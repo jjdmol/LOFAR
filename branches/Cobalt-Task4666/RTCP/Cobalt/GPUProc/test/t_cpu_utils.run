@@ -1,3 +1,0 @@
-#!/bin/sh
-
-mpirun -H cbm006,cbm006 t_cpu_utils
