@@ -328,12 +328,13 @@ namespace LOFAR
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
 
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString);
-
-        node.stations.resize(stationNames.size());
+        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
 
         for (size_t j = 0; j < stationNames.size(); ++j) {
-          node.stations[j] = stationIndex(stationNames[j]);
+          ssize_t index = settings.stationIndex(stationNames[j]);
+
+          if (index >= 0)
+            node.stations.push_back(index);
         }
       }
 
@@ -938,14 +939,14 @@ namespace LOFAR
       return settings.stations[index].name;
     }
 
-    size_t Parset::stationIndex(const std::string &name) const
+    ssize_t ObservationSettings::stationIndex(const std::string &name) const
     {
-      for (size_t station = 0; station < settings.stations.size(); ++station) {
-        if (settings.stations[station].name == name)
+      for (size_t station = 0; station < stations.size(); ++station) {
+        if (stations[station].name == name)
           return station;
       }
 
-      THROW(CoInterfaceException, "invalid station name: " << name);
+      return -1;
     }
 
     std::vector<std::string> Parset::allStationNames() const

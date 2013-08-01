@@ -212,6 +212,8 @@ namespace LOFAR
       // length: len(OLAP.storageStationNames)
       std::vector<struct Station> stations;
 
+      ssize_t stationIndex(const std::string &name) const;
+
       /*
        * Resources information:
        *   - what hardware we use (cpus/gpus)
@@ -597,7 +599,6 @@ namespace LOFAR
       bool                        correctClocks() const;
       bool                        correctBandPass() const;
       std::string                 stationName(int index) const;
-      size_t                      stationIndex(const std::string &name) const;
       std::vector<std::string>    allStationNames() const;
 
       bool                        outputCorrelatedData() const;
