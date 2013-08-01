@@ -80,12 +80,16 @@ void test()
 
 int main( int argc, char **argv )
 {
-  INIT_LOGGER( "tMPITransfer" );
+  INIT_LOGGER( "tMPI" );
 
-  if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+  int provided_threading_support;
+
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threading_support) != MPI_SUCCESS) {
     LOG_ERROR_STR("MPI_Init failed");
     return 1;
   }
+
+  LOG_INFO_STR("Threading support level : " << provided_threading_support << ", and MPI_THREAD_MULTIPLE = " << MPI_THREAD_MULTIPLE);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
