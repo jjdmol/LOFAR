@@ -41,7 +41,7 @@ for idx, line in enumerate(f):
     node = cobalt_nodes[cid] 
     # Only append the station name
     node["stations"].append(entries[1])
-  
+    
   # else parse the lines to dicts  
   else:
     node = {'cid': '',
@@ -58,6 +58,17 @@ for idx, line in enumerate(f):
       node['gpus'] = [2,3]
     node['stations'].append(entries[1])
     
+  # The configuration file only mentions HBA/HBA0/HBA1, but
+  # we want all antenna sets to be mentioned in the parset.
+  if (entries[1].endswith("HBA")): # RSxxxHBA
+    stationname = entries[1][0:5]
+    node['stations'].append(stationname + "LBA")
+
+  if (entries[1].endswith("HBA0")): # CSxxxHBA0
+    stationname = entries[1][0:5]
+    node['stations'].append(stationname + "LBA")
+    node['stations'].append(stationname + "HBA")
+  
     # add the newly create node
     cobalt_nodes[cid] = node
 
