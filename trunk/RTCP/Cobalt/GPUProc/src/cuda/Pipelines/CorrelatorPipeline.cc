@@ -39,9 +39,9 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
-      Pipeline(ps, subbandIndices)
+      Pipeline(ps, subbandIndices, devices)
     {
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
