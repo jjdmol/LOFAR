@@ -113,26 +113,26 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     cudaStatus = cudaSetDevice(0);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
-        goto Error;
+        goto out;
     }
 
     // allocate the std::complex buffers
     cudaStatus = cudaMalloc((void**)&dev_in, size * sizeof(std::complex<float>));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
+        goto out;
     }
 
     cudaStatus = cudaMalloc((void**)&dev_out, size * sizeof(std::complex<float>));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
+        goto errin;
     }
 
     cudaStatus = cudaMemcpy(dev_in, input_complex, size * sizeof(std::complex<float>), cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
+        goto errout;
     }
 
     // Launch a kernel on the GPU with one thread for each element.
@@ -143,20 +143,21 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     cudaStatus = cudaDeviceSynchronize();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto Error;
+        goto errout;
     }
 
     cudaStatus = cudaMemcpy(output_complex, dev_out, size * sizeof(std::complex<float>), cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
+        goto errout;
     }
 
 
-Error:
-    cudaFree(dev_in);
+errout:
     cudaFree(dev_out);
-    
+errin:
+    cudaFree(dev_in);
+out:
     return cudaStatus;
 }
 

@@ -1,7 +1,6 @@
 # $Id$
 
 install(FILES 
-  complex.cuh 
   gpu_math.cuh
   IntToFloat.cuh
   IntToFloat.cu
