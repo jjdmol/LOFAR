@@ -74,14 +74,14 @@ for idx, line in enumerate(f):
 
 # -----------------------------------------------------------------
 # print to parset format
-prefix = "Cobalt.hardware."  
+prefix = "Cobalt.Hardware."  
 with open(outputfile,'w') as f:
   # number of nodes
   f.write(prefix + "nrNodes=" + str(len(cobalt_nodes)) + "\n")
   
   # actual content
   for key, value in cobalt_nodes.items():
-    node_prefix = "node[" + str(value["cid"]) +"]."
+    node_prefix = "Node[" + str(value["cid"]) +"]."
        
     f.write( prefix + node_prefix + "host=" + str(value["host"]) + "\n")
     f.write( prefix + node_prefix + "cpu=" + str(value["cpu"]) + "\n")
