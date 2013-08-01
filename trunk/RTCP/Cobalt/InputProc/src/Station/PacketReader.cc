@@ -45,6 +45,7 @@ namespace LOFAR
       nrBadSize(0),
       nrBadTime(0),
       nrBadData(0),
+      nrBadOther(0),
       hadSizeError(false)
     {
       // Partial reads are not supported on UDP streams, because each read()
