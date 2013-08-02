@@ -78,6 +78,7 @@ extern "C"  __global__ void echo(void *neuronActivationsPtr,
     neuron_activations_pref[idx_neuron] = fcomplex(0,0);
   }
 
+
   // *******************************************************************************
   // Random numbers to be added to the default weight matrix
   // Will contain the random numbers to added to weights
