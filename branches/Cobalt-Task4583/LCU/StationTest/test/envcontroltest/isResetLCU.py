@@ -43,6 +43,14 @@ if __name__ == '__main__':
             print "  cycle LCU power in 5 seconds  "
             print "================================"
             time.sleep(5.0)
-            ec.resetLCU()
+            ec.resetPower(ec.P_LCU)
+            print "waiting 10 seconds"
+            time.sleep(10.0)
+            ec.getPowerStatus()
+            print "waiting 10 seconds"
+            time.sleep(10.0)
+            ec.getPowerStatus()
+            ec.printInfo(False)
+            ec.disconnectHost()
 
 

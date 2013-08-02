@@ -21,20 +21,24 @@
 #include <lofar_config.h>
 
 #include "tFIR_Filter.h"
-#include "TestUtil.h"
 
-#include <iostream>
 #include <cstdlib> 
+#include <string>
+#include <vector>
+#include <iostream>
 #include <sstream>
 #include <fstream>
-#include <string>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
+#include "TestUtil.h"
+
+using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::gpu;
@@ -56,7 +60,7 @@ int test()
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_TAPS"] = lexical_cast<string>(NR_TAPS);
-  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
+  definitions["NR_STABS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
   definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
@@ -126,9 +130,14 @@ int test()
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
   // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
-  if(rawFilteredData.get<float>()[0] != 6.0f) 
+  // However, in modes other than 16 bit mode, all amplitudes are scaled to match 16 bit mode.
+  // For 8 bit mode, this means *256.
+  unsigned scale = 1;
+  if (NR_BITS_PER_SAMPLE != 16)
+    scale = 256;
+  if (rawFilteredData.get<float>()[0] != 6.0f * scale) 
   {
-    std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << rawFilteredData.get<float>()[0] << std::endl;
+    std::cerr << "FIR_FilterTest 1: Expected at idx 0: " << 6 * scale << "; got: " << rawFilteredData.get<float>()[0] << std::endl;
 
     testOk = false;
   }

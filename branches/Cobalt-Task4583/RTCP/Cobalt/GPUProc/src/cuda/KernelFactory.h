@@ -64,7 +64,9 @@ namespace LOFAR
       // settings in the Parset \a ps.
       KernelFactory(const Parset& ps) :
         itsParameters(ps),
-        itsPTX(_createPTX())
+        itsPTX(createPTX(T::theirSourceFile,
+                         compileDefinitions(),
+                         compileFlags()))
       {
       }
 

@@ -54,6 +54,8 @@
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
 
+#include <GPUProc/cpu_utils.h>
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
@@ -66,7 +68,7 @@ void usage(char **argv)
   cerr << "  -p: enable profiling" << endl;
 }
 
-void runPipeline(const Parset &ps, const vector<size_t> subbands)
+void runPipeline(const Parset &ps, const vector<size_t> subbands, const vector<gpu::Device> &devices)
 {
   bool correlatorEnabled = ps.settings.correlator.enabled;
   bool beamFormerEnabled = ps.settings.beamFormer.enabled;
@@ -80,14 +82,15 @@ void runPipeline(const Parset &ps, const vector<size_t> subbands)
 
   if (correlatorEnabled) {
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
+    CorrelatorPipeline(ps, subbands, devices).processObservation(CORRELATED_DATA);
   } else if (beamFormerEnabled) {
     LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps, subbands).processObservation(BEAM_FORMED_DATA);
+    BeamFormerPipeline(ps, subbands, devices).processObservation(BEAM_FORMED_DATA);
   } else {
     LOG_FATAL_STR("No pipeline selected, do nothing");
   }
 }
+
 
 int main(int argc, char **argv)
 {
@@ -129,13 +132,14 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef HAVE_LOG4CPLUS
-  INIT_LOGGER(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER("rtcp");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+
 #else
   LOG_WARN_STR("Running without MPI!");
 #endif
@@ -167,6 +171,21 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
+  ASSERT(rank >= 0 && (size_t)rank < ps.settings.nodes.size());
+
+  // set the processor affinity before any threads are created
+  int cpuId = ps.settings.nodes[rank].cpu;
+  setProcessorAffinity(cpuId);
+
+  // derive the set of gpus we're allowed to use
+  gpu::Platform platform;
+  vector<gpu::Device> allDevices(platform.devices());
+  vector<gpu::Device> devices;
+  const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
+  for (size_t i = 0; i < gpuIds.size(); ++i)
+    devices.push_back(allDevices[i]);
+
+  // From here threads are produced
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
@@ -203,7 +222,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        runPipeline(ps, subbandDistribution[rank]);
+        runPipeline(ps, subbandDistribution[rank], devices);
       }
     }
   }

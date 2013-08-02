@@ -36,6 +36,7 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
+      nrTABs(ps.nrTABs(0)),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
@@ -99,6 +100,8 @@ namespace LOFAR
       }
     }
 
+    
+    
     template<> CompileDefinitions
     KernelFactory<BeamFormerKernel>::compileDefinitions() const
     {
@@ -106,10 +109,11 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
+      defs["WEIGHT_CORRECTION"] =
+        lexical_cast<string>(itsParameters.weightCorrection);
 
       return defs;
     }
-
   }
 }
 

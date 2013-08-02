@@ -214,16 +214,10 @@ namespace LOFAR
 
       Platform::Platform(unsigned int flags)
       {
-        // TODO: Technically, we need to make this thread safe.
-        // Typically, however, the first platform is created in the main
-        // thread.
-        static bool initialised = false;
-
-        if (!initialised) {
-          initialised = true;
-
-          checkCuCall(cuInit(flags));
-        }
+        // cuInit() is thread-safe, so we don't have to mutex it.
+        // In fact, if you start with multiple threads, all threads that
+        // do CUDA calls must first call cuInit().
+        checkCuCall(cuInit(flags));
       }
 
       int Platform::version() const
@@ -327,7 +321,6 @@ namespace LOFAR
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
         return value;
       }
-
 
       class Context::Impl : boost::noncopyable
       {

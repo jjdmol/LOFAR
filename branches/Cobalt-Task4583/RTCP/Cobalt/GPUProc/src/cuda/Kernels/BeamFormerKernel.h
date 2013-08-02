@@ -43,6 +43,7 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         size_t nrTABs;
+        float weightCorrection;   // constant weight applied to all weights
       };
 
       enum BufferType

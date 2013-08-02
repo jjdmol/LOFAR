@@ -28,7 +28,9 @@
 // The actual function used depends on the define NR_BITS_PER_SAMPLE
 // If this is 8 the input char get convert with instances of -128 clamped
 // to -127.
-// If NR_BITS_PER_SAMPLE == 16 a simple conversion to float is performed
+// If NR_BITS_PER_SAMPLE == 16 a simple conversion to float is performed.
+//
+// Output values are scaled in terms of 16 bit mode.
 
 #if NR_BITS_PER_SAMPLE == 16
 inline __device__ float convertIntToFloat(short x)
@@ -38,11 +40,15 @@ inline __device__ float convertIntToFloat(short x)
 #elif NR_BITS_PER_SAMPLE == 8
 inline __device__ float convertIntToFloat(signed char x)
 {
-    // Edge case. -128 should be returned as -127
-	return x==-128 ? -127 : x;
+  // Edge case. -128 should be returned as -127
+  int i = x == -128 ? -127 : x;
+
+  // Keep output scale the same as 16 bit mode.
+  return 256 * i;
 }
 #else
-#error unsupport NR_BITS_PER_SAMPLE
+#error unsupported NR_BITS_PER_SAMPLE
 #endif
 
 #endif
+
