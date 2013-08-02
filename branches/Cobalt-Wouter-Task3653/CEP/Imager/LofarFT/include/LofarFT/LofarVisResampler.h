@@ -109,6 +109,7 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           const Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
+    //Linear interpolation tries
     void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
                           const Vector<uInt>& rows,
                           Int rbeg, Int rend,
@@ -122,6 +123,8 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                           const Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
+    //End Linear interpolation tries
+
 
     void lofarGridToData(LofarVBStore& vbs,
                          const Array<Complex>& grid,
@@ -129,6 +132,31 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
                          Int rbeg, Int rend,
                          LofarCFStore& cfs);
 
+    template <class T>
+    void lofarDataToGrid_interp(Array<T>& grid,  LofarVBStore& vbs,
+				const Vector<uInt>& rows,
+				Matrix<Double>& sumwt,
+				const Bool& dopsf,
+				LofarCFStore& cfs);//,
+				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
+
+    void lofarGridToData_interp(LofarVBStore& vbs,
+                         const Array<Complex>& grid,
+                         const Vector<uInt>& rows,
+                         //Int rbeg, Int rend,
+				LofarCFStore& cfs);//,
+				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
+
+    void lofarGridToData_linear(LofarVBStore& vbs,
+                         const Array<Complex>& grid,
+                         const Vector<uInt>& rows,
+                         Int rbeg, Int rend,
+                         LofarCFStore& cfs0,
+                         LofarCFStore& cfs1);
+
+    Vector<uInt> ChanCFMap;
+    void setChanCFMaps(Vector<uInt> ChanMap)
+    {ChanCFMap=ChanMap.copy();}
 
     virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
     {cfMap_p.assign(cfMap); conjCFMap_p.assign(conjCFMap);}

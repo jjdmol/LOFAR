@@ -93,7 +93,7 @@ class EC:
     def disconnectHost(self):
         self.setInfo("closing %s" %(self.host))
         self.sck.close()
-        #time.sleep(0.1)
+        time.sleep(1.0)
         return
         
     #---------------------------------------

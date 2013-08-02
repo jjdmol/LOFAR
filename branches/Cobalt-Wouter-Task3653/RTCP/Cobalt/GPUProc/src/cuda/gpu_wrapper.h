@@ -253,6 +253,9 @@ namespace LOFAR
         // Return the size of this memory block.
         size_t size() const;
 
+        // Fetch the contents of this buffer in a new HostMemory buffer.
+        HostMemory fetch() const;
+
       private:
         // Function needs access to our device ptr location to set this as a kernel arg.
         friend class Function;
@@ -298,7 +301,7 @@ namespace LOFAR
         // an unsigned int as value, the unsigned int's value itself is cast to void*!
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadDataEx in the CUDA Driver API.
-        Module(const Context &context, const void *image, const optionmap_t &options);
+        Module(const Context &context, const void *image, optionmap_t &options);
 
         // Return the Context in which this Module was created.
         Context getContext() const;
@@ -321,7 +324,7 @@ namespace LOFAR
       public:
         // Construct a function object by looking up the function \a name in the
         // module \a module.
-        Function(Module &module, const std::string &name);
+        Function(const Module &module, const std::string &name);
 
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
@@ -432,23 +435,23 @@ namespace LOFAR
         // \param hostMem Host memory that will be copied from.
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
-        void writeBuffer(DeviceMemory &devMem, const HostMemory &hostMem,
-                         bool synchronous = false);
+        void writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
+                         bool synchronous = false) const;
 
         // Transfer data from device memory \a devMem to host memory \a hostMem.
         // \param hostMem Host memory that will be copied to.
         // \param devMem Device memory that will be copied from.
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
-        void readBuffer(HostMemory &hostMem, const DeviceMemory &devMem,
-                        bool synchronous = false);
+        void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
+                        bool synchronous = false) const;
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
         // \param grid Grid size (in terms of blocks (not threads (OpenCL)))
         // \param block Block (thread group) size
         void launchKernel(const Function &function,
-                          const Grid &grid, const Block &block);
+                          const Grid &grid, const Block &block) const;
 
         // Check if all operations on this stream have completed.
         // \return true if all completed, or false otherwise.
@@ -467,7 +470,7 @@ namespace LOFAR
         CUstream get() const;
 
         // Returns the context associated with the underlying CUDA stream.
-        Context getContext() const; // TODO: consider using this in the WorkQueues (now has Stream and Context stored)
+        Context getContext() const; // TODO: consider using this in the SubbandProcs (now has Stream and Context stored)
 
         // Return whether this stream mandates synchronous behaviour
         bool isSynchronous() const;

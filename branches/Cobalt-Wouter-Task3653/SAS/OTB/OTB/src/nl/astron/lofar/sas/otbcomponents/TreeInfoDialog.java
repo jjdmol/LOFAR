@@ -574,8 +574,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                     if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
                         aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
                         hasChanged=true;
-                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
-                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state,false)) {
+                            String aS="Error during setTreeState("+aTree.treeID()+","+aTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                             logger.error(aS);
                             LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                             succes=false;
@@ -610,8 +610,8 @@ public final class TreeInfoDialog extends javax.swing.JDialog {
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
                     itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+"): "+OtdbRmi.getRemoteMaintenance().errorMsg();
+                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state,false)) {
+                        String aS="Error during setTreeState("+itsTree.treeID()+","+itsTree.state+",false): "+OtdbRmi.getRemoteMaintenance().errorMsg();
                         logger.error(aS);
                         LofarUtils.showErrorPanel(this,aS,new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                         succes=false;

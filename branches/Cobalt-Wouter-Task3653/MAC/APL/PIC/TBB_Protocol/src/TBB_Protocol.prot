@@ -15,8 +15,7 @@ include = '<Common/LofarTypes.h>';
 include = '<Common/LofarConstants.h>';
 include = '<Common/lofar_bitset.h>';
 
-//include = '<APL/RTCCommon/Timestamp.h>';
-include = '<APL/RTCCommon/NsTimestamp.h>';
+include = '<Common/NsTimestamp.h>';
 
 prelude = << PRELUDE_END
 
@@ -334,7 +333,7 @@ event = {
 	};
 	param = {
 		name = "nstimestamp";
-		type = "RTC::NsTimestamp";
+		type = "NsTimestamp";
 		userdefined;
 	};
 	param = {
@@ -523,7 +522,7 @@ event = {
 	};
 	param = {
 		name = "nstimestamp";
-		type = "RTC::NsTimestamp";
+		type = "NsTimestamp";
 		userdefined;
 	};
 	param = {
@@ -579,17 +578,17 @@ event = {
 //	};
 	param = {
 		name = "nstimestamp";
-		type = "RTC::NsTimestamp";
+		type = "NsTimestamp";
 		userdefined;
 	};
 	param = {
 		name = "nstimebefore";
-		type = "RTC::NsTimestamp";
+		type = "NsTimestamp";
 		userdefined;
 	};
 	param = {
 		name = "nstimeafter";
-		type = "RTC::NsTimestamp";
+		type = "NsTimestamp";
 		userdefined;
 	};
 };

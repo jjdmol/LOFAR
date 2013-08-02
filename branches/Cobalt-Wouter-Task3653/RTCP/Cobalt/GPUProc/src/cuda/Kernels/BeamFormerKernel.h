@@ -23,7 +23,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include "Kernel.h"
+#include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -33,11 +34,51 @@ namespace LOFAR
     class BeamFormerKernel : public Kernel
     {
     public:
-      BeamFormerKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devComplexVoltages,
-                       gpu::DeviceMemory &devCorrectedData, gpu::DeviceMemory &devBeamFormerWeights);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // BeamFormerKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrTABs;
+        float weightCorrection;   // constant weight applied to all weights
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        BEAM_FORMER_WEIGHTS
+      };
+
+      // Buffers that must be passed to the constructor of the BeamFormerKernel
+      // class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& beamFormerWeights) :
+          Kernel::Buffers(in, out), beamFormerWeights(beamFormerWeights)
+        {}
+
+        gpu::DeviceMemory beamFormerWeights;
+      };
+
+      BeamFormerKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
     };
 
+    // Specialization of the KernelFactory for
+    // BeamFormerKernel
+    template<> size_t
+    KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 
+    template<> CompileDefinitions
+    KernelFactory<BeamFormerKernel>::compileDefinitions() const;
   }
 }
 

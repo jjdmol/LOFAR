@@ -32,7 +32,6 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <UnitTest++.h>
 
 #include "TestUtil.h"
@@ -67,8 +66,8 @@ float * runTest(float bandPassFactor,
   string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
  
   // Get an instantiation of the default parameters
-  definitions_type definitions = defaultDefinitions();
-  flags_type flags = defaultFlags();
+  CompileDefinitions definitions;
+  CompileFlags flags = defaultCompileFlags();
 
   // ****************************************
   // Compile to ptx
@@ -80,24 +79,22 @@ float * runTest(float bandPassFactor,
   definitions["NR_SAMPLES_PER_CHANNEL"] = "64";
   unsigned NR_SAMPLES_PER_CHANNEL = 64;
   definitions["NR_SAMPLES_PER_SUBBAND"] = "1024";
-  unsigned NR_SAMPLES_PER_SUBBAND = 1024;
   definitions["NR_BITS_PER_SAMPLE"] = "8";
-  unsigned NR_BITS_PER_SAMPLE = 8;
   definitions["NR_POLARIZATIONS"] = "2";
   unsigned NR_POLARIZATIONS = 2;
-  definitions["NR_BEAMS"] = "8";
-  unsigned NR_BEAMS = 8;
+  definitions["NR_SAPS"] = "8";
+  unsigned NR_SAPS = 8;
   definitions["USE_CUDA"] = "1";
   definitions["COMPLEX"] = "2";
   unsigned COMPLEX = 2;
   tostrstream << subbandWidth;
   definitions["SUBBAND_BANDWIDTH"] = tostrstream.str();
   tostrstream.clear();
-  float SUBBAND_BANDWIDTH = subbandWidth;
   definitions["BANDPASS_CORRECTION"] = "1";
   if (delayCompensation)
     definitions["DELAY_COMPENSATION"] = "1";
-  string ptx = createPTX(devices, kernelPath, flags, definitions);
+  definitions["DO_TRANSPOSE"] = "1";
+  string ptx = createPTX(kernelPath, definitions, flags, devices);
   gpu::Module module(createModule(ctx, kernelPath, ptx));
   Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
 
@@ -113,12 +110,12 @@ float * runTest(float bandPassFactor,
   HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
   cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
 
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float);  
+  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_SAPS * 2 * sizeof(float);  
   DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
   HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
   cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
     
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_BEAMS * 2 * sizeof(float); 
+  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_SAPS * 2 * sizeof(float); 
   DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
   HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
   cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
@@ -144,14 +141,7 @@ float * runTest(float bandPassFactor,
   hKernel.setArg(6, DevPhaseOffsetMemory);
   hKernel.setArg(7, DevbandPassFactorsMemory);
 
-  // Calculate the number of threads in total and per blovk
-  int nrChannelsPerSubband = NR_CHANNELS;
-  int nrStations = NR_STATIONS; 
-  int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
-  size_t maxNrThreads = MAXNRCUDATHREADS;
-  unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-  // assign to gpu_wrapper objects
+  // Calculate the number of threads in total and per block
   Grid globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS);  
   Block localWorkSize(256, 1,1); 
 

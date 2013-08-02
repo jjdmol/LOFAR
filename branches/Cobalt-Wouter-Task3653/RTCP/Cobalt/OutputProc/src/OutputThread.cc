@@ -71,13 +71,11 @@ namespace LOFAR
         LOG_DEBUG_STR(logPrefix << "Creating directory " << dirname);
 
         if (mkdir(dirname.c_str(), 0777) != 0 && errno != EEXIST) {
-          unsigned savedErrno = errno; // first argument below clears errno
-          throw SystemCallException(string("mkdir ") + dirname, savedErrno, THROW_ARGS);
+          THROW_SYSCALL(string("mkdir ") + dirname);
         }
       } else {
         // something else went wrong
-        unsigned savedErrno = errno; // first argument below clears errno
-        throw SystemCallException(string("stat ") + dirname, savedErrno, THROW_ARGS);
+        THROW_SYSCALL(string("stat ") + dirname);
       }
     }
 
@@ -163,21 +161,15 @@ namespace LOFAR
       case CORRELATED_DATA:
         itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
 
-        {
-          const vector<unsigned> subbands = itsParset.subbandList();
-          const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();
-          const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
-          LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-                                    << "SAP " << SAPs[itsStreamNr]
-                                    << ", subband " << subbands[itsStreamNr]
-                                    << ", centralfreq " << setprecision(8) << frequencies[itsStreamNr] / 1e6 << " MHz"
-                                    << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-                                    << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
-                                    << ", channels " << itsParset.nrChannelsPerSubband()
-                                    << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
-                       );
-        }
+        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
+                                  << "SAP " << itsParset.settings.subbands[itsStreamNr].SAP
+                                  << ", subband " << itsParset.settings.subbands[itsStreamNr].stationIdx
+                                  << ", centralfreq " << setprecision(8) << itsParset.settings.subbands[itsStreamNr].centralFrequency / 1e6 << " MHz"
+                                  << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
+                                  << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
+                                  << ", channels " << itsParset.nrChannelsPerSubband()
+                                  << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
+                     );
         break;
       case BEAM_FORMED_DATA:
         itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
@@ -247,32 +239,36 @@ namespace LOFAR
     }
 
 
-    void OutputThread::cleanUp()
+    void OutputThread::cleanUp() const
     {
       float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
       LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+    }
 
-      // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
-      ParameterSet feedbackLTA = itsWriter->configuration();
-      string prefix = "UNKNOWN";
+
+    ParameterSet OutputThread::feedbackLTA() const
+    {
+      string prefix;
 
       switch (itsOutputType) {
       case CORRELATED_DATA:
-        prefix = formatString("Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
+        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
         break;
 
       case BEAM_FORMED_DATA:
-        prefix = formatString("Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
+        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
         break;
 
       default:
+        prefix = "UNKNOWN.";
         break;
       }
 
-      // For now, transport feedback parset through log lines
-      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
-        LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << prefix << i->first << " = " << i->second);
+      ParameterSet result;
+      result.adoptCollection(itsWriter->configuration(), prefix);
+
+      return result;
     }
 
 

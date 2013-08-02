@@ -26,7 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -48,45 +48,24 @@ int main() {
   gpu::Stream stream(ctx);
 
   Parset ps("tDelayAndBandPassKernel.in_parset");
-  string srcFilename("DelayAndBandPass.cu");
+  KernelFactory<DelayAndBandPassKernel> factory(ps);
 
-  // Get default parameters for the compiler
-  flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
+  gpu::DeviceMemory 
+    inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
+    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
+    delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
+    phaseOffsets(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS)),
+    bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
-  gpu::Module module(createModule(ctx, srcFilename, ptx));
-  cout << "Succesfully compiled '" << srcFilename << "'" << endl;
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
 
-  WorkQueueInputData::DeviceBuffers devInput(ps.nrBeams(),
-                ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                ctx);
+  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
 
-  // Calculate bandpass weights and transfer to the device.
-  gpu::HostMemory bpWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
-  BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                     ps.nrChannelsPerSubband());
-  gpu::DeviceMemory devBandPassCorrectionWeights(ctx, ps.nrChannelsPerSubband() * sizeof(float));
-  stream.writeBuffer(devBandPassCorrectionWeights, bpWeights, true);
-
-  // reserve enough space for the output of the firFilterKernel, and the correlatorKernel.
-  size_t devFilteredDataSize = std::max(ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() * sizeof(std::complex<float>),
-                      ps.nrBaselines() * ps.nrChannelsPerSubband() * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>));
-  gpu::DeviceMemory devFilteredData(ctx, devFilteredDataSize);
-
-  DelayAndBandPassKernel kernel(ps, module, 
-                             devInput.inputSamples,
-                             devFilteredData,
-                             devInput.delaysAtBegin,
-                             devInput.delaysAfterEnd,
-                             devInput.phaseOffsets,
-                             devBandPassCorrectionWeights);
-
-  unsigned subband = 0;
-  kernel.enqueue(stream, subband);
+  size_t subbandIdx = 0;
+  float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
+  size_t SAP = ps.settings.subbands[subbandIdx].SAP;
+  kernel->enqueue(stream, centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

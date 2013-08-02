@@ -35,10 +35,11 @@ namespace LOFAR
       char stationName[64];
       char antennaField[64];
 
-      unsigned clockMHz;
-      unsigned bitMode;
+      StationID( const std::string &stationName = "", const std::string &antennaField = "" );
 
-      StationID( const std::string &stationName = "", const std::string &antennaField = "", unsigned clockMHz = 200, unsigned bitMode = 16);
+      // The full ('storage') name of the station, f.e.
+      // CS001HBA0.
+      std::string name() const;
 
       bool operator==(const struct StationID &other) const;
       bool operator!=(const struct StationID &other) const;

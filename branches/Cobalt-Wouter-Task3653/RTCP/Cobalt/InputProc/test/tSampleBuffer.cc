@@ -35,13 +35,16 @@ using namespace Cobalt;
 using namespace std;
 
 template<typename T>
-void test( struct BufferSettings &settings )
+void test( struct BufferSettings &settings, unsigned bitMode )
 {
+  LOG_INFO_STR("Test " << bitMode << "-bit complex");
+
   // Should be able to create the buffer
-  SampleBuffer< SampleType<T> > buffer_create(settings, true);
+  SampleBuffer< SampleType<T> > buffer_create(settings, SharedMemoryArena::CREATE);
 
   // Should be able to attach to created buffer
-  SampleBuffer< SampleType<T> > buffer_read(settings, false);
+  SampleBuffer< SampleType<T> > buffer_read(settings, SharedMemoryArena::READ);
+  SampleBuffer< SampleType<T> > buffer_readwrite(settings, SharedMemoryArena::READWRITE);
 }
 
 int main()
@@ -52,7 +55,7 @@ int main()
   alarm(10);
 
   // Fill a BufferSettings object
-  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct StationID stationID("RS106", "LBA");
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
@@ -64,14 +67,9 @@ int main()
   settings.setBufferSize(0.1);
 
   // Test various modes
-  LOG_INFO("Test 16-bit complex");
-  test<i16complex>(settings);
-
-  LOG_INFO("Test 8-bit complex");
-  test<i8complex>(settings);
-
-  LOG_INFO("Test 4-bit complex");
-  test<i4complex>(settings);
+  test<i16complex>(settings, 16);
+  test<i8complex>(settings, 8);
+  test<i4complex>(settings, 4);
 
   return 0;
 }

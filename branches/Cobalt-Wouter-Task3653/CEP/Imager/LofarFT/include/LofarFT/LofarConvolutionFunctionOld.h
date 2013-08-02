@@ -198,7 +198,6 @@ namespace LOFAR
     uInt                m_oversampling;
     uInt                m_nChannel;
     Double              m_refFrequency;
-    uInt                m_maxCFSupport;
     //# Stack of the convolution functions for the average PB calculation
     Matrix<Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
@@ -222,7 +221,6 @@ namespace LOFAR
     Double              itsTimeApar;
     Double              itsTimeAfft;
     unsigned long long  itsTimeAcnt;
-    Double              itsTimeCF;
     Double              itsTimeCFpar;
     Double              itsTimeCFfft;
     unsigned long long  itsTimeCFcnt;

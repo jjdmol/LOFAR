@@ -31,22 +31,44 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    string CoherentStokesKernel::theirSourceFile = "BeamFormer/CoherentStokes.cu";
+    string CoherentStokesKernel::theirFunction = "coherentStokes";
 
-    CoherentStokesKernel::CoherentStokesKernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devStokesData, gpu::DeviceMemory &devComplexVoltages)
-      :
-      Kernel(ps, program, "coherentStokes")
+    CoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      nrTABs(ps.nrTABs(0)),
+      nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
+      timeIntegrationFactor(ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
     {
-      ASSERT(ps.nrChannelsPerSubband() >= 16 && ps.nrChannelsPerSubband() % 16 == 0);
-      ASSERT(ps.nrCoherentStokes() == 1 || ps.nrCoherentStokes() == 4);
-      setArg(0, devStokesData);
-      setArg(1, devComplexVoltages);
+    }
 
-      globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
+
+    CoherentStokesKernel::CoherentStokesKernel(const gpu::Stream& stream,
+                                       const gpu::Module& module,
+                                       const Buffers& buffers,
+                                       const Parameters& params) :
+      Kernel(stream, gpu::Function(module, theirFunction))
+    {
+      ASSERT(params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0);
+      ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
+      setArg(0, buffers.output);
+      setArg(1, buffers.input);
+
+      // TODO: params.nrTABs only works for one SAP
+      globalWorkSize = gpu::Grid(256, (params.nrTABs + 15) / 16, (params.nrChannelsPerSubband + 15) / 16);
       localWorkSize = gpu::Block(256, 1, 1);
 
-      nrOperations = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * (ps.nrCoherentStokes() == 1 ? 8 : 20 + 2.0 / ps.coherentStokesTimeIntegrationFactor());
-      nrBytesRead = (size_t) ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) ps.nrTABs(0) * ps.nrCoherentStokes() * ps.nrSamplesPerChannel() / ps.coherentStokesTimeIntegrationFactor() * ps.nrChannelsPerSubband() * sizeof(float);
+      nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
+      nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
+    }
+
+    template<> CompileDefinitions
+    KernelFactory<CoherentStokesKernel>::compileDefinitions() const
+    {
+      CompileDefinitions defs =
+        KernelFactoryBase::compileDefinitions(itsParameters);
+      return defs;
     }
 
   }

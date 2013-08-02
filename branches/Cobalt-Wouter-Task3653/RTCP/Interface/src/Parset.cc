@@ -842,7 +842,7 @@ unsigned Parset::nrBaselines() const
 
 unsigned Parset::nrCrossPolarisations() const
 {
-  return (getUint32("Observation.nrPolarisations") * getUint32("Observation.nrPolarisations"));
+  return (getUint32("Observation.nrPolarisations", 2) * getUint32("Observation.nrPolarisations", 2));
 }
 
 unsigned Parset::clockSpeed() const
@@ -1052,7 +1052,7 @@ unsigned Parset::nrSamplesToCNProc() const
 
 unsigned Parset::inputBufferSize() const
 {
-  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 1.0) * subbandBandwidth());
+  return (unsigned) (getDouble("OLAP.nrSecondsOfBuffer", 2.5) * subbandBandwidth());
 }
 
 unsigned Parset::maxNetworkDelay() const
@@ -1085,7 +1085,7 @@ unsigned Parset::nrPhase3StreamsPerPset() const
 
 unsigned Parset::nrPPFTaps() const
 {
-  return getUint32("OLAP.CNProc.nrPPFTaps");
+  return getUint32("OLAP.CNProc.nrPPFTaps", 16);
 }
 
 unsigned Parset::nrChannelsPerSubband() const
@@ -1266,7 +1266,7 @@ string Parset::partitionName() const
 
 bool Parset::realTime() const
 {
-  return getBool("OLAP.realTime");
+  return getBool("OLAP.realTime", true);
 }
 
 std::vector<unsigned> Parset::nrTABs() const

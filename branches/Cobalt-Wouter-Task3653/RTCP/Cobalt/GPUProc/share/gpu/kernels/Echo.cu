@@ -53,8 +53,7 @@ extern "C"  __global__ void echo(void *neuronActivationsPtr,
   ExternalInputsWeightsDataType externalInputsWeights = (ExternalInputsWeightsDataType) externalInputsWeightsPtr;
   BaseWeightsDataType baseWeights = (BaseWeightsDataType) baseWeightsTypePtr;
   curandState* globalState = (curandState*)globalStatePtr;
-
-  
+    
 
   // **************************************************************************
   // Get the weights into local memory
@@ -95,9 +94,9 @@ extern "C"  __global__ void echo(void *neuronActivationsPtr,
   {
     unsigned idx = idx_copy * NR_SOLUTION_PARALEL + tid;
     // Do not go over the bounds of the random weight matrix
-    if ( idx > NR_NEURONS * NR_NEURONS )
+    if ( idx < NR_NEURONS * NR_NEURONS )
       weightRandom[idx] = 
-          fcomplex(curand_normal(&state), curand_normal(&state));  //lognormal aslo candidate?
+          fcomplex(RANDOM_MAGNITUDE * curand_normal(&state), RANDOM_MAGNITUDE * curand_normal(&state));  //lognormal aslo candidate?
   }
   __syncthreads();
 
@@ -110,29 +109,27 @@ extern "C"  __global__ void echo(void *neuronActivationsPtr,
   // From here all code is fully parallel and no sync between threads is needed
   for (unsigned idx_timestep = 1; idx_timestep < NR_TIMESTEPS; ++ idx_timestep)
   {
-    // Under the assumption that we have 128 threads running
-    // either have the first wave create the random numbers or
-    // have each thread create a random number.
-  
     for (unsigned idx_neuron = 0; idx_neuron < NR_NEURONS; ++ idx_neuron)
     {
       // Get the correct neuron activation, including decay
       fcomplex neuron_activation =  neuron_activations_pref[idx_neuron]; 
       neuron_activation *= ACTIVATION_DECAY;
-      // external input
-      // NEXT STEP: Add the inputs and validate the activations
+      
       unsigned saved_neuron_idx = (idx_neuron + threadIdx.x) * NR_NEURONS ;
       for (unsigned idx_synaps = 0; idx_synaps < NR_NEURONS; ++ idx_synaps)
       {
-        neuron_activation += (shared_baseWeights[idx_neuron][idx_synaps] + 
-           weightRandom[(saved_neuron_idx + idx_synaps) % (NR_NEURONS * NR_NEURONS)]) *
-                             neuron_activations_pref[idx_synaps];
+        neuron_activation += (  
+                                shared_baseWeights[idx_neuron][idx_synaps] 
+                                +  weightRandom[(saved_neuron_idx + idx_synaps) % (NR_NEURONS * NR_NEURONS)]
+                              ) 
+                              * neuron_activations_pref[idx_synaps];
       }
-
 
       // No output function!!
       (*neuronActivations)[0][idx_timestep][threadIdx.x][idx_neuron] = neuron_activation;
     }
+
+
     for (unsigned idx_neuron = 0; idx_neuron < NR_NEURONS; ++ idx_neuron)
     {
       neuron_activations_pref[idx_neuron] = (*neuronActivations)[0][idx_timestep][threadIdx.x][idx_neuron];

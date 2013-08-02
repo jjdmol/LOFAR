@@ -28,7 +28,6 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
 #include <Common/LofarLogger.h>
 
@@ -53,10 +52,10 @@ int main() {
   Parset ps("tKernel.parset.in");
 
   // Get default parameters for the compiler
-  flags_type flags = defaultFlags();
-  definitions_type definitions = defaultDefinitions(ps);
+  CompileFlags flags = defaultCompileFlags();
+  CompileDefinitions definitions = defaultCompileDefinitions();
 
-  string ptx = createPTX(devices, srcFilename, flags, definitions);
+  string ptx = createPTX(srcFilename, definitions, flags, devices);
   gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 

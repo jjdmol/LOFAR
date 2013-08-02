@@ -38,20 +38,15 @@ void reload() {
  
   addAdders();
   
-  resize();
-  
 }
 
 void addAdders() {
 
   // get all the InputBuffers used by this observation
-  adders = navFunct_getAdderssForObservation(observationName);  
+  adders = navFunct_getAddersForObservation(observationName);  
 
 }
-
-void resize() {
-  AdderModule.size(1010,14*dynlen(adders));
-}" 0
+" 0
  E E E E 1 -1 -1 0  200 170
 ""0  1
 E "#uses \"navPanel.ctl\"

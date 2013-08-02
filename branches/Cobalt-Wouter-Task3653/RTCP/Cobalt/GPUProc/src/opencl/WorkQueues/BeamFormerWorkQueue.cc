@@ -1,4 +1,4 @@
-//# BeamFormerWorkQueue.cc
+//# BeamFormerSubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFormerWorkQueue.h"
+#include "BeamFormerSubbandProc.h"
 
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
@@ -34,9 +34,9 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerWorkQueue::BeamFormerWorkQueue(BeamFormerPipeline &pipeline, unsigned gpuNumber)
+    BeamFormerSubbandProc::BeamFormerSubbandProc(BeamFormerPipeline &pipeline, unsigned gpuNumber)
       :
-      WorkQueue( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
+      SubbandProc( pipeline.context,pipeline.devices[gpuNumber], gpuNumber, pipeline.ps),
       pipeline(pipeline),
       inputSamples(boost::extents[ps.nrStations()][ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband()][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()], queue, CL_MEM_WRITE_ONLY, CL_MEM_READ_ONLY),
       devFilteredData(queue, CL_MEM_READ_WRITE, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerChannel() * ps.nrChannelsPerSubband() * sizeof(std::complex<float>)),
@@ -68,7 +68,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerWorkQueue::doWork()
+    void BeamFormerSubbandProc::doWork()
     {
       //queue.enqueueWriteBuffer(devFIRweights, CL_TRUE, 0, firWeightsSize, firFilterWeights);
       bandPassCorrectionWeights.hostToDevice(CL_TRUE);

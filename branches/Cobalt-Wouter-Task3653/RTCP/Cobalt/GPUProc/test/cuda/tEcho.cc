@@ -48,10 +48,10 @@ unsigned NR_NEURONS = 16;  // 16 * 2 == width of thread wave
 unsigned NR_TIMESTEPS = 10;
 unsigned COMPLEX = 2;
 unsigned NR_BASENETWORKS = 1;
-unsigned NR_SOLUTION_PARALEL = 4;
+unsigned NR_SOLUTION_PARALEL = 2;
 
 float ACTIVATION_DECAY = 0.9;
-
+float RANDOM_MAGNITUDE = 0.005;
 
 // Create the data arrays
 size_t lengthInputData = NR_INPUTS * NR_TIMESTEPS * COMPLEX ;
@@ -84,6 +84,8 @@ HostMemory runTest(gpu::Context ctx,
   definitions["NR_BASENETWORKS"] = lexical_cast<string>(NR_BASENETWORKS);
   definitions["NR_SOLUTION_PARALEL"] = lexical_cast<string>(NR_SOLUTION_PARALEL);
   definitions["ACTIVATION_DECAY"] = lexical_cast<string>(ACTIVATION_DECAY);
+  definitions["RANDOM_MAGNITUDE"] = lexical_cast<string>(RANDOM_MAGNITUDE);
+
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(devices, kernelFile, flags, definitions);
   gpu::Module module(createModule(ctx, kernelFile, ptx));
@@ -194,16 +196,16 @@ int main()
   float * weightsData= new float[lengthWeightsData];
   for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
   {
-    weightsData[idx * 2] = 5.0f;
+    weightsData[idx * 2] = 0.005f;
     weightsData[idx * 2 + 1] = 0.0f;
+
   }
   float * activationsData = new float[lengthActivationsData];
 
   float * outputOnHostPtr;
-  
+ 
   const char* function = "echo";
 
-  
   // ***********************************************************
   // Baseline test: If all input data is zero the output should be zero
   // The output array is initialized with 42s
@@ -229,7 +231,9 @@ int main()
         
         for (unsigned idx_neuron = 0; idx_neuron < 2; ++ idx_neuron)
         {
-          cout << "(" << activationsData[start_basenetwork_idx + start_timestep_idx + start_solutions_idx + idx_neuron]
+
+          cout << setprecision(3)
+               << "(" << activationsData[start_basenetwork_idx + start_timestep_idx + start_solutions_idx + idx_neuron]
                << ", " << activationsData[start_basenetwork_idx + start_timestep_idx + start_solutions_idx + idx_neuron + 1]
                << ")" ;
         }

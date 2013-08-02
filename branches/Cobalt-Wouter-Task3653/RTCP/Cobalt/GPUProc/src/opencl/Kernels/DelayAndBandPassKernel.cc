@@ -63,6 +63,36 @@ namespace LOFAR
       Kernel::enqueue(queue, counter);
     }
 
+    size_t
+    DelayAndBandPassKernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+        if (ps.nrChannelsPerSubband() == 1)
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * ps.nrBytesPerComplexSample();
+        else
+          return 
+            ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      case OUTPUT_DATA:
+        return
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      case DELAYS:
+        return 
+          ps.nrBeams() * ps.nrStations() * NR_POLARIZATIONS * sizeof(float);
+      case PHASE_OFFSETS:
+        return
+          ps.nrStations() * NR_POLARIZATIONS * sizeof(float);
+      case BAND_PASS_CORRECTION_WEIGHTS:
+        return
+          ps.nrChannelsPerSubband() * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
 
   }
 }

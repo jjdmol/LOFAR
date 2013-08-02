@@ -39,8 +39,9 @@ TEST(Tracking) {
   Parset ps;
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
-  ps.add( "PIC.Core.STATION.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
-  ps.add( "OLAP.storageStationNames", "[STATION]" );
+  ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
+  ps.add( "Observation.VirtualInstrument.stationList", "[CS001]" );
+  ps.add( "Observation.antennaSet", "LBA_INNER" );
 
   ps.add( "Observation.nrBeams", "1" );
   ps.add( "Observation.Beam[0].directionType", "J2000" );
@@ -77,10 +78,13 @@ TEST(TiedArrayBeam) {
   Parset ps;
 
   ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
-  ps.add( "PIC.Core.STATION.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
-  ps.add( "OLAP.storageStationNames", "[STATION]" );
+  ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
+  ps.add( "Observation.VirtualInstrument.stationList", "[CS001]" );
+  ps.add( "Observation.antennaSet", "LBA_INNER" );
 
   // Delays for SAP 0 and TAB 0 of SAP 1 should be equal
   ps.add( "Observation.nrBeams", "2" );
@@ -121,6 +125,8 @@ TEST(AllDelayIO) {
   Parset ps;
 
   ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
   ps.add( "Observation.nrBeams", "2" );
   ps.add( "Observation.Beam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[0].angle1", "1" );

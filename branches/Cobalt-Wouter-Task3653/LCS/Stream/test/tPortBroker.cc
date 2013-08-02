@@ -51,9 +51,13 @@ void start()
       // found a valid port
       LOG_DEBUG_STR( "using TCP port " << PORT );
       break;
-    } catch( SocketStream::BindException& ) {
-      // port is in use -- try the next one
-      continue;
+    } catch ( SystemCallException& exc ) {
+      if (exc.syscall() == "bind" || exc.syscall() == "listen") {
+        // port is in use -- try the next one
+        continue;
+      }
+ 
+      throw;
     }
   }
 

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1010 600 N "_3DFace" 0
+PANEL,-1 -1 975 7500 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -81,8 +81,24 @@ void reload() {
 void addInputBuffers() {
 
   // get all the InputBuffers used by this observation
-  inputBuffers = navFunct_getInputBuffersForObservation(observationName);  
+  dyn_string ib = navFunct_getInputBuffersForObservation(observationName);  
 
+  // we need to sort those on station, makes more sense, so we put all in a dyn-dyn and sort that
+  dyn_dyn_string stationInfo;
+  dyn_string stations;
+  for (int i = 1; i <= dynlen(ib); i++) {
+    string station;
+    dpGet(ib[i]+\".stationName\",station);
+    dynAppend(stations,station);
+  }
+  
+  stationInfo[1]=ib;
+  stationInfo[2]=stations;
+
+  //below doesn't seem to work, question is in Austria now.  it might be a bug.  
+  dynDynSort(stationInfo,2);
+  inputBuffers=stationInfo[1];
+  
 }" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1

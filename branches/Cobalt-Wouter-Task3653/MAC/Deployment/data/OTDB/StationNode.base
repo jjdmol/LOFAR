@@ -15,7 +15,3 @@ par  nrHBAntennas      I    int    -      10    0    0                          
 par  stsPosition       I    text   -      10    0    '[0,0,0]'                                   -        'Station position in longitude, latitude and heigth'
 par  RSPMacAddresses   I    vtext   -      10    0    '["00:30:00:00:00:00", "00:30:00:00:00:00"]'  -        'MAC addresses of the RSPBoards'     
 par  inputNodeList     I    vtext   -      10    0    '["lii001","lii001","lii002","lii003"]'		   -        'Inputnodes connected to the RSPBoards'
-
-#      name          vers   qual        constr.            descr.
-#--------------------------------------------------------------------------------------------------------
-#uses   ControlSW     4.0.0  development 1                  "Control Software for this Station"

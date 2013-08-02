@@ -66,12 +66,13 @@ int main( int, char **argv )
     outputStreams[0] = createStream(desc, false);
   }
 
-  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct StationID stationID("RS106", "LBA");
   struct BufferSettings settings(stationID, false);
+  struct BoardMode mode(16, 200);
 
-  const TimeStamp from(time(0), 0, stationID.clockMHz * 1000000);
+  const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
-  PacketFactory factory(settings);
+  PacketFactory factory(mode);
   Generator g(settings, outputStreams, factory, from, to);
 
   bool error = false;
@@ -100,7 +101,7 @@ int main( int, char **argv )
         for(size_t nr = 0; nr < NUMPACKETS; ++nr) {
           struct RSP packet;
 
-          if (!reader.readPacket(packet, settings)) {
+          if (!reader.readPacket(packet)) {
             reader.logStatistics();
 
             ASSERT(false);

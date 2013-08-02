@@ -79,4 +79,13 @@ inline __device__ float4& operator /= (float4 &a, float4 b)
   return a;
 }
 
+inline __device__ float2 operator * (float2 a, float b)
+{
+  return make_float2(a.x * b, a.y);
+}
+
+inline __device__ float2 operator * (float a, float2 b)
+{
+  return make_float2(b.x * a, b.y);
+}
 #endif

@@ -20,21 +20,38 @@
 
 #include <lofar_config.h>
 
-#include "Kernel.h"
+#include <ostream>
+#include <boost/format.hpp>
+
+#include <GPUProc/global_defines.h>
+#include <GPUProc/Kernels/Kernel.h>
+
+using namespace std;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Kernel(const Parset &ps, gpu::Module& module, const string &name)
-      :
-      gpu::Function(module, name),
-      event(module.getContext()),
-      ps(ps)
+    Kernel::Parameters::Parameters(const Parset& ps) :
+      nrStations(ps.nrStations()),
+      nrChannelsPerSubband(ps.nrChannelsPerSubband()),
+      nrSamplesPerChannel(ps.nrSamplesPerChannel()),
+      nrSamplesPerSubband(ps.nrSamplesPerSubband()),
+      nrPolarizations(NR_POLARIZATIONS)
     {
     }
 
-    void Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
+    Kernel::Kernel(const gpu::Stream& stream, 
+                   const gpu::Function& function)
+      : 
+      gpu::Function(function),
+      event(stream.getContext()),
+      itsStream(stream)
+    {
+    }
+
+    void Kernel::enqueue(const gpu::Stream &queue
+                         /*, PerformanceCounter &counter*/) const
     {
       // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.
       //if (globalWorkSize.x == 0)
@@ -53,6 +70,10 @@ namespace LOFAR
 //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
+    void Kernel::enqueue() const
+    {
+      enqueue(itsStream);
+    }
   }
 }
 

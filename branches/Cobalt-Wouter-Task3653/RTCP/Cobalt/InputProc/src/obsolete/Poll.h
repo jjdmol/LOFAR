@@ -51,7 +51,7 @@ Poll::Poll()
   fd = epoll_create1(EPOLL_CLOEXEC);
 
   if( fd == -1 )
-    throw SystemCallException("epoll_create1", errno, THROW_ARGS);
+    THROW_SYSCALL("epoll_create1");
 }
 
 void Poll::add( FileDescriptorBasedStream *s, bool reading, bool writing )
@@ -63,7 +63,7 @@ void Poll::add( FileDescriptorBasedStream *s, bool reading, bool writing )
   ev.data.ptr = s;
 
   if (epoll_ctl(fd, EPOLL_CTL_ADD, s->fd, &ev) == -1)
-    throw SystemCallException("epoll_ctl", errno, THROW_ARGS);
+    THROW_SYSCALL("epoll_ctl");
 }
 
 void Poll::remove( FileDescriptorBasedStream *s )
@@ -73,7 +73,7 @@ void Poll::remove( FileDescriptorBasedStream *s )
   struct epoll_event ev;
 
   if (epoll_ctl(fd, EPOLL_CTL_DEL, s->fd, &ev) == -1)
-    throw SystemCallException("epoll_ctl", errno, THROW_ARGS);
+    THROW_SYSCALL("epoll_ctl");
 }
 
 std::vector<FileDescriptorBasedStream *> Poll::poll( int timeout_ms, size_t maxevents )
@@ -87,7 +87,7 @@ std::vector<FileDescriptorBasedStream *> Poll::poll( int timeout_ms, size_t maxe
   nfds = epoll_wait(fd, &events[0], events.size(), timeout_ms );
 
   if (nfds == -1)
-    throw SystemCallException("epoll_wait", errno, THROW_ARGS);
+    THROW_SYSCALL("epoll_wait");
 
   std::vector<FileDescriptorBasedStream *> result(nfds, 0);
 

@@ -6,8 +6,6 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_definitions("-DLOFARROOT=${CMAKE_CURRENT_SOURCE_DIR}/..")
-
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/runrtcp.sh.in"
   "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"  # internal, no need to install
@@ -17,19 +15,38 @@ configure_file(
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 
-# DummyStorage is started by tStorageProcesses to emulate an OutputProc process
-lofar_add_executable(DummyStorage DummyStorage.cc)
-lofar_add_test(tStorageProcesses tStorageProcesses.cc DEPENDS DummyStorage)
-
-if(UNITTEST++_FOUND)
-  lofar_add_test(tCorrelatorWorkQueue tCorrelatorWorkQueue.cc)
-endif()
-
 # tests that use testParset.sh
+
+# fail on all system skip for now
+#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
+
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
+set_tests_properties(
+  tCorrelate_1sec_1st_5sb_noflagging
+  tCorrelate_3sec_1st_5sb
+  tCorrelate_3sec_2st_5sb
+  PROPERTIES RUN_SERIAL ON
+)
+
+if(MPI_FOUND)
+  lofar_add_test(t_cpu_utils t_cpu_utils.cc)
+  set_tests_properties(
+    t_cpu_utils
+    PROPERTIES RUN_SERIAL ON
+  )
+endif()
+
+if(UNITTEST++_FOUND)
+  lofar_add_test(t_gpu_utils t_gpu_utils)
+endif()
+
+add_subdirectory(Kernels)
+add_subdirectory(Pipelines)
+add_subdirectory(Storage)
+add_subdirectory(SubbandProcs)
 
 if(USE_CUDA)
   add_subdirectory(cuda)

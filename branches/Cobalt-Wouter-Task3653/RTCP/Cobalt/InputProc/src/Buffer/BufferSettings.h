@@ -47,6 +47,8 @@ namespace LOFAR
       }
 
     public:
+      static const unsigned MAX_NR_RSP_BOARDS = 4;
+
       typedef uint64 range_type;
       typedef SparseSet<range_type> flags_type;
 
@@ -56,9 +58,7 @@ namespace LOFAR
       bool sync;
       SyncLock *syncLock;
 
-      unsigned nrBeamletsPerBoard;
-
-      size_t nrSamples;
+      size_t nrSamples_16bit;
 
       unsigned nrBoards;
       size_t nrAvailableRanges;
@@ -69,26 +69,29 @@ namespace LOFAR
 
       // if attach=true, read settings from shared memory, using the given stationID
       // if attach=false, set sane default values
-      BufferSettings(const struct StationID &station, bool attach);
+      BufferSettings(const struct StationID &station, bool attach, time_t timeout = 60);
 
       // Shortcut to set nrSamples to represent `seconds' of buffer.
       void setBufferSize(double seconds);
-
-      size_t boardIndex(unsigned beamlet) const
-      {
-        return beamlet / nrBeamletsPerBoard;
-      }
 
       bool operator==(const struct BufferSettings &other) const
       {
         return station == other.station
                && sync == other.sync
-               && nrBeamletsPerBoard == other.nrBeamletsPerBoard
-               && nrSamples == other.nrSamples
+               && nrSamples_16bit == other.nrSamples_16bit
                && nrBoards == other.nrBoards
                && nrAvailableRanges == other.nrAvailableRanges
                && dataKey == other.dataKey;
       }
+
+      size_t nrSamples(unsigned bitMode) const {
+        (void)bitMode;
+
+        // The number of samples is invariant to the bitmode, because
+        // smaller bitmodes introduce more beamlets.
+        return nrSamples_16bit;
+      }
+
     private:
 
       // Derive sane values from the station field.

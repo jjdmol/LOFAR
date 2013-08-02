@@ -1004,7 +1004,7 @@ class SolverQuery:
     # The slice is defined by a startIdx and an endIdx
     # default return value is the whole list
     #
-    # startIdx         - start index to take slice (default=0), this can also be a time stamp of type flaot
+    # startIdx         - start index to take slice (default=0), this can also be a time stamp of type float
     # endIdx           - end index to take slice (default='end'), this can also be a time stamp of type float
     #
     def getMidTimes(self, startIdx=0, endIdx="end"):

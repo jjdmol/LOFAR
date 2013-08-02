@@ -36,9 +36,8 @@
 
 #include "Interface/Parset.h"
 #include <GPUProc/FilterBank.h>
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/gpu_wrapper.h>
 
@@ -104,7 +103,7 @@ int main() {
 
 #define NR_POLARIZATIONS 2
 
-  WorkQueueInputData::DeviceBuffers devInput(ps.nrBeams(),
+  SubbandProcInputData::DeviceBuffers devInput(ps.nrBeams(),
     ps.nrStations(),
     NR_POLARIZATIONS,
     ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
@@ -135,7 +134,7 @@ int main() {
  
   std::vector<gpu::Device> devices(1,device);
   flags_type flags(defaultFlags());
-  definitions_type definitions(defaultDefinitions(ps));
+  CompileDefinitions definitions(Kernel::compileDefinitions(ps));
   string ptx(createPTX(devices, "FIR_Filter.cu", flags, definitions));
   gpu::Module program =  createModule(ctx, "FIR_Filter.cu", ptx);
 

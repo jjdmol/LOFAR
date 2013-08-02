@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 #include <CoInterface/SubbandMetaData.h>
 
 namespace LOFAR

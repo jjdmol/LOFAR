@@ -28,39 +28,33 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
-#include <map>
 #include <vector>
 #include <string>
 #include <omp.h>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
-#include <InputProc/Transpose/MPISendStation.h>
-#else
-#include <GPUProc/DirectInput.h>
 #endif
 
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/BufferSettings.h>
-#include <InputProc/Buffer/BlockReader.h>
-#include <InputProc/Station/PacketsToBuffer.h>
-#include <InputProc/Station/PacketFactory.h>
-#include <InputProc/Station/PacketStream.h>
-#include <InputProc/Delays/Delays.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
+#include <GPUProc/Station/StationInput.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
+
+#include <GPUProc/cpu_utils.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -69,266 +63,34 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "usage: " << argv[0] << " parset" << " [-t correlator|beam|UHEP] [-p]" << endl;
+  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
-  cerr << "  -t: select pipeline type" << endl;
   cerr << "  -p: enable profiling" << endl;
 }
 
-// Rank in MPI set of hosts, or 0 if no MPI is used
-int rank = 0;
-
-// Number of MPI hosts, or 1 if no MPI is used
-int nrHosts = 1;
-
-// Which MPI rank receives which subbands.
-map<int, vector<size_t> > subbandDistribution; // rank -> [subbands]
-
-// An MPI send process, sending data for one station.
-template<typename SampleT> void sender(const Parset &ps, size_t stationIdx)
+void runPipeline(const Parset &ps, const vector<size_t> subbands, const vector<gpu::Device> &devices)
 {
-  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+  bool correlatorEnabled = ps.settings.correlator.enabled;
+  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
 
-  /*
-   * Construct our stationID.
-   */
-
-  // fetch station name (e.g. CS001HBA0)
-  const string fullFieldName = ps.settings.stations[stationIdx].name;
-
-  // split into station name and antenna field name
-  const string stationName = fullFieldName.substr(0,5); // CS001
-  const string fieldName   = fullFieldName.substr(5);   // HBA0
-
-  struct StationID stationID(stationName, fieldName, ps.settings.clockMHz, ps.settings.nrBitsPerSample);
-
-  /*
-   * For now, we run the circular buffer
-   */
-  struct BufferSettings settings(stationID, false);
-  settings.setBufferSize(2.0);
-
-  // Remove lingering buffers
-  removeSampleBuffers(settings);
-
-  // fetch input streams
-  vector<string> inputStreamDescs = ps.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % fullFieldName), true);
-  vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
-
-  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
-    const string desc = inputStreamDescs[board];
-
-    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
-
-    if (desc == "factory:") {
-      PacketFactory factory(settings);
-      inputStreams[board] = new PacketStream(factory, from, to, board);
-    } else {
-      inputStreams[board] = createStream(desc, true);
-    }
+  if (correlatorEnabled && beamFormerEnabled) {
+    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    exit(1);
   }
 
-  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << fullFieldName);
-  settings.nrBoards = inputStreams.size();
-
-  // Force buffer reader/writer syncing if observation is non-real time
-  SyncLock syncLock(settings);
-  if (!ps.realTime()) {
-    settings.sync = true;
-    settings.syncLock = &syncLock;
-  }
-
-  // Set up the circular buffer
-  MultiPacketsToBuffer station(settings, inputStreams);
-
-  /*
-   * Stream the data.
-   */
-  #pragma omp parallel sections
-  {
-    // Start a circular buffer
-    #pragma omp section
-    { 
-      LOG_INFO_STR("Starting circular buffer");
-      station.process();
-    }
-
-    // Send data to receivers
-    #pragma omp section
-    {
-      // Fetch buffer settings from SHM.
-      struct BufferSettings s(stationID, true);
-
-      LOG_INFO_STR("Detected " << s);
-      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-
-      /*
-       * Set up circular buffer data reader.
-       */
-      vector<size_t> beamlets(ps.nrSubbands());
-      for( size_t i = 0; i < beamlets.size(); ++i) {
-        // Determine the beamlet number of subband i for THIS station
-        unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
-        unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
-
-        unsigned beamlet = board * s.nrBeamletsPerBoard + slot;
-
-        beamlets[i] = beamlet;
-      }
-
-      BlockReader<SampleT> reader(s, beamlets, ps.nrHistorySamples(), 0.25);
-
-#ifdef HAVE_MPI
-      /*
-       * Set up the MPI send engine.
-       */
-      MPISendStation sender(s, rank, subbandDistribution);
-#endif
-
-      /*
-       * Set up delay compensation.
-       */
-      Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
-      delays.start();
-
-      // We keep track of the delays at the beginning and end of each block.
-      // After each block, we'll swap the afterEnd delays into atBegin.
-      Delays::AllDelays delaySet1(ps), delaySet2(ps);
-      Delays::AllDelays *delaysAtBegin  = &delaySet1;
-      Delays::AllDelays *delaysAfterEnd = &delaySet2;
-
-      // Get delays at begin of first block
-      delays.getNextDelays(*delaysAtBegin);
-
-      /*
-       * Transfer all blocks.
-       */
-      LOG_INFO_STR("Sending to receivers");
-
-      vector<SubbandMetaData> metaDatas(ps.nrSubbands());
-      vector<ssize_t> read_offsets(ps.nrSubbands());
-
-      for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
-        // Fetch end delays (start delays are set by the previous block, or
-        // before the loop).
-        delays.getNextDelays(*delaysAfterEnd);
-
-        // Compute the next set of metaData and read_offsets from the new
-        // delays pair.
-        delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, metaDatas, read_offsets);
-
-        //LOG_DEBUG_STR("Delays obtained");
-
-        // Read the next block from the circular buffer.
-        SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
-
-        //LOG_INFO_STR("Block read");
-
-#ifdef HAVE_MPI
-        // Send the block to the receivers
-        sender.sendBlock<SampleT>(*block, metaDatas);
-#else
-        // Send the block to the stationDataQueues global object
-        for (size_t subband = 0; subband < block->beamlets.size(); ++subband) {
-          const struct Block<SampleT>::Beamlet &beamlet = block->beamlets[subband];
-
-          /* create new block */
-          SmartPtr<struct InputBlock> pblock = new InputBlock;
-
-          pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(SampleT));
-
-          /* copy metadata */
-          pblock->metaData = metaDatas[subband];
-
-          /* copy data */
-          beamlet.copy(reinterpret_cast<SampleT*>(&pblock->samples[0]));
-
-          /* obtain flags (after reading the data!) */
-          pblock->metaData.flags = beamlet.flagsAtBegin | block->flags(subband);
-
-          /* send to pipeline */
-          stationDataQueues[stationIdx][subband]->append(pblock);
-        }
-#endif
-
-        //LOG_INFO_STR("Block sent");
-
-        // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
-        swap(delaysAtBegin, delaysAfterEnd);
-      }
-
-      /*
-       * The end.
-       */
-      station.stop();
-    }
-  }
-}
-
-void sender(const Parset &ps, size_t stationIdx)
-{
-  switch (ps.nrBitsPerSample()) {
-    default:
-    case 16: 
-      sender< SampleType<i16complex> >(ps, stationIdx);
-      break;
-
-    case 8: 
-      sender< SampleType<i8complex> >(ps, stationIdx);
-      break;
-
-    case 4: 
-      sender< SampleType<i4complex> >(ps, stationIdx);
-      break;
-  }
-}
-
-enum SELECTPIPELINE { correlator, beam, UHEP,unittest};
-
-// Converts the input argument from string to a valid 'function' name
-SELECTPIPELINE to_select_pipeline(char *argument)
-{
-  if (!strcmp(argument,"correlator"))
-    return correlator;
-
-  if (!strcmp(argument,"beam"))
-    return beam;
-
-  if (!strcmp(argument,"UHEP"))
-    return UHEP;
-
-  cout << "incorrect third argument supplied." << endl;
-  exit(1);
-}
-
-void runPipeline(SELECTPIPELINE pipeline, const Parset &ps, const vector<size_t> subbands)
-{
   LOG_INFO_STR("Processing subbands " << subbands);
 
-  // use a switch to select between modes
-  switch (pipeline)
-  {
-  case correlator:
+  if (correlatorEnabled) {
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands).doWork();
-    break;
-
-  case beam:
+    CorrelatorPipeline(ps, subbands, devices).processObservation(CORRELATED_DATA);
+  } else if (beamFormerEnabled) {
     LOG_INFO_STR("BeamFormer pipeline selected");
-    //BeamFormerPipeline(ps).doWork();
-    break;
-
-  case UHEP:
-    LOG_INFO_STR("UHEP pipeline selected");
-    //UHEP_Pipeline(ps).doWork();
-    break;
-
-  default:
-    LOG_WARN_STR("No pipeline selected, do nothing");
-    break;
+    BeamFormerPipeline(ps, subbands, devices).processObservation(BEAM_FORMED_DATA);
+  } else {
+    LOG_FATAL_STR("No pipeline selected, do nothing");
   }
 }
+
 
 int main(int argc, char **argv)
 {
@@ -344,8 +106,6 @@ int main(int argc, char **argv)
   // Allow OpenMP thread registration
   OMPThread::init();
 
-  using namespace LOFAR::Cobalt;
-
   // Set parts of the environment
   if (setenv("DISPLAY", ":0", 1) < 0)
   {
@@ -353,11 +113,17 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  // Rank in MPI set of hosts, or 0 if no MPI is used
+  int rank = 0;
+
+  // Number of MPI hosts, or 1 if no MPI is used
+  int nrHosts = 1;
+
 #ifdef HAVE_MPI
   // Initialise and query MPI
-  int mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init failed" << endl;
+  int provided_mpi_thread_support;
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init_thread failed" << endl;
     exit(1);
   }
 
@@ -366,27 +132,22 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef HAVE_LOG4CPLUS
-  INIT_LOGGER(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER("rtcp");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+
 #else
   LOG_WARN_STR("Running without MPI!");
 #endif
 
-  SELECTPIPELINE option = correlator;
-  int opt;
-
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "t:p")) != -1) {
+  int opt;
+  while ((opt = getopt(argc, argv, "p")) != -1) {
     switch (opt) {
-    case 't':
-      option = to_select_pipeline(optarg);
-      break;
-
     case 'p':
       profiling = true;
       break;
@@ -410,6 +171,21 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
+  ASSERT(rank >= 0 && (size_t)rank < ps.settings.nodes.size());
+
+  // set the processor affinity before any threads are created
+  int cpuId = ps.settings.nodes[rank].cpu;
+  setProcessorAffinity(cpuId);
+
+  // derive the set of gpus we're allowed to use
+  gpu::Platform platform;
+  vector<gpu::Device> allDevices(platform.devices());
+  vector<gpu::Device> devices;
+  const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
+  for (size_t i = 0; i < gpuIds.size(); ++i)
+    devices.push_back(allDevices[i]);
+
+  // From here threads are produced
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
@@ -417,52 +193,19 @@ int main(int argc, char **argv)
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-  // Distribute the subbands over the receivers
-#ifdef HAVE_MPI
-  size_t nrReceivers = nrHosts - ps.nrStations();
-  size_t firstReceiver = ps.nrStations();
-#else
-  size_t nrReceivers = 1;
-  size_t firstReceiver = 0;
-#endif
+  // Distribute the subbands over the MPI ranks
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
 
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = firstReceiver + subband % nrReceivers;
+    int receiverRank = subband % nrHosts;
 
     subbandDistribution[receiverRank].push_back(subband);
   }
 
-#ifdef HAVE_MPI
-  // This is currently the only supported case
-  ASSERT(nrHosts >= (int)ps.nrStations() + 1);
-
-  // Decide course to take based on rank.
-  if (rank < (int)ps.nrStations()) {
-    ASSERTSTR(subbandDistribution.find(rank) == subbandDistribution.end(), "An MPI rank can't both send station data and receive it.");
-
-    /*
-     * Send station data for station #rank
-     */
-    sender(ps, rank);
-  } else if (subbandDistribution.find(rank) != subbandDistribution.end()) {
-    /*
-     * Receive and process station data
-     */
-    runPipeline(option, ps, subbandDistribution[rank]);
-  } else {
-    LOG_WARN_STR("Superfluous MPI rank");
-  }
-#else
-  // No MPI -- run the same stuff, but multithreaded
-
-  // Create queues to forward station data
-  stationDataQueues.resize(boost::extents[ps.nrStations()][ps.nrSubbands()]);
-
-  for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-    for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
-      stationDataQueues[stat][sb] = new BestEffortQueue< SmartPtr<struct InputBlock> >(1, ps.realTime());
-    }
-  }
+#ifndef HAVE_MPI
+  // Create the DirectInput instance
+  DirectInput::instance(&ps);
+#endif
 
   #pragma omp parallel sections
   {
@@ -471,17 +214,18 @@ int main(int argc, char **argv)
       // Read and forward station data
       #pragma omp parallel for num_threads(ps.nrStations())
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        sender(ps, stat);
+        sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
     #pragma omp section
     {
       // Process station data
-      runPipeline(option, ps, subbandDistribution[rank]);
+      if (!subbandDistribution[rank].empty()) {
+        runPipeline(ps, subbandDistribution[rank], devices);
+      }
     }
   }
-#endif
 
   /*
    * COMPLETING stage
@@ -489,12 +233,40 @@ int main(int argc, char **argv)
   if (storageProcesses) {
     time_t completing_start = time(0);
 
+    LOG_INFO("Retrieving and forwarding final meta data");
+
     // retrieve and forward final meta data
     // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
     storageProcesses->forwardFinalMetaData(completing_start + 2);
 
+    LOG_INFO("Stopping Storage processes");
+
     // graceful exit
     storageProcesses->stop(completing_start + 10);
+
+    LOG_INFO("Writing LTA feedback to disk");
+
+    // obtain LTA feedback
+    Parset feedbackLTA;
+    feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
+
+    // augment LTA feedback with global information
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+
+    // write LTA feedback to disk
+    const char *LOFARROOT = getenv("LOFARROOT");
+    if (LOFARROOT != NULL) {
+      string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+
+      try {
+        feedbackLTA.writeFile(feedbackFilename, false);
+      } catch (APSException &ex) {
+        LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
+      }
+    } else {
+      LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
+    }
   }
 
   LOG_INFO_STR("Done");

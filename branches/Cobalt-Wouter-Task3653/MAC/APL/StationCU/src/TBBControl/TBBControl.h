@@ -106,7 +106,7 @@ public:
     StopRequest();
     ~StopRequest(){};
     RCUset_t rcuSet;
-    RTC::NsTimestamp stopTime;
+    NsTimestamp stopTime;
 private:
 };
 
@@ -116,9 +116,9 @@ public:
     ReadRequest();
     ~ReadRequest(){};
     int    rcuNr;
-    RTC::NsTimestamp readTime;
-    RTC::NsTimestamp timeBefore;
-    RTC::NsTimestamp timeAfter;
+    NsTimestamp readTime;
+    NsTimestamp timeBefore;
+    NsTimestamp timeAfter;
     int    cepDelay;
     int    cepDatapaths;
     bool   readActive;

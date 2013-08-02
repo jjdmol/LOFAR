@@ -22,11 +22,13 @@
 #define LOFAR_GPUPROC_CUDA_KERNEL_H
 
 #include <string>
+#include <iosfwd>
 #include <cuda.h>
 
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/gpu_utils.h>
 //#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -36,13 +38,45 @@ namespace LOFAR
     class Kernel : public gpu::Function
     {
     public:
-      Kernel(const Parset &ps, gpu::Module& module, const std::string &name);
+      // Parameters that must be passed to the constructor of this Kernel class.
+      struct Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrStations;
+        size_t nrChannelsPerSubband;
+        size_t nrSamplesPerChannel;
+        size_t nrSamplesPerSubband;
+        size_t nrPolarizations;
+      };
 
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      // Buffers that must be passed to the constructor of this Kernel class.
+      struct Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out) :
+          input(in), output(out)
+        {}
+        gpu::DeviceMemory input;
+        gpu::DeviceMemory output;
+      };
+
+      void enqueue(const gpu::Stream &queue
+                   /*, PerformanceCounter &counter*/) const;
+
+      void enqueue() const;
 
     protected:
+      // Construct a kernel.
+      Kernel(const gpu::Stream& stream, const gpu::Function& function);
+
       gpu::Event event;
-      const Parset &ps;
+      gpu::Stream itsStream;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

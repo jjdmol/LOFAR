@@ -190,7 +190,12 @@ SUITE(Memory) {
 
 int main(int, char **) {
   INIT_LOGGER("tGPUWrapper");
-
-  return UnitTest::RunAllTests() != 0;
+  try {
+    Platform pf;
+    return UnitTest::RunAllTests() > 0;
+  } catch (GPUException& e) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 0;
+  }
 }
 

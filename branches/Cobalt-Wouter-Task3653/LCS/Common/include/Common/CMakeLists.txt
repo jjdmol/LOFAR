@@ -57,6 +57,7 @@ install(FILES
   lofar_vector.h
   Mmap.h
   Numeric.h
+  NsTimestamp.h
   ObjectFactory.h
   OpenMP.h
   ParameterRecord.h

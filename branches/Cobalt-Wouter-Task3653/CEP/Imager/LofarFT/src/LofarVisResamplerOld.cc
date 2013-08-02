@@ -34,13 +34,13 @@ namespace LOFAR {
                                            const Vector<uInt>& rows,
                                            Int rbeg, Int rend,
 					Matrix<Double>& sumwt,const Bool& dopsf,
-					LofarCFStore& cfs) __restrict__;
+					LofarCFStore& cfs);
   template
   void LofarVisResamplerOld::DataToGridImpl_p(Array<Complex>& grid, LofarVBStore& vbs,
                                            const Vector<uInt>& rows,
                                            Int rbeg, Int rend,
 					Matrix<Double>& sumwt,const Bool& dopsf,
-					LofarCFStore& cfs) __restrict__;
+					LofarCFStore& cfs);
 
 
   template <class T>
@@ -49,7 +49,7 @@ namespace LOFAR {
                                            Int rbeg, Int rend,
                                            Matrix<Double>& sumwt,
                                            const Bool& dopsf,
-                                           LofarCFStore& cfs) __restrict__
+                                           LofarCFStore& cfs)
   {
     // grid[nx,ny,np,nf]
     // vbs.data[np,nf,nrow]
@@ -705,13 +705,11 @@ namespace LOFAR {
   void LofarVisResamplerOld::sgrid(Vector<Double>& pos, Vector<Int>& loc,
 			     Vector<Int>& off, Complex& phasor,
 			     const Int& irow, const Matrix<Double>& uvw,
-			     const Double& dphase, const Double& freq,
+			     const Double&, const Double& freq,
 			     const Vector<Double>& scale,
 			     const Vector<Double>& offset,
 			     const Vector<Float>& sampling)
   {
-    (void)dphase;
-
     //Double phase;
     Vector<Double> uvw_l(3,0); // This allows gridding of weights
 			       // centered on the uv-origin

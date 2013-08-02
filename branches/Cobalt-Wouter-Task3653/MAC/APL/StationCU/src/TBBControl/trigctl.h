@@ -26,13 +26,13 @@
 #define _TRIGCTL_H_
 
 #include <APL/CR_Protocol/CR_Protocol.ph>
-#include <APL/RTCCommon/NsTimestamp.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/GCF_RTDBPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
+#include <Common/NsTimestamp.h>
 #include <cstdio>
 
 
@@ -116,9 +116,9 @@ public:
     virtual ~StopCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
-    void setStopTime(RTC::NsTimestamp time) { itsStopTime = time; }
+    void setStopTime(NsTimestamp time) { itsStopTime = time; }
 private:
-    RTC::NsTimestamp itsStopTime;
+    NsTimestamp itsStopTime;
 };
 
 //-----------------------------------------------------------------------------
@@ -129,13 +129,13 @@ public:
     virtual ~ReadCmd() { }
     virtual void send();
     virtual GCFEvent::TResult ack(GCFEvent& e);
-    void setTime(RTC::NsTimestamp time) { itsReadTime = time; }
-    void setTimeBefore(RTC::NsTimestamp time) { itsTimeBefore = time; }
-    void setTimeAfter(RTC::NsTimestamp time) { itsTimeAfter = time; }
+    void setTime(NsTimestamp time) { itsReadTime = time; }
+    void setTimeBefore(NsTimestamp time) { itsTimeBefore = time; }
+    void setTimeAfter(NsTimestamp time) { itsTimeAfter = time; }
 private:
-    RTC::NsTimestamp itsReadTime;
-    RTC::NsTimestamp itsTimeBefore;
-    RTC::NsTimestamp itsTimeAfter;
+    NsTimestamp itsReadTime;
+    NsTimestamp itsTimeBefore;
+    NsTimestamp itsTimeAfter;
 };
 
 //-----------------------------------------------------------------------------
