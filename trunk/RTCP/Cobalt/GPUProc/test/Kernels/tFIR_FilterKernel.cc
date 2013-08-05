@@ -39,6 +39,7 @@ TEST(FIR_FilterKernel)
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
   ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
 
   KernelFactory<FIR_FilterKernel> factory(ps);
@@ -102,3 +103,4 @@ int main()
   }
 
 }
+

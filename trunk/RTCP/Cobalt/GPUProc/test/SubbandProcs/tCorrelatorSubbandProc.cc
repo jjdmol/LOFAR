@@ -37,12 +37,18 @@ TEST(propagateFlags)
 {
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","4"); //not to large a number of subbands, else the integration steps gets big
-  parset.add("OLAP.IONProc.integrationSteps", "1");  
-  parset.add("OLAP.CNProc.integrationSteps", "1024");   //samples per channel 
+
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband","4");
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
+  parset.add("Cobalt.blockSize", "4096");
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS102, RS103, RS104, RS105]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
+
   parset.updateSettings();
   unsigned number_of_baselines = (parset.nrStations() * 1.0 * (parset.nrStations() + 1)) / 2;
 
@@ -140,12 +146,18 @@ TEST(calcWeights4Channels)
 {
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","4"); 
-  parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
-  parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
+
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband","4");
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
+  parset.add("Cobalt.blockSize", "1024");
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
+
   parset.updateSettings();
 
   // Input flags: an array of sparseset
@@ -181,12 +193,18 @@ TEST(calcWeights1Channels)
   // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","1"); 
-  parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
-  parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
+
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband","1");
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
+  parset.add("Cobalt.blockSize", "256");
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
+
   parset.updateSettings();
   // Input flags: an array of sparseset
   MultiDimArray<LOFAR::SparseSet<unsigned>, 2> flagsPerChanel(
@@ -215,12 +233,17 @@ TEST(applyWeights)
 {
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","4"); 
-  parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
-  parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
+
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband","4");
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
+  parset.add("Cobalt.blockSize", "1024");
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
   parset.updateSettings();
   // Create correlated data object
   CorrelatedData output(parset.nrStations(), 
@@ -265,14 +288,22 @@ TEST(applyWeight)
     // on channel so the zero channel should be filled with the flags!!
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Observation.channelsPerSubband","1"); 
-  parset.add("OLAP.IONProc.integrationSteps", "1");  // both are needed?
-  parset.add("OLAP.CNProc.integrationSteps", "256");   // both are needed? Is there a check in the parset that assures equality?
+
+
+  parset.add("Cobalt.Correlator.nrChannelsPerSubband","4");
+  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
+  parset.add("Cobalt.blockSize", "1024");
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+
+  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
+  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
+
   parset.updateSettings();
-   // Output object
+
+  // Output object
   CorrelatedData output(parset.nrStations(), 
                         parset.nrChannelsPerSubband(), 
                         parset.integrationSteps());
