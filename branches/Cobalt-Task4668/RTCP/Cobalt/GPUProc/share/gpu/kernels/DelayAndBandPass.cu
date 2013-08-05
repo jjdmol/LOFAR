@@ -87,8 +87,9 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 
 // Keep it simple. We had complex<T> defined, but we need operator overloads,
-// so we cannot make it a POD type. Then we get redundant member inits in the
+// so we cannot make it a POD type. Then we got redundant member inits in the
 // constructor, causing races when declaring variables in shared memory.
+// Now, avoid complex<T> and just work with cmul() and a few extra lines.
 __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
 {
   return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
@@ -169,7 +170,7 @@ extern "C" {
 
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
-  float pi2 = -2.0f * 3.1415926535f;
+  const float pi2 = -6.28318530717958647688f; // -2.0f * M_PI_F
   float2 phiBegin = make_float2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
   float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
