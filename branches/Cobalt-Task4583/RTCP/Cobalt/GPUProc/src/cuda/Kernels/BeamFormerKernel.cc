@@ -36,7 +36,6 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.nrTABs(0)),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
