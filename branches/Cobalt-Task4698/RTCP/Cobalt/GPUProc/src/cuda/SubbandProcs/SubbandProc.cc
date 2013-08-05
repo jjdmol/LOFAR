@@ -123,6 +123,7 @@ namespace LOFAR
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 
+      ASSERT(n != 0);
       ASSERT(powerOfTwo(n));
 
       unsigned log;
