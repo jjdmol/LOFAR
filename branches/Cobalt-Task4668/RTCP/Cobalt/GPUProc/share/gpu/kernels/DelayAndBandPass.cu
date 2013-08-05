@@ -39,12 +39,13 @@
  *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
  * - if @c NR_CHANNELS > 1 (input data is in floating point format):
  *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
+ * - @c NR_SAPS: > 0
  * - @c NR_POLARIZATIONS: 2
- * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
+ * - @c SUBBAND_BANDWIDTH: a multiple of @c NR_CHANNELS
  *
- * - @c DELAY_COMPENSATION: do delay compensation
- * - @c BANDPASS_CORRECTION: correct the bandpass
- * - @c DO_TRANSPOSE: transpose the data. The pol dim moves to the stride 1 dim.
+ * - @c DELAY_COMPENSATION: defined or not
+ * - @c BANDPASS_CORRECTION: defined or not
+ * - @c DO_TRANSPOSE: defined or not
  */
 
 #include "IntToFloat.cuh"
