@@ -602,49 +602,45 @@ SUITE(correlator) {
   TEST(nrChannels) {
     // for now, nrChannels is also defined if the correlator is disabled
     TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband") {
-      TESTBOOL {
-        Parset ps;
+      Parset ps;
 
-        ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
-        ps.add(keystr, "256");
-        ps.updateSettings();
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add(keystr, "256");
+      ps.updateSettings();
 
-        CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
-        CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
-      }
+      CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+      CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
     }
   }
 
   TEST(channelWidth) {
-    // for now, channelWidth is also defined if the correlator is disabled
-    TESTBOOL {
-      // validate all powers of 2 in [1, 4096]
-      for (size_t nrChannels = 1; nrChannels <= 4096; nrChannels <<= 1) {
-        Parset ps;
+    // validate all powers of 2 in [1, 4096]
+    for (size_t nrChannels = 1; nrChannels <= 4096; nrChannels <<= 1) {
+      Parset ps;
 
-        ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
-        ps.add("Observation.channelsPerSubband", str(format("%u") % nrChannels));
-        ps.updateSettings();
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Observation.channelsPerSubband", str(format("%u") % nrChannels));
+      ps.updateSettings();
 
-        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
-        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
-      }
+      CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
+      CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
     }
   }
 
   TEST(nrSamplesPerChannel) {
-    TESTKEYS("Cobalt.Correlator.nrSamplesPerChannelPerBlock", "OLAP.CNProc.integrationSteps") {
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.nrChannelsPerSubband") {
       Parset ps;
       
       // set
       ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.add(keystr, "42");
+      ps.add("Cobalt.blockSize", "256");
+      ps.add(keystr, "64");
       ps.updateSettings();
 
       // verify settings
-      CHECK_EQUAL(42U, ps.settings.correlator.nrSamplesPerChannel);
-      CHECK_EQUAL(42U, ps.CNintegrationSteps());
-      CHECK_EQUAL(42U, ps.nrSamplesPerChannel());
+      CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerChannel);
+      CHECK_EQUAL(4U, ps.CNintegrationSteps());
+      CHECK_EQUAL(4U, ps.nrSamplesPerChannel());
     }
   }
 
