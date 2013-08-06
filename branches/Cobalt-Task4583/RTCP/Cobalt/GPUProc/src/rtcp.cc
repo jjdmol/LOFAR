@@ -171,19 +171,25 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
-  ASSERT(rank >= 0 && (size_t)rank < ps.settings.nodes.size());
-
-  // set the processor affinity before any threads are created
-  int cpuId = ps.settings.nodes[rank].cpu;
-  setProcessorAffinity(cpuId);
-
-  // derive the set of gpus we're allowed to use
   gpu::Platform platform;
   vector<gpu::Device> allDevices(platform.devices());
+
+  // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
-  const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-  for (size_t i = 0; i < gpuIds.size(); ++i)
-    devices.push_back(allDevices[i]);
+
+  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
+    // set the processor affinity before any threads are created
+    int cpuId = ps.settings.nodes[rank].cpu;
+    setProcessorAffinity(cpuId);
+
+    // derive the set of gpus we're allowed to use
+    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
+    for (size_t i = 0; i < gpuIds.size(); ++i)
+      devices.push_back(allDevices[i]);
+  } else {
+    LOG_WARN_STR("Rank " << rank << " not present in node list -- using all GPUs");
+    devices = allDevices;
+  }
 
   // From here threads are produced
   // Only ONE host should start the Storage processes
