@@ -113,7 +113,7 @@ function parse_logs
 
     for f in *.MS
     do
-      ${srcdir}/cmpfloat.py `pwd`/$f $REFDIR/$f || exit 1
+      $RUNDIR/cmpfloat `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 

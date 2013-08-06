@@ -31,7 +31,8 @@ namespace LOFAR
   {
 
     // Inexact floating point comparison routines.
-    // The 'tfpequals' test covers these routines.
+    // The 'tfpequals' test covers these routines
+    // and has some more hints on reasonable epsilon values.
 
 
     // T can be float, double, long double, or complex of those (overloads below).
