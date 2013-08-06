@@ -14,15 +14,19 @@ configure_file(
 
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
+lofar_add_test(tfpequals tfpequals.cc)
+
+# cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
+lofar_add_executable(cmpfloat cmpfloat.cc)
 
 # tests that use testParset.sh
 
 # fail on all system skip for now
 lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
 
-lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
-lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
-lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp)
+lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
+lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp cmpfloat)
+lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp cmpfloat)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
 set_tests_properties(
   tCorrelate_1sec_1st_5sb_noflagging

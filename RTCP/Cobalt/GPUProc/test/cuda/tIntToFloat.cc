@@ -39,8 +39,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "TestUtil.h"
-
 using namespace std;
 using namespace LOFAR::Cobalt;
 
@@ -48,8 +46,7 @@ using LOFAR::i16complex;
 using LOFAR::i8complex;
 using LOFAR::i4complex; // TODO: add support for 4 bit mode (only 1 func was done)
 
-CompileDefinitions compileDefs;
-gpu::Stream *stream;
+static gpu::Stream *stream;
 
 // default compile definitions
 const unsigned NR_STATIONS = 5;
@@ -88,7 +85,8 @@ void runKernel(gpu::Function kfunc,
   stream->synchronize(); // wait until transfer completes
 }
 
-gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs) {
+gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs)
+{
   // Compile to ptx. Copies the kernel to the current dir
   // (also the complex header, needed for compilation).
   string kernelPath("IntToFloat.cu");
@@ -99,6 +97,20 @@ gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs) {
   gpu::Function kfunc(module, "intToFloat");
 
   return kfunc;
+}
+
+CompileDefinitions getDefaultCompileDefinitions()
+{
+  CompileDefinitions defs;
+
+  defs["NR_STATIONS"]            = boost::lexical_cast<string>(NR_STATIONS);
+  defs["NR_CHANNELS"]            = boost::lexical_cast<string>(NR_CHANNELS);
+  defs["NR_SAMPLES_PER_CHANNEL"] = boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
+  defs["NR_SAMPLES_PER_SUBBAND"] = boost::lexical_cast<string>(NR_SAMPLES_PER_SUBBAND);
+  defs["NR_BITS_PER_SAMPLE"]     = boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
+  defs["NR_POLARIZATIONS"]       = boost::lexical_cast<string>(NR_POLARIZATIONS);
+
+  return defs;
 }
 
 // T is an LCS i*complex type.
@@ -121,18 +133,21 @@ vector<complex<float> > runTest(int defaultVal)
   // set output for proper verification later
   memset(output.origin(), 0, output.size());
 
+  CompileDefinitions compileDefs(getDefaultCompileDefinitions());
+
   // Apply test-specific parameters for mem alloc sizes and kernel compilation.
   unsigned nrBitsPerSample = sizeof(T) * 8 / 2;
   compileDefs["NR_BITS_PER_SAMPLE"] = boost::lexical_cast<string>(nrBitsPerSample);
   gpu::Function kfunc(initKernel(ctx, compileDefs));
 
-
   runKernel(kfunc, input, output);
 
-  // Tests that use this function only check the first 4 output floats.
+  // Tests that use this function only check the first and last 2 output floats.
   const unsigned nrResultVals = 2;
+  assert(output.num_elements() >= nrResultVals * sizeof(complex<float>) / sizeof(float));
   vector<complex<float> > outputrv(nrResultVals);
-  memcpy(&outputrv[0], output.origin(), nrResultVals * sizeof(complex<float>));
+  outputrv[0] = output.origin()[0];
+  outputrv[1] = output.origin()[output.num_elements() - 1];
   return outputrv;
 }
 
@@ -258,6 +273,8 @@ void runTest2()
   // set output for proper verification later
   memset(output.origin(), 0, output.size());
 
+  CompileDefinitions compileDefs(getDefaultCompileDefinitions());
+
   // Apply test-specific parameters for mem alloc sizes and kernel compilation.
   unsigned nrBitsPerSample = sizeof(T) * 8 / 2; // 4, 8, or 16 bit mode
   compileDefs["NR_BITS_PER_SAMPLE"] = boost::lexical_cast<string>(nrBitsPerSample);
@@ -339,22 +356,12 @@ TEST(AllVals16)
   runTest2<i16complex>();
 }
 
-void initDefaultCompileDefinitions(CompileDefinitions& defs)
-{
-  defs["NR_STATIONS"]            = boost::lexical_cast<string>(NR_STATIONS);
-  defs["NR_CHANNELS"]            = boost::lexical_cast<string>(NR_CHANNELS);
-  defs["NR_SAMPLES_PER_CHANNEL"] = boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
-  defs["NR_SAMPLES_PER_SUBBAND"] = boost::lexical_cast<string>(NR_SAMPLES_PER_SUBBAND);
-  defs["NR_BITS_PER_SAMPLE"]     = boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
-  defs["NR_POLARIZATIONS"]       = boost::lexical_cast<string>(NR_POLARIZATIONS);
-}
-
 gpu::Stream initDevice()
 {
   // Set up device (GPU) environment
   try {
     gpu::Platform pf;
-    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+    cout << "Detected " << pf.size() << " GPU devices" << endl;
   } catch (gpu::CUDAException& e) {
     cerr << e.what() << endl;
     exit(3); // test skipped
@@ -371,8 +378,7 @@ int main()
 {
   INIT_LOGGER("tIntToFloat");
 
-  // init global(s): compile defs, device, context/stream.
-  initDefaultCompileDefinitions(compileDefs);
+  // init global(s): device, context/stream.
   gpu::Stream strm(initDevice());
   stream = &strm;
 

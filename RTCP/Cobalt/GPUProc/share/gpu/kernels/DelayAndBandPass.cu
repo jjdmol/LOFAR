@@ -39,12 +39,13 @@
  *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
  * - if @c NR_CHANNELS > 1 (input data is in floating point format):
  *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
+ * - @c NR_SAPS: > 0
  * - @c NR_POLARIZATIONS: 2
- * - @c SUBBAND_WIDTH: a multiple of @c NR_CHANNELS
+ * - @c SUBBAND_BANDWIDTH: a multiple of @c NR_CHANNELS
  *
- * - @c DELAY_COMPENSATION: do delay compensation
- * - @c BANDPASS_CORRECTION: correct the bandpass
- * - @c DO_TRANSPOSE: transpose the data. The pol dim moves to the stride 1 dim.
+ * - @c DELAY_COMPENSATION: defined or not
+ * - @c BANDPASS_CORRECTION: defined or not
+ * - @c DO_TRANSPOSE: defined or not
  */
 
 #include "IntToFloat.cuh"
@@ -68,6 +69,9 @@ typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CH
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 #endif
 
+// TODO: Unify #dims in input type to 4: [NR_SAMPLES_PER_SUBBAND] -> [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS] (see kernel test)
+//       It is technically incorrect, but different dims for the same input type is a real pain to use/supply.
+//       Also unify order of #chn, #sampl to [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]
 #if NR_CHANNELS == 1
 #  if NR_BITS_PER_SAMPLE == 16
 typedef  short_complex rawSampleType;
@@ -87,8 +91,9 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 
 // Keep it simple. We had complex<T> defined, but we need operator overloads,
-// so we cannot make it a POD type. Then we get redundant member inits in the
+// so we cannot make it a POD type. Then we got redundant member inits in the
 // constructor, causing races when declaring variables in shared memory.
+// Now, avoid complex<T> and just work with cmul() and a few extra lines.
 __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
 {
   return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
@@ -169,7 +174,7 @@ extern "C" {
 
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
-  float pi2 = -2.0f * 3.1415926535f;
+  const float pi2 = -6.28318530717958647688f; // -2.0f * M_PI_F
   float2 phiBegin = make_float2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
   float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
