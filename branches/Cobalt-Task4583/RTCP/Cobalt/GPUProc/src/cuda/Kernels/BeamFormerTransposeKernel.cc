@@ -35,8 +35,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    string BeamFormerTransposeKernel::theirSourceFile = "BeamFormer/Transpose.cu";
-    string BeamFormerTransposeKernel::theirFunction = "transposeComplexVoltages";
+    string BeamFormerTransposeKernel::theirSourceFile = "Transpose.cu";
+    string BeamFormerTransposeKernel::theirFunction = "transpose";
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),

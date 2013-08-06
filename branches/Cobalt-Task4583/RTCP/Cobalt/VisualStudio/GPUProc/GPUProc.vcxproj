@@ -156,6 +156,15 @@
     <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cuh" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu" />
     <None Include="..\..\GPUProc\src\BestEffortQueue.tcc" />
     <None Include="..\..\GPUProc\src\CMakeLists.txt" />
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt" />

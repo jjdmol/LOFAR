@@ -37,6 +37,9 @@
     <Filter Include="test\cuda">
       <UniqueIdentifier>{51b333f8-a7d1-4342-9046-a9e5a8e71783}</UniqueIdentifier>
     </Filter>
+    <Filter Include="share">
+      <UniqueIdentifier>{6366e12c-9513-4476-af75-1c5f0e9a6295}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.h">
@@ -627,6 +630,33 @@
     </None>
     <None Include="..\..\GPUProc\test\cuda\tDelayAndBandPassKernel.sh">
       <Filter>test\cuda</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cuh">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu">
+      <Filter>share</Filter>
     </None>
   </ItemGroup>
 </Project>
