@@ -36,9 +36,11 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.nrTABs(0)),
-      weightCorrection(1.0f)  // Currently set to 1.0. Should be red from ps or calculated
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()) 
     {
+      // override the correlator settings with beamformer specifics
+      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,

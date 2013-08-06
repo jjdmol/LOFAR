@@ -48,10 +48,12 @@ namespace LOFAR
       unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
       workQueues.resize(nrSubbandProcs);
 
+      BeamFormerFactories factories(ps);
+
       for (size_t i = 0; i < nrSubbandProcs; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context);
+        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
       }
     }
   }

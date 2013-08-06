@@ -95,6 +95,7 @@ function parse_logs
 
   # enable debugging
   echo "Global 20" >> rtcp.debug &&
+  cp $srcdir/../src/rtcp.log_prop . && # Get correct log4cplus output format
 
   # be able to find the GPU kernels
   export LOFARROOT=$srcdir/.. &&

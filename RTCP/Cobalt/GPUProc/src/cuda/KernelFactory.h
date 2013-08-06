@@ -70,6 +70,14 @@ namespace LOFAR
       {
       }
 
+      // Construct a factory for creating Kernel objects of type \c T, using the
+      // settings provided by \a params.
+      KernelFactory(const typename T::Parameters &params) :
+        itsParameters(params),
+        itsPTX(_createPTX())
+      {
+      }
+
       // Create a new Kernel object of type \c T.
       T* create(const gpu::Stream& stream,
                 const typename T::Buffers& buffers) const
@@ -90,6 +98,14 @@ namespace LOFAR
       size_t bufferSize(BufferType bufferType) const;
 
     private:
+      // Used by the constructors to construct the PTX from the other
+      // members.
+      std::string _createPTX() const {
+        return createPTX(T::theirSourceFile,
+                           compileDefinitions(),
+                           compileFlags());
+      }
+
       // Return compile definitions to use when creating PTX code for kernels of
       // type \c T, using the parameters stored in \c itsParameters.
       CompileDefinitions compileDefinitions() const {
