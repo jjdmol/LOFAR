@@ -69,6 +69,9 @@ typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CH
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 #endif
 
+// TODO: Unify #dims in input type to 4: [NR_SAMPLES_PER_SUBBAND] -> [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS] (see kernel test)
+//       It is technically incorrect, but different dims for the same input type is a real pain to use/supply.
+//       Also unify order of #chn, #sampl to [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]
 #if NR_CHANNELS == 1
 #  if NR_BITS_PER_SAMPLE == 16
 typedef  short_complex rawSampleType;
