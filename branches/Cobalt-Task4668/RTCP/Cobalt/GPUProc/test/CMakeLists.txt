@@ -14,6 +14,7 @@ configure_file(
 
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
+lofar_add_test(tfpequals tfpequals.cc)
 
 # tests that use testParset.sh
 
