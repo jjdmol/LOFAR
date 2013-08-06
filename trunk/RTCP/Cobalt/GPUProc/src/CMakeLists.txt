@@ -106,3 +106,7 @@ if(USE_OPENCL)
 endif()
 
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
+# install the logprop file
+install(FILES
+  rtcp.log_prop
+  DESTINATION etc)

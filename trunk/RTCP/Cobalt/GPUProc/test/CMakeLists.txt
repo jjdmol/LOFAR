@@ -18,7 +18,7 @@ lofar_add_test(tSSH tSSH.cc)
 # tests that use testParset.sh
 
 # fail on all system skip for now
-#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
+lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
 
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp)
@@ -28,6 +28,7 @@ set_tests_properties(
   tCorrelate_1sec_1st_5sb_noflagging
   tCorrelate_3sec_1st_5sb
   tCorrelate_3sec_2st_5sb
+  tBeamform_1sec_1st_5sb_noflagging
   PROPERTIES RUN_SERIAL ON
 )
 
