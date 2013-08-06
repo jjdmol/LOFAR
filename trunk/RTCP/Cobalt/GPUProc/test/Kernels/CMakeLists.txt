@@ -2,6 +2,16 @@
 
 include(LofarCTest)
 
+
+lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel)
+
+# Trick tests that compile kernels that need to be installed into thinking
+# that they can find the kernels using the LOFARROOT environment variable.
+set_tests_properties(
+  tDelayAndBandPassKernel
+  PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
+)
+
 if(UNITTEST++_FOUND)
   lofar_add_test(tCorrelatorKernel tCorrelatorKernel)
   lofar_add_test(tDelayAndBandPassKernel2 tDelayAndBandPassKernel2)
