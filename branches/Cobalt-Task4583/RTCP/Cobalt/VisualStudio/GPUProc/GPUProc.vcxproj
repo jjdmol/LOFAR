@@ -89,6 +89,8 @@
     <ClInclude Include="..\..\GPUProc\src\SubbandProcs\CorrelatorSubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\SubbandProcs\UHEP_SubbandProc.h" />
+    <ClInclude Include="..\..\GPUProc\test\cuda\TestUtil.h" />
+    <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\BandPass.cc" />
@@ -133,6 +135,25 @@
     <ClCompile Include="..\..\GPUProc\src\Storage\SSH.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcesses.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBeamFormer.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBeamFormerKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tCorrelator.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tDelayAndBandPass.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tDelayAndBandPassKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tFFT.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tFFT_leakage.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tFIR_Filter.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tGPUWrapper.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tIntToFloat.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tIntToFloatKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tMultiDimArrayHostBuffer.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tStreamReadBuffer.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose.cc" />
+    <ClCompile Include="..\..\GPUProc\test\tBestEffortQueue.cc" />
+    <ClCompile Include="..\..\GPUProc\test\tSSH.cc" />
+    <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc" />
+    <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\BestEffortQueue.tcc" />
@@ -140,6 +161,55 @@
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt" />
     <None Include="..\..\GPUProc\src\cuda\cuda_config.h.in" />
     <None Include="..\..\GPUProc\src\cuda\gpu_wrapper.tcc" />
+    <None Include="..\..\GPUProc\test\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\test\cmpfloat.py" />
+    <None Include="..\..\GPUProc\test\cuda\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\test\cuda\tBeamFormer.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tBeamFormerKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\cuda\tBeamFormerKernel.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tCorrelator.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tDelayAndBandPass.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tDelayAndBandPassKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\cuda\tDelayAndBandPassKernel.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tFFT_leakage.in_.parset" />
+    <None Include="..\..\GPUProc\test\cuda\tFIR_Filter.parset.77_Stations" />
+    <None Include="..\..\GPUProc\test\cuda\tFIR_Filter.parset.AARTFAAC" />
+    <None Include="..\..\GPUProc\test\cuda\tFIR_Filter.parset.small-test" />
+    <None Include="..\..\GPUProc\test\cuda\tFIR_Filter.run" />
+    <None Include="..\..\GPUProc\test\cuda\tFIR_Filter.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tIntToFloat.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tIntToFloatKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\cuda\tIntToFloatKernel.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tKernel.in_.cu" />
+    <None Include="..\..\GPUProc\test\cuda\tKernel.parset.in" />
+    <None Include="..\..\GPUProc\test\cuda\tKernel.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tMultiDimArrayHostBuffer.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tStreamReadBuffer.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tTranspose.sh" />
+    <None Include="..\..\GPUProc\test\cuda\t_cuda_complex.cu" />
+    <None Include="..\..\GPUProc\test\cuda\t_cuda_complex.sh" />
+    <None Include="..\..\GPUProc\test\cuda\Vizualize_leakage.py" />
+    <None Include="..\..\GPUProc\test\runrtcp.sh.in" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.sh" />
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.parset" />
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.run" />
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.sh" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.parset" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.run" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.sh" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.parset" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.run" />
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.sh" />
+    <None Include="..\..\GPUProc\test\testFuncs.sh" />
+    <None Include="..\..\GPUProc\test\testParset.sh" />
+    <None Include="..\..\GPUProc\test\tGPUPerformance.parset" />
+    <None Include="..\..\GPUProc\test\tGPUPerformance.run" />
+    <None Include="..\..\GPUProc\test\tGPUPerformance.sh" />
+    <None Include="..\..\GPUProc\test\t_cpu_utils.in_parset" />
+    <None Include="..\..\GPUProc\test\t_cpu_utils.run" />
+    <None Include="..\..\GPUProc\test\t_cpu_utils.sh" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{93C5C054-7BF7-478E-A8B5-E0829597AEEA}</ProjectGuid>
@@ -180,7 +250,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);USE_CUDA</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
