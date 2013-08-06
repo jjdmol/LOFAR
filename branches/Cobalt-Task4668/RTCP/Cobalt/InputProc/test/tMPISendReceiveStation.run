@@ -1,2 +1,0 @@
-#!/bin/sh
-mpirun -host localhost -np 2 tMPISendReceiveStation
