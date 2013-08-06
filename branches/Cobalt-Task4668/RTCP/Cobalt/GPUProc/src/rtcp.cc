@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   setenv("TZ", "UTC", 1);
 
   // Restrict access to (tmp build) files we create to owner
-  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+//  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
