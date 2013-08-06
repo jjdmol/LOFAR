@@ -140,13 +140,14 @@ vector<complex<float> > runTest(int defaultVal)
   compileDefs["NR_BITS_PER_SAMPLE"] = boost::lexical_cast<string>(nrBitsPerSample);
   gpu::Function kfunc(initKernel(ctx, compileDefs));
 
-
   runKernel(kfunc, input, output);
 
-  // Tests that use this function only check the first 4 output floats.
+  // Tests that use this function only check the first and last 2 output floats.
   const unsigned nrResultVals = 2;
+  assert(output.num_elements() >= nrResultVals * sizeof(complex<float>) / sizeof(float));
   vector<complex<float> > outputrv(nrResultVals);
-  memcpy(&outputrv[0], output.origin(), nrResultVals * sizeof(complex<float>));
+  outputrv[0] = output.origin()[0];
+  outputrv[1] = output.origin()[output.num_elements() - 1];
   return outputrv;
 }
 
