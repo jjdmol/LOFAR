@@ -134,7 +134,9 @@ CompileDefinitions getDefaultCompileDefinitions()
   defs["NR_POLARIZATIONS"]       = boost::lexical_cast<string>(NR_POLARIZATIONS);
 
   defs["NR_SAPS"]                = boost::lexical_cast<string>(NR_SAPS);
-  defs["SUBBAND_BANDWIDTH"]      = boost::lexical_cast<string>(SUBBAND_BANDWIDTH) + 'f'; // or use boost::format() to enforce more precision
+  // SUBBAND_BANDWIDTH must be printed as a float c-string.
+  // Could use boost::format() to enforce more precision.
+  defs["SUBBAND_BANDWIDTH"]      = boost::lexical_cast<string>(SUBBAND_BANDWIDTH) + 'f';
   if (BANDPASS_CORRECTION)
     defs["BANDPASS_CORRECTION"]  = "1";
   if (DELAY_COMPENSATION)
@@ -213,10 +215,12 @@ vector<complex<float> > runTest(
 
   delete filteredData;
 
-  // Tests that use this function only check the first 4 output floats.
+  // Tests that use this function only check the first and last 2 output floats.
   const unsigned nrResultVals = 2;
+  assert(correctedData->num_elements() >= nrResultVals * sizeof(complex<float>) / sizeof(float));
   vector<complex<float> > outputrv(nrResultVals);
-  memcpy(&outputrv[0], correctedData->origin(), nrResultVals * sizeof(complex<float>));
+  outputrv[0] = correctedData->origin()[0];
+  outputrv[1] = correctedData->origin()[correctedData->num_elements() - 1];
   delete correctedData;
   return outputrv;
 }
@@ -296,8 +300,26 @@ SUITE(DelayCompensation)
 
     CHECK_CLOSE(-1.0, results[0].real(), 0.00001);
     CHECK_CLOSE(-1.0, results[0].imag(), 0.00001);
-    CHECK_CLOSE(-1.0, results[1].real(), 0.00001);
-    CHECK_CLOSE(-1.0, results[1].imag(), 0.00001);
+
+    // For verification: for the following vals, the kernel computes:
+    // frequency = 1.0 - 0.5*1.0 + (0 + 15) * (1.0 / 16) = 0.5 + 15/16 = 1.4375
+    // phiBegin = -2.0 * 3.1415 * delayAtBegin = -6.8232 * 1.0 = -6.8232
+    // deltaPhi = (phiEnd - phiBegin) / 64 = 0
+    // myPhiBegin = (-6.8232 + major (= offset within block of 16 samples) * deltaPhi) * frequency + phaseOffset
+    //            = -6.8232 * 1.4375 + 0.0 = -9.032086
+    // myPhiDelta = 16 (= time step) * deltaPhi * frequency = 0
+    // vX = ( cos(myPhiBegin.x), sin(myPhiBegin.x) ) = (-0.923882, -0.382677)
+    // vY = idem (as delays begin == delays end)
+    // dvX = ( cos(myPhiDelta.x), sin(myPhiDelta.x) ) = (1, 0)
+    // dvY = idem
+    // (vX, vY) *= weight (*1.0)
+    // sampleX = sampleY = (1.0, 1.0)
+    // After 64/16 rounds, (vX, vY) have been updated 64/16 times with (dvX, dvY).
+    //   In this case, (dvX, dvY) stays (1, 0), so for the last sample, we get:
+    // sampleY = cmul(sampleY, vY) = -0.923882 - -0.382677 = -0.541205 (~ -0.541196) (real)
+    //                             = -0.923882 + -0.382677 = -1.306559 (~ -1.30656)  (imag)
+    CHECK_CLOSE(-0.541196, results[1].real(), 0.00001);
+    CHECK_CLOSE(-1.30656 , results[1].imag(), 0.00001);
   }
 
   TEST(SlopedDelay)
@@ -325,8 +347,8 @@ SUITE(DelayCompensation)
 
     CHECK_CLOSE(-1.0,     results[0].real(), 0.00001);
     CHECK_CLOSE(-1.0,     results[0].imag(), 0.00001);
-    CHECK_CLOSE(1.047860, results[1].real(), 0.00001);
-    CHECK_CLOSE(0.949728, results[1].imag(), 0.00001);
+    CHECK_CLOSE(1.130720, results[1].real(), 0.00001);
+    CHECK_CLOSE(0.849399, results[1].imag(), 0.00001);
   }
 }
 
@@ -356,8 +378,8 @@ TEST(AllAtOnce)
 
   CHECK_CLOSE( 0.602337, results[0].real(), 0.00001);
   CHECK_CLOSE(-2.763550, results[0].imag(), 0.00001);
-  CHECK_CLOSE(-0.466011, results[1].real(), 0.00001);
-  CHECK_CLOSE( 2.789770, results[1].imag(), 0.00001);
+  CHECK_CLOSE(-0.207632, results[1].real(), 0.00001);
+  CHECK_CLOSE( 2.820790, results[1].imag(), 0.00001);
 }
 
 
