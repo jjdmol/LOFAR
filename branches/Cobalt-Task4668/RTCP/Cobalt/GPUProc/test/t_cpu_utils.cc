@@ -26,6 +26,7 @@
 
 #include <mpi.h>
 #include <iostream>
+#include <string>
 #include <sched.h>
 
 using namespace std;
@@ -43,6 +44,24 @@ int main(int argc, char **argv)
     cerr << "MPI_Init_thread failed" << endl;
     exit(1);
   }
+
+  // Get the name of the processor
+  // skip test if we are not on cobalt!!!
+  char processor_name[MPI_MAX_PROCESSOR_NAME];
+  int name_len;
+  MPI_Get_processor_name(processor_name, &name_len);
+
+  string name(processor_name);
+  
+  if (!(name.find("cbm") == 0))
+  {
+    cout << "Test is not running on cobalt hardware and therefore skipped" << endl;
+    MPI_Finalize();
+    return 0;
+  }
+    
+
+
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   

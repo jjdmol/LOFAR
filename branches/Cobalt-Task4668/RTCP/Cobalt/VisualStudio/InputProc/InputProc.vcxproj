@@ -75,10 +75,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\InputProc\src\Buffer\Block.h" />
+    <ClInclude Include="..\..\InputProc\src\Buffer\BlockReader.h" />
+    <ClInclude Include="..\..\InputProc\src\Buffer\BoardMode.h" />
     <ClInclude Include="..\..\InputProc\src\Buffer\BufferSettings.h" />
     <ClInclude Include="..\..\InputProc\src\Buffer\Ranges.h" />
     <ClInclude Include="..\..\InputProc\src\Buffer\SampleBuffer.h" />
-    <ClInclude Include="..\..\InputProc\src\Buffer\SampleBufferReader.h" />
     <ClInclude Include="..\..\InputProc\src\Buffer\SharedMemory.h" />
     <ClInclude Include="..\..\InputProc\src\Buffer\StationID.h" />
     <ClInclude Include="..\..\InputProc\src\obsolete\MPI_RMA.h" />
@@ -98,6 +100,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\InputProc\src\Buffer\BufferSettings.cc" />
     <ClCompile Include="..\..\InputProc\src\Buffer\Ranges.cc" />
+    <ClCompile Include="..\..\InputProc\src\Buffer\SampleBuffer.cc" />
     <ClCompile Include="..\..\InputProc\src\Buffer\SharedMemory.cc" />
     <ClCompile Include="..\..\InputProc\src\Buffer\StationID.cc" />
     <ClCompile Include="..\..\InputProc\src\newInputSection.cc" />
@@ -108,7 +111,9 @@
     <ClCompile Include="..\..\InputProc\src\Station\PacketsToBuffer.cc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\InputProc\src\Buffer\SampleBufferReader.tcc" />
+    <None Include="..\..\InputProc\src\Buffer\Block.tcc" />
+    <None Include="..\..\InputProc\src\Buffer\BlockReader.tcc" />
+    <None Include="..\..\InputProc\src\Buffer\SampleBuffer.tcc" />
     <None Include="..\..\InputProc\src\CMakeLists.txt" />
     <None Include="..\..\InputProc\src\Station\PacketWriter.tcc" />
     <None Include="..\..\InputProc\src\Transpose\MPITransferStations.tcc" />

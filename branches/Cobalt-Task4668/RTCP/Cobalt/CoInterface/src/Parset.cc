@@ -617,6 +617,11 @@ namespace LOFAR
       return max;
     }
 
+    size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
+    {
+      return inputBlockSize / nrChannels / timeIntegrationFactor;
+    }
+
 
     void Parset::updateSettings()
     {
