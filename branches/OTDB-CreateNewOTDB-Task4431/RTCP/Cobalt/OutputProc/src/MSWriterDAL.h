@@ -47,13 +47,11 @@ namespace LOFAR
       virtual void write(StreamableData *data);
     private:
       const Parset &itsParset;
-      const Transpose2 &itsTransposeLogic;
-      const StreamInfo &itsInfo;
-      const unsigned itsNrChannels;
-      const unsigned itsNrSamples;
+      unsigned itsNrChannels;
+      unsigned itsNrSamples;
       unsigned itsNextSeqNr;
 
-      const unsigned itsBlockSize; // the size of StreamableData::samples, in T
+      unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }
 }

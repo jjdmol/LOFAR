@@ -43,10 +43,10 @@ NamedPipeStream::NamedPipeStream(const char *name, bool serverSide)
 {
   try {
     if (mknod(itsReadName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
-      throw SystemCallException(std::string("mknod ") + itsReadName, errno, THROW_ARGS);
+      THROW_SYSCALL(std::string("mknod ") + itsReadName);
 
     if (mknod(itsWriteName.c_str(), 0600 | S_IFIFO, 0) < 0 && errno != EEXIST)
-      throw SystemCallException(std::string("mknod ") + itsWriteName, errno, THROW_ARGS);
+      THROW_SYSCALL(std::string("mknod ") + itsWriteName);
 
     itsReadStream = new FileStream(itsReadName.c_str(), O_RDWR, 0600); // strange; O_RDONLY hangs ???
     itsWriteStream = new FileStream(itsWriteName.c_str(), O_RDWR, 0600);

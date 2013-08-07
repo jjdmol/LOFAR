@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -35,10 +35,10 @@
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <Stream/Stream.h>
 #include <Stream/SocketStream.h>
 
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
@@ -91,8 +91,9 @@ int nrReceivers;
 
 void sender()
 {
-  struct StationID stationID(str(format("CS%03d") % rank), "LBA", clockMHz, 16);
+  struct StationID stationID(str(format("CS%03d") % rank), "LBA");
   struct BufferSettings settings(stationID, false);
+  struct BoardMode mode(16, clockMHz);
 
   // sync readers and writers to prevent data loss
   // if the reader is delayed w.r.t. the generator
@@ -127,7 +128,7 @@ void sender()
   removeSampleBuffers(settings);
 
   MultiPacketsToBuffer station( settings, inputStreams );
-  PacketFactory factory( settings );
+  PacketFactory factory( mode );
   Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
 
   #pragma omp parallel sections
@@ -147,7 +148,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, values(beamletDistribution), nrHistorySamples, 0.1);
+      BlockReader<SampleT> reader(s, mode, values(beamletDistribution), nrHistorySamples, 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
@@ -170,15 +171,10 @@ void receiver()
   const std::vector<size_t> &beamlets = beamletDistribution[rank];
   const size_t nrBeamlets = beamlets.size();
 
-  std::vector<int> stationRanks(nrStations);
-
-  for (size_t i = 0; i < stationRanks.size(); i++)
-    stationRanks[i] = i;
-
   LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
   LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
-  MPIReceiveStations receiver(stationRanks, beamlets, blockSize + nrHistorySamples);
+  MPIReceiveStations receiver(nrStations, beamlets, blockSize + nrHistorySamples);
 
   // create space for the samples
   MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize + nrHistorySamples]);

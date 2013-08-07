@@ -23,7 +23,7 @@
 #ifndef CR_READ_REQUEST_H_
 #define CR_READ_REQUEST_H_
 
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -34,9 +34,9 @@ public:
 	//@{
 	// Constructors and destructors for a pointing.
 	CRreadRequest(const string& aStationList, const string& aRCUlist,
-						RTC::NsTimestamp aReadTime, 
-						RTC::NsTimestamp aTimeBefore, 
-						RTC::NsTimestamp aTimeAfter) : 
+						NsTimestamp aReadTime, 
+						NsTimestamp aTimeBefore, 
+						NsTimestamp aTimeAfter) : 
 		stationList(aStationList), rcuList(aRCUlist), readTime(aReadTime), timeBefore(aTimeBefore), timeAfter(aTimeAfter) {};
 	CRreadRequest() {};
 	~CRreadRequest() {};
@@ -53,11 +53,11 @@ public:
 	//@}
 
 	// --- datamembers ---
-	string            stationList;
-	string            rcuList;
-	RTC::NsTimestamp  readTime;
-	RTC::NsTimestamp  timeBefore;
-	RTC::NsTimestamp  timeAfter;
+	string       stationList;
+	string       rcuList;
+	NsTimestamp  readTime;
+	NsTimestamp  timeBefore;
+	NsTimestamp  timeAfter;
 };
 
 //

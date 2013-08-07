@@ -65,22 +65,28 @@ bool cmp_fcomplex(const fcomplex &a, const fcomplex &b, const float epsilon = EP
 int main() {
   INIT_LOGGER("tFFT");
 
-  gpu::Platform pf;
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 0;
+  }
   gpu::Device device(0);
   gpu::Context ctx(device);
 
-  gpu::Stream stream;
+  gpu::Stream stream(ctx);
 
-  const size_t size = 1024 * 1024;
+  const size_t size = 128 * 1024;
   const int fftSize = 256;
   const unsigned nrFFTs = size / fftSize;
 
   // GPU buffers and plans
-  gpu::HostMemory inout(size  * sizeof(fcomplex));
-  gpu::DeviceMemory d_inout(size  * sizeof(fcomplex));
+  gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
+  gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
-  FFT_Kernel fftFwdKernel(fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(fftSize, nrFFTs, false, d_inout);
+  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
+  FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);

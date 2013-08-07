@@ -2130,7 +2130,7 @@ namespace LOFAR
       const std::complex<float> l = out[(i - 3 * nrChannels / 2) % fftSize];
       const std::complex<float> r = out[i + nrChannels / 2];
 
-      factors[i] = pow(2, 25) / sqrt(abs(m * m + l * l + r * r));
+      factors[i] = std::pow(2, 25) / std::sqrt(std::abs(m * m + l * l + r * r));
     }
   }
 
@@ -2140,11 +2140,12 @@ namespace LOFAR
 } // namespace LOFAR
 
 
-#if 0
+#ifdef TEST_COMPUTE_BANDPASS_CORRECTION_FACTORS
 int main()
 {
-  std::vector<float> factors(4096);
-  BandPass::computeCorrectionFactors(&factors[0], 4096);
+  unsigned nrChannelsPerSb = 4096;
+  std::vector<float> factors(nrChannelsPerSb);
+  BandPass::computeCorrectionFactors(&factors[0], nrChannelsPerSb);
   return 0;
 }
 #endif

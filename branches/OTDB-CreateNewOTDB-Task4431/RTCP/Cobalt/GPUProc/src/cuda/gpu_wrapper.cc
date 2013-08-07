@@ -28,7 +28,10 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <Common/Exception.h>
 #include <Common/LofarLogger.h>
+
+#include <GPUProc/global_defines.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -36,11 +39,14 @@
   do {                                                                  \
     CUresult result = func;                                             \
     if (result != CUDA_SUCCESS) {                                       \
+      LOG_ERROR_STR(                                                    \
+             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
       THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
              # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
     }                                                                   \
   } while(0)
 
+LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 namespace LOFAR
 {
@@ -208,7 +214,17 @@ namespace LOFAR
 
       Platform::Platform(unsigned int flags)
       {
+        // cuInit() is thread-safe, so we don't have to mutex it.
+        // In fact, if you start with multiple threads, all threads that
+        // do CUDA calls must first call cuInit().
         checkCuCall(cuInit(flags));
+      }
+
+      int Platform::version() const
+      {
+        int version;
+        checkCuCall(cuDriverGetVersion(&version));
+        return version;
       }
 
       size_t Platform::size() const
@@ -216,6 +232,19 @@ namespace LOFAR
         int nrDevices;
         checkCuCall(cuDeviceGetCount(&nrDevices));
         return (size_t)nrDevices;
+      }
+
+      std::vector<Device> Platform::devices() const
+      {
+        std::vector<Device> devices;
+
+        size_t nrDevices = size();
+
+        for (size_t i = 0; i < nrDevices; ++i) {
+          devices.push_back(Device(i));
+        }
+
+        return devices;
       }
 
       std::string Platform::getName() const
@@ -231,20 +260,67 @@ namespace LOFAR
 
       std::string Device::getName() const
       {
-        // NV ref is not crystal clear on returned str len. Better be safe.
-        const size_t max_name_len = 255;
-        char name[max_name_len + 1];
-        checkCuCall(cuDeviceGetName(name, max_name_len, _device));
+        char name[1024];
+
+        // NV ref is not crystal clear on returned str len. Better be safe
+        // and reserve an extra byte for the \0 terminator.
+        checkCuCall(cuDeviceGetName(name, sizeof name - 1, _device));
         return std::string(name);
+      }
+
+      unsigned Device::getComputeCapabilityMajor() const
+      {
+#if CUDA_VERSION >= 5000
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+#else
+        int major;
+        int minor;
+
+        checkCuCall(cuDeviceComputeCapability(&major, &minor, _device));
+
+        return major;
+#endif
+      }
+
+      unsigned Device::getComputeCapabilityMinor() const
+      {
+#if CUDA_VERSION >= 5000
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+#else
+        int major;
+        int minor;
+
+        checkCuCall(cuDeviceComputeCapability(&major, &minor, _device));
+
+        return minor;
+#endif
+      }
+
+      size_t Device::getTotalGlobalMem() const
+      {
+        size_t value;
+
+        checkCuCall(cuDeviceTotalMem(&value, _device));
+        return value;
+      }
+
+      size_t Device::getBlockSharedMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
+      }
+
+      size_t Device::getTotalConstMem() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
+
         checkCuCall(cuDeviceGetAttribute(&value, attribute, _device));
         return value;
       }
-
 
       class Context::Impl : boost::noncopyable
       {
@@ -252,16 +328,14 @@ namespace LOFAR
         Impl(CUdevice device, unsigned int flags)
         {
           checkCuCall(cuCtxCreate(&_context, flags, device));
+
+          // Make the context floating, so we can tie it to any thread
+          freeCurrent();
         }
 
         ~Impl()
         {
           checkCuCall(cuCtxDestroy(_context));
-        }
-
-        void setCurrent() const
-        {
-          checkCuCall(cuCtxSetCurrent(_context));
         }
 
         CUdevice getDevice() const
@@ -285,46 +359,75 @@ namespace LOFAR
 #endif
         }
 
+        void setCurrent() const
+        {
+          checkCuCall(cuCtxPushCurrent(_context));
+        }
+
+        void freeCurrent() const
+        {
+          checkCuCall(cuCtxPopCurrent(NULL));
+        }
+
       private:
         CUcontext _context;
       };
 
-      Context::Context(Device device, unsigned int flags) :
+      Context::Context(const Device &device, unsigned int flags) :
         _impl(new Impl(device._device, flags))
       {
       }
 
-      void Context::setCurrent() const
-      {
-        _impl->setCurrent();
-      }
-
       Device Context::getDevice() const
       {
+        ScopedCurrentContext scc(*this);
+
         return Device(_impl->getDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
+        ScopedCurrentContext scc(*this);
+
         _impl->setCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
+        ScopedCurrentContext scc(*this);
+
         _impl->setSharedMemConfig(config);
+      }
+
+
+      ScopedCurrentContext::ScopedCurrentContext(const Context &context):
+        _context(context)
+      {
+        _context._impl->setCurrent();
+      }
+
+      ScopedCurrentContext::~ScopedCurrentContext()
+      {
+        _context._impl->freeCurrent();
       }
 
 
       class HostMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size, unsigned int flags) : _size(size)
+        Impl(const Context &context, size_t size, unsigned int flags):
+          _context(context),
+          _size(size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemHostAlloc(&_ptr, size, flags));
         }
 
         ~Impl()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemFreeHost(_ptr));
         }
 
@@ -339,12 +442,14 @@ namespace LOFAR
         }
 
       private:
+        const Context _context;
+
         void *_ptr;
         size_t _size;
       };
 
-      HostMemory::HostMemory(size_t size, unsigned int flags) :
-        _impl(new Impl(size, flags))
+      HostMemory::HostMemory(const Context &context, size_t size, unsigned int flags) :
+        _impl(new Impl(context, size, flags))
       {
       }
 
@@ -362,13 +467,19 @@ namespace LOFAR
       class DeviceMemory::Impl : boost::noncopyable
       {
       public:
-        Impl(size_t size) : _size(size)
+        Impl(const Context &context, size_t size):
+          _context(context),
+          _size(size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemAlloc(&_ptr, size));
         }
 
         ~Impl()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemFree(_ptr));
         }
 
@@ -382,14 +493,20 @@ namespace LOFAR
           return _size;
         }
 
+        Context getContext() const
+        {
+          return _context;
+        }
+
       //private: // Functions needs its address to set kernel args
         CUdeviceptr _ptr;
       private:
+        const Context _context;
         size_t _size;
       };
 
-      DeviceMemory::DeviceMemory(size_t size) :
-        _impl(new Impl(size))
+      DeviceMemory::DeviceMemory(const Context &context, size_t size) :
+        _impl(new Impl(context, size))
       {
       }
 
@@ -403,57 +520,122 @@ namespace LOFAR
         return _impl->size();
       }
 
+      HostMemory DeviceMemory::fetch() const
+      {
+        // Create a host buffer of the right size
+        // in the right context.
+        HostMemory host(_impl->getContext(), size());
+
+        // Read the contents of our buffer synchronously,
+        // using a dedicated stream.
+        Stream s(_impl->getContext());
+        s.readBuffer(host, *this, true);
+
+        return host;
+      }
+
 
       class Module::Impl : boost::noncopyable
       {
       public:
-        Impl(const char* fname)
+        Impl(): _context(0), _module(0)
         {
-          checkCuCall(cuModuleLoad(&_module, fname));
         }
 
-        Impl(const void *image)
+        Impl(const Context &context, const std::string &fname):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuModuleLoad(&_module, fname.c_str()));
+        }
+
+        Impl(const Context &context, const void *image):
+          _context(context)
+        {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuModuleLoadData(&_module, image));
         }
 
-        Impl(const void *image, unsigned int numOptions,
-             CUjit_option *options, void **optionValues)
+        Impl(const Context &context, const void *image, Module::optionmap_t &options):
+          _context(context)
         {
-          checkCuCall(cuModuleLoadDataEx(&_module, image, numOptions,
-                                         options, optionValues));
+          // Convert our option map to two arrays for CUDA
+          std::vector<CUjit_option> keys;
+          std::vector<void*> values;
+
+          for (optionmap_t::const_iterator i = options.begin(); i != options.end(); ++i) {
+            keys.push_back(i->first);
+            values.push_back(i->second);
+          }
+
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuModuleLoadDataEx(&_module, image, options.size(),
+                                         &keys[0], &values[0]));
+
+          for (size_t i = 0; i < keys.size(); ++i) {
+            options[keys[i]] = values[i];
+          }
+
         }
 
         ~Impl()
         {
-          checkCuCall(cuModuleUnload(_module));
+          if (_module) {
+            ScopedCurrentContext scc(_context);
+
+            checkCuCall(cuModuleUnload(_module));
+          }
         }
 
-        //private: // Function needs it to create a CUfunction
-        CUmodule _module;
+        Context getContext() const
+        {
+          return _context;
+        }
+
+      private:
+        const Context _context;
+
+        CUmodule _module; // NOTE: can be 0
+
+        friend class Function;
       };
 
-      Module::Module(const std::string &fname) :
-        _impl(new Impl(fname.c_str()))
+      Module::Module() :
+        _impl(new Impl())
       {
       }
 
-      Module::Module(const void *image) :
-        _impl(new Impl(image))
+      Module::Module(const Context &context, const std::string &fname) :
+        _impl(new Impl(context, fname))
       {
       }
 
-      Module::Module(const void *image,
-                     std::vector<CUjit_option> &options,
-                     std::vector<void*> &optionValues) :
-        _impl(new Impl(image, std::min(options.size(), optionValues.size()),
-                       &options[0], &optionValues[0]))
+      Module::Module(const Context &context, const void *image) :
+        _impl(new Impl(context, image))
       {
       }
 
-
-      Function::Function(Module &module, const std::string &name)
+      Module::Module(const Context &context, const void *image, optionmap_t &options):
+        _impl(new Impl(context, image, options))
       {
+      }
+
+      Context Module::getContext() const
+      {
+        return _impl->getContext();
+      }
+
+
+      Function::Function(const Module &module, const std::string &name):
+        _context(module.getContext()),
+        _module(module),
+        _name(name)
+      {
+        ScopedCurrentContext scc(_context);
+
         checkCuCall(cuModuleGetFunction(&_function, module._impl->_module,
                                         name.c_str()));
       }
@@ -478,6 +660,8 @@ namespace LOFAR
 
       int Function::getAttribute(CUfunction_attribute attribute) const
       {
+        ScopedCurrentContext scc(_context);
+
         int value;
         checkCuCall(cuFuncGetAttribute(&value, attribute, _function));
         return value;
@@ -486,6 +670,8 @@ namespace LOFAR
       void Function::setSharedMemConfig(CUsharedconfig config) const
       {
 #if CUDA_VERSION >= 4020
+        ScopedCurrentContext scc(_context);
+
         checkCuCall(cuFuncSetSharedMemConfig(_function, config));
 #else
         (void)config;
@@ -496,18 +682,25 @@ namespace LOFAR
       class Event::Impl : boost::noncopyable
       {
       public:
-        Impl(unsigned int flags)
+        Impl(const Context &context, unsigned int flags):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventCreate(&_event, flags));
         }
 
         ~Impl()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventDestroy(_event));
         }
 
         float elapsedTime(CUevent other) const
         {
+          ScopedCurrentContext scc(_context);
+
           float ms;
           checkCuCall(cuEventElapsedTime(&ms, other, _event));
           return ms;
@@ -515,14 +708,19 @@ namespace LOFAR
 
         void wait()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventSynchronize(_event));
         }
 
       //private: // Stream needs it to wait for and record events
         CUevent _event;
+      private:
+        const Context _context;
       };
 
-      Event::Event(unsigned int flags) : _impl(new Impl(flags))
+      Event::Event(const Context &context, unsigned int flags):
+        _impl(new Impl(context, flags))
       {
       }
 
@@ -540,24 +738,33 @@ namespace LOFAR
       class Stream::Impl : boost::noncopyable
       {
       public:
-        Impl(unsigned int flags)
+        Impl(const Context &context, unsigned int flags):
+          _context(context)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamCreate(&_stream, flags));
         }
 
         ~Impl()
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamDestroy(_stream));
         }
 
         void memcpyHtoDAsync(CUdeviceptr devPtr, const void *hostPtr, 
                              size_t size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemcpyHtoDAsync(devPtr, hostPtr, size, _stream));
         }
 
         void memcpyDtoHAsync(void *hostPtr, CUdeviceptr devPtr, size_t size)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
         }
 
@@ -566,6 +773,8 @@ namespace LOFAR
                           unsigned blockZ, unsigned sharedMemBytes,
                           void **parameters)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
                                      blockY, blockZ, sharedMemBytes, _stream,
                                      parameters, NULL));
@@ -573,28 +782,42 @@ namespace LOFAR
 
         bool query() const
         {
+          ScopedCurrentContext scc(_context);
+
           CUresult rv = cuStreamQuery(_stream);
-          if (rv == CUDA_ERROR_NOT_READY) {
-            return false;
-          } else if (rv == CUDA_SUCCESS) {
-            return true;
+
+          switch (rv) {
+            case CUDA_ERROR_NOT_READY:
+              return false;
+
+            case CUDA_SUCCESS:
+              return true;
+
+            default:
+              checkCuCall(rv); // throws
+
+              ASSERT(false); // not reached; silence compilation warning
           }
-          checkCuCall(rv); // throws
-          return false; // not reached; silence compilation warning
         }
 
         void synchronize() const
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamSynchronize(_stream));
         }
 
         void waitEvent(CUevent event) const
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuStreamWaitEvent(_stream, event, 0));
         }
 
         void recordEvent(CUevent event)
         {
+          ScopedCurrentContext scc(_context);
+
           checkCuCall(cuEventRecord(event, _stream));
         }
 
@@ -603,59 +826,73 @@ namespace LOFAR
           return _stream;
         }
 
+        Context getContext() const
+        {
+          return _context;
+        }
+
       private:
+        const Context _context;
         CUstream _stream;
       };
 
-      Stream::Stream(unsigned int flags) : _impl(new Impl(flags))
+      Stream::Stream(const Context &context, unsigned int flags):
+        _impl(new Impl(context, flags)),
+        force_synchronous(profiling) // TODO: properly set this based on something else
       {
       }
 
-      void Stream::writeBuffer(DeviceMemory &devMem, 
+      void Stream::writeBuffer(const DeviceMemory &devMem, 
                                const HostMemory &hostMem,
-                               bool synchronous)
+                               bool synchronous) const
       {
         // tmp check: avoid async writeBuffer request that will fail later.
-        // This interface may still change at which point a cleaner solution can be used.
+        // TODO: This interface may still change at which point a cleaner solution can be used.
         if (hostMem.size() > devMem.size())
         {
-          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer");
+          THROW(CUDAException, "writeBuffer(): host buffer too large for device buffer: host buffer is " << hostMem.size() << " bytes, device buffer is " << devMem.size() << " bytes");
         }
 
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
-                               hostMem.get<void *>(),
+                               hostMem.get<void>(),
                                hostMem.size());
-        if (synchronous) {
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
 
-      void Stream::readBuffer(HostMemory &hostMem, 
+      void Stream::readBuffer(const HostMemory &hostMem, 
                               const DeviceMemory &devMem,
-                              bool synchronous)
+                              bool synchronous) const
       {
-        // tmp check: avoid async writeBuffer request that will fail later.
-        // This interface may still change at which point a cleaner solution can be used.
-        if (devMem.size() > hostMem.size())
-        {
-          THROW(CUDAException, "readBuffer(): device buffer too large for host buffer");
-        }
+        // Host buffer can be smaller, because the device
+        // buffers can be used for multiple purposes in
+        // the CUDA code, and thus can be larger than
+        // needed here.
+        size_t size = std::min(devMem.size(), hostMem.size());
 
-        _impl->memcpyDtoHAsync(hostMem.get<void *>(), 
+        _impl->memcpyDtoHAsync(hostMem.get<void>(),
                                (CUdeviceptr)devMem.get(),
-                               devMem.size());
-        if (synchronous) {
+                               size);
+        if (synchronous || force_synchronous) {
           synchronize();
         }
       }
 
       void Stream::launchKernel(const Function &function,
-                                const Grid &grid, const Block &block)
+                                const Grid &grid, const Block &block) const
       {
+        LOG_DEBUG_STR("Launching " << function._name);
+
         const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
                             block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
+
+          if (force_synchronous) {
+            synchronize();
+          }
+
       }
 
       bool Stream::query() const
@@ -681,6 +918,16 @@ namespace LOFAR
       CUstream Stream::get() const
       {
         return _impl->get();
+      }
+
+      Context Stream::getContext() const
+      {
+        return _impl->getContext();
+      }
+
+      bool Stream::isSynchronous() const
+      {
+        return force_synchronous;
       }
 
 

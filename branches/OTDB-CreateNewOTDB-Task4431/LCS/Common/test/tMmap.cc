@@ -53,7 +53,7 @@ int main()
 
     size_t mappingSize = (16 * 1024 + pageSize) & ~(pageSize - 1);
     LOFAR::Mmap mmap(NULL, mappingSize, PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                     MAP_PRIVATE | MAP_ANON, -1, 0);
     cout << "Mmap worked, trying to write, then read back" << endl;
 
     unsigned nerrors = 0; // to limit potential error cerr spam

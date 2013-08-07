@@ -23,8 +23,8 @@
 #include <vector>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/Buffers.h>
-#include <GPUProc/gpu_utils.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/opencl/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
 
 using namespace LOFAR;

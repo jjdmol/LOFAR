@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #ifndef LOFAR_INPUT_PROC_BLOCK_H
@@ -24,7 +24,7 @@
 
 #include <vector>
 
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 #include <CoInterface/SubbandMetaData.h>
 
 namespace LOFAR
@@ -52,6 +52,8 @@ namespace LOFAR
         struct Range {
           const T* from;
           const T* to;
+
+          size_t size() const;
         } ranges[2];
 
         unsigned nrRanges;
@@ -61,6 +63,9 @@ namespace LOFAR
 
         // The flags, with indices local to this block
         SubbandMetaData::flags_type flagsAtBegin;
+
+        // Copy the samples for this beamlet to dest
+        void copy(T *dest) const;
       };
 
       std::vector<struct Beamlet> beamlets; // [beamlet]
@@ -78,6 +83,8 @@ namespace LOFAR
   }
 
 }
+
+#include "Block.tcc"
 
 #endif
 

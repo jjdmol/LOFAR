@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -24,6 +24,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>
@@ -96,6 +97,8 @@ namespace LOFAR
       // get/create shmid handle
       for(;;) {
         try {
+          LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): TRYING");
+
           // Try to open the buffer
           if (open(open_flags, attach_flags, timeout > 0))
             break;
@@ -123,8 +126,10 @@ namespace LOFAR
           throw TimeOutException("shared memory", THROW_ARGS);
 
         if (usleep(999999) < 0)
-          throw SystemCallException("sleep", errno, THROW_ARGS);
+          THROW_SYSCALL("usleep");
       }
+
+      LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
     }
 
 
@@ -137,14 +142,13 @@ namespace LOFAR
       preexisting = (shmget(key, 0, 0) >= 0 || errno != ENOENT);
 
       shmid = shmget( key, itsSize, open_flags );
-
       if (shmid == -1) {
         // No timeout means we're not keeping silent about ENOENT/ENOEXIST
         if (!timeout)
-          throw SystemCallException("shmget", errno, THROW_ARGS);
+          THROW_SYSCALL("shmget");
 
         if (errno != ENOENT && errno != EEXIST)
-          throw SystemCallException("shmget", errno, THROW_ARGS);
+          THROW_SYSCALL("shmget");
       } else {
         // attach to segment
         itsBegin = shmat( shmid, NULL, attach_flags );
@@ -152,15 +156,13 @@ namespace LOFAR
         if (itsBegin != (void*)-1)
           return true; // success!
 
-        int saved_errno = errno;
-
         if (!preexisting) {
           // we created the buffer, so erase it before continuing
           if (shmctl(shmid, IPC_RMID, NULL) < 0)
-            throw SystemCallException("shmctl", errno, THROW_ARGS);
+            THROW_SYSCALL("shmctl");
         }
 
-        throw SystemCallException("shmat", saved_errno, THROW_ARGS);
+        THROW_SYSCALL("shmat");
       }
 
       return false;
@@ -191,6 +193,10 @@ namespace LOFAR
 
     void SharedMemoryArena::remove( key_t key, bool quiet )
     {
+      ScopedLock sl(shmMutex);
+
+      LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (remove)");
+
       int shmid = shmget( key, 0, 0 );
 
       if (shmid < 0)
@@ -204,7 +210,7 @@ namespace LOFAR
       // so getting EINVAL is a possibility.
       if (shmctl(shmid, IPC_RMID, NULL) < 0 && errno != EINVAL)
         // failed to remove SHM
-        throw SystemCallException("shmctl", errno, THROW_ARGS);
+        THROW_SYSCALL("shmctl");
 
       // key existed, SHM removed
     }
@@ -212,18 +218,38 @@ namespace LOFAR
 
     SharedMemoryArena::~SharedMemoryArena()
     {
+      ScopedLock sl(shmMutex);
+
       try {
         // detach
         if (shmdt(itsBegin) < 0)
-          throw SystemCallException("shmdt", errno, THROW_ARGS);
+          THROW_SYSCALL("shmdt");
 
         // destroy
-        if (!preexisting && (mode == CREATE || mode == CREATE_EXCL))
+        if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
+          LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (destructor)");
+
           if (shmctl(shmid, IPC_RMID, NULL) < 0)
-            throw SystemCallException("shmctl", errno, THROW_ARGS);
+            THROW_SYSCALL("shmctl");
+        }
 
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
+      }
+    }
+
+    string SharedMemoryArena::modeStr( Mode mode ) const {
+      switch(mode) {
+        case CREATE_EXCL:
+          return "CREATE_EXCL";
+        case CREATE:
+          return "CREATE";
+        case READ:
+          return "READ";
+        case READWRITE:
+          return "READWRITE";
+        default:
+          return "INVALID";
       }
     }
 

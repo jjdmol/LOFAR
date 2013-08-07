@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -32,6 +32,14 @@
 
 using namespace std;
 using namespace LOFAR::Cobalt::MPIProtocol;
+
+//#define DEBUG_MPI
+
+#ifdef DEBUG_MPI
+#define DEBUG(str)    LOG_DEBUG_STR(__PRETTY_FUNCTION__ << ": " << str)
+#else
+#define DEBUG(str)
+#endif
 
 namespace LOFAR {
 
@@ -70,10 +78,11 @@ namespace LOFAR {
       }
     }
 
+
     template<typename T>
     MPI_Request MPISendStation::sendHeader( int rank, struct MPIProtocol::Header &header, const struct Block<T> &block )
     {
-      //LOG_DEBUG_STR(logPrefix << "Sending header to rank " << rank);
+      DEBUG(logPrefix << "Sending header to rank " << rank);
 
       // Copy dynamic header info
       header.from             = block.from;
@@ -101,7 +110,7 @@ namespace LOFAR {
     template<typename T>
     unsigned MPISendStation::sendData( int rank, unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] )
     {
-      //LOG_DEBUG_STR(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
+      DEBUG(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
       // Send beamlet using 1 or 2 transfers
       for(unsigned transfer = 0; transfer < ib.nrRanges; ++transfer) {
@@ -126,7 +135,7 @@ namespace LOFAR {
 
     MPI_Request MPISendStation::sendMetaData( int rank, unsigned beamlet, const struct MPIProtocol::MetaData &metaData )
     {
-      //LOG_DEBUG_STR("Sending flags to rank " << rank);
+      DEBUG("Sending flags to rank " << rank);
 
       union tag_t tag;
       tag.bits.type     = METADATA;
@@ -140,6 +149,8 @@ namespace LOFAR {
     template<typename T>
     void MPISendStation::sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData )
     {
+      DEBUG("entry");
+
       ASSERT(metaData.size() == block.beamlets.size());
 
       /*
@@ -223,6 +234,8 @@ namespace LOFAR {
 
       // Wait on them all
       waitAll(allRequests);
+
+      DEBUG("exit");
     }
 
     // Create all necessary instantiations

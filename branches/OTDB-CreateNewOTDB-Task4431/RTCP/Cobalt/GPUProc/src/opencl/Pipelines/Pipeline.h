@@ -32,7 +32,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_incl.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -42,7 +42,7 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &);
+      Pipeline(const Parset &ps);
 
       cl::Program             createProgram(const char *sources);
 
@@ -54,10 +54,6 @@ namespace LOFAR
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
-      void doWork();
-
-      void                    sendNextBlock(unsigned station);
-      
     protected:
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {
@@ -66,9 +62,9 @@ namespace LOFAR
         // lock on the shared data
         Mutex totalsMutex;
         // add the counter in this queue
-        void addQueue(WorkQueue &queue);
+        void addQueue(SubbandProc &queue);
         // Print a logline with results
-        void log(size_t nrWorkQueues);
+        void log(size_t nrSubbandProcs);
       } performance;
     };
   }

@@ -27,17 +27,18 @@ prefix		= "KVT"; // for the signal names
 id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
-include = '<MACIO/StringVector.h>';
-include = '<MACIO/DoubleVector.h>';
+include = '<Common/KVpair.h>';
 
 prelude = << PRELUDE_END
 
 //	REGISTER 	  	 (uint obsID, string	name);
 //	REGISTER_ACK	 (uint obsID, string	name);
-//	SEND_MSG		 (int seqnr, string key, string value, double	secsEpoch1970);
+//	SEND_MSG		 (int seqnr, KVpair		kvp;
 //	SEND_MSG_ACK	 (int seqnr, uint result);
-//	SEND_MSG_POOL	 (int seqnr, uint nrMsgs, strVector key, strVector value, dblVector time);
+//	SEND_MSG_POOL	 (int seqnr, vector<KVpair> kvps);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
+
+using LOFAR::operator<<;
 
 PRELUDE_END;
 
@@ -81,16 +82,8 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "key";
-		type = "string";
-	};
-	param = {
-		name = "value";
-		type = "string";
-	};
-	param = {
-		name = "timestamp";
-		type = "double";
+		name = "kvp";
+		type = "KVpair";
 	};
 };
 
@@ -115,26 +108,8 @@ event = {
 		type = "int32";
 	};
 	param = {
-		name = "nrElements";
-		type = "uint32";
-	};
-	param = {
-		name = "keys";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
-	};
-	param = {
-		name = "values";
-		type = "MACIO::StringVector";
-		userdefined;
-		printable;
-	};
-	param = {
-		name = "times";
-		type = "MACIO::DoubleVector";
-		userdefined;
-		printable;
+		name = "kvps";
+		type = "vector<KVpair>";
 	};
 };
 

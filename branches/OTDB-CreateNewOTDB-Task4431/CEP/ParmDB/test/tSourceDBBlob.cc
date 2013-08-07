@@ -63,4 +63,13 @@ int main()
     cout << "Shapelet U:     " << sdata.getInfo().getShapeletCoeffU() << endl;
     cout << "Shapelet V:     " << sdata.getInfo().getShapeletCoeffV() << endl;
   }
+
+  // Get all patch names and info.
+  cout << "Patch info: " << sdb.getPatchInfo() << endl;
+  cout << "Patch names: " << sdb.getPatches() << endl;
+  cout << "Patch names: " << sdb.getPatches(-1, "cy*") << endl;
+  cout << "Patch names: " << sdb.getPatches(1) << endl;
+  cout << "Patch names: " << sdb.getPatches(2) << endl;
+  cout << "Patch names: " << sdb.getPatches(-1, "", -1, 0.5) << endl;
+  cout << "Patch names: " << sdb.getPatches(-1, "", 0.5, 2.25) << endl;
 }

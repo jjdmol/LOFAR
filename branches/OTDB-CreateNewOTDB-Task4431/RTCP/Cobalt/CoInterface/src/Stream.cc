@@ -72,9 +72,11 @@ namespace LOFAR
 #else
         return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
 #endif
-      else if (split.size() == 2 && split[0] == "file")
-        return asServer ? new FileStream(split[1].c_str()) : new FileStream(split[1].c_str(), 0666);
-      else if (split.size() == 2 && split[0] == "pipe")
+      else if (split.size() > 1 && split[0] == "file") {
+        // don't use split[1] to allow : in filenames
+        const string filename = descriptor.substr(5);
+        return asServer ? new FileStream(filename.c_str()) : new FileStream(filename.c_str(), 0666);
+      } else if (split.size() == 2 && split[0] == "pipe")
         return new NamedPipeStream(split[1].c_str(), asServer);
       else if (split.size() == 2)
         return new SocketStream(split[0].c_str(), boost::lexical_cast<unsigned short>(split[1]), SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline);

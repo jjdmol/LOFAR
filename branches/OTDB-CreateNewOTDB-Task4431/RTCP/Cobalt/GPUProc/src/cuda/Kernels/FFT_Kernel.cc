@@ -24,7 +24,7 @@
 #include <cufft.h>
 
 #include <Common/LofarLogger.h>
-
+#include <GPUProc/global_defines.h>
 #include "FFT_Kernel.h"
 
 namespace LOFAR
@@ -32,22 +32,27 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
+    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
       :
+      context(context),
       nrFFTs(nrFFTs),
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
-      plan(fftSize, nrFFTs),
+      plan(context, fftSize, nrFFTs),
       buffer(buffer)
     {
     }
 
-    void FFT_Kernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/)
+    void FFT_Kernel::enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/)
     {
+      gpu::ScopedCurrentContext scc(context);
+
       cufftResult error;
 
       // Tie our plan to the specified stream
-      plan.setStream(queue);
+      plan.setStream(stream);
+
+      LOG_DEBUG("Launching cuFFT");
 
       // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,
@@ -58,11 +63,28 @@ namespace LOFAR
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 
+      if (stream.isSynchronous()) {
+        stream.synchronize();
+      }
+
 /*
       counter.doOperation(event,
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));*/
+    }
+
+    size_t FFT_Kernel::bufferSize(const Parset& ps, BufferType bufferType)
+    {
+      switch (bufferType) {
+      case INPUT_DATA: 
+      case OUTPUT_DATA:
+        return
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
     }
 
   }

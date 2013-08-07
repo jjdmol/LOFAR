@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #ifndef LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
 #define LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
@@ -77,12 +77,14 @@ namespace LOFAR
 
       // Process data for this board until interrupted or end of data.
       // `packet' is the receive buffer for packets. If a new mode is detected,
-      // `packet' is filled with the last read packet, and a BadModeException
+      // `packet' is filled with the last read packet, and a PacketWriter::BadModeException
       // is thrown.
+      //
+      // `mode' indicates the expected mode.
       //
       // If `writeGivenPacket' is true, the provided `packet' is written as well.
       template<typename T>
-      void process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
+      void process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
 
       // Triggers statistics logging every LOG_INTERVAL seconds
       void logStatistics( PacketReader &reader, const struct RSP &packet );

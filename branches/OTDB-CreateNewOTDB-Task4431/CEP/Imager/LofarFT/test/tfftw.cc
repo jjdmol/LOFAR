@@ -7,6 +7,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/OS/Timer.h>
 
+
 using namespace casa;
 
 #include <vector>
@@ -200,11 +201,8 @@ void premult(Matrix<Complex>& rData)
   }
 }
 
-void moveInx(Complex* to, Complex* fr, Complex* p0, int size)
+void moveInx(Complex* to, Complex* fr, Complex*, int)
 {
-  (void)p0;
-  (void)size;
-
   *to = *fr;
   //  cout << "move "<<(fr-p0)/size << ','<< (fr-p0)%size << " to "
   //       <<(to-p0)/size << ','<< (to-p0)%size << "   "<<*fr<<endl;
@@ -501,9 +499,77 @@ void timeFlip(int sz)
   timer.show ("oldflip");
 }
 
+void timeParallel(int direction, int sz=128, int nthread=1, bool show=false, int align=0)
+{
+  if (show) cout <<"fftw size=" << sz << " dir=" << direction
+                 << " align=" << align
+                 << " nthread=" << nthread << endl;
+  Complex* ptr = static_cast<Complex*>(fftw_malloc ((sz*sz+1)*sizeof(Complex)));
+  Matrix<Complex> arr(IPosition(2,sz,sz), ptr+align, SHARE);
+  if (show) cout << ptr << ' ' << arr.data() << endl;
+  Timer timer;
+  fftwf_plan plan = fftwf_plan_dft_2d(sz, sz,
+                                      reinterpret_cast<fftwf_complex*>(arr.data()),
+                                      reinterpret_cast<fftwf_complex*>(arr.data()),
+                                      direction, FFTW_MEASURE);
+  if (show) timer.show ("plan   ");
+  init (arr);
+  if (direction == FFTW_FORWARD) {
+    if (sz%4 == 0) {
+      timer.mark();
+      preflip(arr);
+      if (show) timer.show ("preflip");
+      timer.mark();
+      cout<<"ececute"<<endl;
+      fftwf_execute (plan);
+      cout<<"done"<<endl;
+      if (show) timer.show ("exec   ");
+    } else {
+      timer.mark();
+      flip(arr);
+      if (show) timer.show ("flip1  ");
+      timer.mark();
+      fftwf_execute (plan);
+      if (show) timer.show ("exec   ");
+      timer.mark();
+      flip (arr);
+      if (show) timer.show ("flip2  ");
+    }
+  } else {
+    timer.mark();
+    flip(arr);
+    if (show) timer.show ("flip1  ");
+    flip(arr);
+    if (show) timer.show ("flip1  ");
+    timer.mark();
+    fftwf_execute (plan);
+    if (show) timer.show ("exec   ");
+    timer.mark();
+    scaleflip (arr);
+    if (show) timer.show ("scalefl");
+  }
+}
 
 int main (int argc, char* [])
 {
+  cout << "Testing parallel FFTW ..." << endl;
+  //  timeParallel (FFTW_FORWARD, 4096, 1, true);
+  //  timeParallel (FFTW_FORWARD, 4096, 2, true);
+  //timeParallel (FFTW_FORWARD, 4096, 4, true);
+  //timeParallel (FFTW_FORWARD, 4096, 8, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  fftwf_init_threads();
+  //fftwf_plan_with_nthreads (1);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  fftwf_plan_with_nthreads (6);
+  timeParallel (FFTW_FORWARD, 2*4096, 6, true);
+  timeParallel (FFTW_FORWARD, 2*4096, 6, true);
+  //fftwf_plan_with_nthreads (1);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //timeParallel (FFTW_FORWARD, 2*4096, 1, true);
+  //fftwf_destroy_plan (plan);
+  return 0;
   ///  testvec();
   checkFlip(5);
   timeFlip (2048);

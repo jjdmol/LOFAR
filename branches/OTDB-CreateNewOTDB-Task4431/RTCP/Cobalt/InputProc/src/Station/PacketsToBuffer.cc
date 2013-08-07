@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -54,6 +54,12 @@ namespace LOFAR
       // Holder for packet
       struct RSP packet;
 
+      // Create the buffer, regardless of mode
+      GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
+
+      // Keep track of the desired mode
+      struct BoardMode mode;
+
       // Whether packet has been read already
       bool packetValid = false;
 
@@ -61,36 +67,29 @@ namespace LOFAR
       for(;; ) {
         try {
           // Process packets based on (expected) bit mode
-          switch(settings.station.bitMode) {
+          switch(mode.bitMode) {
           case 16:
-            process< SampleType<i16complex> >(packet, packetValid);
+            process< SampleType<i16complex> >(packet, mode, packetValid);
             break;
 
           case 8:
-            process< SampleType<i8complex> >(packet, packetValid);
+            process< SampleType<i8complex> >(packet, mode, packetValid);
             break;
 
           case 4:
-            process< SampleType<i4complex> >(packet, packetValid);
+            process< SampleType<i4complex> >(packet, mode, packetValid);
             break;
           }
 
           // process<>() exited gracefully, so we're done
           break;
-        } catch (PacketReader::BadModeException &ex) {
+        } catch (BadModeException &ex) {
           // Mode switch detected
-          unsigned bitMode = packet.bitMode();
-          unsigned clockMHz = packet.clockMHz();
-          unsigned nrBeamlets = packet.header.nrBeamlets;
+          LOG_INFO_STR(logPrefix << "Mode switch detected to " << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit");
 
-          LOG_INFO_STR( logPrefix << "Mode switch detected to " << clockMHz << " MHz, " << bitMode << " bit, " << nrBeamlets << " beamlets");
-
-          // update settings
-          settings.station.bitMode = bitMode;
-          settings.station.clockMHz = clockMHz;
-          settings.dataKey = settings.station.hash();
-
-          settings.nrBeamletsPerBoard = nrBeamlets;
+          // change mode
+          mode.bitMode = packet.bitMode();
+          mode.clockMHz = packet.clockMHz();
 
           // Process packet again
           packetValid = true;
@@ -110,14 +109,14 @@ namespace LOFAR
 
 
     template<typename T>
-    void PacketsToBuffer::process( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException)
+    void PacketsToBuffer::process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket )
     {
       // Create input structures
       PacketReader reader(logPrefix, inputStream);
 
       // Create output structures
-      SampleBuffer<T> buffer(settings, true);
-      PacketWriter<T> writer(logPrefix, buffer, boardNr);
+      SampleBuffer<T> buffer(settings, SharedMemoryArena::READWRITE);
+      PacketWriter<T> writer(logPrefix, buffer, mode, boardNr);
 
       LOG_INFO_STR( logPrefix << "Processing packets" );
 
@@ -130,13 +129,13 @@ namespace LOFAR
 
         // Transport packets from reader to writer
         for(;; ) {
-          if (reader.readPacket(packet, settings)) {
+          if (reader.readPacket(packet)) {
             writer.writePacket(packet);
             logStatistics(reader, packet);
           }
         }
 
-      } catch (PacketReader::BadModeException &ex) {
+      } catch (BadModeException &ex) {
         // Packet has different clock or bitmode
         throw;
 
@@ -154,15 +153,15 @@ namespace LOFAR
         LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
       }
 
+      writer.noMoreWriting();
+
       LOG_INFO_STR( logPrefix << "End");
     }
 
 
     // Explcitly create the instances we use
-    template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
-    template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
-    template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, bool writeGivenPacket ) throw(PacketReader::BadModeException);
-
-
+    template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
+    template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
+    template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
   }
 }

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -25,13 +25,14 @@
 
 #include <ctime>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -79,6 +80,9 @@ void report( const string &filename )
 
 int main()
 {
+  // Force printing times in UTC
+  setenv("TZ", "UTC", 1);
+
   INIT_LOGGER("printRSP");
 
   report("/dev/stdin");

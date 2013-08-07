@@ -17,12 +17,11 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
 
-#include <InputProc/Buffer/BufferSettings.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <time.h>
 
@@ -31,14 +30,13 @@ using namespace Cobalt;
 
 void test()
 {
-  struct StationID stationID("RS106", "LBA", 200, 16);
-  struct BufferSettings settings(stationID, false);
-  PacketFactory factory(settings);
+  struct BoardMode mode(16, 200);
+  PacketFactory factory(mode);
 
   // Just generate packets.
   time_t now = time(0);
-  TimeStamp start(now,     0, stationID.clockMHz * 1000000);
-  TimeStamp end  (now + 1, 0, stationID.clockMHz * 1000000);
+  TimeStamp start(now,     0, mode.clockHz());
+  TimeStamp end  (now + 1, 0, mode.clockHz());
 
   // The number of time slots per packet, which will
   // be read from the generated packets.

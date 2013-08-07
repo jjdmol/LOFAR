@@ -93,7 +93,7 @@ static string formatFilenameTimestamp(const struct timeval& tv, const char* outp
 static size_t tryPWrite(int fd, const void *ptr, size_t size, off_t offset) {
 	ssize_t bytes = ::pwrite(fd, ptr, size, offset);
 	if (bytes < 0)
-		throw SystemCallException("pwrite", errno, THROW_ARGS);
+		THROW_SYSCALL("pwrite");
 	return bytes;
 }
 

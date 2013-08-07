@@ -1,4 +1,4 @@
-//# UHEP_WorkQueue.h
+//# UHEP_SubbandProc.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -27,19 +27,19 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/Buffers.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/UHEP_Pipeline.h>
 #include <GPUProc/Kernels/UHEP_TriggerKernel.h>
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    class UHEP_WorkQueue : public WorkQueue
+    class UHEP_SubbandProc : public SubbandProc
     {
     public:
-      UHEP_WorkQueue(UHEP_Pipeline &, unsigned queueNumber);
+      UHEP_SubbandProc(UHEP_Pipeline &, unsigned queueNumber);
 
       void doWork(const float *delaysAtBegin, const float *delaysAfterEnd, const float *phaseOffsets);
 

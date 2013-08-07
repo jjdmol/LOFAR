@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -51,8 +51,12 @@ SampleBuffer< SampleType<i16complex> >::Board *board;
  */
 void initBoard()
 {
+  // Delete the old buffer, if any
+  board = 0;
+  buffer = 0;
+
   // Fill a BufferSettings object
-  struct StationID stationID("RS106", "LBA", 200, 16);
+  struct StationID stationID("RS106", "LBA");
   struct BufferSettings settings(stationID, false);
 
   // Use a fixed key, so the test suite knows what to clean
@@ -71,7 +75,7 @@ void initBoard()
   settings.syncLock = syncLock;
 
   // Create the buffer
-  buffer = new SampleBuffer< SampleType<i16complex> >(settings, true);
+  buffer = new SampleBuffer< SampleType<i16complex> >(settings, SharedMemoryArena::CREATE);
   board = &buffer->boards[0];
 
   board->noReadBefore(TimeStamp(EPOCH));
@@ -240,6 +244,6 @@ int main()
   // Don't run forever if communication fails for some reason
   alarm(10);
 
-  return UnitTest::RunAllTests();
+  return UnitTest::RunAllTests() > 0;
 }
 

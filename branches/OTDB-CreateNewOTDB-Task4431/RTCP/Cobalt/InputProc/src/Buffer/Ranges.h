@@ -16,12 +16,13 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #ifndef LOFAR_INPUT_PROC_RANGES_H
 #define LOFAR_INPUT_PROC_RANGES_H
 
 #include <ostream>
+#include <iterator>
 
 #include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
@@ -55,6 +56,9 @@ namespace LOFAR
       Ranges( void *data, size_t numBytes, value_type minHistory, bool create );
       ~Ranges();
 
+      // Remove everything
+      void clear();
+
       // Remove [0,to)
       void excludeBefore( value_type to );
 
@@ -68,11 +72,8 @@ namespace LOFAR
       // Returns [first, last) as a SparseSet
       BufferSettings::flags_type sparseSet( value_type first, value_type last ) const;
 
-      // The size of a single [from,to) pair.
-      static size_t elementSize()
-      {
-        return sizeof(struct Range);
-      }
+      // Dump the raw contents to LOG_DEBUG
+      void dump() const;
 
     private:
       struct Range {
@@ -91,13 +92,102 @@ namespace LOFAR
       bool create;
       size_t len;
       Range *ranges;
-      Range *begin;
-      Range *end;
+      Range *_begin;
+      Range *_end;
       Range *head;
 
       // minimal history to maintain (samples newer than this
       // will be maintained in favour of newly added ranges)
       value_type minHistory;
+
+      // An iterator that skips invalid Range entries. We keep this private
+      // to avoid external access to our volatile members.
+      //
+      // The iterator caches the range it points to, allowing it to keep
+      // the referenced value valid.
+      class const_iterator: public std::iterator<std::forward_iterator_tag, const struct Range> {
+      public:
+        const_iterator(pointer at, pointer const end): ptr(at), end(end) { moveToValid(); }
+        const_iterator(const const_iterator &other): ptr(other.ptr), end(other.end) {}
+
+        Ranges::value_type from() const { return cache.from; }
+        Ranges::value_type to()   const { return cache.to;   }
+
+        bool operator==(const const_iterator &other) { return ptr == other.ptr; }
+        bool operator!=(const const_iterator &other) { return ptr != other.ptr; }
+
+        const_iterator &operator++() {
+          ++ptr;
+          moveToValid();
+          return *this;
+        }
+
+      private:
+        // the item being referenced
+        pointer ptr;
+
+        // move the pointer until it hits a valid value
+        void moveToValid() {
+          if (ptr == end)
+            return;
+
+          // find the next valid entry before `end'
+          do {
+            cache = *ptr;
+          } while(!cacheValid() && ++ptr != end);
+        }
+
+        // whether `cache' is a valid entry
+        bool cacheValid() const {
+          return from() < to();
+        }
+
+        // a non-volatile cache of *ptr
+        struct {
+          Ranges::value_type from, to;
+
+          void operator=(const Range &r) {
+            // read in same order as fields are written
+            from = r.from;
+            to = r.to;
+          }
+        } cache;
+
+        // a cache of the end, to prevent skipping over it
+        pointer const end;
+      };
+
+      const_iterator begin() const {
+        return const_iterator(_begin, _end);
+      }
+
+      const_iterator end() const {
+        return const_iterator(_end, _end);
+      }
+
+      // Return a pointer to the next entry, wrapping around
+      // from _end to _begin.
+      Range *next_rr( Range *x ) const {
+        return x + 1 == _end ? _begin : x + 1;
+      }
+
+      // Return a pointer to the previous entry, wrapping around
+      // from _begin to _end.
+      Range *prev_rr( Range *x ) const {
+        return x == _begin ? _end - 1 : x - 1;
+      }
+
+      // Remove a given entry, and create a continuous array
+      // by shifting all entries from i to head.
+      //
+      // 'head' is updated as well.
+      void remove( Range *i );
+
+      // Insert an empty range at spot i, to contain data up to
+      // 'to'. Returns whether the insertion was succesful.
+      //
+      // 'head' is updated as well.
+      bool insert_empty( Range *i, value_type to );
 
     public:
       // The size of this object for a given number of [from,to) pairs.

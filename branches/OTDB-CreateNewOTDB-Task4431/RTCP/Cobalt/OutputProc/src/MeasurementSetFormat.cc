@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <cstdlib>
 
 #if defined __linux__
 #include <linux/limits.h>
@@ -69,6 +70,7 @@
 #include <MSLofar/BeamTables.h>
 #include <LofarStMan/LofarStMan.h>
 #include <CoInterface/Exceptions.h>
+#include <Common/LofarLocators.h>
 #include <OutputProc/Package__Version.h>
 
 
@@ -101,11 +103,11 @@ namespace LOFAR
       itsAlignment(alignment)
     {
       if (itsPS.nrTabStations() > 0) {
-        ASSERTSTR(antPos.size() == 3 * itsPS.nrTabStations(),
-                  antPos.size() << " == " << 3 * itsPS.nrTabStations());
+        ASSERTSTR(antPos.size() == itsPS.nrTabStations(),
+                  antPos.size() << " == " << itsPS.nrTabStations());
       } else {
-        ASSERTSTR(antPos.size() == 3 * itsPS.nrStations(),
-                  antPos.size() << " == " << 3 * itsPS.nrStations());
+        ASSERTSTR(antPos.size() == itsPS.nrStations(),
+                  antPos.size() << " == " << itsPS.nrStations());
       }
 
       itsStartTime = toMJDs(itsPS.startTime());
@@ -160,9 +162,9 @@ namespace LOFAR
 
         try {
           for (unsigned i = 0; i < itsNrAnt; i++) {
-            antMPos[i] = MPosition(MVPosition(antPos[3 * i],
-                                              antPos[3 * i + 1],
-                                              antPos[3 * i + 2]),
+            antMPos[i] = MPosition(MVPosition(antPos[i][0],
+                                              antPos[i][1],
+                                              antPos[i][2]),
                                    MPosition::ITRF);
           }
         } catch (AipsError &ex) {
@@ -170,8 +172,7 @@ namespace LOFAR
         }
 
         // Get subarray id (formerly known as beam).
-        const vector<unsigned> subbandToSAPmapping = itsPS.subbandToSAPmapping();
-        int subarray = subbandToSAPmapping[subband];
+        int subarray = itsPS.settings.subbands[subband].SAP;
 
         fillAntenna(antMPos);
         fillFeed();
@@ -183,14 +184,24 @@ namespace LOFAR
         fillHistory();
 
         try {
+          // Use ConfigLocator to locate antenna configuration files.
+          ConfigLocator configLocator;
+          // By default, ConfigLocator doesn't add ${LOFARROOT} to its search
+          // path, so we have to do it here :(
+          const char* lofarroot = getenv("LOFARROOT");
+          if (lofarroot) {
+            configLocator.addPathAtFront(lofarroot);
+          }
+          LOG_DEBUG_STR("Config locator search path: " << 
+                        configLocator.getPath());
           // Fill the tables containing the beam info.
           BeamTables::fill(*itsMS,
                            itsPS.antennaSet(),
-                           itsPS.AntennaSetsConf(),
-                           itsPS.AntennaFieldsDir(),
-                           itsPS.HBADeltasDir());
+                           configLocator.locate("AntennaSets.conf"),
+                           configLocator.locate("StaticMetaData"),
+                           configLocator.locate("StaticMetaData"));
         } catch (LOFAR::AssertError &ex) {
-          LOG_WARN_STR("Ignoring exception from BeamTables::fill(): " << ex.what());
+          LOG_ERROR_STR("Failed to add beam tables: " << ex);
         }
       } catch (AipsError &ex) {
         THROW(StorageException, "AIPS/CASA error: " << ex.getMesg());
@@ -392,7 +403,10 @@ namespace LOFAR
       timeRange[1] = itsStartTime + itsNrTimes * itsTimeStep;
 
       // Get minimum and maximum frequency.
-      vector<double> freqs = itsPS.subbandToFrequencyMapping();
+      vector<double> freqs(itsPS.nrSubbands());
+      for(size_t sb = 0; sb < itsPS.nrSubbands(); ++sb)
+         freqs[sb] = itsPS.settings.subbands[sb].centralFrequency;
+
       ASSERT( freqs.size() > 0 );
 
       double minFreq = *std::min_element( freqs.begin(), freqs.end() );
@@ -468,11 +482,11 @@ namespace LOFAR
 
     void MeasurementSetFormat::fillSpecWindow(unsigned subband)
     {
-      const double refFreq = itsPS.subbandToFrequencyMapping()[subband];
+      const double refFreq = itsPS.settings.subbands[subband].centralFrequency;
       const size_t nchan = itsPS.nrChannelsPerSubband();
       const double chanWidth = itsPS.channelWidth();
       const double totalBW = nchan * chanWidth;
-      const double channel0freq = itsPS.channel0Frequency(subband);
+      const double channel0freq = itsPS.channel0Frequency(subband, nchan);
 
       casa::Vector<double> chanWidths(nchan, chanWidth);
       casa::Vector<double> chanFreqs(nchan);
@@ -548,15 +562,14 @@ namespace LOFAR
 
       for (uInt i = 0; i < nStations; ++i) {
         for (uInt j = 0; j <= i; ++j) {
-
-          if (itsPS.getLofarStManVersion() == 1) {
-            ant1[inx] = j;
-            ant2[inx] = i;
-            ++inx;
-          } else {
+          if (LofarStManVersion == 2) {
             // switch order of stations to fix write of complex conjugate data in V1
             ant1[inx] = i;
             ant2[inx] = j;
+            ++inx;
+          } else {
+            ant1[inx] = j;
+            ant2[inx] = i;
             ++inx;
           }
         }
@@ -565,7 +578,7 @@ namespace LOFAR
       string filename = MSname + "/table.f0meta";
 
       AipsIO aio(filename, ByteIO::New);
-      aio.putstart("LofarStMan", itsPS.getLofarStManVersion());
+      aio.putstart("LofarStMan", LofarStManVersion);
       aio << ant1 << ant2
           << itsStartTime
           << itsPS.IONintegrationTime()
@@ -574,7 +587,7 @@ namespace LOFAR
           << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
           << itsAlignment
           << isBigEndian;
-      if (itsPS.getLofarStManVersion() > 1) {
+      if (LofarStManVersion > 1) {
         uInt itsNrBytesPerNrValidSamples =
           itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;
         aio << itsNrBytesPerNrValidSamples;

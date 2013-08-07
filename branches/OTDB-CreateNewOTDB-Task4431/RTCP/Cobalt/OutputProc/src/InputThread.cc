@@ -72,7 +72,7 @@ namespace LOFAR
         for (unsigned count = 0; !nullInput || count < 10; count++) {
           SmartPtr<StreamableData> data(itsFreeQueue.remove());
 
-          data->read(streamFromION, true);
+          data->read(streamFromION, true, 1); // Cobalt writes with an alignment of 1
 
           if (nullInput)
             data->setSequenceNumber(count);

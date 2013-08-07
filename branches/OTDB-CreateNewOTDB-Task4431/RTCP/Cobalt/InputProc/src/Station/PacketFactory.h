@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #ifndef LOFAR_INPUT_PROC_PACKETFACTORY_H
 #define LOFAR_INPUT_PROC_PACKETFACTORY_H
 
-#include <InputProc/Buffer/BufferSettings.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/Buffer/SampleBuffer.h>
+#include <InputProc/RSPTimeStamp.h>
 
 #include "RSP.h"
 
@@ -36,7 +36,7 @@ namespace LOFAR
     class PacketFactory
     {
     public:
-      PacketFactory( const BufferSettings &settings );
+      PacketFactory( const struct BoardMode &mode );
       virtual ~PacketFactory();
 
       /*
@@ -45,7 +45,7 @@ namespace LOFAR
       virtual void makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
     protected:
-      const BufferSettings &settings;
+      const struct BoardMode mode;
 
       /*
        * Fill packet.header.

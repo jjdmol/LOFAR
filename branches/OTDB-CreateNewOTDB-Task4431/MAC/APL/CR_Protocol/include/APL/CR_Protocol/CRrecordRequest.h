@@ -23,7 +23,7 @@
 #ifndef CR_RECORD_REQUEST_H_
 #define CR_RECORD_REQUEST_H_
 
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 namespace LOFAR {
   namespace CR_Protocol {

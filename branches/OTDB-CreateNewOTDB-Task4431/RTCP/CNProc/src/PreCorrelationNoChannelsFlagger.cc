@@ -625,8 +625,8 @@ void PreCorrelationNoChannelsFlagger::initFFT()
   itsFFTWforwardPlan =  fftwf_plan_dft_1d(itsFFTSize, (fftwf_complex *) &itsSamples[0], (fftwf_complex *) &itsFFTBuffer[0], FFTW_FORWARD, FFTW_MEASURE);
   itsFFTWbackwardPlan = fftwf_plan_dft_1d(itsFFTSize, (fftwf_complex *) &itsFFTBuffer[0], (fftwf_complex *) &itsSamples[0], FFTW_FORWARD, FFTW_MEASURE);
 #elif defined HAVE_FFTW2
-  itsFFTWforwardPlan  = fftw_create_plan(itsFFTsize, FFTW_FORWARD,  FFTW_ESTIMATE);
-  itsFFTWbackwardPlan = fftw_create_plan(itsFFTsize, FFTW_BACKWARD, FFTW_ESTIMATE);
+  itsFFTWforwardPlan  = fftw_create_plan(itsFFTSize, FFTW_FORWARD,  FFTW_ESTIMATE);
+  itsFFTWbackwardPlan = fftw_create_plan(itsFFTSize, FFTW_BACKWARD, FFTW_ESTIMATE);
 #endif
 }
 
@@ -646,7 +646,7 @@ void PreCorrelationNoChannelsFlagger::backwardFFT()
 #if defined HAVE_FFTW3
   fftwf_execute(itsFFTWbackwardPlan);
 #elif defined HAVE_FFTW2
-  fftw(itsFFTWbackwardPlan,( fftw_complex *) &itsFFTBuffer[0], (fftw_complex *) &itsSamples[0]);
+  fftw_one(itsFFTWbackwardPlan,( fftw_complex *) &itsFFTBuffer[0], (fftw_complex *) &itsSamples[0]);
 #endif
 }
 

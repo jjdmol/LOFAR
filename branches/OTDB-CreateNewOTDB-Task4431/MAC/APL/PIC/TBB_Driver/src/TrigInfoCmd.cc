@@ -25,7 +25,7 @@
 #include <Common/StringUtil.h>
 
 #include "TrigInfoCmd.h"
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 
 using namespace LOFAR;
@@ -111,7 +111,7 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
 	TBBTrigInfoAckEvent tbb_ack;
-	RTC::NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
+	NsTimestamp nsTimestamp(itsTime, (uint32)((double)itsSampleNr * TS->getSampleTime()));
 	tbb_ack.status_mask     = getStatus(0);
 	tbb_ack.rcu             = itsRcu;
 	tbb_ack.nstimestamp     = nsTimestamp;

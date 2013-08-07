@@ -141,14 +141,14 @@ namespace BBS {
   {
     TableLocker lockerp(itsPatchTable, FileLocker::Read);
     Table tabp = itsPatchTable.sort ("PATCHNAME", Sort::Ascending,
-                                     Sort::HeapSort + Sort::NoDuplicates);
+                                     Sort::QuickSort + Sort::NoDuplicates);
     ASSERTSTR (tabp.nrow() == itsPatchTable.nrow(),
                "The PATCHES table has " <<
                itsPatchTable.nrow() - tabp.nrow() <<
                " duplicate patch names");
     TableLocker lockers(itsSourceTable, FileLocker::Read);
     Table tabs = itsSourceTable.sort ("SOURCENAME", Sort::Ascending,
-                                     Sort::HeapSort + Sort::NoDuplicates);
+                                     Sort::QuickSort + Sort::NoDuplicates);
     ASSERTSTR (tabs.nrow() == itsSourceTable.nrow(),
                "The SOURCES table has " <<
                itsSourceTable.nrow() - tabs.nrow() <<
@@ -270,6 +270,15 @@ namespace BBS {
     addSrc (sourceInfo, patchId, defaultParameters, ra, dec);
   }
 
+  void SourceDBCasa::addSource (const SourceData& source,
+                                bool check)
+  {
+    ParmMap parms;
+    source.getParms (parms);
+    addSource (source.getInfo(), source.getPatchName(),
+               parms, 0, 0, check);
+  }
+
   void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
                                 const string& patchName,
                                 int catType,
@@ -341,12 +350,18 @@ namespace BBS {
     // Now add the default parameters to the ParmDB DEFAULTVALUES table.
     bool foundRa = false;
     bool foundDec = false;
+    string suffix = ':' + sourceInfo.getName();
     for (ParmMap::const_iterator iter=defaultParameters.begin();
          iter!=defaultParameters.end(); ++iter) {
-      if (iter->first == "Ra")  foundRa  = true;
-      if (iter->first == "Dec") foundDec = true;
-      getParmDB().putDefValue (iter->first + ':' + sourceInfo.getName(),
-                               iter->second, false);
+      // Add source name suffix if not part of name yet.
+      string name = iter->first;
+      if (name.size() <= suffix.size()  ||
+          name.substr(name.size() - suffix.size()) != suffix) {
+        name = name + suffix;
+      }
+      getParmDB().putDefValue (name, iter->second, false);
+      if (name.substr(0,3) == "Ra:")  foundRa  = true;
+      if (name.substr(0,4) == "Dec:") foundDec = true;
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.
@@ -414,12 +429,14 @@ namespace BBS {
     TableLocker locker(itsPatchTable, FileLocker::Read);
     Table table (selectPatches(category, pattern,
                                minBrightness, maxBrightness));
-    Block<String> keys(2);
-    Block<Int> orders(2);
+    Block<String> keys(3);
+    Block<Int> orders(3);
     keys[0] = "CATEGORY";
     keys[1] = "APPARENT_BRIGHTNESS";
+    keys[2] = "PATCHNAME";
     orders[0] = Sort::Ascending;
     orders[1] = Sort::Descending;
+    orders[2] = Sort::Ascending;
     table = table.sort (keys, orders);
     Vector<String> nm(ROScalarColumn<String>(table, "PATCHNAME").getColumn());
     return vector<string>(nm.cbegin(), nm.cend());
@@ -460,6 +477,23 @@ namespace BBS {
     uint patchid = table.rowNumbers()[0];
     table = itsSourceTable(itsSourceTable.col("PATCHID") == patchid);
     return readSources(table);
+  }
+
+
+  vector<SourceData> SourceDBCasa::getPatchSourceData (const string& patchName)
+  {
+    vector<SourceInfo> info = getPatchSources(patchName);
+    vector<SourceData> result;
+    result.reserve (info.size());
+    for (vector<SourceInfo>::const_iterator iter=info.begin();
+         iter!=info.end(); ++iter) {
+      ParmMap pmap;
+      getParmDB().getDefValues (pmap, "*:" + iter->getName());
+      SourceData srcData(*iter, patchName, 0, 0);
+      srcData.setParms (pmap);
+      result.push_back (srcData);
+    }
+    return result;
   }
 
   SourceInfo SourceDBCasa::getSource (const string& sourceName)
@@ -556,6 +590,8 @@ namespace BBS {
 
   void SourceDBCasa::getNextSource (SourceData& src)
   {
+    TableLocker slocker(itsSourceTable, FileLocker::Read);
+    TableLocker plocker(itsPatchTable, FileLocker::Read);
     // Read the main info for the current row.
     src.setInfo (readSources(itsSourceTable(itsRowNr))[0]);
     ROScalarColumn<String> patchNameCol(itsPatchTable, "PATCHNAME");
@@ -568,19 +604,12 @@ namespace BBS {
     src.setDec (getDefaultParmValue("Dec:" + srcName));
     src.setI   (getDefaultParmValue("I:" + srcName));
     src.setV   (getDefaultParmValue("V:" + srcName));
-    if (!src.getInfo().getUseRotationMeasure()) {
-      src.setQ   (getDefaultParmValue("Q:" + srcName));
-      src.setU   (getDefaultParmValue("U:" + srcName));
-    }
+    src.setQ   (getDefaultParmValue("Q:" + srcName));
+    src.setU   (getDefaultParmValue("U:" + srcName));
     if (src.getInfo().getType() == SourceInfo::GAUSSIAN) {
-      const double deg2rad = (casa::C::pi / 180.0);
-      src.setOrientation (getDefaultParmValue
-                          ("Orientation:" + srcName) * deg2rad);
-      const double arcsec2rad = (casa::C::pi / 3600.0) / 180.0;
-      src.setMajorAxis (getDefaultParmValue
-                        ("MajorAxis:" + srcName) * arcsec2rad);
-      src.setMinorAxis (getDefaultParmValue
-                        ("MinorAxis:" + srcName) * arcsec2rad);
+      src.setOrientation (getDefaultParmValue ("Orientation:" + srcName));
+      src.setMajorAxis (getDefaultParmValue ("MajorAxis:" + srcName));
+      src.setMinorAxis (getDefaultParmValue ("MinorAxis:" + srcName));
     } else {
       src.setOrientation (0);
       src.setMajorAxis (0);

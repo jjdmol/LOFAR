@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #ifndef LOFAR_INPUT_PROC_MPI_SEND_STATIONS_H
@@ -25,10 +25,10 @@
 #include <mpi.h>
 
 #include <Common/LofarTypes.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SubbandMetaData.h>
 
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Buffer/Block.h>
 #include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #ifndef LOFAR_INPUT_PROC_GENERATOR_H
 #define LOFAR_INPUT_PROC_GENERATOR_H
@@ -25,10 +25,10 @@
 #include <vector>
 
 #include <Stream/Stream.h>
-#include <CoInterface/RSPTimeStamp.h>
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPBoards.h>
+#include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Buffer/BufferSettings.h>
 
 #include "PacketFactory.h"

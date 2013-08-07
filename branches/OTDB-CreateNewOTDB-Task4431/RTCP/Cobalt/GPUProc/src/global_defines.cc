@@ -36,10 +36,10 @@ namespace LOFAR
     const char *str = getenv("NR_GPUS");
     unsigned nrGPUs = str ? atoi(str) : 1;
 
-#if defined __linux__
 
     inline void set_affinity(unsigned device)
     {
+#ifdef __linux__
 #if 0
       static const char mapping[1][12] = {
         0,  1,  2,  3,  8,  9, 10, 11,
@@ -66,11 +66,8 @@ namespace LOFAR
 
       if (sched_setaffinity(0, sizeof set, &set) < 0)
         perror("sched_setaffinity");
-    }
-
-#else
-  inline void set_affinity(unsigned device) { }
 #endif // __linux__
+    }
 
   }
 }

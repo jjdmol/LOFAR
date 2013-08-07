@@ -54,7 +54,7 @@ namespace LOFAR
       itsMSname(msName),
       itsParset(parset)
     {
-      if (itsParset.getLofarStManVersion() > 1) {
+      if (LofarStManVersion > 1) {
         string seqfilename = str(format("%s/table.f0seqnr") % msName);
 
         try {
@@ -81,25 +81,21 @@ namespace LOFAR
           baselineNames[bl++] = str(format("%s_%s") % stationNames[s1] % stationNames[s2]);
 #endif
 
-      const vector<unsigned> subbands = itsParset.subbandList();
-      const vector<unsigned> SAPs = itsParset.subbandToSAPmapping();
-      const vector<double> frequencies = itsParset.subbandToFrequencyMapping();
-
       itsConfiguration.add("fileFormat",           "AIPS++/CASA");
       itsConfiguration.add("filename",             LOFAR::basename(msName));
       itsConfiguration.add("size",                 "0");
-      itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + LOFAR::dirname(msName));
+      itsConfiguration.add("location",             parset.getHostName(CORRELATED_DATA, subbandIndex) + ":" + parset.getDirectoryName(CORRELATED_DATA, subbandIndex));
 
       itsConfiguration.add("percentageWritten",    "0");
       itsConfiguration.add("startTime",            parset.getString("Observation.startTime"));
       itsConfiguration.add("duration",             "0");
       itsConfiguration.add("integrationInterval",  str(format("%f") % parset.IONintegrationTime()));
-      itsConfiguration.add("centralFrequency",     str(format("%f") % (frequencies[subbandIndex] / 1e6)));
-      itsConfiguration.add("channelWidth",         str(format("%f") % (parset.channelWidth() / 1e3)));
+      itsConfiguration.add("centralFrequency",     str(format("%f") % parset.settings.subbands[subbandIndex].centralFrequency));
+      itsConfiguration.add("channelWidth",         str(format("%f") % parset.channelWidth()));
       itsConfiguration.add("channelsPerSubband",   str(format("%u") % parset.nrChannelsPerSubband()));
-      itsConfiguration.add("stationSubband",       str(format("%u") % subbands[subbandIndex]));
+      itsConfiguration.add("stationSubband",       str(format("%u") % parset.settings.subbands[subbandIndex].stationIdx));
       itsConfiguration.add("subband",              str(format("%u") % subbandIndex));
-      itsConfiguration.add("SAP",                  str(format("%u") % SAPs[subbandIndex]));
+      itsConfiguration.add("SAP",                  str(format("%u") % parset.settings.subbands[subbandIndex].SAP));
     }
 
 
@@ -186,7 +182,11 @@ namespace LOFAR
 
       LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
 
-      FailedTileInfo::writeFailed(ms, before, during);
+      try {
+        FailedTileInfo::writeFailed(ms, before, during);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Failed to write broken hardware information: " << ex);
+      }
     }
 
 

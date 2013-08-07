@@ -53,6 +53,55 @@ class GCFEvent(object):
     return GCFEvent.sizePackedGCFEvent
 
 #
+# Some handy routines
+#
+def typename(x):
+  'Returns the name of the type of x'
+  try:
+    return x.__name__
+  except:
+    return str(type(x)).split(' ')[1].split("'")[1] 
+
+def isBasicType(x):
+  'Returns true of x is a basic type'
+  try:
+    if x.__name__:
+      return True
+  except:
+    return False
+
+# array support
+def isCdefArray(Ctype):
+  "Returns true is the given C-type is an array."
+  return Ctype.endswith("]") and Ctype.find("[")>0
+
+def CdefArrayType(Ctype):
+  "Returns the basic type of the array."
+  if not(isCdefArray(Ctype)):
+    return Ctype
+  return Ctype[0:Ctype.find("[")]
+
+def CdefArraySize(Ctype):
+  "Returns the size of the C array. Returns 0 for undefined lengths"
+  "Does NOT yet work for multi-dimensional arrays"
+  if not(isCdefArray(Ctype)):
+    return None
+  if Ctype.find("[]")>0:
+    return 0
+  return int(Ctype[Ctype.find("[")+1:-1])
+
+# vector support
+def isCdefVector(Ctype):
+  "Returns true is the given C-type is an vector."
+  return Ctype.startswith("vector") and Ctype.endswith(">") and Ctype.find("<")>0
+
+def CdefVectorType(Ctype):
+  "Returns the basic type of the vector."
+  if not(isCdefVector(Ctype)):
+    return Ctype
+  return Ctype[Ctype.find("<")+1:-1]
+
+#
 # Packing and unpacking strings
 #
 def packString(value, fixedlen=0):
@@ -90,6 +139,24 @@ def unpackArray(buffer, itemlen, count):
     value = struct.unpack(format, buffer[0:vLen])[0]
     return value
 
+def packVariable(value):
+    "Pack the variable according to its type"
+
+def packVector(value, typestr):
+    "Pack a vector of 'something' in a MAC-like way"
+    print "packVector:", value , ":", typestr
+    items = len(value)
+    buffer = struct.pack("=H", items)
+    for _elem in value:
+      print "elem:", _elem
+      buffer += packCdefinedVariable(_elem, typestr)
+    return buffer
+
+def unpackVector(buffer, typestr):
+    "Unpack a vector of 'something'"
+    items = struct.unpack("=H", buffer[0:2])[0]
+    list = []
+
 def recvEvent(tcpsocket):
     "Wait for a message to receive on the given socket"
     buffer = tcpsocket.recv(GCFEvent.sizePackedGCFEvent)
@@ -97,6 +164,34 @@ def recvEvent(tcpsocket):
     if length > 0:
       buffer += tcpsocket.recv(length)
     return buffer
+
+#
+# Toplevel marshalling
+#
+def packCdefinedVariable(value, typestr):
+    "Pack the variable according to its type"
+    formatTable = {
+      "bool"    : "=b",
+      "char"    : "=c",
+      "double"  : "=d",
+      "float"   : "=f",
+      "int16"   : "=h",
+      "int32"   : "=i",
+      "int64"   : "=q",
+      "uint16"  : "=H",
+      "uint32"  : "=I",
+      "uint64"  : "=Q", 
+      "uint8"   : "=B", }
+    if isCdefArray(typestr):
+      if typestr.startswith("char["):
+        return packArray(value, CdefArraySize(typestr))
+      return packArray(value.tostring())
+    if isCdefVector(typestr):
+      return packVector(value, CdefVectorType(typestr))
+    if typestr == "string":
+      return packString(value) 
+    if formatTable[typestr] != None:
+      return struct.pack(formatTable[typestr], value)
 
 #
 # Protocol knowledge

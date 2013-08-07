@@ -1,4 +1,4 @@
-//# Align.h
+//# SubbandProc.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,24 +20,23 @@
 
 #include <lofar_config.h>
 
-#include "WorkQueue.h"
+#include "SubbandProc.h"
 
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
 
-
 namespace LOFAR
 {
   namespace Cobalt
   {
-    WorkQueue::WorkQueue(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps)
+    SubbandProc::SubbandProc(cl::Context &context, cl::Device &device, unsigned gpuNumber, const Parset &ps)
       :
       gpu(gpuNumber),
       device(device),
       ps(ps)
     {
-#if defined __linux__ && defined USE_B7015
+#ifdef USE_B7015
       set_affinity(gpu);
 #endif
 
@@ -45,13 +44,13 @@ namespace LOFAR
     }
 
 
-    void WorkQueue::addCounter(const std::string &name)
+    void SubbandProc::addCounter(const std::string &name)
     {
       counters[name] = new PerformanceCounter(name, profiling);
     }
 
 
-    void WorkQueue::addTimer(const std::string &name)
+    void SubbandProc::addTimer(const std::string &name)
     {
       timers[name] = new NSTimer(name, false, false);
     }

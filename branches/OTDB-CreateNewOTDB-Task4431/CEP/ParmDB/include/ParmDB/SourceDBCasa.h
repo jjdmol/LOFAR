@@ -89,11 +89,15 @@ namespace BBS {
     // The map should contain the parameters belonging to the source type.
     // Missing parameters will default to 0.
     // <br>Optionally it is checked if the patch already exists.
+    // <group>
     virtual void addSource (const SourceInfo& sourceInfo,
                             const string& patchName,
                             const ParmMap& defaultParameters,
                             double ra, double dec,
                             bool check);
+    virtual void addSource (const SourceData& source,
+                            bool check);
+    // </group>
 
     // Add a source which forms a patch in itself (with the same name).
     // <br>Optionally it is checked if the patch or source already exists.
@@ -120,6 +124,9 @@ namespace BBS {
 
     // Get the sources belonging to the given patch.
     virtual vector<SourceInfo> getPatchSources (const string& patchName);
+
+    // Get all data of the sources belonging to the given patch.
+    virtual vector<SourceData> getPatchSourceData (const string& patchName);
 
     // Get the source info of the given source.
     virtual SourceInfo getSource (const string& sourceName);

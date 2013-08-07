@@ -95,7 +95,7 @@ def readStationConfig():
 
 def swlevel(level=None):
     answer = sendCmd('swlevel')
-    current_level = int(answer.splitlines()[0][-1])
+    current_level = int(answer.splitlines()[0].split()[-1])
     if (level != None):
         if (level != current_level):
             answer = sendCmd('swlevel', str(level))
@@ -152,6 +152,13 @@ def waitTBBready(n_boards=6):
     logger.warn("Not all TB boards in working image")
     return (0)
 
+def checkActiveRSPDriver():
+    answer = sendCmd('swlevel').strip().splitlines()
+    for line in answer:
+        if line.find('RSPDriver') > -1:
+            if line.find('DOWN') != -1:
+                return (False)
+    return (True)
 
 # wait until all boards have a working image loaded
 # returns 1 if ready or 0 if timed_out
@@ -203,7 +210,7 @@ def resetRSPsettings():
     rspctl('--bitmode=16', wait=0.0)
     rspctl('--rcumode=0', wait=0.0)
     rspctl('--rcuenable=0', wait=0.0)
-    rspctl('--hbadelays=%s' %(('128,'*16)[:-1]), wait=0.0)
+    rspctl('--hbadelays=%s' %(('128,'*16)[:-1]), wait=8.0)
 
 def turnonRCUs(mode, rcus):
     global logger
@@ -220,7 +227,7 @@ def turnonRCUs(mode, rcus):
     rsp_rcu_mode(mode, rcus)
     if mode >= 5:
         logger.info("set hbadelays to 0 for 1 second")
-        rspctl('--hbadelay=%s' %(('0,'* 16)[:-1]), wait=6.0)
+        rspctl('--hbadelay=%s' %(('0,'* 16)[:-1]), wait=8.0)
     
 def turnoffRCUs():
     global logger

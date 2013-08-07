@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -318,7 +318,7 @@ int main( int argc, char **argv )
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 
   // Set up
-  struct StationID stationID(str(format("CS%03d") % rank), "LBA", 200, 16);
+  struct StationID stationID(str(format("CS%03d") % rank), "LBA");
   struct BufferSettings settings(stationID, false);
 
   size_t blockSize = 1024;
@@ -331,7 +331,7 @@ int main( int argc, char **argv )
   beamletDistribution[1].push_back(2);
 
   sender = new MPISendStation(settings, 0, beamletDistribution);
-  receiver = new MPIReceiveStations(std::vector<int>(1,0), beamletDistribution[1], blockSize);
+  receiver = new MPIReceiveStations(1, beamletDistribution[1], blockSize);
 
   // Fill input
   for (size_t i = 0; i < data_in.size(); ++i) {
@@ -340,7 +340,7 @@ int main( int argc, char **argv )
   }
 
   // Run tests
-  int result = UnitTest::RunAllTests();
+  int result = UnitTest::RunAllTests() > 0;
 
   // Tear down
   receiver = 0;

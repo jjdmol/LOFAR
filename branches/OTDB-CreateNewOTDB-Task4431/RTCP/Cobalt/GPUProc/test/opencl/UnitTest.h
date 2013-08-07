@@ -23,11 +23,9 @@
 
 #include <vector>
 #include <iostream>
-#include <complex>
 
 #include <CoInterface/Parset.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/opencl-incl.h>
 
 namespace LOFAR
 {
@@ -55,27 +53,8 @@ namespace LOFAR
       cl::CommandQueue queue;
 
       PerformanceCounter counter;
-
-
-      /**
-       * Fuzzy compare of floating point value val with ref.
-       * Use absolute error around 0.0 (ref within epsilon), otherwise use relative error.
-       *
-       * \param[in] val          value to test
-       * \param[in] ref          reference value to test against
-       * \param[in] epsilon      max absolute difference. Must be positive.
-       *
-       * A good epsilon depends on the computation, but pick something reasonable for our single precision tests and allow override.
-       *
-       * Return true if val is close enough to ref, false otherwise (including if val or ref is NaN).
-       */
-      bool fpEquals(double val, double ref, double epsilon = 1.0e-5) const;
-
-      /**
-       * See fpEquals(), but for complex values.
-       */
-      bool cfpEquals(std::complex<double> val, std::complex<double> ref, double epsilon = 1.0e-5) const;
     };
+
   }
 }
 

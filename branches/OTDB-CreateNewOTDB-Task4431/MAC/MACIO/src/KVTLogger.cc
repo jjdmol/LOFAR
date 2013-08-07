@@ -96,9 +96,9 @@ bool KVTLogger::log(const vector<string> keys, const vector<string> values, cons
 	KVTSendMsgPoolEvent		logEvent;
 	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
 	logEvent.nrElements= nrElements;
-	logEvent.keys()    = keys;
-	logEvent.values()  = values;
-	logEvent.times()   = times;
+	logEvent.keys      = keys;
+	logEvent.values    = values;
+	logEvent.times     = times;
 	itsKVTport->send(&logEvent);
 	return (true);
 }

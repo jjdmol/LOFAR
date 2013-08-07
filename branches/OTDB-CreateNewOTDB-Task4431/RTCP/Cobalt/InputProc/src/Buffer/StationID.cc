@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -24,7 +24,10 @@
 
 #include <cstring>
 #include <cstdio>
+#include <boost/format.hpp>
 #include <Common/LofarLogger.h>
+
+using boost::format;
 
 #ifndef HAVE_STRNLEN
 static size_t strnlen( const char *s, size_t maxlen )
@@ -44,10 +47,7 @@ namespace LOFAR
   {
 
 
-    StationID::StationID( const std::string &stationName, const std::string &antennaField, unsigned clockMHz, unsigned bitMode)
-      :
-      clockMHz(clockMHz),
-      bitMode(bitMode)
+    StationID::StationID( const std::string &stationName, const std::string &antennaField )
     {
       ASSERTSTR( stationName.size() < sizeof this->stationName, "Station name longer than " << (sizeof this->stationName - 1) << " characters.");
       ASSERTSTR( antennaField.size() < sizeof this->antennaField, "Antenna-set name longer than " << (sizeof this->antennaField - 1) << " characters.");
@@ -56,12 +56,15 @@ namespace LOFAR
       snprintf(this->antennaField, sizeof this->antennaField, "%s", antennaField.c_str());
     }
 
+    std::string StationID::name() const
+    {
+      return str(format("%s%s") % stationName % antennaField);
+    }
+
     bool StationID::operator==(const struct StationID &other) const
     {
       return !strncmp(stationName, other.stationName, sizeof stationName)
-             && !strncmp(antennaField, other.antennaField, sizeof antennaField)
-             && clockMHz == other.clockMHz
-             && bitMode == other.bitMode;
+             && !strncmp(antennaField, other.antennaField, sizeof antennaField);
     }
 
     bool StationID::operator!=(const struct StationID &other) const
@@ -73,13 +76,12 @@ namespace LOFAR
     {
       // convert to 32 bit value (human-readable in hexadecimal):
       //
-      //
-      // 0x0106020F
-      //   \__||\||
-      //      || |\_ bit mode:      F  = 16-bit, 8 = 8-bit, 4 = 4-bit
-      //      || \__ clock:         20 = 200 MHz, 16 = 160 MHz
-      //      |\____ antenna field: 0 = HBA/HBA0/LBA, 1 = HBA1
-      //      \_____ station ID:    0x0106 = RS106
+      // 0x10001060
+      //   |  \__||
+      //   |     |\____ antenna field: 0 = HBA/HBA0/LBA, 1 = HBA1
+      //   |     \_____ station ID:    0x0106 = RS106
+      //   \___________ prevent keys being 0, which is a special value
+      //                for Linux.
 
       uint32 stationNr = 0;
 
@@ -99,21 +101,15 @@ namespace LOFAR
 
       // make sure everything fits
       ASSERT( stationNr    < (1L << 16) );
-      ASSERT( antennaFieldNr < (1L << 4)  );
-
-      ASSERT( clockMHz == 200 || clockMHz == 160 );
-      ASSERT( bitMode == 4 || bitMode == 8 || bitMode == 16 );
+      ASSERT( antennaFieldNr < (1L << 4) );
 
       // derive the hash
-      unsigned clockMHzNr = clockMHz == 200 ? 0x20 : 0x16;
-      unsigned bitModeNr = bitMode == 16 ? 0xF : bitMode;
-
-      return (stationNr << 16) + (antennaFieldNr << 12) + (clockMHzNr << 4) + bitModeNr;
+      return ((stationNr << 4) + (antennaFieldNr << 0)) | 0x10000000;
     }
 
     std::ostream& operator<<( std::ostream &str, const struct StationID &s )
     {
-      str << "station " << s.stationName << " antenna field " << s.antennaField << " clockMHz " << s.clockMHz << " bitMode " << s.bitMode;
+      str << "station " << s.stationName << " antenna field " << s.antennaField;
 
       return str;
     }

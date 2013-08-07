@@ -1,4 +1,4 @@
-//# FIR_Filter.h
+//# tFIR_Filter.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef GPUPROC_FIR_FILTERTEST_H
-#define GPUPROC_FIR_FILTERTEST_H
+#ifndef LOFAR_GPUPROC_TFIR_FILTER_H
+#define LOFAR_GPUPROC_TFIR_FILTER_H
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -297,10 +297,15 @@ namespace LOFAR
         }
 
         // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
-        if((*filteredData)[0][0][0][0][0] != 6.0f) 
+        // However, in modes other than 16 bit mode, all amplitudes are scaled to match 16 bit mode.
+        // For 8 bit mode, this means *256.
+        unsigned scale = 1;
+        if (NR_BITS_PER_SAMPLE != 16)
+          scale = 256;
+        if((*filteredData)[0][0][0][0][0] != 6.0f * scale) 
         {
           // int maxSample = NR_SAMPLES_PER_CHANNEL;
-          std::cerr << "FIR_FilterTest 1: Expected at idx 0: 6; got: " << (*filteredData)[0][0][0][0][0] << std::endl;
+          std::cerr << "FIR_FilterTest 1: Expected at idx 0: " << 6 * scale << "; got: " << (*filteredData)[0][0][0][0][0] << std::endl;
         }
 
         const unsigned nrExpectedZeros = sizeFilteredData - 1;

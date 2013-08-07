@@ -162,11 +162,12 @@ int main (int argc, char*[])
     FFTCMatrix fftm;
 #pragma omp for
     for (int i=0; i<25; ++i) {
+      cout<< i << endl;
       fresults[i] = testfftw(fftm, FFTW_FORWARD, 8+i*2);
       bresults[i] = testfftw(fftm, FFTW_BACKWARD, 8+i*2);
     }
   }
-  return 0;
+  ///  return 0;
   cout << "check serial fftw and casa 8,10,12,..,50" << endl;
   FFTCMatrix fftmat;
   Matrix<Complex> arr(8,8,Complex(1,0));

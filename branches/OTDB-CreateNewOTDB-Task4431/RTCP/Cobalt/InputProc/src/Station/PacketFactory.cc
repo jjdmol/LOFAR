@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
  *
- * $Id: $
+ * $Id$
  */
 
 #include <lofar_config.h>
@@ -30,9 +30,9 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    PacketFactory::PacketFactory( const BufferSettings &settings )
+    PacketFactory::PacketFactory( const struct BoardMode &mode )
       :
-      settings(settings)
+      mode(mode)
     {
     }
 
@@ -47,9 +47,9 @@ namespace LOFAR
       packet.header.version = 3; // we emulate BDI 6.0
 
       packet.header.sourceInfo1 =
-        (boardNr & 0x1F) | (settings.station.clockMHz == 200 ? 1 << 7 : 0);
+        (boardNr & 0x1F) | (mode.clockMHz == 200 ? 1 << 7 : 0);
 
-      switch (settings.station.bitMode) {
+      switch (mode.bitMode) {
       case 16:
         packet.header.sourceInfo2 = 0;
         break;
@@ -63,7 +63,7 @@ namespace LOFAR
         break;
       }
 
-      packet.header.nrBeamlets = settings.nrBeamletsPerBoard;
+      packet.header.nrBeamlets = mode.nrBeamletsPerBoard();
       packet.header.nrBlocks = 16;
 
       packet.header.timestamp = timestamp.getSeqId();
@@ -72,8 +72,8 @@ namespace LOFAR
       // verify whether the packet really reflects what we intended
       ASSERT(packet.rspBoard()     == boardNr);
       ASSERT(packet.payloadError() == false);
-      ASSERT(packet.bitMode()      == settings.station.bitMode);
-      ASSERT(packet.clockMHz()     == settings.station.clockMHz);
+      ASSERT(packet.bitMode()      == mode.bitMode);
+      ASSERT(packet.clockMHz()     == mode.clockMHz);
 
       // verify that the packet has a valid size
       ASSERT(packet.packetSize()   <= sizeof packet);

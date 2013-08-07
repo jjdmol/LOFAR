@@ -1,6 +1,6 @@
 /* tbb-dumpframes.cc
  * Author: Alexander S. van Amesfoort, ASTRON
- * Last-modified: Jan 2013
+ * Last-modified: Jun 2013
  * build: g++ -Wall -o tbb-dumpframes tbb-dumpframes.cc
  */
 
@@ -113,17 +113,51 @@ void printPayload(const int16_t* payload, size_t payload_len) {
 	cout << "crc32:       " << reinterpret_cast<uint32_t*>(payload[i]) << endl;
 }
 
+void printFakeInput() {
+	TBB_Header hdr0;
+
+	hdr0.stationID = 1;
+	hdr0.rspID = 2;
+	hdr0.rcuID = 3;
+	hdr0.sampleFreq = 200;
+	hdr0.seqNr = 10000;
+	hdr0.time = 1380240059;
+	hdr0.bandSliceNr = (17 << 10) | 11; // sliceNr=17; bandNr is 11
+	hdr0.nOfSamplesPerFrame = 487;
+	hdr0.nOfFreqBands = 487/8 * 7 + 7; // 427, as set in the sb bitmap below
+
+	// subband bitmap
+	// I'm not 100% if the bits are populated from most to least significant...
+	int i;
+	for (i = 0; i < 487/8; i++)
+		hdr0.bandSel[i] = 0x7f;
+	hdr0.bandSel[i++] = 0xfe; // remaining 7 bits to cover all 487 meaningful bits
+	for ( ; i < 64; i++)
+		hdr0.bandSel[i] = 0;
+
+	hdr0.spare = 0;
+	hdr0.crc16 = 1;
+
+	printHeader(hdr0);
+}
+
 int main(int argc, char* argv[]) {
 	bool printData = false;
+	bool fakeInput = false;
 	const char* filename = "/dev/stdin";
 	int nprinted = 8;
 
-	cout << "Usage: " << argv[0] << " [-d] [data/tbbdata.raw] [nframes]" << endl;
+	cout << "Usage: " << argv[0] << " [-d] [-t] [data/tbbdata.raw] [nframes]" << endl;
 
 	int argi = 1;
 	if (argc > argi) {
 		if (strcmp(argv[argi], "-d") == 0) {
 			printData = true;
+			argi += 1;
+		}
+
+		if (strcmp(argv[argi], "-t") == 0) {
+			fakeInput = true;
 			argi += 1;
 		}
 
@@ -142,6 +176,11 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+
+	if (fakeInput) {
+		printFakeInput();
+		exit(0);
+	}
 
 	ifstream ifs(filename);
 	if (!ifs) {

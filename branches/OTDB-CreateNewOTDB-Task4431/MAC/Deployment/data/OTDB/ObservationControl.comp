@@ -11,7 +11,6 @@ node  ObservationControl   4.0.1  development ''			"Observation Controller"
 uses  StationControl       4.0.0  development '1'			"All the station Controllers"
 uses  OnlineControl        4.0.1  development '1'			"Controller for the online datastream"
 uses  PythonControl        4.0.0  development '1'			"Controller for the offline datastream"
-#uses  OfflineControl      4.0.0  development '1'			"Controller for the offline datastream"
 
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.

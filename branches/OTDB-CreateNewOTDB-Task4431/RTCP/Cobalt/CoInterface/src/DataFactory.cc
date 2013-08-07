@@ -35,17 +35,20 @@ namespace LOFAR
   {
 
 
-    StreamableData *newStreamableData(const Parset &parset, OutputType outputType, int streamNr, Allocator &allocator)
+    StreamableData *newStreamableData(const Parset &parset, OutputType outputType, unsigned streamNr, Allocator &allocator)
     {
       switch (outputType) {
-      case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator);
+      case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator, 512); // 512 alignment is needed for writing to MS
 
       case BEAM_FORMED_DATA: {
-        const Transpose2 &beamFormLogic = parset.transposeLogic();
+        const struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[streamNr];
+        const struct ObservationSettings::BeamFormer::StokesSettings &sset =
+          file.coherent ? parset.settings.beamFormer.coherentSettings
+                        : parset.settings.beamFormer.incoherentSettings;
 
-        unsigned nrSubbands = streamNr == -1 ? beamFormLogic.maxNrSubbands() : beamFormLogic.streamInfo[streamNr].subbands.size();
-        unsigned nrChannels = streamNr == -1 ? beamFormLogic.maxNrChannels() : beamFormLogic.streamInfo[streamNr].nrChannels;
-        unsigned nrSamples = streamNr == -1 ? beamFormLogic.maxNrSamples()  : beamFormLogic.streamInfo[streamNr].nrSamples;
+        unsigned nrSubbands = parset.settings.nrSubbands(file.sapNr);
+        unsigned nrChannels = sset.nrChannels;
+        unsigned nrSamples = parset.settings.nrSamplesPerSubband() / sset.nrChannels / sset.timeIntegrationFactor;
 
         return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
       }

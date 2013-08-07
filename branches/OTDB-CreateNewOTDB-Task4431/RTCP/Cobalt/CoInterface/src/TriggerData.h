@@ -41,11 +41,11 @@ namespace LOFAR
       bool trigger;
 
     protected:
-      virtual void readData(Stream *str)
+      virtual void readData(Stream *str, unsigned)
       {
         str->read(&trigger, sizeof trigger);
       }
-      virtual void writeData(Stream *str)
+      virtual void writeData(Stream *str, unsigned)
       {
         str->write(&trigger, sizeof trigger);
       }

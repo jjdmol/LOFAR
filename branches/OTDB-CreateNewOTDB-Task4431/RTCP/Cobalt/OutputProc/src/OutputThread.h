@@ -50,13 +50,15 @@ namespace LOFAR
 
       // needed in createHeaders.cc
       void           createMS();
+      void           cleanUp() const;
 
       void           augment(const FinalMetaData &finalMetaData);
+
+      ParameterSet feedbackLTA() const;
 
     private:
       void                             checkForDroppedData(StreamableData *);
       void                             doWork();
-      void                             cleanUp();
       void                             mainLoop();
 
       const Parset                     &itsParset;

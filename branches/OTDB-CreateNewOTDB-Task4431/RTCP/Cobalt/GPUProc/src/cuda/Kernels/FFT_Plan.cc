@@ -21,13 +21,38 @@
 #include <lofar_config.h>
 
 #include "FFT_Plan.h"
+#include <GPUProc/gpu_wrapper.h>
+
+// CUDA 5.5RC crashes if cuFFT is linked in but not used,
+// so we provide a workaround by always using cuFFT.
+#if CUDA_VERSION == 5050
+namespace {
+  int use_cuFFT() {
+      cufftHandle plan;
+      cufftResult error;
+
+      error = cufftPlan1d(&plan, 256, CUFFT_C2C, 1);
+
+      if (error == CUFFT_SUCCESS)
+        cufftDestroy(plan);
+
+      return 0;
+  }
+};
+
+static int __using_cuFFT = use_cuFFT();
+#endif
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    FFT_Plan::FFT_Plan(unsigned fftSize, unsigned nrFFTs)
+    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
+      :
+      context(context)
     {
+      gpu::ScopedCurrentContext scc(context);
+
       cufftResult error;
 
       error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
@@ -38,12 +63,16 @@ namespace LOFAR
 
     FFT_Plan::~FFT_Plan()
     {
+      gpu::ScopedCurrentContext scc(context);
+
       cufftDestroy(plan);
     }
 
     void FFT_Plan::setStream(gpu::Stream &stream)
     {
       cufftResult error;
+
+      gpu::ScopedCurrentContext scc(context);
 
       error = cufftSetStream(plan, stream.get());
 

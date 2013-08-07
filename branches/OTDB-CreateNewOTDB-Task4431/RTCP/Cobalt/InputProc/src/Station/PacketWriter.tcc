@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <ios>
 #include <boost/format.hpp>
@@ -24,44 +24,56 @@
 #include <Common/LofarTypes.h>
 #include <Common/LofarConstants.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/RSPTimeStamp.h>
+#include <InputProc/RSPTimeStamp.h>
 
 namespace LOFAR {
 namespace Cobalt {
 
 
-template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, unsigned boardNr )
+template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix, SampleBuffer<T> &buffer, const struct BoardMode &mode, unsigned boardNr )
 :
   logPrefix(str(boost::format("%s [PacketWriter] ") % logPrefix)),
 
   buffer(buffer),
   board(buffer.boards[boardNr]),
+  mode(mode),
   settings(*buffer.settings),
-  firstBeamlet(boardNr * settings.nrBeamletsPerBoard),
+  firstBeamlet(boardNr * mode.nrBeamletsPerBoard()),
 
   nrWritten(0)
 {
-  // bitmode must coincide with our template
-  ASSERTSTR( sizeof(T) == N_POL * 2 * settings.station.bitMode / 8, "PacketWriter created with sample size " << sizeof(T) << " does not match station settings, which are in " << settings.station.bitMode << " bit mode" );
+  // Set mode for this board if necessary
+  if (mode != *board.mode) {
+    LOG_INFO_STR(logPrefix << "Switching buffer to mode " << mode.bitMode << " bit, " << mode.clockMHz << " MHz");
 
-  // we must be able to fit our packets
-  ASSERT( firstBeamlet + settings.nrBeamletsPerBoard <= settings.nrBoards * settings.nrBeamletsPerBoard );
+    board.changeMode(mode);
+  }
+
+  // bitmode must coincide with our template
+  ASSERTSTR( T::bitMode() == mode.bitMode, "PacketWriter created with template for bitmode " << T::bitMode() << " but constructed for bitmode " << mode.bitMode );
+
+  // our boardNr must exist
+  ASSERT( boardNr < settings.nrBoards );
 }
 
-template<typename T> PacketWriter<T>::~PacketWriter()
+template<typename T>
+void PacketWriter<T>::noMoreWriting()
 {
-  // we won't write anymore
   board.noMoreWriting();
 }
 
 
 template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet )
 {
+  if (packet.bitMode() != mode.bitMode || packet.clockMHz() != mode.clockMHz) {
+    THROW(BadModeException, "Mode switch to " << packet.bitMode() << " bit, " << packet.clockMHz() << " MHz");
+  }
+
   const uint8 &nrBeamlets  = packet.header.nrBeamlets;
   const uint8 &nrTimeslots = packet.header.nrBlocks;
 
   // should not exceed the number of beamlets we expect
-  ASSERT( nrBeamlets <= settings.nrBeamletsPerBoard );
+  ASSERT( nrBeamlets <= mode.nrBeamletsPerBoard() );
 
   const TimeStamp begin = packet.timeStamp();
   const TimeStamp end   = begin + nrTimeslots;
@@ -70,10 +82,12 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   const size_t from_offset = buffer.offset(begin);
   size_t to_offset = buffer.offset(end);
 
-  if (to_offset == 0)
-    to_offset = settings.nrSamples;
+  const size_t bufferSize = settings.nrSamples(T::bitMode());
 
-  const size_t wrap = from_offset < to_offset ? 0 : settings.nrSamples - from_offset;
+  if (to_offset == 0)
+    to_offset = bufferSize;
+
+  const size_t wrap = from_offset < to_offset ? 0 : bufferSize - from_offset;
 
   /*
    * Make sure the buffer and available ranges are always consistent.

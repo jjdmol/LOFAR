@@ -28,62 +28,47 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/cuda/CudaRuntimeCompiler.h>
 #include <GPUProc/global_defines.h>
+#include <Common/LofarLogger.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
-  // Set up gpu environment
-  gpu::Platform pf;
+  INIT_LOGGER("tKernel");
+
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " CUDA devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    return 3;
+  }
+
   gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
-  vector<string> targets; // unused atm, so can be empty
   string srcFilename("tKernel.in_.cu");
   Parset ps("tKernel.parset.in");
 
   // Get default parameters for the compiler
-  CudaRuntimeCompiler::flags_type flags = CudaRuntimeCompiler::defaultFlags();
-  CudaRuntimeCompiler::definitions_type definitions = CudaRuntimeCompiler::defaultDefinitions();
-  // assign the correct defines
-  definitions["NR_BITS_PER_SAMPLE"]= boost::lexical_cast<string>(ps.nrBitsPerSample());
-  definitions["SUBBAND_BANDWIDTH"]= boost::lexical_cast<string>(ps.subbandBandwidth()).append("f");
-  definitions["NR_SUBBANDS"]= boost::lexical_cast<string>(ps.nrSubbands());
-  definitions["NR_CHANNELS"]= boost::lexical_cast<string>(ps.nrChannelsPerSubband());
-  definitions["NR_STATIONS"]= boost::lexical_cast<string>(ps.nrStations());
-  definitions["NR_SAMPLES_PER_CHANNEL"]= boost::lexical_cast<string>(ps.nrSamplesPerChannel());
-  definitions["NR_SAMPLES_PER_SUBBAND"]= boost::lexical_cast<string>(ps.nrSamplesPerSubband());
-  definitions["NR_BEAMS"]= boost::lexical_cast<string>(ps.nrBeams());
-  definitions["NR_TABS"]= boost::lexical_cast<string>(ps.nrTABs(0)); // TODO: this restricts to the 1st TAB; make more flex
-  definitions["NR_COHERENT_STOKES"]= boost::lexical_cast<string>(ps.nrCoherentStokes());
-  definitions["NR_INCOHERENT_STOKES"]= boost::lexical_cast<string>(ps.nrIncoherentStokes());
-  definitions["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"]= boost::lexical_cast<string>(ps.coherentStokesTimeIntegrationFactor());
-  definitions["INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR"]= boost::lexical_cast<string>(ps.incoherentStokesTimeIntegrationFactor());
-  definitions["NR_POLARIZATIONS"]= boost::lexical_cast<string>(NR_POLARIZATIONS);
-  definitions["NR_TAPS"]= boost::lexical_cast<string>(NR_TAPS);
-  definitions["NR_STATION_FILTER_TAPS"]= boost::lexical_cast<string>(NR_STATION_FILTER_TAPS);
-  if (ps.delayCompensation()) {
-    definitions["DELAY_COMPENSATION"]= "1";
-  }
-  if (ps.correctBandPass()) {
-    definitions["BANDPASS_CORRECTION"]= "1";
-  }
-  definitions["DEDISPERSION_FFT_SIZE"]= boost::lexical_cast<string>(ps.dedispersionFFTsize());
+  CompileFlags flags = defaultCompileFlags();
+  CompileDefinitions definitions = defaultCompileDefinitions();
 
-  gpu::Module module(createProgram(ctx, targets, srcFilename, flags, definitions));
+  string ptx = createPTX(srcFilename, definitions, flags, devices);
+  gpu::Module module(createModule(ctx, srcFilename, ptx));
   cout << "Succesfully compiled '" << srcFilename << "'" << endl;
 
   string entryPointName("testKernel");
   gpu::Function func(module, entryPointName);
 
-  gpu::Stream stream;
+  gpu::Stream stream(ctx);
 
   const size_t size = 2 * 1024 * 1024;
-  gpu::HostMemory in(size  * sizeof(float));
-  gpu::HostMemory out(size * sizeof(float));
-  gpu::DeviceMemory d_in(size  * sizeof(float));
-  gpu::DeviceMemory d_out(size * sizeof(float));
+  gpu::HostMemory in(ctx, size  * sizeof(float));
+  gpu::HostMemory out(ctx, size * sizeof(float));
+  gpu::DeviceMemory d_in(ctx, size  * sizeof(float));
+  gpu::DeviceMemory d_out(ctx, size * sizeof(float));
 
   // init buffers
   for (size_t i = 0; i < size; i++)

@@ -27,24 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\InputProc\src\Buffer\SampleBuffer.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\SampleBufferReader.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\SharedMemory.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\StationID.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\BufferSettings.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\Ranges.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\InputProc\src\obsolete\MPI_RMA.h">
       <Filter>obsolete</Filter>
     </ClInclude>
@@ -84,20 +66,32 @@
     <ClInclude Include="..\..\InputProc\src\WallClockTime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\Block.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\BlockReader.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\BoardMode.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\BufferSettings.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\Ranges.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\SampleBuffer.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\SharedMemory.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\StationID.h">
+      <Filter>Buffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\InputProc\src\Buffer\BufferSettings.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\Ranges.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\SharedMemory.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\StationID.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\InputProc\src\Station\PacketsToBuffer.cc">
       <Filter>Station</Filter>
     </ClCompile>
@@ -116,11 +110,23 @@
     <ClCompile Include="..\..\InputProc\src\RSPBoards.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Buffer\BufferSettings.cc">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Buffer\Ranges.cc">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Buffer\SampleBuffer.cc">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Buffer\SharedMemory.cc">
+      <Filter>Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Buffer\StationID.cc">
+      <Filter>Buffer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\InputProc\src\Buffer\SampleBufferReader.tcc">
-      <Filter>Buffer</Filter>
-    </None>
     <None Include="..\..\InputProc\src\Station\PacketWriter.tcc">
       <Filter>Station</Filter>
     </None>
@@ -128,5 +134,14 @@
       <Filter>Transpose</Filter>
     </None>
     <None Include="..\..\InputProc\src\CMakeLists.txt" />
+    <None Include="..\..\InputProc\src\Buffer\Block.tcc">
+      <Filter>Buffer</Filter>
+    </None>
+    <None Include="..\..\InputProc\src\Buffer\BlockReader.tcc">
+      <Filter>Buffer</Filter>
+    </None>
+    <None Include="..\..\InputProc\src\Buffer\SampleBuffer.tcc">
+      <Filter>Buffer</Filter>
+    </None>
   </ItemGroup>
 </Project>

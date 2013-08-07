@@ -71,7 +71,7 @@ namespace BBS {
       { return itsCategory; }
 
     // Get the apparent brightness of the patch (in Jy).
-    bool apparentBrightness() const
+    double apparentBrightness() const
       { return itsAppBrightness; }
 
   private:
@@ -81,6 +81,15 @@ namespace BBS {
     int    itsCategory;
     double itsAppBrightness;
   };
+
+
+  // Show the contents of a PatchInfo object.
+  inline std::ostream& operator<< (std::ostream& os, const PatchInfo& info)
+  { os << "patch=" << info.getName() << " cat=" << info.getCategory()
+       << " ra=" << info.getRa() << " dec=" << info.getDec()
+       << " flux=" << info.apparentBrightness();
+    return os;
+  }
 
   // @}
 

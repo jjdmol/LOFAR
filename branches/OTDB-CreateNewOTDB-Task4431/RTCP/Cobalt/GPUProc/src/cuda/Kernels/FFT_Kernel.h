@@ -34,16 +34,28 @@ namespace LOFAR
     class FFT_Kernel
     {
     public:
-      FFT_Kernel(unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer);
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/);
+      FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs,
+                 bool forward, gpu::DeviceMemory &buffer);
 
+      void enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/);
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      // Return required buffer size for \a bufferType
+      static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
+      gpu::Context context;
+
       const unsigned nrFFTs, fftSize;
       const int direction;
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
-      gpu::Event event;
+      //gpu::Event event;
     };
   }
 }

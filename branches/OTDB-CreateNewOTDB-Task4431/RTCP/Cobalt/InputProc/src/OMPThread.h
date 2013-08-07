@@ -77,9 +77,11 @@ namespace LOFAR
         // once it has been set.
         pthread_t oldid = id;
 
-        if (oldid > 0)
-          if (pthread_kill(oldid, SIGHUP) < 0)
-            throw SystemCallException("pthread_kill", errno, THROW_ARGS);
+        if (oldid > 0) {
+          int error = pthread_kill(oldid, SIGHUP);
+          if (error != 0)
+            throw SystemCallException("pthread_kill", error, THROW_ARGS);
+        }
 
         // sleep for 100ms - do NOT let us get killed here,
         // because we're maintaining integrity

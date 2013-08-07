@@ -69,11 +69,11 @@ int main()
 {
   INIT_LOGGER( "tSSH" );
 
+  SSH_Init();
+
   // discover a working private key
   if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
-
-  SSH_Init();
 
   test_SSHconnection( "stdout read", "", false );
   test_SSHconnection( "",            "stderr read", false );

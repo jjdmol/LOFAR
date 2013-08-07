@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -45,9 +45,8 @@ namespace LOFAR
       nrBadSize(0),
       nrBadTime(0),
       nrBadData(0),
-      nrBadMode(0),
-      hadSizeError(false),
-      hadModeError(false)
+      nrBadOther(0),
+      hadSizeError(false)
     {
       // Partial reads are not supported on UDP streams, because each read()
       // will consume a full packet.
@@ -117,43 +116,17 @@ namespace LOFAR
     }
 
 
-    bool PacketReader::readPacket( struct RSP &packet, const struct BufferSettings &settings )
-    {
-      if (!readPacket(packet))
-        return false;
-
-      // check whether the mode matches the one given
-      if (packet.clockMHz() != settings.station.clockMHz
-          || packet.bitMode() != settings.station.bitMode
-          || packet.header.nrBeamlets != settings.nrBeamletsPerBoard) {
-
-        if (!hadModeError) {
-          LOG_ERROR_STR( logPrefix << "Packet has mode (" << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit, " << (int)packet.header.nrBeamlets << " beamlets), but expected mode (" << settings.station.clockMHz << " MHz, " << settings.station.bitMode << " bit, " << settings.nrBeamletsPerBoard << " beamlets)");
-          hadModeError = true;
-        }
-
-        ++nrBadMode;
-
-        THROW(BadModeException, "Packet has unexpected clock or bitmode settings");
-      }
-
-      return true;
-    }
-
-
     void PacketReader::logStatistics()
     {
-      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadMode << " clock/bitmode errors, " << nrBadOther << " otherwise bad packets" );
+      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
 
       nrReceived = 0;
       nrBadTime = 0;
       nrBadSize = 0;
       nrBadData = 0;
-      nrBadMode = 0;
       nrBadOther = 0;
 
       hadSizeError = false;
-      hadModeError = false;
     }
 
 

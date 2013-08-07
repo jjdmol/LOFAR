@@ -65,7 +65,7 @@ namespace LOFAR
         timeval.tv_usec = 0;
 
         switch (select(1, &fds, 0, 0, &timeval)) {
-        case -1: throw SystemCallException("select", errno, THROW_ARGS);
+        case -1: THROW_SYSCALL("select");
         case  0: continue;
         }
 
@@ -79,7 +79,7 @@ namespace LOFAR
         } else {
           // slow down reading data (IONProc will be spamming us with /dev/zero)
           if (usleep(999999) < 0)
-            throw SystemCallException("usleep", errno, THROW_ARGS);
+            THROW_SYSCALL("usleep");
         }
       }
     }

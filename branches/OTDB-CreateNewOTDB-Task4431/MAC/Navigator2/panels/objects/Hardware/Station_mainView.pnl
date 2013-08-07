@@ -51,6 +51,10 @@ LANG:1 0
 0
 1 22 6 "" 0
 0
+1 23 7 "" 0
+0
+1 24 8 "" 0
+0
 0
 LAYER, 1 
 1
@@ -85,22 +89,30 @@ LANG:1 0
 1
 "$station""$station"
 3 2 "PANEL_REF2" -1
-"objects\\genericOnOffView.pnl" 40 0 T 35 U 
+"objects\\genericOnOffView.pnl" 40 0 T 35 1 0 1 40 0
 2
 "$fullDP""LOFAR_PIC_StationInfo.power48On"
 "$station""$station"
 3 4 "PANEL_REF4" -1
-"objects\\Hardware\\antennaBroken_Small.pnl" 80 0 T 37 1 0 1 2 0
+"objects\\Hardware\\antennaBroken_Small.pnl" 80 0 T 37 1 0 1 42 0
 2
 "$antennaType""HBA"
 "$station""$station"
 3 5 "PANEL_REF5" -1
-"objects\\Hardware\\antennaBroken_Small.pnl" 100 0 T 38 1 0 1 5 0
+"objects\\Hardware\\antennaBroken_Small.pnl" 100 0 T 38 1 0 1 50 0
 2
 "$antennaType""LBA"
 "$station""$station"
 3 6 "PANEL_REF6" -1
-"objects\\Hardware\\TBBmode_small.pnl" 60 0 T 39 U 
+"objects\\Hardware\\TBBmode_small.pnl" 60 0 T 39 1 0 1 40 0
+1
+"$station""$station"
+3 7 "PANEL_REF7" -1
+"objects\\Hardware\\APtemp_small.pnl" 40 0 T 40 U 
+1
+"$station""$station"
+3 8 "PANEL_REF8" -1
+"objects/Hardware\\BPtemp_small.pnl" 60 0 T 40 U 
 1
 "$station""$station"
 0
