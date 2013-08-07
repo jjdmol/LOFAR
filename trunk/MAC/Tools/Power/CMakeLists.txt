@@ -2,7 +2,7 @@
 
 # All env. control python scripts and libs to sbin 
 file (GLOB ecfiles *.py)
-install(FILES
+install(PROGRAMS
   ${ecfiles}
   DESTINATION sbin)
 
