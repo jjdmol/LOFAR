@@ -1,24 +1,47 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
 import os,sys,time,pg
-from database import *
-
-# get info from database.py
-dbName=getDBname()
-dbHost=getDBhost()
-
-# calling stored procedures only works from the pg module for some reason.
-otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
+from optparse import OptionParser
 
 #
 # MAIN
 #
 if __name__ == '__main__':
     """
-    revertDefaultTemplates reverts each default template in OTDB the has a matching older one.
+    revertDefaultTemplates reverts each default template in OTDB to a previous
+    version, when the default template has a matching older one.
     Two templates match when the templatename, the processType, the processSubtype and the Strategy values
     only differ in a leading '#'
     """
+
+    parser = OptionParser("Usage: %prog [options]" )
+    parser.add_option("-D", "--database",
+                      dest="dbName",
+                      type="string",
+                      default="",
+                      help="Name of OTDB database to use")
+
+    parser.add_option("-H", "--host",
+                      dest="dbHost",
+                      type="string",
+                      default="sasdb",
+                      help="Hostname of OTDB database")
+
+    # parse arguments
+
+    (options, args) = parser.parse_args()
+
+    if not options.dbName:
+        print "Provide the name of OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(0)
+
+    dbName = options.dbName
+    dbHost = options.dbHost
+
+    # calling stored procedures only works from the pg module for some reason.
+    otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 
     # Give user escape possibility
     print "About to REVERT the default templates in database %s on host %s. Starting in 5 seconds..." % (dbName, dbHost)
