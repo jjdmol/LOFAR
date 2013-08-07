@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mpirun -H localhost,localhost t_cpu_utils
