@@ -129,6 +129,12 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
 #endif
 
+  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
+  {
+    perror("error setting MPIRANK");
+    exit(1);
+  }
+
 #ifdef HAVE_LOG4CPLUS
   INIT_LOGGER("rtcp");
 #else
