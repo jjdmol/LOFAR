@@ -128,7 +128,7 @@ class imager_prepare(LOFARnodeTCP):
     def add_beam_tables(self, time_slices_path_list):
         beamtable_proc_group = SubProcessGroup(self.logger)
         for ms_path in time_slices_path_list:
-            self.logger.debug( "makebeamtables start"
+            self.logger.debug( "makebeamtables start")
             cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path)
             self.logger.debug(cmd_string)
             beamtable_proc_group.run(cmd_string)
