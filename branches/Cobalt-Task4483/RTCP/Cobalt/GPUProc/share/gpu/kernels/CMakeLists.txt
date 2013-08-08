@@ -9,6 +9,7 @@ set(_kernel_sources
   FIR_Filter.cu
   IntToFloat.cu
   Transpose.cu
+  CoherentStokes.cu
 )
 
 install(FILES ${_kernel_sources} DESTINATION share/gpu/kernels)

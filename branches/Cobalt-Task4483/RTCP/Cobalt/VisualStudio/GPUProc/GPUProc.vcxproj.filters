@@ -658,5 +658,8 @@
     <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu">
       <Filter>share</Filter>
     </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu">
+      <Filter>share</Filter>
+    </None>
   </ItemGroup>
 </Project>
