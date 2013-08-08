@@ -23,6 +23,9 @@
 #include <boost/lexical_cast.hpp>
 
 #include "BeamFormerKernel.h"
+
+#include <Common/lofar_complex.h>
+#include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
 
 using boost::lexical_cast;

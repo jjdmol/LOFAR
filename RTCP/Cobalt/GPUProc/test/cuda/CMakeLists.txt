@@ -21,13 +21,11 @@ lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 
 # GPU kernel unit tests
 lofar_add_test(tIntToFloat tIntToFloat.cc)
-lofar_add_test(tIntToFloatKernel tIntToFloatKernel.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)
 #lofar_add_test(tFFT_leakage tFFT_leakage.cc)
 lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
-lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc)
 lofar_add_test(tTranspose tTranspose.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
@@ -37,9 +35,7 @@ set_tests_properties(
   #tFFT_leakage
   tCorrelator
   tIntToFloat
-  tIntToFloatKernel
   tBeamFormer
-  tBeamFormerKernel
   tTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )

@@ -36,7 +36,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "TestUtil.h"
+#include "../TestUtil.h"
 
 using namespace std;
 using namespace LOFAR;
