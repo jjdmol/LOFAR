@@ -68,34 +68,6 @@ void usage(char **argv)
   cerr << "  -p: enable profiling" << endl;
 }
 
-void runPipeline(const Parset &ps, const vector<size_t> subbands, const vector<gpu::Device> &devices)
-{
-  bool correlatorEnabled = ps.settings.correlator.enabled;
-  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
-
-  if (correlatorEnabled && beamFormerEnabled) {
-    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
-    exit(1);
-  }
-
-  if (correlatorEnabled) {
-    LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline pipeline(ps, subbands, devices);
-
-  #ifdef HAVE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
-  #endif
-    
-    pipeline.processObservation(CORRELATED_DATA);
-  } else if (beamFormerEnabled) {
-    LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps, subbands, devices).processObservation(BEAM_FORMED_DATA);
-  } else {
-    LOG_FATAL_STR("No pipeline selected, do nothing");
-  }
-}
-
-
 int main(int argc, char **argv)
 {
   // Make sure all time is dealt with and reported in UTC
@@ -143,6 +115,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+
 #else
   LOG_WARN_STR("Running without MPI!");
 #endif
@@ -236,12 +209,15 @@ int main(int argc, char **argv)
   } else if (beamFormerEnabled) {
     pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
     outputType = BEAM_FORMED_DATA;
+  } else {
+    LOG_FATAL("No pipeline selected.");
+    exit(1);
   }
 
-  #ifdef HAVE_MPI
+#ifdef HAVE_MPI
   // Make sure all processes are done with forking
   MPI_Barrier(MPI_COMM_WORLD);
-  #endif
+#endif
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
@@ -259,7 +235,7 @@ int main(int argc, char **argv)
     #pragma omp section
     {
       // Process station data
-      if (pipeline != NULL && !subbandDistribution[rank].empty()) {
+      if (!subbandDistribution[rank].empty()) {
         pipeline->processObservation(outputType);
       }
     }
