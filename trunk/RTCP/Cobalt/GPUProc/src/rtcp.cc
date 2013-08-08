@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+#include <sys/resource.h>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -68,37 +69,30 @@ void usage(char **argv)
   cerr << "  -p: enable profiling" << endl;
 }
 
-void runPipeline(const Parset &ps, const vector<size_t> subbands, const vector<gpu::Device> &devices)
-{
-  bool correlatorEnabled = ps.settings.correlator.enabled;
-  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
-
-  if (correlatorEnabled && beamFormerEnabled) {
-    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
-    exit(1);
-  }
-
-  LOG_INFO_STR("Processing subbands " << subbands);
-
-  if (correlatorEnabled) {
-    LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands, devices).processObservation(CORRELATED_DATA);
-  } else if (beamFormerEnabled) {
-    LOG_INFO_STR("BeamFormer pipeline selected");
-    BeamFormerPipeline(ps, subbands, devices).processObservation(BEAM_FORMED_DATA);
-  } else {
-    LOG_FATAL_STR("No pipeline selected, do nothing");
-  }
-}
-
-
 int main(int argc, char **argv)
 {
+  /*
+   * Initialise the system environment
+   */
+
   // Make sure all time is dealt with and reported in UTC
-  setenv("TZ", "UTC", 1);
+  if (setenv("TZ", "UTC", 1) < 0) {
+    int _errno = errno;
+
+    LOG_ERROR_STR("Could not set time zone: " << strerror(_errno));
+  }
 
   // Restrict access to (tmp build) files we create to owner
   umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
+    int _errno = errno;
+
+    LOG_WARN_STR("Could not raise MEMLOCK limit: " << strerror(_errno));
+  }
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
@@ -112,6 +106,10 @@ int main(int argc, char **argv)
     perror("error setting DISPLAY");
     exit(1);
   }
+
+  /*
+   * Initialise MPI
+   */
 
   // Rank in MPI set of hosts, or 0 if no MPI is used
   int rank = 0;
@@ -144,7 +142,10 @@ int main(int argc, char **argv)
   LOG_WARN_STR("Running without MPI!");
 #endif
 
-  // parse all command-line options
+  /*
+   * Parse command-line options
+   */
+
   int opt;
   while ((opt = getopt(argc, argv, "p")) != -1) {
     switch (opt) {
@@ -163,6 +164,10 @@ int main(int argc, char **argv)
     usage(argv);
     exit(1);
   }
+
+  /*
+   * INIT stage
+   */
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
@@ -214,6 +219,45 @@ int main(int argc, char **argv)
   DirectInput::instance(&ps);
 #endif
 
+  bool correlatorEnabled = ps.settings.correlator.enabled;
+  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
+
+  if (correlatorEnabled && beamFormerEnabled) {
+    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    exit(1);
+  }
+
+  SmartPtr<Pipeline> pipeline;
+  OutputType outputType;
+
+  // Creation of pipelines cause fork/exec, which we need to
+  // do before we start doing anything fancy with libraries and threads.
+  if (correlatorEnabled) {
+    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+    outputType = CORRELATED_DATA;
+  } else if (beamFormerEnabled) {
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
+    outputType = BEAM_FORMED_DATA;
+  } else {
+    LOG_FATAL("No pipeline selected.");
+    exit(1);
+  }
+
+  /*
+   * Sync before execution
+   */
+
+#ifdef HAVE_MPI
+  // Make sure all processes are done with forking
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
+  /*
+   * RUN stage
+   */
+
+  LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+
   #pragma omp parallel sections
   {
     #pragma omp section
@@ -229,7 +273,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        runPipeline(ps, subbandDistribution[rank], devices);
+        pipeline->processObservation(outputType);
       }
     }
   }
