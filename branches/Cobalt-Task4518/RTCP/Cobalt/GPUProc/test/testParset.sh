@@ -79,7 +79,7 @@ function parse_logs
   echo "Total processing time: $WALLTIME s"
   echo "GPU usage            : $GPUUSAGE %"
 
-  if [ "$GPUUSAGE" -lt $GPUEFFICIENCY ]
+  if [ "$GPUUSAGE" -lt "$GPUEFFICIENCY" ]
   then
     echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure." >&2
     return 1
@@ -95,6 +95,7 @@ function parse_logs
 
   # enable debugging
   echo "Global 20" >> rtcp.debug &&
+  cp $srcdir/../src/rtcp.log_prop . && # Get correct log4cplus output format
 
   # be able to find the GPU kernels
   export LOFARROOT=$srcdir/.. &&
@@ -112,7 +113,7 @@ function parse_logs
 
     for f in *.MS
     do
-      ${srcdir}/cmpfloat.py `pwd`/$f $REFDIR/$f || exit 1
+      $RUNDIR/cmpfloat `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 

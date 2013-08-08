@@ -79,14 +79,25 @@ namespace LOFAR
         return;
       }
 
-      if (!itsThread->wait(deadline))
+      if (!itsThread->wait(deadline)) {
         itsThread->cancel();
+        itsThread->wait();
+      }
     }
 
 
-    bool StorageProcess::isDone()
+    bool StorageProcess::isDone() const
     {
       return itsThread->isDone();
+    }
+
+
+    ParameterSet StorageProcess::feedbackLTA() const
+    {
+      // Prevent read/write conflicts
+      ASSERT(isDone());
+
+      return itsFeedbackLTA;
     }
 
 
@@ -122,7 +133,7 @@ namespace LOFAR
       char cwd[1024];
 
       if (getcwd(cwd, sizeof cwd) == 0)
-        throw SystemCallException("getcwd", errno, THROW_ARGS);
+        THROW_SYSCALL("getcwd");
 
       std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
                                     % cwd
@@ -160,6 +171,12 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
       itsFinalMetaData.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent final meta data");
+
+      // Wait for LTA feedback
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] reading LTA feedback");
+      Parset feedbackLTA(&stream);
+      itsFeedbackLTA.adoptCollection(feedbackLTA);
+      LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
 
       // Wait for Storage to finish properly
       sshconn.wait();

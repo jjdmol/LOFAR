@@ -8,6 +8,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 set(_inputproc_sources
   Package__Version.cc
   RSPBoards.cc
+  RSPTimeStamp.cc
   Buffer/BufferSettings.cc
   Buffer/Ranges.cc
   Buffer/SampleBuffer.cc

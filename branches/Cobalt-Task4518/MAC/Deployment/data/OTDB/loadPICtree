@@ -93,7 +93,7 @@ if [[ -e $DIR/PVSS2SAS ]] && [[ -e $DIR/load_PICtree ]]; then
   if [ $localUse = 0 ]; then 
     createPICfile | $DIR/PVSS2SAS >${RESULTFILE}
   else
-    createPICfile -l | $DIR/PVSS2SAS >${RESULTFILE}
+    ${wdir}/createPICfile -l | $DIR/PVSS2SAS >${RESULTFILE}
   fi
   # create commandline for load_PICtree
   arguments=$DATABASE

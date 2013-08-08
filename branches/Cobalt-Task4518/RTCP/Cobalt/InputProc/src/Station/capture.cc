@@ -57,7 +57,7 @@ int main( int argc, char **argv )
   }
 
   // Fill a BufferSettings object
-  struct StationID stationID(stationName, "LBA", 200, 16);
+  struct StationID stationID(stationName, "LBA");
   struct BufferSettings settings(stationID, false);
 
   MultiPacketsToBuffer mpb(settings, inputStreams);

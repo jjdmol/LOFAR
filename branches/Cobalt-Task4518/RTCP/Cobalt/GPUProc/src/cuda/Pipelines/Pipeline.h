@@ -23,17 +23,21 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
+#include <Common/Thread/Mutex.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/SlidingPointer.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/BestEffortQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 namespace LOFAR
 {
@@ -42,14 +46,17 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
-      std::string createPTX(const std::string &srcFilename);
+      // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
+      void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
-      const gpu::Platform      platform;
-      std::vector<gpu::Device> devices;
+      const std::vector<gpu::Device> devices;
+
+      const std::vector<size_t> subbandIndices; // [localSubbandIdx]
+      std::vector< SmartPtr<SubbandProc> > workQueues;
 
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
@@ -62,14 +69,62 @@ namespace LOFAR
         // lock on the shared data
         Mutex totalsMutex;
         // add the counter in this queue
-        void addQueue(WorkQueue &queue);
+        void addQueue(SubbandProc &queue);
         // Print a logline with results
-        void log(size_t nrWorkQueues);
+        void log(size_t nrSubbandProcs);
 
         size_t nrGPUs;
 
         Performance(size_t nrGPUs = 1);
       } performance;
+
+    private:
+      // for each block, read all subbands from all stations, and divide the work over the workQueues
+      void receiveInput( size_t nrBlocks );
+
+      // Templated version of receiveInput(), to specialise in receiving
+      // a certain type of input sample.
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      struct Output {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
+      };
+
+      class SubbandProcOwnerMap {
+      public:
+
+        // set the owner of a specific block
+        void push(const struct BlockID &id, SubbandProc &workQueue);
+
+        // get and remove the owner of a specific block
+        SubbandProc& pop(const struct BlockID &id);
+
+      private:
+        std::map<struct BlockID, SubbandProc*> ownerMap;
+        Mutex mutex;
+      };
+
+      SubbandProcOwnerMap workQueueOwnerMap;
+
+      std::vector<struct Output> subbandPool; // [localSubbandIdx]
+
+      // process subbands on the GPU
+      void processSubbands(SubbandProc &workQueue);
+
+      // postprocess subbands on the CPU
+      void postprocessSubbands(SubbandProc &workQueue);
+
+      // send subbands to Storage
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
+                        SmartPtr<Stream> outputStream);
+
+      // create Stream to Storage
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
+                                       OutputType outputType) const;
     };
   }
 }

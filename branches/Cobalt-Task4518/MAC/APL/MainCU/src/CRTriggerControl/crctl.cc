@@ -567,7 +567,7 @@ Command* CRCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setStopTime(RTC::NsTimestamp(stopTime));
+                cmd->setStopTime(NsTimestamp(stopTime));
             } break;
 
             case 'c': {   // --read
@@ -587,9 +587,9 @@ Command* CRCtl::parse_options(int argc, char** argv)
                         exit(EXIT_FAILURE);
                     }
                 }
-                cmd->setTime(RTC::NsTimestamp(time));
-                cmd->setTimeBefore(RTC::NsTimestamp(timeBefore));
-                cmd->setTimeAfter(RTC::NsTimestamp(timeAfter));
+                cmd->setTime(NsTimestamp(time));
+                cmd->setTimeBefore(NsTimestamp(timeBefore));
+                cmd->setTimeAfter(NsTimestamp(timeAfter));
             } break;
 
             case 'd': {   // --record

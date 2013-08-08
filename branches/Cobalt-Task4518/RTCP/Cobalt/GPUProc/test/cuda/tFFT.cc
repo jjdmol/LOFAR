@@ -69,8 +69,8 @@ int main() {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " CUDA devices" << endl;
   } catch (gpu::CUDAException& e) {
-    cerr << e.what() << endl;
-    return 3;
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 0;
   }
   gpu::Device device(0);
   gpu::Context ctx(device);

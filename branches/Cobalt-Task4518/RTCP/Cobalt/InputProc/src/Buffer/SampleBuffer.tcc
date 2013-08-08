@@ -16,30 +16,36 @@ namespace LOFAR
     template <typename T>
     size_t SampleBuffer<T>::dataSize( const struct BufferSettings &settings )
     {
-      return sizeof settings
+      return // header
+             sizeof settings
+             // flags (aligned to 8)
              + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + 8)
-             + settings.nrBoards * settings.nrBeamletsPerBoard * (settings.nrSamples * sizeof(T) + 128);
+             // beamlets (aligned to 128)
+             + settings.nrBoards * (BoardMode::nrBeamletsPerBoard(T::bitMode()) * settings.nrSamples(T::bitMode()) * sizeof(T) + 128)
+             // mode (aligned to 1)
+             + settings.nrBoards * sizeof(struct BoardMode);
     }
 
 
     template<typename T>
-    SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, bool create )
+    SampleBuffer<T>::SampleBuffer( const struct BufferSettings &_settings, SharedMemoryArena::Mode shmMode )
       :
       logPrefix(str(boost::format("[station %s %s board] [SampleBuffer] ") % _settings.station.stationName % _settings.station.antennaField)),
-      data(_settings.dataKey, dataSize(_settings), create ? SharedMemoryArena::CREATE : SharedMemoryArena::READ),
+      data(_settings.dataKey, dataSize(_settings), shmMode),
       allocator(data),
+      create(shmMode == SharedMemoryArena::CREATE || shmMode == SharedMemoryArena::CREATE_EXCL),
       settings(initSettings(_settings, create)),
       sync(settings->sync),
       syncLock(settings->syncLock),
 
-      nrBeamletsPerBoard(settings->nrBeamletsPerBoard),
-      nrSamples(settings->nrSamples),
+      nrSamples(settings->nrSamples(T::bitMode())),
       nrBoards(settings->nrBoards),
       nrAvailableRanges(settings->nrAvailableRanges),
 
-      beamlets(boost::extents[nrBoards * nrBeamletsPerBoard][nrSamples], 128, allocator, false, false),
+      beamlets(boost::extents[nrBoards * BoardMode::nrBeamletsPerBoard(T::bitMode())][nrSamples], 128, allocator, false, false),
       boards(nrBoards,Board(*this))
     {
+      // Check if non-realtime mode is set up correctly
       if (sync) {
         ASSERTSTR(syncLock, "Synced buffer requires syncLock object");
         ASSERTSTR(syncLock->size() == nrBoards, "SHM buffer has " << nrBoards << " RSP boards, but syncLock expects " << syncLock->size() << " boards");
@@ -50,6 +56,7 @@ namespace LOFAR
 
         boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, 8)), numBytes, nrSamples, create);
         boards[b].boardNr = b;
+        boards[b].mode = allocator.allocateTyped();
       }
 
       LOG_INFO_STR( logPrefix << "Initialised" );
@@ -78,9 +85,25 @@ namespace LOFAR
     template<typename T>
     SampleBuffer<T>::Board::Board( SampleBuffer<T> &buffer, size_t boardNr )
       :
+      mode(0),
       boardNr(boardNr),
       buffer(buffer)
     {
+    }
+
+
+    template<typename T>
+    void SampleBuffer<T>::Board::changeMode( const struct BoardMode &mode )
+    {
+      // only act if something changes
+      if (mode == *this->mode)
+        return;
+
+      // invalidate all data
+      available.clear();
+
+      // set the new mode
+      *this->mode = mode;
     }
 
 
@@ -118,6 +141,8 @@ namespace LOFAR
     template<typename T>
     void SampleBuffer<T>::Board::noMoreReading()
     {
+      LOG_DEBUG_STR("[board " << boardNr << "] noMoreReading()");
+
       // Signal we're done reading
 
       // Put the readPtr into the far future.
@@ -129,7 +154,7 @@ namespace LOFAR
     template<typename T>
     void SampleBuffer<T>::Board::startWrite( const TimeStamp &begin, const TimeStamp &end )
     {
-      ASSERT((uint64)end > buffer.settings->nrSamples);
+      ASSERT((uint64)end > buffer.nrSamples);
 
       if (buffer.sync) {
         // Signal write intent, to let reader know we don't have data older than
@@ -137,11 +162,11 @@ namespace LOFAR
         (*buffer.syncLock)[boardNr].writePtr.advanceTo(begin);
 
         // Wait for reader to finish what we're about to overwrite
-        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.settings->nrSamples);
+        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.nrSamples);
       }
 
       // Mark overwritten range (and everything before it to prevent a mix) as invalid
-      available.excludeBefore(end - buffer.settings->nrSamples);
+      available.excludeBefore(end - buffer.nrSamples);
     }
 
 
@@ -158,6 +183,8 @@ namespace LOFAR
     template<typename T>
     void SampleBuffer<T>::Board::noMoreWriting()
     {
+      LOG_DEBUG_STR("[board " << boardNr << "] noMoreWriting()");
+
       if (buffer.sync) {
         // Signal we're done writing
 

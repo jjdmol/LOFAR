@@ -25,6 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/NsTimestamp.h>
 #include<Common/StringUtil.h>
 #include<Common/KVpair.h>
 #include<time.h>
@@ -33,46 +34,76 @@ namespace LOFAR {
 
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
-		first.append(formatString("{%d}", time(0))); \
+		timestamp = (double)NsTimestamp::now(); \
+		if (timestampInKeyname) { \
+			first.append(formatString("{%.9f}", timestamp)); \
+		} \
 	}
 
-KVpair::KVpair(const string& aKey, const string&  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, aValue)
+KVpair::KVpair() :
+	timestamp(0.0),
+	valueType(VT_UNKNOWN)
+{}
+
+KVpair::KVpair(const string& aKey, const string&  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, aValue),
+	timestamp(0.0),
+	valueType(VT_STRING)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, bool			  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%s", aValue ? "True" : "False"))
+KVpair::KVpair(const string& aKey, const char*  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, aValue),
+	timestamp(0.0),
+	valueType(VT_STRING)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, int			  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%d", aValue))
+KVpair::KVpair(const string& aKey, bool			  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%s", aValue ? "True" : "False")),
+	timestamp(0.0),
+	valueType(VT_BOOL)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, double		  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%.20lg", aValue))
+KVpair::KVpair(const string& aKey, int			  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%d", aValue)),
+	timestamp(0.0),
+	valueType(VT_INT)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, float		  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%e", aValue))
+KVpair::KVpair(const string& aKey, double		  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%.20lg", aValue)),
+	timestamp(0.0),
+	valueType(VT_DOUBLE)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp) :
-	pair<string, string> (aKey, formatString("%ld", aValue))
+KVpair::KVpair(const string& aKey, float		  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%e", aValue)),
+	timestamp(0.0),
+	valueType(VT_FLOAT)
 {
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp)
+KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%ld", aValue)),
+	timestamp(0.0),
+	valueType(VT_TIME_T)
+{
+	OPTIONAL_TIMESTAMP
+}
+
+KVpair::KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp, bool timestampInKeyname) :
+	timestamp(0.0),
+	valueType(VT_STRING | VT_INT)
 {
 	uint max = aValue.size();
    	string strValue = "[";
@@ -93,7 +124,9 @@ KVpair::~KVpair()
 {}
 
 KVpair::KVpair(const KVpair&	that) : 
-	pair<string,string>(that.first, that.second) 
+	pair<string,string>(that.first, that.second),
+	timestamp(that.timestamp),
+	valueType(that.valueType)
 {}
 
 KVpair& KVpair::operator=(const KVpair& that)
@@ -101,9 +134,14 @@ KVpair& KVpair::operator=(const KVpair& that)
 	if (this != &that) {
 		this->first  = that.first;
 		this->second = that.second;
+		this->timestamp = that.timestamp;
+		this->valueType = that.valueType;
 	}
 	return (*this);
 }
 
-
-} // namespace LOFAR
+std::ostream& operator<< (std::ostream& os, const LOFAR::KVpair& kv)
+{
+	return os << kv.first << "=" << kv.second;
+}
+ } // namespace LOFAR

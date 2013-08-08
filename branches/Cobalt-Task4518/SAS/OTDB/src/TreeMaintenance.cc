@@ -1245,7 +1245,8 @@ bool	TreeMaintenance::setClassification(treeIDType	aTreeID,
 // constraints/validations for the current type must be fulfilled.
 // When errors occur these can be retrieved with the errorMsg function.
 bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
-									  treeState			aState)
+									  treeState			aState,
+									  bool				allow_endtime_update)
 {
 	// Check connection
 	if (!itsConn->connect()) {
@@ -1254,16 +1255,18 @@ bool	TreeMaintenance::setTreeState(treeIDType		aTreeID,
 	}
 
 	LOG_TRACE_FLOW_STR("TM:setTreeState(" << aTreeID << ","
-										  << aState << ")");
+										  << aState << ","
+										  << (allow_endtime_update ? "true" : "false") << ")");
 
 	work 	xAction(*(itsConn->getConn()), "setTreeState");
 	try {
 		// build and execute query
 		result res = xAction.exec(
-					formatString("SELECT setTreeState(%d,%d,%d::int2)",
+					formatString("SELECT setTreeState(%d,%d,%d::int2,'%s')",
 							itsConn->getAuthToken(),
 							aTreeID,
-							aState));
+							aState,
+							allow_endtime_update ? "true" : "false"));
 							
 		// Analyse result.
 		bool		succes;

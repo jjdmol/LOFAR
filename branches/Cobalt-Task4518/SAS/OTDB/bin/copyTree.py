@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding: iso-8859-15
 import os,sys,time,pg
-from database import *
+from optparse import OptionParser
 
 
 #
@@ -94,23 +94,22 @@ def copyTemplateTree(treeID):
 #
 # copyTreeMetaData(treeID, campID)
 #
-def copyTreeMetaData(treeID, campID):
+def copyTreeMetaData(treeID, campID, templateName):
     """
     Copy the metadata of the tree.
     """
     # First create the tree. Unfortunately there are no suitable stored procedures to do this in a nice way...
 	# TODO: Funerable in the current implementation are groupid and pt+pst+strategy
-    #       The name is always left empty so we cannot accidently create a default template
     fromTree = fromDB.query("select * from otdbtree where treeid=%d" % treeID).dictresult()[0]
     query = ''
-    if fromTree['treetype'] == '20':
+    if fromTree['treetype'] == 20:
       query = "insert into otdbtree(treeid,momid,originid,classif,treetype,state,creator, \
-      campaign,starttime,stoptime,owner,description,groupid,processtype,processsubtype,strategy) values \
-      (%d,%d,0,%d::int2,%d::int2,%d::int2,%d,%d::int2,'%s','%s',%d,'%s',%d,'%s','%s','%s')" %  \
+      campaign,owner,description,groupid,processtype,processsubtype,strategy,name) values \
+      (%d,%d,0,%d::int2,%d::int2,%d::int2,%d,%d::int2,%d,'%s',%d,'%s','%s','%s','%s')" %  \
       (treeID, fromTree['momid'], fromTree['classif'], fromTree['treetype'], fromTree['state'],  \
-      fromTree['creator'], campID, fromTree['starttime'], fromTree['stoptime'],  \
+      fromTree['creator'], campID, \
       fromTree['owner'], fromTree['description'], fromTree['groupid'],  \
-      fromTree['processtype'], fromTree['processsubtype'], fromTree['strategy'])
+      fromTree['processtype'], fromTree['processsubtype'], fromTree['strategy'], templateName)
     else:
       query = "insert into otdbtree(treeid,momid,originid,classif,treetype,state,creator, \
       campaign,owner,description,groupid,processtype,processsubtype,strategy) values \
@@ -225,20 +224,72 @@ if __name__ == '__main__':
 	are copied also. Idem with campaigns, users and units.
     """
 
-    # check syntax of invocation
-    # Expected syntax: copyTree treeID fromDB toDB
-    if (len(sys.argv) != 4):
-        print "Syntax: %s treeID fromDB toDB" % sys.argv[0]
-        sys.exit(1)
-    treeID     = int(sys.argv[1])
-    fromDBname = sys.argv[2]
-    toDBname   = sys.argv[3]
+    parser = OptionParser("Usage: %prog [options]" )
+    parser.add_option("-D", "--sourcedatabase",
+                      dest="fromDBname",
+                      type="string",
+                      default="",
+                      help="Name of source OTDB database to use")
+
+    parser.add_option("-S", "--sourcehost",
+                      dest="fromDBhost",
+                      type="string",
+                      default="localhost",
+                      help="Hostname of source OTDB database")
+
     
+    parser.add_option("-d", "--destdatabase",
+                      dest="toDBname",
+                      type="string",
+                      default="",
+                      help="Name of destination OTDB database to use")
+
+    parser.add_option("-s", "--desthost",
+                      dest="toDBhost",
+                      type="string",
+                      default="localhost",
+                      help="Hostname of destination OTDB database")
+
+    parser.add_option("-t", "--treeid",
+                      dest="treeID",
+                      type="int",
+                      default=0,
+                      help="SASID (treeID) of default template to copy")
+
+    # parse arguments
+
+    (options, args) = parser.parse_args()
+
+    if not options.fromDBname:
+        print "Provide the name of source OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    if not options.toDBname:
+        print "Provide the name of destination OTDB database to use!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    if not options.treeID:
+        print "Provide SASID (treeID) of default template to copy!"
+        print
+        parser.print_help()
+        sys.exit(1)
+
+    # Fill variables used in remainder of code
+    fromDBhost=options.fromDBhost
+    fromDBname=options.fromDBname
+    toDBhost=options.toDBhost
+    toDBname=options.toDBname
+    treeID=options.treeID
+
     # calling stored procedures only works from the pg module for some reason.
-    fromDB = pg.connect(user="postgres", host="localhost", dbname=fromDBname)
-    print "Connected to database", fromDBname
-    toDB   = pg.connect(user="postgres", host="localhost", dbname=toDBname)
-    print "Connected to database", toDBname
+    fromDB = pg.connect(user="postgres", host=fromDBhost, dbname=fromDBname)
+    print "Connected to source database", fromDBname, "on host ",fromDBhost 
+    toDB   = pg.connect(user="postgres", host=toDBhost, dbname=toDBname)
+    print "Connected to destination database", toDBname, "on host ",toDBhost
 
     # Check for tree-existance in both databases.
     fromDBtree = fromDB.query("select * from OTDBtree t INNER JOIN campaign c ON c.ID = t.campaign where treeID=%d" % treeID).dictresult()
@@ -253,6 +304,25 @@ if __name__ == '__main__':
     if fromDBtree[0]['treetype'] == 10:	# PIC tree?
         print "PIC trees cannot be copied"
         sys.exit(1)
+
+    # If copying a default template check that we don't create duplicates
+    templateName=''
+    if fromDBtree[0]['treetype'] == 20:
+        templateName = fromDB.query("select name from otdbtree where treeID=%d" % treeID).getresult()[0][0]
+        try:
+          toTemplateID = toDB.query("select treeid from OTDBtree where name='%s'" % templateName).getresult()[0][0]
+          print "The destination database has already a default-template with the name: %s" % templateName
+          sys.exit(1)
+        except IndexError:
+          pass
+        if fromDBtree[0]['processtype'] != '':
+          try:
+            toTemplateID = toDB.query("select treeid from OTDBtree where processtype='%s' and processsubtype='%s' and strategy='%s'" % (fromDBtree[0]['processtype'],fromDBtree[0]['processsubtype'],fromDBtree[0]['strategy'])).getresult()[0][0]
+            print "Copying the tree would result in duplicate processtype/processsubtype/strategy combination"
+            sys.exit(1)
+          except IndexError, e:
+            pass
+        print "Safe to copy default template '%s' to the new database." % templateName
 
     # What's the version of this tree?
     nodeDefID = fromDB.query("select * from getTopNode(%d)" % treeID).dictresult()[0]
@@ -272,13 +342,12 @@ if __name__ == '__main__':
     # components are now in the new database for sure and the node and par ID's are in the map dicts.
 
 	# make sure the campaign exists also
-    print fromDBtree
     newCampaignID = checkCampaign(fromDBtree[0]['name'])
 
     # TODO: check user table (owner of tree must exist)
 
     # copy the trees metadata first
-    copyTreeMetaData(treeID, newCampaignID)
+    copyTreeMetaData(treeID, newCampaignID, templateName)
 
     if fromDBtree[0]['treetype'] == 20:	# template?
         copyTemplateTree(treeID)

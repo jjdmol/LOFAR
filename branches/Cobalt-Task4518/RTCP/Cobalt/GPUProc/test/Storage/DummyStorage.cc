@@ -66,6 +66,11 @@ void emulateStorage()
 
     cout << "Storage: FinalMetaData received and matches." << endl;
   }
+
+  // write LTA feedback
+  Parset feedbackLTA;
+  feedbackLTA.add("foo", "bar");
+  feedbackLTA.write(&stream);
 }
 
 void emulateFinalMetaDataGatherer()

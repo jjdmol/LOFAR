@@ -279,12 +279,12 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 
 	case KVT_SEND_MSG_POOL: {
 		KVTSendMsgPoolEvent		logEvent(event);
-		if (logEvent.keys().size() != logEvent.nrElements || 
-			logEvent.values().size() != logEvent.nrElements ||
-			logEvent.times().size() != logEvent.nrElements) {
+		if (logEvent.keys.size() != logEvent.nrElements || 
+			logEvent.values.size() != logEvent.nrElements ||
+			logEvent.times.size() != logEvent.nrElements) {
 			LOG_ERROR(formatString("Received kvt pool from %s (seqnr=%d) with unequal vectorsizes (n=%d, k=%d, v=%d, t=%d)", 
 					itsClients[&port].name.c_str(), logEvent.seqnr, logEvent.nrElements, 
-					logEvent.keys().size(), logEvent.values().size(), logEvent.times().size()));
+					logEvent.keys.size(), logEvent.values.size(), logEvent.times.size()));
 			if (logEvent.seqnr > 0) {
 				KVTSendMsgPoolAckEvent	answer;
 				answer.seqnr = logEvent.seqnr;
@@ -296,7 +296,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&		event, GCFPortInterface
 
 		bool	sendOk(true);
 		for (uint32 i = 0; i < logEvent.nrElements; i++) {
-			sendOk &= itsKVTgate->addKVT(logEvent.keys()[i], logEvent.values()[i], from_ustime_t(logEvent.times()[i]));
+			sendOk &= itsKVTgate->addKVT(logEvent.keys[i], logEvent.values[i], from_ustime_t(logEvent.times[i]));
 		}
 		itsClients[&port].msgCnt += logEvent.nrElements;
 		if (logEvent.seqnr > 0) {

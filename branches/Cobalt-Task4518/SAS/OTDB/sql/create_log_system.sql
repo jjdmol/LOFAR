@@ -22,7 +22,7 @@
 --  $Id$
 --
 
-DROP TABLE log CASCADE;
+DROP TABLE IF EXISTS log CASCADE;
 
 CREATE TABLE log (
     --  $Id$

@@ -956,10 +956,10 @@ GCFEvent::TResult ReadAllCmd::ack(GCFEvent& e)
             
             // make timestamp
             double sampletime = 1. / (sampleFreq * 1E6);
-            RTC::NsTimestamp lastTime(secondsTime + (sampleNr * sampletime));
+            NsTimestamp lastTime(secondsTime + (sampleNr * sampletime));
             itsTime = lastTime;
             itsTimeAfter.set(0.0);
-            RTC::NsTimestamp timeBefore(itsPages * savedSamples * sampletime);
+            NsTimestamp timeBefore(itsPages * savedSamples * sampletime);
             itsTimeBefore = timeBefore;
             
             cout << formatString("rcu %-3d, last recorded time=%lu seconds, sample number=%lu and sample-freq=%dMHz",

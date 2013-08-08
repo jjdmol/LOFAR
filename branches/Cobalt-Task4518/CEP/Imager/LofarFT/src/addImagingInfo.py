@@ -153,7 +153,7 @@ def addOriginTable (image, msNames):
     print "Added subtable LOFAR_ORIGIN containing", len(msNames), "rows"
 
 """ Create the LOFAR_SOURCE subtable and fill from the SourceDB """
-def addSourceTable (image, sourcedbName, times):
+def addSourceTable (image, sourcedbName, minTime, maxTime):
     # Create the table using TaQL.
     tab = pt.taql ("create table '" + image.name() + "/LOFAR_SOURCE' " + 
                    "SOURCE_ID int, \TIME double, INTERVAL double, " +
@@ -175,8 +175,8 @@ def addSourceTable (image, sourcedbName, times):
     tab.flush()
     image.putkeyword ("ATTRGROUPS." + "LOFAR_SOURCE", tab)
     # Get all parameters from the source parmdb.
-    midtime = (times[0] + times[1]) / 2
-    inttime = times[1] - times[0]
+    midtime = (minTime + maxTime) / 2
+    inttime = maxTime - minTime
     sourcedb = pdb.parmdb(sourcedbName)
     # Get all source names by getting the Ra parms from DEFAULTVALUES
     names = [name[3:] for name in sourcedb.getDefNames ("Ra:*")]
@@ -213,7 +213,8 @@ def addSourceTable (image, sourcedbName, times):
     print "Added subtable LOFAR_SOURCE containing", row, "rows"
 
 """ Update times and frequencies in the LOFAR_OBSERVATION subtable """
-def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts):
+def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts,
+                    minTime, maxTime):
     obstab = pt.table (image.name() + "/LOFAR_OBSERVATION", readonly=False,
                        ack=False)
     oritab = pt.table (image.name() + "/LOFAR_ORIGIN", ack=False)
@@ -221,16 +222,12 @@ def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts):
                        oritab.name() + "'])")
     maxfreq = pt.taql ("calc max([select FREQUENCY_MAX from '" +
                        oritab.name() + "'])")
-    mintime = pt.taql ("calc min([select START from '" +
-                       oritab.name() + "'])")
-    maxtime = pt.taql ("calc max([select END from '" +
-                       oritab.name() + "'])")
     obstab.putcell ("OBSERVATION_FREQUENCY_MIN", 0, minfreq[0]);
     obstab.putcell ("OBSERVATION_FREQUENCY_MAX", 0, maxfreq[0]);
     obstab.putcell ("OBSERVATION_FREQUENCY_CENTER", 0, (minfreq[0]+maxfreq[0])/2);
-    obstab.putcell ("OBSERVATION_START", 0, mintime[0]);
-    obstab.putcell ("OBSERVATION_END", 0, maxtime[0]);
-    obstab.putcell ("TIME_RANGE", 0, (mintime[0], maxtime[0]));
+    obstab.putcell ("OBSERVATION_START", 0, minTime);
+    obstab.putcell ("OBSERVATION_END", 0, maxTime);
+    obstab.putcell ("TIME_RANGE", 0, (minTime, maxTime));
     obstab.putcell ("FILENAME", 0, os.path.basename(image.name()))
     obstab.putcell ("FILETYPE", 0, "sky")
     pt.taql ("update '" + obstab.name() + "' set FILEDATE = mjd(date()), " +
@@ -265,16 +262,17 @@ def updateObsTable (image, msName, minbl, maxbl, usedCounts, visCounts):
     obstab.close()
     oritab.close()
     print "Updated subtable LOFAR_OBSERVATION"
-    return (mintime[0], maxtime[0])
 
 """ Count number of unflagged visibilities per MS """
-def countVis (msNames, taqlStr, baselineStr, minbl, maxbl):
+def countVisTime (msNames, taqlStr, baselineStr, minbl, maxbl):
     print "Counting visibility flags ..."
     t = pt.table(msNames[0] + '/ANTENNA', ack=False)
     nant = t.nrows();
     t.close()
     visCounts  = np.zeros ((len(msNames), nant, nant), 'int');
     usedCounts = np.zeros ((len(msNames), nant, nant), 'int');
+    minTime    = +1e30
+    maxTime    = -1e30
     for j in range(len(msNames)):
         # If baseline selection is done, use msselect to apply it.
         msname = msNames[j];
@@ -290,7 +288,7 @@ def countVis (msNames, taqlStr, baselineStr, minbl, maxbl):
             whereStr += ' && sumsqr(UVW[:2]) >= sqr(' + str(minbl) + ')'
         if maxbl > 0:
             whereStr += ' && sumsqr(UVW[:2]) <= sqr(' + str(maxbl) + ')'
-        t = pt.taql ('select ANTENNA1,ANTENNA2,nfalse(FLAG) as NUSED,count(FLAG) as NVIS from ' +
+        t = pt.taql ('select TIME-0.5*INTERVAL as STIME, TIME+0.5*INTERVAL as ETIME, ANTENNA1,ANTENNA2,nfalse(FLAG) as NUSED,count(FLAG) as NVIS from ' +
                      msname + whereStr + ' giving as memory')
         ant1  = t.getcol ('ANTENNA1')
         ant2  = t.getcol ('ANTENNA2')
@@ -302,10 +300,12 @@ def countVis (msNames, taqlStr, baselineStr, minbl, maxbl):
             usedCounts[j, ant2[i], ant1[i]] += nused[i]
             visCounts [j, ant1[i], ant2[i]] += nvis[i]
             visCounts [j, ant2[i], ant1[i]] += nvis[i]
+        minTime = min(minTime, t.getcol('STIME').min())
+        maxTime = max(maxTime, t.getcol('ETIME').max())
         t.close()
         if msname != msNames[j]:
             os.system ('rm -rf ' + msname)
-    return (usedCounts, visCounts)
+    return (usedCounts, visCounts, minTime, maxTime)
 
 
 """ Add all imaging info
@@ -334,7 +334,7 @@ def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
         raise Exception("addImagingInfo already done (keyword ATTRGROUPS already exists)")
     image.putkeyword ("ATTRGROUPS", {})
     # Find the number of unflagged visibilities per antenna per MS.
-    (usedCounts,visCounts) = countVis (msNames, taqlStr, baseline, minbl, maxbl)
+    (usedCounts,visCounts,minTime,maxTime) = countVisTime (msNames, taqlStr, baseline, minbl, maxbl)
     # Add all subtables while removing obsolete columns.
     addSubTable (image, msNames[0], "POINTING")
     addSubTable (image, msNames[0], "FIELD")
@@ -348,10 +348,10 @@ def addImagingInfo (imageName, msNames, sourcedbName="", minbl=0., maxbl=0.,
     # Create the LOFAR_ORIGIN subtable from all MSs.
     addOriginTable (image, msNames)
     # Update times/frequencies/etc. in the LOFAR_OBSERVATION table.
-    times = updateObsTable (image, msNames[0], minbl, maxbl,
-                            usedCounts, visCounts)
+    updateObsTable (image, msNames[0], minbl, maxbl,
+                    usedCounts, visCounts, minTime, maxTime)
     # If needed, add the LOFAR_SOURCE table.
     if len(sourcedbName) > 0:
-        addSourceTable (image, sourcedbName, times)
+        addSourceTable (image, sourcedbName, minTime, maxTime)
     # Flush and close the image.
     image.close()

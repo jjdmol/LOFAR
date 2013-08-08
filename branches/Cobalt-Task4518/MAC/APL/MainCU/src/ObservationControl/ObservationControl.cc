@@ -980,7 +980,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			string  command = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			if (command == "ABORT") {
 				LOG_INFO("Received manual request for abort, accepting it.");
-				if (itsState < CTState::RESUME) {
+				if (itsState <= CTState::RESUME) {
 					itsQuitReason = CT_RESULT_MANUAL_ABORT;
 				}
 				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer

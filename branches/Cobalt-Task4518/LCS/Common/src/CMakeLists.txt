@@ -15,6 +15,7 @@ set(common_LIB_SRCS
   Mmap.cc
   NewHandler.cc
   Numeric.cc
+  NsTimestamp.cc
   ParameterRecord.cc
   ParameterSet.cc
   ParameterSetImpl.cc

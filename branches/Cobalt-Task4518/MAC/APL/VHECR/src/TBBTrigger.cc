@@ -35,7 +35,7 @@ namespace LOFAR {
 //
 // TBBTrigger(...)
 //
-	  TBBTrigger::TBBTrigger (uint32	rcuNr, 		uint32	time, 		uint32	sampleNr, RTC::NsTimestamp nsTimestamp,
+	  TBBTrigger::TBBTrigger (uint32	rcuNr, 		uint32	time, 		uint32	sampleNr, NsTimestamp nsTimestamp,
 						uint32	sum, 	uint32	nrSamples,	uint32	peakValue,	uint32	missed) :
 	itsRcuNr	(rcuNr),
 	itsTime 	(time),

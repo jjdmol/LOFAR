@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 //#include <GPUProc/PerformanceCounter.h>
 
@@ -35,18 +36,22 @@ namespace LOFAR
     class DelayAndBandPassKernel : public Kernel
     {
     public:
-      DelayAndBandPassKernel(const Parset &ps,
-                             gpu::Module &program,
-                             gpu::DeviceMemory &devCorrectedData,
-                             gpu::DeviceMemory &devFilteredData,
-                             gpu::DeviceMemory &devDelaysAtBegin,
-                             gpu::DeviceMemory &devDelaysAfterEnd,
-                             gpu::DeviceMemory &devPhaseOffsets,
-                             gpu::DeviceMemory &devBandPassCorrectionWeights);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
 
-      void enqueue(gpu::Stream &queue,
-                   /* PerformanceCounter &counter,*/
-                   unsigned subband);
+      // Parameters that must be passed to the constructor of the
+      // DelayAndBandPassKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrBitsPerSample;
+        size_t nrBytesPerComplexSample;
+        size_t nrSAPs;
+        bool delayCompensation;
+        bool correctBandPass;
+        bool transpose;
+        double subbandBandwidth;
+      };
 
       enum BufferType
       {
@@ -57,10 +62,43 @@ namespace LOFAR
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
+      // Buffers that must be passed to the constructor of the DelayAndBandPassKernel
+      // class.
+      struct Buffers : Kernel::Buffers
+      {
+        Buffers(const gpu::DeviceMemory& in, 
+                const gpu::DeviceMemory& out,
+                const gpu::DeviceMemory& delaysAtBegin,
+                const gpu::DeviceMemory& delaysAfterEnd,
+                const gpu::DeviceMemory& phaseOffsets,
+                const gpu::DeviceMemory& bandPassCorrectionWeights) :
+          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phaseOffsets(phaseOffsets), bandPassCorrectionWeights(bandPassCorrectionWeights)
+        {}
 
+        gpu::DeviceMemory delaysAtBegin;
+        gpu::DeviceMemory delaysAfterEnd;
+        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory bandPassCorrectionWeights;
+      };
+
+      DelayAndBandPassKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
+
+
+      void enqueue(gpu::Stream &queue,
+                   /* PerformanceCounter &counter,*/
+                   float centralFrequency, size_t SAP);
     };
+
+    // Specialization of the KernelFactory for
+    // DelayAndBandPassKernel
+    template<> size_t
+    KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const;
   }
 }
 

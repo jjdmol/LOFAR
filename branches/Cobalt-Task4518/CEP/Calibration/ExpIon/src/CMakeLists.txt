@@ -31,5 +31,9 @@ python_install(
   parmdbmain.py
   baselinefitting.py
   repairGlobaldb.py
+  MMionosphere.py
+  fitClockTEC.py
+  PosTools.py
+  read_sagecal.py
   DESTINATION lofar/expion)
 

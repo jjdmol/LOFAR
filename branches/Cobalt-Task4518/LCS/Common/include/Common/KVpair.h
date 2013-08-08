@@ -31,6 +31,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 
 
 namespace LOFAR {
@@ -41,22 +42,40 @@ namespace LOFAR {
 class KVpair : public pair<string, string>
 {
 public:
-	KVpair(const string& aKey, const string& aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, int			 aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false);
-	KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp = false); 
+	KVpair(const string& aKey, const string& aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, const char*   aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, int			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp = false, bool timestampInKeyname = false); 
 
+	KVpair();
 	~KVpair();
 
 	// Copying is allowed
 	KVpair(const KVpair&	that);
 	KVpair& operator=(const KVpair& that);
+	inline bool operator==(const KVpair& that) const { 
+		return (first==that.first && second==that.second && timestamp==that.timestamp && valueType==that.valueType); 
+	}
+
+	// data-members
+	double	timestamp;	// store also as double
+	int16	valueType;	
+
+	enum {
+		VT_UNKNOWN = 0, VT_STRING, VT_BOOL, VT_INT, VT_DOUBLE, VT_FLOAT, VT_TIME_T,
+		VT_VECTOR = 0x100
+	};
 };
 
 // @} addgroup
+
+std::ostream& operator<< (std::ostream& os, const LOFAR::KVpair& kv);
+
+
 } // namespace LOFAR
 
 #endif

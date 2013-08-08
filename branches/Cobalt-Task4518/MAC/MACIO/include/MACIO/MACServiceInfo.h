@@ -64,6 +64,7 @@ namespace LOFAR {
 #define	MAC_SVCMASK_CEPLOGPROC			"BGPlogger%s:v1.0"
 #define	MAC_SVCMASK_CEPLOGCONTROL		"CEPlogControl%s:v1.0"
 #define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v1.0"
+#define MAC_SVCMASK_PVSSGATEWAY			"PVSSGateway%s:v1.0"
 
 // Define names for all controllers
 #define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v1.0"

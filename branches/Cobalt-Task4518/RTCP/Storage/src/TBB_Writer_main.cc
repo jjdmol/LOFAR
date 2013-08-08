@@ -282,7 +282,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::RTCP::
 		 */
 		struct itimerval timer = {args.timeoutVal, args.timeoutVal};
 		if (setitimer(ITIMER_REAL, &timer, NULL) != 0) {
-			throw LOFAR::SystemCallException("setitimer", errno, THROW_ARGS);
+			THROW_SYSCALL("setitimer");
 		}
 
 		bool anyFrameReceived = false; // don't quit if there is no data immediately after starting

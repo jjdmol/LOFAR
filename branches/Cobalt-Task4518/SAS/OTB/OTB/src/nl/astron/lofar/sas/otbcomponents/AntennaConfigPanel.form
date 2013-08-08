@@ -135,7 +135,6 @@
                           <Component id="inputInnerCircle" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input1070" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="inputLongBaselines" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input3070" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input1090" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="input3090" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -143,7 +142,7 @@
                           <Component id="inputXPolesOnly" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="inputSparseOdd" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="14" max="32767" attributes="0"/>
+                      <EmptySpace pref="22" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -161,9 +160,7 @@
                       <Component id="inputXPolesOnly" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="inputYPolesOnly" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
-                      <Component id="inputLongBaselines" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="70" max="-2" attributes="0"/>
                       <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
                       <Component id="input1070" min="-2" max="-2" attributes="0"/>
@@ -235,15 +232,6 @@
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputYPolesOnlyActionPerformed"/>
-              </Events>
-            </Component>
-            <Component class="javax.swing.JCheckBox" name="inputLongBaselines">
-              <Properties>
-                <Property name="text" type="java.lang.String" value="long baselines"/>
-                <Property name="enabled" type="boolean" value="false"/>
-              </Properties>
-              <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="inputLongBaselinesActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel1">
@@ -338,14 +326,14 @@
                           <Component id="inputHBADualInner" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Group type="102" alignment="0" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input110190" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input170230" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="input210250" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="input110190" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="input170230" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="input210250" alignment="0" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
                       </Group>
-                  </Group>
-                  </Group>
                       <EmptySpace pref="44" max="32767" attributes="0"/>
                   </Group>
               </Group>
