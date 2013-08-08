@@ -44,7 +44,7 @@ class imager_prepare(LOFARnodeTCP):
              ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable):
+            rficonsole_executable, add_beam_tables):
         """
         Entry point for the node recipe
         """
@@ -110,7 +110,8 @@ class imager_prepare(LOFARnodeTCP):
 				
             #*****************************************************************
             # Add measurmenttables 
-            self.add_beam_tables(time_slices_path_list)
+            if add_beam_tables:
+                self.add_beam_tables(time_slices_path_list)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices

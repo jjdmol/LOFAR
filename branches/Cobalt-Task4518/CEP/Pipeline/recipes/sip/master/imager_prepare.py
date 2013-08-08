@@ -103,6 +103,11 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         'processed_ms_dir': ingredient.StringField(
             '--processed-ms-dir',
             help="Path to directory for processed measurment sets"
+        ),
+        'add_beam_tables': ingredient.BoolField(
+            '--add_beam_tables',
+            default=false,
+            help="Developer option, adds beamtables to ms"
         )
     }
 
@@ -182,7 +187,8 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['asciistat_executable'],
                          self.inputs['statplot_executable'],
                          self.inputs['msselect_executable'],
-                         self.inputs['rficonsole_executable']]
+                         self.inputs['rficonsole_executable'],
+                         self.inputs['add_beam_tables']]
 
             jobs.append(ComputeJob(item.host, node_command, arguments))
 
