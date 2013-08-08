@@ -78,11 +78,15 @@ void runPipeline(const Parset &ps, const vector<size_t> subbands, const vector<g
     exit(1);
   }
 
-  LOG_INFO_STR("Processing subbands " << subbands);
-
   if (correlatorEnabled) {
     LOG_INFO_STR("Correlator pipeline selected");
-    CorrelatorPipeline(ps, subbands, devices).processObservation(CORRELATED_DATA);
+    CorrelatorPipeline pipeline(ps, subbands, devices);
+
+  #ifdef HAVE_MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+  #endif
+    
+    pipeline.processObservation(CORRELATED_DATA);
   } else if (beamFormerEnabled) {
     LOG_INFO_STR("BeamFormer pipeline selected");
     BeamFormerPipeline(ps, subbands, devices).processObservation(BEAM_FORMED_DATA);
@@ -139,7 +143,6 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
-
 #else
   LOG_WARN_STR("Running without MPI!");
 #endif
@@ -214,6 +217,34 @@ int main(int argc, char **argv)
   DirectInput::instance(&ps);
 #endif
 
+  bool correlatorEnabled = ps.settings.correlator.enabled;
+  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
+
+  if (correlatorEnabled && beamFormerEnabled) {
+    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    exit(1);
+  }
+
+  SmartPtr<Pipeline> pipeline;
+  OutputType outputType;
+
+  // Creation of pipelines cause fork/exec, which we need to
+  // do before we start doing anything fancy with libraries and threads.
+  if (correlatorEnabled) {
+    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+    outputType = CORRELATED_DATA;
+  } else if (beamFormerEnabled) {
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
+    outputType = BEAM_FORMED_DATA;
+  }
+
+  #ifdef HAVE_MPI
+  // Make sure all processes are done with forking
+  MPI_Barrier(MPI_COMM_WORLD);
+  #endif
+
+  LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+
   #pragma omp parallel sections
   {
     #pragma omp section
@@ -228,8 +259,8 @@ int main(int argc, char **argv)
     #pragma omp section
     {
       // Process station data
-      if (!subbandDistribution[rank].empty()) {
-        runPipeline(ps, subbandDistribution[rank], devices);
+      if (pipeline != NULL && !subbandDistribution[rank].empty()) {
+        pipeline->processObservation(outputType);
       }
     }
   }
