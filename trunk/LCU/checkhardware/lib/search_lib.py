@@ -209,7 +209,8 @@ def search_oscillation(data, delta, start_sb, stop_sb):
     mean_sum_peaks = peaks.getSumPeaks()
     mean_low = _data.min(axis=1).mean()
     
-    logger.debug("mean n_peaks=%d, sum_peaks=%5.3f, low=%3.1f" %(mean_n_peaks, mean_sum_peaks, mean_low)) 
+    logger.debug("ref. data: used delta=%3.1f dB" %(delta)) 
+    logger.debug("           n_peaks=%d, sum_all_peaks=%5.3f, mean_low_value=%3.1f dB" %(mean_n_peaks, mean_sum_peaks, mean_low)) 
     
     for rcu in range(_data.shape[0]):
         max_peak_val  = 0
@@ -224,9 +225,9 @@ def search_oscillation(data, delta, start_sb, stop_sb):
             
         if max_n_peaks > (mean_n_peaks + 5):
             rcu_low = _data[rcu,:,:].min(axis=0).mean()
-            logger.debug("RCU %d sb=%d..%d number-of-peaks=%d (delta=%3.1fdB) maxvalue=%3.1f sum=%5.3f low=%3.1f" %\
+            logger.debug("RCU %d sb=%d..%d number-of-peaks=%d  max_value=%3.1f  peaks_sum=%5.3f low_value=%3.1f" %\
                         (rcu, start_sb, stop_sb, max_n_peaks, delta, max_peak_val, max_sum_peaks, rcu_low))        
-            if rcu_low > (mean_low + 1.0): #peaks.getSumPeaks() > (mean_sum_peaks * 2.0):
+            if rcu_low > (mean_low + 1.5): #peaks.getSumPeaks() > (mean_sum_peaks * 2.0):
                 info.append((max_sum_peaks, max_n_peaks, rcu))                                
     return (sorted(info,reverse=True))
 
@@ -247,7 +248,7 @@ def search_summator_noise(data, start_sb, stop_sb):
         peaks = cSearchPeak(_data[rcu,start_sb:stop_sb])
         peaks.search(delta=1.5)
         n_peaks = peaks.nMaxPeaks()
-        logger.debug("RCU %d sb=%d..%d number-of-peaks=%d (delta=1.5dB) maxvalue=%3.1f" %(rcu, start_sb, stop_sb, n_peaks, peaks.getMaxPeak()[0]))
+        logger.debug("Tile %d sb=%d..%d number-of-peaks=%d (delta=1.5dB) maxvalue=%3.1f" %(rcu, start_sb, stop_sb, n_peaks, peaks.getMaxPeak()[0]))
         if n_peaks > ref_peaks:
             if peaks.getMaxPeak()[0] < 120:
                 meanval = psd[10:].mean()
