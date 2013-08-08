@@ -181,10 +181,10 @@ class msss_imager_pipeline(control):
         # missing on the provided ms. There is NO use case for users of the 
         # pipeline
         try:
-          add_beam_tables = self.parset.getbool(
+          add_beam_tables = self.parset.getBool(
                                     "Imaging.addBeamTables")
         except:
-          add_beam_tables = false
+          add_beam_tables = False
             
             
         # ******************************************************************
