@@ -178,14 +178,10 @@ class msss_imager_pipeline(control):
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
         # TODO: This is a backdoor option to manually add beamtables when these 
-        # missing on the provided ms. There is NO use case for users of the 
+        # are missing on the provided ms. There is NO use case for users of the 
         # pipeline
-        try:
-          add_beam_tables = self.parset.getBool(
-                                    "Imaging.addBeamTables")
-        except:
-          add_beam_tables = False
-            
+        add_beam_tables = self.parset.getBool(
+                                    "Imaging.addBeamTables", False)          
             
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
