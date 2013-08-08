@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
   cerr.precision(8); // print full float precision (7 + the 0.).
 
   int status = 0;
+  size_t total = 0;
 
   while (ifs1.good() && ifs2.good()) {
     size_t len = bufLen;
@@ -91,10 +92,12 @@ int main(int argc, char *argv[])
     {
       if (!fpEquals(buf1[i], buf2[i], eps))
       {
-        cerr << "Error: value diff beyond eps at pos " << i << ": " << buf1[i] << " " << buf2[i] << endl;
+        cerr << "Error: value diff beyond eps at pos " << total + i << ": " << buf1[i] << " " << buf2[i] << endl;
         status = 1;
       }
     }
+
+    total += len;
   }
 
   if (!ifs1.eof())

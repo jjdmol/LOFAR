@@ -38,8 +38,8 @@ int main() {
   // Set up gpu environment
   try {
     gpu::Platform pf;
-    cout << "Detected " << pf.size() << " CUDA devices" << endl;
-  } catch (gpu::CUDAException& e) {
+    cout << "Detected " << pf.size() << " GPU devices" << endl;
+  } catch (gpu::GPUException& e) {
     cerr << e.what() << endl;
     return 3;
   }
@@ -80,12 +80,12 @@ int main() {
   // The inputs were all -128 with bits per sample 8. 
   // Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
   for (size_t idx =0; idx < nSampledData; ++idx)
-    if(samplesFloat[idx] != -127 * 256)
+    if (samplesFloat[idx] != -127 * 256)
     {
         cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
              << "Value found: " << samplesFloat[idx] << endl
              << "Test failed "  << endl;
-        return -1;
+        return 1;
     }
       
   return 0;
