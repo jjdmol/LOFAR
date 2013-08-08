@@ -106,7 +106,7 @@ class imager_prepare(BaseRecipe, RemoteCommandRecipeMixIn):
         ),
         'add_beam_tables': ingredient.BoolField(
             '--add_beam_tables',
-            default=false,
+            default=False,
             help="Developer option, adds beamtables to ms"
         )
     }
