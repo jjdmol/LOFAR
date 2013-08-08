@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+#include <sys/resource.h>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -70,11 +71,28 @@ void usage(char **argv)
 
 int main(int argc, char **argv)
 {
+  /*
+   * Initialise the system environment
+   */
+
   // Make sure all time is dealt with and reported in UTC
-  setenv("TZ", "UTC", 1);
+  if (setenv("TZ", "UTC", 1) < 0) {
+    int _errno = errno;
+
+    LOG_ERROR_STR("Could not set time zone: " << strerror(_errno));
+  }
 
   // Restrict access to (tmp build) files we create to owner
   umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
+    int _errno = errno;
+
+    LOG_WARN_STR("Could not raise MEMLOCK limit: " << strerror(_errno));
+  }
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
@@ -88,6 +106,10 @@ int main(int argc, char **argv)
     perror("error setting DISPLAY");
     exit(1);
   }
+
+  /*
+   * Initialise MPI
+   */
 
   // Rank in MPI set of hosts, or 0 if no MPI is used
   int rank = 0;
@@ -120,7 +142,10 @@ int main(int argc, char **argv)
   LOG_WARN_STR("Running without MPI!");
 #endif
 
-  // parse all command-line options
+  /*
+   * Parse command-line options
+   */
+
   int opt;
   while ((opt = getopt(argc, argv, "p")) != -1) {
     switch (opt) {
@@ -139,6 +164,10 @@ int main(int argc, char **argv)
     usage(argv);
     exit(1);
   }
+
+  /*
+   * INIT stage
+   */
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
@@ -214,10 +243,18 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  /*
+   * Sync before execution
+   */
+
 #ifdef HAVE_MPI
   // Make sure all processes are done with forking
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
+
+  /*
+   * RUN stage
+   */
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
