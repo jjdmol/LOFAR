@@ -20,18 +20,21 @@
 
 #include <lofar_config.h>
 
+#include <boost/lexical_cast.hpp>
+
 #include "CoherentStokesKernel.h"
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-
 #include <GPUProc/global_defines.h>
+
+using boost::lexical_cast;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    string CoherentStokesKernel::theirSourceFile = "BeamFormer/CoherentStokes.cu";
+    string CoherentStokesKernel::theirSourceFile = "CoherentStokes.cu";
     string CoherentStokesKernel::theirFunction = "coherentStokes";
 
     CoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
@@ -52,6 +55,7 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction))
     {
       ASSERT(params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0);
+      ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -65,11 +69,37 @@ namespace LOFAR
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
     }
 
+    //--------  Template specializations for KernelFactory  --------//
+
+    template<> size_t
+    KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case CoherentStokesKernel::INPUT_DATA:
+        return
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+      case CoherentStokesKernel::OUTPUT_DATA:
+        return 
+          itsParameters.nrTABs * itsParameters.nrStokes * itsParameters.nrSamplesPerChannel /
+          itsParameters.timeIntegrationFactor * itsParameters.nrChannelsPerSubband * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     template<> CompileDefinitions
     KernelFactory<CoherentStokesKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["NR_TABS"] =
+        lexical_cast<string>(itsParameters.nrTABs);
+      defs["NR_COHERENT_STOKES"] =
+        lexical_cast<string>(itsParameters.nrStokes); // TODO: nrStokes and timeIntegrationFactor cannot differentiate between coh and incoh, while there are separate defines for coh and incoh. Correct?
+      defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"] =
+        lexical_cast<string>(itsParameters.timeIntegrationFactor);
+
       return defs;
     }
 
