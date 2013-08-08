@@ -44,7 +44,7 @@ class imager_prepare(LOFARnodeTCP):
              ndppp_executable, output_measurement_set,
             time_slices_per_image, subbands_per_group, raw_ms_mapfile,
             asciistat_executable, statplot_executable, msselect_executable,
-            rficonsole_executable):
+            rficonsole_executable, add_beam_tables):
         """
         Entry point for the node recipe
         """
@@ -107,6 +107,11 @@ class imager_prepare(LOFARnodeTCP):
             time_slice_filtered_path_list = self._filter_bad_stations(
                 time_slices_path_list, asciistat_executable,
                 statplot_executable, msselect_executable)
+				
+            #*****************************************************************
+            # Add measurmenttables 
+            if add_beam_tables:
+                self.add_beam_tables(time_slice_filtered_path_list)
 
             #******************************************************************
             # 6. Perform the (virtual) concatenation of the timeslices
@@ -116,11 +121,23 @@ class imager_prepare(LOFARnodeTCP):
             #******************************************************************
             # return
             self.outputs["time_slices"] = \
-                time_slice_filtered_path_list
-
+                time_slices_path_list
 
         return 0
 
+    def add_beam_tables(self, time_slices_path_list):
+        beamtable_proc_group = SubProcessGroup(self.logger)
+        for ms_path in time_slices_path_list:
+            self.logger.debug( "makebeamtables start")
+            cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path)
+            self.logger.debug(cmd_string)
+            beamtable_proc_group.run(cmd_string)
+
+        if beamtable_proc_group.wait_for_finish() != None:
+            raise Exception("an makebeamtables run failed!")
+            
+        self.logger.debug("makebeamtables finished")
+        
     def _copy_input_files(self, processed_ms_dir, input_map):
         """
         Collect all the measurement sets in a single directory:

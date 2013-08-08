@@ -65,7 +65,6 @@ class imager_bbs(LOFARnodeTCP):
             self.logger.error("Failed to execute bbs: {0}".format(str(
                                                                     exception)))
             return 1
-
         return 0
 
 
