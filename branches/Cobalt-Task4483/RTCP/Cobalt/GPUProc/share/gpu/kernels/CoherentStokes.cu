@@ -18,12 +18,8 @@
 //#
 //# $Id: CoherentStokes.cu 24553 2013-04-09 14:21:56Z mol $
 
-#include "IntToFloat.cuh"
-
 typedef float2 (*inputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
-typedef float2 (*outputDataType)[NR_TABS][NR_STOKES][NR_SAMPLES_PER_CHANNEL/STOKES_INTEGRATION_SAMPLES][NR_CHANNELS];
-
-extern "C" {
+typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/STOKES_INTEGRATION_SAMPLES][NR_CHANNELS];
 
 /*!
  * Computes correlations between all pairs of stations (baselines) and X,Y
@@ -45,18 +41,19 @@ extern "C" {
  *
  * Execution configuration:
  */
-
-__global__ void coherentStokes(void *inputPtr, const void *outputPtr) 
+extern "C" __global__ void coherentStokes(void *outputPtr, const void *inputPtr) 
 {
   inputDataType input = (inputDataType) inputPtr;
-  outputDataType output = (outputDataType) correctedDataPtr;
+  outputDataType output = (outputDataType) outputPtr;
+
+
 
   // Define the indexes in the data depending on the block and thread idx
   unsigned tab_idx = 0;
-  unsigned channel_idx = 0;
+  unsigned channel_idx = threadIdx.y;
 
   // Step over the complete time line with COHERENT_STOKES_TIME_INTEGRATION_FACTOR steps
-  for (unsigned idx_stride = 0; idx_stride < NR_SAMPLES_PER_CHANNEL / COHERENT_STOKES_TIME_INTEGRATION_FACTOR; idx_stride++)
+  for (unsigned idx_stride = 0; idx_stride < NR_SAMPLES_PER_CHANNEL; idx_stride+= INTEGRATION_SIZE)
   {
     // We are integrating all values in the current stride, we need local variable to store
     float stokesI = 0;
@@ -67,11 +64,12 @@ __global__ void coherentStokes(void *inputPtr, const void *outputPtr)
     float halfStokesV = 0;
 #   endif
 
-    for (unsigned idx_step = 0; idx_step < COHERENT_STOKES_TIME_INTEGRATION_FACTOR; idx_step++) 
+    for (unsigned idx_step = 0; idx_step < INTEGRATION_SIZE; idx_step++) 
     {
-      float4 sample = (*inputDataType)[tab_idx][idx_stride][idx_step][channel_idx];
-      float2 X = make_float2(sample.x, sample.y);
-      float2 Y = sample.zw;
+        //[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]
+      float2 X = (*input)[tab_idx][0][idx_stride + idx_step][channel_idx];    
+      float2 Y = (*input)[tab_idx][1][idx_stride + idx_step][channel_idx];
+
       float powerX = X.x * X.x + X.y * X.y;
       float powerY = Y.x * Y.x + Y.y * Y.y;
       stokesI += powerX + powerY;
@@ -80,14 +78,17 @@ __global__ void coherentStokes(void *inputPtr, const void *outputPtr)
       stokesQ += powerX - powerY;
       halfStokesU += X.x * Y.x + X.y * Y.y;
       halfStokesV += X.y * Y.x - X.x * Y.y;
-#     endif*/
+#     endif
     }
-
-    (*output)[tab_idx][0][idx_stride][channel_idx] = stokesI;
+    unsigned write_idx = idx_stride / INTEGRATION_SIZE;
+    (*output)[tab_idx][0][write_idx][channel_idx] = stokesI;
 #   if NR_COHERENT_STOKES == 4
-    (*output)[tab_idx][0][idx_stride][channel_idx] = stokesQ;
-    (*output)[tab_idx][0][idx_stride][channel_idx] = 2 * halfStokesU;
-    (*output)[tab_idx][0][idx_stride][channel_idx] = 2 * halfStokesV;
+    (*output)[tab_idx][1][write_idx][channel_idx] = stokesQ;
+    (*output)[tab_idx][2][write_idx][channel_idx] = 2 * halfStokesU;
+    (*output)[tab_idx][3][write_idx][channel_idx] = 2 * halfStokesV;
 #   endif
+
+    
+
   }
 }

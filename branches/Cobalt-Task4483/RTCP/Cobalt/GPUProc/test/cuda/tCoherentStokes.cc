@@ -40,18 +40,19 @@ using namespace LOFAR::Cobalt;
 using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
-unsigned NR_CHANNELS = 4;
-unsigned NR_SAMPLES_PER_CHANNEL = 4;
-unsigned NR_TABS = 4;
+unsigned NR_CHANNELS = 8;
+unsigned NR_SAMPLES_PER_CHANNEL = 8;
+unsigned NR_TABS = 1;
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
-unsigned NR_STOKES = 4;
-unsigned INTEGRATION_SIZE = 16;
+unsigned NR_COHERENT_STOKES = 1;
+unsigned INTEGRATION_SIZE = 2;
 unsigned STOKES_INTEGRATION_SAMPLES = NR_SAMPLES_PER_CHANNEL / INTEGRATION_SIZE;
 
 // Create the data arrays
-size_t lengthInputData = NR_TABS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS;
-size_t lengthOutputData = NR_TABS * NR_STOKES * (NR_SAMPLES_PER_CHANNEL / STOKES_INTEGRATION_SAMPLES) * NR_CHANNELS;
+size_t lengthInputData = NR_TABS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
+size_t lengthOutputData = NR_TABS * NR_COHERENT_STOKES *  (NR_SAMPLES_PER_CHANNEL / INTEGRATION_SIZE) * NR_CHANNELS;
+
 
 void exit_with_print(float *outputOnHostPtr)
 {
@@ -108,7 +109,9 @@ HostMemory runTest(Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-
+  definitions["NR_COHERENT_STOKES"] = lexical_cast<string>(NR_COHERENT_STOKES);
+  definitions["STOKES_INTEGRATION_SAMPLES"] = lexical_cast<string>(STOKES_INTEGRATION_SAMPLES);
+  definitions["INTEGRATION_SIZE"] = lexical_cast<string>(INTEGRATION_SIZE);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
@@ -142,8 +145,10 @@ HostMemory runTest(Context ctx,
 
 
   // Calculate the number of threads in total and per block
-  Grid globalWorkSize(1, 1, 1);
-  Block localWorkSize(NR_POLARIZATIONS, NR_TABS, NR_CHANNELS);
+  Grid globalWorkSize(1, 8, 1);
+  Block localWorkSize(1, 8, 1);
+
+
 
   // Run the kernel
   cuStream.synchronize(); // assure memory is copied
@@ -157,11 +162,14 @@ HostMemory runTest(Context ctx,
   return rawOutputData; 
 }
 
+
+
 Exception::TerminateHandler t(Exception::terminate);
 
 
 int main()
 {
+
   INIT_LOGGER("tCoherentStokes");
   const char* function = "coherentStokes";
   try 
@@ -191,10 +199,9 @@ int main()
   // Baseline test: If all weight data is zero the output should be zero
   // The output array is initialized with 42s
   cout << "test 1" << endl;
-  for (unsigned idx = 0; idx < lengthInputData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthInputData; ++idx)
   {
-    intputData[idx * 2] = 42.0f;
-    intputData[idx * 2 + 1] = 42.0f;
+    intputData[idx] = 0.0f;
   }
 
   for (unsigned idx = 0; idx < lengthOutputData / 2; ++idx)
@@ -210,11 +217,11 @@ int main()
   // Validate the returned data array
   outputOnHostPtr = outputOnHost.get<float>();
   for (size_t idx = 0; idx < lengthOutputData; ++idx)
-    if (outputOnHostPtr[idx] != 0.0f)
-    {
-      cerr << "The data returned by the kernel should be all zero: All weights are zero";
-    }
-    
+    cout << outputOnHostPtr[idx] << ',';
+    //if (outputOnHostPtr[idx] != 0.0f)
+    //{
+    //  cout << outputOnHostPtr[idx] << ',';
+    //}   
 
   delete [] intputData;
   delete [] outputData;
