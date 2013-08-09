@@ -26,7 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include "TestUtil.h"
+#include "../TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -41,8 +41,8 @@ int main() {
   // Set up gpu environment
   try {
     gpu::Platform pf;
-    cout << "Detected " << pf.size() << " CUDA devices" << endl;
-  } catch (gpu::CUDAException& e) {
+    cout << "Detected " << pf.size() << " GPU devices" << endl;
+  } catch (gpu::GPUException& e) {
     cerr << e.what() << endl;
     return 3;
   }
