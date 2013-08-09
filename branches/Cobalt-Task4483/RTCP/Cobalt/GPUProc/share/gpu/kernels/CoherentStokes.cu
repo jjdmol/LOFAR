@@ -19,7 +19,7 @@
 //# $Id: CoherentStokes.cu 24553 2013-04-09 14:21:56Z mol $
 
 typedef float2 (*inputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
-typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/STOKES_INTEGRATION_SAMPLES][NR_CHANNELS];
+typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE][NR_CHANNELS];
 
 /*!
  * Computes correlations between all pairs of stations (baselines) and X,Y
@@ -46,14 +46,15 @@ extern "C" __global__ void coherentStokes(void *outputPtr, const void *inputPtr)
   inputDataType input = (inputDataType) inputPtr;
   outputDataType output = (outputDataType) outputPtr;
 
-
-
   // Define the indexes in the data depending on the block and thread idx
-  unsigned tab_idx = 0;
-  unsigned channel_idx = threadIdx.y;
+  unsigned channel_idx = threadIdx.x;  // The channels are next to each other in mem 
+  unsigned time_idx = threadIdx.y;     //
+  unsigned tab_idx = threadIdx.z;   // 
 
-  // Step over the complete time line with COHERENT_STOKES_TIME_INTEGRATION_FACTOR steps
-  for (unsigned idx_stride = 0; idx_stride < NR_SAMPLES_PER_CHANNEL; idx_stride+= INTEGRATION_SIZE)
+  // Step over the complete time line with INTEGRATION_SIZE steps
+  for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR) ; 
+                idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR);
+                idx_stride += INTEGRATION_SIZE)
   {
     // We are integrating all values in the current stride, we need local variable to store
     float stokesI = 0;
@@ -82,6 +83,7 @@ extern "C" __global__ void coherentStokes(void *outputPtr, const void *inputPtr)
     }
     unsigned write_idx = idx_stride / INTEGRATION_SIZE;
     (*output)[tab_idx][0][write_idx][channel_idx] = stokesI;
+
 #   if NR_COHERENT_STOKES == 4
     (*output)[tab_idx][1][write_idx][channel_idx] = stokesQ;
     (*output)[tab_idx][2][write_idx][channel_idx] = 2 * halfStokesU;

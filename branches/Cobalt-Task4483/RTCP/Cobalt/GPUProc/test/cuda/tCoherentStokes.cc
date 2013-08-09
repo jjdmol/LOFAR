@@ -40,19 +40,22 @@ using namespace LOFAR::Cobalt;
 using LOFAR::Exception;
 
 // The tests succeeds for different values of stations, channels, samples and tabs.
-unsigned NR_CHANNELS = 8;
-unsigned NR_SAMPLES_PER_CHANNEL = 8;
-unsigned NR_TABS = 1;
+unsigned NR_CHANNELS = 16;
+unsigned NR_SAMPLES_PER_CHANNEL = 128;
+unsigned TIME_PARALLEL_FACTOR = 2;  // cannot be more then NR_SAMPLES_PER_CHANNEL / INTEGRATION_SIZE
+unsigned NR_TABS = 1; 
 unsigned NR_POLARIZATIONS = 2;
 unsigned COMPLEX = 2;
-unsigned NR_COHERENT_STOKES = 1;
-unsigned INTEGRATION_SIZE = 2;
+unsigned NR_COHERENT_STOKES = 4;
+unsigned INTEGRATION_SIZE = 64;
 unsigned STOKES_INTEGRATION_SAMPLES = NR_SAMPLES_PER_CHANNEL / INTEGRATION_SIZE;
+
+
+
 
 // Create the data arrays
 size_t lengthInputData = NR_TABS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
 size_t lengthOutputData = NR_TABS * NR_COHERENT_STOKES *  (NR_SAMPLES_PER_CHANNEL / INTEGRATION_SIZE) * NR_CHANNELS;
-
 
 void exit_with_print(float *outputOnHostPtr)
 {
@@ -112,6 +115,7 @@ HostMemory runTest(Context ctx,
   definitions["NR_COHERENT_STOKES"] = lexical_cast<string>(NR_COHERENT_STOKES);
   definitions["STOKES_INTEGRATION_SAMPLES"] = lexical_cast<string>(STOKES_INTEGRATION_SAMPLES);
   definitions["INTEGRATION_SIZE"] = lexical_cast<string>(INTEGRATION_SIZE);
+  definitions["TIME_PARALLEL_FACTOR"] = lexical_cast<string>(TIME_PARALLEL_FACTOR);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
@@ -120,7 +124,7 @@ HostMemory runTest(Context ctx,
 
   // *************************************************************
   // Create the data arrays
-
+  
   size_t sizeInputData= lengthInputData * sizeof(float);
   DeviceMemory devInputMemory(ctx, sizeInputData);
   HostMemory rawInputData = getInitializedArray(ctx, sizeInputData, 2.0f);
@@ -142,14 +146,11 @@ HostMemory runTest(Context ctx,
   // Run the kernel on the created data
   hKernel.setArg(0, devOutputMemory);
   hKernel.setArg(1, devInputMemory);
-
-
+  
   // Calculate the number of threads in total and per block
-  Grid globalWorkSize(1, 8, 1);
-  Block localWorkSize(1, 8, 1);
-
-
-
+  Grid globalWorkSize(NR_CHANNELS, TIME_PARALLEL_FACTOR, NR_TABS);
+  Block localWorkSize(NR_CHANNELS, TIME_PARALLEL_FACTOR, NR_TABS);
+    
   // Run the kernel
   cuStream.synchronize(); // assure memory is copied
   cuStream.launchKernel(hKernel, globalWorkSize, localWorkSize);
@@ -161,8 +162,6 @@ HostMemory runTest(Context ctx,
 
   return rawOutputData; 
 }
-
-
 
 Exception::TerminateHandler t(Exception::terminate);
 
@@ -218,14 +217,9 @@ int main()
   outputOnHostPtr = outputOnHost.get<float>();
   for (size_t idx = 0; idx < lengthOutputData; ++idx)
     cout << outputOnHostPtr[idx] << ',';
-    //if (outputOnHostPtr[idx] != 0.0f)
-    //{
-    //  cout << outputOnHostPtr[idx] << ',';
-    //}   
 
   delete [] intputData;
   delete [] outputData;
 
   return 0;
 }
-
