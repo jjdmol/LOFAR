@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# Script to start MPI. It tries to wrap (part of) the different scripts that
+# exist to start MPI (e.g., mpirun, mpiexec, etc.)
+
+error()
+{
+  echo "ERROR: $@"
+  exit 1
+}
+
+parse_openmpi_options()
+{
+  echo "parset_openmpi_options()"
+#  OPTIONS=
+#  for opt in "$@"
+#  do
+#    OPTIONS="$OPTIONS \"$opt\""
+#  done
+  OPTIONS="$@"
+}
+
+parse_mvapich2_options()
+{
+  echo "parset_mvapich2_options()"
+  OPTIONS=""
+  while :
+  do
+    case $1 in
+      -c | -np | --np)
+        OPTIONS="$OPTIONS -np $2"
+        shift 2 || break
+        ;;
+      -H | -host | --host)
+        OPTIONS="$OPTIONS -hosts \"$2\""
+        shift 2 || break
+        ;;
+      -*)
+        echo "Warning: $1 is an unknown option"
+        shift
+        ;;
+      *) # no more options
+        PROGRAM="$1"
+        break;
+        ;;
+    esac
+  done
+  echo "OPTIONS=$OPTIONS"
+  echo "PROGRAM=$PROGRAM"
+}
+
+if [ "@HAVE_MPI@" = "TRUE" ]
+then
+  MPIEXEC=@MPIEXEC@
+  MPIEXEC=/opt/mvapich2/bin/mpiexec
+
+  echo "MPIEXEC=$MPIEXEC"
+
+  # Determine MPI flavour
+  VERSION_HEADER=$(${MPIEXEC} --version 2>&1 | head -n 1)
+  echo "VERSION_HEADER=$VERSION_HEADER"
+
+  if echo ${VERSION_HEADER} | grep "OpenRTE" >/dev/null; then
+    FLAVOUR=openmpi
+  elif echo ${VERSION_HEADER} | grep "HYDRA" >/dev/null; then
+    FLAVOUR=mvapich2
+  else
+    error "Cannot determine flavour of @MPIEXEC@"
+  fi
+
+  parse_${FLAVOUR}_options "$@"
+  echo "OPTIONS=$OPTIONS"
+
+  COMMAND="$MPIEXEC @MPIEXEC_PREFLAGS@ $OPTIONS $PROGRAM @MPIEXEC_POSTFLAGS@"
+#  COMMAND="@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ @MPIEXEC_MAX_NUMPROCS@ \
+#           @MPIEXEC_PREFLAGS@ $@ @MPIEXEC_POSTFLAGS@"
+else
+  # Not using MPI
+  COMMAND="$@"
+fi
+
+echo "COMMAND=$COMMAND"
+eval $COMMAND
