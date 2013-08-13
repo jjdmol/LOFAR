@@ -45,6 +45,12 @@ namespace LOFAR
     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+
+      // TODO: Add sensing of hardware to allow usage of the 1024 limit of k10
+      // The TIME_PARALLEL_FACTOR depends on the size of the workload
+      // We cannot have more then 512 threads on a average hw solution
+      // We already asserted the itsParameters.nrTABs * itsParameters.nrChannelsPerSubband < 512
+      timeParallelFactor = 512 / (nrTABs * nrChannelsPerSubband);
     }
 
 
@@ -57,12 +63,15 @@ namespace LOFAR
       ASSERT(params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0);
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
+      ASSERT(params.nrChannelsPerSubband * params.nrTABs <= 512);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
       // TODO: params.nrTABs only works for one SAP
-      globalWorkSize = gpu::Grid(256, (params.nrTABs + 15) / 16, (params.nrChannelsPerSubband + 15) / 16);
-      localWorkSize = gpu::Block(256, 1, 1);
+      // TODO: Worksize larger the 512 are not supported yet.
+      //       From sm 2.5 we could increase this to 1024
+      globalWorkSize = gpu::Grid(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
+      localWorkSize = gpu::Block(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -97,8 +106,10 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrTABs);
       defs["NR_COHERENT_STOKES"] =
         lexical_cast<string>(itsParameters.nrStokes); // TODO: nrStokes and timeIntegrationFactor cannot differentiate between coh and incoh, while there are separate defines for coh and incoh. Correct?
-      defs["COHERENT_STOKES_TIME_INTEGRATION_FACTOR"] =
+      defs["INTEGRATION_SIZE"] =
         lexical_cast<string>(itsParameters.timeIntegrationFactor);
+      defs["TIME_PARALLEL_FACTOR"] =
+        lexical_cast<string>(itsParameters.timeParallelFactor);
 
       return defs;
     }
