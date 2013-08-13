@@ -9,75 +9,78 @@ error()
   exit 1
 }
 
+# Ignore all mpirun options
+parse_nompi_options()
+{
+  # Assume the last "option" is the name of the executable
+  while [ $# -gt 1 ]
+  do
+    shift
+  done
+  EXECUTABLE=$1
+}
+
 parse_openmpi_options()
 {
-  echo "parset_openmpi_options()"
-#  OPTIONS=
-#  for opt in "$@"
-#  do
-#    OPTIONS="$OPTIONS \"$opt\""
-#  done
-  OPTIONS="$@"
+  # Assume the last "option" is the name of the executable
+  while [ $# -gt 1 ]
+  do
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS $1"
+    shift
+  done
+  EXECUTABLE=$1
 }
 
 parse_mvapich2_options()
 {
-  echo "parset_mvapich2_options()"
-  OPTIONS=""
   while :
   do
     case $1 in
       -c | -np | --np)
-        OPTIONS="$OPTIONS -np $2"
-        shift 2 || break
+        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $2"
+        shift 2 || error "argument for option $1 missing"
         ;;
       -H | -host | --host)
-        OPTIONS="$OPTIONS -hosts \"$2\""
-        shift 2 || break
+        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $2"
+        shift 2 || error "argument for option $1 missing"
         ;;
       -*)
-        echo "Warning: $1 is an unknown option"
+        error "$1 is an unknown option"
         shift
         ;;
       *) # no more options
-        PROGRAM="$1"
+        EXECUTABLE="$1"
         break;
         ;;
     esac
   done
-  echo "OPTIONS=$OPTIONS"
-  echo "PROGRAM=$PROGRAM"
 }
 
 if [ "@HAVE_MPI@" = "TRUE" ]
 then
   MPIEXEC=@MPIEXEC@
-  MPIEXEC=/opt/mvapich2/bin/mpiexec
-
-  echo "MPIEXEC=$MPIEXEC"
+  MPIEXEC_PREFLAGS=@MPIEXEC_PREFLAGS@
+  MPIEXEC_POSTFLAGS=@MPIEXEC_POSTFLAGS@
 
   # Determine MPI flavour
   VERSION_HEADER=$(${MPIEXEC} --version 2>&1 | head -n 1)
-  echo "VERSION_HEADER=$VERSION_HEADER"
 
   if echo ${VERSION_HEADER} | grep "OpenRTE" >/dev/null; then
-    FLAVOUR=openmpi
+    MPI_FLAVOUR=openmpi
   elif echo ${VERSION_HEADER} | grep "HYDRA" >/dev/null; then
-    FLAVOUR=mvapich2
+    MPI_FLAVOUR=mvapich2
   else
-    error "Cannot determine flavour of @MPIEXEC@"
+    error "Cannot determine flavour of ${MPIEXEC}"
   fi
 
-  parse_${FLAVOUR}_options "$@"
-  echo "OPTIONS=$OPTIONS"
-
-  COMMAND="$MPIEXEC @MPIEXEC_PREFLAGS@ $OPTIONS $PROGRAM @MPIEXEC_POSTFLAGS@"
-#  COMMAND="@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ @MPIEXEC_MAX_NUMPROCS@ \
-#           @MPIEXEC_PREFLAGS@ $@ @MPIEXEC_POSTFLAGS@"
 else
   # Not using MPI
-  COMMAND="$@"
+  MPI_FLAVOUR=nompi
 fi
 
-echo "COMMAND=$COMMAND"
+parse_${MPI_FLAVOUR}_options "$@"
+
+COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS}"
+
+echo "Executing: $COMMAND"
 eval $COMMAND
