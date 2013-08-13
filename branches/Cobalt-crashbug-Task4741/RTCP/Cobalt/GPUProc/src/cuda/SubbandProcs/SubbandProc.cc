@@ -43,7 +43,7 @@ namespace LOFAR
       // mean time.
       //
       // At least 3 items are needed for a smooth Pool operation.
-      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
+      size_t nrInputDatas = 16UL;//std::max(3UL, ps.nrSubbands());
       for (size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),

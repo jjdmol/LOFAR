@@ -63,6 +63,8 @@ class SocketStream : public FileDescriptorBasedStream
     const std::string nfskey;
     int listen_sk;
 
+    const std::string logPrefix;
+
     void accept(time_t timeout);
 
     static void syncNFS();

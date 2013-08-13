@@ -40,6 +40,9 @@
 #include <cstdlib>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+using boost::format;
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
@@ -72,8 +75,14 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
   hostname(hostname),
   port(_port),
   nfskey(nfskey),
-  listen_sk(-1)
-{  
+  listen_sk(-1),
+  logPrefix(str(format(
+    "%s %s:%s:%u: ")
+    % (mode == Client ? "connect to" : "listen at")
+    % (protocol == TCP ? "tcp" : "udp")
+    % hostname
+    % _port))
+{
   struct addrinfo hints;
   bool            autoPort = (port == 0);
 
@@ -106,7 +115,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         snprintf(portStr, sizeof portStr, "%hu", port);
 
         if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0)
-          throw SystemCallException("getaddrinfo", retval, THROW_ARGS); // TODO: getaddrinfo does not return errno; needs gai_strerror() to stringify
+          throw SystemCallException(logPrefix + "getaddrinfo", retval, THROW_ARGS); // TODO: getaddrinfo does not return errno; needs gai_strerror() to stringify
 
         // make sure result will be freed
         struct D {
@@ -121,30 +130,30 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
         // result is a linked list of resolved addresses, we only use the first
 
         if ((fd = socket(result->ai_family, result->ai_socktype, result->ai_protocol)) < 0)
-          THROW_SYSCALL("socket");
+          THROW_SYSCALL(logPrefix + "socket");
 
         if (mode == Client) {
           while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
             if (errno == ECONNREFUSED) {
               if (deadline > 0 && time(0) >= deadline)
-                throw TimeOutException("client socket", THROW_ARGS);
+                throw TimeOutException(logPrefix + "client socket", THROW_ARGS);
 
               if (usleep(999999) < 0) {
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 
-                THROW_SYSCALL("sleep");
+                THROW_SYSCALL(logPrefix + "sleep");
               }
             } else
-              THROW_SYSCALL("connect");
+              THROW_SYSCALL(logPrefix + "connect");
         } else {
           int on = 1;
 
           if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on) < 0)
-            THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
+            THROW_SYSCALL(logPrefix + "setsockopt(SO_REUSEADDR)");
 
           if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-            THROW_SYSCALL("bind");
+            THROW_SYSCALL(logPrefix + "bind");
 
           if (protocol == TCP) {
             listen_sk = fd;
@@ -152,7 +161,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
             int listenBacklog = 15;
             if (listen(listen_sk, listenBacklog) < 0)
-              THROW_SYSCALL("listen");
+              THROW_SYSCALL(logPrefix + "listen");
 
             if (doAccept)
               accept(deadline);

@@ -47,7 +47,7 @@ endif()
 
 lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
-lofar_find_package(OpenMP REQUIRED)
+lofar_find_package(OpenMP)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(MPI)
 lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
@@ -79,6 +79,6 @@ if(USE_VALGRIND)
 endif()  
 
 add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(test)
 add_subdirectory(share/gpu/kernels)
 add_subdirectory(etc)

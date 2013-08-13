@@ -30,7 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <omp.h>
+//#include <omp.h>
 #include <sys/resource.h>
 
 #ifdef HAVE_MPI
@@ -40,15 +40,16 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Thread.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
-#include <InputProc/OMPThread.h>
+//#include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
 
 #include "global_defines.h"
-#include "OpenMP_Lock.h"
+//#include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
@@ -68,6 +69,27 @@ void usage(char **argv)
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
+
+class StationStarter
+{
+public:
+  StationStarter(const Parset &ps, int stat, const SubbandDistribution &subbandDistribution):
+    ps(ps), stat(stat), subbandDistribution(subbandDistribution)
+  {
+    thread = new Thread(this, &StationStarter::mainLoop);
+  }
+
+  void mainLoop()
+  {
+    sendInputToPipeline(ps, stat, subbandDistribution);
+  }
+
+  const Parset &ps;
+  const int stat;
+  const SubbandDistribution subbandDistribution;
+
+  SmartPtr<Thread> thread;
+};
 
 int main(int argc, char **argv)
 {
@@ -95,10 +117,11 @@ int main(int argc, char **argv)
   }
 
   // Allow usage of nested omp calls
-  omp_set_nested(true);
+  //omp_set_nested(true);
+  //omp_set_num_threads(32);
 
   // Allow OpenMP thread registration
-  OMPThread::init();
+  //OMPThread::init();
 
   // Set parts of the environment
   if (setenv("DISPLAY", ":0", 1) < 0)
@@ -239,7 +262,8 @@ int main(int argc, char **argv)
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (correlatorEnabled) {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+    //pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+    pipeline = new Pipeline(ps, subbandDistribution[rank], devices);
     outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
     pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
@@ -264,18 +288,27 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
-  #pragma omp parallel sections
+  vector< SmartPtr<StationStarter> > stations(ps.nrStations());
+
+  for (int stat = 0; stat < ps.nrStations(); ++stat) {
+    stations[stat] = new StationStarter(ps, stat, subbandDistribution);
+  }
+
+  {
+#if 0
+  #pragma omp parallel sections default(shared) num_threads(2)
   {
     #pragma omp section
     {
       // Read and forward station data
-      #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+      #pragma omp parallel for default(shared) num_threads(ps.nrStations())
+      for (int stat = 0; stat < ps.nrStations(); ++stat) {
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
     #pragma omp section
+#endif
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
@@ -283,6 +316,7 @@ int main(int argc, char **argv)
       }
     }
   }
+
 
   /*
    * COMPLETING stage

@@ -26,6 +26,7 @@
 #include <map>
 #include <omp.h>
 #include <mpi.h>
+#include <sys/resource.h>
 
 #include <boost/format.hpp>
 
@@ -54,10 +55,10 @@
 #include <map>
 #include <vector>
 
-#define DURATION 3
-#define BLOCKSIZE 0.2
-#define NRSTATIONS 3
-#define NRBEAMLETS 4
+#define DURATION 300
+#define BLOCKSIZE 1
+#define NRSTATIONS 10
+#define NRBEAMLETS 244
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -94,6 +95,8 @@ void sender()
   struct StationID stationID(str(format("CS%03d") % rank), "LBA");
   struct BufferSettings settings(stationID, false);
   struct BoardMode mode(16, clockMHz);
+
+  settings.setBufferSize(BLOCKSIZE * 1.1);
 
   // sync readers and writers to prevent data loss
   // if the reader is delayed w.r.t. the generator
@@ -227,7 +230,16 @@ int main( int argc, char **argv )
   INIT_LOGGER( "tMPITransfer" );
 
   // Prevent stalling.
-  alarm(30);
+  //alarm(30);
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
+    int _errno = errno;
+
+    LOG_WARN_STR("Could not raise MEMLOCK limit: " << strerror(_errno));
+  }
 
   if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
     LOG_ERROR_STR("MPI_Init failed");

@@ -36,8 +36,8 @@ namespace LOFAR
     {
       typedef T element_type;
 
-      Queue< SmartPtr<element_type> > free;
-      Queue< SmartPtr<element_type> > filled;
+      Queue< element_type* > free;
+      Queue< element_type* > filled;
     };
   }
 }

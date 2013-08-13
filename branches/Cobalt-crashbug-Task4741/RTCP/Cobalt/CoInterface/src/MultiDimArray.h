@@ -119,7 +119,10 @@ namespace LOFAR
       /*
        * Copy constructor. Uses other.allocator to allocate a copy.
        */
+
       MultiDimArray(const MultiDimArray<T,DIM> &other)
+      ;
+#if 0
         :
         SuperType(other.num_elements_ && other.allocator ? allocate(other.num_elements_, other.alignment, *other.allocator, other.padToAlignment, other.construct) : 0, other.extent_list_),
         //new(other.allocator->allocate(padToAlignment ? align(other.num_elements_ * sizeof(T), other.alignment) : other.num_elements_ * sizeof(T), other.alignment))T[other.num_elements_] : 0, other.extent_list_),
@@ -133,7 +136,7 @@ namespace LOFAR
 
         *this = other;
       }
-
+#endif
       ~MultiDimArray()
       {
         destructElements();

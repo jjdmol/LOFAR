@@ -91,7 +91,7 @@ namespace LOFAR
         SlidingPointer<size_t> sync;
 
         // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
+        SmartPtr< BestEffortQueue< StreamableData* > > bequeue;
       };
 
       class SubbandProcOwnerMap {

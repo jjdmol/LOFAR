@@ -23,6 +23,7 @@
 #include "FFT_Plan.h"
 #include <GPUProc/gpu_wrapper.h>
 
+#if 0
 // CUDA 5.5RC crashes if cuFFT is linked in but not used,
 // so we provide a workaround by always using cuFFT.
 #if CUDA_VERSION == 5050
@@ -41,6 +42,8 @@ namespace {
 };
 
 static int __using_cuFFT = use_cuFFT();
+#endif
+
 #endif
 
 namespace LOFAR

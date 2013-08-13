@@ -55,6 +55,17 @@ namespace LOFAR
       performance(devices.size()),
       subbandPool(subbandIndices.size())
     {
+      // If profiling, use one workqueue: with >1 workqueues decreased
+      // computation / I/O overlap can affect optimization gains.
+      unsigned nrSubbandProcs = (profiling ? 1 : 2) * devices.size();
+      workQueues.resize(nrSubbandProcs);
+
+      // Create the SubbandProcs
+      for (size_t i = 0; i < nrSubbandProcs; ++i) {
+        gpu::Context context(devices[i % devices.size()]);
+
+        workQueues[i] = new SubbandProc(ps, context);
+      }
     }
 
 
@@ -64,7 +75,7 @@ namespace LOFAR
     struct inputData_t {
       // An InputData object suited for storing one subband from all
       // stations.
-      SmartPtr<SubbandProcInputData> data;
+      SubbandProcInputData* data;
 
       // The SubbandProc associated with the data
       SubbandProc *queue;
@@ -79,12 +90,14 @@ namespace LOFAR
 
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
-
+#if 1
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 #else
       DirectInput &receiver = DirectInput::instance();
+#endif
+
 #endif
 
       // Create a block object to hold all information for receiving one
@@ -111,7 +124,7 @@ namespace LOFAR
 
           // Fetch an input object to fill from the selected queue.
           // NOTE: We'll put it in a SmartPtr right away!
-          SmartPtr<SubbandProcInputData> data = queue.inputPool.free.remove();
+          SubbandProcInputData *data = queue.inputPool.free.remove();
 
           // Annotate the block
           struct BlockID id;
@@ -130,15 +143,17 @@ namespace LOFAR
           inputDatas[inputIdx].queue = &queue;
         }
 
+#if 1
         // Receive all subbands from all stations
         receiver.receiveBlock<SampleT>(blocks);
+#endif
 
         size_t nrFlaggedSamples = 0;
 
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
           SubbandProc &queue = *inputDatas[inputIdx].queue;
-          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx].data;
+          SubbandProcInputData* data = inputDatas[inputIdx].data;
 
           const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
 
@@ -147,15 +162,15 @@ namespace LOFAR
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->applyMetaData(ps, stat, SAP, metaData);
+            //data->applyMetaData(ps, stat, SAP, metaData);
 
-            nrFlaggedSamples += metaData.flags.count();
+            //nrFlaggedSamples += metaData.flags.count();
           }
 
-          queue.inputPool.filled.append(data);
+          queue.inputPool.free.append(data);
         }
 
-        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / blockSize) << "%");
+        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / ps.nrStations() / blockSize) << "%");
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
       }
@@ -192,7 +207,7 @@ namespace LOFAR
       for (size_t i = 0; i < subbandPool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
+        subbandPool[i].bequeue = new BestEffortQueue< StreamableData* >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -200,12 +215,14 @@ namespace LOFAR
       double blockTime = ps.CNintegrationTime();
 
       size_t nrBlocks = floor((stopTime - startTime) / blockTime);
+      receiveInput(nrBlocks);
+#if 0
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections
+#     pragma omp parallel sections default(shared) num_threads(4)
       {
         /*
          * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
@@ -223,8 +240,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) {
+#         pragma omp parallel for default(shared) num_threads(workQueues.size())
+          for (int i = 0; i < workQueues.size(); ++i) {
 #ifdef USE_B7015
             unsigned gpuNr = i % devices.size();
             set_affinity(gpuNr);
@@ -248,8 +265,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) {
+#         pragma omp parallel for default(shared) num_threads(workQueues.size())
+          for (int i = 0; i < workQueues.size(); ++i) {
             SubbandProc &queue = *workQueues[i];
 
             // run the queue
@@ -267,8 +284,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(subbandPool.size())
-          for (size_t i = 0; i < subbandPool.size(); ++i) {
+#         pragma omp parallel for default(shared) num_threads(subbandPool.size())
+          for (int i = 0; i < subbandPool.size(); ++i) {
             SmartPtr<Stream> outputStream = connectToOutput(subbandIndices[i], outputType);
 
             // write subband to Storage
@@ -284,6 +301,7 @@ namespace LOFAR
 
       // log performance figures
       performance.log(workQueues.size());
+#endif
     }
 
 
@@ -309,11 +327,11 @@ namespace LOFAR
         workQueue.timers["CPU - process"]->stop();
 
         // Hand off output to post processing
-        workQueue.outputPool.filled.append(output);
+        workQueue.outputPool.filled.append(output.release());
         ASSERT(!output);
 
         // Give back input data for a refill
-        workQueue.inputPool.free.append(input);
+        workQueue.inputPool.free.append(input.release());
         ASSERT(!input);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to post processing");
@@ -375,12 +393,14 @@ namespace LOFAR
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
 
-        if (!pool.bequeue->append(output)) {
+        StreamableData *outputPtr = output.release();
+
+        if (!pool.bequeue->append(outputPtr)) {
           nrBlocksDropped++;
           //LOG_WARN_STR("[block " << block << "] Dropped for subband " << globalSubbandIdx);
 
           // Give back to queue
-          workQueue.outputPool.free.append(output);
+          workQueue.outputPool.free.append(outputPtr);
         } else {
           nrBlocksForwarded++;
         }
@@ -425,7 +445,7 @@ namespace LOFAR
         }
 
         // Hand the object back to the workQueue it originally came from
-        workQueue.outputPool.free.append(outputData);
+        workQueue.outputPool.free.append(outputData.release());
 
         ASSERT(!outputData);
 

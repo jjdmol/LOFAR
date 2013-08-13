@@ -132,7 +132,6 @@ namespace LOFAR {
 
           ASSERTSTR(header.beamlets[beamletIdx] == beamlet, "Got beamlet " << header.beamlets[beamletIdx] << ", but expected beamlet " << beamlet);
           ASSERT(wrapOffset < blockSize);
-
           /*
            * RECEIVE BEAMLET (ASYNC)
            */
@@ -142,16 +141,19 @@ namespace LOFAR {
           // First sample transfer
           requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
 
+#if 0
           // Second sample transfer
           if (wrapOffset > 0) {
             requests.push_back(receiveData<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
-
+#endif
           /*
            * RECEIVE FLAGS (ASYNC)
            */
 
+#if 0
           requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
+#endif
         }
       }
 
@@ -168,7 +170,7 @@ namespace LOFAR {
       for (size_t stat = 0; stat < nrStations; ++stat) {
         // Convert the flags array
         for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
-          blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
+          //blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
         }
       }
     }

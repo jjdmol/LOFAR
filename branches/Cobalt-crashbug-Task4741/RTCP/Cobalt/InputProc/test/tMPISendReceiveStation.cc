@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 #include <mpi.h>
+#include <sys/resource.h>
 
 #include <boost/format.hpp>
 
@@ -305,6 +306,15 @@ TEST(Block_OneStation) {
 int main( int argc, char **argv )
 {
   INIT_LOGGER( "tMPISendReceiveStation" );
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
+    int _errno = errno;
+
+    LOG_WARN_STR("Could not raise MEMLOCK limit: " << strerror(_errno));
+  }
 
   // Prevent stalling.
   alarm(30);

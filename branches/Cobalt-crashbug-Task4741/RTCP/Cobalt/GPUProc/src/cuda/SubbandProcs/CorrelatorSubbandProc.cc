@@ -91,7 +91,7 @@ namespace LOFAR
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) {
+      for (size_t i = 0; i < 32; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),

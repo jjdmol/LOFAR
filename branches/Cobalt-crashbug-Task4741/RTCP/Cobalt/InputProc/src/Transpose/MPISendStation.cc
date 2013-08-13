@@ -113,7 +113,7 @@ namespace LOFAR {
       DEBUG(logPrefix << "Sending beamlet " << beamlet << " to rank " << rank << " using " << ib.nrRanges << " transfers");
 
       // Send beamlet using 1 or 2 transfers
-      for(unsigned transfer = 0; transfer < ib.nrRanges; ++transfer) {
+      for(unsigned transfer = 0; transfer < 1/*ib.nrRanges*/; ++transfer) {
         union tag_t tag;
 
         tag.bits.type     = BEAMLET;
@@ -129,7 +129,7 @@ namespace LOFAR {
         requests[transfer] = Guarded_MPI_Isend((void*)from, (to - from) * sizeof(T), rank, tag.value);
       }
 
-      return ib.nrRanges;
+      return 1;//ib.nrRanges;
     }
 
 
@@ -163,6 +163,7 @@ namespace LOFAR {
         headerRequests.push_back(sendHeader<T>(*rank, headers[*rank], block));
       }
 
+#if 1
       /*
        * SEND BEAMLETS
        */
@@ -178,8 +179,9 @@ namespace LOFAR {
         const struct Block<T>::Beamlet &ib = block.beamlets[beamletIdx];
 
         nrBeamletRequests += sendData<T>(rank, beamletIdx, ib, &beamletRequests[beamletIdx * 2]);
+        //nrBeamletRequests += sendData<T>(rank, beamletIdx, ib, &beamletRequests[nrBeamletRequests]);
       }
-
+#endif
       /*
        * SEND METADATA
        */
@@ -196,6 +198,7 @@ namespace LOFAR {
 
         // waitAny sets finished requests to MPI_REQUEST_NULL in our array.
         if (ib.nrRanges == 1 || beamletRequests[globalBeamletIdx * 2 + (1 - transfer)] == MPI_REQUEST_NULL) {
+#if 0
           /*
            * SEND FLAGS FOR BEAMLET
            */
@@ -219,9 +222,9 @@ namespace LOFAR {
            * SEND FLAGS
            */
           metaDataRequests.push_back(sendMetaData(rank, globalBeamletIdx, buffer));
+#endif
         }
       }
-
       /*
        * WRAP UP ASYNC SENDS
        */

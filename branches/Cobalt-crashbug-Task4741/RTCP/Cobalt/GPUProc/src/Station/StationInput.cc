@@ -85,7 +85,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   // Set up the circular buffer
   MultiPacketsToBuffer station(settings, inputStreams);
 
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     // Start a circular buffer
     #pragma omp section
@@ -131,10 +131,16 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
   Semaphore stopSignal;
 
+  struct BufferSettings create_settings(stationID, false);
+  create_settings.setBufferSize(2.0);
+  SampleBuffer<SampleT> buffer(create_settings, SharedMemoryArena::CREATE);
+
+  {
+#if 0
   /*
    * Stream the data.
    */
-  #pragma omp parallel sections
+  #pragma omp parallel sections default(shared) num_threads(2)
   {
     // Start a circular buffer
     #pragma omp section
@@ -144,6 +150,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
     // Send data to receivers
     #pragma omp section
+#endif
     {
       // Fetch buffer settings from SHM.
       const struct BufferSettings settings(stationID, true);
@@ -220,12 +227,13 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
         SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + ps.nrSamplesPerSubband(), read_offsets));
 
         //LOG_INFO_STR("Block read");
-
+#if 1
 #ifdef HAVE_MPI
         // Send the block to the receivers
         sender.sendBlock<SampleT>(*block, metaDatas);
 #else
         DirectInput::instance().sendBlock<SampleT>(stationIdx, *block, metaDatas);
+#endif
 #endif
 
         //LOG_INFO_STR("Block sent");

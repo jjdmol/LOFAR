@@ -235,7 +235,7 @@ namespace LOFAR
       {
         // TODO: first try 'nvcc', then this path.
         ostringstream oss;
-        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
+        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs << " 2>&1";
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 

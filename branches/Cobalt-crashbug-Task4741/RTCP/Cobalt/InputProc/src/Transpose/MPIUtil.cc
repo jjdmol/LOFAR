@@ -62,8 +62,11 @@ namespace LOFAR {
 
       int idx;
 
+      ASSERT(requests.size() > 0);
 
-      if (MPI_threadSafe()) {
+      std::vector<MPI_Request> copy(requests);
+
+      if (0) { //MPI_threadSafe()) {
         int error = MPI_Waitany(requests.size(), &requests[0], &idx, MPI_STATUS_IGNORE);
         ASSERT(error == MPI_SUCCESS);
       } else {
@@ -91,6 +94,9 @@ namespace LOFAR {
       // entries with MPI_REQUEST_NULL.
       ASSERT(requests[idx] == MPI_REQUEST_NULL);
 
+      for (size_t i = 0; i < requests.size(); ++i)
+        ASSERT(idx == i || copy[i] == requests[i]);
+
       DEBUG("index " << idx);
 
       return idx;
@@ -102,7 +108,7 @@ namespace LOFAR {
       DEBUG("entry: " << requests.size() << " requests");
 
       if (requests.size() > 0) {
-        if (MPI_threadSafe()) {
+        if (0) { //MPI_threadSafe()) {
           int error = MPI_Waitall(requests.size(), &requests[0], MPI_STATUS_IGNORE);
           ASSERT(error == MPI_SUCCESS);
         } else {

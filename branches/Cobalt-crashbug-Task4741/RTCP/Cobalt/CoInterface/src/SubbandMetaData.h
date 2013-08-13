@@ -76,7 +76,9 @@ namespace LOFAR
       size_t nrTABs;
       str->read(&nrTABs, sizeof nrTABs);
       TABs.resize(nrTABs);
-      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+      if (nrTABs > 0) {
+        str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+      }
 
       // read flags
       std::vector<char> flagsBuffer(MAXFLAGSIZE);
@@ -93,7 +95,9 @@ namespace LOFAR
       // write TABs
       size_t nrTABs = TABs.size();
       str->write(&nrTABs, sizeof nrTABs);
-      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
+      if (nrTABs > 0) {
+        str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
+      }
 
       // write flags
       std::vector<char> flagsBuffer(MAXFLAGSIZE);
