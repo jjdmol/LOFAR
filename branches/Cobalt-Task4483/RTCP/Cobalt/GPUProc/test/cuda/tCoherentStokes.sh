@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tCoherentStokes
+./runctest.sh tDelayAndBandPass
