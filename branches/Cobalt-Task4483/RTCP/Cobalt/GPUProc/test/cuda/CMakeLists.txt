@@ -45,6 +45,7 @@ set_tests_properties(
 if(UNITTEST++_FOUND)
   set_tests_properties(
     tDelayAndBandPass
+    tCoherentStokes
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
   )
 endif(UNITTEST++_FOUND)
