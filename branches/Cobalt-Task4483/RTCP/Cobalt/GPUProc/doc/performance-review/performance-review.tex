@@ -31,19 +31,54 @@ Both limits will be upgraded to full LOFAR capacity before the end of 2013, allo
 
 The acceptance criterium for each test run is whether Cobalt system runs at real time, that is, can keep up with the data flow with $<<1\%$ loss. Each test run will run for 5 minutes, which is enough to measure the system's capability. Longer test runs, required for stability testing, will be performed at a later stage.
 
-Apart from acceptance, we will keep track of the CPU load on the most stressed node in the system (cbt005), as we expect that figure to be critical for Cobalt.
+Apart from data loss, we will keep track of the CPU load on the most stressed node in the system (cbt005), as we expect that figure to be critical for Cobalt.
 
 \section{Correlator Performance}
 
 The Correlator performance of Cobalt will be measured in two ways. First, we will determine how many antenna fields can be correlated at real time at the full spectral bandwidth. Secondly, we will determine how many subbands we can process if we correlate all 48 antenna fields.
 
-We show the performance as a function of the number of antenna fields in figure \ref{fig:corr_stations}. In all cases, 488 subbands were streamed in 8-bit mode.
+\begin{figure}
+\centering
+%\includegraphics[scale=1]{pic.png}
+\caption{Average data loss when processing the full bandwidth of a varying number of antenna fields.}
+\label{fig:corr_stations_loss}
+\end{figure}
 
-Figure \ref{fig:corr_subbands} shows the performance of Cobalt if all 48 antenna fields are used, processing an increasing number of subbands in each test run.
+\begin{figure}
+\centering
+%\includegraphics[scale=1]{pic.png}
+\caption{System load on cbt005 when processing the full bandwidth of a varying number of antenna fields.}
+\label{fig:corr_stations_load}
+\end{figure}
+
+We show the performance as a function of the number of antenna fields in Figures \ref{fig:corr_stations_loss} and \ref{fig:corr_stations_load}. In all cases, 488 subbands were streamed in 8-bit mode.
+
+\begin{figure}
+\centering
+%\includegraphics[scale=1]{pic.png}
+\caption{Average data loss when processing a various number of subbands from all antenna fields.}
+\label{fig:corr_subbands_loss}
+\end{figure}
+
+\begin{figure}
+\centering
+%\includegraphics[scale=1]{pic.png}
+\caption{System load on cbt005 when processing a various number of subbands from all antenna fields.}
+\label{fig:corr_subbands_load}
+\end{figure}
+
+Figures \ref{fig:corr_subbands_loss} and \ref{fig:corr_subbands_load} show the performance of Cobalt if all 48 antenna fields are used, processing an increasing number of subbands in each test run.
 
 \section{Beamformer Performance}
 
 The Beamformer pipeline of Cobalt has behaviour similar to the Correlator pipeline. The network loads are similar, as is the CPU load. The actual algorithms, which are performed on the GPU, do of course differ drastically. For that reason, we focus on measuring the GPU load when creating a various amount of Tied-Array Beams (TABs) using a varying number of different stations.
+
+\begin{figure}
+\centering
+%\includegraphics[scale=1]{pic.png}
+\caption{The runtime of the Beamformer kernels versus the number of created TABs.}
+\label{fig:bf_tabs}
+\end{figure}
 
 In Figure \ref{fig:bf_tabs}, we create an increasing number of TABs from data originating from 48 antenna fields. It is not necessary to scale in the number of subbands used in the observation, because each subband is processed independently. Results for one subband are used to calculate the expected system load for 488 subbands, at which point an assessment is made whether Cobalt will be able to handle such a load at real time.
 

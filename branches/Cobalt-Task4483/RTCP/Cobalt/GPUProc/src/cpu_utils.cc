@@ -1,12 +1,32 @@
+//# cpu_utils.cc
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+//#
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
+
 #include <lofar_config.h>
 
-#include <fstream>
 #include <sched.h>
+#include <fstream>
 #include <boost/format.hpp>
-#include <CoInterface/Parset.h>
-#include <CoInterface/Exceptions.h>
 
 #include <Common/SystemCallException.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/Exceptions.h>
 #include <CoInterface/PrintVector.h>
 
 namespace LOFAR
@@ -53,10 +73,9 @@ namespace LOFAR
         CPU_SET(*i, &mask);
 
       // now assign the mask and set the affinity
-      int sched_return = sched_setaffinity(0, sizeof(cpu_set_t), &mask);
-      int localerrno = errno;
-      if (sched_return != 0)
-        throw SystemCallException("sched_setaffinity", localerrno, THROW_ARGS);
+      if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) != 0)
+        THROW_SYSCALL("sched_setaffinity");
     }
   }
 }
+
