@@ -19,29 +19,42 @@
 //#
 //# $Id$
 
+#ifndef LOFAR_GPUPROC_RUNNINGSTATISTICS_H
+#define LOFAR_GPUPROC_RUNNINGSTATISTICS_H
+
+#include <cstddef>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    // RunningStatistics collects mean and variance for a running
+    // process without storing the individual entries.
     // Donald Knuth's Art of Computer Programming, Vol 2, page 232, 3rd edition. 
     // http://www.johndcook.com/standard_deviation.html
     class RunningStatistics
     {
     public:
+      // Constructor
       RunningStatistics(); 
         
-      void Clear();
+      // Reset to zero
+      void reset();
 
-      void Push(double sample);
+      // insert a new value
+      void push(double sample);
       
-      int NumDataValues() const;
+      // number of inserted samples
+      int count() const;
 
-      double Mean() const;
+      // mean of the received samples
+      double mean() const;
 
-      double Variance() const;
+      // The variance of the received samples
+      double variance() const;
 
-      double StandardDeviation() const;
+      // The standard deviation
+      double stDev() const;
 
     private:
       size_t counter;
@@ -52,3 +65,4 @@ namespace LOFAR
     };
   }
 }
+#endif

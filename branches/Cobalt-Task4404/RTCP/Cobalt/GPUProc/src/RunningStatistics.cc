@@ -19,6 +19,7 @@
 //#
 //# $Id$
 #include "RunningStatistics.h"
+#include <math.h> 
 
 namespace LOFAR
 {
@@ -30,12 +31,12 @@ namespace LOFAR
       counter(0) 
       {}
 
-      void RunningStatistics::Clear()
+      void RunningStatistics::reset()
       {
         counter = 0;
       }
 
-      void RunningStatistics::Push(double sample)
+      void RunningStatistics::push(double sample)
       {
         counter++;
 
@@ -57,26 +58,26 @@ namespace LOFAR
         }
       }
 
-      int RunningStatistics::NumDataValues() const
+      int RunningStatistics::count() const
       {
         return counter;
       }
 
-      double RunningStatistics::Mean() const
+      double RunningStatistics::mean() const
       {
         return (counter > 0) ? newMean : 0.0;
       }
 
-      double RunningStatistics::Variance() const
+      double RunningStatistics::variance() const
       {
         return (counter > 1) ? 
           newVariance/(counter - 1) :
         0.0;
       }
 
-      double RunningStatistics::StandardDeviation() const
+      double RunningStatistics::stDev() const
       {
-        return sqrt( Variance() );
+        return sqrt( variance() );
       }
 
 

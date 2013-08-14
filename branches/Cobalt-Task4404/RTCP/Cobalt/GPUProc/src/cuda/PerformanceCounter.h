@@ -27,6 +27,7 @@
 #include <Common/Thread/Condition.h>
 
 #include "gpu_wrapper.h"
+#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {

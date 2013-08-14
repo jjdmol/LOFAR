@@ -16,8 +16,10 @@ lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tfpequals tfpequals.cc)
 
+
 # cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
 lofar_add_executable(cmpfloat cmpfloat.cc)
+
 
 # tests that use testParset.sh
 
@@ -46,6 +48,7 @@ endif()
 
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
+  lofar_add_test(tRunningStatistics tRunningStatistics.cc)
 endif()
 
 add_subdirectory(Kernels)
