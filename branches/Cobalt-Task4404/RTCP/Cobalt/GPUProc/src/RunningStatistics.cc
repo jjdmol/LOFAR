@@ -72,7 +72,7 @@ namespace LOFAR
       {
         return (counter > 1) ? 
           newVariance/(counter - 1) :
-        0.0;
+          0.0;
       }
 
       double RunningStatistics::stDev() const

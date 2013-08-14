@@ -21,23 +21,83 @@
 
 #include <lofar_config.h>
 
-#ifdef USE_CUDA
+#include <iostream>
+#include <GPUProc/RunningStatistics.h>
+#include <Common/LofarLogger.h>
 
-#include <cstdio>    // for remove()
-#include <cstdlib>   // for unsetenv()
-#include <stream>
-#include <RunningStaticstics.h>
-
+#include <UnitTest++.h>
+#include <math.h> 
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
+TEST(AddSingleValueValidReturns)
+{
+  RunningStatistics stats;
+
+  stats.push(2.0);
+
+  CHECK(stats.count() == 1);
+  CHECK(stats.mean() == 2.0);
+  CHECK(stats.variance() == 0.0);
+  CHECK(stats.stDev() == 0.0);
+}
+
+TEST(AddTwoSameValueValidReturns)
+{
+  RunningStatistics stats;
+
+  stats.push(2.0);
+  stats.push(2.0);
+
+  CHECK(stats.count() == 2);
+  CHECK(stats.mean() == 2.0);
+  CHECK(stats.variance() == 0.0);
+  CHECK(stats.stDev() == 0.0);
+}
+
+TEST(AddTwoDifValueValidReturns)
+{
+  RunningStatistics stats;
+
+  stats.push(2.0);
+  stats.push(3.0);
+
+  CHECK(stats.count() == 2);
+  CHECK(stats.mean() == 2.5);
+  CHECK(stats.variance() == 0.5);
+  CHECK(stats.stDev() == sqrt(0.5));
+}
+
+TEST(AddThreeDifValueValidReturns)
+{
+  RunningStatistics stats;
+
+  stats.push(2.0);
+  stats.push(3.0);
+  stats.push(4.0);
+
+  CHECK(stats.count() == 3);
+  CHECK(stats.mean() == 3.0);
+  CHECK(stats.variance() == 1.0);
+  CHECK(stats.stDev() == sqrt(1));
+}
+
+
+TEST(AddNoneValidReturns)
+{
+  RunningStatistics stats;
+
+  CHECK(stats.count() == 0);
+  CHECK(stats.mean() == 0.0);
+  CHECK(stats.variance() == 0.0);
+  CHECK(stats.stDev() == 0.0);
+}
+
 int main()
 {
   INIT_LOGGER("tRunningStatistics");
-
-  unsetenv("LOFARROOT");
-
   return UnitTest::RunAllTests() > 0;
 }
+
 
