@@ -58,15 +58,6 @@ namespace LOFAR
     }
 
 
-    // Record type needed by receiveInput. Before c++0x, a local type
-    // can't be a template argument, so we'll have to define this type
-    // globally.
-    struct inputData_t {
-      // An InputData object suited for storing one subband from all
-      // stations.
-      SmartPtr<SubbandProcInputData> data;
-    };
-
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
@@ -97,7 +88,7 @@ namespace LOFAR
         LOG_INFO_STR("[block " << block << "] Reading input samples");
 
         // The set of InputData objects we're using for this block.
-        vector<struct inputData_t> inputDatas(subbandIndices.size());
+        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
 
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
           // Fetch an input object to store this inputIdx.
@@ -120,7 +111,7 @@ namespace LOFAR
           }
 
           // Record the block (transfers ownership)
-          inputDatas[inputIdx].data = data;
+          inputDatas[inputIdx] = data;
         }
 
         // Receive all subbands from all stations
@@ -131,7 +122,7 @@ namespace LOFAR
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
           SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
-          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx].data;
+          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
 
           const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
 
