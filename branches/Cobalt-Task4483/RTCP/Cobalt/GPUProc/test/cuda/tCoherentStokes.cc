@@ -208,7 +208,7 @@ TEST(BasicZeroTest)
 {
   // ***********************************************************
   // Baseline test: If all weight data is zero the output should be zero
-  // outof bound mem should be untoughed
+  // outof bound mem should be untouched
   // The output array is initialized with 42s
   // With all constant on the smallest == default size
   // 2 samples
@@ -217,7 +217,7 @@ TEST(BasicZeroTest)
 
   // Create the testharnass with the system under test
   CoherentStokesTester sut;
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -290,7 +290,7 @@ TEST(LargeBasicZeroTest)
     16,  //NR_TABS
     4,  //NR_COHERENT_STOKES 
     64); //INTEGRATION_SIZE
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -374,7 +374,7 @@ TEST(CoherentNoComplex1SampleTest)
     1,  //NR_TABS
     4,  //NR_COHERENT_STOKES 
     1); //INTEGRATION_SIZE
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -405,10 +405,10 @@ TEST(CoherentNoComplex1SampleTest)
 
   // Validate the returned data array
   
-  if (outputData[0] != 5 ||  // I = 2 ^ 2 + 1 ^2 
-      outputData[1] != 3 ||  // Q = 2 ^ 2 - 1 ^2
-      outputData[2] != 4 ||  // U = 2 * (2 * 1 + 0 * 0) 
-      outputData[3] != 0     // V = 2 * (0 * 1 - 2 * 0)
+  if (outputData[0] != 5.0f ||  // I = 2 ^ 2 + 1 ^2 
+      outputData[1] != 3.0f ||  // Q = 2 ^ 2 - 1 ^2
+      outputData[2] != 4.0f ||  // U = 2 * (2 * 1 + 0 * 0) 
+      outputData[3] != 0.0f     // V = 2 * (0 * 1 - 2 * 0)
     )
     {
       cout << "encountered incorrect output." <<  endl;
@@ -467,7 +467,7 @@ TEST(CoherentComplex1SampleTest)
     1,  //NR_TABS
     4,  //NR_COHERENT_STOKES 
     1); //INTEGRATION_SIZE
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -498,10 +498,10 @@ TEST(CoherentComplex1SampleTest)
 
   // Validate the returned data array
   
-  if (outputData[0] != 5 ||  // I = 2 ^ 2 + 1 ^ 2 
-      outputData[1] != 3 ||  // Q = 2 ^ 2 - 1 ^ 2
-      outputData[2] != 4 ||  // U = 2 * (2 * 1 + 0 * 0) 
-      outputData[3] != 0     // V = 2 * (0 * 1 - 2 * 0)
+  if (outputData[0] != 5.0f ||  // I = 2 ^ 2 + 1 ^ 2 
+      outputData[1] != 3.0f ||  // Q = 2 ^ 2 - 1 ^ 2
+      outputData[2] != 4.0f ||  // U = 2 * (2 * 1 + 0 * 0) 
+      outputData[3] != 0.0f     // V = 2 * (0 * 1 - 2 * 0)
     )
     {
       cout << "encountered incorrect output." <<  endl;
@@ -560,7 +560,7 @@ TEST(Coherent4DifferentValuesSampleTest)
     1,  //NR_TABS
     4,  //NR_COHERENT_STOKES 
     1); //INTEGRATION_SIZE
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -591,10 +591,10 @@ TEST(Coherent4DifferentValuesSampleTest)
 
   // Validate the returned data array
   
-  if (outputData[0] != 30  ||  // I = (1 ^ 2 + 2 ^ 2) + (3 ^ 2 + 4 ^ 2) = 1 + 4 + 9 + 16 = 30
-      outputData[1] != -20 ||  // Q = (1 ^ 2 + 2 ^ 2) - (3 ^ 2 + 4 ^ 2) = 1 + 4 - 9 - 16 = 5 - 25 = -20
-      outputData[2] != 22   ||  // U = 2 * ( 1 * 3 + 2 * 4) = 2 * 11 = 22
-      outputData[3] != 4     // V = 2 * (2 * 3 + 1 * 4) = 2 * (6 - 2) = 2 * 2 = 4
+  if (outputData[0] != 30.0f  ||  // I = (1 ^ 2 + 2 ^ 2) + (3 ^ 2 + 4 ^ 2) = 1 + 4 + 9 + 16 = 30
+      outputData[1] != -20.0f ||  // Q = (1 ^ 2 + 2 ^ 2) - (3 ^ 2 + 4 ^ 2) = 1 + 4 - 9 - 16 = -20
+      outputData[2] != 22.0f  ||  // U = 2 * (1 * 3 + 2 * 4) = 2 * (3 + 8) = 2 * 11 = 22
+      outputData[3] != 4.0f       // V = 2 * (2 * 3 - 1 * 4) = 2 * (6 - 4) = 2 * 2 = 4
     )
     {
       cout << "encountered incorrect output." <<  endl;
@@ -641,7 +641,7 @@ TEST(BasicIntegrationTest)
     1,  //NR_TABS
     4,  //NR_COHERENT_STOKES 
     16); //INTEGRATION_SIZE
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];
@@ -668,10 +668,10 @@ TEST(BasicIntegrationTest)
   // Validate the returned data array
   for (size_t idx = 0; idx < sut.lengthOutputData / 2; ++idx)
   {
-    if (outputData[0] != 2 * NR_SAMPLES_PER_CHANNEL ||
-        outputData[1] != 0 ||
-        outputData[2] != 2 * NR_SAMPLES_PER_CHANNEL ||
-        outputData[3] != 0 )
+    if (outputData[0] != 2.0f * NR_SAMPLES_PER_CHANNEL ||
+        outputData[1] != 0.0f ||
+        outputData[2] != 2.0f * NR_SAMPLES_PER_CHANNEL ||
+        outputData[3] != 0.0f )
     {
       cout << "encountered incorrect output on idx: " << idx << endl;
       cout << "expected: " << 0 << " received: "  << outputData[idx] << endl;
@@ -731,7 +731,7 @@ TEST(Coherent2DifferentValuesAllDimTest)
     NR_COHERENT_STOKES, 
     INTEGRATION_SIZE); 
   
-  float salt = 42;
+  float salt = 42.0f;
   // Get the input and output arrays
   // ************************************************************* 
   float * inputData = new float[sut.lengthInputData];

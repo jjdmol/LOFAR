@@ -51,7 +51,7 @@
  * NR_TABS                 | >= 1                    | number of tabs to create
  * NR_COHERENT_STOKES      | 1 or 4                  | number of stokes paramters to create
  * INTEGRATION_SIZE        | >= 1                    | amount of samples to integrate to a single output sample
- * TIME_PARALLEL_FACTOR    | >= 1                    | amount of paralel threads to work on a full timerange
+ * TIME_PARALLEL_FACTOR    | >= 1                    | amount of parallel threads to work on a full timerange
  * 
  * Note that this kernel assumes and needs NR_POLARIZATIONS == 2 and COMPLEX == 2
  * 
@@ -59,7 +59,7 @@
  * - LocalWorkSize = 3 dimensional; (NR_CHANNELS, TIME_PARALLEL_FACTOR, NR_TABS)
  *                   The product of the three should not be larger then max thread size
  * - GlobalWorkSize = 3 dimensional; depends on the size of NR_TABS, NR_CHANNELS and the max thread size
- *                   Ideally the work fist in a single block. If not the remainder could
+ *                   Ideally the work fits in a single block. If not the remainder could
  *                   be computed with a second (differently sized) block
  */
 
