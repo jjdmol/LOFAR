@@ -26,60 +26,71 @@ namespace LOFAR
   namespace Cobalt
   {
 
-      RunningStatistics::RunningStatistics() 
-        :
-      counter(0) 
-      {}
+    RunningStatistics::RunningStatistics() 
+    {
+      reset();
+    }
 
-      void RunningStatistics::reset()
-      {
-        counter = 0;
-      }
+    void RunningStatistics::reset()
+    {
+      counter = 0;
+      _mean = var_base =  0.0;
+    }
 
-      void RunningStatistics::push(double sample)
-      {
-        counter++;
+    void RunningStatistics::push(double x)
+    {
+      double delta_mean, delta_weighted;
 
-        if (counter == 1)
-        {
-          oldMean = newMean = sample;
-          oldVariance = 0.0;
-        }
-        else
-        {
-          // The 
-          newMean = oldMean + (sample - oldMean) / counter;
+      long long old_counter = counter;
+      counter++;
+      delta_mean = x - _mean;
+      delta_weighted = delta_mean / counter;
+      _mean += delta_weighted;
+      var_base += delta_mean * delta_weighted * old_counter;
+    }
 
-          newVariance = oldVariance + (sample - oldMean) * (sample - newMean);
+    size_t RunningStatistics::count() const
+    {
+      return counter;
+    }
 
-          // set up for next iteration
-          oldMean = newMean; 
-          oldVariance = newVariance;
-        }
-      }
+    double RunningStatistics::mean() const
+    {
+      return _mean;
+    }
 
-      int RunningStatistics::count() const
-      {
-        return counter;
-      }
+    double RunningStatistics::variance() const
+    {
+      return  counter != 1? var_base/(counter-1.0): 0.0;
+    }
 
-      double RunningStatistics::mean() const
-      {
-        return (counter > 0) ? newMean : 0.0;
-      }
+    double RunningStatistics::stDev() const
+    {
+      return sqrt( variance() );
+    }
 
-      double RunningStatistics::variance() const
-      {
-        return (counter > 1) ? 
-          newVariance/(counter - 1) :
-          0.0;
-      }
+    RunningStatistics& RunningStatistics::operator+=(const RunningStatistics& rhs)
+    { 
+      RunningStatistics combined = *this + rhs;
+      *this = combined;
 
-      double RunningStatistics::stDev() const
-      {
-        return sqrt( variance() );
-      }
+      return *this;
+    }
 
+    RunningStatistics operator+(const RunningStatistics a,
+         const RunningStatistics b)
+    {
+      RunningStatistics combined;
+      combined.counter += a.counter + b.counter;
 
+      double delta_means = b._mean - a._mean;
+      double delta_means_sqrt = delta_means*delta_means;
+
+      combined._mean = (a.counter * a._mean + b.counter * b._mean) / combined.counter;
+
+      combined.var_base = a.var_base + b.var_base + 
+        delta_means_sqrt * a.counter * b.counter / combined.counter;
+      return combined;
+    }
   }
 }

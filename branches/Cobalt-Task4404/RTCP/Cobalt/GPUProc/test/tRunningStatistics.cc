@@ -31,7 +31,7 @@
 using namespace std;
 using namespace LOFAR::Cobalt;
 
-TEST(AddSingleValueValidReturns)
+TEST(AddSingleValue)
 {
   RunningStatistics stats;
 
@@ -43,7 +43,7 @@ TEST(AddSingleValueValidReturns)
   CHECK(stats.stDev() == 0.0);
 }
 
-TEST(AddTwoSameValueValidReturns)
+TEST(AddTwoSameValue)
 {
   RunningStatistics stats;
 
@@ -56,7 +56,7 @@ TEST(AddTwoSameValueValidReturns)
   CHECK(stats.stDev() == 0.0);
 }
 
-TEST(AddTwoDifValueValidReturns)
+TEST(AddTwoDifValue)
 {
   RunningStatistics stats;
 
@@ -69,7 +69,7 @@ TEST(AddTwoDifValueValidReturns)
   CHECK(stats.stDev() == sqrt(0.5));
 }
 
-TEST(AddThreeDifValueValidReturns)
+TEST(AddThreeDifValue)
 {
   RunningStatistics stats;
 
@@ -84,7 +84,7 @@ TEST(AddThreeDifValueValidReturns)
 }
 
 
-TEST(AddNoneValidReturns)
+TEST(AddNoneValid)
 {
   RunningStatistics stats;
 
@@ -94,10 +94,45 @@ TEST(AddNoneValidReturns)
   CHECK(stats.stDev() == 0.0);
 }
 
+TEST(AddTwoStatsAndAssign)
+{
+  RunningStatistics stats2;
+  RunningStatistics stats3;
+  stats2.push(2.0);
+  stats3.push(3.0);
+  stats3.push(4.0);
+
+  
+  RunningStatistics stats1 = stats2 + stats3;
+
+  CHECK(stats1.count() == 3);
+  CHECK(stats1.mean() == 3.0);
+  CHECK(stats1.variance() == 1.0);
+  CHECK(stats1.stDev() == sqrt(1));
+}
+
+TEST(plusis)
+{
+  RunningStatistics stats2;
+  RunningStatistics stats3;
+  stats2.push(2.0);
+  stats3.push(3.0);
+  stats3.push(4.0);
+
+  
+  stats2 += stats3;
+
+  CHECK(stats2.count() == 3);
+  CHECK(stats2.mean() == 3.0);
+  CHECK(stats2.variance() == 1.0);
+  CHECK(stats2.stDev() == sqrt(1));
+}
+
 int main()
 {
   INIT_LOGGER("tRunningStatistics");
   return UnitTest::RunAllTests() > 0;
 }
+
 
 

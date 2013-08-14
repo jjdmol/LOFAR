@@ -45,7 +45,7 @@ namespace LOFAR
       void push(double sample);
       
       // number of inserted samples
-      int count() const;
+      size_t count() const;
 
       // mean of the received samples
       double mean() const;
@@ -56,13 +56,21 @@ namespace LOFAR
       // The standard deviation
       double stDev() const;
 
+           
+      friend RunningStatistics operator+(const RunningStatistics a,
+        const RunningStatistics b);
+
+      // Plus is operator for adding two runningstatistics objects
+      RunningStatistics& operator+=(const RunningStatistics& rhs);
+
     private:
       size_t counter;
-      double oldMean;
-      double newMean;
-      double oldVariance;
-      double newVariance;
+      double _mean;
+      double var_base;
     };
+
+    RunningStatistics operator+(const RunningStatistics a, const RunningStatistics b);    
+
   }
 }
 #endif

@@ -29,6 +29,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/RunningStatistics.h>
 //#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
@@ -41,6 +42,7 @@ namespace LOFAR
       // time performed work
       class Counter
       {
+        RunningStatistics stats;
       public:
         Counter(const LOFAR::Cobalt::gpu::Context &context);
 
@@ -50,7 +52,6 @@ namespace LOFAR
 
         gpu::Event start;
         gpu::Event stop;
-
       };
 
 

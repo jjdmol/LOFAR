@@ -89,9 +89,8 @@ namespace LOFAR
 
     void Kernel::Counter::logTime()
     {
-      float elapsedTime; // Initialize elapsedTime;
-      elapsedTime = stop.elapsedTime(start); 
-      cout << "Execution Time: " << elapsedTime << endl;
+      //
+      stats.push(stop.elapsedTime(start));
     }
 
     void Kernel::enqueue() const
