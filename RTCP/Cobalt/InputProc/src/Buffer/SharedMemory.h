@@ -77,7 +77,6 @@ namespace LOFAR
     private:
       const key_t key;
       const Mode mode;
-      int shmid;
 
       // Whether the memory region existed before we tried to create it.
       bool preexisting;
