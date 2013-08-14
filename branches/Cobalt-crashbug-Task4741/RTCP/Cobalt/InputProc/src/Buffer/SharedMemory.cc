@@ -25,6 +25,7 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
+#include <sys/mman.h>
 
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>
@@ -41,6 +42,7 @@ namespace LOFAR
     // time.
     static Mutex shmMutex;
 
+    map<key_t,char*> mem;
 
     SharedMemoryArena::SharedMemoryArena( key_t key, size_t size, Mode mode, time_t timeout )
       :
@@ -51,6 +53,33 @@ namespace LOFAR
       preexisting(false)
     {
       time_t deadline = time(0) + timeout;
+#if 0
+      if(mode == CREATE || mode == CREATE_EXCL) {
+        ScopedLock sl(shmMutex);
+
+        if (mem[key] == NULL)
+          itsBegin = mem[key] = new char[size];
+      } else {
+        shmMutex.lock();
+
+        while (mem[key] == NULL) {
+          shmMutex.unlock();
+
+        // try again until the deadline
+        if (time(0) >= deadline)
+          throw TimeOutException("shared memory", THROW_ARGS);
+
+          if (usleep(999999) < 0)
+            THROW_SYSCALL("usleep");
+
+          shmMutex.lock();
+        }
+
+        itsBegin = mem[key];
+
+        shmMutex.unlock();
+      }
+#else
       int open_flags = 0, attach_flags = 0;
 
       // Check whether the size is allowed
@@ -129,12 +158,17 @@ namespace LOFAR
           THROW_SYSCALL("usleep");
       }
 
+      if (mlock(itsBegin, itsSize) < 0)
+        THROW_SYSCALL("mlock");
+
       LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
+#endif
     }
 
 
     bool SharedMemoryArena::open( int open_flags, int attach_flags, bool timeout )
     {
+#if 1
       ScopedLock sl(shmMutex);
 
       // Check whether shm area already exists, so we know whether
@@ -164,7 +198,7 @@ namespace LOFAR
 
         THROW_SYSCALL("shmat");
       }
-
+#endif
       return false;
     }
 
@@ -218,6 +252,10 @@ namespace LOFAR
 
     SharedMemoryArena::~SharedMemoryArena()
     {
+      if (munlock(itsBegin, itsSize) < 0)
+        THROW_SYSCALL("munlock");
+
+  #if 1
       ScopedLock sl(shmMutex);
 
       try {
@@ -236,6 +274,7 @@ namespace LOFAR
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }
+  #endif
     }
 
     string SharedMemoryArena::modeStr( Mode mode ) const {

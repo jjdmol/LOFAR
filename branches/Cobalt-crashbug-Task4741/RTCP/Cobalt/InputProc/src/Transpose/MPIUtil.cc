@@ -144,7 +144,7 @@ namespace LOFAR {
       ASSERT(numBytes > 0);
       ASSERT(tag >= 0); // Silly MPI requirement
 
-      SmartPtr<ScopedLock> sl = MPI_threadSafe() ? 0 : new ScopedLock(MPIMutex);
+      ScopedLock sl(MPIMutex);
 
       MPI_Request request;
 
@@ -162,9 +162,9 @@ namespace LOFAR {
 
       ASSERT(tag >= 0); // Silly MPI requirement
 
-      SmartPtr<ScopedLock> sl = MPI_threadSafe() ? 0 : new ScopedLock(MPIMutex);
+      ScopedLock sl(MPIMutex);
 
-      MPI_Request request;
+      MPI_Request request = MPI_REQUEST_NULL;
 
       int error;
 

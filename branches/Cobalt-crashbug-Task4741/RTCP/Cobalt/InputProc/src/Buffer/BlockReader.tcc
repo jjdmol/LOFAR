@@ -71,7 +71,7 @@ namespace LOFAR {
       BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
 
       if (reader.mode != *(reader.buffer.boards[boardIdx].mode)) {
-        LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
+        //LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
 
         // Board is in wrong mode! We can't use this data, so flag everything.
 
