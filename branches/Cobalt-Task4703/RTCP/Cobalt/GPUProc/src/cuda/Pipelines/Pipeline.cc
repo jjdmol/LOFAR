@@ -65,17 +65,12 @@ namespace LOFAR
       // An InputData object suited for storing one subband from all
       // stations.
       SmartPtr<SubbandProcInputData> data;
-
-      // The SubbandProc associated with the data
-      SubbandProc *queue;
     };
 
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
       ASSERT(workQueues.size() > 0);
-
-      size_t workQueueIterator = 0;
 
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
@@ -105,9 +100,8 @@ namespace LOFAR
         vector<struct inputData_t> inputDatas(subbandIndices.size());
 
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          // Fetch an input object to store this inputIdx. For now, blindly
-          // round-robin over the work queues.
-          SubbandProc &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+          // Fetch an input object to store this inputIdx.
+          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
 
           // Fetch an input object to fill from the selected queue.
           // NOTE: We'll put it in a SmartPtr right away!
@@ -127,7 +121,6 @@ namespace LOFAR
 
           // Record the block (transfers ownership)
           inputDatas[inputIdx].data = data;
-          inputDatas[inputIdx].queue = &queue;
         }
 
         // Receive all subbands from all stations
@@ -137,7 +130,7 @@ namespace LOFAR
 
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          SubbandProc &queue = *inputDatas[inputIdx].queue;
+          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
           SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx].data;
 
           const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
@@ -321,31 +314,6 @@ namespace LOFAR
     }
 
 
-    void Pipeline::SubbandProcOwnerMap::push(const struct BlockID &id, SubbandProc &workQueue)
-    {
-      ScopedLock sl(mutex);
-
-      ASSERT(ownerMap.find(id) == ownerMap.end());
-      ownerMap[id] = &workQueue;
-    }
-
-
-    SubbandProc& Pipeline::SubbandProcOwnerMap::pop(const struct BlockID &id)
-    {
-      SubbandProc *workQueue;
-
-      ScopedLock sl(mutex);
-
-      ASSERT(ownerMap.find(id) != ownerMap.end());
-      workQueue = ownerMap[id];
-      ASSERT(workQueue != NULL);
-
-      ownerMap.erase(id);
-
-      return *workQueue;
-    }
-
-
     void Pipeline::postprocessSubbands(SubbandProc &workQueue)
     {
       SmartPtr<StreamableData> output;
@@ -367,11 +335,6 @@ namespace LOFAR
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = subbandPool[id.localSubbandIdx];
 
-        pool.sync.waitFor(id.block);
-
-        // Register ownership
-        workQueueOwnerMap.push(id, workQueue);
-
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
 
@@ -384,9 +347,6 @@ namespace LOFAR
         } else {
           nrBlocksForwarded++;
         }
-
-        // Allow next block to be written
-        pool.sync.advanceTo(id.block + 1);
 
         ASSERT(!output);
 
@@ -410,9 +370,6 @@ namespace LOFAR
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
-        // Cache workQueue reference, because `output' will be destroyed.
-        SubbandProc &workQueue = workQueueOwnerMap.pop(id);
-
         LOG_INFO_STR("[" << id << "] Writing start");
 
         // Write block to disk 
@@ -424,7 +381,7 @@ namespace LOFAR
           outputStream = new NullStream;
         }
 
-        // Hand the object back to the workQueue it originally came from
+        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
         workQueue.outputPool.free.append(outputData);
 
         ASSERT(!outputData);
