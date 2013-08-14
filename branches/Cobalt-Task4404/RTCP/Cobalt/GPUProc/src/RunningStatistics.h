@@ -1,5 +1,6 @@
-//# global_defines.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# RunningStatistics.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,28 +19,36 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_GLOBAL_DEFINES_H
-#define LOFAR_GPUPROC_GLOBAL_DEFINES_H
-
-#define NR_STATION_FILTER_TAPS  16
-#undef USE_NEW_CORRELATOR
-#define NR_POLARIZATIONS         2 // TODO: get the nr of pol symbol from an LCS/Common header and/or from CoInterface/Config.h (if that isn't a dup too)
-#define NR_TAPS                 16
-#undef USE_2X2
-#undef USE_TEST_DATA
-#undef USE_B7015
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    extern bool profiling;
-    extern bool gpuProfiling;
-    extern unsigned nrGPUs;
+    // Donald Knuth's Art of Computer Programming, Vol 2, page 232, 3rd edition. 
+    // http://www.johndcook.com/standard_deviation.html
+    class RunningStatistics
+    {
+    public:
+      RunningStatistics(); 
+        
+      void Clear();
 
-    void set_affinity(unsigned device);
+      void Push(double sample);
+      
+      int NumDataValues() const;
+
+      double Mean() const;
+
+      double Variance() const;
+
+      double StandardDeviation() const;
+
+    private:
+      size_t counter;
+      double oldMean;
+      double newMean;
+      double oldVariance;
+      double newVariance;
+    };
   }
 }
-
-#endif
-
