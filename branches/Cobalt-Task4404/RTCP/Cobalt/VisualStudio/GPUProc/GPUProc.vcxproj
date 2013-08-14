@@ -74,6 +74,11 @@
     <ClInclude Include="..\..\GPUProc\src\Kernels\UHEP_TransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\UHEP_TriggerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\MultiDimArrayHostBuffer.h" />
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_incl.h" />
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_utils.h" />
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_wrapper.h" />
+    <ClInclude Include="..\..\GPUProc\src\opencl\MultiDimArrayHostBuffer.h" />
+    <ClInclude Include="..\..\GPUProc\src\opencl\PerformanceCounter.h" />
     <ClInclude Include="..\..\GPUProc\src\OpenMP_Lock.h" />
     <ClInclude Include="..\..\GPUProc\src\PerformanceCounter.h" />
     <ClInclude Include="..\..\GPUProc\src\Pipelines\BeamFormerPipeline.h" />
@@ -129,6 +134,9 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\UHEP_SubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\FilterBank.cc" />
     <ClCompile Include="..\..\GPUProc\src\global_defines.cc" />
+    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_utils.cc" />
+    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_wrapper.cc" />
+    <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc" />
     <ClCompile Include="..\..\GPUProc\src\rtcp.cc" />
     <ClCompile Include="..\..\GPUProc\src\Station\StationInput.cc" />
     <ClCompile Include="..\..\GPUProc\src\Station\StationNodeAllocation.cc" />
@@ -170,6 +178,14 @@
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt" />
     <None Include="..\..\GPUProc\src\cuda\cuda_config.h.in" />
     <None Include="..\..\GPUProc\src\cuda\gpu_wrapper.tcc" />
+    <None Include="..\..\GPUProc\src\opencl\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\src\opencl\Correlator.cl" />
+    <None Include="..\..\GPUProc\src\opencl\DelayAndBandPass.cl" />
+    <None Include="..\..\GPUProc\src\opencl\FFT.cl" />
+    <None Include="..\..\GPUProc\src\opencl\fft2.cl" />
+    <None Include="..\..\GPUProc\src\opencl\FIR.cl" />
+    <None Include="..\..\GPUProc\src\opencl\math.cl" />
+    <None Include="..\..\GPUProc\src\opencl\NewCorrelator.cl" />
     <None Include="..\..\GPUProc\test\CMakeLists.txt" />
     <None Include="..\..\GPUProc\test\cmpfloat.py" />
     <None Include="..\..\GPUProc\test\cuda\CMakeLists.txt" />
@@ -249,7 +265,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41</IncludePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

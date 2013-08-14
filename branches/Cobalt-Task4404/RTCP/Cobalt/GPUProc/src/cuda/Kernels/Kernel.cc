@@ -22,6 +22,7 @@
 
 #include <ostream>
 #include <boost/format.hpp>
+#include <cuda_runtime.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
@@ -46,9 +47,9 @@ namespace LOFAR
       : 
       gpu::Function(function),
       event(stream.getContext()),
-      itsStream(stream)
-    {
-    }
+      itsStream(stream),
+      counter(stream.getContext())
+    {}
 
     void Kernel::enqueue(const gpu::Stream &queue
                          /*, PerformanceCounter &counter*/) const
@@ -66,8 +67,31 @@ namespace LOFAR
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
       //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
+
+      queue.recordEvent(counter.start);     
       queue.launchKernel(*this, grid, block);
-//      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
+      queue.recordEvent(counter.stop);
+      
+      //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
+    }
+
+    void Kernel::logTime()
+    {
+      counter.logTime();
+    }
+
+    Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)
+      :
+    start(context),
+    stop(context)
+    {}
+
+
+    void Kernel::Counter::logTime()
+    {
+      float elapsedTime; // Initialize elapsedTime;
+      elapsedTime = stop.elapsedTime(start); 
+      cout << "Execution Time: " << elapsedTime << endl;
     }
 
     void Kernel::enqueue() const

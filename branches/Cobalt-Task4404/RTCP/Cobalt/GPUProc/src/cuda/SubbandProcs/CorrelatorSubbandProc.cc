@@ -320,6 +320,9 @@ namespace LOFAR
       // Wait for the GPU to finish.
       timers["GPU - wait"]->start();
       queue.synchronize();
+
+      // At this place the queue is cleared and we could read out the kernel running times!!
+
       timers["GPU - wait"]->stop();
 
       timers["GPU - compute"]->stop();

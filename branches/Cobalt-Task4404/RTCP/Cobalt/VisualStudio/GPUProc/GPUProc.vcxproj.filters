@@ -40,6 +40,9 @@
     <Filter Include="share">
       <UniqueIdentifier>{6366e12c-9513-4476-af75-1c5f0e9a6295}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\opencl">
+      <UniqueIdentifier>{df0cf1e4-c813-41cb-b576-495868d16308}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.h">
@@ -282,6 +285,21 @@
     <ClInclude Include="..\..\GPUProc\test\cuda\TestUtil.h">
       <Filter>test\cuda</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_incl.h">
+      <Filter>src\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_utils.h">
+      <Filter>src\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_wrapper.h">
+      <Filter>src\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\opencl\MultiDimArrayHostBuffer.h">
+      <Filter>src\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\opencl\PerformanceCounter.h">
+      <Filter>src\opencl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -466,6 +484,15 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\cuda\tFFT_leakage.cc">
       <Filter>test\cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_utils.cc">
+      <Filter>src\opencl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_wrapper.cc">
+      <Filter>src\opencl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc">
+      <Filter>src\opencl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -657,6 +684,30 @@
     </None>
     <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu">
       <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\CMakeLists.txt">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\Correlator.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\DelayAndBandPass.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\FFT.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\fft2.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\FIR.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\math.cl">
+      <Filter>src\opencl</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\opencl\NewCorrelator.cl">
+      <Filter>src\opencl</Filter>
     </None>
   </ItemGroup>
 </Project>

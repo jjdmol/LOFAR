@@ -37,7 +37,7 @@ TEST(tKernelFunctions)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("OLAP.CNProc.integrationSteps", "128");
+  ps.add("OLAP.CNProc.integrationSteps", "1048576");
   ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
@@ -77,6 +77,9 @@ TEST(tKernelFunctions)
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
+  stream.synchronize();
+  kernel->logTime();
+
 
   /*  Comment out printing of this information: it disrupts the logfile and add no information.
   float* buf = hOutput.get<float>();

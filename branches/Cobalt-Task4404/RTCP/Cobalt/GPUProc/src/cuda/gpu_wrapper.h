@@ -464,7 +464,7 @@ namespace LOFAR
         void waitEvent(const Event &event) const;
 
         // Record the event \a event for this stream.
-        void recordEvent(const Event &event);
+        void recordEvent(const Event &event) const;
 
         // Return the underlying CUDA stream. TODO: try to get rid of CUstream here: FFT thing to here or make it friend
         CUstream get() const;

@@ -37,6 +37,23 @@ namespace LOFAR
   {
     class Kernel : public gpu::Function
     {
+      // Class encapsulating functionality needed to count and
+      // time performed work
+      class Counter
+      {
+      public:
+        Counter(const LOFAR::Cobalt::gpu::Context &context);
+
+        // logs the duration for the previous kernel infocation using the
+        // stored start and stop times
+        void logTime();
+
+        gpu::Event start;
+        gpu::Event stop;
+
+      };
+
+
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
       struct Parameters
@@ -71,6 +88,9 @@ namespace LOFAR
 
       void enqueue() const;
 
+      void logTime();
+
+
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream, const gpu::Function& function);
@@ -80,6 +100,8 @@ namespace LOFAR
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
+    private:
+      Counter counter;
     };
   }
 }

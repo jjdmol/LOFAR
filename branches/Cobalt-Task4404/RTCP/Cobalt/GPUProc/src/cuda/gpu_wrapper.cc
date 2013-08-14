@@ -814,7 +814,7 @@ namespace LOFAR
           checkCuCall(cuStreamWaitEvent(_stream, event, 0));
         }
 
-        void recordEvent(CUevent event)
+        void recordEvent(CUevent event) const
         {
           ScopedCurrentContext scc(_context);
 
@@ -910,7 +910,7 @@ namespace LOFAR
         _impl->waitEvent(event._impl->_event);
       }
 
-      void Stream::recordEvent(const Event &event)
+      void Stream::recordEvent(const Event &event) const
       {
         _impl->recordEvent(event._impl->_event);
       }
