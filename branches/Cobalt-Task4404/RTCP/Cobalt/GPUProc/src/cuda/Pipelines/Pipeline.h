@@ -64,7 +64,7 @@ namespace LOFAR
 
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {
-        std::map<std::string, PerformanceCounter::figures> total_counters;
+        //std::map<std::string, PerformanceCounter::figures> total_counters;
         std::map<std::string, SmartPtr<NSTimer> > total_timers;
         // lock on the shared data
         Mutex totalsMutex;

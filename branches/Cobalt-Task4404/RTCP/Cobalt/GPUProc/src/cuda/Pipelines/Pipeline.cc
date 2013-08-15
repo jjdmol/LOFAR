@@ -468,16 +468,16 @@ namespace LOFAR
     {
       ScopedLock sl(totalsMutex);
 
-      // add performance counters
-      for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
+      //// add performance counters
+      //for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
 
-        const string &name = i->first;
-        PerformanceCounter *counter = i->second.get();
+      //  const string &name = i->first;
+      //  PerformanceCounter *counter = i->second.get();
 
-        counter->waitForAllOperations();
+      //  counter->waitForAllOperations();
 
-        total_counters[name] += counter->getTotal();
-      }
+      //  total_counters[name] += counter->getTotal();
+      //}
 
       //// add timers
       //for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {

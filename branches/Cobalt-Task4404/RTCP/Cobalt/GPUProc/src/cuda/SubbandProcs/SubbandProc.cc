@@ -63,7 +63,7 @@ namespace LOFAR
 
     void SubbandProc::addCounter(const std::string &name)
     {
-      counters[name] = new PerformanceCounter(name, profiling);
+      //counters[name] = new PerformanceCounter(name, profiling);
     }
 
 
