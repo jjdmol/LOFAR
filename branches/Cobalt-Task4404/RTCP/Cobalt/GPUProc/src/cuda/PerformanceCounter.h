@@ -45,14 +45,11 @@ namespace LOFAR
       // TODO: on descruction print the log
       //~PerformanceCounter();
 
-         // Class encapsulating functionality needed to count and
-      // time performed work
-        // logs the duration for the previous kernel infocation using the
-        // stored start and stop times
-        void logTime();
+      void logTime();
 
-        gpu::Event start;
-        gpu::Event stop;
+      // public events: they need to be inserted in streams..
+      gpu::Event start;
+      gpu::Event stop;
     };
   }
 }

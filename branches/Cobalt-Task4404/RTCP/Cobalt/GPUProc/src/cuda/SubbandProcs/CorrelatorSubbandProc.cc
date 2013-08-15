@@ -98,27 +98,6 @@ namespace LOFAR
                 ps.integrationSteps(),
                 context));
       }
-
-      //// create all the counters
-      //addCounter("compute - FIR");
-      //addCounter("compute - FFT");
-      //addCounter("compute - delay/bp");
-      //addCounter("compute - correlator");
-      //addCounter("input - samples");
-      //addCounter("output - visibilities");
-
-      //// CPU timers are set by CorrelatorPipeline
-      //addTimer("CPU - read input");
-      //addTimer("CPU - process");
-      //addTimer("CPU - postprocess");
-      //addTimer("CPU - total");
-
-      //// GPU timers are set by us
-      //addTimer("GPU - total");
-      //addTimer("GPU - input");
-      //addTimer("GPU - output");
-      //addTimer("GPU - compute");
-      //addTimer("GPU - wait");
     }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(
@@ -257,29 +236,18 @@ namespace LOFAR
     {
       CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
 
-//      timers["GPU - total"]->start();
-
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
       {
-        //timers["GPU - input"]->start();
-
-#if defined USE_B7015
-        OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
-#endif
         // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
         if (ps.nrChannelsPerSubband() == 1) {
           queue.writeBuffer(devFilteredData, input.inputSamples, true);
         } else { // #ch/sb > 1
           queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
         }
-//        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
-
-        //timers["GPU - input"]->stop();
       }
 
-  //    timers["GPU - compute"]->start();
 
       if (ps.delayCompensation())
       {
@@ -297,19 +265,19 @@ namespace LOFAR
       }
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue/*, *counters["compute - FIR"]*/);
-        fftKernel.enqueue(queue/*, *counters["compute - FFT"]*/);
+        firFilterKernel->enqueue(queue);
+        fftKernel.enqueue(queue);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue/*, *counters["compute - delay/bp"]*/,
+      delayAndBandPassKernel->enqueue(queue,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue/*, *counters["compute - correlator"]*/);
+      correlatorKernel->enqueue(queue);
 
-      //queue.flush(); // CUDA doesn't have/need flush() (OpenCL)
+
 
       // ***** The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -318,39 +286,22 @@ namespace LOFAR
       Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.
-   //   timers["GPU - wait"]->start();
       queue.synchronize();
 
-      // At this place the queue is cleared and we can read out
-      
-      // the kernel running times!!
-      
+      // ************************************************
+      // At this place the queue is cleared and we can read out the kernel running times
       delayAndBandPassKernel->logTime();
       correlatorKernel->logTime();
+
+      //Fir and fft only performed on runs with more then 1 channel
       if (ps.nrChannelsPerSubband() > 1) 
       {
         firFilterKernel->logTime();          
         fftKernel.logTime();
       }
 
-
-
-
-      {
-    //    timers["GPU - output"]->start();
-
-#ifdef USE_B7015
-        OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
-#endif
-        queue.readBuffer(output, devFilteredData, true);
-        // now perform weighting of the data based on the number of valid samples; TODO???
-
-//        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
-
-    //    timers["GPU - output"]->stop();
-      }
-
-//timers["GPU - total"]->stop();
+      queue.readBuffer(output, devFilteredData, true);
+      // now perform weighting of the data based on the number of valid samples; TODO???
     }
 
 

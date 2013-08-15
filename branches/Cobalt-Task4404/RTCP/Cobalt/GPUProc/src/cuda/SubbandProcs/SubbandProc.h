@@ -192,8 +192,8 @@ namespace LOFAR
 
       gpu::Stream queue;
 
-      void addCounter(const std::string &name);
-      void addTimer(const std::string &name);
+      //void addCounter(const std::string &name);
+      //void addTimer(const std::string &name);
     };
   }
 }

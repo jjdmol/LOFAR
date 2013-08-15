@@ -108,18 +108,18 @@ namespace LOFAR
                 context));
       }
 
-      // CPU timers are set by CorrelatorPipeline
-      addTimer("CPU - read input");
-      addTimer("CPU - process");
-      addTimer("CPU - postprocess");
-      addTimer("CPU - total");
+      //// CPU timers are set by CorrelatorPipeline
+      //addTimer("CPU - read input");
+      //addTimer("CPU - process");
+      //addTimer("CPU - postprocess");
+      //addTimer("CPU - total");
 
-      // GPU timers are set by us
-      addTimer("GPU - total");
-      addTimer("GPU - input");
-      addTimer("GPU - output");
-      addTimer("GPU - compute");
-      addTimer("GPU - wait");
+      //// GPU timers are set by us
+      //addTimer("GPU - total");
+      //addTimer("GPU - input");
+      //addTimer("GPU - output");
+      //addTimer("GPU - compute");
+      //addTimer("GPU - wait");
     }
 
 

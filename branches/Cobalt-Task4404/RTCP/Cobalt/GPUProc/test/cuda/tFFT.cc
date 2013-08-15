@@ -107,8 +107,10 @@ int main() {
 
   // *****************************************
   // Test 1: Impulse at origin
+  //  Test correct usage of the runtime stat class functionality
   // *****************************************
   {
+
     // init buffers
     for (size_t i = 0; i < size; i++) {
       inout.get<fcomplex>()[i] = fcomplex(0.0f, 0.0f);
