@@ -39,7 +39,8 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()) 
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
+      weightCorrection(1.0f)  // TODO: Add a key to the parset to specify this
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;

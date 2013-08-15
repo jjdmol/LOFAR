@@ -94,22 +94,6 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
 
-      class SubbandProcOwnerMap {
-      public:
-
-        // set the owner of a specific block
-        void push(const struct BlockID &id, SubbandProc &workQueue);
-
-        // get and remove the owner of a specific block
-        SubbandProc& pop(const struct BlockID &id);
-
-      private:
-        std::map<struct BlockID, SubbandProc*> ownerMap;
-        Mutex mutex;
-      };
-
-      SubbandProcOwnerMap workQueueOwnerMap;
-
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 
       // process subbands on the GPU
