@@ -85,6 +85,7 @@
     <ClInclude Include="..\..\GPUProc\src\Pipelines\CorrelatorPipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\Pipelines\CorrelatorPipelinePrograms.h" />
     <ClInclude Include="..\..\GPUProc\src\Pipelines\UHEP_Pipeline.h" />
+    <ClInclude Include="..\..\GPUProc\src\RunningStatistics.h" />
     <ClInclude Include="..\..\GPUProc\src\Station\StationInput.h" />
     <ClInclude Include="..\..\GPUProc\src\Station\StationNodeAllocation.h" />
     <ClInclude Include="..\..\GPUProc\src\Storage\SSH.h" />
@@ -138,6 +139,7 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\gpu_wrapper.cc" />
     <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc" />
     <ClCompile Include="..\..\GPUProc\src\rtcp.cc" />
+    <ClCompile Include="..\..\GPUProc\src\RunningStatistics.cc" />
     <ClCompile Include="..\..\GPUProc\src\Station\StationInput.cc" />
     <ClCompile Include="..\..\GPUProc\src\Station\StationNodeAllocation.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\SSH.cc" />

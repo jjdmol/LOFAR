@@ -321,7 +321,14 @@ namespace LOFAR
       timers["GPU - wait"]->start();
       queue.synchronize();
 
-      // At this place the queue is cleared and we could read out the kernel running times!!
+      // At this place the queue is cleared and we can read out
+      // the kernel running times!!
+      firFilterKernel->logTime();
+      fftKernel.logTime();
+      delayAndBandPassKernel->logTime();
+      correlatorKernel->logTime();
+
+      
 
       timers["GPU - wait"]->stop();
 

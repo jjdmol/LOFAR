@@ -300,6 +300,9 @@
     <ClInclude Include="..\..\GPUProc\src\opencl\PerformanceCounter.h">
       <Filter>src\opencl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\RunningStatistics.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -493,6 +496,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc">
       <Filter>src\opencl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\RunningStatistics.cc">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

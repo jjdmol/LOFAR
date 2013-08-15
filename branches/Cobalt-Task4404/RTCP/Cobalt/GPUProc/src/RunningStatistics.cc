@@ -66,30 +66,33 @@ namespace LOFAR
 
     double RunningStatistics::stDev() const
     {
-      return sqrt( variance() );
+      return sqrt(variance());
     }
 
-    RunningStatistics& RunningStatistics::operator+=(const RunningStatistics& rhs)
+    RunningStatistics& RunningStatistics::operator+=(const RunningStatistics& other)
     { 
-      RunningStatistics combined = *this + rhs;
+      RunningStatistics combined = *this + other;
       *this = combined;
 
       return *this;
     }
 
-    RunningStatistics operator+(const RunningStatistics a,
-         const RunningStatistics b)
+    RunningStatistics operator+(const RunningStatistics left,
+         const RunningStatistics right)
     {
       RunningStatistics combined;
-      combined.counter += a.counter + b.counter;
+      combined.counter = left.counter + right.counter;
 
-      double delta_means = b._mean - a._mean;
+      double delta_means = right._mean - left._mean;
       double delta_means_sqrt = delta_means*delta_means;
 
-      combined._mean = (a.counter * a._mean + b.counter * b._mean) / combined.counter;
+      // get the weighted mean of the two inputs
+      combined._mean = (left.counter * left._mean + right.counter * right._mean) / combined.counter;
 
-      combined.var_base = a.var_base + b.var_base + 
-        delta_means_sqrt * a.counter * b.counter / combined.counter;
+
+      combined.var_base = left.var_base + right.var_base + 
+        delta_means_sqrt * left.counter * right.counter / combined.counter;
+
       return combined;
     }
   }

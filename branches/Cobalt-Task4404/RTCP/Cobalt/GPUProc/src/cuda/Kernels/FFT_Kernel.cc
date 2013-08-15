@@ -39,7 +39,8 @@ namespace LOFAR
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
       plan(context, fftSize, nrFFTs),
-      buffer(buffer)
+      buffer(buffer),
+      counter(context)
     {
     }
 
@@ -85,6 +86,23 @@ namespace LOFAR
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
+    }
+
+    void FFT_Kernel::logTime()
+    {
+      counter.logTime();
+    }
+
+    FFT_Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)
+      :
+    start(context),
+    stop(context)
+    {}
+
+    void FFT_Kernel::Counter::logTime()
+    {
+      //
+      stats.push(stop.elapsedTime(start));
     }
 
   }

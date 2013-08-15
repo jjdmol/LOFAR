@@ -26,13 +26,35 @@
 #include <GPUProc/gpu_wrapper.h>
 //#include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
+#include <GPUProc/RunningStatistics.h>
+
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+
+
     class FFT_Kernel
     {
+            // Class encapsulating functionality needed to count and
+      // time performed work
+      class Counter
+      {
+        RunningStatistics stats;
+      public:
+        Counter(const LOFAR::Cobalt::gpu::Context &context);
+
+        // logs the duration for the previous kernel infocation using the
+        // stored start and stop times
+        void logTime();
+
+        gpu::Event start;
+        gpu::Event stop;
+      };
+
+
+
     public:
       FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs,
                  bool forward, gpu::DeviceMemory &buffer);
@@ -45,10 +67,13 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
+      void logTime();
+
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
+
       gpu::Context context;
 
       const unsigned nrFFTs, fftSize;
@@ -56,6 +81,7 @@ namespace LOFAR
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
       //gpu::Event event;
+      Counter counter;
     };
   }
 }
