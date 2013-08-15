@@ -77,7 +77,7 @@ namespace LOFAR
 
     void Kernel::logTime()
     {
-      counter.logTime();
+      //counter.logTime();
     }
 
     Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)

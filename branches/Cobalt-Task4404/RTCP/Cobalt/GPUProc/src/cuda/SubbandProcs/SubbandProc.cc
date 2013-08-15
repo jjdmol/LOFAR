@@ -69,7 +69,7 @@ namespace LOFAR
 
     void SubbandProc::addTimer(const std::string &name)
     {
-      timers[name] = new NSTimer(name, false, false);
+      //timers[name] = new NSTimer(name, false, false);
     }
 
 

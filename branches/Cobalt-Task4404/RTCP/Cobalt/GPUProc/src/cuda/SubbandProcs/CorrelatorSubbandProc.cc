@@ -99,26 +99,26 @@ namespace LOFAR
                 context));
       }
 
-      // create all the counters
-      addCounter("compute - FIR");
-      addCounter("compute - FFT");
-      addCounter("compute - delay/bp");
-      addCounter("compute - correlator");
-      addCounter("input - samples");
-      addCounter("output - visibilities");
+      //// create all the counters
+      //addCounter("compute - FIR");
+      //addCounter("compute - FFT");
+      //addCounter("compute - delay/bp");
+      //addCounter("compute - correlator");
+      //addCounter("input - samples");
+      //addCounter("output - visibilities");
 
-      // CPU timers are set by CorrelatorPipeline
-      addTimer("CPU - read input");
-      addTimer("CPU - process");
-      addTimer("CPU - postprocess");
-      addTimer("CPU - total");
+      //// CPU timers are set by CorrelatorPipeline
+      //addTimer("CPU - read input");
+      //addTimer("CPU - process");
+      //addTimer("CPU - postprocess");
+      //addTimer("CPU - total");
 
-      // GPU timers are set by us
-      addTimer("GPU - total");
-      addTimer("GPU - input");
-      addTimer("GPU - output");
-      addTimer("GPU - compute");
-      addTimer("GPU - wait");
+      //// GPU timers are set by us
+      //addTimer("GPU - total");
+      //addTimer("GPU - input");
+      //addTimer("GPU - output");
+      //addTimer("GPU - compute");
+      //addTimer("GPU - wait");
     }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(
@@ -257,13 +257,13 @@ namespace LOFAR
     {
       CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
 
-      timers["GPU - total"]->start();
+//      timers["GPU - total"]->start();
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
       {
-        timers["GPU - input"]->start();
+        //timers["GPU - input"]->start();
 
 #if defined USE_B7015
         OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
@@ -276,10 +276,10 @@ namespace LOFAR
         }
 //        counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
 
-        timers["GPU - input"]->stop();
+        //timers["GPU - input"]->stop();
       }
 
-      timers["GPU - compute"]->start();
+  //    timers["GPU - compute"]->start();
 
       if (ps.delayCompensation())
       {
@@ -318,24 +318,24 @@ namespace LOFAR
       Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.
-      timers["GPU - wait"]->start();
+   //   timers["GPU - wait"]->start();
       queue.synchronize();
 
       // At this place the queue is cleared and we can read out
       // the kernel running times!!
       firFilterKernel->logTime();
-      fftKernel.logTime();
+      //fftKernel.logTime();
       delayAndBandPassKernel->logTime();
       correlatorKernel->logTime();
 
       
 
-      timers["GPU - wait"]->stop();
+      //timers["GPU - wait"]->stop();
 
-      timers["GPU - compute"]->stop();
+     // timers["GPU - compute"]->stop();
 
       {
-        timers["GPU - output"]->start();
+    //    timers["GPU - output"]->start();
 
 #ifdef USE_B7015
         OMP_ScopedLock scopedLock(pipeline.deviceToHostLock[gpu / 2]);
@@ -345,10 +345,10 @@ namespace LOFAR
 
 //        counters["output - visibilities"]->doOperation(output.deviceBuffer.event, 0, output.bytesize(), 0);
 
-        timers["GPU - output"]->stop();
+    //    timers["GPU - output"]->stop();
       }
 
-      timers["GPU - total"]->stop();
+//timers["GPU - total"]->stop();
     }
 
 
