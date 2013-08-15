@@ -54,30 +54,26 @@ namespace LOFAR
     void Kernel::enqueue(const gpu::Stream &queue
                          /*, PerformanceCounter &counter*/) const
     {
-      // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.
-      //if (globalWorkSize.x == 0)
-      //  return;
-
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
       assert(globalWorkSize.x % block.x == 0 &&
              globalWorkSize.y % block.y == 0 &&
              globalWorkSize.z % block.z == 0);
+
       gpu::Grid grid(globalWorkSize.x / block.x,
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
-      //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
 
+      // Perform a timed lauch of the Kernel
       queue.recordEvent(counter.start);     
       queue.launchKernel(*this, grid, block);
       queue.recordEvent(counter.stop);
       
-      //      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
     void Kernel::logTime()
     {
-      //counter.logTime();
+      counter.logTime();
     }
 
     Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)
@@ -89,7 +85,7 @@ namespace LOFAR
 
     void Kernel::Counter::logTime()
     {
-      //
+      // get the difference between start and stop. push it on the stats object
       stats.push(stop.elapsedTime(start));
     }
 
