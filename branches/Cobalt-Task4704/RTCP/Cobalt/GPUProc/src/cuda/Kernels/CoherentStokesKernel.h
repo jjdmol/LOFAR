@@ -46,6 +46,7 @@ namespace LOFAR
         size_t nrTABs;
         size_t nrStokes;
         size_t timeIntegrationFactor;
+        size_t timeParallelFactor;
       };
 
       enum BufferType
