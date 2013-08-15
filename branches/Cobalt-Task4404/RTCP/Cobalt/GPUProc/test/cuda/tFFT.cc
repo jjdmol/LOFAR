@@ -85,6 +85,7 @@ int main() {
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
+
   FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
   FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
 
@@ -120,6 +121,9 @@ int main() {
     
     fftFwdKernel.enqueue(stream);
     stream.readBuffer(inout, d_inout, true);
+    stream.synchronize();
+    // do a call to the stats functionality 
+    fftFwdKernel.logTime();
 
     // verify output
 
@@ -134,6 +138,8 @@ int main() {
 
     // Backward FFT: compute and I/O
     fftFwdKernel.enqueue(stream);
+    stream.synchronize();
+    fftFwdKernel.logTime();
     stream.readBuffer(inout, d_inout, true);
 
     // See if we got only our scaled impuls back.
