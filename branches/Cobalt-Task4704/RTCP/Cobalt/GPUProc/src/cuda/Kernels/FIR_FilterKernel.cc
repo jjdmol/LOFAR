@@ -54,6 +54,7 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.filterWeights);
+      setArg(3, buffers.historySamples);
 
       size_t maxNrThreads = 
         getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
@@ -111,6 +112,8 @@ namespace LOFAR
         return 
           itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
           sizeof(float);
+      case FIR_FilterKernel::HISTORY_DATA:
+        return 1;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

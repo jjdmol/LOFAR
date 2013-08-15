@@ -144,6 +144,7 @@ namespace LOFAR
 
       // PPF
       gpu::DeviceMemory devFilterWeights;
+      gpu::DeviceMemory devFilterHistoryData;
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;

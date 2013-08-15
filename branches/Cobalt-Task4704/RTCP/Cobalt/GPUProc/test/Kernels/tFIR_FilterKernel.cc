@@ -51,16 +51,19 @@ TEST(FIR_FilterKernel)
   gpu::DeviceMemory
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
     dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
-    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
+    dCoeff(context, factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+    dHistory(context, factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
 
   gpu::HostMemory
     hInput(context, dInput.size()),
     hOutput(context, dOutput.size()),
-    hCoeff(context, dCoeff.size());
+    hCoeff(context, dCoeff.size()),
+    hHistory(context, dHistory.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
   cout << "dCoeff.size() = " << dCoeff.size() << endl;
+  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -71,7 +74,7 @@ TEST(FIR_FilterKernel)
 
   stream.writeBuffer(dInput, hInput);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   kernel->enqueue();
 

@@ -91,6 +91,7 @@ int test()
   DeviceMemory devFilteredData(ctx, sizeFilteredData * sizeof(float));
   DeviceMemory devSampledData(ctx, sizeSampledData * sizeof(float));
   DeviceMemory devFirWeights(ctx, sizeWeightsData * sizeof(float));
+  DeviceMemory devHistoryData(ctx, 1);
 
   unsigned station, sample, ch, pol;
 
@@ -112,6 +113,7 @@ int test()
   hKernel.setArg(0, devFilteredData);
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
+  hKernel.setArg(3, devHistoryData);
 
   // Calculate the number of threads in total and per blovk
   int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal

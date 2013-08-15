@@ -130,6 +130,7 @@ namespace LOFAR
 
       // FIR filter
       gpu::DeviceMemory devFilterWeights;
+      gpu::DeviceMemory devFilterHistoryData;
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
 

@@ -69,7 +69,8 @@ namespace LOFAR
 
       // FIR filter
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT

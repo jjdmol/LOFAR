@@ -90,7 +90,8 @@ namespace LOFAR
       // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devB, devA, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A

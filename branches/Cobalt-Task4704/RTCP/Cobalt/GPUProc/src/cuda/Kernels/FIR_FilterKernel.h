@@ -54,7 +54,8 @@ namespace LOFAR
       {
         INPUT_DATA,
         OUTPUT_DATA,
-        FILTER_WEIGHTS
+        FILTER_WEIGHTS,
+        HISTORY_DATA
       };
 
       // Buffers that must be passed to the constructor of the FIR_FilterKernel
@@ -63,10 +64,12 @@ namespace LOFAR
       {
         Buffers(const gpu::DeviceMemory& in, 
                 const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& fw) :
-          Kernel::Buffers(in, out), filterWeights(fw)
+                const gpu::DeviceMemory& fw,
+                const gpu::DeviceMemory& hs) :
+          Kernel::Buffers(in, out), filterWeights(fw), historySamples(hs)
         {}
         gpu::DeviceMemory filterWeights;
+        gpu::DeviceMemory historySamples;
       };
 
       FIR_FilterKernel(const gpu::Stream& stream,

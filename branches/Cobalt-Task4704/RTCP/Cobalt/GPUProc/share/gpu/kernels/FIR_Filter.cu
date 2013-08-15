@@ -54,8 +54,9 @@ typedef signed char SampleType;
 
 // NR_STABS means #stations (correlator) or #TABs (beamformer).
 typedef SampleType (*SampledDataType)[NR_STABS][NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
+typedef SampleType (*HistoryDataType)[NR_STABS][NR_TAPS - 1][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef float (*FilteredDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
-typedef const float (*WeightsType)[NR_CHANNELS][16];
+typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
 
 
 /*!
@@ -97,11 +98,13 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
 extern "C" {
 __global__ void FIR_filter( void *filteredDataPtr,
                             const void *sampledDataPtr,
-                            const void *weightsPtr)
+                            const void *weightsPtr,
+                            void *historyDataPtr)
 {
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;
   WeightsType weightsData = (WeightsType) weightsPtr;
+  HistoryDataType historyData = (HistoryDataType) historyDataPtr;
 
   unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x;
 #if 0
