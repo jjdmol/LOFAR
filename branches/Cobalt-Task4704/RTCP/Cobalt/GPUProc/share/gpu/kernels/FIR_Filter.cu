@@ -20,12 +20,36 @@
 
 #include "IntToFloat.cuh"
 
+#if !(NR_STABS >= 1)
+#error Precondition violated: NR_STABS >= 1
+#endif
+
+#if !(NR_TAPS == 16)
+#error Precondition violated: NR_TAPS == 16
+#endif
+
+#if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % NR_TAPS == 0)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % NR_TAPS == 0
+#endif
+
 #if NR_BITS_PER_SAMPLE == 16
 typedef signed short SampleType;
 #elif NR_BITS_PER_SAMPLE == 8
 typedef signed char SampleType;
 #else
-#error unsupported NR_BITS_PER_SAMPLE
+#error Precondition violated: NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
+#endif
+
+#if !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
+#error Precondition violated: NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0
+#endif
+
+#if !(NR_POLARIZATIONS == 2)
+#error Precondition violated: NR_POLARIZATIONS == 2
+#endif
+
+#if !(COMPLEX == 2)
+#error Precondition violated: COMPLEX == 2
 #endif
 
 // NR_STABS means #stations (correlator) or #TABs (beamformer).
@@ -54,11 +78,11 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  * ----------------------- | --------------------------- | -----------
  * NR_STABS                | >= 1                        | number of antenna fields (correlator),
  *                         |                             | or number of tight array beams (tabs) (beamformer)
- * NR_TAPS                 | 1--16                       | number of FIR filtering coefficients
+ * NR_TAPS                 | 16                          | number of FIR filtering coefficients
  * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
  * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
  * NR_CHANNELS             | multiple of 16 and > 0      | number of frequency channels per subband
- * NR_POLARIZATIONS        | power of 2                  | number of polarizations
+ * NR_POLARIZATIONS        | 2                           | number of polarizations
  * COMPLEX                 | 2                           | size of complex in number of floats/doubles
  *
  * Execution configuration: (TODO: enforce using __attribute__ reqd_work_group_size)
@@ -72,8 +96,8 @@ typedef const float (*WeightsType)[NR_CHANNELS][16];
  */
 extern "C" {
 __global__ void FIR_filter( void *filteredDataPtr,
-                          const void *sampledDataPtr,
-                          const void *weightsPtr)
+                            const void *sampledDataPtr,
+                            const void *weightsPtr)
 {
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;
