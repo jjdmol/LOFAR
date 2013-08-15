@@ -52,9 +52,6 @@ typedef signed char SampleType;
 #include <exception>
 #include <cuda.h>
 
-extern cudaError_t FIR_filter_wrapper(float *DevFilteredData,
-  float const *DevSampledData,
-  float const *DevWeightsData);
 namespace LOFAR
 {
   namespace Cobalt
@@ -276,9 +273,6 @@ namespace LOFAR
   {
     std::cerr << " cuLaunchKernel " << cudaStatus <<std::endl;
     }
-
-        //// Launch a kernel on the GPU with one thread for each element.
-     //   ::FIR_filter_wrapper(DevFilteredData, DevSampledData, DevFirWeights);
 
         // cudaDeviceSynchronize waits for the kernel to finish, and returns
         // any errors encountered during the launch.

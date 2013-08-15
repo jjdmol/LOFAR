@@ -449,36 +449,3 @@ __global__ void FIR_filter( void *filteredDataPtr,
   }
 }
 }
-
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t FIR_filter_wrapper(float *DevFilteredData,
-    float const *DevSampledData,
-    float const *DevWeightsData)
-{
-    cudaError_t cudaStatus;
-
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        //fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        return cudaStatus;
-    }
-
-    // From here copy pasta of opencl code
-    int nrChannelsPerSubband = 8;
-    int nrStations = 2; 
-    unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-    dim3 globalWorkSize(totalNrThreads, nrStations); //ps.nrStations()
-
-    int MAXNRCUDATHREADS = 512;
-    size_t maxNrThreads = MAXNRCUDATHREADS;
-    unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-    dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
-
-    // Launch a kernel on the GPU with one thread for each element.
-    FIR_filter<<<globalWorkSize, localWorkSize>>>(DevFilteredData,
-      DevSampledData, DevWeightsData);
-
-    return (cudaError_t)0;
-}
-
