@@ -63,7 +63,7 @@ namespace LOFAR
       ASSERT(params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0);
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
-      ASSERT(params.nrChannelsPerSubband * params.nrTABs <= 512);
+      ASSERT(params.nrChannelsPerSubband * params.nrTABs <= 512); // TODO This is a test for pre k10 hardware. We should increase this to 1024
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
