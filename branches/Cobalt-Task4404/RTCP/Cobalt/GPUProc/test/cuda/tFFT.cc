@@ -117,6 +117,7 @@ int main() {
 
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
+    
     fftFwdKernel.enqueue(stream);
     stream.readBuffer(inout, d_inout, true);
 

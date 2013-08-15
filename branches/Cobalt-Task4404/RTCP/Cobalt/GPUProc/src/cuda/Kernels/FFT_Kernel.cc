@@ -54,13 +54,13 @@ namespace LOFAR
       plan.setStream(stream);
 
       LOG_DEBUG("Launching cuFFT");
-
+      stream.recordEvent(counter.start);   
       // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
                            static_cast<cufftComplex*>(buffer.get()),
                            direction);
-
+      stream.recordEvent(counter.stop);   
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 
@@ -91,18 +91,6 @@ namespace LOFAR
     void FFT_Kernel::logTime()
     {
       counter.logTime();
-    }
-
-    FFT_Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)
-      :
-    start(context),
-    stop(context)
-    {}
-
-    void FFT_Kernel::Counter::logTime()
-    {
-      //
-      stats.push(stop.elapsedTime(start));
     }
 
   }

@@ -76,19 +76,6 @@ namespace LOFAR
       counter.logTime();
     }
 
-    Kernel::Counter::Counter(const LOFAR::Cobalt::gpu::Context &context)
-      :
-    start(context),
-    stop(context)
-    {}
-
-
-    void Kernel::Counter::logTime()
-    {
-      // get the difference between start and stop. push it on the stats object
-      stats.push(stop.elapsedTime(start));
-    }
-
     void Kernel::enqueue() const
     {
       enqueue(itsStream);

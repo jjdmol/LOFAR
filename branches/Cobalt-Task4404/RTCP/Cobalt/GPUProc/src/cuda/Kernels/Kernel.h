@@ -29,8 +29,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/RunningStatistics.h>
-//#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
@@ -38,22 +37,6 @@ namespace LOFAR
   {
     class Kernel : public gpu::Function
     {
-      // Class encapsulating functionality needed to count and
-      // time performed work
-      class Counter
-      {
-        RunningStatistics stats;
-      public:
-        Counter(const LOFAR::Cobalt::gpu::Context &context);
-
-        // logs the duration for the previous kernel infocation using the
-        // stored start and stop times
-        void logTime();
-
-        gpu::Event start;
-        gpu::Event stop;
-      };
-
 
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
@@ -102,7 +85,7 @@ namespace LOFAR
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
     private:
-      Counter counter;
+      PerformanceCounter counter;
     };
   }
 }

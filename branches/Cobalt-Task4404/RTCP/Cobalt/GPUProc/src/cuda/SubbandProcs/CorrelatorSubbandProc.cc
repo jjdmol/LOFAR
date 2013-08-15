@@ -322,17 +322,19 @@ namespace LOFAR
       queue.synchronize();
 
       // At this place the queue is cleared and we can read out
+      
       // the kernel running times!!
-      firFilterKernel->logTime();
-      //fftKernel.logTime();
+      
       delayAndBandPassKernel->logTime();
       correlatorKernel->logTime();
+      if (ps.nrChannelsPerSubband() > 1) 
+      {
+        firFilterKernel->logTime();          
+        fftKernel.logTime();
+      }
 
-      
 
-      //timers["GPU - wait"]->stop();
 
-     // timers["GPU - compute"]->stop();
 
       {
     //    timers["GPU - output"]->start();
