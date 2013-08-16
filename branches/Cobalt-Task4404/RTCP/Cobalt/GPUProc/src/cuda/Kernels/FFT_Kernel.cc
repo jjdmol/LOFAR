@@ -39,12 +39,20 @@ namespace LOFAR
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
       plan(context, fftSize, nrFFTs),
-      buffer(buffer),
-      counter(context)
+      buffer(buffer)
     {
     }
 
-    void FFT_Kernel::enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/)
+
+
+    void FFT_Kernel::enqueue(gpu::Stream &stream, PerformanceCounter &counter)
+    {
+      stream.recordEvent(counter.start); 
+      enqueue(stream);
+      stream.recordEvent(counter.stop); 
+    }
+
+    void FFT_Kernel::enqueue(gpu::Stream &stream)
     {
       gpu::ScopedCurrentContext scc(context);
 
@@ -54,13 +62,13 @@ namespace LOFAR
       plan.setStream(stream);
 
       LOG_DEBUG("Launching cuFFT");
-      stream.recordEvent(counter.start);   
+        
       // Enqueue the FFT execution
       error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
                            static_cast<cufftComplex*>(buffer.get()),
                            direction);
-      stream.recordEvent(counter.stop);   
+
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 
@@ -87,12 +95,6 @@ namespace LOFAR
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
     }
-
-    void FFT_Kernel::logTime()
-    {
-      counter.logTime();
-    }
-
   }
 }
 

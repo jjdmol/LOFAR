@@ -38,7 +38,9 @@ namespace LOFAR
       FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs,
                  bool forward, gpu::DeviceMemory &buffer);
 
-      void enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/);
+      void enqueue(gpu::Stream &stream);
+
+      void enqueue(gpu::Stream &stream, PerformanceCounter &counter);
 
       enum BufferType
       {
@@ -46,7 +48,6 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      void logTime();
 
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
@@ -59,7 +60,6 @@ namespace LOFAR
       const int direction;
       FFT_Plan plan;
       gpu::DeviceMemory &buffer;
-      PerformanceCounter counter;
     };
   }
 }

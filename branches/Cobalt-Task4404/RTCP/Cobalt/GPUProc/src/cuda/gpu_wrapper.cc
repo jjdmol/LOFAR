@@ -869,7 +869,7 @@ namespace LOFAR
         if (gpuProfiling)
         {
           recordEvent(counter.start);
-          writeBuffer(devMem, hostMem, true);
+          writeBuffer(devMem, hostMem, synchronous); 
           recordEvent(counter.stop);
         }
         else
@@ -903,7 +903,7 @@ namespace LOFAR
         if (gpuProfiling)
         {
           recordEvent(counter.start);
-          readBuffer(hostMem, devMem, true);
+          readBuffer(hostMem, devMem, synchronous);  
           recordEvent(counter.stop);
         }
         else

@@ -35,9 +35,7 @@ namespace LOFAR
   {
     class PerformanceCounter
     {
-      RunningStatistics stats;
     public:
-
       PerformanceCounter(const LOFAR::Cobalt::gpu::Context &context);
 
       // TODO: on descruction print the log
@@ -48,6 +46,10 @@ namespace LOFAR
       // public events: they need to be inserted in streams..
       gpu::Event start;
       gpu::Event stop;
+
+      RunningStatistics stats;
+    private:
+      
     };
   }
 }

@@ -47,12 +47,18 @@ namespace LOFAR
       : 
       gpu::Function(function),
       event(stream.getContext()),
-      itsStream(stream),
-      counter(stream.getContext())
+      itsStream(stream)
     {}
 
-    void Kernel::enqueue(const gpu::Stream &queue
-                         /*, PerformanceCounter &counter*/) const
+    void Kernel::enqueue(const gpu::Stream &queue,
+                         PerformanceCounter &counter) const
+    {
+      queue.recordEvent(counter.start);   
+      enqueue(queue);
+      queue.recordEvent(counter.stop);
+    }
+
+    void Kernel::enqueue(const gpu::Stream &queue) const
     {
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
@@ -65,20 +71,23 @@ namespace LOFAR
                      globalWorkSize.z / block.z);
 
       // Perform a timed lauch of the Kernel
-      queue.recordEvent(counter.start);     
+        
       queue.launchKernel(*this, grid, block);
-      queue.recordEvent(counter.stop);
       
-    }
-
-    void Kernel::logTime()
-    {
-      counter.logTime();
+      
     }
 
     void Kernel::enqueue() const
     {
       enqueue(itsStream);
+    }
+
+
+    void Kernel::enqueue(PerformanceCounter &counter) const
+    {
+      itsStream.recordEvent(counter.start);
+      enqueue(itsStream);
+      itsStream.recordEvent(counter.stop);
     }
   }
 }

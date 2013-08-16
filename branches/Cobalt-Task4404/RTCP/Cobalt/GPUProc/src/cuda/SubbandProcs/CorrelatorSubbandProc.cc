@@ -55,7 +55,7 @@ namespace LOFAR
     CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset &parset,
       gpu::Context &context, CorrelatorFactories &factories)
     :
-      SubbandProc( parset, context ),
+      SubbandProc( parset, context ),       
       prevBlock(-1),
       prevSAP(-1),
       devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
@@ -98,6 +98,27 @@ namespace LOFAR
                 ps.integrationSteps(),
                 context));
       }
+      // create all the counters
+      addCounter("compute - FIR", context);
+      addCounter("compute - FFT", context);
+      addCounter("compute - delay/bp", context);
+      addCounter("compute - correlator", context);
+      addCounter("input - samples", context);
+      addCounter("output - visibilities", context);
+
+      //// CPU timers are set by CorrelatorPipeline
+      //addTimer("CPU - read input");
+      //addTimer("CPU - process");
+      //addTimer("CPU - postprocess");
+      //addTimer("CPU - total");
+
+      //// GPU timers are set by us
+      //addTimer("GPU - total");
+      //addTimer("GPU - input");
+      //addTimer("GPU - output");
+      //addTimer("GPU - compute");
+      //addTimer("GPU - wait");
+
     }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(
@@ -240,13 +261,14 @@ namespace LOFAR
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
+
       // ***************************************************
       // Copy data to the GPU 
       // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
       if (ps.nrChannelsPerSubband() == 1)
-        queue.writeBuffer(devFilteredData, input.inputSamples, true);
+        queue.writeBuffer(devFilteredData, input.inputSamples, *counters["input - samples"], true);
       else // #ch/sb > 1
-        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+        queue.writeBuffer(devInput.inputSamples, input.inputSamples, *counters["input - samples"], true);
    
       if (ps.delayCompensation())
       {
@@ -267,17 +289,17 @@ namespace LOFAR
       // *********************************************
       // Run the kernels
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue);
-        fftKernel.enqueue(queue);
+        firFilterKernel->enqueue(queue, *counters["compute - FIR"]);
+        fftKernel.enqueue(queue, *counters["compute - FFT"]);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue,
+      delayAndBandPassKernel->enqueue(queue, *counters["compute - delay/bp"], 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue);
+      correlatorKernel->enqueue(queue, *counters["compute - correlator"] );
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -288,22 +310,28 @@ namespace LOFAR
       // Wait for the GPU to finish.
       queue.synchronize();
 
+      // Read data back from the kernel
+      queue.readBuffer(output, devFilteredData, *counters["output - visibilities"], true);
+
       // ************************************************
-      // get performance data and output from the gpu
-      // At this place the qu
-      delayAndBandPassKernel->logTime();
-      correlatorKernel->logTime();
-
-      //Fir and fft only performed on runs with more then 1 channel
-      if (ps.nrChannelsPerSubband() > 1) 
+      // Perform performance statistics if needed
+      if (gpuProfiling)
       {
-        firFilterKernel->logTime();          
-        fftKernel.logTime();
+        // assure that the queue is done so all events are fished
+        queue.synchronize();
+        // Update the counters
+        if (ps.nrChannelsPerSubband() > 1) 
+        {
+          counters["compute - FIR"]->logTime();
+          counters["compute - FFT"]->logTime();
+        }
+        counters["compute - delay/bp"]->logTime();
+        counters["compute - correlator"]->logTime();
+        counters["input - samples"]->logTime();
+        counters["output - visibilities"]->logTime();
+
       }
-
-      queue.readBuffer(output, devFilteredData, true);
       // now perform weighting of the data based on the number of valid samples; TODO???
-
     }
 
 

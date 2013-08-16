@@ -60,6 +60,17 @@ namespace LOFAR
     {
     }
 
+    void SubbandProc::addCounter(const std::string &name, gpu::Context & context)
+    {
+      counters[name] = new PerformanceCounter(context);
+    }
+
+
+    void SubbandProc::addTimer(const std::string &name)
+    {
+      timers[name] = new NSTimer(name, false, false);
+    }
+
 
     void SubbandProcInputData::applyMetaData(const Parset &ps,
                                            unsigned station, unsigned SAP,

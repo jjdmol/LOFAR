@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -120,12 +121,12 @@ int main() {
 
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
-    
+        
     fftFwdKernel.enqueue(stream);
     stream.readBuffer(inout, d_inout, true);
     stream.synchronize();
     // do a call to the stats functionality 
-    fftFwdKernel.logTime();
+
 
     // verify output
 
@@ -141,7 +142,6 @@ int main() {
     // Backward FFT: compute and I/O
     fftFwdKernel.enqueue(stream);
     stream.synchronize();
-    fftFwdKernel.logTime();
     stream.readBuffer(inout, d_inout, true);
 
     // See if we got only our scaled impuls back.

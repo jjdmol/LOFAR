@@ -108,6 +108,24 @@ namespace LOFAR
                 context));
       }
 
+
+      
+      // Set of GPU counters
+      addCounter("compute - intToFloat", context);
+      addCounter("compute - firstFFT", context);
+      addCounter("compute - delay/bp", context);
+      addCounter("compute - secondFFT", context);
+      addCounter("compute - correctBandpass", context);
+      addCounter("compute - beamformer", context);
+      addCounter("compute - transpose", context);
+      addCounter("compute - inverseFFT", context);
+      addCounter("compute - firFilterKernel", context);
+      addCounter("compute - finalFFT", context);
+
+      addCounter("input - samples", context);
+      addCounter("output - visibilities", context);
+
+
       //// CPU timers are set by CorrelatorPipeline
       //addTimer("CPU - read input");
       //addTimer("CPU - process");
@@ -158,26 +176,28 @@ namespace LOFAR
         }
       }
 
-      intToFloatKernel->enqueue();
+      //****************************************
+      // Enqueue the kernels
+      intToFloatKernel->enqueue(*counters["compute - intToFloat"]);
 
-      firstFFT.enqueue(queue);
-      delayCompensationKernel->enqueue(queue,
+      firstFFT.enqueue(queue, *counters["compute - firstFFT"]);
+      delayCompensationKernel->enqueue(queue, *counters["compute - delay/bp"],
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      secondFFT.enqueue(queue);
-      correctBandPassKernel->enqueue(queue,
+      secondFFT.enqueue(queue, *counters["compute - secondFFT"]);
+      correctBandPassKernel->enqueue(queue, *counters["compute - correctBandpass"],
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue();
-      transposeKernel->enqueue();
+      beamFormerKernel->enqueue(*counters["compute - beamformer"]);
+      transposeKernel->enqueue( *counters["compute - transpose"]);
 
-      inverseFFT.enqueue(queue);
+      inverseFFT.enqueue(queue, *counters["compute - inverseFFT"]);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue();
-        finalFFT.enqueue(queue);
+        firFilterKernel->enqueue( *counters["compute - firFilterKernel"]);
+        finalFFT.enqueue(queue, *counters["compute - finalFFT"]);
       }
 
       // TODO: Propagate flags
@@ -193,4 +213,5 @@ namespace LOFAR
     }
   }
 }
+
 

@@ -27,7 +27,7 @@
 
 #include <UnitTest++.h>
 #include <memory>
-
+#include <GPUProc/PerformanceCounter.h>
 using namespace LOFAR::Cobalt;
 using namespace LOFAR;
 using namespace std;
@@ -73,13 +73,12 @@ TEST(tKernelFunctions)
 
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
-  kernel->enqueue();
+  PerformanceCounter counter(context);
+  kernel->enqueue(counter);
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
   stream.synchronize();
-  kernel->logTime();
-
 }
 
 int main()

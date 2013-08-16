@@ -67,8 +67,11 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const gpu::Stream &queue
-                   /*, PerformanceCounter &counter*/) const;
+      void enqueue(const gpu::Stream &queue) const;
+
+      void enqueue(const gpu::Stream &queue, PerformanceCounter &counter) const;
+
+      void enqueue(PerformanceCounter &counter) const;
 
       void enqueue() const;
 
@@ -84,8 +87,6 @@ namespace LOFAR
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
-    private:
-      PerformanceCounter counter;
     };
   }
 }
