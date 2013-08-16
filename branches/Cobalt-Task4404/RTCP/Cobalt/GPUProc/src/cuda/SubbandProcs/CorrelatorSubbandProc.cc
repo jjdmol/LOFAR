@@ -236,25 +236,25 @@ namespace LOFAR
     {
       CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
 
+      // Get the id of the block we are processing
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
-      {
-        // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
-        if (ps.nrChannelsPerSubband() == 1) {
-          queue.writeBuffer(devFilteredData, input.inputSamples, true);
-        } else { // #ch/sb > 1
-          queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
-        }
-      }
-
-
+      // ***************************************************
+      // Copy data to the GPU 
+      // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
+      if (ps.nrChannelsPerSubband() == 1)
+        queue.writeBuffer(devFilteredData, input.inputSamples, true);
+      else // #ch/sb > 1
+        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+   
       if (ps.delayCompensation())
       {
         unsigned SAP = ps.settings.subbands[subband].SAP;
 
         // Only upload delays if they changed w.r.t. the previous subband.
-        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) 
+        {
           queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
@@ -264,6 +264,8 @@ namespace LOFAR
         }
       }
 
+      // *********************************************
+      // Run the kernels
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel->enqueue(queue);
         fftKernel.enqueue(queue);
@@ -277,9 +279,7 @@ namespace LOFAR
 
       correlatorKernel->enqueue(queue);
 
-
-
-      // ***** The GPU will be occupied for a while, do some calculations in the
+      // The GPU will be occupied for a while, do some calculations in the
       // background.
 
       // Propagate the flags.
@@ -289,7 +289,8 @@ namespace LOFAR
       queue.synchronize();
 
       // ************************************************
-      // At this place the queue is cleared and we can read out the kernel running times
+      // get performance data and output from the gpu
+      // At this place the qu
       delayAndBandPassKernel->logTime();
       correlatorKernel->logTime();
 
@@ -302,6 +303,7 @@ namespace LOFAR
 
       queue.readBuffer(output, devFilteredData, true);
       // now perform weighting of the data based on the number of valid samples; TODO???
+
     }
 
 

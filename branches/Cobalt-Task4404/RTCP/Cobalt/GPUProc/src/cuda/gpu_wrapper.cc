@@ -32,6 +32,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
+#include <GPUProc/PerformanceCounter.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -856,8 +857,24 @@ namespace LOFAR
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void>(),
                                hostMem.size());
-        if (synchronous || force_synchronous) {
+        if (synchronous || force_synchronous) 
+        {
           synchronize();
+        }
+      }
+
+      void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
+                         const PerformanceCounter &counter, bool synchronous) const
+      {
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          writeBuffer(devMem, hostMem, true);
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
         }
       }
 
@@ -874,10 +891,27 @@ namespace LOFAR
         _impl->memcpyDtoHAsync(hostMem.get<void>(),
                                (CUdeviceptr)devMem.get(),
                                size);
-        if (synchronous || force_synchronous) {
+        if (synchronous || force_synchronous) 
+        {
           synchronize();
         }
       }
+
+      void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
+                        const PerformanceCounter &counter, bool synchronous) const
+      {
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          readBuffer(hostMem, devMem, true);
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
+        }
+      }
+
 
       void Stream::launchKernel(const Function &function,
                                 const Grid &grid, const Block &block) const

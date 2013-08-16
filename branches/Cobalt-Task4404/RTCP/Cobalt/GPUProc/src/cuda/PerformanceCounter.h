@@ -25,10 +25,8 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
 
-#include "gpu_wrapper.h"
+#include <GPUProc/gpu_wrapper.h> // GPUException
 
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
 #include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR

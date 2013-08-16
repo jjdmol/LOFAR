@@ -224,11 +224,8 @@ namespace LOFAR
 #       pragma omp section
         {
 #         pragma omp parallel for num_threads(workQueues.size())
-          for (size_t i = 0; i < workQueues.size(); ++i) {
-#ifdef USE_B7015
-            unsigned gpuNr = i % devices.size();
-            set_affinity(gpuNr);
-#endif
+          for (size_t i = 0; i < workQueues.size(); ++i) 
+          {
             SubbandProc &queue = *workQueues[i];
 
             // run the queue
