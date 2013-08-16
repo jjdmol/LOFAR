@@ -98,7 +98,7 @@ namespace LOFAR
                 ps.integrationSteps(),
                 context));
       }
-      // create all the counters
+      // create all gpu counters
       addCounter("compute - FIR", context);
       addCounter("compute - FFT", context);
       addCounter("compute - delay/bp", context);
