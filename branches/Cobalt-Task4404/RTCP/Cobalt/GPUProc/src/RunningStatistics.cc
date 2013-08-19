@@ -20,7 +20,9 @@
 //# $Id$
 #include "RunningStatistics.h"
 #include <math.h> 
-
+#include <limits>
+#include <ostream>
+#include <iomanip>
 namespace LOFAR
 {
   namespace Cobalt
@@ -35,13 +37,21 @@ namespace LOFAR
     {
       counter = 0;
       _mean = var_base =  0.0;
+      _min = std::numeric_limits<double>::max();
+      _max = std::numeric_limits<double>::min();
     }
 
     void RunningStatistics::push(double x)
     {
-      double delta_mean, delta_weighted;
+      // update the maxima
+      if (x < _min)
+        _min = x;
+      if (x > _max)
+        _max = x;
 
+      double delta_mean, delta_weighted;
       long long old_counter = counter;
+
       counter++;
       delta_mean = x - _mean;
       delta_weighted = delta_mean / counter;
@@ -69,6 +79,18 @@ namespace LOFAR
       return sqrt(variance());
     }
 
+          // Minimum value received samples
+    double RunningStatistics::min() const
+    {
+      return _min;
+    }
+
+    // Maximum value received samples
+    double RunningStatistics::max() const
+    {
+      return _max;
+    }
+
     RunningStatistics& RunningStatistics::operator+=(const RunningStatistics& other)
     { 
       RunningStatistics combined = *this + other;
@@ -83,6 +105,9 @@ namespace LOFAR
       RunningStatistics combined;
       combined.counter = left.counter + right.counter;
 
+      combined._min = left._min < right._min ? left._min : right._min;
+      combined._max = left._max > right._max ? left._max : right._max;
+
       double delta_means = right._mean - left._mean;
       double delta_means_sqrt = delta_means*delta_means;
 
@@ -94,6 +119,27 @@ namespace LOFAR
         delta_means_sqrt * left.counter * right.counter / combined.counter;
 
       return combined;
+    }
+
+    void RunningStatistics::print(std::ostream& os) const
+    {
+      if (count() == 0)      
+        os << "*Not executed*";
+      else
+        os.precision(5);
+
+        os  << " count: "  << std::setw(8) << count()
+            << " mean:  "  << std::setw(8) << mean() 
+            << " stDev: " << std::setw(8) << stDev()
+            << " min:   " << std::setw(8) << min()    
+            << " max:   " << std::setw(8) << max()
+            << " (stats in ms)" ;
+    }
+
+    std::ostream& operator<<(std::ostream& os, RunningStatistics const & rs)
+    {
+      rs.print(os);
+      return os;
     }
   }
 }

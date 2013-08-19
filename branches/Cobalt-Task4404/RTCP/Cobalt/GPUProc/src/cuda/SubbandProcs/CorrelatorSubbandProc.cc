@@ -24,11 +24,13 @@
 
 #include <cstring>
 #include <algorithm>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/BandPass.h>
+
 
 namespace LOFAR
 {
@@ -140,21 +142,14 @@ namespace LOFAR
 
     void CorrelatorSubbandProc::Counters::printStats()
     {     
-
       // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****");
-      LOG_INFO_STR("(fir) mean: " << fir.stats.mean() 
-                   << " stDev: " << fir.stats.stDev());
-      LOG_INFO_STR("(fft) mean: " << fft.stats.mean() 
-                   << " stDev: " << fft.stats.stDev());
-      LOG_INFO_STR("(delayBp) mean: " << delayBp.stats.mean() 
-                   << " stDev: " << delayBp.stats.stDev());
-      LOG_INFO_STR("(correlator) mean: " << correlator.stats.mean() 
-                   << " stDev: " << correlator.stats.stDev());
-      LOG_INFO_STR("(samples) mean: " << samples.stats.mean() 
-                   << " stDev: " << samples.stats.stDev());
-      LOG_INFO_STR("(visibilities) mean: " << visibilities.stats.mean() 
-                   << " stDev: " << visibilities.stats.stDev());
+      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(fir)" << fir.stats<< endl <<
+        std::setw(20) << "(fft)" << fft.stats << endl <<
+        std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
+        std::setw(20) << "(correlator)" << correlator.stats << endl <<
+        std::setw(20) << "(samples)" << samples.stats << endl <<
+        std::setw(20) << "(visibilities)" << visibilities.stats << endl);
     }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(

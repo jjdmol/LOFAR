@@ -23,6 +23,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iomanip>
 
 #include "BeamFormerPipeline.h"
 
@@ -31,6 +32,8 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/global_defines.h>
+
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
@@ -56,6 +59,77 @@ namespace LOFAR
         workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
       }
     }
+
+    BeamFormerPipeline::~BeamFormerPipeline()
+    {
+      try
+      { 
+        // TODO: I'm not really happy with this construction: Pipeline needs to know
+        // to much about the subbandProc, codesmell.
+        if(gpuProfiling)
+        {
+        // gpu kernel counters
+        RunningStatistics intToFloat;
+        RunningStatistics firstFFT;
+        RunningStatistics delayBp;
+        RunningStatistics secondFFT;
+        RunningStatistics correctBandpass;
+        RunningStatistics beamformer;
+        RunningStatistics transpose;
+        RunningStatistics inverseFFT;
+        RunningStatistics firFilterKernel;
+        RunningStatistics finalFFT;
+
+        // gpu transfer counters
+        RunningStatistics samples;
+        RunningStatistics visibilities;
+          for (size_t idx_queue = 0; idx_queue < workQueues.size(); ++idx_queue)
+          {
+            //We know we are in the correlator pipeline, this queue can only contain correlatorSubbandprocs
+            BeamFormerSubbandProc *proc = dynamic_cast<BeamFormerSubbandProc *>(workQueues[idx_queue].get());
+
+            // Print the individual counters
+            proc->counters.printStats();
+            
+            // Calculate aggregate statistics for the whole pipeline
+            intToFloat += proc->counters.intToFloat.stats;
+            firstFFT += proc->counters.firstFFT.stats;
+            delayBp += proc->counters.delayBp.stats;
+            secondFFT += proc->counters.secondFFT.stats;
+            correctBandpass += proc->counters.correctBandpass.stats;
+            beamformer += proc->counters.beamformer.stats;
+            transpose += proc->counters.transpose.stats;
+            inverseFFT += proc->counters.inverseFFT.stats;
+            firFilterKernel += proc->counters.firFilterKernel.stats;
+            finalFFT += proc->counters.finalFFT.stats;
+            
+            samples += proc->counters.samples.stats;
+            visibilities += proc->counters.visibilities.stats;
+          }
+
+          // Now print the aggregate statistics.
+          LOG_INFO_STR( "**** GPU runtimes for the complete BeamFormer pipeline n=" << workQueues.size() 
+                       << " ****" << endl <<
+                       std::setw(20) << "(intToFloat)" << intToFloat << endl <<
+                       std::setw(20) << "(firstFFT)" << firstFFT << endl <<
+                       std::setw(20) << "(delayBp)" << delayBp << endl <<
+                       std::setw(20) << "(secondFFT)" << secondFFT << endl <<
+                       std::setw(20) << "(correctBandpass)" << correctBandpass << endl <<
+                       std::setw(20) << "(beamformer)" << beamformer << endl <<
+                       std::setw(20) << "(transpose)" << transpose << endl <<
+                       std::setw(20) << "(inverseFFT)" << inverseFFT << endl <<
+                       std::setw(20) << "(firFilterKernel)" << firFilterKernel << endl <<
+                       std::setw(20) << "(finalFFT)" << finalFFT << endl <<
+                       std::setw(20) << "(samples)" << samples << endl <<
+                       std::setw(20) << "(visibilities)" << visibilities << endl);
+        }
+      }
+      catch(...) // Log all errors at this stage. DO NOT THROW IN DESTRUCTOR
+      {
+        LOG_ERROR_STR("Received an Exception desctructing BeamFormerPipline, while print performance");
+      }
+    }
+
   }
 }
 

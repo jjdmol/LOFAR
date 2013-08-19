@@ -35,6 +35,8 @@ namespace LOFAR
     {
     public:
       BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
+
+      ~BeamFormerPipeline();
     };
   }
 }

@@ -25,6 +25,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 
@@ -96,21 +97,14 @@ namespace LOFAR
           }
 
           // Now print the aggregate statistics.
-          cout << "**** GPU runtimes for the complete Correlator pipeline n=" << workQueues.size() 
-                        << " ****" << endl;
-          LOG_INFO_STR("(fir) mean: " << fir.mean() 
-                        << " stDev: " << fir.stDev());
-          LOG_INFO_STR("(fft) mean: " << fft.mean() 
-                        << " stDev: " << fft.stDev());
-          LOG_INFO_STR("(delayBp) mean: " << delayBp.mean() 
-                        << " stDev: " << delayBp.stDev());
-          LOG_INFO_STR("(correlator) mean: " << correlator.mean() 
-                        << " stDev: " << correlator.stDev());
-          LOG_INFO_STR("(samples) mean: " << samples.mean() 
-                        << " stDev: " << samples.stDev());
-          LOG_INFO_STR("(visibilities) mean: " << visibilities.mean() 
-                        << " stDev: " << visibilities.stDev());
-
+          LOG_INFO_STR("**** GPU runtimes for the complete Correlator pipeline n=" << workQueues.size()
+                        << " ****" << endl <<
+                        std::setw(20) << "(fir)" << fir << endl <<
+                        std::setw(20) << "(fft)" << fft << endl <<
+                        std::setw(20) << "(delayBp)" << delayBp << endl <<
+                        std::setw(20) << "(correlator)" << correlator << endl <<
+                        std::setw(20) << "(samples)" << samples << endl <<
+                        std::setw(20) << "(visibilities)" << visibilities << endl);
         }
       }
       catch(...) // Log all errors at this stage. DO NOT THROW IN DESTRUCTOR

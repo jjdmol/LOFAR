@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#include <iomanip>
 #include "BeamFormerSubbandProc.h"
 
 #include <Common/LofarLogger.h>
@@ -109,24 +110,6 @@ namespace LOFAR
                 context));
       }
 
-
-      
-      //// Set of GPU counters
-      //addCounter("compute - intToFloat", context);
-      //addCounter("compute - firstFFT", context);
-      //addCounter("compute - delay/bp", context);
-      //addCounter("compute - secondFFT", context);
-      //addCounter("compute - correctBandpass", context);
-      //addCounter("compute - beamformer", context);
-      //addCounter("compute - transpose", context);
-      //addCounter("compute - inverseFFT", context);
-      //addCounter("compute - firFilterKernel", context);
-      //addCounter("compute - finalFFT", context);
-
-      //addCounter("input - samples", context);
-      //addCounter("output - visibilities", context);
-
-
       //// CPU timers are set by CorrelatorPipeline
       //addTimer("CPU - read input");
       //addTimer("CPU - process");
@@ -156,6 +139,26 @@ namespace LOFAR
     samples(context),
     visibilities(context)
     {
+    }
+
+    void BeamFormerSubbandProc::Counters::printStats()
+    {     
+
+      // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****" <<
+        std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
+        std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
+        std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
+        std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
+        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<
+        std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
+        std::setw(20) << "(transpose)" << transpose.stats << endl <<
+        std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
+        std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
+        std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
+        std::setw(20) << "(samples)" << samples.stats << endl <<
+        std::setw(20) << "(visibilities)" << visibilities.stats << endl);
+
     }
 
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)

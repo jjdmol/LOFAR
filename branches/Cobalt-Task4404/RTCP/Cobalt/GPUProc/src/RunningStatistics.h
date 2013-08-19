@@ -23,6 +23,7 @@
 #define LOFAR_GPUPROC_RUNNINGSTATISTICS_H
 
 #include <cstddef>
+#include <iosfwd>
 
 namespace LOFAR
 {
@@ -56,6 +57,12 @@ namespace LOFAR
       // The standard deviation
       double stDev() const;
 
+      // Minimum value received samples
+      double min() const;
+
+      // Maximum value received samples
+      double max() const;
+
            
       friend RunningStatistics operator+(const RunningStatistics a,
         const RunningStatistics b);
@@ -63,14 +70,19 @@ namespace LOFAR
       // Plus is operator for adding two runningstatistics objects
       RunningStatistics& operator+=(const RunningStatistics& rhs);
 
+      void print(std::ostream& os) const;
+
     private:
       size_t counter;
       double _mean;
       double var_base;
+      double _min;
+      double _max;
     };
 
     RunningStatistics operator+(const RunningStatistics a, const RunningStatistics b);    
 
+    std::ostream& operator<<(std::ostream& os, RunningStatistics const & rs);
   }
 }
 #endif

@@ -109,6 +109,9 @@ namespace LOFAR
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
+
+        // Print the mean and std of each performance counter on the logger
+        void printStats();
       };
 
       Counters counters;

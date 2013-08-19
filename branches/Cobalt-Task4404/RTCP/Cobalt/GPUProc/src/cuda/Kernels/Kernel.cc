@@ -26,7 +26,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
-
+#include <GPUProc/PerformanceCounter.h>
 using namespace std;
 
 namespace LOFAR
