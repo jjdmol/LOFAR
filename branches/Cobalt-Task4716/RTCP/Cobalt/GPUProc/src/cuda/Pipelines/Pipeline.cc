@@ -53,7 +53,7 @@ namespace LOFAR
       devices(devices),
       subbandIndices(subbandIndices),
       performance(devices.size()),
-      subbandPool(subbandIndices.size())
+      writePool(subbandIndices.size())
     {
     }
 
@@ -126,14 +126,11 @@ namespace LOFAR
           SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
           SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
 
-          const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
-
-          // Translate the metadata as provided by receiver
+          // Copy the meta data to the SubbandProcInputData struct
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
-            // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->applyMetaData(ps, stat, SAP, metaData);
+            data->metaData[stat] = metaData;
 
             nrFlaggedSamples += metaData.flags.count();
           }
@@ -141,9 +138,9 @@ namespace LOFAR
           queue.inputPool.filled.append(data);
         }
 
-        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / blockSize) << "%");
+        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / ps.nrStations() / blockSize) << "%");
 
-        LOG_DEBUG_STR("[block " << block << "] Forwarded input to processing");
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
       }
 
       // Signal end of input
@@ -175,10 +172,10 @@ namespace LOFAR
 
     void Pipeline::processObservation(OutputType outputType)
     {
-      for (size_t i = 0; i < subbandPool.size(); i++) {
+      for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        subbandPool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
       }
 
       double startTime = ps.startTime();
@@ -191,7 +188,7 @@ namespace LOFAR
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections
+#     pragma omp parallel sections num_threads(5)
       {
         /*
          * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
@@ -199,6 +196,24 @@ namespace LOFAR
 #       pragma omp section
         {
           receiveInput(nrBlocks);
+        }
+
+        /*
+         * WORKQUEUE INPUTPOOL -> PROCESSPOOL
+         *
+         * Perform pre-processing, one thread per workQueue.
+         */
+#       pragma omp section
+        {
+#         pragma omp parallel for num_threads(workQueues.size())
+          for (size_t i = 0; i < workQueues.size(); ++i) {
+            SubbandProc &queue = *workQueues[i];
+
+            // run the queue
+            preprocessSubbands(queue);
+
+            queue.processPool.filled.append(NULL);
+          }
         }
 
 
@@ -228,7 +243,7 @@ namespace LOFAR
         }
 
         /*
-         * WORKQUEUE OUTPUTPOOL -> SUBBANDPOOL
+         * WORKQUEUE OUTPUTPOOL -> WRITEPOOL
          *
          * Perform post-processing, one thread per workQueue.
          */
@@ -243,22 +258,22 @@ namespace LOFAR
           }
 
           // Signal end of output
-          for (size_t i = 0; i < subbandPool.size(); ++i) {
-            subbandPool[i].bequeue->noMore();
+          for (size_t i = 0; i < writePool.size(); ++i) {
+            writePool[i].bequeue->noMore();
           }
         }
 
         /*
-         * SUBBANDPOOL -> STORAGE STREAMS (best effort)
+         * WRITEPOOL -> STORAGE STREAMS (best effort)
          */
 #       pragma omp section
         {
-#         pragma omp parallel for num_threads(subbandPool.size())
-          for (size_t i = 0; i < subbandPool.size(); ++i) {
+#         pragma omp parallel for num_threads(writePool.size())
+          for (size_t i = 0; i < writePool.size(); ++i) {
             SmartPtr<Stream> outputStream = connectToOutput(subbandIndices[i], outputType);
 
             // write subband to Storage
-            writeSubband(subbandIndices[i], subbandPool[i], outputStream);
+            writeSubband(subbandIndices[i], writePool[i], outputStream);
           }
         }
       }
@@ -273,12 +288,42 @@ namespace LOFAR
     }
 
 
+    void Pipeline::preprocessSubbands(SubbandProc &workQueue)
+    {
+      SmartPtr<SubbandProcInputData> input;
+
+      // Keep fetching input objects until end-of-output
+      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
+        const struct BlockID &id = input->blockID;
+
+        LOG_INFO_STR("[" << id << "] Pre processing start");
+
+        /* PREPROCESS START */
+
+        const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
+
+        // Translate the metadata as provided by receiver
+        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
+        }
+
+        /* PREPROCESS END */
+
+        // Hand off output to processing
+        workQueue.processPool.filled.append(input);
+        ASSERT(!input);
+
+        LOG_DEBUG_STR("[" << id << "] Forwarded input to processing");
+      }
+    }
+
+
     void Pipeline::processSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
 
       // Keep fetching input objects until end-of-input
-      while ((input = workQueue.inputPool.filled.remove()) != NULL) {
+      while ((input = workQueue.processPool.filled.remove()) != NULL) {
         const struct BlockID id = input->blockID;
 
         LOG_INFO_STR("[" << id << "] Processing start");
@@ -326,7 +371,7 @@ namespace LOFAR
         workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
-        struct Output &pool = subbandPool[id.localSubbandIdx];
+        struct Output &pool = writePool[id.localSubbandIdx];
 
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
