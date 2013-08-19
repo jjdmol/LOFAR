@@ -30,8 +30,6 @@
 #include <GPUProc/gpu_wrapper.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
 #include <GPUProc/Kernels/IntToFloatKernel.h>

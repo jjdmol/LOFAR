@@ -44,7 +44,7 @@ using LOFAR::Exception;
 // Performs the runtime compilation and management.
 struct CoherentStokesTester
 {
-  char* function;
+  const char* function;
   // Create a default context
   Device device;
   Context ctx;
