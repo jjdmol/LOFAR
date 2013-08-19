@@ -488,6 +488,13 @@ namespace LOFAR
           return _ptr;
         }
 
+        void set(unsigned char uc, size_t n)
+        {
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuMemsetD8(_ptr, uc, n));
+        }
+
         size_t size() const
         {
           return _size;
@@ -513,6 +520,11 @@ namespace LOFAR
       void *DeviceMemory::get() const
       {
         return (void *)_impl->get();
+      }
+
+      void DeviceMemory::set(unsigned char uc, size_t n)
+      {
+        _impl->set(uc, std::min(n, size()));
       }
 
       size_t DeviceMemory::size() const
