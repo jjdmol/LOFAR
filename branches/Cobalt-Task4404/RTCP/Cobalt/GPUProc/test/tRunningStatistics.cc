@@ -128,6 +128,17 @@ TEST(plusis)
   CHECK(stats2.stDev() == sqrt(1));
 }
 
+TEST(minMax)
+{
+  RunningStatistics stats;
+  stats.push(2.0);
+  stats.push(3.0);
+  stats.push(4.0);
+
+  CHECK(stats.min() == 2.0);
+  CHECK(stats.max() == 4.0);
+}
+
 int main()
 {
   INIT_LOGGER("tRunningStatistics");
