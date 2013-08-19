@@ -27,6 +27,7 @@
 #include <algorithm>  // for std::min
 
 #include <boost/noncopyable.hpp>
+#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
@@ -47,6 +48,8 @@
   } while(0)
 
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
+
+using boost::format;
 
 namespace LOFAR
 {
@@ -244,6 +247,12 @@ namespace LOFAR
           devices.push_back(Device(i));
         }
 
+        // sort to get a predictable order,
+        // because CUDA derives its own sorting
+        // based on expected performance, which
+        // might differ per NUMA binding.
+        sort(devices.begin(), devices.end());
+
         return devices;
       }
 
@@ -256,6 +265,11 @@ namespace LOFAR
       Device::Device(int ordinal)
       {
         checkCuCall(cuDeviceGet(&_device, ordinal));
+      }
+
+      bool Device::operator<(const Device &other) const
+      {
+        return pciId() < other.pciId();
       }
 
       std::string Device::getName() const
@@ -312,6 +326,14 @@ namespace LOFAR
       size_t Device::getTotalConstMem() const
       {
         return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
+      }
+
+      std::string Device::pciId() const
+      {
+        int bus    = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_BUS_ID);
+        int device = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID);
+
+        return str(format("%04x:%04x") % bus % device);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const

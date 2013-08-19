@@ -117,6 +117,9 @@ namespace LOFAR
         //        valid range: [0, Platform.size()-1]
         Device(int ordinal = 0);
 
+        // Order Devices by PCI ID (used in std::sort)
+        bool operator<(const Device &other) const;
+
         // Return the name of the device in human readable form.
         std::string getName() const;
 
@@ -134,6 +137,9 @@ namespace LOFAR
 
         // Return the total amount of constant memory
         size_t getTotalConstMem() const;
+
+        // Return the PCI ID (bus:device) of this GPU
+        std::string pciId() const;
 
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
