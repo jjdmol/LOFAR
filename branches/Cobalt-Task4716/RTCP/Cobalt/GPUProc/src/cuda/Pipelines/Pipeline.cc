@@ -296,7 +296,7 @@ namespace LOFAR
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         const struct BlockID &id = input->blockID;
 
-        LOG_INFO_STR("[" << id << "] Pre processing start");
+        LOG_DEBUG_STR("[" << id << "] Pre processing start");
 
         /* PREPROCESS START */
 
@@ -326,7 +326,7 @@ namespace LOFAR
       while ((input = workQueue.processPool.filled.remove()) != NULL) {
         const struct BlockID id = input->blockID;
 
-        LOG_INFO_STR("[" << id << "] Processing start");
+        LOG_DEBUG_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
         SmartPtr<StreamableData> output = workQueue.outputPool.free.remove();
@@ -364,7 +364,7 @@ namespace LOFAR
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         const struct BlockID id = output->blockID;
 
-        LOG_INFO_STR("[" << id << "] Post processing start");
+        LOG_DEBUG_STR("[" << id << "] Post processing start");
 
         workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
@@ -408,7 +408,7 @@ namespace LOFAR
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
-        LOG_INFO_STR("[" << id << "] Writing start");
+        LOG_DEBUG_STR("[" << id << "] Writing start");
 
         // Write block to disk 
         try {
