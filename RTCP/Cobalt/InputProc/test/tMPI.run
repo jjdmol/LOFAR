@@ -1,2 +1,2 @@
 #!/bin/sh
-mpirun -host localhost -np 1 tMPI
+mpirun.sh -host localhost -np 1 tMPI
