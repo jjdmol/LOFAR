@@ -74,6 +74,9 @@ TEST(FIR_FilterKernel)
 
   stream.writeBuffer(dInput, hInput);
 
+  // initialize history data
+  dHistory.set(0);
+
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   kernel->enqueue();

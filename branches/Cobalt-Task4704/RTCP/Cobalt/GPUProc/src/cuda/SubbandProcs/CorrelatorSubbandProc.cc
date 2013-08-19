@@ -91,6 +91,9 @@ namespace LOFAR
                         devFilteredData),
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
+      // initialize history data to zero
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(

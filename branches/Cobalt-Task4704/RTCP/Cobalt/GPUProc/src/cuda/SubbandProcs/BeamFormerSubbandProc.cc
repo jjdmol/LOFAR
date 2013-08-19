@@ -100,6 +100,9 @@ namespace LOFAR
       // result buffer
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB)
     {
+      // initialize history data
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new BeamFormedData(
