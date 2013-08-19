@@ -32,12 +32,14 @@
 #include <string>
 #include <omp.h>
 #include <sys/resource.h>
+#include <sys/mman.h>
 
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -72,83 +74,6 @@ void usage(char **argv)
 int main(int argc, char **argv)
 {
   /*
-   * Initialise the system environment
-   */
-
-  // Make sure all time is dealt with and reported in UTC
-  if (setenv("TZ", "UTC", 1) < 0) {
-    int _errno = errno;
-
-    LOG_ERROR_STR("Could not set time zone: " << strerror(_errno));
-  }
-
-  // Restrict access to (tmp build) files we create to owner
-  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-
-  // Remove limits on pinned (locked) memory
-  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
-
-  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
-    int _errno = errno;
-
-    LOG_WARN_STR("Could not raise MEMLOCK limit: " << strerror(_errno));
-  }
-
-  // Allow usage of nested omp calls
-  omp_set_nested(true);
-
-  // Allow OpenMP thread registration
-  OMPThread::init();
-
-  // Set parts of the environment
-  if (setenv("DISPLAY", ":0", 1) < 0)
-  {
-    perror("error setting DISPLAY");
-    exit(1);
-  }
-
-  /*
-   * Initialise MPI
-   */
-
-  // Rank in MPI set of hosts, or 0 if no MPI is used
-  int rank = 0;
-
-  // Number of MPI hosts, or 1 if no MPI is used
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  // Initialise and query MPI
-  int provided_mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
-  }
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
-
-  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
-  {
-    perror("error setting MPIRANK");
-    exit(1);
-  }
-
-#ifdef HAVE_LOG4CPLUS
-  INIT_LOGGER("rtcp");
-#else
-  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
-#endif
-
-#ifdef HAVE_MPI
-  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
-
-#else
-  LOG_WARN_STR("Running without MPI!");
-#endif
-
-  /*
    * Parse command-line options
    */
 
@@ -172,8 +97,101 @@ int main(int argc, char **argv)
   }
 
   /*
+   * Extract rank/size from environment, because we need
+   * to fork during initialisation, which we want to do
+   * BEFORE calling MPI_Init_thread. Once MPI is initialised,
+   * forking can lead to crashes.
+   */
+
+  // Rank in MPI set of hosts, or 0 if no MPI is used
+  int rank = 0;
+
+  // Number of MPI hosts, or 1 if no MPI is used
+  int nrHosts = 1;
+
+#ifdef HAVE_MPI
+  const char *rankstr, *sizestr;
+
+  // OpenMPI rank
+  if ((rankstr = getenv("OMPI_COMM_WORLD_RANK")) != NULL)
+    rank = boost::lexical_cast<int>(rankstr);
+
+  // MVAPICH2 rank
+  if ((rankstr = getenv("MV2_COMM_WORLD_RANK")) != NULL)
+    rank = boost::lexical_cast<int>(rankstr);
+
+  // OpenMPI size
+  if ((sizestr = getenv("OMPI_COMM_WORLD_SIZE")) != NULL)
+    nrHosts = boost::lexical_cast<int>(sizestr);
+
+  // MVAPICH2 size
+  if ((sizestr = getenv("MV2_COMM_WORLD_SIZE")) != NULL)
+    nrHosts = boost::lexical_cast<int>(sizestr);
+#endif
+
+  /*
+   * Initialise logger.
+   */
+
+#ifdef HAVE_LOG4CPLUS
+  // Set ${MPIRANK}, which is used by our log_prop file.
+  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
+  {
+    perror("error setting MPIRANK");
+    exit(1);
+  }
+
+  INIT_LOGGER("rtcp");
+#else
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
+#endif
+
+  LOG_INFO_STR("===== INIT =====");
+
+#ifdef HAVE_MPI
+  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+#else
+  LOG_WARN_STR("Running without MPI!");
+#endif
+
+  /*
+   * Initialise the system environment
+   */
+
+  // Make sure all time is dealt with and reported in UTC
+  if (setenv("TZ", "UTC", 1) < 0)
+    THROW_SYSCALL("setenv(TZ)");
+
+  // Tie to local X server (TODO: does CUDA really need this?)
+  if (setenv("DISPLAY", ":0", 1) < 0)
+    THROW_SYSCALL("setenv(DISPLAY)");
+
+  // Restrict access to (tmp build) files we create to owner
+  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+
+  // Remove limits on pinned (locked) memory
+  struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
+
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
+    THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+
+  /*
+   * Initialise OpenMP
+   */
+
+  LOG_INFO_STR("----- Initialising OpenMP");
+
+  // Allow usage of nested omp calls
+  omp_set_nested(true);
+
+  // Allow OpenMP thread registration
+  OMPThread::init();
+
+  /*
    * INIT stage
    */
+
+  LOG_INFO_STR("----- Reading Parset");
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
@@ -182,8 +200,15 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
+  LOG_INFO_STR("----- Initialising GPUs");
+
   gpu::Platform platform;
   vector<gpu::Device> allDevices(platform.devices());
+
+  LOG_INFO_STR("----- Initialising NUMA bindings");
+
+  // TODO: How to migrate the memory that's currently in use
+  // (and mlocked!) to the selected CPU?
 
   // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
@@ -196,20 +221,29 @@ int main(int argc, char **argv)
 
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
+    LOG_DEBUG_STR("Binding to GPUs " << gpuIds);
     for (size_t i = 0; i < gpuIds.size(); ++i)
       devices.push_back(allDevices[i]);
   } else {
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using all GPUs");
+    LOG_WARN_STR("Rank " << rank << " not present in node list -- using all cores and GPUs");
     devices = allDevices;
   }
 
-  // From here threads are produced
+  // Bindings are done -- Lock everything in memory
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
+    THROW_SYSCALL("mlockall");
+
+  LOG_DEBUG_STR("All memory is now pinned.");
+
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
   if (rank == 0) {
+    LOG_INFO_STR("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
+
+  LOG_INFO_STR("----- Initialising Pipeline");
 
   // Distribute the subbands over the MPI ranks
   SubbandDistribution subbandDistribution; // rank -> [subbands]
@@ -219,11 +253,6 @@ int main(int argc, char **argv)
 
     subbandDistribution[receiverRank].push_back(subband);
   }
-
-#ifndef HAVE_MPI
-  // Create the DirectInput instance
-  DirectInput::instance(&ps);
-#endif
 
   bool correlatorEnabled = ps.settings.correlator.enabled;
   bool beamFormerEnabled = ps.settings.beamFormer.enabled;
@@ -249,18 +278,40 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  /*
-   * Sync before execution
-   */
 
 #ifdef HAVE_MPI
-  // Make sure all processes are done with forking
-  MPI_Barrier(MPI_COMM_WORLD);
+  /*
+   * Initialise MPI (we are done forking)
+   */
+
+  // Initialise and query MPI
+  int provided_mpi_thread_support;
+
+  LOG_INFO_STR("----- Initialising MPI");
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init_thread failed" << endl;
+    exit(1);
+  }
+
+  // Verify the rank/size settings we assumed earlier
+  int real_rank;
+  int real_size;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &real_size);
+
+  ASSERT(rank    == real_rank);
+  ASSERT(nrHosts == real_size);
+#else
+  // Create the DirectInput instance
+  DirectInput::instance(&ps);
 #endif
 
   /*
    * RUN stage
    */
+
+  LOG_INFO_STR("===== LAUNCH =====");
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
@@ -287,10 +338,12 @@ int main(int argc, char **argv)
   /*
    * COMPLETING stage
    */
+  LOG_INFO_STR("===== FINALISE =====");
+
   if (storageProcesses) {
     time_t completing_start = time(0);
 
-    LOG_INFO("Retrieving and forwarding final meta data");
+    LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
     // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
@@ -326,7 +379,7 @@ int main(int argc, char **argv)
     }
   }
   pipeline=0;
-  LOG_INFO_STR("Done");
+  LOG_INFO_STR("===== SUCCESS =====");
 
 #ifdef HAVE_MPI
   MPI_Finalize();
