@@ -98,6 +98,11 @@ void test_protocol()
 
     // Give 10 seconds to wrap up
     sp.stop(time(0) + 10);
+
+    // Obtain LTA feedback
+    ParameterSet feedbackLTA(sp.feedbackLTA());
+
+    ASSERT(feedbackLTA.getString("foo","") == "bar");
   }
 }
 
@@ -108,10 +113,10 @@ int main()
   // prevent stalls
   alarm(60);
 
+  SSH_Init();
+
   if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
-
-  SSH_Init();
 
   test_simple();
   test_protocol();

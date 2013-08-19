@@ -32,7 +32,7 @@
 #include <CoInterface/Stream.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/Kernel.h>
-#include <GPUProc/WorkQueues/WorkQueue.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
 
 #ifdef HAVE_MPI
@@ -47,11 +47,10 @@ namespace LOFAR
   {
 
 
-    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
+    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
       ps(ps),
-      platform(),
-      devices(platform.devices()),
+      devices(devices),
       subbandIndices(subbandIndices),
       performance(devices.size()),
       subbandPool(subbandIndices.size())
@@ -59,32 +58,10 @@ namespace LOFAR
     }
 
 
-    std::string Pipeline::createPTX(const string &srcFilename)
-    {
-      CompileFlags flags(defaultCompileFlags());
-      CompileDefinitions definitions(Kernel::compileDefinitions(ps));
-      return LOFAR::Cobalt::createPTX(srcFilename, definitions, flags, devices);
-    }
-
-
-    // Record type needed by receiveInput. Before c++0x, a local type
-    // can't be a template argument, so we'll have to define this type
-    // globally.
-    struct inputData_t {
-      // An InputData object suited for storing one subband from all
-      // stations.
-      SmartPtr<WorkQueueInputData> data;
-
-      // The WorkQueue associated with the data
-      WorkQueue *queue;
-    };
-
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
-      // Need WorkQueues to send work to
+      // Need SubbandProcs to send work to
       ASSERT(workQueues.size() > 0);
-
-      size_t workQueueIterator = 0;
 
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
@@ -111,16 +88,15 @@ namespace LOFAR
         LOG_INFO_STR("[block " << block << "] Reading input samples");
 
         // The set of InputData objects we're using for this block.
-        vector<struct inputData_t> inputDatas(subbandIndices.size());
+        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
 
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          // Fetch an input object to store this inputIdx. For now, blindly
-          // round-robin over the work queues.
-          WorkQueue &queue = *workQueues[workQueueIterator++ % workQueues.size()];
+          // Fetch an input object to store this inputIdx.
+          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
 
           // Fetch an input object to fill from the selected queue.
           // NOTE: We'll put it in a SmartPtr right away!
-          SmartPtr<WorkQueueInputData> data = queue.inputPool.free.remove();
+          SmartPtr<SubbandProcInputData> data = queue.inputPool.free.remove();
 
           // Annotate the block
           struct BlockID id;
@@ -135,8 +111,7 @@ namespace LOFAR
           }
 
           // Record the block (transfers ownership)
-          inputDatas[inputIdx].data = data;
-          inputDatas[inputIdx].queue = &queue;
+          inputDatas[inputIdx] = data;
         }
 
         // Receive all subbands from all stations
@@ -146,8 +121,8 @@ namespace LOFAR
 
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          WorkQueue &queue = *inputDatas[inputIdx].queue;
-          SmartPtr<WorkQueueInputData> data = inputDatas[inputIdx].data;
+          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
+          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
 
           const unsigned SAP = ps.settings.subbands[data->blockID.globalSubbandIdx].SAP;
 
@@ -156,7 +131,7 @@ namespace LOFAR
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
-            data->applyMetaData(stat, SAP, metaData);
+            data->applyMetaData(ps, stat, SAP, metaData);
 
             nrFlaggedSamples += metaData.flags.count();
           }
@@ -238,7 +213,7 @@ namespace LOFAR
             unsigned gpuNr = i % devices.size();
             set_affinity(gpuNr);
 #endif
-            WorkQueue &queue = *workQueues[i];
+            SubbandProc &queue = *workQueues[i];
 
             // run the queue
             queue.timers["CPU - total"]->start();
@@ -259,7 +234,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(workQueues.size())
           for (size_t i = 0; i < workQueues.size(); ++i) {
-            WorkQueue &queue = *workQueues[i];
+            SubbandProc &queue = *workQueues[i];
 
             // run the queue
             postprocessSubbands(queue);
@@ -296,9 +271,9 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processSubbands(WorkQueue &workQueue)
+    void Pipeline::processSubbands(SubbandProc &workQueue)
     {
-      SmartPtr<WorkQueueInputData> input;
+      SmartPtr<SubbandProcInputData> input;
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
@@ -330,32 +305,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::WorkQueueOwnerMap::push(const struct BlockID &id, WorkQueue &workQueue)
-    {
-      ScopedLock sl(mutex);
-
-      ASSERT(ownerMap.find(id) == ownerMap.end());
-      ownerMap[id] = &workQueue;
-    }
-
-
-    WorkQueue& Pipeline::WorkQueueOwnerMap::pop(const struct BlockID &id)
-    {
-      WorkQueue *workQueue;
-
-      ScopedLock sl(mutex);
-
-      ASSERT(ownerMap.find(id) != ownerMap.end());
-      workQueue = ownerMap[id];
-      ASSERT(workQueue != NULL);
-
-      ownerMap.erase(id);
-
-      return *workQueue;
-    }
-
-
-    void Pipeline::postprocessSubbands(WorkQueue &workQueue)
+    void Pipeline::postprocessSubbands(SubbandProc &workQueue)
     {
       SmartPtr<StreamableData> output;
 
@@ -376,11 +326,6 @@ namespace LOFAR
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = subbandPool[id.localSubbandIdx];
 
-        pool.sync.waitFor(id.block);
-
-        // Register ownership
-        workQueueOwnerMap.push(id, workQueue);
-
         // We do the ordering, so we set the sequence numbers
         output->setSequenceNumber(id.block);
 
@@ -393,9 +338,6 @@ namespace LOFAR
         } else {
           nrBlocksForwarded++;
         }
-
-        // Allow next block to be written
-        pool.sync.advanceTo(id.block + 1);
 
         ASSERT(!output);
 
@@ -419,9 +361,6 @@ namespace LOFAR
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
-        // Cache workQueue reference, because `output' will be destroyed.
-        WorkQueue &workQueue = workQueueOwnerMap.pop(id);
-
         LOG_INFO_STR("[" << id << "] Writing start");
 
         // Write block to disk 
@@ -433,7 +372,7 @@ namespace LOFAR
           outputStream = new NullStream;
         }
 
-        // Hand the object back to the workQueue it originally came from
+        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
         workQueue.outputPool.free.append(outputData);
 
         ASSERT(!outputData);
@@ -473,7 +412,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::Performance::addQueue(WorkQueue &queue)
+    void Pipeline::Performance::addQueue(SubbandProc &queue)
     {
       ScopedLock sl(totalsMutex);
 
@@ -501,7 +440,7 @@ namespace LOFAR
       }
     }
     
-    void Pipeline::Performance::log(size_t nrWorkQueues)
+    void Pipeline::Performance::log(size_t nrSubbandProcs)
     {
       // Group figures based on their prefix before " - ", so "compute - FIR"
       // belongs to group "compute".
@@ -539,9 +478,9 @@ namespace LOFAR
       double wall_seconds = total_timers["CPU - total"]->getAverage();
       double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
       double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrWorkQueues;
-      double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrWorkQueues;
-      double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrWorkQueues;
+      double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrSubbandProcs;
+      double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrSubbandProcs;
+      double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrSubbandProcs;
 
       LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
       LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);

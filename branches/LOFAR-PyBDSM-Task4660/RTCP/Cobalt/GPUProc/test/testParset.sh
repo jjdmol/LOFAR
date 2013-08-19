@@ -95,6 +95,7 @@ function parse_logs
 
   # enable debugging
   echo "Global 20" >> rtcp.debug &&
+  cp $srcdir/../src/rtcp.log_prop . && # Get correct log4cplus output format
 
   # be able to find the GPU kernels
   export LOFARROOT=$srcdir/.. &&
@@ -112,7 +113,7 @@ function parse_logs
 
     for f in *.MS
     do
-      ${srcdir}/cmpfloat.py `pwd`/$f $REFDIR/$f || exit 1
+      $RUNDIR/cmpfloat `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 

@@ -79,7 +79,7 @@ namespace LOFAR {
 
           // sleep (with lock released)
           if (!flag) {
-            const struct timespec req = { 0, 10000000 }; // 10 ms
+            const struct timespec req = { 0, 100000 }; // 0.1 ms
             nanosleep(&req, NULL);
           }
         } while(!flag);
@@ -118,7 +118,7 @@ namespace LOFAR {
 
             // sleep (with lock released)
             if (!flag) {
-              const struct timespec req = { 0, 10000000 }; // 10 ms
+              const struct timespec req = { 0, 100000 }; // 0.1 ms
               nanosleep(&req, NULL);
             }
           } while(!flag);

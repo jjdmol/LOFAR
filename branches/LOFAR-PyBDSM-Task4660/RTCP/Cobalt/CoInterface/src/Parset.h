@@ -39,14 +39,13 @@
 #include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/MultiDimArray.h>
 
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-    class Transpose2;
 
     enum StokesType { STOKES_I = 0, STOKES_IQUV, STOKES_XXYY, INVALID_STOKES = -1 };
 
@@ -88,7 +87,15 @@ namespace LOFAR
       double subbandWidth() const;
 
       // The number of samples in one block of one subband.
+      //
+      // key: Cobalt.blockSize
+      size_t blockSize;
+
+      // Alias for blockSize
       size_t nrSamplesPerSubband() const;
+
+      // The number of seconds represented by each block.
+      double blockDuration() const;
 
       // The number of bits in each input sample (16, 8, or 4)
       //
@@ -168,6 +175,25 @@ namespace LOFAR
         // key: PIC.Core.CS001LBA.phaseCenter
         std::vector<double> phaseCenter;
 
+        // The phase correction for this station, in radians.
+        //
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.Y
+        struct {
+          double x;
+          double y;
+        } phaseCorrection;
+
+        // The delay correction for this station, in seconds
+        //
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.Y
+        struct {
+          double x;
+          double y;
+        } delayCorrection;
+
+
         // The RSP board to which each subband is mapped
         //
         // key: Observation.Dataslots.CS001LBA.RSPBoardList
@@ -185,6 +211,34 @@ namespace LOFAR
       //
       // length: len(OLAP.storageStationNames)
       std::vector<struct Station> stations;
+
+      ssize_t stationIndex(const std::string &name) const;
+
+      /*
+       * Resources information:
+       *   - what hardware we use (cpus/gpus)
+       *   - which nodes receive which stations
+       */ 
+
+      struct Node {
+        // MPI rank of this node, is the
+        // same as the index in the `nodes' vector.
+        int rank;
+
+        // Host name
+        std::string hostName;
+
+        // CPU number to bind to
+        size_t cpu;
+
+        // CUDA GPU numbers to bind to
+        std::vector<unsigned> gpus;
+
+        // Station indices to forward data for
+        std::vector<size_t> stations;
+      };
+
+      std::vector<struct Node> nodes;
 
       /*
        * Pointing information
@@ -265,6 +319,8 @@ namespace LOFAR
       //
       // length: len(Observation.subbandList)
       std::vector<struct Subband> subbands;
+
+      size_t nrSubbands(size_t SAP) const;
 
       struct FileLocation {
         string host;
@@ -353,6 +409,21 @@ namespace LOFAR
         // key: Observation.DataProducts.Output_Beamformed.enabled
         bool enabled;
 
+        struct File {
+          size_t streamNr;
+
+          size_t sapNr;
+          size_t tabNr;
+          size_t stokesNr;
+          bool coherent;
+
+          struct FileLocation location;
+        };
+
+        // The list of files to write, one file
+        // per part/stokes.
+        std::vector<struct File> files;
+
         struct TAB {
           // The direction in wich the TAB points, relative
           // to the SAP's coordinates
@@ -371,11 +442,9 @@ namespace LOFAR
           // key: Observation.Beam[sap].TiedArrayBeam[tab].dispersionMeasure
           double dispersionMeasure;
 
-          // The list of station indices to use for beam forming.
-          //
-          // key: Observation.Beam[sap].TiedArrayBeam[tab].stationList
-          // (note: the key contains station names, not indices)
-          std::vector<size_t> stations;
+          // The list of files to write, one file
+          // per part/stokes.
+          std::vector<struct File> files; 
         };
 
         struct SAP {
@@ -390,7 +459,13 @@ namespace LOFAR
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
 
+        size_t maxNrTABsPerSAP() const;
+
         struct StokesSettings {
+          // Reflection: whether this struct captures
+          // coherent or incoherent stokes settings.
+          bool coherent;
+
           // The type of stokes to output
           //
           // key: *.which
@@ -411,6 +486,9 @@ namespace LOFAR
           //
           // key: *.timeIntegrationFactor
           size_t timeIntegrationFactor;
+
+          // return the number of samples per channel
+          size_t nrSamples(size_t inputBlockSize) const;
 
           // The number of subbands to store in each file.
           // The last file can have fewer subbands.
@@ -441,9 +519,20 @@ namespace LOFAR
       // Returns the Nyquist zone number based on bandFilter.
       unsigned nyquistZone() const;
 
-      // Constructs the station names "CS001HBA0" etc from a set of stations
+      struct AntennaFieldName {
+        std::string station;
+        std::string antennaField;
+
+        AntennaFieldName(const std::string &station, const std::string &antennaField): station(station), antennaField(antennaField) {}
+
+        std::string fullName() const {
+          return station + antennaField;
+        }
+      };
+
+      // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
       // ("CS001","CS002") and the antenna set.
-      static std::vector<std::string> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+      static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
     };
 
 
@@ -490,7 +579,7 @@ namespace LOFAR
       double                      sampleDuration() const;
       unsigned                    nrBitsPerSample() const;
       size_t                      nrBytesPerComplexSample() const;
-      std::vector<double>         positions() const;
+      MultiDimArray<double,2>     positions() const;
       std::string                 positionType() const;
       unsigned                    dedispersionFFTsize() const;
       unsigned                    CNintegrationSteps() const;
@@ -564,7 +653,7 @@ namespace LOFAR
 
       size_t                      nrSubbands() const;
 
-      double channel0Frequency( size_t subband ) const;
+      double channel0Frequency( size_t subband, size_t nrChannels ) const;
 
       bool                        realTime() const;
 
@@ -581,14 +670,10 @@ namespace LOFAR
 
       std::string                 PVSS_TempObsName() const;
 
-      const Transpose2            &transposeLogic() const;
-
     private:
       const std::string itsName;
 
       mutable std::string itsWriteCache;
-
-      mutable SmartPtr<const Transpose2>     itsTransposeLogic;
 
       void                        checkVectorLength(const std::string &key, unsigned expectedSize) const;
       void                        checkInputConsistency() const;
@@ -601,58 +686,14 @@ namespace LOFAR
       std::vector<double>         centroidPos(const string &stations) const;
 
       struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
+
+      // If a parset key is renamed, this function allows the old
+      // name to be used as a fall-back.
+      //
+      // Returns the name of the key in the parset, or `newname' if
+      // neither key is defined.
+      std::string renamedKey(const std::string &newname, const std::string &oldname) const;
     };
-
-    //
-    // All of the logic for the second transpose.
-    //
-
-    struct StreamInfo {
-      unsigned stream;
-
-      unsigned sap;
-      unsigned beam;
-
-      bool coherent;
-      unsigned nrChannels; // channels per subband
-      unsigned timeIntFactor; // time integration factor
-      unsigned nrStokes;   // total # stokes for this beam
-      StokesType stokesType;
-      unsigned nrSamples;  // # samples/channel, after temporal integration
-
-      unsigned stokes;
-      unsigned part;
-
-      std::vector<unsigned> subbands;
-
-      void log() const;
-    };
-
-    class Transpose2
-    {
-    public:
-      Transpose2( const Parset &parset );
-
-      unsigned nrStreams() const;
-
-      // compose and decompose a stream number
-      unsigned stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt = 0) const;
-      void decompose( unsigned stream, unsigned &sap, unsigned &beam, unsigned &stokes, unsigned &part ) const;
-
-      std::vector<unsigned> subbands( unsigned stream ) const;
-      unsigned nrSubbands( unsigned stream ) const;
-      unsigned maxNrSubbands() const;
-      unsigned maxNrChannels() const;
-      unsigned maxNrSamples() const;
-
-      size_t subbandSize( unsigned stream ) const;
-
-      const std::vector<struct StreamInfo> streamInfo;
-
-    private:
-      std::vector<struct StreamInfo> generateStreamInfo( const Parset &parset ) const;
-    };
-
   } // namespace Cobalt
 } // namespace LOFAR
 

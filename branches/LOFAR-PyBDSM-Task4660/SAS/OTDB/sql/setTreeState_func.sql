@@ -1,7 +1,7 @@
 --
 --  SetTreeState.sql: function for changing the State of the tree
 --
---  Copyright (C) 2005
+--  Copyright (C) 2005-2013
 --  ASTRON (Netherlands Foundation for Research in Astronomy)
 --  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 --
@@ -23,7 +23,7 @@
 --
 
 --
--- setTreeState (authToken, treeID, treeState)
+-- setTreeState (authToken, treeID, treeState, allow_update)
 --
 -- Checks if the treeState is legal before assigning it.
 --
@@ -33,8 +33,8 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
-  RETURNS BOOLEAN AS '
+CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2, BOOLEAN)
+  RETURNS BOOLEAN AS $$
     --  $Id$
 	DECLARE
 		vFunction				INT2 := 1;
@@ -59,7 +59,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4) 
 		INTO   vIsAuth;
 		IF NOT vIsAuth THEN
-			RAISE EXCEPTION \'Not authorized.\';
+			RAISE EXCEPTION 'Not authorized.';
 			RETURN FALSE;
 		END IF;
 
@@ -69,7 +69,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 		FROM	treeState
 		WHERE	id = $3;
 		IF NOT FOUND THEN
-			RAISE EXCEPTION \'TreeState % does not exist\', $3;
+			RAISE EXCEPTION 'TreeState % does not exist', $3;
 			RETURN FALSE;
 		END IF;
 
@@ -91,7 +91,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
             AND     state    = TSactive
 			AND		treeID  <> $2;
             IF FOUND THEN
-                RAISE EXCEPTION \'Already an active hardware tree of the same classification.\';
+                RAISE EXCEPTION 'Already an active hardware tree of the same classification.';
                 RETURN FALSE;
             END IF;
         END IF;
@@ -103,7 +103,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 
 		SELECT  whoIs($1)
 		INTO 	vUserID;
-		PERFORM addTreeState ($2, vMomID, $3, vUserID, \'\');
+		PERFORM addTreeState ($2, vMomID, $3, vUserID, '');
 
 		-- (temp?) add extra timeinfo on PIC trees.
 		IF vTreeType = TThardware THEN
@@ -129,7 +129,7 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 			SET    starttime = now()
 			WHERE  treeid    = $2;
 		  END IF;
-		  IF $3 = TSfinished OR $3 = TSaborted THEN
+		  IF $4 = TRUE AND ($3 = TSfinished OR $3 = TSaborted) THEN
 		    UPDATE OTDBtree
 			SET	   stoptime = now()
 			WHERE  treeid   = $2;
@@ -139,5 +139,112 @@ CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
 
 		RETURN TRUE;
 	END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION setTreeState(INT4, INT4, INT2)
+  RETURNS BOOLEAN AS '
+        DECLARE
+                vFunction                               INT2 := 1;
+                vTreeState                              OTDBtree.state%TYPE;
+                vTreeID                                 OTDBtree.treeID%TYPE;
+                vMomID                                  OTDBtree.momID%TYPE;
+                vTreeType                               OTDBtree.treeType%TYPE;
+                vClassif                                OTDBtree.classif%TYPE;
+                vIsAuth                                 BOOLEAN;
+                vAuthToken                              ALIAS FOR $1;
+                vUserID                                 INT4;
+                TThardware CONSTANT             INT2 := 10;
+                TTVIC      CONSTANT             INT2 := 30;
+                TSactive   CONSTANT             INT2 := 600;
+                TSfinished CONSTANT             INT2 := 1000;
+                TSaborted  CONSTANT             INT2 := 1100;
+                TSobsolete CONSTANT             INT2 := 1200;
+
+        BEGIN
+                -- check authorisation(authToken, treeID, func, treeState)
+                vIsAuth := FALSE;
+                SELECT isAuthorized(vAuthToken, $2, vFunction, $3::int4)
+                INTO   vIsAuth;
+                IF NOT vIsAuth THEN
+                        RAISE EXCEPTION \'Not authorized.\';
+                        RETURN FALSE;
+                END IF;
+
+                -- check classification
+                SELECT  id
+                INTO    vTreeState
+                FROM    treeState
+                WHERE   id = $3;
+                IF NOT FOUND THEN
+                        RAISE EXCEPTION \'TreeState % does not exist\', $3;
+                        RETURN FALSE;
+                END IF;
+
+                -- get current treetype.
+                -- Note: tree existance is checked during auth.check
+                SELECT  momID, treetype, classif
+                INTO    vMomID, vTreeType, vClassif
+                FROM    OTDBtree
+                WHERE   treeID = $2;
+
+        -- changing PIC tree to operational?
+        -- restriction: only 1 PIC may be active of each classification
+        IF vTreeType = TThardware AND $3 = TSactive THEN
+            SELECT  treeid
+            INTO    vTreeID     -- dummy
+            FROM    OTDBtree
+            WHERE   treetype = TThardware
+            AND     classif  = vClassif
+            AND     state    = TSactive
+                        AND             treeID  <> $2;
+            IF FOUND THEN
+                RAISE EXCEPTION \'Already an active hardware tree of the same classification.\';
+                RETURN FALSE;
+            END IF;
+        END IF;
+
+                -- Finally update tree
+                UPDATE  OTDBtree
+                SET             state = $3
+                WHERE   treeid = $2;
+
+                SELECT  whoIs($1)
+                INTO    vUserID;
+                PERFORM addTreeState ($2, vMomID, $3, vUserID, \'\');
+
+                -- (temp?) add extra timeinfo on PIC trees.
+                IF vTreeType = TThardware THEN
+                  BEGIN
+                  IF $3 = TSactive THEN
+                        UPDATE OTDBtree
+                        SET    starttime = now()
+                        WHERE  treeid    = $2;
+                  END IF;
+                  IF $3 = TSobsolete THEN
+                    UPDATE OTDBtree
+                        SET        stoptime = now()
+                        WHERE  treeid   = $2;
+                  END IF;
+                  END;
+                END IF;
+
+                -- add timeinfo to VIC trees
+                IF vTreeType = TTVIC THEN
+                  BEGIN
+                  IF $3 = TSactive THEN
+                        UPDATE OTDBtree
+                        SET    starttime = now()
+                        WHERE  treeid    = $2;
+                  END IF;
+                  IF $3 = TSfinished OR $3 = TSaborted THEN
+                    UPDATE OTDBtree
+                        SET        stoptime = now()
+                        WHERE  treeid   = $2;
+                  END IF;
+                  END;
+                END IF;
+
+                RETURN TRUE;
+        END;
 ' LANGUAGE plpgsql;
 

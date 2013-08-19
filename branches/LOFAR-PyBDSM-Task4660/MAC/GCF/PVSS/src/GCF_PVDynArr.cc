@@ -168,11 +168,23 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 //
 // getValueAsString(format)
 //
-string GCFPVDynArr::getValueAsString(const string& format) const
+string GCFPVDynArr::getValueAsString(const string& /*format*/) const
 {
-	(void)format;
-
-	return ("Not yet implemented!");
+	stringstream	os;
+	os << "[";
+	GCFPValueArray::const_iterator iter = _values.begin();
+	GCFPValueArray::const_iterator end  = _values.end();
+	GCFPValueArray::const_iterator last(end);
+	last--;
+	while (iter != end) {
+		os << (*iter)->getValueAsString();
+		if (iter != last) {
+			os << ",";
+		}
+		++iter;
+	}
+	os << "]";
+	return (os.str());
 }
 
 //

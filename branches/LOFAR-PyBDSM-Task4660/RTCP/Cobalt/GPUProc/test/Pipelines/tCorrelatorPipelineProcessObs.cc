@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   gpu::Context ctx(device);
 
   // Note: we just need to test the Pipeline part (processObservation()),
-  // not the WorkQueue and other logic below it, as that is already covered
+  // not the SubbandProc and other logic below it, as that is already covered
   // in other tests. (This is not a feature or integration test.)
   // Testing Pipeline in isolation is next to impossible, but fake it
   // with a parset where the number of input data blocks is 0. Then we don't

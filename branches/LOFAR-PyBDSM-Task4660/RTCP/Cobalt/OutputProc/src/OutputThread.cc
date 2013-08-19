@@ -239,32 +239,36 @@ namespace LOFAR
     }
 
 
-    void OutputThread::cleanUp()
+    void OutputThread::cleanUp() const
     {
       float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
       LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+    }
 
-      // log some final characteristics for CEPlogProcessor for feedback to MoM/LTA
-      ParameterSet feedbackLTA = itsWriter->configuration();
-      string prefix = "UNKNOWN";
+
+    ParameterSet OutputThread::feedbackLTA() const
+    {
+      string prefix;
 
       switch (itsOutputType) {
       case CORRELATED_DATA:
-        prefix = formatString("Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
+        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
         break;
 
       case BEAM_FORMED_DATA:
-        prefix = formatString("Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
+        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
         break;
 
       default:
+        prefix = "UNKNOWN.";
         break;
       }
 
-      // For now, transport feedback parset through log lines
-      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
-        LOG_INFO_STR(itsLogPrefix << "LTA FEEDBACK: " << prefix << i->first << " = " << i->second);
+      ParameterSet result;
+      result.adoptCollection(itsWriter->configuration(), prefix);
+
+      return result;
     }
 
 

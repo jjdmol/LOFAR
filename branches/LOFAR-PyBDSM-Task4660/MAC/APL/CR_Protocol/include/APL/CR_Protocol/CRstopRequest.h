@@ -23,7 +23,7 @@
 #ifndef CR_STOP_REQUEST_H_
 #define CR_STOP_REQUEST_H_
 
-#include <APL/RTCCommon/NsTimestamp.h>
+#include <Common/NsTimestamp.h>
 
 namespace LOFAR {
   namespace CR_Protocol {
@@ -33,7 +33,7 @@ class CRstopRequest
 public:
 	//@{
 	// Constructors and destructors for a pointing.
-	CRstopRequest(const string& aStationList, const string& aRCUlist, RTC::NsTimestamp aStopTime) : 
+	CRstopRequest(const string& aStationList, const string& aRCUlist, NsTimestamp aStopTime) : 
 		stationList(aStationList), rcuList(aRCUlist), stopTime(aStopTime) {};
 	CRstopRequest() {};
 	~CRstopRequest() {};
@@ -52,7 +52,7 @@ public:
 	// --- datamembers ---
 	string				stationList;
 	string 		     	rcuList;
-	RTC::NsTimestamp 	stopTime;
+	NsTimestamp 		stopTime;
 };
 
 //

@@ -28,9 +28,11 @@
 #include <Common/Thread/Cancellation.h>
 #include <CoInterface/Exceptions.h>
 
+#ifdef HAVE_CASACORE
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCDirection.h>
 #include <casa/Exceptions/Error.h>
+#endif
 
 
 namespace LOFAR
@@ -84,7 +86,9 @@ namespace LOFAR
       str->read(&nrTABs, sizeof nrTABs);
       ASSERT(nrTABs == TABs.size());
 
-      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+      if (nrTABs > 0) {
+        str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
+      }
     }
 
 
@@ -94,7 +98,9 @@ namespace LOFAR
       str->write(&SAP, sizeof SAP);
 
       str->write(&nrTABs, sizeof nrTABs);
-      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
+      if (nrTABs > 0) {
+        str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
+      }
     }
 
 

@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
     Parset parset(parset_filename);
     FileStream datafile(table_filename);
-    CorrelatedData *data = dynamic_cast<CorrelatedData*>(newStreamableData(parset, CORRELATED_DATA));
+    CorrelatedData *data = dynamic_cast<CorrelatedData*>(newStreamableData(parset, CORRELATED_DATA, 0));
 
     if (channel == -1)
       channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1;  // default to first useful channel

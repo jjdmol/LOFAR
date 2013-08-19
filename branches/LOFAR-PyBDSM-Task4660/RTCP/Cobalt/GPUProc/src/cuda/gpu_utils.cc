@@ -1,4 +1,5 @@
 //# gpu_utils.cc
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,25 +23,19 @@
 
 #include <GPUProc/gpu_utils.h>
 
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/fcntl.h>
-#include <unistd.h>
-#include <cstring>
-#include <cerrno>
+#include <cstdlib>    // for getenv()
+#include <cstdio>     // for popen(), pclose(), fgets()
 #include <iostream>
 #include <sstream>
-#include <set>
 #include <boost/format.hpp>
 
-#include <Common/SystemUtil.h>
 #include <Common/SystemCallException.h>
-#include <Stream/FileStream.h>
+#include <Common/LofarLogger.h>
+#include <CoInterface/Exceptions.h>
 
 #include <GPUProc/global_defines.h>
 
-#define BUILD_MAX_LOG_SIZE	4095
+#include "cuda_config.h"
 
 namespace LOFAR
 {
@@ -196,12 +191,9 @@ namespace LOFAR
 
       string lofarRoot()
       {
-        static const char* env;
-        static bool init(false);
-        if (!init) {
-          env = getenv("LOFARROOT");
-        }
-        return string(env ? env : "");
+        // Prefer copy over racy static var or mutex.
+        const char* env = getenv("LOFARROOT");
+        return env ? string(env) : string();
       }
 
       string prefixPath()
@@ -241,8 +233,9 @@ namespace LOFAR
                          const CompileFlags& flags,
                          const CompileDefinitions& defs)
       {
+        // TODO: first try 'nvcc', then this path.
         ostringstream oss;
-        oss << "nvcc " << source << flags << defs;
+        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 
@@ -252,7 +245,7 @@ namespace LOFAR
         if (!stream) {
           THROW_SYSCALL("popen");
         }
-        while (!feof(stream)) {  // NOTE: We do not get stderr
+        while (!feof(stream)) {  // NOTE: We do not get stderr (TODO)
           if (fgets(buffer, sizeof buffer, stream) != NULL) {
             ptx += buffer;
           }
@@ -266,24 +259,19 @@ namespace LOFAR
     } // namespace {anonymous}
 
 
-    const CompileDefinitions& defaultCompileDefinitions()
+    CompileDefinitions defaultCompileDefinitions()
     {
-      static CompileDefinitions defs;
-      if (defs.empty()) {
-        // initialize default definitions
-      }
+      CompileDefinitions defs;
       return defs;
     }
 
-    const CompileFlags& defaultCompileFlags()
+    CompileFlags defaultCompileFlags()
     {
-      static CompileFlags flags;
-      if (flags.empty()) {
-        flags.insert("-o -");
-        flags.insert("-ptx");
-        flags.insert("-use_fast_math");
-        flags.insert(str(format("-I%s") % includePath()));
-      }
+      CompileFlags flags;
+      flags.insert("-o -"); // buggy on CUDA 5.0 and 5.5RC (TODO)
+      flags.insert("-ptx");
+      flags.insert("-use_fast_math"); // TODO: disable for some kernels?
+      flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }
 
@@ -298,10 +286,12 @@ namespace LOFAR
                        get_virtarch(computeTarget(devices))));
 
       // Add default definitions and flags
-      definitions.insert(defaultCompileDefinitions().begin(), 
-                         defaultCompileDefinitions().end());
-      flags.insert(defaultCompileFlags().begin(),
-                   defaultCompileFlags().end());
+      CompileDefinitions defaultDefinitions(defaultCompileDefinitions());
+      definitions.insert(defaultDefinitions.begin(), 
+                         defaultDefinitions.end());
+      CompileFlags defaultFlags(defaultCompileFlags());
+      flags.insert(defaultFlags.begin(),
+                   defaultFlags.end());
 
 #if 0
       // We'll compile a specific version for each device that has a different
@@ -332,6 +322,7 @@ namespace LOFAR
                              const string &srcFilename,
                              const string &ptx)
     {
+      const unsigned int BUILD_MAX_LOG_SIZE = 4095;
       /*
        * JIT compilation options.
        * Note: need to pass a void* with option vals. Preferably, do not alloc

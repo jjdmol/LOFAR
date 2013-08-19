@@ -322,48 +322,50 @@ void navFunct_updateObservations(string dp1, dyn_string active,
   LOG_DEBUG("navFunct.ctl:navFunct_updateObservations|triggered.....");
 
   // Clear mapping
-  mappingClear(g_observations);
-  g_observations[ "DP"          ]    = makeDynString();                    
-  g_observations[ "NAME"        ]    = makeDynString();
-  g_observations[ "STATIONLIST" ]    = makeDynString();
-  g_observations[ "SCHEDULE" ]       = makeDynString();
+  mapping observationsNew;
+  observationsNew[ "DP"          ]    = makeDynString();                    
+  observationsNew[ "NAME"        ]    = makeDynString();
+  observationsNew[ "STATIONLIST" ]    = makeDynString();
+  observationsNew[ "SCHEDULE" ]       = makeDynString();
   
   for (int i = 1; i<= dynlen(active); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+active[i]);
     if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      iPos=dynAppend(observationsNew[ "DP"          ] , dp);
       dpGet(dp+".stationList",stationList);
       
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+active[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "active";
+      observationsNew[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+active[i];
+      observationsNew[ "STATIONLIST"    ][iPos]  = stationList;
+      observationsNew[ "SCHEDULE"       ][iPos]  = "active";
     }      
   }
 
   for (int i = 1; i<= dynlen(planned); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+planned[i]);
     if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      iPos=dynAppend(observationsNew[ "DP"          ] , dp);
       dpGet(dp+".stationList",stationList);
       
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+planned[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "planned";
+      observationsNew[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+planned[i];
+      observationsNew[ "STATIONLIST"    ][iPos]  = stationList;
+      observationsNew[ "SCHEDULE"       ][iPos]  = "planned";
     }      
   }
 
   for (int i = 1; i<= dynlen(finished); i++) {
     string dp = claimManager_nameToRealName("LOFAR_ObsSW_"+finished[i]);
     if (dp != "") {
-      iPos=dynAppend(g_observations[ "DP"          ] , dp);
+      iPos=dynAppend(observationsNew[ "DP"          ] , dp);
       dpGet(dp+".stationList",stationList);
       
-      g_observations[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
-      g_observations[ "STATIONLIST"    ][iPos]  = stationList;
-      g_observations[ "SCHEDULE"       ][iPos]  = "finished";
+      observationsNew[ "NAME"           ][iPos]  = "LOFAR_ObsSW_"+finished[i];
+      observationsNew[ "STATIONLIST"    ][iPos]  = stationList;
+      observationsNew[ "SCHEDULE"       ][iPos]  = "finished";
     }      
   }
 
+  // all gathering done, set the global mapping;  
+  g_observations=observationsNew;
 
 
   // check if tabCtrl has a Panel loaded (indicating init has passed and panels are loaded)
@@ -2284,7 +2286,7 @@ bool navFunct_isObservation(string obsName) {
   bool isObs = true;
   int iPos = dynContains( g_observations[ "NAME"         ], "LOFAR_ObsSW_"+obsName );
    if (iPos <=0) {
-     LOG_ERROR("navFunct.ctl:navFunct_hardware2Obs|observation: "+ obsName+" not in g_observations.");     
+     LOG_DEBUG("navFunct.ctl:navFunct_isObservations|observation: "+ obsName+" not in g_observations : "+g_observations[ "NAME" ]);     
      isObs=false;
      return isObs;
   }
@@ -2316,12 +2318,12 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
-  //DebugN("query: "+query);
   dpQuery(query,tab);
-  //DebugN("Result:"+result);
   for(int z=2;z<=dynlen(tab);z++) {
-    dynAppend(inputBuffers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    dynAppend(inputBuffers,dp);
   }
+  dynSort(inputBuffers);
   return inputBuffers;
 }
 
@@ -2346,8 +2348,11 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   dpQuery(query,tab);
   //DebugN("Result:"+result);
   for(int z=2;z<=dynlen(tab);z++) {
-    dynAppend(adders,dpSubStr(tab[z][1],DPSUB_SYS_DP));
+    string dp=dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    // avoid doubles
+    dynAppend(adders,dp);
   }
+  dynSort(adders);
   return adders;
 }
 
@@ -2372,6 +2377,7 @@ dyn_int navFunct_getLocusNodesForObservation(string obsName) {
     dpGet(adders[z]+".locusNode",ln);
     dynAppend(locusnodes,ln);
   }
+  dynsort(locusnodes);
   return locusnodes;
 }
 

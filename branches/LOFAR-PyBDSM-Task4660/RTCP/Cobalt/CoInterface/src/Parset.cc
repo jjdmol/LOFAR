@@ -176,8 +176,8 @@ namespace LOFAR
     }
 
 
-    vector<string> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
-      vector<string> result;
+    vector<struct ObservationSettings::AntennaFieldName> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
+      vector<struct AntennaFieldName> result;
 
       for (vector<string>::const_iterator i = stations.begin(); i != stations.end(); ++i) {
         const string &station = *i;
@@ -189,7 +189,7 @@ namespace LOFAR
           // Observation.VirtualInstrument.stationList can contain full
           // antennafield names such as CS001LBA.
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
-          result.push_back(station);
+          result.push_back(AntennaFieldName(station.substr(0,5), station.substr(5)));
           continue;
         }
 
@@ -201,36 +201,36 @@ namespace LOFAR
          || antennaSet == "LBA_SPARSE_EVEN"
          || antennaSet == "LBA_SPARSE_ODD") {
 
-          result.push_back(str(format("%sLBA") % station));
+          result.push_back(AntennaFieldName(station, "LBA"));
 
         } else if (
             antennaSet == "HBA" /* used for debugging */
          || antennaSet == "HBA_JOINED"
          || antennaSet == "HBA_JOINED_INNER") {
 
-          result.push_back(str(format("%sHBA") % station));
+          result.push_back(AntennaFieldName(station, "HBA"));
 
         } else if (
             antennaSet == "HBA_ZERO"
          || antennaSet == "HBA_ZERO_INNER") {
 
-          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA0" : "HBA")));
+          result.push_back(AntennaFieldName(station, coreStation ? "HBA0" : "HBA"));
 
         } else if (
             antennaSet == "HBA_ONE"
          || antennaSet == "HBA_ONE_INNER") {
 
-          result.push_back(str(format("%s%s") % station % (coreStation ? "HBA1" : "HBA")));
+          result.push_back(AntennaFieldName(station, coreStation ? "HBA1" : "HBA"));
 
         } else if (
             antennaSet == "HBA_DUAL"
          || antennaSet == "HBA_DUAL_INNER") {
 
           if (coreStation) {
-            result.push_back(str(format("%sHBA0") % station));
-            result.push_back(str(format("%sHBA1") % station));
+            result.push_back(AntennaFieldName(station, "HBA0"));
+            result.push_back(AntennaFieldName(station, "HBA1"));
           } else {
-            result.push_back(str(format("%sHBA") % station));
+            result.push_back(AntennaFieldName(station, "HBA"));
           }
         } else {
           THROW(CoInterfaceException, "Unknown antennaSet: " << antennaSet);
@@ -238,6 +238,18 @@ namespace LOFAR
       }
 
       return result;
+    }
+
+    std::string Parset::renamedKey(const std::string &newname, const std::string &oldname) const {
+      if (isDefined(newname))
+        return newname;
+
+      if (isDefined(oldname)) {
+        LOG_WARN_STR("Parset: key " << oldname << " is deprecated. Please use " << newname << " instead.");
+        return oldname;
+      }
+
+      return newname;
     }
 
 
@@ -253,26 +265,21 @@ namespace LOFAR
       vector<double>   emptyVectorDouble;
 
       // Generic information
-      settings.realTime = getBool("OLAP.realTime", false);
+      settings.realTime = getBool(renamedKey("Cobalt.realTime", "OLAP.realTime"), false);
       settings.observationID = getUint32("Observation.ObsID", 0);
       settings.startTime = getTime("Observation.startTime", "2013-01-01 00:00:00");
       settings.stopTime  = getTime("Observation.stopTime",  "2013-01-01 00:01:00");
       settings.clockMHz = getUint32("Observation.sampleClock", 200);
 
-      if (isDefined("Observation.nrBitsPerSample")) {
-        settings.nrBitsPerSample = getUint32("Observation.nrBitsPerSample", 16);
-      } else {
-        LOG_WARN("Using deprecated OLAP.nrBitsPerSample. Please replace by Observation.nrBitsPerSample");
-        settings.nrBitsPerSample = getUint32("OLAP.nrBitsPerSample", 16);
-      }
+      settings.nrBitsPerSample = getUint32(renamedKey("Observation.nrBitsPerSample","OLAP.nrBitsPerSample"), 16);
 
       settings.nrPolarisations = 2;
 
-      settings.corrections.bandPass   = getBool("OLAP.correctBandPass", true);
-      settings.corrections.clock      = getBool("OLAP.correctClocks", true);
-      settings.corrections.dedisperse = getBool("OLAP.coherentDedisperseChannels", true);
+      settings.corrections.bandPass   = getBool(renamedKey("Cobalt.correctBandPass", "OLAP.correctBandPass"), true);
+      settings.corrections.clock      = getBool(renamedKey("Cobalt.correctClocks", "OLAP.correctClocks"), true);
+      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
-      settings.delayCompensation.enabled              = getBool("OLAP.delayCompensation", true);
+      settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
       settings.nrPPFTaps = 16;
@@ -283,17 +290,21 @@ namespace LOFAR
 
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
-      vector<string> stationNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
+      vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
-      size_t nrStations = stationNames.size();
+      size_t nrStations = fieldNames.size();
 
       settings.stations.resize(nrStations);
       for (unsigned i = 0; i < nrStations; ++i) {
         struct ObservationSettings::Station &station = settings.stations[i];
 
-        station.name            = stationNames[i];
-        station.clockCorrection = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter     = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.name              = fieldNames[i].fullName();
+        station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
+        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -302,6 +313,29 @@ namespace LOFAR
         key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % station.name));
         if (!isDefined(key)) key = "Observation.rspSlotList";
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
+      }
+
+      // Resource information
+      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
+      settings.nodes.resize(nrNodes);
+      for (size_t i = 0; i < nrNodes; ++i) {
+        struct ObservationSettings::Node &node = settings.nodes[i];
+
+        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
+
+        node.rank     = i;
+        node.hostName = getString(prefix + "host", "localhost");
+        node.cpu      = getUint32(prefix + "cpu",  0);
+        node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
+
+        for (size_t j = 0; j < stationNames.size(); ++j) {
+          ssize_t index = settings.stationIndex(stationNames[j]);
+
+          if (index >= 0)
+            node.stations.push_back(index);
+        }
       }
 
       // Pointing information
@@ -343,17 +377,23 @@ namespace LOFAR
         settings.anaBeam.direction.angle2 = getDouble("Observation.AnaBeam[0].angle2", 0.0);
       }
 
+      if (isDefined("Cobalt.blockSize")) {
+        settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
+      } else {
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+      }
+
       /* ===============================
        * Correlator pipeline information
        * ===============================
        */
 
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
-      if (settings.correlator.enabled || true) { // for now, always fill in correlator values, since they're still used outside the correlator to determine the block size, etc (TODO: move generic ones outside, but see TODO below)
-        settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
+      if (settings.correlator.enabled) {
+        settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
-        settings.correlator.nrSamplesPerChannel = getUint32("OLAP.CNProc.integrationSteps", 3052);
-        settings.correlator.nrBlocksPerIntegration = getUint32("OLAP.IONProc.integrationSteps", 1);
+        settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
+        settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
         // super-station beam former
@@ -401,55 +441,13 @@ namespace LOFAR
        * ===============================
        */
 
+      // SAP/TAB-crossing counter for the files we generate
+      size_t bfStreamNr = 0;
+
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
       if (settings.beamFormer.enabled || true) { // for now, the values below are also used even if no beam forming is performed
-        settings.beamFormer.SAPs.resize(nrSAPs);
 
-        for (unsigned i = 0; i < nrSAPs; ++i) {
-          struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
-
-          size_t nrTABs = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
-
-          sap.TABs.resize(nrTABs);
-          for (unsigned j = 0; j < nrTABs; ++j) {
-            struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
-
-            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
-
-            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
-            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
-            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
-
-            tab.coherent          = getBool(prefix + ".coherent", true);
-            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
-
-            const vector<string> stations = getStringVector(prefix + ".stationList", emptyVectorString, true);
-
-            if (stations.empty()) {
-              // default: add all stations
-              tab.stations.reserve(settings.stations.size());
-              for (unsigned t = 0; t < settings.stations.size(); ++t) {
-                tab.stations.push_back(t);
-              }
-            } else {
-              // if stations are given, look them up and record the indices
-              tab.stations.reserve(stations.size());
-              for (unsigned s = 0; s < stations.size(); ++s) {
-                const string &name = stations[s];
-
-                // lookup name in the stations list
-                for (unsigned t = 0; t < settings.stations.size(); ++t) {
-                  if (name == settings.stations[t].name) {
-                    // found
-                    tab.stations.push_back(t);
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
+        // Parse global settings
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
@@ -462,11 +460,13 @@ namespace LOFAR
             case 0:
               prefix = "OLAP.CNProc_CoherentStokes";
               set = &settings.beamFormer.coherentSettings;
+              set->coherent = true;
               break;
 
             case 1:
               prefix = "OLAP.CNProc_IncoherentStokes";
               set = &settings.beamFormer.incoherentSettings;
+              set->coherent = false;
               break;
 
             default:
@@ -488,9 +488,58 @@ namespace LOFAR
             // apply default
             set->nrSubbandsPerFile = settings.subbands.size();
           }
+
+          ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
 
-        settings.beamFormer.dedispersionFFTsize = getUint32("OLAP.CNProc.dedispersionFFTsize", settings.correlator.nrSamplesPerChannel);
+        // Parse all TABs
+        settings.beamFormer.SAPs.resize(nrSAPs);
+
+        for (unsigned i = 0; i < nrSAPs; ++i) {
+          struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
+
+          size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+          size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
+          double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+
+          ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
+
+          sap.TABs.resize(nrTABs);
+          for (unsigned j = 0; j < nrTABs; ++j) {
+            struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
+
+            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+
+            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
+            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
+            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
+
+            tab.coherent          = getBool(prefix + ".coherent", true);
+            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
+
+            struct ObservationSettings::BeamFormer::StokesSettings &set =
+               tab.coherent ? settings.beamFormer.coherentSettings
+                            : settings.beamFormer.incoherentSettings;
+
+            // Generate file list
+            tab.files.resize(set.nrStokes);
+            for (size_t s = 0; s < set.nrStokes; ++s) {
+              struct ObservationSettings::BeamFormer::File file;
+
+              file.sapNr    = i;
+              file.tabNr    = j;
+              file.coherent = tab.coherent;
+              file.stokesNr = s;
+              file.streamNr = bfStreamNr++;
+              file.location = getFileLocation("Beamformed", tab.files[s].streamNr);
+
+              tab.files[s] = file;
+              settings.beamFormer.files.push_back(file);
+            }
+          }
+        }
+
+        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.Beamformer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
       }
 
       return settings;
@@ -505,7 +554,11 @@ namespace LOFAR
     }
 
     size_t ObservationSettings::nrSamplesPerSubband() const {
-      return correlator.nrChannels * correlator.nrSamplesPerChannel;
+      return blockSize;
+    }
+
+    double ObservationSettings::blockDuration() const {
+      return nrSamplesPerSubband() / subbandWidth();
     }
 
     double ObservationSettings::Correlator::integrationTime() const {
@@ -541,6 +594,34 @@ namespace LOFAR
 
       return location;
     }
+
+    size_t ObservationSettings::nrSubbands(size_t SAP) const
+    {
+      size_t count = 0;
+
+      for (size_t sb = 0; sb < subbands.size(); ++sb)
+        if (subbands[sb].SAP == SAP)
+          ++count;
+
+      return count;
+    }
+
+
+    size_t ObservationSettings::BeamFormer::maxNrTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].TABs.size());
+
+      return max;
+    }
+
+    size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
+    {
+      return inputBlockSize / nrChannels / timeIntegrationFactor;
+    }
+
 
     void Parset::updateSettings()
     {
@@ -580,21 +661,6 @@ namespace LOFAR
 
       if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
         // second transpose is performed
-      }
-
-      // check whether the beam forming parameters are valid
-      const Transpose2 &logic = transposeLogic();
-
-      for (unsigned i = 0; i < logic.nrStreams(); i++) {
-        const StreamInfo &info = logic.streamInfo[i];
-
-        if ( info.timeIntFactor == 0 )
-          THROW(CoInterfaceException, "Temporal integration factor needs to be > 0 (it is set to 0 for " << (info.coherent ? "coherent" : "incoherent") << " beams).");
-
-        if ( info.coherent
-             && info.stokesType == STOKES_XXYY
-             && info.timeIntFactor != 1 )
-          THROW(CoInterfaceException, "Cannot perform temporal integration if calculating Coherent Stokes XXYY. Integration factor needs to be 1, but is set to " << info.timeIntFactor);
       }
     }
 
@@ -664,9 +730,9 @@ namespace LOFAR
         return 0;
 
       switch (outputType) {
-      case CORRELATED_DATA:   return nrSubbands();
+      case CORRELATED_DATA:   return settings.correlator.files.size();
       case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      return transposeLogic().nrStreams();
+      case TRIGGER_DATA:      return settings.beamFormer.files.size();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
     }
@@ -710,21 +776,26 @@ namespace LOFAR
     }
 
 
-    vector<double> Parset::positions() const
+    MultiDimArray<double,2> Parset::positions() const
     {
-      vector<double> pos, list;
-
       const vector<ObservationSettings::Correlator::Station> &stations = settings.correlator.stations;
+
+      MultiDimArray<double,2> list(boost::extents[stations.size()][3]);
 
       for (size_t i = 0; i < stations.size(); i++) {
         const string &name = stations[i].name;
+        vector<double> pos;
 
         if (name.find("+") != string::npos)
           pos = centroidPos(name); // super station
         else
-          pos = getDoubleVector("PIC.Core." + name + ".position");
+          pos = getDoubleVector("PIC.Core." + name + ".position", true);
 
-        list.insert(list.end(), pos.begin(), pos.end());
+        ASSERT(pos.size() == 3);
+
+        list[i][0] = pos[0];
+        list[i][1] = pos[1];
+        list[i][2] = pos[2];
       }
 
       return list;
@@ -843,14 +914,6 @@ namespace LOFAR
       return itsName;
     }
 
-    const Transpose2 &Parset::transposeLogic() const
-    {
-      if (!itsTransposeLogic)
-        itsTransposeLogic = new Transpose2(*this);
-
-      return *itsTransposeLogic;
-    }
-
     unsigned Parset::observationID() const
     {
       return settings.observationID;
@@ -879,6 +942,16 @@ namespace LOFAR
     string Parset::stationName(int index) const
     {
       return settings.stations[index].name;
+    }
+
+    ssize_t ObservationSettings::stationIndex(const std::string &name) const
+    {
+      for (size_t station = 0; station < stations.size(); ++station) {
+        if (stations[station].name == name)
+          return station;
+      }
+
+      return -1;
     }
 
     std::vector<std::string> Parset::allStationNames() const
@@ -1116,11 +1189,11 @@ namespace LOFAR
       return settings.corrections.bandPass;
     }
 
-    double Parset::channel0Frequency(size_t subband) const
+    double Parset::channel0Frequency(size_t subband, size_t nrChannels) const
     {
       const double sbFreq = settings.subbands[subband].centralFrequency;
 
-      if (nrChannelsPerSubband() == 1)
+      if (nrChannels == 1)
         return sbFreq;
 
       // if the 2nd PPF is used, the subband is shifted half a channel
@@ -1181,165 +1254,6 @@ namespace LOFAR
     string Parset::PVSS_TempObsName() const
     {
       return getString("_DPname","");
-    }
-
-    void StreamInfo::log() const
-    {
-      LOG_DEBUG_STR( "Stream " << stream << " is sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part << " consisting of subbands " << subbands );
-    }
-
-    Transpose2::Transpose2( const Parset &parset )
-      :
-
-      streamInfo( generateStreamInfo(parset) )
-    {
-    }
-
-    unsigned Transpose2::nrStreams() const
-    {
-      return streamInfo.size();
-    }
-
-    // compose and decompose a stream number
-    unsigned Transpose2::stream( unsigned sap, unsigned beam, unsigned stokes, unsigned part, unsigned startAt ) const
-    {
-      for (unsigned i = startAt; i < streamInfo.size(); i++) {
-        const struct StreamInfo &info = streamInfo[i];
-
-        if (sap == info.sap && beam == info.beam && stokes == info.stokes && part == info.part)
-          return i;
-      }
-
-      // shouldn't reach this point
-      ASSERTSTR(false, "Requested non-existing sap " << sap << " beam " << beam << " stokes " << stokes << " part " << part);
-
-      return 0;
-    }
-
-    void Transpose2::decompose( unsigned stream, unsigned &sap, unsigned &beam, unsigned &stokes, unsigned &part ) const
-    {
-      const struct StreamInfo &info = streamInfo[stream];
-
-      sap = info.sap;
-      beam = info.beam;
-      stokes = info.stokes;
-      part = info.part;
-    }
-
-    std::vector<unsigned> Transpose2::subbands( unsigned stream ) const
-    {
-      ASSERT(stream < streamInfo.size());
-
-      return streamInfo[stream].subbands;
-    }
-
-    unsigned Transpose2::nrSubbands( unsigned stream ) const
-    {
-      return stream >= streamInfo.size() ? 0 : subbands(stream).size();
-    }
-
-    static bool streamInfoSubbandsComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.subbands.size() < b.subbands.size();
-    }
-
-    unsigned Transpose2::maxNrSubbands() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSubbandsComp )->subbands.size();
-    }
-
-    static bool streamInfoChannelsComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.nrChannels < b.nrChannels;
-    }
-
-    unsigned Transpose2::maxNrChannels() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoChannelsComp )->nrChannels;
-    }
-
-    static bool streamInfoSamplesComp( const struct StreamInfo &a, const struct StreamInfo &b )
-    {
-      return a.nrSamples < b.nrSamples;
-    }
-
-    unsigned Transpose2::maxNrSamples() const
-    {
-      return streamInfo.size() == 0 ? 0 : std::max_element( streamInfo.begin(), streamInfo.end(), &streamInfoSamplesComp )->nrSamples;
-    }
-
-    size_t Transpose2::subbandSize( unsigned stream ) const
-    {
-      const StreamInfo &info = streamInfo[stream];
-
-      return (size_t)info.nrChannels * (info.nrSamples | 2) * sizeof(float);
-    }
-
-
-    std::vector<struct StreamInfo> Transpose2::generateStreamInfo( const Parset &parset ) const
-    {
-      // get all info from parset, since we will be called while constructing our members
-
-      // ParameterSets are SLOW, so settings any info we need repeatedly
-
-      std::vector<struct StreamInfo> infoset;
-      const unsigned nrSAPs = parset.settings.SAPs.size();
-      const unsigned nrSubbands = parset.settings.subbands.size();
-
-      const unsigned nrSamples = parset.CNintegrationSteps();
-
-      struct StreamInfo info;
-      info.stream = 0;
-
-      for (unsigned sap = 0; sap < nrSAPs; sap++) {
-        const unsigned nrBeams = parset.nrTABs(sap);
-
-        info.sap = sap;
-
-        std::vector<unsigned> sapSubbands;
-
-        for (unsigned sb = 0; sb < nrSubbands; sb++)
-          if (parset.settings.subbands[sb].SAP == sap)
-            sapSubbands.push_back(sb);
-
-        for (unsigned beam = 0; beam < nrBeams; beam++) {
-          info.beam = beam;
-
-          const bool coherent = parset.settings.beamFormer.SAPs[sap].TABs[beam].coherent;
-          const ObservationSettings::BeamFormer::StokesSettings &set =
-              coherent ? parset.settings.beamFormer.coherentSettings
-                       : parset.settings.beamFormer.incoherentSettings;
-          const unsigned nrStokes = set.nrStokes;
-
-          info.coherent = coherent;
-          info.nrChannels = set.nrChannels;
-          info.timeIntFactor = set.timeIntegrationFactor;
-          info.nrStokes = set.nrStokes;
-          info.stokesType = set.type;
-          info.nrSamples = nrSamples / info.timeIntFactor;
-
-          const unsigned nrSubbandsPerFile = set.nrSubbandsPerFile;
-
-          for (unsigned stokes = 0; stokes < nrStokes; stokes++) {
-            info.stokes = stokes;
-            info.part = 0;
-
-            // split into parts of at most nrSubbandsPerFile
-            for (unsigned sb = 0; sb < sapSubbands.size(); sb += nrSubbandsPerFile ) {
-              for (unsigned i = 0; sb + i < sapSubbands.size() && i < nrSubbandsPerFile; i++)
-                info.subbands.push_back(sapSubbands[sb + i]);
-
-              infoset.push_back(info);
-
-              info.subbands.clear();
-              info.part++;
-              info.stream++;
-            }
-          }
-        }
-      }
-
-      return infoset;
     }
   } // namespace Cobalt
 } // namespace LOFAR

@@ -182,7 +182,11 @@ namespace LOFAR
 
       LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
 
-      FailedTileInfo::writeFailed(ms, before, during);
+      try {
+        FailedTileInfo::writeFailed(ms, before, during);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Failed to write broken hardware information: " << ex);
+      }
     }
 
 

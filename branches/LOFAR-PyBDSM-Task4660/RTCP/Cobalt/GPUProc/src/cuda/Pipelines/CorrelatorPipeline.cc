@@ -28,10 +28,9 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/WorkQueues/CorrelatorWorkQueue.h>
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include "CorrelatorPipelinePrograms.h"
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
@@ -40,50 +39,22 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
-      Pipeline(ps, subbandIndices)
+      Pipeline(ps, subbandIndices, devices)
     {
       // If profiling, use one workqueue: with >1 workqueues decreased
       // computation / I/O overlap can affect optimization gains.
-      unsigned nrWorkQueues = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrWorkQueues);
+      unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
+      workQueues.resize(nrSubbandProcs);
 
-      // Compile all required kernels to ptx
-      LOG_INFO("Compiling device kernels");
-      double startTime = omp_get_wtime();
-      vector<string> kernels;
-      map<string, string> ptx;
-      kernels.push_back("FIR_Filter.cu");
-      kernels.push_back("DelayAndBandPass.cu");
-#if defined USE_NEW_CORRELATOR
-      kernels.push_back("NewCorrelator.cu");
-#else
-      kernels.push_back("Correlator.cu");
-#endif
+      CorrelatorFactories factories(ps);
 
-      for (vector<string>::const_iterator i = kernels.begin(); i != kernels.end(); ++i) {
-        ptx[*i] = createPTX(*i);
-      }
-
-      double stopTime = omp_get_wtime();
-      LOG_INFO("Compiling device kernels done");
-      LOG_DEBUG_STR("Compile time = " << stopTime - startTime);
-
-      // Create the WorkQueues
-      CorrelatorPipelinePrograms programs;
-      for (size_t i = 0; i < nrWorkQueues; ++i) {
+      // Create the SubbandProcs
+      for (size_t i = 0; i < nrSubbandProcs; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        programs.firFilterProgram = createModule(context, "FIR_Filter.cu", ptx["FIR_Filter.cu"]);
-        programs.delayAndBandPassProgram = createModule(context, "DelayAndBandPass.cu", ptx["DelayAndBandPass.cu"]);
-#if defined USE_NEW_CORRELATOR
-        programs.correlatorProgram = createModule(context, "NewCorrelator.cu", ptx["NewCorrelator.cu"]);
-#else
-        programs.correlatorProgram = createModule(context, "Correlator.cu", ptx["Correlator.cu"]);
-#endif
-
-        workQueues[i] = new CorrelatorWorkQueue(ps, context, programs);
+        workQueues[i] = new CorrelatorSubbandProc(ps, context, factories);
       }
 
     }

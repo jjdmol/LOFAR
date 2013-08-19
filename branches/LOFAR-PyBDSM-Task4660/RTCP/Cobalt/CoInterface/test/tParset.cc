@@ -41,6 +41,7 @@ using boost::format;
   ps.updateSettings();
 
 // macros for testing true/false keys
+#define TESTKEYS(new, old) for ( string k = "x", keystr = new; k != "xxx"; k += "x", keystr = old)
 #define TESTBOOL for( unsigned val = 0; val < 2; ++val )
 #define valstr ((val) ? "true" : "false")
 
@@ -81,11 +82,13 @@ template<typename T> string toStr( const vector<T> &v )
  */
 
 TEST(realTime) {
-  TESTBOOL {
-    MAKEPS("OLAP.realTime", valstr);
+  TESTKEYS("Cobalt.realTime", "OLAP.realTime") {
+    TESTBOOL {
+      MAKEPS(keystr, valstr);
 
-    CHECK_EQUAL(val, ps.settings.realTime);
-    CHECK_EQUAL(val, ps.realTime());
+      CHECK_EQUAL(val, ps.settings.realTime);
+      CHECK_EQUAL(val, ps.realTime());
+    }
   }
 }
 
@@ -172,39 +175,47 @@ TEST(nrPolarisations) {
 
 SUITE(corrections) {
   TEST(bandPass) {
-    TESTBOOL {
-      MAKEPS("OLAP.correctBandPass", valstr);
+    TESTKEYS("Cobalt.correctBandPass", "OLAP.correctBandPass") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.bandPass);
-      CHECK_EQUAL(val, ps.correctBandPass());
+        CHECK_EQUAL(val, ps.settings.corrections.bandPass);
+        CHECK_EQUAL(val, ps.correctBandPass());
+      }
     }
   }
 
   TEST(clock) {
-    TESTBOOL {
-      MAKEPS("OLAP.correctClocks", valstr);
+    TESTKEYS("Cobalt.correctClocks", "OLAP.correctClocks") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.clock);
-      CHECK_EQUAL(val, ps.correctClocks());
+        CHECK_EQUAL(val, ps.settings.corrections.clock);
+        CHECK_EQUAL(val, ps.correctClocks());
+      }
     }
   }
 
   TEST(dedisperse) {
-    TESTBOOL {
-      MAKEPS("OLAP.coherentDedisperseChannels", valstr);
+    TESTKEYS("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+        CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
+      }
     }
   }
 }
 
 SUITE(delayCompensation) {
   TEST(enabled) {
-    TESTBOOL {
-      MAKEPS("OLAP.delayCompensation", valstr);
+    TESTKEYS("Cobalt.delayCompensation", "OLAP.delayCompensation") {
+      TESTBOOL {
+        MAKEPS(keystr, valstr);
 
-      CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
-      CHECK_EQUAL(val, ps.delayCompensation());
+        CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
+        CHECK_EQUAL(val, ps.delayCompensation());
+      }
     }
   }
 
@@ -276,10 +287,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603LBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA0) {
@@ -293,10 +307,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA1) {
@@ -310,10 +327,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA_DUAL) {
@@ -329,10 +349,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 
   TEST(HBA_JOINED) {
@@ -346,10 +369,13 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<string> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
+    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
 
     CHECK_EQUAL(expectedFields.size(), antennaFields.size());
-    CHECK_ARRAY_EQUAL(expectedFields, antennaFields, antennaFields.size());
+
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    }
   }
 }
 
@@ -575,11 +601,11 @@ SUITE(correlator) {
 
   TEST(nrChannels) {
     // for now, nrChannels is also defined if the correlator is disabled
-    TESTBOOL {
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband") {
       Parset ps;
 
-      ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
-      ps.add("Observation.channelsPerSubband", "256");
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add(keystr, "256");
       ps.updateSettings();
 
       CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
@@ -588,47 +614,49 @@ SUITE(correlator) {
   }
 
   TEST(channelWidth) {
-    // for now, channelWidth is also defined if the correlator is disabled
-    TESTBOOL {
-      // validate all powers of 2 in [1, 4096]
-      for (size_t nrChannels = 1; nrChannels <= 4096; nrChannels <<= 1) {
-        Parset ps;
+    // validate all powers of 2 in [1, 4096]
+    for (size_t nrChannels = 1; nrChannels <= 4096; nrChannels <<= 1) {
+      Parset ps;
 
-        ps.add("Observation.DataProducts.Output_Correlated.enabled", valstr);
-        ps.add("Observation.channelsPerSubband", str(format("%u") % nrChannels));
-        ps.updateSettings();
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Observation.channelsPerSubband", str(format("%u") % nrChannels));
+      ps.updateSettings();
 
-        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
-        CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
-      }
+      CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
+      CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.channelWidth(), 0.00001);
     }
   }
 
   TEST(nrSamplesPerChannel) {
-    Parset ps;
-    
-    // set
-    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.add("OLAP.CNProc.integrationSteps", "42");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.nrChannelsPerSubband") {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add("Cobalt.blockSize", "256");
+      ps.add(keystr, "64");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(42U, ps.settings.correlator.nrSamplesPerChannel);
-    CHECK_EQUAL(42U, ps.CNintegrationSteps());
-    CHECK_EQUAL(42U, ps.nrSamplesPerChannel());
+      // verify settings
+      CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerChannel);
+      CHECK_EQUAL(4U, ps.CNintegrationSteps());
+      CHECK_EQUAL(4U, ps.nrSamplesPerChannel());
+    }
   }
 
   TEST(nrBlocksPerIntegration) {
-    Parset ps;
-    
-    // set
-    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-    ps.add("OLAP.IONProc.integrationSteps", "42");
-    ps.updateSettings();
+    TESTKEYS("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps") {
+      Parset ps;
+      
+      // set
+      ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+      ps.add(keystr, "42");
+      ps.updateSettings();
 
-    // verify settings
-    CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
-    CHECK_EQUAL(42U, ps.IONintegrationSteps());
+      // verify settings
+      CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+      CHECK_EQUAL(42U, ps.IONintegrationSteps());
+    }
   }
 
   /* TODO: test super-station beam former */
@@ -824,26 +852,12 @@ SUITE(integration) {
     // check SAP 0
     CHECK_EQUAL(2U,         ps.settings.beamFormer.SAPs[0].TABs.size());
     CHECK_EQUAL(true,       ps.settings.beamFormer.SAPs[0].TABs[0].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[0].TABs[0].stations.size());
     CHECK_EQUAL(false,      ps.settings.beamFormer.SAPs[0].TABs[1].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[0].TABs[1].stations.size());
 
     // check SAP 1
     CHECK_EQUAL(2U,         ps.settings.beamFormer.SAPs[1].TABs.size());
     CHECK_EQUAL(true,       ps.settings.beamFormer.SAPs[1].TABs[0].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[1].TABs[0].stations.size());
     CHECK_EQUAL(false,      ps.settings.beamFormer.SAPs[1].TABs[1].coherent);
-    CHECK_EQUAL(nrStations, ps.settings.beamFormer.SAPs[1].TABs[1].stations.size());
-
-    // check all station lists of TABs in one go
-    for (unsigned sap = 0; sap < nrSAPs; ++sap) {
-      for (unsigned tab = 0; tab < ps.settings.beamFormer.SAPs[sap].TABs.size(); ++tab) {
-        for (unsigned st = 0; st < nrStations; ++st) {
-          //CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.beamFormer.SAPs[sap].TABs[tab].stations[st].name); // <-- why not this?
-          CHECK_EQUAL(st, ps.settings.beamFormer.SAPs[sap].TABs[tab].stations[st]);
-        }
-      }
-    }
 
     // check coherent settings
     CHECK_EQUAL(STOKES_I,   ps.settings.beamFormer.coherentSettings.type);
