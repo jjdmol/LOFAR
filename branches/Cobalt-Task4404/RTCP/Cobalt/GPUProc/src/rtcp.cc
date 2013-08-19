@@ -325,7 +325,7 @@ int main(int argc, char **argv)
       LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
     }
   }
-
+  pipeline=0;
   LOG_INFO_STR("Done");
 
 #ifdef HAVE_MPI

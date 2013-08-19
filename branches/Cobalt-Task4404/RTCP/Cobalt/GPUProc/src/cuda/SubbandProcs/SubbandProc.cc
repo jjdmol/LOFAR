@@ -56,23 +56,14 @@ namespace LOFAR
       }
     }
 
-
     SubbandProc::~SubbandProc()
     {
-      for (std::map<std::string,  SmartPtr<PerformanceCounter> >::iterator iterator = counters.begin();
-          iterator != counters.end();
-          iterator++)
-      {
-        cout << iterator->first << " Duration, Mean: " <<
-               (*iterator->second).stats.mean() <<
-               " stDev: " << (*iterator->second).stats.stDev() <<endl;
-      }
     }
 
-    void SubbandProc::addCounter(const std::string &name, gpu::Context & context)
-    {
-      counters[name] = new PerformanceCounter(context);
-    }
+    //void SubbandProc::addCounter(const std::string &name, gpu::Context & context)
+    //{
+    //  counters[name] = new PerformanceCounter(context);
+    //}
 
 
     void SubbandProc::addTimer(const std::string &name)

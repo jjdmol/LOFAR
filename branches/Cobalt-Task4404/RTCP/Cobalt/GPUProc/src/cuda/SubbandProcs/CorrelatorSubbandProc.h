@@ -112,6 +112,27 @@ namespace LOFAR
         static void applyWeight(unsigned baseline, unsigned channel, float weight, CorrelatedData &output);
       };
 
+      // Correlator specific collection of PerformanceCounters
+      class Counters
+      {
+      public:
+        Counters(gpu::Context &context);
+
+        // gpu kernel counters
+        PerformanceCounter fir;
+        PerformanceCounter fft;
+        PerformanceCounter delayBp;
+        PerformanceCounter correlator;
+
+        // gpu transfer counters
+        PerformanceCounter samples;
+        PerformanceCounter visibilities;
+
+        // Print the mean and std of each performance counter on the logger
+        void printStats();
+      };
+
+      Counters counters;
     private:
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have

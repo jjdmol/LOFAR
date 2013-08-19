@@ -38,6 +38,7 @@ namespace LOFAR
       gpu::Context &context, BeamFormerFactories &factories)
     :
       SubbandProc( parset, context ),
+      counters(context),
       prevBlock(-1),
       prevSAP(-1),
 
@@ -110,20 +111,20 @@ namespace LOFAR
 
 
       
-      // Set of GPU counters
-      addCounter("compute - intToFloat", context);
-      addCounter("compute - firstFFT", context);
-      addCounter("compute - delay/bp", context);
-      addCounter("compute - secondFFT", context);
-      addCounter("compute - correctBandpass", context);
-      addCounter("compute - beamformer", context);
-      addCounter("compute - transpose", context);
-      addCounter("compute - inverseFFT", context);
-      addCounter("compute - firFilterKernel", context);
-      addCounter("compute - finalFFT", context);
+      //// Set of GPU counters
+      //addCounter("compute - intToFloat", context);
+      //addCounter("compute - firstFFT", context);
+      //addCounter("compute - delay/bp", context);
+      //addCounter("compute - secondFFT", context);
+      //addCounter("compute - correctBandpass", context);
+      //addCounter("compute - beamformer", context);
+      //addCounter("compute - transpose", context);
+      //addCounter("compute - inverseFFT", context);
+      //addCounter("compute - firFilterKernel", context);
+      //addCounter("compute - finalFFT", context);
 
-      addCounter("input - samples", context);
-      addCounter("output - visibilities", context);
+      //addCounter("input - samples", context);
+      //addCounter("output - visibilities", context);
 
 
       //// CPU timers are set by CorrelatorPipeline
@@ -140,6 +141,22 @@ namespace LOFAR
       //addTimer("GPU - wait");
     }
 
+    BeamFormerSubbandProc::Counters::Counters(gpu::Context &context)
+      :
+    intToFloat(context),
+    firstFFT(context),
+    delayBp(context),
+    secondFFT(context),
+    correctBandpass(context),
+    beamformer(context),
+    transpose(context),
+    inverseFFT(context),
+    firFilterKernel(context),
+    finalFFT(context),
+    samples(context),
+    visibilities(context)
+    {
+    }
 
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
@@ -150,13 +167,7 @@ namespace LOFAR
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
-      {
-#if defined USE_B7015
-        OMP_ScopedLock scopedLock(pipeline.hostToDeviceLock[gpu / 2]);
-#endif
-        queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
-//      counters["input - samples"]->doOperation(input.inputSamples.deviceBuffer.event, 0, 0, input.inputSamples.bytesize());
-      }
+      queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
 
       if (ps.delayCompensation())
       {
@@ -178,26 +189,26 @@ namespace LOFAR
 
       //****************************************
       // Enqueue the kernels
-      intToFloatKernel->enqueue(*counters["compute - intToFloat"]);
+      intToFloatKernel->enqueue(counters.intToFloat);
 
-      firstFFT.enqueue(queue, *counters["compute - firstFFT"]);
-      delayCompensationKernel->enqueue(queue, *counters["compute - delay/bp"],
+      firstFFT.enqueue(queue, counters.firstFFT);
+      delayCompensationKernel->enqueue(queue, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      secondFFT.enqueue(queue, *counters["compute - secondFFT"]);
-      correctBandPassKernel->enqueue(queue, *counters["compute - correctBandpass"],
+      secondFFT.enqueue(queue, counters.secondFFT);
+      correctBandPassKernel->enqueue(queue, counters.correctBandpass,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(*counters["compute - beamformer"]);
-      transposeKernel->enqueue( *counters["compute - transpose"]);
+      beamFormerKernel->enqueue(counters.beamformer);
+      transposeKernel->enqueue(counters.transpose);
 
-      inverseFFT.enqueue(queue, *counters["compute - inverseFFT"]);
+      inverseFFT.enqueue(queue, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue( *counters["compute - firFilterKernel"]);
-        finalFFT.enqueue(queue, *counters["compute - finalFFT"]);
+        firFilterKernel->enqueue( counters.firFilterKernel);
+        finalFFT.enqueue(queue, counters.finalFFT);
       }
 
       // TODO: Propagate flags
@@ -205,6 +216,28 @@ namespace LOFAR
       queue.synchronize();
 
       queue.readBuffer(output, devResult, true);
+
+            // ************************************************
+      // Perform performance statistics if needed
+      if (gpuProfiling)
+      {
+        // assure that the queue is done so all events are fished
+        queue.synchronize();
+        // Update the counters
+        if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
+        {
+          counters.firFilterKernel.logTime();
+          counters.finalFFT.logTime();
+        }
+        counters.intToFloat.logTime();
+        counters.firstFFT.logTime();
+        counters.delayBp.logTime();
+        counters.secondFFT.logTime();
+        counters.correctBandpass.logTime();
+        counters.beamformer.logTime();
+        counters.transpose.logTime();
+        counters.inverseFFT.logTime();
+      }
     }
 
     void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)

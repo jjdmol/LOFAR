@@ -57,6 +57,10 @@ namespace LOFAR
     {
     }
 
+    Pipeline::~Pipeline()
+    {
+    }
+
 
     // Record type needed by receiveInput. Before c++0x, a local type
     // can't be a template argument, so we'll have to define this type

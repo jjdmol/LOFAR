@@ -56,6 +56,7 @@ namespace LOFAR
       gpu::Context &context, CorrelatorFactories &factories)
     :
       SubbandProc( parset, context ),       
+      counters(context),
       prevBlock(-1),
       prevSAP(-1),
       devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
@@ -91,20 +92,14 @@ namespace LOFAR
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) {
+      for (size_t i = 0; i < 3; ++i) 
+      {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
                 ps.integrationSteps(),
                 context));
       }
-      // create all gpu counters
-      addCounter("compute - FIR", context);
-      addCounter("compute - FFT", context);
-      addCounter("compute - delay/bp", context);
-      addCounter("compute - correlator", context);
-      addCounter("input - samples", context);
-      addCounter("output - visibilities", context);
 
       //// CPU timers are set by CorrelatorPipeline
       //addTimer("CPU - read input");
@@ -119,6 +114,47 @@ namespace LOFAR
       //addTimer("GPU - compute");
       //addTimer("GPU - wait");
 
+    }
+    //SubbandProc::~SubbandProc()
+    //{
+    //  for (std::map<std::string,  SmartPtr<PerformanceCounter> >::iterator iterator = counters.begin();
+    //      iterator != counters.end();
+    //      iterator++)
+    //  {
+    //    cout << iterator->first << " Duration, Mean: " <<
+    //           (*iterator->second).stats.mean() <<
+    //           " stDev: " << (*iterator->second).stats.stDev() <<endl;
+    //  }
+    //}
+
+
+    CorrelatorSubbandProc::Counters::Counters(gpu::Context &context)
+      :
+    fir(context),
+    fft(context),
+    delayBp(context),
+    correlator(context),
+    samples(context),
+    visibilities(context)
+    {}
+
+    void CorrelatorSubbandProc::Counters::printStats()
+    {     
+
+      // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****");
+      LOG_INFO_STR("(fir) mean: " << fir.stats.mean() 
+                   << " stDev: " << fir.stats.stDev());
+      LOG_INFO_STR("(fft) mean: " << fft.stats.mean() 
+                   << " stDev: " << fft.stats.stDev());
+      LOG_INFO_STR("(delayBp) mean: " << delayBp.stats.mean() 
+                   << " stDev: " << delayBp.stats.stDev());
+      LOG_INFO_STR("(correlator) mean: " << correlator.stats.mean() 
+                   << " stDev: " << correlator.stats.stDev());
+      LOG_INFO_STR("(samples) mean: " << samples.stats.mean() 
+                   << " stDev: " << samples.stats.stDev());
+      LOG_INFO_STR("(visibilities) mean: " << visibilities.stats.mean() 
+                   << " stDev: " << visibilities.stats.stDev());
     }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(
@@ -266,9 +302,9 @@ namespace LOFAR
       // Copy data to the GPU 
       // If #ch/sb==1, copy the input to the device buffer where the DelayAndBandPass kernel reads from.
       if (ps.nrChannelsPerSubband() == 1)
-        queue.writeBuffer(devFilteredData, input.inputSamples, *counters["input - samples"], true);
+        queue.writeBuffer(devFilteredData, input.inputSamples, counters.samples, true);
       else // #ch/sb > 1
-        queue.writeBuffer(devInput.inputSamples, input.inputSamples, *counters["input - samples"], true);
+        queue.writeBuffer(devInput.inputSamples, input.inputSamples,  counters.samples, true);
    
       if (ps.delayCompensation())
       {
@@ -289,17 +325,17 @@ namespace LOFAR
       // *********************************************
       // Run the kernels
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue, *counters["compute - FIR"]);
-        fftKernel.enqueue(queue, *counters["compute - FFT"]);
+        firFilterKernel->enqueue(queue, counters.fir);
+        fftKernel.enqueue(queue, counters.fft);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue, *counters["compute - delay/bp"], 
+      delayAndBandPassKernel->enqueue(queue, counters.delayBp, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue, *counters["compute - correlator"] );
+      correlatorKernel->enqueue(queue, counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -311,7 +347,7 @@ namespace LOFAR
       queue.synchronize();
 
       // Read data back from the kernel
-      queue.readBuffer(output, devFilteredData, *counters["output - visibilities"], true);
+      queue.readBuffer(output, devFilteredData, counters.visibilities, true);
 
       // ************************************************
       // Perform performance statistics if needed
@@ -322,13 +358,13 @@ namespace LOFAR
         // Update the counters
         if (ps.nrChannelsPerSubband() > 1) 
         {
-          counters["compute - FIR"]->logTime();
-          counters["compute - FFT"]->logTime();
+          counters.fir.logTime();
+          counters.fft.logTime();
         }
-        counters["compute - delay/bp"]->logTime();
-        counters["compute - correlator"]->logTime();
-        counters["input - samples"]->logTime();
-        counters["output - visibilities"]->logTime();
+        counters.delayBp.logTime();
+        counters.correlator.logTime();
+        counters.samples.logTime();
+        counters.visibilities.logTime();
 
       }
       // now perform weighting of the data based on the number of valid samples; TODO???
