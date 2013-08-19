@@ -101,6 +101,7 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
+          // itsParameters.nrSamplesPerSubband *
           (itsParameters.nrHistorySamples + itsParameters.nrSamplesPerSubband) *
           itsParameters.nrStations * itsParameters.nrPolarizations * 
           itsParameters.nrBytesPerComplexSample;
@@ -113,7 +114,9 @@ namespace LOFAR
           itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
           sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
-        return 1;
+        return
+          itsParameters.nrHistorySamples * itsParameters.nrStations * 
+          itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
