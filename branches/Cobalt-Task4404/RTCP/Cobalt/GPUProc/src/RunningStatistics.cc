@@ -126,6 +126,7 @@ namespace LOFAR
       if (count() == 0)      
         os << "*Not executed*";
       else
+      {
         os.precision(5);
 
         os  << " count: "  << std::setw(8) << count()
@@ -134,6 +135,7 @@ namespace LOFAR
             << " min:   " << std::setw(8) << min()    
             << " max:   " << std::setw(8) << max()
             << " (stats in ms)" ;
+      }
     }
 
     std::ostream& operator<<(std::ostream& os, RunningStatistics const & rs)

@@ -24,7 +24,6 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
 #include <GPUProc/PerformanceCounter.h>
 
@@ -48,7 +47,6 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
@@ -63,6 +61,4 @@ namespace LOFAR
     };
   }
 }
-
 #endif
-

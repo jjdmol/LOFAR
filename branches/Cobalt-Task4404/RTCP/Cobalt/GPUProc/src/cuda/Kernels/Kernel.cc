@@ -48,7 +48,8 @@ namespace LOFAR
       gpu::Function(function),
       event(stream.getContext()),
       itsStream(stream)
-    {}
+    {
+      }
 
     void Kernel::enqueue(const gpu::Stream &queue,
                          PerformanceCounter &counter) const
@@ -69,19 +70,14 @@ namespace LOFAR
       gpu::Grid grid(globalWorkSize.x / block.x,
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
-
-      // Perform a timed lauch of the Kernel
-        
+      
       queue.launchKernel(*this, grid, block);
-      
-      
     }
 
     void Kernel::enqueue() const
     {
       enqueue(itsStream);
     }
-
 
     void Kernel::enqueue(PerformanceCounter &counter) const
     {

@@ -24,6 +24,7 @@
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
 #include <Common/lofar_complex.h>
+#include <sstream>
 
 #include <UnitTest++.h>
 #include <memory>
@@ -34,6 +35,8 @@ using namespace std;
 
 TEST(tKernelFunctions)
 {
+  // **************************************
+  // Set up sut
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
@@ -73,12 +76,27 @@ TEST(tKernelFunctions)
 
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
-  PerformanceCounter counter(context);
-  kernel->enqueue(counter);
+
+  // **************************************
+  // excercise it
+  PerformanceCounter counter(context);  //create a counter
+  kernel->enqueue(counter);             // insert in kernel queue
+
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
   stream.synchronize();
+ 
+  // update the counter
+  counter.logTime();
+
+  stringstream str;
+  counter.stats.print(str);
+  
+  // Most functionality is tested at the specific stats class. Just test if
+  // the stats object has been used once
+  CHECK(str.str() != "*Not executed*");
+
 }
 
 int main()

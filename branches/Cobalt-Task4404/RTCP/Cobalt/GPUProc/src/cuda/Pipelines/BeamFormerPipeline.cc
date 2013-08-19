@@ -34,7 +34,6 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/global_defines.h>
 
-
 #define NR_WORKQUEUES_PER_DEVICE  2
 
 namespace LOFAR
@@ -129,7 +128,5 @@ namespace LOFAR
         LOG_ERROR_STR("Received an Exception desctructing BeamFormerPipline, while print performance");
       }
     }
-
   }
 }
-

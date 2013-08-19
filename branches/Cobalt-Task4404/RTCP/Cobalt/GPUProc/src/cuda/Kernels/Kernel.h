@@ -37,7 +37,6 @@ namespace LOFAR
   {
     class Kernel : public gpu::Function
     {
-
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
       struct Parameters
@@ -74,9 +73,6 @@ namespace LOFAR
       void enqueue(PerformanceCounter &counter) const;
 
       void enqueue() const;
-
-      void logTime();
-
 
     protected:
       // Construct a kernel.

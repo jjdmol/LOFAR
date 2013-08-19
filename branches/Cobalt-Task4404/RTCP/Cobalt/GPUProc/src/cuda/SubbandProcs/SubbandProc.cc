@@ -25,7 +25,6 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
-#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
@@ -59,12 +58,6 @@ namespace LOFAR
     SubbandProc::~SubbandProc()
     {
     }
-
-    //void SubbandProc::addCounter(const std::string &name, gpu::Context & context)
-    //{
-    //  counters[name] = new PerformanceCounter(context);
-    //}
-
 
     void SubbandProc::addTimer(const std::string &name)
     {

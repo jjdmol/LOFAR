@@ -31,7 +31,6 @@
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/BandPass.h>
 
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -117,18 +116,6 @@ namespace LOFAR
       //addTimer("GPU - wait");
 
     }
-    //SubbandProc::~SubbandProc()
-    //{
-    //  for (std::map<std::string,  SmartPtr<PerformanceCounter> >::iterator iterator = counters.begin();
-    //      iterator != counters.end();
-    //      iterator++)
-    //  {
-    //    cout << iterator->first << " Duration, Mean: " <<
-    //           (*iterator->second).stats.mean() <<
-    //           " stDev: " << (*iterator->second).stats.stDev() <<endl;
-    //  }
-    //}
-
 
     CorrelatorSubbandProc::Counters::Counters(gpu::Context &context)
       :

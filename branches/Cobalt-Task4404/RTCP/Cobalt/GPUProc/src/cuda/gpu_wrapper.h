@@ -431,8 +431,6 @@ namespace LOFAR
         // documentation of \c cuStreamCreate in the CUDA Driver API.
         Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
-
-
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.
         // \param hostMem Host memory that will be copied from.

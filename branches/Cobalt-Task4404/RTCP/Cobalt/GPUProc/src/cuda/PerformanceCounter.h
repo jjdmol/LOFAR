@@ -38,9 +38,6 @@ namespace LOFAR
     public:
       PerformanceCounter(const LOFAR::Cobalt::gpu::Context &context);
 
-      // TODO: on descruction print the log
-      //~PerformanceCounter();
-
       void logTime();
 
       // public events: they need to be inserted in streams..

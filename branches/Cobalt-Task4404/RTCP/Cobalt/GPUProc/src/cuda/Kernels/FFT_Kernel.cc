@@ -43,8 +43,6 @@ namespace LOFAR
     {
     }
 
-
-
     void FFT_Kernel::enqueue(gpu::Stream &stream, PerformanceCounter &counter)
     {
       stream.recordEvent(counter.start); 
