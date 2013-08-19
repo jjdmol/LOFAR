@@ -40,7 +40,9 @@ typedef signed char SampleType;
 #error Precondition violated: NR_BITS_PER_SAMPLE == 8 || NR_BITS_PER_SAMPLE == 16
 #endif
 
-#if !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
+#if NR_CHANNELS == 1
+#warning TODO: NR_CHANNELS == 1 is not (yet) supported
+#elif !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
 #error Precondition violated: NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0
 #endif
 
