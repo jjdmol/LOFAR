@@ -385,9 +385,9 @@ namespace LOFAR
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
-        cout << "Build info for '" << srcFilename 
+        LOG_DEBUG_STR( "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &infoLog[0] << endl;
+             << " ms):" << endl << &infoLog[0] );
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -395,9 +395,9 @@ namespace LOFAR
           errorLogSize = errorLog.size();
         }
         errorLog[errorLogSize - 1] = '\0';
-        cerr << "Build errors for '" << srcFilename 
+        LOG_FATAL_STR( "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &errorLog[0] << endl;
+             << " ms):" << endl << &errorLog[0] );
         throw;
       }
     }
