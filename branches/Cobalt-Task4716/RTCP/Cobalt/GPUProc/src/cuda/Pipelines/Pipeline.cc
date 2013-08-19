@@ -85,7 +85,7 @@ namespace LOFAR
         // Receive the samples of all subbands from the stations for this
         // block.
 
-        LOG_INFO_STR("[block " << block << "] Reading input samples");
+        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
 
         // The set of InputData objects we're using for this block.
         vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
@@ -115,7 +115,9 @@ namespace LOFAR
         }
 
         // Receive all subbands from all stations
+        LOG_INFO_STR("[block " << block << "] Receive input");
         receiver.receiveBlock<SampleT>(blocks);
+        LOG_INFO_STR("[block " << block << "] Input received");
 
         size_t nrFlaggedSamples = 0;
 
