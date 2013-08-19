@@ -224,8 +224,18 @@ int main(int argc, char **argv)
     LOG_DEBUG_STR("Binding to GPUs " << gpuIds);
     for (size_t i = 0; i < gpuIds.size(); ++i)
       devices.push_back(allDevices[i]);
+
+    // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
+    const string nic = ps.settings.nodes[rank].nic;
+
+    if (nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << nic);
+
+      if (setenv("OMPI_MCA_btl_openib_if_include", nic.c_str(), 1) < 0)
+        THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
+    }
   } else {
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using all cores and GPUs");
+    LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
     devices = allDevices;
   }
 

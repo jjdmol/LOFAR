@@ -326,6 +326,7 @@ namespace LOFAR
         node.rank     = i;
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
+        node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
 
         vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
