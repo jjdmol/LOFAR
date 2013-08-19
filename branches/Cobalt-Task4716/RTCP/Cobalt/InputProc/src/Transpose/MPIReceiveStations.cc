@@ -40,7 +40,8 @@ namespace LOFAR {
       logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
       nrStations(nrStations),
       beamlets(beamlets),
-      blockSize(blockSize)
+      blockSize(blockSize),
+      stationSourceRanks(nrStations, MPI_ANY_SOURCE)
     {
     }
 
@@ -51,7 +52,7 @@ namespace LOFAR {
       tag.bits.type    = CONTROL;
       tag.bits.station = station;
 
-      return Guarded_MPI_Irecv(&header, sizeof header, MPI_ANY_SOURCE, tag.value);
+      return Guarded_MPI_Irecv(&header, sizeof header, stationSourceRanks[station], tag.value);
     }
 
 
@@ -64,7 +65,7 @@ namespace LOFAR {
       tag.bits.beamlet = beamlet;
       tag.bits.transfer = transfer;
 
-      return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), MPI_ANY_SOURCE, tag.value);
+      return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), stationSourceRanks[station], tag.value);
     }
 
 
@@ -75,7 +76,7 @@ namespace LOFAR {
       tag.bits.station = station;
       tag.bits.beamlet = beamlet;
 
-      return Guarded_MPI_Irecv(&metaData, sizeof metaData, MPI_ANY_SOURCE, tag.value);
+      return Guarded_MPI_Irecv(&metaData, sizeof metaData, stationSourceRanks[station], tag.value);
     }
 
 
@@ -120,6 +121,9 @@ namespace LOFAR {
          */
 
         const struct Header &header = headers[stat];
+
+        // Record where station data comes from
+        stationSourceRanks[stat] = header.sourceRank;
 
         //LOG_DEBUG_STR(logPrefix << "Received header from station " << stat);
 
@@ -171,6 +175,7 @@ namespace LOFAR {
           blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
         }
       }
+
     }
 
     // Create all necessary instantiations
