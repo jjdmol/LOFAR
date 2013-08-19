@@ -24,7 +24,7 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <algorithm>  // for std::min
+#include <algorithm>  // for std::min and std::max
 
 #include <boost/noncopyable.hpp>
 
@@ -473,7 +473,7 @@ namespace LOFAR
         {
           ScopedCurrentContext scc(_context);
 
-          checkCuCall(cuMemAlloc(&_ptr, size));
+          checkCuCall(cuMemAlloc(&_ptr, std::max(1UL, size)));
         }
 
         ~Impl()
