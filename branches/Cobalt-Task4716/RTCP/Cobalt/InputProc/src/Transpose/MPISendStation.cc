@@ -36,7 +36,8 @@ using namespace LOFAR::Cobalt::MPIProtocol;
 //#define DEBUG_MPI
 
 #ifdef DEBUG_MPI
-#define DEBUG(str)    LOG_DEBUG_STR(__PRETTY_FUNCTION__ << ": " << str)
+//#define DEBUG(str)    LOG_DEBUG_STR(__PRETTY_FUNCTION__ << ": " << str)
+#define DEBUG(str)    LOG_DEBUG_STR(str)
 #else
 #define DEBUG(str)
 #endif
@@ -51,7 +52,7 @@ namespace LOFAR {
       settings(settings),
       stationIdx(stationIdx),
       beamletDistribution(beamletDistribution),
-      targetRanks(keys(beamletDistribution)),
+      targetRanks(keys_nonempty(beamletDistribution)),
       beamletTargets(inverse(beamletDistribution))
     {
       LOG_INFO_STR(logPrefix << "Initialised");
@@ -59,9 +60,12 @@ namespace LOFAR {
       // Check whether we send each subband to at most one node
       ASSERT(beamletTargets.size() == values(beamletDistribution).size());
 
+      int sourceRank = MPI_Rank();
+
       // Set static header info
-      for(std::vector<int>::const_iterator rank = targetRanks.begin(); rank != targetRanks.end(); ++rank) {
-        headers[*rank].station      = settings.station;
+      for(std::vector<int>::const_iterator targetRank = targetRanks.begin(); targetRank != targetRanks.end(); ++targetRank) {
+        headers[*targetRank].station      = settings.station;
+        headers[*targetRank].sourceRank   = sourceRank;
       }
 
       // Set beamlet info
