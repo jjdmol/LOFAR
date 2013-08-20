@@ -256,6 +256,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
 
+    # Extract station number from its name
+    stationNr = int(name[2:])
+
+    # Need globally unique IP port numbers.
+    #basePort = 0x10FA
+    basePort = 10000 + stationNr * 10
+
     # International station in local mode takes dest. MAC/IP info from
     # separate file 
     if (ip_parts[1] != "151" and ilt_local == 1):
@@ -263,7 +270,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         for rspNr in range(len(ip_mac_alias)):  
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
-            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", 0x10FA + rspNr)
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
     else:
         nrNodes = len(rspDestNode) # Number of occurences in file
         # Core stations have two occurences (these have a splitter), and so
@@ -275,13 +282,13 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                 for rspNr in range(4):
                     RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
                     RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
-                    RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(0x10FA + rspNr))
+                    RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
             if str(1) in rspDestNode.keys():
                 (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
                 for rspNr in range(4):
                     RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
                     RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(0x10FA + 6 + rspNr))
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address

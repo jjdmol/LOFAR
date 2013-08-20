@@ -4,9 +4,12 @@ cat RSPConnections.dat.tmpl | perl -ne '
 
 /^(\w+) RSP_([01]) (.*)/ || next;
 
-$station=$1;
-$board=$2;
-$host=$3;
+$station = $1;
+$board = $2;
+$host = $3;
+
+$station =~ /^[A-Z][A-Z]([0-9]+)/;
+$nr = $1;
 
 # only parse cobalt nodes
 $host =~ /^cbt/ || next;
@@ -30,12 +33,13 @@ if (not $cached) {
 }
 
 $dest = $lookup{$host};
+$baseport = 10000 + $nr * 10;
 
 $portstr = sprintf "[udp:%s:%d, udp:%s:%d, udp:%s:%d, udp:%s:%d]",
-  $dest, 4346 + ($board * 6) + 0,
-  $dest, 4346 + ($board * 6) + 1,
-  $dest, 4346 + ($board * 6) + 2,
-  $dest, 4346 + ($board * 6) + 3;
+  $dest, $baseport + ($board * 6) + 0,
+  $dest, $baseport + ($board * 6) + 1,
+  $dest, $baseport + ($board * 6) + 2,
+  $dest, $baseport + ($board * 6) + 3;
 
 if ($board == 0) {
   printf "PIC.Core.Station.%sLBA.RSP.ports = %s\n",$station,$portstr;
