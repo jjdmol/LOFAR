@@ -126,6 +126,9 @@
 /* Define if LAM is installed */
 #cmakedefine HAVE_LAM 1
 
+/* Define if libnuma is installed */
+#cmakedefine HAVE_LIBNUMA 1
+
 /* Define if libssh2 is installed */
 #cmakedefine HAVE_LIBSSH2 1
 
