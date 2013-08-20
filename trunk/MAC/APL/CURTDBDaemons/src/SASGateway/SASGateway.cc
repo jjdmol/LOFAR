@@ -182,6 +182,9 @@ GCFEvent::TResult SASGateway::connect2PVSS(GCFEvent& event, GCFPortInterface& po
 	break;
 
 	case DP_QUERY_SUBSCRIBED: {
+		itsTimerPort->cancelAllTimers();
+
+		// only failures are reported, successful subscriptions result in a DP_QUERY_CHANGED
 		DPQuerySubscribedEvent	answer(event);
 		if (answer.result != PVSS::SA_NO_ERROR) {
 			LOG_ERROR_STR ("Taking subscription on PVSS-states failed (" << answer.result  <<
@@ -189,17 +192,16 @@ GCFEvent::TResult SASGateway::connect2PVSS(GCFEvent& event, GCFPortInterface& po
 			itsTimerPort->setTimer(10.0);
 			break;
 		}
-		itsQueryID = answer.QryID;
-		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
-					 "), going to operational mode");
-		itsTimerPort->cancelAllTimers();
-		TRAN(SASGateway::operational);
 	}
 	break;
 
 	case DP_QUERY_CHANGED:
-		// don't expect this event here right now, but you never know.
+		itsTimerPort->cancelAllTimers();
+
 		_handleQueryEvent(event);
+		LOG_INFO_STR("Subscription on state fields from PVSS successful(" << itsQueryID  <<
+					 "), going to operational mode");
+		TRAN(SASGateway::operational);
 		break;
 
 	default:
@@ -225,7 +227,6 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 		break;
 
 	case DP_QUERY_CHANGED:
-		// don't expect this event here right now, but you never know.
 		_handleQueryEvent(event);
 		break;
 
@@ -233,6 +234,7 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 
 
 	default:
+		LOG_DEBUG_STR("operational DEFAULT:" << eventName(event) << "@" << port.getName());
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -247,6 +249,10 @@ GCFEvent::TResult SASGateway::operational(GCFEvent&			event,
 void SASGateway::_handleQueryEvent(GCFEvent&	event)
 {
 	DPQueryChangedEvent		DPevent(event);
+
+	if (!itsQueryID) {
+		itsQueryID = DPevent.QryID;
+	}
 	
 	if (DPevent.result != PVSS::SA_NO_ERROR) {
 		LOG_ERROR_STR("PVSS reported error " << DPevent.result << " for query " << itsQueryID);
@@ -271,6 +277,7 @@ void SASGateway::_handleQueryEvent(GCFEvent&	event)
 	}
 	catch (Exception& ex) {
 		LOG_ERROR_STR("Caught exception while updating SAS:" << ex.what() << "\nError= " << itsSASservice->errorMsg());
+		itsSASservice->disconnect();
 	}
 }
 
