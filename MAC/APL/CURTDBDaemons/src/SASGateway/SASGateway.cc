@@ -257,16 +257,21 @@ void SASGateway::_handleQueryEvent(GCFEvent&	event)
 	GCFPVDynArr*	DPnames  = (GCFPVDynArr*)(DPevent.DPnames._pValue);
 	GCFPVDynArr*	DPvalues = (GCFPVDynArr*)(DPevent.DPvalues._pValue);
 	GCFPVDynArr*	DPtimes  = (GCFPVDynArr*)(DPevent.DPtimes._pValue);
-	TreeValue		tv(itsSASservice, itsPICtreeID);
-	for (int	idx = 0; idx < nrDPs; ++idx) {
-		// show operator what we are doing
-		string	nameStr(PVSS2SASname(DPnames->getValue() [idx]->getValueAsString()));
-		string	valStr (DPvalues->getValue()[idx]->getValueAsString());
-		string	timeStr(DPtimes->getValue() [idx]->getValueAsString());
-		LOG_INFO_STR(nameStr << " = " << valStr << " @ " << timeStr);
+	try {
+		TreeValue	tv(itsSASservice, itsPICtreeID);
+		for (int	idx = 0; idx < nrDPs; ++idx) {
+			// show operator what we are doing
+			string	nameStr(PVSS2SASname(DPnames->getValue() [idx]->getValueAsString()));
+			string	valStr (DPvalues->getValue()[idx]->getValueAsString());
+			string	timeStr(DPtimes->getValue() [idx]->getValueAsString());
+			LOG_INFO_STR(nameStr << " = " << valStr << " @ " << timeStr);
 
-		tv.addKVT(nameStr, valStr, time_from_string(timeStr));
-	} // for
+			tv.addKVT(nameStr, valStr, time_from_string(timeStr));
+		} // for
+	}
+	catch (Exception& ex) {
+		LOG_ERROR_STR("Caught exception while updating SAS:" << ex.what() << "\nError= " << itsSASservice->errorMsg());
+	}
 }
 
 
