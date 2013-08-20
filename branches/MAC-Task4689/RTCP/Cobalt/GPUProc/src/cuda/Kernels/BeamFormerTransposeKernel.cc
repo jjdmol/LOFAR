@@ -35,8 +35,16 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    string BeamFormerTransposeKernel::theirSourceFile = "BeamFormer/Transpose.cu";
-    string BeamFormerTransposeKernel::theirFunction = "transposeComplexVoltages";
+    string BeamFormerTransposeKernel::theirSourceFile = "Transpose.cu";
+    string BeamFormerTransposeKernel::theirFunction = "transpose";
+
+    BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
+    {
+      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+    }
 
     BeamFormerTransposeKernel::
     BeamFormerTransposeKernel(const gpu::Stream& stream,
@@ -49,7 +57,6 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      //globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, (ps.nrChannelsPerSubband() + 15) / 16);
       globalWorkSize = gpu::Grid(256,
                                  (params.nrTABs + 15) / 16, 
                                  params.nrSamplesPerChannel / 16);

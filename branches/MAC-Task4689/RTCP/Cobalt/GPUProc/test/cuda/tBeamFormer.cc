@@ -32,7 +32,7 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
-#include "TestUtil.h"
+#include "../TestUtil.h"
 
 using namespace std;
 using namespace boost;
@@ -309,7 +309,7 @@ int main()
   // with only the real weight set to 1 and imag also 1
   // all outputs should be (0,8) 
   // (1 , i) * (1, i) == 1 * 1 + i * i + 1 * i + 1 * i= 1 -1 +2i = 2i
-  // times 4 stations is (0.8)
+  // times 4 stations is (0,8)
   cout << "test 4" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
@@ -350,7 +350,7 @@ int main()
   // Test 5: all inputs 1 (including imag)
   // with only the real weight set to 1.
   // The global weight correction is set to 2.01 so
-  // all outputs should be 4 * 2.01 = 8.01
+  // all outputs should be 4 * 2.01 = 8.04
   cout << "test 5" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {

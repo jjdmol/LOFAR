@@ -177,16 +177,24 @@ class msss_imager_pipeline(control):
         self.logger.debug(
             "Wrote output sky-image mapfile: {0}".format(output_image_mapfile))
 
+        # TODO: This is a backdoor option to manually add beamtables when these 
+        # are missing on the provided ms. There is NO use case for users of the 
+        # pipeline
+        add_beam_tables = self.parset.getBool(
+                                    "Imaging.addBeamTables", False)          
+            
         # ******************************************************************
         # (1) prepare phase: copy and collect the ms
         concat_ms_map_path, timeslice_map_path, raw_ms_per_image_map_path, \
             processed_ms_dir = self._prepare_phase(input_mapfile,
-                                    target_mapfile)
+                                    target_mapfile, add_beam_tables)
 
         #We start with an empty source_list
         source_list = ""  # path to local sky model (list of 'found' sources)
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
+
+                                    
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model
@@ -457,7 +465,8 @@ class msss_imager_pipeline(control):
         return output_mapfile, max_baseline
 
     @xml_node
-    def _prepare_phase(self, input_ms_map_path, target_mapfile):
+    def _prepare_phase(self, input_ms_map_path, target_mapfile,
+        add_beam_tables):
         """
         Copy ms to correct location, combine the ms in slices and combine
         the time slices into a large virtual measurement set
@@ -493,7 +502,8 @@ class msss_imager_pipeline(control):
                 slices_mapfile=time_slices_mapfile,
                 raw_ms_per_image_mapfile=raw_ms_per_image_mapfile,
                 working_directory=self.scratch_directory,
-                processed_ms_dir=processed_ms_dir)
+                processed_ms_dir=processed_ms_dir,
+                add_beam_tables=add_beam_tables)
 
         #validate that the prepare phase produced the correct data
         output_keys = outputs.keys()

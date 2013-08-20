@@ -12,10 +12,8 @@ def printHelp():
     print "possible option for this script"
     print "-------------------------------"
     print "-h            print this help screen"
-    print "-s=CS002C     station to show 'CS002C'"
     print "-d=2          show last 2 days"
     print "-f=full_path_filename"
-    #print "-p=full_path  path too this script"
     print "-------------------------------"
     sys.exit(0)
 
@@ -44,7 +42,7 @@ sys.path.insert(0, libPath)
 from general_lib import *
 from lofar_lib import *
 
-StID = args.get('S', getHostName()).upper()
+StID = getHostName().upper()
 
 def main():
     f = open(runPath+r'/checkHardware.conf', 'r')
@@ -167,8 +165,7 @@ def main():
                 print ">> Station name : %s" %(kv.get('NAME'))
             
             if msg == 'RUNTIME':
-                print ">> Check date   : %s-%s-%s" %(date[6:], date[4:6], date[:4])
-                print ">> Check runtime: %s .. %s" %(kv.get('START'), kv.get('STOP'))
+                print ">> Check runtime: %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
             
             if msg == 'CHECKS':
                 print ">> Checks done  : %s" %(string.join(d[4:],', ')) 
