@@ -478,7 +478,6 @@ GCFEvent::TResult SoftwareMonitor::finish_state(GCFEvent& event, GCFPortInterfac
 void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, int	curLevel)
 {
 	LOG_DEBUG_STR("_updateProcess(" << iter->DPname << "," << pid << "," << curLevel << ")");
-	time_t	now(time(0));
 
 	if (pid) {					// process is running?
 		// mark it operational whether or not it should be running
@@ -498,7 +497,7 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 			iter->startTime = statStruct.st_ctime;
 		}
 		else {	// retrieval of time failed assume 'now'
-			iter->startTime = now;
+			iter->startTime = itsPMtime;
 		}
 		LOG_DEBUG_STR("starttime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->startTime)));
 		itsDPservice->setValue(iter->DPname+".process.startTime", 
@@ -542,7 +541,7 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 		
 	// update stopTime is not done already.
 	if (iter->startTime > iter->stopTime) {
-		iter->stopTime = now;
+		iter->stopTime = itsPMtime;
 		LOG_DEBUG_STR("stoptime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->stopTime)));
 		itsDPservice->setValue(iter->DPname+".process.stopTime", 
 									GCFPVString(to_iso_extended_string(from_time_t(iter->stopTime))));
@@ -561,6 +560,7 @@ void SoftwareMonitor::_buildProcessMap()
 	const int STAT_BUFFER_SIZE = 1024;
 
 	itsProcessMap.clear();
+	itsPMtime = time(0);
 
 	DIR*	procDir = opendir("/proc");
 	ASSERTSTR(procDir, "Cannot open directory /proc to check programlist");
