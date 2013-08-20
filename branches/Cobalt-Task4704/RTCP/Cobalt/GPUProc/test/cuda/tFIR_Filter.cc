@@ -20,17 +20,32 @@
 
 #include <lofar_config.h>
 
-#include "tFIR_Filter.h"
+#define COMPLEX 2       // do not change
+
+#define NR_BITS_PER_SAMPLE 8
+#define NR_STATION_FILTER_TAPS  16
+#define USE_NEW_CORRELATOR
+#define NR_POLARIZATIONS         2 
+#define NR_TAPS                 16
+
+#define NR_STATIONS 20
+#define NR_SAMPLES_PER_CHANNEL 128
+#define NR_CHANNELS 64
+
+#if NR_BITS_PER_SAMPLE == 16
+typedef signed short SampleType;
+#elif NR_BITS_PER_SAMPLE == 8
+typedef signed char SampleType;
+#else
+#error unsupported NR_BITS_PER_SAMPLE
+#endif
 
 #include <cstdlib> 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
-#include <fstream>
 #include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_wrapper.h>
