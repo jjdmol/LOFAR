@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <fstream>
 #include <boost/lexical_cast.hpp>
@@ -35,8 +36,10 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/FilterBank.h>
 
 #include "../TestUtil.h"
+#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR;
@@ -95,12 +98,42 @@ int test()
 
   unsigned station, sample, ch, pol;
 
+  // Calculate the number of threads in total and per block
+  int MAXNRCUDATHREADS = 1024;//dit moet nog opgevraagd worden en niet als magisch getal
+  size_t maxNrThreads = MAXNRCUDATHREADS;
+  unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
+  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
+  
+  Grid globalWorkSize(nrPasses, NR_STATIONS); 
+  Block localWorkSize(totalNrThreads / nrPasses, 1); 
+
+  MultiDimArray<signed char, 5>
+    inputSamplesArr(boost::extents
+                    [NR_STATIONS]
+                    [NR_SAMPLES_PER_CHANNEL + (NR_TAPS - 1)]
+                    [NR_CHANNELS]
+                    [NR_POLARIZATIONS]
+                    [COMPLEX],
+                    rawInputSamples.get<signed char>(), false);
+  MultiDimArray<float, 2> 
+    firWeightsArr(boost::extents
+                  [NR_CHANNELS]
+                  [NR_TAPS],
+                  rawFirWeights.get<float>(), false);
+
+  MultiDimArray<float, 5>
+    filteredDataArr(boost::extents
+                    [NR_STATIONS]
+                    [NR_POLARIZATIONS]
+                    [NR_SAMPLES_PER_CHANNEL]
+                    [NR_CHANNELS]
+                    [COMPLEX],
+                    rawFilteredData.get<float>(), false);
+
   // Test 1: Single impulse test on single non-zero weight
   station = ch = pol = 0;
   sample = NR_TAPS - 1; // skip FIR init samples
   rawFirWeights.get<float>()[0] = 2.0f;
-  MultiDimArray<signed char, 5> inputSamplesArr(boost::extents[NR_STATIONS][NR_SAMPLES_PER_CHANNEL + (NR_TAPS - 1)][NR_CHANNELS][NR_POLARIZATIONS][COMPLEX]
-, rawInputSamples.get<signed char>(), false);
   inputSamplesArr[station][sample][ch][pol][0] = 3;
 
   // Copy input vectors from host memory to GPU buffers.
@@ -108,21 +141,11 @@ int test()
   stream.writeBuffer(devSampledData, rawInputSamples, true);
   stream.writeBuffer(devFirWeights, rawFirWeights, true);
 
-  // ****************************************************************************
   // Run the kernel on the created data
   hKernel.setArg(0, devFilteredData);
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
   hKernel.setArg(3, devHistoryData);
-
-  // Calculate the number of threads in total and per blovk
-  int MAXNRCUDATHREADS = 1024;//doet moet nog opgevraagt worden en niuet als magish getal
-  size_t maxNrThreads = MAXNRCUDATHREADS;
-  unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-  unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-  
-  Grid globalWorkSize(nrPasses, NR_STATIONS); 
-  Block localWorkSize(totalNrThreads / nrPasses, 1); 
 
   // Run the kernel
   stream.synchronize();
@@ -159,6 +182,177 @@ int test()
     std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
     testOk = false;
   }
+
+
+  // Test 2: Impulse train 2*NR_TAPS apart. All st, all ch, all pol.
+  for (ch = 0; ch <NR_CHANNELS; ch++) {
+    for (unsigned tap = 0; tap < NR_TAPS; tap++) {
+      firWeightsArr[ch][tap] = ch + tap;
+    }
+  }
+
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (sample = NR_TAPS - 1; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample += 2 * NR_TAPS) {
+      for (ch = 0; ch <NR_CHANNELS; ch++) {
+        for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+          inputSamplesArr[station][sample][ch][pol][0] = station;
+        }
+      }
+    }
+  }
+
+  // Copy input vectors from host memory to GPU buffers.
+  stream.writeBuffer(devFilteredData, rawFilteredData, true);
+  stream.writeBuffer(devSampledData, rawInputSamples, true);
+  stream.writeBuffer(devFirWeights, rawFirWeights, true);
+
+  // Run the kernel on the created data
+  hKernel.setArg(0, devFilteredData);
+  hKernel.setArg(1, devSampledData);
+  hKernel.setArg(2, devFirWeights);
+
+  // Run the kernel
+  stream.synchronize();
+  stream.launchKernel(hKernel, globalWorkSize, localWorkSize);
+  stream.synchronize();
+
+  stream.readBuffer(rawFilteredData, devFilteredData, true);
+
+  // stp = rawInputSamples.get<SampleType>();
+  // for (size_t i = 0; i < rawInputSamples.size() / sizeof(SampleType); i++) {
+  //   cout << "input[" << i << "] = " << int(stp[i]) << endl;
+  // }
+
+  // fp = rawFirWeights.get<float>();
+  // for (size_t i = 0; i < rawFirWeights.size() / sizeof(float); i++) {
+  //   cout << "coeff[" << i << "] = " << fp[i] << endl;
+  // }
+
+  // fp = rawFilteredData.get<float>();
+  // for (size_t i = 0; i < rawFilteredData.size() / sizeof(float); i++) {
+  //   cout << "output[" << i << "] = " << fp[i] << endl;
+  // }
+
+  // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
+  unsigned nrErrors = 0;
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      unsigned s;
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL / (2 * NR_TAPS); sample += s) {
+        for (s = 0; s < NR_TAPS; s++) {
+          for (ch = 0; ch <NR_CHANNELS; ch++) {
+            if (filteredDataArr[station][pol][sample + s][ch][0] != scale * station * firWeightsArr[ch][s]) {
+              if (++nrErrors < 100) { // limit spam
+                std::cerr << "2a.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
+                  "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][0] << std::endl;
+              }
+            }
+            if (filteredDataArr[station][pol][sample + s][ch][1] != 0.0f) {
+              if (++nrErrors < 100) {
+                std::cerr << "2a imag non-zero: " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][1] << std::endl;
+              }
+            }
+          }
+        }
+
+        for ( ; s < 2 * NR_TAPS; s++) {
+          for (ch = 0; ch < NR_CHANNELS; ch++) {
+            if (filteredDataArr[station][pol][sample + s][ch][0] != 0.0f || filteredDataArr[station][pol][sample + s][ch][1] != 0.0f) {
+              if (++nrErrors < 100) {
+                std::cerr << "2b.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
+                  "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][0] <<
+                  ", "<<filteredDataArr[station][pol][sample + s][ch][1] << std::endl;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (nrErrors == 0) {
+    std::cout << "FIR_FilterTest 2: test OK" << std::endl;
+  } else {
+    std::cerr << "FIR_FilterTest 2: " << nrErrors << " unexpected output values" << std::endl;
+    testOk = false;
+  }
+
+
+  // Test 3: Scaled step test (scaled DC gain) on KAISER filterbank. Non-zero imag input.
+  FilterBank filterBank(true, NR_TAPS, NR_CHANNELS, KAISER);
+  filterBank.negateWeights(); // not needed for testing, but as we use it
+  //filterBank.printWeights();
+
+  assert(firWeightsArr.num_elements() == filterBank.getWeights().num_elements());
+  double* expectedSums = new double[NR_CHANNELS];
+  memset(expectedSums, 0, NR_CHANNELS * sizeof(double));
+  for (ch = 0; ch < NR_CHANNELS; ch++) {
+    for (unsigned tap = 0; tap < NR_TAPS; tap++) {
+      firWeightsArr[ch][tap] = filterBank.getWeights()[ch][tap];
+      expectedSums[ch] += firWeightsArr[ch][tap];
+    }
+  }
+
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (sample = 0; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample++) {
+      for (ch = 0; ch < NR_CHANNELS; ch++) {
+        for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+          inputSamplesArr[station][sample][ch][pol][0] = 2; // real
+          inputSamplesArr[station][sample][ch][pol][1] = 3; // imag
+        }
+      }
+    }
+  }
+
+  // Copy input vectors from host memory to GPU buffers.
+  stream.writeBuffer(devFilteredData, rawFilteredData, true);
+  stream.writeBuffer(devSampledData, rawInputSamples, true);
+  stream.writeBuffer(devFirWeights, rawFirWeights, true);
+
+  // Run the kernel on the created data
+  hKernel.setArg(0, devFilteredData);
+  hKernel.setArg(1, devSampledData);
+  hKernel.setArg(2, devFirWeights);
+
+  // Run the kernel
+  stream.synchronize();
+  stream.launchKernel(hKernel, globalWorkSize, localWorkSize);
+  stream.synchronize();
+
+  stream.readBuffer(rawFilteredData, devFilteredData, true);
+
+  nrErrors = 0;
+  const float eps = 2.0f * std::numeric_limits<float>::epsilon();
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+        for (ch = 0; ch < NR_CHANNELS; ch++) {
+          // Expected sum must also be scaled by 2 and 3, because weights are real only.
+          if (!fpEquals(filteredDataArr[station][pol][sample][ch][0], (float)(2 * scale * expectedSums[ch]), eps)) {
+            if (++nrErrors < 100) { // limit spam
+              std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
+                "][0] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
+            }
+          }
+          if (!fpEquals(filteredDataArr[station][pol][sample][ch][1], (float)(3 * scale * expectedSums[ch]), eps)) {
+            if (++nrErrors < 100) {
+              std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
+                "][1] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
+            }
+          }
+        }
+      }
+    }
+  }
+  delete[] expectedSums;
+  if (nrErrors == 0) {
+    std::cout << "FIR_FilterTest 3: test OK" << std::endl;
+  } else {
+    std::cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values" << std::endl;
+    testOk = false;
+  }
+
+
+
 
   return testOk ? 0 : 1;
 }
