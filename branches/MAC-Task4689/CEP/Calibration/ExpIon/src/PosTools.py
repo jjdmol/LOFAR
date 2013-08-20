@@ -14,7 +14,6 @@ earth_ellipsoid_e2 = (earth_ellipsoid_a2 - earth_ellipsoid_b2) / earth_ellipsoid
 posCS002=[3826577.1095  ,461022.900196, 5064892.758]
 
 def getMSinfo(MS=None):
-    print "getting info for",MS
     if MS is None:
         print "No measurement set given"
         return
@@ -23,7 +22,6 @@ def getMSinfo(MS=None):
     else:
         print "Do not understand the format of MS",MS,"bailing out"
         return;
-    print "opened table",MS
     timerange=[np.amin(myMS.getcol('TIME_CENTROID')),np.amax(myMS.getcol('TIME_CENTROID'))]
     timestep=myMS.getcell('INTERVAL',0)
     

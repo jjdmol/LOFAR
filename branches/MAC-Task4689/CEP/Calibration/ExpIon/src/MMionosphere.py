@@ -32,8 +32,8 @@ import atexit
 
 # import 3rd party modules
 #from IPython.parallel import client
-from numpy import *
-#from pylab import *
+import numpy
+from pylab import *
 import scipy.optimize
 
 # import user modules
@@ -300,45 +300,6 @@ class IonosphericModel:
             tecs.append(get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp[0,ist]))
          TEC_out.append(tecs)
       return np.array(pp_out),np.array(am_out),np.array(TEC_out)
-
-   def get_TEC_frame(self,time=0,pol=0,scale=1.1,steps=10):
-      N_stations = len(self.stat_select[:])
-      N_sources = len(self.sources)
-      N_piercepoints = N_stations * N_sources
-
-      h=self.piercepoints.attrs.height
-      r_0 = self.TECfit_white.attrs.r_0
-      beta = self.TECfit_white.attrs.beta
-      pp=self.piercepoints[time]['positions'].reshape(N_piercepoints,2)
-      Xp_table=reshape(self.piercepoints[time]['positions_xyz'], (N_piercepoints, 3))
-      v=self.TECfit_white[ time, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
-      myxlim=[np.min(pp[:,0]),np.max(pp[:,0])]
-      myylim=[np.min(pp[:,1]),np.max(pp[:,1])]
-      diff=(myxlim[1]-myxlim[0])*(scale-1.)*0.5
-      myxlim[0]-=diff
-      myxlim[1]+=diff
-      xsize=(myxlim[1]-myxlim[0])*scale/(steps+1)
-      myxlim[1]+=xsize
-      diff=(myylim[1]-myylim[0])*(scale-1.)*0.5
-      myylim[0]-=diff
-      myylim[1]+=diff
-      ysize=(myylim[1]-myylim[0])*scale/(steps+1)
-      myylim[1]+=ysize
-      length=np.sqrt(np.dot(Xp_table[0],Xp_table[0].T))
-      #print "length",length,myxlim,myylim,xsize,ysize
-      iy=0
-      ix=0
-      phi=np.zeros((steps,steps),dtype=float)
-      for lat in np.arange(myylim[0],myylim[1],ysize): 
-         for lon in np.arange(myxlim[0],myxlim[1],xsize): 
-            xyzpp=[np.cos(lat)*np.cos(lon)*length,np.cos(lat)*np.sin(lon)*length,np.sin(lat)*length]
-            #print "my",ix,iy,lon,lat,xyzpp
-            #print Xp_table[0]
-            phi[iy,ix]=get_interpolated_TEC_white(Xp_table,v,beta,r_0,xyzpp)
-            ix+=1
-         ix=0
-         iy+=1
-      return phi,np.arange(myxlim[0],myxlim[1],xsize),np.arange(myylim[0],myylim[1],ysize)
 
    def make_movie( self, extent = 0, npixels = 100, vmin = 0, vmax = 0 ):
       """

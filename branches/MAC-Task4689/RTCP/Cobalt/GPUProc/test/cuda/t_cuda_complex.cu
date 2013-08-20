@@ -1,4 +1,4 @@
-//# t_cuda_complex.cu: tests our complex type for CUDA device code
+//# t_cuda_complex.cu
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,10 +20,11 @@
 
 #include <lofar_config.h>
 
-#include <cstdio>
-#include <iostream>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 
-// Note: watch what namespace you're referring to in this file! Outside device code, keep it explicit.
+#include <stdio.h>
+#include <iostream>
 #include <complex>
 
 #include "complex.cuh"
@@ -35,26 +36,27 @@ __global__ void addKernel( void *in_ptr, const void *out_ptr)
     int i = threadIdx.x;
     // Cast to complex
 
-    complex<float>*in = (complex<float>*) in_ptr;
-    complex<float>*out = (complex<float>*) out_ptr;
+    LOFAR::Cobalt::gpu::complex<float>*in = (LOFAR::Cobalt::gpu::complex<float>*) in_ptr;
+    LOFAR::Cobalt::gpu::complex<float>*out = (LOFAR::Cobalt::gpu::complex<float>*) out_ptr;
 
     //do some computations, We are not testing the correctness of the implementation here.
     out[i] = in[i] + in[i];
     out[i] -= in[i];
     out[i] = out[i];
-    out[i] *= 10.0f;
+    out[i] *= 10.0;
 }
 
+using namespace std;
 int main()
 {
     const int arraySize = 5;
     // insert some values
-    const std::complex<float> complex_in[5] = { std::complex<float>(1.0,1.0),
-                                                std::complex<float>(1,-1),
-                                                std::complex<float>(-1,1),
-                                                std::complex<float>(-1,-1),
-                                                std::complex<float>(4,-4) };
-    std::complex<float> complex_out[5] = { 0 };
+    const complex<float> complex_in[5] = { complex<float>(1.0,1.0),
+                                           complex<float>(1,-1),
+                                           complex<float>(-1,1),
+                                           complex<float>(-1,-1),
+                                           complex<float>(4,-4)};
+    complex<float> complex_out[5] = { 0 };
 
     // Add vectors in parallel.
     cudaError_t cudaStatus = addWithCuda(complex_out, complex_in,arraySize);
@@ -66,11 +68,11 @@ int main()
         return 1;
     }
 
-    const std::complex<float> complex_target[5] = { std::complex<float>(10,10),
-                                                    std::complex<float>(10, -10),
-                                                    std::complex<float>(-10,10),
-                                                    std::complex<float>(-10,-10),
-                                                    std::complex<float>(40,-40) };
+    const complex<float> complex_target[5] = {complex<float>(10,10),
+        complex<float>(10, -10),
+        complex<float>(-10,10),
+        complex<float>(-10,-10),
+        complex<float>(40,-40)};
       
 
     // validate that the output of the kernel is correct!
@@ -85,16 +87,16 @@ int main()
       }
     else //print the output data and return -1
     {
-      std::cout << "The complex values returned from the device were incorrect:" << std::endl;
-      std::cout << "complex numbers, expected - received: {";
-      for (int idx =0; idx < 5; ++idx)
+      cout << "The complex values returned from the device were incorrect:" << endl;
+      cout << "complex numbers, expected - received: {";
+      for (int idx =0; idx < 5 ;++idx)
       {
-        std::cout << complex_target[idx] << " - " << complex_out[idx] ;
+        cout << complex_target[idx] << " - " << complex_out[idx] ;
         if (complex_target[idx]  != complex_out[idx])
-          std::cout << "<<<";
-        std::cout << std::endl;
+          cout << "<<<";
+        cout << endl;
       }
-      std::cout << " }" << std::endl;
+      cout << " }" << endl;
       return -1;
     }
 }
@@ -113,26 +115,26 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     cudaStatus = cudaSetDevice(0);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?\n");
-        goto out;
+        goto Error;
     }
 
-    // allocate the std::complex buffers
+    // allocate the complex buffers
     cudaStatus = cudaMalloc((void**)&dev_in, size * sizeof(std::complex<float>));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
-        goto out;
+        goto Error;
     }
 
     cudaStatus = cudaMalloc((void**)&dev_out, size * sizeof(std::complex<float>));
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMalloc failed!");
-        goto errin;
+        goto Error;
     }
 
     cudaStatus = cudaMemcpy(dev_in, input_complex, size * sizeof(std::complex<float>), cudaMemcpyHostToDevice);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
-        goto errout;
+        goto Error;
     }
 
     // Launch a kernel on the GPU with one thread for each element.
@@ -143,21 +145,20 @@ cudaError_t addWithCuda(std::complex<float>* output_complex,
     cudaStatus = cudaDeviceSynchronize();
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto errout;
+        goto Error;
     }
 
     cudaStatus = cudaMemcpy(output_complex, dev_out, size * sizeof(std::complex<float>), cudaMemcpyDeviceToHost);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed!");
-        goto errout;
+        goto Error;
     }
 
 
-errout:
-    cudaFree(dev_out);
-errin:
+Error:
     cudaFree(dev_in);
-out:
+    cudaFree(dev_out);
+    
     return cudaStatus;
 }
 

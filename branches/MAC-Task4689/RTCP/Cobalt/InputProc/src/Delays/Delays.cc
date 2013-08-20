@@ -86,9 +86,7 @@ namespace LOFAR
       str->read(&nrTABs, sizeof nrTABs);
       ASSERT(nrTABs == TABs.size());
 
-      if (nrTABs > 0) {
-        str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
-      }
+      str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
     }
 
 
@@ -98,9 +96,7 @@ namespace LOFAR
       str->write(&SAP, sizeof SAP);
 
       str->write(&nrTABs, sizeof nrTABs);
-      if (nrTABs > 0) {
-        str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
-      }
+      str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
     }
 
 

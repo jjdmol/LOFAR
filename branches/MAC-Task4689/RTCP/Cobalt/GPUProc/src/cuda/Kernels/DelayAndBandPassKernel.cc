@@ -49,7 +49,6 @@ namespace LOFAR
       nrSAPs(ps.settings.SAPs.size()),
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
-      transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
     }
@@ -137,7 +136,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.5ff") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";
@@ -145,10 +144,6 @@ namespace LOFAR
 
       if (itsParameters.correctBandPass) {
         defs["BANDPASS_CORRECTION"] = "1";
-      }
-
-      if (itsParameters.transpose) {
-        defs["DO_TRANSPOSE"] = "1";
       }
 
       return defs;

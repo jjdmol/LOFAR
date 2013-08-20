@@ -49,7 +49,6 @@ TEST(Basic) {
     for (size_t blockSize = 1; blockSize < settings.nrSamples(16); blockSize <<= 1) {
       // Create a buffer
       SampleBuffer< SampleType<i16complex> > buffer(settings, SharedMemoryArena::CREATE);
-      buffer.boards[0].changeMode(mode);
 
       // Read the beamlets
       std::vector<size_t> beamlets(nrBeamlets);

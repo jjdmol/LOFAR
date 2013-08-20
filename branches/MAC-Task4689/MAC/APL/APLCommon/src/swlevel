@@ -99,39 +99,36 @@ findImage()
 }       
 
 #
-# selectImage(); load an image on the RSP boards
+# selectImage(); the image to load has been set in parameter $image in MAIN
 #
 selectImage()
 {
 	let nrRSPs=`grep RSPBOARDS ${ETCDIR}/RemoteStation.conf | cut -d'=' -f2 | sed 's/ //g'`
 	let board=0
-        # Assume no errors with board communication
-	boardError=0
-	# Make sure we have an image number in parameter $image
-        if [ -z $image ] && [ $imageForced -eq 0 ]; then  
-            findImage `hostname -s`
-        fi
-
 	while [ $board -lt $nrRSPs ]
 	do
-		# get major version of active firmware on RSPboard $board
+		# get version number of RSPboard in var. rsu
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
 		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
-
-		# If not a single number, something weird  must have happened
-		if [ ${#rsu} -ne 1 ]; then 
-                  echo "RSPboard $board: Error requesting active firmware version (communication error)"
-		  boardError=1
-                else
-  		  echo "Loading image $image on RSPboard $board ..."
+		if [ $imageForced ] || [ ${rsu} -eq 1 ]; then
+  		  let version=$rsu
+                  # Find image location for this station
+                  if [ -z $image ]; then  
+                     findImage `hostname -s`
+                  fi
+ 		  # if board has reset itself to image 0, load default RSP image again
+		  echo "Loading image $image on RSPboard $board ..."
 		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  #fi
+                elif [ ${rsu} -eq 6 ]; then
+		  echo "No need to reload image for RSPboard $board"
+		elif [ ${#rsu} -ne 1 ]; then 
+                  echo "No RSPboard $board found"
+                else
+                  echo "Not a valid image found for RSPboard $board; perhaps an image is being loaded"
 		fi
-		# Next board
 		let board+=1
 	done
-	if [ $boardError -eq 1 ]; then
-	    echo "One or more boards have a communication problem; try reset the 48V"
-	fi
 }
 
 #
@@ -489,11 +486,6 @@ handle_args()
 {
 
   # Handle arguments
-  if [ ${#} -gt 1 ]; then
-      if [[ $1 != \-* ]]; then
-        echo "Warning: all arguments except level $1 will be ignored"
-      fi
-  fi
   while getopts  "hSsVvi:l:q:r:" flag
   do
     case "$flag" in
@@ -504,7 +496,7 @@ handle_args()
     show_lofar_version $flag
     ;;
     i)
-    imageForced=1
+    imageForced=true
     image=$OPTARG
     # This is needed to be able to retrieve the requested swlevel
     # when it is not provided with option -l
@@ -570,7 +562,7 @@ fi
 
 user=`id | cut -d'(' -f2 | cut -d')' -f1`
 group=`groups | awk '{print $1}'`
-imageForced=0
+imageForced=false
 
 handle_args $*
 

@@ -1,6 +1,6 @@
 
 # Configure the loggers
-log4cplus.rootLogger=DEBUG, STDOUT
+log4cplus.rootLogger=INFO, STDOUT
 log4cplus.logger.TRC=INFO
 
 # prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger
@@ -12,11 +12,11 @@ log4cplus.additivity.LCS.MSLofar=false
 # Define the appenders
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
 log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
-log4cplus.appender.STDOUT.layout.ConversionPattern=outputProc@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
+log4cplus.appender.STDOUT.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S.%q} %-5p %m%n
 
 #log4cplus.appender.STDERR=log4cplus::ConsoleAppender
 #log4cplus.appender.STDERR.layout=log4cplus::PatternLayout
-#log4cplus.appender.STDERR.layout.ConversionPattern=outputProc@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
+#log4cplus.appender.STDERR.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%.25l]%n
 #log4cplus.appender.STDERR.logToStdErr=true
 
 #log4cplus.appender.FILE=log4cplus::RollingFileAppender
@@ -24,6 +24,6 @@ log4cplus.appender.STDOUT.layout.ConversionPattern=outputProc@%h %D{%d-%m-%y %H:
 #log4cplus.appender.FILE.MaxFileSize=10MB
 #log4cplus.appender.FILE.MaxBackupIndex=2
 #log4cplus.appender.FILE.layout=log4cplus::PatternLayout
-#log4cplus.appender.FILE.layout.ConversionPattern=outputProc@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
+#log4cplus.appender.FILE.layout.ConversionPattern=%x %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%.25l]%n
 
 log4cplus.appender.DUMP=log4cplus::NullAppender

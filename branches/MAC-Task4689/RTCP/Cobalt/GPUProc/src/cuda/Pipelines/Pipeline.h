@@ -46,14 +46,15 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
-      const std::vector<gpu::Device> devices;
+      const gpu::Platform      platform;
+      std::vector<gpu::Device> devices;
 
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
       std::vector< SmartPtr<SubbandProc> > workQueues;
@@ -93,6 +94,22 @@ namespace LOFAR
         // output data queue
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
+
+      class SubbandProcOwnerMap {
+      public:
+
+        // set the owner of a specific block
+        void push(const struct BlockID &id, SubbandProc &workQueue);
+
+        // get and remove the owner of a specific block
+        SubbandProc& pop(const struct BlockID &id);
+
+      private:
+        std::map<struct BlockID, SubbandProc*> ownerMap;
+        Mutex mutex;
+      };
+
+      SubbandProcOwnerMap workQueueOwnerMap;
 
       std::vector<struct Output> subbandPool; // [localSubbandIdx]
 

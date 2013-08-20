@@ -78,8 +78,6 @@ namespace LOFAR
         pthread_t oldid = id;
 
         if (oldid > 0) {
-          // Do not use THROW_SYSCALL(), because pthread_*() does not set errno,
-          // but returns it.
           int error = pthread_kill(oldid, SIGHUP);
           if (error != 0)
             throw SystemCallException("pthread_kill", error, THROW_ARGS);

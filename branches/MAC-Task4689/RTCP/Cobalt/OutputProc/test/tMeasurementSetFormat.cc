@@ -41,8 +41,8 @@ int main()
   INIT_LOGGER("tMeasurementSetFormat");
   const string suffixes[] = { "-j2000", "-sun" };
 
-  for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) 
-  {
+  for( unsigned i = 0; i < sizeof suffixes / sizeof suffixes[0]; i++ ) {
+    try {
       const string parsetName = string("tMeasurementSetFormat.parset") + suffixes[i];
       const string msName = string("tMeasurementSetFormat_tmp") + suffixes[i] + ".MS";
 
@@ -56,6 +56,10 @@ int main()
       ///fclose (file);
       RegularFileIO file(String(msName + "/table.f0data"),
                          ByteIO::New);
+    } catch (LOFAR::Exception &err) {
+      LOG_FATAL_STR("LOFAR Exception detected: " << err);
+      return 1;
+    }
   }
 
   return 0;

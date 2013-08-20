@@ -32,7 +32,7 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
-#include "../TestUtil.h"
+#include "TestUtil.h"
 
 using namespace std;
 using namespace boost;

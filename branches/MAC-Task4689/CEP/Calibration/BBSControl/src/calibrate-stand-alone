@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # calibrate-stand-alone: top-level calibration script (stand-alone version).
 #

@@ -219,7 +219,7 @@ def turnonRCUs(mode, rcus):
     rspctl('--rcuenable=1', wait=0.0)
     logger.info("setweights")
     rspctl('--aweights=8000,0', wait=0.0)
-    if mode == 5:
+    if mode >= 5:
         rspctl('--specinv=1', wait=0.0)
     else:
         rspctl('--specinv=0', wait=0.0)

@@ -38,9 +38,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
       :
-      Pipeline(ps, subbandIndices, devices)
+      Pipeline(ps, subbandIndices)
     {
 
       // If profiling, use one workqueue: with >1 workqueues decreased
@@ -48,12 +48,10 @@ namespace LOFAR
       unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
       workQueues.resize(nrSubbandProcs);
 
-      BeamFormerFactories factories(ps);
-
       for (size_t i = 0; i < nrSubbandProcs; ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
+        workQueues[i] = new BeamFormerSubbandProc(ps, context);
       }
     }
   }

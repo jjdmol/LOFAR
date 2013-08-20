@@ -27,9 +27,9 @@
 --		 Possibly introduce usergroups as well.
 --
 
-DROP TABLE IF EXISTS OTDBaccess CASCADE;
-DROP TABLE IF EXISTS OTDBuser   CASCADE;
-DROP SEQUENCE IF EXISTS	OTDBuserID;
+DROP TABLE OTDBaccess CASCADE;
+DROP TABLE OTDBuser   CASCADE;
+DROP SEQUENCE	OTDBuserID;
 
 --
 -- The OTDBuser table contains some admistrative info about the user.

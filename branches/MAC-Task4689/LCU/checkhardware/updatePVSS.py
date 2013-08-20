@@ -34,14 +34,11 @@ def main():
     logdir = getLogDir()
     ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
     logger = cPVSSLogger(logdir)
-    
+
     if args.has_key('RESET'):
         resetPVSS(state=0)
+        addManualDataToPVSS()
     
-    if args.has_key('NO_UPDATE'):
-        print "PVSS Update skipped"
-        sys.exit()
-        
     if args.has_key('MANUAL'):
         addManualDataToPVSS()
     
@@ -67,27 +64,25 @@ def printHelp():
     print "----------------------------------------------------------------------------"
     print "Usage of arguments"
     print "Output of last stationcheck is always send to pvss also the bad_rcu file is made"
-    print "-h                   : this help screen"
+    print "-h     : this help screen"
     
-    print "-manual              : send manual list"     
-    print "-reset[=type]        : set all state fields to ok for type if given"
-    print "                       type = all | lba | lbl | lbh | hba (all=default)"
-    print "-no_update           : skip pvss update"
-    print "-test                : do not send to PVSS"
+    print "-manual: send manual list"     
+    print "-reset : set all state fields to ok and send manual list"
+    print "-test  : do not send to PVSS"
     print "-file=[full filename]: filename to use"
     print ""
-    #print "-L=x                : x = flag level"
+    #print "-L=x   : x = flag level"
     print " NEXT KEYS ARE ONLY USED FOR HBA ERRORS"
-    print "-S=x                 : rf, flag only if deviation greater than x dB"
-    print "-N=x,y,z             : noise, flag only if available more than x% of time (x=0..100)"
+    print "-S=x     : rf, flag only if deviation greater than x dB"
+    print "-N=x,y,z : noise, flag only if available more than x% of time (x=0..100)"
     print "           or available more than y% of time and fluctuation > z dB"
-    print "-J=x,y,z             : jitter, flag only if available more than x% of time (x=0..100)"
+    print "-J=x,y,z : jitter, flag only if available more than x% of time (x=0..100)"
     print "           or available more than y% of time and fluctuation > z dB"
-    print "-SN                  : do not flag summator noise"
-    print "-SP                  : do not flag spurious signals"
-    print "-O                   : do not flag oscillating signals"
-    print "-M=x                 : modem, flag only if error in x elements (x=0..16)"
-    print "-E                   : do not flag results of element test"
+    print "-SN      : do not flag summator noise"
+    print "-SP      : do not flag spurious signals"
+    print "-O       : do not flag oscillating signals"
+    print "-M=x     : modem, flag only if error in x elements (x=0..16)"
+    print "-E       : do not flag results of element test"
     
 
 # get command line arguments
@@ -106,7 +101,7 @@ def getArguments():
             else:
                 args[sys.argv[i][1:].upper()]='-'
 
-        if args.has_key('H') or args.has_key('HELP'):
+        if args.has_key('H'):
             printHelp()
             sys.exit()
     return
@@ -119,8 +114,12 @@ def getLogDir():
     data = f.readlines()
     f.close()
     for line in data:
+        if line.find('log-dir-global') != -1:            
+            key, logdir = line.strip().split('=')        
         if line.find('log-dir-local') != -1:             
-            key, logdir = line.strip().split('=')    
+            if not os.path.exists(logdir):               
+                key, logdir = line.strip().split('=')    
+
     return(logdir)
 
 # send comment, key and value to PVSS and write to file
@@ -143,37 +142,32 @@ def sendToPVSS(comment, pvss_key, value):
 
 # set all antenna info to ok
 def resetPVSS(state=0):
-    global args, libPath, State, nRSP, nLBL, nLBH, nHBA
+    global libPath, State, nRSP, nLBL, nLBH, nHBA
     
-    reset_type = args.get('RESET','ALL').upper()
     filename = "reset_pvss.log"
     full_filename = os.path.join(libPath, filename)
     f = open(full_filename, 'w')
-    
-    if reset_type == 'ALL':    
-        for rcu in range(nRSP*8):
-            board = int(rcu / 8)
-            rack  = int(board / 4)
-            cabinet = int(rack / 2)    
-            f.write("LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d %d\n" %(cabinet, rack, board, rcu, state))
-    
-    if reset_type in ('ALL','LBA','LBH'):
-        for ant in range(nLBH):
-            f.write("LOFAR_PIC_LBA%03d %d\n" %(ant, state))
-
-    if reset_type in ('ALL','LBA','LBL'):
-        for ant in range(nLBL):
-            f.write("LOFAR_PIC_LBA%03d %d\n" %(ant+48, state))
-
-    if reset_type in ('ALL','HBA'):        
-        for tile in range(nHBA):
-            f.write("LOFAR_PIC_HBA%02d %d\n" %(tile, state))
+        
+    for rcu in range(nRSP*8):
+        board = int(rcu / 8)
+        rack  = int(board / 4)
+        cabinet = int(rack / 2)    
+        f.write("LOFAR_PIC_Cabinet%d_Subrack%d_RSPBoard%d_RCU%d %d\n" %(cabinet, rack, board, rcu, state))
             
-            for elem in range(16):
-                f.write("LOFAR_PIC_HBA%02d.element%02d %d\n" %(tile, elem, state))
-                f.write("LOFAR_PIC_HBA%02d.element%02d.comm %d\n" %(tile, elem, state))
-                f.write("LOFAR_PIC_HBA%02d.element%02d.X %d\n" %(tile, elem, state))
-                f.write("LOFAR_PIC_HBA%02d.element%02d.Y %d\n" %(tile, elem, state))
+    for ant in range(nLBH):
+        f.write("LOFAR_PIC_LBA%03d %d\n" %(ant, state))
+
+    for ant in range(nLBL):
+        f.write("LOFAR_PIC_LBA%03d %d\n" %(ant+48, state))
+
+    for tile in range(nHBA):
+        f.write("LOFAR_PIC_HBA%02d %d\n" %(tile, state))
+        
+        for elem in range(16):
+            f.write("LOFAR_PIC_HBA%02d.element%02d %d\n" %(tile, elem, state))
+            f.write("LOFAR_PIC_HBA%02d.element%02d.comm %d\n" %(tile, elem, state))
+            f.write("LOFAR_PIC_HBA%02d.element%02d.X %d\n" %(tile, elem, state))
+            f.write("LOFAR_PIC_HBA%02d.element%02d.Y %d\n" %(tile, elem, state))
     f.close()
     if not args.has_key('TEST'):
         sendCmd("setObjectState", "stationtes:reset %s" %(full_filename))

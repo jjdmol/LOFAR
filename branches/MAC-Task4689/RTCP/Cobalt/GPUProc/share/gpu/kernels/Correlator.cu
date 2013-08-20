@@ -24,6 +24,8 @@
 // correlator. It computes correlations between all pairs of stations
 // (baselines) and X,Y polarizations, including auto-correlations.
 
+#include <cuda.h>
+
 #include "gpu_math.cuh"
 
 #define NR_BASELINES     (NR_STATIONS * (NR_STATIONS + 1) / 2)

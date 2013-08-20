@@ -22,60 +22,58 @@ namespace LOFAR
   namespace Cobalt
   {
 
-StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const Parset &parset )
+StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const Parset &parset, const std::string &myHostname )
 :
   stationID(stationID),
-  parset(parset)
+  parset(parset),
+  myHostname(myHostname)
 {
 }
 
 bool StationNodeAllocation::receivedHere() const
 {
-  int rank = 0;
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
-
-  int stationRank = receiverRank();
-
-  if (stationRank == -1) {
-    // allocate stations not mentioned in Cobalt.Hardware round-robin
-    stationRank = parset.settings.stationIndex(stationID.name()) % nrHosts;
-
-    if (stationRank == rank)
-      LOG_WARN_STR("Receiving station " << stationID << " due to round-robin allocation across nodes.");
-  }
-
-  return stationRank == rank;
-}
-
-int StationNodeAllocation::receiverRank() const
-{
   /*
    * The parset key
    *
-   *   Cobalt.Hardware.Node[rank].stations
+   *   PIC.Core.Station.CS001LBA.RSP.host
    *
-   * contains the station names that will be received
-   * by the specified MPI rank.
+   * contains the name of the host at which
+   * field CS001LBA will be received.
+   *
+   * In development however, we want to start everything
+   * on 'localhost'. To accomodate that, if the above key
+   * does not exist or equals to '*', the station will
+   * be received by the MPI rank corresponding to the station's
+   * index (modulo the number of MPI ranks), creating a
+   * round-robin distribution.
    */
+  const string stationNode = parset.getString(str(format("PIC.Core.Station.%s.RSP.host") % stationID.name()), "*");
 
-  ssize_t stationIdx = parset.settings.stationIndex(stationID.name());
+  if (stationNode == "*") {
+    // Let MPI rank (if any) determine whether we receive this station
+    int rank = 0;
+    int size = 1;
 
-  if (stationIdx < 0)
-    return -1;
+#ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+#endif
 
-  for (unsigned rank = 0; rank < parset.settings.nodes.size(); ++rank) {
-    const vector<size_t> &stations = parset.settings.nodes[rank].stations;
+    // Determine station index
+    for (size_t i = 0; i < parset.settings.stations.size(); ++i) {
+      if (parset.settings.stations[i].name == stationID.name()) {
+        // We distribute the stations over the MPI nodes
+        // in a round-robin fashion.
+        return static_cast<int>(i) % size == rank;
+      }
+    }
 
-    if (find(stations.begin(), stations.end(), stationIdx) != stations.end())
-      return rank;
+    // Station not in observation?
+    return false;
+  } else {
+    // If the value is not '*', it must match our (short) host name
+    return stationNode == myHostname;
   }
-
-  return -1;
 }
 
 std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const

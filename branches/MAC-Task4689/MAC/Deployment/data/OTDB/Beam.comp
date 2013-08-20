@@ -31,8 +31,6 @@ par  angle2              I      dbl   -              10    0    0               
 par  directionType	 I	ptext -              10    0	 'J2000|ITRF|B1950|HADEC|AZELGEO|TOPO|ICRS|APP|GALACTIC|ECLIPTIC|COMET|MERCURY|VENUS|MARS|JUPITER|SATURN|URANUS|NEPTUNE|PLUTO|SUN|MOON;J2000' -     'Coord.system used for the sources'
 par  dispersionMeasure	 I	dbl   -              10    0    0                    -       'Dedisperse channels with this DM (0 for no dedispersion)'
 par  coherent	         I	bool  -              10    0    true                 -       'coherent = true, incoherent = false'
-par  absoluteAngle1    I      dbl   -              10    0    0                    -       'RightAscention(s) or Azimuth of thesource(s) in rad. (coordinate system is same as used in the Beams)'
-par  absoluteAngle2    I      dbl   -              10    0    0                    -       'Declination(s) or Elevation of the source(s) in rad. (coordinate system is the same as used in the Beams)'
 
 
 

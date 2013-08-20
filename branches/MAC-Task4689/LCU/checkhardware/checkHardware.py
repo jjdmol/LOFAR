@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-versiondate = 'September 2013'
+versiondate = '23 May 2013'
 
 import sys
 import os
@@ -65,7 +65,7 @@ def printHelp():
 
 rcu_m1_keys  = ('LBL','O1','SP1','N1','S1')
 rcu_m3_keys  = ('LBH','O3','SP3','N3','S3')
-rcu_m5_keys  = ('HBA','M','O5','SN','SP5','N5','S5','EHBA','ES7')
+rcu_m5_keys  = ('HBA','M','O5','SN','SP5','N5','S5','EHBA')
 rsp_keys     = ('RV',) + rcu_m1_keys + rcu_m3_keys + rcu_m5_keys
 tbb_keys     = ('TV','TM')
 control_keys = ('R','START','STOP')
@@ -297,6 +297,7 @@ def main():
         os.mkdir(dataDir())
 
     # use format YYYYMMDD_HH:MM:SS
+    start_time = time.time()
     stop_time = -1
     if args.has_key('STOP'):
         stop = args.get('STOP')
@@ -312,18 +313,12 @@ def main():
                 sys.exit("wrong starttime format must be YYYYMMDD_HH:MM:SS")
             start_datetime = datetime.datetime(int(start[:4]),int(start[4:6]),int(start[6:8]), \
                                                int(start[9:11]),int(start[12:14]),int(start[15:]))
-            if (time.mktime(start_datetime.timetuple()) < time.time()):
-                #print time.mktime(start_datetime.timetuple()), time.time()
-                logger.error("Stop program, StartTime in past")
-                sys.exit(2)
-            if(time.mktime(start_datetime.timetuple()) > stop_time):
-                logger.error("Stop program, stop before start")
-                sys.exit(2)    
+
             waitForStart(start_datetime)
         
         logger.info("run checks till %s" %(time.asctime(stop_datetime.timetuple())))
     
-    start_time = time.gmtime()
+    
     # Read in RemoteStation.conf
     ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
 
@@ -464,7 +459,6 @@ def main():
                                 recordtime = 15
                             else:
                                 recordtime = int(args.get('EHBA'))
-                            
                             hba.checkElements(  mode=5, 
                                                 record_time=recordtime,
                                                 subband=conf.getInt('hba-test-sb',155),
@@ -473,17 +467,8 @@ def main():
                                                 noise_max_diff=conf.getFloat('ehba-noise-max-difference', 1.5),
                                                 rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
                                                 rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
-                                                rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0),
-                                                skip_signal_test=args.has_key('ES7'))
-                        
-                        # Element test in mode 7 for UK station
-                        if args.has_key('ES7'):
-                            hba.checkElementsSignal(  mode=7, 
-                                                      subband=conf.getInt('hba-test-sb',155),
-                                                      rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
-                                                      rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
-                                                      rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0))
-                        
+                                                rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0))
+                            
                         # one run done
                         repeat_cnt += 1
                         runtime = time.time() - runstart
@@ -519,7 +504,7 @@ def main():
 
     # delete files from data directory
     removeAllDataFiles()
-    sys.exit(0)
+
 
 if __name__ == '__main__':
     main()

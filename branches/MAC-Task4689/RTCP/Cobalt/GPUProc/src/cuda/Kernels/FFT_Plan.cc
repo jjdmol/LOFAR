@@ -35,8 +35,6 @@ namespace {
 
       if (error == CUFFT_SUCCESS)
         cufftDestroy(plan);
-
-      return 0;
   }
 };
 

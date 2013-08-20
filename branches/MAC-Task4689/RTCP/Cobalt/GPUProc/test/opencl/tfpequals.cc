@@ -1,4 +1,4 @@
-//# tfpequals.h
+//# tfpfpEquals.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,11 +20,10 @@
 
 #include <lofar_config.h>
 
+#include "UnitTest.h"
+
 #include <iomanip>
-
 #include <Common/LofarLogger.h>
-
-#include "fpequals.h"
 
 using namespace LOFAR::Cobalt;
 

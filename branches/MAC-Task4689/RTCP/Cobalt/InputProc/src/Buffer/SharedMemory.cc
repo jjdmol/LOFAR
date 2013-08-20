@@ -25,18 +25,13 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/SystemCallException.h>
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Mutex.h>
-#include <Stream/FileDescriptorBasedStream.h>
 
 using namespace std;
-using boost::format;
 
 namespace LOFAR
 {
@@ -46,20 +41,17 @@ namespace LOFAR
     // time.
     static Mutex shmMutex;
 
-    // TODO: key_t can be replaced with std::string, but that would require
-    // updates across SampleBuffer/StationID/BufferSettings/SharedStruct, and
-    // all tests, etc.
 
     SharedMemoryArena::SharedMemoryArena( key_t key, size_t size, Mode mode, time_t timeout )
       :
       FixedArena(NULL, size),
       key(key),
       mode(mode),
+      shmid(-1),
       preexisting(false)
     {
       time_t deadline = time(0) + timeout;
-
-      int open_flags = 0, mmap_flags = 0;
+      int open_flags = 0, attach_flags = 0;
 
       // Check whether the size is allowed
       size_t max_shm_size = maxSize();
@@ -71,31 +63,63 @@ namespace LOFAR
       // Derive the open flags based on the provided mode
       switch (mode) {
         case CREATE_EXCL:
-          open_flags |= O_EXCL;
-          // fall-through
+          open_flags |= IPC_EXCL;
         case CREATE:
-          open_flags |= O_CREAT;
-          // fall-through
-        case READWRITE:
-        default:
-          open_flags |= O_RDWR;
-          mmap_flags |= PROT_READ | PROT_WRITE;
+          open_flags |= IPC_CREAT | S_IRUSR | S_IWUSR;
+
+          // Give others read permission, to allow other users to
+          // a. access our data, and to
+          // b. see our buffer in 'ipcs' and related commands.
+          open_flags |= S_IRGRP | S_IROTH;
+
+#ifdef __linux__
+          // The following flags will be removed below if permissions
+          // do not allow them to be used.
+
+          // Don't let the kernel swap out the buffer.
+          open_flags |= SHM_NORESERVE;
+
+          // Get huge TLB pages for faster access.
+          // NOTE: For some reason, this causes shmget to succeed but shmat to
+          // fail.
+          open_flags |= SHM_HUGETLB;
+#endif
           break;
+          case READ:
+            attach_flags |= SHM_RDONLY;
+            break;
 
-        case READ:
-          open_flags |= O_RDONLY;
-          mmap_flags |= PROT_READ;
-          break;
+          case READWRITE:
+          default:
+            break;
+          }
 
-      }
-
-      // Keep attempting to create/attach until the deadline
+      // get/create shmid handle
       for(;;) {
-        LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): TRYING");
+        try {
+          LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): TRYING");
 
-        // Try to open the buffer
-        if (open(open_flags, mmap_flags, timeout > 0))
-          break;
+          // Try to open the buffer
+          if (open(open_flags, attach_flags, timeout > 0))
+            break;
+        } catch(SystemCallException &ex) {
+#ifdef __linux__
+          // If we used special-priviledge flags, try again without
+
+          if (open_flags & SHM_HUGETLB) {
+            LOG_WARN("Could not obtain shared memory with SHM_HUGETLB, trying without.");
+            open_flags &= ~SHM_HUGETLB;
+            continue;
+          }
+
+          if (open_flags & SHM_NORESERVE) {
+            LOG_WARN("Could not obtain shared memory with SHM_NORESERVE, trying without.");
+            open_flags &= ~SHM_NORESERVE;
+            continue;
+          }
+#endif
+          throw;
+        }
 
         // try again until the deadline
         if (time(0) >= deadline)
@@ -109,42 +133,36 @@ namespace LOFAR
     }
 
 
-    bool SharedMemoryArena::open( int open_flags, int mmap_flags, bool timeout )
+    bool SharedMemoryArena::open( int open_flags, int attach_flags, bool timeout )
     {
       ScopedLock sl(shmMutex);
 
-      string keystr = str(format("/%x") % key);
+      // Check whether shm area already exists, so we know whether
+      // to clean up in case of failure.
+      preexisting = (shmget(key, 0, 0) >= 0 || errno != ENOENT);
 
-      // check if the SHM already exists, and mark it as such
-      int tmpid;
-      if ((tmpid = shm_open(keystr.c_str(), O_RDONLY, 0666)) >= 0) {
-        (void)close(tmpid);
-
-        preexisting = true;
-      }
-
-      // open the SHM
-      FileDescriptorBasedStream fd(shm_open(keystr.c_str(), open_flags, 0666 ));
-
-      if (fd.fd == -1) {
+      shmid = shmget( key, itsSize, open_flags );
+      if (shmid == -1) {
         // No timeout means we're not keeping silent about ENOENT/ENOEXIST
         if (!timeout)
-          THROW_SYSCALL("shm_open");
+          THROW_SYSCALL("shmget");
+
+        if (errno != ENOENT && errno != EEXIST)
+          THROW_SYSCALL("shmget");
       } else {
-        if (mode == CREATE || mode == CREATE_EXCL) {
-          // set correct size
-          LOG_DEBUG_STR("Resizing " << keystr << " to " << itsSize << " bytes");
-          if (ftruncate(fd.fd, itsSize) < 0)
-            THROW_SYSCALL("ftruncate");
+        // attach to segment
+        itsBegin = shmat( shmid, NULL, attach_flags );
+
+        if (itsBegin != (void*)-1)
+          return true; // success!
+
+        if (!preexisting) {
+          // we created the buffer, so erase it before continuing
+          if (shmctl(shmid, IPC_RMID, NULL) < 0)
+            THROW_SYSCALL("shmctl");
         }
 
-        // attach
-        itsBegin = mmap(NULL, itsSize, mmap_flags, MAP_SHARED, fd.fd, 0);
-
-        if (itsBegin == (void*)MAP_FAILED)
-          THROW_SYSCALL("mmap");
-
-        return true; // success!
+        THROW_SYSCALL("shmat");
       }
 
       return false;
@@ -175,9 +193,26 @@ namespace LOFAR
 
     void SharedMemoryArena::remove( key_t key, bool quiet )
     {
-      string keystr = str(format("/%x") % key);
+      ScopedLock sl(shmMutex);
 
-      shm_unlink(keystr.c_str());
+      LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (remove)");
+
+      int shmid = shmget( key, 0, 0 );
+
+      if (shmid < 0)
+        // key does not exist
+        return;
+
+      if (!quiet)
+        LOG_WARN_STR("Removing existing SHM area 0x" << hex << key);
+
+      // Note: the shmid might have been removed by another thread or process,
+      // so getting EINVAL is a possibility.
+      if (shmctl(shmid, IPC_RMID, NULL) < 0 && errno != EINVAL)
+        // failed to remove SHM
+        THROW_SYSCALL("shmctl");
+
+      // key existed, SHM removed
     }
 
 
@@ -187,16 +222,17 @@ namespace LOFAR
 
       try {
         // detach
-        if (munmap(itsBegin, itsSize) < 0)
-          THROW_SYSCALL("munmap");
+        if (shmdt(itsBegin) < 0)
+          THROW_SYSCALL("shmdt");
 
-        // destroy, if we created it
+        // destroy
         if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
-          string keystr = str(format("/%x") % key);
+          LOG_DEBUG_STR("SHM: DELETE 0x" << hex << key << " (destructor)");
 
-          if (shm_unlink(keystr.c_str()) < 0)
-            THROW_SYSCALL("shm_unlink");
+          if (shmctl(shmid, IPC_RMID, NULL) < 0)
+            THROW_SYSCALL("shmctl");
         }
+
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }

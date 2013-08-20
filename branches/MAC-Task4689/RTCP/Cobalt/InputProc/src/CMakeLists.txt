@@ -35,11 +35,3 @@ lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(capture Station/capture.cc)
-
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mpirun.sh.in
-  ${CMAKE_BINARY_DIR}/bin/mpirun.sh @ONLY)
-
-install(PROGRAMS
-  ${CMAKE_BINARY_DIR}/bin/mpirun.sh
-  DESTINATION bin)

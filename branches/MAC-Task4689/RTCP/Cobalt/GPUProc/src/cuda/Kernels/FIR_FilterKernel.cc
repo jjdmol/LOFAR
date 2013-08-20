@@ -123,12 +123,8 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_TAPS"] = lexical_cast<string>(itsParameters.nrPPFTaps);
-
-      // NR_STABS is a contraction of NR_STATIONS (correlator) or NR_TABS
-      // (beamformer). The kernel deals with either quantity in the same way.
-      defs["NR_STABS"] = lexical_cast<string>(itsParameters.nrStations); // TODO: or use nrTABs
-
+      defs["NR_TAPS"] =
+        lexical_cast<string>(itsParameters.nrPPFTaps);
       return defs;
     }
   }

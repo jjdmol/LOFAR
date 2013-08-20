@@ -34,6 +34,7 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <GPUProc/FilterBank.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>

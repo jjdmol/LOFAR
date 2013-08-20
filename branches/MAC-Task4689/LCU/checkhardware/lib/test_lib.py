@@ -553,11 +553,11 @@ class cHBA:
                     ant_polarity = rcu % 2
                     realctrllist = line[line.find('=')+1:].strip().split()
                     for elem in self.hba.tile[hba_nr].element:
-                        if ctrllist[elem.nr-1] != realctrllist[elem.nr-1]:
+                        if ctrllist[elem.nr] != realctrllist[elem.nr]:
                             logger.info("Modemtest Tile=%d RCU=%d Element=%d ctrlword=%s response=%s" %\
-                                         (hba_nr, rcu, elem.nr, ctrllist[elem.nr-1], realctrllist[elem.nr-1]))
+                                         (hba_nr, rcu, elem.nr+1, ctrllist[elem.nr], realctrllist[elem.nr]))
                             
-                            if realctrllist[elem.nr-1].count('?') == 3:
+                            if realctrllist[elem.nr].count('?') == 3:
                                 elem.no_modem += 1
                             else:
                                 elem.modem_error += 1
@@ -580,7 +580,6 @@ class cHBA:
         rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=10.0)
         self.rcudata.record(rec_time=1)
         
-        logger.debug("- test X -")
         sum_noise = search_summator_noise(self.rcudata.getAllX(), start_sb=45, stop_sb=350)
         for n in sum_noise:
             tile, val, n_peaks = n
@@ -588,7 +587,6 @@ class cHBA:
             self.hba.tile[tile].x.summator_noise = 1
             self.turnOffTile(tile)
         
-        logger.debug("- test Y -")
         sum_noise = search_summator_noise(self.rcudata.getAllY(), start_sb=45, stop_sb=350)
         for n in sum_noise:
             tile, val, n_peaks = n
@@ -866,62 +864,9 @@ class cHBA:
     #
     def checkElements(self, mode, record_time, subband,
                       noise_low_deviation, noise_high_deviation, noise_max_diff,
-                      rf_min_signal, rf_low_deviation, rf_high_deviation,
-                      skip_signal_test=False):
+                      rf_min_signal, rf_low_deviation, rf_high_deviation):
                       
         logger.info("=== Start HBA element based tests ===")
-        self.db.rcumode = mode
-        swapXY(state=0)
-        turnoffRCUs()
-        turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
-        self.hba.resetRcuState()
-        
-        n_rcus_off = 0
-        delay_start  = 0
-        for ctrl in ('128', '253'):
-            if ctrl == '128': ctrl_nr = 0
-            elif ctrl == '253': ctrl_nr = 1
-            
-            #ctrlstring = (ctrl+',' + '2,'*15)[:33]
-            #rspctl('--hbadelay=%s' %(ctrlstring), wait=10.0)
-            for elem in range(self.hba.tile[0].nr_elements):
-                logger.info("check elements %d, ctrlword=%s" %(elem+1, ctrl))
-                if n_rcus_off > 0:
-                    rsp_rcu_mode(mode=mode, n_rcus=self.db.nr_rcu)
-                    n_rcus_off = 0
-                for tile in self.hba.tile:
-                    if tile.element[elem].no_modem or tile.element[elem].modem_error:
-                        self.turnOffTile(tile.nr)
-                        n_rcus_off += 1
-                        logger.info("skip tile %d, modem error" %(tile.nr))
-                clean = False
-                while not clean:
-                    clean = True
-                    ctrlstring = ('2,'*elem + ctrl + ',' + '2,'*15)[:33]
-                    rspctl('--hbadelay=%s' %(ctrlstring), wait=10.0)
-                    self.rcudata.record(rec_time=record_time)
-                    
-                    clean, n_off = self.checkOscillationElements(elem)
-                    n_rcus_off += n_off
-                    if n_off > 0: continue
-                    n_off = self.checkSpuriousElements(elem)
-                    n_rcus_off += n_off
-                    if n_off > 0: continue
-                    self.checkNoiseElements(elem, noise_low_deviation, noise_high_deviation, noise_max_diff)
-                    if not skip_signal_test:
-                        self.checkSignalElements(elem, ctrl_nr, subband, rf_min_signal, rf_low_deviation, rf_high_deviation)
-                    else:
-                        logger.info("skip signal test for mode %d" %(mode))
-
-        self.hba.element_check_done = 1
-        self.db.addTestDone('EHBA')
-        logger.info("Done HBA element tests")
-        rspctl('--hbadelay=%s' %(('128,'* 16)[:-1]), wait=8.0)
-        return
-    
-    def checkElementsSignal(self, mode, subband, rf_min_signal, rf_low_deviation, rf_high_deviation):
-                      
-        logger.info("=== Start HBA element based signal test in mode %d ===" %(mode))
         self.db.rcumode = mode
         swapXY(state=0)
         turnoffRCUs()
@@ -952,22 +897,28 @@ class cHBA:
                     if (time.time() - delay_start) < 10.0:
                         time.sleep(10.0 - (time.time() - delay_start))
                     
-                    self.rcudata.record(rec_time=2)
+                    self.rcudata.record(rec_time=record_time)
                     
                     ctrlstring = ('2,'*elem + ctrl + ',' + '2,'*15)[:33]
                     rspctl('--hbadelay=%s' %(ctrlstring), wait=0.0)
                     delay_start = time.time()
+                    clean, n_off = self.checkOscillationElements(elem)
+                    n_rcus_off += n_off
+                    n_off = self.checkSpuriousElements(elem)
+                    n_rcus_off += n_off
+                    self.checkNoiseElements(elem, noise_low_deviation, noise_high_deviation, noise_max_diff)
                     self.checkSignalElements(elem, ctrl_nr, subband, rf_min_signal, rf_low_deviation, rf_high_deviation)
+                    if not clean:
+                        n_rcus_off = 0
 
         self.hba.element_check_done = 1
-        self.db.addTestDone('ES%d' %(mode))
+        self.db.addTestDone('EHBA')
         logger.info("Done HBA element tests")
         rspctl('--hbadelay=%s' %(('128,'* 16)[:-1]), wait=8.0)
         return
-        
+    
     # check for oscillating tiles and turn off RCU
     # stop one RCU each run
-    # elem counts from 0..15 (for user output use 1..16)
     def checkOscillationElements(self, elem):
         logger.info("--- oscillation test --")
         clean = True
@@ -981,8 +932,7 @@ class cHBA:
             if self.hba.tile[tile].element[elem].no_modem or self.hba.tile[tile].element[elem].modem_error:
                 return(True, 0)
             tile_polarity  = strongest_rcu % 2
-            logger.info("RCU %d Tile %d Element %d Oscillation sum=%3.1f peaks=%d" %\
-                       (strongest_rcu, tile, elem+1, result[0][0], result[0][1]))
+            logger.info("RCU %d Tile %d Element %d Oscillation sum=%3.1f peaks=%d" %(strongest_rcu, tile, elem, result[0][0], result[0][1]))
             self.turnOffTile(tile)
             n_rcus_off += 1
             if tile_polarity == 0:
@@ -999,7 +949,7 @@ class cHBA:
         for rcu in result:
             tile = rcu / 2
             tile_polarity  = rcu % 2
-            logger.info("RCU %d Tile %d Element %d pol %d Spurious" %(rcu, tile, elem+1, tile_polarity))
+            logger.info("RCU %d Tile %d Element %d pol %d Spurious" %(rcu, tile, elem, tile_polarity))
             self.turnOffTile(tile)
             n_rcus_off += 1
             if tile_polarity == 0:
@@ -1017,7 +967,7 @@ class cHBA:
             rcu, val, bad_secs, ref, diff = n
             tile = rcu / 2
             logger.info("RCU %d Tile %d Element %d Low-Noise value=%3.1f bad=%d(%d) limit=%3.1f diff=%3.3f" %\
-                       (rcu, tile, elem+1, val, bad_secs, self.rcudata.frames, ref, diff))
+                       (rcu, tile, elem, val, bad_secs, self.rcudata.frames, ref, diff))
             
             if rcu%2 == 0:
                 elem_polarity = self.hba.tile[tile].element[elem].x 
@@ -1036,7 +986,7 @@ class cHBA:
             rcu, val, bad_secs, ref, diff = n
             tile = rcu / 2
             logger.info("RCU %d Tile %d Element %d High-Noise value=%3.1f bad=%d(%d) ref=%3.1f diff=%3.1f" %\
-                       (rcu, tile, elem+1, val, bad_secs, self.rcudata.frames, ref, diff))
+                       (rcu, tile, elem, val, bad_secs, self.rcudata.frames, ref, diff))
             
             if rcu%2 == 0:
                 elem_polarity = self.hba.tile[tile].element[elem].x 
@@ -1054,8 +1004,7 @@ class cHBA:
         for n in jitter:
             rcu, val, ref, bad_secs = n
             tile = rcu / 2
-            logger.info("RCU %d Tile %d Element %d Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
-                       (rcu, tile, elem+1, val, ref))
+            logger.info("RCU %d Tile %d Element %d Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %(rcu, tile, elem, val, ref))
             
             if rcu%2 == 0:
                 elem_polarity = self.hba.tile[tile].element[elem].x 
@@ -1071,7 +1020,6 @@ class cHBA:
         return    
     
     def checkSignalElements(self, elem, ctrl_nr, subband, min_signal, low_deviation, high_deviation):
-        
         logger.info("--- RF test ---")
         self.rcudata.searchTestSignal(subband=subband, minsignal=min_signal, maxsignal=120.0)
         logger.info("HBA, X used test subband=%d  avg_signal=%3.1f" %(self.rcudata.testSubband_X, self.rcudata.testSignal_X))

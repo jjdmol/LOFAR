@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/OpenMP_Lock.h>
+#include <GPUProc/BandPass.h>
 
 namespace LOFAR
 {
@@ -153,7 +154,7 @@ namespace LOFAR
     namespace {
       unsigned baseline(unsigned stat1, unsigned stat2)
       {
-        //baseline(stat1, stat2); TODO: This function should be moved to a helper class
+        //baseline(stat1, stat2); This function should be moved to a helper class
         return stat2 * (stat2 + 1) / 2 + stat1;
       }
     }

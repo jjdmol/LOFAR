@@ -2,66 +2,58 @@ interfaces:
 x.eth2 & x.eth3: 10GbE of CPU 1
 x.eth4 & x.eth5: 10GbE of CPU 2
 
-International stations share a link with the core station directly above it.
+BG router	field				cobalt node.if
+-------------------------------------------------------------
+0		CS021HBA0			cbt001.eth2
+0		CS021HBA1			cbt001.eth2
+0		RS208				cbt001.eth2
+0		CS005HBA0			cbt001.eth4
+0		CS005HBA1			cbt001.eth4
+0		RS310				cbt001.eth4
+0		CS101HBA0			cbt002.eth2
+0		CS101HBA1			cbt002.eth2
+0		RS407				cbt002.eth2
+0		CS032HBA0			cbt002.eth4
+0		CS032HBA1			cbt002.eth4
+0		RS409				cbt002.eth4
+1		CS002HBA0			cbt003.eth2
+1		CS002HBA1			cbt003.eth2
+1		CS006HBA0			cbt003.eth2
+1		CS006HBA1			cbt003.eth4
+1		CS201HBA0			cbt003.eth4
+1		CS201HBA1			cbt003.eth4
+1		CS011HBA0			cbt004.eth2
+1		CS011HBA1 + Potsdam		cbt004.eth2
+1		CS028HBA0			cbt004.eth2
+1		CS028HBA1 + Tautenburg		cbt004.eth4
+1		CS302HBA0			cbt004.eth4
+1		CS302HBA1			cbt004.eth4
+2		CS003HBA0			cbt005.eth2
+2		CS003HBA1			cbt005.eth2
+2		RS305				cbt005.eth2
+2		CS007HBA0			cbt005.eth3
+2		CS007HBA1			cbt005.eth3
+2		RS503				cbt005.eth3
+2		CS030HBA0 + Nancay		cbt005.eth4
+2		CS030HBA1			cbt005.eth4
+2		CS301HBA0 + Onsala		cbt005.eth4
+2		CS301HBA1			cbt005.eth5
+2		CS501HBA0			cbt005.eth5
+2		CS501HBA1			cbt005.eth5
+3		CS004HBA0			cbt006.eth2
+3		CS004HBA1			cbt006.eth2
+3		RS106				cbt006.eth2
+3		CS401HBA0 + Juelich		cbt006.eth4
+3		CS401HBA1			cbt006.eth4
+3		RS205				cbt006.eth4
+3		CS103HBA0			cbt007.eth2
+3		CS103HBA1			cbt007.eth2
+3		RS307				cbt007.eth2
+3		RS406				cbt007.eth4
+3		RS508				cbt007.eth4
+3		RS509				cbt007.eth4
 
-BG router	field				field ip		cobalt node.if		Fiber.number
-						(x = 1, 2, 3, 4)
-						(y = 7, 8, 9, 10)
--------------------------------------------------------------------------------------------------------------
-0		CS021HBA0			10.175.39.x		cbt001.eth2		C1:1
-0		CS021HBA1			10.175.39.y		cbt001.eth2		C1:1		
-0		RS208				10.175.152.x		cbt001.eth2		C1:1
-0		CS005HBA0			10.175.5.x		cbt001.eth4		C1:2
-0		CS005HBA1			10.175.5.y		cbt001.eth4		C1:2
-0		RS310				10.175.170.x		cbt001.eth4		C1:2
-0		CS101HBA0			10.175.129.y		cbt002.eth2		C2:1
-0		CS101HBA1			10.175.129.x		cbt002.eth2		C2:1
-0		RS407				10.175.183.y		cbt002.eth2		C2:1
-0		CS032HBA0			10.175.68.x		cbt002.eth4		C2:2
-0		CS032HBA1			10.175.68.y		cbt002.eth4		C2:2
-0		RS409				10.175.185.x		cbt002.eth4		C2:2
 
-1		CS002HBA0			10.175.2.x		cbt003.eth2		C3:1
-1		CS002HBA1			10.175.2.y		cbt003.eth2		C3:1
-1		CS006HBA0			10.175.6.x		cbt003.eth2		C3:1
-1		CS006HBA1			10.175.6.y		cbt003.eth4		C3:2
-1		CS201HBA0			10.175.145.x		cbt003.eth4		C3:2
-1		CS201HBA1			10.175.145.y		cbt003.eth4		C3:2
-1		CS011HBA0			10.175.20.x		cbt004.eth2		C4:1
-1		CS011HBA1			10.175.20.y		cbt004.eth2		C4:1
-1		Potsdam				10.200.81.x		cbt004.eth2		C4:1
-1		CS028HBA0			10.175.55.x		cbt004.eth2		C4:1
-1		CS028HBA1 			10.175.55.y		cbt004.eth4		C4:2
-1		Tautenburg			10.21x.3.1		cbt004.eth4		C4:2
-1		CS302HBA0			10.175.162.x		cbt004.eth4		C4:2
-1		CS302HBA1			10.175.162.y		cbt004.eth4		C4:2
 
-2		CS003HBA0			10.175.3.x		cbt005.eth2		C5:1
-2		CS003HBA1			10.175.3.y		cbt005.eth2		C5:1
-2		RS305				10.175.165.x		cbt005.eth2		C5:1
-2		CS007HBA0			10.175.7.x		cbt005.eth3		C5:2
-2		CS007HBA1			10.175.7.y		cbt005.eth3		C5:2
-2		RS503				10.175.195.x		cbt005.eth3		C5:2
-2		CS030HBA0 			10.175.66.x		cbt005.eth4		C6:1
-2		Nancay				10.21x.6.1		cbt005.eth4		C6:1
-2		CS030HBA1			10.175.66.y		cbt005.eth4		C6:1
-2		CS301HBA0 			10.175.161.x		cbt005.eth4		C6:1
-2		Onsala				10.21x.7.1		cbt005.eth4		C6:1
-2		CS301HBA1			10.175.161.y		cbt005.eth5		C6:2
-2		CS501HBA0			10.175.193.x		cbt005.eth5		C6:2
-2		CS501HBA1			10.175.193.y		cbt005.eth5		C6:2
 
-3		CS004HBA0			10.175.4.x		cbt006.eth2		C7:1
-3		CS004HBA1			10.175.4.y		cbt006.eth2		C7:1
-3		RS106				10.175.134.x		cbt006.eth2		C7:1
-3		CS401HBA0 			10.175.177.x		cbt006.eth4		C7:2
-3		Juelich				10.21x.5.1		cbt006.eth4		C7:2
-3		CS401HBA1			10.175.177.x		cbt006.eth4		C7:2
-3		RS205				10.175.149.x		cbt006.eth4		C7:2
-3		CS103HBA0			10.175.131.x		cbt007.eth2		C8:1
-3		CS103HBA1			10.175.131.y		cbt007.eth2		C8:1
-3		RS307				10.175.167.x		cbt007.eth2		C8:1
-3		RS406				10.175.182.x		cbt007.eth4		C8:2
-3		RS508				10.175.200.x		cbt007.eth4		C8:2
-3		RS509				10.175.201.x		cbt007.eth4		C8:2
 

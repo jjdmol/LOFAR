@@ -31,9 +31,6 @@ checkHardware.py -l=2 $start $stop
 # Add to history
 cat $filenameNow >> $filenameHistory
 
-# Copy to L2 file in local dir
-cp $filenameNow $locallogdir$host"_L2_StationTest.csv"
-
 # Copy from local to global dir
 cp $filenameNow $globallogdir$host"_L2_StationTest.csv"
 cp $filenameHistory $globallogdir

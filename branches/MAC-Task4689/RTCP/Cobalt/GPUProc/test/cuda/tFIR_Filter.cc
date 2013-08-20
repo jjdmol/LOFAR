@@ -36,7 +36,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
-#include "../TestUtil.h"
+#include "TestUtil.h"
 
 using namespace std;
 using namespace LOFAR;
@@ -60,7 +60,7 @@ int test()
   // Compile to ptx
   // Set op string string pairs to be provided to the compiler as defines
   definitions["NR_TAPS"] = lexical_cast<string>(NR_TAPS);
-  definitions["NR_STABS"] = lexical_cast<string>(NR_STATIONS);
+  definitions["NR_STATIONS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
   definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);

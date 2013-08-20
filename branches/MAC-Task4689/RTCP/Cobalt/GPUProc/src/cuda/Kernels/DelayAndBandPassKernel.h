@@ -49,7 +49,6 @@ namespace LOFAR
         size_t nrSAPs;
         bool delayCompensation;
         bool correctBandPass;
-        bool transpose;
         double subbandBandwidth;
       };
 

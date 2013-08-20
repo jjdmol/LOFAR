@@ -47,17 +47,12 @@ TEST(convertFlagsToChannelFlags)
 {
   // Create a parset with the needed parameters
   Parset parset;
-  parset.add("Cobalt.Correlator.nrChannelsPerSubband","4");
-  parset.add("Cobalt.Correlator.nrBlocksPerIntegration", "1");
-  parset.add("Cobalt.blockSize", "1024");
+  parset.add("Observation.channelsPerSubband","4"); //not to large a number of subbands, else the integration steps gets big
+  parset.add("OLAP.IONProc.integrationSteps", "1");  
+  parset.add("OLAP.CNProc.integrationSteps", "256");   //samples per channel 
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
-
-  parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-  parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
-  parset.add("Observation.DataProducts.Output_Correlated.locations","[lse011:/data3/L2011_24523/]");
-
   parset.updateSettings();
   
   // Input flags: an array of sparseset
