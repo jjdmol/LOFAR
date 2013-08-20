@@ -120,6 +120,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 
