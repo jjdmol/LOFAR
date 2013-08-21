@@ -337,7 +337,7 @@ int test()
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
   nrErrors = 0;
-  const float eps = 2.0f * std::numeric_limits<float>::epsilon();
+  const float eps = 4.0f * std::numeric_limits<float>::epsilon();
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
       for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
@@ -346,13 +346,13 @@ int test()
           if (!fpEquals(filteredDataArr[station][pol][sample][ch][0], (float)(2 * scale * expectedSums[ch]), eps)) {
             if (++nrErrors < 100) { // limit spam
               std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                "][0] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][0] << " 2*weight = " << 2*expectedSums[ch] << std::endl;
+                "][0] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][0] << " 2*weight = " << 2*scale*expectedSums[ch] << std::endl;
             }
           }
           if (!fpEquals(filteredDataArr[station][pol][sample][ch][1], (float)(3 * scale * expectedSums[ch]), eps)) {
             if (++nrErrors < 100) {
               std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                "][1] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][1] << " 3*weight = " << 3*expectedSums[ch] << std::endl;
+                "][1] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][1] << " 3*weight = " << 3*scale*expectedSums[ch] << std::endl;
             }
           }
         }
