@@ -10,16 +10,6 @@
 # If existing, DROPS the current database
 #
 
-# TO DO: Add optionparser for options -d en -H (and -h for help)
-#        Add option -l for local (using a checked out SVN tree)
-#        Add option -v for version of new components 
-#        Add switches for:
-#         - NOT Recreating database if exists; otherwise assume database has PIC tree, all functions, default templates, components
-#         - Copying default templates (requires production host and database)
-#         - Loading new version of components (needs version number)
-#         - Update existing default templates to version of loaded components
-#
-
 SyntaxError()
 {
         Msg=$1
@@ -202,7 +192,6 @@ if [ $not_create_otdb_if_exists -eq 0 ]; then
   else
     if [ -e /opt/lofar/sbin/sql/create_OTDB.sql ]; then 
       cd /opt/lofar/sbin/sql
-      # ADD THE ''IF EXISTS'' TO ALL DROP TABLE COMMANDS!
       psql -f create_OTDB.sql --host $DBHOST --port $DBPORT --user $DBUSER $DBNAME 2>&1 | grep ERROR | grep -v "does not exist"
       otdb_create_result=$?
     else
