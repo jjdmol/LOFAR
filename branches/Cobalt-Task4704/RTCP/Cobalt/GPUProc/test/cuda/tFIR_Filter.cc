@@ -23,8 +23,6 @@
 #define COMPLEX 2       // do not change
 
 #define NR_BITS_PER_SAMPLE 8
-#define NR_STATION_FILTER_TAPS  16
-#define USE_NEW_CORRELATOR
 #define NR_POLARIZATIONS         2 
 #define NR_TAPS                 16
 
@@ -33,6 +31,7 @@
 #define NR_CHANNELS 64
 
 #if NR_BITS_PER_SAMPLE == 16
+#error unsupported by this test at the moment
 typedef signed short SampleType;
 #elif NR_BITS_PER_SAMPLE == 8
 typedef signed char SampleType;
@@ -99,22 +98,25 @@ int test()
   unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
   HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData * sizeof(float), 0.0f);
 
-  unsigned sizeSampledData = NR_STATIONS * (NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;               
+  unsigned sizeSampledData = NR_STATIONS * (NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
   HostMemory rawInputSamples = getInitializedArray(ctx, sizeSampledData * sizeof(signed char), char(0));
 
   unsigned sizeWeightsData = NR_CHANNELS * NR_TAPS;
   HostMemory rawFirWeights = getInitializedArray(ctx, sizeWeightsData * sizeof(float), 0.0f);
 
+  unsigned sizeHistoryData = NR_STATIONS * (NR_TAPS - 1) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
+  HostMemory rawHistoryData = getInitializedArray(ctx, sizeHistoryData * sizeof(signed char), char(0));
+
   // Data on the gpu
   DeviceMemory devFilteredData(ctx, sizeFilteredData * sizeof(float));
-  DeviceMemory devSampledData(ctx, sizeSampledData * sizeof(float));
+  DeviceMemory devSampledData(ctx, sizeSampledData * sizeof(signed char));
   DeviceMemory devFirWeights(ctx, sizeWeightsData * sizeof(float));
-  DeviceMemory devHistoryData(ctx, 1);
+  DeviceMemory devHistoryData(ctx, sizeHistoryData * sizeof(signed char));
 
   unsigned station, sample, ch, pol;
 
   // Calculate the number of threads in total and per block
-  int MAXNRCUDATHREADS = 1024;//dit moet nog opgevraagd worden en niet als magisch getal
+  int MAXNRCUDATHREADS = 64;//dit moet nog opgevraagd worden en niet als magisch getal
   size_t maxNrThreads = MAXNRCUDATHREADS;
   unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
   unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
@@ -130,6 +132,7 @@ int test()
                     [NR_POLARIZATIONS]
                     [COMPLEX],
                     rawInputSamples.get<signed char>(), false);
+
   MultiDimArray<float, 2> 
     firWeightsArr(boost::extents
                   [NR_CHANNELS]
@@ -145,6 +148,15 @@ int test()
                     [COMPLEX],
                     rawFilteredData.get<float>(), false);
 
+  MultiDimArray<signed char, 5>
+    historyDataArr(boost::extents
+                    [NR_STATIONS]
+                    [NR_TAPS - 1]
+                    [NR_CHANNELS]
+                    [NR_POLARIZATIONS]
+                    [COMPLEX],
+                    rawHistoryData.get<signed char>(), false);
+
   // Test 1: Single impulse test on single non-zero weight
   station = ch = pol = 0;
   sample = NR_TAPS - 1; // skip FIR init samples
@@ -155,6 +167,7 @@ int test()
   stream.writeBuffer(devFilteredData, rawFilteredData, true);
   stream.writeBuffer(devSampledData, rawInputSamples, true);
   stream.writeBuffer(devFirWeights, rawFirWeights, true);
+  stream.writeBuffer(devHistoryData, rawHistoryData, true);
 
   // Run the kernel on the created data
   hKernel.setArg(0, devFilteredData);
@@ -220,11 +233,7 @@ int test()
   stream.writeBuffer(devFilteredData, rawFilteredData, true);
   stream.writeBuffer(devSampledData, rawInputSamples, true);
   stream.writeBuffer(devFirWeights, rawFirWeights, true);
-
-  // Run the kernel on the created data
-  hKernel.setArg(0, devFilteredData);
-  hKernel.setArg(1, devSampledData);
-  hKernel.setArg(2, devFirWeights);
+  stream.writeBuffer(devHistoryData, rawHistoryData, true);
 
   // Run the kernel
   stream.synchronize();
@@ -232,21 +241,6 @@ int test()
   stream.synchronize();
 
   stream.readBuffer(rawFilteredData, devFilteredData, true);
-
-  // stp = rawInputSamples.get<SampleType>();
-  // for (size_t i = 0; i < rawInputSamples.size() / sizeof(SampleType); i++) {
-  //   cout << "input[" << i << "] = " << int(stp[i]) << endl;
-  // }
-
-  // fp = rawFirWeights.get<float>();
-  // for (size_t i = 0; i < rawFirWeights.size() / sizeof(float); i++) {
-  //   cout << "coeff[" << i << "] = " << fp[i] << endl;
-  // }
-
-  // fp = rawFilteredData.get<float>();
-  // for (size_t i = 0; i < rawFilteredData.size() / sizeof(float); i++) {
-  //   cout << "output[" << i << "] = " << fp[i] << endl;
-  // }
 
   // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
   unsigned nrErrors = 0;
@@ -318,15 +312,22 @@ int test()
     }
   }
 
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (sample = 0; sample < NR_TAPS - 1; sample++) {
+      for (ch = 0; ch < NR_CHANNELS; ch++) {
+        for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+          historyDataArr[station][sample][ch][pol][0] = 2; // real
+          historyDataArr[station][sample][ch][pol][1] = 3; // imag
+        }
+      }
+    }
+  }
+
   // Copy input vectors from host memory to GPU buffers.
   stream.writeBuffer(devFilteredData, rawFilteredData, true);
   stream.writeBuffer(devSampledData, rawInputSamples, true);
   stream.writeBuffer(devFirWeights, rawFirWeights, true);
-
-  // Run the kernel on the created data
-  hKernel.setArg(0, devFilteredData);
-  hKernel.setArg(1, devSampledData);
-  hKernel.setArg(2, devFirWeights);
+  stream.writeBuffer(devHistoryData, rawHistoryData, true);
 
   // Run the kernel
   stream.synchronize();
@@ -365,8 +366,6 @@ int test()
     std::cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values" << std::endl;
     testOk = false;
   }
-
-
 
 
   return testOk ? 0 : 1;
