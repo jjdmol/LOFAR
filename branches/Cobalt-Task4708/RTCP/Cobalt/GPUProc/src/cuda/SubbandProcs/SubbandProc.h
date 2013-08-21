@@ -83,6 +83,9 @@ namespace LOFAR
       //!< Remainder of delays
       MultiDimArrayHostBuffer<float, 2> phaseOffsets;
 
+      //!< Delays for TABs (aka pencil beams) after station beam correction
+      MultiDimArrayHostBuffer<float, 3> tabDelays;
+
       // inputdata with flagged data set to zero
       MultiDimArrayHostBuffer<char, 4> inputSamples;
 
@@ -99,6 +102,8 @@ namespace LOFAR
         delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
                        context, hostBufferFlags),
         phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        tabDelays(boost::extents[n_beams][n_stations][n_polarizations],
                        context, hostBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated

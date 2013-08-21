@@ -43,7 +43,9 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  *
  * \param[out] complexVoltagesPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
  * \param[in]  correctedDataPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
- * \param[in]  weightsPtr              3d input array of complex valued weights to be applied to the correctData samples. THere is a weight for each station, channel and Tied Array Beam triplet.
+ * \param[in]  delaysPtr               3D input array of complex valued delays to be applied to the correctData samples. There is a delay for each station, channel and Tied Array Beam triplet.
+ * \param[in]  subbandFrequency        central frequency of the subband
+
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
@@ -51,7 +53,7 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
  * NR_TABS                 | >= 1                    | number of Tied Array Beams to create
- * WEIGHT_CORRECTION       | float                   | weighting applied to all weights, primarily used for correcting FFT and iFFT chain multiplication correction
+ * WEIGHT_CORRECTION       | float                   | weighting applied to all weights derived from the delays, primarily used for correcting FFT and iFFT chain multiplication correction
  * ----------------------- | ------------------------| 
  * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
@@ -62,15 +64,16 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  */
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                        const void *samplesPtr,
-                                       const void *weightsPtr)
+                                       const void *delaysPtr,
+                                       float subbandFrequency)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
-  WeightsType weights = (WeightsType) weightsPtr;
+  WeightsType weights = (WeightsType) delaysPtr; // TODO: compute weights from delays using phaseShift()
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
-  unsigned channel =  blockDim.z * blockIdx.z + threadIdx.z;  // The paralellization in the channel is controllable with extra blocks
+  unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks
 
   float2 sample;
   // This union is in shared memory because it is used by all threads in the block
@@ -79,17 +82,26 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
- 
+
+/*
+#if NR_CHANNELS == 1
+  float frequency = subbandFrequency;
+#else
+  float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
+#endif
+  float2 weight = make_float2(phaseShift(frequency, delay.x),
+                              phaseShift(frequency, delay.y));
+*/
 
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
        first_station < NR_STATIONS;
        first_station += NR_STATIONS_PER_PASS) 
-  { // this for loop spand the whole file
+  { // this for loop spans the whole file
 #if NR_STATIONS_PER_PASS >= 1
     float2 weight_00;                     // assign the weights to register variables
-    if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32: We 
-                                          // the do multiple passes to span all stations
+    if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32:
+                                          // We then do multiple passes to span all stations
       weight_00 = (*weights)[first_station + 0][channel][tab] * WEIGHT_CORRECTION; // Get data from global mem
 #endif
     // Loop onrolling allows usage of registers for weights

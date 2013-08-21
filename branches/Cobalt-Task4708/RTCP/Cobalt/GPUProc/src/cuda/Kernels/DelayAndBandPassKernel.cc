@@ -87,9 +87,9 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, float centralFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, float subbandFrequency, size_t SAP)
     {
-      setArg(2, centralFrequency);
+      setArg(2, subbandFrequency);
       setArg(3, SAP);
       Kernel::enqueue(queue/*, counter*/);
     }

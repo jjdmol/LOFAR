@@ -155,6 +155,7 @@ HostMemory runTest(Context ctx,
   hKernel.setArg(0, devComplexVoltagesMemory);
   hKernel.setArg(1, devBandPassCorrectedMemory);
   hKernel.setArg(2, devWeightsMemory);
+  hKernel.setArg(3, subbandFrequency);
 
   // Calculate the number of threads in total and per block
   Grid globalWorkSize(1, 1, 1);

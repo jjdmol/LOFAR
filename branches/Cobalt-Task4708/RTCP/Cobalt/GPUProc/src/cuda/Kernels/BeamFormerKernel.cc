@@ -55,7 +55,7 @@ namespace LOFAR
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, buffers.beamFormerWeights);
+      setArg(2, buffers.beamFormerDelays);
 
       globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
                                  params.nrTABs, 
@@ -65,7 +65,7 @@ namespace LOFAR
                                  params.nrChannelsPerSubband);
 
 #if 0
-      size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);
+      size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
       size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
       size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
 
@@ -75,10 +75,16 @@ namespace LOFAR
 
       nrOperations = count * params.nrStations * params.nrTABs * 8;
       nrBytesRead = 
-        nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
+        nrDelaysBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
         nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
 #endif
+    }
+
+    void BeamFormerKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, float subbandFrequency)
+    {
+      setArg(3, subbandFrequency);
+      Kernel::enqueue(queue/*, counter*/);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -95,7 +101,7 @@ namespace LOFAR
         return
           itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
           NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
-      case BeamFormerKernel::BEAM_FORMER_WEIGHTS:
+      case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
           itsParameters.nrStations * itsParameters.nrTABs * itsParameters.nrChannelsPerSubband * 
           sizeof(std::complex<float>);
