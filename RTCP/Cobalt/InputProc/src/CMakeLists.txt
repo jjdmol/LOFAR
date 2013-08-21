@@ -30,6 +30,9 @@ if(MPI_FOUND)
 endif(MPI_FOUND)
 
 lofar_add_library(inputproc ${_inputproc_sources})
+if(UNIX AND NOT APPLE)
+  target_link_libraries(inputproc rt)
+endif(UNIX AND NOT APPLE)
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
