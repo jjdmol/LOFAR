@@ -121,9 +121,9 @@ function parse_logs
   $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # check logs
-  parse_logs performance_normal.txt performance_profiled.txt &&
+  parse_logs performance_normal.txt performance_profiled.txt && # Remove this && and remove the last line for output
 
   # toss output if everything is ok
-  (cd $RUNDIR && rm -rf $OUTDIR)
+  (cd $RUNDIR && rm -rf $OUTDIR) # Comment this line for output
 ) || exit 1
 

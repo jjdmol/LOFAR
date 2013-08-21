@@ -86,6 +86,34 @@ namespace LOFAR
       // second FFT
       static const size_t BEAM_FORMER_NR_CHANNELS = 2048;
 
+      // Beamformer specific collection of PerformanceCounters
+      class Counters
+      {
+      public:
+        Counters(gpu::Context &context);
+
+        // gpu kernel counters
+        PerformanceCounter intToFloat;
+        PerformanceCounter firstFFT;
+        PerformanceCounter delayBp;
+        PerformanceCounter secondFFT;
+        PerformanceCounter correctBandpass;
+        PerformanceCounter beamformer;
+        PerformanceCounter transpose;
+        PerformanceCounter inverseFFT;
+        PerformanceCounter firFilterKernel;
+        PerformanceCounter finalFFT;
+
+        // gpu transfer counters
+        PerformanceCounter samples;
+        PerformanceCounter visibilities;
+
+        // Print the mean and std of each performance counter on the logger
+        void printStats();
+      };
+
+      Counters counters;
+
     private:
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have

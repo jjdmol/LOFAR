@@ -29,6 +29,7 @@
 #include "../TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
+#include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
 using namespace boost;

@@ -48,6 +48,8 @@ namespace LOFAR
     public:
       Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
+      virtual ~Pipeline();
+
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       void processObservation(OutputType outputType);
 
@@ -64,7 +66,6 @@ namespace LOFAR
 
       // combines all functionality needed for getting the total from a set of counters
       struct Performance {
-        std::map<std::string, PerformanceCounter::figures> total_counters;
         std::map<std::string, SmartPtr<NSTimer> > total_timers;
         // lock on the shared data
         Mutex totalsMutex;
