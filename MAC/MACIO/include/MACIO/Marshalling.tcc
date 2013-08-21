@@ -37,32 +37,32 @@
 using namespace LOFAR;
 
 // Basic template
-template<typename T> inline size_t MSH_size(const T	&tVar)
+template<typename T> inline uint32 MSH_size(const T	&tVar)
 {
 	return (sizeof(tVar));
 }
 
-template<typename T> inline void MSH_pack(char *bufPtr, size_t &offset, const T &tVar)
+template<typename T> inline void MSH_pack(char *bufPtr, uint32 &offset, const T &tVar)
 {
-	size_t	size = MSH_size(tVar);
+	uint32	size = MSH_size(tVar);
 	memcpy(bufPtr + offset, &tVar, size);
 	offset += size;
 }
 
-template<typename T> inline void MSH_unpack(const char *bufPtr, size_t &offset, T &tVar)
+template<typename T> inline void MSH_unpack(const char *bufPtr, uint32 &offset, T &tVar)
 {
-	size_t	size = MSH_size(tVar);
+	uint32	size = MSH_size(tVar);
 	memcpy(&tVar, bufPtr + offset, size);
 	offset += size;
 }
 
 // Specialistion for string
-template<> inline size_t MSH_size<string>(const string &tVar)
+template<> inline uint32 MSH_size<string>(const string &tVar)
 {
 	return (sizeof(int32) + tVar.size() + sizeof(char));
 }
 
-template <> inline void MSH_pack<string>(char *bufPtr, size_t &offset, const string &tVar)
+template <> inline void MSH_pack<string>(char *bufPtr, uint32 &offset, const string &tVar)
 {
 	int32	nrChars = tVar.size();
 	memcpy(bufPtr + offset, &nrChars, sizeof(nrChars));
@@ -73,7 +73,7 @@ template <> inline void MSH_pack<string>(char *bufPtr, size_t &offset, const str
 	offset++;
 }
 
-template<> inline void MSH_unpack<string>(const char *bufPtr, size_t &offset, string &tVar)
+template<> inline void MSH_unpack<string>(const char *bufPtr, uint32 &offset, string &tVar)
 {
 	int32	nrChars;
 	memcpy(&nrChars, bufPtr + offset, sizeof(nrChars));
@@ -83,12 +83,12 @@ template<> inline void MSH_unpack<string>(const char *bufPtr, size_t &offset, st
 }
 
 // Specialistion for KVpair
-template<> inline size_t MSH_size<KVpair>(const KVpair &tVar)
+template<> inline uint32 MSH_size<KVpair>(const KVpair &tVar)
 {
 	return (sizeof(tVar.valueType) + sizeof(tVar.timestamp) + MSH_size(tVar.first) + MSH_size(tVar.second));
 }
 
-template <> inline void MSH_pack<KVpair>(char *bufPtr, size_t &offset, const KVpair &tVar)
+template <> inline void MSH_pack<KVpair>(char *bufPtr, uint32 &offset, const KVpair &tVar)
 {
 	MSH_pack(bufPtr, offset, tVar.valueType);
 	MSH_pack(bufPtr, offset, tVar.timestamp);
@@ -96,7 +96,7 @@ template <> inline void MSH_pack<KVpair>(char *bufPtr, size_t &offset, const KVp
 	MSH_pack(bufPtr, offset, tVar.second);
 }
 
-template<> inline void MSH_unpack<KVpair>(const char *bufPtr, size_t &offset, KVpair &tVar)
+template<> inline void MSH_unpack<KVpair>(const char *bufPtr, uint32 &offset, KVpair &tVar)
 {
 	MSH_unpack(bufPtr, offset, tVar.valueType);
 	MSH_unpack(bufPtr, offset, tVar.timestamp);
@@ -105,13 +105,13 @@ template<> inline void MSH_unpack<KVpair>(const char *bufPtr, size_t &offset, KV
 }
 
 // Specialistion for boost::dynamic_bitset
-template<> inline size_t MSH_size<boost::dynamic_bitset<> >(const boost::dynamic_bitset<> &tVar)
+template<> inline uint32 MSH_size<boost::dynamic_bitset<> >(const boost::dynamic_bitset<> &tVar)
 {
 	return (sizeof(int32) + tVar.size() + sizeof(char));
 }
 
 // Specialisation for boost::dynamic_bitset
-template <> inline void MSH_pack<boost::dynamic_bitset<> >(char *bufPtr, size_t &offset, const boost::dynamic_bitset<> &tVar)
+template <> inline void MSH_pack<boost::dynamic_bitset<> >(char *bufPtr, uint32 &offset, const boost::dynamic_bitset<> &tVar)
 {
 	int32	nrBits = tVar.size();
 	memcpy(bufPtr + offset, &nrBits, sizeof(nrBits));
@@ -124,7 +124,7 @@ template <> inline void MSH_pack<boost::dynamic_bitset<> >(char *bufPtr, size_t 
 	offset++;
 }
 
-template<> void inline MSH_unpack<boost::dynamic_bitset<> >(const char *bufPtr, size_t &offset, boost::dynamic_bitset<> &tVar)
+template<> void inline MSH_unpack<boost::dynamic_bitset<> >(const char *bufPtr, uint32 &offset, boost::dynamic_bitset<> &tVar)
 {
 	int32	nrBits;
 	memcpy(&nrBits, bufPtr + offset, sizeof(nrBits));
@@ -135,9 +135,9 @@ template<> void inline MSH_unpack<boost::dynamic_bitset<> >(const char *bufPtr, 
 }
 
 // basics for vector<T>
-template<typename T> size_t MSH_size(const vector<T> &tVar)
+template<typename T> uint32 MSH_size(const vector<T> &tVar)
 {
-	size_t sizevar = sizeof(int32);
+	uint32 sizevar = sizeof(int32);
 	typename vector<T>::const_iterator	iter = tVar.begin();
 	typename vector<T>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -147,7 +147,7 @@ template<typename T> size_t MSH_size(const vector<T> &tVar)
     return (sizevar);
 } 
 	
-template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const vector<T> &tVar)
+template<typename T> void MSH_pack(char *bufPtr, uint32	&offset, const vector<T> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
@@ -161,7 +161,7 @@ template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const vector<T>
 	}
 }
 
-template<typename T> void MSH_unpack(const char* bufPtr, size_t &offset, vector<T> &tVar)
+template<typename T> void MSH_unpack(const char* bufPtr, uint32 &offset, vector<T> &tVar)
 {
 	int32	nrElem = 0;
 	memcpy(&nrElem, (char*)bufPtr + offset, sizeof(nrElem));
@@ -175,9 +175,9 @@ template<typename T> void MSH_unpack(const char* bufPtr, size_t &offset, vector<
 } 
 
 // basics for map<string,T*>
-template<typename T> size_t MSH_size(const map<string,T*> &tVar)
+template<typename T> uint32 MSH_size(const map<string,T*> &tVar)
 {
-	size_t sizevar = sizeof(int32);
+	uint32 sizevar = sizeof(int32);
 	typename map<string,T*>::const_iterator	iter = tVar.begin();
 	typename map<string,T*>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -187,7 +187,7 @@ template<typename T> size_t MSH_size(const map<string,T*> &tVar)
     return (sizevar);
 } 
 	
-template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const map<string,T*> &tVar)
+template<typename T> void MSH_pack(char *bufPtr, uint32	&offset, const map<string,T*> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
@@ -202,7 +202,7 @@ template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const map<strin
 	}
 }
 
-template<typename T> void MSH_unpack(const char* bufPtr, size_t &offset, map<string,T*> &tVar)
+template<typename T> void MSH_unpack(const char* bufPtr, uint32 &offset, map<string,T*> &tVar)
 {
 	int32	nrElem = 0;
 	memcpy(&nrElem, (char*)bufPtr + offset, sizeof(nrElem));
@@ -217,9 +217,9 @@ template<typename T> void MSH_unpack(const char* bufPtr, size_t &offset, map<str
 } 
 
 // basics for map<string,T>
-template<typename T> size_t MSH_size(const map<string,T> &tVar)
+template<typename T> uint32 MSH_size(const map<string,T> &tVar)
 {
-	size_t sizevar = sizeof(int32);
+	uint32 sizevar = sizeof(int32);
 	typename map<string,T>::const_iterator	iter = tVar.begin();
 	typename map<string,T>::const_iterator	end  = tVar.end();
 	while (iter != end) {
@@ -229,7 +229,7 @@ template<typename T> size_t MSH_size(const map<string,T> &tVar)
     return (sizevar);
 } 
 	
-template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const map<string,T> &tVar)
+template<typename T> void MSH_pack(char *bufPtr, uint32	&offset, const map<string,T> &tVar)
 {
 	int32	nrElem = tVar.size();
 	memcpy((char*)bufPtr + offset, &nrElem, sizeof(int32));
@@ -244,7 +244,7 @@ template<typename T> void MSH_pack(char *bufPtr, size_t	&offset, const map<strin
 	}
 }
 
-template<typename T> void MSH_unpack(const char* bufPtr, size_t &offset, map<string,T> &tVar)
+template<typename T> void MSH_unpack(const char* bufPtr, uint32 &offset, map<string,T> &tVar)
 {
 	int32	nrElem = 0;
 	memcpy(&nrElem, (char*)bufPtr + offset, sizeof(nrElem));
