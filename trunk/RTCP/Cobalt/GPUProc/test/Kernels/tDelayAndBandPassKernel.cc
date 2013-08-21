@@ -27,6 +27,7 @@
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -65,7 +66,8 @@ int main() {
   size_t subbandIdx = 0;
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
-  kernel->enqueue(stream, centralFrequency, SAP);
+  PerformanceCounter counter(ctx);
+  kernel->enqueue(stream, counter, centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

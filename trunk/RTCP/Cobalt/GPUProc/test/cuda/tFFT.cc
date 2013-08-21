@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/PerformanceCounter.h>
 
 using namespace std;
 using namespace LOFAR;
@@ -85,6 +86,7 @@ int main() {
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
+
   FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
   FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
 
@@ -106,8 +108,10 @@ int main() {
 
   // *****************************************
   // Test 1: Impulse at origin
+  //  Test correct usage of the runtime stat class functionality
   // *****************************************
   {
+
     // init buffers
     for (size_t i = 0; i < size; i++) {
       inout.get<fcomplex>()[i] = fcomplex(0.0f, 0.0f);
@@ -117,8 +121,12 @@ int main() {
 
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
+        
     fftFwdKernel.enqueue(stream);
     stream.readBuffer(inout, d_inout, true);
+    stream.synchronize();
+    // do a call to the stats functionality 
+
 
     // verify output
 
@@ -133,6 +141,7 @@ int main() {
 
     // Backward FFT: compute and I/O
     fftFwdKernel.enqueue(stream);
+    stream.synchronize();
     stream.readBuffer(inout, d_inout, true);
 
     // See if we got only our scaled impuls back.
