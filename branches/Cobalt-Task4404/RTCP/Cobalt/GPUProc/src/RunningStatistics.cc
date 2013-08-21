@@ -71,7 +71,7 @@ namespace LOFAR
 
     double RunningStatistics::variance() const
     {
-      return  counter != 1? var_base/(counter-1.0): 0.0;
+      return  counter > 1? var_base/(counter -1): 0.0;
     }
 
     double RunningStatistics::stDev() const
@@ -104,6 +104,10 @@ namespace LOFAR
     {
       RunningStatistics combined;
       combined.counter = left.counter + right.counter;
+
+      // If both counters are empty return empty counter
+      if (combined.counter == 0)
+        return combined;
 
       combined._min = left._min < right._min ? left._min : right._min;
       combined._max = left._max > right._max ? left._max : right._max;
