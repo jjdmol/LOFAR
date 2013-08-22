@@ -85,6 +85,8 @@ global dyn_string superTerpStations;
 global dyn_string cs0nnCoreStations;
 global dyn_string csx01CoreStations;
 
+global string savePath = "./";
+
 
 //======================== Action Handlers =======================================
 //
