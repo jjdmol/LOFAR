@@ -1,4 +1,4 @@
-//# tFIR_FilterKernel.cc: test FIR_FilterKernel class
+//# tKernelFunctions.cc: test FIR_FilterKernel class
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -24,21 +24,23 @@
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
 #include <Common/lofar_complex.h>
+#include <sstream>
 
 #include <UnitTest++.h>
 #include <memory>
 #include <GPUProc/PerformanceCounter.h>
-
 using namespace LOFAR::Cobalt;
 using namespace LOFAR;
 using namespace std;
 
-TEST(FIR_FilterKernel)
+TEST(tKernelFunctions)
 {
+  // **************************************
+  // Set up sut
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("OLAP.CNProc.integrationSteps", "128");
+  ps.add("OLAP.CNProc.integrationSteps", "1048576");
   ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
@@ -74,28 +76,32 @@ TEST(FIR_FilterKernel)
 
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
-  PerformanceCounter counter(context);
-  kernel->enqueue(counter);
+
+  // **************************************
+  // excercise it
+  PerformanceCounter counter(context);  //create a counter
+  kernel->enqueue(counter);             // insert in kernel queue
+
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
+  stream.synchronize();
+ 
+  // update the counter
+  counter.logTime();
 
-  /*  Comment out printing of this information: it disrupts the logfile and add no information.
-  float* buf = hOutput.get<float>();
-  for(size_t i = 0; i < hOutput.size() / sizeof(float); ++i) {
-    cout << "out[" << i << "] = " << buf[i] << endl;
-  }
+  stringstream str;
+  counter.stats.print(str);
+  
+  // Most functionality is tested at the specific stats class. Just test if
+  // the stats object has been used once
+  CHECK(str.str() != "*Not executed*");
 
-  buf = hCoeff.get<float>();
-  for(size_t i = 0; i < hCoeff.size() / sizeof(float); ++i) {
-    cout << "coeff[" << i << "] = " << buf[i] << endl;
-  }
-  */
 }
 
 int main()
 {
-  INIT_LOGGER("tFIR_FilterKernel");
+  INIT_LOGGER("tKernelFunctions");
   try {
     gpu::Platform pf;
     return UnitTest::RunAllTests() > 0;

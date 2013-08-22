@@ -88,7 +88,7 @@ namespace LOFAR
 
 
       void enqueue(gpu::Stream &queue,
-                   /* PerformanceCounter &counter,*/
+                    PerformanceCounter &counter,
                    float centralFrequency, size_t SAP);
     };
 

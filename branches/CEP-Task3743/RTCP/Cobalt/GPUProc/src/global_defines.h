@@ -34,6 +34,7 @@ namespace LOFAR
   namespace Cobalt
   {
     extern bool profiling;
+    extern bool gpuProfiling;
     extern unsigned nrGPUs;
 
     void set_affinity(unsigned device);
