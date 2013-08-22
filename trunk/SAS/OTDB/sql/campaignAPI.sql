@@ -210,11 +210,11 @@ CREATE OR REPLACE FUNCTION exportCampaign(INT4, INT4)
 	  SELECT substr(name,$2)
 	  INTO	 vPrefix
 	  FROM	 getVHitemList($1, '%.Observation');
-	  vResult := vResult || vPrefix || '.Campaign.name='    || vRecord.name    || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.title='   || vRecord.title   || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.PI='      || vRecord.PI      || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.CO_I='    || vRecord.CO_I    || chr(10);
-	  vResult := vResult || vPrefix || '.Campaign.contact=' || vRecord.contact || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.name="'    || vRecord.name    || '"' || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.title="'   || vRecord.title   || '"' || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.PI="'      || vRecord.PI      || '"' || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.CO_I="'    || vRecord.CO_I    || '"' || chr(10);
+	  vResult := vResult || vPrefix || '.Campaign.contact="' || vRecord.contact || '"' || chr(10);
       RETURN vResult;
     END
 $$ LANGUAGE plpgsql;
