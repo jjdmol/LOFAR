@@ -101,6 +101,17 @@ def CdefVectorType(Ctype):
     return Ctype
   return Ctype[Ctype.find("<")+1:-1]
 
+# map support
+def isCdefMap(Ctype):
+  "Returns true is the given C-type is a map."
+  return Ctype.startswith("map") and Ctype.endswith(">") and Ctype.find("<")>0
+
+def CdefMapType(Ctype):
+  "Returns the basic types of the map."
+  if not(isCdefMap(Ctype)):
+    return Ctype
+  return Ctype[Ctype.find("<")+1:-1]
+
 #
 # Packing and unpacking strings
 #
@@ -110,16 +121,16 @@ def packString(value, fixedlen=0):
       vLen = fixedlen
     else:
       vLen = len(value)
-    format = "=H%ds" % vLen
+    format = "=i%ds" % vLen
     buffer = struct.pack(format, vLen, value)
     return buffer
 
 def unpackString(buffer):
     "Unpack a string from the buffer"
-    vLen= struct.unpack("=H", buffer[0:2])[0]
+    vLen= struct.unpack("=i", buffer[0:4])[0]
     format = "=%ds" % vLen
-    vLen += 2
-    value = struct.unpack(format, buffer[2:vLen])[0]
+    vLen += 4
+    value = struct.unpack(format, buffer[4:vLen])[0]
     return (value, vLen)
 
 def packArray(value, fixedlen=0):
@@ -139,23 +150,66 @@ def unpackArray(buffer, itemlen, count):
     value = struct.unpack(format, buffer[0:vLen])[0]
     return value
 
-def packVariable(value):
-    "Pack the variable according to its type"
-
 def packVector(value, typestr):
     "Pack a vector of 'something' in a MAC-like way"
     print "packVector:", value , ":", typestr
     items = len(value)
-    buffer = struct.pack("=H", items)
+    buffer = struct.pack("=i", items)
     for _elem in value:
-      print "elem:", _elem
       buffer += packCdefinedVariable(_elem, typestr)
     return buffer
 
 def unpackVector(buffer, typestr):
     "Unpack a vector of 'something'"
-    items = struct.unpack("=H", buffer[0:2])[0]
+    items = struct.unpack("=i", buffer[0:4])[0]
+    print "unpackVector:", items, " ", typestr, ":", " ".join(x.encode('hex') for x in buffer)
     list = []
+    offset = struct.calcsize("=i")
+    elemSize = packSize(typestr)
+    for _elem in range(items):
+      if typestr == "string":
+        (_value, elemSize)=unpackString(buffer[offset:])
+        list.append(_value)
+      else:
+        list.append(unpackCdefinedVariable(buffer[offset:offset+elemSize], typestr, elemSize))
+      offset += elemSize
+    return  (list, offset)
+
+def packMap(value, typestr):
+    "Pack a map of 'something' in a MAC-like way"
+    print "packMap:", value , ":", typestr
+    items     = len(value)
+    buffer    = struct.pack("=i", items)
+    keyType   = typestr.split(",")[0]
+    valueType = typestr.split(",")[1]
+    for _elem in value.items():
+      buffer += packCdefinedVariable(_elem[0], keyType)
+      buffer += packCdefinedVariable(_elem[1], valueType)
+    return buffer
+
+def unpackMap(buffer, typestr):
+    "Unpack a map of 'something'"
+    items = struct.unpack("=i", buffer[0:4])[0]
+    offset = struct.calcsize("=i")
+    print "unpackMap:", items, " ", typestr, ":", " ".join(x.encode('hex') for x in buffer)
+    dict = {}
+    keyType   = typestr.split(",")[0]
+    valueType = typestr.split(",")[1]
+    keySize   = packSize(keyType)
+    valueSize = packSize(valueType)
+    for _elem in range(items):
+      if keyType == "string":
+        (_keyValue, keySize)=unpackString(buffer[offset:])
+      else:
+        _keyValue = unpackCdefinedVariable(buffer[offset:offset+keySize], keyType, keySize)
+      offset += keySize
+      if valueType == "string":
+        (_value, valueSize)=unpackString(buffer[offset:])
+      else:
+        _value = unpackCdefinedVariable(buffer[offset:offset+valueSize], valueType, valueSize)
+      offset += valueSize
+      dict[_keyValue]=_value
+    return  (dict, offset)
 
 def recvEvent(tcpsocket):
     "Wait for a message to receive on the given socket"
@@ -168,9 +222,8 @@ def recvEvent(tcpsocket):
 #
 # Toplevel marshalling
 #
-def packCdefinedVariable(value, typestr):
-    "Pack the variable according to its type"
-    formatTable = {
+global gMarshallingFormatTable
+gMarshallingFormatTable = {
       "bool"    : "=b",
       "char"    : "=c",
       "double"  : "=d",
@@ -182,16 +235,36 @@ def packCdefinedVariable(value, typestr):
       "uint32"  : "=I",
       "uint64"  : "=Q", 
       "uint8"   : "=B", }
+
+def packSize(typestr):
+    "Return the size of fixed size variables or 0"
+    if gMarshallingFormatTable.has_key(typestr):
+      return struct.calcsize(gMarshallingFormatTable[typestr])
+    return 0
+
+def packCdefinedVariable(value, typestr):
+    "Pack the variable according to its type"
     if isCdefArray(typestr):
       if typestr.startswith("char["):
         return packArray(value, CdefArraySize(typestr))
       return packArray(value.tostring())
     if isCdefVector(typestr):
       return packVector(value, CdefVectorType(typestr))
+    if isCdefMap(typestr):
+      return packMap(value, CdefMapType(typestr))
     if typestr == "string":
       return packString(value) 
-    if formatTable[typestr] != None:
-      return struct.pack(formatTable[typestr], value)
+    return struct.pack(gMarshallingFormatTable[typestr], value)
+
+def unpackCdefinedVariable(buffer, typestr, varSize):
+    "Unpack the variable according to its type"
+    if isCdefVector(typestr):
+      return unpackVector(buffer, CdefVectorType(typestr))
+    if typestr == "string":
+      return unpackString(buffer) 
+    if gMarshallingFormatTable.has_key(typestr):
+      return struct.unpack(gMarshallingFormatTable[typestr], buffer[:varSize])[0]
+    return None
 
 #
 # Protocol knowledge
