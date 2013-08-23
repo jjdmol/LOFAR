@@ -174,12 +174,12 @@ extern "C" {
 #if NR_CHANNELS == 1
   double frequency = subbandFrequency;
 #else
-  double frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
+  double frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
-  // double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
-  // double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
-  double2 delayAtBegin  = make_double2(0.0, 0.0);
-  double2 delayAfterEnd = make_double2(0.0, 0.0);
+  double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
+  double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
+  // double2 delayAtBegin  = make_double2(0.0, 0.0);
+  // double2 delayAfterEnd = make_double2(0.0, 0.0);
 
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
