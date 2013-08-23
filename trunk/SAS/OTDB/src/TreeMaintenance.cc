@@ -1170,7 +1170,7 @@ bool	TreeMaintenance::setMomInfo (treeIDType		aTreeID,
 				aTreeID,
 				aMomID,
 				aGroupID,
-				aCampaign.c_str()));
+				escapeQuotes(aCampaign).c_str()));
 
 		// Analyse result
 		bool		updateOK;
