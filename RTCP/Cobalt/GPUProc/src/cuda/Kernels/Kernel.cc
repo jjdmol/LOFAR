@@ -47,7 +47,8 @@ namespace LOFAR
       : 
       gpu::Function(function),
       event(stream.getContext()),
-      itsStream(stream)
+      itsStream(stream),
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {
       }
 
@@ -70,6 +71,13 @@ namespace LOFAR
       gpu::Grid grid(globalWorkSize.x / block.x,
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
+
+      ASSERTSTR(block.x * block.y * block.z
+                <= maxThreadsPerBlock,
+        "Requested dimensions "
+        << block.x << ", " << block.y << ", " << block.z
+        << " creates more than the " << maxThreadsPerBlock
+        << " supported threads/block" );
       
       queue.launchKernel(*this, grid, block);
     }

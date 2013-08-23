@@ -80,6 +80,7 @@ namespace LOFAR
 
       gpu::Event event;
       gpu::Stream itsStream;
+      const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

@@ -136,6 +136,13 @@ namespace LOFAR
         // Return the total amount of constant memory
         size_t getTotalConstMem() const;
 
+        // Return the maximum number of threads per block
+        // 
+        // Hardware dependent.
+        // - Returns at least 512 (except for ancient hardware)
+        // - Returns 1024 for K10 (= Cobalt hardware)
+        size_t getMaxThreadsPerBlock() const;
+
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
         int getAttribute(CUdevice_attribute attribute) const;
