@@ -134,7 +134,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
   /*
    * Stream the data.
    */
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     // Start a circular buffer
     #pragma omp section
