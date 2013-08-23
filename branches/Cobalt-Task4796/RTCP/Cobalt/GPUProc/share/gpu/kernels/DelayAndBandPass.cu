@@ -63,6 +63,8 @@ typedef float2 fcomplex;
 typedef char2  char_complex;
 typedef short2 short_complex;
 
+#undef DO_TRANSPOSE
+
 #if defined DO_TRANSPOSE
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 #else
@@ -97,18 +99,6 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
 {
   return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
-                     lhs.x * rhs.y + lhs.y * rhs.x);
-}
-
-__device__ fcomplex cmul(fcomplex lhs, double2 rhs)
-{
-  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
-                     lhs.x * rhs.y + lhs.y * rhs.x);
-}
-
-__device__ double2 cmul(double2 lhs, double2 rhs)
-{
-  return make_double2(lhs.x * rhs.x - lhs.y * rhs.y,
                      lhs.x * rhs.y + lhs.y * rhs.x);
 }
 
@@ -198,8 +188,8 @@ extern "C" {
                         (phiBegin.x + float(threadIdx.x) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
                         (phiBegin.y + float(threadIdx.x) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   float2 myPhiDelta = make_float2(
-                         float(blockDim.x) * deltaPhi.x * frequency,
-                         float(blockDim.x) * deltaPhi.y * frequency);
+                         float(blockDim.x) * deltaPhi.x * frequency.x,
+                         float(blockDim.x) * deltaPhi.y * frequency.y);
 #else
   float2 myPhiBegin = make_float2(
                           (phiBegin.x + float(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
@@ -209,11 +199,11 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency);
 #endif
 
-  double2 vX, vY, dvX, dvY; // store (cos(), sin())
-  sincos(myPhiBegin.x, &vX.y,  &vX.x);
-  sincos(myPhiBegin.y, &vY.y,  &vY.x);
-  sincos(myPhiDelta.x, &dvX.y, &dvX.x);
-  sincos(myPhiDelta.y, &dvY.y, &dvY.x);
+  fcomplex vX, vY, dvX, dvY; // store (cos(), sin())
+  sincosf(myPhiBegin.x, &vX.y,  &vX.x);
+  sincosf(myPhiBegin.y, &vY.y,  &vY.x);
+  sincosf(myPhiDelta.x, &dvX.y, &dvX.x);
+  sincosf(myPhiDelta.y, &dvY.y, &dvY.x);
 #endif
 
 #if defined BANDPASS_CORRECTION
