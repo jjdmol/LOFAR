@@ -315,6 +315,11 @@ namespace LOFAR
         return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
       }
 
+      size_t Device::getMaxThreadsPerBlock() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      }
+
       int Device::getAttribute(CUdevice_attribute attribute) const
       {
         int value;
