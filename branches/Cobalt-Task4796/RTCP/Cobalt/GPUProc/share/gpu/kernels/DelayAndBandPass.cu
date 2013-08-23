@@ -175,8 +175,11 @@ extern "C" {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
   const float pi2 = -6.28318530717958647688f; // -2.0f * M_PI_F
-  float2 phiBegin = make_float2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
-  float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
+  // float2 phiBegin = make_float2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
+  // float2 phiEnd   = make_float2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
+
+  float2 phiBegin = make_float2(0.0f, 0.0f);
+  float2 phiEnd   = make_float2(0.0f, 0.0f);
 
   float2 deltaPhi = make_float2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                 (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
@@ -231,12 +234,12 @@ extern "C" {
     fcomplex sampleY = (*inputData)[station][1][time + major][channel + minor];
 #endif
 
-#if defined DELAY_COMPENSATION    
-    // sampleX = cmul(sampleX, vX);
-    // sampleY = cmul(sampleY, vY);
-    // // The calculations are with exponentional complex for: multiplication for correct phase shift
-    // vX = cmul(vX, dvX);
-    // vY = cmul(vY, dvY);
+#if defined DELAY_COMPENSATION
+    sampleX = cmul(sampleX, vX);
+    sampleY = cmul(sampleY, vY);
+    // The calculations are with exponentional complex for: multiplication for correct phase shift
+    vX = cmul(vX, dvX);
+    vY = cmul(vY, dvY);
 #elif defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;
