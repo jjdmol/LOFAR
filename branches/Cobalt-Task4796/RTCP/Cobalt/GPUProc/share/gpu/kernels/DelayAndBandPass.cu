@@ -235,8 +235,8 @@ extern "C" {
     sampleX = cmul(sampleX, vX);
     sampleY = cmul(sampleY, vY);
     // The calculations are with exponentional complex for: multiplication for correct phase shift
-    vX = cmul(vX, dvX);
-    vY = cmul(vY, dvY);
+    /* vX = cmul(vX, dvX); */
+    /* vY = cmul(vY, dvY); */
 #elif defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;
