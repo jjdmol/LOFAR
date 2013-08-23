@@ -96,11 +96,11 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 // so we cannot make it a POD type. Then we got redundant member inits in the
 // constructor, causing races when declaring variables in shared memory.
 // Now, avoid complex<T> and just work with cmul() and a few extra lines.
-__device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
-{
-  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
-                     lhs.x * rhs.y + lhs.y * rhs.x);
-}
+// __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
+// {
+//   return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
+//                      lhs.x * rhs.y + lhs.y * rhs.x);
+// }
 
 __device__ dcomplex cmul(dcomplex lhs, dcomplex rhs)
 {
@@ -202,8 +202,8 @@ extern "C" {
                           (phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
                           (phiBegin.y + double(major) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   // Magic constant 16 is the time step we take in the samples
-  double2 myPhiDelta = make_double2(16.0f * deltaPhi.x * frequency,
-                                  16.0f * deltaPhi.y * frequency);
+  double2 myPhiDelta = make_double2(16.0 * deltaPhi.x * frequency,
+                                  16.0 * deltaPhi.y * frequency);
 #endif
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
