@@ -63,8 +63,6 @@ typedef float2 fcomplex;
 typedef char2  char_complex;
 typedef short2 short_complex;
 
-#undef DO_TRANSPOSE
-
 #if defined DO_TRANSPOSE
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 #else
@@ -234,11 +232,11 @@ extern "C" {
 #endif
 
 #if defined DELAY_COMPENSATION    
-    sampleX = cmul(sampleX, vX);
-    sampleY = cmul(sampleY, vY);
-    // The calculations are with exponentional complex for: multiplication for correct phase shift
-    vX = cmul(vX, dvX);
-    vY = cmul(vY, dvY);
+    // sampleX = cmul(sampleX, vX);
+    // sampleY = cmul(sampleY, vY);
+    // // The calculations are with exponentional complex for: multiplication for correct phase shift
+    // vX = cmul(vX, dvX);
+    // vY = cmul(vY, dvY);
 #elif defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;
