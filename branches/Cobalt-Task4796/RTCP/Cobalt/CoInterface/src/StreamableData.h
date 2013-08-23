@@ -167,21 +167,21 @@ namespace LOFAR
     inline void StreamableData::write(Stream *str, bool withSequenceNumber, unsigned alignment)
     {
 
-      if (withSequenceNumber) {
-        /*     std::vector<char> header(alignment > sizeof(uint32_t) ? alignment : sizeof(uint32_t)); */
-        std::vector<char> header(alignment > 2 * sizeof(uint32_t) ? alignment : 2 * sizeof(uint32_t));
-        uint32_t          &magicValue = *reinterpret_cast<uint32_t *>(&header[0]);
-        uint32_t          &seqNo = *reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
+//       if (withSequenceNumber) {
+//         /*     std::vector<char> header(alignment > sizeof(uint32_t) ? alignment : sizeof(uint32_t)); */
+//         std::vector<char> header(alignment > 2 * sizeof(uint32_t) ? alignment : 2 * sizeof(uint32_t));
+//         uint32_t          &magicValue = *reinterpret_cast<uint32_t *>(&header[0]);
+//         uint32_t          &seqNo = *reinterpret_cast<uint32_t *>(&header[sizeof(uint32_t)]);
 
-#if defined USE_VALGRIND
-        std::memset(&header[0], 0, header.size());
-#endif
+// #if defined USE_VALGRIND
+//         std::memset(&header[0], 0, header.size());
+// #endif
 
-        magicValue = peerMagicNumber;
-        seqNo = rawSequenceNumber;
+//         magicValue = peerMagicNumber;
+//         seqNo = rawSequenceNumber;
 
-        str->write(&header[0], header.size());
-      }
+//         str->write(&header[0], header.size());
+//       }
 
       writeData(str, alignment);
     }

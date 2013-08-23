@@ -190,16 +190,16 @@ namespace LOFAR
 
       str->write(visibilities.origin(), align(visibilities.num_elements() * sizeof *visibilities.origin(), alignment));
 
-      switch (itsNrBytesPerNrValidSamples) {
-      case 4: str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), alignment));
-        break;
+      // switch (itsNrBytesPerNrValidSamples) {
+      // case 4: str->write(itsNrValidSamples4.origin(), align(itsNrValidSamples4.num_elements() * sizeof(uint32_t), alignment));
+      //   break;
 
-      case 2: str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), alignment));
-        break;
+      // case 2: str->write(itsNrValidSamples2.origin(), align(itsNrValidSamples2.num_elements() * sizeof(uint16_t), alignment));
+      //   break;
 
-      case 1: str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), alignment));
-        break;
-      }
+      // case 1: str->write(itsNrValidSamples1.origin(), align(itsNrValidSamples1.num_elements() * sizeof(uint8_t), alignment));
+      //   break;
+      // }
     }
 
 
