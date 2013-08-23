@@ -70,7 +70,7 @@ CampaignInfo Campaign::getCampaign(const string&	name)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign('" + name + "')");
+		result	res = xAction.exec("SELECT * FROM getCampaign('" + escapeQuotes(name) + "')");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {
