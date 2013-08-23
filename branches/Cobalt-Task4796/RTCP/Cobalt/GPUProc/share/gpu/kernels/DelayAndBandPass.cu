@@ -100,6 +100,18 @@ __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
                      lhs.x * rhs.y + lhs.y * rhs.x);
 }
 
+__device__ fcomplex cmul(fcomplex lhs, double2 rhs)
+{
+  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
+                     lhs.x * rhs.y + lhs.y * rhs.x);
+}
+
+__device__ double2 cmul(double2 lhs, double2 rhs)
+{
+  return make_double2(lhs.x * rhs.x - lhs.y * rhs.y,
+                     lhs.x * rhs.y + lhs.y * rhs.x);
+}
+
 /**
  * This kernel performs (up to) three operations on the input data:
  * - Apply a fine delay by doing a per channel phase correction.
@@ -197,11 +209,11 @@ extern "C" {
                                   16.0f * deltaPhi.y * frequency);
 #endif
 
-  fcomplex vX, vY, dvX, dvY; // store (cos(), sin())
-  sincosf(myPhiBegin.x, &vX.y,  &vX.x);
-  sincosf(myPhiBegin.y, &vY.y,  &vY.x);
-  sincosf(myPhiDelta.x, &dvX.y, &dvX.x);
-  sincosf(myPhiDelta.y, &dvY.y, &dvY.x);
+  double2 vX, vY, dvX, dvY; // store (cos(), sin())
+  sincos(myPhiBegin.x, &vX.y,  &vX.x);
+  sincos(myPhiBegin.y, &vY.y,  &vY.x);
+  sincos(myPhiDelta.x, &dvX.y, &dvX.x);
+  sincos(myPhiDelta.y, &dvY.y, &dvY.x);
 #endif
 
 #if defined BANDPASS_CORRECTION
@@ -235,8 +247,8 @@ extern "C" {
     sampleX = cmul(sampleX, vX);
     sampleY = cmul(sampleY, vY);
     // The calculations are with exponentional complex for: multiplication for correct phase shift
-    /* vX = cmul(vX, dvX); */
-    /* vY = cmul(vY, dvY); */
+    vX = cmul(vX, dvX);
+    vY = cmul(vY, dvY);
 #elif defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;
