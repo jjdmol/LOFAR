@@ -6,7 +6,7 @@
 #   - receive recorded input
 #   - wait for input to arrive
 #   - never drop output (wait for data to be written)
-Cobalt.realTime=true 
+Cobalt.realTime=false 
 # SAS id
 Observation.ObsID=0
 
@@ -49,9 +49,9 @@ Observation.bandFilter=HBA_110_190
 #Observation.Dataslots.CS001LBA.DataslotList=[0,1]
 
 # Default for Observation.Dataslots.STATION.RSPBoardList
-#Observation.rspBoardList=[]
+Observation.rspBoardList=[0]
 # Default for Observation.Dataslots.STATION.DataslotList
-#Observation.rspSlotList=[]
+Observation.rspSlotList=[0]
 
 
 # ===============================
@@ -129,7 +129,7 @@ OLAP.Storage.hosts=[]
 # ===============================
 Observation.DataProducts.Output_Correlated.enabled=false
 
-Cobalt.Correlator.nrChannelsPerSubband=64
+Cobalt.Correlator.nrChannelsPerSubband=1
 Cobalt.Correlator.nrBlocksPerIntegration=1  # only 1 is currently supported
 
 # A filename and location for each subband
@@ -191,8 +191,8 @@ Observation.Beam[0].TiedArrayBeam[0].coherent=true
 #   Per SAP, each TAB is put in a different file
 #   Per TAB, each Stokes is put into a different file
 #   Per Stokes, the data is divided using the .subbandsPerFile setting
-Observation.DataProducts.Output_Beamformed.filenames=[BEAM000.h5]  # filename 
-Observation.DataProducts.Output_Beamformed.locations=[localhost:.] # host:directory
+Observation.DataProducts.Output_Beamformed.filenames=[/]  # filename 
+Observation.DataProducts.Output_Beamformed.locations=[:.] # host:directory
 
 # Number of channels used for the coherent dedispersion kernel
 Cobalt.Beamformer.dedispersionFFTsize=2048
