@@ -107,6 +107,14 @@ namespace LOFAR
 
         // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
         std::string getName() const;
+
+        // Return the maximum number of threads per block, that
+        // is supported by all devices on the platform.
+        // 
+        // Hardware dependent.
+        // - Returns at least 512 (except for ancient hardware)
+        // - Returns 1024 for K10 (= Cobalt hardware)
+        size_t getMaxThreadsPerBlock() const;
       };
 
       // Wrap a CUDA Device.

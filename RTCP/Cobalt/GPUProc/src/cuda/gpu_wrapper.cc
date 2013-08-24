@@ -253,6 +253,22 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
+      size_t Platform::getMaxThreadsPerBlock() const
+      {
+        const std::vector<Device> _devices = devices();
+
+        size_t lowest = 0;
+
+        for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
+          const size_t maxThreadsPerBlock = i->getMaxThreadsPerBlock();
+
+          if (i == _devices.begin() || maxThreadsPerBlock < lowest)
+            lowest = maxThreadsPerBlock;
+        }
+
+        return lowest;
+      }
+
 
       Device::Device(int ordinal)
       {
