@@ -68,7 +68,7 @@ namespace LOFAR
       delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
-      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, true, devA),
+      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
 
       // bandPass: A -> B
       devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -98,8 +98,14 @@ namespace LOFAR
       // final FFT: A -> A
       finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
 
+      // coherentStokes: 1ch: A -> B, Nch: B -> A
+      coherentStokesBuffers(
+          ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB,
+          ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
+      coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
+
       // result buffer
-      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB)
+      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
     {
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
@@ -136,6 +142,7 @@ namespace LOFAR
     inverseFFT(context),
     firFilterKernel(context),
     finalFFT(context),
+    coherentStokes(context),
     samples(context),
     visibilities(context)
     {
@@ -145,7 +152,7 @@ namespace LOFAR
     {     
 
       // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****" <<
+      LOG_INFO_STR("**** BeamFormerSubbandProc GPU mean and stDev ****" <<
         std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
@@ -156,6 +163,7 @@ namespace LOFAR
         std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
         std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
         std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
+        std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<
         std::setw(20) << "(visibilities)" << visibilities.stats << endl);
 
@@ -214,6 +222,8 @@ namespace LOFAR
         finalFFT.enqueue(queue, counters.finalFFT);
       }
 
+      coherentStokesKernel->enqueue(counters.coherentStokes);
+
       // TODO: Propagate flags
 
       queue.synchronize();
@@ -240,6 +250,7 @@ namespace LOFAR
         counters.beamformer.logTime();
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
+        counters.coherentStokes.logTime();
       }
     }
 

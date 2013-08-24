@@ -78,6 +78,7 @@ namespace LOFAR
         RunningStatistics inverseFFT;
         RunningStatistics firFilterKernel;
         RunningStatistics finalFFT;
+        RunningStatistics coherentStokes;
 
         // gpu transfer counters
         RunningStatistics samples;
@@ -101,6 +102,7 @@ namespace LOFAR
             inverseFFT += proc->counters.inverseFFT.stats;
             firFilterKernel += proc->counters.firFilterKernel.stats;
             finalFFT += proc->counters.finalFFT.stats;
+            coherentStokes += proc->counters.coherentStokes.stats;
             
             samples += proc->counters.samples.stats;
             visibilities += proc->counters.visibilities.stats;
@@ -119,6 +121,7 @@ namespace LOFAR
                        std::setw(20) << "(inverseFFT)" << inverseFFT << endl <<
                        std::setw(20) << "(firFilterKernel)" << firFilterKernel << endl <<
                        std::setw(20) << "(finalFFT)" << finalFFT << endl <<
+                       std::setw(20) << "(coherentStokes)" << coherentStokes << endl <<
                        std::setw(20) << "(samples)" << samples << endl <<
                        std::setw(20) << "(visibilities)" << visibilities << endl);
         }

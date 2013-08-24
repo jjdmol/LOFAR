@@ -37,6 +37,7 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
@@ -103,6 +104,7 @@ namespace LOFAR
         PerformanceCounter inverseFFT;
         PerformanceCounter firFilterKernel;
         PerformanceCounter finalFFT;
+        PerformanceCounter coherentStokes;
 
         // gpu transfer counters
         PerformanceCounter samples;
@@ -174,6 +176,10 @@ namespace LOFAR
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;
 
+      // Coherent Stokes
+      CoherentStokesKernel::Buffers coherentStokesBuffers;
+      std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
+
       // end result
       gpu::DeviceMemory &devResult;
     };
@@ -186,7 +192,8 @@ namespace LOFAR
         correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
-        firFilter(firFilterParams(ps))
+        firFilter(firFilterParams(ps)),
+        coherentStokes(coherentStokesParams(ps))
       {
       }
 
@@ -196,6 +203,7 @@ namespace LOFAR
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<CoherentStokesKernel> coherentStokes;
 
       DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);
@@ -241,6 +249,14 @@ namespace LOFAR
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
 
         // time integration has not taken place yet, so calculate the nrSamples manually
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        return params;
+      }
+
+      CoherentStokesKernel::Parameters coherentStokesParams(const Parset &ps) const {
+        CoherentStokesKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;
