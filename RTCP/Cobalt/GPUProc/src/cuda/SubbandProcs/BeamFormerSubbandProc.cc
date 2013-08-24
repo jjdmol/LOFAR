@@ -152,7 +152,7 @@ namespace LOFAR
     {     
 
       // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR("**** BeamFormerSubbandProc GPU mean and stDev ****" <<
+      LOG_INFO_STR("**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
         std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
@@ -178,7 +178,7 @@ namespace LOFAR
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
-      queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+      queue.writeBuffer(devInput.inputSamples, input.inputSamples, counters.samples, true);
 
       if (ps.delayCompensation())
       {
@@ -228,7 +228,7 @@ namespace LOFAR
 
       queue.synchronize();
 
-      queue.readBuffer(output, devResult, true);
+      queue.readBuffer(output, devResult, counters.visibilities, true);
 
             // ************************************************
       // Perform performance statistics if needed
@@ -251,6 +251,9 @@ namespace LOFAR
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
         counters.coherentStokes.logTime();
+
+        counters.samples.logTime();
+        counters.visibilities.logTime();
       }
     }
 
