@@ -47,9 +47,9 @@ public:
 	DoubleVector() {};
 	~DoubleVector() {};
 
-	size_t getSize() const;
-	size_t pack  (char	*buffer) const;
-	size_t unpack(char	*buffer);
+	uint32 getSize() const;
+	uint32 pack  (char	*buffer) const;
+	uint32 unpack(char	*buffer);
 	ostream& print (ostream& os) const;
 
 	vector<double>&	operator()()
@@ -63,23 +63,23 @@ private:
 // @}
 
 // getSize()
-inline size_t DoubleVector::getSize() const
+inline uint32 DoubleVector::getSize() const
 {
 	return (MSH_size(theVector));
 }
 
 // pack()
-inline size_t DoubleVector::pack(char	*buffer) const
+inline uint32 DoubleVector::pack(char	*buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_pack(buffer, offset, theVector);
 	return (offset);
 }
 
 // unpack()
-inline size_t DoubleVector::unpack(char	*buffer)
+inline uint32 DoubleVector::unpack(char	*buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_unpack(buffer, offset, theVector);
 	return (offset);
 }
