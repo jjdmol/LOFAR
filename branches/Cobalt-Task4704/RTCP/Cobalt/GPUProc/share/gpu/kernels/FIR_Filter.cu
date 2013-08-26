@@ -19,6 +19,7 @@
 //# $Id$
 
 #include "IntToFloat.cuh"
+#include <stdio.h>
 
 #if !(NR_STABS >= 1)
 #error Precondition violated: NR_STABS >= 1
@@ -79,8 +80,7 @@ typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values                | Description
  * ----------------------- | --------------------------- | -----------
- * NR_STABS                | >= 1                        | number of antenna fields (correlator),
- *                         |                             | or number of tight array beams (tabs) (beamformer)
+ * NR_STABS                | >= 1                        | number of antenna fields (correlator), or number of tight array beams (tabs) (beamformer)
  * NR_TAPS                 | 16                          | number of FIR filtering coefficients
  * NR_SAMPLES_PER_CHANNEL  | multiple of NR_TAPS and > 0 | number of input samples per channel
  * NR_BITS_PER_SAMPLE      | 8 or 16                     | number of bits of signed integral value type of sampledDataPtr (TODO: support 4)
@@ -110,20 +110,20 @@ __global__ void FIR_filter( void *filteredDataPtr,
 
   unsigned cpr = blockIdx.x*blockDim.x+threadIdx.x;
 #if 0
-  // Straight index calc for NR_CHANNELS == 1
+  //# Straight index calc for NR_CHANNELS == 1
   uint pol_ri = cpr & 3;
   uint channel = cpr >> 2;
   uint ri = cpr & 1;
   uint pol = pol_ri >> 1;
 #else
-  unsigned ri = cpr & 1;
-  unsigned channel = (cpr >> 1) % NR_CHANNELS;
-  unsigned pol = (cpr >> 1) / NR_CHANNELS;
-  unsigned pol_ri = (pol << 1) | ri;
+  unsigned ri = cpr & 1;                        // index (real/imag) in output data
+  unsigned channel = (cpr >> 1) % NR_CHANNELS;  // index in input & output data
+  unsigned pol = (cpr >> 1) / NR_CHANNELS;      // index (polarization) in output data
+  unsigned pol_ri = (pol << 1) | ri;            // index (polarization & real/imag) in input data
 #endif
   unsigned station = blockIdx.y;
 
-  //const float16 weights = (*weightsData)[channel];
+  //# const float16 weights = (*weightsData)[channel];
   const float weights_s0 = (*weightsData)[channel][0];
   const float weights_s1 = (*weightsData)[channel][1];
   const float weights_s2 = (*weightsData)[channel][2];
@@ -141,7 +141,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   const float weights_sE = (*weightsData)[channel][14];
   const float weights_sF = (*weightsData)[channel][15];
 
-  //float16 delayLine;
+  //# float16 delayLine;
   float delayLine_s0, delayLine_s1, delayLine_s2, delayLine_s3, 
         delayLine_s4, delayLine_s5, delayLine_s6, delayLine_s7, 
         delayLine_s8, delayLine_s9, delayLine_sA, delayLine_sB,
@@ -180,6 +180,24 @@ __global__ void FIR_filter( void *filteredDataPtr,
   delayLine_sD = convertIntToFloat((*historyData)[station][13][channel][pol_ri]);
   delayLine_sE = convertIntToFloat((*historyData)[station][14][channel][pol_ri]);
 #endif
+
+  /* if (cpr == 0) { */
+  /*   printf("delayLine_s0 = %f\n", delayLine_s0); */
+  /*   printf("delayLine_s1 = %f\n", delayLine_s1); */
+  /*   printf("delayLine_s2 = %f\n", delayLine_s2); */
+  /*   printf("delayLine_s3 = %f\n", delayLine_s3); */
+  /*   printf("delayLine_s4 = %f\n", delayLine_s4); */
+  /*   printf("delayLine_s5 = %f\n", delayLine_s5); */
+  /*   printf("delayLine_s6 = %f\n", delayLine_s6); */
+  /*   printf("delayLine_s7 = %f\n", delayLine_s7); */
+  /*   printf("delayLine_s8 = %f\n", delayLine_s8); */
+  /*   printf("delayLine_s9 = %f\n", delayLine_s9); */
+  /*   printf("delayLine_sA = %f\n", delayLine_sA); */
+  /*   printf("delayLine_sB = %f\n", delayLine_sB); */
+  /*   printf("delayLine_sC = %f\n", delayLine_sC); */
+  /*   printf("delayLine_sD = %f\n", delayLine_sD); */
+  /*   printf("delayLine_sE = %f\n", delayLine_sE); */
+  /* } */
 
   float sum_s0, sum_s1, sum_s2, sum_s3,
         sum_s4, sum_s5, sum_s6, sum_s7,
@@ -495,7 +513,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
 
   for (unsigned time = 0; time < NR_TAPS - 1; time++)
   {
-    (*historyData)[station][time][channel][pol_ri] = 
+    (*historyData)[station][time][channel][pol_ri] =
       (*sampledData)[station][NR_SAMPLES_PER_CHANNEL - NR_TAPS + 1 + time][channel][pol_ri];
   }
 }

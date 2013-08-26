@@ -113,7 +113,7 @@ int test()
   DeviceMemory devFirWeights(ctx, sizeWeightsData * sizeof(float));
   DeviceMemory devHistoryData(ctx, sizeHistoryData * sizeof(signed char));
 
-  unsigned station, sample, ch, pol;
+  unsigned station, sample, ch, pol, ri;
 
   // Calculate the number of threads in total and per block
   int MAXNRCUDATHREADS = 64;//dit moet nog opgevraagd worden en niet als magisch getal
@@ -366,6 +366,113 @@ int test()
     std::cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values" << std::endl;
     testOk = false;
   }
+
+
+  // Test 4: Test the use of history samples, by invoking the GPU kernel more
+  // than once.
+
+  // Clear all global memory blocks first.
+  memset(inputSamplesArr.origin(), 0,
+         inputSamplesArr.num_elements() * sizeof(signed char));
+  memset(firWeightsArr.origin(), 0, 
+         firWeightsArr.num_elements() * sizeof(float));
+  memset(filteredDataArr.origin(), 0,
+         filteredDataArr.num_elements() * sizeof(float));
+  memset(historyDataArr.origin(), 0,
+         historyDataArr.num_elements() * sizeof(signed char));
+
+  // Set FIR filter weights: a triangle shaped pulse response.
+  for (ch = 0; ch < NR_CHANNELS; ch++) {
+    for (unsigned tap = 0; tap < NR_TAPS; tap++) {
+      firWeightsArr[ch][tap] = (NR_TAPS - tap) / 16.0f;
+    }
+  }
+
+  // Set input samples: a train of alternating real and imaginary pulses,
+  // NR_TAPS / 2 samples apart.
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (sample = NR_TAPS - 1; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample += NR_TAPS) {
+      for (ch = 0; ch < NR_CHANNELS; ch++) {
+        for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+          // for (ri = 0; ri < COMPLEX; ri++) {
+            inputSamplesArr[station][sample][ch][pol][0] = 1.0f;
+            inputSamplesArr[station][sample + NR_TAPS / 2][ch][pol][1] = -1.0f;
+          // }
+        }
+      }
+    }
+  }
+
+  // for (station = 0; station < NR_STATIONS; station++) {
+  //   for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+  //     for (ch = 0; ch < NR_CHANNELS; ch++) {
+  //       for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+  //         for (unsigned ri = 0; ri < 2; ri++) {
+  //           cout << "in[" << station << "][" << sample 
+  //                << "][" << ch << "][" << pol << "][" << ri << "] = " 
+  //                << int(inputSamplesArr[station][sample][ch][pol][ri])
+  //                << endl;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // Copy input vectors from host memory to GPU buffers.
+  stream.writeBuffer(devFilteredData, rawFilteredData, true);
+  stream.writeBuffer(devSampledData, rawInputSamples, true);
+  stream.writeBuffer(devFirWeights, rawFirWeights, true);
+  stream.writeBuffer(devHistoryData, rawHistoryData, true);
+
+  // Run the kernel
+  stream.synchronize();
+  stream.launchKernel(hKernel, globalWorkSize, localWorkSize);
+  stream.synchronize();
+
+  stream.readBuffer(rawFilteredData, devFilteredData, true);
+
+  station = 0;
+  // for (station = 0; station < NR_STATIONS; station++) {
+    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+        ch = 0;
+        // for (ch = 0; ch < NR_CHANNELS; ch++) {
+          for (unsigned ri = 0; ri < 2; ri++) {
+            cout << "out[" << station << "][" << pol 
+                 << "][" << sample << "][" << ch << "][" << ri << "] = " 
+                 << filteredDataArr[station][pol][sample][ch][ri]
+                 << endl;
+          }
+        // }
+      }
+    }
+  // }
+
+  // Verify output. This first NR_TAPS outputs represent the transient behaviour
+  // of the FIR filter; the remaining output the steady state.
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+        for (ch = 0; ch < NR_CHANNELS; ch++) {
+          
+        }
+      }
+    }
+  }
+
+  // Run the kernel for the second time. This time the history buffer should be
+  // filled with previous samples. Hence we should NOT see the transient
+  // behaviour of the FIR filter we saw previously in the first run.
+
+/*
+  // Set FIR filter weights: a triangle shaped pulse response.
+  for (ch = 0; ch < NR_CHANNELS; ch++) {
+    for (unsigned tap = 0; tap < NR_TAPS; tap++) {
+      firWeightsArr[ch][tap] = (NR_TAPS - tap) / 16.0f;
+    }
+  }
+
+ */
 
 
   return testOk ? 0 : 1;
