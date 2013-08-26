@@ -49,6 +49,7 @@
  */
 
 #include "IntToFloat.cuh"
+#include <stdio.h>
 
 #if NR_CHANNELS == 1
    // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
@@ -190,6 +191,8 @@ extern "C" {
   double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                   (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
   
+  printf("[beam=%d][station=%d]: deltaPhi = (%e, %e)\n", beam, station, deltaPhi.x, deltaPhi.y);
+
 #if NR_CHANNELS == 1
   double2 myPhiBegin = make_double2(
                         (phiBegin.x + double(threadIdx.x) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
@@ -205,6 +208,11 @@ extern "C" {
   double2 myPhiDelta = make_double2(16.0 * deltaPhi.x * frequency,
                                   16.0 * deltaPhi.y * frequency);
 #endif
+
+  printf("[station=%d][major=%d][minor=%d][channel=%d]: myPhiBegin = (%e, %e)\n", 
+         station, major, minor, channel, myPhiBegin.x, myPhiBegin.y);
+  printf("[station=%d][major=%d][minor=%d][channel=%d]: myPhiDelta = (%e, %e)\n", 
+         station, major, minor, channel, myPhiDelta.x, myPhiDelta.y);
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
   sincos(myPhiBegin.x, &vX.y,  &vX.x);
