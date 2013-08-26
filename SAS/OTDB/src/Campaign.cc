@@ -96,7 +96,7 @@ CampaignInfo Campaign::getCampaign(int32	ID)
 
 	work	xAction(*(itsConn->getConn()), "getCampaign");
 	try {
-		result	res = xAction.exec("SELECT * FROM getCampaign('" + toString(ID) + "')");
+		result	res = xAction.exec("SELECT * FROM getCampaign(" + toString(ID) + ")");
 		return (CampaignInfo(res[0]));
 	}
 	catch (std::exception&	ex) {
