@@ -25,6 +25,7 @@
 #  $Id: protocol.tpl 23417 2012-12-20 14:06:29Z loose $
 #
 import struct
+from Numeric import *
 
 class GCFEvent(object):
   'Base class of all events'
@@ -247,6 +248,7 @@ def packCdefinedVariable(value, typestr):
     if isCdefArray(typestr):
       if typestr.startswith("char["):
         return packArray(value, CdefArraySize(typestr))
+      print "VALUE:", value
       return packArray(value.tostring())
     if isCdefVector(typestr):
       return packVector(value, CdefVectorType(typestr))
@@ -265,6 +267,73 @@ def unpackCdefinedVariable(buffer, typestr, varSize):
     if gMarshallingFormatTable.has_key(typestr):
       return struct.unpack(gMarshallingFormatTable[typestr], buffer[:varSize])[0]
     return None
+
+def pyArrayType(typestr):
+    "Return the array type conform the c_type"
+    pyArrayTypeTable = {
+      "double"  : Float,
+      "float"   : Float32,
+      "int16"   : Int16,
+      "int32"   : Int32 }
+    basicType=CdefArrayType(typestr)
+    if pyArrayTypeTable.has_key(basicType):
+      return (pyArrayTypeTable[basicType])
+    return None
+
+def testValue(typestr, idx=-1):
+    "Return a testvalue for generating tests"
+    testValueTable = {
+      "bool"    : True,
+      "char"    : 'q',
+      "double"  : 3.14152926535,
+      "float"   : 2.7182818,
+      "int16"   : -32100,
+      "int32"   : -2000111222,
+      "int64"   : -9222111000000000000,
+      "uint16"  : 65432,
+      "uint32"  : 4111222333,
+      "uint64"  : 18444888000000000000,
+      "uint8"   : 250}
+    print "testValue:", typestr
+    if testValueTable.has_key(typestr):
+      if idx<0:
+        return (testValueTable[typestr])
+      else:
+        return (testValueTable[typestr]+idx)
+    if typestr == "string":
+      if idx<0:
+        return "This is a test string."
+      else:
+        return ("aap","noot","mies","wim","zus","jet","teun","vuur","gijs","does")[idx]
+    if isCdefArray(typestr):
+      arrSize = CdefArraySize(typestr)
+      if (arrSize == 0):
+        arrSize = 5
+      print "arrsz:", arrSize
+      if typestr.startswith("char["):
+        return "%*s" % (arrSize, "Just another string for testing...")
+      else:
+        res = zeros(arrSize, pyArrayType(typestr))
+        for x in range(arrSize):
+          res[x] = testValue(CdefArrayType(typestr))+x
+      return res
+    if isCdefVector(typestr):
+      baseType = CdefVectorType(typestr)
+      lres = []
+      for x in range(5):
+        lres.append(testValue(baseType,x))
+      return lres
+    if isCdefMap(typestr):
+      baseType = CdefMapType(typestr)
+      keyType   = baseType.split(",")[0]
+      valueType = baseType.split(",")[1]
+      dres={}
+      for x in range(5):
+        keyVal   = testValue(keyType, x)
+        valueVal = testValue(valueType, x+2)
+        dres[keyVal] = valueVal
+      return dres
+
 
 #
 # Protocol knowledge

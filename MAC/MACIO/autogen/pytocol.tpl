@@ -94,13 +94,14 @@ class [+ event_class_decl +]
 
 if __name__ == '__main__':
 [+ FOR event "" +]  print "Testing [+ event_class_name +]..."
-  obj[+ (for-index) +] = [+ event_class_name +]()
-  print obj[+ (for-index) +]
-  obj[+ (for-index) +].pack()
-  print obj[+ (for-index) +]
-  objX[+ (for-index) +] = [+ event_class_name +]()
-  objX[+ (for-index) +].unpack(obj[+ (for-index) +].buffer)
-  print objX[+ (for-index) +]
+  obj[+ (for-index) +] = [+ event_class_name +]()[+ FOR param "" +]
+  obj[+ (for-index "event") +].[+ (get "name") +]=testValue("[+ (get "type") +]")[+ ENDFOR param +]
+  print obj[+ (for-index "event") +]
+  obj[+ (for-index "event") +].pack()
+  print obj[+ (for-index "event") +]
+  objX[+ (for-index "event") +] = [+ event_class_name +]()
+  objX[+ (for-index "event") +].unpack(obj[+ (for-index "event") +].buffer)
+  print objX[+ (for-index "event") +]
 
 [+ ENDFOR event +]
 
