@@ -330,6 +330,31 @@ namespace LOFAR
         fftKernel.enqueue(queue, counters.fft);
       }
 
+      gpu::Context ctx(queue.getContext());
+
+#ifdef DEBUG_INTERMEDIATE_OUTPUT
+      ASSERT(ps.settings.nrBitsPerSample == 8);
+
+      MultiDimArrayHostBuffer<std::complex<signed char>, 4>
+        firInput(boost::extents
+                 [ps.settings.stations.size()]
+                 [ps.settings.nrPPFTaps - 1 + 
+                  ps.settings.correlator.nrSamplesPerChannel]
+                 [ps.settings.correlator.nrChannels]
+                 [ps.settings.nrPolarisations],
+                 ctx);
+      queue.synchronize();
+      queue.readBuffer(firInput, devInput.inputSamples, true);
+      for (size_t i = 0; i < firInput.shape()[0]; i++)
+        for (size_t j = 0; j < firInput.shape()[1]; j++)
+          for (size_t k = 0; k < firInput.shape()[2]; k++)
+            for (size_t l = 0; l < firInput.shape()[3]; l++)
+              LOG_INFO_STR("firInput[" << i << "][" << j << "][" << k 
+                           << "][" << l << "] = " 
+                           << std::complex<int>(firInput[i][j][k][l]));
+
+#endif
+
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
       delayAndBandPassKernel->enqueue(queue, counters.delayBp, 
@@ -337,8 +362,6 @@ namespace LOFAR
         ps.settings.subbands[subband].SAP);
 
 #ifdef DEBUG_INTERMEDIATE_OUTPUT
-      gpu::Context ctx(queue.getContext());
-
       ASSERT(ps.settings.correlator.nrChannels > 1);
 
       MultiDimArrayHostBuffer<std::complex<float>, 4>
