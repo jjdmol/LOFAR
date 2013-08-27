@@ -20,11 +20,13 @@
 
 //#include <lofar_config.h>
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 
 #include "fpequals.h"
 
+using std::cout;
 using std::cerr;
 using std::endl;
 using std::ifstream;
@@ -34,11 +36,30 @@ using LOFAR::Cobalt::fpEquals;
 
 int main(int argc, char *argv[])
 {
-  if (argc != 3)
+  cerr.precision(8); // print full float precision (7 + the 0.).
+
+  // Default epsilon. For fp cmp, you want to override this for sure.
+  double epsilon = std::numeric_limits<double>::epsilon();
+
+  if (argc < 3 || argc > 4)
   {
-    cerr << "Usage: " << argv[0] << " <file1> <file2>" << endl;
+    cerr << "Usage: " << argv[0] << "[1.0e-12] <file1> <file2>" << endl;
+    cerr << "  where the optional first floating point argument overrides the comparison epsilon" << endl;
     return 1;
   }
+
+  if (argc == 4)
+  {
+    epsilon = std::atof(argv[1]);
+    if (epsilon <= 0.0 || epsilon > 1.0)
+    {
+      cerr << "Epsilon command line argument is out of range" << endl;
+      return 1;
+    } else {
+      cout << "Using an epsilon of " << epsilon << endl;
+    }
+  }
+  float eps = (float)epsilon; // atm, we only cmp single precision floats
 
   ifstream ifs1(argv[1], std::ios::binary);
   if (!ifs1)
@@ -57,12 +78,6 @@ int main(int argc, char *argv[])
   const size_t bufLen = 2048;
   float *buf1 = new float[bufLen];
   float *buf2 = new float[bufLen];
-
-  // For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
-  // Taking 32*..., we still get a few dozen miscomparisons.
-  // Generally, the first 5 decimals are ok; occasionally, the 5th is off by 1.
-  const float eps = 64.0f * std::numeric_limits<float>::epsilon();
-  cerr.precision(8); // print full float precision (7 + the 0.).
 
   int status = 0;
   size_t total = 0;

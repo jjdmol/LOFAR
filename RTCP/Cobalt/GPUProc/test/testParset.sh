@@ -111,9 +111,18 @@ function parse_logs
     cp `pwd`/*.MS $REFDIR" > accept_output
     chmod a+x accept_output
 
+    # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
+    numfp32eps=\(1.192092896/10000000\)
+
+    # Generally (tCorrelate_*), the first 5 decimals are ok; occasionally, the 5th is off.
+    # For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
+    # Taking 32*..., we still get a few dozen miscomparisons, so resort to:
+    eps_factor=64.0
+    EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
+
     for f in *.MS
     do
-      $RUNDIR/cmpfloat `pwd`/$f $REFDIR/$f || exit 1
+      $RUNDIR/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 
