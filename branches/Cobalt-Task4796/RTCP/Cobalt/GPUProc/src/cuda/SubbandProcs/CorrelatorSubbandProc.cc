@@ -30,7 +30,8 @@
 
 #include <GPUProc/OpenMP_Lock.h>
 
-#define DEBUG_INTERMEDIATE_OUTPUT
+#define DEBUG_FIRFILTER
+// #define DEBUG_DELAYANDBANDPASS
 
 namespace LOFAR
 {
@@ -332,7 +333,7 @@ namespace LOFAR
 
       gpu::Context ctx(queue.getContext());
 
-#ifdef DEBUG_INTERMEDIATE_OUTPUT
+#ifdef DEBUG_FIRFILTER
       ASSERT(ps.settings.nrBitsPerSample == 8);
 
       MultiDimArrayHostBuffer<std::complex<signed char>, 4>
@@ -361,7 +362,7 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-#ifdef DEBUG_INTERMEDIATE_OUTPUT
+#ifdef DEBUG_DELAYANDBANDPASS
       ASSERT(ps.settings.correlator.nrChannels > 1);
 
       MultiDimArrayHostBuffer<std::complex<float>, 4>
