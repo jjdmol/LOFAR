@@ -291,23 +291,23 @@ namespace LOFAR
       {
         unsigned SAP = ps.settings.subbands[subband].SAP;
 
-        for (size_t i = 0; i < input.delaysAtBegin.shape()[0]; i++) {
-          for (size_t j = 0; j < input.delaysAtBegin.shape()[1]; j++) {
-            LOG_INFO_STR("*** delaysAtBegin[" << i << "][" << j << "] = (" 
-                         << std::setprecision(16)
-                         << input.delaysAtBegin[i][j][0] << ", "
-                         << input.delaysAtBegin[i][j][1] << ")");
-          }
-        }
+        // for (size_t i = 0; i < input.delaysAtBegin.shape()[0]; i++) {
+        //   for (size_t j = 0; j < input.delaysAtBegin.shape()[1]; j++) {
+        //     LOG_INFO_STR("*** delaysAtBegin[" << i << "][" << j << "] = (" 
+        //                  << std::setprecision(16)
+        //                  << input.delaysAtBegin[i][j][0] << ", "
+        //                  << input.delaysAtBegin[i][j][1] << ")");
+        //   }
+        // }
 
-        for (size_t i = 0; i < input.delaysAfterEnd.shape()[0]; i++) {
-          for (size_t j = 0; j < input.delaysAfterEnd.shape()[1]; j++) {
-            LOG_INFO_STR("*** delaysAfterEnd[" << i << "][" << j << "] = (" 
-                         << std::setprecision(16)
-                         << input.delaysAfterEnd[i][j][0] << ", "
-                         << input.delaysAfterEnd[i][j][1] << ")");
-          }
-        }
+        // for (size_t i = 0; i < input.delaysAfterEnd.shape()[0]; i++) {
+        //   for (size_t j = 0; j < input.delaysAfterEnd.shape()[1]; j++) {
+        //     LOG_INFO_STR("*** delaysAfterEnd[" << i << "][" << j << "] = (" 
+        //                  << std::setprecision(16)
+        //                  << input.delaysAfterEnd[i][j][0] << ", "
+        //                  << input.delaysAfterEnd[i][j][1] << ")");
+        //   }
+        // }
 
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) 
@@ -334,6 +334,47 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
+#define DEBUG_INTERMEDIATE_OUTPUT
+
+#ifdef DEBUG_INTERMEDIATE_OUTPUT
+      gpu::Context ctx(queue.getContext());
+
+      MultiDimArrayHostBuffer<std::complex<float>, 4>
+        delayOutput(boost::extents
+                    [ps.settings.stations.size()]
+                    [ps.settings.correlator.nrChannels]
+                    [ps.settings.correlator.nrSamplesPerChannel]
+                    [ps.settings.nrPolarisations],
+                    ctx);
+
+      queue.synchronize();
+
+      queue.readBuffer(delayOutput, devInput.inputSamples, true);
+
+      // cout << "delayOutput.num_dimensions() = " << delayOutput.num_dimensions()
+      //      << endl;
+      // cout << "delayOutput.num_elements() = " << delayOutput.num_elements()
+      //      << endl;
+      // cout << "delayOutput.shape = {";
+      // for (size_t i = 0; i < delayOutput.num_dimensions(); i++) {
+      //   if (i > 0) cout << ", ";
+      //   cout << delayOutput.shape()[i];
+      // }
+      // cout << "}" << endl;
+      
+      // cout << "OUTPUT_DATA: " << KernelFactory<DelayAndBandPassKernel>(ps).bufferSize(DelayAndBandPassKernel::OUTPUT_DATA) << endl;
+      for (size_t i = 0; i < delayOutput.shape()[0]; i++) {
+        for (size_t j = 0; j < delayOutput.shape()[1]; j++) {
+          for (size_t k = 0; k < delayOutput.shape()[2]; k++) {
+            for (size_t l = 0; l < delayOutput.shape()[3]; l++) {
+              LOG_INFO_STR("delayOutput[" << i << "][" << j << "][" << k 
+                           << "][" << l << "] = " << std::setprecision(16)
+                           << delayOutput[i][j][k][l]);
+            }
+          }
+        }        
+      }
+#endif
       correlatorKernel->enqueue(queue, counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
