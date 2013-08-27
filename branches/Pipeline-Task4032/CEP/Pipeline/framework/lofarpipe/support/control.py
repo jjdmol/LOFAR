@@ -92,6 +92,8 @@ class control(StatefulRecipe):
             self.logger.error("Detailed exception information:")
             self.logger.error(str(type))
             self.logger.error(str(value))
+            import traceback
+            print traceback.format_exc()
             # Get the stacktrace and pretty print it:
             # self.logger.error("\n" + " ".join(traceback.format_list(
             #            traceback.extract_tb(traceback_object))))
@@ -109,7 +111,7 @@ class control(StatefulRecipe):
                 xmlfile = self.config.get("logging", "xml_stat_file")
                 try:
                     fp = open(xmlfile, "w")
-                    fp.write(get_active_stack(self).toxml(encoding='ascii'))
+                    fp.write(get_active_stack(self).toxml(encoding = 'ascii'))
                     fp.close()
                 except Exception, except_object:
                     self.logger.error("Failed opening xml stat file:")
