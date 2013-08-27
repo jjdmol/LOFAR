@@ -291,6 +291,24 @@ namespace LOFAR
       {
         unsigned SAP = ps.settings.subbands[subband].SAP;
 
+        for (size_t i = 0; i < input.delaysAtBegin.shape()[0]; i++) {
+          for (size_t j = 0; j < input.delaysAtBegin.shape()[1]; j++) {
+            LOG_INFO_STR("*** delaysAtBegin[" << i << "][" << j << "] = (" 
+                         << std::setprecision(16)
+                         << input.delaysAtBegin[i][j][0] << ", "
+                         << input.delaysAtBegin[i][j][1] << ")");
+          }
+        }
+
+        for (size_t i = 0; i < input.delaysAfterEnd.shape()[0]; i++) {
+          for (size_t j = 0; j < input.delaysAfterEnd.shape()[1]; j++) {
+            LOG_INFO_STR("*** delaysAfterEnd[" << i << "][" << j << "] = (" 
+                         << std::setprecision(16)
+                         << input.delaysAfterEnd[i][j][0] << ", "
+                         << input.delaysAfterEnd[i][j][1] << ")");
+          }
+        }
+
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) 
         {
