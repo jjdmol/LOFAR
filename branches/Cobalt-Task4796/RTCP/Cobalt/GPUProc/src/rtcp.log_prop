@@ -1,7 +1,7 @@
 
 # Configure the loggers
-log4cplus.rootLogger=DEBUG, STDOUT
-log4cplus.logger.TRC=DEBUG
+log4cplus.rootLogger=INFO, STDOUT
+log4cplus.logger.TRC=INFO
 
 # prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger
 log4cplus.logger.LCS.ApplCommon=WARN, STDOUT

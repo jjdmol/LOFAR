@@ -30,6 +30,8 @@
 
 #include <GPUProc/OpenMP_Lock.h>
 
+#define DEBUG_INTERMEDIATE_OUTPUT
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -334,10 +336,26 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-#define DEBUG_INTERMEDIATE_OUTPUT
-
 #ifdef DEBUG_INTERMEDIATE_OUTPUT
       gpu::Context ctx(queue.getContext());
+
+      ASSERT(ps.settings.correlator.nrChannels > 1);
+
+      MultiDimArrayHostBuffer<std::complex<float>, 4>
+        delayInput(boost::extents
+                   [ps.settings.stations.size()]
+                   [ps.settings.nrPolarisations]
+                   [ps.settings.correlator.nrSamplesPerChannel]
+                   [ps.settings.correlator.nrChannels],
+                   ctx);
+      queue.synchronize();
+      queue.readBuffer(delayInput, devFilteredData, true);
+      for (size_t i = 0; i < delayInput.shape()[0]; i++)
+        for (size_t j = 0; j < delayInput.shape()[1]; j++)
+          for (size_t k = 0; k < delayInput.shape()[2]; k++)
+            for (size_t l = 0; l < delayInput.shape()[3]; l++)
+              LOG_INFO_STR("delayInput[" << i << "][" << j << "][" << k 
+                           << "][" << l << "] = " << delayInput[i][j][k][l]);
 
       MultiDimArrayHostBuffer<std::complex<float>, 4>
         delayOutput(boost::extents
@@ -346,34 +364,14 @@ namespace LOFAR
                     [ps.settings.correlator.nrSamplesPerChannel]
                     [ps.settings.nrPolarisations],
                     ctx);
-
       queue.synchronize();
-
       queue.readBuffer(delayOutput, devInput.inputSamples, true);
-
-      // cout << "delayOutput.num_dimensions() = " << delayOutput.num_dimensions()
-      //      << endl;
-      // cout << "delayOutput.num_elements() = " << delayOutput.num_elements()
-      //      << endl;
-      // cout << "delayOutput.shape = {";
-      // for (size_t i = 0; i < delayOutput.num_dimensions(); i++) {
-      //   if (i > 0) cout << ", ";
-      //   cout << delayOutput.shape()[i];
-      // }
-      // cout << "}" << endl;
-      
-      // cout << "OUTPUT_DATA: " << KernelFactory<DelayAndBandPassKernel>(ps).bufferSize(DelayAndBandPassKernel::OUTPUT_DATA) << endl;
-      for (size_t i = 0; i < delayOutput.shape()[0]; i++) {
-        for (size_t j = 0; j < delayOutput.shape()[1]; j++) {
-          for (size_t k = 0; k < delayOutput.shape()[2]; k++) {
-            for (size_t l = 0; l < delayOutput.shape()[3]; l++) {
+      for (size_t i = 0; i < delayOutput.shape()[0]; i++)
+        for (size_t j = 0; j < delayOutput.shape()[1]; j++)
+          for (size_t k = 0; k < delayOutput.shape()[2]; k++)
+            for (size_t l = 0; l < delayOutput.shape()[3]; l++)
               LOG_INFO_STR("delayOutput[" << i << "][" << j << "][" << k 
-                           << "][" << l << "] = " << std::setprecision(16)
-                           << delayOutput[i][j][k][l]);
-            }
-          }
-        }        
-      }
+                           << "][" << l << "] = " << delayOutput[i][j][k][l]);
 #endif
       correlatorKernel->enqueue(queue, counters.correlator);
 
