@@ -101,8 +101,7 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          // itsParameters.nrSamplesPerSubband *
-          (itsParameters.nrHistorySamples + itsParameters.nrSamplesPerSubband) *
+          itsParameters.nrSamplesPerSubband *
           itsParameters.nrStations * itsParameters.nrPolarizations * 
           itsParameters.nrBytesPerComplexSample;
       case FIR_FilterKernel::OUTPUT_DATA:
@@ -139,3 +138,4 @@ namespace LOFAR
     }
   }
 }
+
