@@ -76,7 +76,8 @@ namespace LOFAR
   {
 
   public:
-    LofarConvolutionFunction(const IPosition& shape,
+    LofarConvolutionFunction(const IPosition& shape,    //# padded shape
+                             const IPosition& imageShape,
                              const DirectionCoordinate& coordinates,
                              const MeasurementSet& ms,
                              uInt nW, double Wmax,

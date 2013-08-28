@@ -72,6 +72,7 @@ namespace LOFAR
 
   LofarConvolutionFunction::LofarConvolutionFunction
   (const IPosition& shape,
+   const IPosition& imageShape,
    const DirectionCoordinate& coordinates,
    const MeasurementSet& ms,
    uInt nW, double Wmax,
@@ -112,6 +113,14 @@ namespace LOFAR
   {
     if (itsVerbose > 0) {
       cout<<"LofarConvolutionFunction:shape  "<<shape<<endl;
+    }
+    // Set correct reference pixels in DirectionCoordinate if padding is used.
+    // Note: LofarFTMachine takes care that padding is always even.
+    if (shape[0] != imageShape[0]  ||  shape[1] != imageShape[1]) {
+      Vector<Double> refPix = m_coordinates.referencePixel();
+      refPix[0] += (shape[0] - imageShape[0]) / 2;
+      refPix[1] += (shape[1] - imageShape[1]) / 2;
+      m_coordinates.setReferencePixel (refPix);
     }
     itsFFTMachines.resize (OpenMP::maxThreads());
     initStoreMasksNew();
@@ -290,7 +299,7 @@ namespace LOFAR
     // // Build the cutted spheroidal for the element beam image
     Double pixelSize = abs(m_coordinates.increment()[0]);
     Double imageDiameter = pixelSize * m_shape(0);
-    DirectionCoordinate coordinate = m_coordinates;
+    // DirectionCoordinate coordinate = m_coordinates;
     Double aPixelAngSize = min(m_pixelSizeSpheroidal,
     			       estimateAResolution(m_shape, m_coordinates));
     //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
