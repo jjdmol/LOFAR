@@ -408,14 +408,12 @@ void LofarFTMachine::init() {
   //cout<<"padding_p!!!!! "<<padding_p<<endl;
 
   isTiled=False;
-  if(!noPadding_p){
-    CompositeNumber cn(uInt(image->shape()(0)*2));
-    nx    = int(padding_p*image->shape()(0)/2.)*2;//cn.nextLargerEven(Int(padding_p*Float(image->shape()(0))-0.5));
-    ny    = int(padding_p*image->shape()(0)/2.)*2;//cn.nextLargerEven(Int(padding_p*Float(image->shape()(1))-0.5));
-  }
-  else{
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
+  nx = image->shape()(0);
+  ny = image->shape()(1);
+  if (!noPadding_p) {
+    // Make sure padding is always even.
+    nx += int((padding_p-1)*nx/2.)*2;
+    ny += int((padding_p-1)*ny/2.)*2;
   }
   npol  = image->shape()(2);
   nchan = image->shape()(3);
@@ -463,6 +461,7 @@ void LofarFTMachine::init() {
     fftw_init_threads();
     fftw_plan_with_nthreads(1);
   itsConvFunc = new LofarConvolutionFunction(padded_shape,
+                                             image->shape(),
                                              image->coordinates().directionCoordinate (image->coordinates().findCoordinate(Coordinate::DIRECTION)),
                                              itsMS, itsNWPlanes, itsWMax,
                                              itsOversample,
