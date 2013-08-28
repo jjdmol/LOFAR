@@ -26,8 +26,11 @@
 #include <DPPP/PointSource.h>
 #include <DPPP/GaussianSource.h>
 #include <DPPP/Stokes.h>
+#include <DPPP/Simulate.h>
 #include <ParmDB/SourceDB.h>
 #include <Common/ParameterSet.h>
+#include <Common/StreamUtil.h>
+#include <Common/OpenMP.h>
 
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MCDirection.h>
@@ -40,17 +43,19 @@ namespace LOFAR {
 
     DemixInfo::DemixInfo (const ParameterSet& parset, const string& prefix)
       : itsSelBL            (parset, prefix, false, "cross"),
-        itsSelBLRatio       (parset, prefix+"ratio.", false, "cross"), 
-        itsPredictModelName (parset.getString(prefix+"skymodelPredict")),
-        itsDemixModelName   (parset.getString(prefix+"skymodelDemix")),
-        itsTargetModelName  (parset.getString(prefix+"skymodelTarget")),
+        itsSelBLEstimate    (parset, prefix+"estimate.", false, "cross", "CS*&"),
+        itsPredictModelName (parset.getString(prefix+"estimate.skymodel")),
+        itsDemixModelName   (parset.getString(prefix+"ateam.skymodel")),
+        itsTargetModelName  (parset.getString(prefix+"target.skymodel")),
         itsSourceNames      (parset.getStringVector (prefix+"sources")),
-        itsRatioPattern     (parset.getString (prefix+"ratioBaselines", "CS*&")),
         itsRatio1           (parset.getDouble (prefix+"ratio1", 5.)),
         itsRatio2           (parset.getDouble (prefix+"ratio2", 0.25)),
-        itsAmplThreshold    (parset.getDouble (prefix+"amplThreshold", 20.)),
-        itsAngdistThreshold (parset.getDouble (prefix+"distanceThreshold", 60.)),
-        itsAngdistRefFreq   (parset.getDouble (prefix+"distanceRefFreq", 60e6)),
+        itsAteamAmplThreshold  (parset.getDouble (prefix+"ateam.threshold",
+                                                  20.)),
+        itsTargetAmplThreshold (parset.getDouble (prefix+"target.threshold",
+                                                  20.)),
+        itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60.)),
+        itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsMinNStation      (parset.getDouble (prefix+"minnstation", 6)),
         itsNStation         (0),
         itsNBl              (0),
@@ -64,12 +69,13 @@ namespace LOFAR {
         itsNTimeAvgSubtr    (parset.getUint  (prefix+"timestep", 1)),
         itsNTimeAvg         (parset.getUint  (prefix+"demixtimestep",
                                               itsNTimeAvgSubtr)),
-        itsChunkSize        (parset.getUint  (prefix+"chunksize", 120)),
-        itsNTimeChunk       (parset.getUint  (prefix+"ntimechunk", 0)),
+        itsChunkSize        (parset.getUint  (prefix+"timechunksize", 120)),
+        itsNTimeChunk       (parset.getUint  (prefix+"ntimechunk",
+                                              OpenMP::maxThreads())),
         itsTimeIntervalAvg  (0)
     {
       // Get delta in arcsec and take cosine of it (convert to radians first).
-      double delta = parset.getDouble (prefix+"distanceDelta", 60.);
+      double delta = parset.getDouble (prefix+"distance.delta", 60.);
       itsCosAngdistDelta = cos (delta / 3600. * casa::C::pi / 180.);
       ASSERTSTR (!(itsPredictModelName.empty() || itsDemixModelName.empty() ||
                    itsTargetModelName.empty()),
@@ -79,7 +85,7 @@ namespace LOFAR {
       itsAteamDemixList = makePatchList (itsDemixModelName, itsSourceNames);
       itsTargetList     = makePatchList (itsTargetModelName, vector<string>());
       ASSERT (ateamList.size() == itsAteamDemixList.size());
-      // Make sure the Ateam models are in the same order and having matching
+      // Make sure the A-team models are in the same order and have matching
       // positions.
       itsAteamList.reserve (ateamList.size());
       for (size_t i=0; i<itsAteamDemixList.size(); ++i) {
@@ -91,7 +97,7 @@ namespace LOFAR {
                                     ateamList[j]->position()[1],
                                     itsCosAngdistDelta),
                        "Position mismatch of source " << ateamList[j]->name()
-                       << " in Ateam SourceDBs (["
+                       << " in A-team SourceDBs (["
                        << itsAteamDemixList[i]->position()[0] << ", "
                        << itsAteamDemixList[i]->position()[1] << "] and ["
                        << ateamList[j]->position()[0] << ", "
@@ -101,41 +107,46 @@ namespace LOFAR {
           }
         }
       }
+      ASSERTSTR (itsAteamList.size() == itsAteamDemixList.size(),
+                 "A-team models have mismatching sources");
       // Make a more detailed target model in case it contains A-team sources.
       makeTargetDemixList();
     }
 
     void DemixInfo::makeTargetDemixList()
     {
-      // Get all Ateam models for demixing.
+      // Get all A-team models for demixing.
+      // Note that in constructor only some sources were read.
       // Open the SourceDB.
       BBS::SourceDB sdb(BBS::ParmDBMeta(string(), itsDemixModelName));
       sdb.lock();
       vector<Patch::ConstPtr> patchList = makePatchList (itsDemixModelName,
                                                          vector<string>());
-      // The demix target list is the same as the predict list, but Ateam
+      // The demix target list is the same as the predict list, but A-team
       // sources must be replaced with their demix model.
-      // Also these sources must be removed from the Ateam model.
+      // Also these sources must be removed from the A-team model.
       itsTargetDemixList.reserve (itsTargetList.size());
       for (size_t i=0; i<itsTargetList.size(); ++i) {
         // Initially use rough target model.
         itsTargetDemixList.push_back (itsTargetList[i]);
-        // Look if an Ateam source matches this target source.
+        // Look if an A-team source matches this target source.
         for (size_t j=0; j<patchList.size(); ++j) {
           if (testAngDist (itsTargetList[i]->position()[0],
                            itsTargetList[i]->position()[1],
                            patchList[j]->position()[0],
                            patchList[j]->position()[1],
                            itsCosAngdistDelta)) {
-            // Match, so use the detailed Ateam model.
+            // Match, so use the detailed A-team model.
             itsTargetDemixList[i] = patchList[j];
-            // A-source is in target, so remove from Ateam models (if in there).
+            itsTargetReplaced.push_back (patchList[j]->name());
+            // A-source is in target, so remove from A-team models (if in there).
             for (size_t k=0; k<itsAteamList.size(); ++k) {
               if (testAngDist (itsTargetDemixList[i]->position()[0],
                                itsTargetDemixList[i]->position()[1],
                                itsAteamList[k]->position()[0],
                                itsAteamList[k]->position()[1],
                                itsCosAngdistDelta)) {
+                itsAteamRemoved.push_back (itsAteamList[k]->name());
                 itsAteamList.erase (itsAteamList.begin() + k);
                 itsAteamDemixList.erase (itsAteamDemixList.begin() + k);
                 break;
@@ -161,17 +172,15 @@ namespace LOFAR {
       itsNStation = infoSel.antennaUsed().size();
 
       // Setup the baseline index vector used to split the UVWs.
-      itsUVWSplitIndex = setupSplitUVW (infoSel.nantenna(),
-                                        infoSel.getAnt1(), infoSel.getAnt2());
+      itsUVWSplitIndex = nsetupSplitUVW (infoSel.nantenna(),
+                                         infoSel.getAnt1(), infoSel.getAnt2());
 
-      // Determine which baselines to use when determining ratio target/Ateam.
-      ParameterSet pset;
-      pset.add ("baseline", itsRatioPattern);
-      itsSelRatio = BaselineSelection(pset, string(), false, "cross");
-      itsSelRatio.apply (infoSel);
+      // Determine which baselines to use when estimating A-team and target.
+      itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
 
       // Re-number the station IDs in the selected baselines, removing gaps in
       // the numbering due to unused stations.
+      /// Why is that needed for predict/solve?
       const vector<int> &antennaMap = infoSel.antennaMap();
       for (uint i=0; i<itsNBl; ++i) {
         itsBaselines.push_back(Baseline(antennaMap[infoSel.getAnt1()[i]],
@@ -214,17 +223,59 @@ namespace LOFAR {
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()[0],
                              angles.getBaseValue()[1]);
+
+      // Determine if the minimum distance (scaled with freq) of A-sources
+      // to target is within the threshold.
+      // First get the target position (average of its patches).
+      BBS::PatchSumInfo sumInfo(0);
+      for (size_t i=0; i<itsTargetList.size(); ++i) {
+        sumInfo.add (itsTargetList[i]->position()[0],
+                     itsTargetList[i]->position()[1],
+                     1.);
+      }
+      double targetRa  = sumInfo.getRa();
+      double targetDec = sumInfo.getDec();
+      // Determine the minimum distance.
+      double minDist   = 1e30;
+      double freqRatio = info.refFreq() / itsAngdistRefFreq;
+      for (size_t i=0; i<itsAteamList.size(); ++i) {
+        double dist = acos (getCosAngDist (itsAteamList[i]->position()[0],
+                                           itsAteamList[i]->position()[1],
+                                           targetRa, targetDec));
+        dist *= freqRatio;
+        if (dist < minDist) minDist = dist;
+      }
+      itsIsAteamNearby = cos(minDist) > cos(itsAngdistThreshold);
     }
 
     void DemixInfo::show (ostream& os) const
     {
+      os << "  ateam.skymodel      " << itsDemixModelName << endl;
+      os << "  estimate.skymodel   " << itsPredictModelName << endl;
+      os << "  target.skymodel     " << itsTargetModelName << endl;
+      os << "  sources             " << itsSourceNames << endl;
+      os << "                      " << itsAteamRemoved
+         << " removed from A-team model (in target)" << endl;
+      os << "                      " << itsTargetReplaced
+         << " replaced in target model (better A-team model)" << endl;
+      os << "  ratio1              " << itsRatio1 << endl;
+      os << "  ratio2              " << itsRatio2 << endl;
+      os << "  ateam.threshold     " << itsAteamAmplThreshold << endl;
+      os << "  target.threshold    " << itsTargetAmplThreshold << endl;
+      os << "  distance.delta      "
+         << acos(itsCosAngdistDelta) * 3600. / casa::C::pi * 180.
+         << " arcsec" << endl;
+      os << "  distance.threshold  " << itsAngdistThreshold << endl;
+      os << "  distance.reffreq    " << itsAngdistRefFreq << endl;
+      os << "  minnstation         " << itsMinNStation << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;
       os << "  demixfreqstep:      " << itsNChanAvg << endl;
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
-      os << "  chunksize:          " << itsChunkSize << endl;
+      os << "  timechunksize:      " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
       itsSelBL.show (os);
+      itsSelBLEstimate.show (os);
     }
 
     vector<Patch::ConstPtr>
@@ -321,13 +372,6 @@ namespace LOFAR {
                                                    componentList.end())));
       }
       return patchList;
-    }
-
-    bool DemixInfo::testAngDist (double ra1, double dec1,
-                                 double ra2, double dec2,
-                                 double cosDelta)
-    {
-      return sin(dec1)*sin(dec2) + cos(dec1)*cos(dec2)*cos(ra1-ra2) >= cosDelta;
     }
 
 

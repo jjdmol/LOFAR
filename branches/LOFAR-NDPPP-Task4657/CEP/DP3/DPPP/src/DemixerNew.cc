@@ -54,26 +54,36 @@ namespace LOFAR {
     {
       ASSERTSTR (! itsInstrumentName.empty(),
                  "An empty name is given for the instrument model");
+      /// Create ParmDB at first write!!!
+      /// In that way instrumentmodel can be in MS directory.
       itsParmDB = boost::shared_ptr<BBS::ParmDB>
         (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsInstrumentName),
                          true));
-      // Add a null step as the last step in the filter.
-      DPStep::ShPtr nullStep(new NullStep());
-      itsFilter.setNextStep (nullStep);
+      ///      // Add a null step as the last step in the filter.
+      ///      DPStep::ShPtr nullStep(new NullStep());
+      ///      itsFilter.setNextStep (nullStep);
     }
 
     void DemixerNew::updateInfo (const DPInfo& infoIn)
     {
       info() = infoIn;
-      itsFilter.setInfo (infoIn);
       // Handle possible data selection.
+      itsFilter.updateInfo (infoIn);
       const DPInfo& infoSel = itsFilter.getInfo();
       itsDemixInfo.update (infoSel, info());
       // Update the info of this object.
       info().setNeedVisData();
       info().setNeedWrite();
-      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.timeWindow());
+      // Size the buffers.
+      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.timeChunkSize());
       itsBufOut.resize (itsBufIn.size() / itsDemixInfo.ntimeAvgSubtr());
+      // Create a worker per thread.
+      int nthread = OpenMP::maxThreads();
+      itsWorkers.reserve (nthread);
+      for (int i=0; i<nthread; ++i) {
+        itsWorkers.push_back (DemixWorker (itsInput, itsName, itsDemixInfo,
+                                           getInfo()));
+      }
     }
 
     void DemixerNew::show (ostream& os) const
@@ -141,7 +151,7 @@ namespace LOFAR {
     bool DemixerNew::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      // Keep ntimechunk*timewindow data buffers.
+      // Keep ntimechunk*timechunksize data buffers.
       // Make sure all required data arrays are filled in.
       DPBuffer& newBuf = itsBufIn[itsNTime];
       newBuf = buf;
@@ -167,7 +177,7 @@ namespace LOFAR {
     void DemixerNew::processData()
     {
       // Last timechunk might contain fewer time slots.
-      uint timeWindowIn  = itsDemixInfo.timeWindow();
+      uint timeWindowIn  = itsDemixInfo.timeChunkSize();
       uint timeWindowOut = timeWindowIn / itsDemixInfo.ntimeAvgSubtr();
       int lastChunk = (itsNTime - 1) / timeWindowIn;
       int lastNTime = itsNTime - itsDemixInfo.ntimeChunk()*timeWindowIn;
@@ -202,6 +212,7 @@ namespace LOFAR {
     void DemixerNew::processChunk (const DPBuffer* bufIn, int nbufin,
                                    DPBuffer* bufOut)
     {
+      cout<< "thread="<< OpenMP::threadNum()<<endl;
       itsWorkers[OpenMP::threadNum()].process (bufIn, nbufin, bufOut);
     }
 

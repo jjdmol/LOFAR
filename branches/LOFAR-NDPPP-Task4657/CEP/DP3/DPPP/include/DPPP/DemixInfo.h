@@ -64,37 +64,37 @@ namespace LOFAR {
       void show (ostream&) const;
 
       //# Data members
-      uint   minNStation() const                   {return itsMinNStation;}
-      uint   nstation() const                      {return itsNStation;}
-      uint   nbl() const                           {return itsNBl;}
-      uint   ncorr() const                         {return itsNCorr;}
-      uint   nchanIn() const                       {return itsNChanIn;}
-      uint   nchanAvg() const                      {return itsNChanAvg;}
-      uint   nchanAvgSubtr() const                 {return itsNChanAvgSubtr;}
-      uint   nchanOut() const                      {return itsNChanOut;}
-      uint   nchanOutSubtr() const                 {return itsNChanOutSubtr;}
-      uint   ntimeAvg() const                      {return itsNTimeAvg;}
-      uint   ntimeAvgSubtr() const                 {return itsNTimeAvgSubtr;}
-      uint   ntimeOut() const                      {return itsNTimeOut;}
-      uint   ntimeOutSubtr() const                 {return itsNTimeOutSubtr;}
-      uint   ntimeChunk() const                    {return itsNTimeChunk;}
-      uint   chunkSize() const                     {return itsChunkSize;}
-      uint   timeWindow() const      {return itsNTimeChunk*itsChunkSize;}
-      double timeIntervalAvg() const               {return itsTimeIntervalAvg;}
-      double ratio1() const                        {return itsRatio1;}
-      double ratio2() const                        {return itsRatio2;}
-      double amplThreshold() const                 {return itsAmplThreshold;}
-      double angdistThreshold() const              {return itsAngdistThreshold;}
-      double angdistRefFreq() const                {return itsAngdistRefFreq;}
-      const BaselineSelection& selBL() const       {return itsSelBL;}
-      const BaselineSelection& selBLRatio() const  {return itsSelBLRatio;}
-      const vector<uint>& uvwSplitIndex() const    {return itsUVWSplitIndex;}
-      const string& predictModelName() const       {return itsPredictModelName;}
-      const string& demixModelName() const         {return itsDemixModelName;}
-      const string& targetModelName() const        {return itsTargetModelName;}
-      const vector<string>& sourceNames() const    {return itsSourceNames;}
-      const Position& phaseRef() const             {return itsPhaseRef;}
-      const vector<Baseline>& baselines() const    {return itsBaselines;}
+      uint   minNStation() const                 {return itsMinNStation;}
+      uint   nstation() const                    {return itsNStation;}
+      uint   nbl() const                         {return itsNBl;}
+      uint   ncorr() const                       {return itsNCorr;}
+      uint   nchanIn() const                     {return itsNChanIn;}
+      uint   nchanAvg() const                    {return itsNChanAvg;}
+      uint   nchanAvgSubtr() const               {return itsNChanAvgSubtr;}
+      uint   nchanOut() const                    {return itsNChanOut;}
+      uint   nchanOutSubtr() const               {return itsNChanOutSubtr;}
+      uint   ntimeAvg() const                    {return itsNTimeAvg;}
+      uint   ntimeAvgSubtr() const               {return itsNTimeAvgSubtr;}
+      uint   ntimeOut() const                    {return itsNTimeOut;}
+      uint   ntimeOutSubtr() const               {return itsNTimeOutSubtr;}
+      uint   ntimeChunk() const                  {return itsNTimeChunk;}
+      uint   timeChunkSize() const               {return itsTimeChunkSize;}
+      ///      uint   timeWindow() const      {return itsNTimeChunk*itsTimeChunkSize;}
+      double timeIntervalAvg() const             {return itsTimeIntervalAvg;}
+      double ratio1() const                      {return itsRatio1;}
+      double ratio2() const                      {return itsRatio2;}
+      double ateamAmplThreshold() const          {return itsAteamAmplThreshold;}
+      double targetAmplThreshold() const         {return itsTargetAmplThreshold;}
+      bool   isAteamNearby() const               {return itsIsAteamNearby;}
+      const BaselineSelection& selBL() const     {return itsSelBL;}
+      const vector<int>& uvwSplitIndex() const   {return itsUVWSplitIndex;}
+      const string& predictModelName() const     {return itsPredictModelName;}
+      const string& demixModelName() const       {return itsDemixModelName;}
+      const string& targetModelName() const      {return itsTargetModelName;}
+      const vector<string>& sourceNames() const  {return itsSourceNames;}
+      const Position& phaseRef() const           {return itsPhaseRef;}
+      const vector<Baseline>& baselines() const  {return itsBaselines;}
+      const vector<uint> selEstimate() const     {return itsSelEstimate;}
       const casa::Vector<double>& freqDemix() const      {return itsFreqDemix;}
       const casa::Vector<double>& freqSubtr() const      {return itsFreqSubtr;}
       const vector<Patch::ConstPtr>& ateamList() const   {return itsAteamList;}
@@ -104,9 +104,19 @@ namespace LOFAR {
       const vector<Patch::ConstPtr>& targetDemixList() const
         {return itsTargetDemixList;}
 
+      // Get cosine of the angular distance between two sky positions.
+      static double getCosAngDist (double ra1, double dec1,
+                                   double ra2, double dec2)
+      {
+        return sin(dec1)*sin(dec2) + cos(dec1)*cos(dec2)*cos(ra1-ra2);
+      }
+
       // Test if two positions in the sky are within delta radians.
       static bool testAngDist (double ra1, double dec1,
-                               double ra2, double dec2, double cosDelta);
+                               double ra2, double dec2, double cosDelta)
+      {
+        return getCosAngDist (ra1, dec1, ra2, dec2) >= cosDelta;
+      }
 
     private:
       // Create a list of patches (and components).
@@ -119,19 +129,20 @@ namespace LOFAR {
 
       //# Data members.
       BaselineSelection       itsSelBL;
-      BaselineSelection       itsSelBLRatio;
-      vector<uint>            itsUVWSplitIndex;
+      BaselineSelection       itsSelBLEstimate;
+      vector<int>             itsUVWSplitIndex;
       string                  itsPredictModelName;
       string                  itsDemixModelName;
       string                  itsTargetModelName;
       vector<string>          itsSourceNames;
-      string                  itsRatioPattern;
       double                  itsCosAngdistDelta;
       double                  itsRatio1;
       double                  itsRatio2;
-      double                  itsAmplThreshold;
+      double                  itsAteamAmplThreshold;
+      double                  itsTargetAmplThreshold;
       double                  itsAngdistThreshold;
       double                  itsAngdistRefFreq;
+      bool                    itsIsAteamNearby;
       uint                    itsMinNStation;        //# min #stations for solve
       uint                    itsNStation;
       uint                    itsNBl;
@@ -143,19 +154,22 @@ namespace LOFAR {
       uint                    itsNChanOut;
       uint                    itsNTimeAvgSubtr;      //# subtract averaging
       uint                    itsNTimeAvg;           //# demix averaging
-      uint                    itsChunkSize;          //# nr times per chunk
+      uint                    itsTimeChunkSize;      //# nr times per chunk
       uint                    itsNTimeOutSubtr;      //# #output times per chunk
       uint                    itsNTimeOut;           //# #demix times per chunk
       uint                    itsNTimeChunk;         //# nr chunks in parallel
       double                  itsTimeIntervalAvg;
       Position                itsPhaseRef;           //# original phaseref
       vector<Baseline>        itsBaselines;
+      vector<uint>            itsSelEstimate;        //# baselines in estimate
       casa::Vector<double>    itsFreqDemix;
       casa::Vector<double>    itsFreqSubtr;
       vector<Patch::ConstPtr> itsAteamList;
       vector<Patch::ConstPtr> itsTargetList;
       vector<Patch::ConstPtr> itsAteamDemixList;
       vector<Patch::ConstPtr> itsTargetDemixList;
+      vector<string>          itsAteamRemoved;
+      vector<string>          itsTargetReplaced;
     };
 
   } //# end namespace

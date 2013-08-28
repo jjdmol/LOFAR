@@ -27,15 +27,18 @@
 
 // Only required for rotateUVW().
 #include <DPPP/PhaseShift.h>
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/MatrixMath.h>
+
+using namespace casa;
 
 namespace LOFAR
 {
 namespace DPPP
 {
 
-vector<int> setupSplitUVW (uint nant, const Vector<int>& ant1,
+vector<int> nsetupSplitUVW (uint nant, const Vector<int>& ant1,
                            const Vector<int>& ant2)
 {
   // Get the indices of the baselines needed to split the baseline UVWs into
@@ -45,8 +48,8 @@ vector<int> setupSplitUVW (uint nant, const Vector<int>& ant1,
   // like 0-1, 0-2, 1-2 and 3-4, 4-5, 5-6.
   // Note that the first station of a group gets UVW=0. All other station UVWs
   // are relative to it using the baseline UVWs.
-  // Also note that the size of the returned vector tells the nr of groups
-  // (because it contains no entry for the first antenna in a group).
+  // Also note that nr of groups can be derived from the size of the returned
+  // vector (because it contains no entry for the first antenna in a group).
   vector<int> uvwbl;
   uvwbl.reserve (nant);
   Block<bool> known(nant, false);
@@ -95,23 +98,28 @@ vector<int> setupSplitUVW (uint nant, const Vector<int>& ant1,
   return uvwbl;
 }
 
-void splitUVW (const vector<int>& blindex,
+void nsplitUVW (const vector<int>& blindex,
                const vector<Baseline>& baselines,
                const Matrix<double>& uvwbl,
                Matrix<double>& uvwant)
 {
   uvwant = 0.;
+  double* uvwl;
+  double* uvwr;
+  const double* uvwb;
   for (uint i=0; i<blindex.size(); ++i) {
     int inx = blindex[i];
     if (inx < 0) {
-      inx = -inx - 1
-      int a1 = baselines[inx].first;
-      int a2 = baselines[inx].second;
-      uvwant[a2] = uvwant[inx] - uvwant[a1];
+      inx = -inx - 1;
+      uvwr = uvwant.data() + 3 * baselines[inx].first;
+      uvwl = uvwant.data() + 3 * baselines[inx].second;
     } else {
-      int a1 = baselines[inx].first;
-      int a2 = baselines[inx].second;
-      uvwant[a1] = uvwant[inx] - uvwant[a2];
+      uvwl = uvwant.data() + 3 * baselines[inx].first;
+      uvwr = uvwant.data() + 3 * baselines[inx].second;
+    }
+    uvwb = uvwbl.data() + 3*inx;
+    for (int j=0; j<3; ++j) {
+      uvwl[j] = uvwb[j] - uvwr[j];
     }
   }
 }

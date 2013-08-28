@@ -57,7 +57,7 @@ namespace LOFAR {
       BaselineSelection (const ParameterSet&, const string& prefix,
                          bool minmax=false,
 			 const string& defaultCorrType=string(),
-                         const stirng& defaultBaseline=string());
+                         const string& defaultBaseline=string());
 
       // Is there any selection?
       bool hasSelection() const;
@@ -69,11 +69,9 @@ namespace LOFAR {
       // If no selection is made, all values in the matrix are true.
       casa::Matrix<bool> apply (const DPInfo& info) const;
 
-      // Form the selection vector telling for each baseline in the DPInfo
-      // object if it is selected.
-      //# Note: A casa::Block instead of std::vector is returned because
-      //# std::vector is represented as bits.
-      casa::Block<bool> applyVec (const DPInfo& info) const;
+      // Form the selection vector giving the index of the selected baselines
+      // in the DPInfo object.
+      vector<uint> applyVec (const DPInfo& info) const;
 
     private:
       // Convert the baseline selection string.

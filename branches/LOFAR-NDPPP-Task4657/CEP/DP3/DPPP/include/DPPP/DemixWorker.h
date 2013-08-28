@@ -1,5 +1,5 @@
 //# DemixWorker.h: Demixer helper class processing a time chunk
-//# Copyright (C) 2011
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -66,7 +66,6 @@ namespace LOFAR {
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
       DemixWorker (DPInput*,
-                   const ParameterSet& parset,
                    const string& prefix,
                    const DemixInfo& info,
                    const DPInfo& dpinfo);
@@ -81,16 +80,18 @@ namespace LOFAR {
 
       // Get the number of converged solutions.
       uint nConverged() const
-        { return itsNConverged; }
+        { return itsNrConverged; }
       // Get the number of times no demix was needed.
       uint nNoDemix() const
-        { return itsNNoDemix; }
-      uint nIncludeTarget() const
-        { return itsNIncludeTarget; }
+        { return itsNrNoDemix; }
+      uint nInclude1Target() const
+        { return itsNrInclude1Target; }
+      uint nInclude2Target() const
+        { return itsNrInclude2Target; }
       uint nIgnoreTarget() const
-        { return itsNIgnoreTarget; }
+        { return itsNrIgnoreTarget; }
       uint nDeprojectTarget() const
-        { return itsNDeprojectTarget; }
+        { return itsNrDeprojectTarget; }
 
       // Get the timings of the various processing steps.
       // <group>
@@ -107,24 +108,32 @@ namespace LOFAR {
       // </group>
 
     private:
+      // Setup the demix processing steps for this piece of data.
+      // It fills itsFirstSteps, etc. for the sources to be demixed.
+      // It also determines how to handle the target (include,deproject,ignore).
+      void setupDemix();
+
       // Average the baseline UVWs in bufin and split them into UVW per station.
       // It returns the number of time averages.
       uint avgSplitUVW (const DPBuffer* bufin, uint nbufin,
-                        uint ntimeAvg);
+                        uint ntimeAvg, const vector<uint>& selbl);
 
       // Predict the target StokesI amplitude.
       // It applies the beam at each target patch.
       void predictTarget (const vector<Patch::ConstPtr>& patchList,
-                          uint ntime);
+                          uint ntime, double time, double timeStep);
 
       // Predict the StokesI amplitude of the Ateam patches and determine
       // which antennae and sources to use when demixing.
       // It applies the beam at each patch center.
       void predictAteam (const vector<Patch::ConstPtr>& patchList,
-                         uint ntime);
+                         uint ntime, double time, double timeStep);
+
+      // Add the StokesI of itsPredictVis to ampl.
+      void addStokesI (casa::Matrix<float>& ampl);
 
       // Apply the beam for the given sky direction.
-      void applyBeam (const Position& dir);
+      void applyBeam (double time, const Position& dir);
 
       // Calculate the StokesI amplitude from the predicted visibilities.
       // (0.5 * (XX+YY))
@@ -162,14 +171,16 @@ namespace LOFAR {
       void mergeSubtractResult();
 
       //# Data members.
-      const DemixInfo&                      itsInfo;
-      const DPInfo&                         itsDPInfo;
-      vector<PhaseShift*>                   itsPhaseShifts;
+      const DemixInfo*                      itsInfo;
+      const DPInfo*                         itsDPInfo;
+      vector<PhaseShift*>                   itsOrigPhaseShifts;
       //# Phase shift and average steps for demix.
-      vector<DPStep::ShPtr>                 itsFirstSteps;
+      vector<DPStep::ShPtr>                 itsOrigFirstSteps;
       //# Result of phase shifting and averaging the directions of interest
       //# at the demix resolution.
       vector<MultiResultStep*>              itsAvgResults;
+      vector<PhaseShift*>                   itsPhaseShifts;
+      vector<DPStep::ShPtr>                 itsFirstSteps;
       DPStep::ShPtr                         itsAvgStepSubtr;
       Filter                                itsFilter;
       Filter*                               itsFilterSubtr;
@@ -177,6 +188,10 @@ namespace LOFAR {
       MultiResultStep*                      itsAvgResultFull;
       MultiResultStep*                      itsAvgResultSubtr;
 
+      //# Variables set by setupDemix and used by handleDemix.
+      uint                                  itsNDir;
+      uint                                  itsNModel;
+      bool                                  itsIgnoreTarget;
       //# Accumulator used for computing the demixing weights at the demix
       //# resolution. The shape of this buffer is #correlations x #channels
       //# x #baselines x #directions x #directions (fastest axis first).
@@ -205,15 +220,26 @@ namespace LOFAR {
       vector<casa::Cube<float> >            itsAteamAmpl;
       //# #nfreq x #bl x #time StokesI amplitude of target.
       casa::Cube<float>                     itsTargetAmpl;
-      //# Per A-source the nr of antennae matching the minimum amplitude.
-      casa::Matrix<uint> >                  itsAntennaeMatch;
+      //# Per A-source the stations to use (matching the minimum amplitude).
+      vector<vector<uint> >                 itsStationsToUse;
+      //# Per A-source and for target the min and max amplitude.
+      vector<double>                        itsAteamMinAmpl;
+      vector<double>                        itsAteamMaxAmpl;
+      double                                itsTargetMinAmpl;
+      double                                itsTargetMaxAmpl;
+      //# Variables to do the solve.
       vector<double>                        itsUnknowns;
       vector<double>                        itsPrevSolution;
       uint                                  itsNTimeOut;
       uint                                  itsNTimeOutSubtr;
       uint                                  itsTimeIndex;
-      uint                                  itsNConverged;
-
+      //# Statistics
+      uint                                  itsNrConverged;
+      uint                                  itsNrNoDemix;
+      uint                                  itsNrInclude1Target;
+      uint                                  itsNrInclude2Target;
+      uint                                  itsNrIgnoreTarget;
+      uint                                  itsNrDeprojectTarget;
       //# Timers.
       NSTimer                               itsTimer;
       NSTimer                               itsTimerPredict;

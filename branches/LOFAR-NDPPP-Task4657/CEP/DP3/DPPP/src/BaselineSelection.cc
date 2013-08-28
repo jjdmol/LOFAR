@@ -97,14 +97,17 @@ namespace LOFAR {
       return selectBL;
     }
 
-    Block<bool> BaselineSelection::applyVec (const DPInfo& info)
+    vector<uint> BaselineSelection::applyVec (const DPInfo& info) const
     {
       Matrix<bool> sel = apply(info);
-      Block<bool> bl(info.nbaselines());
+      vector<uint> vec;
+      vec.reserve (info.nbaselines());
       for (uint i=0; i<info.nbaselines(); ++i) {
-        bl[i] = sel(info.getAnt1[i], info.getAnt2[i]);
+        if (sel(info.getAnt1()[i], info.getAnt2()[i])) {
+          vec.push_back (i);
+        }
       }
-      return bl;
+      return vec;
     }
 
     void BaselineSelection::handleBL (Matrix<bool>& selectBL,
