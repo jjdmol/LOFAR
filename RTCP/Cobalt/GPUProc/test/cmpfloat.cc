@@ -44,12 +44,21 @@ int main(int argc, char *argv[])
   if (argc < 3 || argc > 4)
   {
     cerr << "Usage: " << argv[0] << "[1.0e-12] <file1> <file2>" << endl;
-    cerr << "  where the optional first floating point argument overrides the comparison epsilon" << endl;
+    cerr << "  where the optional floating point argument overrides the comparison epsilon" << endl;
     return 1;
   }
 
-  if (argc == 4)
+  char *filename1;
+  char *filename2;
+
+  if (argc == 3)
   {
+    filename1 = argv[1];
+    filename2 = argv[2];
+  } else { // argc == 4
+    filename1 = argv[2];
+    filename2 = argv[3];
+
     epsilon = std::atof(argv[1]);
     if (epsilon <= 0.0 || epsilon > 1.0)
     {
@@ -61,17 +70,17 @@ int main(int argc, char *argv[])
   }
   float eps = (float)epsilon; // atm, we only cmp single precision floats
 
-  ifstream ifs1(argv[1], std::ios::binary);
+  ifstream ifs1(filename1, std::ios::binary);
   if (!ifs1)
   {
-    cerr << "Failed to open file " << argv[1] << endl;
+    cerr << "Failed to open file " << filename1 << endl;
     return 1;
   }
 
-  ifstream ifs2(argv[2], std::ios::binary);
+  ifstream ifs2(filename2, std::ios::binary);
   if (!ifs2)
   {
-    cerr << "Failed to open file " << argv[2] << endl;
+    cerr << "Failed to open file " << filename2 << endl;
     return 1;
   }
 
@@ -117,13 +126,13 @@ int main(int argc, char *argv[])
 
   if (!ifs1.eof())
   {
-    cerr << "Error occurred while reading from file " << argv[1] << endl;
+    cerr << "Error occurred while reading from file " << filename1 << endl;
     status = 1;
   }
 
   if (!ifs2.eof())
   {
-    cerr << "Error occurred while reading from file " << argv[2] << endl;
+    cerr << "Error occurred while reading from file " << filename2 << endl;
     status = 1;
   }
 
