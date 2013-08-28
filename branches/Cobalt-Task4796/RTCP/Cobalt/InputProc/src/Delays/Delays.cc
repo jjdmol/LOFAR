@@ -421,7 +421,7 @@ namespace LOFAR
       for (size_t subband = 0; subband < parset.nrSubbands(); ++subband) {
         unsigned sap = parset.settings.subbands[subband].SAP;
 
-        // Mystery unary minus
+        // Mystery unary minus. TODO: Look into this.
         read_offsets[subband] = -coarseDelaysSamples[sap];
       }
 
