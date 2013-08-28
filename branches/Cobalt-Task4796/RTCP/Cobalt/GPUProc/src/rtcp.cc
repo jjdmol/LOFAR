@@ -172,8 +172,10 @@ int main(int argc, char **argv)
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
 
-  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
-    THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0) {
+    int err = errno;
+    LOG_WARN_STR("setrlimit(RLIMIT_MEMLOCK, unlimited): " << strerror(err));
+  }
 
   /*
    * Initialise OpenMP
@@ -230,10 +232,13 @@ int main(int argc, char **argv)
   }
 
   // Bindings are done -- Lock everything in memory
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-    THROW_SYSCALL("mlockall");
-
-  LOG_DEBUG_STR("All memory is now pinned.");
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
+    // THROW_SYSCALL("mlockall");
+    int err = errno;
+    LOG_WARN_STR("mlockall: " << strerror(err));
+  } else {
+    LOG_DEBUG_STR("All memory is now pinned.");
+  }
 
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
@@ -300,8 +305,10 @@ int main(int argc, char **argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &real_size);
 
-  ASSERT(rank    == real_rank);
-  ASSERT(nrHosts == real_size);
+  ASSERTSTR(rank == real_rank, 
+            "rank = " << rank << ", real_rank = " << real_rank);
+  ASSERTSTR(nrHosts == real_size,
+            "nrHosts = " << nrHosts << ", real_size = " << real_size);
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
