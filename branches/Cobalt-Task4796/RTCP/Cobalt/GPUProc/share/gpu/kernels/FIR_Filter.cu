@@ -95,25 +95,25 @@ __global__ void FIR_filter( void *filteredDataPtr,
   unsigned station = blockIdx.y;
 
   //const float16 weights = (*weightsData)[channel];
-  const float weights_s0 = (*weightsData)[channel][0];
-  const float weights_s1 = (*weightsData)[channel][1];
-  const float weights_s2 = (*weightsData)[channel][2];
-  const float weights_s3 = (*weightsData)[channel][3];
-  const float weights_s4 = (*weightsData)[channel][4];
-  const float weights_s5 = (*weightsData)[channel][5];
-  const float weights_s6 = (*weightsData)[channel][6];
-  const float weights_s7 = (*weightsData)[channel][7];
-  const float weights_s8 = (*weightsData)[channel][8];
-  const float weights_s9 = (*weightsData)[channel][9];
-  const float weights_sA = (*weightsData)[channel][10];
-  const float weights_sB = (*weightsData)[channel][11];
-  const float weights_sC = (*weightsData)[channel][12];
-  const float weights_sD = (*weightsData)[channel][13];
-  const float weights_sE = (*weightsData)[channel][14];
-  const float weights_sF = (*weightsData)[channel][15];
+  const double weights_s0 = (*weightsData)[channel][0];
+  const double weights_s1 = (*weightsData)[channel][1];
+  const double weights_s2 = (*weightsData)[channel][2];
+  const double weights_s3 = (*weightsData)[channel][3];
+  const double weights_s4 = (*weightsData)[channel][4];
+  const double weights_s5 = (*weightsData)[channel][5];
+  const double weights_s6 = (*weightsData)[channel][6];
+  const double weights_s7 = (*weightsData)[channel][7];
+  const double weights_s8 = (*weightsData)[channel][8];
+  const double weights_s9 = (*weightsData)[channel][9];
+  const double weights_sA = (*weightsData)[channel][10];
+  const double weights_sB = (*weightsData)[channel][11];
+  const double weights_sC = (*weightsData)[channel][12];
+  const double weights_sD = (*weightsData)[channel][13];
+  const double weights_sE = (*weightsData)[channel][14];
+  const double weights_sF = (*weightsData)[channel][15];
 
-  //float16 delayLine;
-  float delayLine_s0, delayLine_s1, delayLine_s2, delayLine_s3, 
+  //double16 delayLine;
+  double delayLine_s0, delayLine_s1, delayLine_s2, delayLine_s3, 
         delayLine_s4, delayLine_s5, delayLine_s6, delayLine_s7, 
         delayLine_s8, delayLine_s9, delayLine_sA, delayLine_sB,
         delayLine_sC, delayLine_sD, delayLine_sE, delayLine_sF;
@@ -136,7 +136,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
   delayLine_sE = convertIntToFloat((*sampledData)[station][14][channel][pol_ri]);
   
 
-  float sum_s0, sum_s1, sum_s2, sum_s3,
+  double sum_s0, sum_s1, sum_s2, sum_s3,
         sum_s4, sum_s5, sum_s6, sum_s7,
         sum_s8, sum_s9, sum_sA, sum_sB,
         sum_sC, sum_sD, sum_sE, sum_sF;
@@ -448,37 +448,5 @@ __global__ void FIR_filter( void *filteredDataPtr,
     (*filteredData)[station][pol][time + 15][channel][ri] = sum_sF;
   }
 }
-}
-
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t FIR_filter_wrapper(float *DevFilteredData,
-    float const *DevSampledData,
-    float const *DevWeightsData)
-{
-    cudaError_t cudaStatus;
-
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        //fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        return cudaStatus;
-    }
-
-    // From here copy pasta of opencl code
-    int nrChannelsPerSubband = 8;
-    int nrStations = 2; 
-    unsigned totalNrThreads = nrChannelsPerSubband * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
-    dim3 globalWorkSize(totalNrThreads, nrStations); //ps.nrStations()
-
-    int MAXNRCUDATHREADS = 512;
-    size_t maxNrThreads = MAXNRCUDATHREADS;
-    unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
-    dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
-
-    // Launch a kernel on the GPU with one thread for each element.
-    FIR_filter<<<globalWorkSize, localWorkSize>>>(DevFilteredData,
-      DevSampledData, DevWeightsData);
-
-    return (cudaError_t)0;
 }
 
