@@ -18,7 +18,7 @@ from lofarpipe.support.data_map import DataMap, validate_data_maps, MultiDataMap
 from lofarpipe.support.utilities import patch_parset, get_parset
 from lofarpipe.support.loggingdecorators import xml_node, mail_log_on_exception
 from lofar.parameterset import parameterset
-from lofarpipe.support.xmllogging import  get_active_stack
+from lofarpipe.support.xmllogging import  get_active_stack, add_child
 import xml.dom.minidom as _xml
 
 class msss_imager_pipeline(control):
@@ -497,6 +497,21 @@ class msss_imager_pipeline(control):
         ndppp_parset = self.parset.makeSubset("DPPP.")
         ndppp_parset_path = self._write_parset_to_file(ndppp_parset,
                     "prepare_imager_ndppp", "parset for ndpp recipe")
+
+        # Get the demixing information and add to the pipeline xml-node
+        # Use a new node with the node demix to allow searching at later stages
+        stack = get_active_stack(self)
+        demix_node = add_child(stack, "demixed_sources_meta_information")
+
+        demix_parset = ndppp_parset.makeSubset("demixer.")
+        # If there is demixer information add it to the active stack node
+        if len(demix_parset) > 0:
+            demix_node.setAttribute("modelsources", demix_parset.getString(
+                                "modelsources"))
+            demix_node.setAttribute("othersources", demix_parset.getString(
+                                "othersources"))
+            demix_node.setAttribute("subtractsources", demix_parset.getString(
+                                "subtractsources"))
 
         # create the output file paths
         # [1] output -> prepare_output

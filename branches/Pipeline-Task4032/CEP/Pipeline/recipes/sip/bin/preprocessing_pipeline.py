@@ -181,10 +181,25 @@ class preprocessing_pipeline(control):
 
 
         # *********************************************************************
-        # 3. Average and flag data, using NDPPP.
+        # 3. Average, flag and optionally demix data, using NDPPP
+        ndppp_parset_path = os.path.join(parset_dir, "NDPPP.parset")
+        ndppp_parset = py_parset.makeSubset('DPPP.')
+        ndppp_parset.writeFile(ndppp_parset_path)
 
-        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+        # Get the demixing information and add to the pipeline xml-node
+        # Use a new node with the node demix to allow searching at later stages
+        stack = get_active_stack(self)
+        demix_node = add_child(stack, "demixed_sources_meta_information")
+
+        demix_parset = ndppp_parset.makeSubset("demixer.")
+        # If there is demixer information add it to the active stack node
+        if len(demix_parset) > 0:
+            demix_node.setAttribute("modelsources", demix_parset.getString(
+                                "modelsources"))
+            demix_node.setAttribute("othersources", demix_parset.getString(
+                                "othersources"))
+            demix_node.setAttribute("subtractsources", demix_parset.getString(
+                                "subtractsources"))
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         with duration(self, "ndppp"):

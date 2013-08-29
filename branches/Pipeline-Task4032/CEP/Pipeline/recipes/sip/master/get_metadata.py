@@ -146,8 +146,8 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
 
             # If there is an xml log
             if xml_log_string != '':
-
                 xml_node = _xml.parseString(xml_log_string)
+
                 # Get the start time from the lognode. Could use named child
                 # but this is a pipeline log file
                 start_time = float(
@@ -158,15 +158,36 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                 metadata.to_parset({global_prefix + 'duration':str(duration)})
                     )
 
+                # Search for the first child with the name:
+                # demixed_sources_meta_information
+                demix_meta_node = xml_node.getElementsByTagName(
+                   "demixed_sources_meta_information").item(0)  # Get the node
+                                        # there should only be one node
+                if demix_meta_node != None:
+
+                    demix_meta_dict = {}
+
+                # extract the information
+                    demix_meta_dict[global_prefix + 'demixer.' + 'modelsources'] = \
+                        demix_meta_node.getAttribute("modelsources")
+
+                    demix_meta_dict[global_prefix + 'demixer.' + 'othersources'] = \
+                        demix_meta_node.getAttribute("othersources")
+
+                    demix_meta_dict[global_prefix + 'demixer.' + 'subtractsources'] = \
+                        demix_meta_node.getAttribute("subtractsources")
+
+                # add to the parset
+                    parset.adoptCollection(metadata.to_parset(demix_meta_dict))
+
             else:
-                self.logger.error("No xml log supplied, this is needed for " + 
+                self.logger.error("No xml log supplied, this is needed for " +
                                   "Pipeline meta information")
 
 
         # ********************************************************************
         # 7. Write the parset to disk
         try:
-            self.logger.error(self.inputs['parset_file'])
             create_directory(os.path.dirname(self.inputs['parset_file']))
             parset.writeFile(self.inputs['parset_file'])
         except RuntimeError, err:

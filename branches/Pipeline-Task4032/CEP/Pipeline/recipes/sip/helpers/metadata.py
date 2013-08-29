@@ -15,6 +15,7 @@ parameterset that can be handled by MAC/SAS.
 
 from lofarpipe.support.utilities import disk_usage
 from lofar.parameterset import parameterset
+from lofarpipe.support.lofarexceptions import PipelineException
 
 import pyrap.tables
 import pyrap.images
@@ -77,6 +78,9 @@ def to_parset(data, prefix = ''):
                     result.replace(fullkey, str(value))
             else:
                 result.replace(fullkey, str(value))
+    else:
+        raise PipelineException("Unsupported data type used as input: " +
+                                 type(data))
     return result
 
 

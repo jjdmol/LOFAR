@@ -18,7 +18,7 @@ from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
-from lofarpipe.support.xmllogging import  get_active_stack
+from lofarpipe.support.xmllogging import  get_active_stack, add_child
 import xml.dom.minidom as _xml
 
 class msss_target_pipeline(control):
@@ -294,8 +294,24 @@ class msss_target_pipeline(control):
         # *********************************************************************
         # 4. Run NDPPP to demix the A-Team sources
         # Create a parameter-subset for DPPP and write it to file.
-        ndppp_parset = os.path.join(parset_dir, "NDPPP.parset")
-        py_parset.makeSubset('DPPP.').writeFile(ndppp_parset)
+        ndppp_parset_path = os.path.join(parset_dir, "NDPPP.parset")
+        ndppp_parset = py_parset.makeSubset('DPPP.')
+        ndppp_parset.writeFile(ndppp_parset_path)
+
+        # Get the demixing information and add to the pipeline xml-node
+        # Use a new node with the node demix to allow searching at later stages
+        stack = get_active_stack(self)
+        demix_node = add_child(stack, "demixed_sources_meta_information")
+
+        demix_parset = ndppp_parset.makeSubset("demixer.")
+        # If there is demixer information add it to the active stack node
+        if len(demix_parset) > 0:
+            demix_node.setAttribute("modelsources", demix_parset.getString(
+                                "modelsources"))
+            demix_node.setAttribute("othersources", demix_parset.getString(
+                                "othersources"))
+            demix_node.setAttribute("subtractsources", demix_parset.getString(
+                                "subtractsources"))
 
         # Run the Default Pre-Processing Pipeline (DPPP);
         with duration(self, "ndppp"):
@@ -350,7 +366,7 @@ class msss_target_pipeline(control):
         # 7. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
-        correlated_metadata = os.path.join(self.parset_dir,
+        correlated_metadata = os.path.join(parset_dir,
                                            "Correlated.metadata")
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", corrected_mapfile,
@@ -362,7 +378,7 @@ class msss_target_pipeline(control):
                 product_type = "Correlated")
 
         # add pipeline meta information
-        pipeline_metadata = os.path.join(self.parset_dir, "pipeline.metadata")
+        pipeline_metadata = os.path.join(parset_dir, "pipeline.metadata")
         stackDocument = _xml.Document()
         stackDocument.appendChild(get_active_stack(self))
         self.run_task("get_metadata", pipeline_metadata,
