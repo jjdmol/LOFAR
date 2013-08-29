@@ -282,7 +282,8 @@ namespace LOFAR
       // The CUDA code is assumed to be written for the architecture of the
       // oldest device.
       flags.insert(str(format("--gpu-architecture %s") % 
-                       get_virtarch(computeTarget(devices))));
+                       "compute_20"));
+                       // get_virtarch(computeTarget(devices))));
 
       // Add default definitions and flags
       CompileDefinitions defaultDefinitions(defaultCompileDefinitions());
