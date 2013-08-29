@@ -135,7 +135,8 @@ namespace LOFAR
       }
 
       if(t0>tmax){
-	for(Double tat=t0+dt/2.;tat<t1; tat+=dt)
+	double d = std::min(dt, t1-t0);
+	for(Double tat=t0+d/2.;tat<t1; tat+=d)
 	  {
 	    computeAterm(tat);
 	    VecTimesAterm.push_back(tat);

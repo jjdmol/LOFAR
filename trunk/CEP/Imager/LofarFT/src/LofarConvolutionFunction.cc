@@ -1242,7 +1242,6 @@ namespace LOFAR
     Bool Stack = (Append_average_PB_CF != 0.);
 
 
-
     map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter_station =
       m_AtermStore_station.find(time);
     AlwaysAssert (aiter_station!=m_AtermStore_station.end(), AipsError);
