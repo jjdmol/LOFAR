@@ -189,17 +189,23 @@ extern "C" {
   double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                   (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
 
-  if (beam == 0 && station == 0 && major == 0 && minor == 0 && channel == 0) {
-    printf("(*delaysAtBegin) [0][0] = (%e, %e)\n",
-           (*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
-    printf("(*delaysAfterEnd)[0][0] = (%e, %e)\n",
-           (*delaysAfterEnd) [beam][station][0], (*delaysAfterEnd) [beam][station][1]);
-    // printf("delayAtBegin  = (%e, %e)\n", delayAtBegin.x, delayAtBegin.y);
-    // printf("delayAfterEnd = (%e, %e)\n", delayAfterEnd.x, delayAfterEnd.y);
-    // printf("phiBegin = (%e, %e)\n", phiBegin.x, phiBegin.y);
-    // printf("phiEnd   = (%e, %e)\n", phiEnd.x,   phiEnd.y);
-    // printf("deltaPhi = (%e, %e)\n", deltaPhi.x, deltaPhi.y);
+  if (major == 0 && minor == 0 && channel == 0) {
+    printf("delaysAtBegin [%d][%d] = (%e, %e)\n", 
+           beam, station, (*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]);
+    printf("delaysAfterEnd[%d][%d] = (%e, %e)\n", 
+           beam, station, (*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
   }
+  /* if (beam == 0 && station == 0 && major == 0 && minor == 0 && channel == 0) { */
+  /*   printf("(*delaysAtBegin) [0][0] = (%e, %e)\n", */
+  /*          (*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]); */
+  /*   printf("(*delaysAfterEnd)[0][0] = (%e, %e)\n", */
+  /*          (*delaysAfterEnd) [beam][station][0], (*delaysAfterEnd) [beam][station][1]); */
+  /*   // printf("delayAtBegin  = (%e, %e)\n", delayAtBegin.x, delayAtBegin.y); */
+  /*   // printf("delayAfterEnd = (%e, %e)\n", delayAfterEnd.x, delayAfterEnd.y); */
+  /*   // printf("phiBegin = (%e, %e)\n", phiBegin.x, phiBegin.y); */
+  /*   // printf("phiEnd   = (%e, %e)\n", phiEnd.x,   phiEnd.y); */
+  /*   // printf("deltaPhi = (%e, %e)\n", deltaPhi.x, deltaPhi.y); */
+  /* } */
 
 #if NR_CHANNELS == 1
   double2 myPhiBegin = make_double2(
@@ -217,17 +223,17 @@ extern "C" {
                                   16.0 * deltaPhi.y * frequency);
 #endif
 
-  if (beam == 0 && station == 0 && major == 0 && threadIdx.x == 0) {
-    printf("(phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0] = \n");
-    printf("  %e * %e + %e = %e\n", (phiBegin.x + double(major) * deltaPhi.x), frequency, (*phaseOffsets)[station][0],
-           (phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0]);
-    // printf("[station=%d][major=%d][minor=%d][channel=%d][threadIdx.x=%d]: myPhiBegin = (%e, %e), frequency=%e\n", 
-    //        station, major, minor, channel, threadIdx.x, myPhiBegin.x, myPhiBegin.y, frequency);
-    // // __syncthreads();
-    // printf("[station=%d][major=%d][minor=%d][channel=%d][threadIdx.x=%d]: myPhiDelta = (%e, %e), freuqency=%e\n", 
-    //        station, major, minor, channel, threadIdx.x, myPhiDelta.x, myPhiDelta.y, frequency);
-    // // __syncthreads();
-  }
+  /* if (beam == 0 && station == 0 && major == 0 && threadIdx.x == 0) { */
+  /*   printf("(phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0] = \n"); */
+  /*   printf("  %e * %e + %e = %e\n", (phiBegin.x + double(major) * deltaPhi.x), frequency, (*phaseOffsets)[station][0], */
+  /*          (phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0]); */
+  /*   // printf("[station=%d][major=%d][minor=%d][channel=%d][threadIdx.x=%d]: myPhiBegin = (%e, %e), frequency=%e\n",  */
+  /*   //        station, major, minor, channel, threadIdx.x, myPhiBegin.x, myPhiBegin.y, frequency); */
+  /*   // // __syncthreads(); */
+  /*   // printf("[station=%d][major=%d][minor=%d][channel=%d][threadIdx.x=%d]: myPhiDelta = (%e, %e), freuqency=%e\n",  */
+  /*   //        station, major, minor, channel, threadIdx.x, myPhiDelta.x, myPhiDelta.y, frequency); */
+  /*   // // __syncthreads(); */
+  /* } */
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
   sincos(myPhiBegin.x, &vX.y,  &vX.x);
