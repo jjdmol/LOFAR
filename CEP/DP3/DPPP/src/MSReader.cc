@@ -76,8 +76,6 @@ namespace LOFAR {
       string endTimeStr   = parset.getString (prefix+"endtime", "");
       itsUseFlags         = parset.getBool   (prefix+"useflag", true);
       itsDataColName      = parset.getString (prefix+"datacolumn", "DATA");
-      itsWeightColName    = parset.getString (prefix+"weightcolumn",
-                                              "WEIGHT_SPECTRUM");
       itsAutoWeight       = parset.getBool   (prefix+"autoweight", false);
       itsAutoWeightForce  = parset.getBool   (prefix+"forceautoweight", false);
       itsNeedSort         = parset.getBool   (prefix+"sort", false);
@@ -366,7 +364,6 @@ namespace LOFAR {
           os << "  (not present)";
         }
         os << std::endl;
-        os << "  WEIGHT column:  " << itsWeightColName << std::endl;
         os << "  autoweight:     " << itsAutoWeight << std::endl;
       }
     }
@@ -391,24 +388,14 @@ namespace LOFAR {
                             double& interval)
     {
       ASSERT (itsSelMS.nrow() > 0);
+      // Test if WEIGHT_SPECTRUM is present.
       TableDesc tdesc = itsMS.tableDesc();
-
       itsHasWeightSpectrum = false;
-      // if weightcolname is specified to "WEIGHT" then this is used, even
-      // if a weight_spectrum is present.
-      if (itsWeightColName!="WEIGHT") {
-        // Test if specified weight column or WEIGHT_SPECTRUM is present.
-        if (tdesc.isColumn(itsWeightColName)) {
-          // The column is there, but it might not contain values. Test row 0.
-          itsHasWeightSpectrum =
-            ROArrayColumn<float>(itsSelMS, itsWeightColName).isDefined(0);
-          if (!itsHasWeightSpectrum && itsWeightColName!="WEIGHT_SPECTRUM") {
-            LOG_WARN ("Specified weight column " + itsWeightColName +
-                "is not a valid column, using WEIGHT instead");
-          }
-        }
+      if (tdesc.isColumn("WEIGHT_SPECTRUM")) {
+        // The column is there, but it might not contain values. Test row 0.
+        itsHasWeightSpectrum =
+          ROArrayColumn<float>(itsSelMS, "WEIGHT_SPECTRUM").isDefined(0);
       }
-
       // Test if the data column is present.
       if (tdesc.isColumn (itsDataColName)) {
         itsMissingData = false;
@@ -422,7 +409,6 @@ namespace LOFAR {
                              " is missing in " + itsMSName));
         }
       }
-
       // Test if the full resolution flags are present.
       itsHasFullResFlags = tdesc.isColumn("LOFAR_FULL_RES_FLAG");
       if (itsHasFullResFlags) {
@@ -644,7 +630,7 @@ namespace LOFAR {
       Cube<float> weights;
       // Get weights for entire spectrum if present.
       if (itsHasWeightSpectrum) {
-        ROArrayColumn<float> wsCol(itsMS, itsWeightColName);
+        ROArrayColumn<float> wsCol(itsMS, "WEIGHT_SPECTRUM");
         // Using getColumnCells(rowNrs,itsColSlicer) fails for LofarStMan.
         // Hence work around it.
         weights.reference (wsCol.getColumnCells (rowNrs));

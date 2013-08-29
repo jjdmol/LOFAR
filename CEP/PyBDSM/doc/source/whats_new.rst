@@ -4,24 +4,6 @@
 What's New
 **********
 
-Version 1.7.4 (2013/08/29):
-
-    * Fix to bug in ``show_fit`` that caused error when ``i`` is pressed in the plot window and shapelet decomposition had not been done.
-
-    * Tweak to ``pybdsm`` startup shell script to avoid problems with the Mac OS X matplotlib backend on non-framework Python installations (such as Anaconda Python).
-
-    * Fix to bug in ``process_image`` that could result in wavelet Gaussians being excluded from model image under certain conditions.
-
-Version 1.7.3 (2013/08/27):
-
-    * Fix to bug in image reading that caused images to be distorted.
-
-Version 1.7.2 (2013/08/23):
-
-    * Improved handling of non-standard FITS CUNIT keywords.
-
-    * Improved loading of FITS images when ``trim_box`` is specified.
-
 Version 1.7.1 (2013/08/22):
 
     * Fix to bug that caused cached images to be deleted when rerunning an analysis.
@@ -62,7 +44,7 @@ Version 1.6.0 (2013/03/05):
 
     * Improved speed and accuracy of aperture flux calculation.
 
-    * Added option to use the curvature map method of Hancock et al. (2012) for the initial estimation of Gaussian parameters (``ini_method = 'curvature'``) and for grouping of Gaussians into sources (``group_method = 'curvature'``).
+    * Added option to use the curvature map method of Hopkins et al. (2012) for the initial estimation of Gaussian parameters (``ini_method = 'curvature'``) and for grouping of Gaussians into sources (``group_method = 'curvature'``).
 
     * Fix to bug in spectral index module that caused sources with multiple Gaussians to be skipped. Minor adjustments to the wavelet module to improve performance.
 

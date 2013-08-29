@@ -29,7 +29,6 @@
 
 #include <DPPP/DPStep.h>
 #include <Common/LofarTypes.h>
-#include <tables/Tables/ColumnDesc.h>
 #include <tables/Tables/RefRows.h>
 
 namespace LOFAR {
@@ -80,33 +79,24 @@ namespace LOFAR {
       void putFlags (const casa::RefRows& rowNrs,
                      const casa::Cube<bool>& flags);
 
-      // Write the weights at the given row numbers
-      void putWeights (const casa::RefRows& rowNrs,
-                       const casa::Cube<float>& weights);
-
       // Write the data at the given row numbers.
       void putData (const casa::RefRows& rowNrs,
                     const casa::Cube<casa::Complex>& data);
 
-      // If not existing yet, add the column specified by colname.
-      // Column will containt arrays of type datatype.
-      // If the column has been added, this function returns true
-      bool addColumn(const string& colname, const casa::DataType dataType,
-          const casa::ColumnDesc& cd);
+      // If not existing yet, add the data column.
+      // If existing, check if it contains Complex arrays.
+      void addDataColumn();
 
       //# Data members
       MSReader*   itsReader;
-      casa::String itsDataColName;
-      casa::String itsWeightColName;
+      string      itsDataColName;
       uint        itsNrTimesFlush; //# flush every N time slots (0=no flush)
       bool        itsWriteData;
-      bool        itsWriteWeight;
       uint        itsNrCorr;
       uint        itsNrChan;
       uint        itsNrBl;
       uint        itsNrDone;       //# nr of time slots written
       bool        itsDataColAdded; //# has data column been added?
-      bool        itsWeightColAdded; //# has weight column been added?
       NSTimer     itsTimer;
     };
 

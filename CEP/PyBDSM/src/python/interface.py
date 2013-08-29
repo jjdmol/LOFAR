@@ -155,7 +155,7 @@ def get_op_chain(img):
     polarisation_opts += gaul2srl_opts
 
     # Op_make_residimage()
-    make_residimage_opts = gausfit_opts + wavelet_atrous_opts + shapelets_opts + ['fittedimage_clip']
+    make_residimage_opts = gausfit_opts + shapelets_opts + ['fittedimage_clip']
 
     # Op_psf_vary()
     psf_vary_opts = img.opts.get_names(group='psf_vary_do')
@@ -165,9 +165,9 @@ def get_op_chain(img):
     # Op_outlist() and Op_cleanup() are always done.
 
     # Find whether new opts differ from previous opts (and are not hidden
-    # opts, which should not be checked). If so, found = True and we reset
-    # the relevant image parameters and add the relevant Op to the Op_chain.
-    found = False
+    # opts, which should not be checked). If so, reset relevant
+    # image parameters and add relevant Op to Op_chain.
+    found = None
     for k, v in prev_opts.iteritems():
         if v != new_opts[k] and k not in hidden_opts:
             found = False
@@ -254,8 +254,13 @@ def get_op_chain(img):
             if not found:
                 break
 
-    # If a changed option is not in any of the above lists (or no options
-    # have changed), force a re-run of all Ops.
+    # If no options have changed, don't re-run
+    if found == None:
+        print 'No processing parameters have changed.'
+        return img, []
+
+    # If a changed option is not in any of the above lists,
+    # re-run all Ops.
     if not found:
         del img.completed_Ops
         if hasattr(img, 'rms'): del img.rms

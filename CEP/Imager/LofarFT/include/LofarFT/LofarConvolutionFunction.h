@@ -76,8 +76,7 @@ namespace LOFAR
   {
 
   public:
-    LofarConvolutionFunction(const IPosition& shape,    //# padded shape
-                             const IPosition& imageShape,
+    LofarConvolutionFunction(const IPosition& shape,
                              const DirectionCoordinate& coordinates,
                              const MeasurementSet& ms,
                              uInt nW, double Wmax,
@@ -135,8 +134,7 @@ namespace LOFAR
       }
 
       if(t0>tmax){
-	double d = std::min(dt, t1-t0);
-	for(Double tat=t0+d/2.;tat<t1; tat+=d)
+	for(Double tat=t0+dt/2.;tat<t1; tat+=dt)
 	  {
 	    computeAterm(tat);
 	    VecTimesAterm.push_back(tat);

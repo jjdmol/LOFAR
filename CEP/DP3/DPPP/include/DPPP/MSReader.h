@@ -57,8 +57,6 @@ namespace LOFAR {
     //  <li> msin.nchan: number of channels to use [all]
     //  <li> msin.useflag: use the existing flags? [yes]
     //  <li> msin.datacolumn: the data column to use [DATA]
-    //  <li> msin.weightcolumn: the weights column to use [WEIGHT_SPECTRUM or
-    //           WEIGHT]
     //  <li> msin.starttime: first time to use [first time in MS]
     //  <li> msin.endtime: last time to use [last time in MS]
     // </ul>
@@ -188,9 +186,6 @@ namespace LOFAR {
       const casa::String& dataColumnName() const
         { return itsDataColName; }
 
-      const casa::String& weightColumnName() const
-        { return itsWeightColName; }
-
       // Get the slicer in the FLAG and DATA column.
       const casa::Slicer& colSlicer() const
         { return itsColSlicer; }
@@ -266,7 +261,6 @@ namespace LOFAR {
       casa::Table         itsSelMS;         //# possible selection of spw, baseline
       casa::TableIterator itsIter;
       casa::String        itsDataColName;
-      casa::String        itsWeightColName;
       casa::String        itsStartChanStr;  //# startchan expression
       casa::String        itsNrChanStr;     //# nchan expression
       string              itsSelBL;         //# Baseline selection string

@@ -40,7 +40,6 @@ namespace LOFAR {
 LofarStMan::LofarStMan (const String& dataManName)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFD          (-1),
   itsRegFile     (0),
   itsSeqFile     (0)
 {}
@@ -49,7 +48,6 @@ LofarStMan::LofarStMan (const String& dataManName,
                         const Record&)
 : DataManager    (),
   itsDataManName (dataManName),
-  itsFD          (-1),
   itsRegFile     (0),
   itsSeqFile     (0)
 {}
@@ -57,7 +55,6 @@ LofarStMan::LofarStMan (const String& dataManName,
 LofarStMan::LofarStMan (const LofarStMan& that)
 : DataManager    (),
   itsDataManName (that.itsDataManName),
-  itsFD          (-1),
   itsRegFile     (0),
   itsSeqFile     (0)
 {}
@@ -67,7 +64,8 @@ LofarStMan::~LofarStMan()
   for (uInt i=0; i<ncolumn(); i++) {
     delete itsColumns[i];
   }
-  closeFiles();
+  delete itsRegFile;
+  delete itsSeqFile;
 }
 
 DataManager* LofarStMan::clone() const
@@ -205,7 +203,7 @@ uInt LofarStMan::open1 (uInt, AipsIO&)
 {
   // Read meta info.
   init();
-  openFiles (table().isWritable());
+  openFile (table().isWritable());
   return itsNrRows;
 }
 
@@ -216,14 +214,14 @@ void LofarStMan::prepare()
   }
 }
 
-void LofarStMan::openFiles (bool writable)
+void LofarStMan::openFile (bool writable)
 {
   // Open the data file using unbuffered IO.
-  // First close if needed.
-  closeFiles();
+  delete itsRegFile;
+  itsRegFile = 0;
   String fname (fileName() + "data");
-  itsFD = LargeFiledesIO::open (fname.c_str(), writable);
-  itsRegFile = new LargeFiledesIO (itsFD);
+  itsRegFile = new LargeFiledesIO (LargeFiledesIO::open (fname.c_str(),
+                                                         writable));
   // Set correct number of rows.
   itsNrRows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
   // Map the file with seqnrs.
@@ -251,18 +249,6 @@ void LofarStMan::mapSeqFile()
   }
 }
 
-void LofarStMan::closeFiles()
-{
-  if (itsFD >= 0) {
-    LargeFiledesIO::close (itsFD);
-    itsFD = -1;
-  }
-  delete itsRegFile;
-  itsRegFile = 0;
-  delete itsSeqFile;
-  itsSeqFile = 0;
-}
-
 void LofarStMan::resync (uInt)
 {
   throw DataManError ("LofarStMan::resync should never be called");
@@ -272,19 +258,22 @@ uInt LofarStMan::resync1 (uInt)
   uInt nrows = itsRegFile->length() / itsBlockSize * itsAnt1.size();
   // Reopen file if different nr of rows.
   if (nrows != itsNrRows) {
-    openFiles (table().isWritable());
+    openFile (table().isWritable());
   }
   return itsNrRows;
 }
 
 void LofarStMan::reopenRW()
 {
-  openFiles (true);
+  openFile (true);
 }
 
 void LofarStMan::deleteManager()
 {
-  closeFiles();
+  delete itsRegFile;
+  itsRegFile = 0;
+  delete itsSeqFile;
+  itsSeqFile = 0;
   DOos::remove (fileName()+"meta", False, False);
   DOos::remove (fileName()+"data", False, False);
   DOos::remove (fileName()+"seqnr", False, False);

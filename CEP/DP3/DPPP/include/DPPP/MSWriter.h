@@ -160,7 +160,6 @@ namespace LOFAR {
       MSReader*       itsReader;
       casa::Table     itsMS;
       casa::String    itsDataColName;
-      casa::String    itsWeightColName;
       double          itsInterval;
       bool            itsOverwrite;   //# Overwrite an existing output MS?
       bool            itsCopyCorrData;

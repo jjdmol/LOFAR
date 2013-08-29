@@ -276,13 +276,13 @@ private:
   // The seqnr is always memory-mapped (it is very small).
   // The data file is only memory-mapped in 64 bit systems because the
   // address space of 32-bit systems is too small for it.
-  void openFiles (bool writable);
+  void openFile (bool writable);
+
+  // Memory map the data file and seqnr file.
+  void mapFile (bool writable);
 
   // Memory map the seqnr file.
   void mapSeqFile();
-
-  // Close all files.
-  void closeFiles();
 
   // Get a pointer to data to be read.
   const void* getReadPointer (casa::uInt blocknr, casa::uInt offset,
@@ -327,7 +327,6 @@ private:
   // The column objects.
   vector<LofarColumn*> itsColumns;
   // On 32-bit systems regular IO is used.
-  int    itsFD;
   casa::LargeFiledesIO* itsRegFile;
   casa::Block<char> itsBuffer;   //# buffer of size itsBLDataSize for regular IO
   // The seqnr file (if present) is always memory-mapped because it is small.

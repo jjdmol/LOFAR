@@ -70,7 +70,6 @@ namespace LOFAR {
       info() = infoIn;
       info().setNeedVisData();
       info().setNeedWrite();
-      info().setNeedWrite(info().needWrite() | DPInfo::NeedWriteWeight);
       itsTimeInterval = infoIn.timeInterval();
       itsNCorr = infoIn.ncorr();
 
@@ -179,7 +178,6 @@ namespace LOFAR {
 
       Complex* data = buf.getData().data();
 
-      buf.setWeights(itsInput->fetchWeights (buf, rowNrs, itsTimer));
       float* weight = buf.getWeights().data();
 
       size_t nchan = buf.getData().shape()[1];
@@ -384,10 +382,11 @@ namespace LOFAR {
       vis[2] /= diag1A * conj(diag0B);
       vis[3] /= diag1A * conj(diag1B);
 
-      weight[0] *= norm(diag0A) * norm(diag0B);
-      weight[1] *= norm(diag0A) * norm(diag1B);
-      weight[2] *= norm(diag1A) * norm(diag0B);
-      weight[3] *= norm(diag1A) * norm(diag1B);
+      // TODO: implement DPInput::getWeights
+      //weight[0]*= real(diag0A) * real(diag0A) * real(diag0B) * real(diag0B);
+      //weight[1]*= real(diag0A) * real(diag0A) * real(diag1B) * real(diag1B);
+      //weight[2]*= real(diag1A) * real(diag1A) * real(diag0B) * real(diag0B);
+      //weight[3]*= real(diag1A) * real(diag1A) * real(diag1B) * real(diag1B);
     }
 
     // Inverts complex 2x2 input matrix
