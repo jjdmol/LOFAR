@@ -78,8 +78,6 @@ namespace LOFAR {
       uint   ntimeOut() const                    {return itsNTimeOut;}
       uint   ntimeOutSubtr() const               {return itsNTimeOutSubtr;}
       uint   ntimeChunk() const                  {return itsNTimeChunk;}
-      uint   timeChunkSize() const               {return itsTimeChunkSize;}
-      ///      uint   timeWindow() const      {return itsNTimeChunk*itsTimeChunkSize;}
       double timeIntervalAvg() const             {return itsTimeIntervalAvg;}
       double ratio1() const                      {return itsRatio1;}
       double ratio2() const                      {return itsRatio2;}
@@ -135,11 +133,11 @@ namespace LOFAR {
       string                  itsDemixModelName;
       string                  itsTargetModelName;
       vector<string>          itsSourceNames;
-      double                  itsCosAngdistDelta;
       double                  itsRatio1;
       double                  itsRatio2;
       double                  itsAteamAmplThreshold;
       double                  itsTargetAmplThreshold;
+      double                  itsCosTargetDelta;
       double                  itsAngdistThreshold;
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
@@ -154,7 +152,6 @@ namespace LOFAR {
       uint                    itsNChanOut;
       uint                    itsNTimeAvgSubtr;      //# subtract averaging
       uint                    itsNTimeAvg;           //# demix averaging
-      uint                    itsTimeChunkSize;      //# nr times per chunk
       uint                    itsNTimeOutSubtr;      //# #output times per chunk
       uint                    itsNTimeOut;           //# #demix times per chunk
       uint                    itsNTimeChunk;         //# nr chunks in parallel

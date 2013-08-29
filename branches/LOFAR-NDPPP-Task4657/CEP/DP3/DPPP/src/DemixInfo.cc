@@ -69,47 +69,45 @@ namespace LOFAR {
         itsNTimeAvgSubtr    (parset.getUint  (prefix+"timestep", 1)),
         itsNTimeAvg         (parset.getUint  (prefix+"demixtimestep",
                                               itsNTimeAvgSubtr)),
-        itsChunkSize        (parset.getUint  (prefix+"timechunksize", 120)),
         itsNTimeChunk       (parset.getUint  (prefix+"ntimechunk",
                                               OpenMP::maxThreads())),
         itsTimeIntervalAvg  (0)
     {
       // Get delta in arcsec and take cosine of it (convert to radians first).
-      double delta = parset.getDouble (prefix+"distance.delta", 60.);
-      itsCosAngdistDelta = cos (delta / 3600. * casa::C::pi / 180.);
+      double delta = parset.getDouble (prefix+"target.delta", 60.);
+      itsCosTargetDelta = cos (delta / 3600. * casa::C::pi / 180.);
       ASSERTSTR (!(itsPredictModelName.empty() || itsDemixModelName.empty() ||
                    itsTargetModelName.empty()),
                  "An empty name is given for a sky model");
-      vector<Patch::ConstPtr> ateamList = makePatchList (itsPredictModelName,
-                                                         itsSourceNames);
-      itsAteamDemixList = makePatchList (itsDemixModelName, itsSourceNames);
-      itsTargetList     = makePatchList (itsTargetModelName, vector<string>());
-      ASSERT (ateamList.size() == itsAteamDemixList.size());
-      // Make sure the A-team models are in the same order and have matching
-      // positions.
-      itsAteamList.reserve (ateamList.size());
-      for (size_t i=0; i<itsAteamDemixList.size(); ++i) {
-        for (size_t j=0; j<ateamList.size(); ++j) {
-          if (ateamList[j]->name() == itsAteamDemixList[i]->name()) {
-            ASSERTSTR (testAngDist (itsAteamDemixList[i]->position()[0],
-                                    itsAteamDemixList[i]->position()[1],
-                                    ateamList[j]->position()[0],
-                                    ateamList[j]->position()[1],
-                                    itsCosAngdistDelta),
-                       "Position mismatch of source " << ateamList[j]->name()
-                       << " in A-team SourceDBs (["
-                       << itsAteamDemixList[i]->position()[0] << ", "
-                       << itsAteamDemixList[i]->position()[1] << "] and ["
-                       << ateamList[j]->position()[0] << ", "
-                       << ateamList[j]->position()[1] << "])");
-            itsAteamList.push_back (ateamList[j]);
-            break;
-          }
+      itsAteamList = makePatchList (itsPredictModelName, itsSourceNames);
+      // Use all predict patch names if no source names given.
+      // In this way we're sure both A-team lists have the same sources
+      // in the same order.
+      if (itsSourceNames.empty()) {
+        itsSourceNames.reserve (itsAteamList.size());
+        for (size_t i=0; i<itsAteamList.size(); ++i) {
+          itsSourceNames.push_back (itsAteamList[i]->name());
         }
       }
-      ASSERTSTR (itsAteamList.size() == itsAteamDemixList.size(),
-                 "A-team models have mismatching sources");
-      // Make a more detailed target model in case it contains A-team sources.
+      itsAteamDemixList = makePatchList (itsDemixModelName, itsSourceNames);
+      itsTargetList     = makePatchList (itsTargetModelName, vector<string>());
+      // Note that the A-team models are in the same order of name.
+      // Check they have matching positions.
+      ASSERT (itsAteamList.size() == itsAteamDemixList.size());
+      for (size_t i=0; i<itsAteamList.size(); ++i) {
+        ASSERT (itsAteamList[i]->name() == itsAteamDemixList[i]->name());
+        ASSERTSTR (testAngDist (itsAteamDemixList[i]->position()[0],
+                                itsAteamDemixList[i]->position()[1],
+                                itsAteamList[i]->position()[0],
+                                itsAteamList[i]->position()[1],
+                                itsCosTargetDelta),
+                   "Position mismatch of source " << itsAteamList[i]->name()
+                   << " in A-team SourceDBs (["
+                   << itsAteamDemixList[i]->position()[0] << ", "
+                   << itsAteamDemixList[i]->position()[1] << "] and ["
+                   << itsAteamList[i]->position()[0] << ", "
+                   << itsAteamList[i]->position()[1] << "])");
+      }
       makeTargetDemixList();
     }
 
@@ -135,7 +133,7 @@ namespace LOFAR {
                            itsTargetList[i]->position()[1],
                            patchList[j]->position()[0],
                            patchList[j]->position()[1],
-                           itsCosAngdistDelta)) {
+                           itsCosTargetDelta)) {
             // Match, so use the detailed A-team model.
             itsTargetDemixList[i] = patchList[j];
             itsTargetReplaced.push_back (patchList[j]->name());
@@ -145,7 +143,7 @@ namespace LOFAR {
                                itsTargetDemixList[i]->position()[1],
                                itsAteamList[k]->position()[0],
                                itsAteamList[k]->position()[1],
-                               itsCosAngdistDelta)) {
+                               itsCosTargetDelta)) {
                 itsAteamRemoved.push_back (itsAteamList[k]->name());
                 itsAteamList.erase (itsAteamList.begin() + k);
                 itsAteamDemixList.erase (itsAteamDemixList.begin() + k);
@@ -174,6 +172,7 @@ namespace LOFAR {
       // Setup the baseline index vector used to split the UVWs.
       itsUVWSplitIndex = nsetupSplitUVW (infoSel.nantenna(),
                                          infoSel.getAnt1(), infoSel.getAnt2());
+      cout << "splitindex="<<itsUVWSplitIndex<<endl;
 
       // Determine which baselines to use when estimating A-team and target.
       itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
@@ -207,12 +206,8 @@ namespace LOFAR {
         "Demix time averaging " << itsNTimeAvg
         << " must be a multiple of output averaging "
         << itsNTimeAvgSubtr);
-      ASSERTSTR (itsChunkSize % itsNTimeAvg == 0,
-        "Demix time chunk size " << itsChunkSize
-        << " must be a multiple of demix time averaging "
-        << itsNTimeAvg);
-      itsNTimeOut = itsChunkSize / itsNTimeAvg;
-      itsNTimeOutSubtr = itsChunkSize / itsNTimeAvgSubtr;
+      itsNTimeOut = 1;
+      itsNTimeOutSubtr = itsNTimeAvg / itsNTimeAvgSubtr;
       // Store channel frequencies for the demix and subtract resolutions.
       itsFreqDemix = infoDemix.chanFreqs();
       itsFreqSubtr = info.chanFreqs();
@@ -250,20 +245,20 @@ namespace LOFAR {
 
     void DemixInfo::show (ostream& os) const
     {
-      os << "  ateam.skymodel      " << itsDemixModelName << endl;
       os << "  estimate.skymodel   " << itsPredictModelName << endl;
+      os << "  ateam.skymodel      " << itsDemixModelName << endl;
       os << "  target.skymodel     " << itsTargetModelName << endl;
       os << "  sources             " << itsSourceNames << endl;
-      os << "                      " << itsAteamRemoved
+      os << "                        " << itsAteamRemoved
          << " removed from A-team model (in target)" << endl;
-      os << "                      " << itsTargetReplaced
+      os << "                        " << itsTargetReplaced
          << " replaced in target model (better A-team model)" << endl;
       os << "  ratio1              " << itsRatio1 << endl;
       os << "  ratio2              " << itsRatio2 << endl;
       os << "  ateam.threshold     " << itsAteamAmplThreshold << endl;
       os << "  target.threshold    " << itsTargetAmplThreshold << endl;
-      os << "  distance.delta      "
-         << acos(itsCosAngdistDelta) * 3600. / casa::C::pi * 180.
+      os << "  target.delta        "
+         << acos(itsCosTargetDelta) * 3600. / casa::C::pi * 180.
          << " arcsec" << endl;
       os << "  distance.threshold  " << itsAngdistThreshold << endl;
       os << "  distance.reffreq    " << itsAngdistRefFreq << endl;
@@ -272,7 +267,6 @@ namespace LOFAR {
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;
       os << "  demixfreqstep:      " << itsNChanAvg << endl;
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
-      os << "  timechunksize:      " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
       itsSelBL.show (os);
       itsSelBLEstimate.show (os);

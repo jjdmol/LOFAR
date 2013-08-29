@@ -75,8 +75,8 @@ namespace LOFAR {
       info().setNeedVisData();
       info().setNeedWrite();
       // Size the buffers.
-      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.timeChunkSize());
-      itsBufOut.resize (itsBufIn.size() / itsDemixInfo.ntimeAvgSubtr());
+      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeAvg());
+      itsBufOut.resize(itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeOutSubtr());
       // Create a worker per thread.
       int nthread = OpenMP::maxThreads();
       itsWorkers.reserve (nthread);
@@ -151,7 +151,7 @@ namespace LOFAR {
     bool DemixerNew::process (const DPBuffer& buf)
     {
       itsTimer.start();
-      // Keep ntimechunk*timechunksize data buffers.
+      // Collect sufficient data buffers.
       // Make sure all required data arrays are filled in.
       DPBuffer& newBuf = itsBufIn[itsNTime];
       newBuf = buf;
@@ -171,18 +171,20 @@ namespace LOFAR {
         processData();
         itsNTime = 0;
       }
+      itsTimer.stop();
       return true;
     }
       
     void DemixerNew::processData()
     {
-      // Last timechunk might contain fewer time slots.
-      uint timeWindowIn  = itsDemixInfo.timeChunkSize();
-      uint timeWindowOut = timeWindowIn / itsDemixInfo.ntimeAvgSubtr();
+      itsTimerDemix.start();
+      // Last batch might contain fewer time slots.
+      uint timeWindowIn  = itsDemixInfo.ntimeAvg();
+      uint timeWindowOut = itsDemixInfo.ntimeOutSubtr();
       int lastChunk = (itsNTime - 1) / timeWindowIn;
-      int lastNTime = itsNTime - itsDemixInfo.ntimeChunk()*timeWindowIn;
+      int lastNTime = itsNTime - lastChunk*timeWindowIn;
       ///#pragma omp parallel for schedule dynamic
-      for (int i=0; i<lastChunk+1; ++i) {
+      for (int i=0; i<=lastChunk; ++i) {
         if (i == lastChunk) {
           processChunk (&(itsBufIn[i*timeWindowIn]), lastNTime,
                         &(itsBufOut[i*timeWindowOut]));
@@ -191,6 +193,7 @@ namespace LOFAR {
                         &(itsBufOut[i*timeWindowOut]));
         }
       }
+      itsTimerDemix.stop();
       // Write the solutions into the instrument ParmDB.
       // Let the next steps process the results.
       // This can be done in parallel.
@@ -199,12 +202,14 @@ namespace LOFAR {
         if (i == 0) {
           writeSolutions();
         } else {
+          itsTimer.stop();
           itsTimerNext.start();
           uint ntimeOut = (lastChunk+1) * itsDemixInfo.ntimeAvgSubtr();
           for (uint i=0; i<ntimeOut; ++i) {
             getNextStep()->process (itsBufOut[i]);
           }
           itsTimerNext.stop();
+          itsTimer.start();
         }
       }
     }
@@ -212,7 +217,6 @@ namespace LOFAR {
     void DemixerNew::processChunk (const DPBuffer* bufIn, int nbufin,
                                    DPBuffer* bufOut)
     {
-      cout<< "thread="<< OpenMP::threadNum()<<endl;
       itsWorkers[OpenMP::threadNum()].process (bufIn, nbufin, bufOut);
     }
 

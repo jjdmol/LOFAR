@@ -110,16 +110,22 @@ void nsplitUVW (const vector<int>& blindex,
   for (uint i=0; i<blindex.size(); ++i) {
     int inx = blindex[i];
     if (inx < 0) {
+      // Ant2 is known.
       inx = -inx - 1;
-      uvwr = uvwant.data() + 3 * baselines[inx].first;
-      uvwl = uvwant.data() + 3 * baselines[inx].second;
-    } else {
       uvwl = uvwant.data() + 3 * baselines[inx].first;
       uvwr = uvwant.data() + 3 * baselines[inx].second;
-    }
-    uvwb = uvwbl.data() + 3*inx;
-    for (int j=0; j<3; ++j) {
-      uvwl[j] = uvwb[j] - uvwr[j];
+      uvwb = uvwbl.data() + 3*inx;
+      for (int j=0; j<3; ++j) {
+        uvwl[j] = uvwr[j] - uvwb[j];
+      }
+    } else {
+      // Ant1 is known.
+      uvwl = uvwant.data() + 3 * baselines[inx].first;
+      uvwr = uvwant.data() + 3 * baselines[inx].second;
+      uvwb = uvwbl.data() + 3*inx;
+      for (int j=0; j<3; ++j) {
+        uvwr[j] = uvwl[j] + uvwb[j];
+      }
     }
   }
 }
