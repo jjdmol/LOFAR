@@ -16,6 +16,9 @@ from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
+from lofarpipe.support.xmllogging import  get_active_stack
+import xml.dom.minidom as _xml
+
 class preprocessing_pipeline(control):
     """
     The pre-processing pipeline can be used to average raw UV-data in time
@@ -76,38 +79,6 @@ class preprocessing_pipeline(control):
             raise PipelineException(
                 "Validation of input/output data product specification failed!"
             )
-#        # Validate input data, by searching the cluster for files
-#        self._validate_input_data()
-#        # Update input- and output-data product specifications if needed
-#        if not all(self.io_data_mask):
-#            self.logger.info("Updating input/output product specifications")
-#            self.input_data = [
-#                f for (f, m) in zip(self.input_data, self.io_data_mask) if m
-#            ]
-#            self.output_data = [
-#                f for (f, m) in zip(self.output_data, self.io_data_mask) if m
-#            ]
-
-
-#    def _validate_input_data(self):
-#        """
-#        Search for the requested input files and mask the files in
-#        `self.input_data[]` that could not be found on the system.
-#        """
-#        # Use filename glob-pattern as defined in LOFAR-USG-ICD-005.
-#        self.io_data_mask = tally_data_map(
-#            self.input_data, 'L*_SB???_uv.MS', self.logger
-#        )
-#        # Log a warning if not all input data files were found.
-#        if not all(self.io_data_mask):
-#            self.logger.warn(
-#                "The following input data files were not found: %s" %
-#                ', '.join(
-#                    ':'.join(f) for (f, m) in zip(
-#                        self.input_data, self.io_data_mask
-#                    ) if not m
-#                )
-#            )
 
     def go(self):
         """
@@ -175,16 +146,16 @@ class preprocessing_pipeline(control):
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+            vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
 
         # Create a parameter database that will be used by the NDPPP demixing
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
                 "setupparmdb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-                suffix='.dppp.parmdb'
+                mapfile = os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix = '.dppp.parmdb'
             )['mapfile']
-                
+
         # Create a source database from a user-supplied sky model
         # The user-supplied sky model can either be a name, in which case the
         # pipeline will search for a file <name>.skymodel in the default search
@@ -202,10 +173,10 @@ class preprocessing_pipeline(control):
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", input_data_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
+                mapfile = os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel = skymodel,
+                suffix = '.dppp.sourcedb',
+                type = 'blob'
             )['mapfile']
 
 
@@ -219,28 +190,49 @@ class preprocessing_pipeline(control):
         with duration(self, "ndppp"):
             self.run_task("ndppp",
                 (input_data_mapfile, output_data_mapfile),
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                demix_always=
+                data_start_time = vdsinfo['start_time'],
+                data_end_time = vdsinfo['end_time'],
+                demix_always =
                     py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
+                demix_if_needed =
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile
+                parset = ndppp_parset,
+                parmdb_mapfile = parmdb_mapfile,
+                sourcedb_mapfile = sourcedb_mapfile
             )
 
         # *********************************************************************
         # 6. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
+        correlated_metadata = os.path.join(self.parset_dir,
+                                           "Correlated.metadata")
+
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_data_mapfile,
-                parset_file=self.parset_feedback_file,
-                parset_prefix=(
+                parset_file = correlated_metadata,
+                parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated")
+                product_type = "Correlated")
+
+
+        # add pipeline meta information
+        pipeline_metadata = os.path.join(self.parset_dir, "pipeline.metadata")
+        stackDocument = _xml.Document()
+        stackDocument.appendChild(get_active_stack(self))
+        self.run_task("get_metadata", pipeline_metadata,
+                parset_file = pipeline_metadata,
+                parset_prefix = (
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type = "PipelineMeta",
+                xml_log = stackDocument.toprettyxml(encoding = 'ascii')
+                )
+
+        parset = parameterset(correlated_metadata)
+        parset.adoptFile(pipeline_metadata)
+        parset.writeFile(self.parset_feedback_file)
 
         return 0
 

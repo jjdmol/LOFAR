@@ -23,7 +23,7 @@ import sys
 import socket
 
 
-def to_parset(data, prefix=''):
+def to_parset(data, prefix = ''):
     """
     Convert the data in the variable `data` to a LOFAR parameterset. Values
     may contain vectors (python lists) or records (python dicts) of scalars.
@@ -47,13 +47,13 @@ def to_parset(data, prefix=''):
         for key, value in data.iteritems():
             fullkey = prefix + '.' + key if prefix else key
             if isinstance(value, dict):
-                if any(isinstance(v, dict) or isinstance(v, list) 
+                if any(isinstance(v, dict) or isinstance(v, list)
                     for v in value.values()):
                     result.adoptCollection(to_parset(value, fullkey))
                 else:
                     result.replace(fullkey, str(value))
             elif isinstance(value, list):
-                if any(isinstance(v, dict) or isinstance(v, list) 
+                if any(isinstance(v, dict) or isinstance(v, list)
                     for v in value):
                     result.adoptCollection(to_parset(value, fullkey))
                 else:
@@ -64,13 +64,13 @@ def to_parset(data, prefix=''):
         for index, value in enumerate(data):
             fullkey = prefix + '[%d]' % index
             if isinstance(value, dict):
-                if any(isinstance(v, dict) or isinstance(v, list) 
+                if any(isinstance(v, dict) or isinstance(v, list)
                     for v in value.values()):
                     result.adoptCollection(to_parset(value, fullkey))
                 else:
                     result.replace(fullkey, str(value))
             elif isinstance(value, list):
-                if any(isinstance(v, dict) or isinstance(v, list) 
+                if any(isinstance(v, dict) or isinstance(v, list)
                     for v in value):
                     result.adoptCollection(to_parset(value, fullkey))
                 else:
@@ -98,8 +98,8 @@ class DataProduct(object):
     def data(self):
         """Return the current metadata."""
         return self._data
-        
-        
+
+
     def as_parameterset(self):
         """Return the current data product into a LOFAR parameterset."""
         return to_parset(self._data)
@@ -128,7 +128,7 @@ class Correlated(DataProduct):
     Class representing the metadata associated with UV-correlated data.
     The optional argument `filename` is the name of the Measurement Set.
     """
-    def __init__(self, filename=None):
+    def __init__(self, filename = None):
         super(Correlated, self).__init__()
         self._data.update({
             'startTime' : "not-a-datetime",
@@ -138,9 +138,10 @@ class Correlated(DataProduct):
             'channelWidth' : 0.0,
             'channelsPerSubband' : 0,
             'subband' : 0,
-            'stationSubband' : 0
+            'stationSubband' : 0,
+            'percentageFlagged' : 0.0,
         })
-        if filename: 
+        if filename:
             self.collect(filename)
 
 
@@ -150,8 +151,13 @@ class Correlated(DataProduct):
         """
         super(Correlated, self).collect(filename)
         try:
-            main = pyrap.tables.table(filename, ack=False)
-            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'), ack=False)
+            # Get the amount of flagged data
+            nr_flag = pyrap.tables.taql ('calc sum([select ntrue(FLAG) from ' + filename + ' giving as memory])')
+            nr_not_flag = pyrap.tables.taql ('calc sum([select nfalse(FLAG) from ' + filename + ' giving as memory])')
+            flagged = (nr_flag[0] * 100.0) / (1.0 * nr_flag[0] + nr_not_flag[0])
+
+            main = pyrap.tables.table(filename, ack = False)
+            spw = pyrap.tables.table(main.getkeyword('SPECTRAL_WINDOW'), ack = False)
             exposure = main.getcell('EXPOSURE', 0)
             startTime = main.getcell('TIME', 0) - 0.5 * exposure
             endTime = main.getcell('TIME', main.nrows() - 1) + 0.5 * exposure
@@ -164,6 +170,7 @@ class Correlated(DataProduct):
             )
             self._data.update({
                 'percentageWritten' : 100,
+                'percentageFlagged' : flagged,
                 'startTime' : startTimeString,
                 'duration' : endTime - startTime,
                 'integrationInterval' : exposure,
@@ -172,11 +179,11 @@ class Correlated(DataProduct):
                 'channelsPerSubband' : spw.getcell('NUM_CHAN', 0),
                 # Assume subband name has format 'SB-nn'
                 'subband' : int(spw.getcell('NAME', 0)[3:]),
-                'stationSubband' : 0         ### NOT CORRECT! ###
+                'stationSubband' : 0  ### NOT CORRECT! ###
             })
         except Exception, error:
             print >> sys.stderr, (
-                "%s: %s\n\twhile processing file %s" % 
+                "%s: %s\n\twhile processing file %s" %
                 (type(error).__name__, error, filename)
             )
 
@@ -186,13 +193,13 @@ class InstrumentModel(DataProduct):
     """
     Class representing the metadata associated with an instrument model.
     """
-    def __init__(self, filename=None):
+    def __init__(self, filename = None):
         """
         Constructor. The optional argument `filename` is the name of the
         Measurement Set containing the instrument model.
         """
         DataProduct.__init__(self)
-        if filename: 
+        if filename:
             self.collect(filename)
 
 
@@ -210,7 +217,7 @@ class SkyImage(DataProduct):
     """
     Class representing the metadata associated with a sky image.
     """
-    def __init__(self, filename=None):
+    def __init__(self, filename = None):
         """
         Constructor. The optional argument `filename` is the name of the
         CASA Image containing the sky image.
@@ -231,15 +238,15 @@ class SkyImage(DataProduct):
             'rmsNoiseValue' : 0,
             'rmsNoiseUnit' : ""
         })
-        if filename: 
+        if filename:
             self.collect(filename)
 
-        
+
     def collect(self, filename):
         """
         Collect sky image metadata from the CASA Image `filename`.
         """
-        super(SkyImage, self).collect(filename)    
+        super(SkyImage, self).collect(filename)
         try:
             image = pyrap.images.image(filename)
             coord = image.coordinates()
@@ -274,7 +281,7 @@ class SkyImage(DataProduct):
                 stokes = coord.get_coordinate('stokes')
                 self._data.update({
                     'nrOfPolarizationCoordinates' : 1,
-                    'PolarizationCoordinate' : self._get_stokes_coord(stokes)                
+                    'PolarizationCoordinate' : self._get_stokes_coord(stokes)
                 })
             self._data.update({
                 'Pointing' : self._get_pointing(image),
@@ -282,7 +289,7 @@ class SkyImage(DataProduct):
             })
         except Exception, error:
             print >> sys.stderr, (
-                "%s: %s\n\twhile processing file %s" % 
+                "%s: %s\n\twhile processing file %s" %
                 (type(error).__name__, error, filename)
             )
 
@@ -292,7 +299,7 @@ class SkyImage(DataProduct):
         angles = list(image.attrget('LOFAR_FIELD', 'PHASE_DIR', 0)[0])
         data = {
             'equinox' : image.attrgetmeas('LOFAR_FIELD', 'PHASE_DIR')[1],
-            'coordType' : "RA-DEC",     ### Correct? ###
+            'coordType' : "RA-DEC",  ### Correct? ###
             'angle1' : angles[0],
             'angle2' : angles[1]
         }
@@ -339,7 +346,7 @@ class SkyImage(DataProduct):
             'units' : spectral.get_unit(),
             'length' : spectral.get_axis_size()
         }
-        # Assume spectral linear axis if spectral._coord['wcs'] exists 
+        # Assume spectral linear axis if spectral._coord['wcs'] exists
         if spectral._coord['wcs']:
             _axis.update({
                 'increment' : spectral.get_increment(),

@@ -13,11 +13,13 @@ import sys
 from lofarpipe.support.control import control
 from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.data_map import DataMap, validate_data_maps
-#from lofarpipe.support.group_data import tally_data_map
+# from lofarpipe.support.group_data import tally_data_map
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
+from lofarpipe.support.xmllogging import  get_active_stack
+import xml.dom.minidom as _xml
 
 class msss_target_pipeline(control):
     """
@@ -89,7 +91,7 @@ class msss_target_pipeline(control):
         ])
         self.logger.debug("%d Input_InstrumentModel data products specified" %
                           len(self.input_data['instrument']))
-                          
+
         self.output_data['data'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
@@ -141,7 +143,7 @@ class msss_target_pipeline(control):
         create_directory(copier_map_path)
         target_map = self._create_target_map_for_instruments()
 
-        #Write the two needed maps to file
+        # Write the two needed maps to file
         source_path = os.path.join(copier_map_path, "source_instruments.map")
         self.input_data['instrument'].save(source_path)
 
@@ -153,10 +155,10 @@ class msss_target_pipeline(control):
         # The output of the copier is a mapfile containing all the host, path
         # of succesfull copied files.
         copied_instruments_mapfile = self.run_task("copier",
-                      mapfile_source=source_path,
-                      mapfile_target=target_path,
-                      mapfiles_dir=copier_map_path,
-                      mapfile=copied_files_path)['mapfile_target_copied']
+                      mapfile_source = source_path,
+                      mapfile_target = target_path,
+                      mapfiles_dir = copier_map_path,
+                      mapfile = copied_files_path)['mapfile_target_copied']
 
         # Some copy action might fail; the skip fields in the other map-files
         # need to be updated these to reflect this.
@@ -182,7 +184,7 @@ class msss_target_pipeline(control):
             return self.usage()
         self.parset.adoptFile(parset_file)
         self.parset_feedback_file = parset_file + "_feedback"
-        
+
         # Set job-name to basename of parset-file w/o extension, if it's not
         # set on the command-line with '-j' or '--job-name'
         if not self.inputs.has_key('job_name'):
@@ -252,7 +254,7 @@ class msss_target_pipeline(control):
         )
 
         # *********************************************************************
-        # 3. Create database needed for performing work: 
+        # 3. Create database needed for performing work:
         #    - GVDS, describing data on the compute nodes
         #    - SourceDB, for skymodel (A-team)
         #    - ParmDB for outputtting solutions
@@ -261,7 +263,7 @@ class msss_target_pipeline(control):
 
         # Read metadata (e.g., start- and end-time) from the GVDS file.
         with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+            vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
 
         # Create an empty parmdb for DPPP
         with duration(self, "setupparmdb"):
@@ -284,9 +286,9 @@ class msss_target_pipeline(control):
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", data_mapfile,
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
+                skymodel = skymodel,
+                suffix = '.dppp.sourcedb',
+                type = 'blob'
             )['mapfile']
 
         # *********************************************************************
@@ -299,16 +301,16 @@ class msss_target_pipeline(control):
         with duration(self, "ndppp"):
             dppp_mapfile = self.run_task("ndppp",
                 data_mapfile,
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                demix_always=
+                data_start_time = vdsinfo['start_time'],
+                data_end_time = vdsinfo['end_time'],
+                demix_always =
                     py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
+                demix_if_needed =
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.mapfile')
+                parset = ndppp_parset,
+                parmdb_mapfile = parmdb_mapfile,
+                sourcedb_mapfile = sourcedb_mapfile,
+                mapfile = os.path.join(mapfile_dir, 'dppp.mapfile')
             )['mapfile']
 
         # ********************************************************************
@@ -327,9 +329,9 @@ class msss_target_pipeline(control):
         with duration(self, "bbs_reducer"):
             bbs_mapfile = self.run_task("bbs_reducer",
                 dppp_mapfile,
-                parset=bbs_parset,
-                instrument_mapfile=copied_instrument_mapfile,
-                sky_mapfile=sourcedb_mapfile
+                parset = bbs_parset,
+                instrument_mapfile = copied_instrument_mapfile,
+                sky_mapfile = sourcedb_mapfile
             )['data_mapfile']
 
         # *********************************************************************
@@ -338,24 +340,43 @@ class msss_target_pipeline(control):
         # corrected_mapfile will contain an updated map of output files.
         with duration(self, "copier"):
             self.run_task("copier",
-                mapfile_source=bbs_mapfile,
-                mapfile_target=corrected_mapfile,
-                mapfiles_dir=mapfile_dir,
-                mapfile=corrected_mapfile
+                mapfile_source = bbs_mapfile,
+                mapfile_target = corrected_mapfile,
+                mapfiles_dir = mapfile_dir,
+                mapfile = corrected_mapfile
             )
 
         # *********************************************************************
         # 7. Create feedback file for further processing by the LOFAR framework
         # (MAC)
         # Create a parset-file containing the metadata for MAC/SAS
+        correlated_metadata = os.path.join(self.parset_dir,
+                                           "Correlated.metadata")
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", corrected_mapfile,
-                parset_file=self.parset_feedback_file,
-                parset_prefix=(
+                parset_file = correlated_metadata,
+                parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')
                 ),
-                product_type="Correlated")
+                product_type = "Correlated")
+
+        # add pipeline meta information
+        pipeline_metadata = os.path.join(self.parset_dir, "pipeline.metadata")
+        stackDocument = _xml.Document()
+        stackDocument.appendChild(get_active_stack(self))
+        self.run_task("get_metadata", pipeline_metadata,
+                parset_file = pipeline_metadata,
+                parset_prefix = (
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type = "PipelineMeta",
+                xml_log = stackDocument.toprettyxml(encoding = 'ascii')
+                )
+
+        parset = parameterset(correlated_metadata)
+        parset.adoptFile(pipeline_metadata)
+        parset.writeFile(self.parset_feedback_file)
 
         return 0
 

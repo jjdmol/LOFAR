@@ -15,7 +15,8 @@ from lofarpipe.support.lofarexceptions import PipelineException
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
-
+from lofarpipe.support.xmllogging import  get_active_stack
+import xml.dom.minidom as _xml
 
 class msss_calibrator_pipeline(control):
     """
@@ -141,7 +142,7 @@ class msss_calibrator_pipeline(control):
         # *********************************************************************
         # 1. Get input from parset, validate and cast to pipeline 'data types'
         #    Only perform work on existing files
-        #    Created needed directories 
+        #    Created needed directories
         # Create a parameter-subset containing only python-control stuff.
         py_parset = self.parset.makeSubset(
             self.parset.fullModuleName('PythonControl') + '.')
@@ -179,7 +180,7 @@ class msss_calibrator_pipeline(control):
             ', '.join(str(f) for f in self.input_data['correlated']))
 
         # *********************************************************************
-        # 2. Create database needed for performing work: 
+        # 2. Create database needed for performing work:
         #    Vds, descibing data on the nodes
         #    sourcedb, For skymodel (A-team)
         #    parmdb for outputtting solutions
@@ -191,14 +192,14 @@ class msss_calibrator_pipeline(control):
 
         # Read metadata (start, end times, pointing direction) from GVDS.
         with duration(self, "vdsreader"):
-            vdsinfo = self.run_task("vdsreader", gvds=gvds_file)
+            vdsinfo = self.run_task("vdsreader", gvds = gvds_file)
 
         # Create an empty parmdb for DPPP
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
                 "setupparmdb", input_correlated_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
-                suffix='.dppp.parmdb'
+                mapfile = os.path.join(mapfile_dir, 'dppp.parmdb.mapfile'),
+                suffix = '.dppp.parmdb'
             )['mapfile']
 
         # Create a sourcedb to be used by the demixing phase of DPPP
@@ -218,10 +219,10 @@ class msss_calibrator_pipeline(control):
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", input_correlated_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
-                skymodel=skymodel,
-                suffix='.dppp.sourcedb',
-                type='blob'
+                mapfile = os.path.join(mapfile_dir, 'dppp.sourcedb.mapfile'),
+                skymodel = skymodel,
+                suffix = '.dppp.sourcedb',
+                type = 'blob'
             )['mapfile']
 
         # *********************************************************************
@@ -235,15 +236,15 @@ class msss_calibrator_pipeline(control):
         with duration(self, "ndppp"):
             dppp_mapfile = self.run_task(
                 "ndppp", input_correlated_mapfile,
-                data_start_time=vdsinfo['start_time'],
-                data_end_time=vdsinfo['end_time'],
-                demix_always=
+                data_start_time = vdsinfo['start_time'],
+                data_end_time = vdsinfo['end_time'],
+                demix_always =
                     py_parset.getStringVector('PreProcessing.demix_always'),
-                demix_if_needed=
+                demix_if_needed =
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset=ndppp_parset,
-                parmdb_mapfile=parmdb_mapfile,
-                sourcedb_mapfile=sourcedb_mapfile
+                parset = ndppp_parset,
+                parmdb_mapfile = parmdb_mapfile,
+                sourcedb_mapfile = sourcedb_mapfile
             )['mapfile']
 
         # *********************************************************************
@@ -255,21 +256,21 @@ class msss_calibrator_pipeline(control):
         with duration(self, "setupparmdb"):
             parmdb_mapfile = self.run_task(
                 "setupparmdb", dppp_mapfile,
-                mapfile=os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
-                suffix='.bbs.parmdb'
+                mapfile = os.path.join(mapfile_dir, 'bbs.parmdb.mapfile'),
+                suffix = '.bbs.parmdb'
             )['mapfile']
 
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
                 "setupsourcedb", input_correlated_mapfile,
-                skymodel=os.path.join(
+                skymodel = os.path.join(
                     self.config.get('DEFAULT', 'lofarroot'),
                     'share', 'pipeline', 'skymodels',
                     py_parset.getString('Calibration.SkyModel') +
                         '.skymodel'),
-                mapfile=os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
-                suffix='.bbs.sourcedb')['mapfile']
+                mapfile = os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
+                suffix = '.bbs.sourcedb')['mapfile']
 
         # Create a parameter-subset for BBS and write it to file.
         bbs_parset = os.path.join(parset_dir, "BBS.parset")
@@ -279,14 +280,14 @@ class msss_calibrator_pipeline(control):
         with duration(self, "bbs_reducer"):
             bbs_mapfile = self.run_task(
                 "bbs_reducer", dppp_mapfile,
-                parset=bbs_parset,
-                instrument_mapfile=parmdb_mapfile,
-                sky_mapfile=sourcedb_mapfile
+                parset = bbs_parset,
+                instrument_mapfile = parmdb_mapfile,
+                sky_mapfile = sourcedb_mapfile
             )['data_mapfile']
 
         # *********************************************************************
         # 5. Perform gain outlier correction on the found calibration solutions
-        #    Swapping outliers in the gains with the median 
+        #    Swapping outliers in the gains with the median
         # Export the calibration solutions using gainoutliercorrection and store
         # the results in the files specified in the instrument mapfile.
         export_instrument_model = py_parset.getBool(
@@ -295,17 +296,17 @@ class msss_calibrator_pipeline(control):
         with duration(self, "gainoutliercorrection"):
             self.run_task("gainoutliercorrection",
                       (parmdb_mapfile, output_instrument_mapfile),
-                      sigma=1.0,
-                      export_instrument_model=export_instrument_model) # TODO: Parset parameter
+                      sigma = 1.0,
+                      export_instrument_model = export_instrument_model)  # TODO: Parset parameter
 
         # *********************************************************************
         # 6. Copy corrected MS's to their final output destination.
         with duration(self, "copier"):
             self.run_task("copier",
-                mapfile_source=bbs_mapfile,
-                mapfile_target=output_correlated_mapfile,
-                mapfiles_dir=mapfile_dir,
-                mapfile=output_correlated_mapfile
+                mapfile_source = bbs_mapfile,
+                mapfile_target = output_correlated_mapfile,
+                mapfiles_dir = mapfile_dir,
+                mapfile = output_correlated_mapfile
             )
 
         # *********************************************************************
@@ -315,24 +316,41 @@ class msss_calibrator_pipeline(control):
         #    c. join the two files and write the final feedback file
         correlated_metadata = os.path.join(parset_dir, "correlated.metadata")
         instrument_metadata = os.path.join(parset_dir, "instrument.metadata")
+        pipeline_metadata = os.path.join(parset_dir, "pipeline.metadata")
+
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_correlated_mapfile,
-                parset_file=correlated_metadata,
-                parset_prefix=(
+                parset_file = correlated_metadata,
+                parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="Correlated")
+                product_type = "Correlated")
 
         with duration(self, "get_metadata"):
             self.run_task("get_metadata", output_instrument_mapfile,
-                parset_file=instrument_metadata,
-                parset_prefix=(
+                parset_file = instrument_metadata,
+                parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
-                product_type="InstrumentModel")
+                product_type = "InstrumentModel")
+
+
+        # add pipeline meta information
+        stackDocument = _xml.Document()
+        stackDocument.appendChild(get_active_stack(self))
+        with duration(self, "get_metadata"):
+            self.run_task("get_metadata", pipeline_metadata,
+                parset_file = instrument_metadata,
+                parset_prefix = (
+                    self.parset.getString('prefix') +
+                    self.parset.fullModuleName('DataProducts')),
+                product_type = "PipelineMeta",
+                xml_log = stackDocument.toprettyxml(encoding = 'ascii')
+                )
 
         parset = parameterset(correlated_metadata)
         parset.adoptFile(instrument_metadata)
+        parset.adoptFile(pipeline_metadata)
         parset.writeFile(self.parset_feedback_file)
 
         return 0

@@ -80,7 +80,7 @@ class duration:
         # Get and save the current time
         self._time_info_start = time.time()
 
-        return self # return self, the context manager
+        return self  # return self, the context manager
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         """
@@ -114,6 +114,12 @@ def mail_log_on_exception(target):
         try:
             # call the actual function
             time_info_start = time.time()
+
+            # add the start time to the active stack as attribute
+            enter_active_stack(calling_object, None)
+            stack = get_active_stack(calling_object)
+            stack.setAttribute("time_info_start", str(time_info_start))
+
             return_value = target(*args, **argsw)
             time_info_end = time.time()
             # Force exception on non zero output
@@ -125,7 +131,7 @@ def mail_log_on_exception(target):
             if stack != None:
                 stack.setAttribute(
                     "duration", duration_recipe)
-                msg_string = stack.toprettyxml(encoding='ascii')
+                msg_string = stack.toprettyxml(encoding = 'ascii')
             else:
                 msg_string = "duration: {0} \n "\
                  "No additional pipeline data available".format(duration_recipe
@@ -149,7 +155,7 @@ def mail_log_on_exception(target):
             stack = get_active_stack(calling_object)
             active_stack_data = ""
             if stack != None:
-                active_stack_data = stack.toprettyxml(encoding='ascii')
+                active_stack_data = stack.toprettyxml(encoding = 'ascii')
             # get the Obsid and pipeline name add to subjecy title
             subject = "Failed pipeline run {0}: {1}".format(
                         os.path.basename(calling_object.__file__),
