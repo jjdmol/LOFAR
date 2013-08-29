@@ -31,7 +31,7 @@
 #include <GPUProc/OpenMP_Lock.h>
 
 // #define DEBUG_FIRFILTER
-#define DEBUG_DELAYANDBANDPASS
+// #define DEBUG_DELAYANDBANDPASS
 
 namespace LOFAR
 {
