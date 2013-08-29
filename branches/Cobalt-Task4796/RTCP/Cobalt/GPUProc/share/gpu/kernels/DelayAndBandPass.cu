@@ -190,9 +190,9 @@ extern "C" {
                                   (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
 
   if (major == 0 && minor == 0 && channel == 0) {
-    printf("delaysAtBegin [%d][%d] = (%e, %e)\n", 
+    printf("delaysAtBegin [%d][%d] = (%.9e, %.9e)\n", 
            beam, station, (*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]);
-    printf("delaysAfterEnd[%d][%d] = (%e, %e)\n", 
+    printf("delaysAfterEnd[%d][%d] = (%.9e, %.9e)\n", 
            beam, station, (*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
   }
   /* if (beam == 0 && station == 0 && major == 0 && minor == 0 && channel == 0) { */
