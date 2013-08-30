@@ -215,7 +215,8 @@ class ComputeJob(object):
                 self.command,
                 {
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
-                    "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
+                    "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH'),
+                    "LOFARROOT" : os.environ.get('LOFARROOT')
                 },
                 arguments=[id, jobhost, jobport]
             )
