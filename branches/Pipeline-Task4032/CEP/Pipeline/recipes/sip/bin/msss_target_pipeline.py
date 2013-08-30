@@ -381,7 +381,7 @@ class msss_target_pipeline(control):
         pipeline_metadata = os.path.join(parset_dir, "pipeline.metadata")
         stackDocument = _xml.Document()
         stackDocument.appendChild(get_active_stack(self))
-        self.run_task("get_metadata", pipeline_metadata,
+        self.run_task("get_metadata", corrected_mapfile,
                 parset_file = pipeline_metadata,
                 parset_prefix = (
                     self.parset.getString('prefix') +

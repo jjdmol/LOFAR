@@ -250,7 +250,7 @@ class imaging_pipeline(control):
         pipeline_metadata = os.path.join(self.parset_dir, "pipeline.metadata")
         stackDocument = _xml.Document()
         stackDocument.appendChild(get_active_stack(self))
-        self.run_task("get_metadata", pipeline_metadata,
+        self.run_task("get_metadata", placed_data_image_map,
                 parset_file = pipeline_metadata,
                 parset_prefix = (
                     self.parset.getString('prefix') +
