@@ -254,7 +254,9 @@ class calibration_pipeline(control):
         # pipeline will search for a file <name>.skymodel in the default search
         # path $LOFARROOT/share/pipeline/skymodels; or a full path.
         # It is an error if the file does not exist.
+        user_supplied = True
         if not os.path.isabs(skymodel):
+            user_supplied = False
             skymodel = os.path.join(
                 # This should really become os.environ['LOFARROOT']
                 self.config.get('DEFAULT', 'lofarroot'),
@@ -262,9 +264,17 @@ class calibration_pipeline(control):
             )
         if not os.path.isfile(skymodel):
             raise PipelineException("Skymodel %s does not exist" % skymodel)
+
+        # Add the skymodel to the pipeline_xml node for meta information
+        stack = get_active_stack(self)
+        skymodel_node = add_child(stack, "skymodel_meta_information")
+        skymodel_node.setAttribute("skymodel", skymodel)
+        skymodel_node.setAttribute("userSupplied", str(user_supplied))
+
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
-                "setupsourcedb", dppp_mapfile,
+                "setupsourcedb",
+                 dppp_mapfile,
                 skymodel = skymodel,
                 suffix = '.bbs.sourcedb'
             )['mapfile']

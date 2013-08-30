@@ -276,15 +276,38 @@ class msss_calibrator_pipeline(control):
                 suffix = '.bbs.parmdb'
             )['mapfile']
 
+
+        skymodel = py_parset.getString('Calibration.SkyModel')
+
+        # The user-supplied sky model can either be a name, in which case the
+        # pipeline will search for a file <name>.skymodel in the default search
+        # path $LOFARROOT/share/pipeline/skymodels; or a full path.
+        # It is an error if the file does not exist.
+        user_supplied = True
+        if not os.path.isabs(skymodel):
+            # If the path is not absolute we have a system skymodel
+            user_supplied = False
+            skymodel = os.path.join(
+                # This should really become os.environ['LOFARROOT']
+                self.config.get('DEFAULT', 'lofarroot'),
+                'share', 'pipeline', 'skymodels', skymodel + '.skymodel'
+            )
+
+        if not os.path.isfile(skymodel):
+            raise PipelineException("Skymodel %s does not exist" % skymodel)
+
+        # Add the skymodel to the pipeline_xml node for meta information
+        stack = get_active_stack(self)
+        skymodel_node = add_child(stack, "skymodel_meta_information")
+        skymodel_node.setAttribute("skymodel", skymodel)
+        skymodel_node.setAttribute("userSupplied", str(user_supplied))
+
         # Create a sourcedb based on sourcedb's input argument "skymodel"
         with duration(self, "setupsourcedb"):
             sourcedb_mapfile = self.run_task(
-                "setupsourcedb", input_correlated_mapfile,
-                skymodel = os.path.join(
-                    self.config.get('DEFAULT', 'lofarroot'),
-                    'share', 'pipeline', 'skymodels',
-                    py_parset.getString('Calibration.SkyModel') +
-                        '.skymodel'),
+                "setupsourcedb",
+                input_correlated_mapfile,
+                skymodel = skymodel,
                 mapfile = os.path.join(mapfile_dir, 'bbs.sourcedb.mapfile'),
                 suffix = '.bbs.sourcedb')['mapfile']
 
