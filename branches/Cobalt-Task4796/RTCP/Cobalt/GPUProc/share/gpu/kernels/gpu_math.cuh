@@ -33,7 +33,8 @@
 
 // Provide the equivalent of the OpenCL swizzle feature. Obviously, the OpenCL
 // \c swizzle operation is more powerful, because it's a language built-in.
-#define SWIZZLE(ARG, X, Y, Z, W) make_float4((ARG).X, (ARG).Y, (ARG).Z, (ARG).W)
+// #define SWIZZLE(ARG, X, Y, Z, W) make_float4((ARG).X, (ARG).Y, (ARG).Z, (ARG).W)
+#define SWIZZLE(ARG, X, Y, Z, W) make_double4((ARG).X, (ARG).Y, (ARG).Z, (ARG).W)
 
 inline __device__ float4 operator + (float4 a, float4 b)
 {
@@ -88,4 +89,50 @@ inline __device__ float2 operator * (float a, float2 b)
 {
   return make_float2(b.x * a, b.y);
 }
+
+inline __device__ double4 operator + (double4 a, double4 b)
+{
+  return make_double4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+}
+
+inline __device__ double4 operator - (double4 a, double4 b)
+{
+  return make_double4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
+}
+
+inline __device__ double4 operator * (double4 a, double4 b)
+{
+  return make_double4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+}
+
+inline __device__ double4 operator / (double4 a, double4 b)
+{
+  return make_double4(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w);
+}
+
+inline __device__ double4& operator += (double4 &a, double4 b)
+{
+  a.x += b.x; a.y += b.y; a.z += b.z; a.w += b.w;
+  return a;
+}
+
+inline __device__ double4& operator -= (double4 &a, double4 b)
+{
+  a.x -= b.x; a.y -= b.y; a.z -= b.z; a.w -= b.w;
+  return a;
+}
+
+inline __device__ double4& operator *= (double4 &a, double4 b)
+{
+  a.x *= b.x; a.y *= b.y; a.z *= b.z; a.w *= b.w;
+  return a;
+}
+
+inline __device__ double4& operator /= (double4 &a, double4 b)
+{
+  a.x /= b.x; a.y /= b.y; a.z /= b.z; a.w /= b.w;
+  return a;
+}
+
+
 #endif
