@@ -51,6 +51,8 @@
 #include "IntToFloat.cuh"
 #include <stdio.h>
 
+#undef DELAY_COMPENSATION
+
 #if NR_CHANNELS == 1
    // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
    // but once here, don't do difficult and adjust cleanly here.
@@ -189,22 +191,22 @@ extern "C" {
   double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                   (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
 
-  if (major == 0 && minor == 0 && channel == 0) {
-    printf("delaysAtBegin [%d][%d] = (%.9e, %.9e)\n", 
-           beam, station, (*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]);
-    printf("delaysAfterEnd[%d][%d] = (%.9e, %.9e)\n", 
-           beam, station, (*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
-  }
+  /* if (major == 0 && minor == 0 && channel == 0) { */
+  /*   printf("delaysAtBegin [%d][%d] = (%.9e, %.9e)\n",  */
+  /*          beam, station, (*delaysAtBegin)[beam][station][0], (*delaysAtBegin)[beam][station][1]); */
+  /*   printf("delaysAfterEnd[%d][%d] = (%.9e, %.9e)\n",  */
+  /*          beam, station, (*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]); */
+  /* } */
   /* if (beam == 0 && station == 0 && major == 0 && minor == 0 && channel == 0) { */
-  /*   printf("(*delaysAtBegin) [0][0] = (%e, %e)\n", */
-  /*          (*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]); */
-  /*   printf("(*delaysAfterEnd)[0][0] = (%e, %e)\n", */
-  /*          (*delaysAfterEnd) [beam][station][0], (*delaysAfterEnd) [beam][station][1]); */
-  /*   // printf("delayAtBegin  = (%e, %e)\n", delayAtBegin.x, delayAtBegin.y); */
-  /*   // printf("delayAfterEnd = (%e, %e)\n", delayAfterEnd.x, delayAfterEnd.y); */
-  /*   // printf("phiBegin = (%e, %e)\n", phiBegin.x, phiBegin.y); */
-  /*   // printf("phiEnd   = (%e, %e)\n", phiEnd.x,   phiEnd.y); */
-  /*   // printf("deltaPhi = (%e, %e)\n", deltaPhi.x, deltaPhi.y); */
+    /* printf("(*delaysAtBegin) [0][0] = (%e, %e)\n", */
+    /*        (*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]); */
+    /* printf("(*delaysAfterEnd)[0][0] = (%e, %e)\n", */
+    /*        (*delaysAfterEnd) [beam][station][0], (*delaysAfterEnd) [beam][station][1]); */
+    /* printf("delayAtBegin  = (%.9e, %.9e)\n", delayAtBegin.x, delayAtBegin.y); */
+    /* printf("delayAfterEnd = (%.9e, %.9e)\n", delayAfterEnd.x, delayAfterEnd.y); */
+    /* printf("phiBegin = (%.9e, %.9e)\n", phiBegin.x, phiBegin.y); */
+    /* printf("phiEnd   = (%.9e, %.9e)\n", phiEnd.x,   phiEnd.y); */
+    /* printf("deltaPhi = (%.9e, %.9e)\n", deltaPhi.x, deltaPhi.y); */
   /* } */
 
 #if NR_CHANNELS == 1
