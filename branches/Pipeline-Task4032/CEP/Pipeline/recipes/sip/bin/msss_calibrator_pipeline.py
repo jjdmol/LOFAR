@@ -355,8 +355,8 @@ class msss_calibrator_pipeline(control):
         stackDocument = _xml.Document()
         stackDocument.appendChild(get_active_stack(self))
         with duration(self, "get_metadata"):
-            self.run_task("get_metadata", pipeline_metadata,
-                parset_file = instrument_metadata,
+            self.run_task("get_metadata", "",
+                parset_file = pipeline_metadata,
                 parset_prefix = (
                     self.parset.getString('prefix') +
                     self.parset.fullModuleName('DataProducts')),
