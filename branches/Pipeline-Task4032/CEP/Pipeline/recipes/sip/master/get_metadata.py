@@ -148,6 +148,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             if xml_log_string != '':
                 xml_node = _xml.parseString(xml_log_string)
 
+                # ************************************************************
                 # Get the start time from the lognode. Could use named child
                 # but this is a pipeline log file
                 start_time = float(
@@ -158,13 +159,13 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                 metadata.to_parset({global_prefix + 'duration':str(duration)})
                     )
 
-                # Search for the first child with the name:
+                #**************************************************************
+                # Demixer information
                 # demixed_sources_meta_information
                 demix_meta_node = xml_node.getElementsByTagName(
                    "demixed_sources_meta_information").item(0)  # Get the node
                                         # there should only be one node
                 if demix_meta_node != None:
-
                     demix_meta_dict = {}
 
                 # extract the information
@@ -180,6 +181,24 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                 # add to the parset
                     parset.adoptCollection(metadata.to_parset(demix_meta_dict))
 
+                # *************************************************************
+                # Skymodel information
+                skymodel_node = xml_node.getElementsByTagName(
+                   "skymodel_meta_information").item(0)  # Get the node
+                                        # there should only be one node
+                if skymodel_node != None:
+
+                    skymodel_dict = {}
+
+                # extract the information
+                    skymodel_dict[global_prefix + 'skymodel.' + 'path'] = \
+                        skymodel_node.getAttribute("skymodel")
+
+                    skymodel_dict[global_prefix + 'demixer.' + 'userSupplied'] = \
+                        skymodel_node.getAttribute("userSupplied")
+
+                # add to the parset
+                    parset.adoptCollection(metadata.to_parset(skymodel_dict))
             else:
                 self.logger.error("No xml log supplied, this is needed for " +
                                   "Pipeline meta information")
