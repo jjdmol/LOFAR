@@ -51,8 +51,6 @@
 #include "IntToFloat.cuh"
 #include <stdio.h>
 
-#undef DELAY_COMPENSATION
-
 #if NR_CHANNELS == 1
    // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
    // but once here, don't do difficult and adjust cleanly here.
