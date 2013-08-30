@@ -211,7 +211,7 @@ class preprocessing_pipeline(control):
                     py_parset.getStringVector('PreProcessing.demix_always'),
                 demix_if_needed =
                     py_parset.getStringVector('PreProcessing.demix_if_needed'),
-                parset = ndppp_parset,
+                parset = ndppp_parset_path,
                 parmdb_mapfile = parmdb_mapfile,
                 sourcedb_mapfile = sourcedb_mapfile
             )
