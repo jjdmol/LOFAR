@@ -172,7 +172,9 @@ int main(int argc, char **argv)
     THROW_SYSCALL("setenv(DISPLAY)");
 
   // Restrict access to (tmp build) files we create to owner
-  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+  // JD: Don't do that! We want to be able to clean up each other's
+  // mess.
+  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
@@ -189,9 +191,11 @@ int main(int argc, char **argv)
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
 
-  LOG_DEBUG_STR("nr stations = " << ps.nrStations());
-  LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
-  LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
+  if (rank == 0) {
+    LOG_INFO_STR("nr stations = " << ps.nrStations());
+    LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
+    LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
+  }
 
   LOG_INFO_STR("----- Initialising GPUs");
 
