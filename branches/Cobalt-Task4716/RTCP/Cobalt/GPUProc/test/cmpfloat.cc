@@ -61,6 +61,8 @@ int main(int argc, char *argv[])
   // For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
   // Taking 32*..., we still get a few dozen miscomparisons.
   // Generally, the first 5 decimals are ok; occasionally, the 5th is off by 1.
+  //
+  // Note: the epsilon for floats is 1.19209290E-07F.
   const float eps = 64.0f * std::numeric_limits<float>::epsilon();
   cerr.precision(8); // print full float precision (7 + the 0.).
 
@@ -92,7 +94,7 @@ int main(int argc, char *argv[])
     {
       if (!fpEquals(buf1[i], buf2[i], eps))
       {
-        cerr << "Error: value diff beyond eps at pos " << total + i << ": " << buf1[i] << " " << buf2[i] << endl;
+        cerr << "Error: value diff beyond eps at pos " << total + i << ": " << buf1[i] << " " << buf2[i] << " (eps = " << eps << ")" << endl;
         status = 1;
       }
     }
