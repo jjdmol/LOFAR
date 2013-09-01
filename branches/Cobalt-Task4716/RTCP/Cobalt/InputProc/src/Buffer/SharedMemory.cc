@@ -259,7 +259,7 @@ namespace LOFAR
 #ifdef HAVE_MPI
           ScopedLock sl(MPIMutex);
 
-          MPI_free_mem(itsBegin);
+          MPI_Free_mem(itsBegin);
 #else
           heapAllocator.deallocate(itsBegin);
 #endif
