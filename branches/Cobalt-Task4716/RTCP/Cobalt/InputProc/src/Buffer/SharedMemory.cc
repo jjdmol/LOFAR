@@ -122,34 +122,46 @@ namespace LOFAR
       LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
     }
 
-    void *allocate(size_t size) {
+    namespace {
+      void *allocate(size_t size) {
 #if 0
-      // Allocate HugeTLB pages
-      void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        // Allocate HugeTLB pages
+        void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
-      if (addr == MAP_FAILED)
-        THROW_SYSCALL("mmap");
+        if (addr == MAP_FAILED)
+          THROW_SYSCALL("mmap");
 
-      return addr;
+        return addr;
 #endif
 
 #ifdef HAVE_MPI
-      ScopedLock sl(MPIMutex);
+        ScopedLock sl(MPIMutex);
 
-      void *addr;
+        void *addr;
 
-      MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
-      return addr;
+        MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
+        return addr;
 #else
-      return heapAllocator.allocate(size, 256);
+        return heapAllocator.allocate(size, 256);
 #endif
+      }
+
+      void deallocate(void *ptr) {
+#ifdef HAVE_MPI
+        ScopedLock sl(MPIMutex);
+
+        MPI_Free_mem(ptr);
+#else
+        heapAllocator.deallocate(ptr);
+#endif
+      }
     }
 
 
     bool SharedMemoryArena::open( int open_flags, int mmap_flags, bool timeout )
     {
 #ifdef FAKE_SHARED_MEM
-      LOG_WARN_STR("Faking shared memory!");
+      //LOG_WARN_STR("Faking shared memory!");
 
       ScopedLock sl(shmMutex);
 
@@ -253,16 +265,9 @@ namespace LOFAR
 
       try {
 #ifdef FAKE_SHARED_MEM
-
         // destroy, if we created it
         if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
-#ifdef HAVE_MPI
-          ScopedLock sl(MPIMutex);
-
-          MPI_Free_mem(itsBegin);
-#else
-          heapAllocator.deallocate(itsBegin);
-#endif
+          deallocate(itsBegin);
         }
 #else
         // detach
