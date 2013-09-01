@@ -135,18 +135,9 @@ namespace LOFAR
 #endif
 
 #ifdef HAVE_MPI
-        ScopedLock sl(MPIMutex);
-
         // Don't use MPI_Alloc_mem if MPI wasn't initialised
-        int initialised;
-        MPI_Initialized(&initialised);
-
-        if (initialised) {
-          void *addr;
-
-          MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
-
-          return addr;
+        if (MPI_Initialised()) {
+          return mpiAllocator.allocate(size);
         } else {
           return heapAllocator.allocate(size, 256);
         }
@@ -160,14 +151,9 @@ namespace LOFAR
         // NOTE: We assume that MPI_Init was either called before the use of
         // SharedMemory or will never be called at all.
 
-        ScopedLock sl(MPIMutex);
-
         // Don't use MPI_Free_mem if MPI wasn't initialised
-        int initialised;
-        MPI_Initialized(&initialised);
-
-        if (initialised) {
-          MPI_Free_mem(ptr);
+        if (MPI_Initialised()) {
+          mpiAllocator.deallocate(ptr);
         } else {
           heapAllocator.deallocate(ptr);
         }

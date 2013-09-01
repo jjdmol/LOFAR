@@ -27,11 +27,13 @@
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/SubbandMetaData.h>
+#include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Buffer/Block.h>
 #include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"
+#include "MPIUtil.h"
 
 #include <map>
 #include <set>
@@ -74,10 +76,10 @@ namespace LOFAR
       void sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
 
       // Cache for the header to send
-      MPIProtocol::Header *header;
+      SmartPtr<MPIProtocol::Header, SmartPtrMPI<MPIProtocol::Header> > header;
 
       // Cache for meta data to send
-      struct MPIProtocol::MetaData *metaDatas;
+      SmartPtr<MPIProtocol::MetaData, SmartPtrMPI<MPIProtocol::MetaData> > metaDatas;
 
     private:
       const std::string logPrefix;

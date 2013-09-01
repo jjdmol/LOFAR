@@ -5,6 +5,8 @@
 #include <vector>
 
 #include <Common/Thread/Mutex.h>
+#include <CoInterface/Allocator.h>
+#include <CoInterface/SmartPtr.h>
 
 namespace LOFAR {
 
@@ -18,6 +20,30 @@ namespace LOFAR {
 
     // Return the number of MPI ranks in this run
     int MPI_Size();
+
+    // Return whether MPI is initialised
+    bool MPI_Initialised();
+
+    // An allocator using MPI_Alloc_mem/MPI_Free_mem
+    class MPIAllocator : public Allocator
+    {
+    public:
+      virtual void                *allocate(size_t size, size_t alignment = 1);
+      virtual void                deallocate(void *);
+    };
+
+    extern MPIAllocator mpiAllocator;
+
+    // Free functor for CoInterface/SmartPtr
+    template <typename T = void>
+    class SmartPtrMPI
+    {
+    public:
+      static void free( T *ptr )
+      {
+        mpiAllocator.deallocate(ptr);
+      }
+    };
 
     // Wait for any request to finish. Returns the index of the request that
     // finished. Finished requests are set to MPI_REQUEST_NULL and ignored in

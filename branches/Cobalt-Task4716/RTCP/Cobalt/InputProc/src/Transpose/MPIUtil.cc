@@ -229,7 +229,7 @@ namespace LOFAR {
       
       int rank;
 
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      ::MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
       return rank;
     }
@@ -239,13 +239,48 @@ namespace LOFAR {
       
       int size;
 
-      MPI_Comm_size(MPI_COMM_WORLD, &size);
+      ::MPI_Comm_size(MPI_COMM_WORLD, &size);
 
       return size;
     }
 
+    bool MPI_Initialised() {
+      int flag;
+
+      ::MPI_Initialized(&flag);
+
+      return flag != 0;
+    }
+
+
+    void *MPIAllocator::allocate(size_t size, size_t alignment)
+    {
+      ScopedLock sl(MPIMutex);
+
+      ASSERT(alignment == 1); // Don't support anything else yet, although MPI likely aligns for us
+      ASSERT(MPI_Initialised());
+
+      void *ptr;
+
+      int error = ::MPI_Alloc_mem(size, MPI_INFO_NULL, &ptr);
+      ASSERT(error == MPI_SUCCESS);
+
+      return ptr;
+    }
+
+
+    void MPIAllocator::deallocate(void *ptr)
+    {
+      ScopedLock sl(MPIMutex);
+
+      int error = ::MPI_Free_mem(ptr);
+      ASSERT(error == MPI_SUCCESS);
+    }
+
+    MPIAllocator mpiAllocator;
+
     void freeRequest(MPI_Request &request) {
-      MPI_Request_free(&request);
+      ::MPI_Request_free(&request);
       ASSERT(request == MPI_REQUEST_NULL);
     }
 

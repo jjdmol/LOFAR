@@ -63,12 +63,8 @@ namespace LOFAR {
       int sourceRank = MPI_Rank();
 
       // Allocate MPI memory
-      {
-        ScopedLock sl(MPIMutex);
-
-        MPI_Alloc_mem(sizeof *header, MPI_INFO_NULL, &header);
-        MPI_Alloc_mem(beamlets.size() * sizeof *metaDatas, MPI_INFO_NULL, &metaDatas);
-      }
+      header = mpiAllocator.allocateTyped();
+      metaDatas = static_cast<MPIProtocol::MetaData *>(mpiAllocator.allocate(beamlets.size() * sizeof *metaDatas));
 
       // Set the static header info
       header->station      = settings.station;
@@ -84,13 +80,6 @@ namespace LOFAR {
 
     MPISendStation::~MPISendStation()
     {
-      // Free MPI memory
-      {
-        ScopedLock sl(MPIMutex);
-
-        MPI_Free_mem(metaDatas);
-        MPI_Free_mem(header);
-      }
     }
 
 
