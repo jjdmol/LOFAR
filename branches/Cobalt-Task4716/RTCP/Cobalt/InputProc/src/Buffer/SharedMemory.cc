@@ -137,10 +137,19 @@ namespace LOFAR
 #ifdef HAVE_MPI
         ScopedLock sl(MPIMutex);
 
-        void *addr;
+        // Don't use MPI_Alloc_mem if MPI wasn't initialised
+        int initialised;
+        MPI_Initialized(&initialised);
 
-        MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
-        return addr;
+        if (initialised) {
+          void *addr;
+
+          MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
+
+          return addr;
+        } else {
+          return heapAllocator.allocate(size, 256);
+        }
 #else
         return heapAllocator.allocate(size, 256);
 #endif
@@ -148,9 +157,20 @@ namespace LOFAR
 
       void deallocate(void *ptr) {
 #ifdef HAVE_MPI
+        // NOTE: We assume that MPI_Init was either called before the use of
+        // SharedMemory or will never be called at all.
+
         ScopedLock sl(MPIMutex);
 
-        MPI_Free_mem(ptr);
+        // Don't use MPI_Free_mem if MPI wasn't initialised
+        int initialised;
+        MPI_Initialized(&initialised);
+
+        if (initialised) {
+          MPI_Free_mem(ptr);
+        } else {
+          heapAllocator.deallocate(ptr);
+        }
 #else
         heapAllocator.deallocate(ptr);
 #endif
@@ -268,6 +288,8 @@ namespace LOFAR
         // destroy, if we created it
         if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
           deallocate(itsBegin);
+
+          fakeSharedMem.erase(key);
         }
 #else
         // detach
