@@ -63,6 +63,8 @@ namespace LOFAR
       // Need SubbandProcs to send work to
       ASSERT(workQueues.size() > 0);
 
+      NSTimer receiveTimer("MPI: Receive station data", true, false);
+
       // The length of a block in samples
       size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
 
@@ -116,7 +118,9 @@ namespace LOFAR
 
         // Receive all subbands from all stations
         LOG_INFO_STR("[block " << block << "] Receive input");
+        if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(blocks);
+        if (block > 2) receiveTimer.stop();
         LOG_INFO_STR("[block " << block << "] Input received");
 
         size_t nrFlaggedSamples = 0;
@@ -424,7 +428,10 @@ namespace LOFAR
 
         ASSERT(!outputData);
 
-        LOG_INFO_STR("[" << id << "] Done");
+        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
+          LOG_INFO_STR("[" << id << "] Done"); 
+        else
+          LOG_DEBUG_STR("[" << id << "] Done"); 
       }
     }
 
