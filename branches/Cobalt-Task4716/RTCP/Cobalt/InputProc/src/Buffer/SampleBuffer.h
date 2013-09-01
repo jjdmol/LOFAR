@@ -135,6 +135,10 @@ namespace LOFAR
       };
 
       std::vector<Board> boards;
+
+
+    private:
+      static const size_t ALIGNMENT = 256;
     };
 
     // Removes the sample buffers that correspond to settings.dataKey,

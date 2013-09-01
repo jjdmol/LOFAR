@@ -18,12 +18,12 @@ namespace LOFAR
     {
       return // header
              sizeof settings
-             // flags (aligned to 8)
-             + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + 8)
-             // beamlets (aligned to 128)
-             + settings.nrBoards * (BoardMode::nrBeamletsPerBoard(T::bitMode()) * settings.nrSamples(T::bitMode()) * sizeof(T) + 128)
-             // mode (aligned to 1)
-             + settings.nrBoards * sizeof(struct BoardMode);
+             // flags (aligned to ALIGNMENT)
+             + settings.nrBoards * (Ranges::size(settings.nrAvailableRanges) + ALIGNMENT)
+             // beamlets (aligned to ALIGNMENT)
+             + settings.nrBoards * (BoardMode::nrBeamletsPerBoard(T::bitMode()) * settings.nrSamples(T::bitMode()) * sizeof(T) + ALIGNMENT)
+             // mode (aligned to ALIGNMENT)
+             + settings.nrBoards * (sizeof(struct BoardMode) + ALIGNMENT);
     }
 
 
@@ -42,7 +42,7 @@ namespace LOFAR
       nrBoards(settings->nrBoards),
       nrAvailableRanges(settings->nrAvailableRanges),
 
-      beamlets(boost::extents[nrBoards * BoardMode::nrBeamletsPerBoard(T::bitMode())][nrSamples], 128, allocator, false, false),
+      beamlets(boost::extents[nrBoards * BoardMode::nrBeamletsPerBoard(T::bitMode())][nrSamples], ALIGNMENT, allocator, true, false),
       boards(nrBoards,Board(*this))
     {
       // Check if non-realtime mode is set up correctly
@@ -54,19 +54,19 @@ namespace LOFAR
       for (size_t b = 0; b < boards.size(); b++) {
         size_t numBytes = Ranges::size(nrAvailableRanges);
 
-        boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, 8)), numBytes, nrSamples, create);
+        boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, ALIGNMENT)), numBytes, nrSamples, create);
         boards[b].boardNr = b;
-        boards[b].mode = allocator.allocateTyped();
+        boards[b].mode = allocator.allocateTyped(ALIGNMENT);
       }
 
-      LOG_INFO_STR( logPrefix << "Initialised" );
+      LOG_DEBUG_STR( logPrefix << "Initialised" );
     }
     
 
     template<typename T>
     struct BufferSettings *SampleBuffer<T>::initSettings( const struct BufferSettings &localSettings, bool create )
     {
-      struct BufferSettings *sharedSettings = allocator.allocateTyped();
+      struct BufferSettings *sharedSettings = allocator.allocateTyped(ALIGNMENT);
 
       if (create) {
         // register settings
