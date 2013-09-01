@@ -396,10 +396,10 @@ namespace LOFAR
       bufferFree.up();
     }
 
-    void Delays::generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, vector<SubbandMetaData> &metaDatas, vector<ssize_t> &read_offsets )
+    void Delays::generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, const vector<size_t> &subbands, vector<SubbandMetaData> &metaDatas, vector<ssize_t> &read_offsets )
     {
-      ASSERT( metaDatas.size() == parset.nrSubbands() );
-      ASSERT( read_offsets.size() == parset.nrSubbands() );
+      ASSERT( metaDatas.size() == subbands.size() );
+      ASSERT( read_offsets.size() == subbands.size() );
 
       // Delay compensation is performed in two parts. First, a coarse
       // correction is done by shifting the block to read by a whole
@@ -418,24 +418,28 @@ namespace LOFAR
       }
 
       // Compute the offsets at which each subband is read
-      for (size_t subband = 0; subband < parset.nrSubbands(); ++subband) {
+      for (size_t i = 0; i < subbands.size(); ++i) {
+        const size_t subband = subbands[i];
+
         unsigned sap = parset.settings.subbands[subband].SAP;
 
         // Mystery unary minus
-        read_offsets[subband] = -coarseDelaysSamples[sap];
+        read_offsets[i] = -coarseDelaysSamples[sap];
       }
 
       // Add the delays to metaDatas.
-      for (size_t subband = 0; subband < parset.nrSubbands(); ++subband) {
+      for (size_t i = 0; i < subbands.size(); ++i) {
+        const size_t subband = subbands[i];
+
         unsigned sap = parset.settings.subbands[subband].SAP;
         double coarseDelay = coarseDelaysSeconds[sap];
 
-        metaDatas[subband].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay - coarseDelay;
-        metaDatas[subband].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay - coarseDelay;
+        metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay - coarseDelay;
+        metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay - coarseDelay;
 
-        for (size_t tab = 0; tab < metaDatas[subband].TABs.size(); ++tab) {
-          metaDatas[subband].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].delay - coarseDelay;
-          metaDatas[subband].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].delay - coarseDelay;
+        for (size_t tab = 0; tab < metaDatas[i].TABs.size(); ++tab) {
+          metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].delay - coarseDelay;
+          metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].delay - coarseDelay;
         }
       }
     }

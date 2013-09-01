@@ -9,6 +9,9 @@
 #include "SharedMemory.h"
 #include "Ranges.h"
 
+#define DEBUG_SYNCLOCK(s)
+//#define DEBUG_SYNCLOCK(s) LOG_DEBUG_STR(s)
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -47,8 +50,10 @@ namespace LOFAR
     {
       // Check if non-realtime mode is set up correctly
       if (sync) {
+        const BoardMode mode(T::bitMode());
+
         ASSERTSTR(syncLock, "Synced buffer requires syncLock object");
-        ASSERTSTR(syncLock->size() == nrBoards, "SHM buffer has " << nrBoards << " RSP boards, but syncLock expects " << syncLock->size() << " boards");
+        ASSERTSTR(syncLock->writeLock.size() == nrBoards, "SampleBuffer has " << nrBoards << " RSP boards, but syncLock expects " << syncLock->writeLock.size() << " boards");
       }
 
       for (size_t b = 0; b < boards.size(); b++) {
@@ -108,46 +113,65 @@ namespace LOFAR
 
 
     template<typename T>
-    void SampleBuffer<T>::Board::noReadBefore( const TimeStamp &epoch )
+    void SampleBuffer<T>::noReadBefore( size_t beamlet, const TimeStamp &epoch )
     {
-      if (buffer.sync) {
+      if (sync) {
         // Free up read intent up until `epoch'.
-        (*buffer.syncLock)[boardNr].readPtr.advanceTo(epoch);
+        DEBUG_SYNCLOCK("noReadBefore(" << beamlet << ", " << epoch << ")");
+
+        ASSERT(beamlet < syncLock->readLock.size());
+        syncLock->readLock[beamlet].advanceTo(epoch);
       }
     }
 
 
     template<typename T>
-    void SampleBuffer<T>::Board::startRead( const TimeStamp &begin, const TimeStamp &end )
+    void SampleBuffer<T>::startRead( size_t beamlet, const TimeStamp &begin, const TimeStamp &end )
     {
-      // Free up read intent up until `begin'.
-      noReadBefore(begin);
+      /*
+       * Note: callers might want to free up the read intent up until `begin':
+       *  noReadBefore(beamlet, begin);
+       */
+      (void)begin;
 
-      if (buffer.sync) {
+      if (sync) {
+        ASSERT(beamlet < syncLock->readLock.size());
+
         // Wait for writer to finish writing until `end'.
-        (*buffer.syncLock)[boardNr].writePtr.waitFor(end);
+        const BoardMode mode(T::bitMode());
+        size_t boardNr = mode.boardIndex(beamlet);
+
+        DEBUG_SYNCLOCK("startRead(" << beamlet << ", " << begin << ", " << end << "): waits on board " << boardNr);
+
+        syncLock->writeLock[boardNr].waitFor(end);
+
+        DEBUG_SYNCLOCK("startRead(" << beamlet << ", " << begin << ", " << end << "): reading from board " << boardNr);
       }
     }
 
 
     template<typename T>
-    void SampleBuffer<T>::Board::stopRead( const TimeStamp &end )
+    void SampleBuffer<T>::stopRead( size_t beamlet, const TimeStamp &end )
     {
+      if (sync) {
+        DEBUG_SYNCLOCK("stopRead(" << beamlet << ", " << end << ")");
+      }
+
       // Signal we're done reading
-      noReadBefore(end);
+      noReadBefore(beamlet, end);
     }
 
 
     template<typename T>
-    void SampleBuffer<T>::Board::noMoreReading()
+    void SampleBuffer<T>::noMoreReading( size_t beamlet )
     {
-      LOG_DEBUG_STR("[board " << boardNr << "] noMoreReading()");
+      DEBUG_SYNCLOCK("noMoreReading(" << beamlet << ")");
 
       // Signal we're done reading
 
       // Put the readPtr into the far future.
       // We only use this TimeStamp for comparison so clockSpeed does not matter.
-      noReadBefore(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
+      noReadBefore(beamlet, TimeStamp(0xFFFFFFFFFFFFFFFFULL));
     }
 
 
@@ -157,12 +181,28 @@ namespace LOFAR
       ASSERT((uint64)end > buffer.nrSamples);
 
       if (buffer.sync) {
+        DEBUG_SYNCLOCK("[board " << boardNr << "] startWrite(" << begin << ", " << end << ")");
+
         // Signal write intent, to let reader know we don't have data older than
         // this.
-        (*buffer.syncLock)[boardNr].writePtr.advanceTo(begin);
+        buffer.syncLock->writeLock[boardNr].advanceTo(begin);
 
-        // Wait for reader to finish what we're about to overwrite
-        (*buffer.syncLock)[boardNr].readPtr.waitFor(end - buffer.nrSamples);
+        ASSERT(this->mode);
+
+        const size_t nrBeamletsPerBoard = this->mode->nrBeamletsPerBoard();
+        const size_t nrBeamlets = buffer.syncLock->readLock.size();
+
+        // Wait for readers to finish what we're about to overwrite
+        for (size_t i = 0; i < nrBeamletsPerBoard; ++i) {
+          size_t beamlet = boardNr * nrBeamletsPerBoard + i;
+
+          if (beamlet >= nrBeamlets)
+            break;
+
+          DEBUG_SYNCLOCK("[board " << boardNr << "] startWrite: waiting for readLock on beamlet " << beamlet << " to reach " << (end - buffer.nrSamples));
+          buffer.syncLock->readLock[beamlet].waitFor(end - buffer.nrSamples);
+          DEBUG_SYNCLOCK("[board " << boardNr << "] startWrite: passed readLock on beamlet " << beamlet);
+        }
       }
 
       // Mark overwritten range (and everything before it to prevent a mix) as invalid
@@ -174,8 +214,10 @@ namespace LOFAR
     void SampleBuffer<T>::Board::stopWrite( const TimeStamp &end )
     {
       if (buffer.sync) {
+        DEBUG_SYNCLOCK("[board " << boardNr << "] stopWrite(" << end << ")");
+
         // Signal we're done writing
-        (*buffer.syncLock)[boardNr].writePtr.advanceTo(end);
+        buffer.syncLock->writeLock[boardNr].advanceTo(end);
       }
     }
 
@@ -190,7 +232,7 @@ namespace LOFAR
 
         // Put the writePtr into the far future.
         // We only use this TimeStamp for comparison so clockSpeed does not matter.
-        (*buffer.syncLock)[boardNr].writePtr.advanceTo(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
+        buffer.syncLock->writeLock[boardNr].advanceTo(TimeStamp(0xFFFFFFFFFFFFFFFFULL));
       }
     }
   }

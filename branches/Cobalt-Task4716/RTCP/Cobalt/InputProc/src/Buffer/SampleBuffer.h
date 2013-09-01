@@ -93,6 +93,20 @@ namespace LOFAR
 
       size_t offset( const TimeStamp &timestamp ) const { return (int64)timestamp % nrSamples; }
 
+
+      // Signal that there will be no reads before the given epoch
+      void noReadBefore( size_t beamlet, const TimeStamp &epoch );
+
+      // Signal start of read intent for data in [begin, end). Waits for data to arrive
+      // until or after `end'.
+      void startRead( size_t beamlet, const TimeStamp &begin, const TimeStamp &end );
+
+      // Signal release of data before end, thus allowing it to be overwritten by newer data.
+      void stopRead( size_t beamlet, const TimeStamp &end );
+
+      // Signal that we're done reading.
+      void noMoreReading( size_t beamlet );
+
       class Board {
       public:
         Board( SampleBuffer<T> &buffer, size_t boardNr = 0 );
@@ -106,9 +120,6 @@ namespace LOFAR
         // Change the mode of this board
         void changeMode( const struct BoardMode &mode );
 
-        // Signal that there will be no reads before the given epoch
-        void noReadBefore( const TimeStamp &epoch );
-
         // Signal start of write intent for data in [begin, end). The flags will be updated
         // for any data that will be overwritten, but not set for any data that is
         // written.
@@ -120,22 +131,11 @@ namespace LOFAR
         // Signal end-of-data (we're done writing).
         void noMoreWriting();
 
-        // Signal start of read intent for data in [begin, end). Waits for data to arrive
-        // until or after `end'.
-        void startRead( const TimeStamp &begin, const TimeStamp &end );
-
-        // Signal release of data before end, thus allowing it to be overwritten by newer data.
-        void stopRead( const TimeStamp &end );
-
-        // Signal that we're done reading.
-        void noMoreReading();
-
       private:
         SampleBuffer<T> &buffer;
       };
 
       std::vector<Board> boards;
-
 
     private:
       static const size_t ALIGNMENT = 256;

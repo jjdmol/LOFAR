@@ -96,11 +96,16 @@ namespace LOFAR {
       std::vector<MPI_Request> header_requests(nrStations, MPI_REQUEST_NULL);
       std::vector<struct Header> headers(nrStations);
 
+      {
+        ScopedLock sl(MPIMutex);
+
       for (size_t stat = 0; stat < nrStations; ++stat) {
         //LOG_DEBUG_STR(logPrefix << "Posting receive for header from station " << stat);
 
         // receive the header
         header_requests[stat] = receiveHeader(stat, headers[stat]);
+      }
+
       }
 
       // Process stations in the order in which we receive the headers
@@ -129,6 +134,8 @@ namespace LOFAR {
 
         ASSERTSTR(header.nrBeamlets == beamlets.size(), "Got " << header.nrBeamlets << " beamlets, but expected " << beamlets.size());
 
+        ScopedLock sl(MPIMutex);
+
         // Post receives for all beamlets from this station
         for (size_t beamletIdx = 0; beamletIdx < header.nrBeamlets; ++beamletIdx) {
           const size_t beamlet = beamlets[beamletIdx];
@@ -138,11 +145,19 @@ namespace LOFAR {
           ASSERT(wrapOffset < blockSize);
 
           /*
+           * RECEIVE FLAGS (ASYNC)
+           *
+           * Post these first, so that beam transfer implies that the FLAGS
+           * request has been posted (allowing the use of Irsend).
+           */
+
+          requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
+
+          /*
            * RECEIVE BEAMLET (ASYNC)
            */
 
           //LOG_DEBUG_STR(logPrefix << "Receiving beamlet " << beamlet << " from station " << stat << " using " << (wrapOffset > 0 ? 2 : 1) << " transfers");
-
           // First sample transfer
           requests.push_back(receiveData<T>(stat, beamlet, 0, &blocks[stat].beamlets[beamletIdx].samples[0], wrapOffset ? wrapOffset : blockSize));
 
@@ -150,12 +165,6 @@ namespace LOFAR {
           if (wrapOffset > 0) {
             requests.push_back(receiveData<T>(stat, beamlet, 1, &blocks[stat].beamlets[beamletIdx].samples[wrapOffset], blockSize - wrapOffset));
           }
-
-          /*
-           * RECEIVE FLAGS (ASYNC)
-           */
-
-          requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
         }
       }
 

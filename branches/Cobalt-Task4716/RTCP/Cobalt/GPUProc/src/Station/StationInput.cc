@@ -67,7 +67,8 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
 {
   // settings for the circular buffer
   struct BufferSettings settings(stationID, false);
-  settings.setBufferSize(5.0);
+  settings.nrSamples_16bit = 5 * ps.nrSamplesPerSubband(); // Align with our block increment
+  //settings.setBufferSize(5.0);
 
   // Remove lingering buffers
   removeSampleBuffers(settings);
@@ -79,7 +80,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   settings.nrBoards = inputStreams.size();
 
   // Force buffer reader/writer syncing if observation is non-real time
-  SyncLock syncLock(settings);
+  SyncLock syncLock(settings, ps.settings.subbands.size());
   if (!ps.realTime()) {
     settings.sync = true;
     settings.syncLock = &syncLock;
@@ -155,113 +156,122 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
       // Wait for SHM buffer to be created and initialised
       bufferReady.down();
 
-      // Fetch buffer settings from SHM.
-      const struct BufferSettings settings(stationID, true);
-      const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+      { // Make sure the SHM buffer is unused when we raise stopSignal
 
-      LOG_INFO_STR("Detected " << settings);
+        // Fetch buffer settings from SHM.
+        const struct BufferSettings settings(stationID, true);
+        const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
-      /*
-       * Set up circular buffer data reader.
-       */
-      vector<size_t> beamlets(ps.nrSubbands());
-      for( size_t i = 0; i < beamlets.size(); ++i) {
-        // Determine the beamlet number of subband i for THIS station
-        unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
-        unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
+        LOG_INFO_STR("Detected " << settings);
 
-        unsigned beamlet = board * mode.nrBeamletsPerBoard() + slot;
+        const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+        const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
 
-        beamlets[i] = beamlet;
-      }
+        // Determine the subband -> beamlet mapping for THIS station
+        vector<size_t> beamlets(ps.nrSubbands());
+        for( size_t i = 0; i < ps.nrSubbands(); ++i) {
+          unsigned board = ps.settings.stations[stationIdx].rspBoardMap[i];
+          unsigned slot  = ps.settings.stations[stationIdx].rspSlotMap[i];
 
-      BlockReader<SampleT> reader(settings, mode, beamlets, ps.nrHistorySamples(), 1.0);
+          size_t beamlet = board * mode.nrBeamletsPerBoard() + slot;
 
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
-      LOG_DEBUG_STR("Connecting to receivers to send " << from << " to " << to);
-
-      vector<int> targetRanks(keys(subbandDistribution));
-
-#ifdef HAVE_MPI
-#     pragma omp parallel for num_threads(targetRanks.size())
-      for(size_t i = 0; i < targetRanks.size(); ++i) {
-        int rank = targetRanks[i];
-
-        /*
-         * Set up the MPI send engine for this rank.
-         */
-        SubbandDistribution dist;
-        dist[rank] = subbandDistribution.at(rank);
-
-        MPISendStation sender(settings, stationIdx, dist);
-#else
-        int rank = -1;
-
-        (void)subbandDistribution;
-        (void)rank;
-#endif
-
-        /*
-         * Set up delay compensation.
-         */
-        Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
-        delays.start();
-
-        // We keep track of the delays at the beginning and end of each block.
-        // After each block, we'll swap the afterEnd delays into atBegin.
-        Delays::AllDelays delaySet1(ps), delaySet2(ps);
-        Delays::AllDelays *delaysAtBegin  = &delaySet1;
-        Delays::AllDelays *delaysAfterEnd = &delaySet2;
-
-        // Get delays at begin of first block
-        delays.getNextDelays(*delaysAtBegin);
-
-        /*
-         * Transfer all blocks.
-         */
-
-        vector<SubbandMetaData> metaDatas(ps.nrSubbands());
-        vector<ssize_t> read_offsets(ps.nrSubbands());
-
-        size_t block = 0;
-
-        for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband(), ++block) {
-          LOG_DEBUG_STR(str(format("[rank %i block %u] Sending data from %s") % rank % block % stationID));
-
-          // Fetch end delays (start delays are set by the previous block, or
-          // before the loop).
-          delays.getNextDelays(*delaysAfterEnd);
-
-          // Compute the next set of metaData and read_offsets from the new
-          // delays pair.
-          delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, metaDatas, read_offsets);
-
-          //LOG_DEBUG_STR("Delays obtained");
-          // Align reads to 256
-          size_t offset = 0;//((int64)current + read_offsets[0] - ps.nrHistorySamples()) & 0xFFUL;
-
-          // Read the next block from the circular buffer.
-          SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current - offset, current - offset + ps.nrSamplesPerSubband(), read_offsets));
-
-          //LOG_INFO_STR("Block read");
-
-#ifdef HAVE_MPI
-          // Send the block to the receivers
-          sender.sendBlock<SampleT>(*block, metaDatas);
-#else
-          DirectInput::instance().sendBlock<SampleT>(stationIdx, *block, metaDatas);
-#endif
-
-          //LOG_INFO_STR("Block sent");
-
-          // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
-          swap(delaysAtBegin, delaysAfterEnd);
+          beamlets[i] = beamlet;
         }
+
+        // All receiver ranks -- we have a dedicated thread for each one
+        const vector<int> targetRanks(keys(subbandDistribution));
+
 #ifdef HAVE_MPI
-      }
+        // Send to all receivers in PARALLEL for higher performance
+#       pragma omp parallel for num_threads(targetRanks.size())
+        for(size_t i = 0; i < targetRanks.size(); ++i) {
+          int rank = targetRanks.at(i);
+          const vector<size_t> &targetSubbands(subbandDistribution.at(rank));
+
+          /*
+           * Set up circular buffer data reader.
+           */
+
+          // subband -> beamlet conversion for the reader
+          vector<size_t> targetBeamlets(targetSubbands.size());
+          for( size_t i = 0; i < targetSubbands.size(); ++i) {
+            targetBeamlets[i] = beamlets[targetSubbands[i]];
+          }
+
+          BlockReader<SampleT> reader(settings, mode, targetBeamlets, ps.nrHistorySamples(), 1.0);
+
+          /*
+           * Set up the MPI send engine for this rank.
+           */
+
+          MPISendStation sender(settings, stationIdx, rank, targetSubbands);
+#else
+          int rank = -1;
+
+          (void)subbandDistribution;
+          (void)rank;
 #endif
+
+          /*
+           * Set up delay compensation.
+           */
+          Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
+          delays.start();
+
+          // We keep track of the delays at the beginning and end of each block.
+          // After each block, we'll swap the afterEnd delays into atBegin.
+          Delays::AllDelays delaySet1(ps), delaySet2(ps);
+          Delays::AllDelays *delaysAtBegin  = &delaySet1;
+          Delays::AllDelays *delaysAfterEnd = &delaySet2;
+
+          // Get delays at begin of first block
+          delays.getNextDelays(*delaysAtBegin);
+
+          /*
+           * Transfer all blocks.
+           */
+
+          vector<SubbandMetaData> metaDatas(targetSubbands.size());
+          vector<ssize_t> read_offsets(targetSubbands.size());
+
+          size_t block = 0;
+
+          for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband(), ++block) {
+            LOG_DEBUG_STR(str(format("[rank %i block %u] Sending data from %s") % rank % block % stationID));
+
+            // Fetch end delays (start delays are set by the previous block, or
+            // before the loop).
+            delays.getNextDelays(*delaysAfterEnd);
+
+            // Compute the next set of metaData and read_offsets from the new
+            // delays pair.
+            delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, metaDatas, read_offsets);
+
+            //LOG_DEBUG_STR("Delays obtained");
+            // Align reads to 256
+            size_t offset = 0;//((int64)current + read_offsets[0] - ps.nrHistorySamples()) & 0xFFUL;
+
+            // Read the next block from the circular buffer.
+            SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current - offset, current - offset + ps.nrSamplesPerSubband(), read_offsets));
+
+            //LOG_INFO_STR("Block read");
+
+#ifdef HAVE_MPI
+            // Send the block to the receivers
+            sender.sendBlock<SampleT>(*block, metaDatas);
+#else
+            DirectInput::instance().sendBlock<SampleT>(stationIdx, *block, metaDatas);
+#endif
+
+            //LOG_INFO_STR("Block sent");
+
+            // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
+            swap(delaysAtBegin, delaysAfterEnd);
+          }
+#ifdef HAVE_MPI
+        }
+#endif
+      }
 
       /*
        * The end.
