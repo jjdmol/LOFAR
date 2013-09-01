@@ -34,6 +34,16 @@
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Mutex.h>
 #include <Stream/FileDescriptorBasedStream.h>
+#include <CoInterface/Allocator.h>
+
+#ifdef HAVE_MPI
+#include <mpi.h>
+#include <InputProc/Transpose/MPIUtil.h>
+#endif
+
+// If defined, disable the use of shared memory, and fake it with
+// local memory instead.
+#define FAKE_SHARED_MEM
 
 using namespace std;
 using boost::format;
@@ -45,6 +55,10 @@ namespace LOFAR
     // Prevent multiple threads from creating/deleting the same region at the same
     // time.
     static Mutex shmMutex;
+
+#ifdef FAKE_SHARED_MEM
+    std::map<key_t, void *> fakeSharedMem;
+#endif
 
     // TODO: key_t can be replaced with std::string, but that would require
     // updates across SampleBuffer/StationID/BufferSettings/SharedStruct, and
@@ -108,9 +122,54 @@ namespace LOFAR
       LOG_DEBUG_STR("SHM: " << modeStr(mode) << " 0x" << hex << key << " (" << dec << size << " bytes): SUCCESS");
     }
 
+    void *allocate(size_t size) {
+#if 0
+      // Allocate HugeTLB pages
+      void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_HUGETLB | MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+
+      if (addr == MAP_FAILED)
+        THROW_SYSCALL("mmap");
+
+      return addr;
+#endif
+
+#ifdef HAVE_MPI
+      ScopedLock sl(MPIMutex);
+
+      void *addr;
+
+      MPI_Alloc_mem(size, MPI_INFO_NULL, &addr);
+      return addr;
+#else
+      return heapAllocator.allocate(size, 256);
+#endif
+    }
+
 
     bool SharedMemoryArena::open( int open_flags, int mmap_flags, bool timeout )
     {
+#ifdef FAKE_SHARED_MEM
+      LOG_WARN_STR("Faking shared memory!");
+
+      ScopedLock sl(shmMutex);
+
+      preexisting = true;
+
+      if (fakeSharedMem.find(key) == fakeSharedMem.end()) {
+        if ((open_flags & O_CREAT) > 0) {
+          preexisting = false;
+          fakeSharedMem[key] = allocate(itsSize);
+        } else {
+          if (!timeout)
+            THROW_SYSCALL("(dummy)");
+
+          return false;
+        }
+      }
+
+      itsBegin = fakeSharedMem[key];
+      return true;
+#else
       ScopedLock sl(shmMutex);
 
       string keystr = str(format("/%x") % key);
@@ -139,7 +198,7 @@ namespace LOFAR
         }
 
         // attach
-        itsBegin = mmap(NULL, itsSize, mmap_flags, MAP_SHARED, fd.fd, 0);
+        itsBegin = mmap(NULL, itsSize, mmap_flags, MAP_SHARED | MAP_LOCKED | MAP_POPULATE | MAP_NORESERVE, fd.fd, 0);
 
         if (itsBegin == (void*)MAP_FAILED)
           THROW_SYSCALL("mmap");
@@ -148,11 +207,15 @@ namespace LOFAR
       }
 
       return false;
+#endif
     }
 
 
     size_t SharedMemoryArena::maxSize()
     {
+#ifdef FAKE_SHARED_MEM
+      return 0;
+#else
       size_t max_shm_size = 0;
 
 #ifdef __linux__
@@ -171,13 +234,16 @@ namespace LOFAR
 #endif
 
       return 0;
+#endif
     }
 
     void SharedMemoryArena::remove( key_t key, bool quiet )
     {
+#ifndef FAKE_SHARED_MEM
       string keystr = str(format("/%x") % key);
 
       shm_unlink(keystr.c_str());
+#endif
     }
 
 
@@ -186,6 +252,19 @@ namespace LOFAR
       ScopedLock sl(shmMutex);
 
       try {
+#ifdef FAKE_SHARED_MEM
+
+        // destroy, if we created it
+        if (!preexisting && (mode == CREATE || mode == CREATE_EXCL)) {
+#ifdef HAVE_MPI
+          ScopedLock sl(MPIMutex);
+
+          MPI_free_mem(itsBegin);
+#else
+          heapAllocator.deallocate(itsBegin);
+#endif
+        }
+#else
         // detach
         if (munmap(itsBegin, itsSize) < 0)
           THROW_SYSCALL("munmap");
@@ -197,6 +276,7 @@ namespace LOFAR
           if (shm_unlink(keystr.c_str()) < 0)
             THROW_SYSCALL("shm_unlink");
         }
+#endif
       } catch (Exception &ex) {
         LOG_ERROR_STR("Exception in destructor: " << ex);
       }
