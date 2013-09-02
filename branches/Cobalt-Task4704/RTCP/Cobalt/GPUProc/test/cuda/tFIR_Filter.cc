@@ -98,7 +98,7 @@ int test()
   unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
   HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData * sizeof(float), 0.0f);
 
-  unsigned sizeSampledData = NR_STATIONS * (NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
+  unsigned sizeSampledData = NR_STATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
   HostMemory rawInputSamples = getInitializedArray(ctx, sizeSampledData * sizeof(signed char), char(0));
 
   unsigned sizeWeightsData = NR_CHANNELS * NR_TAPS;
@@ -127,7 +127,7 @@ int test()
   MultiDimArray<signed char, 5>
     inputSamplesArr(boost::extents
                     [NR_STATIONS]
-                    [NR_SAMPLES_PER_CHANNEL + (NR_TAPS - 1)]
+                    [NR_SAMPLES_PER_CHANNEL]
                     [NR_CHANNELS]
                     [NR_POLARIZATIONS]
                     [COMPLEX],
@@ -159,7 +159,7 @@ int test()
 
   // Test 1: Single impulse test on single non-zero weight
   station = ch = pol = 0;
-  sample = NR_TAPS - 1; // skip FIR init samples
+  sample = 0;
   rawFirWeights.get<float>()[0] = 2.0f;
   inputSamplesArr[station][sample][ch][pol][0] = 3;
 
@@ -220,7 +220,7 @@ int test()
   }
 
   for (station = 0; station < NR_STATIONS; station++) {
-    for (sample = NR_TAPS - 1; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample += 2 * NR_TAPS) {
+    for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample += 2 * NR_TAPS) {
       for (ch = 0; ch <NR_CHANNELS; ch++) {
         for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
           inputSamplesArr[station][sample][ch][pol][0] = station;
@@ -302,22 +302,11 @@ int test()
   }
 
   for (station = 0; station < NR_STATIONS; station++) {
-    for (sample = 0; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample++) {
+    for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
       for (ch = 0; ch < NR_CHANNELS; ch++) {
         for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
           inputSamplesArr[station][sample][ch][pol][0] = 2; // real
           inputSamplesArr[station][sample][ch][pol][1] = 3; // imag
-        }
-      }
-    }
-  }
-
-  for (station = 0; station < NR_STATIONS; station++) {
-    for (sample = 0; sample < NR_TAPS - 1; sample++) {
-      for (ch = 0; ch < NR_CHANNELS; ch++) {
-        for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          historyDataArr[station][sample][ch][pol][0] = 2; // real
-          historyDataArr[station][sample][ch][pol][1] = 3; // imag
         }
       }
     }
@@ -340,7 +329,8 @@ int test()
   const float eps = 4.0f * std::numeric_limits<float>::epsilon();
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+      // Skip the first NR_TAPS - 1 samples; they contain the filtered history data
+      for (sample = NR_TAPS - 1; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
         for (ch = 0; ch < NR_CHANNELS; ch++) {
           // Expected sum must also be scaled by 2 and 3, because weights are real only.
           if (!fpEquals(filteredDataArr[station][pol][sample][ch][0], (float)(2 * scale * expectedSums[ch]), eps)) {
@@ -391,7 +381,7 @@ int test()
   // Set input samples: a train of alternating real and imaginary pulses,
   // NR_TAPS / 2 samples apart.
   for (station = 0; station < NR_STATIONS; station++) {
-    for (sample = NR_TAPS - 1; sample < NR_TAPS - 1 + NR_SAMPLES_PER_CHANNEL; sample += NR_TAPS) {
+    for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample += NR_TAPS) {
       for (ch = 0; ch < NR_CHANNELS; ch++) {
         for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
           // for (ri = 0; ri < COMPLEX; ri++) {
