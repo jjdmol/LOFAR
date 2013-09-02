@@ -258,6 +258,56 @@ void acknowledgeAlarm(int iPos,string dp,string message) {
             sys+\"__navObjectState.force\",true);
     }    
   }
+}
+
+void acknowledge(string what) {
+
+  alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
+                              \"Message\",g_alarms[\"MESSAGE\"][j],
+                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
+                              \"State\",g_alarms[\"STATE\"][j]);
+
+  dyn_int ackList;
+  for (int j=1; j<=dynlen(g_alarms[\"DPNAME\"])  ; j++) {
+  
+    switch(what) {
+      case (\"alarmall\") : {
+        break;
+      }
+      case (\"alarmcame\") : {
+        break;
+      }
+      case (\"alarmwent\") : {
+        break;
+      }
+      case (\"suspall\") : {
+        break;
+      }
+      case (\"suspcame\") : {
+        break;
+      }
+      case (\"suspwent\") : {
+        break;
+      }
+      case (\"all\") : {
+        break;
+      }
+      case (\"allcame\") : {
+        break;
+      }
+      case (\"allwent\") : {
+        break;
+      }
+      case (\"allstationtest\") : {  
+        if (strpos(g_alarms[\"MESSAGE\"][j],\"stationtest\") >= 0 &&
+                   g_alarms[\"STATUS\"][j] != ACK ) {
+            dynAppend(ackList,j);
+          break;
+        }
+      }
+    }
+  }
+  DebugN(ackList);
 }" 0
  2
 "CBRef" "1"
@@ -270,7 +320,7 @@ LANG:1 0
 25 1
 "alarmTable"
 ""
-1 9 8.69318181818182 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 9.009100101112235 38.14588047384534 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main(int row, string column)
 {
   rClick(row);
@@ -289,7 +339,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  -2 -2 991 685
+0  -2 28 992 672
 "main()
 {
   this.tableMode(TABLE_SELECT_MULTIPLE);
@@ -342,6 +392,91 @@ LANG:1 2 #4
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 0 0 1 1 1 7
 1 0
+26 2
+"CASCADE_BUTTON1"
+""
+1 0 0 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0  -2 -2 122 24
+ 0 1
+LANG:1 11 Acknowledge
+"" 0 0 0 0 0
+ 7 0 1
+LANG:1 5 Alarm
+"5" 0 0 0 0 0
+ 3 1 1
+LANG:1 3 All
+"7" 0 0 0 0 0
+ 1 1
+LANG:1 4 Came
+"8" 0 0 0 0 0
+ 1 1
+LANG:1 4 Went
+"9" 0 0 0 0 0
+ 0 1
+LANG:1 10 Suspicious
+"6" 0 0 0 0 0
+ 3 1 1
+LANG:1 3 All
+"10" 0 0 0 0 0
+ 1 1
+LANG:1 4 Came
+"11" 0 0 0 0 0
+ 1 1
+LANG:1 4 Went
+"12" 0 0 0 0 0
+ 0 1
+LANG:1 8 Specials
+"4" 0 0 0 0 0
+ 1 1 1
+LANG:1 18 stationtest alarms
+"16" 0 0 0 0 0
+ 1 1
+LANG:1 3 ___
+"26" 0 0 0 0 0
+ 1 1
+LANG:1 3 All
+"13" 0 0 0 0 0
+ 1 1
+LANG:1 8 All Came
+"14" 0 0 0 0 0
+ 1 1
+LANG:1 8 All Went
+"15" 0 0 0 0 0
+ E "main(string id)
+{
+  if (id == 7) {
+    acknowledge(\"alarmall\");
+  } else if (id == 8) {
+    acknowledge(\"alarmcame\");
+  } else if (id == 9) {
+    acknowledge(\"alarmwent\");
+  } else if (id == 10) {
+    acknowledge(\"suspall\");
+  } else if (id == 11) {
+    acknowledge(\"suspcame\");
+  } else if (id == 12) {
+    acknowledge(\"suspwent\");
+  } else if (id == 13) {
+    acknowledge(\"all\");
+  } else if (id == 14) {
+    acknowledge(\"allcame\");
+  } else if (id == 15) {
+    acknowledge(\"allwent\");
+  } else if (id == 16) {
+    acknowledge(\"allstationtest\");
+  }
+}" 0
+0 
 0
 LAYER, 1 
 1
