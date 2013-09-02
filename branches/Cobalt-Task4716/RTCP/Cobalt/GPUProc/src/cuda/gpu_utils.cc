@@ -270,8 +270,13 @@ namespace LOFAR
       CompileFlags flags;
       flags.insert("-o /dev/stdout");
       flags.insert("-ptx");
-      flags.insert("--restrict");
-      flags.insert("-O3");
+
+      // For now, keep optimisations the same to detect changes in
+      // output with reference.
+      flags.insert("-use_fast_math");
+      //flags.insert("--restrict");
+      //flags.insert("-O3");
+
       flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }
