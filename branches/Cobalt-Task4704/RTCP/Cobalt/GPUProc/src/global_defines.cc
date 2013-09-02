@@ -33,6 +33,7 @@ namespace LOFAR
   namespace Cobalt
   {
     bool profiling = false;
+    bool gpuProfiling = true;
     const char *str = getenv("NR_GPUS");
     unsigned nrGPUs = str ? atoi(str) : 1;
 

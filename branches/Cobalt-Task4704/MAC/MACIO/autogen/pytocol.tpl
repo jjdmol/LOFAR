@@ -21,6 +21,7 @@
 [+ DEFINE prefix_cap +][+ IF (exist? "prefix") +][+ (get "prefix") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE prefix_ucase +][+ IF (exist? "prefix") +][+ (string-upcase (get "prefix")) +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE protocol_id +][+ IF (exist? "id") +][+ (get "id") +][+ ENDIF +][+ ENDDEF +]
+[+ DEFINE protocolnr +][+ IF (*=* (get "id") "LOFAR::MACIO::") +][+ (string-substitute (get "id") '("LOFAR::MACIO::")' ("")) +][+ ELSE +][+ (get "id") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE signal_name +][+ prefix_ucase +]_[+ (get "signal") +][+ ENDDEF +]
 [+ DEFINE signal_id +][+ signal_name +]_ID[+ ENDDEF +]
 [+ DEFINE cap_signal +][+ (string-substitute (string-capitalize! (get "signal")) '( "_" )' ( "" )) +][+ ENDDEF +]
@@ -28,12 +29,11 @@
 [+ DEFINE event_class_decl +][+ event_class_name +](GCFEvent):[+ ENDDEF +]
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ IF (*== (get "type") ">") +][+ (substring (get "type") (1+(string-index (get "type") #\<)) (string-index (get "type") #\>)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDIF +][+ ENDDEF +]
-[+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (*== (get "type") "[]") +]*[+ ENDIF +] [+ (get "name") +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
+[+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_param_init +][+ CASE (get "type") +][+ == string +]""[+ == char +]'\0'[+ ==* char +]""[+ *== int64 +]0L[+ *=* int +]0[+ == float +]0.0[+ == double +]0.0[+ == bool +]False[+ ESAC +][+ ENDDEF +]
-[+ DEFINE event_param_format1 +][+ CASE (get "type") +][+ == string +]%s[+ == char +]%c[+ *== "]" +]%s[+ ==* vector +][%s][+ *== int64 +]%ld[+ *=* int +]%d[+ == float +]%f[+ == double +]%f[+ == bool +]%r[+ ESAC +][+ ENDDEF +]
+[+ DEFINE event_param_format1 +][+ CASE (get "type") +][+ == string +]%s[+ == char +]%c[+ *== "]" +]%s[+ ==* vector +]%s[+ ==* map +]%s[+ *== int64 +]%ld[+ *=* int +]%d[+ == float +]%f[+ == double +]%f[+ == bool +]%r[+ ESAC +][+ ENDDEF +]
 [+ DEFINE event_param_format2 +][+ CASE (get "type") +][+ ==* char +]c[+ ==* uint16 +]H[+ ==* int16 +]h[+ ==* uint32 +]I[+ ==* int32 +]i[+ ==* uint64 +]Q[+ ==* int64 +]q[+ ==* float +]f[+ ==* double +]d[+ == bool +]b[+ ESAC +][+ ENDDEF +]
 [+ DEFINE event_param_size +][+ CASE (get "type") +][+ == string +]XXX[+ * +]struct.calcsize("=[+ event_param_format2 +]")[+ ESAC +][+ ENDDEF +]
-[+ DEFINE protocolnr +][+ IF (*=* (get "id") "LOFAR::MACIO::") +][+ (string-substitute (get "id") '("LOFAR::MACIO::")' ("")) +][+ ELSE +][+ (get "id") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE array_size +][+ IF (*== (get "type") "]") +][+ (substring (get "type") (1+(string-index (get "type") #\[)) (string-index (get "type") #\])) +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE array_type +][+ CASE (get "type") +][+ ==* float +]Float32[+ ==* double +]Float[+ ==* int +][+ (string-capitalize (substring (get "type") 0 (string-index (get "type") #\[))) +][+ ==* uint +][+ (string-capitalize (substring((get "type") 1))) +][+ ESAC +][+ ENDDEF +]
 
@@ -73,18 +73,20 @@ from MACIO import *
 class [+ event_class_decl +]
   def __init__(self):
     GCFEvent.__init__(self, signal=[+ prefix_ucase +]_[+ (get "signal") +])[+ FOR param "" +]
-    self.[+ (get "name") +] = [+ IF (and (*== (get "type") "]") (not (==* (get "type") "char["))) +]zeros([+ array_size +], [+ array_type +])[+ ELSE +][+ IF (and (*== (get "type") ">") (==* (get "type") "vector")) +][][+ ELSE +][+ event_param_init +][+ ENDIF +][+ ENDIF +][+ ENDFOR param +]
+    self.[+ (get "name") +] = [+ IF (and (*== (get "type") "]") (not (==* (get "type") "char["))) +]zeros([+ array_size +], [+ array_type +])[+ ELSE +][+ IF (and (*== (get "type") ">") (==* (get "type") "vector")) +][][+ ELSE +][+ IF (and (*== (get "type") ">") (==* (get "type") "map")) +]{}[+ ELSE +][+ event_param_init +][+ ENDIF +][+ ENDIF +][+ ENDIF +][+ ENDFOR param +]
 
   def __str__(self):
     return "{%s}[+ FOR param "," +][+ (get "name") +]=[+ event_param_format1 +][+ ENDFOR param +]" % (GCFEvent.__str__(self),[+ FOR param "," +] self.[+ (get "name") +][+ ENDFOR param +])
 
   def pack(self): [+ FOR param "" +]
-    self.buffer += [+ CASE (get "type") +][+ == "string" +]packString([+ *== "]" +]packArray([+ ==* vector +]packVector([+ * +]struct.pack("=[+ event_param_format2 +]", [+ ESAC +]self.[+ (get "name") +][+ CASE (get "type") +][+ ==* "char[" +], [+ array_size +][+ *== "]" +].tostring()[+ ==* vector +], [+ event_class_member_type +][+ ESAC +])[+ ENDFOR param +]
+    self.buffer += packCdefinedVariable(self.[+ (get "name") +], "[+ (get "type") +]")[+ ENDFOR param +]
     GCFEvent.pack(self)
 
   def unpack(self, somebuffer):
     offset = GCFEvent.unpack(self, somebuffer)[+ FOR param +]
-    [+ CASE (get "type") +][+ == "string" +](self.[+ (get "name") +], vLen)=unpackString(self.buffer[offset:])[+ == bool +]self.[+ (get "name") +]=bool(struct.unpack("=[+ event_param_format2 +]", self.buffer[offset:offset+1])[0])[+ ==* "char[" +]self.[+ (get "name") +]=unpackArray(self.buffer[offset:], [+ event_param_size +], [+ array_size +])[+ *== "]" +]self.[+ (get "name") +]=fromstring(unpackArray(self.buffer[offset:], [+ event_param_size +], [+ array_size +]), [+ array_type +])[+ * +]vLen=[+ event_param_size +]
+    [+ CASE (get "type") +][+ == "string" +](self.[+ (get "name") +], vLen)=unpackString(self.buffer[offset:])[+ == bool +]self.[+ (get "name") +]=bool(struct.unpack("=[+ event_param_format2 +]", self.buffer[offset:offset+1])[0])[+ ==* "char[" +]self.[+ (get "name") +]=unpackArray(self.buffer[offset:], [+ event_param_size +], [+ array_size +])[+ ==* vector +](newValue, vLen)=unpackVector(self.buffer[offset:],"[+ event_class_member +]")
+    self.[+ (get "name") +]=newValue[+ *== "]" +]self.[+ (get "name") +]=fromstring(unpackArray(self.buffer[offset:], [+ event_param_size +], [+ array_size +]), [+ array_type +])[+ ==* map +](newValue, vLen)=unpackMap(self.buffer[offset:],"[+ event_class_member +]")
+    self.[+ (get "name") +]=newValue[+ * +]vLen=[+ event_param_size +]
     self.[+ (get "name") +]=struct.unpack("=[+ event_param_format2 +]", self.buffer[offset:offset+vLen])[0][+ ESAC +]
     offset += [+ CASE (get "type") +][+ *== "]" +][+ event_param_size +] * [+ array_size +][+ == bool +]1[+ * +]vLen[+ ESAC +][+ ENDFOR param +]
 
@@ -92,13 +94,14 @@ class [+ event_class_decl +]
 
 if __name__ == '__main__':
 [+ FOR event "" +]  print "Testing [+ event_class_name +]..."
-  obj[+ (for-index) +] = [+ event_class_name +]()
-  print obj[+ (for-index) +]
-  obj[+ (for-index) +].pack()
-  print obj[+ (for-index) +]
-  objX[+ (for-index) +] = [+ event_class_name +]()
-  objX[+ (for-index) +].unpack(obj[+ (for-index) +].buffer)
-  print objX[+ (for-index) +]
+  obj[+ (for-index) +] = [+ event_class_name +]()[+ FOR param "" +]
+  obj[+ (for-index "event") +].[+ (get "name") +]=testValue("[+ (get "type") +]")[+ ENDFOR param +]
+  print obj[+ (for-index "event") +]
+  obj[+ (for-index "event") +].pack()
+  print obj[+ (for-index "event") +]
+  objX[+ (for-index "event") +] = [+ event_class_name +]()
+  objX[+ (for-index "event") +].unpack(obj[+ (for-index "event") +].buffer)
+  print objX[+ (for-index "event") +]
 
 [+ ENDFOR event +]
 

@@ -112,6 +112,7 @@ private:
 	// list with all the running processes.
 	typedef multimap<string, int>	processMap_t;
 	processMap_t				itsProcessMap;	// list that represents 'ps -ef'
+	time_t						itsPMtime;		// time the map was requested.
 
 	// mapping from observationNumber to DP(sub)name
 	struct ObsInfo {

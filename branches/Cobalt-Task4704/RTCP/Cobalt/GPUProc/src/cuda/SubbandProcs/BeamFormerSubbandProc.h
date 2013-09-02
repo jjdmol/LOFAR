@@ -30,8 +30,6 @@
 #include <GPUProc/gpu_wrapper.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/FilterBank.h>
-#include <GPUProc/BandPass.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
 #include <GPUProc/Kernels/IntToFloatKernel.h>
@@ -39,6 +37,7 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
@@ -87,6 +86,35 @@ namespace LOFAR
 
       // second FFT
       static const size_t BEAM_FORMER_NR_CHANNELS = 2048;
+
+      // Beamformer specific collection of PerformanceCounters
+      class Counters
+      {
+      public:
+        Counters(gpu::Context &context);
+
+        // gpu kernel counters
+        PerformanceCounter intToFloat;
+        PerformanceCounter firstFFT;
+        PerformanceCounter delayBp;
+        PerformanceCounter secondFFT;
+        PerformanceCounter correctBandpass;
+        PerformanceCounter beamformer;
+        PerformanceCounter transpose;
+        PerformanceCounter inverseFFT;
+        PerformanceCounter firFilterKernel;
+        PerformanceCounter finalFFT;
+        PerformanceCounter coherentStokes;
+
+        // gpu transfer counters
+        PerformanceCounter samples;
+        PerformanceCounter visibilities;
+
+        // Print the mean and std of each performance counter on the logger
+        void printStats();
+      };
+
+      Counters counters;
 
     private:
       // The previously processed SAP/block, or -1 if nothing has been
@@ -149,6 +177,10 @@ namespace LOFAR
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;
 
+      // Coherent Stokes
+      CoherentStokesKernel::Buffers coherentStokesBuffers;
+      std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
+
       // end result
       gpu::DeviceMemory &devResult;
     };
@@ -161,7 +193,8 @@ namespace LOFAR
         correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
-        firFilter(firFilterParams(ps))
+        firFilter(firFilterParams(ps)),
+        coherentStokes(coherentStokesParams(ps))
       {
       }
 
@@ -171,6 +204,7 @@ namespace LOFAR
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<CoherentStokesKernel> coherentStokes;
 
       DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);
@@ -216,6 +250,14 @@ namespace LOFAR
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
 
         // time integration has not taken place yet, so calculate the nrSamples manually
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        return params;
+      }
+
+      CoherentStokesKernel::Parameters coherentStokesParams(const Parset &ps) const {
+        CoherentStokesKernel::Parameters params(ps);
+        params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;

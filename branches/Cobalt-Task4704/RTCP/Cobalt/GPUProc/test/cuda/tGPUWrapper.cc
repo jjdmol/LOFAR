@@ -50,6 +50,8 @@ SUITE(Device) {
     Platform pf;
     vector<Device> devices(pf.devices());
 
+    size_t globalMaxThreadsPerBlock = pf.getMaxThreadsPerBlock();
+
     for (vector<Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
       const Device &dev = *i;
 
@@ -58,6 +60,9 @@ SUITE(Device) {
       cout << " Global Memory: " << setw(4) << dev.getTotalGlobalMem()/1024/1024 << " MByte" << endl;
       cout << " Shared Memory: " << setw(4) << dev.getBlockSharedMem()/1024 << " KByte/block" << endl;
       cout << " Const Memory:  " << setw(4) << dev.getTotalConstMem()/1024 << " KByte" << endl;
+      cout << " Threads/block: " << setw(4) << dev.getMaxThreadsPerBlock() << endl;
+
+      CHECK(dev.getMaxThreadsPerBlock() <= globalMaxThreadsPerBlock);
     }
   }
 }

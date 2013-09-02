@@ -307,7 +307,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (state > -1) {
+    if (state > -1 && state != aVal) {
       if (force) {
         dpSet(datapoint+"."+element,state);
       } else {

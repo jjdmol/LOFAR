@@ -5,7 +5,8 @@ import lofar.expion.baselinefitting as fitting
 from scipy import optimize as opt
 import tables as tab
 import sys
-from pylab import *
+#from pylab import *
+from numpy import *
 light_speed=299792458.
 
 clockarray=0
@@ -332,6 +333,12 @@ def getTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,station
     A[:,0] = -8.44797245e9/freqs
     if useOffset:
         A[:,1] = np.ones((nF,))
+    # init first sol
+    big_array=(np.arange(-0.1,0.1,0.005)*A[:,0][:,np.newaxis]).T
+    diff=np.sum(np.absolute(np.remainder(big_array[:,:,np.newaxis]-(ph[0,:,:]-ph[0,:,:][:,[0]])+np.pi,2*np.pi)-np.pi),axis=1)
+    init_idx=np.argmin(diff,axis=0)
+    sol[:,0]=init_idx*0.005-0.1
+    print "Initializing with",sol[:,0]
     for itm in range(nT):
         
         if itm%100==0 and itm>0:
@@ -451,7 +458,7 @@ def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,st
         tecarray[itm+timeIdx,stIdx,polIdx]=sol[:,0]
         clockarray[itm+timeIdx,stIdx,polIdx]=sol[:,1]
         if useOffset:
-            offsetarray[itm+timeIdx,stIdx,polIdx]=sol[:,2]
+            offsetarray[itm+timeIdx,stIdx,polIdx]+=sol[:,2]
         residual = ph[itm] - np.dot(A, sol.T)
         residual = residual - residual[:, 0][:,np.newaxis]
         residual = np.remainder(residual+np.pi, 2*np.pi) - np.pi       
@@ -478,7 +485,7 @@ def add_to_h5_func(h5file,data,name='test'):
 
     
 
-def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=300.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all'):
+def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=300.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all',CStec0=False):
     global tecarray
     global clockarray
     global offsetarray
@@ -544,6 +551,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                     initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,pol]
                 initSol[:,1]=ionmodel.Clock[:][timerange[0],stationIndices,pol]
                 phdata+=ionmodel.clock_tec_offsets[:][timerange[0],stationIndices,pol]
+                offsetarray[:,stationIndices,pol]=ionmodel.clock_tec_offsets[:][timerange[0],stationIndices,pol]
             else:
                 initSol=False
 
@@ -565,21 +573,34 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
 
                 #halfwraps=np.remainder(np.round(np.absolute(wraps[stationIndices]*2)),2)==1
                 #print "found halfwraps for",np.array(stations)[halfwraps]
+                if CStec0:
 
-                offsets=-1*np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)*2.*np.pi/steps[0]
-                print "average TEC",np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)
-                print "step",steps[0]
-                print offsets
-                remainingwraps=np.zeros(np.sum(stationIndices),dtype=np.float)
-                remainingwraps[CSstations]=np.round(offsets[CSstations]/(2*np.pi))-np.round(wraps[stationIndices][CSstations])
-                print wraps
-                print remainingwraps
-                wraps[stationIndices]+=remainingwraps
-                #phdata[:,:,:]+=remainingwraps[stationIndices]
-                #offsetarray[:,stationIndices,pol]+=remainingwraps[stationIndices]
+                    #get slope of average TECvs lattitude
+                    lats=np.average(ionmodel.piercepoints.cols.positions[:][timerange[0]:timerange[1],0,:,1],axis=0)
+                    stat_select=ionmodel.stat_select[:]
+                    lats=lats[stationIndices[stat_select]]
+                    lats-=lats[0]  #relative -> no offset
 
-                phdata[:,:,:]+=offsets
-                offsetarray[:,stationIndices,pol]+=offsets
+                    avgtec=np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
+                    
+
+                    slope=  np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,avgtec.T)).flatten()
+                    print "slope",slope
+                    
+                    
+
+                    offsets=-1* (avgtec-slope*lats)*2.*np.pi/steps[0]
+                    print "average TEC",avgtec
+                    print "step",steps[0]
+                    print offsets
+                    remainingwraps=np.zeros(np.sum(stationIndices),dtype=np.float)
+                    #remainingwraps[CSstations]=np.round(offsets[CSstations]/(2*np.pi))-np.round(wraps[stationIndices][CSstations])
+                    remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
+                    print remainingwraps
+                    wraps[stationIndices]+=remainingwraps
+                    #phdata[:,:,:]+=offsets
+                    phdata[:,:,CSstations]+=offsets[CSstations]
+                    offsetarray[:,stationIndices,pol]+=offsets
                 #clockarray[:,stationIndices,pol]+=(np.remainder(offsets+np.pi,2*np.pi)-np.pi)*steps[1]/(2*np.pi)
                 #!!!!!!!!!!!!!!!!TESTESTESTSETTE!!!
                 #phdata[:,:,np.arange(1,46,2)]+=0.01*np.arange(1,46,2)
@@ -591,11 +612,14 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                     initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
                     initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
                 #initSol[:,1]=np.average(clockarray[:,stationIndices,pol]-clockarray[:,[0],pol],axis=0)+steps[1]*np.round(wraps[stationIndices])
+                print "wraps",np.round(wraps[stationIndices])
                 print "prev solutions", clockarray[timerange[0],stationIndices,pol]
                 print "init Clock with", initSol[:,1]
                 print "prev solutions TEC", tecarray[timerange[0],stationIndices,pol]
                 print "init TEC with", initSol[:,0]
-                print offsets
+                if not(CStec0)  and np.all(np.round(wraps[stationIndices])==0):
+                    print "No need for phase unwrapping"
+                    continue;
                 kwargs={'ph':phdata,
                         'amp':ampdata,
                         'freqs':freqs,

@@ -8,7 +8,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/runrtcp.sh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"  # internal, no need to install
+  "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"
+  @ONLY # internal, no need to install
 )
 
 
@@ -46,6 +47,7 @@ endif()
 
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
+  lofar_add_test(tRunningStatistics tRunningStatistics.cc)
 endif()
 
 add_subdirectory(Kernels)
