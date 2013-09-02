@@ -302,7 +302,11 @@ void acknowledge(string what) {
       }
     }
   }
-  DebugN(ackList);
+  for (int iPos=1; iPos<= dynlen(ackList); iPos++) {
+    string dp = navFunct_ObsToTemp(g_alarms[\"DPNAME\"][iPos])+\".status.state\";
+    string message = g_alarms[\"MESSAGE\"][iPos];
+    acknowledgeAlarm(iPos,dp,message);    
+  }
 }" 0
  2
 "CBRef" "1"
