@@ -262,11 +262,6 @@ void acknowledgeAlarm(int iPos,string dp,string message) {
 
 void acknowledge(string what) {
 
-  alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
-                              \"Message\",g_alarms[\"MESSAGE\"][j],
-                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
-                              \"State\",g_alarms[\"STATE\"][j]);
-
   dyn_int ackList;
   for (int j=1; j<=dynlen(g_alarms[\"DPNAME\"])  ; j++) {
   
