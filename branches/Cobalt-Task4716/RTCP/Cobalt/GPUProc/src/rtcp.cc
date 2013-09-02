@@ -215,30 +215,34 @@ int main(int argc, char **argv)
     setProcessorAffinity(cpuId);
 
 #ifdef HAVE_LIBNUMA
-    // force node + memory binding for future allocations
-    struct bitmask *numa_node = numa_allocate_nodemask();
-    numa_bitmask_clearall(numa_node);
-    numa_bitmask_setbit(numa_node, cpuId);
-    numa_bind(numa_node);
-    numa_bitmask_free(numa_node);
+    if (numa_available() != -1) {
+      // force node + memory binding for future allocations
+      struct bitmask *numa_node = numa_allocate_nodemask();
+      numa_bitmask_clearall(numa_node);
+      numa_bitmask_setbit(numa_node, cpuId);
+      numa_bind(numa_node);
+      numa_bitmask_free(numa_node);
 
-    // only allow allocation on this node in case
-    // the numa_alloc_* functions are used
-    numa_set_strict(1);
+      // only allow allocation on this node in case
+      // the numa_alloc_* functions are used
+      numa_set_strict(1);
 
-    // retrieve and report memory binding
-    numa_node = numa_get_membind();
-    vector<string> nodestrs;
-    for (size_t i = 0; i < numa_node->size; i++)
-      if (numa_bitmask_isbitset(numa_node, i))
-        nodestrs.push_back(str(format("%s") % i));
+      // retrieve and report memory binding
+      numa_node = numa_get_membind();
+      vector<string> nodestrs;
+      for (size_t i = 0; i < numa_node->size; i++)
+        if (numa_bitmask_isbitset(numa_node, i))
+          nodestrs.push_back(str(format("%s") % i));
 
-    // migrate currently used memory to our node
-    numa_migrate_pages(0, numa_all_nodes_ptr, numa_node);
+      // migrate currently used memory to our node
+      numa_migrate_pages(0, numa_all_nodes_ptr, numa_node);
 
-    numa_bitmask_free(numa_node);
+      numa_bitmask_free(numa_node);
 
-    LOG_DEBUG_STR("Bound to memory on nodes " << nodestrs);
+      LOG_DEBUG_STR("Bound to memory on nodes " << nodestrs);
+    } else {
+      LOG_WARN_STR("Cannot bind memory (libnuma says there is no numa available)");
+    }
 #else
     LOG_WARN_STR("Cannot bind memory (no libnuma support)");
 #endif
