@@ -39,6 +39,7 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
+      nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       weightCorrection(1.0f)  // TODO: Add a key to the parset to specify this
     {
@@ -95,16 +96,16 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
           NR_POLARIZATIONS * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
           NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          itsParameters.nrStations * itsParameters.nrTABs * itsParameters.nrChannelsPerSubband * 
-          sizeof(std::complex<float>);
+          itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
+          sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -117,6 +118,8 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["NR_SAPS"] =
+        lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["WEIGHT_CORRECTION"] =

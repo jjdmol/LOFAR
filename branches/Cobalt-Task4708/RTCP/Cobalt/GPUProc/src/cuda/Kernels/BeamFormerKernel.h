@@ -42,8 +42,9 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrTABs;
-        float weightCorrection;   // constant weight applied to all weights
+        unsigned nrSAPs;
+        unsigned nrTABs;
+        float weightCorrection; // constant weight applied to all weights
       };
 
       enum BufferType

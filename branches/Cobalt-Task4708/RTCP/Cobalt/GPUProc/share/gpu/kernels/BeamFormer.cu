@@ -17,6 +17,7 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
+
 #include "gpu_math.cuh"
 
 // Some defines used to determine the correct way the process the data
@@ -32,7 +33,7 @@
 #endif
 
 // Typedefs used to map input data on arrays
-typedef  float2 (*WeightsType)[NR_STATIONS][NR_CHANNELS][NR_TABS];
+typedef  float  (*DelaysType)[NR_SAPS][NR_STATIONS][NR_TABS];
 typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 
@@ -69,7 +70,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
-  WeightsType weights = (WeightsType) delaysPtr; // TODO: compute weights from delays using phaseShift()
+  DelaysType delays = (DelaysType) delaysPtr;
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
@@ -82,16 +83,11 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     float4 samples4[NR_STATIONS_PER_PASS][16];
   } _local;
 
-
-/*
 #if NR_CHANNELS == 1
   float frequency = subbandFrequency;
 #else
-  float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
+  float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
-  float2 weight = make_float2(phaseShift(frequency, delay.x),
-                              phaseShift(frequency, delay.y));
-*/
 
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
@@ -99,235 +95,299 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
        first_station += NR_STATIONS_PER_PASS) 
   { // this for loop spans the whole file
 #if NR_STATIONS_PER_PASS >= 1
-    float2 weight_00;                     // assign the weights to register variables
-    if (first_station + 0 < NR_STATIONS)  // Number of station might be larger then 32:
-                                          // We then do multiple passes to span all stations
-      weight_00 = (*weights)[first_station + 0][channel][tab] * WEIGHT_CORRECTION; // Get data from global mem
+    fcomplex weight_00;                     // assign the weights to register variables
+    if (first_station + 0 < NR_STATIONS) {  // Number of station might be larger then 32:
+                                            // We then do multiple passes to span all stations
+      float delay = (*delays)[first_station + 0][channel][tab];
+      weight_00 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
     // Loop onrolling allows usage of registers for weights
 #if NR_STATIONS_PER_PASS >= 2
-    float2 weight_01;
+    fcomplex weight_01;
 
-    if (first_station + 1 < NR_STATIONS)
-      weight_01 = (*weights)[first_station + 1][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 1 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 1][channel][tab];
+      weight_01 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 3
-    float2 weight_02;
+    fcomplex weight_02;
 
-    if (first_station + 2 < NR_STATIONS)
-      weight_02 = (*weights)[first_station + 2][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 2 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 2][channel][tab];
+      weight_02 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
-    float2 weight_03;
+    fcomplex weight_03;
 
-    if (first_station + 3 < NR_STATIONS)
-      weight_03 = (*weights)[first_station + 3][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 3 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 3][channel][tab];
+      weight_03 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
-    float2 weight_04;
+    fcomplex weight_04;
 
-    if (first_station + 4 < NR_STATIONS)
-      weight_04 = (*weights)[first_station + 4][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 4 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 4][channel][tab];
+      weight_04 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
-    float2 weight_05;
+    fcomplex weight_05;
 
-    if (first_station + 5 < NR_STATIONS)
-      weight_05 = (*weights)[first_station + 5][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 5 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 5][channel][tab];
+      weight_05 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
-    float2 weight_06;
+    fcomplex weight_06;
 
-    if (first_station + 6 < NR_STATIONS)
-      weight_06 = (*weights)[first_station + 6][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 6 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 6][channel][tab];
+      weight_06 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
-    float2 weight_07;
+    fcomplex weight_07;
 
-    if (first_station + 7 < NR_STATIONS)
-      weight_07 = (*weights)[first_station + 7][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 7 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 7][channel][tab];
+      weight_07 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
-    float2 weight_08;
+    fcomplex weight_08;
 
-    if (first_station + 8 < NR_STATIONS)
-      weight_08 = (*weights)[first_station + 8][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 8 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 8][channel][tab];
+      weight_08 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
-    float2 weight_09;
+    fcomplex weight_09;
 
-    if (first_station + 9 < NR_STATIONS)
-      weight_09 = (*weights)[first_station + 9][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 9 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 9][channel][tab];
+      weight_09 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
-    float2 weight_10;
+    fcomplex weight_10;
 
-    if (first_station + 10 < NR_STATIONS)
-      weight_10 = (*weights)[first_station + 10][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 10 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 10][channel][tab];
+      weight_10 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
-    float2 weight_11;
+    fcomplex weight_11;
 
-    if (first_station + 11 < NR_STATIONS)
-      weight_11 = (*weights)[first_station + 11][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 11 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 11][channel][tab];
+      weight_11 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
-    float2 weight_12;
+    fcomplex weight_12;
 
-    if (first_station + 12 < NR_STATIONS)
-      weight_12 = (*weights)[first_station + 12][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 12 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 12][channel][tab];
+      weight_12 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
-    float2 weight_13;
+    fcomplex weight_13;
 
-    if (first_station + 13 < NR_STATIONS)
-      weight_13 = (*weights)[first_station + 13][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 13 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 13][channel][tab];
+      weight_13 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
-    float2 weight_14;
+    fcomplex weight_14;
 
-    if (first_station + 14 < NR_STATIONS)
-      weight_14 = (*weights)[first_station + 14][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 14 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 14][channel][tab];
+      weight_14 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
-    float2 weight_15;
+    fcomplex weight_15;
 
-    if (first_station + 15 < NR_STATIONS)
-      weight_15 = (*weights)[first_station + 15][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 15 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 15][channel][tab];
+      weight_15 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
-    float2 weight_16;
+    fcomplex weight_16;
 
-    if (first_station + 16 < NR_STATIONS)
-      weight_16 = (*weights)[first_station + 16][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 16 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 16][channel][tab];
+      weight_16 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
-    float2 weight_17;
+    fcomplex weight_17;
 
-    if (first_station + 17 < NR_STATIONS)
-      weight_17 = (*weights)[first_station + 17][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 17 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 17][channel][tab];
+      weight_17 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
-    float2 weight_18;
+    fcomplex weight_18;
 
     if (first_station + 18 < NR_STATIONS)
-      weight_18 = (*weights)[first_station + 18][channel][tab] * WEIGHT_CORRECTION;
+      float delay = (*delays)[first_station + 18][channel][tab];
+      weight_18 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
-    float2 weight_19;
+    fcomplex weight_19;
 
-    if (first_station + 19 < NR_STATIONS)
-      weight_19 = (*weights)[first_station + 19][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 19 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 19][channel][tab];
+      weight_19 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
-    float2 weight_20;
+    fcomplex weight_20;
 
-    if (first_station + 20 < NR_STATIONS)
-      weight_20 = (*weights)[first_station + 20][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 20 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 20][channel][tab];
+      weight_20 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
-    float2 weight_21;
+    fcomplex weight_21;
 
-    if (first_station + 21 < NR_STATIONS)
-      weight_21 = (*weights)[first_station + 21][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 21 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 21][channel][tab];
+      weight_21 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
-    float2 weight_22;
+    fcomplex weight_22;
 
-    if (first_station + 22 < NR_STATIONS)
-      weight_22 = (*weights)[first_station + 22][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 22 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 22][channel][tab];
+      weight_22 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
-    float2 weight_23;
+    fcomplex weight_23;
 
-    if (first_station + 23 < NR_STATIONS)
-      weight_23 = (*weights)[first_station + 23][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 23 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 23][channel][tab];
+      weight_23 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
-    float2 weight_24;
+    fcomplex weight_24;
 
-    if (first_station + 24 < NR_STATIONS)
-      weight_24 = (*weights)[first_station + 24][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 24 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 24][channel][tab];
+      weight_24 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
-    float2 weight_25;
+    fcomplex weight_25;
 
-    if (first_station + 25 < NR_STATIONS)
-      weight_25 = (*weights)[first_station + 25][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 25 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 25][channel][tab];
+      weight_25 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
-    float2 weight_26;
+    fcomplex weight_26;
 
-    if (first_station + 26 < NR_STATIONS)
-      weight_26 = (*weights)[first_station + 26][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 26 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 26][channel][tab];
+      weight_26 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
-    float2 weight_27;
+    fcomplex weight_27;
 
-    if (first_station + 27 < NR_STATIONS)
-      weight_27 = (*weights)[first_station + 27][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 27 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 27][channel][tab];
+      weight_27 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
-    float2 weight_28;
+    fcomplex weight_28;
 
-    if (first_station + 28 < NR_STATIONS)
-      weight_28 = (*weights)[first_station + 28][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 28 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 28][channel][tab];
+      weight_28 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
-    float2 weight_29;
+    fcomplex weight_29;
 
-    if (first_station + 29 < NR_STATIONS)
-      weight_29 = (*weights)[first_station + 29][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 29 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 29][channel][tab];
+      weight_29 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
-    float2 weight_30;
+    fcomplex weight_30;
 
-    if (first_station + 30 < NR_STATIONS)
-      weight_30 = (*weights)[first_station + 30][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 30 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 30][channel][tab];
+      weight_30 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
-    float2 weight_31;
+    fcomplex weight_31;
 
-    if (first_station + 31 < NR_STATIONS)
-      weight_31 = (*weights)[first_station + 31][channel][tab] * WEIGHT_CORRECTION;
+    if (first_station + 31 < NR_STATIONS) {
+      float delay = (*delays)[first_station + 31][channel][tab];
+      weight_31 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;
+    }
 #endif
 
     // Loop over all the samples in time
-    // TODO: This is a candidate to be added as an extra paralellization dim.
+    // TODO: This is a candidate to be added as an extra parallelization dim.
     // problem: we already have the x,y and z filled with parallel parameters. Make the polarization implicit?
     for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)  // Perform the addition for 16 timesteps
     {
-      // Optimized memory transver: Threads load paralel memory
+      // Optimized memory transfer: Threads load from memory in parallel
       for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y;
                     i < NR_STATIONS_PER_PASS * 16;
                     i += NR_TABS * NR_POLARIZATIONS) 

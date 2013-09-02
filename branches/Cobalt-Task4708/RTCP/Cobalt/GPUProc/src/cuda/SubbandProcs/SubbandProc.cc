@@ -48,7 +48,8 @@ namespace LOFAR
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
-                NR_POLARIZATIONS,
+                ps.settings.nrPolarisations,
+                ps.settings.beamFormer.maxNrTABsPerSAP(),
                 ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 context));
@@ -94,23 +95,21 @@ namespace LOFAR
       delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAfterEnd;
       phaseOffsets[station][1]        = ps.settings.stations[station].phaseCorrection.y;
 
+
       if (ps.settings.beamFormer.enabled)
       {
-        //tabDelays[SAP?][station][0] = computeTabDelays(metaData, ...); // X pol
-        //tabDelays[SAP?][station][1] = computeTabDelays(metaData, ...); // Y pol
-        // or computeTabDelays(metaData, ...);
+        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
+        {
+          // we already compensated for the delay for the first beam
+          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                     metaData.stationBeam.delayAtBegin) * 0.5;
 
-        // See CN_Proc/BeamFormer.cc::computeDelays()
-        /*
-      // we already compensated for the delay for the first beam
-      const SubbandMetaData::beamInfo &centralBeamInfo = metaData->beams(stat)[0];
-      double compensatedDelay = (centralBeamInfo.delayAfterEnd + centralBeamInfo.delayAtBegin) * 0.5;
-
-      const SubbandMetaData::beamInfo &beamInfo = metaData->beams(stat)[pencilIndex + 1];
-
-      // subtract the delay that was already compensated for
-      itsDelays[stat][pencil] = (beamInfo.delayAfterEnd + beamInfo.delayAtBegin) * 0.5 - compensatedDelay;
-        */
+          // subtract the delay that was already compensated for
+          tabDelays[SAP][station][tab] = static_cast<float>(
+                                         (metaData.TABs[tab].delayAtBegin -
+                                          metaData.TABs[tab].delayAfterEnd) * 0.5 -
+                                         compensatedDelay);
+        }
       }
     }
 
