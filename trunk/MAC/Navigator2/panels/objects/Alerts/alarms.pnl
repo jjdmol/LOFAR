@@ -306,6 +306,7 @@ void acknowledge(string what) {
     string dp = g_alarms[\"DPNAME\"][iPos];
     string message = g_alarms[\"MESSAGE\"][iPos];
 
+    DebugN(\"deleting #\"+iPos+ \"   \"+dp+\"    \"+message);
     acknowledgeAlarm(iPos,dp,message);    
   }
 }" 0
