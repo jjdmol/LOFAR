@@ -129,7 +129,7 @@ namespace LOFAR
 
     string getStreamDescriptorBetweenIONandStorage(const Parset &parset, OutputType outputType, unsigned streamNr)
     {
-      string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport");
+      string connectionType = parset.getString("OLAP.OLAP_Conn.IONProc_Storage_Transport", "TCP");
 
       if (connectionType == "NULL") {
         return "null:";

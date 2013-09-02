@@ -160,7 +160,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   // Loop through all alarms in this callback
   for (int nr = 2; nr < dynlen (aResult);nr+=4) {
     //get the stateNr and DP that go with this message
-    
+    if (!dpExists(aResult[n][1])) continue;
     time aTime     = getCurrentTime();
     string aSystem = dpSubStr(aResult[nr][1],DPSUB_SYS);
     string aDP     = aResult[nr][2];

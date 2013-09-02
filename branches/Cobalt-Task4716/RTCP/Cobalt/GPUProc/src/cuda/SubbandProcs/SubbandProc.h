@@ -162,7 +162,6 @@ namespace LOFAR
       virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected
-      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
       std::map<std::string, SmartPtr<NSTimer> > timers;
 
       class Flagger
@@ -199,7 +198,6 @@ namespace LOFAR
 
       gpu::Stream queue;
 
-      void addCounter(const std::string &name);
       void addTimer(const std::string &name);
     };
   }

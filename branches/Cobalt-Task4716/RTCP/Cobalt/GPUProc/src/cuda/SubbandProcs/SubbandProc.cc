@@ -55,17 +55,9 @@ namespace LOFAR
       }
     }
 
-
     SubbandProc::~SubbandProc()
     {
     }
-
-
-    void SubbandProc::addCounter(const std::string &name)
-    {
-      counters[name] = new PerformanceCounter(name, profiling);
-    }
-
 
     void SubbandProc::addTimer(const std::string &name)
     {

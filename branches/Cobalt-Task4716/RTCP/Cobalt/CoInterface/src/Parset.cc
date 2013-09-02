@@ -674,7 +674,15 @@ namespace LOFAR
 
     string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
     {
-      return getStringVector(string("PIC.Core.Station.") + stationName + ".RSP.ports", true)[rspBoardNumber];
+      string key = string("PIC.Core.Station.") + stationName + ".RSP.ports";
+
+      if (!isDefined(key)) {
+        LOG_ERROR_STR("Key not found: " << key << ", falling back to reading from /dev/null");
+
+        return "file:/dev/null";
+      }
+
+      return getStringVector(key, true)[rspBoardNumber];
     }
 
 

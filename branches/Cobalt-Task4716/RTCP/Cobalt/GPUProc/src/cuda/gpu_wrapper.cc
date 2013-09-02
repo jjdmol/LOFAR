@@ -33,6 +33,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/global_defines.h>
+#include <GPUProc/PerformanceCounter.h>
 
 // Convenience macro to call a CUDA Device API function and throw a
 // CUDAException if an error occurred.
@@ -261,6 +262,22 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
+      size_t Platform::getMaxThreadsPerBlock() const
+      {
+        const std::vector<Device> _devices = devices();
+
+        size_t lowest = 0;
+
+        for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
+          const size_t maxThreadsPerBlock = i->getMaxThreadsPerBlock();
+
+          if (i == _devices.begin() || maxThreadsPerBlock < lowest)
+            lowest = maxThreadsPerBlock;
+        }
+
+        return lowest;
+      }
+
 
       Device::Device(int ordinal)
       {
@@ -334,6 +351,11 @@ namespace LOFAR
         int device = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID);
 
         return str(format("%04x:%04x") % bus % device);
+      }
+
+      size_t Device::getMaxThreadsPerBlock() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
@@ -836,7 +858,7 @@ namespace LOFAR
           checkCuCall(cuStreamWaitEvent(_stream, event, 0));
         }
 
-        void recordEvent(CUevent event)
+        void recordEvent(CUevent event) const
         {
           ScopedCurrentContext scc(_context);
 
@@ -878,8 +900,24 @@ namespace LOFAR
         _impl->memcpyHtoDAsync((CUdeviceptr)devMem.get(), 
                                hostMem.get<void>(),
                                hostMem.size());
-        if (synchronous || force_synchronous) {
+        if (synchronous || force_synchronous) 
+        {
           synchronize();
+        }
+      }
+
+      void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
+                         const PerformanceCounter &counter, bool synchronous) const
+      {
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          writeBuffer(devMem, hostMem, synchronous); 
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
         }
       }
 
@@ -896,10 +934,27 @@ namespace LOFAR
         _impl->memcpyDtoHAsync(hostMem.get<void>(),
                                (CUdeviceptr)devMem.get(),
                                size);
-        if (synchronous || force_synchronous) {
+        if (synchronous || force_synchronous) 
+        {
           synchronize();
         }
       }
+
+      void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
+                        const PerformanceCounter &counter, bool synchronous) const
+      {
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          readBuffer(hostMem, devMem, synchronous);  
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          writeBuffer(devMem, hostMem, synchronous);
+        }
+      }
+
 
       void Stream::launchKernel(const Function &function,
                                 const Grid &grid, const Block &block) const
@@ -932,7 +987,7 @@ namespace LOFAR
         _impl->waitEvent(event._impl->_event);
       }
 
-      void Stream::recordEvent(const Event &event)
+      void Stream::recordEvent(const Event &event) const
       {
         _impl->recordEvent(event._impl->_event);
       }

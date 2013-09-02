@@ -57,12 +57,16 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerWeights);
 
+      size_t maxChannelParallisation = std::min(params.nrChannelsPerSubband, maxThreadsPerBlock / NR_POLARIZATIONS / params.nrTABs);
+
+      ASSERT(params.nrChannelsPerSubband % maxChannelParallisation == 0);
+
       globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
                                  params.nrTABs, 
                                  params.nrChannelsPerSubband);
       localWorkSize = gpu::Block(NR_POLARIZATIONS, 
                                  params.nrTABs, 
-                                 params.nrChannelsPerSubband);
+                                 maxChannelParallisation);
 
 #if 0
       size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);

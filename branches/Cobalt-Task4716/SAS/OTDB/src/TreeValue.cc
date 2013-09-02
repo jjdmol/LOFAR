@@ -105,11 +105,17 @@ bool TreeValue::addKVT (const string&	key,
 		}
 		return (insertResult);
 	}
+	catch (broken_connection&  ex) {
+		itsError = string("Exception during insert of KVT:") + ex.what();
+		LOG_ERROR(itsError);
+		itsConn->disconnect();
+		return (false);
+	}
 	catch (std::exception&	ex) {
 		// [080508] tables now have constraints on duplicate keys. Don't report the errors
 		// to the operator anymore, only to the DEBUGger.
 		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_DEBUG(itsError);
+		LOG_WARN(itsError);
 		return (false);
 	}
 

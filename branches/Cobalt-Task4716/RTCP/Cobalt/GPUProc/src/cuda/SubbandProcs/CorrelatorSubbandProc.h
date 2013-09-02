@@ -34,11 +34,11 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/FilterBank.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/Filter_FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
+#include <GPUProc/PerformanceCounter.h>
 
 #include "SubbandProc.h"
 
@@ -110,7 +110,28 @@ namespace LOFAR
         // 2.1 Apply the supplied weight to the complex values in the channel and baseline
         static void applyWeight(unsigned baseline, unsigned channel, float weight, CorrelatedData &output);
       };
-      
+
+      // Correlator specific collection of PerformanceCounters
+      class Counters
+      {
+      public:
+        Counters(gpu::Context &context);
+
+        // gpu kernel counters
+        PerformanceCounter fir;
+        PerformanceCounter fft;
+        PerformanceCounter delayBp;
+        PerformanceCounter correlator;
+
+        // gpu transfer counters
+        PerformanceCounter samples;
+        PerformanceCounter visibilities;
+
+        // Print the mean and std of each performance counter on the logger
+        void printStats();
+      };
+
+      Counters counters;
     private:
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
@@ -120,8 +141,7 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      SubbandProcInputData::DeviceBuffers devInput;
-
+      SubbandProcInputData::DeviceBuffers devInput;      
       gpu::DeviceMemory devFilteredData;
 
       /*

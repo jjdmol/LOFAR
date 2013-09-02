@@ -48,7 +48,7 @@ size_t SubArray::getSize() const {
 }
 
 size_t SubArray::pack(char*	buffer) const {
-	size_t	offset = 0;
+	uint32	offset = 0;
 	memcpy(buffer+offset, &someInt, sizeof(int));
 	offset += sizeof (int);
 	memcpy(buffer+offset, &someDouble, sizeof(double));
@@ -59,7 +59,7 @@ size_t SubArray::pack(char*	buffer) const {
 }
 
 size_t SubArray::unpack(const char*	buffer) {
-	size_t offset = 0;
+	uint32 offset = 0;
 	memcpy(&someInt, buffer+offset, sizeof(int));
 	offset += sizeof(int);
 	memcpy(&someDouble, buffer+offset, sizeof(double));
@@ -78,7 +78,7 @@ size_t SubArrayNC::getSize() const {
 }
 
 size_t SubArrayNC::pack(char*	buffer) const {
-	size_t	offset = 0;
+	uint32	offset = 0;
 	memcpy(buffer+offset, &someInt, sizeof(int));
 	offset += sizeof (int);
 	memcpy(buffer+offset, &someDouble, sizeof(double));
@@ -89,7 +89,7 @@ size_t SubArrayNC::pack(char*	buffer) const {
 }
 
 size_t SubArrayNC::unpack(const char*	buffer) {
-	size_t	offset = 0;
+	uint32	offset = 0;
 	memcpy(&someInt, buffer+offset, sizeof(int));
 	offset += sizeof(int);
 	memcpy(&someDouble, buffer+offset, sizeof(double));
@@ -109,13 +109,13 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 	cout << "size = " << MSH_size(tstString) << endl;
 
 	char	buf[4096];
-	size_t	offset1(0);
+	uint32	offset1(0);
 	MSH_pack(buf, offset1, tstString);
 	cout << "packed: " << endl;
 	hexdump(buf, offset1);
 
 	string	newString;
-	size_t offset2(0);
+	uint32 offset2(0);
 	MSH_unpack(buf, offset2, newString);
 	cout << "unpacked: " << newString << endl;
 	ASSERTSTR (offset1 == offset2 && tstString == newString, "Failure 1 in strings");
@@ -179,7 +179,7 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 	cout << "size = " << size << endl;
 
 	bzero(buf, 4096);
-	size_t offset = 0;
+	uint32 offset = 0;
 	SA1.pack(buf);
 	cout << "packed:" << endl;
 	hexdump(buf, size);
@@ -205,7 +205,7 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iter++;
 	}
 
-	size_t	mapsize;
+	uint32	mapsize;
 	mapsize = MSH_size(ms1);
 //	MSH_SIZE_MAP_STRING_CLASS(mapsize, ms1, SubArray);
 	cout << "size = " << mapsize << endl;
@@ -243,7 +243,7 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iternc++;
 	}
 
-	size_t	mapncsize;
+	uint32	mapncsize;
 	mapncsize = MSH_size(msanc1);
 	cout << "size = " << mapncsize << endl;
 
@@ -281,7 +281,7 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		itersv++;
 	}
 
-	size_t svsize;
+	uint32 svsize;
 	svsize = MSH_size(sv1);
 	cout << "size = " << svsize << endl;
 
@@ -321,7 +321,7 @@ int main (int	/*argc*/, char**	/*argv[]*/)
 		iterdv++;
 	}
 
-	size_t dvsize;
+	uint32 dvsize;
 	dvsize = MSH_size(dv1);
 	cout << "size = " << dvsize << endl;
 
