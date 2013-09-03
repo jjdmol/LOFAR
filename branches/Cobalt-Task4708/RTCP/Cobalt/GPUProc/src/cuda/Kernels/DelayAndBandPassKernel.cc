@@ -31,9 +31,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/BandPass.h>
 
-using namespace std;
 using boost::lexical_cast;
-using boost::format;
 
 namespace LOFAR
 {
@@ -137,7 +135,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7ff") % itsParameters.subbandBandwidth);
+        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";

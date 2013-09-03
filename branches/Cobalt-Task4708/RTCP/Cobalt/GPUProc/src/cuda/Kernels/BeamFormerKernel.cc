@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include "BeamFormerKernel.h"
 
@@ -41,7 +42,8 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f)  // TODO: Add a key to the parset to specify this
+      weightCorrection(1.0f),  // TODO: Add a key to the parset to specify this
+      subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
@@ -122,8 +124,10 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
+      defs["SUBBAND_BANDWIDTH"] =
+        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
       defs["WEIGHT_CORRECTION"] =
-        lexical_cast<string>(itsParameters.weightCorrection);
+        str(boost::format("%.7ff") % itsParameters.weightCorrection);
 
       return defs;
     }

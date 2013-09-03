@@ -45,6 +45,7 @@ namespace LOFAR
         unsigned nrSAPs;
         unsigned nrTABs;
         float weightCorrection; // constant weight applied to all weights
+        double subbandBandwidth;
       };
 
       enum BufferType
