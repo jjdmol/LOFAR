@@ -95,7 +95,10 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
 
-      std::vector<struct Output> subbandPool; // [localSubbandIdx]
+      std::vector<struct Output> writePool; // [localSubbandIdx]
+
+      // preprocess subbands on the CPU
+      void preprocessSubbands(SubbandProc &workQueue);
 
       // process subbands on the GPU
       void processSubbands(SubbandProc &workQueue);

@@ -75,6 +75,8 @@ namespace LOFAR
       const std::vector<size_t> beamlets;
       const size_t blockSize;
 
+      std::vector<int> stationSourceRanks; // [station]
+
       // Receive a header (async) from the given rank.
       MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
 

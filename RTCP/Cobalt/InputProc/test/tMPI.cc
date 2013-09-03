@@ -56,7 +56,7 @@ void test()
     for (int n = 0; n < nrHosts; ++n) {
       if (n == rank) continue;
 
-      requests.push_back(Guarded_MPI_Isend(&send_buffers[n][0], BUFSIZE, n, 1000 * rank + 200 + n));
+      requests.push_back(Guarded_MPI_Issend(&send_buffers[n][0], BUFSIZE, n, 1000 * rank + 200 + n));
     }
 
     // post our receives
