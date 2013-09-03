@@ -129,7 +129,9 @@ int main() {
   auto_ptr<BeamFormerKernel> kernel(factory.create(ctx, buffers));
 
   float subbandFreq = 60e6f;
-  kernel->enqueue(stream, subbandFreq);
+  unsigned sap = 0;
+
+  kernel->enqueue(stream, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

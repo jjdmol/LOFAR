@@ -172,7 +172,8 @@ namespace LOFAR
         ps.settings.subbands[subband].SAP);
 
       beamFormerKernel->enqueue(queue,
-        ps.settings.subbands[subband].centralFrequency);
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
       transposeKernel->enqueue();
 
       inverseFFT.enqueue(queue);

@@ -155,6 +155,7 @@ HostMemory runTest(Context ctx,
   cuStream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
   float subbandFrequency = 1.5e8f; // Hz
+  unsigned sap = 0;
 
   // ****************************************************************************
   // Run the kernel on the created data
@@ -162,6 +163,7 @@ HostMemory runTest(Context ctx,
   hKernel.setArg(1, devBandPassCorrectedMemory);
   hKernel.setArg(2, devDelaysMemory);
   hKernel.setArg(3, subbandFrequency);
+  hKernel.setArg(4, sap);
 
   // Calculate the number of threads in total and per block
   Grid globalWorkSize(1, 1, 1);

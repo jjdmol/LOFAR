@@ -45,14 +45,15 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * \param[in]  correctedDataPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
  * \param[in]  delaysPtr               3D input array of complex valued delays to be applied to the correctData samples. There is a delay for each Sub-Array Pointing, station, and Tied Array Beam triplet.
  * \param[in]  subbandFrequency        central frequency of the subband
-
+ * \param[in]  sap                     number (index) of the Sub-Array Pointing (aka (station) beam)
+ *
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
  * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
- * NR_SAPS                 | >= 1                    | number of Sub-Array Pointings (aka station beams)
+ * NR_SAPS                 | >= 1 && > sap           | number of Sub-Array Pointings
  * NR_TABS                 | >= 1                    | number of Tied Array Beams (old name: pencil beams) to create
  * WEIGHT_CORRECTION       | float                   | weighting applied to all weights derived from the delays, primarily used for correcting FFT and iFFT chain multiplication correction
  * SUBBAND_BANDWIDTH       | float, multiple of NR_CHANNELS | Bandwidth of a subband in Hz
@@ -67,7 +68,8 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                        const void *samplesPtr,
                                        const void *delaysPtr,
-                                       float subbandFrequency)
+                                       float subbandFrequency,
+                                       unsigned sap)
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
@@ -89,11 +91,6 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 #else
   float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
-
-
-  // Assumes that all SAPs use the same nr of stations (or almost with the other stations' data all 0).
-  for (unsigned sap = 0; sap < NR_SAPS; sap++)
-  {
 
 #pragma unroll
   for (unsigned first_station = 0;  // Step over data with NR_STATIONS_PER_PASS stride
@@ -714,9 +711,6 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
       __syncthreads();
     }
-  } // first_station < NR_STATIONS
-
-  } // sap < NR_SAPS
-
+  }
 }
 

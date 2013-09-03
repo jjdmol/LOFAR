@@ -84,9 +84,11 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, float subbandFrequency)
+    void BeamFormerKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/,
+                                   float centralFrequency, unsigned SAP)
     {
-      setArg(3, subbandFrequency);
+      setArg(3, centralFrequency);
+      setArg(4, SAP);
       Kernel::enqueue(queue/*, counter*/);
     }
 
