@@ -34,9 +34,6 @@ namespace LOFAR
 
     ostream &operator << (ostream &os, const TimeStamp &ts)
     {
-      if(ts.getClock() == 0)
-        return os << "[<no clock: timestamp 0x" << hex << (uint64)ts << ">]";
-
       double time_d = ts.getSeconds();
       time_t seconds = static_cast<time_t>(floor(time_d));
       unsigned ms = static_cast<unsigned>(floor((time_d - seconds) * 1000 + 0.5));
