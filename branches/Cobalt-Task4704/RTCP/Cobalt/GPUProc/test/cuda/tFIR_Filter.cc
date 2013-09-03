@@ -79,7 +79,8 @@ int test()
   definitions["NR_TAPS"] = lexical_cast<string>(NR_TAPS);
   definitions["NR_STABS"] = lexical_cast<string>(NR_STATIONS);
   definitions["NR_CHANNELS"] = lexical_cast<string>(NR_CHANNELS);
-  definitions["NR_SAMPLES_PER_CHANNEL"] = lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
+  definitions["NR_SAMPLES_PER_CHANNEL"] = 
+    lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
   definitions["NR_BITS_PER_SAMPLE"] = lexical_cast<string>(NR_BITS_PER_SAMPLE);
@@ -95,17 +96,26 @@ int test()
   Function hKernel(module, function);
 
   // Create the needed data
-  unsigned sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX;
-  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData * sizeof(float), 0.0f);
+  unsigned sizeFilteredData = 
+    NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * 
+    NR_CHANNELS * COMPLEX;
+  HostMemory rawFilteredData = 
+    getInitializedArray(ctx, sizeFilteredData * sizeof(float), 0.0f);
 
-  unsigned sizeSampledData = NR_STATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
-  HostMemory rawInputSamples = getInitializedArray(ctx, sizeSampledData * sizeof(signed char), char(0));
+  unsigned sizeSampledData = 
+    NR_STATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * 
+    NR_POLARIZATIONS * COMPLEX;
+  HostMemory rawInputSamples = 
+    getInitializedArray(ctx, sizeSampledData * sizeof(signed char), char(0));
 
   unsigned sizeWeightsData = NR_CHANNELS * NR_TAPS;
-  HostMemory rawFirWeights = getInitializedArray(ctx, sizeWeightsData * sizeof(float), 0.0f);
+  HostMemory rawFirWeights = 
+    getInitializedArray(ctx, sizeWeightsData * sizeof(float), 0.0f);
 
-  unsigned sizeHistoryData = NR_STATIONS * (NR_TAPS - 1) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
-  HostMemory rawHistoryData = getInitializedArray(ctx, sizeHistoryData * sizeof(signed char), char(0));
+  unsigned sizeHistoryData = 
+    NR_STATIONS * (NR_TAPS - 1) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
+  HostMemory rawHistoryData = 
+    getInitializedArray(ctx, sizeHistoryData * sizeof(signed char), char(0));
 
   // Data on the gpu
   DeviceMemory devFilteredData(ctx, sizeFilteredData * sizeof(float));
@@ -113,12 +123,15 @@ int test()
   DeviceMemory devFirWeights(ctx, sizeWeightsData * sizeof(float));
   DeviceMemory devHistoryData(ctx, sizeHistoryData * sizeof(signed char));
 
-  unsigned station, sample, ch, pol, ri;
+  unsigned station, sample, ch, pol;
 
   // Calculate the number of threads in total and per block
-  int MAXNRCUDATHREADS = 64;//dit moet nog opgevraagd worden en niet als magisch getal
+
+  // Dit moet nog opgevraagd worden en niet als magisch getal
+  int MAXNRCUDATHREADS = 64;
+
   size_t maxNrThreads = MAXNRCUDATHREADS;
-  unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2; //ps.nrChannelsPerSubband()
+  unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2;
   unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
   
   Grid globalWorkSize(nrPasses, NR_STATIONS); 
@@ -183,18 +196,20 @@ int test()
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
   // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
-  // However, in modes other than 16 bit mode, all amplitudes are scaled to match 16 bit mode.
-  // For 8 bit mode, this means *256.
+  // However, in modes other than 16 bit mode, all amplitudes are scaled to
+  // match 16 bit mode. For 8 bit mode, this means *256.
   unsigned scale = 1;
   if (NR_BITS_PER_SAMPLE != 16)
     scale = 256;
   if (rawFilteredData.get<float>()[0] != 6.0f * scale) 
   {
-    std::cerr << "FIR_FilterTest 1: Expected at idx 0: " << 6 * scale << "; got: " << rawFilteredData.get<float>()[0] << std::endl;
+    cerr << "FIR_FilterTest 1: Expected at idx 0: " << 6 * scale 
+              << "; got: " << rawFilteredData.get<float>()[0] << endl;
 
     testOk = false;
   }
-  std::cerr << "Weights returned " << rawFilteredData.get<float>()[0] << std::endl;
+  cerr << "Weights returned " << rawFilteredData.get<float>()[0] 
+            << endl;
 
   const size_t nrExpectedZeros = sizeFilteredData - 1;
   size_t nrZeros = 0;
@@ -202,12 +217,14 @@ int test()
     if (rawFilteredData.get<float>()[i] == 0.0f) {
       nrZeros ++;
     } else {
-      std::cerr << "filteredData[" << i << "] = " << rawFilteredData.get<float>()[i] << std::endl;
+      cerr << "filteredData[" << i << "] = " << rawFilteredData.get<float>()[i]
+           << endl;
     }
 
   if (nrZeros != nrExpectedZeros) 
   {
-    std::cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros << " zeros out of " << nrExpectedZeros << std::endl;
+    cerr << "FIR_FilterTest 1: Unexpected non-zero(s). Only " << nrZeros 
+         << " zeros out of " << nrExpectedZeros << endl;
     testOk = false;
   }
 
@@ -242,23 +259,31 @@ int test()
 
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
-  // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS zeros)
+  // Expected output: sequences of (filterbank scaled by station nr, NR_TAPS
+  // zeros)
   unsigned nrErrors = 0;
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
       unsigned s;
-      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL / (2 * NR_TAPS); sample += s) {
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL / (2 * NR_TAPS); 
+           sample += s) {
         for (s = 0; s < NR_TAPS; s++) {
           for (ch = 0; ch <NR_CHANNELS; ch++) {
-            if (filteredDataArr[station][pol][sample + s][ch][0] != scale * station * firWeightsArr[ch][s]) {
+            if (filteredDataArr[station][pol][sample + s][ch][0] != 
+                scale * station * firWeightsArr[ch][s]) {
               if (++nrErrors < 100) { // limit spam
-                std::cerr << "2a.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
-                  "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][0] << std::endl;
+                cerr << "2a.filtered[" << station << "][" << pol << "][" 
+                     << sample+s << "][" << ch << "][0] (sample=" << sample
+                     << " s="<<s<<") = " << setprecision(9+1)
+                     << filteredDataArr[station][pol][sample + s][ch][0]
+                     << endl;
               }
             }
             if (filteredDataArr[station][pol][sample + s][ch][1] != 0.0f) {
               if (++nrErrors < 100) {
-                std::cerr << "2a imag non-zero: " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][1] << std::endl;
+                cerr << "2a imag non-zero: " << setprecision(9+1)
+                     << filteredDataArr[station][pol][sample + s][ch][1]
+                     << endl;
               }
             }
           }
@@ -266,11 +291,15 @@ int test()
 
         for ( ; s < 2 * NR_TAPS; s++) {
           for (ch = 0; ch < NR_CHANNELS; ch++) {
-            if (filteredDataArr[station][pol][sample + s][ch][0] != 0.0f || filteredDataArr[station][pol][sample + s][ch][1] != 0.0f) {
+            if (filteredDataArr[station][pol][sample + s][ch][0] != 0.0f ||
+                filteredDataArr[station][pol][sample + s][ch][1] != 0.0f) {
               if (++nrErrors < 100) {
-                std::cerr << "2b.filtered["<<station<<"]["<<pol<<"]["<<sample+s<<"]["<<ch<<
-                  "][0] (sample="<<sample<<" s="<<s<<") = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample + s][ch][0] <<
-                  ", "<<filteredDataArr[station][pol][sample + s][ch][1] << std::endl;
+                cerr << "2b.filtered[" << station << "][" << pol << "][" 
+                     << sample+s << "][" << ch << "][0] (sample=" << sample
+                     << " s=" << s <<") = " << setprecision(9+1)
+                     << filteredDataArr[station][pol][sample + s][ch][0]
+                     << ", "<< filteredDataArr[station][pol][sample + s][ch][1]
+                     << endl;
               }
             }
           }
@@ -279,19 +308,23 @@ int test()
     }
   }
   if (nrErrors == 0) {
-    std::cout << "FIR_FilterTest 2: test OK" << std::endl;
+    cout << "FIR_FilterTest 2: test OK" << endl;
   } else {
-    std::cerr << "FIR_FilterTest 2: " << nrErrors << " unexpected output values" << std::endl;
+    cerr << "FIR_FilterTest 2: " << nrErrors << " unexpected output values"
+         << endl;
     testOk = false;
   }
 
 
-  // Test 3: Scaled step test (scaled DC gain) on KAISER filterbank. Non-zero imag input.
+  // Test 3: Scaled step test (scaled DC gain) on KAISER filterbank. Non-zero
+  // imag input.
   FilterBank filterBank(true, NR_TAPS, NR_CHANNELS, KAISER);
   filterBank.negateWeights(); // not needed for testing, but as we use it
   //filterBank.printWeights();
 
-  assert(firWeightsArr.num_elements() == filterBank.getWeights().num_elements());
+  assert(firWeightsArr.num_elements() == 
+         filterBank.getWeights().num_elements());
+
   double* expectedSums = new double[NR_CHANNELS];
   memset(expectedSums, 0, NR_CHANNELS * sizeof(double));
   for (ch = 0; ch < NR_CHANNELS; ch++) {
@@ -326,23 +359,29 @@ int test()
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
   nrErrors = 0;
-  const float eps = 4.0f * std::numeric_limits<float>::epsilon();
+  const float eps = 4.0f * numeric_limits<float>::epsilon();
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-      // Skip the first NR_TAPS - 1 samples; they contain the filtered history data
+      // Skip first NR_TAPS - 1 samples; they contain the filtered history data
       for (sample = NR_TAPS - 1; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
         for (ch = 0; ch < NR_CHANNELS; ch++) {
-          // Expected sum must also be scaled by 2 and 3, because weights are real only.
-          if (!fpEquals(filteredDataArr[station][pol][sample][ch][0], (float)(2 * scale * expectedSums[ch]), eps)) {
+          // Expected sum must also be scaled by 2 and 3
+          if (!fpEquals(filteredDataArr[station][pol][sample][ch][0], 
+                        (float)(2 * scale * expectedSums[ch]), eps)) {
             if (++nrErrors < 100) { // limit spam
-              std::cerr << "3a.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                "][0] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][0] << " 2*weight = " << 2*scale*expectedSums[ch] << std::endl;
+              cerr << "3a.filtered[" << station << "][" << pol << "]["
+                   << sample << "][" << ch << "][0] = " << setprecision(9+1)
+                   << filteredDataArr[station][pol][sample][ch][0] 
+                   << " 2*weight = " << 2 * scale * expectedSums[ch] << endl;
             }
           }
-          if (!fpEquals(filteredDataArr[station][pol][sample][ch][1], (float)(3 * scale * expectedSums[ch]), eps)) {
+          if (!fpEquals(filteredDataArr[station][pol][sample][ch][1], 
+                        (float)(3 * scale * expectedSums[ch]), eps)) {
             if (++nrErrors < 100) {
-              std::cerr << "3b.filtered["<<station<<"]["<<pol<<"]["<<sample<<"]["<<ch<<
-                "][1] = " << std::setprecision(9+1) << filteredDataArr[station][pol][sample][ch][1] << " 3*weight = " << 3*scale*expectedSums[ch] << std::endl;
+              cerr << "3b.filtered[" << station << "][" << pol << "][" 
+                   << sample << "][" << ch << "][1] = " << setprecision(9+1)
+                   << filteredDataArr[station][pol][sample][ch][1]
+                   << " 3*weight = " << 3 * scale * expectedSums[ch] << endl;
             }
           }
         }
@@ -351,9 +390,10 @@ int test()
   }
   delete[] expectedSums;
   if (nrErrors == 0) {
-    std::cout << "FIR_FilterTest 3: test OK" << std::endl;
+    cout << "FIR_FilterTest 3: test OK" << endl;
   } else {
-    std::cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values" << std::endl;
+    cerr << "FIR_FilterTest 3: " << nrErrors << " unexpected output values"
+         << endl;
     testOk = false;
   }
 
@@ -378,35 +418,20 @@ int test()
     }
   }
 
+  size_t halfNrTaps = NR_TAPS / 2;
+
   // Set input samples: a train of alternating real and imaginary pulses,
   // NR_TAPS / 2 samples apart.
   for (station = 0; station < NR_STATIONS; station++) {
     for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample += NR_TAPS) {
       for (ch = 0; ch < NR_CHANNELS; ch++) {
         for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          // for (ri = 0; ri < COMPLEX; ri++) {
-            inputSamplesArr[station][sample][ch][pol][0] = 1.0f;
-            inputSamplesArr[station][sample + NR_TAPS / 2][ch][pol][1] = -1.0f;
-          // }
+          inputSamplesArr[station][sample][ch][pol][0] = 1.0f;
+          inputSamplesArr[station][sample + halfNrTaps][ch][pol][0] = -1.0f;
         }
       }
     }
   }
-
-  // for (station = 0; station < NR_STATIONS; station++) {
-  //   for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
-  //     for (ch = 0; ch < NR_CHANNELS; ch++) {
-  //       for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-  //         for (unsigned ri = 0; ri < 2; ri++) {
-  //           cout << "in[" << station << "][" << sample 
-  //                << "][" << ch << "][" << pol << "][" << ri << "] = " 
-  //                << int(inputSamplesArr[station][sample][ch][pol][ri])
-  //                << endl;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 
   // Copy input vectors from host memory to GPU buffers.
   stream.writeBuffer(devFilteredData, rawFilteredData, true);
@@ -421,30 +446,37 @@ int test()
 
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
-  station = 0;
-  // for (station = 0; station < NR_STATIONS; station++) {
-    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
-        ch = 0;
-        // for (ch = 0; ch < NR_CHANNELS; ch++) {
-          for (unsigned ri = 0; ri < 2; ri++) {
-            cout << "out[" << station << "][" << pol 
-                 << "][" << sample << "][" << ch << "][" << ri << "] = " 
-                 << filteredDataArr[station][pol][sample][ch][ri]
-                 << endl;
-          }
-        // }
-      }
-    }
-  // }
-
   // Verify output. This first NR_TAPS outputs represent the transient behaviour
   // of the FIR filter; the remaining output the steady state.
+  nrErrors = 0;
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+      // transient part
+      for (sample = 0; sample < halfNrTaps ; sample++) {
         for (ch = 0; ch < NR_CHANNELS; ch++) {
-          
+          if (filteredDataArr[station][pol][sample][ch][0] != 
+              firWeightsArr[ch][sample] * scale) {
+            nrErrors++;
+            cerr << "4a.filtered[" << station << "][" << pol << "]["
+                 << sample << "][" << ch << "][0] = "
+                 << filteredDataArr[station][pol][sample][ch][0] << " != "
+                 << firWeightsArr[ch][sample] * scale << endl;
+          }
+        }
+      }
+      // steady state part
+      int sign = 1;
+      for (sample = halfNrTaps; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+        sign = (sample % halfNrTaps == 0) ? -sign : sign;
+        for (ch = 0; ch < NR_CHANNELS; ch++) {
+          if (filteredDataArr[station][pol][sample][ch][0] !=
+              firWeightsArr[ch][0] * scale * sign / 2) {
+            nrErrors++;
+            cerr << "4a.filtered[" << station << "][" << pol << "]["
+                 << sample << "][" << ch << "][0] = "
+                 << filteredDataArr[station][pol][sample][ch][0] << " != "
+                 << firWeightsArr[ch][0] * scale * sign / 2 << endl;
+          }
         }
       }
     }
@@ -453,17 +485,56 @@ int test()
   // Run the kernel for the second time. This time the history buffer should be
   // filled with previous samples. Hence we should NOT see the transient
   // behaviour of the FIR filter we saw previously in the first run.
+  stream.synchronize();
+  stream.launchKernel(hKernel, globalWorkSize, localWorkSize);
+  stream.synchronize();
 
-/*
-  // Set FIR filter weights: a triangle shaped pulse response.
-  for (ch = 0; ch < NR_CHANNELS; ch++) {
-    for (unsigned tap = 0; tap < NR_TAPS; tap++) {
-      firWeightsArr[ch][tap] = (NR_TAPS - tap) / 16.0f;
+  stream.readBuffer(rawFilteredData, devFilteredData, true);
+
+  // station = 0;
+  // // for (station = 0; station < NR_STATIONS; station++) {
+  // for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+  //   for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+  //     ch = 0;
+  //     // for (ch = 0; ch < NR_CHANNELS; ch++) {
+  //     for (unsigned ri = 0; ri < 2; ri++) {
+  //       cout << "out[" << station << "][" << pol 
+  //            << "][" << sample << "][" << ch << "][" << ri << "] = " 
+  //            << filteredDataArr[station][pol][sample][ch][ri]
+  //            << endl;
+  //     }
+  //     // }
+  //   }
+  // }
+  // // }
+
+  // Verify output. This time, there should be no transient behaviour.
+  for (station = 0; station < NR_STATIONS; station++) {
+    for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
+      int sign = -1;
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+        sign = (sample % halfNrTaps == 0) ? -sign : sign;
+        for (ch = 0; ch < NR_CHANNELS; ch++) {
+          if (filteredDataArr[station][pol][sample][ch][0] !=
+              firWeightsArr[ch][0] * scale * sign / 2) {
+            nrErrors++;
+            cerr << "4b.filtered[" << station << "][" << pol << "]["
+                 << sample << "][" << ch << "][0] = "
+                 << filteredDataArr[station][pol][sample][ch][0] << " != "
+                 << firWeightsArr[ch][0] * scale * sign / 2 << endl;
+          }
+        }
+      }
     }
   }
 
- */
-
+  if (nrErrors == 0) {
+    cout << "FIR_FilterTest 4: test OK" << endl;
+  } else {
+    cerr << "FIR_FilterTest 4: " << nrErrors << " unexpected output values"
+         << endl;
+    testOk = false;
+  }
 
   return testOk ? 0 : 1;
 }
