@@ -49,7 +49,7 @@ namespace LOFAR
                 ps.nrBeams(),
                 ps.nrStations(),
                 NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+                /*ps.nrHistorySamples() +*/ ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 context));
       }
