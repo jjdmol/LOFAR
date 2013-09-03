@@ -146,12 +146,13 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
-  LOG_INFO_STR("===== INIT =====");
+  // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
+  LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 #else
-  LOG_WARN_STR("Running without MPI!");
+  LOG_WARN("Running without MPI!");
 #endif
 
   /*
@@ -179,7 +180,7 @@ int main(int argc, char **argv)
    * Initialise OpenMP
    */
 
-  LOG_INFO_STR("----- Initialising OpenMP");
+  LOG_INFO("----- Initialising OpenMP");
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
    * INIT stage
    */
 
-  LOG_INFO_STR("----- Reading Parset");
+  LOG_INFO("----- Reading Parset");
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
@@ -200,12 +201,13 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
   LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
 
-  LOG_INFO_STR("----- Initialising GPUs");
+  LOG_INFO("----- Initialising GPUs");
 
   gpu::Platform platform;
+  LOG_INFO_STR("GPU platform " << platform.getName());
   vector<gpu::Device> allDevices(platform.devices());
 
-  LOG_INFO_STR("----- Initialising NUMA bindings");
+  LOG_INFO("----- Initialising NUMA bindings");
 
   // TODO: How to migrate the memory that's currently in use
   // (and mlocked!) to the selected CPU?
@@ -229,21 +231,27 @@ int main(int argc, char **argv)
     devices = allDevices;
   }
 
+  for (unsigned i = 0; i < devices.size(); i++)
+    LOG_INFO_STR(devices[i].getName() << ": compute capability: " <<
+                 devices[i].getComputeCapabilityMajor() << "." <<
+                 devices[i].getComputeCapabilityMinor() <<
+                 " global memory: " << devices[i].getTotalGlobalMem());
+
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
     THROW_SYSCALL("mlockall");
 
-  LOG_DEBUG_STR("All memory is now pinned.");
+  LOG_DEBUG("All memory is now pinned.");
 
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
   if (rank == 0) {
-    LOG_INFO_STR("----- Starting OutputProc");
+    LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-  LOG_INFO_STR("----- Initialising Pipeline");
+  LOG_INFO("----- Initialising Pipeline");
 
   // Distribute the subbands over the MPI ranks
   SubbandDistribution subbandDistribution; // rank -> [subbands]
@@ -258,7 +266,7 @@ int main(int argc, char **argv)
   bool beamFormerEnabled = ps.settings.beamFormer.enabled;
 
   if (correlatorEnabled && beamFormerEnabled) {
-    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    LOG_ERROR("Commensal observations (correlator+beamformer) not supported yet.");
     exit(1);
   }
 
@@ -287,7 +295,7 @@ int main(int argc, char **argv)
   // Initialise and query MPI
   int provided_mpi_thread_support;
 
-  LOG_INFO_STR("----- Initialising MPI");
+  LOG_INFO("----- Initialising MPI");
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
     cerr << "MPI_Init_thread failed" << endl;
     exit(1);
@@ -311,7 +319,7 @@ int main(int argc, char **argv)
    * RUN stage
    */
 
-  LOG_INFO_STR("===== LAUNCH =====");
+  LOG_INFO("===== LAUNCH =====");
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
@@ -338,7 +346,7 @@ int main(int argc, char **argv)
   /*
    * COMPLETING stage
    */
-  LOG_INFO_STR("===== FINALISE =====");
+  LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
     time_t completing_start = time(0);
@@ -375,11 +383,11 @@ int main(int argc, char **argv)
         LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
       }
     } else {
-      LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
+      LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
     }
   }
 
-  LOG_INFO_STR("===== SUCCESS =====");
+  LOG_INFO("===== SUCCESS =====");
 
 #ifdef HAVE_MPI
   MPI_Finalize();

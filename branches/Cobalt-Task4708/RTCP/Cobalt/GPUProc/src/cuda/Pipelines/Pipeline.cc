@@ -462,7 +462,7 @@ namespace LOFAR
 
       // Log all performance totals at DEBUG level
       for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
-        LOG_DEBUG_STR(i->second.log(i->first));
+        LOG_DEBUG(i->second.log(i->first).c_str());
       }
 
       for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
@@ -471,7 +471,7 @@ namespace LOFAR
 
       // Log all group totals at INFO level
       for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
-        LOG_INFO_STR(i->second.log(i->first));
+        LOG_INFO(i->second.log(i->first).c_str());
       }
 
       // Log specific performance figures for regression tests at INFO level

@@ -52,7 +52,7 @@ namespace LOFAR
       waitForAllOperations();
 
       if (logAtDestruction) {
-        LOG_INFO_STR(total.log(name));
+        LOG_INFO(total.log(name).c_str());
       }
     }
 
