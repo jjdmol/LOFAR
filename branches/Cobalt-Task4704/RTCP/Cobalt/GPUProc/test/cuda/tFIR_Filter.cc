@@ -419,15 +419,23 @@ int test()
   }
 
   size_t halfNrTaps = NR_TAPS / 2;
+  size_t quartNrTaps = halfNrTaps / 2;
 
   // Set input samples: a train of alternating real and imaginary pulses,
-  // NR_TAPS / 2 samples apart.
+  // NR_TAPS / 4 samples apart.
+  size_t n0, n1, n2, n3;
   for (station = 0; station < NR_STATIONS; station++) {
     for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample += NR_TAPS) {
+      n0 = sample; 
+      n1 = n0 + quartNrTaps;
+      n2 = n1 + quartNrTaps;
+      n3 = n2 + quartNrTaps;
       for (ch = 0; ch < NR_CHANNELS; ch++) {
         for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-          inputSamplesArr[station][sample][ch][pol][0] = 1.0f;
-          inputSamplesArr[station][sample + halfNrTaps][ch][pol][0] = -1.0f;
+          inputSamplesArr[station][n0][ch][pol][0] = 1.0f;
+          inputSamplesArr[station][n1][ch][pol][1] = 1.0f;
+          inputSamplesArr[station][n2][ch][pol][0] = -1.0f;
+          inputSamplesArr[station][n3][ch][pol][1] = -1.0f;
         }
       }
     }
@@ -462,11 +470,20 @@ int test()
                  << filteredDataArr[station][pol][sample][ch][0] << " != "
                  << firWeightsArr[ch][sample] * scale << endl;
           }
+          if (filteredDataArr[station][pol][sample + quartNrTaps][ch][1] != 
+              firWeightsArr[ch][sample] * scale) {
+            nrErrors++;
+            cerr << "4a.filtered[" << station << "][" << pol << "]["
+                 << sample + quartNrTaps << "][" << ch << "][1] = "
+                 << filteredDataArr[station][pol][sample + quartNrTaps][ch][1]
+                 << " != " << firWeightsArr[ch][sample] * scale << endl;
+          }
         }
       }
       // steady state part
       int sign = 1;
-      for (sample = halfNrTaps; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+      for (sample = halfNrTaps; sample < NR_SAMPLES_PER_CHANNEL - quartNrTaps; 
+           sample++) {
         sign = (sample % halfNrTaps == 0) ? -sign : sign;
         for (ch = 0; ch < NR_CHANNELS; ch++) {
           if (filteredDataArr[station][pol][sample][ch][0] !=
@@ -476,6 +493,14 @@ int test()
                  << sample << "][" << ch << "][0] = "
                  << filteredDataArr[station][pol][sample][ch][0] << " != "
                  << firWeightsArr[ch][0] * scale * sign / 2 << endl;
+          }
+          if (filteredDataArr[station][pol][sample + quartNrTaps][ch][1] !=
+              firWeightsArr[ch][0] * scale * sign / 2) {
+            nrErrors++;
+            cerr << "4a.filtered[" << station << "][" << pol << "]["
+                 << sample + quartNrTaps << "][" << ch << "][0] = "
+                 << filteredDataArr[station][pol][sample + quartNrTaps][ch][1] 
+                 << " != " << firWeightsArr[ch][0] * scale * sign / 2 << endl;
           }
         }
       }
@@ -491,28 +516,11 @@ int test()
 
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
-  // station = 0;
-  // // for (station = 0; station < NR_STATIONS; station++) {
-  // for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
-  //   for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
-  //     ch = 0;
-  //     // for (ch = 0; ch < NR_CHANNELS; ch++) {
-  //     for (unsigned ri = 0; ri < 2; ri++) {
-  //       cout << "out[" << station << "][" << pol 
-  //            << "][" << sample << "][" << ch << "][" << ri << "] = " 
-  //            << filteredDataArr[station][pol][sample][ch][ri]
-  //            << endl;
-  //     }
-  //     // }
-  //   }
-  // }
-  // // }
-
   // Verify output. This time, there should be no transient behaviour.
   for (station = 0; station < NR_STATIONS; station++) {
     for (pol = 0; pol < NR_POLARIZATIONS; pol++) {
       int sign = -1;
-      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL; sample++) {
+      for (sample = 0; sample < NR_SAMPLES_PER_CHANNEL - quartNrTaps; sample++) {
         sign = (sample % halfNrTaps == 0) ? -sign : sign;
         for (ch = 0; ch < NR_CHANNELS; ch++) {
           if (filteredDataArr[station][pol][sample][ch][0] !=
@@ -522,6 +530,14 @@ int test()
                  << sample << "][" << ch << "][0] = "
                  << filteredDataArr[station][pol][sample][ch][0] << " != "
                  << firWeightsArr[ch][0] * scale * sign / 2 << endl;
+          }
+          if (filteredDataArr[station][pol][sample + quartNrTaps][ch][1] !=
+              firWeightsArr[ch][0] * scale * sign / 2) {
+            nrErrors++;
+            cerr << "4b.filtered[" << station << "][" << pol << "]["
+                 << sample + quartNrTaps << "][" << ch << "][1] = "
+                 << filteredDataArr[station][pol][sample + quartNrTaps][ch][1]
+                 << " != " << firWeightsArr[ch][0] * scale * sign / 2 << endl;
           }
         }
       }
