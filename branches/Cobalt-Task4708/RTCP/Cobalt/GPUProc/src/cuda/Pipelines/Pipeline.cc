@@ -485,9 +485,9 @@ namespace LOFAR
       LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
       LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
       LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
-      LOG_INFO_STR("CPU  seconds spent on input,   per WQ: " << fixed << setw(8) << setprecision(3) << input_seconds);
-      LOG_INFO_STR("CPU  seconds spent processing, per WQ: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
-      LOG_INFO_STR("CPU  seconds spent postprocessing, per WQ: " << fixed << setw(8) << setprecision(3) << postprocess_seconds);
+      LOG_INFO_STR("CPU  seconds spent on input,   per SbProc: " << fixed << setw(8) << setprecision(3) << input_seconds);
+      LOG_INFO_STR("CPU  seconds spent processing, per SbProc: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
+      LOG_INFO_STR("CPU  seconds spent postprocessing, per SbProc: " << fixed << setw(8) << setprecision(3) << postprocess_seconds);
     }
 
   }
