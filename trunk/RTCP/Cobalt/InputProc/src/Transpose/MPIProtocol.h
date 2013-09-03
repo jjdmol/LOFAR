@@ -39,6 +39,9 @@ namespace LOFAR
         // Originating station
         StationID station;
 
+        // Rank of originating data
+        int sourceRank;
+
         // Block will span [from,to)
         int64 from, to;
 
@@ -81,7 +84,7 @@ namespace LOFAR
         }
       };
 
-      enum tag_types { CONTROL = 0, BEAMLET = 1, METADATA = 2 };
+      enum tag_types { CONTROL = 1, BEAMLET = 2, METADATA = 3 };
 
       // MPI tag which identifies each block.
       union tag_t {

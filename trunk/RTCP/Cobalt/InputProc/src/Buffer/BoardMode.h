@@ -39,6 +39,10 @@ namespace LOFAR
         return nrBeamletsPerBoard(bitMode);
       }
 
+      unsigned nrBeamletsPerBoard() const volatile {
+        return nrBeamletsPerBoard(bitMode);
+      }
+
       static unsigned nrBeamletsPerBoard( unsigned bitMode ) {
         // the number of beamlets scales with the bitmode:
         // 16-bit:  61

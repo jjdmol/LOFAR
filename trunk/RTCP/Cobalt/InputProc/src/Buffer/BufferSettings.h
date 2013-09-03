@@ -28,6 +28,7 @@
 #include <CoInterface/SparseSet.h>
 #include <CoInterface/SlidingPointer.h>
 #include "StationID.h"
+#include "BoardMode.h"
 
 namespace LOFAR
 {
@@ -100,16 +101,26 @@ namespace LOFAR
 
     std::ostream& operator<<( std::ostream &str, const struct BufferSettings &s );
 
-    struct BoardLock {
-      SlidingPointer<BufferSettings::range_type> readPtr;
-      SlidingPointer<BufferSettings::range_type> writePtr;
-    };
-
-    class SyncLock: public std::vector<struct BoardLock> { // [board]
+    class SyncLock {
     public:
-      SyncLock(const BufferSettings &settings)
+      typedef SlidingPointer<BufferSettings::range_type> LockType;
+
+      /*
+       * We have a write lock per RSP board, which unlocks readers according to
+       * the writer's mode. So the reader must be in the same mode!
+       *
+       * We have a read lock per beamlet. We assume all beamlets are used up
+       * to readLock.size(). Failure to read one of the beamlets will block
+       * the writer for the given board.
+       */
+
+      std::vector<LockType> writeLock; // [board]
+      std::vector<LockType> readLock;  // [beamlet]
+
+      SyncLock(const BufferSettings &settings, size_t nrBeamlets)
       :
-        std::vector<struct BoardLock>(settings.nrBoards)
+        writeLock(settings.nrBoards),
+        readLock(nrBeamlets)
       {
       }
     };
