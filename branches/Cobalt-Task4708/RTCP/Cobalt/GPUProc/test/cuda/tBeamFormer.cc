@@ -226,7 +226,8 @@ int main()
   }
 
   HostMemory outputOnHost = runTest(ctx, cuStream, weightsData,
-    bandPassCorrectedData,complexVoltagesData, function);
+                                    bandPassCorrectedData,
+                                    complexVoltagesData, function);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost.get<float>();
@@ -250,7 +251,8 @@ int main()
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
   {
     bandPassCorrectedData[idx * 2] = 0.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 0.0f;  }
+    bandPassCorrectedData[idx * 2+ 1] = 0.0f;
+  }
 
   for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
   {
@@ -285,7 +287,8 @@ int main()
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
   {
     bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;  }
+    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+  }
 
   for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
   {
@@ -321,7 +324,8 @@ int main()
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
   {
     bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;  }
+    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+  }
 
   for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
   {
