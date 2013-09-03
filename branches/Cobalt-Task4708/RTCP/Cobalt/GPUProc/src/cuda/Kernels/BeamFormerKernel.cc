@@ -124,10 +124,10 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
-      defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
       defs["WEIGHT_CORRECTION"] =
         str(boost::format("%.7ff") % itsParameters.weightCorrection);
+      defs["SUBBAND_BANDWIDTH"] =
+        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
 
       return defs;
     }

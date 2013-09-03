@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
@@ -96,7 +97,8 @@ HostMemory runTest(Context ctx,
                    float * bandPassCorrectedData,
                    float * complexVoltagesData,
                    string function,
-                   float weight_correction = 1.0f) // TODO: -> 2.0f in caller, otherwise we don't see any effect
+                   float weightCorrection,
+                   double subbandBandwidth)
 {
   string kernelFile = "BeamFormer.cu";
 
@@ -117,8 +119,8 @@ HostMemory runTest(Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
-  definitions["WEIGHT_CORRECTION"] = lexical_cast<string>(weight_correction);
-  
+  definitions["WEIGHT_CORRECTION"] = str(boost::format("%.7ff") % weightCorrection);
+  definitions["SUBBAND_BANDWIDTH"] = str(boost::format("%.7ff") % subbandBandwidth);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
@@ -207,6 +209,9 @@ int main()
   float * delaysData= new float[lengthDelaysData];
   float * outputOnHostPtr;
 
+  float weightCorrection = 1.0f;
+  double subbandBandwidth = 200e3; // Hz
+
   // ***********************************************************
   // Baseline test: If all delays data is zero the output should be zero
   // The output array is initialized with 42s
@@ -231,7 +236,8 @@ int main()
 
   HostMemory outputOnHost = runTest(ctx, cuStream, delaysData,
                                     bandPassCorrectedData,
-                                    complexVoltagesData, function);
+                                    complexVoltagesData, function,
+                                    weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost.get<float>();
@@ -265,7 +271,10 @@ int main()
   }
 
   HostMemory outputOnHost2 = runTest(ctx, cuStream, delaysData,
-    bandPassCorrectedData,complexVoltagesData, function);
+                                     bandPassCorrectedData,
+                                     complexVoltagesData, function,
+                                     weightCorrection, subbandBandwidth);
+
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost2.get<float>();
@@ -301,7 +310,9 @@ int main()
   }
 
   HostMemory outputOnHost3 = runTest(ctx, cuStream, delaysData,
-    bandPassCorrectedData,complexVoltagesData, function);
+                                     bandPassCorrectedData,
+                                     complexVoltagesData, function,
+                                     weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost3.get<float>();
@@ -338,7 +349,9 @@ int main()
   }
 
   HostMemory outputOnHost4 = runTest(ctx, cuStream, delaysData,
-    bandPassCorrectedData,complexVoltagesData, function);
+                                     bandPassCorrectedData,
+                                     complexVoltagesData, function,
+                                     weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost4.get<float>();
@@ -380,7 +393,9 @@ int main()
   }
 
   HostMemory outputOnHost5 = runTest(ctx, cuStream, delaysData,
-    bandPassCorrectedData,complexVoltagesData, function, 2.01f);
+                                     bandPassCorrectedData,
+                                     complexVoltagesData, function,
+                                     2.01f, subbandBandwidth);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost5.get<float>();
