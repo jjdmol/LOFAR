@@ -100,7 +100,7 @@ int main() {
   HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
   float *rawDelaysPtr = rawDelaysData.get<float>();
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
-    rawDelaysPtr[idx] = DelaysData[idx];
+    rawDelaysPtr[idx] = delaysData[idx];
   stream.writeBuffer(devDelaysMemory, rawDelaysData);
 
   size_t sizeBandPassCorrectedData = 
