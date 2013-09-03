@@ -106,7 +106,7 @@ namespace LOFAR
 
           // subtract the delay that was already compensated for
           tabDelays[SAP][station][tab] = static_cast<float>(
-                                         (metaData.TABs[tab].delayAtBegin -
+                                         (metaData.TABs[tab].delayAtBegin +
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -
                                          compensatedDelay);
         }
