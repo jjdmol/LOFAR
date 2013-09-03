@@ -150,9 +150,9 @@ extern "C" {
                                                 const fcomplex * filteredDataPtr,
                                                 float subbandFrequency,
                                                 unsigned beam,
-                                                const float * delaysAtBeginPtr,
-                                                const float * delaysAfterEndPtr,
-                                                const float * phaseOffsetsPtr,
+                                                const double * delaysAtBeginPtr,
+                                                const double * delaysAfterEndPtr,
+                                                const double * phaseOffsetsPtr,
                                                 const float * bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
