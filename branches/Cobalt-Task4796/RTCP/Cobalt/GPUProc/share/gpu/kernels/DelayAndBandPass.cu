@@ -88,8 +88,8 @@ typedef  char_complex  (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR
 #else
 typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
-typedef  const float (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
-typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
+typedef  const double (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
+typedef  const double (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 

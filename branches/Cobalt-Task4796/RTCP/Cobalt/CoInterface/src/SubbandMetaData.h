@@ -40,8 +40,8 @@ namespace LOFAR
       SubbandMetaData(size_t nrTABs = 0);
 
       struct beamInfo {
-        float delayAtBegin;
-        float delayAfterEnd;
+        double delayAtBegin;
+        double delayAfterEnd;
         double beamDirectionAtBegin[3];
         double beamDirectionAfterEnd[3];
       };

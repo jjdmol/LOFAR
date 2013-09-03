@@ -75,13 +75,13 @@ namespace LOFAR
       struct BlockID blockID;
 
       //!< Whole sample delays at the start of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+      MultiDimArrayHostBuffer<double, 3> delaysAtBegin;
 
       //!< Whole sample delays at the end of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+      MultiDimArrayHostBuffer<double, 3> delaysAfterEnd;
 
       //!< Remainder of delays
-      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
+      MultiDimArrayHostBuffer<double, 2> phaseOffsets;
 
       // inputdata with flagged data set to zero
       MultiDimArrayHostBuffer<char, 4> inputSamples;

@@ -115,10 +115,10 @@ namespace LOFAR
           itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrSAPs * itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::PHASE_OFFSETS:
         return
-          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
           itsParameters.nrChannelsPerSubband * sizeof(float);
