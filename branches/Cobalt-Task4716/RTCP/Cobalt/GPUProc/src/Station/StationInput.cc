@@ -178,15 +178,32 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           beamlets[i] = beamlet;
         }
 
+#ifdef HAVE_MPI
         // All receiver ranks -- we have a dedicated thread for each one
         const vector<int> targetRanks(keys(subbandDistribution));
 
-#ifdef HAVE_MPI
         // Send to all receivers in PARALLEL for higher performance
 #       pragma omp parallel for num_threads(targetRanks.size())
         for(size_t i = 0; i < targetRanks.size(); ++i) {
           int rank = targetRanks.at(i);
           const vector<size_t> &targetSubbands(subbandDistribution.at(rank));
+
+          /*
+           * Set up the MPI send engine for this rank.
+           */
+
+          MPISendStation sender(settings, stationIdx, rank, targetSubbands);
+#else
+          int rank = -1;
+
+          (void)subbandDistribution;
+          (void)rank;
+
+          vector<size_t> targetSubbands(ps.nrSubbands());
+          for( size_t i = 0; i < targetSubbands.size(); ++i) {
+            targetSubbands[i] = i;
+          }
+#endif
 
           /*
            * Set up circular buffer data reader.
@@ -199,18 +216,6 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           }
 
           BlockReader<SampleT> reader(settings, mode, targetBeamlets, ps.nrHistorySamples(), 1.0);
-
-          /*
-           * Set up the MPI send engine for this rank.
-           */
-
-          MPISendStation sender(settings, stationIdx, rank, targetSubbands);
-#else
-          int rank = -1;
-
-          (void)subbandDistribution;
-          (void)rank;
-#endif
 
           /*
            * Set up delay compensation.
