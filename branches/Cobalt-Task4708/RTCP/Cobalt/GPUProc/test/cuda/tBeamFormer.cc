@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include <cstdlib>  // for rand()
+#include <cstdlib>
 #include <string>
 #include <iostream>
 
@@ -58,7 +58,7 @@ size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS
 
 
 
-void exit_with_print(float *outputOnHostPtr)
+void exit_with_print(const float *outputOnHostPtr)
 {
   // Plot the output of the kernel in a readable manner
   unsigned size_channel = NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
@@ -87,7 +87,7 @@ void exit_with_print(float *outputOnHostPtr)
     cout << endl;
   }
   
-  exit(1);
+  std::exit(1);
 }
 
 
@@ -96,6 +96,8 @@ HostMemory runTest(Context ctx,
                    float * delaysData,
                    float * bandPassCorrectedData,
                    float * complexVoltagesData,
+                   float subbandFrequency,
+                   unsigned sap,
                    string function,
                    float weightCorrection,
                    double subbandBandwidth)
@@ -129,7 +131,7 @@ HostMemory runTest(Context ctx,
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeDelaysData = lengthDelaysData* sizeof(float);
+  size_t sizeDelaysData = lengthDelaysData * sizeof(float);
   DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
   HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
   float *rawDelaysPtr = rawDelaysData.get<float>();
@@ -137,7 +139,7 @@ HostMemory runTest(Context ctx,
     rawDelaysPtr[idx] = delaysData[idx];
   cuStream.writeBuffer(devDelaysMemory, rawDelaysData);
 
-  size_t sizeBandPassCorrectedData= lengthBandPassCorrectedData * sizeof(float);
+  size_t sizeBandPassCorrectedData = lengthBandPassCorrectedData * sizeof(float);
   DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
   HostMemory rawBandPassCorrectedData = getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
   float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
@@ -154,9 +156,6 @@ HostMemory runTest(Context ctx,
   // Write output content.
   cuStream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  float subbandFrequency = 1.5e8f; // Hz
-  unsigned sap = 0;
-
   // ****************************************************************************
   // Run the kernel on the created data
   hKernel.setArg(0, devComplexVoltagesMemory);
@@ -170,13 +169,10 @@ HostMemory runTest(Context ctx,
   Block localWorkSize(NR_POLARIZATIONS, NR_TABS, NR_CHANNELS);
 
   // Run the kernel
-  cuStream.synchronize(); // assure memory is copied
   cuStream.launchKernel(hKernel, globalWorkSize, localWorkSize);
-  cuStream.synchronize(); // assure that the kernel is finished
 
   // Copy output vector from GPU buffer to host memory.
-  cuStream.readBuffer(rawComplexVoltagesData, devComplexVoltagesMemory);
-  cuStream.synchronize(); //assure copy from device is done
+  cuStream.readBuffer(rawComplexVoltagesData, devComplexVoltagesMemory, true);
 
   return rawComplexVoltagesData; 
 }
@@ -187,7 +183,7 @@ Exception::TerminateHandler t(Exception::terminate);
 int main()
 {
   INIT_LOGGER("tBeamFormer");
-  const char* function = "beamFormer";
+  const char function[] = "beamFormer";
   try 
   {
     Platform pf;
@@ -211,6 +207,9 @@ int main()
   float * delaysData= new float[lengthDelaysData];
   float * outputOnHostPtr;
 
+  float subbandFrequency = 1.5e8f; // Hz
+  unsigned sap = 0;
+
   float weightCorrection = 1.0f;
   double subbandBandwidth = 200e3; // Hz
 
@@ -230,19 +229,20 @@ int main()
     bandPassCorrectedData[idx * 2+ 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx * 2] = 0.0f;
-    delaysData[idx * 2 + 1] = 0.0f;
+    delaysData[idx] = 0.0f;
   }
 
-  HostMemory outputOnHost = runTest(ctx, cuStream, delaysData,
-                                    bandPassCorrectedData,
-                                    complexVoltagesData, function,
-                                    weightCorrection, subbandBandwidth);
+  HostMemory outputOnHost1 = runTest(ctx, cuStream, delaysData,
+                                     bandPassCorrectedData,
+                                     complexVoltagesData,
+                                     subbandFrequency, sap,
+                                     function,
+                                     weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost.get<float>();
+  outputOnHostPtr = outputOnHost1.get<float>();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
     if (outputOnHostPtr[idx] != 0.0f)
     {
@@ -266,15 +266,16 @@ int main()
     bandPassCorrectedData[idx * 2+ 1] = 0.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx * 2] = 1.0f;
-    delaysData[idx * 2 + 1] = 1.0f;
+    delaysData[idx] = 1.0f;
   }
 
   HostMemory outputOnHost2 = runTest(ctx, cuStream, delaysData,
                                      bandPassCorrectedData,
-                                     complexVoltagesData, function,
+                                     complexVoltagesData,
+                                     subbandFrequency, sap,
+                                     function,
                                      weightCorrection, subbandBandwidth);
 
 
@@ -305,15 +306,16 @@ int main()
     bandPassCorrectedData[idx * 2+ 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx * 2] = 1.0f;
-    delaysData[idx * 2 + 1] = 0.0f;
+    delaysData[idx] = 1.0f;
   }
 
   HostMemory outputOnHost3 = runTest(ctx, cuStream, delaysData,
                                      bandPassCorrectedData,
-                                     complexVoltagesData, function,
+                                     complexVoltagesData,
+                                     subbandFrequency, sap,
+                                     function,
                                      weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
@@ -344,15 +346,16 @@ int main()
     bandPassCorrectedData[idx * 2+ 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx * 2] = 1.0f;
-    delaysData[idx * 2 + 1] = 1.0f;
+    delaysData[idx] = 1.0f;
   }
 
   HostMemory outputOnHost4 = runTest(ctx, cuStream, delaysData,
                                      bandPassCorrectedData,
-                                     complexVoltagesData, function,
+                                     complexVoltagesData,
+                                     subbandFrequency, sap,
+                                     function,
                                      weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
@@ -388,15 +391,16 @@ int main()
     bandPassCorrectedData[idx * 2+ 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx * 2] = 1.0f;
-    delaysData[idx * 2 + 1] = 0.0f;
+    delaysData[idx] = 1.0f;
   }
 
   HostMemory outputOnHost5 = runTest(ctx, cuStream, delaysData,
                                      bandPassCorrectedData,
-                                     complexVoltagesData, function,
+                                     complexVoltagesData,
+                                     subbandFrequency, sap,
+                                     function,
                                      2.01f, subbandBandwidth);
 
   // Validate the returned data array
