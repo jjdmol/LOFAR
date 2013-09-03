@@ -368,7 +368,7 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
