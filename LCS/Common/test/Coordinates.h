@@ -33,7 +33,7 @@ namespace LOFAR
 {
   // Forward declarations
   class Coordinate;
-  typedef Singleton< ObjectFactory<Coordinate(double, double, double), string> > CoordinateFactory;
+  typedef Singleton< ObjectFactory<Coordinate*(double, double, double), string> > CoordinateFactory;
 
   // Base class of coordinates used by the ObjectFactory
   class Coordinate

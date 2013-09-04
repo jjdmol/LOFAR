@@ -88,7 +88,7 @@ namespace LOFAR
 
     // Factory that can be used to generate new Command objects.
     // The factory is defined as a singleton.
-    typedef Singleton< ObjectFactory< Command(), string > > CommandFactory;
+    typedef Singleton< ObjectFactory< Command*(), string > > CommandFactory;
 
     // @}
 
