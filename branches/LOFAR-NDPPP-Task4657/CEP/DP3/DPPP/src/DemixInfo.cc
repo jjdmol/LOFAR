@@ -56,6 +56,8 @@ namespace LOFAR {
                                                   20.)),
         itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60.)),
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
+        itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
+                                               false)),
         itsMinNStation      (parset.getDouble (prefix+"minnstation", 6)),
         itsNStation         (0),
         itsNBl              (0),
@@ -69,6 +71,8 @@ namespace LOFAR {
         itsNTimeAvgSubtr    (parset.getUint  (prefix+"timestep", 1)),
         itsNTimeAvg         (parset.getUint  (prefix+"demixtimestep",
                                               itsNTimeAvgSubtr)),
+        itsChunkSize        (parset.getUint  (prefix+"chunksize",
+                                              itsNTimeAvg)),
         itsNTimeChunk       (parset.getUint  (prefix+"ntimechunk",
                                               OpenMP::maxThreads())),
         itsTimeIntervalAvg  (0)
@@ -206,8 +210,12 @@ namespace LOFAR {
         "Demix time averaging " << itsNTimeAvg
         << " must be a multiple of output averaging "
         << itsNTimeAvgSubtr);
-      itsNTimeOut = 1;
-      itsNTimeOutSubtr = itsNTimeAvg / itsNTimeAvgSubtr;
+      ASSERTSTR (itsChunkSize % itsNTimeAvg == 0,
+        "Demix predict time chunk size " << itsChunkSize
+        << " must be a multiple of averaging time step "
+        << itsNTimeAvg);
+      itsNTimeOut = itsChunkSize / itsNTimeAvg;
+      itsNTimeOutSubtr = itsChunkSize / itsNTimeAvgSubtr;
       // Store channel frequencies for the demix and subtract resolutions.
       itsFreqDemix = infoDemix.chanFreqs();
       itsFreqSubtr = info.chanFreqs();
@@ -245,31 +253,33 @@ namespace LOFAR {
 
     void DemixInfo::show (ostream& os) const
     {
-      os << "  estimate.skymodel   " << itsPredictModelName << endl;
-      os << "  ateam.skymodel      " << itsDemixModelName << endl;
-      os << "  target.skymodel     " << itsTargetModelName << endl;
-      os << "  sources             " << itsSourceNames << endl;
+      os << "  estimate.skymodel:  " << itsPredictModelName << endl;
+      os << "  ateam.skymodel:     " << itsDemixModelName << endl;
+      os << "  target.skymodel:    " << itsTargetModelName << endl;
+      os << "  sources:            " << itsSourceNames << endl;
       os << "                        " << itsAteamRemoved
          << " removed from A-team model (in target)" << endl;
       os << "                        " << itsTargetReplaced
          << " replaced in target model (better A-team model)" << endl;
-      os << "  ratio1              " << itsRatio1 << endl;
-      os << "  ratio2              " << itsRatio2 << endl;
-      os << "  ateam.threshold     " << itsAteamAmplThreshold << endl;
-      os << "  target.threshold    " << itsTargetAmplThreshold << endl;
-      os << "  target.delta        "
+      os << "  ratio1:             " << itsRatio1 << endl;
+      os << "  ratio2:             " << itsRatio2 << endl;
+      os << "  ateam.threshold:    " << itsAteamAmplThreshold << endl;
+      os << "  target.threshold:   " << itsTargetAmplThreshold << endl;
+      os << "  target.delta:       "
          << acos(itsCosTargetDelta) * 3600. / casa::C::pi * 180.
          << " arcsec" << endl;
-      os << "  distance.threshold  " << itsAngdistThreshold << endl;
-      os << "  distance.reffreq    " << itsAngdistRefFreq << endl;
-      os << "  minnstation         " << itsMinNStation << endl;
+      os << "  distance.threshold: " << itsAngdistThreshold << "arcsec" << endl;
+      os << "  distance.reffreq:   " << itsAngdistRefFreq << endl;
+      os << "  minnstation:        " << itsMinNStation << endl;
+      os << "  propagatesolutions: " << itsPropagateSolution << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;
       os << "  demixfreqstep:      " << itsNChanAvg << endl;
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
+      os << "  chunksize:          " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
       itsSelBL.show (os);
-      itsSelBLEstimate.show (os);
+      ///      itsSelBLEstimate.show (os);
     }
 
     vector<Patch::ConstPtr>

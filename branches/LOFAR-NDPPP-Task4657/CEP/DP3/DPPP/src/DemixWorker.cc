@@ -76,20 +76,21 @@ namespace LOFAR {
       : itsInfo        (&info),
         itsDPInfo      (&dpInfo),
         itsFilter      (input, info.selBL()),
+        itsNrSolves    (0),
         itsNrConverged (0),
         itsNrNoDemix   (0),
-        itsNrInclude1Target  (0),
-        itsNrInclude2Target  (0),
-        itsNrIgnoreTarget    (0),
-        itsNrDeprojectTarget (0)
+        itsNrIncludeStrongTarget  (0),
+        itsNrIncludeCloseTarget   (0),
+        itsNrIgnoreTarget         (0),
+        itsNrDeprojectTarget      (0)
     {
       // Add a null step as the last step in the filter.
       DPStep::ShPtr nullStep(new NullStep());
       itsFilter.setNextStep (nullStep);
-      // The worker will process up to ntimeAvg input time slots.
+      // The worker will process up to chunkSize input time slots.
       // Size buffers accordingly.
       uint ndir = info.ateamList().size();
-      itsFactors.resize      (itsInfo->ntimeAvg());
+      itsFactors.resize      (itsInfo->chunkSize());
       itsFactorsSubtr.resize (itsInfo->ntimeOutSubtr());
       itsOrigPhaseShifts.reserve (ndir);
       itsOrigFirstSteps.reserve  (ndir+1);   // also needed for target direction
@@ -130,7 +131,7 @@ namespace LOFAR {
         DPStep::ShPtr step2 (new Averager(input, prefix, itsInfo->nchanAvg(),
                                           itsInfo->ntimeAvg()));
         step1->setNextStep (step2);
-        MultiResultStep* step3 = new MultiResultStep(itsInfo->ntimeAvg());
+        MultiResultStep* step3 = new MultiResultStep(itsInfo->ntimeOut());
         step2->setNextStep (DPStep::ShPtr(step3));
         // There is a single demix factor step which needs to get all results.
         itsAvgResults.push_back (step3);
@@ -141,7 +142,7 @@ namespace LOFAR {
                                            itsInfo->nchanAvg(),
                                            itsInfo->ntimeAvg()));
       itsOrigFirstSteps.push_back (targetAvg);
-      MultiResultStep* targetAvgRes = new MultiResultStep(itsInfo->ntimeAvg());
+      MultiResultStep* targetAvgRes = new MultiResultStep(itsInfo->ntimeOut());
       targetAvg->setNextStep (DPStep::ShPtr(targetAvgRes));
       itsAvgResults.push_back (targetAvgRes);
 
@@ -170,10 +171,15 @@ namespace LOFAR {
       // Size the various work buffers.
       itsAvgUVW.resize (3, itsInfo->nbl());
       itsStationUVW.resize (3, itsInfo->nstation(), itsInfo->ntimeOutSubtr());
+      itsUVW.resize (3, itsInfo->nstation());
       itsIndices.resize (ndir);
       itsStationsToUse.resize (ndir);
+      itsNrSourcesDemixed.resize (ndir);
+      itsNrSourcesDemixed = 0;
       itsPredictVis.resize (itsInfo->ncorr(), itsInfo->nchanOut(),
                             itsInfo->nbl());
+      itsModelVis.resize (itsInfo->ncorr() * itsInfo->nchanOutSubtr() *
+                          itsInfo->nbl() * (ndir+1));
       itsAteamAmpl.resize (ndir);
       for (uint i=0; i<ndir; ++i) {
         itsAteamAmpl[i].resize (itsInfo->nchanOut(), itsInfo->nbl(),
@@ -181,6 +187,28 @@ namespace LOFAR {
       }
       itsTargetAmpl.resize (itsInfo->nchanOut(), itsInfo->nbl(),
                             itsInfo->ntimeOut());
+      uint nd = ndir + 1;
+      itsUnknowns.resize    (nd * itsInfo->nstation() * 8);
+      itsSolutions.resize   (nd * itsInfo->nstation() * 8 * itsInfo->ntimeOut());
+      itsPrevSolution.resize(nd * itsInfo->nstation() * 8);
+      initSolution (itsPrevSolution);
+    }
+
+    void DemixWorker::initSolution (vector<double>& solution)
+    {
+      // Initialize with 1+0i on diagonal terms.
+      vector<double>::iterator it     = solution.begin();
+      vector<double>::iterator it_end = solution.end();
+      while (it != it_end) {
+        *it++ = 1.0;
+        *it++ = 0.0;
+        *it++ = 0.0;
+        *it++ = 0.0;
+        *it++ = 0.0;
+        *it++ = 0.0;
+        *it++ = 1.0;
+        *it++ = 0.0;
+      }
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
@@ -223,8 +251,8 @@ namespace LOFAR {
         const DPBuffer& selBuf = itsFilter.getBuffer();
         // Do the next steps (phaseshift and average) on the filter output.
         itsTimerPhaseShift.start();
-        for (uint j=0; j<itsIndices.size(); ++j) {
-          itsFirstSteps[itsIndices[j]]->process (selBuf);
+        for (uint j=0; j<itsFirstSteps.size(); ++j) {
+          itsFirstSteps[j]->process (selBuf);
         }
         // Do the average and filter step for the output for all data.
         itsAvgStepSubtr->process (bufin[i]);
@@ -266,7 +294,7 @@ namespace LOFAR {
     uint DemixWorker::avgSplitUVW (const DPBuffer* bufin, uint nbufin,
                                    uint ntimeAvg, const vector<uint>& selbl)
     {
-      ASSERT (selbl.size() == itsAvgUVW.shape()[1]);
+      ASSERT (selbl.size() == size_t(itsAvgUVW.shape()[1]));
       // First average the UVWs to the predict time window.
       uint ntime = (nbufin + ntimeAvg - 1) / ntimeAvg;
       const DPBuffer* buf = bufin;
@@ -290,14 +318,14 @@ namespace LOFAR {
         }
         // Average the UVWs.
         itsAvgUVW /= double(ntodo);
-        cout<<"avguvw="<<ntodo<<itsAvgUVW<<endl;
+        ///        cout<<"avguvw="<<ntodo<<itsAvgUVW<<endl;
         nleft -= ntodo;
         // Split the baseline UVW coordinates per station.
         nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
                    itsAvgUVW, uvwIter.matrix());
         uvwIter.next();
       }
-      cout<<"stationuwv="<<itsStationUVW;
+      /// cout<<"stationuwv="<<itsStationUVW;
       return ntime;
     }
 
@@ -351,13 +379,14 @@ namespace LOFAR {
     void DemixWorker::predictAteam (const vector<Patch::ConstPtr>& patchList,
                                     uint ntime, double time, double timeStep)
     {
+      
       for (uint i=0; i<patchList.size(); ++i) {
         itsAteamAmpl[i] = 0;
         MatrixIterator<float> miter(itsAteamAmpl[i]);
         MatrixIterator<double> uvwiter(itsStationUVW);
         double t = time;
         for (uint j=0; j<ntime; ++j) {
-          itsPredictVis = 0;
+          itsPredictVis = dcomplex();
           simulate (itsInfo->phaseRef(),
                     patchList[i],
                     itsInfo->nstation(),
@@ -399,6 +428,7 @@ namespace LOFAR {
         // Use this A-team source if some stations have matched.
         if (! itsStationsToUse[i].empty()) {
           itsIndices.push_back (i);
+          itsNrSourcesDemixed[i]++;
         }
       }
     }
@@ -443,20 +473,20 @@ namespace LOFAR {
         }
       }
       float targetSumAmpl = sum(itsTargetAmpl);
-      bool itsIncludeTarget = false;
-      bool itsIgnoreTarget = false;
+      itsIncludeTarget = false;
+      itsIgnoreTarget = false;
       itsNModel = nsrc;
       itsNDir   = nsrc+1;
       if (targetSumAmpl / maxSumAmpl > itsInfo->ratio1()  ||
           targetSumAmpl > itsInfo->targetAmplThreshold()) {
         itsIncludeTarget = true;
-        itsNrInclude1Target++;
+        itsNrIncludeStrongTarget++;
         itsNModel++;
       } else if (! itsInfo->isAteamNearby()) {
         itsNrDeprojectTarget++;
       } else if (targetSumAmpl / minSumAmpl > itsInfo->ratio2()) {
         itsIncludeTarget = true;
-        itsNrInclude2Target++;
+        itsNrIncludeCloseTarget++;
         itsNModel++;
       } else {
         itsIgnoreTarget = true;
@@ -476,7 +506,7 @@ namespace LOFAR {
       // If selection was done, merge the subtract results back into the
       // buffer.
       if (itsInfo->selBL().hasSelection()) {
-	mergeSubtractResult();
+	mergeSubtractResult ();
       }
       // Clear the input buffers.
       for (size_t i=0; i<itsAvgResults.size(); ++i) {
@@ -722,20 +752,20 @@ namespace LOFAR {
 
     /*
     namespace {
+solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
+          "DirectionalGain:1:1:*:') + str(antenna) + ':' +sourcename+'"
+          "DirectionalGain:0:0:*:*:@TARGET"
+          "DirectionalGain:1:1:*:*:@TARGET"
       struct ThreadPrivateStorage
       {
-        vector<double>    unknowns;
-        vector<double>    uvw;
         vector<dcomplex>  model;
         vector<dcomplex>  model_subtr;
-        size_t            count_converged;
       };
 
       void initThreadPrivateStorage(ThreadPrivateStorage &storage,
         size_t nDirection, size_t nStation, size_t nBaseline, size_t nChannel,
         size_t nChannelSubtr)
       {
-        storage.unknowns.resize(nDirection * nStation * 8);
         storage.uvw.resize(nStation * 3);
         storage.model.resize(nDirection * nBaseline * nChannel * 4);
         storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
@@ -746,65 +776,73 @@ namespace LOFAR {
 
     void DemixWorker::demix (DPBuffer* bufout)
     {
-      /*
+      cout << "demix called"<<endl;
+      // Determine the various sizes.
       const size_t nTime = itsAvgResults[0]->get().size();
       const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
-      const size_t multiplier = itsInfo->ntimeAvg() / itsInfo().ntimeAvgSubtr();
-      const size_t nDr = itsNModel;
-      const size_t nDrSubtr = itsSubtrSources.size();
+      const size_t multiplier = itsInfo->ntimeAvg() / itsInfo->ntimeAvgSubtr();
+      const size_t nDr = itsPhaseShifts.size();
       const size_t nSt = itsInfo->nstation();
       const size_t nBl = itsInfo->baselines().size();
       const size_t nCh = itsInfo->freqDemix().size();
-      const size_t nChSubtr = itsFreqSubtr.size();
+      const size_t nChSubtr = itsInfo->freqSubtr().size();
       const size_t nCr = 4;
       const size_t nSamples = nBl * nCh * nCr;
-
-      ThreadPrivateStorage threadStorage;
-      initThreadPrivateStorage(threadStorage, nDr, nSt, nBl, nCh, nChSubtr);
-
-      const_cursor<double> cr_freq = casa_const_cursor(itsFreqDemix);
-      const_cursor<double> cr_freqSubtr = casa_const_cursor(itsFreqSubtr);
-      const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
-
-      for(size_t ts = 0; ts < nTime; ++ts)
-      {
-        const size_t thread = OpenMP::threadNum();
-        ThreadPrivateStorage &storage = threadStorage[thread];
-
-        // If solution propagation is disabled, re-initialize the thread-private
-        // vector of unknowns.
-        if(!itsPropagateSolutions)
-        {
-          copy(itsPrevSolution.begin(), itsPrevSolution.end(),
-            storage.unknowns.begin());
+      // Define various cursors to iterate through arrays.
+      const_cursor<double> cr_freq = casa_const_cursor(itsInfo->freqDemix());
+      const_cursor<double> cr_freqSubtr = casa_const_cursor(itsInfo->freqSubtr());
+      const_cursor<Baseline> cr_baseline(&(itsInfo->baselines()[0]));
+      // Do a solve and subtract for each predict time slot.
+      for (size_t ts=0; ts<nTime; ++ts) {
+        // Initialize the required unknowns.
+        // Note that itsPrevSolution always contains initial values if
+        // propagateSolution is not in effect.
+        size_t nunknown = 0;
+        for (size_t j=0; j<itsStationsToUse.size(); ++j) {
+          for (size_t i=0; i<itsStationsToUse[j].size(); ++i) {
+            itsUnknowns[nunknown++] = itsPrevSolution[itsStationsToUse[j][i]];
+          }
+        }
+        if (itsIncludeTarget) {
+          for (size_t i=0; i<nSt; ++i) {
+            itsUnknowns[nunknown++] = itsPrevSolution[nDr*nSt + i];
+          }
         }
 
-        // Simulate.
-        //
-        // Model visibilities for each direction of interest will be computed
-        // and stored.
-        size_t stride_uvw[2] = {1, 3};
-        cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
-
-        size_t stride_model[3] = {1, nCr, nCr * nCh};
-        fill(storage.model.begin(), storage.model.end(), dcomplex());
-        for(size_t dr = 0; dr < nDr; ++dr)
-        {
-          const_cursor<double> cr_uvw =
-            casa_const_cursor(itsAvgResults[dr]->get()[ts].getUVW());
-          splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
-
-          cursor<dcomplex> cr_model(&(storage.model[dr * nSamples]), 3,
-            stride_model);
-          simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt,
-            nBl, nCh, cr_baseline, cr_freq, cr_uvw_split, cr_model);
+        // Compute the model visibilities for each A-team source.
+        size_t stride_model[3] = {1, nCr, nCr*nCh};
+        for (size_t dr=0; dr<nDr; ++dr) {
+          // Split the baseline UVW coordinates per station.
+          nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+                     itsAvgResults[dr]->get()[ts].getUVW(), itsUVW);
+          // Create cursors to step through UVW and model buffer.
+          const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
+          cursor<dcomplex> cr_model(&(itsModelVis[dr * nSamples]), 3,
+                                    stride_model);
+          // Initialize this part of the buffer.
+          std::fill (itsModelVis.begin() + dr*nSamples,
+                     itsModelVis.begin() + (dr+1)*nSamples, dcomplex());
+          simulate(itsInfo->ateamList()[dr]->position(),
+                   itsInfo->ateamList()[dr],
+                   nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
         }
-
-        // Estimate Jones matrices.
-        //
-        // A Jones matrix will be estimated for each pair of station and
+        if (itsIncludeTarget) {
+          // Do the same for the target sources which are added up.
+          nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+                     itsAvgResults[nDr]->get()[ts].getUVW(), itsUVW);
+          std::fill (itsModelVis.begin() + nDr*nSamples,
+                     itsModelVis.begin() + (nDr+1)*nSamples, dcomplex());
+          for (size_t dr=0; dr<itsInfo->targetList().size(); ++dr) {
+            const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
+            cursor<dcomplex> cr_model(&(itsModelVis[nDr * nSamples]), 3,
+                                      stride_model);
+            simulate(itsInfo->ateamList()[dr]->position(),
+                     itsInfo->ateamList()[dr],
+                     nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
+          }
+        }
+        // A Jones matrix will be estimated for each pair of stations and
         // direction.
-        //
         // A single (overdetermined) non-linear set of equations for all
         // stations and directions is solved iteratively. The influence of
         // each direction on each other direction is given by the mixing
@@ -814,23 +852,41 @@ namespace LOFAR {
         const_cursor<float> cr_weight =
           casa_const_cursor(itsAvgResults[0]->get()[ts].getWeights());
         const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
-
-        vector<const_cursor<fcomplex> > cr_data(nDr);
-        vector<const_cursor<dcomplex> > cr_model(nDr);
-        for(size_t dr = 0; dr < nDr; ++dr)
-        {
+        // Create a cursor per source.
+        vector<const_cursor<fcomplex> > cr_data(itsNModel);
+        vector<const_cursor<dcomplex> > cr_model(itsNModel);
+        for (size_t dr=0; dr<itsNModel; ++dr) {
           cr_data[dr] =
             casa_const_cursor(itsAvgResults[dr]->get()[ts].getData());
           cr_model[dr] =
-            const_cursor<dcomplex>(&(storage.model[dr * nSamples]), 3,
-            stride_model);
+            const_cursor<dcomplex>(&(itsModelVis[dr * nSamples]), 3,
+                                   stride_model);
         }
-
-        bool converged = estimate(nDr, nSt, nBl, nCh, cr_baseline, cr_data,
-          cr_model, cr_flag, cr_weight, cr_mix, &(storage.unknowns[0]));
-        if(converged)
-        {
-          ++storage.count_converged;
+        // If solving the system succeeds, increment nconverged.
+        bool converged = estimate (nDr, nSt, nBl, nCh, cr_baseline, cr_data,
+                                   cr_model, cr_flag, cr_weight, cr_mix,
+                                   &(itsUnknowns[0]));
+        // Copy solutions to overall solution array.
+        // First initialize to cater for possible ignored stations/sources.
+        vector<double>& solution = itsSolutions[ts];
+        initSolution (solution);
+        size_t k = 0;
+        for (size_t j=0; j<itsStationsToUse.size(); ++j) {
+          for (size_t i=0; i<itsStationsToUse[j].size(); ++i) {
+            solution[itsStationsToUse[j][i]] = itsUnknowns[k++];
+          }
+        }
+        if (itsIncludeTarget) {
+          for (size_t i=0; i<nSt; ++i) {
+            solution[nDr*nSt + i] = itsUnknowns[k++];
+          }
+        }
+        itsNrSolves++;
+        if (converged) {
+          itsNrConverged++;
+          if (itsInfo->propagateSolution()) {
+            itsPrevSolution = solution;
+          }
         }
 
         // Compute the residual.
@@ -841,49 +897,44 @@ namespace LOFAR {
         //
         // Note that the resolution of the residual can differ from the
         // resolution at which the Jones matrices were estimated.
-        for(size_t ts_subtr = multiplier * ts, ts_subtr_end = min(ts_subtr
-          + multiplier, nTimeSubtr); ts_subtr != ts_subtr_end; ++ts_subtr)
-        {
-          for(size_t dr = 0; dr < nDrSubtr; ++dr)
-          {
+        for (size_t ts_subtr = multiplier * ts,
+               ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
+             ts_subtr != ts_subtr_end; ++ts_subtr) {
+          for (size_t dr = 0; dr < nDr; ++dr) {
             // Re-use simulation used for estimating Jones matrices if possible.
-            cursor<dcomplex> cr_model_subtr(&(storage.model[dr * nSamples]),
-              3, stride_model);
-
+            cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
+                                            3, stride_model);
             // Re-simulate if required.
-            if(multiplier != 1 || nCh != nChSubtr)
-            {
-              const_cursor<double> cr_uvw =
-                casa_const_cursor(itsAvgResultSubtr->get()[ts_subtr].getUVW());
-              splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
-
+            if (multiplier != 1 || nCh != nChSubtr) {
+              nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+                         itsAvgResults[nDr]->get()[ts_subtr].getUVW(), itsUVW);
               // Rotate the UVW coordinates for the target direction to the
               // direction of source to subtract. This is required because at
               // the resolution of the residual the UVW coordinates for
               // directions other than the target are unavailable (unless the
               // resolution of the residual is equal to the resolution at which
               // the Jones matrices were estimated, of course).
-              rotateUVW(itsPhaseRef, itsPatchList[dr]->position(), nSt,
-                cr_uvw_split);
-
-              // Zero the visibility buffer.
-              fill(storage.model_subtr.begin(), storage.model_subtr.end(),
-                dcomplex());
-
+              cursor<double> cr_uvw_split = casa_cursor(itsUVW);
+              rotateUVW (itsInfo->phaseRef(),
+                         itsInfo->targetList()[dr]->position(), nSt,
+                         cr_uvw_split);
+              // Initialize the visibility buffer.
+              std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
               // Simulate visibilities at the resolution of the residual.
               size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
-              cr_model_subtr = cursor<dcomplex>(&(storage.model_subtr[0]), 3,
-                stride_model_subtr);
-              simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt, nBl,
-                nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
-                cr_model_subtr);
+              cr_model_subtr = cursor<dcomplex>(&(itsModelVis[0]), 3,
+                                                stride_model_subtr);
+              simulate(itsInfo->ateamList()[dr]->position(),
+                       itsInfo->ateamList()[dr], nSt, nBl,
+                       nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
+                       cr_model_subtr);
             }
 
             // Apply Jones matrices.
             size_t stride_unknowns[2] = {1, 8};
-            const_cursor<double> cr_unknowns(&(storage.unknowns[dr * nSt * 8]),
-              2, stride_unknowns);
-            apply(nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
+            const_cursor<double> cr_unknowns(&(itsSolutions[ts][dr * nSt * 8]),
+                                             2, stride_unknowns);
+            apply (nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
 
             // Subtract the source contribution from the data.
             cursor<fcomplex> cr_residual =
@@ -908,27 +959,19 @@ namespace LOFAR {
               static_cast<size_t>(stride_mix_subtr[4])
             };
             ASSERT(stride_mix_subtr_slice[0] == itsNDir * itsNDir
-              && stride_mix_subtr_slice[1] == itsNDir * itsNDir * nCr
-              && stride_mix_subtr_slice[2] == itsNDir * itsNDir * nCr * nChSubtr);
+                   && stride_mix_subtr_slice[1] == itsNDir * itsNDir * nCr
+                   && stride_mix_subtr_slice[2] == itsNDir * itsNDir * nCr * nChSubtr);
 
             IPosition offset(5, itsNDir - 1, dr, 0, 0, 0);
-            const_cursor<dcomplex> cr_mix_subtr =
-              const_cursor<dcomplex>(&(itsFactorsSubtr[ts_subtr](offset)), 3,
-              stride_mix_subtr_slice);
+            const_cursor<dcomplex> cr_mix_subtr(&(itsFactorsSubtr[ts_subtr](offset)), 3,
+                                                stride_mix_subtr_slice);
 
             // Subtract the source.
-            subtract(nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
-              cr_mix_subtr);
+            subtract (nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
+                      cr_mix_subtr);
           }
         }
-
-        // Copy solutions to global solution array.
-        copy(storage.unknowns.begin(), storage.unknowns.end(),
-          &(itsUnknowns[(itsTimeIndex + ts) * nDr * nSt * 8]));
       }
-
-      itsNConverged += threadStorage.count_converged;
-      */
     }
 
     void DemixWorker::dumpSolutions (BBS::ParmDB& parmDB)

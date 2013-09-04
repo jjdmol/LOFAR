@@ -78,12 +78,14 @@ namespace LOFAR {
       uint   ntimeOut() const                    {return itsNTimeOut;}
       uint   ntimeOutSubtr() const               {return itsNTimeOutSubtr;}
       uint   ntimeChunk() const                  {return itsNTimeChunk;}
+      uint   chunkSize() const                   {return itsChunkSize;}
       double timeIntervalAvg() const             {return itsTimeIntervalAvg;}
       double ratio1() const                      {return itsRatio1;}
       double ratio2() const                      {return itsRatio2;}
       double ateamAmplThreshold() const          {return itsAteamAmplThreshold;}
       double targetAmplThreshold() const         {return itsTargetAmplThreshold;}
       bool   isAteamNearby() const               {return itsIsAteamNearby;}
+      bool   propagateSolution() const           {return itsPropagateSolution;}
       const BaselineSelection& selBL() const     {return itsSelBL;}
       const vector<int>& uvwSplitIndex() const   {return itsUVWSplitIndex;}
       const string& predictModelName() const     {return itsPredictModelName;}
@@ -141,6 +143,7 @@ namespace LOFAR {
       double                  itsAngdistThreshold;
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
+      bool                    itsPropagateSolution;
       uint                    itsMinNStation;        //# min #stations for solve
       uint                    itsNStation;
       uint                    itsNBl;
@@ -154,6 +157,7 @@ namespace LOFAR {
       uint                    itsNTimeAvg;           //# demix averaging
       uint                    itsNTimeOutSubtr;      //# #output times per chunk
       uint                    itsNTimeOut;           //# #demix times per chunk
+      uint                    itsChunkSize;          //# predict time step
       uint                    itsNTimeChunk;         //# nr chunks in parallel
       double                  itsTimeIntervalAvg;
       Position                itsPhaseRef;           //# original phaseref

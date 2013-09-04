@@ -78,20 +78,26 @@ namespace LOFAR {
       // Export the solutions to a ParmDB.
       void dumpSolutions (BBS::ParmDB&);
 
-      // Get the number of converged solutions.
+      // Get the number of solves.
+      uint nSolves() const
+        { return itsNrSolves; }
+      // Get the number of converged solves.
       uint nConverged() const
         { return itsNrConverged; }
       // Get the number of times no demix was needed.
       uint nNoDemix() const
         { return itsNrNoDemix; }
-      uint nInclude1Target() const
-        { return itsNrInclude1Target; }
-      uint nInclude2Target() const
-        { return itsNrInclude2Target; }
+      uint nIncludeStrongTarget() const
+        { return itsNrIncludeStrongTarget; }
+      uint nIncludeCloseTarget() const
+        { return itsNrIncludeCloseTarget; }
       uint nIgnoreTarget() const
         { return itsNrIgnoreTarget; }
       uint nDeprojectTarget() const
         { return itsNrDeprojectTarget; }
+      // Get nr of times a source was demixed.
+      const casa::Vector<uint>& nsourcesDemixed() const
+        { return itsNrSourcesDemixed; }
 
       // Get the timings of the various processing steps.
       // <group>
@@ -108,6 +114,9 @@ namespace LOFAR {
       // </group>
 
     private:
+      // Initialize the solution to 1 on diagonal and 0 elsewhere.
+      void initSolution (vector<double>& solution);
+
       // Setup the demix processing steps for this piece of data.
       // It fills itsFirstSteps, etc. for the sources to be demixed.
       // It also determines how to handle the target (include,deproject,ignore).
@@ -192,6 +201,7 @@ namespace LOFAR {
       uint                                  itsNDir;
       uint                                  itsNModel;
       bool                                  itsIgnoreTarget;
+      bool                                  itsIncludeTarget;
       //# Accumulator used for computing the demixing weights at the demix
       //# resolution. The shape of this buffer is #correlations x #channels
       //# x #baselines x #directions x #directions (fastest axis first).
@@ -210,12 +220,13 @@ namespace LOFAR {
       //# shape #directions x #directions.
       vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
 
-      //# Indicies telling which Ateam sources to use.
+      //# Indices telling which Ateam sources to use.
       vector<uint>                          itsIndices;
       casa::Matrix<double>                  itsAvgUVW;      //# temp buffer
       //# UVW per station per demix time slot
       casa::Cube<double>                    itsStationUVW;  //# UVW per station
       casa::Cube<dcomplex>                  itsPredictVis;  //# temp buffer
+      casa::Cube<dcomplex>                  itsSubtractVis; //# temp buffer
       //# #nfreq x #bl x #time StokesI amplitude per A-source.
       vector<casa::Cube<float> >            itsAteamAmpl;
       //# #nfreq x #bl x #time StokesI amplitude of target.
@@ -230,16 +241,21 @@ namespace LOFAR {
       //# Variables to do the solve.
       vector<double>                        itsUnknowns;
       vector<double>                        itsPrevSolution;
+      vector<vector<double> >               itsSolutions;
+      casa::Matrix<double>                  itsUVW;
+      vector<dcomplex>                      itsModelVis;
       uint                                  itsNTimeOut;
       uint                                  itsNTimeOutSubtr;
       uint                                  itsTimeIndex;
       //# Statistics
+      uint                                  itsNrSolves;
       uint                                  itsNrConverged;
       uint                                  itsNrNoDemix;
-      uint                                  itsNrInclude1Target;
-      uint                                  itsNrInclude2Target;
+      uint                                  itsNrIncludeStrongTarget;
+      uint                                  itsNrIncludeCloseTarget;
       uint                                  itsNrIgnoreTarget;
       uint                                  itsNrDeprojectTarget;
+      casa::Vector<uint>                    itsNrSourcesDemixed;
       //# Timers.
       NSTimer                               itsTimer;
       NSTimer                               itsTimerPredict;

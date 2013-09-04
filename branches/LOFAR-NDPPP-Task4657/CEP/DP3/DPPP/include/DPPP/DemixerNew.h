@@ -1,4 +1,4 @@
-//# DemixerNew.h: DPPP step class to subtract A-team sources in new way
+//# DemixerNew.h: DPPP step class to subtract A-team sources in adaptive way
 //# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -25,7 +25,7 @@
 #define DPPP_DEMIXERNEW_H
 
 // @file
-// @brief DPPP step class to average in time and/or freq
+// @brief DPPP step class to subtract A-team sources in adaptive way
 
 #include <DPPP/DemixInfo.h>
 #include <DPPP/DemixWorker.h>

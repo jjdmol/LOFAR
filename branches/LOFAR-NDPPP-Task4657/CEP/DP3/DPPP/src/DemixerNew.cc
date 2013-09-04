@@ -1,4 +1,4 @@
-//# DemixerNew.cc: DPPP step class to subtract A-team sources
+//# DemixerNew.cc: DPPP step class to subtract A-team sources in adaptive way
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -75,7 +75,7 @@ namespace LOFAR {
       info().setNeedVisData();
       info().setNeedWrite();
       // Size the buffers.
-      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeAvg());
+      itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.chunkSize());
       itsBufOut.resize(itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeOutSubtr());
       // Create a worker per thread.
       int nthread = OpenMP::maxThreads();
@@ -102,17 +102,48 @@ namespace LOFAR {
 
     void DemixerNew::showCounts (ostream& os) const
     {
-      os << endl << "Statistics for DemixerNew " << itsName;
-      os << endl << "======================" << endl;
-      ///      os << endl << "Converged: " << itsNConverged << "/" << itsNTimeDemix
-      ///  << " cells" << endl;
-      /// Count nr of demixes in the various ways (with ignore, etc.)
+      os << endl << "Statistics for SmartDemixer" << itsName;
+      os << endl << "===========================" << endl;
+      // Add the counts of all workers.
+      uint nsolves        = 0;
+      uint nconverged     = 0;
+      uint nnodemix       = 0;
+      uint nincludeStrong = 0;
+      uint nincludeClose  = 0;
+      uint nignore        = 0;
+      uint ndeproject     = 0;
+      Vector<uint> nsources(itsDemixInfo.ateamList().size(), 0);
+      for (size_t i=0; i<itsWorkers.size(); ++i) {
+        nsolves        += itsWorkers[i].nSolves();
+        nconverged     += itsWorkers[i].nConverged();
+        nnodemix       += itsWorkers[i].nNoDemix();
+        nincludeStrong += itsWorkers[i].nIncludeStrongTarget();
+        nincludeClose  += itsWorkers[i].nIncludeCloseTarget();
+        nignore        += itsWorkers[i].nIgnoreTarget();
+        ndeproject     += itsWorkers[i].nDeprojectTarget();
+        nsources       += itsWorkers[i].nsourcesDemixed();
+      }
+      os << "Nr of time chunks with:" << endl;
+      os << setw(8) << nnodemix   << "  no demixing" << endl;
+      os << setw(8) << nignore    << "  target ignored" << endl; 
+      os << setw(8) << ndeproject << "  target deprojected" << endl; 
+      os << setw(8) << nincludeStrong
+         << "  target included because strong" << endl; 
+      os << setw(8) << nincludeClose
+         << "  target included because close" << endl; 
+      os << "Nr of time chunks a source is demixed:" << endl;
+      for (size_t i=0; i<nsources.size(); ++i) {
+        os << setw(8) << nsources[i] << "  "
+           << itsDemixInfo.ateamList()[i]->name() << endl;
+      }
+      os << "Converged solves: " << nconverged << " cells out of "
+         << nsolves << endl;
     }
 
     void DemixerNew::showTimings (std::ostream& os, double duration) const
     {
-      const double self  = itsTimer.getElapsed();
-      const double demix = itsTimerDemix.getElapsed();
+      double self  = itsTimer.getElapsed();
+      double demix = itsTimerDemix.getElapsed();
       double tottime = 0;
       double pretime = 0;
       double psatime = 0;
@@ -179,16 +210,18 @@ namespace LOFAR {
     {
       itsTimerDemix.start();
       // Last batch might contain fewer time slots.
-      uint timeWindowIn  = itsDemixInfo.ntimeAvg();
+      uint timeWindowIn  = itsDemixInfo.chunkSize();
       uint timeWindowOut = itsDemixInfo.ntimeOutSubtr();
       int lastChunk = (itsNTime - 1) / timeWindowIn;
       int lastNTime = itsNTime - lastChunk*timeWindowIn;
       ///#pragma omp parallel for schedule dynamic
       for (int i=0; i<=lastChunk; ++i) {
         if (i == lastChunk) {
+          cout<<"chunk="<<i*timeWindowIn<<' '<<lastNTime<<endl;
           processChunk (&(itsBufIn[i*timeWindowIn]), lastNTime,
                         &(itsBufOut[i*timeWindowOut]));
         } else {
+          cout<<"chunk="<<i*timeWindowIn<<' '<<timeWindowIn<<endl;
           processChunk (&(itsBufIn[i*timeWindowIn]), timeWindowIn,
                         &(itsBufOut[i*timeWindowOut]));
         }
