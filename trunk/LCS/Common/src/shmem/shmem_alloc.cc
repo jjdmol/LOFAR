@@ -348,7 +348,7 @@ static void shmid_registry_clean(void)
 static void shmem_signal_handler(int sig)
 {
     // keep compiler happy
-    sig = sig;
+    (void)sig;
 
     shmid_registry_clean();
     exit(1);
