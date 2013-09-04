@@ -26,10 +26,6 @@
 /** \file
  */
 
-#ifdef HAVE_USR_INCLUDE_MALLOC_H
-#include <malloc.h>
-#endif
-
 #include <Common/shmem/dlmalloc.h>
 #include <stddef.h>
 
