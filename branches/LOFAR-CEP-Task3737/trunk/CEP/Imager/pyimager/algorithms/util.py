@@ -25,30 +25,30 @@ def store_image(name, coordinates, image):
     im = pyrap.images.image(name, shape=shape, coordsys=coordinates)
     im.putdata(image)
 
-def show_image(data, title=None):
-    """Create a figure with 2 x 2 subplots that show the four correlation planes
-    of the image, on the same scale.
+#def show_image(data, title = None):
+#    """Create a figure with 2 x 2 subplots that show the four correlation planes
+#    of the image, on the same scale.
 
-    Keyword arguments:
-    data -- A 4 x N x M array of values to be plotted.
-    title -- An optional title to be put at the top of the combined plot.
-    """
-    fig, axes = matplotlib.pyplot.subplot(nrows=2, ncols=2)
-    if title is not None:
-        fig.suptitle(title, fontsize=14)
+#    Keyword arguments:
+#    data -- A 4 x N x M array of values to be plotted.
+#    title -- An optional title to be put at the top of the combined plot.
+#    """
+#    fig, axes = matplotlib.pyplot.subplots(nrows=2, ncols=2)
+#    if title is not None:
+#        fig.suptitle(title, fontsize=14)
 
-    vmin = numpy.min(data)
-    vmax = numpy.max(data)
-    for k, ax in zip(range(4), axes.flat):
-        __im = ax.imshow(data[k], origin="lower", interpolation="nearest", \
-            cmap="bone", vmin=vmin, vmax=vmax) # aspect="auto")
-        __im.axes.get_xaxis().set_visible(False)
-        __im.axes.get_yaxis().set_visible(False)
+#    vmin = numpy.min(data)
+#    vmax = numpy.max(data)
+#    for k, ax in zip(range(4), axes.flat):
+#        __im = ax.imshow(data[k], origin="lower", interpolation="nearest", \
+#            cmap="bone", vmin=vmin, vmax=vmax) # aspect="auto")
+#        __im.axes.get_xaxis().set_visible(False)
+#        __im.axes.get_yaxis().set_visible(False)
 
-    fig.subplots_adjust(right=0.70, wspace=0.0, hspace=0.0)
-    cax = fig.add_axes([0.75, 0.1, 0.03, 0.8])
-    cbr = fig.colorbar(__im, cax=cax)
-    cbr.set_clim(vmin, vmax)
+#    fig.subplots_adjust(right=0.70, wspace=0.0, hspace=0.0)
+#    cax = fig.add_axes([0.75, 0.1, 0.03, 0.8])
+#    cbr = fig.colorbar(__im, cax=cax)
+#    cbr.set_clim(vmin, vmax)
 
 def full_width_half_max(diameter, freq):
     """Return an estimate of the full width half maximum of the beam given the

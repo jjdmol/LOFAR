@@ -8,13 +8,48 @@ def main():
     subparsers = parser.add_subparsers(help = "operation to perform")
 
     subparser = subparsers.add_parser("empty", help = "create an empty image")
-    subparser.add_argument("-p", "--data-processor", dest = "processor", \
+    subparser.add_argument("-z", "--threads", help = "no. of threads",
+        type = int, default = 1)
+    subparser.add_argument("-p", "--data-processor", dest = "processor",
         metavar = "PROCESSOR", default = "casa", help = "data processor to use")
-    subparser.add_argument("-b", "--max-baseline", type = float, default = 0.0, \
+    subparser.add_argument("-b", "--max-baseline", type = float, default = 0.0,
         metavar = "LENGTH", help = "maximum baseline length (m)")
+    subparser.add_argument("--weight-type", dest = "weighttype",
+        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural,"
+        " robust")
+    subparser.add_argument("--rmode", dest = "rmode",
+        default = "normal", metavar = "RMODE", help = "abs, normal")
+    subparser.add_argument("--noise", dest = "noise", type = float,
+        default = 0.0, metavar = "NOISE", help = "")
+    subparser.add_argument("--robustness", dest = "robustness", type = float,
+        default = 0.0, metavar = "ROBUSTNESS", help = "")
+    subparser.add_argument("--profile", dest = "profile",
+        default = "", metavar = "PROFILE", help = "ipcluster profile name")
     subparser.add_argument("ms", help = "input measurement set")
     subparser.add_argument("image", help = "output image")
     subparser.set_defaults(func = algorithms.empty)
+
+    subparser = subparsers.add_parser("dirty", help = "create a dirty image")
+    subparser.add_argument("-z", "--threads", help = "no. of threads",
+        type = int, default = 1)
+    subparser.add_argument("-p", "--data-processor", dest = "processor",
+        metavar = "PROCESSOR", default = "casa", help = "data processor to use")
+    subparser.add_argument("-b", "--max-baseline", type = float, default = 0.0,
+        metavar = "LENGTH", help = "maximum baseline length (m)")
+    subparser.add_argument("--weight-type", dest = "weighttype",
+        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural,"
+        " robust")
+    subparser.add_argument("--rmode", dest = "rmode",
+        default = "normal", metavar = "RMODE", help = "abs, normal")
+    subparser.add_argument("--noise", dest = "noise", type = float,
+        default = 0.0, metavar = "NOISE", help = "")
+    subparser.add_argument("--robustness", dest = "robustness", type = float,
+        default = 0.0, metavar = "ROBUSTNESS", help = "")
+    subparser.add_argument("--profile", dest = "profile",
+        default = "", metavar = "PROFILE", help = "ipcluster profile name")
+    subparser.add_argument("ms", help = "input measurement set")
+    subparser.add_argument("image", help = "output image")
+    subparser.set_defaults(func = algorithms.dirty)
 
     subparser = subparsers.add_parser("mfclean", help = "multi-field Clark "
         "clean")
@@ -38,15 +73,16 @@ def main():
         default = -1.0, metavar = "SPEEDUP", help = "")
     subparser.add_argument("-m", "--cycle-max-psf-fraction", type = float,
         default = 0.8, metavar = "FRACTION", help = "")
-    subparser.add_argument("--weight-type", dest = "weighttype", 
-        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural, robust")
-    subparser.add_argument("--rmode", dest = "rmode", 
+    subparser.add_argument("--weight-type", dest = "weighttype",
+        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural,"
+        " robust")
+    subparser.add_argument("--rmode", dest = "rmode",
         default = "normal", metavar = "RMODE", help = "abs, normal")
     subparser.add_argument("--noise", dest = "noise", type = float,
         default = 0.0, metavar = "NOISE", help = "")
     subparser.add_argument("--robustness", dest = "robustness", type = float,
         default = 0.0, metavar = "ROBUSTNESS", help = "")
-    subparser.add_argument("--profile", dest = "profile", 
+    subparser.add_argument("--profile", dest = "profile",
         default = "", metavar = "PROFILE", help = "ipcluster profile name")
 #    subparser.add_argument("-g", choices = ["awz", "aw", "w"],
 #        help = "gridder to use")
@@ -57,7 +93,6 @@ def main():
     subparser.set_defaults(func = algorithms.mfclean)
 
     args = parser.parse_args()
-#    args.ms = {"localhost" : [args.ms, args.ms]}
     args.func(args)
 
 if __name__ == "__main__":

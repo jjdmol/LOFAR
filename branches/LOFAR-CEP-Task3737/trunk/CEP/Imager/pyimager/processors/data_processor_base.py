@@ -7,14 +7,14 @@ class Normalization:
     NONE, FLAT_NOISE, FLAT_GAIN = range(3)
 
 class DataProcessorBase:
-    
-    __metaclass__ = ABCMeta    
-    
+
+    __metaclass__ = ABCMeta
+
     @abstractmethod
     def __init__(self, measurement, options):
         """
         """
-    
+
     @abstractmethod
     def capabilities(self):
         """
@@ -61,8 +61,7 @@ class DataProcessorBase:
         """
 
     @abstractmethod
-    def residual(self, coordinates, model, normalization_model, \
+    def residual(self, coordinates, model, normalization_model,
         normalization_residual):
         """
         """
-

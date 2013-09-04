@@ -1,19 +1,19 @@
 from abc import ABCMeta, abstractmethod
 
 class DataProcessorLowLevelBase:
-    
-    __metaclass__ = ABCMeta    
-    
+
+    __metaclass__ = ABCMeta
+
     @abstractmethod
     def __init__(self, measurement, options):
         """
         """
-    
+
     @abstractmethod
     def capabilities(self):
         """
         """
-        
+
     @abstractmethod
     def phase_reference(self):
         """
@@ -33,7 +33,7 @@ class DataProcessorLowLevelBase:
     def maximum_baseline_length(self):
         """
         """
-        
+
     @abstractmethod
     def point_spread_function(self, coordinates, shape, as_grid):
         """
@@ -63,18 +63,8 @@ class DataProcessorLowLevelBase:
     def density(self, coordinates, shape):
         """
         """
-        
-    @abstractmethod    
-    def set_density(self, density, coordinates) :
+
+    @abstractmethod
+    def set_density(self, density, coordinates):
         """
         """
-        
-        
-        
-
-
-
-
-
-
-        

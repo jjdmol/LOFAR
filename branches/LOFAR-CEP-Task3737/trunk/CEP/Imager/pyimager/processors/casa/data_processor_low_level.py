@@ -3,13 +3,12 @@ import itertools
 import os.path as path
 import numpy
 import lofar.casaimwrap
-import lofar.pyimager.algorithms.constants as constants
+from ...algorithms import constants
 import pyrap.tables
-import visimagingweight
+import imaging_weight
 
 class DataProcessorLowLevel(DataProcessorLowLevelBase):
     def __init__(self, measurement, options):
-        print measurement
         self._measurement = measurement
         self._ms = pyrap.tables.table(measurement)
         self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID ==" \
@@ -21,7 +20,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         self._coordinates = None
         self._shape = None
         self._response_available = False
-        
+
         # Defaults from awimager.
         parms = {}
         parms["wmax"] = options["w_max"]
@@ -35,6 +34,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         parms["UseEJones"] = True
         parms["ApplyElement"] = True
         parms["PBCut"] = 5e-2
+#        parms["StepApplyElement"] = 0       # if 0 don't apply element beam
         parms["StepApplyElement"] = 1000       # if 0 don't apply element beam
 #        parms["TWElement"] = 0.02
         parms["PredictFT"] = False
@@ -50,7 +50,8 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         parms["wplanes"] = 0
 
         parms["ApplyBeamCode"] = 0
-        #parms["ApplyBeamCode"] = 3
+#        parms["ApplyBeamCode"] = 1
+#        parms["ApplyBeamCode"] = 3
         parms["UVmin"] = 0
         parms["UVmax"] = 100000
         parms["MakeDirtyCorr"] = False
@@ -64,10 +65,10 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         parms["t1"] = -1
         parms["ChanBlockSize"] = 0
         parms["FindNWplanes"] = True
-        
+
         weightoptionnames = ["weighttype", "rmode", "noise", "robustness"]
         weightoptions = dict( (key, value) for (key,value) in options.iteritems() if key in weightoptionnames)
-        self.imw = visimagingweight.VisImagingWeight(**weightoptions)
+        self.imw = imaging_weight.ImagingWeight(**weightoptions)
 
         self._context = lofar.casaimwrap.CASAContext()
         lofar.casaimwrap.init(self._context, self._measurement, parms)
@@ -99,13 +100,13 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         increment = coordinates.get_increment()
         freqs = self.channel_frequency()
         f = freqs/constants.speed_of_light
-        
+
         density_shape = shape[2:]
         density_increment = increment[2]
-        
+
         uorig = int(density_shape[1]/2)
         vorig = int(density_shape[0]/2)
-        
+
         density = numpy.zeros(density_shape)
         uscale = density_shape[1]*density_increment[1]
         vscale = density_shape[0]*density_increment[0]
@@ -117,12 +118,12 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
           for j in range(len(f)):
               u = int(u1*f[j])
               v = int(v1*f[j])
-              if abs(u)<uorig and abs(v)<vorig : 
+              if abs(u)<uorig and abs(v)<vorig :
                   w = sum(weight[i, j,:])
                   density[vorig+v,uorig+u] += w
                   density[vorig-v,uorig-u] += w
         return density
-        
+
     def set_density(self, density, coordinates) :
         self.imw.set_density(density, coordinates)
 
@@ -154,12 +155,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
 
     def grid(self, coordinates, shape, as_grid):
         assert(not as_grid)
-
         self._update_image_configuration(coordinates, shape)
-        print  "****************************************************************"
-        print coordinates
-        print shape
-        print  "****************************************************************"
 
         args = {}
         args["ANTENNA1"] = self._ms.getcol("ANTENNA1")
@@ -238,25 +234,20 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         self._response_available = True
 
         return (result["image"], result["weight"])
-        
+
     def _update_image_configuration(self, coordinates, shape):
-        # comparing coordinate systems is tricky
-        # a straightforward coordinates1 != coordinates2 yields true if 
-        # coordinates1 and coordinates2 are different objects
-        # even if they represent the same coordinate system.
+        # Comparing coordinate systems is tricky!
+        #
+        # A straightforward coordinates1 != coordinates2 yields True if
+        # coordinates1 and coordinates2 are different objects, even if they
+        # represent the same coordinate system.
+        #
         # Here we compare the string representation of the coordinate systems.
-        # A better solution would be to overload the __cmp__ method of
-        # the coordinatesystem class, with a proper comparison, including
-        # tolerance for the floats.
+        # A better solution would be to overload the __cmp__() method of the
+        # coordinatesystem class, with a proper comparison, including a
+        # tolerance for comparing floating point numbers.
+        #
         if str(self._coordinates) != str(coordinates) or self._shape != shape:
-            if self._coordinates != coordinates:
-                print "coordinates are different"
-            if self._shape != shape:
-                print "shape is different"
-            print self._coordinates 
-            print self._shape
-            print coordinates
-            print shape
             self._coordinates = coordinates
             self._shape = shape
             self._response_available = False
