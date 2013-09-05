@@ -37,6 +37,9 @@ namespace LOFAR
       // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
       size_t localSubbandIdx;
 
+      // Index of this subband within the SubbandProc
+      size_t subbandProcSubbandIdx;
+
       bool operator<(const struct BlockID &other) const;
     };
 

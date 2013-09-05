@@ -103,9 +103,10 @@ namespace LOFAR
 
           // Annotate the block
           struct BlockID id;
-          id.block            = block;
-          id.globalSubbandIdx = subbandIndices[inputIdx];
-          id.localSubbandIdx  = inputIdx;
+          id.block                 = block;
+          id.globalSubbandIdx      = subbandIndices[inputIdx];
+          id.localSubbandIdx       = inputIdx;
+          id.subbandProcSubbandIdx = inputIdx / workQueues.size();
           data->blockID = id;
 
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
