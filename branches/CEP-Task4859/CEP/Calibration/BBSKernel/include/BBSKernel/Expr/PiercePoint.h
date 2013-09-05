@@ -62,9 +62,8 @@ protected:
 private:
     // Station position in ITRF coordinates.
     casa::MPosition     itsPosition;
-    // Geodetic longitude (rad), geodetic latittude (rad), and height above the
-    // ellipsoid (m) (WGS84) of the station.
-    double              itsLon, itsLat, itsHeight;
+    // Geodetic longitude (rad) and latittude (rad) (WGS84) of the station.
+    double              itsLon, itsLat;
     // Distance from the center of gravity of the earth to the station (m).
     double              itsPositionRadius;
     // Earth "radius" at the station position (m).

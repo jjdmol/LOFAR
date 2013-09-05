@@ -69,7 +69,6 @@ private:
     bool    itsBindMask;
 };
 
-template <>
 template <unsigned int LENGTH>
 class ExprValueView<Vector<LENGTH> >
 {
