@@ -115,7 +115,7 @@ bool	ProcControlComm::waitForResponse() const
 	}
 
 	// --- Sync Communication from this point ---
-	if (!itsReadConn->read() == CSConnection::Finished) {
+	if (itsReadConn->read() != CSConnection::Finished) {
 		return (false);							// there should have been data!
 	}
 
