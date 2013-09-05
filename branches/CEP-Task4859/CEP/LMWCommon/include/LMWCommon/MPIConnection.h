@@ -85,9 +85,11 @@ namespace LOFAR { namespace CEP {
     static int getNrNodes();
     // @}
 
+#ifdef HAVE_MPI
   private:
     int itsDestRank;
     int itsTag;
+#endif
   };
 
 }} //# end namespaces

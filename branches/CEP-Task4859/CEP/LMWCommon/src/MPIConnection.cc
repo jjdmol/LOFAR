@@ -34,9 +34,13 @@ using namespace std;
 
 namespace LOFAR { namespace CEP {
 
+#ifdef HAVE_MPI
   MPIConnection::MPIConnection (int destinationRank, int tag)
     : itsDestRank   (destinationRank),
       itsTag        (tag)
+#else
+  MPIConnection::MPIConnection (int, int)
+#endif
   {}
 
   MPIConnection::~MPIConnection()
