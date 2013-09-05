@@ -60,6 +60,8 @@ namespace LOFAR
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
       std::vector< SmartPtr<SubbandProc> > workQueues;
 
+      const size_t nrSubbandsPerSubbandProc;
+
 #if defined USE_B7015
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif

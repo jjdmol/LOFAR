@@ -41,6 +41,8 @@
 #include <GPUProc/Station/StationInput.h>
 #endif
 
+#define NR_WORKQUEUES_PER_DEVICE  2
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -53,7 +55,9 @@ namespace LOFAR
       devices(devices),
       subbandIndices(subbandIndices),
       performance(devices.size()),
-      subbandPool(subbandIndices.size())
+      subbandPool(subbandIndices.size()),
+      workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
+      nrSubbandsPerSubbandProc((subbandIndices.size() + workQueues.size() - 1) / workQueues.size())
     {
     }
 

@@ -41,7 +41,8 @@ namespace LOFAR
       nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
-      nrPPFTaps(ps.nrPPFTaps())
+      nrPPFTaps(ps.nrPPFTaps()),
+      nrSubbands(1)
     {
     }
 
@@ -133,6 +134,7 @@ namespace LOFAR
       // NR_STABS is a contraction of NR_STATIONS (correlator) or NR_TABS
       // (beamformer). The kernel deals with either quantity in the same way.
       defs["NR_STABS"] = lexical_cast<string>(itsParameters.nrStations); // TODO: or use nrTABs
+      defs["NR_SUBBANDS"] = lexical_cast<string>(itsParameters.nrSubbands);
 
       return defs;
     }

@@ -67,11 +67,23 @@ namespace LOFAR
 
     struct CorrelatorFactories
     {
-      CorrelatorFactories(const Parset &ps): firFilter(ps), delayAndBandPass(ps), correlator(ps) {}
+      CorrelatorFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc):
+        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
+        delayAndBandPass(ps),
+        correlator(ps)
+      {
+      }
 
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
       KernelFactory<CorrelatorKernel> correlator;
+
+      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
+        FIR_FilterKernel::Parameters params(ps);
+        params.nrSubbands = nrSubbandsPerSubbandProc;
+
+        return params;
+      }
     };
 
     class CorrelatorSubbandProc : public SubbandProc
