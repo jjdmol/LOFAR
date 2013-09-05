@@ -81,7 +81,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         if(config.useClock())
         {
             itsExpr[i] = compose(itsExpr[i],
-                makeClockExpr(itsScope, instrument->station(i)));
+                makeClockExpr(itsScope, instrument->station(i),
+                    config.getClockConfig()));
         }
 
         // Bandpass.

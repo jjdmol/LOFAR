@@ -120,6 +120,24 @@ bool BeamConfig::conjugateAF() const
 }
 
 // -------------------------------------------------------------------------- //
+// - ClockConfig implementation                                             - //
+// -------------------------------------------------------------------------- //
+ClockConfig::ClockConfig()
+    : itsSplitClock(false)
+{
+}
+
+ClockConfig::ClockConfig(bool splitClock)
+    :   itsSplitClock(splitClock)
+{
+}
+
+bool ClockConfig::splitClock() const
+{
+  return itsSplitClock;
+}
+
+// -------------------------------------------------------------------------- //
 // - IonosphereConfig implementation                                        - //
 // -------------------------------------------------------------------------- //
 
@@ -219,6 +237,11 @@ bool ModelConfig::useBandpass() const
 bool ModelConfig::useClock() const
 {
     return itsModelOptions[CLOCK];
+}
+
+const ClockConfig &ModelConfig::getClockConfig() const
+{
+    return itsConfigClock;
 }
 
 bool ModelConfig::useGain() const
@@ -321,11 +344,6 @@ void ModelConfig::setBandpass(bool value)
     itsModelOptions[BANDPASS] = value;
 }
 
-void ModelConfig::setClock(bool value)
-{
-    itsModelOptions[CLOCK] = value;
-}
-
 void ModelConfig::setGain(bool value)
 {
     itsModelOptions[GAIN] = value;
@@ -355,6 +373,18 @@ void ModelConfig::setElevationCutConfig(const ElevationCutConfig &config)
 {
     itsModelOptions[ELEVATION_CUT] = true;
     itsConfigElevationCut = config;
+}
+
+void ModelConfig::setClockConfig(const ClockConfig &config)
+{
+    itsModelOptions[CLOCK] = true;
+    itsConfigClock = config;
+}
+
+void ModelConfig::clearClockConfig()
+{
+    itsConfigClock = ClockConfig();
+    itsModelOptions[CLOCK] = false;
 }
 
 void ModelConfig::clearElevationCutConfig()
@@ -443,6 +473,11 @@ ostream &operator<<(ostream &out, const FlaggerConfig &obj)
     out << indent << "Threshold: " << obj.threshold();
     return out;
 }
+ostream &operator<<(ostream &out, const ClockConfig &obj)
+{
+    out << indent << "SplitClock: " << obj.splitClock();
+    return out;
+}
 
 ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 {
@@ -484,6 +519,11 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useBandpass() << noboolalpha;
     out << endl << indent << "Clock enabled: " << boolalpha
         << obj.useClock() << noboolalpha;
+    if (obj.useClock()) {
+      Indent id;
+      out << endl << obj.getClockConfig();
+    }
+
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
     out << endl << indent << "TEC enabled: " << boolalpha

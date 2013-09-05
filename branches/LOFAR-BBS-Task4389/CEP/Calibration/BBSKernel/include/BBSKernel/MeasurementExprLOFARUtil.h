@@ -76,8 +76,8 @@ makeBandpassExpr(Scope &scope,
     const Station::ConstPtr &station);
 
 Expr<JonesMatrix>::Ptr
-makeClockExpr(Scope &scope,
-    const Station::ConstPtr &station);
+makeClockExpr(Scope &scope, const Station::ConstPtr &station,
+    const ClockConfig &config);
 
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,

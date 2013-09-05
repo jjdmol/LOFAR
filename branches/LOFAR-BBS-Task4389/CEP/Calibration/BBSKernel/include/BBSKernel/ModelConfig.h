@@ -43,6 +43,7 @@ namespace BBS
 class BeamConfig
 {
 public:
+    int notdef;
     enum Mode
     {
         DEFAULT,
@@ -68,10 +69,24 @@ private:
     bool            itsConjugateAF;
 };
 
+class ClockConfig
+{
+public:
+
+    ClockConfig();
+    ClockConfig(bool splitClock);
+
+    bool splitClock() const;
+
+private:
+    bool itsSplitClock;
+};
+
 // Configuration options specific to the ionospheric model.
 class IonosphereConfig
 {
 public:
+    int notdef;
     enum ModelType
     {
         MIM,
@@ -133,7 +148,9 @@ public:
     void setBandpass(bool value = true);
 
     bool useClock() const;
-    void setClock(bool value = true);
+    void setClockConfig(const ClockConfig &config);
+    const ClockConfig &getClockConfig() const;
+    void clearClockConfig();
 
     bool useGain() const;
     void setGain(bool value = true);
@@ -215,6 +232,7 @@ private:
 
     ElevationCutConfig  itsConfigElevationCut;
     BeamConfig          itsConfigBeam;
+    ClockConfig         itsConfigClock;
     IonosphereConfig    itsConfigIonosphere;
     FlaggerConfig       itsConfigFlagger;
 
