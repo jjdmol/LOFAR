@@ -1,5 +1,8 @@
 # InputBuffer
-stationName			string
+stationName		string
+
+# Observation that is using this station
+observationName		string
 
 # statistics of the 4 input streams of each RSP board, per second
 stream0.blocksIn	int
