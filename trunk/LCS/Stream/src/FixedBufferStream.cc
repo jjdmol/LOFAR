@@ -33,7 +33,6 @@ namespace LOFAR {
 
 FixedBufferStream::FixedBufferStream(char *buffer, size_t size)
 :
-  itsStart(buffer),
   itsEnd(buffer + size),
   itsHead(buffer)
 {

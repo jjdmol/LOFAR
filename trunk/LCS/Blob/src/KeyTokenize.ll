@@ -24,7 +24,7 @@
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
    compilers will issue warnings. */
-%option nounput
+%option nounput noinput
 
 %{
 #include <Blob/KeyValue.h>
