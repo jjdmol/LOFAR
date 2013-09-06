@@ -222,7 +222,7 @@ namespace LOFAR
       inverseFFT.enqueue(queue, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue( counters.firFilterKernel);
+        firFilterKernel->enqueue( counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
         finalFFT.enqueue(queue, counters.finalFFT);
       }
 

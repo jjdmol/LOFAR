@@ -101,7 +101,8 @@ extern "C" {
 __global__ void FIR_filter( void *filteredDataPtr,
                             const void *sampledDataPtr,
                             const void *weightsPtr,
-                            void *historyDataPtr)
+                            void *historyDataPtr,
+                            unsigned subbandIdx)
 {
   SampledDataType sampledData = (SampledDataType) sampledDataPtr;
   FilteredDataType filteredData = (FilteredDataType) filteredDataPtr;

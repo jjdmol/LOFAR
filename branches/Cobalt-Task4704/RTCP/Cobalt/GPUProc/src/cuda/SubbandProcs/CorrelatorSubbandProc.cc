@@ -310,7 +310,7 @@ namespace LOFAR
       // *********************************************
       // Run the kernels
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue, counters.fir);
+        firFilterKernel->enqueue(counters.fir, input.blockID.subbandProcSubbandIdx);
         fftKernel.enqueue(queue, counters.fft);
       }
 

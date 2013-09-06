@@ -100,6 +100,12 @@ namespace LOFAR
         historyFlags.origin()[n].include(0, params.nrHistorySamples);
     }
 
+    void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
+    {
+      setArg(4, static_cast<unsigned>(subbandIdx));
+      Kernel::enqueue(itsStream, counter);
+    }
+
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
       for (size_t stationIdx = 0; stationIdx < params.nrStations; ++stationIdx) {
         // shift sample flags to the right to make room for the history flags

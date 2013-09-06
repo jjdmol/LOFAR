@@ -83,7 +83,7 @@ TEST(tKernelFunctions)
   // **************************************
   // excercise it
   PerformanceCounter counter(context);  //create a counter
-  kernel->enqueue(counter);             // insert in kernel queue
+  kernel->enqueue(counter, 0);          // insert in kernel queue
 
 
   stream.readBuffer(hOutput, dOutput);

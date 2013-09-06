@@ -81,6 +81,9 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
+      void enqueue(PerformanceCounter &counter,
+                   size_t subbandIdx);
+
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
       // and update historyFlags[subbandIdx] with the flags of the last samples
       // in inputFlags.
