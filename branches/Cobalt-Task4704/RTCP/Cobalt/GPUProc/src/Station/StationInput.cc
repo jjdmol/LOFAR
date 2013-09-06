@@ -205,7 +205,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
       vector<SubbandMetaData> metaDatas(ps.nrSubbands());
       vector<ssize_t> read_offsets(ps.nrSubbands());
 
-      for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
+      for (TimeStamp current = from - ps.nrSamplesPerSubband(); current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
         // Fetch end delays (start delays are set by the previous block, or
         // before the loop).
         delays.getNextDelays(*delaysAfterEnd);

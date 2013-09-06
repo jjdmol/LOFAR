@@ -28,8 +28,8 @@ namespace LOFAR
   namespace Cobalt
   {
     struct BlockID {
-      // Block number: 0 .. inf
-      size_t block;
+      // Block number: -inf .. inf (blocks before start have negative values)
+      ssize_t block;
 
       // Subband index in the observation: [0, ps.nrSubbands())
       size_t globalSubbandIdx;

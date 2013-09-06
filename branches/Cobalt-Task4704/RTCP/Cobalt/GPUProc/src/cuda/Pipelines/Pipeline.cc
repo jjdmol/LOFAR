@@ -88,7 +88,7 @@ namespace LOFAR
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
 
-      for (size_t block = 0; block < nrBlocks; block++) {
+      for (ssize_t block = -1; block < ssize_t(nrBlocks); block++) {
         // Receive the samples of all subbands from the stations for this
         // block.
 
@@ -139,7 +139,7 @@ namespace LOFAR
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
 
             // // Dirty hack to flag all history samples for the first data block.
-            // if (block == 0) {
+            // if (block < 0) {
             //   metaData.flags.include(0, ps.nrHistorySamples());
             // }
 
@@ -302,8 +302,13 @@ namespace LOFAR
         workQueue.processSubband(*input, *output);
 //workQueue.timers["CPU - process"]->stop();
 
-        // Hand off output to post processing
-        workQueue.outputPool.filled.append(output);
+        if (id.block < 0) {
+          // Ignore block; only used to initialize history samples
+          workQueue.outputPool.free.append(output);
+        } else {
+          // Hand off output to post processing
+          workQueue.outputPool.filled.append(output);
+        }
         ASSERT(!output);
 
         // Give back input data for a refill
@@ -329,9 +334,9 @@ namespace LOFAR
 
         LOG_INFO_STR("[" << id << "] Post processing start");
 
-      //  workQueue.timers["CPU - postprocess"]->start();
+        //  workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
-       // workQueue.timers["CPU - postprocess"]->stop();
+        // workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = subbandPool[id.localSubbandIdx];
@@ -422,7 +427,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::Performance::addQueue(SubbandProc &queue)
+    void Pipeline::Performance::addQueue(SubbandProc &/*queue*/)
     {
       ScopedLock sl(totalsMutex);
 
@@ -450,7 +455,7 @@ namespace LOFAR
       //}
     }
     
-    void Pipeline::Performance::log(size_t nrSubbandProcs)
+    void Pipeline::Performance::log(size_t /*nrSubbandProcs*/)
     {
       //// Group figures based on their prefix before " - ", so "compute - FIR"
       //// belongs to group "compute".
