@@ -54,10 +54,11 @@ namespace LOFAR
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
-      performance(devices.size()),
-      subbandPool(subbandIndices.size()),
       workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
-      nrSubbandsPerSubbandProc((subbandIndices.size() + workQueues.size() - 1) / workQueues.size())
+      nrSubbandsPerSubbandProc(
+        (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      performance(devices.size()),
+      subbandPool(subbandIndices.size())
     {
     }
 

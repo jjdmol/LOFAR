@@ -66,8 +66,10 @@ namespace LOFAR
       OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
 #endif
 
-      // combines all functionality needed for getting the total from a set of counters
-      struct Performance {
+      // Combines all functionality needed for getting the total from a set of
+      // counters
+      struct Performance
+      {
         std::map<std::string, SmartPtr<NSTimer> > total_timers;
         // lock on the shared data
         Mutex totalsMutex;
@@ -82,13 +84,6 @@ namespace LOFAR
       } performance;
 
     private:
-      // for each block, read all subbands from all stations, and divide the work over the workQueues
-      void receiveInput( size_t nrBlocks );
-
-      // Templated version of receiveInput(), to specialise in receiving
-      // a certain type of input sample.
-      template<typename SampleT> void receiveInput( size_t nrBlocks );
-
       struct Output {
         // synchronisation to write blocks in-order
         SlidingPointer<size_t> sync;
@@ -97,21 +92,30 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
 
-      std::vector<struct Output> subbandPool; // [localSubbandIdx]
+      // For each block, read all subbands from all stations, and divide the
+      // work over the workQueues
+      void receiveInput( size_t nrBlocks );
 
-      // process subbands on the GPU
+      // Templated version of receiveInput(), to specialise in receiving
+      // a certain type of input sample.
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      // Process subbands on the GPU
       void processSubbands(SubbandProc &workQueue);
 
-      // postprocess subbands on the CPU
+      // Post-process subbands on the CPU
       void postprocessSubbands(SubbandProc &workQueue);
 
-      // send subbands to Storage
+      // Send subbands to Storage
       void writeSubband(unsigned globalSubbandIdx, struct Output &output,
                         SmartPtr<Stream> outputStream);
 
-      // create Stream to Storage
+      // Create Stream to Storage
       SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
                                        OutputType outputType) const;
+
+      std::vector<struct Output> subbandPool; // [localSubbandIdx]
+
     };
   }
 }
