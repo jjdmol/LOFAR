@@ -129,6 +129,15 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
   LOG_INFO_STR("Processing data from station " << stationID);
 
+  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
+  const size_t nrBlocks = (to - from) / ps.nrSamplesPerSubband();
+
+  // Don't run if there is no data to process
+  if (nrBlocks == 0)
+    return;
+
   Semaphore stopSignal;
 
   /*
@@ -167,9 +176,6 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
       BlockReader<SampleT> reader(settings, mode, beamlets, /*ps.nrHistorySamples()*/ 0, 0.25);
 
-      const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-      const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
 
 
@@ -205,6 +211,10 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
       vector<SubbandMetaData> metaDatas(ps.nrSubbands());
       vector<ssize_t> read_offsets(ps.nrSubbands());
 
+      // Send data to Pipeline::receiveInput.
+      //
+      // Start with block -1, to allow the initialisation of historySamples,
+      // etc for block 0.
       for (TimeStamp current = from - ps.nrSamplesPerSubband(); current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband()) {
         // Fetch end delays (start delays are set by the previous block, or
         // before the loop).

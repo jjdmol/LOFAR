@@ -89,7 +89,11 @@ namespace LOFAR
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
 
-      for (ssize_t block = -1; block < ssize_t(nrBlocks); block++) {
+      // Receive input from StationInput::sendInputToPipeline.
+      //
+      // Start processing from block -1, and don't process anything if the
+      // observation is empty.
+      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
         // Receive the samples of all subbands from the stations for this
         // block.
 
