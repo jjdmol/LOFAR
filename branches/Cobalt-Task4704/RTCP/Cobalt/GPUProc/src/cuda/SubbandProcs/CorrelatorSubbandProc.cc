@@ -326,6 +326,10 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
+      if (ps.nrChannelsPerSubband() > 1) {
+        firFilterKernel->prefixHistoryFlags(input.inputFlags, input.blockID.subbandProcSubbandIdx);
+      }
+
       Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.

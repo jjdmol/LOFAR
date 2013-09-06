@@ -99,6 +99,95 @@ TEST(FIR_FilterKernel)
   */
 }
 
+TEST(HistoryFlags)
+{
+  /*
+   * Set up a Kernel
+   */
+
+  Parset ps;
+  ps.add("Observation.nrBitsPerSample", "8");
+  ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("OLAP.CNProc.integrationSteps", "128");
+  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.updateSettings();
+
+  KernelFactory<FIR_FilterKernel> factory(ps);
+
+  gpu::Device device(gpu::Platform().devices()[0]);
+  gpu::Context context(device);
+  gpu::Stream stream(context);
+
+  gpu::DeviceMemory
+    dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
+    dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
+    dCoeff(context, factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+    dHistory(context, factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
+
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+
+  /*
+   * Test propagation of history flags. Each block tests for the flags of
+   * the history samples of the previous block, so the order of these tests
+   * matters.
+   */
+
+  MultiDimArray<SparseSet<unsigned>, 1> inputFlags(boost::extents[1]);
+
+  /*
+   * Block 0: only last sample is flagged
+   */
+
+  // Flag only the last sample
+  inputFlags[0].reset();
+  inputFlags[0].include(ps.nrSamplesPerSubband() - 1);
+
+  // insert and update history flags
+  kernel->prefixHistoryFlags(inputFlags, 0);
+
+  // the first set of history flags are all flagged, and so is our last sample
+  CHECK_EQUAL(ps.nrHistorySamples() + 1, inputFlags[0].count());
+
+  /*
+   * Block 1: no samples are flagged
+   */
+
+  // next block
+  inputFlags[0].reset();
+  kernel->prefixHistoryFlags(inputFlags, 0);
+
+  // the second set of history flags should have one sample flagged (the last
+  // sample of the previous block)
+  CHECK_EQUAL(1U, inputFlags[0].count());
+
+  /*
+   * Block 2: all samples are flagged
+   */
+
+  // next block
+  inputFlags[0].reset();
+  inputFlags[0].include(0, ps.nrSamplesPerSubband());
+  kernel->prefixHistoryFlags(inputFlags, 0);
+
+  // the number of flagged samples should have remained unchanged (the last
+  // block had no flags)
+  CHECK_EQUAL(ps.nrSamplesPerSubband(), inputFlags[0].count());
+
+  /*
+   * Block 3: no samples are flagged
+   */
+
+  // next block
+  inputFlags[0].reset();
+  kernel->prefixHistoryFlags(inputFlags, 0);
+
+  // only the history samples should be flagged
+  CHECK_EQUAL(ps.nrHistorySamples(), inputFlags[0].count());
+  CHECK_EQUAL(ps.nrHistorySamples(), inputFlags[0].subset(0, ps.nrHistorySamples()).count());
+}
+
 int main()
 {
   INIT_LOGGER("tFIR_FilterKernel");

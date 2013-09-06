@@ -80,6 +80,20 @@ namespace LOFAR
                        const gpu::Module& module,
                        const Buffers& buffers,
                        const Parameters& param);
+
+      // Put the historyFlags[subbandIdx] in front of the given inputFlags,
+      // and update historyFlags[subbandIdx] with the flags of the last samples
+      // in inputFlags.
+      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
+
+    private:
+      // The Kernel parameters as given to the constructor
+      const Parameters params;
+
+      // The flags of the history samples.
+      //
+      // Dimensions: [nrSubbands][nrStations]
+      MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
     // Specialization of the KernelFactory for

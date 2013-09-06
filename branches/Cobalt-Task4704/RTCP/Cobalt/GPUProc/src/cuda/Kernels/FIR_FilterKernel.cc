@@ -50,7 +50,9 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction)),
+      params(params),
+      historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -92,6 +94,28 @@ namespace LOFAR
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),
                   firWeights.size());
       stream.writeBuffer(buffers.filterWeights, firWeights, true);
+
+      // start with all historyFlags flagged
+      for (size_t n = 0; n < historyFlags.num_elements(); ++n)
+        historyFlags.origin()[n].include(0, params.nrHistorySamples);
+    }
+
+    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
+      for (size_t stationIdx = 0; stationIdx < params.nrStations; ++stationIdx) {
+        // shift sample flags to the right to make room for the history flags
+        inputFlags[stationIdx] += params.nrHistorySamples;
+
+        // add the history flags.
+        inputFlags[stationIdx] |= historyFlags[subbandIdx][stationIdx];
+
+        // save the new history flags for the next block,
+        // shifted to index 0. Note that the nrSamples is the number of samples
+        // WITHOUT history samples, but we've also just shifted everything
+        // by nrHistorySamples.
+        historyFlags[subbandIdx][stationIdx] =
+          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples);
+        historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
+      }
     }
 
     //--------  Template specializations for KernelFactory  --------//
