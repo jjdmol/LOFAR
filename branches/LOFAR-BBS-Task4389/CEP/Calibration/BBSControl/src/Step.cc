@@ -145,7 +145,8 @@ namespace LOFAR
       ps.add(prefix + "Model.Clock.Enable",
         toString(itsModelConfig.useClock()));
       if (itsModelConfig.useClock()) {
-        ps.add(prefix + "Model.Clock.Split", toString(true));
+        const ClockConfig &config = itsModelConfig.getClockConfig();
+        ps.add(prefix + "Model.Clock.Split", toString(config.splitClock()));
       }
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
@@ -229,8 +230,9 @@ namespace LOFAR
           splitClock = ps.getBool("Model.Clock.Split",
               itsModelConfig.getClockConfig().splitClock());
         } else {
-          splitClock = ps.getBool("Model.Clock.Split");
+          splitClock = ps.getBool("Model.Clock.Split",false);
         }
+        itsModelConfig.setClockConfig(ClockConfig(splitClock));
       } else {
         itsModelConfig.clearClockConfig();
       }

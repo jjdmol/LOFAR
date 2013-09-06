@@ -475,7 +475,8 @@ ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 }
 ostream &operator<<(ostream &out, const ClockConfig &obj)
 {
-    out << indent << "SplitClock: " << obj.splitClock();
+    out << indent << "SplitClock: " << boolalpha << obj.splitClock() 
+        << noboolalpha;
     return out;
 }
 
