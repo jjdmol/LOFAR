@@ -46,6 +46,13 @@ namespace LOFAR
         return true;
       }
 
+      // x == y is false if either or both are NaN
+      // so explicitly test for NaN equality.
+      if (isnan(x) && isnan(y)) 
+      {
+        return true;
+      }
+
       // absolute
       if (std::abs(x - y) <= eps)
       {
