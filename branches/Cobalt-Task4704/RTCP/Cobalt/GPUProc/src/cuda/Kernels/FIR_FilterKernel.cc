@@ -102,7 +102,7 @@ namespace LOFAR
 
     void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
     {
-      setArg(4, static_cast<unsigned>(subbandIdx));
+      setArg(4, subbandIdx);
       Kernel::enqueue(itsStream, counter);
     }
 
@@ -145,6 +145,7 @@ namespace LOFAR
           sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
         return
+          itsParameters.nrSubbands *
           itsParameters.nrHistorySamples * itsParameters.nrStations * 
           itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:

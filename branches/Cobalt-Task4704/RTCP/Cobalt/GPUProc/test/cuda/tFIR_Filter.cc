@@ -26,6 +26,7 @@
 #define NR_POLARIZATIONS         2 
 #define NR_TAPS                 16
 
+#define NR_SUBBANDS 1
 #define NR_STATIONS 20
 #define NR_SAMPLES_PER_CHANNEL 128
 #define NR_CHANNELS 64
@@ -84,6 +85,7 @@ int test()
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
   definitions["NR_BITS_PER_SAMPLE"] = lexical_cast<string>(NR_BITS_PER_SAMPLE);
+  definitions["NR_SUBBANDS"] = lexical_cast<string>(NR_SUBBANDS);
 
   // Create a default context
   Platform pf;
@@ -113,7 +115,7 @@ int test()
     getInitializedArray(ctx, sizeWeightsData * sizeof(float), 0.0f);
 
   unsigned sizeHistoryData = 
-    NR_STATIONS * (NR_TAPS - 1) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
+    NR_SUBBANDS * NR_STATIONS * (NR_TAPS - 1) * NR_CHANNELS * NR_POLARIZATIONS * COMPLEX;
   HostMemory rawHistoryData = 
     getInitializedArray(ctx, sizeHistoryData * sizeof(signed char), char(0));
 
@@ -161,8 +163,9 @@ int test()
                     [COMPLEX],
                     rawFilteredData.get<float>(), false);
 
-  MultiDimArray<signed char, 5>
+  MultiDimArray<signed char, 6>
     historyDataArr(boost::extents
+                    [NR_SUBBANDS]
                     [NR_STATIONS]
                     [NR_TAPS - 1]
                     [NR_CHANNELS]
@@ -187,6 +190,8 @@ int test()
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
   hKernel.setArg(3, devHistoryData);
+  size_t subbandIdx = 0;
+  hKernel.setArg(4, subbandIdx);
 
   // Run the kernel
   stream.synchronize();
@@ -498,7 +503,7 @@ int test()
               firWeightsArr[ch][0] * scale * sign / 2) {
             nrErrors++;
             cerr << "4a.filtered[" << station << "][" << pol << "]["
-                 << sample + quartNrTaps << "][" << ch << "][0] = "
+                 << sample + quartNrTaps << "][" << ch << "][1] = "
                  << filteredDataArr[station][pol][sample + quartNrTaps][ch][1] 
                  << " != " << firWeightsArr[ch][0] * scale * sign / 2 << endl;
           }

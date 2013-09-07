@@ -57,7 +57,7 @@ typedef signed char SampleType;
 
 // NR_STABS means #stations (correlator) or #TABs (beamformer).
 typedef SampleType (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
-typedef SampleType (*HistoryDataType)[NR_STABS][NR_TAPS - 1][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
+typedef SampleType (*HistoryDataType)[NR_SUBBANDS][NR_STABS][NR_TAPS - 1][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef float (*FilteredDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
 typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
 
@@ -148,21 +148,21 @@ __global__ void FIR_filter( void *filteredDataPtr,
         delayLine_s8, delayLine_s9, delayLine_sA, delayLine_sB,
         delayLine_sC, delayLine_sD, delayLine_sE, delayLine_sF;
   
-  delayLine_s0 = convertIntToFloat((*historyData)[station][0][channel][pol_ri]);
-  delayLine_s1 = convertIntToFloat((*historyData)[station][1][channel][pol_ri]);
-  delayLine_s2 = convertIntToFloat((*historyData)[station][2][channel][pol_ri]);
-  delayLine_s3 = convertIntToFloat((*historyData)[station][3][channel][pol_ri]);
-  delayLine_s4 = convertIntToFloat((*historyData)[station][4][channel][pol_ri]);
-  delayLine_s5 = convertIntToFloat((*historyData)[station][5][channel][pol_ri]);
-  delayLine_s6 = convertIntToFloat((*historyData)[station][6][channel][pol_ri]);
-  delayLine_s7 = convertIntToFloat((*historyData)[station][7][channel][pol_ri]);
-  delayLine_s8 = convertIntToFloat((*historyData)[station][8][channel][pol_ri]);
-  delayLine_s9 = convertIntToFloat((*historyData)[station][9][channel][pol_ri]);
-  delayLine_sA = convertIntToFloat((*historyData)[station][10][channel][pol_ri]);
-  delayLine_sB = convertIntToFloat((*historyData)[station][11][channel][pol_ri]);
-  delayLine_sC = convertIntToFloat((*historyData)[station][12][channel][pol_ri]);
-  delayLine_sD = convertIntToFloat((*historyData)[station][13][channel][pol_ri]);
-  delayLine_sE = convertIntToFloat((*historyData)[station][14][channel][pol_ri]);
+  delayLine_s0 = convertIntToFloat((*historyData)[subbandIdx][station][0][channel][pol_ri]);
+  delayLine_s1 = convertIntToFloat((*historyData)[subbandIdx][station][1][channel][pol_ri]);
+  delayLine_s2 = convertIntToFloat((*historyData)[subbandIdx][station][2][channel][pol_ri]);
+  delayLine_s3 = convertIntToFloat((*historyData)[subbandIdx][station][3][channel][pol_ri]);
+  delayLine_s4 = convertIntToFloat((*historyData)[subbandIdx][station][4][channel][pol_ri]);
+  delayLine_s5 = convertIntToFloat((*historyData)[subbandIdx][station][5][channel][pol_ri]);
+  delayLine_s6 = convertIntToFloat((*historyData)[subbandIdx][station][6][channel][pol_ri]);
+  delayLine_s7 = convertIntToFloat((*historyData)[subbandIdx][station][7][channel][pol_ri]);
+  delayLine_s8 = convertIntToFloat((*historyData)[subbandIdx][station][8][channel][pol_ri]);
+  delayLine_s9 = convertIntToFloat((*historyData)[subbandIdx][station][9][channel][pol_ri]);
+  delayLine_sA = convertIntToFloat((*historyData)[subbandIdx][station][10][channel][pol_ri]);
+  delayLine_sB = convertIntToFloat((*historyData)[subbandIdx][station][11][channel][pol_ri]);
+  delayLine_sC = convertIntToFloat((*historyData)[subbandIdx][station][12][channel][pol_ri]);
+  delayLine_sD = convertIntToFloat((*historyData)[subbandIdx][station][13][channel][pol_ri]);
+  delayLine_sE = convertIntToFloat((*historyData)[subbandIdx][station][14][channel][pol_ri]);
 
   float sum_s0, sum_s1, sum_s2, sum_s3,
         sum_s4, sum_s5, sum_s6, sum_s7,
@@ -478,7 +478,7 @@ __global__ void FIR_filter( void *filteredDataPtr,
 
   for (unsigned time = 0; time < NR_TAPS - 1; time++)
   {
-    (*historyData)[station][time][channel][pol_ri] =
+    (*historyData)[subbandIdx][station][time][channel][pol_ri] =
       (*sampledData)[station][NR_SAMPLES_PER_CHANNEL - (NR_TAPS - 1) + time][channel][pol_ri];
   }
 }
