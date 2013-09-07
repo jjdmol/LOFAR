@@ -956,10 +956,9 @@ namespace LOFAR
                             block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
 
-          if (force_synchronous) {
-            synchronize();
-          }
-
+        if (force_synchronous) {
+          synchronize();
+        }
       }
 
       bool Stream::query() const
