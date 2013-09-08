@@ -47,7 +47,7 @@ size_t CRrecordRequest::getSize()
 
 size_t CRrecordRequest::pack  (char* buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_pack(buffer, offset, stationList);	
 	MSH_pack(buffer, offset, rcuList);	
 	return (offset);
@@ -55,7 +55,7 @@ size_t CRrecordRequest::pack  (char* buffer) const
 
 size_t CRrecordRequest::unpack(const char *buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_unpack(buffer, offset, stationList);	
 	MSH_unpack(buffer, offset, rcuList);	
 	return (offset);
