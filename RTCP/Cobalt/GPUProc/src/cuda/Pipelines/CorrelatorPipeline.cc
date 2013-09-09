@@ -35,8 +35,6 @@
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/RunningStatistics.h>
 
-#define NR_WORKQUEUES_PER_DEVICE  2
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -46,15 +44,10 @@ namespace LOFAR
       :
       Pipeline(ps, subbandIndices, devices)
     {
-      // If profiling, use one workqueue: with >1 workqueues decreased
-      // computation / I/O overlap can affect optimization gains.
-      unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrSubbandProcs);
-
-      CorrelatorFactories factories(ps);
+      CorrelatorFactories factories(ps, nrSubbandsPerSubbandProc);
 
       // Create the SubbandProcs
-      for (size_t i = 0; i < nrSubbandProcs; ++i) 
+      for (size_t i = 0; i < workQueues.size(); ++i) 
       {
         gpu::Context context(devices[i % devices.size()]);
 

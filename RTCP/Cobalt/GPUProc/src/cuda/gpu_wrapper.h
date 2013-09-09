@@ -272,6 +272,13 @@ namespace LOFAR
         // Return a device pointer as a handle to the memory.
         void *get() const;
 
+        // Fill the first \a n bytes of memory with the constant byte \a uc.
+        // \param c Constant byte value to put into memory
+        // \param n Number of bytes to set. Defaults to the complete block.
+        //          If \a n is larger than the current memory block size, then
+        //          the complete block will be set to \a uc.
+        void set(unsigned char uc, size_t n = -1);
+
         // Return the size of this memory block.
         size_t size() const;
 

@@ -172,6 +172,7 @@ namespace LOFAR
 
       // PPF
       gpu::DeviceMemory devFilterWeights;
+      gpu::DeviceMemory devFilterHistoryData;
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;
@@ -186,13 +187,13 @@ namespace LOFAR
 
     struct BeamFormerFactories
     {
-      BeamFormerFactories(const Parset &ps) :
+      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
         correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
-        firFilter(firFilterParams(ps)),
+        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps))
       {
       }
@@ -243,13 +244,15 @@ namespace LOFAR
         return params;
       }
 
-      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps) const {
+      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
         FIR_FilterKernel::Parameters params(ps);
 
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
 
         // time integration has not taken place yet, so calculate the nrSamples manually
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        params.nrSubbands = nrSubbandsPerSubbandProc;
 
         return params;
       }

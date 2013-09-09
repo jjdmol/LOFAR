@@ -43,7 +43,6 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrTAPs(ps.nrPPFTaps())
     {
-      nrSamplesPerSubband += ps.nrHistorySamples();
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,

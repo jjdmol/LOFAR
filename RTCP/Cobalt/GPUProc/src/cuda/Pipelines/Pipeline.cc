@@ -41,6 +41,8 @@
 #include <GPUProc/Station/StationInput.h>
 #endif
 
+#define NR_WORKQUEUES_PER_DEVICE  2
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -52,6 +54,9 @@ namespace LOFAR
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
+      workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
+      nrSubbandsPerSubbandProc(
+        (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
       performance(devices.size()),
       writePool(subbandIndices.size())
     {
@@ -69,7 +74,7 @@ namespace LOFAR
       NSTimer receiveTimer("MPI: Receive station data", true, false);
 
       // The length of a block in samples
-      size_t blockSize = ps.nrHistorySamples() + ps.nrSamplesPerSubband();
+      size_t blockSize = ps.nrSamplesPerSubband();
 
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
@@ -86,7 +91,11 @@ namespace LOFAR
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
 
-      for (size_t block = 0; block < nrBlocks; block++) {
+      // Receive input from StationInput::sendInputToPipeline.
+      //
+      // Start processing from block -1, and don't process anything if the
+      // observation is empty.
+      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
         // Receive the samples of all subbands from the stations for this
         // block.
 
@@ -105,9 +114,10 @@ namespace LOFAR
 
           // Annotate the block
           struct BlockID id;
-          id.block            = block;
-          id.globalSubbandIdx = subbandIndices[inputIdx];
-          id.localSubbandIdx  = inputIdx;
+          id.block                 = block;
+          id.globalSubbandIdx      = subbandIndices[inputIdx];
+          id.localSubbandIdx       = inputIdx;
+          id.subbandProcSubbandIdx = inputIdx / workQueues.size();
           data->blockID = id;
 
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
@@ -343,8 +353,13 @@ namespace LOFAR
         workQueue.processSubband(*input, *output);
 //workQueue.timers["CPU - process"]->stop();
 
-        // Hand off output to post processing
-        workQueue.outputPool.filled.append(output);
+        if (id.block < 0) {
+          // Ignore block; only used to initialize FIR history samples
+          workQueue.outputPool.free.append(output);
+        } else {
+          // Hand off output to post processing
+          workQueue.outputPool.filled.append(output);
+        }
         ASSERT(!output);
 
         // Give back input data for a refill
@@ -370,9 +385,9 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
-      //  workQueue.timers["CPU - postprocess"]->start();
+        //  workQueue.timers["CPU - postprocess"]->start();
         workQueue.postprocessSubband(*output);
-       // workQueue.timers["CPU - postprocess"]->stop();
+        // workQueue.timers["CPU - postprocess"]->stop();
 
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
@@ -466,7 +481,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::Performance::addQueue(SubbandProc &queue)
+    void Pipeline::Performance::addQueue(SubbandProc &/*queue*/)
     {
       ScopedLock sl(totalsMutex);
 
@@ -494,7 +509,7 @@ namespace LOFAR
       //}
     }
     
-    void Pipeline::Performance::log(size_t nrSubbandProcs)
+    void Pipeline::Performance::log(size_t /*nrSubbandProcs*/)
     {
       //// Group figures based on their prefix before " - ", so "compute - FIR"
       //// belongs to group "compute".

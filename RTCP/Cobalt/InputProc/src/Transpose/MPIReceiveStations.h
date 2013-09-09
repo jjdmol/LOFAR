@@ -54,7 +54,7 @@ namespace LOFAR
       //   observation.
       //
       // blockSize:
-      //   The number of samples in each block. Includes nrHistorySamples.
+      //   The number of samples in each block.
       MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize );
 
       // Receive the next block. The `block' parameter is a structure allocated
