@@ -95,7 +95,7 @@ namespace LOFAR
                   firWeights.size());
       stream.writeBuffer(buffers.filterWeights, firWeights, true);
 
-      // start with all historyFlags flagged
+      // start with all history samples flagged
       for (size_t n = 0; n < historyFlags.num_elements(); ++n)
         historyFlags.origin()[n].include(0, params.nrHistorySamples);
     }
@@ -114,12 +114,14 @@ namespace LOFAR
         // add the history flags.
         inputFlags[stationIdx] |= historyFlags[subbandIdx][stationIdx];
 
-        // save the new history flags for the next block,
-        // shifted to index 0. Note that the nrSamples is the number of samples
+        // Save the new history flags for the next block.
+        // Note that the nrSamples is the number of samples
         // WITHOUT history samples, but we've also just shifted everything
         // by nrHistorySamples.
         historyFlags[subbandIdx][stationIdx] =
           inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples);
+
+        // Shift the flags to index 0
         historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
       }
     }
