@@ -355,6 +355,9 @@ namespace LOFAR
         // module \a module.
         Function(const Module &module, const std::string &name);
 
+        // Return the name of the function.
+        std::string name() const;
+
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
         // Not for device memory objects (be it as DeviceMemory or as void *).
