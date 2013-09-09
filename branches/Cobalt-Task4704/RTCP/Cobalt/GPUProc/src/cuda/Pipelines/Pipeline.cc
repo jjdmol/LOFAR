@@ -72,7 +72,7 @@ namespace LOFAR
       ASSERT(workQueues.size() > 0);
 
       // The length of a block in samples
-      size_t blockSize = /*ps.nrHistorySamples() +*/ ps.nrSamplesPerSubband();
+      size_t blockSize = ps.nrSamplesPerSubband();
 
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
@@ -142,11 +142,6 @@ namespace LOFAR
           // Translate the metadata as provided by receiver
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
-
-            // // Dirty hack to flag all history samples for the first data block.
-            // if (block < 0) {
-            //   metaData.flags.include(0, ps.nrHistorySamples());
-            // }
 
             // TODO: Not in this thread! Add a preprocess thread maybe?
             data->applyMetaData(ps, stat, SAP, metaData);
@@ -308,7 +303,7 @@ namespace LOFAR
 //workQueue.timers["CPU - process"]->stop();
 
         if (id.block < 0) {
-          // Ignore block; only used to initialize history samples
+          // Ignore block; only used to initialize FIR history samples
           workQueue.outputPool.free.append(output);
         } else {
           // Hand off output to post processing

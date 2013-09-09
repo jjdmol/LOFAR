@@ -174,7 +174,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
         beamlets[i] = beamlet;
       }
 
-      BlockReader<SampleT> reader(settings, mode, beamlets, /*ps.nrHistorySamples()*/ 0, 0.25);
+      BlockReader<SampleT> reader(settings, mode, beamlets, 0.25);
 
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
 
@@ -306,7 +306,7 @@ void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::Lo
     /* create new block */
     SmartPtr<struct InputBlock> pblock = new InputBlock;
 
-    pblock->samples.resize((/*ps.nrHistorySamples() + */ps.nrSamplesPerSubband()) * sizeof(T));
+    pblock->samples.resize(ps.nrSamplesPerSubband() * sizeof(T));
 
     /* copy metadata */
     pblock->metaData = metaDatas[subband];

@@ -42,9 +42,6 @@ namespace LOFAR
         // Block will span [from,to)
         int64 from, to;
 
-        // Block is prefixed by past samples (before `from')
-        size_t nrHistorySamples;
-
         // Number of beamlets that will be sent
         size_t nrBeamlets;
 

@@ -26,14 +26,13 @@ namespace LOFAR {
   namespace Cobalt {
 
     template<typename T>
-    BlockReader<T>::BlockReader( const BufferSettings &settings, const struct BoardMode &mode, const std::vector<size_t> beamlets, size_t nrHistorySamples, double maxDelay )
+    BlockReader<T>::BlockReader( const BufferSettings &settings, const struct BoardMode &mode, const std::vector<size_t> beamlets, double maxDelay )
     :
       settings(settings),
       mode(mode),
       buffer(settings, SharedMemoryArena::READ),
 
       beamlets(beamlets),
-      nrHistorySamples(nrHistorySamples),
       maxDelay(mode.secondsToSamples(maxDelay), mode.clockHz())
     {
       // Check whether the selected beamlets exist, to prevent out-of-bounds access
@@ -176,12 +175,10 @@ namespace LOFAR {
     template<typename T>
     BlockReader<T>::LockedBlock::~LockedBlock()
     {
-      // ASSERT((uint64)this->to > reader.nrHistorySamples);
-
       // Signal end of read intent on all buffers
       for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
-        // Unlock data, saving nrHistorySamples for the next block
-        (*board).stopRead(this->to /*- reader.nrHistorySamples*/);
+        // Unlock data
+        (*board).stopRead(this->to);
       }
     }
 
@@ -190,14 +187,11 @@ namespace LOFAR {
     SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
       ASSERT( to > from );
-      ASSERTSTR( (to - from /*+ nrHistorySamples*/) < buffer.nrSamples, 
+      ASSERTSTR( (to - from) < buffer.nrSamples, 
                  "Requested to read block " << from << " to " << to << 
-                 ", which results in " << (to - from/* + nrHistorySamples*/) <<
+                 ", which results in " << (to - from) <<
                  " samples, but buffer is only " << buffer.nrSamples << 
                  " wide" );
-
-
-
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {
@@ -205,7 +199,7 @@ namespace LOFAR {
         waiter.waitUntil(to + maxDelay);
       }
 
-      return new LockedBlock(*this, from /*- nrHistorySamples*/, to, beamletOffsets);
+      return new LockedBlock(*this, from, to, beamletOffsets);
     }
 
   }

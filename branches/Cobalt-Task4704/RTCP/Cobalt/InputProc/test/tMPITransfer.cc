@@ -73,7 +73,6 @@ TimeStamp from;
 TimeStamp to;
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
-const size_t nrHistorySamples = 16;
 
 SubbandMetaData metaData;
 
@@ -129,7 +128,7 @@ void sender()
 
   MultiPacketsToBuffer station( settings, inputStreams );
   PacketFactory factory( mode );
-  Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
+  Generator generator( settings, outputStreams, factory, from, to );
 
   #pragma omp parallel sections
   {
@@ -148,7 +147,7 @@ void sender()
 
       LOG_INFO_STR("Detected " << s);
       LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, mode, values(beamletDistribution), nrHistorySamples, 0.1);
+      BlockReader<SampleT> reader(s, mode, values(beamletDistribution), 0.1);
       MPISendStation sender(s, rank, beamletDistribution);
 
       LOG_INFO_STR("Sending to receivers");
@@ -174,10 +173,10 @@ void receiver()
   LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
   LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
-  MPIReceiveStations receiver(nrStations, beamlets, blockSize + nrHistorySamples);
+  MPIReceiveStations receiver(nrStations, beamlets, blockSize);
 
   // create space for the samples
-  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize + nrHistorySamples]);
+  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize]);
 
   // create blocks -- they all have to be the right size already
   std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
@@ -204,7 +203,7 @@ void receiver()
     }
 
     // calculate flagging average
-    const size_t nrSamples = nrStations * nrBeamlets * (blockSize + nrHistorySamples);
+    const size_t nrSamples = nrStations * nrBeamlets * blockSize;
     size_t nrFlaggedSamples = 0;
 
     for (int s = 0; s < nrStations; ++s) {
