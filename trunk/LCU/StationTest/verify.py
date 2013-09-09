@@ -49,6 +49,8 @@ verify.add_option('--pp', type='string', dest='ppId',
   help='Polarization-phase id: xr, xi, yr or yi', default='xr')
 verify.add_option('--bm', type='int', dest='beamMode',
   help='Beam mode', default=0)
+verify.add_option('--sm', type='int', dest='sdoMode',
+  help='SDO mode', default=0)
   
 # - Testcase specific options
 #   Define the testcase specific options here, rather than passing an --args
@@ -56,7 +58,7 @@ verify.add_option('--bm', type='int', dest='beamMode',
 #   The disadvantage is that for every new options also this verify.py needs to
 #   be updated.
 verify.add_option('--pid', type='string', dest='pid',
-  help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, all', default='all')
+  help='Process ID: rsp, eth, mep, diag, bs, rcuh, rsu, ado, rad, rcuh_test, all', default='all')
 verify.add_option('--data', type='string', dest='data',
   help='Data values(s) to write or verify read', default='40')
 verify.add_option('--hexdata', type='string', dest='hexdata',
@@ -191,6 +193,7 @@ for te in v.testname:
                          te,
                          v.opts.repeat,
                          v.opts.beamMode,
+                         v.opts.sdoMode,
                          v.rspId, v.bpId, v.blpId,
                          v.tbbId, v.tpId, v.mpId,
                          v.polId)
