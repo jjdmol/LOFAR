@@ -42,6 +42,17 @@ To capture station input, one needs to set up a receiver per RSP board:
     zero:                     generate zeroes (reads from /dev/zero)
     stdin:/stdout:/stderr:    I/O with the standard descriptors
 
+  HINT: Optionally, pipe the output through the 'filterRSP'
+        utility found in InputProc/src/Station, to reduce the data rate
+        before sending it to disk. For example, to only save the first 22 beamlets
+        of each packet, use:
+
+     udp-copy udp:0.0.0.0:13050 stdout: | filterRSP -s 22 > RS305-RSP0.raw.udp
+
+        The same utility can be used to:
+          - filter packets between a specific start and end time
+          - filter packets with a specific bitmode or clock
+
 5. Start the observation. This can be done using the normal MoM/Scheduler route.
    Make sure that at least one of the following holds:
      1. Data is not sent to BG/P or Cobalt.
