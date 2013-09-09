@@ -327,6 +327,8 @@ namespace LOFAR
 
       // Propagate the flags.
       if (ps.nrChannelsPerSubband() > 1) {
+        // Put the history flags in front of the sample flags,
+        // because Flagger::propagateFlags expects it that way.
         firFilterKernel->prefixHistoryFlags(input.inputFlags, input.blockID.subbandProcSubbandIdx);
       }
 
