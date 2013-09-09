@@ -40,8 +40,8 @@ TEST(tKernelFunctions)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("OLAP.CNProc.integrationSteps", "1048576");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.blockSize", "262144");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
 
