@@ -54,6 +54,14 @@ int main() {
 
   CorrelatorFactories factories(ps);
 
+  cout << "FIR_FilterKernel::INPUT_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA) << endl;
+  cout << "FIR_FilterKernel::OUTPUT_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::OUTPUT_DATA) << endl;
+  cout << "FIR_FilterKernel::FILTER_WEIGHTS : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS) << endl;
+  cout << "FIR_FilterKernel::HISTORY_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA) << endl;
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,

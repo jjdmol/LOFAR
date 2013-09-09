@@ -136,6 +136,15 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
   LOG_INFO_STR("Processing data from station " << stationID);
 
+  const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+  const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
+  const size_t nrBlocks = (to - from) / ps.nrSamplesPerSubband();
+
+  // Don't run if there is no data to process
+  if (nrBlocks == 0)
+    return;
+
   Semaphore bufferReady;
   Semaphore stopSignal;
 
@@ -215,7 +224,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
             targetBeamlets[i] = beamlets[targetSubbands[i]];
           }
 
-          BlockReader<SampleT> reader(settings, mode, targetBeamlets, ps.nrHistorySamples(), 1.0);
+          BlockReader<SampleT> reader(settings, mode, targetBeamlets, 1.0);
 
           /*
            * Set up delay compensation.
@@ -239,10 +248,16 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           vector<SubbandMetaData> metaDatas(targetSubbands.size());
           vector<ssize_t> read_offsets(targetSubbands.size());
 
-          size_t block = 0;
+          // Send data to Pipeline::receiveInput.
+          //
+          // Start with block -1, to allow the initialisation of historySamples,
+          // etc for block 0.
+          ssize_t block = -1;
 
-          for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband(), ++block) {
-            LOG_DEBUG_STR(str(format("[rank %i block %u] Sending data from %s") % rank % block % stationID));
+          size_t blockSize = ps.nrSamplesPerSubband();
+
+          for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
+            LOG_DEBUG_STR(str(format("[rank %i block %d] Sending data from %s") % rank % block % stationID));
 
             // Fetch end delays (start delays are set by the previous block, or
             // before the loop).
@@ -253,11 +268,9 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
             delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, metaDatas, read_offsets);
 
             //LOG_DEBUG_STR("Delays obtained");
-            // Align reads to 256
-            size_t offset = 0;//((int64)current + read_offsets[0] - ps.nrHistorySamples()) & 0xFFUL;
 
             // Read the next block from the circular buffer.
-            SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current - offset, current - offset + ps.nrSamplesPerSubband(), read_offsets));
+            SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, read_offsets));
 
             //LOG_INFO_STR("Block read");
 
@@ -340,7 +353,7 @@ void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::Lo
     /* create new block */
     SmartPtr<struct InputBlock> pblock = new InputBlock;
 
-    pblock->samples.resize((ps.nrHistorySamples() + ps.nrSamplesPerSubband()) * sizeof(T));
+    pblock->samples.resize(ps.nrSamplesPerSubband() * sizeof(T));
 
     /* copy metadata */
     pblock->metaData = metaDatas[subband];

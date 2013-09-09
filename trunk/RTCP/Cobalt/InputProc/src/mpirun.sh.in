@@ -9,39 +9,21 @@ error()
   exit 1
 }
 
-# Ignore all mpirun options
-parse_nompi_options()
+parse_options()
 {
-  # Assume the last "option" is the name of the executable
-  while [ $# -gt 1 ]
-  do
-    shift
-  done
-  EXECUTABLE=$1
-}
-
-parse_openmpi_options()
-{
-  # Assume the last "option" is the name of the executable
-  while [ $# -gt 1 ]
-  do
-    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS $1"
-    shift
-  done
-  EXECUTABLE=$1
-}
-
-parse_mvapich2_options()
-{
+  # Parse the given MPI options into environment
+  # variables. We mimic the OpenMPI interface.
   while :
   do
     case $1 in
       -c | -np | --np)
-        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $2"
+        # number of processes
+        NUMPROCS="$2"
         shift 2 || error "argument for option $1 missing"
         ;;
       -H | -host | --host)
-        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $2"
+        # comma-separated host list
+        HOSTS="$2"
         shift 2 || error "argument for option $1 missing"
         ;;
       -*)
@@ -50,10 +32,44 @@ parse_mvapich2_options()
         ;;
       *) # no more options
         EXECUTABLE="$1"
+        shift || error "no executable given"
+        ARGS="$@"
         break;
         ;;
     esac
   done
+}
+
+set_nompi_options()
+{
+  # Ignore all mpirun options
+  :
+}
+
+set_openmpi_options()
+{
+  if [ -n "$NUMPROCS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $NUMPROCS"
+  fi
+
+  if [ -n "$HOSTS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -H $HOSTS"
+  fi
+}
+
+set_mvapich2_options()
+{
+  if [ -n "$NUMPROCS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $NUMPROCS"
+  fi
+
+  if [ -n "$HOSTS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $HOSTS"
+  fi
 }
 
 if [ "@HAVE_MPI@" = "TRUE" ]
@@ -78,9 +94,10 @@ else
   MPI_FLAVOUR=nompi
 fi
 
-parse_${MPI_FLAVOUR}_options "$@"
+parse_options "$@"
+set_${MPI_FLAVOUR}_options
 
-COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS}"
+COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS}"
 
 echo "Executing: $COMMAND"
 eval $COMMAND

@@ -24,7 +24,7 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <algorithm>  // for std::min
+#include <algorithm>  // for std::min and std::max
 
 #include <boost/noncopyable.hpp>
 #include <boost/format.hpp>
@@ -517,7 +517,7 @@ namespace LOFAR
         {
           ScopedCurrentContext scc(_context);
 
-          checkCuCall(cuMemAlloc(&_ptr, size));
+          checkCuCall(cuMemAlloc(&_ptr, std::max(1UL, size)));
         }
 
         ~Impl()
@@ -530,6 +530,13 @@ namespace LOFAR
         CUdeviceptr get() const
         {
           return _ptr;
+        }
+
+        void set(unsigned char uc, size_t n)
+        {
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuMemsetD8(_ptr, uc, n));
         }
 
         size_t size() const
@@ -557,6 +564,11 @@ namespace LOFAR
       void *DeviceMemory::get() const
       {
         return (void *)_impl->get();
+      }
+
+      void DeviceMemory::set(unsigned char uc, size_t n)
+      {
+        _impl->set(uc, std::min(n, size()));
       }
 
       size_t DeviceMemory::size() const
@@ -966,10 +978,9 @@ namespace LOFAR
                             block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
 
-          if (force_synchronous) {
-            synchronize();
-          }
-
+        if (force_synchronous) {
+          synchronize();
+        }
       }
 
       bool Stream::query() const

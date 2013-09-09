@@ -92,7 +92,8 @@ namespace LOFAR
       // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devB, devA, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
@@ -107,6 +108,9 @@ namespace LOFAR
       // result buffer
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
     {
+      // initialize history data
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new BeamFormedData(
@@ -218,7 +222,7 @@ namespace LOFAR
       inverseFFT.enqueue(queue, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue( counters.firFilterKernel);
+        firFilterKernel->enqueue( counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
         finalFFT.enqueue(queue, counters.finalFFT);
       }
 
