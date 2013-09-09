@@ -29,6 +29,10 @@
 #error Precondition violated: NR_TAPS == 16
 #endif
 
+#if !(NR_SUBBANDS > 0)
+#error Precondition violated: NR_SUBBANDS > 0
+#endif
+
 #if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % NR_TAPS == 0)
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % NR_TAPS == 0
 #endif

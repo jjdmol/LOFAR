@@ -52,7 +52,7 @@ int main() {
   // Parset also has turned of delay compensation and bandpass correction
   // (but that kernel will run to convert int to float and to transform the data order).
 
-  CorrelatorFactories factories(ps, 1);
+  CorrelatorFactories factories(ps);
 
   cout << "FIR_FilterKernel::INPUT_DATA : "
        << factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA) << endl;

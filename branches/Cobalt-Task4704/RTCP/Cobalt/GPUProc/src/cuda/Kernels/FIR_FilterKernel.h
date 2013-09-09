@@ -49,8 +49,8 @@ namespace LOFAR
         size_t nrHistorySamples;
         size_t nrPPFTaps;
 
-        // The number of subbands THIS kernel instance will process,
-        // typically equal to nrSubbandsPerSubbandProc.
+        // The number of subbands \e this kernel instance will process,
+        // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
       };
 
