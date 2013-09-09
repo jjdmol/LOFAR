@@ -71,7 +71,8 @@ namespace LOFAR
     template<typename T>
     struct BufferSettings *SampleBuffer<T>::initSettings( const struct BufferSettings &localSettings, bool create )
     {
-      struct BufferSettings *sharedSettings = allocator.allocateTyped(ALIGNMENT);
+      // settings are ALWAYS at the start of the buffer, regardless of alignment!
+      struct BufferSettings *sharedSettings = allocator.allocateTyped(1);
 
       if (create) {
         // register settings
