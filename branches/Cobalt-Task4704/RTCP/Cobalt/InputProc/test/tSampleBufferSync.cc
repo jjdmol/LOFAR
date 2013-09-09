@@ -54,6 +54,7 @@ void initBoard()
   // Delete the old buffer, if any
   board = 0;
   buffer = 0;
+  syncLock = 0;
 
   // Fill a BufferSettings object
   struct StationID stationID("RS106", "LBA");
@@ -71,14 +72,14 @@ void initBoard()
   settings.sync = true;
 
   // Create a lock set for syncing
-  syncLock = new SyncLock(settings);
+  syncLock = new SyncLock(settings, 1);
   settings.syncLock = syncLock;
 
   // Create the buffer
   buffer = new SampleBuffer< SampleType<i16complex> >(settings, SharedMemoryArena::CREATE);
   board = &buffer->boards[0];
 
-  board->noReadBefore(TimeStamp(EPOCH));
+  buffer->noReadBefore(0, TimeStamp(EPOCH));
 };
 
 /*
@@ -92,8 +93,8 @@ TEST(OneBlock_InOrder) {
   board->stopWrite(TimeStamp(EPOCH + 20));
 
   // reading should fall through now
-  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
-  board->stopRead(TimeStamp(EPOCH + 20));
+  buffer->startRead(0, TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  buffer->stopRead(0, TimeStamp(EPOCH + 20));
 }
 
 /*
@@ -109,9 +110,9 @@ TEST(OneBlock_OutOfOrder) {
 #   pragma omp section
     {
       // Start reading -- should block on writer
-      board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+      buffer->startRead(0, TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
       CHECK_EQUAL(true, writtenBlock);
-      board->stopRead(TimeStamp(EPOCH + 20));
+      buffer->stopRead(0, TimeStamp(EPOCH + 20));
     }
 
 #   pragma omp section
@@ -145,14 +146,14 @@ TEST(Overwrite) {
       usleep(2000);
 
       // Start reading -- should block on first block
-      board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+      buffer->startRead(0, TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
       CHECK_EQUAL(1U, writtenBlock);
-      board->stopRead(TimeStamp(EPOCH + 20));
+      buffer->stopRead(0, TimeStamp(EPOCH + 20));
 
       // Now the old data is released, and the new will be written
-      board->startRead(TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
+      buffer->startRead(0, TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
       CHECK_EQUAL(2U, writtenBlock);
-      board->stopRead(TimeStamp(EPOCH + 20 + buffer->nrSamples));
+      buffer->stopRead(0, TimeStamp(EPOCH + 20 + buffer->nrSamples));
     }
 
 #   pragma omp section
@@ -181,8 +182,8 @@ TEST(SkipBegin) {
   board->stopWrite(TimeStamp(EPOCH + 30));
 
   // reading 10-20 should be possible now
-  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
-  board->stopRead(TimeStamp(EPOCH + 20));
+  buffer->startRead(0, TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  buffer->stopRead(0, TimeStamp(EPOCH + 20));
 }
 
 /*
@@ -200,8 +201,8 @@ TEST(SkipMiddle) {
   board->stopWrite(TimeStamp(EPOCH + 40));
 
   // reading middle should be possible now
-  board->startRead(TimeStamp(EPOCH + 20), TimeStamp(EPOCH + 30));
-  board->stopRead(TimeStamp(EPOCH + 30));
+  buffer->startRead(0, TimeStamp(EPOCH + 20), TimeStamp(EPOCH + 30));
+  buffer->stopRead(0, TimeStamp(EPOCH + 30));
 }
 
 
@@ -216,7 +217,7 @@ TEST(noMoreReading) {
   board->stopWrite(TimeStamp(EPOCH + 20));
 
   // signal end of reading
-  board->noMoreReading();
+  buffer->noMoreReading(0);
 
   // overwrite the same data, which is allowed if there are no readers
   board->startWrite(TimeStamp(EPOCH + 10 + buffer->nrSamples), TimeStamp(EPOCH + 20 + buffer->nrSamples));
@@ -233,8 +234,8 @@ TEST(noMoreWriting) {
   board->noMoreWriting();
 
   // reading should fall through now
-  board->startRead(TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
-  board->stopRead(TimeStamp(EPOCH + 20));
+  buffer->startRead(0, TimeStamp(EPOCH + 10), TimeStamp(EPOCH + 20));
+  buffer->stopRead(0, TimeStamp(EPOCH + 20));
 }
 
 int main()

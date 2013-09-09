@@ -96,8 +96,7 @@ namespace LOFAR
       devFilterHistoryData.set(0);
 
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) 
-      {
+      for (size_t i = 0; i < std::max(3UL, ps.nrSubbands()); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),

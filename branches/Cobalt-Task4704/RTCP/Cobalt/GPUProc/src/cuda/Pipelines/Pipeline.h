@@ -100,7 +100,10 @@ namespace LOFAR
       // a certain type of input sample.
       template<typename SampleT> void receiveInput( size_t nrBlocks );
 
-      // Process subbands on the GPU
+      // preprocess subbands on the CPU
+      void preprocessSubbands(SubbandProc &workQueue);
+
+      // process subbands on the GPU
       void processSubbands(SubbandProc &workQueue);
 
       // Post-process subbands on the CPU
@@ -114,8 +117,7 @@ namespace LOFAR
       SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
                                        OutputType outputType) const;
 
-      std::vector<struct Output> subbandPool; // [localSubbandIdx]
-
+      std::vector<struct Output> writePool; // [localSubbandIdx]
     };
   }
 }

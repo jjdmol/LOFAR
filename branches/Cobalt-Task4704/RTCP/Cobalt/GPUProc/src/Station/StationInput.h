@@ -64,8 +64,6 @@ namespace LOFAR {
     // Which MPI rank receives which subbands?
     typedef std::map<int, std::vector<size_t> > SubbandDistribution;
 
-    void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &stopSignal);
-
     void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution);
   }
 }

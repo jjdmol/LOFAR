@@ -115,7 +115,7 @@ namespace LOFAR
   // defaults to 8.
   //
   template<typename Base BOOST_PP_ENUM_TRAILING_PARAMS(n, typename A), typename TypeId>
-  class ObjectFactory<Base (BOOST_PP_ENUM_PARAMS(n, A)), TypeId>
+  class ObjectFactory<Base* (BOOST_PP_ENUM_PARAMS(n, A)), TypeId>
   {
   private:
     // Typedef for the function that creates an instance of a class that

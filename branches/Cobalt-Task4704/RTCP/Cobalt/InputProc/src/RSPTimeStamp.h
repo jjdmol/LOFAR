@@ -23,6 +23,7 @@
 
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>
+#include <Common/LofarLogger.h>
 
 #define EVEN_SECOND_HAS_MORE_SAMPLES
 
@@ -83,13 +84,13 @@ namespace LOFAR
 
     inline TimeStamp::TimeStamp() :
       itsTime(0),
-      itsClockSpeed(0)
+      itsClockSpeed(1)
     {
     }
 
     inline TimeStamp::TimeStamp(uint64 time) :
       itsTime(time),
-      itsClockSpeed(0)
+      itsClockSpeed(1)
     {
     }
 
@@ -97,10 +98,13 @@ namespace LOFAR
       itsTime(time),
       itsClockSpeed(clockSpeed)
     {
+      ASSERT(clockSpeed > 0);
     }
 
     inline TimeStamp::TimeStamp(unsigned seqId, unsigned blockId, unsigned clockSpeed)
     {
+      ASSERT(clockSpeed > 0);
+
       itsClockSpeed = clockSpeed;
 
 #ifdef EVEN_SECOND_HAS_MORE_SAMPLES

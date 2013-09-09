@@ -48,8 +48,8 @@ namespace LOFAR {
     BlockReader<T>::~BlockReader()
     {
       // signal end of reading
-      for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = buffer.boards.begin(); board != buffer.boards.end(); ++board ) {
-        (*board).noMoreReading();
+      for (std::vector<size_t>::const_iterator b = beamlets.begin(); b != beamlets.end(); ++b) {
+        buffer.noMoreReading(*b);
       }
     }
 
@@ -70,7 +70,7 @@ namespace LOFAR {
       BufferSettings::flags_type bufferFlags = reader.buffer.boards[boardIdx].available.sparseSet(from, to).invert(from, to);
 
       if (reader.mode != *(reader.buffer.boards[boardIdx].mode)) {
-        LOG_WARN_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
+        LOG_DEBUG_STR("Board in wrong mode -- flagging all data between " << from << " and " << to);
 
         // Board is in wrong mode! We can't use this data, so flag everything.
 
@@ -111,10 +111,17 @@ namespace LOFAR {
         this->beamlets[i] = getBeamlet(i, beamletOffsets[i]);
       }
 
-      // signal read intent on all buffers
-      for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
-        (*board).startRead(this->from, this->to);
+      // clear path for writer
+      for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
+        reader.buffer.noReadBefore(*b, this->from);
       }
+
+      // signal read intent on all buffers
+      for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
+        reader.buffer.startRead(*b, this->from, this->to);
+      }
+
+      //LOG_DEBUG_STR("Locked block " << this->from << " to " << this->to);
 
       // record initial flags
       for (size_t i = 0; i < this->beamlets.size(); ++i) {
@@ -175,10 +182,12 @@ namespace LOFAR {
     template<typename T>
     BlockReader<T>::LockedBlock::~LockedBlock()
     {
+      //LOG_DEBUG_STR("Unlocking block " << this->from << " to " << this->to);
+
       // Signal end of read intent on all buffers
-      for( typename std::vector< typename SampleBuffer<T>::Board >::iterator board = reader.buffer.boards.begin(); board != reader.buffer.boards.end(); ++board ) {
+      for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
         // Unlock data
-        (*board).stopRead(this->to);
+        reader.buffer.stopRead(*b, this->to);
       }
     }
 
@@ -195,7 +204,7 @@ namespace LOFAR {
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {
-        LOG_INFO_STR("Waiting until " << (to + maxDelay) << " for " << from << " to " << to);
+        LOG_DEBUG_STR("Waiting until " << (to + maxDelay) << " for " << from << " to " << to);
         waiter.waitUntil(to + maxDelay);
       }
 

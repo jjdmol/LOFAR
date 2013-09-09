@@ -122,7 +122,7 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Real");
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
-      }  else if (itsCorrectType == "tec") {
+      } else if (itsCorrectType == "tec") {
         itsParmExprs.push_back("TEC");
       } else if (itsCorrectType == "clock") {
         if (itsParmDB->getNames("Clock:0:*").empty() &&
@@ -133,7 +133,12 @@ namespace LOFAR {
           itsParmExprs.push_back("Clock:0");
           itsParmExprs.push_back("Clock:1");
         }
-      } else {
+      } else if (itsCorrectType == "commonrotationangle") {
+        itsParmExprs.push_back("CommonRotationAngle");
+      } else if (itsCorrectType == "commonscalarphase") {
+        itsParmExprs.push_back("CommonScalarPhase");
+      }
+      else {
         THROW (Exception, "Correction type " + itsCorrectType +
                          " is unknown");
       }
@@ -187,7 +192,7 @@ namespace LOFAR {
 #pragma omp parallel for
       for (size_t bl=0; bl<nbl; ++bl) {
         for (size_t chan=0;chan<nchan;chan++) {
-          if (itsCorrectType=="fullgain") {
+          if (itsParms.size()>2) {
             applyFull( &data[bl * itsNCorr * nchan + chan * itsNCorr ],
                 &weight[bl * itsNCorr * nchan + chan * itsNCorr ],
                 info().getAnt1()[bl], info().getAnt2()[bl], chan, itsTimeStep);
@@ -344,6 +349,16 @@ namespace LOFAR {
                   parmvalues[1][ant][tf] * freq * casa::C::_2pi);
             }
           }
+          else if (itsCorrectType=="commonrotationangle") {
+            itsParms[0][ant][tf] =  cos(parmvalues[0][ant][tf]);
+            itsParms[1][ant][tf] = -sin(parmvalues[0][ant][tf]);
+            itsParms[2][ant][tf] =  sin(parmvalues[0][ant][tf]);
+            itsParms[3][ant][tf] =  cos(parmvalues[0][ant][tf]);
+          }
+          else if (itsCorrectType=="commonscalarphase") {
+            itsParms[0][ant][tf] = polar(1., parmvalues[0][ant][tf]);
+            itsParms[1][ant][tf] = polar(1., parmvalues[0][ant][tf]);
+          }
         }
       }
     }
@@ -353,7 +368,7 @@ namespace LOFAR {
       uint tfDomainSize=itsTimeSlotsPerParmUpdate*info().chanFreqs().size();
 
       uint numParms;
-      if (itsCorrectType=="fullgain") {
+      if (itsCorrectType=="fullgain" || itsCorrectType=="commonrotationangle") {
         numParms = 4;
       }
       else {
@@ -446,30 +461,39 @@ namespace LOFAR {
       // The diagonal of covariance matrix is transferred to the weights.
       // Note that the real covariance (mixing of noise terms after which they
       // are not independent anymore) is not stored.
-      float oldweight[4];
+      // The input covariance matrix C is assumed to be diagonal with elements
+      // w_i (the weights), the result the diagonal of
+      // (gainA kronecker gainB^H).C.(gainA kronecker gainB^H)^H
+      float cov[4], normGainA[4], normGainB[4];
       for (uint i=0;i<4;++i) {
-        oldweight[i]=weight[i];
+        cov[i]=1./weight[i];
+        normGainA[i]=norm(gainA[i]);
+        normGainB[i]=norm(gainB[i]);
       }
 
-      weight[0]=oldweight[0]/(norm(gainA[0])*norm(gainB[0]))
-               +oldweight[1]/(norm(gainA[0])*norm(gainB[1]))
-               +oldweight[2]/(norm(gainA[1])*norm(gainB[0]))
-               +oldweight[3]/(norm(gainA[1])*norm(gainB[1]));
+      weight[0]=cov[0]*(normGainA[0]*normGainB[0])
+               +cov[1]*(normGainA[0]*normGainB[1])
+               +cov[2]*(normGainA[1]*normGainB[0])
+               +cov[3]*(normGainA[1]*normGainB[1]);
+      weight[0]=1./weight[0];
 
-      weight[1]=oldweight[0]/(norm(gainA[0])*norm(gainB[2]))
-               +oldweight[1]/(norm(gainA[0])*norm(gainB[3]))
-               +oldweight[2]/(norm(gainA[1])*norm(gainB[2]))
-               +oldweight[3]/(norm(gainA[1])*norm(gainB[3]));
+      weight[1]=cov[0]*(normGainA[0]*normGainB[2])
+               +cov[1]*(normGainA[0]*normGainB[3])
+               +cov[2]*(normGainA[1]*normGainB[2])
+               +cov[3]*(normGainA[1]*normGainB[3]);
+      weight[1]=1./weight[1];
 
-      weight[2]=oldweight[0]/(norm(gainA[2])*norm(gainB[0]))
-               +oldweight[1]/(norm(gainA[2])*norm(gainB[1]))
-               +oldweight[2]/(norm(gainA[3])*norm(gainB[0]))
-               +oldweight[3]/(norm(gainA[3])*norm(gainB[1]));
+      weight[2]=cov[0]*(normGainA[2]*normGainB[0])
+               +cov[1]*(normGainA[2]*normGainB[1])
+               +cov[2]*(normGainA[3]*normGainB[0])
+               +cov[3]*(normGainA[3]*normGainB[1]);
+      weight[2]=1./weight[2];
 
-      weight[3]=oldweight[0]/(norm(gainA[2])*norm(gainB[2]))
-               +oldweight[1]/(norm(gainA[2])*norm(gainB[3]))
-               +oldweight[2]/(norm(gainA[3])*norm(gainB[2]))
-               +oldweight[3]/(norm(gainA[3])*norm(gainB[3]));
+      weight[3]=cov[0]*(normGainA[2]*normGainB[2])
+               +cov[1]*(normGainA[2]*normGainB[3])
+               +cov[2]*(normGainA[3]*normGainB[2])
+               +cov[3]*(normGainA[3]*normGainB[3]);
+      weight[3]=1./weight[3];
 
     }
   } //# end namespace

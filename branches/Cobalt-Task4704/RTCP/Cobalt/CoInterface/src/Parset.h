@@ -234,6 +234,11 @@ namespace LOFAR
         // CUDA GPU numbers to bind to
         std::vector<unsigned> gpus;
 
+        // NIC(s) to bind to (comma seperated)
+        //
+        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        std::string nic;
+
         // Station indices to forward data for
         std::vector<size_t> stations;
       };

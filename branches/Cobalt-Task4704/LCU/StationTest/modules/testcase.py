@@ -10,7 +10,7 @@ import time
 
 class Testcase:
 
-  def __init__(self, verbosity=11, testName='empty.py', repeat=1, beamMode=0,
+  def __init__(self, verbosity=11, testName='empty.py', repeat=1, beamMode=0, sdoMode=0,
                      rspId=['rsp0'], bpId='rsp', blpId='blp0',
                      tbbId=None, tpId=None, mpId=None,
                      polId=['x','y']):
@@ -25,6 +25,15 @@ class Testcase:
       self.bmBanks = [1, 0]         # 2 *  8 bit beamlets
     if beamMode == 2:
       self.bmBanks = [3, 2, 1, 0]   # 4 *  4 bit beamlets
+    self.sdoMode = sdoMode
+    # Derive SDO mode banks from SDO mode (= bit mode)
+    self.sdoBanks = [0]             # 1 * 16 bit subbands is default
+    if sdoMode == 1:
+      self.sdoBanks = [1, 0]        # 2 *  8 bit subbands
+    if sdoMode == 2:
+      self.sdoBanks = [2, 1, 0]     # 3 *  5 bit subbands
+    if sdoMode == 3:
+      self.sdoBanks = [3, 2, 1, 0]  # 4 *  4 bit subbands
     self.rspId = rspId
     self.bpId = bpId
     self.blpId = blpId

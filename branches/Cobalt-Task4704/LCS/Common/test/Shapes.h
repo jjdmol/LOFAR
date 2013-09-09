@@ -34,7 +34,7 @@ namespace LOFAR
   class Shape;
 //   template <typename T> class Singleton;
 //   template <typename Signature, typename TypeId> class ObjectFactory;
-  typedef Singleton< ObjectFactory<Shape(), string> > ShapeFactory;
+  typedef Singleton< ObjectFactory<Shape*(), string> > ShapeFactory;
 
   // Base class of shapes used by the ObjectFactory
   class Shape

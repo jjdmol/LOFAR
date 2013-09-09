@@ -40,8 +40,8 @@
     <Filter Include="share">
       <UniqueIdentifier>{6366e12c-9513-4476-af75-1c5f0e9a6295}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\opencl">
-      <UniqueIdentifier>{df0cf1e4-c813-41cb-b576-495868d16308}</UniqueIdentifier>
+    <Filter Include="test\Kernels">
+      <UniqueIdentifier>{58946e72-592a-481a-947b-1fdce99d6c38}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -282,24 +282,6 @@
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h">
       <Filter>test\cuda</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_incl.h">
-      <Filter>src\opencl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_utils.h">
-      <Filter>src\opencl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\opencl\gpu_wrapper.h">
-      <Filter>src\opencl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\opencl\MultiDimArrayHostBuffer.h">
-      <Filter>src\opencl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\opencl\PerformanceCounter.h">
-      <Filter>src\opencl</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\RunningStatistics.h">
-      <Filter>src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -497,17 +479,11 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_utils.cc">
-      <Filter>src\opencl</Filter>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc">
+      <Filter>test\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\opencl\gpu_wrapper.cc">
-      <Filter>src\opencl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc">
-      <Filter>src\opencl</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\RunningStatistics.cc">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.cc">
+      <Filter>test\Kernels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -735,30 +711,6 @@
     </None>
     <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.sh">
       <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\CMakeLists.txt">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\Correlator.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\DelayAndBandPass.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\FFT.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\fft2.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\FIR.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\math.cl">
-      <Filter>src\opencl</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\opencl\NewCorrelator.cl">
-      <Filter>src\opencl</Filter>
     </None>
   </ItemGroup>
 </Project>

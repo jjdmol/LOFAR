@@ -34,6 +34,11 @@
 #include <sys/resource.h>
 #include <sys/mman.h>
 
+#ifdef HAVE_LIBNUMA
+#include <numa.h>
+#include <numaif.h>
+#endif
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -167,13 +172,109 @@ int main(int argc, char **argv)
     THROW_SYSCALL("setenv(DISPLAY)");
 
   // Restrict access to (tmp build) files we create to owner
-  umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+  // JD: Don't do that! We want to be able to clean up each other's
+  // mess.
+  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
 
   if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
     THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+
+  /*
+   * INIT stage
+   */
+
+  LOG_INFO_STR("----- Reading Parset");
+
+  // Create a parameters set object based on the inputs
+  Parset ps(argv[optind]);
+
+  if (rank == 0) {
+    LOG_INFO_STR("nr stations = " << ps.nrStations());
+    LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
+    LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
+  }
+
+  LOG_INFO_STR("----- Initialising GPUs");
+
+  gpu::Platform platform;
+  vector<gpu::Device> allDevices(platform.devices());
+
+  LOG_INFO_STR("----- Initialising NUMA bindings");
+
+  // The set of GPUs we're allowed to use
+  vector<gpu::Device> devices;
+
+  // If we are testing we do not want dependency on hardware specific cpu configuration
+  // Just use all gpu's
+  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
+    // set the processor affinity before any threads are created
+    int cpuId = ps.settings.nodes[rank].cpu;
+    setProcessorAffinity(cpuId);
+
+#ifdef HAVE_LIBNUMA
+    if (numa_available() != -1) {
+      // force node + memory binding for future allocations
+      struct bitmask *numa_node = numa_allocate_nodemask();
+      numa_bitmask_clearall(numa_node);
+      numa_bitmask_setbit(numa_node, cpuId);
+      numa_bind(numa_node);
+      numa_bitmask_free(numa_node);
+
+      // only allow allocation on this node in case
+      // the numa_alloc_* functions are used
+      numa_set_strict(1);
+
+      // retrieve and report memory binding
+      numa_node = numa_get_membind();
+      vector<string> nodestrs;
+      for (size_t i = 0; i < numa_node->size; i++)
+        if (numa_bitmask_isbitset(numa_node, i))
+          nodestrs.push_back(str(format("%s") % i));
+
+      // migrate currently used memory to our node
+      numa_migrate_pages(0, numa_all_nodes_ptr, numa_node);
+
+      numa_bitmask_free(numa_node);
+
+      LOG_DEBUG_STR("Bound to memory on nodes " << nodestrs);
+    } else {
+      LOG_WARN_STR("Cannot bind memory (libnuma says there is no numa available)");
+    }
+#else
+    LOG_WARN_STR("Cannot bind memory (no libnuma support)");
+#endif
+
+    // Bindings are done -- Lock everything in memory
+    if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
+      THROW_SYSCALL("mlockall");
+
+    // derive the set of gpus we're allowed to use
+    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
+    vector<string> gpuPciIds;
+    for (size_t i = 0; i < gpuIds.size(); ++i) {
+      gpu::Device &d = allDevices[gpuIds[i]];
+
+      devices.push_back(d);
+      gpuPciIds.push_back(d.pciId());
+    }
+    LOG_DEBUG_STR("Binding to GPUs " << gpuIds << " = " << gpuPciIds);
+
+    // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
+    const string nic = ps.settings.nodes[rank].nic;
+
+    if (nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << nic);
+
+      if (setenv("OMPI_MCA_btl_openib_if_include", nic.c_str(), 1) < 0)
+        THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
+    }
+  } else {
+    LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
+    devices = allDevices;
+  }
 
   /*
    * Initialise OpenMP
@@ -186,54 +287,6 @@ int main(int argc, char **argv)
 
   // Allow OpenMP thread registration
   OMPThread::init();
-
-  /*
-   * INIT stage
-   */
-
-  LOG_INFO_STR("----- Reading Parset");
-
-  // Create a parameters set object based on the inputs
-  Parset ps(argv[optind]);
-
-  LOG_DEBUG_STR("nr stations = " << ps.nrStations());
-  LOG_DEBUG_STR("nr subbands = " << ps.nrSubbands());
-  LOG_DEBUG_STR("bitmode     = " << ps.nrBitsPerSample());
-
-  LOG_INFO_STR("----- Initialising GPUs");
-
-  gpu::Platform platform;
-  vector<gpu::Device> allDevices(platform.devices());
-
-  LOG_INFO_STR("----- Initialising NUMA bindings");
-
-  // TODO: How to migrate the memory that's currently in use
-  // (and mlocked!) to the selected CPU?
-
-  // The set of GPUs we're allowed to use
-  vector<gpu::Device> devices;
-  // If we are testing we do not want dependency on hardware specific cpu configuration
-  // Just use all gpu's
-  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
-    // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes[rank].cpu;
-    setProcessorAffinity(cpuId);
-
-    // derive the set of gpus we're allowed to use
-    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-    LOG_DEBUG_STR("Binding to GPUs " << gpuIds);
-    for (size_t i = 0; i < gpuIds.size(); ++i)
-      devices.push_back(allDevices[i]);
-  } else {
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using all cores and GPUs");
-    devices = allDevices;
-  }
-
-  // Bindings are done -- Lock everything in memory
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-    THROW_SYSCALL("mlockall");
-
-  LOG_DEBUG_STR("All memory is now pinned.");
 
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
@@ -315,7 +368,7 @@ int main(int argc, char **argv)
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
