@@ -254,7 +254,9 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           // etc for block 0.
           ssize_t block = -1;
 
-          for (TimeStamp current = from; current + ps.nrSamplesPerSubband() < to; current += ps.nrSamplesPerSubband(), ++block) {
+          size_t blockSize = ps.nrSamplesPerSubband();
+
+          for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
             LOG_DEBUG_STR(str(format("[rank %i block %d] Sending data from %s") % rank % block % stationID));
 
             // Fetch end delays (start delays are set by the previous block, or
@@ -266,11 +268,9 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
             delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, metaDatas, read_offsets);
 
             //LOG_DEBUG_STR("Delays obtained");
-            // Align reads to 256
-            size_t offset = 0;//((int64)current + read_offsets[0] - ps.nrHistorySamples()) & 0xFFUL;
 
             // Read the next block from the circular buffer.
-            SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current - offset, current - offset + ps.nrSamplesPerSubband(), read_offsets));
+            SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, read_offsets));
 
             //LOG_INFO_STR("Block read");
 
