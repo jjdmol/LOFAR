@@ -43,11 +43,14 @@ class MepMessage:
            'tbbi'  :15,
            'cep'   :16,
            'lcu'   :17,
-           'rad'   :18}
+           'rad'   :18,
+           'sdo_ss':19}
    
   c_regid = {('rsr','status') :     0,
              ('rsr','version') :    1,
              ('rsr','timestamp') :  2,
+             ('rsr','beammode') :   3,
+             ('rsr','sdomode') :    4,
              ('rsu','flash') :      1,
              ('rsu','erase') :      2,
              ('rsu','reconfig') :   3,
@@ -68,6 +71,11 @@ class MepMessage:
              ('ss','settings1') :   1,
              ('ss','settings2') :   2,
              ('ss','settings3') :   3,
+             ('sdo_ss','settings') :    0,
+             ('sdo_ss','settings0') :   0,
+             ('sdo_ss','settings1') :   1,
+             ('sdo_ss','settings2') :   2,
+             ('sdo_ss','settings3') :   3,
              ('bf','coefxr') :      0,
              ('bf','coefxi') :      1,
              ('bf','coefyr') :      2,
