@@ -153,12 +153,15 @@ extern "C" {
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
 #endif
+
 #if NR_CHANNELS > 1 || defined DO_TRANSPOSE
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
 
-  unsigned major   = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
-  unsigned minor   = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
-  unsigned channel = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
+  unsigned major       = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
+  unsigned minor       = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
+  unsigned channelBase = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
+
+  unsigned channel = channelBase + minor;
 #endif
   unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
 
@@ -166,7 +169,7 @@ extern "C" {
 #if NR_CHANNELS == 1
   float frequency = subbandFrequency;
 #else
-  float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS);
+  float frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 #endif
   float2 delayAtBegin  = make_float2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
   float2 delayAfterEnd = make_float2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
@@ -205,7 +208,7 @@ extern "C" {
 #endif
 
 #if defined BANDPASS_CORRECTION
-  float weight((*bandPassFactors)[channel + minor]);
+  float weight((*bandPassFactors)[channel]);
 #endif
 
 #if defined DELAY_COMPENSATION && defined BANDPASS_CORRECTION
@@ -225,10 +228,12 @@ extern "C" {
     fcomplex sampleY = make_float2(convertIntToFloat(sampleYraw.x),
                                    convertIntToFloat(sampleYraw.y));
 #else
-  for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)
+  for (unsigned timeBase = 0; timeBase < NR_SAMPLES_PER_CHANNEL; timeBase += 16)
   {
-    fcomplex sampleX = (*inputData)[station][0][time + major][channel + minor];
-    fcomplex sampleY = (*inputData)[station][1][time + major][channel + minor];
+    unsigned time = timeBase + major;
+
+    fcomplex sampleX = (*inputData)[station][0][time][channel];
+    fcomplex sampleY = (*inputData)[station][1][time][channel];
 #endif
 
 #if defined DELAY_COMPENSATION    
@@ -252,8 +257,8 @@ extern "C" {
     tmp[major][minor][0] = sampleX;
     tmp[major][minor][1] = sampleY;
     __syncthreads();
-    (*outputData)[station][channel + major][time + minor][0] = tmp[minor][major][0];
-    (*outputData)[station][channel + major][time + minor][1] = tmp[minor][major][1];
+    (*outputData)[station][channelBase + major][timeBase + minor][0] = tmp[minor][major][0];
+    (*outputData)[station][channelBase + major][timeBase + minor][1] = tmp[minor][major][1];
     __syncthreads();
 #elif NR_CHANNELS == 1 && defined DO_TRANSPOSE
     (*outputData)[station][0][time][0] = sampleX;
@@ -261,8 +266,8 @@ extern "C" {
 
 // No transpose: data order is [station][pol][channel][time]
 #elif NR_CHANNELS > 1
-    (*outputData)[station][0][channel + major][time + minor] = sampleX;
-    (*outputData)[station][1][channel + major][time + minor] = sampleY;
+    (*outputData)[station][0][channel][time] = sampleX;
+    (*outputData)[station][1][channel][time] = sampleY;
 #else
     (*outputData)[station][0][0][time] = sampleX;
     (*outputData)[station][1][0][time] = sampleY;
