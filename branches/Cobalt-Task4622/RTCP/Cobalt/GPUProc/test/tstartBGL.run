@@ -18,6 +18,8 @@ function error {
   exit 1
 }
 
+testdir=$PWD
+
 # Make a fake LOFARROOT to be able to locate:
 #   $LOFARROOT/bin:   startBGL.sh, stopBGL.sh, rtcp, mpi_node_list
 #   $LOFARROOT/etc:   parset-additions.d/
@@ -77,7 +79,7 @@ echo "***************************"
 echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
-startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
+startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
 # PID file must be present
 [ -r $LOFARROOT/var/run/rtcp-1000.pid ] || error "Cannot read $LOFARROOT/var/run/rtcp-1000.pid"
