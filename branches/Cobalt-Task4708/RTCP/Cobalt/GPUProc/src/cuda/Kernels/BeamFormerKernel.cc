@@ -88,12 +88,12 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/,
+    void BeamFormerKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter,
                                    float centralFrequency, unsigned SAP)
     {
       setArg(3, centralFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(queue/*, counter*/);
+      Kernel::enqueue(queue, counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
