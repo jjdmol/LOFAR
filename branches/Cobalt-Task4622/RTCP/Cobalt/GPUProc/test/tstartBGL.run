@@ -30,7 +30,7 @@ ln -sfT $srcdir/../share tstartBGL.out/share || error "ln failed for tstartBGL.s
 export LOFARROOT=$PWD/tstartBGL.out
 
 # Be able to find all binaries through $PATH
-export PATH=$LOFARROOT/bin:$PATH
+export PATH=$LOFARROOT/bin:$srcdir/../src:$PATH
 
 echo "***************************"
 echo "Test 1: no parameters"
