@@ -35,10 +35,13 @@ ln -sfT $srcdir/../share $LOFARROOT/share || error "ln failed for share"
 export PATH=$LOFARROOT/bin:$srcdir/../src:$PATH
 echo "PATH=$PATH"
 
+# Let's work within our temp space
+cd $LOFARROOT || error "could not cd $LOFARROOT"
+
 # Crude hack for the apps to find their log_prop files. It will mess up
 # stdout without it.
-cp $srcdir/../src/Station/mpi_node_list.log_prop $LOFARROOT/etc || error "Could not copy mpi_node_list.log_prop"
-cp $srcdir/../src/rtcp.log_prop $LOFARROOT/etc || error "Could not copy rtcp.log_prop"
+cp $srcdir/../src/Station/mpi_node_list.log_prop . || error "Could not copy mpi_node_list.log_prop"
+cp $srcdir/../src/rtcp.log_prop . || error "Could not copy rtcp.log_prop"
 
 echo "***************************"
 echo "Test 1: no parameters"
