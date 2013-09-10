@@ -132,7 +132,8 @@ int main() {
   float subbandFreq = 60e6f;
   unsigned sap = 0;
 
-  kernel->enqueue(stream, subbandFreq, sap);
+  PerformanceCounter counter(ctx);
+  kernel->enqueue(stream, counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;
