@@ -57,3 +57,5 @@ echo "Done"
 
 ) 2>&1 | tee -a $LOFARROOT/var/log/stopBGL.log
 
+# Return the status of our subshell, not of tee
+exit ${PIPESTATUS[0]}

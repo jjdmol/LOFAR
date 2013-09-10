@@ -109,7 +109,7 @@ endif()
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 
 # install the scripts for MAC
-install(FILES
+install(PROGRAMS
   startBGL.sh
   stopBGL.sh
   DESTINATION bin)

@@ -37,6 +37,9 @@ function error {
   exit 1
 }
 
+[ -n "$OBSID" ] || error "No observation ID provided on the command line"
+[ -n "$PARSET_MAC" ] || error "No parset provided on the command line"
+
 # Add static keys
 cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
 
@@ -60,3 +63,5 @@ echo "Done"
 
 ) 2>&1 | tee -a $LOFARROOT/var/log/startBGL.log
 
+# Return the status of our subshell, not of tee
+exit ${PIPESTATUS[0]}

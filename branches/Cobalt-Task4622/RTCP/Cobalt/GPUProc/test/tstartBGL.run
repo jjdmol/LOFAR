@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Arguments for startBGL.sh:
+#
+# 1. unused
+# 2. unused
+# 3. unused
+# 4. parset
+# 5. obs id
+#
+# Arguments for stopBGL.sh:
+#
+# 1. unused
+# 2. obs id
+
+echo "***************************"
+echo "Test 1: no parameters"
+echo "        (expects failure)"
+echo "***************************"
+startBGL.sh && exit 1
+stopBGL.sh && exit 1
+
+# Log files must be present
+[ -r $LOFARROOT/var/log/startBGL.log ] || exit 1
+[ -r $LOFARROOT/var/log/stopBGL.log ]  || exit 1
+
+echo "***************************"
+echo "Test 2: non-existing parset"
+echo "        (expects failure)"
+echo "***************************"
+startBGL.sh 1 2 3 /non-existing 1000 && exit 1
+
+echo "***************************"
+echo "Test 3: normal run"
+echo "        (expects success)"
+echo "***************************"
+startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || exit 1
+
+# PID file must be present
+[ -r $LOFARROOT/var/run/rtcp-1000.pid ] || exit 1
+
+# Log file must be present
+[ -r $LOFARROOT/var/log/rtcp-1000.log ] || exit 1
+
+# We expect rtcp to still run, because it takes several
+# seconds to initialise. If rtcp is already done, stopBGL.sh
+# will give an error!
+#
+# If this is problematic, a possible fix is to put the
+# observation start time in tstartBGL.in_parset to far into
+# the future, and enable real-time mode. That way, rtcp
+# will surely be running. However, in that case:
+#   - if rtcp crashes, stopBGL.sh will error
+#   - if stopBGL.sh malfunctions, rtcp will linger
+stopBGL.sh 1 1000 || exit 1
+
