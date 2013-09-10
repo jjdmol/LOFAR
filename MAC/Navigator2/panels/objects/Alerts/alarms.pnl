@@ -391,7 +391,7 @@ LANG:1 0
 25 1
 "alarmTable"
 ""
-1 9.009100101112235 38.14588047384534 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 9.100101112234581 38.14588047384534 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main(int row, string column)
 {
   rClick(row);
@@ -410,7 +410,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  -2 28 992 672
+0  -2 28 1002 672
 "main()
 {
   this.tableMode(TABLE_SELECT_MULTIPLE);
@@ -437,7 +437,7 @@ E
 1
 LANG:1 39 extra AlarmMessage set by the Software 
 
-300 "Status" 6 1 0 "s" 1
+290 "Status" 6 1 0 "s" 1
 LANG:1 6 Status
 E
 1
@@ -449,7 +449,7 @@ E
 1
 LANG:1 11 stateNumber
 
-38 
+40 
 20 20 "" 1 1
 LANG:1 2 #1
 "" 1 1
@@ -466,7 +466,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 26 2
 "CASCADE_BUTTON1"
 ""
-1 0 0 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 0 0 E E E 0 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 3 0 0 0 0 0
 E E E
