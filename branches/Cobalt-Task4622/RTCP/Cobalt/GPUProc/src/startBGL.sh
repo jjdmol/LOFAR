@@ -41,7 +41,7 @@ function error {
 cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
 
 # Determine start parameters
-HOSTS=`mpi_node_list -n $PARSET | tail -n 1`
+HOSTS=`mpi_node_list -n $PARSET`
 echo "Hosts: $HOSTS"
 
 # Start observation in the background

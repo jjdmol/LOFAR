@@ -107,7 +107,15 @@ if(USE_OPENCL)
 endif()
 
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
+
+# install the scripts for MAC
+install(FILES
+  startBGL.sh
+  stopBGL.sh
+  DESTINATION bin)
+
 # install the logprop file
 install(FILES
   rtcp.log_prop
+  Station/mpi_node_list.log_prop
   DESTINATION etc)
