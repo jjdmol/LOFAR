@@ -225,15 +225,6 @@ The following keys can be configured to tune each antenna field or station:
 The Output Configuration
 ===========================
 
-The output writers are started on all hosts indicated by:
-
-  OLAP.Storage.hosts
-    Type:    list of string
-    Default: (none)
-    
-    The host names on which OutputProc is started. If no OutputProc is used,
-    this key can be [].
-
 The output is separated per data product. We output the following products:
   - Beamformed
   - Correlated
