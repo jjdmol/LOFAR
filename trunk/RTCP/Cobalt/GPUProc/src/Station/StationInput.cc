@@ -87,6 +87,9 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   }
 
   // Set up the circular buffer
+  GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
+
+  // Set up the data transports
   MultiPacketsToBuffer station(settings, inputStreams);
 
   // Signal the creation of the SHM buffer
