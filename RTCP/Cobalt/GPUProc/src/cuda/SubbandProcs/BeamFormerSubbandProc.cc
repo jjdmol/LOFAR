@@ -77,8 +77,8 @@ namespace LOFAR
 
       // beamForm: B -> A
       // TODO: support >1 SAP
-      devBeamFormerWeights(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS)),
-      beamFormerBuffers(devB, devA, devBeamFormerWeights),
+      devBeamFormerDelays(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
+      beamFormerBuffers(devB, devA, devBeamFormerDelays),
       beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
 
       // transpose after beamforming: A -> B
@@ -194,8 +194,7 @@ namespace LOFAR
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
 
-          // TODO: propagate beam-former weights to here 
-          //queue.writeBuffer(devBeamFormerWeights,    ,   false);
+          queue.writeBuffer(devBeamFormerDelays,     input.tabDelays,      false);
 
           prevSAP = SAP;
           prevBlock = block;
@@ -204,6 +203,8 @@ namespace LOFAR
 
       //****************************************
       // Enqueue the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
       intToFloatKernel->enqueue(counters.intToFloat);
 
       firstFFT.enqueue(queue, counters.firstFFT);
@@ -216,7 +217,10 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(counters.beamformer);
+      beamFormerKernel->enqueue(queue,
+        counters.beamformer,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
       transposeKernel->enqueue(counters.transpose);
 
       inverseFFT.enqueue(queue, counters.inverseFFT);

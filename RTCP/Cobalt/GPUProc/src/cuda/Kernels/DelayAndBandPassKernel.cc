@@ -31,9 +31,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/BandPass.h>
 
-using namespace std;
 using boost::lexical_cast;
-using boost::format;
 
 namespace LOFAR
 {
@@ -87,9 +85,9 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter, float centralFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter, float subbandFrequency, size_t SAP)
     {
-      setArg(2, centralFrequency);
+      setArg(2, subbandFrequency);
       setArg(3, SAP);
       Kernel::enqueue(queue, counter);
     }
@@ -137,7 +135,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7ff") % itsParameters.subbandBandwidth);
+        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";

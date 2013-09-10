@@ -48,20 +48,16 @@
  * - @c DO_TRANSPOSE: defined or not
  */
 
+#include "gpu_math.cuh"
+
 #include "IntToFloat.cuh"
+
 
 #if NR_CHANNELS == 1
    // #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
    // but once here, don't do difficult and adjust cleanly here.
 #  undef BANDPASS_CORRECTION
 #endif
-
-// to distinguish complex float from other uses of float2
-typedef float2 fcomplex;
-//typedef float4 fcomplex2;
-
-typedef char2  char_complex;
-typedef short2 short_complex;
 
 #if defined DO_TRANSPOSE
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
@@ -89,16 +85,6 @@ typedef  const float (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 
 typedef  const float (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
-
-// Keep it simple. We had complex<T> defined, but we need operator overloads,
-// so we cannot make it a POD type. Then we got redundant member inits in the
-// constructor, causing races when declaring variables in shared memory.
-// Now, avoid complex<T> and just work with cmul() and a few extra lines.
-__device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
-{
-  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
-                     lhs.x * rhs.y + lhs.y * rhs.x);
-}
 
 /**
  * This kernel performs (up to) three operations on the input data:
