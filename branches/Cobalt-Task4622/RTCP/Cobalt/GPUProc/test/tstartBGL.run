@@ -24,13 +24,21 @@ function error {
 #   $LOFARROOT/share: gpu/kernels/*.cu
 # and the share/ directory for the GPU kernels
 mkdir -p tstartBGL.out || error "Cannot mkdir tstartBGL.out"
-ln -sfT $PWD/../src tstartBGL.out/bin || error "ln failed for tstartBGL.sh/bin"
-ln -sfT $srcdir/../etc tstartBGL.out/etc || error "ln failed for tstartBGL.sh/etc"
-ln -sfT $srcdir/../share tstartBGL.out/share || error "ln failed for tstartBGL.sh/share"
 export LOFARROOT=$PWD/tstartBGL.out
+echo "LOFARROOT=$LOFARROOT"
+
+ln -sfT $PWD/../src $LOFARROOT/bin || error "ln failed for bin"
+ln -sfT $srcdir/../etc $LOFARROOT/etc || error "ln failed for etc"
+ln -sfT $srcdir/../share $LOFARROOT/share || error "ln failed for share"
 
 # Be able to find all binaries through $PATH
 export PATH=$LOFARROOT/bin:$srcdir/../src:$PATH
+echo "PATH=$PATH"
+
+# Crude hack for the apps to find their log_prop files. It will mess up
+# stdout without it.
+cp $srcdir/../src/Station/mpi_node_list.log_prop $LOFARROOT/etc || error "Could not copy mpi_node_list.log_prop"
+cp $srcdir/../src/rtcp.log_prop $LOFARROOT/etc || error "Could not copy rtcp.log_prop"
 
 echo "***************************"
 echo "Test 1: no parameters"
