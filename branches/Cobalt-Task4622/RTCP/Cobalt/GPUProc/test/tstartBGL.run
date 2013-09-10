@@ -24,7 +24,7 @@ function error {
 #   $LOFARROOT/share: gpu/kernels/*.cu
 # and the share/ directory for the GPU kernels
 mkdir -p tstartBGL.out || error "Cannot mkdir tstartBGL.out"
-ln -sfT ../src tstartBGL.out/bin || error "ln failed for tstartBGL.sh/bin"
+ln -sfT $PWD/../src tstartBGL.out/bin || error "ln failed for tstartBGL.sh/bin"
 ln -sfT $srcdir/../etc tstartBGL.out/etc || error "ln failed for tstartBGL.sh/etc"
 ln -sfT $srcdir/../share tstartBGL.out/share || error "ln failed for tstartBGL.sh/share"
 export LOFARROOT=$PWD/tstartBGL.out
