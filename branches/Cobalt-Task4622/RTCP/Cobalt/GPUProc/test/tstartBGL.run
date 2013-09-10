@@ -18,6 +18,20 @@ function error {
   exit 1
 }
 
+# Make a fake LOFARROOT to be able to locate:
+#   $LOFARROOT/bin:   startBGL.sh, stopBGL.sh, rtcp, mpi_node_list
+#   $LOFARROOT/etc:   parset-additions.d/
+#   $LOFARROOT/share: gpu/kernels/*.cu
+# and the share/ directory for the GPU kernels
+mkdir -p tstartBGL.out || error "Cannot mkdir tstartBGL.out"
+ln -sfT ../src tstartBGL.out/bin || error "ln failed for tstartBGL.sh/bin"
+ln -sfT $srcdir/../etc tstartBGL.out/etc || error "ln failed for tstartBGL.sh/etc"
+ln -sfT $srcdir/../share tstartBGL.out/share || error "ln failed for tstartBGL.sh/share"
+export LOFARROOT=$PWD/tstartBGL.out
+
+# Be able to find all binaries through $PATH
+export PATH=$LOFARROOT/bin:$PATH
+
 echo "***************************"
 echo "Test 1: no parameters"
 echo "        (expects failure)"
@@ -27,7 +41,7 @@ stopBGL.sh && error "stopBGL.sh did not fail as expected"
 
 # Log files must be present
 [ -r $LOFARROOT/var/log/startBGL.log ] || error "Cannot read $LOFARROOT/var/log/startBGL.log"
-[ -r $LOFARROOT/var/log/stopBGL.log ]  || exit "Cannot read $LOFARROOT/var/log/stopBGL.log"
+[ -r $LOFARROOT/var/log/stopBGL.log ]  || error "Cannot read $LOFARROOT/var/log/stopBGL.log"
 
 echo "***************************"
 echo "Test 2: non-existing parset"
