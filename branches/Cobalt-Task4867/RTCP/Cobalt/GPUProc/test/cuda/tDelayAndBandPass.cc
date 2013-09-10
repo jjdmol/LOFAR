@@ -21,7 +21,7 @@
 #include <lofar_config.h>
 
 #include <cstdlib>
-#include <cmath> 
+#include <cmath>
 #include <cassert>
 #include <string>
 #include <sstream>
@@ -74,7 +74,7 @@ void runKernel(gpu::Function kfunc,
                MultiDimArrayHostBuffer<double,   3> &delaysAfterEnd,
                MultiDimArrayHostBuffer<double,   2> &phaseOffsets,
                MultiDimArrayHostBuffer<float,    1> &bandPassFactors,
-               double subbandFrequency, 
+               double subbandFrequency,
                unsigned beam)
 {
   gpu::Context ctx(stream->getContext());
@@ -95,10 +95,10 @@ void runKernel(gpu::Function kfunc,
   kfunc.setArg(6, devPhaseOffsets);
   kfunc.setArg(7, devBandPassFactors);
 
-  gpu::Grid globalWorkSize(1, 
+  gpu::Grid globalWorkSize(1,
                            NR_CHANNELS == 1 ? 1 : NR_CHANNELS / 16,
-                           NR_STATIONS);  
-  gpu::Block localWorkSize(256, 1, 1); 
+                           NR_STATIONS);
+  gpu::Block localWorkSize(256, 1, 1);
 
   // Overwrite devOutput, so result verification is more reliable.
   stream->writeBuffer(devOutput,          outputData);
@@ -174,7 +174,7 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
   boost::scoped_ptr<MultiDimArrayHostBuffer<fcomplex, 4> > outputData;
   boost::scoped_ptr<MultiDimArrayHostBuffer<T,        4> > inputData;
 
-  if(compileDefs.find("DO_TRANSPOSE") != compileDefs.end()) 
+  if(compileDefs.find("DO_TRANSPOSE") != compileDefs.end())
     outputData.reset(
       new MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents
                                                [NR_STATIONS]
@@ -188,7 +188,7 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
                                                [NR_STATIONS]
                                                [NR_POLARIZATIONS]
                                                [NR_SAMPLES_PER_CHANNEL]
-                                               [NR_CHANNELS], 
+                                               [NR_CHANNELS],
                                                ctx));
 
   CompileDefinitions::const_iterator cit;
@@ -209,7 +209,7 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
                                                [NR_STATIONS]
                                                [NR_POLARIZATIONS]
                                                [NR_SAMPLES_PER_CHANNEL]
-                                               [NR_CHANNELS], 
+                                               [NR_CHANNELS],
                                                ctx));
 
   MultiDimArrayHostBuffer<double, 3> delaysAtBegin(boost::extents
@@ -262,7 +262,7 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
 
   // Tests that use this function only check the first and last 2 output floats.
   const unsigned nrResultVals = 2;
-  ASSERT(outputData->num_elements() >= 
+  ASSERT(outputData->num_elements() >=
          nrResultVals * sizeof(fcomplex) / sizeof(float));
   vector<fcomplex> resultVals(nrResultVals);
   resultVals[0] = outputData->origin()[0];
@@ -305,13 +305,13 @@ TEST(PhaseOffsets)
   // cosisin (or sincos) cosisin(pi) = -1
   CompileDefinitions defs(getDefaultCompileDefinitions());
   defs["DELAY_COMPENSATION"] = "1";
-  defs["SUBBAND_BANDWIDTH"]  = "1.0";
+  defs["SUBBAND_BANDWIDTH"] = "1.0";
 
   vector<fcomplex> results(runTest<fcomplex>(
                              defs,
                              1.0,    // sb freq
                              0U,     // beam
-                             0.0,    // delays begin  
+                             0.0,    // delays begin
                              0.0,    // delays end
                              M_PI,   // phase offsets
                              1.0f)); // bandpass factor
@@ -334,13 +334,13 @@ SUITE(DelayCompensation)
     // cosisin(-3.14159+0 i) == -1
     CompileDefinitions defs(getDefaultCompileDefinitions());
     defs["DELAY_COMPENSATION"] = "1";
-    defs["SUBBAND_BANDWIDTH"]  = "1.0";
+    defs["SUBBAND_BANDWIDTH"] = "1.0";
 
     vector<fcomplex> results(runTest<fcomplex>(
                                defs,
                                1.0,    // sb freq
                                0U,     // beam
-                               1.0,    // delays begin  
+                               1.0,    // delays begin
                                1.0,    // delays end
                                0.0,    // phase offsets
                                1.0f)); // bandpass factor
@@ -380,7 +380,7 @@ SUITE(DelayCompensation)
     //
     // timeStep  = 16 (hard-coded)
     // channel   = 0
-    // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH 
+    // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
     //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
     // phiBegin  = -2.0 * PI * delayAtBegin  = -6.283185 * 1.0 = -6.283185
     // phiEnd    = -2.0 * PI * delayAfterEnd = -6.283185 * 0.0 =  0.0
@@ -409,7 +409,7 @@ SUITE(DelayCompensation)
     //            = (-6.283185 + 15 * 0.0981748) * 1.4375 + 0.0 = -6.915185
     // myPhiDelta = timeStep * deltaPhi * frequency
     //            = 16 * 0.0981748 * 1.4375 = 2.258020
-    // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) = 
+    // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) =
     //            = (cos(-6.915185) + sin(-6.915185)j) = (0.806848 + -0.590760j)
     // dvX = dvY  = (cos(myPhiDelta, sin(myPhiDelta))
     //            = (cos(2.258020) + sin(2.258020)j) = (-0.634393 + 0.773010j)
@@ -421,13 +421,13 @@ SUITE(DelayCompensation)
 
     CompileDefinitions defs(getDefaultCompileDefinitions());
     defs["DELAY_COMPENSATION"] = "1";
-    defs["SUBBAND_BANDWIDTH"]  = "1.0";
+    defs["SUBBAND_BANDWIDTH"] = "1.0";
 
     vector<fcomplex> results(runTest<fcomplex>(
                                defs,
                                1.0,    // sb freq
                                0U,     // beam
-                               1.0,    // delays begin  
+                               1.0,    // delays begin
                                0.0,    // delays end
                                0.0,    // phase offsets
                                1.0f)); // bandpass factor
@@ -447,7 +447,7 @@ TEST(AllAtOnce)
   //
   // timeStep  = 16 (hard-coded)
   // channel   = 0
-  // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH 
+  // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
   //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
   // phiBegin  = -2.0 * PI * delayAtBegin  = -6.283185 * 1.0 = -6.283185
   // phiEnd    = -2.0 * PI * delayAfterEnd = -6.283185 * 0.0 =  0.0
@@ -466,7 +466,7 @@ TEST(AllAtOnce)
   // dvX = dvY  = (cos(myPhiDelta) + sin(myPhiDelta))
   //            = (cos(0.785398) + sin(0.785398)j) = (0.707107 + 0.707107j)
   // sample     = sample * weight * (cos(myPhiBegin) + sin(myPhiBegin)j)
-  //            = (1, j) * 2 * (-0.540302 + -0.841471j) = 
+  //            = (1, j) * 2 * (-0.540302 + -0.841471j) =
   //
   // For result[1]:
   // major = 15
@@ -476,7 +476,7 @@ TEST(AllAtOnce)
   //            = (-6.283185 + 15 * 0.0981748) * 1.4375 + 1.0 = -5.915185
   // myPhiDelta = timeStep * deltaPhi * frequency
   //            = 16 * 0.0981748 * 1.4375 = 2.258020
-  // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) = 
+  // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) =
   //            = (cos(-5.915185), sin(-5.915185)j) = (0.933049 + 0.359750j)
   // dvX = dvY  = (cos(myPhiDelta + sin(myPhiDelta)j)
   //            = (cos(2.258020) + sin(2.258020)j) = (-0.634393 + 0.773010j)
@@ -488,13 +488,13 @@ TEST(AllAtOnce)
 
   CompileDefinitions defs(getDefaultCompileDefinitions());
   defs["DELAY_COMPENSATION"] = "1";
-  defs["SUBBAND_BANDWIDTH"]  = "1.0";
+  defs["SUBBAND_BANDWIDTH"] = "1.0";
 
   vector<fcomplex> results(runTest<fcomplex>(
                              defs,
                              1.0,    // sb freq
                              0U,     // beam
-                             1.0,    // delays begin  
+                             1.0,    // delays begin
                              0.0,    // delays end
                              1.0,    // phase offsets (1 rad)
                              2.0f)); // bandpass factor (weights == 2)
