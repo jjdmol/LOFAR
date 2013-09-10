@@ -104,7 +104,8 @@ namespace LOFAR
         if (itsParameters.nrChannelsPerSubband == 1)
           return 
             itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+            itsParameters.nrSamplesPerSubband *
+            itsParameters.nrBytesPerComplexSample;
         else
           return 
             itsParameters.nrStations * NR_POLARIZATIONS * 
@@ -115,10 +116,11 @@ namespace LOFAR
           itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrSAPs * itsParameters.nrStations * 
+          NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::PHASE_OFFSETS:
         return
-          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
           itsParameters.nrChannelsPerSubband * sizeof(float);
@@ -137,7 +139,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";
