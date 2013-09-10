@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1073 745 N "_3DFace" 0
+PANEL,-1 -1 1075 745 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -214,7 +214,7 @@ void addBackLines() {
   //loop over list and prepare panel with all stations and swlevel objects   
   for (int i=1; i<= dynlen(stationList); i++) {
     if ((float)i/2. != floor(i/2.)) {
-      barColor = \"lightgrey\";
+      barColor = \"STD_hover\";
     } else {
       barColor = \"_3DFace\";
     }
