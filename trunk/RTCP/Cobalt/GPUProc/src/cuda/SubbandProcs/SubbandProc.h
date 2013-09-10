@@ -83,6 +83,9 @@ namespace LOFAR
       //!< Remainder of delays
       MultiDimArrayHostBuffer<float, 2> phaseOffsets;
 
+      //!< Delays for TABs (aka pencil beams) after station beam correction
+      MultiDimArrayHostBuffer<float, 3> tabDelays;
+
       // inputdata with flagged data set to zero
       MultiDimArrayHostBuffer<char, 4> inputSamples;
 
@@ -94,7 +97,7 @@ namespace LOFAR
 
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                         size_t n_samples, size_t bytes_per_complex_sample,
+                         size_t n_tabs, size_t n_samples, size_t bytes_per_complex_sample,
                          gpu::Context &context, unsigned int hostBufferFlags = 0)
         :
         delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
@@ -102,6 +105,8 @@ namespace LOFAR
         delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
                        context, hostBufferFlags),
         phaseOffsets(boost::extents[n_stations][n_polarizations],
+                       context, hostBufferFlags),
+        tabDelays(boost::extents[n_beams][n_stations][n_tabs],
                        context, hostBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated

@@ -64,9 +64,9 @@ int main() {
        << factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA) << endl;
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
-  SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
-                        ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                        ps.nrBytesPerComplexSample(), ctx);
+  SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), ps.settings.nrPolarisations,
+                          ps.settings.beamFormer.maxNrTABsPerSAP(), ps.nrHistorySamples() +
+                           ps.nrSamplesPerSubband(), ps.nrBytesPerComplexSample(), ctx);
   cout << "#st=" << ps.nrStations() << " #sampl/sb=" << ps.nrSamplesPerSubband() <<
           " (skipping #histSampl=" << ps.nrHistorySamples() << ") #pol=" << NR_POLARIZATIONS <<
           " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
