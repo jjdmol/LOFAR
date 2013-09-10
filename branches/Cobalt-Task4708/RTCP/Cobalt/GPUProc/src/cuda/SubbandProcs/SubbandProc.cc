@@ -50,23 +50,15 @@ namespace LOFAR
                 ps.nrStations(),
                 ps.settings.nrPolarisations,
                 ps.settings.beamFormer.maxNrTABsPerSAP(),
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+                ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 context));
       }
     }
 
-
     SubbandProc::~SubbandProc()
     {
     }
-
-
-    void SubbandProc::addCounter(const std::string &name)
-    {
-      counters[name] = new PerformanceCounter(name, profiling);
-    }
-
 
     void SubbandProc::addTimer(const std::string &name)
     {

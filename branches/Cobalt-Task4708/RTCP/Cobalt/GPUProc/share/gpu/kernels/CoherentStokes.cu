@@ -18,9 +18,7 @@
 //#
 //# $Id: CoherentStokes.cu 24553 2013-04-09 14:21:56Z mol $
 
-#if NR_SAMPLES_PER_CHANNEL % TIME_PARALLEL_FACTOR != 0
-  #error unsupported TIME_PARALLEL_FACTOR for NR_SAMPLES_PER_CHANNEL
-#elif  NR_SAMPLES_PER_CHANNEL % INTEGRATION_SIZE != 0 
+#if NR_SAMPLES_PER_CHANNEL % INTEGRATION_SIZE != 0 
   #error  unsupported INTEGRATION_SIZE for NR_SAMPLES_PER_CHANNEL
 #elif NR_COHERENT_STOKES != 1
   #if NR_COHERENT_STOKES != 4
@@ -104,7 +102,8 @@ extern "C" __global__ void coherentStokes(void *outputPtr, const void *inputPtr)
   // Work from the start of the time frame (pending your threadIdx.y) untill the next timeframe
   // Step within this timerange with integration size steps. These substeps are done in the inner loop
   for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR) ; 
-                idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR);
+                   idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR)
+                && idx_stride < NR_SAMPLES_PER_CHANNEL;
                 idx_stride += INTEGRATION_SIZE)
   {
     // We are integrating all values in the current stride

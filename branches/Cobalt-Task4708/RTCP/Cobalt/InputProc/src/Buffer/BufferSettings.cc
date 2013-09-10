@@ -77,6 +77,9 @@ namespace LOFAR
       // Make sure nrSamples is a multiple of 16, which
       // is the expected number of samples in a block.
       //
+      // We use a multiple of 256 for maximum memory-
+      // alignment benefits.
+      //
       // Doing so allows the writer to prevent split
       // writes of packets. (TODO: That's not implemented,
       // because the timestamps of the packets are not
@@ -84,7 +87,7 @@ namespace LOFAR
       //
       // We use 200 MHz clock as a reference.
       const BoardMode mode(16, 200);
-      nrSamples_16bit = mode.secondsToSamples(seconds) & ~0xFLL;
+      nrSamples_16bit = mode.secondsToSamples(seconds) & ~0xFFLL;
     }
 
 

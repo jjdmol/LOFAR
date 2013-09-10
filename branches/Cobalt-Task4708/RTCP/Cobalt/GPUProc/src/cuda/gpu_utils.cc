@@ -268,9 +268,15 @@ namespace LOFAR
     CompileFlags defaultCompileFlags()
     {
       CompileFlags flags;
-      flags.insert("-o -"); // buggy on CUDA 5.0 and 5.5RC (TODO)
+      flags.insert("-o /dev/stdout");
       flags.insert("-ptx");
-      flags.insert("-use_fast_math"); // TODO: disable for some kernels?
+
+      // For now, keep optimisations the same to detect changes in
+      // output with reference.
+      flags.insert("-use_fast_math");
+      flags.insert("--restrict");
+      flags.insert("-O3");
+
       flags.insert(str(format("-I%s") % includePath()));
       return flags;
     }
@@ -385,9 +391,9 @@ namespace LOFAR
           infoLogSize = infoLog.size();
         }
         infoLog[infoLogSize - 1] = '\0';
-        cout << "Build info for '" << srcFilename 
+        LOG_DEBUG_STR( "Build info for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &infoLog[0] << endl;
+             << " ms):" << endl << &infoLog[0] );
 
         return module;
       } catch (gpu::CUDAException& exc) {
@@ -395,9 +401,9 @@ namespace LOFAR
           errorLogSize = errorLog.size();
         }
         errorLog[errorLogSize - 1] = '\0';
-        cerr << "Build errors for '" << srcFilename 
+        LOG_FATAL_STR( "Build errors for '" << srcFilename 
              << "' (build time: " << jitWallTime 
-             << " ms):" << endl << &errorLog[0] << endl;
+             << " ms):" << endl << &errorLog[0] );
         throw;
       }
     }

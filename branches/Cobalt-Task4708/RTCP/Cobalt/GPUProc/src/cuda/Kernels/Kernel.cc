@@ -22,10 +22,11 @@
 
 #include <ostream>
 #include <boost/format.hpp>
+#include <cuda_runtime.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
-
+#include <GPUProc/PerformanceCounter.h>
 using namespace std;
 
 namespace LOFAR
@@ -46,33 +47,51 @@ namespace LOFAR
       : 
       gpu::Function(function),
       event(stream.getContext()),
-      itsStream(stream)
+      itsStream(stream),
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {
+      }
+
+    void Kernel::enqueue(const gpu::Stream &queue,
+                         PerformanceCounter &counter) const
+    {
+      queue.recordEvent(counter.start);   
+      enqueue(queue);
+      queue.recordEvent(counter.stop);
     }
 
-    void Kernel::enqueue(const gpu::Stream &queue
-                         /*, PerformanceCounter &counter*/) const
+    void Kernel::enqueue(const gpu::Stream &queue) const
     {
-      // Unlike OpenCL, no need to check for 0-sized work. CUDA can handle it.
-      //if (globalWorkSize.x == 0)
-      //  return;
-
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
       assert(globalWorkSize.x % block.x == 0 &&
              globalWorkSize.y % block.y == 0 &&
              globalWorkSize.z % block.z == 0);
+
       gpu::Grid grid(globalWorkSize.x / block.x,
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
-      //queue.enqueueNDRangeKernel(*this, gpu::nullDim, globalWorkSize, localWorkSize, 0, &event);
+
+      ASSERTSTR(block.x * block.y * block.z
+                <= maxThreadsPerBlock,
+        "Requested dimensions "
+        << block.x << ", " << block.y << ", " << block.z
+        << " creates more than the " << maxThreadsPerBlock
+        << " supported threads/block" );
+      
       queue.launchKernel(*this, grid, block);
-//      counter.doOperation(event, nrOperations, nrBytesRead, nrBytesWritten);
     }
 
     void Kernel::enqueue() const
     {
       enqueue(itsStream);
+    }
+
+    void Kernel::enqueue(PerformanceCounter &counter) const
+    {
+      itsStream.recordEvent(counter.start);
+      enqueue(itsStream);
+      itsStream.recordEvent(counter.stop);
     }
   }
 }

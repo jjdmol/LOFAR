@@ -172,8 +172,8 @@ extern "C" {
                         (phiBegin.x + float(threadIdx.x) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
                         (phiBegin.y + float(threadIdx.x) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   float2 myPhiDelta = make_float2(
-                         float(blockDim.x) * deltaPhi.x * frequency.x,
-                         float(blockDim.x) * deltaPhi.y * frequency.y);
+                         float(blockDim.x) * deltaPhi.x * frequency,
+                         float(blockDim.x) * deltaPhi.y * frequency);
 #else
   float2 myPhiBegin = make_float2(
                           (phiBegin.x + float(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],

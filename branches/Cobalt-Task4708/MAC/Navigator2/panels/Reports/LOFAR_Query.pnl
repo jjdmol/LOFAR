@@ -96,6 +96,7 @@ void doAction(string aDP, string anAction) {
 void reload() {
   
   navFunct_clearGlobalLists(); 
+  saveQueryResultsButton.visible(false);
  
   // do all actions
   updatePD();
@@ -185,7 +186,10 @@ void rebuildTable(){
   dynClear(systemIds);
   mappingClear(results);
   
-  if (query == \"\" ) return;
+  if (query == \"\" ) {
+      if (resultTable.lineCount <= 0 ) saveQueryResultsButton.visible(false);
+      return;
+  }
   
   // check if REMOTE ALL is used in the query, queries normally don't accept REMOTE ALL,
   // so we need to set up a multitreaded answer cycle
@@ -241,7 +245,8 @@ synchronized addResult(string systemName, const dyn_dyn_anytype &values) {
 void fillTable() {
   
   resultTable.deleteAllLines();
-  
+  saveQueryResultsButton.visible(false);
+
   dyn_string DPs;
   dyn_string values;
   dyn_string DPsorted;
@@ -291,6 +296,8 @@ void fillTable() {
   string lenTxt=\"Datapoints found: \" + resultTable.lineCount();
   setValue(\"foundText\",\"text\",lenTxt );
   setValue(\"dateText\",\"text\",getCurrentTime());
+  if (lenTxt > 0 ) saveQueryResultsButton.visible(true);
+
 }
 
 void updatePD() {
@@ -315,6 +322,7 @@ void updatePD() {
     } else {
       selectionCombobox.selectedPos(1);
     }
+    saveQueryResultsButton.visible(false);
 }
   " 0
  2
@@ -328,7 +336,7 @@ LANG:1 0
 25 0
 "resultTable"
 ""
-1 20 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 20 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main(int row, string column)
 {
   rclick(row);
@@ -347,7 +355,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  18 278 982 639
+0  18 248 982 609
 "main()
 {
   resultTable.tableMode(TABLE_SELECT_BROWSE);
@@ -500,7 +508,7 @@ LANG:1 5 Query
 2 7
 "foundText"
 ""
-1 10 650 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 22 612 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -510,8 +518,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 10 650 106 663
-0 2 2 "0s" 0 0 0 192 0 0  10 650 1
+E E 0 1 1 2 1 E U  1 E 22 612 118 625
+0 2 2 "0s" 0 0 0 192 0 0  22 612 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0 1
@@ -782,7 +790,7 @@ LANG:1 8 QUERYING
 2 19
 "PRIMITIVE_TEXT3"
 ""
-1 190 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 192 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 E E E
@@ -792,8 +800,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 190 650 266 663
-0 2 2 "0s" 0 0 0 192 0 0  190 650 1
+E E 0 1 1 2 1 E U  1 E 192 612 268 625
+0 2 2 "0s" 0 0 0 192 0 0  192 612 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0 1
@@ -801,7 +809,7 @@ LANG:1 16 Last Query time:
 2 20
 "dateText"
 ""
-1 280 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 282 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 E E E
@@ -811,12 +819,79 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 280 650 313 663
-0 2 2 "0s" 0 0 0 192 0 0  280 650 1
+E E 0 1 1 2 1 E U  1 E 282 612 315 625
+0 2 2 "0s" 0 0 0 192 0 0  282 612 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0 1
 LANG:1 7 xxx:xxx
+13 22
+"saveQueryResultsButton"
+""
+1 22 632 E E E 1 E 0 E N "_ButtonText" E N "_Button" E E
+ E E
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 37 Save the query results to a text file
+
+0
+1
+LANG:1 32 MS Shell Dlg,8,-1,5,50,0,0,0,0,0
+0  20 630 144 656
+
+T 
+1
+LANG:1 18 save query results
+"main()
+{
+  int err,fcl;
+  file wf;
+  string dat=\"\";
+  dyn_errClass error;
+
+
+  // check if results have been found
+  if (resultTable.lineCount != 0) {
+    err = fileSelector(dat, savePath , true, \"*.txt\", false, \"MyId\");
+    if (err < 0) {
+      return;
+    }
+   
+    if (dat == \"\") return;
+        
+    file wf = fopen(dat, \"w+\");
+    error = getLastError();
+    if(dynlen(error) > 0) { 
+      writeError(error);
+      return;
+    }
+    dyn_anytype result;
+    for (int i=0; i< resultTable.lineCount; i++) {
+      result=resultTable.getLineN(i);
+      fprintf(wf,\"%s\\t%s\\n\",result[1],result[2]);
+    }    
+    
+    
+    fflush(wf);   
+    fclose(wf); 
+    
+    DebugN(dat);
+    savePath=dirName(dat);
+  }
+  
+}
+
+void writeError(dyn_errClass error) {
+  
+  errorDialog(error);
+}" 0
+ E E "main()
+{
+  this.visible(false);
+}" 0
+
 0
 LAYER, 1 
 1

@@ -46,11 +46,7 @@ namespace LOFAR
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
-      // TODO: Add sensing of hardware to allow usage of the 1024 limit of k10
-      // The TIME_PARALLEL_FACTOR depends on the size of the workload
-      // We cannot have more then 512 threads on a average hw solution
-      // We already asserted the itsParameters.nrTABs * itsParameters.nrChannelsPerSubband < 512
-      timeParallelFactor = 512 / (nrTABs * nrChannelsPerSubband);
+      timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
     }
 
 
@@ -60,16 +56,13 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction))
     {
-      ASSERT(params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0);
+      ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
-      ASSERT(params.nrChannelsPerSubband * params.nrTABs <= 512); // TODO This is a test for pre k10 hardware. We should increase this to 1024
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
       // TODO: params.nrTABs only works for one SAP
-      // TODO: Worksize larger the 512 are not supported yet.
-      //       From sm 2.5 we could increase this to 1024
       globalWorkSize = gpu::Grid(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
       localWorkSize = gpu::Block(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
 

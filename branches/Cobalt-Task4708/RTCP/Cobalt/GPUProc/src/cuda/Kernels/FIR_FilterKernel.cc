@@ -41,7 +41,8 @@ namespace LOFAR
       nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
-      nrPPFTaps(ps.nrPPFTaps())
+      nrPPFTaps(ps.nrPPFTaps()),
+      nrSubbands(1)
     {
     }
 
@@ -49,11 +50,14 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction)),
+      params(params),
+      historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.filterWeights);
+      setArg(3, buffers.historySamples);
 
       size_t maxNrThreads = 
         getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
@@ -90,6 +94,36 @@ namespace LOFAR
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),
                   firWeights.size());
       stream.writeBuffer(buffers.filterWeights, firWeights, true);
+
+      // start with all history samples flagged
+      for (size_t n = 0; n < historyFlags.num_elements(); ++n)
+        historyFlags.origin()[n].include(0, params.nrHistorySamples);
+    }
+
+    void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
+    {
+      setArg(4, subbandIdx);
+      Kernel::enqueue(itsStream, counter);
+    }
+
+    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
+      for (size_t stationIdx = 0; stationIdx < params.nrStations; ++stationIdx) {
+        // shift sample flags to the right to make room for the history flags
+        inputFlags[stationIdx] += params.nrHistorySamples;
+
+        // add the history flags.
+        inputFlags[stationIdx] |= historyFlags[subbandIdx][stationIdx];
+
+        // Save the new history flags for the next block.
+        // Note that the nrSamples is the number of samples
+        // WITHOUT history samples, but we've also just shifted everything
+        // by nrHistorySamples.
+        historyFlags[subbandIdx][stationIdx] =
+          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples);
+
+        // Shift the flags to index 0
+        historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
+      }
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -100,7 +134,7 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          (itsParameters.nrHistorySamples + itsParameters.nrSamplesPerSubband) *
+          itsParameters.nrSamplesPerSubband *
           itsParameters.nrStations * itsParameters.nrPolarizations * 
           itsParameters.nrBytesPerComplexSample;
       case FIR_FilterKernel::OUTPUT_DATA:
@@ -111,6 +145,11 @@ namespace LOFAR
         return 
           itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
           sizeof(float);
+      case FIR_FilterKernel::HISTORY_DATA:
+        return
+          itsParameters.nrSubbands *
+          itsParameters.nrHistorySamples * itsParameters.nrStations * 
+          itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -121,15 +160,20 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_TAPS"] = lexical_cast<string>(itsParameters.nrPPFTaps);
-
-      // NR_STABS is a contraction of NR_STATIONS (correlator) or NR_TABS
+      defs["NR_TAPS"] = 
+        lexical_cast<string>(itsParameters.nrPPFTaps);
+      // NR_STABS is a contraction of NR_STATIONS (correlator) and NR_TABS
       // (beamformer). The kernel deals with either quantity in the same way.
-      defs["NR_STABS"] = lexical_cast<string>(itsParameters.nrStations); // TODO: or use nrTABs
+      defs["NR_STABS"] = 
+        lexical_cast<string>(itsParameters.nrStations); // TODO: or use nrTABs
+      defs["NR_SUBBANDS"] = 
+        lexical_cast<string>(itsParameters.nrSubbands);
 
       return defs;
     }
   }
 }
+

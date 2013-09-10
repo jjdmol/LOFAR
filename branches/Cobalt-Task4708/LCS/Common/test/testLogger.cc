@@ -51,7 +51,6 @@ public:
 	}
 	
 private:
-	int		myIntVar;
 	ALLOC_TRACER_CONTEXT				// attach seperate trace logger to this class
 
 };

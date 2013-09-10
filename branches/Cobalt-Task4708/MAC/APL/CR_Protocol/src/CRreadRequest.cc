@@ -47,7 +47,7 @@ size_t CRreadRequest::getSize()
 
 size_t CRreadRequest::pack  (char* buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_pack(buffer, offset, stationList);	
 	MSH_pack(buffer, offset, rcuList);	
 	offset += readTime.pack((char*)(buffer)+offset);
@@ -58,7 +58,7 @@ size_t CRreadRequest::pack  (char* buffer) const
 
 size_t CRreadRequest::unpack(const char *buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_unpack(buffer, offset, stationList);	
 	MSH_unpack(buffer, offset, rcuList);	
 	offset += readTime.unpack((char*)(buffer)+offset);

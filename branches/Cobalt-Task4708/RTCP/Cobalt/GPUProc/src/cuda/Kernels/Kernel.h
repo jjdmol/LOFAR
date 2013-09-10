@@ -29,7 +29,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-//#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
@@ -67,8 +67,11 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const gpu::Stream &queue
-                   /*, PerformanceCounter &counter*/) const;
+      void enqueue(const gpu::Stream &queue) const;
+
+      void enqueue(const gpu::Stream &queue, PerformanceCounter &counter) const;
+
+      void enqueue(PerformanceCounter &counter) const;
 
       void enqueue() const;
 
@@ -78,6 +81,7 @@ namespace LOFAR
 
       gpu::Event event;
       gpu::Stream itsStream;
+      const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
