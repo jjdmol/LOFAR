@@ -45,6 +45,8 @@ namespace LOFAR
     {
     }
 
+    const size_t FIR_FilterKernel::Parameters::nrTaps = 16;
+
     size_t FIR_FilterKernel::Parameters::nrHistorySamples() const
     {
       return (nrTaps - 1) * nrChannelsPerSubband;
