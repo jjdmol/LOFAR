@@ -49,6 +49,10 @@ namespace LOFAR
         size_t nrHistorySamples;
         size_t nrPPFTaps;
 
+        // The number of stations or TABs to filter. The FIR filter will
+        // deal with either in the same way.
+        size_t nrSTABs;
+
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;

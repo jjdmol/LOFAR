@@ -245,7 +245,7 @@ namespace LOFAR
       FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
         FIR_FilterKernel::Parameters params(ps);
 
-        params.nrStations = ps.settings.beamFormer.maxNrTABsPerSAP();
+        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
 
         // define at least 16 channels to get the FIR_Filter.cu to compile, even
         // if we won't use it.
