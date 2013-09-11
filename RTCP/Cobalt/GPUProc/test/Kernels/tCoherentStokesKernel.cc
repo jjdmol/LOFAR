@@ -59,6 +59,12 @@ TEST_FIXTURE(TestFixture, MustThrow)
 int main()
 {
   INIT_LOGGER("tCoherentStokesKernel");
+  try {
+    gpu::Platform pf;
+  } catch (gpu::GPUException&) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 3;
+  }
   return UnitTest::RunAllTests() == 0 ? 0 : 1;
 }
 
