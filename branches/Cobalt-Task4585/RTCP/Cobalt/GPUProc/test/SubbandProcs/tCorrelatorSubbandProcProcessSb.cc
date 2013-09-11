@@ -65,17 +65,16 @@ int main() {
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), ps.settings.nrPolarisations,
-                          ps.settings.beamFormer.maxNrTABsPerSAP(), ps.nrHistorySamples() +
+                          ps.settings.beamFormer.maxNrTABsPerSAP(), 
                            ps.nrSamplesPerSubband(), ps.nrBytesPerComplexSample(), ctx);
   cout << "#st=" << ps.nrStations() << " #sampl/sb=" << ps.nrSamplesPerSubband() <<
-          " (skipping #histSampl=" << ps.nrHistorySamples() << ") #pol=" << NR_POLARIZATIONS <<
+          " #pol=" << NR_POLARIZATIONS <<
           " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
           " Total bytes=" << in.inputSamples.size() << endl;
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < ps.nrStations(); st++)
-    // skip ps.nrHistorySamples(), because no FIR
-    for (size_t i = ps.nrHistorySamples(); i < ps.nrHistorySamples() + ps.nrSamplesPerSubband(); i++)
+    for (size_t i = 0; i < ps.nrSamplesPerSubband(); i++)
       for (size_t pol = 0; pol < NR_POLARIZATIONS; pol++)
       {
         if (ps.nrBytesPerComplexSample() == 4) { // 16 bit mode

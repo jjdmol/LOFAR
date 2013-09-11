@@ -282,8 +282,6 @@ namespace LOFAR
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
-      settings.nrPPFTaps = 16;
-
       // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
@@ -1160,16 +1158,6 @@ namespace LOFAR
     unsigned Parset::nrSamplesPerChannel() const
     {
       return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
-    }
-
-    unsigned Parset::nrHistorySamples() const
-    {
-      return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
-    }
-
-    unsigned Parset::nrPPFTaps() const
-    {
-      return settings.nrPPFTaps;
     }
 
     unsigned Parset::nrChannelsPerSubband() const

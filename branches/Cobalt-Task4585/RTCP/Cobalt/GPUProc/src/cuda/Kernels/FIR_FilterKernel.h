@@ -46,8 +46,6 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
-        size_t nrHistorySamples;
-        size_t nrPPFTaps;
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.
@@ -56,6 +54,12 @@ namespace LOFAR
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
+
+        // The number of PPF filter taps.
+        static const size_t nrTaps = 16;
+
+        // The number of history samples used for each block
+        size_t nrHistorySamples() const;
       };
 
       enum BufferType

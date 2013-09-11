@@ -40,11 +40,14 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrHistorySamples(ps.nrHistorySamples()),
-      nrPPFTaps(ps.nrPPFTaps()),
       nrSTABs(nrStations), // default to filter station data
       nrSubbands(1)
     {
+    }
+
+    size_t FIR_FilterKernel::Parameters::nrHistorySamples() const
+    {
+      return (nrTaps - 1) * nrChannelsPerSubband;
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
@@ -75,10 +78,10 @@ namespace LOFAR
         params.nrPolarizations;
 
       nrOperations = 
-        nrSamples * params.nrSamplesPerChannel * params.nrPPFTaps * 2 * 2;
+        nrSamples * params.nrSamplesPerChannel * params.nrTaps * 2 * 2;
 
       nrBytesRead = 
-        nrSamples * (params.nrPPFTaps - 1 + params.nrSamplesPerChannel) * 
+        nrSamples * (params.nrTaps - 1 + params.nrSamplesPerChannel) * 
         params.nrBytesPerComplexSample;
 
       nrBytesWritten = 
@@ -87,7 +90,7 @@ namespace LOFAR
       // Note that these constant weights are now (unnecessarily) stored on the
       // device for every workqueue. A single copy per device could be used, but
       // first verify that the device platform still allows workqueue overlap.
-      FilterBank filterBank(true, params.nrPPFTaps, 
+      FilterBank filterBank(true, params.nrTaps, 
                             params.nrChannelsPerSubband, KAISER);
       filterBank.negateWeights();
 
@@ -98,7 +101,7 @@ namespace LOFAR
 
       // start with all history samples flagged
       for (size_t n = 0; n < historyFlags.num_elements(); ++n)
-        historyFlags.origin()[n].include(0, params.nrHistorySamples);
+        historyFlags.origin()[n].include(0, params.nrHistorySamples());
     }
 
     void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
@@ -110,7 +113,7 @@ namespace LOFAR
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
       for (size_t stationIdx = 0; stationIdx < params.nrSTABs; ++stationIdx) {
         // shift sample flags to the right to make room for the history flags
-        inputFlags[stationIdx] += params.nrHistorySamples;
+        inputFlags[stationIdx] += params.nrHistorySamples();
 
         // add the history flags.
         inputFlags[stationIdx] |= historyFlags[subbandIdx][stationIdx];
@@ -120,7 +123,7 @@ namespace LOFAR
         // WITHOUT history samples, but we've also just shifted everything
         // by nrHistorySamples.
         historyFlags[subbandIdx][stationIdx] =
-          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples);
+          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples());
 
         // Shift the flags to index 0
         historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
@@ -144,12 +147,12 @@ namespace LOFAR
           itsParameters.nrPolarizations * sizeof(std::complex<float>);
       case FIR_FilterKernel::FILTER_WEIGHTS:
         return 
-          itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
+          itsParameters.nrChannelsPerSubband * itsParameters.nrTaps *
           sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
         return
           itsParameters.nrSubbands *
-          itsParameters.nrHistorySamples * itsParameters.nrSTABs * 
+          itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
           itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -165,7 +168,7 @@ namespace LOFAR
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
       defs["NR_TAPS"] = 
-        lexical_cast<string>(itsParameters.nrPPFTaps);
+        lexical_cast<string>(itsParameters.nrTaps);
       defs["NR_STABS"] = 
         lexical_cast<string>(itsParameters.nrSTABs);
       defs["NR_SUBBANDS"] = 
