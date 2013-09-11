@@ -508,6 +508,10 @@ namespace LOFAR
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
 
+          // unused until we support rings
+          (void)nrRings;
+          (void)ringWidth;
+
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
           sap.TABs.resize(nrTABs);

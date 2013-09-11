@@ -47,9 +47,9 @@ Observation.bandFilter=HBA_110_190
 #Observation.Dataslots.CS001LBA.DataslotList=[0,1]
 
 # Default for Observation.Dataslots.STATION.RSPBoardList
-#Observation.rspBoardList=[]
+Observation.rspBoardList=[3*0]
 # Default for Observation.Dataslots.STATION.DataslotList
-#Observation.rspSlotList=[]
+Observation.rspSlotList=[0..2]
 
 
 # ===============================

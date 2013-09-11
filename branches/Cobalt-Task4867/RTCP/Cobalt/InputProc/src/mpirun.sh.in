@@ -97,7 +97,26 @@ fi
 parse_options "$@"
 set_${MPI_FLAVOUR}_options
 
-COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS}"
+# Construct the command to call.
+#
+# &: Execute in the background to be able to propagate signals.
+# Put the & here, and not after eval, because we don't want
+# to background the 'eval' command itself!
+COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS} &"
 
 echo "Executing: $COMMAND"
+
 eval $COMMAND
+PID=$!
+
+# Propagate SIGTERM
+trap "echo mpirun.sh: killing $PID; kill $PID" SIGTERM SIGINT SIGQUIT SIGHUP
+
+# Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
+# receives a signal.
+#
+# Return code:
+#   signal:    >128
+#   no signal: return code of $COMMAND
+wait $PID
+

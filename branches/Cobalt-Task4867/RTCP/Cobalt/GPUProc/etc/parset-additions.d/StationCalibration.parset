@@ -1,3 +1,5 @@
+# Calibration settings for the LOFAR stations,
+# including positions and clock offsets.
 #
 # Fibre length corrections for core stations using
 # a single clock. 

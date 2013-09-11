@@ -160,7 +160,7 @@ namespace LOFAR
       std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
 
       // beam former
-      gpu::DeviceMemory devBeamFormerWeights;
+      gpu::DeviceMemory devBeamFormerDelays;
       BeamFormerKernel::Buffers beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 

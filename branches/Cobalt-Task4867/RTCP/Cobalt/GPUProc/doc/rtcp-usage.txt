@@ -1,3 +1,25 @@
+===========================
+Installation
+===========================
+
+To build and install Cobalt:
+
+  # check out code from svn
+  ROOT=`pwd`
+  svn co -N https://svn.astron.nl/LOFAR/trunk
+  cd $ROOT/trunk
+  svn up RTCP CMake LCS
+
+  # configure Cobalt
+  mkdir $ROOT/build
+  cd $ROOT/build
+  ln -s $ROOT/trunk LOFAR
+  cmake LOFAR -DBUILD_PACKAGES=GPUProc
+
+  # build and install
+  make -j 32 install
+
+=============================
 Running an observation
 =============================
 
@@ -7,16 +29,26 @@ The Cobalt software is started by calling the `rtcp' executable with the parset.
 
    mpirun.sh -H `mpi_node_list -n $PARSET` rtcp $PARSET
 
-
 The mpi_node_list utility extracts the list of hosts that rtcp should run on. More specifically, it extracts the Cobalt.Hardware.Node[x].host keys and joins them with commas. Without MPI, one instance runs everything:
 
    rtcp $PARSET
 
-The sections below will describe:
+Command line parameters include:
+  -p            Enable profiling:
+                    - Sequential kernel execution
+                    - One SubbandProc/GPU
+                    - Collect performance statistics
+
+===========================
+Configuration
+===========================
+
+The sections below will describe key parset parameters that configure the input/output of Cobalt:
 
   * The mapping of stations to antenna fields
   * The selection of Cobalt hardware to use
   * The configuration of each antenna field
+  * The configuration of output
 
 The Station Set
 ===========================
@@ -189,3 +221,38 @@ The following keys can be configured to tune each antenna field or station:
     Unit:    s
 
     Fixed delay offset for either polarisation (frequency dependent).
+
+The Output Configuration
+===========================
+
+The output is separated per data product. We output the following products:
+  - Beamformed
+  - Correlated
+
+If we take Correlated as an example, the following keys are relevant:
+
+  Observation.DataProducts.Output_Correlated.filenames
+    Type:    list of string
+    Default: []
+    
+    The filename for each data product.
+
+  Observation.DataProducts.Output_Correlated.locations
+    Type:    list of string
+    Default: []
+    
+    The location for each data product. Format:
+      host:directory
+
+    If 'host' is empty:
+      * the data is written to disk directly (not sent to OutputProc)
+      * no header is written
+
+    This means that an empty host is different from 'localhost'!
+
+Note that both lists need enough entries, that is, the same or more than
+the number of files produced in the observation for the given data product:
+
+  1. Beamformed: each TAB has its own files, one per Stokes.
+  2. Correlated: each subband has its own file.
+
