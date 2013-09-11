@@ -91,9 +91,9 @@ inline __device__ float2 operator * (float a, float2 b)
 
 
 
-// to distinguish complex float from other uses of float2
+// to distinguish complex float/double from other uses of float2/double2
 typedef float2 fcomplex;
-//typedef float4 fcomplex2;
+typedef double2 dcomplex;
 
 typedef char2  char_complex;
 typedef short2 short_complex;

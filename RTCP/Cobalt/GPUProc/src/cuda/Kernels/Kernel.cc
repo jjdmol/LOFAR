@@ -27,6 +27,8 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <Common/LofarLogger.h>
+
 using namespace std;
 
 namespace LOFAR
@@ -50,7 +52,13 @@ namespace LOFAR
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {
-      }
+      LOG_INFO_STR(
+        "Function " << function.name() << ":" << 
+        "\n  max. threads per block: " << 
+        function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
+        "\n  nr. of registers used : " <<
+        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+    }
 
     void Kernel::enqueue(const gpu::Stream &queue,
                          PerformanceCounter &counter) const
