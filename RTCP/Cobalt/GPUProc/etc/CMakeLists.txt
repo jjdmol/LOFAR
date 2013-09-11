@@ -1,4 +1,9 @@
 # $Id: CMakeLists.txt 25878 2013-08-01 02:08:38Z amesfoort $
 
 
-install(FILES station_map.parset DESTINATION etc)
+install(FILES
+  parset-additions.d/CobaltHardwareMap.parset
+  parset-additions.d/StationCalibration.parset
+  parset-additions.d/StationStreams.parset
+  DESTINATION etc/parset-additions.d)
+

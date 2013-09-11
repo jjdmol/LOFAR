@@ -16,6 +16,7 @@ configure_file(
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tfpequals tfpequals.cc)
+lofar_add_test(tstartBGL DEPENDS rtcp)
 
 # cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
 lofar_add_executable(cmpfloat cmpfloat.cc)
