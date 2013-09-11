@@ -43,7 +43,6 @@ function error {
 # Add static keys
 cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
 
-
 # Start observation in the background
 runObservation.sh "$PARSET" > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 </dev/null &
 PID=$!
