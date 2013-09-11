@@ -89,7 +89,6 @@ namespace LOFAR
       inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
-      // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
       devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
@@ -98,6 +97,7 @@ namespace LOFAR
 
       // final FFT: A -> A
       finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
+      
 
       // coherentStokes: 1ch: A -> B, Nch: B -> A
       coherentStokesBuffers(
@@ -106,7 +106,7 @@ namespace LOFAR
       coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
 
       // result buffer
-      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
+      devResult(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY ? coherentStokesBuffers.input : coherentStokesBuffers.output)
     {
       // initialize history data
       devFilterHistoryData.set(0);
@@ -226,11 +226,13 @@ namespace LOFAR
       inverseFFT.enqueue(queue, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue( counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
+        firFilterKernel->enqueue(counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
         finalFFT.enqueue(queue, counters.finalFFT);
       }
 
-      coherentStokesKernel->enqueue(counters.coherentStokes);
+      if (ps.settings.beamFormer.coherentSettings.type != STOKES_XXYY) {
+        coherentStokesKernel->enqueue(counters.coherentStokes);
+      }
 
       // TODO: Propagate flags
 
