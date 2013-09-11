@@ -45,7 +45,7 @@ namespace LOFAR
     {
     }
 
-    const size_t FIR_FilterKernel::Parameters::nrTaps = 16;
+    const size_t FIR_FilterKernel::Parameters::nrTaps;
 
     size_t FIR_FilterKernel::Parameters::nrHistorySamples() const
     {

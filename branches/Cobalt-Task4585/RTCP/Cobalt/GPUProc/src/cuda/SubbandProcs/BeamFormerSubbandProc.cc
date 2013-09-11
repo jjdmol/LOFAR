@@ -262,7 +262,7 @@ namespace LOFAR
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
 
-        if (ps.settings.bamFormer.coherentSettings.type != STOKES_XXYY) {
+        if (ps.settings.beamFormer.coherentSettings.type != STOKES_XXYY) {
           counters.coherentStokes.logTime();
         }
 
