@@ -156,7 +156,7 @@ c_ei_status_ado_offset       =  c_ei_status_rsu_offset       +                 c
 c_ei_status_ado_size         =  8
 c_ei_status_rad_offset       =  c_ei_status_ado_offset       + c_nof_blp     * c_ei_status_ado_size
 c_ei_status_rad_size         =  4  # For each link
-c_ei_status_rcuh_test_offset =  c_ei_status_rad_offset       + c_rad_nof_rx_status * c_ei_status_rad_size]
+c_ei_status_rcuh_test_offset =  c_ei_status_rad_offset       + c_rad_nof_rx_status * c_ei_status_rad_size
 c_ei_status_rcuh_test_size   =  4  # For each AP
 c_ei_status_rsr_offset       =  0  # = c_ei_status_rsp_tvolt_offset
 c_ei_status_rsr_size         =  c_ei_status_rcuh_test_offset + c_nof_blp     * c_ei_status_rcuh_test_size
