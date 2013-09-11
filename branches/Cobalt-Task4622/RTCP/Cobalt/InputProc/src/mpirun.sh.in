@@ -108,10 +108,9 @@ echo "Executing: $COMMAND"
 
 eval $COMMAND
 PID=$!
-#echo "Command PID is $PID"
 
 # Propagate SIGTERM
-trap "echo Killing $PID; kill $PID" SIGTERM
+trap "echo mpirun.sh: killing $PID; kill $PID" SIGTERM
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.

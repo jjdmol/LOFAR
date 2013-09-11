@@ -43,14 +43,9 @@ function error {
 # Add static keys
 cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
 
-# Determine start parameters
-HOSTS=`mpi_node_list -n $PARSET`
-echo "Hosts: $HOSTS"
 
 # Start observation in the background
-COMMAND="nohup mpirun.sh -H $HOSTS rtcp $PARSET > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 &"
-echo "Running $COMMAND"
-eval $COMMAND
+runObservation.sh "$PARSET" > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
 
