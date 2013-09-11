@@ -246,6 +246,7 @@ namespace LOFAR
       {
         // assure that the queue is done so all events are fished
         queue.synchronize();
+
         // Update the counters
         if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
         {
@@ -260,7 +261,10 @@ namespace LOFAR
         counters.beamformer.logTime();
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
-        counters.coherentStokes.logTime();
+
+        if (ps.settings.bamFormer.coherentSettings.type != STOKES_XXYY) {
+          counters.coherentStokes.logTime();
+        }
 
         counters.samples.logTime();
         counters.visibilities.logTime();
