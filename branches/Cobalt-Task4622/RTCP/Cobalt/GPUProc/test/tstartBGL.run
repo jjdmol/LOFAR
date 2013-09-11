@@ -46,6 +46,14 @@ cp $srcdir/../src/Station/mpi_node_list.log_prop . || error "Could not copy mpi_
 cp $srcdir/../src/rtcp.log_prop . || error "Could not copy rtcp.log_prop"
 
 echo "***************************"
+echo "Test 0: check environment"
+echo "***************************"
+which startBGL.sh || error "Cannot execute startBGL.sh"
+which stopBGL.sh  || error "Cannot execute stopBGL.sh"
+which mpirun.sh   || error "Cannot execute mpirun.sh"
+which rtcp        || error "Cannot execute rtcp"
+
+echo "***************************"
 echo "Test 1: no parameters"
 echo "        (expects failure)"
 echo "***************************"
