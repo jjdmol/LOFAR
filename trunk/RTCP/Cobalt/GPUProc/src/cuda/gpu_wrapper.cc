@@ -696,6 +696,11 @@ namespace LOFAR
                                         name.c_str()));
       }
 
+      std::string Function::name() const
+      {
+        return _name;
+      }
+
       void Function::setArg(size_t index, const DeviceMemory &mem)
       {
         doSetArg(index, &mem._impl->_ptr);

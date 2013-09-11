@@ -53,14 +53,14 @@ TEST_FIXTURE(TestFixture, OutputData)
 
 TEST_FIXTURE(TestFixture, Delays)
 {
-  CHECK_EQUAL(size_t(8),
+  CHECK_EQUAL(size_t(16),
               factory.bufferSize(
                 DelayAndBandPassKernel::DELAYS));
 }
 
 TEST_FIXTURE(TestFixture, PhaseOffsets)
 {
-  CHECK_EQUAL(size_t(8),
+  CHECK_EQUAL(size_t(16),
               factory.bufferSize(
                 DelayAndBandPassKernel::PHASE_OFFSETS));
 }

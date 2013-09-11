@@ -75,13 +75,13 @@ namespace LOFAR
       struct BlockID blockID;
 
       //!< Whole sample delays at the start of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+      MultiDimArrayHostBuffer<double, 3> delaysAtBegin;
 
       //!< Whole sample delays at the end of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+      MultiDimArrayHostBuffer<double, 3> delaysAfterEnd;
 
       //!< Remainder of delays
-      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
+      MultiDimArrayHostBuffer<double, 2> phaseOffsets;
 
       //!< Delays for TABs (aka pencil beams) after station beam correction
       MultiDimArrayHostBuffer<float, 3> tabDelays;
