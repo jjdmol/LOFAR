@@ -563,6 +563,12 @@ int test()
 int main()
 {
   INIT_LOGGER("tFIR_Filter");
+  try {
+    gpu::Platform pf;
+  } catch (gpu::GPUException&) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 3;
+  }
   return test() > 0;
 }
 
