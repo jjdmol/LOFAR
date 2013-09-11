@@ -1159,7 +1159,7 @@ namespace LOFAR
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return settings.correlator.nrSamplesPerChannel;
+      return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
     }
 
     unsigned Parset::nrHistorySamples() const
@@ -1174,7 +1174,7 @@ namespace LOFAR
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return settings.correlator.nrChannels;
+      return settings.correlator.enabled ? settings.correlator.nrChannels : 0;
     }
 
     size_t Parset::nrSubbands() const
