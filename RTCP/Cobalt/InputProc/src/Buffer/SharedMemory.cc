@@ -167,6 +167,8 @@ namespace LOFAR
     bool SharedMemoryArena::open( int open_flags, int mmap_flags, bool timeout )
     {
 #ifdef FAKE_SHARED_MEM
+      (void)mmap_flags;
+
       //LOG_WARN_STR("Faking shared memory!");
 
       ScopedLock sl(shmMutex);
@@ -257,7 +259,11 @@ namespace LOFAR
 
     void SharedMemoryArena::remove( key_t key, bool quiet )
     {
-#ifndef FAKE_SHARED_MEM
+      (void)quiet;
+
+#ifdef FAKE_SHARED_MEM
+      (void)key;
+#else
       string keystr = str(format("/%x") % key);
 
       shm_unlink(keystr.c_str());
