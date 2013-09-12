@@ -92,10 +92,10 @@ function parse_logs
   mklofarroot $OUTDIR
 
   # run correlator -- without profiling
-  runObservation.sh -F -l 4 $PARSET > performance_normal.txt 2>&1 &&
+  runObservation.sh -F -l 4 $PARSET > performance_normal.txt 2>&1 || error "Observation failed"
 
   # compare output
-  if [ "x" != "x$REFDIR" ]
+  if [ -n "$REFDIR" ]
   then
     # create script to accept output (ie. copy it to the source dir for check in)
     echo "#!/bin/bash
@@ -113,17 +113,17 @@ function parse_logs
 
     for f in *.MS
     do
-      $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || exit 1
+      $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference"
     done
-  fi &&
+  fi
 
   # run correlator -- with profiling
-  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 &&
+  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
 
   # check logs
-  parse_logs performance_normal.txt performance_profiled.txt && # Remove this && and remove the last line for output
+  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
   # toss output if everything is ok
-  (cd $testdir && rm -rf $OUTDIR) # Comment this line for output
+  rm -rf $testdir/$OUTDIR # Comment this line for output
 ) || exit 1
 
