@@ -1,0 +1,40 @@
+#
+# Configuration of the Calibration Server
+#
+
+#
+# Define dimensions of the ACC array
+#
+CalServer.requestPoolSize=4
+CalServer.firstSubband=1
+CalServer.lastSubband=511
+
+#
+# setup values for the Baseline Restriction
+CalServer.relativeBRinWaves = 4
+CalServer.maxAbsBRinMeters = 10
+
+#
+# For testing purposes, read ACC from file
+#
+# Set ACCTestEnable to 1 to enable reading from file ACCTestFile
+# If ACCTestEnable is set to 0 then the ACC is collected from the RSP hardware.
+# If extension is .bin then read file as binary. Extension .txt reads file as Blitz array.
+CalServer.ACCTestEnable=0
+CalServer.ACCTestFile=ACC.txt
+
+#
+# Write ACC's to file for debugging?
+CalServer.WriteACCToFile=0
+
+#
+# Write Gains to file for debugging?
+CalServer.WriteGainsToFile=0
+
+#
+# For testing purposes it is possible to not run the calibration algorithm
+# or not run the ACM collection. This will result in zero weights being sent
+# to clients.
+CalServer.enableCollection  = 1
+CalServer.enableCalibration = 1
+
