@@ -191,7 +191,7 @@ then
     echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
   fi
 else
-  echo "Not communicating back to OnlineControl
+  echo "Not communicating back to OnlineControl"
 fi
 
 # Our exit code is that of the observation
