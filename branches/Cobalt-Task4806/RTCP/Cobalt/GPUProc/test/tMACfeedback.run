@@ -5,7 +5,6 @@ PARSET=$PWD/tMACfeedback.in_parset
 . $srcdir/testFuncs.sh
 
 # Create and use LOFARROOT environment
-ls
 mklofarroot tMACfeedback_tmp.lofarroot
 
 # Add the connection information for this test
@@ -17,7 +16,7 @@ MockOnlineControl.sh $PARSET &
 ONLINECONTROL_PID=$!
 
 # Run the observation
-runObservation.sh $PARSET
+runObservation.sh -l 1 $PARSET
 OBSRESULT=$?
 
 # Wait for OnlineControl to finish

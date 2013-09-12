@@ -58,7 +58,6 @@ fi
 
 echo "Testing $PARSET"
 
-RUNDIR=`pwd`
 OUTDIR=`basename "${PARSET%.parset}.output"`
 
 function parse_logs
@@ -89,19 +88,11 @@ function parse_logs
 }
 
 (
-  # create output dir
-  mkdir -p $OUTDIR &&
-  cd $OUTDIR &&
-
-  # enable debugging
-  echo "Global 20" >> rtcp.debug &&
-  cp $srcdir/../src/rtcp.log_prop . && # Get correct log4cplus output format
-
-  # be able to find the GPU kernels
-  export LOFARROOT=$srcdir/.. &&
+  # Create fake LOFARROOT environment
+  mklofarroot $OUTDIR
 
   # run correlator -- without profiling
-  $RUNDIR/runrtcp.sh $PARSET > performance_normal.txt 2>&1 &&
+  runObservation.sh -F -l 4 $PARSET > performance_normal.txt 2>&1 &&
 
   # compare output
   if [ "x" != "x$REFDIR" ]
@@ -122,17 +113,17 @@ function parse_logs
 
     for f in *.MS
     do
-      $RUNDIR/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || exit 1
+      $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || exit 1
     done
   fi &&
 
   # run correlator -- with profiling
-  $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
+  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 &&
 
   # check logs
   parse_logs performance_normal.txt performance_profiled.txt && # Remove this && and remove the last line for output
 
   # toss output if everything is ok
-  (cd $RUNDIR && rm -rf $OUTDIR) # Comment this line for output
+  (cd $testdir && rm -rf $OUTDIR) # Comment this line for output
 ) || exit 1
 
