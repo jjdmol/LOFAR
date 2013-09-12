@@ -16,7 +16,10 @@ cat $filenameNow >> $filenameHistory
 
 # Add test results too PVSS and make bad_rcu_file
 #updatePVSS.py -N=5,50,1 -J=5,50,2 -reset -S=20 -E
-updatePVSS.py -N=5,50,3 -J=5,50,3 -E -S=10 # new settings by Wilfred, 9-7-2013
+
+
+#UNCOMMENT NEXT LINE WHEN PVSS UPDATE MUST BE ENABLED AGAIN
+#updatePVSS.py -N=5,50,3 -J=5,50,3 -E -S=10 # new settings by Wilfred, 9-7-2013
 
 # Make old station log files
 makeStationLogFile.py
