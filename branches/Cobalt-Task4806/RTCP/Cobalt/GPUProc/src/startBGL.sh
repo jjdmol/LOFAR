@@ -40,8 +40,8 @@ function error {
 [ -n "$OBSID" ] || error "No observation ID provided on the command line"
 [ -n "$PARSET_MAC" ] || error "No parset provided on the command line"
 
-# Add static keys
-cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
+# Add static keys ($PARSET_MAC is last, to allow any key to be overridden in tests)
+cat $LOFARROOT/etc/parset-additions.d/*.parset $PARSET_MAC > $PARSET || error "Could not create parset $PARSET"
 
 # Start observation in the background
 runObservation.sh "$PARSET" > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 </dev/null &
