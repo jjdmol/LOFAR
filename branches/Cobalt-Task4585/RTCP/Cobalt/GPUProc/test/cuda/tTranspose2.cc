@@ -47,7 +47,7 @@ unsigned NR_POLARIZATIONS = 2;
 
 Exception::TerminateHandler t(Exception::terminate);
 
-void runTest( Stream &stream )
+void runTest( Context &ctx, Stream &stream )
 {
   Parset ps;
   ps.updateSettings();
@@ -64,7 +64,7 @@ void runTest( Stream &stream )
   MultiDimArrayHostBuffer<fcomplex, 4> hInput(boost::extents[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS], ctx);
 
   for (size_t i = 0; i < hInput.num_elements(); ++i)
-    hInput.origin()[i] = i;
+    hInput.origin()[i] = fcomplex(2 * i, 2 * i + 1);
 
   // Define output
   DeviceMemory dOutput(ctx, factory.bufferSize(BeamFormerTransposeKernel::OUTPUT_DATA));
@@ -109,7 +109,7 @@ int main()
   Stream stream(ctx);
 
   // Run the test
-  runTest(stream);
+  runTest(ctx, stream);
 
   return 0;
 }
