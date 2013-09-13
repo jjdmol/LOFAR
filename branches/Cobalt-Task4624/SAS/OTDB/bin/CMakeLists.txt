@@ -1,7 +1,6 @@
 # $Id$
 
 install (PROGRAMS
-  database.py
   copyTree.py
   makeDefaultTemplates.py
   revertDefaultTemplates.py
