@@ -59,38 +59,38 @@ namespace LOFAR
       counters(context),
       prevBlock(-1),
       prevSAP(-1),
-      devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
-                        factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
-               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::DELAYS),
-               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
+      devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter->bufferSize(FIR_FilterKernel::INPUT_DATA),
+                        factories.correlator->bufferSize(CorrelatorKernel::INPUT_DATA)),
+               factories.delayAndBandPass->bufferSize(DelayAndBandPassKernel::DELAYS),
+               factories.delayAndBandPass->bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
       devFilteredData(context,
-                      std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
-                               factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))),
+                      std::max(factories.delayAndBandPass->bufferSize(DelayAndBandPassKernel::INPUT_DATA),
+                               factories.correlator->bufferSize(CorrelatorKernel::OUTPUT_DATA))),
 
       // FIR filter
-      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      devFilterWeights(context, factories.firFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      devFilterHistoryData(context, factories.firFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights, devFilterHistoryData),
-      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
+      firFilterKernel(factories.firFilter->create(queue, firFilterBuffers)),
 
       // FFT
       fftKernel(ps, context, devFilteredData),
 
       // Delay and Bandpass
-      devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      devBandPassCorrectionWeights(context, factories.delayAndBandPass->bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
       delayAndBandPassBuffers(devFilteredData,
                               devInput.inputSamples,
                               devInput.delaysAtBegin, devInput.delaysAfterEnd,
                               devInput.phaseOffsets,
                               devBandPassCorrectionWeights),
-      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
+      delayAndBandPassKernel(factories.delayAndBandPass->create(queue, delayAndBandPassBuffers)),
 
       // Correlator
       //correlatorBuffers(devInput.inputSamples, devFilteredData),
       correlatorBuffers(devInput.inputSamples,
                         devFilteredData),
-      correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
+      correlatorKernel(factories.correlator->create(queue, correlatorBuffers))
     {
       // initialize history data to zero
       devFilterHistoryData.set(0);
