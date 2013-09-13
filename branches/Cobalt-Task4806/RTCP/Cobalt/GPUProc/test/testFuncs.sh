@@ -48,7 +48,7 @@ function mklofarroot {
   cp $srcdir/../src/rtcp.log_prop . || error "Could not copy rtcp.log_prop"
 
   # Be able to find all binaries through $PATH
-  export PATH=$LOFARROOT/bin:$srcdir/../src:$srcdir:$PATH
+  export PATH=$LOFARROOT/bin:$srcdir/../src:$srcdir/../src/scripts:$srcdir:$PATH
   echo "PATH=$PATH"
 }
 
