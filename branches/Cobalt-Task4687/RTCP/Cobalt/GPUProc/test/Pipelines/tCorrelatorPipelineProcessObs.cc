@@ -36,31 +36,11 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
-int main(int argc, char *argv[]) {
+int main(int, char **) {
   INIT_LOGGER("tCorrelatorPipelineProcessObs");
 
   omp_set_nested(true);
   OMPThread::init();
-
-  if (setenv("DISPLAY", ":0", 1) < 0)
-  {
-    perror("error setting DISPLAY");
-    exit(1);
-  }
-
-  int rank = 0;
-  int nrHosts = 1;
-#ifdef HAVE_MPI
-  // Initialize and query MPI
-  int mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init failed" << endl;
-    exit(1);
-  }
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
 
   try {
     gpu::Platform pf;
@@ -98,10 +78,6 @@ int main(int argc, char *argv[]) {
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
   CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
-
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
 
   return 0;
 }
