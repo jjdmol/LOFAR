@@ -107,13 +107,17 @@ function parse_logs
 
     # Generally (tCorrelate_*), the first 5 decimals are ok; occasionally, the 5th is off.
     # For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
-    # Taking 32*..., we still get a few dozen miscomparisons, so resort to:
-    eps_factor=128.0
-    EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
-
-    for f in *.MS
+    # Taking 32*..., we still get a few dozen miscomparisons, so resort to 64.0
+    #
+    # Try bigger epsilons as well to see how big the error actually is.
+    for eps_factor in 1024.0 512.0 256.0 128.0
     do
-      $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference"
+      EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
+
+      for f in *.MS
+      do
+        $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
+      done
     done
   fi
 
