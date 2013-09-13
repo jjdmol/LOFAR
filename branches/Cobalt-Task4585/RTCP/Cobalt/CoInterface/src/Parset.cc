@@ -481,11 +481,7 @@ namespace LOFAR
           // Obtain settings of selected stokes
           set->type = stokesType(getString(prefix + ".which", "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
-          if (set->nrChannels == 0) {
-            // apply default
-            set->nrChannels = settings.correlator.nrChannels;
-          }
+          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
           set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
           set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
           if (set->nrSubbandsPerFile == 0) {
