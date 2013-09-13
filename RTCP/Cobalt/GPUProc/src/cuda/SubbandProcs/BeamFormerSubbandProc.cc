@@ -46,11 +46,11 @@ namespace LOFAR
       // NOTE: Make sure the history samples are dealt with properly until the
       // FIR, which the beam former does in a later stage!
       devInput(std::max(
-                 factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
-                 factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)
+                 factories.intToFloat->bufferSize(IntToFloatKernel::INPUT_DATA),
+                 factories.beamFormer->bufferSize(BeamFormerKernel::OUTPUT_DATA)
                ),
-               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::DELAYS),
-               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
+               factories.delayCompensation->bufferSize(DelayAndBandPassKernel::DELAYS),
+               factories.delayCompensation->bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
       devA(devInput.inputSamples),
       devB(context, devA.size()),
@@ -58,32 +58,32 @@ namespace LOFAR
 
       // intToFloat: input -> B
       intToFloatBuffers(devInput.inputSamples, devB),
-      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
+      intToFloatKernel(factories.intToFloat->create(queue, intToFloatBuffers)),
 
       // FFT: B -> B
       firstFFT(context, DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS, true, devB),
 
       // delayComp: B -> A
       delayCompensationBuffers(devB, devA, devInput.delaysAtBegin, devInput.delaysAfterEnd, devInput.phaseOffsets, devNull),
-      delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
+      delayCompensationKernel(factories.delayCompensation->create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
       secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
 
       // bandPass: A -> B
-      devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      devBandPassCorrectionWeights(context, factories.correctBandPass->bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
       correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
-      correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
+      correctBandPassKernel(factories.correctBandPass->create(queue, correctBandPassBuffers)),
 
       // beamForm: B -> A
       // TODO: support >1 SAP
-      devBeamFormerDelays(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
+      devBeamFormerDelays(context, factories.beamFormer->bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
       beamFormerBuffers(devB, devA, devBeamFormerDelays),
-      beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
+      beamFormerKernel(factories.beamFormer->create(queue, beamFormerBuffers)),
 
       // transpose after beamforming: A -> B
       transposeBuffers(devA, devB),
-      transposeKernel(factories.transpose.create(queue, transposeBuffers)),
+      transposeKernel(factories.transpose->create(queue, transposeBuffers)),
 
       // inverse FFT: B -> B
       inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
@@ -91,10 +91,10 @@ namespace LOFAR
       // FIR filter: B -> A
       // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
-      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      devFilterWeights(context, factories.firFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      devFilterHistoryData(context, factories.firFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
-      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
+      firFilterKernel(factories.firFilter->create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
       finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
@@ -103,7 +103,7 @@ namespace LOFAR
       coherentStokesBuffers(
           ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB,
           ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
-      coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
+      coherentStokesKernel(factories.coherentStokes->create(queue, coherentStokesBuffers)),
 
       // result buffer
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
