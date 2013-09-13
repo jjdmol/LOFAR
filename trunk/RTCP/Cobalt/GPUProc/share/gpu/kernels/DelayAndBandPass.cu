@@ -140,9 +140,11 @@ extern "C" {
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
 #endif
 
-#if NR_CHANNELS > 1 || defined DO_TRANSPOSE
+#if defined BANDPASS_CORRECTION
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
+#endif
 
+#if NR_CHANNELS > 1
   unsigned major       = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
   unsigned minor       = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
   unsigned channelBase = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
