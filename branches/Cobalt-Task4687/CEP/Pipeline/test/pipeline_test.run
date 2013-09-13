@@ -1,0 +1,20 @@
+#!/bin/sh
+
+#add correct path for lofarPipe python files
+#**WORKAROUND** for incorrect path setting in testframework code
+# For standalone unittest the path should only contain the code to be tested and
+# the testframework containing fake externals
+
+#run the actual python script performing the tests
+# Run all test collected in the current directory (including possible self tests!)
+
+PYTHONPATH=${srcdir}/test_framework/fixture:${PYTHONPATH}
+export PYTHONPATH
+
+python ${srcdir}/test_framework/unittest_runner.py -x results.xml -p ${srcdir}
+
+if [ $? -ne 0 ]; then
+  return 1
+else
+  return 0
+fi
