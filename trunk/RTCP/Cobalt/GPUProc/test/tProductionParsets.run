@@ -15,7 +15,8 @@
 # Create and use LOFARROOT environment
 mklofarroot tMACfeedback_tmp.lofarroot
 
-for PARSET in $testdir/tProductionParsets.in_parsets/*
+for PARSET in $srcdir/../etc/default.parset \
+              $testdir/tProductionParsets.in_parsets/*
 do
   echo "****** Testing parset `basename "$PARSET"` ******"
 
