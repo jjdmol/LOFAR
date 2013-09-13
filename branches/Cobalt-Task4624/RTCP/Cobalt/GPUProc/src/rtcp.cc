@@ -54,6 +54,9 @@
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
 
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <APL/APLCommon/ControllerDefines.h>
+
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
@@ -66,6 +69,7 @@
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
+using namespace LOFAR::APLCommon;
 using namespace std;
 using boost::format;
 
@@ -203,6 +207,10 @@ int main(int argc, char **argv)
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
+
+  // Send identification string to the MAC Log Processor
+  LOG_INFO_STR("MACProcessScope: " << createPropertySetName(
+                 PSN_COBALTGPU_PROC, "", ps.getString("_DPname")));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
