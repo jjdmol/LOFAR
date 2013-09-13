@@ -110,9 +110,9 @@ lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 
 # install the scripts for MAC
 install(PROGRAMS
-  runObservation.sh
-  startBGL.sh
-  stopBGL.sh
+  scripts/runObservation.sh
+  scripts/startBGL.sh
+  scripts/stopBGL.sh
   DESTINATION bin)
 
 # install the logprop file
