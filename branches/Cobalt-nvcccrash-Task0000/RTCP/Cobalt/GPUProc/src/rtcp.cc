@@ -289,12 +289,6 @@ int main(int argc, char **argv)
                  devices[i].getComputeCapabilityMinor() <<
                  " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
 
-  // Bindings are done -- Lock everything in memory
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-    THROW_SYSCALL("mlockall");
-
-  LOG_DEBUG("All memory is now pinned.");
-
   // Allow usage of nested omp calls
   omp_set_nested(true);
 
@@ -344,6 +338,11 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  // Bindings and forking are done -- Lock everything in memory
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
+    THROW_SYSCALL("mlockall");
+
+  LOG_DEBUG("All memory is now pinned.");
 
 #ifdef HAVE_MPI
   /*
