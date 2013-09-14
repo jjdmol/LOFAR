@@ -36,6 +36,7 @@
 #include <GPUProc/global_defines.h>
 
 #include "cuda_config.h"
+#include <GPUProc/TempFiles.h>
 
 namespace LOFAR
 {
@@ -233,9 +234,11 @@ namespace LOFAR
                          const CompileFlags& flags,
                          const CompileDefinitions& defs)
       {
+        TempDir tempDir(".");
+
         // TODO: first try 'nvcc', then this path.
         ostringstream oss;
-        oss << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
+        oss << "cd " << tempDir.name() << " && " << CUDA_TOOLKIT_ROOT_DIR << "/bin/nvcc " << source << flags << defs;
         string cmd(oss.str());
         LOG_DEBUG_STR("Starting runtime compilation:\n\t" << cmd);
 
