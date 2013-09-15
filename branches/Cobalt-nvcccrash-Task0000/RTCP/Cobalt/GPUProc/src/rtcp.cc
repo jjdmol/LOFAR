@@ -340,6 +340,7 @@ int main(int argc, char **argv)
 #else
     LOG_WARN_STR("Cannot bind memory (no libnuma support)");
 #endif
+  }
 
   // Bindings and forking are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
