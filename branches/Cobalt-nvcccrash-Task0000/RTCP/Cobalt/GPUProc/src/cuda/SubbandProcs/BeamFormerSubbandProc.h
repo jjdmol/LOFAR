@@ -189,7 +189,7 @@ namespace LOFAR
     {
       BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc)
       {
-#       pragma omp parallel sections num_threads(7)
+#       pragma omp parallel sections num_threads(1)
         {
 #         pragma omp section
           intToFloat.reset(new KernelFactory<IntToFloatKernel>(ps));

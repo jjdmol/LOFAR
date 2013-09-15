@@ -70,7 +70,7 @@ namespace LOFAR
       CorrelatorFactories(const Parset &ps, 
                           size_t nrSubbandsPerSubbandProc = 1)
       {
-#       pragma omp parallel sections num_threads(3)
+#       pragma omp parallel sections num_threads(1)
         {
 #         pragma omp section
           firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
