@@ -187,40 +187,24 @@ namespace LOFAR
 
     struct BeamFormerFactories
     {
-      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc)
+      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
+        intToFloat(ps),
+        delayCompensation(delayCompensationParams(ps)),
+        correctBandPass(correctBandPassParams(ps)),
+        beamFormer(beamFormerParams(ps)),
+        transpose(transposeParams(ps)),
+        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
+        coherentStokes(coherentStokesParams(ps))
       {
-#       pragma omp parallel sections num_threads(7)
-        {
-#         pragma omp section
-          intToFloat.reset(new KernelFactory<IntToFloatKernel>(ps));
-
-#         pragma omp section
-          delayCompensation.reset(new KernelFactory<DelayAndBandPassKernel>(delayCompensationParams(ps)));
-
-#         pragma omp section
-          correctBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(correctBandPassParams(ps)));
-
-#         pragma omp section
-          beamFormer.reset(new KernelFactory<BeamFormerKernel>(beamFormerParams(ps)));
-
-#         pragma omp section
-          transpose.reset(new KernelFactory<BeamFormerTransposeKernel>(transposeParams(ps)));
-
-#         pragma omp section
-          firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
-
-#         pragma omp section
-          coherentStokes.reset(new KernelFactory<CoherentStokesKernel>(coherentStokesParams(ps)));
-        }
       }
 
-      std::auto_ptr< KernelFactory<IntToFloatKernel> > intToFloat;
-      std::auto_ptr< KernelFactory<DelayAndBandPassKernel> > delayCompensation;
-      std::auto_ptr< KernelFactory<DelayAndBandPassKernel> > correctBandPass;
-      std::auto_ptr< KernelFactory<BeamFormerKernel> > beamFormer;
-      std::auto_ptr< KernelFactory<BeamFormerTransposeKernel> > transpose;
-      std::auto_ptr< KernelFactory<FIR_FilterKernel> > firFilter;
-      std::auto_ptr< KernelFactory<CoherentStokesKernel> > coherentStokes;
+      KernelFactory<IntToFloatKernel> intToFloat;
+      KernelFactory<DelayAndBandPassKernel> delayCompensation;
+      KernelFactory<DelayAndBandPassKernel> correctBandPass;
+      KernelFactory<BeamFormerKernel> beamFormer;
+      KernelFactory<BeamFormerTransposeKernel> transpose;
+      KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<CoherentStokesKernel> coherentStokes;
 
       DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);

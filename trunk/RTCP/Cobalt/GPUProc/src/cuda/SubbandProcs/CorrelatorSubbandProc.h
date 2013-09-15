@@ -68,24 +68,16 @@ namespace LOFAR
     struct CorrelatorFactories
     {
       CorrelatorFactories(const Parset &ps, 
-                          size_t nrSubbandsPerSubbandProc = 1)
+                          size_t nrSubbandsPerSubbandProc = 1):
+        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
+        delayAndBandPass(ps),
+        correlator(ps)
       {
-#       pragma omp parallel sections num_threads(3)
-        {
-#         pragma omp section
-          firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
-
-#         pragma omp section
-          delayAndBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(ps));
-
-#         pragma omp section
-          correlator.reset(new KernelFactory<CorrelatorKernel>(ps));
-        }
       }
 
-      std::auto_ptr< KernelFactory<FIR_FilterKernel> > firFilter;
-      std::auto_ptr< KernelFactory<DelayAndBandPassKernel> > delayAndBandPass;
-      std::auto_ptr< KernelFactory<CorrelatorKernel> > correlator;
+      KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+      KernelFactory<CorrelatorKernel> correlator;
 
       FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
         FIR_FilterKernel::Parameters params(ps);
