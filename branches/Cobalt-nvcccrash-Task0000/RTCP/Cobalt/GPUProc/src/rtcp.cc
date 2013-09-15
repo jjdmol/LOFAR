@@ -216,7 +216,12 @@ int main(int argc, char **argv)
   LOG_INFO_STR("GPU platform " << platform.getName());
   vector<gpu::Device> allDevices(platform.devices());
 
+  // The set of GPUs we're allowed to use
+  vector<gpu::Device> devices;
 
+  // If we are testing we do not want dependency on hardware specific cpu configuration
+  // Just use all gpu's
+  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
     for (size_t i = 0; i < gpuIds.size(); ++i) {
@@ -295,9 +300,6 @@ int main(int argc, char **argv)
   }
 
   LOG_INFO("----- Initialising NUMA bindings");
-
-  // The set of GPUs we're allowed to use
-  vector<gpu::Device> devices;
 
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
