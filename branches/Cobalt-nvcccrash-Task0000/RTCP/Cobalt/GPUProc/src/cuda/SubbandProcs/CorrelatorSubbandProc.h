@@ -70,9 +70,17 @@ namespace LOFAR
       CorrelatorFactories(const Parset &ps, 
                           size_t nrSubbandsPerSubbandProc = 1)
       {
-        firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
-        delayAndBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(ps));
-        correlator.reset(new KernelFactory<CorrelatorKernel>(ps));
+#       pragma omp parallel sections num_threads(3)
+        {
+#         pragma omp section
+          firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
+
+#         pragma omp section
+          delayAndBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(ps));
+
+#         pragma omp section
+          correlator.reset(new KernelFactory<CorrelatorKernel>(ps));
+        }
       }
 
       std::auto_ptr< KernelFactory<FIR_FilterKernel> > firFilter;
