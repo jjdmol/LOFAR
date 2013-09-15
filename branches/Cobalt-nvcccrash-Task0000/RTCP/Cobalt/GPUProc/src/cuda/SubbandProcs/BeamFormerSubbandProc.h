@@ -189,29 +189,13 @@ namespace LOFAR
     {
       BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc)
       {
-#       pragma omp parallel sections num_threads(1)
-        {
-#         pragma omp section
-          intToFloat.reset(new KernelFactory<IntToFloatKernel>(ps));
-
-#         pragma omp section
-          delayCompensation.reset(new KernelFactory<DelayAndBandPassKernel>(delayCompensationParams(ps)));
-
-#         pragma omp section
-          correctBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(correctBandPassParams(ps)));
-
-#         pragma omp section
-          beamFormer.reset(new KernelFactory<BeamFormerKernel>(beamFormerParams(ps)));
-
-#         pragma omp section
-          transpose.reset(new KernelFactory<BeamFormerTransposeKernel>(transposeParams(ps)));
-
-#         pragma omp section
-          firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
-
-#         pragma omp section
-          coherentStokes.reset(new KernelFactory<CoherentStokesKernel>(coherentStokesParams(ps)));
-        }
+        intToFloat.reset(new KernelFactory<IntToFloatKernel>(ps));
+        delayCompensation.reset(new KernelFactory<DelayAndBandPassKernel>(delayCompensationParams(ps)));
+        correctBandPass.reset(new KernelFactory<DelayAndBandPassKernel>(correctBandPassParams(ps)));
+        beamFormer.reset(new KernelFactory<BeamFormerKernel>(beamFormerParams(ps)));
+        transpose.reset(new KernelFactory<BeamFormerTransposeKernel>(transposeParams(ps)));
+        firFilter.reset(new KernelFactory<FIR_FilterKernel>(firFilterParams(ps, nrSubbandsPerSubbandProc)));
+        coherentStokes.reset(new KernelFactory<CoherentStokesKernel>(coherentStokesParams(ps)));
       }
 
       std::auto_ptr< KernelFactory<IntToFloatKernel> > intToFloat;
