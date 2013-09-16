@@ -351,7 +351,7 @@ string	createPropertySetName(const string&		propSetMask,
 		psName.replace(pos, 14, string("PSCBT%03d"));
 	}
 	if ((pos = psName.find("@cobaltgpuproc@")) != string::npos) {
-		psName.replace(pos, 15, string("CobaltGPUProc%03d"));
+		psName.replace(pos, 15, string("CobaltGPUProc%02d"));
 	}
 	if ((pos = psName.find("@cobaltoutputproc@")) != string::npos) {
 		psName.replace(pos, 18, string("CobaltOutputProc%03d"));

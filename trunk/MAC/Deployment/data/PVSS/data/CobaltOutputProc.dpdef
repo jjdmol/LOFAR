@@ -1,5 +1,5 @@
-# Observation
-observationName	string
+# locusnode number
+locusNode	int
 
 # Data type: Correlated/Beamformed
 dataProductType	string
