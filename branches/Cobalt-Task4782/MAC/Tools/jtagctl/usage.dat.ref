@@ -1,9 +1,0 @@
-=== jtagctl (Revision: 1.6 )
-jtagctl [-h hostname] [-p port] command    # Control the JTAG Embedded Controller Board
-  Usage: command is one of the following
-    jtagctl -l                      # List the files saved on the ECB
-    jtagctl -s filename             # Save the specified file to the ECB
-    jtagctl -g GenFile -a AplFile [-c CnnFile] [-r OutputErrFile]
-    jtagctl -e filename -t[g|a|c]   # Erase the file with the specified type (Gen, Apl, Cnn) from the ECB
-    jtagctl -i A.B.C.D              # Update the ECB IP-address (default is 192.168.1.25)
-    jtagctl -x                      # Erase all saved files
