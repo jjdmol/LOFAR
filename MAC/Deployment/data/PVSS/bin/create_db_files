@@ -29,6 +29,12 @@
 #
 VERSION="v2.0"
 
+
+#======================================================================================================
+# Attention !!!!!
+# If you add new @name@ resolves here theey also should be added to the function: createPropertySetName
+# in LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
+#======================================================================================================
 #
 # SyntaxError msg
 #
@@ -153,6 +159,30 @@ substitute_adder()
 }
 
 #
+# substitute_cobaltgpuproc
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_cobaltgpuproc()
+{
+	awk '
+	{
+		hasCobaltGPUProc=index($1,"@cobaltgpuproc@");
+		if (hasCobaltGPUProc > 0) {
+			for (cobaltgpuproc=0; cobaltgpuproc<122; cobaltgpuproc++) {
+				dpname=$1;
+                                newname = sprintf("CobaltGPUProc%03d",cobaltgpuproc);
+				sub("@cobaltgpuproc@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
 # substitute_pslocusnode\
 #
 # syntax of the lines must be: dp dpt
@@ -224,6 +254,30 @@ substitute_writer()
 	} '
 }
 
+#
+# substitute_cobaltoutputproc
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_cobaltoutputproc()
+{
+	awk '
+	{
+		hasCobaltOutputProc=index($1,"@cobaltoutputproc@");
+		if (hasCobaltOutputProc > 0) {
+			for (wNr = 0; wNr < 20; wNr++) {  
+				dpname=$1;
+                                newname = sprintf("CobaltOutputProc%02d",wNr);
+                                sub("@cobaltoutputproc@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
 
 #
 # substitute_midplane
@@ -273,6 +327,37 @@ substitute_midplane_ionode()
 }
 
 #
+# substitute_cobalt_cobaltnode_cobaltnic
+#
+# syntax of the lines must be: dp dpt
+#
+# cobaltnodes are devided over the racks as follows:
+# rack 0 has 4 nodes
+# rack 1 has 4 nodes (and a spare node)
+#
+substitute_cobalt_cobaltnode_cobaltnic()
+{
+	awk  '
+	{
+		hasCobaltNIC=index($1,"@cobalt@_@cobaltnode@_@cobaltnic@");
+		if (hasCobaltNIC > 0) {
+			for (cnic=0; cnic<32; cnic++) {
+			    crack = int(cnic/16);
+			    cnode = int(cnic/4);    
+			    dpname=$1;
+			    
+                            newname = sprintf("Cobalt%d_CBT%03d_CobaltNIC%02d",crack,cnode,cnic);
+                            sub("@cobalt@_@cobaltnode@_@cobaltnic@", newname, dpname);
+			    print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
 # substitute_psionode\
 #
 # syntax of the lines must be: dp dpt
@@ -287,6 +372,30 @@ substitute_psionode()
 				dpname=$1;
                                 newname = sprintf("PSIONode%02d",ionode);
                                 sub("@psionode@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_pscobaltnode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_pscobaltnode()
+{
+	awk '
+	{
+		hasCobaltNode=index($1,"@pscobaltnode@");
+		if (hasCobaltNode > 0) {
+			for (cnode=1; cnode<9; cnode++) {
+				dpname=$1;
+                                newname = sprintf("PSCBT%03d",cnode);
+                                sub("@pscobaltnode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -320,6 +429,29 @@ substitute_osionode()
 	} '
 }
 
+#
+# substitute_oscobaltnode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_oscobaltnode()
+{
+	awk '
+	{
+		hasCobaltNode=index($1,"@oscobaltnode@");
+		if (hasCobaltNode > 0) {
+			for (cnode=1; cnode<9; cnode++) {
+				dpname=$1;
+                                newname = sprintf("CBT%03d",cnode);
+                                sub("@oscobaltnode@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
 
 #
 # substitute_osrack
@@ -335,6 +467,55 @@ substitute_osrack()
 			for (osr=0; osr<9; osr++) {
 				dpname=$1;
 				sub("@osrack@", "OSRack"osr, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_cobalt
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_cobalt()
+{
+	awk  '
+	{
+		hasCobalt=index($1,"@cobalt@");
+		if (hasCobalt > 0) {
+			for (osr=0; osr<2; osr++) {
+				dpname=$1;
+				sub("@cobalt@", "Cobalt"osr, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+#
+# substitute_cobalt_cobaltnode
+#
+# syntax of the lines must be: dp dpt
+
+
+#
+substitute_cobalt_cobaltnode()
+{
+	awk  '
+	{
+		hasCobaltNode=index($1,"@cobalt@_@cobaltnode@");
+		if (hasCobaltNode > 0) {
+			for (cnode=0; cnode<9; cnode++) {
+				dpname=$1;
+				cbnr = 0;
+				if (cnode > 3) cbnr = 1;
+				sub("@cobalt@_@cobaltnode@", "Cobalt"cbnr"_CBT00"cnode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -1018,11 +1199,18 @@ create_dp_file()
 				substitute_osrack_locusnode | \
 				substitute_osrack | \
 				substitute_osionode | \
+				substitute_cobalt_cobaltnode_cobaltnic | \
+				substitute_cobalt_cobaltnode | \
+				substitute_cobalt | \
+		                substitute_oscobaltnode | \
 				substitute_psionode | \
+				substitute_pscobaltnode | \
 			        substitute_oslocusnode | \
 			        substitute_pslocusnode | \
 				substitute_adder | \
+				substitute_cobaltgpuproc | \
 				substitute_writer | \
+				substitute_cobaltoutputproc | \
 				sort -k1,1 >>${DESTDIR}/${DP_FILE}
 
 #				number_dps >>${DESTDIR}/${DP_FILE}
