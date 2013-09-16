@@ -53,14 +53,14 @@ TEST_FIXTURE(TestFixture, OutputData)
 
 TEST_FIXTURE(TestFixture, Delays)
 {
-  CHECK_EQUAL(size_t(8),
+  CHECK_EQUAL(size_t(16),
               factory.bufferSize(
                 DelayAndBandPassKernel::DELAYS));
 }
 
 TEST_FIXTURE(TestFixture, PhaseOffsets)
 {
-  CHECK_EQUAL(size_t(8),
+  CHECK_EQUAL(size_t(16),
               factory.bufferSize(
                 DelayAndBandPassKernel::PHASE_OFFSETS));
 }
@@ -82,5 +82,11 @@ TEST_FIXTURE(TestFixture, MustThrow)
 int main()
 {
   INIT_LOGGER("tDelayAndBandPassKernel");
+  try {
+    gpu::Platform pf;
+  } catch (gpu::GPUException&) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 3;
+  }
   return UnitTest::RunAllTests() > 0;
 }

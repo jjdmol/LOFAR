@@ -24,9 +24,10 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <algorithm>  // for std::min
+#include <algorithm>  // for std::min and std::max
 
 #include <boost/noncopyable.hpp>
+#include <boost/format.hpp>
 
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
@@ -48,6 +49,8 @@
   } while(0)
 
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
+
+using boost::format;
 
 namespace LOFAR
 {
@@ -245,6 +248,12 @@ namespace LOFAR
           devices.push_back(Device(i));
         }
 
+        // sort to get a predictable order,
+        // because CUDA derives its own sorting
+        // based on expected performance, which
+        // might differ per NUMA binding.
+        sort(devices.begin(), devices.end());
+
         return devices;
       }
 
@@ -253,10 +262,31 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
+      size_t Platform::getMaxThreadsPerBlock() const
+      {
+        const std::vector<Device> _devices = devices();
+
+        size_t lowest = 0;
+
+        for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
+          const size_t maxThreadsPerBlock = i->getMaxThreadsPerBlock();
+
+          if (i == _devices.begin() || maxThreadsPerBlock < lowest)
+            lowest = maxThreadsPerBlock;
+        }
+
+        return lowest;
+      }
+
 
       Device::Device(int ordinal)
       {
         checkCuCall(cuDeviceGet(&_device, ordinal));
+      }
+
+      bool Device::operator<(const Device &other) const
+      {
+        return pciId() < other.pciId();
       }
 
       std::string Device::getName() const
@@ -313,6 +343,19 @@ namespace LOFAR
       size_t Device::getTotalConstMem() const
       {
         return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY);
+      }
+
+      std::string Device::pciId() const
+      {
+        int bus    = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_BUS_ID);
+        int device = getAttribute(CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID);
+
+        return str(format("%04x:%04x") % bus % device);
+      }
+
+      size_t Device::getMaxThreadsPerBlock() const
+      {
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
@@ -474,7 +517,7 @@ namespace LOFAR
         {
           ScopedCurrentContext scc(_context);
 
-          checkCuCall(cuMemAlloc(&_ptr, size));
+          checkCuCall(cuMemAlloc(&_ptr, std::max(1UL, size)));
         }
 
         ~Impl()
@@ -487,6 +530,13 @@ namespace LOFAR
         CUdeviceptr get() const
         {
           return _ptr;
+        }
+
+        void set(unsigned char uc, size_t n)
+        {
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuMemsetD8(_ptr, uc, n));
         }
 
         size_t size() const
@@ -514,6 +564,11 @@ namespace LOFAR
       void *DeviceMemory::get() const
       {
         return (void *)_impl->get();
+      }
+
+      void DeviceMemory::set(unsigned char uc, size_t n)
+      {
+        _impl->set(uc, std::min(n, size()));
       }
 
       size_t DeviceMemory::size() const
@@ -639,6 +694,11 @@ namespace LOFAR
 
         checkCuCall(cuModuleGetFunction(&_function, module._impl->_module,
                                         name.c_str()));
+      }
+
+      std::string Function::name() const
+      {
+        return _name;
       }
 
       void Function::setArg(size_t index, const DeviceMemory &mem)
@@ -923,10 +983,9 @@ namespace LOFAR
                             block.x, block.y, block.z, dynSharedMemBytes,
                             const_cast<void **>(&function._kernelArgs[0]));
 
-          if (force_synchronous) {
-            synchronize();
-          }
-
+        if (force_synchronous) {
+          synchronize();
+        }
       }
 
       bool Stream::query() const

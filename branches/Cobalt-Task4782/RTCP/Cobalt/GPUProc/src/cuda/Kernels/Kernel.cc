@@ -27,6 +27,8 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <Common/LofarLogger.h>
+
 using namespace std;
 
 namespace LOFAR
@@ -47,9 +49,16 @@ namespace LOFAR
       : 
       gpu::Function(function),
       event(stream.getContext()),
-      itsStream(stream)
+      itsStream(stream),
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {
-      }
+      LOG_INFO_STR(
+        "Function " << function.name() << ":" << 
+        "\n  max. threads per block: " << 
+        function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
+        "\n  nr. of registers used : " <<
+        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+    }
 
     void Kernel::enqueue(const gpu::Stream &queue,
                          PerformanceCounter &counter) const
@@ -70,6 +79,13 @@ namespace LOFAR
       gpu::Grid grid(globalWorkSize.x / block.x,
                      globalWorkSize.y / block.y,
                      globalWorkSize.z / block.z);
+
+      ASSERTSTR(block.x * block.y * block.z
+                <= maxThreadsPerBlock,
+        "Requested dimensions "
+        << block.x << ", " << block.y << ", " << block.z
+        << " creates more than the " << maxThreadsPerBlock
+        << " supported threads/block" );
       
       queue.launchKernel(*this, grid, block);
     }

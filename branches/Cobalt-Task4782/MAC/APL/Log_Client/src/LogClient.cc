@@ -1,6 +1,6 @@
 //#  LogClient.cc: Filters and stores logmessages
 //#
-//#  Copyright (C) 2007
+//#  Copyright (C) 2007-2013
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -27,7 +27,6 @@
 #include <Common/ParameterSet.h>
 #include <ApplCommon/LofarDirs.h>
 #include <ApplCommon/StationInfo.h>
-//#include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/LOG_Protocol.ph>
 #include <log4cplus/socketappender.h>
@@ -70,6 +69,7 @@ LogClient::LogClient(const string&	myName) :
 	itsMaxLinesPerFile = globalParameterSet()->getUint32("MaxLinesPerFile", 1000);
 	itsChunkSize       = globalParameterSet()->getUint32("ChunkSize", 10);
 	itsMasterHost      = globalParameterSet()->getString("MasterHost", "rs002");
+	itsInTestMode      = globalParameterSet()->getBool  ("UseTestMode", false);
 	if (itsAdminFile.find("share") == string::npos) {
 		itsAdminFile.insert(0, LOFAR_SHARE_LOCATION);
 	}
@@ -82,9 +82,11 @@ LogClient::LogClient(const string&	myName) :
 	ASSERTSTR(itsListener, "Can't allocate a listener port");
 	itsListener->setPortNumber(MAC_CODELOGGING_PORT);
 
-	itsCLmaster = new GCFTCPPort(*this, MAC_SVCMASK_LOGPROC, GCFPortInterface::SAP, LOG_PROTOCOL);
-	itsCLmaster->setHostName(itsMasterHost);
-	ASSERTSTR(itsCLmaster, "Can't allocate distribution port");
+	if (!itsInTestMode) {
+		itsCLmaster = new GCFTCPPort(*this, MAC_SVCMASK_LOGPROC, GCFPortInterface::SAP, LOG_PROTOCOL);
+		itsCLmaster->setHostName(itsMasterHost);
+		ASSERTSTR(itsCLmaster, "Can't allocate distribution port");
+	}
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 	ASSERTSTR(itsTimerPort, "Can't allocate timer");
@@ -130,11 +132,14 @@ GCFEvent::TResult LogClient::initial(GCFEvent& event, GCFPortInterface& port)
 
 	case F_CONNECTED:
 		// Listener is opened. Startup connection with CLmaster and go to the right mode.
-		itsCLmaster->open();
+		if (!itsInTestMode) {
+			itsCLmaster->open();
+		}
 		TRAN(LogClient::operational);
 	break;
 
 	case F_DISCONNECTED:
+		LOG_FATAL("Opening listener for receiving the logstreams failed.");
 		port.setTimer(5.0); // try again after 5 second
 	break;
 
@@ -254,7 +259,7 @@ GCFEvent::TResult LogClient::operational(GCFEvent&			event,
 
 		// Has client a known DP?
 		string 	PVSSdp(_searchClientDP(logEvent, port));
-		if (PVSSdp.empty()) {
+		if (!itsInTestMode && PVSSdp.empty()) {
 			break;
 		}
 
@@ -266,9 +271,14 @@ GCFEvent::TResult LogClient::operational(GCFEvent&			event,
 					basename(logEvent.getFile()).c_str(),
 					logEvent.getLine()));
 
-LOG_DEBUG_STR("Storing message " << itsInSeqnr);
-		itsMsgBuffer[itsInSeqnr++] = Message(PVSSdp, msg);
-		_activateBuffer();
+		if (itsInTestMode) {
+			LOG_INFO(msg);
+		}
+		else {
+			LOG_DEBUG_STR("Storing message " << itsInSeqnr);
+			itsMsgBuffer[itsInSeqnr++] = Message(PVSSdp, msg);
+			_activateBuffer();
+		}
 	}
 	break;
 
@@ -322,7 +332,7 @@ bool LogClient::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 //
 // _activateBuffer
 //
-// Some messages were removed or added to the Msgbuffer send the next.
+// Some messages were removed or added to the Msgbuffer, send the next.
 //
 void LogClient::_activateBuffer()
 {
@@ -392,7 +402,7 @@ bool LogClient::_loadNextMessageFile()
 // or when database report more than 10 errors on that DP.
 //
 string LogClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
-									 	 GCFPortInterface&			port)
+							 	 GCFPortInterface&				port)
 {
 	// Known client ?
 	LogProcMap::iterator iter = itsClients.find(&port);
@@ -413,10 +423,13 @@ string LogClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 	}
 
 	// DPname is not filled in yet, tried to find it if we are still
-	// within the first 10 messages.
+	// within the first 10 messages. Note: msgCnt is initialized with -10.
 	if (++(iter->second.msgCnt) > 0) {
 		// when msgCnt reached 0 we could report that we tried it 10 times
 		// but we don't know the name of the log-stream, so just return
+		if (itsInTestMode && iter->second.msgCnt == 1) {
+			LOG_ERROR("*** *** No 'MACProcessScope:' found in the first 10 message! *** ***");
+		}
 		return ("");
 	}
 
@@ -463,7 +476,7 @@ void LogClient::_registerFailure(GCFPortInterface&		port)
 
 	if (++(iter->second.errCnt) > 10) {
 		iter->second.valid = false;
-		LOG_INFO_STR("Log-stream to " << iter->second.DPname << " keeps reporting errors, ignoring stream");
+		LOG_WARN_STR("Log-stream to " << iter->second.DPname << " keeps reporting errors, ignoring stream");
 	}
 }
 

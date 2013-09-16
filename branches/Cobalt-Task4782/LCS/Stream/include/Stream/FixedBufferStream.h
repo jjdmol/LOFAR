@@ -42,7 +42,6 @@ class FixedBufferStream : public Stream
     virtual size_t tryWrite(const void *ptr, size_t size);
 
   private:
-    char * const itsStart;
     char * const itsEnd;
 
     char *itsHead;

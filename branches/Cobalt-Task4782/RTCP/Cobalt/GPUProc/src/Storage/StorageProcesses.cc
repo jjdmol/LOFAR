@@ -22,6 +22,8 @@
 
 #include "StorageProcesses.h"
 
+#include <set>
+#include <algorithm>
 #include <sys/time.h>
 #include <unistd.h>
 #include <boost/format.hpp>
@@ -60,9 +62,37 @@ namespace LOFAR
       return itsFeedbackLTA;
     }
 
+    vector<string> StorageProcesses::hosts() const
+    {
+      set<string> hostNames;
+
+      // Add all hosts on which Correlated Data is stored
+      if (itsParset.settings.correlator.enabled) {
+        for (size_t i = 0; i < itsParset.settings.correlator.files.size(); ++i) {
+          hostNames.insert(itsParset.settings.correlator.files[i].location.host);
+        }
+      }
+
+      // Add all hosts on which Beamformed Data is stored
+      if (itsParset.settings.beamFormer.enabled) {
+        for (size_t i = 0; i < itsParset.settings.beamFormer.files.size(); ++i) {
+          hostNames.insert(itsParset.settings.beamFormer.files[i].location.host);
+        }
+      }
+
+      // Erase the empty host, we don't want to connect to it
+      hostNames.erase("");
+
+      // Copy the result to a vector
+      vector<string> result(hostNames.size());
+      copy(hostNames.begin(), hostNames.end(), result.begin());
+
+      return result;
+    }
+
     void StorageProcesses::start()
     {
-      vector<string> hostnames = itsParset.getStringVector("OLAP.Storage.hosts");
+      vector<string> hostnames = hosts();
 
       itsStorageProcesses.resize(hostnames.size());
 

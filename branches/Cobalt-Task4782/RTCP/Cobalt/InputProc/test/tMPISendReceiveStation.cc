@@ -48,6 +48,8 @@ using namespace std;
 
 using boost::format;
 
+#define NRBEAMLETS 3
+
 
 typedef SampleType<i16complex> SampleT;
 std::vector<char> metaDataBlob(100, 42);
@@ -59,7 +61,7 @@ int rank;
 int nrHosts;
 
 // Common transfer objects
-map<int, std::vector<size_t> > beamletDistribution;
+std::vector<size_t> beamletDistribution;
 SmartPtr<MPISendStation> sender;
 SmartPtr<MPIReceiveStations> receiver;
 
@@ -77,7 +79,7 @@ TEST(Header) {
   block.from = TimeStamp(1, 2);
   block.to   = TimeStamp(3, 4);
 
-  for (size_t b = 0; b < 10; ++b) {
+  for (size_t b = 0; b < NRBEAMLETS; ++b) {
     struct Block<SampleT>::Beamlet ib;
 
     ib.stationBeamlet = b;
@@ -105,7 +107,9 @@ TEST(Header) {
   vector<MPI_Request> requests(1);
  
   if (rank == 0) {
-    requests[0] = sender->sendHeader<SampleT>(1, header_in, block);
+    *(sender->header) = header_in;
+
+    requests[0] = sender->sendHeader<SampleT>(block);
   } else {
     requests[0] = receiver->receiveHeader(0, header_out);
   }
@@ -142,7 +146,7 @@ TEST(Data_OneTransfer) {
   vector<MPI_Request> requests(1);
 
   if (rank == 0) {
-    unsigned nrTransfers = sender->sendData<SampleT>(1, 42, ib, &requests[0]);
+    unsigned nrTransfers = sender->sendData<SampleT>(42, ib, &requests[0]);
     CHECK_EQUAL(1U, nrTransfers);
   } else {
     requests[0] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], data_out.size());
@@ -176,7 +180,7 @@ TEST(Data_TwoTransfers) {
   vector<MPI_Request> requests(2);
  
   if (rank == 0) {
-    unsigned nrTransfers = sender->sendData<SampleT>(1, 42, ib, &requests[0]);
+    unsigned nrTransfers = sender->sendData<SampleT>(42, ib, &requests[0]);
     CHECK_EQUAL(2U, nrTransfers);
   } else {
     requests[0] = receiver->receiveData<SampleT>(0, 42, 0, &data_out[0], blockSize/2);
@@ -212,7 +216,7 @@ TEST(MetaData) {
   vector<MPI_Request> requests(1);
  
   if (rank == 0) {
-    requests[0] = sender->sendMetaData(1, 42, mdBuf_in);
+    requests[0] = sender->sendMetaData(42, mdBuf_in);
   } else {
     requests[0] = receiver->receiveMetaData(0, 42, mdBuf_out);
   }
@@ -240,13 +244,12 @@ TEST(Block_OneStation) {
   SubbandMetaData metaData_out;
 
   size_t nrStations = 1;
-  size_t nrBeamlets = beamletDistribution[1].size();
 
   // Fill input
   block_in.from = TimeStamp(1, 2);
   block_in.to   = TimeStamp(3, 4);
 
-  for (size_t b = 0; b < nrBeamlets; ++b) {
+  for (size_t b = 0; b < NRBEAMLETS; ++b) {
     struct Block<SampleT>::Beamlet ib;
 
     ib.stationBeamlet = b;
@@ -265,22 +268,22 @@ TEST(Block_OneStation) {
   }
 
   // create a place to store the samples
-  MultiDimArray<SampleT, 3> samples_out(boost::extents[nrStations][nrBeamlets][blockSize]);
+  MultiDimArray<SampleT, 3> samples_out(boost::extents[nrStations][NRBEAMLETS][blockSize]);
 
   // create blocks_out -- they all have to be the right size already
   blocks_out.resize(nrStations);
 
   for (size_t s = 0; s < nrStations; ++s) {
-    blocks_out[s].beamlets.resize(nrBeamlets);
+    blocks_out[s].beamlets.resize(NRBEAMLETS);
 
-    for (size_t b = 0; b < nrBeamlets; ++b) {
+    for (size_t b = 0; b < NRBEAMLETS; ++b) {
       blocks_out[s].beamlets[b].samples = &samples_out[s][b][0];
     }
   }
 
   if (rank == 0) {
     // sender
-    std::vector<SubbandMetaData> metaDatas(nrBeamlets, metaData_in);
+    std::vector<SubbandMetaData> metaDatas(NRBEAMLETS, metaData_in);
     sender->sendBlock<SampleT>(block_in, metaDatas);
   } else {
     // receiver
@@ -291,7 +294,7 @@ TEST(Block_OneStation) {
 
   if (rank == 1) {
     // Validate results
-    for (size_t b = 0; b < nrBeamlets; ++b) {
+    for (size_t b = 0; b < NRBEAMLETS; ++b) {
       for (size_t t = 0; t < blockSize; ++t) {
         CHECK_EQUAL(data_in[t], samples_out[0][b][t]);
       }
@@ -326,12 +329,12 @@ int main( int argc, char **argv )
   // Rank 0 is the sender, rank 1 is the receiver
   ASSERT(nrHosts == 2);
 
-  beamletDistribution[1].push_back(0);
-  beamletDistribution[1].push_back(1);
-  beamletDistribution[1].push_back(2);
+  for(size_t i = 0; i < NRBEAMLETS; ++i) {
+    beamletDistribution.push_back(i);
+  }
 
-  sender = new MPISendStation(settings, 0, beamletDistribution);
-  receiver = new MPIReceiveStations(1, beamletDistribution[1], blockSize);
+  sender = new MPISendStation(settings, 0, 1, beamletDistribution);
+  receiver = new MPIReceiveStations(1, beamletDistribution, blockSize);
 
   // Fill input
   for (size_t i = 0; i < data_in.size(); ++i) {

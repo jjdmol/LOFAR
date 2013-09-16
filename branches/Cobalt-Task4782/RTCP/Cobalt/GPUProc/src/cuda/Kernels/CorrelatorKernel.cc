@@ -32,6 +32,12 @@
 
 #include <GPUProc/global_defines.h>
 
+// For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
+// performance.
+//
+// TODO: 2x2 kernel produces different output than the 1x1 kernel!
+//#define USE_2X2
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -56,8 +62,7 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      size_t maxNrThreads, preferredMultiple;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      size_t preferredMultiple;
 
       gpu::Platform pf;
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
@@ -80,7 +85,7 @@ namespace LOFAR
 # else
       unsigned nrBlocks = nrBaselines;
 # endif
-      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrPasses = (nrBlocks + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
       unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
       nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
 

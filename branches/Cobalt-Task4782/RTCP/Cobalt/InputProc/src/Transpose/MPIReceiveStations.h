@@ -54,7 +54,7 @@ namespace LOFAR
       //   observation.
       //
       // blockSize:
-      //   The number of samples in each block. Includes nrHistorySamples.
+      //   The number of samples in each block.
       MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize );
 
       // Receive the next block. The `block' parameter is a structure allocated
@@ -74,6 +74,8 @@ namespace LOFAR
     public:
       const std::vector<size_t> beamlets;
       const size_t blockSize;
+
+      std::vector<int> stationSourceRanks; // [station]
 
       // Receive a header (async) from the given rank.
       MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );

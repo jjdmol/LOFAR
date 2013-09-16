@@ -70,7 +70,8 @@ namespace LOFAR
 
       // FIR filter
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT
@@ -91,9 +92,11 @@ namespace LOFAR
                         devFilteredData),
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
+      // initialize history data to zero
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) 
-      {
+      for (size_t i = 0; i < std::max(3UL, ps.nrSubbands()); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
@@ -305,8 +308,11 @@ namespace LOFAR
 
       // *********************************************
       // Run the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
+
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue, counters.fir);
+        firFilterKernel->enqueue(counters.fir, input.blockID.subbandProcSubbandIdx);
         fftKernel.enqueue(queue, counters.fft);
       }
 
@@ -322,6 +328,12 @@ namespace LOFAR
       // background.
 
       // Propagate the flags.
+      if (ps.nrChannelsPerSubband() > 1) {
+        // Put the history flags in front of the sample flags,
+        // because Flagger::propagateFlags expects it that way.
+        firFilterKernel->prefixHistoryFlags(input.inputFlags, input.blockID.subbandProcSubbandIdx);
+      }
+
       Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.

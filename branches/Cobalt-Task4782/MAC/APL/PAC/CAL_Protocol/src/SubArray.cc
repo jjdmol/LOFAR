@@ -210,7 +210,7 @@ size_t SubArray::getSize() const
 
 size_t SubArray::pack(char* buffer) const
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
 	MSH_pack(buffer, offset, m_name);
 	MSH_pack(buffer, offset, m_geoloc);
@@ -224,7 +224,7 @@ size_t SubArray::pack(char* buffer) const
 
 size_t SubArray::unpack(const char* buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 
 	MSH_unpack(buffer, offset, m_name);
 	MSH_unpack(buffer, offset, m_geoloc);
@@ -245,14 +245,14 @@ size_t SubArrayMap::getSize() const
 
 size_t SubArrayMap::pack(char* buffer) const
 {
-	size_t	offset = 0;
+	uint32 offset = 0;
 	MSH_pack(buffer, offset, (*this));
 	return (offset);
 }
 
 size_t SubArrayMap::unpack(const char* buffer)
 {
-	size_t offset = 0;
+	uint32 offset = 0;
 	MSH_unpack(buffer, offset, (*this));
 	return (offset);
 }

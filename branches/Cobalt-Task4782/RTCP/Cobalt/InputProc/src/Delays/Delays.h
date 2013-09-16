@@ -150,7 +150,7 @@ namespace LOFAR
        * and in the metaData the remainders will be recorded, that is,
        *     SAP.delay % sampleDuration.
        */
-      void generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, std::vector<SubbandMetaData> &metaDatas, std::vector<ssize_t> &read_offsets );
+      void generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, const std::vector<size_t> &subbands, std::vector<SubbandMetaData> &metaDatas, std::vector<ssize_t> &read_offsets );
 
     private:
       const Parset &parset;

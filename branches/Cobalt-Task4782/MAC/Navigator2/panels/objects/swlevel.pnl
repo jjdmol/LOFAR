@@ -9,7 +9,7 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
   
   station = $station;
   station_text.text = station;
-  
+
   baseDP = station+\":LOFAR_PermSW_Daemons_SoftwareMonitor\";
   
   if (navFunct_dpReachable(baseDP)) {

@@ -16,7 +16,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 lofar_add_executable(tEventPort tEventPort.cc Echo_Protocol.cc)
 lofar_add_executable(tRTmetadata tRTmetadata.cc)
-lofar_add_executable(tMarshalling tMarshalling.cc)
+#lofar_add_test(tKVTLogger tKVTLogger.cc)
+lofar_add_test(tMarshalling tMarshalling.cc)
 lofar_add_test(tProtocol tProtocol.cc Echo_Protocol.cc testprotocol.cc)
 lofar_add_test(tClone tClone.cc Clone_Protocol.cc)
 

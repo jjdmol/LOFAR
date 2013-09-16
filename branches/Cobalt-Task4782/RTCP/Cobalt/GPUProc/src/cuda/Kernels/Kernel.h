@@ -39,6 +39,7 @@ namespace LOFAR
     {
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
+      // TODO: more at constructor passed immediates can be turned into defines (blockDim/gridDim too if enforced fixed (consider conditional define) or drop opt)
       struct Parameters
       {
         Parameters(const Parset& ps);
@@ -80,6 +81,7 @@ namespace LOFAR
 
       gpu::Event event;
       gpu::Stream itsStream;
+      const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

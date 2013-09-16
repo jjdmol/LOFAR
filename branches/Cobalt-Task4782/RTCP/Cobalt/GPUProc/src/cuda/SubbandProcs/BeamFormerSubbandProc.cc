@@ -68,7 +68,7 @@ namespace LOFAR
       delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
-      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, true, devA),
+      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
 
       // bandPass: A -> B
       devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -77,8 +77,8 @@ namespace LOFAR
 
       // beamForm: B -> A
       // TODO: support >1 SAP
-      devBeamFormerWeights(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS)),
-      beamFormerBuffers(devB, devA, devBeamFormerWeights),
+      devBeamFormerDelays(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
+      beamFormerBuffers(devB, devA, devBeamFormerDelays),
       beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
 
       // transpose after beamforming: A -> B
@@ -92,15 +92,25 @@ namespace LOFAR
       // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devB, devA, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
       finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
 
+      // coherentStokes: 1ch: A -> B, Nch: B -> A
+      coherentStokesBuffers(
+          ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB,
+          ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
+      coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
+
       // result buffer
-      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB)
+      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
     {
+      // initialize history data
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < 3; ++i) {
         outputPool.free.append(new BeamFormedData(
@@ -136,6 +146,7 @@ namespace LOFAR
     inverseFFT(context),
     firFilterKernel(context),
     finalFFT(context),
+    coherentStokes(context),
     samples(context),
     visibilities(context)
     {
@@ -145,7 +156,7 @@ namespace LOFAR
     {     
 
       // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR("**** CorrelatorSubbandProc GPU mean and stDev ****" <<
+      LOG_INFO_STR("**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
         std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
@@ -156,6 +167,7 @@ namespace LOFAR
         std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
         std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
         std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
+        std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<
         std::setw(20) << "(visibilities)" << visibilities.stats << endl);
 
@@ -170,7 +182,7 @@ namespace LOFAR
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
 
-      queue.writeBuffer(devInput.inputSamples, input.inputSamples, true);
+      queue.writeBuffer(devInput.inputSamples, input.inputSamples, counters.samples, true);
 
       if (ps.delayCompensation())
       {
@@ -182,8 +194,7 @@ namespace LOFAR
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
 
-          // TODO: propagate beam-former weights to here 
-          //queue.writeBuffer(devBeamFormerWeights,    ,   false);
+          queue.writeBuffer(devBeamFormerDelays,     input.tabDelays,      false);
 
           prevSAP = SAP;
           prevBlock = block;
@@ -192,6 +203,8 @@ namespace LOFAR
 
       //****************************************
       // Enqueue the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
       intToFloatKernel->enqueue(counters.intToFloat);
 
       firstFFT.enqueue(queue, counters.firstFFT);
@@ -204,21 +217,26 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(counters.beamformer);
+      beamFormerKernel->enqueue(queue,
+        counters.beamformer,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
       transposeKernel->enqueue(counters.transpose);
 
       inverseFFT.enqueue(queue, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue( counters.firFilterKernel);
+        firFilterKernel->enqueue( counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
         finalFFT.enqueue(queue, counters.finalFFT);
       }
+
+      coherentStokesKernel->enqueue(counters.coherentStokes);
 
       // TODO: Propagate flags
 
       queue.synchronize();
 
-      queue.readBuffer(output, devResult, true);
+      queue.readBuffer(output, devResult, counters.visibilities, true);
 
             // ************************************************
       // Perform performance statistics if needed
@@ -240,6 +258,10 @@ namespace LOFAR
         counters.beamformer.logTime();
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
+        counters.coherentStokes.logTime();
+
+        counters.samples.logTime();
+        counters.visibilities.logTime();
       }
     }
 

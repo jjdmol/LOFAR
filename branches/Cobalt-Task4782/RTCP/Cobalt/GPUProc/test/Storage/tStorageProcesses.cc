@@ -48,11 +48,16 @@ void test_simple()
   Parset p;
 
   p.add("Observation.ObsID",          "12345");
-  p.add("OLAP.Storage.hosts",         "[localhost]");
   p.add("OLAP.Storage.userName",      USER);
   p.add("OLAP.Storage.sshPublicKey",  pubkey);
   p.add("OLAP.Storage.sshPrivateKey", privkey);
   p.add("OLAP.Storage.msWriter",      "/bin/echo");
+
+  p.add("Observation.nrBeams",             "1");
+  p.add("Observation.Beam[0].subbandList", "[0]");
+  p.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  p.add("Observation.DataProducts.Output_Correlated.filenames", "[SB0.MS]");
+  p.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   p.updateSettings();
 
   {
@@ -72,7 +77,6 @@ void test_protocol()
   Parset p;
 
   p.add("Observation.ObsID",            "12345");
-  p.add("OLAP.Storage.hosts",           "[localhost]");
   p.add("OLAP.Storage.userName",        USER);
   p.add("OLAP.Storage.sshPublicKey",    pubkey);
   p.add("OLAP.Storage.sshPrivateKey",   privkey);
@@ -81,6 +85,12 @@ void test_protocol()
   p.add("OLAP.FinalMetaDataGatherer.userName",      USER);
   p.add("OLAP.FinalMetaDataGatherer.sshPublicKey",  pubkey);
   p.add("OLAP.FinalMetaDataGatherer.sshPrivateKey", privkey);
+
+  p.add("Observation.nrBeams",             "1");
+  p.add("Observation.Beam[0].subbandList", "[0]");
+  p.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  p.add("Observation.DataProducts.Output_Correlated.filenames", "[SB0.MS]");
+  p.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
 
   // DummyStorage already emulates the FinalMetaDataGatherer, so use a dummy
   // instead.

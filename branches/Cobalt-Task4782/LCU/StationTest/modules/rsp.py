@@ -37,6 +37,10 @@
   def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21)
   def write_rsr_timestamp(tc, msg, timestamp=0, timemode=1, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   def read_rsr_timestamp(tc, msg, fpgaId=['rsp', 'blp0'], rspId=['rsp0'], applev=21)
+  def write_rsr_beam_mode(tc, msg, beam_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
+  def read_rsr_beam_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
+  def write_rsr_sdo_mode(tc, msg, sdo_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
+  def read_rsr_sdo_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   
   def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21)
   def read_rad_settings(tc, msg, rspId=['rsp0'], applev=21)
@@ -47,10 +51,12 @@
   def read_cdo_settings(tc, msg, rspId=['rsp0'], applev=21)
   def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21)
     
-  def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
-  def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
+  def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bank=[0])
+  def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bank=[0])
+  def write_sdo_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bank=[0])
+  def read_sdo_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bank=[0])
   
-  def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bmBank=[0])
+  def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bank=[0])
 """
 
 ################################################################################
@@ -86,8 +92,12 @@ c_nof_ap                    = 4
 c_nof_blp_per_ap            = 1
 c_nof_blp                   = c_nof_ap * c_nof_blp_per_ap
 
+c_nof_rcu_per_ap            = c_pol                        # = 2, nof RCU per AP (and 1 BLP per AP)
+c_nof_rcu                   = c_nof_ap*c_nof_rcu_per_ap    # = 8, nof RCU per RSP (and 1 BLP per AP)
+c_nof_sp                    = c_nof_rcu;                   # = 8, nof signal paths (SP) per RSP (each RCU receives one SP)
+  
 c_nof_subbands              = 512
-c_slice_size                = c_cpx * c_nof_subbands
+c_slice_size                = c_cpx * c_nof_subbands  # = 1024
 
 c_nof_lanes                 = 4
 c_nof_beamlets              = 248
@@ -97,8 +107,8 @@ c_nof_crosslets_per_antenna = 1
 c_nof_crosslets             = c_nof_antennas * c_nof_crosslets_per_antenna
 c_nof_crosslets_per_lane    = c_nof_crosslets / c_nof_lanes
 c_nof_reflets               = c_nof_crosslets_per_antenna
-c_nof_reflets_ap            = c_nof_crosslets_per_antenna * c_nof_ap
-c_nof_beamlets_ap           = c_nof_reflets_ap + c_nof_beamlets
+c_nof_reflets_ap            = c_nof_crosslets_per_antenna * c_nof_ap     # = 4
+c_nof_beamlets_ap           = c_nof_reflets_ap + c_nof_beamlets          # = 252
 c_nof_let_types             = 2
 
 c_rcu_dat_w                 = 12
@@ -111,6 +121,8 @@ c_diag_reg_wave_size_small_w = 11
 c_diag_reg_res_word_w        =  4
 c_diag_reg_res_size          =  c_nof_beamlets_ap*c_pol_phs
 
+c_ss_map_size                = c_pol * c_nof_beamlets_ap  # = 504
+
 c_bf_reg_coef_w              = 16
 c_beam_data_dat_w            = 24
 
@@ -121,7 +133,8 @@ c_tdsh_result_adr_w          = 10
 c_rcuh_protocol_adr_w        =  9
 c_rcuh_result_adr_w          =  9
 
-c_rad_nof_rx                 =  1+c_nof_let_types*c_nof_lanes   # = 9
+c_rad_nof_rx_latency         =  1+c_nof_let_types*c_nof_lanes               # = 1 + 2*4     =  9  (RI, (Beamlets + Xrosslets) * 4)
+c_rad_nof_rx_status          =  1+c_nof_let_types*c_nof_lanes+c_nof_lanes   # = 1 + 2*4 + 4 = 13  (RI, (Beamlets + Xrosslets) * 4, Subbands * 4)
 
 c_ei_status_rsp_tvolt_offset =  0
 c_ei_status_rsp_tvolt_size   =  9
@@ -144,9 +157,11 @@ c_ei_status_rsu_size         =  4
 c_ei_status_ado_offset       =  c_ei_status_rsu_offset       +                 c_ei_status_rsu_size
 c_ei_status_ado_size         =  8
 c_ei_status_rad_offset       =  c_ei_status_ado_offset       + c_nof_blp     * c_ei_status_ado_size
-c_ei_status_rad_size         =  4
+c_ei_status_rad_size         =  4  # For each link
+c_ei_status_rcuh_test_offset =  c_ei_status_rad_offset       + c_rad_nof_rx_status * c_ei_status_rad_size
+c_ei_status_rcuh_test_size   =  4  # For each AP
 c_ei_status_rsr_offset       =  0  # = c_ei_status_rsp_tvolt_offset
-c_ei_status_rsr_size         =  c_ei_status_rad_offset       + c_rad_nof_rx  * c_ei_status_rad_size
+c_ei_status_rsr_size         =  c_ei_status_rcuh_test_offset + c_nof_blp     * c_ei_status_rcuh_test_size
 
 c_ei_eth_err_noerr           = 0
 c_ei_eth_err_preamblevalue   = 1
@@ -167,9 +182,24 @@ c_ei_mep_err_size            = 6
 c_ei_mep_err_ringcrc         = 7
 c_ei_mep_err_timeout         = 8
 
+# CDO = CEP Data Output (beamlets)
 c_cdo_settings_size          = 30   # nof bytes in CDO settings register
 c_cdo_settings_ctrl_offset   = 6    # byte index of the first byte of the ctrl field in CDO settings register
 c_cdo_transport_size         = 28   # nof bytes in CDO transport header register (IPv4 + UDP = 20 + 8 = 28)
+
+# SDO = Subband Data Output
+c_sdo_mode_str               = ['1 x 16-bit', '2 x 8-bit', '3 x 5-bit', '4 x 4-bit']
+c_ss_sel_zero                = 0x8000
+
+c_sdo_nof_subbands           = 36                               # Number of SDO subbands per SP
+c_sdo_nof_subbands_per_lane  = c_sdo_nof_subbands/c_nof_lanes
+
+c_sdo_ss_nof_subbands_ap     = c_sdo_nof_subbands*c_pol         # = 72
+c_sdo_ss_nof_subbands_rsp    = c_sdo_nof_subbands*c_nof_sp      # = 288
+c_sdo_ss_nof_bands           = 316                              # = c_sdo_len_ap_frame_payload/c_pol
+
+c_sdo_ss_map_size            = c_sdo_ss_nof_subbands_ap         # = 72
+
 
 ################################################################################
 # Derived constants (from constants.tcl)
@@ -913,21 +943,22 @@ def overwrite_rsr(tc, msg, procid='all', value=255, rspId=['rsp0']):
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - procid = Process ID : 'rsp', 'eth', 'mep', 'diag', 'bs', 'rcuh', 'rsu', 'ado', 'rad' or 'all'
+  - procid = Process ID : 'rsp', 'eth', 'mep', 'diag', 'bs', 'rcuh', 'rsu', 'ado', 'rad', 'rcuh_test' or 'all'
   - value  = Byte value to use for overwrite
   - rspId  = List of 'rsp#' 
   Return: void
   """
-  if   procid == 'rsp' : offset = c_ei_status_rsp_offset;  size =               c_ei_status_rsp_size
-  elif procid == 'eth' : offset = c_ei_status_eth_offset;  size =               c_ei_status_eth_size
-  elif procid == 'mep' : offset = c_ei_status_mep_offset;  size =               c_ei_status_mep_size
-  elif procid == 'diag': offset = c_ei_status_diag_offset; size =               c_ei_status_diag_size
-  elif procid == 'bs'  : offset = c_ei_status_bs_offset;   size = c_nof_blp    *c_ei_status_bs_size
-  elif procid == 'rcuh': offset = c_ei_status_rcuh_offset; size = c_nof_blp    *c_ei_status_rcuh_size
-  elif procid == 'rsu' : offset = c_ei_status_rsu_offset;  size =               c_ei_status_rsu_size
-  elif procid == 'ado' : offset = c_ei_status_ado_offset;  size = c_nof_blp    *c_ei_status_ado_size
-  elif procid == 'rad' : offset = c_ei_status_rad_offset;  size = c_rad_nof_rx *c_ei_status_rad_size
-  else:                  offset = c_ei_status_rsr_offset;  size =               c_ei_status_rsr_size
+  if   procid == 'rsp'       : offset = c_ei_status_rsp_offset;       size =                      c_ei_status_rsp_size
+  elif procid == 'eth'       : offset = c_ei_status_eth_offset;       size =                      c_ei_status_eth_size
+  elif procid == 'mep'       : offset = c_ei_status_mep_offset;       size =                      c_ei_status_mep_size
+  elif procid == 'diag'      : offset = c_ei_status_diag_offset;      size =                      c_ei_status_diag_size
+  elif procid == 'bs'        : offset = c_ei_status_bs_offset;        size = c_nof_blp           *c_ei_status_bs_size
+  elif procid == 'rcuh'      : offset = c_ei_status_rcuh_offset;      size = c_nof_blp           *c_ei_status_rcuh_size
+  elif procid == 'rsu'       : offset = c_ei_status_rsu_offset;       size =                      c_ei_status_rsu_size
+  elif procid == 'ado'       : offset = c_ei_status_ado_offset;       size = c_nof_blp           *c_ei_status_ado_size
+  elif procid == 'rad'       : offset = c_ei_status_rad_offset;       size = c_rad_nof_rx_status *c_ei_status_rad_size
+  elif procid == 'rcuh_test' : offset = c_ei_status_rcuh_test_offset; size = c_nof_blp           *c_ei_status_rcuh_test_size
+  else:                        offset = c_ei_status_rsr_offset;       size =                      c_ei_status_rsr_size
   
   status = []
   for i in range(size):
@@ -941,7 +972,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - procid   = Process ID : 'rsp', 'eth', 'mep', 'diag', 'bs', 'rcuh', 'rsu', 'ado', 'rad' or 'all'
+  - procid   = Process ID : 'rsp', 'eth', 'mep', 'diag', 'bs', 'rcuh', 'rsu', 'ado', 'rad', 'rcuh_test', or 'all'
   - rspId    = List of 'rsp#' 
   - applev   = Append log level
   Return:
@@ -1028,6 +1059,14 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
     for la in range(c_nof_lanes):
       rad_lane[la,'crosslets'] = msg.readUnsigned(4)
       rad_lane[la,'beamlets']  = msg.readUnsigned(4)
+    for la in range(c_nof_lanes):
+      rad_lane[la,'subbands'] = msg.readUnsigned(4)
+    # RCU test status
+    rcu_test_x = {}
+    rcu_test_y = {}
+    for bi in range(c_nof_blp):
+      rcu_test_x[bi] = msg.readUnsigned(2)
+      rcu_test_y[bi] = msg.readUnsigned(2)
 
     # Report RSR fields indicated by procid
     tc.appendLog(applev, '')
@@ -1069,6 +1108,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
       else:                                                tc.appendLog(applev, '  Last error       = Illegal error code: %d' % eth_last_error)
       tc.appendLog(applev, '')
       ret.append([eth_nof_frames, eth_nof_errors, eth_last_error])
+      
     if procid == 'mep' or procid == 'all':
       tc.appendLog(applev, 'MEP status:')
       tc.appendLog(applev, '')
@@ -1085,6 +1125,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
       else:                                         tc.appendLog(applev, '  Error status previous msg = Illegal error code: %d' % mep_prev_error)
       tc.appendLog(applev, '')
       ret.append([mep_seq_nr, mep_prev_error])
+      
     if procid == 'diag' or procid == 'all':
       tc.appendLog(applev, 'DIAG status:')
       tc.appendLog(applev, '')
@@ -1153,6 +1194,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
           tc.appendLog(applev, '  Test result RI-AP%s        = Unknown status %d.' % (ai, diag_ri_errors[ai]))
       tc.appendLog(applev, '')
       ret.append([diag_interface, diag_mode, diag_ri_errors['rsp'], diag_rcux_errors, diag_rcuy_errors, diag_eth_errors['LCU'], diag_eth_errors['CEP'], diag_serdes_errors, diag_ri_errors['0'], diag_ri_errors['1'], diag_ri_errors['2'], diag_ri_errors['3']])
+      
     if procid == 'bs' or procid == 'all':
       tc.appendLog(applev, 'BS status:')
       tc.appendLog(applev, '')
@@ -1165,6 +1207,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
         tc.appendLog(applev, '  %s' % st)
         ret.append([bs_ext_cnt[bi], bs_sync_cnt[bi], bs_sample_cnt[bi], bs_slice_cnt[bi]])
       tc.appendLog(applev, '')
+      
     if procid == 'rcuh' or procid == 'all':
       tc.appendLog(applev, 'RCU status:')
       tc.appendLog(applev, '')
@@ -1176,6 +1219,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
         tc.appendLog(applev, '  %s' % st)
         ret.append([rcu_status[bi], rcu_nof_ovr_x[bi], rcu_nof_ovr_y[bi]])
       tc.appendLog(applev, '')
+      
     if procid == 'rsu' or procid == 'all':
       tc.appendLog(applev, 'RSU status:')
       tc.appendLog(applev, '')
@@ -1207,7 +1251,8 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
       tc.appendLog(applev, '  [%d,%d] statusVersion   = %d : CP version number' % (c_cp_statusVersion1, c_cp_statusVersion0, cp_version))
       tc.appendLog(applev, '')
       ret.append([rsu_cp_status])
-    elif procid == 'ado' or procid == 'all':
+      
+    if procid == 'ado' or procid == 'all':
       tc.appendLog(applev, 'ADC offset:')
       tc.appendLog(applev, '')
       for bi in range(c_nof_blp):
@@ -1230,6 +1275,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
 
         ret.append([ado_x[bi], ado_y[bi]])
       tc.appendLog(applev, '')
+      
     if procid == 'rad' or procid == 'all':
       tc.appendLog(applev, 'RAD BP frame rx status:')
       tc.appendLog(applev, '')
@@ -1251,7 +1297,7 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
       tc.appendLog(applev, '  %s' % st)
       ret.append(rad_ri)
       for la in range(c_nof_lanes):
-        for let in ['crosslets', 'beamlets']:
+        for let in ['crosslets', 'beamlets', 'subbands']:
           st = 'Lane-%d, %-9s: ' % (la, let)
           cnt = rad_lane[la, let] & ((1<<18)-1)
           if cnt==0:
@@ -1269,6 +1315,18 @@ def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21):
           ret.append(rad_lane[la, let])
       tc.appendLog(applev, '')
       ret = [retb, ret]
+      
+    if procid == 'rcuh_test' or procid == 'all':
+      tc.appendLog(applev, 'RCU test status:')
+      tc.appendLog(applev, '')
+      for bi in range(c_nof_blp):
+        st  = 'BLP-%s: ' % bi
+        st += 'rcu_test_x = 0x%x, ' % rcu_test_x[bi]
+        st += 'rcu_test_y = 0x%x'   % rcu_test_y[bi]
+        tc.appendLog(applev, '  %s' % st)
+        ret.append([rcu_test_x[bi], rcu_test_y[bi]])
+      tc.appendLog(applev, '')
+      
     ret_rsp.append(ret)
   return ret_rsp
 
@@ -1294,7 +1352,7 @@ def write_rsr_timestamp(tc, msg, timestamp=0, timemode=1, fpgaId=['rsp'], rspId=
       mode_str = 'auto increment'
   else:
       mode_str = 'no change'
-  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR timestamp = %d, behaviour at sync is %s):' % (rspId, timestamp, mode_str))
+  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR timestamp = %d, behaviour at sync is %s):' % (rspId, fpgaId, timestamp, mode_str))
   timedata=i2bbbb([timestamp])
   timedata.append(timemode)
   for ri in rspId:
@@ -1331,23 +1389,139 @@ def read_rsr_timestamp(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
       for fi in fpgaId:
           tc.appendLog(applev, '>>> RSR timestamps:')
           tc.appendLog(applev, '    . RSP-%s, FPGA-%s : %d' % (ri, fi, fpgaTimestamps[index]))
+          index += 1
   index = 0
   for ri in rspId:
       for fi in fpgaId:
-        tc.appendLog(applev, '>>> RSR timestamp behaviour at sync:')
-        if fpgaTimestamp_modes[index]==1:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : reset to -1' % (ri, fi))
-        elif fpgaTimestamp_modes[index]==2:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : auto increment' % (ri, fi))
-        else:
-            tc.appendLog(applev, '    . RSP-%s, FPGA-%s : no change' % (ri, fi))
+          tc.appendLog(applev, '>>> RSR timestamp behaviour at sync:')
+          if fpgaTimestamp_modes[index]==1:
+              tc.appendLog(applev, '    . RSP-%s, FPGA-%s : reset to -1' % (ri, fi))
+          elif fpgaTimestamp_modes[index]==2:
+              tc.appendLog(applev, '    . RSP-%s, FPGA-%s : auto increment' % (ri, fi))
+          else:
+              tc.appendLog(applev, '    . RSP-%s, FPGA-%s : no change' % (ri, fi))
+          index += 1
       
   ret = fpgaTimestamps[0]
   for ti in fpgaTimestamps:
       if ret != ti:
           ret = -1
   return ret
-  
+
+    
+def write_rsr_beam_mode(tc, msg, beam_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR write beam mode
+
+  Input:
+  - tc        = Testcase
+  - msg       = MepMessage
+  - beam_mode = Select beam mode 0, 1, or 2
+  - fpgaId    = List of ['rsp', 'blp#']
+  - rspId     = List of 'rsp#' 
+  - applev    = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return: void
+  """ 
+  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR beam mode = %d : %s:' % (rspId, fpgaId, beam_mode, c_beam_mode_str[beam_mode]))
+  offset = 1
+  for ri in rspId:
+      msg.packAddr(fpgaId, 'rsr', 'beammode')
+      msg.packPayload([beam_mode],1)
+      rspctl(tc, '--writeblock=%s,%s,%d,%s' % (ri[3:], msg.hexAddr, offset, msg.hexPayload))
+  rspctl_write_sleep()
+
+
+def read_rsr_beam_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR read beam mode
+
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - fpgaId = List of ['rsp', 'blp#']
+  - rspId  = List of ['rsp#']
+  - applev = Append log level
+  Report:  
+    tc appendlog messages are reported.
+  Return:
+  - read active beam_mode if all are equal else -1
+  """
+  fpga_beam_modes_max = []  # Maximum beam mode 0, 1, or 2 that is supported in the hardware
+  fpga_beam_modes_act = []  # Selected beam mode 0, 1, or 2 that is currently active
+  for ri in rspId:
+      for fi in fpgaId:
+          read_mem(tc, msg, 'rsr', 'beammode', 2, [fi], [ri], 'h', 1, 0)
+          msg.setOffset(0)
+          beam_max = msg.readUnsigned(1)
+          beam_act = msg.readUnsigned(1)
+          fpga_beam_modes_max.append(beam_max)
+          fpga_beam_modes_act.append(beam_act)
+          tc.appendLog(applev, '>>> RSR beam mode:')
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : max = %d (read only), active = %d' % (ri, fi, beam_max, beam_act))
+      
+  ret = fpga_beam_modes_act[0]
+  for si in fpga_beam_modes_act:
+      if ret != si:
+          ret = -1
+  return ret
+
+
+def write_rsr_sdo_mode(tc, msg, sdo_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR write subband data output (SDO) mode
+
+  Input:
+  - tc        = Testcase
+  - msg       = MepMessage
+  - sdo_mode  = Select SDO mode 0, 1, 2 or 3
+  - fpgaId    = List of ['rsp', 'blp#']
+  - rspId     = List of 'rsp#' 
+  - applev    = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return: void
+  """ 
+  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR SDO mode = %d : %s:' % (rspId, fpgaId, sdo_mode, c_sdo_mode_str[sdo_mode]))
+  offset = 1
+  for ri in rspId:
+      msg.packAddr(fpgaId, 'rsr', 'sdomode')
+      msg.packPayload([sdo_mode],1)
+      rspctl(tc, '--writeblock=%s,%s,%d,%s' % (ri[3:], msg.hexAddr, offset, msg.hexPayload))
+  rspctl_write_sleep()
+
+
+def read_rsr_sdo_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR read SDO mode
+
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - fpgaId = List of ['rsp', 'blp#']
+  - rspId  = List of ['rsp#']
+  - applev = Append log level
+  Report:  
+    tc appendlog messages are reported.
+  Return:
+  - read active sdo_mode if all are equal else -1
+  """
+  fpga_SDO_modes_max = []  # Maximum sdo mode 0, 1, 2 or 3 that is supported in the hardware
+  fpga_SDO_modes_act = []  # Selected sdo mode 0, 1, 2 or 3 that is currently active
+  for ri in rspId:
+      for fi in fpgaId:
+          read_mem(tc, msg, 'rsr', 'sdomode', 2, [fi], [ri], 'h', 1, 0)
+          msg.setOffset(0)
+          sdo_max = msg.readUnsigned(1)
+          sdo_act = msg.readUnsigned(1)
+          fpga_SDO_modes_max.append(sdo_max)
+          fpga_SDO_modes_act.append(sdo_act)
+          tc.appendLog(applev, '>>> RSR sdo mode:')
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : max = %d (read only), active = %d' % (ri, fi, sdo_max, sdo_act))
+      
+  ret = fpga_SDO_modes_act[0]
+  for si in fpga_SDO_modes_act:
+      if ret != si:
+          ret = -1
+  return ret
+
 
 def write_rad_settings(tc, msg, settings, rspId=['rsp0'], applev=21):
   """RAD_BP write settings
@@ -1442,7 +1616,7 @@ def read_rad_latency(tc, msg, rspId=['rsp0'], applev=21):
   - latency = RI and lane latencies crosslets and beamlets
   """
   latency = []
-  nof_rd = 2*c_rad_nof_rx
+  nof_rd = 2*c_rad_nof_rx_latency
   
   title_str = '>>>         '
   title_str += 'Ri'
@@ -1698,41 +1872,74 @@ def read_cdo_transport(tc, msg, rspId=['rsp0'], applev=21):
   tc.appendLog(applev, '      UDP  : checksum        = 0x%X' % udp.checksum)
 
           
-def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
+def write_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bank=[0], pid='ss'):
   """Write subband to beamlet mapping to SS register
   
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - ss_map = List of words for subband to beamlet mapping
+  - ss_map = List of words for subband to beamlet mapping, length <= c_ss_map_size
   - blpId  = List of 'blp#'
   - rspId  = List of 'rsp#'
-  - bmBank = List of regId(s) for beam mode banks 0, 1, 2 and/or 3
+  - bank   = List of regId(s) for SS banks 0, 1, 2 and/or 3
+  - pid    = SS instance name (peripheral ID)
   Return: void
   """
-  regId = bmBank[0]
-  write_mem(tc, msg, 'ss', 'settings%d' % regId, ss_map, blpId, rspId, 2)
+  regId = bank[0]
+  write_mem(tc, msg, pid, 'settings%d' % regId, ss_map, blpId, rspId, 2)
 
 
-def read_ss(tc, msg, nof, blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
+def read_ss(tc, msg, nof=c_ss_map_size, blpId=['blp0'], rspId=['rsp0'], bank=[0], pid='ss'):
   """Read subband to beamlet mapping from SS register
   
   Input:
   - tc     = Testcase
   - msg    = MepMessage
-  - nof    = Nof words to read from the SS register
+  - nof    = Nof words to read from the SS register <= c_ss_map_size
   - blpId  = List of one 'blp#'
   - rspId  = List of one 'rsp#'
-  - bmBank = List of one regId for beam mode bank 0, 1, 2 or 3
+  - bank   = List of one regId for SS bank 0, 1, 2 or 3
+  - pid    = SS instance name (peripheral ID)
   Return:
   - Read SS register words
   """
   width = 2
-  regId = bmBank[0]
-  return read_mem(tc, msg, 'ss', 'settings%d' % regId, width*nof, blpId, rspId, '+', width)
+  regId = bank[0]
+  return read_mem(tc, msg, pid, 'settings%d' % regId, width*nof, blpId, rspId, '+', width)
   
   
-def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bmBank=[0]):
+def write_sdo_ss(tc, msg, ss_map, blpId=['blp0'], rspId=['rsp0'], bank=[0]):
+  """Write subband data output mapping to SDO-SS register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - ss_map = List of words for SDO mapping, length <= c_sdo_ss_map_size = c_sdo_ss_nof_subbands_ap
+  - blpId  = List of 'blp#'
+  - rspId  = List of 'rsp#'
+  - bank   = List of regId(s) for SDO SS banks 0, 1, 2 and/or 3
+  Return: void
+  """
+  write_ss(tc, msg, ss_map, blpId, rspId, bank, 'sdo_ss')
+
+
+def read_sdo_ss(tc, msg, nof=c_sdo_ss_map_size, blpId=['blp0'], rspId=['rsp0'], bank=[0]):
+  """Read subband data output mapping from SDO SS register
+  
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - nof    = Nof words to read from the SDO SS register <= c_sdo_ss_map_size = c_sdo_ss_nof_subbands_ap
+  - blpId  = List of one 'blp#'
+  - rspId  = List of one 'rsp#'
+  - bank   = List of one regId for SDO SS bank 0, 1, 2 or 3
+  Return:
+  - Read SDO SS register words
+  """
+  return read_ss(tc, msg, nof, blpId, rspId, bank, 'sdo_ss')
+    
+  
+def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bank=[0]):
   """Read coefficients from BF register
   
   Input:
@@ -1742,12 +1949,12 @@ def read_bf(tc, msg, nof, ppId=['xr'], blpId=['blp0'], rspId=['rsp0'], bmBank=[0
   - ppId   = List of one BF coefficient pol-phase identifier xr, xi, yr, or yi
   - blpId  = List of one 'blp#'
   - rspId  = List of one 'rsp#'
-  - bmBank = List of one register bank identifier for beam mode bank 0, 1, 2 or 3
+  - bank   = List of one register bank identifier for beam mode bank 0, 1, 2 or 3
   Return:
   - Read BF register words
   """
   width = 2
-  return read_mem(tc, msg, 'bf', 'coef%s%d' % (ppId[0], bmBank[0]), width*nof, blpId, rspId, '-', width)
+  return read_mem(tc, msg, 'bf', 'coef%s%d' % (ppId[0], bank[0]), width*nof, blpId, rspId, '-', width)
   
   
 ################################################################################

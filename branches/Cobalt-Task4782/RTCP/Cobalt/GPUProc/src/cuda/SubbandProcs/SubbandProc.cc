@@ -48,8 +48,9 @@ namespace LOFAR
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+                ps.settings.nrPolarisations,
+                ps.settings.beamFormer.maxNrTABsPerSAP(),
+                ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 context));
       }
@@ -85,6 +86,23 @@ namespace LOFAR
       delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAtBegin;
       delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAfterEnd;
       phaseOffsets[station][1]        = ps.settings.stations[station].phaseCorrection.y;
+
+
+      if (ps.settings.beamFormer.enabled)
+      {
+        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
+        {
+          // we already compensated for the delay for the first beam
+          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                     metaData.stationBeam.delayAtBegin) * 0.5;
+
+          // subtract the delay that was already compensated for
+          tabDelays[SAP][station][tab] = static_cast<float>(
+                                         (metaData.TABs[tab].delayAtBegin +
+                                          metaData.TABs[tab].delayAfterEnd) * 0.5 -
+                                         compensatedDelay);
+        }
+      }
     }
 
 
@@ -112,6 +130,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 

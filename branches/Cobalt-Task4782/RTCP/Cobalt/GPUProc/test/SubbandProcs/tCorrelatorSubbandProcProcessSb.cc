@@ -54,20 +54,26 @@ int main() {
 
   CorrelatorFactories factories(ps);
 
+  cout << "FIR_FilterKernel::INPUT_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA) << endl;
+  cout << "FIR_FilterKernel::OUTPUT_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::OUTPUT_DATA) << endl;
+  cout << "FIR_FilterKernel::FILTER_WEIGHTS : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS) << endl;
+  cout << "FIR_FilterKernel::HISTORY_DATA : "
+       << factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA) << endl;
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
-  SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), NR_POLARIZATIONS,
-                        ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
-                        ps.nrBytesPerComplexSample(), ctx);
+  SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), ps.settings.nrPolarisations,
+                          ps.settings.beamFormer.maxNrTABsPerSAP(),
+                           ps.nrSamplesPerSubband(), ps.nrBytesPerComplexSample(), ctx);
   cout << "#st=" << ps.nrStations() << " #sampl/sb=" << ps.nrSamplesPerSubband() <<
-          " (skipping #histSampl=" << ps.nrHistorySamples() << ") #pol=" << NR_POLARIZATIONS <<
           " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
           " Total bytes=" << in.inputSamples.size() << endl;
 
   // Initialize synthetic input to all (1, 1).
   for (size_t st = 0; st < ps.nrStations(); st++)
-    // skip ps.nrHistorySamples(), because no FIR
-    for (size_t i = ps.nrHistorySamples(); i < ps.nrHistorySamples() + ps.nrSamplesPerSubband(); i++)
+    for (size_t i = 0; i < ps.nrSamplesPerSubband(); i++)
       for (size_t pol = 0; pol < NR_POLARIZATIONS; pol++)
       {
         if (ps.nrBytesPerComplexSample() == 4) { // 16 bit mode
@@ -85,7 +91,8 @@ int main() {
   // Initialize subbands partitioning administration (struct BlockID). We only do the 1st block of whatever.
   in.blockID.block = 0;            // Block number: 0 .. inf
   in.blockID.globalSubbandIdx = 0; // Subband index in the observation: [0, ps.nrSubbands())
-  in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
+  in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline: [0, subbandIndices.size())
+  in.blockID.subbandProcSubbandIdx = 0; // Subband index for this subbandProc: [0, nrSubbandsPerSubbandProc)
 
   // Initialize delays. We skip delay compensation, but init anyway,
   // so we won't copy uninitialized data to the device.
