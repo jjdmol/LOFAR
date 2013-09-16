@@ -1,0 +1,21 @@
+# Observation
+observationName	string
+
+# Data type: Correlated/Beamformed
+dataProductType	string
+
+# Filename
+fileName	string
+
+# Directory
+directory string
+
+# Dropping output?
+dropping  bool
+
+# Data written (seconds)
+written		float
+
+# Data dropped (seconds)
+dropped		float
+
