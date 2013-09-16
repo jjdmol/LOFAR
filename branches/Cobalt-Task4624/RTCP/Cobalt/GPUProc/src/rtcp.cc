@@ -47,6 +47,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
@@ -209,8 +211,11 @@ int main(int argc, char **argv)
   Parset ps(argv[optind]);
 
   // Send identification string to the MAC Log Processor
-  LOG_INFO_STR("MACProcessScope: " << createPropertySetName(
-                 PSN_COBALTGPU_PROC, "", ps.getString("_DPname")));
+  LOG_INFO_STR("MACProcessScope: " << 
+               str(format(createPropertySetName(
+                            PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
+                   % toUpper(myHostname(false))
+                   % ps.settings.nodes[rank].cpu));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
