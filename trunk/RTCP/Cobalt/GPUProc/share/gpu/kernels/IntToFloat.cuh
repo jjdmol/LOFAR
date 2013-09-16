@@ -44,7 +44,9 @@ inline __device__ float convertIntToFloat(signed char x)
   int i = x == -128 ? -127 : x;
 
   // Keep output scale the same as 16 bit mode.
-  return 256 * i;
+  // Gains (input and complex voltages) end up x16,
+  // power (visibilities and Stokes) end up x16^2.
+  return 16 * i;
 }
 #else
 #error unsupported NR_BITS_PER_SAMPLE
