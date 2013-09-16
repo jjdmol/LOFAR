@@ -15,5 +15,5 @@ ElementName	TypeName	_original.._value
 scriptInfo.transferMPs.runDone	ScriptInfo	0
 _ValueArchive_2.size.maxDpElGet	_ValueArchive	10000
 _ValueArchive_2.size.maxDpElSet	_ValueArchive	10000
-_ValueArchive_2.size.maxValueSet	_ValueArchive	1000
-_ValueArchive_2.size.maxValueGet	_ValueArchive	1000
+_ValueArchive_2.size.maxValuesSet	_ValueArchive	1000
+_ValueArchive_2.size.maxValuesGet	_ValueArchive	1000
