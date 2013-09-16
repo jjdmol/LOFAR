@@ -253,6 +253,10 @@ string observationParset(int	obsID)
 //  @inputbuffer@
 //  @adder@
 //  @storage@
+//  @oscobaltnode@
+//  @pscobaltnode@
+//  @cobaltgpuproc@
+//  @cobaltoutputproc@
 //
 string	createPropertySetName(const string&		propSetMask,
 							  const string&		controllerName,
@@ -339,6 +343,18 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@storage@")) != string::npos) {
 		psName.replace(pos, 9, string("Storage%d"));
+	}
+	if ((pos = psName.find("@oscobaltnode@")) != string::npos) {
+		psName.replace(pos, 14, string("OSCBT%03d"));
+	}
+	if ((pos = psName.find("@pscobaltnode@")) != string::npos) {
+		psName.replace(pos, 14, string("PSCBT%03d"));
+	}
+	if ((pos = psName.find("@cobaltgpuproc@")) != string::npos) {
+		psName.replace(pos, 15, string("CobaltGPUProc%03d"));
+	}
+	if ((pos = psName.find("@cobaltoutputproc@")) != string::npos) {
+		psName.replace(pos, 18, string("CobaltOutputProc%03d"));
 	}
 		
 	return (psName);
