@@ -169,9 +169,9 @@ substitute_cobaltgpuproc()
 	{
 		hasCobaltGPUProc=index($1,"@cobaltgpuproc@");
 		if (hasCobaltGPUProc > 0) {
-			for (cobaltgpuproc=0; cobaltgpuproc<122; cobaltgpuproc++) {
+			for (cobaltgpuproc=0; cobaltgpuproc<2; cobaltgpuproc++) {
 				dpname=$1;
-                                newname = sprintf("CobaltGPUProc%03d",cobaltgpuproc);
+                                newname = sprintf("CobaltGPUProc%02d",cobaltgpuproc);
 				sub("@cobaltgpuproc@", newname, dpname);
 				print dpname"	"$2;
 			}
@@ -265,9 +265,9 @@ substitute_cobaltoutputproc()
 	{
 		hasCobaltOutputProc=index($1,"@cobaltoutputproc@");
 		if (hasCobaltOutputProc > 0) {
-			for (wNr = 0; wNr < 20; wNr++) {  
+			for (wNr = 0; wNr < 500; wNr++) {  
 				dpname=$1;
-                                newname = sprintf("CobaltOutputProc%02d",wNr);
+                                newname = sprintf("CobaltOutputProc%03d",wNr);
                                 sub("@cobaltoutputproc@", newname, dpname);
 				print dpname"	"$2;
 			}
@@ -406,6 +406,30 @@ substitute_pscobaltnode()
 }
 
 #
+# substitute_oscobaltnode\
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_oscobaltnode()
+{
+	awk '
+	{
+		hasCobaltNode=index($1,"@oscobaltnode@");
+		if (hasCobaltNode > 0) {
+			for (cnode=1; cnode<9; cnode++) {
+				dpname=$1;
+                                newname = sprintf("OSCBT%03d",cnode);
+                                sub("@oscobaltnode@", newname, dpname);
+				print dpname"	"$2;
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
 # substitute_osionode\
 #
 # syntax of the lines must be: dp dpt
@@ -420,30 +444,6 @@ substitute_osionode()
 				dpname=$1;
                                 newname = sprintf("OSIONode%02d",ionode);
                                 sub("@osionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-#
-# substitute_oscobaltnode\
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_oscobaltnode()
-{
-	awk '
-	{
-		hasCobaltNode=index($1,"@oscobaltnode@");
-		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<9; cnode++) {
-				dpname=$1;
-                                newname = sprintf("CBT%03d",cnode);
-                                sub("@oscobaltnode@", newname, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -1202,8 +1202,8 @@ create_dp_file()
 				substitute_cobalt_cobaltnode_cobaltnic | \
 				substitute_cobalt_cobaltnode | \
 				substitute_cobalt | \
-		                substitute_oscobaltnode | \
 				substitute_psionode | \
+				substitute_oscobaltnode | \
 				substitute_pscobaltnode | \
 			        substitute_oslocusnode | \
 			        substitute_pslocusnode | \
