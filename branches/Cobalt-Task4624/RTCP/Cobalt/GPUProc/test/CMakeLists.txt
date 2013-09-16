@@ -6,17 +6,12 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/runrtcp.sh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/runrtcp.sh"
-  @ONLY # internal, no need to install
-)
-
-
 lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tfpequals tfpequals.cc)
 lofar_add_test(tstartBGL DEPENDS rtcp)
+lofar_add_test(tMACfeedback DEPENDS rtcp)
+lofar_add_test(tProductionParsets DEPENDS rtcp)
 
 # cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
 lofar_add_executable(cmpfloat cmpfloat.cc)

@@ -441,7 +441,7 @@ int main(int argc, char **argv)
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
-      string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.observationID());
 
       try {
         feedbackLTA.writeFile(feedbackFilename, false);

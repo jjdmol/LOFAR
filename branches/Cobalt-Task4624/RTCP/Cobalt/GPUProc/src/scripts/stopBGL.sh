@@ -33,13 +33,8 @@ function error {
   exit 1
 }
 
-# Check whether the PID file is usable
-echo "PID file: $PIDFILE"
-[ -e "$PIDFILE" ] || error "PID file does not exist: $PIDFILE"
-[ -f "$PIDFILE" ] || error "PID file is not a regular file: $PIDFILE"
-[ -r "$PIDFILE" ] || error "PID file is not readable: $PIDFILE"
-
 # Extract PID
+echo "PID file: $PIDFILE"
 PID=`cat $PIDFILE`
 [ -n "$PID" ] || error "PID file empty: $PIDFILE"
 echo "PID: $PID"

@@ -9,17 +9,11 @@
 #
 # This script is called by OnlineControl to start an observation.
 
-PARSET_MAC="$4"
+PARSET="$4"
 OBSID="$5"
-
-# The name of what will be our parset
-PARSET=$LOFARROOT/var/run/Observation$OBSID.parset
 
 # The file to store the PID in
 PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
-
-# Prepare environment, typically needed only once
-mkdir -p $LOFARROOT/var/{run,log}
 
 (
 # Always print a header, to match errors to observations
@@ -29,7 +23,7 @@ echo "called as: $0 $@"
 echo "pwd:       $PWD"
 echo "LOFARROOT: $LOFARROOT"
 echo "obs id:    $OBSID"
-echo "parset:    $PARSET_MAC"
+echo "parset:    $PARSET"
 echo "---------------"
 
 function error {
@@ -37,11 +31,8 @@ function error {
   exit 1
 }
 
-[ -n "$OBSID" ] || error "No observation ID provided on the command line"
-[ -n "$PARSET_MAC" ] || error "No parset provided on the command line"
-
-# Add static keys
-cat $PARSET_MAC $LOFARROOT/etc/parset-additions.d/*.parset > $PARSET || error "Could not create parset $PARSET"
+[ -n "$PARSET" ] || error "No parset provided"
+[ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
 # Start observation in the background
 runObservation.sh "$PARSET" > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 </dev/null &
@@ -59,3 +50,4 @@ echo "Done"
 
 # Return the status of our subshell, not of tee
 exit ${PIPESTATUS[0]}
+
