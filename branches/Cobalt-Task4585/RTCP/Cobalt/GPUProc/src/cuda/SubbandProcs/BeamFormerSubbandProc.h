@@ -49,12 +49,12 @@ namespace LOFAR
     /*
      * Our output data type
      */
-    class BeamFormedData: public MultiDimArrayHostBuffer<fcomplex, 3>, public StreamableData
+    class BeamFormedData: public MultiDimArrayHostBuffer<float, 3>, public StreamableData
     {
     public:
       BeamFormedData(unsigned nrStokes, unsigned nrChannels, size_t nrSamples, gpu::Context &context)
       :
-        MultiDimArrayHostBuffer<fcomplex, 3>(boost::extents[nrStokes][nrChannels][nrSamples], context, 0)
+        MultiDimArrayHostBuffer<float, 3>(boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
       {
       }
 
@@ -187,7 +187,7 @@ namespace LOFAR
 
     struct BeamFormerFactories
     {
-      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
+      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1) :
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
         correctBandPass(correctBandPassParams(ps)),
