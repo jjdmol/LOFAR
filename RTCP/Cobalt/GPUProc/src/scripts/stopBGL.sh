@@ -8,6 +8,11 @@
 #   - the stop time (plus a grace period) has passed
 #   - the observation is aborted
 
+if test "$LOFARROOT" == ""; then
+  echo "LOFARROOT is not set! Exiting."
+  exit 1
+fi
+
 JOB="$1"
 OBSID="$2"
 

@@ -9,6 +9,11 @@
 #
 # This script is called by OnlineControl to start an observation.
 
+if test "$LOFARROOT" == ""; then
+  echo "LOFARROOT is not set! Exiting."
+  exit 1
+fi
+
 PARSET="$4"
 OBSID="$5"
 
