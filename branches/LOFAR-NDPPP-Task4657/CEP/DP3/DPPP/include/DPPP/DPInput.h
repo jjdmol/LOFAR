@@ -31,13 +31,15 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/UVWCalculator.h>
 #include <DPPP/FlagCounter.h>
+#include <StationResponse/Station.h>
+#include <Common/lofar_vector.h>
+
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/RefRows.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slicer.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
-#include <Common/lofar_vector.h>
 
 namespace LOFAR {
   namespace DPPP {
@@ -79,6 +81,10 @@ namespace LOFAR {
       // Get the MS name.
       // The default implementation returns an empty string.
       virtual casa::String msName() const;
+
+      // Fill the vector with station beam info from the input source (MS).
+      // The default implementation throws an exception.
+      virtual void fillBeamInfo (vector<StationResponse::Station::Ptr>&);
 
       // Fetch the FullRes flags.
       // If defined in the buffer, they are taken from there.

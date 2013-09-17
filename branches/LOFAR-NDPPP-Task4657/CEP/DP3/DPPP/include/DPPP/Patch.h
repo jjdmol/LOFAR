@@ -52,15 +52,16 @@ public:
 
     const string &name() const;
     const Position &position() const;
+    void setPosition (const Position&);
 
     size_t nComponents() const;
     ModelComponent::ConstPtr component(size_t i) const;
 
-private:
     typedef vector<ModelComponent::ConstPtr>::const_iterator const_iterator;
     const_iterator begin() const;
     const_iterator end() const;
 
+private:
     string                              itsName;
     Position                            itsPosition;
     vector<ModelComponent::ConstPtr>    itsComponents;
@@ -87,6 +88,11 @@ inline const string &Patch::name() const
 inline const Position &Patch::position() const
 {
     return itsPosition;
+}
+
+inline void Patch::setPosition (const Position& pos)
+{
+    itsPosition = pos;
 }
 
 inline size_t Patch::nComponents() const

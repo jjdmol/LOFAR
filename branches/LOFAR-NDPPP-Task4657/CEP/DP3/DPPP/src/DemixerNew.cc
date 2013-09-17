@@ -54,11 +54,6 @@ namespace LOFAR {
     {
       ASSERTSTR (! itsInstrumentName.empty(),
                  "An empty name is given for the instrument model");
-      /// Create ParmDB at first write!!!
-      /// In that way instrumentmodel can be in MS directory.
-      itsParmDB = boost::shared_ptr<BBS::ParmDB>
-        (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsInstrumentName),
-                         true));
       ///      // Add a null step as the last step in the filter.
       ///      DPStep::ShPtr nullStep(new NullStep());
       ///      itsFilter.setNextStep (nullStep);
@@ -69,9 +64,9 @@ namespace LOFAR {
       info() = infoIn;
       // Handle possible data selection.
       itsFilter.updateInfo (infoIn);
-      const DPInfo& infoSel = itsFilter.getInfo();
-      itsDemixInfo.update (infoSel, info());
+      itsDemixInfo.update (itsFilter.getInfo(), info());
       // Update the info of this object.
+      info().fillAntennaBeamInfo (itsInput);
       info().setNeedVisData();
       info().setNeedWrite();
       // Size the buffers.
@@ -267,6 +262,13 @@ namespace LOFAR {
 
     void DemixerNew::writeSolutions()
     {
+      /// Open the ParmDB at the first write.
+      /// In that way the instrumentmodel ParmDB can be in the MS directory.
+      if (! itsParmDB) {
+        itsParmDB = boost::shared_ptr<BBS::ParmDB>
+          (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsInstrumentName),
+                           true));
+      }
       itsTimerDump.start();
       for (uint i=0; i<itsWorkers.size(); ++i) {
         itsWorkers[i].dumpSolutions (*itsParmDB);

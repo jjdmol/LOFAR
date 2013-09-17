@@ -54,11 +54,12 @@ namespace LOFAR {
                                                   20.)),
         itsTargetAmplThreshold (parset.getDouble (prefix+"target.threshold",
                                                   20.)),
-        itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60.)),
+        itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60)),
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
-        itsMinNStation      (parset.getDouble (prefix+"minnstation", 6)),
+        itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
+        itsMinNStation      (parset.getUint   (prefix+"minnstation", 6)),
         itsNStation         (0),
         itsNBl              (0),
         itsNCorr            (0),
@@ -118,8 +119,8 @@ namespace LOFAR {
     void DemixInfo::makeTargetDemixList()
     {
       // Get all A-team models for demixing.
-      // Note that in constructor only some sources were read.
-      // Open the SourceDB.
+      // Note that in the constructor only some sources were read.
+      // First open the SourceDB.
       BBS::SourceDB sdb(BBS::ParmDBMeta(string(), itsDemixModelName));
       sdb.lock();
       vector<Patch::ConstPtr> patchList = makePatchList (itsDemixModelName,
@@ -127,10 +128,12 @@ namespace LOFAR {
       // The demix target list is the same as the predict list, but A-team
       // sources must be replaced with their demix model.
       // Also these sources must be removed from the A-team model.
-      itsTargetDemixList.reserve (itsTargetList.size());
+      vector<Patch::ConstPtr> targetDemixList;
+      uint ncomponent = 0;
+      targetDemixList.reserve (itsTargetList.size());
       for (size_t i=0; i<itsTargetList.size(); ++i) {
-        // Initially use rough target model.
-        itsTargetDemixList.push_back (itsTargetList[i]);
+        targetDemixList.push_back (itsTargetList[i]);
+        ncomponent += itsTargetList[i]->nComponents();
         // Look if an A-team source matches this target source.
         for (size_t j=0; j<patchList.size(); ++j) {
           if (testAngDist (itsTargetList[i]->position()[0],
@@ -139,12 +142,14 @@ namespace LOFAR {
                            patchList[j]->position()[1],
                            itsCosTargetDelta)) {
             // Match, so use the detailed A-team model.
-            itsTargetDemixList[i] = patchList[j];
+            targetDemixList[i] = patchList[j];
+            ncomponent += (patchList[j]->nComponents() -
+                           itsTargetList[i]->nComponents());
             itsTargetReplaced.push_back (patchList[j]->name());
             // A-source is in target, so remove from A-team models (if in there).
             for (size_t k=0; k<itsAteamList.size(); ++k) {
-              if (testAngDist (itsTargetDemixList[i]->position()[0],
-                               itsTargetDemixList[i]->position()[1],
+              if (testAngDist (targetDemixList[i]->position()[0],
+                               targetDemixList[i]->position()[1],
                                itsAteamList[k]->position()[0],
                                itsAteamList[k]->position()[1],
                                itsCosTargetDelta)) {
@@ -158,10 +163,25 @@ namespace LOFAR {
           }
         }
       }
+      // For demixing a single patch is used with the field center
+      // as the patch center. So combine all sources in a single patch.
+      vector<ModelComponent::ConstPtr> componentList;
+      componentList.reserve (ncomponent);
+      for (size_t i=0; i<targetDemixList.size(); ++i) {
+        componentList.insert (componentList.end(),
+                              targetDemixList[i]->begin(),
+                              targetDemixList[i]->end());
+      }
+      itsTargetDemix = Patch::Ptr(new Patch("target",
+                                            componentList.begin(),
+                                            componentList.end()));
     }
  
     void DemixInfo::update (const DPInfo& infoSel, DPInfo& info)
     {
+      // Remove unused antennae and renumber remaining ones.
+      itsInfoSel = infoSel;
+      itsInfoSel.removeUnusedAnt();
       // Get size info.
       itsNChanIn = infoSel.nchan();
       itsNCorr   = infoSel.ncorr();
@@ -174,20 +194,20 @@ namespace LOFAR {
       itsNStation = infoSel.antennaUsed().size();
 
       // Setup the baseline index vector used to split the UVWs.
-      itsUVWSplitIndex = nsetupSplitUVW (infoSel.nantenna(),
-                                         infoSel.getAnt1(), infoSel.getAnt2());
+      itsUVWSplitIndex = nsetupSplitUVW (itsInfoSel.nantenna(),
+                                         itsInfoSel.getAnt1(),
+                                         itsInfoSel.getAnt2());
       cout << "splitindex="<<itsUVWSplitIndex<<endl;
 
       // Determine which baselines to use when estimating A-team and target.
-      itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
+      ////itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
 
-      // Re-number the station IDs in the selected baselines, removing gaps in
+      // Form the baselines.
       // the numbering due to unused stations.
       /// Why is that needed for predict/solve?
-      const vector<int> &antennaMap = infoSel.antennaMap();
       for (uint i=0; i<itsNBl; ++i) {
-        itsBaselines.push_back(Baseline(antennaMap[infoSel.getAnt1()[i]],
-          antennaMap[infoSel.getAnt2()[i]]));
+        itsBaselines.push_back (Baseline(itsInfoSel.getAnt1()[i],
+                                        itsInfoSel.getAnt2()[i]));
       }
 
       // Adapt averaging to available nr of channels and times.
@@ -199,6 +219,7 @@ namespace LOFAR {
       itsTimeIntervalAvg = infoDemix.timeInterval();
       ///      itsNTimeDemix      = infoDemix.ntime();
 
+      // Update the overall Demixer DPInfo object.
       itsNTimeAvgSubtr = std::min (itsNTimeAvgSubtr, infoSel.ntime());
       itsNChanAvgSubtr = info.update (itsNChanAvgSubtr, itsNTimeAvgSubtr);
       itsNChanOutSubtr = info.nchan();
@@ -226,6 +247,7 @@ namespace LOFAR {
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()[0],
                              angles.getBaseValue()[1]);
+      itsTargetDemix->setPosition (itsPhaseRef);
 
       // Determine if the minimum distance (scaled with freq) of A-sources
       // to target is within the threshold.
@@ -278,7 +300,7 @@ namespace LOFAR {
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
       os << "  chunksize:          " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
-      itsSelBL.show (os);
+      itsSelBL.show (os, "    ");
       ///      itsSelBLEstimate.show (os);
     }
 
@@ -371,9 +393,16 @@ namespace LOFAR {
         }
 
         // Add the component list to the list of patches.
-        patchList.push_back (Patch::Ptr (new Patch(*pnamesIter,
-                                                   componentList.begin(),
-                                                   componentList.end())));
+        Patch::Ptr ppatch(new Patch(*pnamesIter,
+                                    componentList.begin(),
+                                    componentList.end()));
+        vector<BBS::PatchInfo> patchInfo(sdb.getPatchInfo(-1, *pnamesIter));
+        ASSERT (patchInfo.size() == 1);
+        Position patchPosition;
+        patchPosition[0] = patchInfo[0].getRa();
+        patchPosition[1] = patchInfo[0].getDec();
+        ppatch->setPosition (patchPosition);
+        patchList.push_back (ppatch);
       }
       return patchList;
     }

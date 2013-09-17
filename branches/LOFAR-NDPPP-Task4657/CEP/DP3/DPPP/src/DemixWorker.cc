@@ -71,27 +71,26 @@ namespace LOFAR {
 
     DemixWorker::DemixWorker (DPInput* input,
                               const string& prefix,
-                              const DemixInfo& info,
-                              const DPInfo& dpInfo)
-      : itsInfo        (&info),
-        itsDPInfo      (&dpInfo),
-        itsFilter      (input, info.selBL()),
+                              const DemixInfo& mixInfo,
+                              const DPInfo& info)
+      : itsMix         (&mixInfo),
+        itsFilter      (input, mixInfo.selBL()),
         itsNrSolves    (0),
         itsNrConverged (0),
         itsNrNoDemix   (0),
-        itsNrIncludeStrongTarget  (0),
-        itsNrIncludeCloseTarget   (0),
-        itsNrIgnoreTarget         (0),
-        itsNrDeprojectTarget      (0)
+        itsNrIncludeStrongTarget (0),
+        itsNrIncludeCloseTarget  (0),
+        itsNrIgnoreTarget        (0),
+        itsNrDeprojectTarget     (0)
     {
       // Add a null step as the last step in the filter.
       DPStep::ShPtr nullStep(new NullStep());
       itsFilter.setNextStep (nullStep);
       // The worker will process up to chunkSize input time slots.
       // Size buffers accordingly.
-      uint ndir = info.ateamList().size();
-      itsFactors.resize      (itsInfo->chunkSize());
-      itsFactorsSubtr.resize (itsInfo->ntimeOutSubtr());
+      uint ndir = itsMix->ateamList().size();
+      itsFactors.resize      (itsMix->chunkSize());
+      itsFactorsSubtr.resize (itsMix->ntimeOutSubtr());
       itsOrigPhaseShifts.reserve (ndir);
       itsOrigFirstSteps.reserve  (ndir+1);   // also needed for target direction
       itsAvgResults.reserve  (ndir+1);
@@ -113,7 +112,7 @@ namespace LOFAR {
       //   no selection is done.
       // Note that multiple time chunks are handled jointly, so a
       // MultiResultStep is used to catch the results of all time chunks.
-      const vector<Patch::ConstPtr>& patchList = itsInfo->ateamDemixList();
+      const vector<Patch::ConstPtr>& patchList = itsMix->ateamDemixList();
       vector<string> sourceVec(2);
       for (uint i=0; i<ndir; ++i) {
         // First make the phaseshift and average steps for each demix source.
@@ -124,14 +123,14 @@ namespace LOFAR {
         sourceVec[0] = toString(patchList[i]->position()[0]);
         sourceVec[1] = toString(patchList[i]->position()[1]);
         PhaseShift* step1 = new PhaseShift(input, ParameterSet(),
-                                           prefix+itsInfo->sourceNames()[i]+'.',
+                                           prefix+itsMix->sourceNames()[i]+'.',
                                            sourceVec);
         itsOrigFirstSteps.push_back (DPStep::ShPtr(step1));
         itsOrigPhaseShifts.push_back (step1);
-        DPStep::ShPtr step2 (new Averager(input, prefix, itsInfo->nchanAvg(),
-                                          itsInfo->ntimeAvg()));
+        DPStep::ShPtr step2 (new Averager(input, prefix, itsMix->nchanAvg(),
+                                          itsMix->ntimeAvg()));
         step1->setNextStep (step2);
-        MultiResultStep* step3 = new MultiResultStep(itsInfo->ntimeOut());
+        MultiResultStep* step3 = new MultiResultStep(itsMix->ntimeOut());
         step2->setNextStep (DPStep::ShPtr(step3));
         // There is a single demix factor step which needs to get all results.
         itsAvgResults.push_back (step3);
@@ -139,10 +138,10 @@ namespace LOFAR {
 
       // Now create the step to average the data themselves.
       DPStep::ShPtr targetAvg(new Averager(input, prefix,
-                                           itsInfo->nchanAvg(),
-                                           itsInfo->ntimeAvg()));
+                                           itsMix->nchanAvg(),
+                                           itsMix->ntimeAvg()));
       itsOrigFirstSteps.push_back (targetAvg);
-      MultiResultStep* targetAvgRes = new MultiResultStep(itsInfo->ntimeOut());
+      MultiResultStep* targetAvgRes = new MultiResultStep(itsMix->ntimeOut());
       targetAvg->setNextStep (DPStep::ShPtr(targetAvgRes));
       itsAvgResults.push_back (targetAvgRes);
 
@@ -151,46 +150,56 @@ namespace LOFAR {
       // Only the selected baselines need to be subtracted, so add a
       // filter step as the last one.
       itsAvgStepSubtr = DPStep::ShPtr(new Averager(input, prefix,
-                                                   itsInfo->nchanAvgSubtr(),
-                                                   itsInfo->ntimeAvgSubtr()));
-      itsAvgResultFull  = new MultiResultStep(itsInfo->ntimeOutSubtr());
-      itsFilterSubtr    = new Filter(input, itsInfo->selBL());
-      itsAvgResultSubtr = new MultiResultStep(itsInfo->ntimeOutSubtr());
+                                                   itsMix->nchanAvgSubtr(),
+                                                   itsMix->ntimeAvgSubtr()));
+      itsAvgResultFull  = new MultiResultStep(itsMix->ntimeOutSubtr());
+      itsFilterSubtr    = new Filter(input, itsMix->selBL());
+      itsAvgResultSubtr = new MultiResultStep(itsMix->ntimeOutSubtr());
       itsAvgStepSubtr->setNextStep (DPStep::ShPtr(itsAvgResultFull));
       itsAvgResultFull->setNextStep (DPStep::ShPtr(itsFilterSubtr));
       itsFilterSubtr->setNextStep (DPStep::ShPtr(itsAvgResultSubtr));
 
       // Let the internal steps update their data.
-      itsFilter.setInfo (dpInfo);
-      const DPInfo& dpInfoSel = itsFilter.getInfo();
+      itsFilter.setInfo (info);
       for (uint i=0; i<itsOrigFirstSteps.size(); ++i) {
-        itsOrigFirstSteps[i]->setInfo (dpInfoSel);
+        itsOrigFirstSteps[i]->setInfo (itsFilter.getInfo());
       }
-      itsAvgStepSubtr->setInfo (dpInfo);
+      itsAvgStepSubtr->setInfo (info);
 
       // Size the various work buffers.
-      itsAvgUVW.resize (3, itsInfo->nbl());
-      itsStationUVW.resize (3, itsInfo->nstation(), itsInfo->ntimeOutSubtr());
-      itsUVW.resize (3, itsInfo->nstation());
+      itsAvgUVW.resize (3, itsMix->nbl());
+      itsStationUVW.resize (3, itsMix->nstation(), itsMix->ntimeOutSubtr());
+      itsUVW.resize (3, itsMix->nstation());
       itsIndices.resize (ndir);
       itsStationsToUse.resize (ndir);
+      itsUnknownsIndex.resize (ndir+1);
+      itsSrcStatSolveFlag.resize (ndir+1);
+      for (uint i=0; i<ndir+1; ++i) {
+        itsUnknownsIndex[i].resize (itsMix->nstation());
+        itsSrcStatSolveFlag[i].resize (itsMix->nstation());
+      }
+      itsStationSolveFlag.resize (itsMix->nstation());
       itsNrSourcesDemixed.resize (ndir);
       itsNrSourcesDemixed = 0;
-      itsPredictVis.resize (itsInfo->ncorr(), itsInfo->nchanOut(),
-                            itsInfo->nbl());
-      itsModelVis.resize (itsInfo->ncorr() * itsInfo->nchanOutSubtr() *
-                          itsInfo->nbl() * (ndir+1));
+      itsPredictVis.resize (itsMix->ncorr(), itsMix->nchanOut(),
+                            itsMix->nbl());
+      itsModelVis.resize (itsMix->ncorr() * itsMix->nchanOutSubtr() *
+                          itsMix->nbl() * (ndir+1));
       itsAteamAmpl.resize (ndir);
       for (uint i=0; i<ndir; ++i) {
-        itsAteamAmpl[i].resize (itsInfo->nchanOut(), itsInfo->nbl(),
-                                itsInfo->ntimeOut());
+        itsAteamAmpl[i].resize (itsMix->nchanOut(), itsMix->nbl(),
+                                itsMix->ntimeOut());
       }
-      itsTargetAmpl.resize (itsInfo->nchanOut(), itsInfo->nbl(),
-                            itsInfo->ntimeOut());
+      itsTargetAmpl.resize (itsMix->nchanOut(), itsMix->nbl(),
+                            itsMix->ntimeOut());
       uint nd = ndir + 1;
-      itsUnknowns.resize    (nd * itsInfo->nstation() * 8);
-      itsSolutions.resize   (nd * itsInfo->nstation() * 8 * itsInfo->ntimeOut());
-      itsPrevSolution.resize(nd * itsInfo->nstation() * 8);
+      itsUnknowns.resize    (nd * itsMix->nstation() * 8);
+      itsM.resize           (nd * 4);
+      itsdM.resize          (nd * 16);
+      itsdR.resize          (nd * 8);
+      itsdI.resize          (nd * 8);
+      itsSolutions.resize   (nd * itsMix->nstation() * 8 * itsMix->ntimeOut());
+      itsPrevSolution.resize(nd * itsMix->nstation() * 8);
       initSolution (itsPrevSolution);
     }
 
@@ -219,14 +228,14 @@ namespace LOFAR {
       // Average and split the baseline UVW coordinates per station.
       // Do this at the demix time resolution.
       // The buffer has not been filtered yet, so the UVWs have to be filtered.
-      uint ntime = avgSplitUVW (bufin, nbufin, itsInfo->ntimeAvg(),
+      uint ntime = avgSplitUVW (bufin, nbufin, itsMix->ntimeAvg(),
                                 itsFilter.getIndicesBL());
       double timeStep = bufin[0].getExposure();
-      double time = bufin[0].getTime() + (itsInfo->ntimeAvg()-1) * 0.5*timeStep;
+      double time = bufin[0].getTime() + (itsMix->ntimeAvg()-1) * 0.5*timeStep;
       // First do the predict of the coarse A-team sources at demix resolution.
       // It fills the indices of the sources to demix.
       // It also fills in the baselines that do not need to used.
-      predictAteam (itsInfo->ateamList(), ntime, time, timeStep);
+      predictAteam (itsMix->ateamList(), ntime, time, timeStep);
       // If no sources to demix, simply average the input buffers.
       if (itsIndices.empty()) {
         itsTimerPredict.stop();
@@ -237,7 +246,7 @@ namespace LOFAR {
         return;
       }
       // The target has to be predicted as well (also at demix resolution).
-      predictTarget (itsInfo->targetList(), ntime, time, timeStep);
+      predictTarget (itsMix->targetList(), ntime, time, timeStep);
       // Determine what needs to be done. It fills in the steps to perform
       // for the sources to demix.
       setupDemix();
@@ -262,11 +271,11 @@ namespace LOFAR {
         // for the selected data.
         itsTimerDemix.start();
         addFactors (selBuf, itsFactorBuf);
-        if (i % itsInfo->ntimeAvg() == 0) {
+        if (i % itsMix->ntimeAvg() == 0) {
           makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
                        itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
-                       itsInfo->nchanOut(),
-                       itsInfo->nchanAvg());
+                       itsMix->nchanOut(),
+                       itsMix->nchanAvg());
           // Deproject sources without a model.
           deproject (itsFactors[itsNTimeOut], itsAvgResults, itsNTimeOut);
           itsFactorBuf = Complex();       // Clear summation buffer
@@ -275,11 +284,11 @@ namespace LOFAR {
         // Subtract is done with different averaging parameters, so calculate
         // the factors for it (again for selected data only).
         addFactors (selBuf, itsFactorBufSubtr);
-        if (i % itsInfo->ntimeAvgSubtr() == 0) {
+        if (i % itsMix->ntimeAvgSubtr() == 0) {
           makeFactors (itsFactorBufSubtr, itsFactorsSubtr[itsNTimeOutSubtr],
                        itsAvgResultSubtr->get()[itsNTimeOutSubtr].getWeights(),
-                       itsInfo->nchanOutSubtr(),
-                       itsInfo->nchanAvgSubtr());
+                       itsMix->nchanOutSubtr(),
+                       itsMix->nchanAvgSubtr());
           itsFactorBufSubtr = Complex();  // Clear summation buffer
           itsNTimeOutSubtr++;
         }
@@ -321,7 +330,7 @@ namespace LOFAR {
         ///        cout<<"avguvw="<<ntodo<<itsAvgUVW<<endl;
         nleft -= ntodo;
         // Split the baseline UVW coordinates per station.
-        nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+        nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                    itsAvgUVW, uvwIter.matrix());
         uvwIter.next();
       }
@@ -342,13 +351,13 @@ namespace LOFAR {
       for (uint j=0; j<ntime; ++j) {
         for (uint i=0; i<patchList.size(); ++i) {
           itsPredictVis = dcomplex();
-          simulate (itsInfo->phaseRef(),
+          simulate (itsMix->phaseRef(),
                     patchList[i],
-                    itsInfo->nstation(),
-                    itsInfo->nbl(),
-                    itsInfo->freqDemix().size(),
-                    const_cursor<Baseline>(&(itsInfo->baselines()[0])),
-                    casa_const_cursor<double>(itsInfo->freqDemix()),
+                    itsMix->nstation(),
+                    itsMix->nbl(),
+                    itsMix->freqDemix().size(),
+                    const_cursor<Baseline>(&(itsMix->baselines()[0])),
+                    casa_const_cursor<double>(itsMix->freqDemix()),
                     casa_const_cursor<double>(uvwiter.matrix()),
                     casa_cursor<dcomplex>(itsPredictVis));
           // Apply beam for target patch.
@@ -379,7 +388,6 @@ namespace LOFAR {
     void DemixWorker::predictAteam (const vector<Patch::ConstPtr>& patchList,
                                     uint ntime, double time, double timeStep)
     {
-      
       for (uint i=0; i<patchList.size(); ++i) {
         itsAteamAmpl[i] = 0;
         MatrixIterator<float> miter(itsAteamAmpl[i]);
@@ -387,13 +395,13 @@ namespace LOFAR {
         double t = time;
         for (uint j=0; j<ntime; ++j) {
           itsPredictVis = dcomplex();
-          simulate (itsInfo->phaseRef(),
+          simulate (itsMix->phaseRef(),
                     patchList[i],
-                    itsInfo->nstation(),
-                    itsInfo->nbl(),
-                    itsInfo->freqDemix().size(),
-                    const_cursor<Baseline>(&(itsInfo->baselines()[0])),
-                    casa_const_cursor<double>(itsInfo->freqDemix()),
+                    itsMix->nstation(),
+                    itsMix->nbl(),
+                    itsMix->freqDemix().size(),
+                    const_cursor<Baseline>(&(itsMix->baselines()[0])),
+                    casa_const_cursor<double>(itsMix->freqDemix()),
                     casa_const_cursor<double>(itsStationUVW),
                     casa_cursor<dcomplex>(itsPredictVis));
           // Apply beam.
@@ -407,22 +415,29 @@ namespace LOFAR {
       }
       // Determine per A-source which stations to use.
       itsIndices.resize (0);
-      vector<uint> antCount (itsInfo->nstation());
+      vector<uint> antCount (itsMix->nstation());
+      itsStationSolveFlag = false;
       for (uint i=0; i<patchList.size(); ++i) {
         // Count the stations of baselines with sufficient amplitude.
         std::fill (antCount.begin(), antCount.end(), 0);
         MatrixIterator<float> miter(itsAteamAmpl[i], 0, 2);
-        for (uint j=0; j<itsInfo->nbl(); ++j, miter.next()) {
-          if (max(miter.matrix()) > itsInfo->ateamAmplThreshold()) {
-            antCount[itsDPInfo->getAnt1()[j]]++;
-            antCount[itsDPInfo->getAnt2()[j]]++;
+        for (uint j=0; j<itsMix->nbl(); ++j, miter.next()) {
+          if (max(miter.matrix()) > itsMix->ateamAmplThreshold()) {
+            antCount[itsMix->getAnt1()[j]]++;
+            antCount[itsMix->getAnt2()[j]]++;
+            cout<<"baseline "<<itsMix->getAnt1()[j]<<' '<<itsMix->getAnt2()[j]<<" has ampl " << max(miter.matrix())<<endl;
           }
         }
         // Determine which stations have sufficient occurrence.
         itsStationsToUse[i].resize (0);
         for (uint j=0; j<antCount.size(); ++j) {
-          if (antCount[j] >= itsInfo->minNStation()) {
+          if (antCount[j] >= itsMix->minNStation()) {
             itsStationsToUse[i].push_back (j);
+            itsSrcStatSolveFlag[i][j] = true;
+            itsStationSolveFlag[j] = true;
+          } else {
+            itsSrcStatSolveFlag[i] = false;
+            cout << "ignore station " << j << " for src " << i << endl;
           }
         }
         // Use this A-team source if some stations have matched.
@@ -440,7 +455,7 @@ namespace LOFAR {
         itsAvgStepSubtr->process (bufin[i]);
       }
       itsAvgStepSubtr->finish();
-      ASSERT (itsAvgResultFull->get().size() <= itsInfo->ntimeOutSubtr());
+      ASSERT (itsAvgResultFull->get().size() <= itsMix->ntimeOutSubtr());
       for (uint i=0; i<itsAvgResultFull->get().size(); ++i) {
         bufout[i] = itsAvgResultFull->get()[i];
       }
@@ -477,14 +492,14 @@ namespace LOFAR {
       itsIgnoreTarget = false;
       itsNModel = nsrc;
       itsNDir   = nsrc+1;
-      if (targetSumAmpl / maxSumAmpl > itsInfo->ratio1()  ||
-          targetSumAmpl > itsInfo->targetAmplThreshold()) {
+      if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
+          targetSumAmpl > itsMix->targetAmplThreshold()) {
         itsIncludeTarget = true;
         itsNrIncludeStrongTarget++;
         itsNModel++;
-      } else if (! itsInfo->isAteamNearby()) {
+      } else if (! itsMix->isAteamNearby()) {
         itsNrDeprojectTarget++;
-      } else if (targetSumAmpl / minSumAmpl > itsInfo->ratio2()) {
+      } else if (targetSumAmpl / minSumAmpl > itsMix->ratio2()) {
         itsIncludeTarget = true;
         itsNrIncludeCloseTarget++;
         itsNModel++;
@@ -492,6 +507,34 @@ namespace LOFAR {
         itsIgnoreTarget = true;
         itsNrIgnoreTarget++;
       }
+      // Determine the unknowns to be solved.
+      // The unknowns are complex values of a Jones matrix per direction-station.
+      // thus 8 unknowns per direction-station.
+      // Their names are DirectionalGain:i:j:Type::Station::Direction
+      // where i:j gives the Jones element and Type is Real or Imag.
+      // Fill the map of source/station to unknown seqnr (4 pol, ampl/phase).
+      uint ndir = itsStationsToUse.size();
+      itsNUnknown = 0;
+      for (uint i=0; i<ndir; ++i) {
+        // Initialize unknowns index.
+        std::fill (itsUnknownsIndex[i].begin(), itsUnknownsIndex[i].end(), -1);
+        for (uint j=0; j<itsStationsToUse[i].size(); ++j) {
+          uint st = itsStationsToUse[i][j];
+          itsUnknownsIndex[i][st] = itsNUnknown;
+          itsNUnknown += 8;
+        }
+      }
+      cout<<"nunkb="<<itsNUnknown<<endl;
+      // Do the same for the target if it has to be solved as well.
+      std::fill (itsUnknownsIndex[ndir].begin(),
+                 itsUnknownsIndex[ndir].end(), -1);
+      if (itsIncludeTarget) {
+        for (uint j=0; j<itsUnknownsIndex[ndir].size(); ++j) {
+          itsUnknownsIndex[ndir][j] = itsNUnknown;
+          itsNUnknown += 8;
+        }
+      }
+      cout<<"nunka="<<itsNUnknown<<endl;
     }
 
     void DemixWorker::applyBeam (double time, const Position& dir)
@@ -505,7 +548,7 @@ namespace LOFAR {
       itsTimerSolve.stop();
       // If selection was done, merge the subtract results back into the
       // buffer.
-      if (itsInfo->selBL().hasSelection()) {
+      if (itsMix->selBL().hasSelection()) {
 	mergeSubtractResult ();
       }
       // Clear the input buffers.
@@ -513,8 +556,8 @@ namespace LOFAR {
         itsAvgResults[i]->clear();
       }
       // Store the output buffers.
-      for (uint i=0; i<itsInfo->ntimeOutSubtr(); ++i) {
-        if (itsInfo->selBL().hasSelection()) {
+      for (uint i=0; i<itsMix->ntimeOutSubtr(); ++i) {
+        if (itsMix->selBL().hasSelection()) {
           bufout[i] = itsAvgResultFull->get()[i];
         } else {
           bufout[i] = itsAvgResultSubtr->get()[i];
@@ -622,11 +665,11 @@ namespace LOFAR {
       if (ndir <= 1) return;
       ASSERT (! weightSums.empty());
       bufOut.resize (IPosition(5, ndir, ndir,
-                               itsInfo->ncorr(), nChanOut, itsInfo->nbl()));
+                               itsMix->ncorr(), nChanOut, itsMix->nbl()));
       bufOut = DComplex(1,0);
-      int ncc = itsInfo->ncorr()*nChanOut;
+      int ncc = itsMix->ncorr()*nChanOut;
       int nccdd = ncc*ndir*ndir;
-      int nccin = itsInfo->ncorr()*itsInfo->nchanIn();
+      int nccin = itsMix->ncorr()*itsMix->nchanIn();
       // Fill the factors for each combination of different directions.
       uint dirnr = 0;
       for (uint d0=0; d0<ndir; ++d0) {
@@ -635,8 +678,8 @@ namespace LOFAR {
           // Note that summing in time is done in addFactors.
           // The sum per output channel is divided by the summed weight.
           // Note there is a summed weight per baseline,outchan,corr.
-          for (int k=0; k<int(itsInfo->nbl()); ++k) {
-            const DComplex* phin = bufIn.data() + (dirnr*itsInfo->nbl() + k)*nccin;
+          for (int k=0; k<int(itsMix->nbl()); ++k) {
+            const DComplex* phin = bufIn.data() + (dirnr*itsMix->nbl() + k)*nccin;
             DComplex* ph1 = bufOut.data() + k*nccdd + (d0*ndir + d1);
             DComplex* ph2 = bufOut.data() + k*nccdd + (d1*ndir + d0);
             const float* weightPtr = weightSums.data() + k*ncc;
@@ -645,13 +688,13 @@ namespace LOFAR {
               DComplex sum[4];
               // In theory the last output channel could consist of fewer
               // input channels, so take care of that.
-              uint nch = std::min(nChanAvg, itsInfo->nchanIn()-c0*nChanAvg);
+              uint nch = std::min(nChanAvg, itsMix->nchanIn()-c0*nChanAvg);
               for (uint c1=0; c1<nch; ++c1) {
-                for (uint j=0; j<itsInfo->ncorr(); ++j) {
+                for (uint j=0; j<itsMix->ncorr(); ++j) {
                   sum[j] += *phin++;
                 }
               }
-              for (uint j=0; j<itsInfo->ncorr(); ++j) {
+              for (uint j=0; j<itsMix->ncorr(); ++j) {
                 *ph1 = sum[j] / double(*weightPtr++);
                 *ph2 = conj(*ph1);
                 ph1 += ndir*ndir;
@@ -780,40 +823,25 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
       // Determine the various sizes.
       const size_t nTime = itsAvgResults[0]->get().size();
       const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
-      const size_t multiplier = itsInfo->ntimeAvg() / itsInfo->ntimeAvgSubtr();
+      const size_t multiplier = itsMix->ntimeAvg() / itsMix->ntimeAvgSubtr();
       const size_t nDr = itsPhaseShifts.size();
-      const size_t nSt = itsInfo->nstation();
-      const size_t nBl = itsInfo->baselines().size();
-      const size_t nCh = itsInfo->freqDemix().size();
-      const size_t nChSubtr = itsInfo->freqSubtr().size();
+      const size_t nSt = itsMix->nstation();
+      const size_t nBl = itsMix->baselines().size();
+      const size_t nCh = itsMix->freqDemix().size();
+      const size_t nChSubtr = itsMix->freqSubtr().size();
       const size_t nCr = 4;
       const size_t nSamples = nBl * nCh * nCr;
       // Define various cursors to iterate through arrays.
-      const_cursor<double> cr_freq = casa_const_cursor(itsInfo->freqDemix());
-      const_cursor<double> cr_freqSubtr = casa_const_cursor(itsInfo->freqSubtr());
-      const_cursor<Baseline> cr_baseline(&(itsInfo->baselines()[0]));
+      const_cursor<double> cr_freq = casa_const_cursor(itsMix->freqDemix());
+      const_cursor<double> cr_freqSubtr = casa_const_cursor(itsMix->freqSubtr());
+      const_cursor<Baseline> cr_baseline(&(itsMix->baselines()[0]));
       // Do a solve and subtract for each predict time slot.
       for (size_t ts=0; ts<nTime; ++ts) {
-        // Initialize the required unknowns.
-        // Note that itsPrevSolution always contains initial values if
-        // propagateSolution is not in effect.
-        size_t nunknown = 0;
-        for (size_t j=0; j<itsStationsToUse.size(); ++j) {
-          for (size_t i=0; i<itsStationsToUse[j].size(); ++i) {
-            itsUnknowns[nunknown++] = itsPrevSolution[itsStationsToUse[j][i]];
-          }
-        }
-        if (itsIncludeTarget) {
-          for (size_t i=0; i<nSt; ++i) {
-            itsUnknowns[nunknown++] = itsPrevSolution[nDr*nSt + i];
-          }
-        }
-
         // Compute the model visibilities for each A-team source.
         size_t stride_model[3] = {1, nCr, nCr*nCh};
         for (size_t dr=0; dr<nDr; ++dr) {
           // Split the baseline UVW coordinates per station.
-          nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+          nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                      itsAvgResults[dr]->get()[ts].getUVW(), itsUVW);
           // Create cursors to step through UVW and model buffer.
           const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
@@ -822,22 +850,22 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
           // Initialize this part of the buffer.
           std::fill (itsModelVis.begin() + dr*nSamples,
                      itsModelVis.begin() + (dr+1)*nSamples, dcomplex());
-          simulate(itsInfo->ateamList()[dr]->position(),
-                   itsInfo->ateamList()[dr],
+          simulate(itsMix->ateamList()[dr]->position(),
+                   itsMix->ateamList()[dr],
                    nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
         }
         if (itsIncludeTarget) {
           // Do the same for the target sources which are added up.
-          nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+          nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                      itsAvgResults[nDr]->get()[ts].getUVW(), itsUVW);
           std::fill (itsModelVis.begin() + nDr*nSamples,
                      itsModelVis.begin() + (nDr+1)*nSamples, dcomplex());
-          for (size_t dr=0; dr<itsInfo->targetList().size(); ++dr) {
+          for (size_t dr=0; dr<itsMix->targetList().size(); ++dr) {
             const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
             cursor<dcomplex> cr_model(&(itsModelVis[nDr * nSamples]), 3,
                                       stride_model);
-            simulate(itsInfo->ateamList()[dr]->position(),
-                     itsInfo->ateamList()[dr],
+            simulate(itsMix->ateamList()[dr]->position(),
+                     itsMix->ateamList()[dr],
                      nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
           }
         }
@@ -884,7 +912,7 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
         itsNrSolves++;
         if (converged) {
           itsNrConverged++;
-          if (itsInfo->propagateSolution()) {
+          if (itsMix->propagateSolution()) {
             itsPrevSolution = solution;
           }
         }
@@ -906,7 +934,7 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
                                             3, stride_model);
             // Re-simulate if required.
             if (multiplier != 1 || nCh != nChSubtr) {
-              nsplitUVW (itsInfo->uvwSplitIndex(), itsInfo->baselines(),
+              nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                          itsAvgResults[nDr]->get()[ts_subtr].getUVW(), itsUVW);
               // Rotate the UVW coordinates for the target direction to the
               // direction of source to subtract. This is required because at
@@ -915,8 +943,8 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
               // resolution of the residual is equal to the resolution at which
               // the Jones matrices were estimated, of course).
               cursor<double> cr_uvw_split = casa_cursor(itsUVW);
-              rotateUVW (itsInfo->phaseRef(),
-                         itsInfo->targetList()[dr]->position(), nSt,
+              rotateUVW (itsMix->phaseRef(),
+                         itsMix->targetList()[dr]->position(), nSt,
                          cr_uvw_split);
               // Initialize the visibility buffer.
               std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
@@ -924,8 +952,8 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
               size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
               cr_model_subtr = cursor<dcomplex>(&(itsModelVis[0]), 3,
                                                 stride_model_subtr);
-              simulate(itsInfo->ateamList()[dr]->position(),
-                       itsInfo->ateamList()[dr], nSt, nBl,
+              simulate(itsMix->ateamList()[dr]->position(),
+                       itsMix->ateamList()[dr], nSt, nBl,
                        nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
                        cr_model_subtr);
             }
@@ -978,12 +1006,12 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
     {
       /*
       // Construct solution grid.
-      const Vector<double>& freq      = itsInfo->chanFreqs();
-      const Vector<double>& freqWidth = itsInfo->chanWidths();
+      const Vector<double>& freq      = itsMix->chanFreqs();
+      const Vector<double>& freqWidth = itsMix->chanWidths();
       BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
         * 0.5, freqWidth[0], 1));
-      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsInfo->startTime()
-        - itsInfo->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
+      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis(itsMix->startTime()
+        - itsMix->timeInterval() * 0.5, itsTimeIntervalAvg, itsNTimeDemix));
       BBS::Grid solGrid(freqAxis, timeAxis);
 
       // Create and initialize ParmDB.
@@ -993,7 +1021,7 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
       // Store the (freq, time) resolution of the solutions.
       vector<double> resolution(2);
       resolution[0] = freqWidth[0];
-      resolution[1] = itsInfo->timeIntervalAvg();
+      resolution[1] = itsMix->timeIntervalAvg();
       parmDB.setDefaultSteps(resolution);
 
       // Map station indices in the solution array to the corresponding antenna
@@ -1007,9 +1035,9 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
 
       vector<BBS::Parm> parms;
       for(size_t dr = 0; dr < itsNModel; ++dr) {
-        for(size_t st = 0; st < itsInfo->nstation(); ++st) {
+        for(size_t st = 0; st < itsMix->nstation(); ++st) {
           string name(antennaNames[antennaUsed[st]]);
-          string suffix(name + ":" + itsInfo->sourceNames()[dr]);
+          string suffix(name + ":" + itsMix->sourceNames()[dr]);
 
           parms.push_back(BBS::Parm(parmCache, parmSet.addParm(parmDB,
             "DirectionalGain:0:0:Real:" + suffix)));
@@ -1042,8 +1070,8 @@ solve for "DirectionalGain:0:0:*:') + str(antenna) + ':' +sourcename+'"
       }
 
       // Write solutions.
-      for(size_t ts = 0; ts < itsInfo->NTimeDemix; ++ts) {
-        double *unknowns = &(itsUnknowns[ts * itsNModel * itsInfo->nstation()*8]);
+      for(size_t ts = 0; ts < itsMix->NTimeDemix; ++ts) {
+        double *unknowns = &(itsUnknowns[ts * itsNModel * itsMix->nstation()*8]);
         for(size_t i = 0; i < parms.size(); ++i) {
           parms[i].setCoeff(BBS::Location(0, ts), unknowns + i, 1);
         }

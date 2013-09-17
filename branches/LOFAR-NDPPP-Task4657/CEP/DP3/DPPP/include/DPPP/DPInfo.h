@@ -27,6 +27,7 @@
 // @file
 // @brief General info about DPPP data processing attributes like averaging
 
+#include <StationResponse/Station.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
@@ -35,6 +36,9 @@
 
 namespace LOFAR {
   namespace DPPP {
+
+    //# Forward declarations.
+    class DPInput;
 
     // @ingroup NDPPP
 
@@ -49,7 +53,7 @@ namespace LOFAR {
     public:
 
       // Define bits telling if data and/or flags need to be written.
-      enum NeedWrite {NeedWriteData=1, NeedWriteFlags=2};
+      enum NeedWrite {NeedWriteData=1, NeedWriteFlags=2, NeedWriteWeight=4};
 
       // Default constructor.
       DPInfo();
@@ -94,13 +98,20 @@ namespace LOFAR {
       uint update (uint chanAvg, uint timeAvg);
 
       // Update the info from the given selection parameters.
+      // Optionally unused stations are really removed from the antenna lists.
       void update (uint startChan, uint nchan,
-                   const vector<uint>& baselines);
+                   const vector<uint>& baselines, bool remove);
+
+      // Remove unused stations from the antenna lists.
+      void removeUnusedAnt();
 
       // Set the phase center.
       // If original=true, it is set to the original phase center.
       void setPhaseCenter (const casa::MDirection& phaseCenter, bool original)
         { itsPhaseCenter=phaseCenter; itsPhaseCenterIsOriginal = original; }
+
+      // Fill the antenna beam info from the input source (if not filled yet).
+      void fillAntennaBeamInfo (DPInput*);
 
       // Get the info.
       const string& msName() const
@@ -137,6 +148,8 @@ namespace LOFAR {
         { return itsAntDiam; }
       const vector<casa::MPosition>& antennaPos() const
         { return itsAntPos; }
+      const vector<StationResponse::Station::Ptr>& antennaBeamInfo() const
+        { return itsAntBeamInfo; }
       const casa::MPosition& arrayPos() const
         { return itsArrayPos; }
       const casa::MDirection& phaseCenter() const
@@ -223,6 +236,7 @@ namespace LOFAR {
       casa::Vector<casa::String> itsAntNames;
       casa::Vector<casa::Double> itsAntDiam;
       vector<casa::MPosition>    itsAntPos;
+      vector<StationResponse::Station::Ptr> itsAntBeamInfo;
       vector<int>                itsAntUsed;
       vector<int>                itsAntMap;
       casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines

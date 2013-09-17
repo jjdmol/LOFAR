@@ -63,7 +63,8 @@ namespace LOFAR {
       bool hasSelection() const;
 
       // Show the parameters.
-      void show (ostream& os) const;
+      // Optional extra blanks can be put before the value.
+      void show (ostream& os, const string& blanks = string()) const;
 
       // Form the selection matrix telling for each baseline if it is selected.
       // If no selection is made, all values in the matrix are true.

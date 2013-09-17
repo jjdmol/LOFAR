@@ -113,5 +113,8 @@ namespace LOFAR {
     Cube<bool> DPInput::getFullResFlags (const RefRows&)
       { throw Exception ("DPInput::getFullResFlags not implemented"); }
 
+    void DPInput::fillBeamInfo (vector<StationResponse::Station::Ptr>&)
+      { throw Exception ("DPInput::fillBeamInfo not implemented"); }
+
   } //# end namespace
 }

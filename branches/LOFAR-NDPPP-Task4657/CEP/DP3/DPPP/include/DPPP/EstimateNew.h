@@ -1,7 +1,4 @@
-//# EstimateMixed.h: Estimate Jones matrices for several directions
-//# simultaneously. A separate data stream is used for each direction. The
-//# mixing coefficients quantify the influence of each direction on each of the
-//# other directions (including time and frequency smearing).
+//# EstimateNew.h: Estimate Jones matrices for several directions and stations
 //#
 //# Copyright (C) 2012
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -23,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef DPPP_ESTIMATEMIXED_H
-#define DPPP_ESTIMATEMIXED_H
+#ifndef DPPP_ESTIMATENEW_H
+#define DPPP_ESTIMATENEW_H
 
 // \file
 // Estimate Jones matrices for several directions simultaneously. A separate
@@ -37,19 +34,27 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_vector.h>
 
-namespace LOFAR
-{
-namespace DPPP
-{
+namespace LOFAR {
+  namespace DPPP {
 
-// \addtogroup NDPPP
-// @{
+    // \addtogroup NDPPP
+    // @{
 
-// Estimate Jones matrices for several directions simultaneously. A separate
-// data stream is used for each direction. The mixing coefficients quantify the
-// influence of each direction on each of the other directions (including time
-// and frequency smearing).
-//
+    // Estimate Jones matrices for several directions simultaneously. A separate
+    // data stream is used for each direction. The mixing coefficients quantify the
+    // influence of each direction on each of the other directions (including time
+    // and frequency smearing).
+    class EstimateNew
+    {
+
+      EstimateNew();
+
+      // Update the object and size its internal buffers.
+      void update (size_t ndir, size_t nBaseline, size_t nStation,
+                   size_t nChannel, size_t maxIter);
+
+
+    //
 // \param[in]   nDirection
 // Number of directions to estimate Jones matrices for.
 // \param[in]   nStation
@@ -80,6 +85,16 @@ namespace DPPP
 // \param[in]   errors
 // A pointer to a buffer of errors of size nDirection * nStation * 8. If this
 // pointer is null (0), errors will not be estimated.
+    // Note that the cursors are passed by value, so a copy is made.
+    // In this way no reset of the cursor is needed.
+    bool EstimateNew::estimate (const vector<Block<bool> >& dirStations,
+                                const_cursor<Baseline> baselines,
+                                vector<const_cursor<fcomplex> > data,
+                                vector<const_cursor<dcomplex> > model,
+                                const_cursor<bool> flag,
+                                const_cursor<float> weight,
+                                const_cursor<dcomplex> mix,
+                                size_t nUnknowns)
 bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     size_t nChannel, const_cursor<Baseline> baselines,
     vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
@@ -99,7 +114,22 @@ bool estimateSel(size_t nDirection, size_t nStation, size_t nBaseline,
                  vector<double>& dR, vector<double>& dI);
 
 
-} //# namespace DPPP
+    private:
+      size_t itsNrBaselines;
+      size_t itsNrStations
+      size_t itsNrChannel;
+      size_t itsMaxIter;
+      bool   itsPropagateSolution;
+      vector<casa::uInt> itsDerivIndex;
+      vector<double>     itsUnknowns;
+      vector<double>     itsSolution;
+      vector<dcomplex>&  itsM;
+      vector<dcomplex>&  itsdM;
+      vector<double>&    itsdR;
+      vector<double>&    itsdI;
+      casa::Block<bool>  itsSolveStation;
+
+  } //# namespace DPPP
 } //# namespace LOFAR
 
 #endif

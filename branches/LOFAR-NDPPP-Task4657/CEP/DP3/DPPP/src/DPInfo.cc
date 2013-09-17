@@ -23,12 +23,16 @@
 
 #include <lofar_config.h>
 #include <DPPP/DPInfo.h>
+#include <DPPP/DPInput.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCPosition.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayIO.h>
+#include <casa/Containers/ContainerIO.h>
 
 using namespace casa;
+using namespace std;
 
 namespace LOFAR {
   namespace DPPP {
@@ -141,6 +145,14 @@ namespace LOFAR {
       }
     }
 
+    void DPInfo::fillAntennaBeamInfo (DPInput* msp)
+    {
+      if (itsAntBeamInfo.empty()) {
+        itsAntBeamInfo.resize (itsAntNames.size());
+        msp->fillBeamInfo (itsAntBeamInfo);
+      }
+    }
+
     uint DPInfo::update (uint chanAvg, uint timeAvg)
     {
       if (chanAvg > itsNChan) {
@@ -181,7 +193,7 @@ namespace LOFAR {
     }
 
     void DPInfo::update (uint startChan, uint nchan,
-                         const vector<uint>& baselines)
+                         const vector<uint>& baselines, bool removeAnt)
     {
       Slice slice(startChan, nchan);
       itsChanFreqs.reference  (itsChanFreqs (slice).copy());
@@ -202,6 +214,40 @@ namespace LOFAR {
         itsAutoCorrIndex.resize (0);
       }
       setAntUsed();
+      // If needed, remove the stations and renumber the baselines.
+      if (removeAnt) {
+        removeUnusedAnt();
+      }
+    }
+
+    void DPInfo::removeUnusedAnt()
+    {
+      if (itsAntUsed.size() < itsAntMap.size()) {
+        // First remove stations.
+        Vector<String> antNames (itsAntUsed.size());
+        Vector<Double> antDiam (itsAntUsed.size());;
+        vector<MPosition> antPos;
+        antPos.reserve (itsAntUsed.size());
+        for (uint i=0; i<itsAntUsed.size(); ++i) {
+          antNames[i] = itsAntNames[itsAntUsed[i]];
+          antDiam[i]  = itsAntDiam[itsAntUsed[i]];
+          antPos.push_back (itsAntPos[itsAntUsed[i]]);
+        }
+        // Use the new vectors.
+        itsAntNames.reference (antNames);
+        itsAntDiam.reference (antDiam);
+        itsAntPos.swap (antPos);
+        // Renumber the baselines.
+        for (uint i=0; i<itsAnt1.size(); ++i) {
+          itsAnt1[i] = itsAntMap[itsAnt1[i]];
+          itsAnt2[i] = itsAntMap[itsAnt2[i]];
+        }
+        // Now fill the itsAntUsed and itsAntMap vectors again.
+        setAntUsed();
+        // Clear; they'll be recalculated if needed.
+        itsBLength.resize (0);
+        itsAutoCorrIndex.resize (0);
+      }
     }
 
     const vector<double>& DPInfo::getBaselineLengths() const

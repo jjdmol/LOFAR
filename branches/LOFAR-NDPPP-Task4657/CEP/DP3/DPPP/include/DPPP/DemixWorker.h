@@ -180,8 +180,7 @@ namespace LOFAR {
       void mergeSubtractResult();
 
       //# Data members.
-      const DemixInfo*                      itsInfo;
-      const DPInfo*                         itsDPInfo;
+      const DemixInfo*                      itsMix;
       vector<PhaseShift*>                   itsOrigPhaseShifts;
       //# Phase shift and average steps for demix.
       vector<DPStep::ShPtr>                 itsOrigFirstSteps;
@@ -231,17 +230,30 @@ namespace LOFAR {
       vector<casa::Cube<float> >            itsAteamAmpl;
       //# #nfreq x #bl x #time StokesI amplitude of target.
       casa::Cube<float>                     itsTargetAmpl;
-      //# Per A-source the stations to use (matching the minimum amplitude).
-      vector<vector<uint> >                 itsStationsToUse;
       //# Per A-source and for target the min and max amplitude.
       vector<double>                        itsAteamMinAmpl;
       vector<double>                        itsAteamMaxAmpl;
       double                                itsTargetMinAmpl;
       double                                itsTargetMaxAmpl;
+      //# Per A-source the stations to use (matching the minimum amplitude).
+      vector<vector<uint> >                 itsStationsToUse;
+      //# Per station and source the index in the unknowns vector.
+      //# Note there are 8 unknowns (4 pol, ampl/phase) per source/station.
+      vector<vector<int> >                  itsUnknownsIndex;
+      //# Per direction tell which stations to solve.
+      vector<casa::Vector<bool> >           itsSrcStatSolveFlag;
+      //# Tell which stations to use (for any source).
+      casa::Vector<bool>                    itsStationSolveFlag;
       //# Variables to do the solve.
+      uint                                  itsNUnknown;
       vector<double>                        itsUnknowns;
       vector<double>                        itsPrevSolution;
       vector<vector<double> >               itsSolutions;
+      vector<dcomplex>                      itsM;    //# workspace for estimate
+      vector<dcomplex>                      itsdM;   //# workspace for estimate
+      vector<double>                        itsdR;   //# workspace for estimate
+      vector<double>                        itsdI;   //# workspace for estimate
+      //# Variables for the predict.
       casa::Matrix<double>                  itsUVW;
       vector<dcomplex>                      itsModelVis;
       uint                                  itsNTimeOut;

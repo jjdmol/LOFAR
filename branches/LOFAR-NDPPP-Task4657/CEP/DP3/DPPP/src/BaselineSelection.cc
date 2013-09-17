@@ -71,12 +71,12 @@ namespace LOFAR {
                itsCorrType.empty()  &&  itsRangeBL.empty());
     }
 
-    void BaselineSelection::show (ostream& os) const
+    void BaselineSelection::show (ostream& os, const string& blanks) const
     {
       os << "  Baseline selection:" << std::endl;
-      os << "    baseline:     " << itsStrBL << std::endl;
-      os << "    corrtype:     " << itsCorrType << std::endl;
-      os << "    blrange:      " << itsRangeBL << std::endl;
+      os << "    baseline:     " << blanks << itsStrBL << std::endl;
+      os << "    corrtype:     " << blanks << itsCorrType << std::endl;
+      os << "    blrange:      " << blanks << itsRangeBL << std::endl;
     }
 
     Matrix<bool> BaselineSelection::apply (const DPInfo& info) const

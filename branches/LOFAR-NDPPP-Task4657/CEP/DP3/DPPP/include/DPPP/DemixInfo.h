@@ -64,6 +64,7 @@ namespace LOFAR {
       void show (ostream&) const;
 
       //# Data members
+      uint   maxIter() const                     {return itsMaxIter;}
       uint   minNStation() const                 {return itsMinNStation;}
       uint   nstation() const                    {return itsNStation;}
       uint   nbl() const                         {return itsNBl;}
@@ -101,8 +102,14 @@ namespace LOFAR {
       const vector<Patch::ConstPtr>& targetList() const  {return itsTargetList;}
       const vector<Patch::ConstPtr>& ateamDemixList() const
         {return itsAteamDemixList;}
-      const vector<Patch::ConstPtr>& targetDemixList() const
-        {return itsTargetDemixList;}
+      const Patch::Ptr& targetDemix() const
+        {return itsTargetDemix;}
+
+      // Get the baselines.
+      const casa::Vector<casa::Int>& getAnt1() const
+        { return itsInfoSel.getAnt1(); }
+      const casa::Vector<casa::Int>& getAnt2() const
+        { return itsInfoSel.getAnt2(); }
 
       // Get cosine of the angular distance between two sky positions.
       static double getCosAngDist (double ra1, double dec1,
@@ -128,6 +135,7 @@ namespace LOFAR {
       void makeTargetDemixList();
 
       //# Data members.
+      DPInfo                  itsInfoSel;
       BaselineSelection       itsSelBL;
       BaselineSelection       itsSelBLEstimate;
       vector<int>             itsUVWSplitIndex;
@@ -144,6 +152,7 @@ namespace LOFAR {
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
+      uint                    itsMaxIter;            //# max #iter in solve
       uint                    itsMinNStation;        //# min #stations for solve
       uint                    itsNStation;
       uint                    itsNBl;
@@ -168,7 +177,7 @@ namespace LOFAR {
       vector<Patch::ConstPtr> itsAteamList;
       vector<Patch::ConstPtr> itsTargetList;
       vector<Patch::ConstPtr> itsAteamDemixList;
-      vector<Patch::ConstPtr> itsTargetDemixList;
+      Patch::Ptr              itsTargetDemix;
       vector<string>          itsAteamRemoved;
       vector<string>          itsTargetReplaced;
     };
