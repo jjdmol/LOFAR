@@ -26,6 +26,12 @@ RTCP_PARAMS=""
 
 echo "Called as $@"
 
+if test "$LOFARROOT" == ""; then
+  echo "LOFARROOT is not set! Exiting."
+  exit 1
+fi
+echo "LOFARROOT is set to $LOFARROOT"
+
 # Parse command-line options
 while getopts ":AFl:p" opt; do
   case $opt in
