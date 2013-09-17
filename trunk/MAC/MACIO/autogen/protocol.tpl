@@ -189,6 +189,7 @@ void [+ event_class_name +]::pack()
   [+ ENDIF +][+ ENDFOR +]
 	[+ IF (= (count "param") 0) +]
   // no params in this event to pack
+  (void)__offset;
 	[+ ENDIF +]
 }
 
@@ -215,7 +216,7 @@ void [+ event_class_name +]::unpack()
     MSH_unpack(_buffer, __offset, [+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
 	_buffer  = 0;
-	__offset = 0;
+        (void)__offset;
 }
 
 [+ event_class_name +]* [+ event_class_name +]::clone()
