@@ -8,3 +8,9 @@ install(DIRECTORY .
   USE_SOURCE_PERMISSIONS
   FILES_MATCHING REGEX "(README\\.txt|\\.(gold|m|py|sh))$"
   PATTERN ".svn" EXCLUDE)
+
+install(DIRECTORY ../../MAC/Tools/Power/
+  DESTINATION stationtest/ec
+  USE_SOURCE_PERMISSIONS
+  FILES_MATCHING REGEX "(README\\.txt|\\.(gold|m|py|sh))$"
+  PATTERN ".svn" EXCLUDE)
