@@ -57,7 +57,7 @@
 #include <InputProc/Buffer/StationID.h>
 
 #include <ApplCommon/PVSSDatapointDefs.h>
-#include <APL/APLCommon/ControllerDefines.h>
+#include <APL/APLCommon/ControllerDefines.h>  // for createPropertySetName()
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -215,7 +215,8 @@ int main(int argc, char **argv)
                str(format(createPropertySetName(
                             PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
                    % toUpper(myHostname(false))
-                   % ps.settings.nodes[rank].cpu));
+                   % (ps.settings.nodes.size() > size_t(rank) ? 
+                      ps.settings.nodes[rank].cpu : 0)));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
