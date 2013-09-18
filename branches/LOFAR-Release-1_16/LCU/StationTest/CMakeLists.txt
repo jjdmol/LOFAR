@@ -1,6 +1,7 @@
 # $Id$
 
 lofar_package(StationTest 1.0)
+lofar_add_package(MACTools)
 
 # Install files matching regex pattern in current directory and below
 install(DIRECTORY . 
