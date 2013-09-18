@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created by diasvg.py -->
+<svg width="42.175cm" height="28.250cm" viewBox="6.950 1.875 49.125 30.125"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect x="27.000" y="8.000" width="8.000" height="6.000" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="27.000" y="8.000" width="8.000" height="6.000" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="31.000" y="10.564"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+Compute</text>
+<text x="31.000" y="12.258"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+(Adder)</text>
+<rect x="17.000" y="8.000" width="8.000" height="5.850" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="17.000" y="8.000" width="8.000" height="5.850" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="21.000" y="11.336"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+Input</text>
+<line x1="37.000" y1="2.000" x2="37.000" y2="15.000" stroke="#000000" stroke-width="0.250" stroke-dasharray="0.10,0.10"/>
+<text x="40.000" y="4.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+CEP 2</text>
+<text x="24.000" y="4.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+BG/P</text>
+<line x1="15.000" y1="2.000" x2="15.000" y2="15.000" stroke="#000000" stroke-width="0.250" stroke-dasharray="0.10,0.10"/>
+<text x="7.000" y="4.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+Antenna</text>
+<text x="7.000" y="6.117"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+  Fields</text>
+<polygon fill="#FFFFFF" stroke="none" stroke-width="0.250" points="8.505,11.000 10.011,12.253 8.505,13.505 7.000,12.253 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.100"  points="8.505,11.000 10.011,12.253 8.505,13.505 7.000,12.253 "/>
+<polygon fill="#FFFFFF" stroke="none" stroke-width="0.100" points="12.505,7.000 14.011,8.253 12.505,9.505 11.000,8.253 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.100"  points="12.505,7.000 14.011,8.253 12.505,9.505 11.000,8.253 "/>
+<line x1="13.000" y1="11.000" x2="16.346" y2="10.937" stroke="#000000" stroke-width="0.250" />
+<polygon fill="#000000" stroke="none" stroke-width="0.250" points="16.721,10.930 16.225,11.190 16.346,10.937 16.216,10.690 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.250"  points="16.721,10.930 16.225,11.190 16.346,10.937 16.216,10.690 "/>
+<line x1="25.000" y1="10.925" x2="26.346" y2="10.975" stroke="#000000" stroke-width="0.250" />
+<polygon fill="#000000" stroke="none" stroke-width="0.250" points="26.721,10.990 26.212,11.221 26.346,10.975 26.230,10.721 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.250"  points="26.721,10.990 26.212,11.221 26.346,10.975 26.230,10.721 "/>
+<line x1="35.000" y1="11.000" x2="38.345" y2="11.000" stroke="#000000" stroke-width="0.250" />
+<polygon fill="#000000" stroke="none" stroke-width="0.250" points="38.720,11.000 38.220,11.250 38.345,11.000 38.220,10.750 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.250"  points="38.720,11.000 38.220,11.250 38.345,11.000 38.220,10.750 "/>
+<line x1="10.000" y1="8.000" x2="10.000" y2="10.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="8.000" x2="11.000" y2="9.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="8.000" x2="9.000" y2="11.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="8.000" x2="9.000" y2="9.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="8.000" x2="11.000" y2="11.000" stroke="#000000" stroke-width="0.100" />
+<rect x="39.000" y="8.000" width="9.000" height="6.000" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="39.000" y="8.000" width="9.000" height="6.000" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="43.500" y="11.411"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+Storage    </text>
+<path stroke="none" fill="#FFFFFF" stroke-width="0.250" d="M 46.000,11.500 C 46.400,11.125 46.600,11.000 47.000,11.000 C 47.400,11.000 47.600,11.125 48.000,11.500 L 48.000,13.500 C 47.600,13.875 47.400,14.000 47.000,14.000 C 46.600,14.000 46.400,13.875 46.000,13.500 L 46.000,11.500 "/>
+<path stroke="#000000" fill="none" stroke-width="0.250"  d="M 46.000,11.500 C 46.400,11.125 46.600,11.000 47.000,11.000 C 47.400,11.000 47.600,11.125 48.000,11.500 L 48.000,13.500 C 47.600,13.875 47.400,14.000 47.000,14.000 C 46.600,14.000 46.400,13.875 46.000,13.500 L 46.000,11.500 "/>
+<path stroke="#000000" fill="none" stroke-width="0.250"  d="M 46.000,11.500 C 46.400,11.875 46.600,12.000 47.000,12.000 C 47.400,12.000 47.600,11.875 48.000,11.500 "/>
+<rect x="26.000" y="23.000" width="9.000" height="6.000" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="26.000" y="23.000" width="9.000" height="6.000" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="30.500" y="26.411"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+GPUProc</text>
+<rect x="17.000" y="23.000" width="9.000" height="6.000" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="17.000" y="23.000" width="9.000" height="6.000" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="21.500" y="26.411"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+InputProc</text>
+<line x1="37.000" y1="17.000" x2="37.000" y2="30.000" stroke="#000000" stroke-width="0.250" stroke-dasharray="0.10,0.10"/>
+<text x="40.000" y="19.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+CEP 2</text>
+<text x="23.000" y="19.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+Cobalt</text>
+<line x1="15.000" y1="17.000" x2="15.000" y2="30.000" stroke="#000000" stroke-width="0.250" stroke-dasharray="0.10,0.10"/>
+<text x="7.000" y="19.000"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+Antenna</text>
+<text x="7.000" y="21.117"  fill="#000000" text-anchor="start" font-size="2.12" font-family="sans" font-style="normal" font-weight="400">
+  Fields</text>
+<polygon fill="#FFFFFF" stroke="none" stroke-width="0.250" points="8.505,26.000 10.011,27.253 8.505,28.505 7.000,27.253 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.100"  points="8.505,26.000 10.011,27.253 8.505,28.505 7.000,27.253 "/>
+<polygon fill="#FFFFFF" stroke="none" stroke-width="0.100" points="12.505,22.000 14.011,23.253 12.505,24.505 11.000,23.253 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.100"  points="12.505,22.000 14.011,23.253 12.505,24.505 11.000,23.253 "/>
+<line x1="13.000" y1="26.000" x2="16.345" y2="26.000" stroke="#000000" stroke-width="0.250" />
+<polygon fill="#000000" stroke="none" stroke-width="0.250" points="16.720,26.000 16.220,26.250 16.345,26.000 16.220,25.750 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.250"  points="16.720,26.000 16.220,26.250 16.345,26.000 16.220,25.750 "/>
+<line x1="35.000" y1="26.000" x2="38.132" y2="26.000" stroke="#000000" stroke-width="0.250" />
+<polygon fill="#000000" stroke="none" stroke-width="0.250" points="38.507,26.000 38.007,26.250 38.132,26.000 38.007,25.750 "/>
+<polygon fill="none" stroke="#000000" stroke-width="0.250"  points="38.507,26.000 38.007,26.250 38.132,26.000 38.007,25.750 "/>
+<line x1="10.000" y1="23.000" x2="10.000" y2="25.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="23.000" x2="11.000" y2="24.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="23.000" x2="9.000" y2="26.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="23.000" x2="9.000" y2="24.000" stroke="#000000" stroke-width="0.100" />
+<line x1="10.000" y1="23.000" x2="11.000" y2="26.000" stroke="#000000" stroke-width="0.100" />
+<rect x="38.786" y="23.000" width="10.214" height="6.000" fill="#FFFFFF" stroke="none" stroke-width="0"/>
+<rect x="38.786" y="23.000" width="10.214" height="6.000" fill="none" stroke="#000000" stroke-width="0.250" />
+<text x="43.893" y="26.411"  fill="#000000" text-anchor="middle" font-size="1.69" font-family="sans" font-style="normal" font-weight="400">
+OutputProc   </text>
+<path stroke="none" fill="#FFFFFF" stroke-width="0.250" d="M 47.000,26.500 C 47.400,26.125 47.600,26.000 48.000,26.000 C 48.400,26.000 48.600,26.125 49.000,26.500 L 49.000,28.500 C 48.600,28.875 48.400,29.000 48.000,29.000 C 47.600,29.000 47.400,28.875 47.000,28.500 L 47.000,26.500 "/>
+<path stroke="#000000" fill="none" stroke-width="0.250"  d="M 47.000,26.500 C 47.400,26.125 47.600,26.000 48.000,26.000 C 48.400,26.000 48.600,26.125 49.000,26.500 L 49.000,28.500 C 48.600,28.875 48.400,29.000 48.000,29.000 C 47.600,29.000 47.400,28.875 47.000,28.500 L 47.000,26.500 "/>
+<path stroke="#000000" fill="none" stroke-width="0.250"  d="M 47.000,26.500 C 47.400,26.875 47.600,27.000 48.000,27.000 C 48.400,27.000 48.600,26.875 49.000,26.500 "/>
+</svg>
