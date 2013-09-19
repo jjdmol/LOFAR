@@ -90,11 +90,6 @@ namespace LOFAR
       queue.launchKernel(*this, grid, block);
     }
 
-    void Kernel::enqueue() const
-    {
-      enqueue(itsStream);
-    }
-
     void Kernel::enqueue(PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);

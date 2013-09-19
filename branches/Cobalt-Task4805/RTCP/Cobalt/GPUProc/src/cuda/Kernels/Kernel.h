@@ -73,8 +73,6 @@ namespace LOFAR
 
       void enqueue(PerformanceCounter &counter) const;
 
-      void enqueue() const;
-
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream, const gpu::Function& function);
