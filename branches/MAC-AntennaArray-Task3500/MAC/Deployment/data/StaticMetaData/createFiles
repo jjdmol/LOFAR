@@ -545,9 +545,14 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     Copies the right AntennaArrays.conf file for this station
     """
-    # Copy file <stationname>-antennaarrays.conf> to
-    # /opt/lofar/etc/AntennaArray.conf
-    srcFile = dataDir + "/" + stationName.upper() + "-AntennaArrays.conf"
+    stationName = stationName.upper()
+    if stationName[0:2] == "CS":
+        srcFile = dataDir + "/AntennaArrays_CS.conf"
+    elif stationName[0:2] == "RS":
+        srcFile = dataDir + "/AntennaArrays_RS.conf"
+    else:
+        srcFile = dataDir + "/AntennaArrays_Int.conf"
+    
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
         print "Will create AntennaArrays_default.conf instead"
@@ -557,7 +562,6 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
         destFile = resultDir + "/AntennaArrays.conf"
 
     command = "cp -f "+srcFile+ " " + destFile
-    #print command
     os.system(command)
 
 def createAntennaFieldFile(resultDir, stationName, dataDir):
