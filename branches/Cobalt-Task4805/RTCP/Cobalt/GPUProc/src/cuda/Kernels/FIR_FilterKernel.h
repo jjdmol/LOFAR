@@ -48,11 +48,10 @@ namespace LOFAR
         size_t nrBytesPerComplexSample;
         size_t nrHistorySamples;
         size_t nrPPFTaps;
+
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
       };
 
       enum BufferType

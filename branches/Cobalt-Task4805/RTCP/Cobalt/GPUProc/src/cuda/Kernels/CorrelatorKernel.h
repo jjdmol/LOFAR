@@ -38,15 +38,6 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
-      // Parameters that must be passed to the constructor of the
-      // CorrelatorKernel class.
-      struct Parameters : Kernel::Parameters
-      {
-        Parameters(const Parset& ps);
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
-      };
-
       enum BufferType
       {
         INPUT_DATA,

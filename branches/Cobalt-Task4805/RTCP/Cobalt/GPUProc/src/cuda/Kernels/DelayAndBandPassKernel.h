@@ -47,12 +47,10 @@ namespace LOFAR
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrSAPs;
-        double subbandBandwidth;
         bool delayCompensation;
         bool correctBandPass;
         bool transpose;
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
+        double subbandBandwidth;
       };
 
       enum BufferType

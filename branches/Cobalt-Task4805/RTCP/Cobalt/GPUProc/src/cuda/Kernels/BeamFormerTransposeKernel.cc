@@ -40,8 +40,7 @@ namespace LOFAR
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());

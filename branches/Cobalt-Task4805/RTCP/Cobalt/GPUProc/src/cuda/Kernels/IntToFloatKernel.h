@@ -45,8 +45,6 @@ namespace LOFAR
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrTAPs;
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
       };
 
       enum BufferType

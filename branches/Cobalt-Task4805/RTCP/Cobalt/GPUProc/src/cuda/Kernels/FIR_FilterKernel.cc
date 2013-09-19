@@ -42,8 +42,7 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
       nrPPFTaps(ps.nrPPFTaps()),
-      nrSubbands(1),
-      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
+      nrSubbands(1)
     {
     }
 

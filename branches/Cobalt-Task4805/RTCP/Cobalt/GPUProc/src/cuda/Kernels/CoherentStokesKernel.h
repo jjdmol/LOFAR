@@ -47,8 +47,6 @@ namespace LOFAR
         size_t nrStokes;
         size_t timeIntegrationFactor;
         size_t timeParallelFactor;
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
       };
 
       enum BufferType

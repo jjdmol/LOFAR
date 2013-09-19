@@ -43,8 +43,6 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         size_t nrTABs;
-        // If \c true, dump output buffers to disk
-        bool dumpBuffers;
       };
 
       enum BufferType

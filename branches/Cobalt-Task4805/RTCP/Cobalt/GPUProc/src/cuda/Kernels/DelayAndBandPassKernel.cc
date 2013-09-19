@@ -46,11 +46,10 @@ namespace LOFAR
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrSAPs(ps.settings.SAPs.size()),
-      subbandBandwidth(ps.settings.subbandWidth()),
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
       transpose(correctBandPass), // sane for correlator; bf redefines
-      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
+      subbandBandwidth(ps.settings.subbandWidth())
     {
     }
 
