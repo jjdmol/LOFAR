@@ -83,8 +83,3 @@ add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(share/gpu/kernels)
 add_subdirectory(etc)
-
-# At install time, create two directories where runtime log files and the like will be stored.
-install(DIRECTORY DESTINATION var/run)
-install(DIRECTORY DESTINATION var/log)
-
