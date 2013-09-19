@@ -604,27 +604,6 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
 
-def createHBADeltasFile(resultDir, stationName, dataDir):
-    """
-    Copies the right HBADeltas.conf file for this station
-    """
-    # Copy file <stationname>-hbadeltas.conf> to
-    # /opt/lofar/etc/HBADeltas.conf
-    
-    # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.upper() + "-HBADeltas.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
-        print "Will create HBADeltas_default.conf instead"
-        srcFile = dataDir + "/HBADeltas_default.conf"
-        destFile= resultDir + "/HBADeltas.conf"
-    else:
-        destFile = resultDir + "/HBADeltas.conf"
-
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
 def createiHBADeltasFile(resultDir, stationName, dataDir):
     """
     Copies the right iHBADeltas.conf file for this station
@@ -752,7 +731,6 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 createAntennaArraysFile(resultDir, stationName, dataDir)
                 createAntennaFieldFile (resultDir, stationName, dataDir)
                 createCableDelaysFile  (resultDir, stationName, dataDir)
-                createHBADeltasFile    (resultDir, stationName, dataDir)
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
@@ -804,7 +782,6 @@ else:
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createAntennaFieldFile (resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
-        createHBADeltasFile    (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
