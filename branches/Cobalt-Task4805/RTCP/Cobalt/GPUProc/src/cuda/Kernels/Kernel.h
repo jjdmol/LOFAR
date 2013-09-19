@@ -25,7 +25,7 @@
 #include <iosfwd>
 #include <cuda.h>
 
-#include <CoInterface/Parset.h>
+// #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -35,6 +35,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    //# Forward declaration
+    class Parset;
+
     class Kernel : public gpu::Function
     {
     public:

@@ -27,6 +27,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 
 using namespace std;
