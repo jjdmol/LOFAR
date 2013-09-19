@@ -18,7 +18,8 @@ To build and install Cobalt:
   # configure Cobalt
   mkdir -p $ROOT/build/gnu_opt
   cd $ROOT/build/gnu_opt
-  cmake -DBUILD_PACKAGES=Cobalt -DUSE_CUDA=ON -DUSE_OPENMP=ON -DUSE_MPI=ON $ROOT/LOFAR
+  cmake $ROOT/LOFAR -DBUILD_PACKAGES=Cobalt \
+    -DUSE_CUDA=ON -DUSE_OPENMP=ON -DUSE_MPI=ON
 
   # build and install into $ROOT/build/gnu_opt/installed/
   # Note: you can choose another install directory by setting the *CMake*
@@ -32,6 +33,11 @@ To build and install Cobalt:
   # set LOFARROOT and a few other variables for the installed build
   . $ROOT/build/gnu_opt/installed/lofarinit.sh
   (or if you use a C-shell: . $ROOT/build/gnu_opt/installed/lofarinit.csh )
+
+  # Post-install, you'll have to create two directories, where runtime log files
+  # and the like will be stored.
+
+  mkdir -p $LOFARROOT/var/{run,log}
 
 Those who have access to the LOFAR Operations Wiki can find extensive
 information on building the LOFAR software on the following pages:
