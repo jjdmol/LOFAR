@@ -34,6 +34,11 @@ To build and install Cobalt:
   . $ROOT/build/gnu_opt/installed/lofarinit.sh
   (or if you use a C-shell: . $ROOT/build/gnu_opt/installed/lofarinit.csh )
 
+  # Post-install, you'll have to create two directories, where runtime log files
+  # and the like will be stored.
+
+  mkdir -p $LOFARROOT/var/{run,log}
+
 Those who have access to the LOFAR Operations Wiki can find extensive
 information on building the LOFAR software on the following pages:
 
