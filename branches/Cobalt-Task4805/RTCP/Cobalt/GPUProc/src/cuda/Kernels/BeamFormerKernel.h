@@ -46,6 +46,8 @@ namespace LOFAR
         unsigned nrTABs;
         float weightCorrection; // constant weight applied to all weights
         double subbandBandwidth;
+        // If \c true, dump output buffers to disk
+        bool dumpBuffers;
       };
 
       enum BufferType

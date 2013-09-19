@@ -53,6 +53,12 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 # endif
 
+    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps),
+      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
+    {
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,

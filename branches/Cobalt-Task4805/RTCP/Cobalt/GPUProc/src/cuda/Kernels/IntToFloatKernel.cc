@@ -41,7 +41,8 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrTAPs(ps.nrPPFTaps())
+      nrTAPs(ps.nrPPFTaps()),
+      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
     {
     }
 

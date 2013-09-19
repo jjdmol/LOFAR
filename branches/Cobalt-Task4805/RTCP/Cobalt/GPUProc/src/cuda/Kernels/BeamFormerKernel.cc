@@ -43,7 +43,8 @@ namespace LOFAR
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       weightCorrection(1.0f),  // TODO: Add a key to the parset to specify this
-      subbandBandwidth(ps.settings.subbandWidth())
+      subbandBandwidth(ps.settings.subbandWidth()),
+      dumpBuffers(false)  // TODO: Add a key to the parset to specify this
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
