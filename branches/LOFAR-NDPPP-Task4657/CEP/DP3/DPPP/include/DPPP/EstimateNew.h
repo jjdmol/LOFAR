@@ -34,6 +34,9 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_vector.h>
 
+//# Use Block<bool> instead of vector<bool> (because testing bits is slower).
+#include <casa/Containers/Block.h>
+
 namespace LOFAR {
   namespace DPPP {
 
@@ -46,88 +49,83 @@ namespace LOFAR {
     // and frequency smearing).
     class EstimateNew
     {
+    public:
 
       EstimateNew();
 
       // Update the object and size its internal buffers.
-      void update (size_t ndir, size_t nBaseline, size_t nStation,
-                   size_t nChannel, size_t maxIter);
+      void update (size_t maxndir, size_t nBaseline, size_t nStation,
+                   size_t nChannel, size_t maxIter, bool propagateSolution);
 
+      // \param[in]   data
+      // Vector of length \p nDirection of cursors for 3-D buffers of observed
+      // visiblity data of shape (\p nBaseline, \p nChannel, 4).
+      // \param[in]   model
+      // Vector of length \p nDirection of cursors for 3-D buffers of simulated
+      // visiblity data of shape (\p nBaseline, \p nChannel, 4).
+      // \param[in]   baselines
+      // A cursor for a 1-D buffer of baselines of shape (\p nBaseline).
+      // \param[in]   flag
+      // A cursor for a 3-D buffer of observed visibility flags of shape
+      // (\p nBaseline, \p nChannel, 4).
+      // \param[in]   weight
+      // A cursor for a 3-D buffer of observed visibility weights of shape
+      // (\p nBaseline, \p nChannel, 4).
+      // \param[in]   mix
+      // A cursor for a 5-D buffer of mixing weights of shape
+      // (\p nBaseline, \p nChannel, 4, \p nDirection, \p nDirection).
+      //
+      // <br>Note that the cursors are passed by value, so a copy is made.
+      // In this way no reset of the cursor is needed.
+      bool estimate (const vector<vector<int> >& unknownsIndex,
+                     const_cursor<Baseline> baselines,
+                     vector<const_cursor<fcomplex> > data,
+                     vector<const_cursor<dcomplex> > model,
+                     const_cursor<bool> flag,
+                     const_cursor<float> weight,
+                     const_cursor<dcomplex> mix);
 
-    //
-// \param[in]   nDirection
-// Number of directions to estimate Jones matrices for.
-// \param[in]   nStation
-// Number of stations.
-// \param[in]   nBaseline
-// Number of baselines.
-// \param[in]   nChannel
-// Number of frequency channels.
-// \param[in]   data
-// Vector of length \p nDirection of cursors for 3-D buffers of observed
-// visiblity data of shape (\p nBaseline, \p nChannel, 4).
-// \param[in]   model
-// Vector of length \p nDirection of cursors for 3-D buffers of simulated
-// visiblity data of shape (\p nBaseline, \p nChannel, 4).
-// \param[in]   baselines
-// A cursor for a 1-D buffer of baselines of shape (\p nBaseline).
-// \param[in]   flag
-// A cursor for a 3-D buffer of observed visibility flags of shape
-// (\p nBaseline, \p nChannel, 4).
-// \param[in]   weight
-// A cursor for a 3-D buffer of observed visibility weights of shape
-// (\p nBaseline, \p nChannel, 4).
-// \param[in]   mix
-// A cursor for a 5-D buffer of mixing weights of shape
-// (\p nBaseline, \p nChannel, 4, \p nDirection, \p nDirection).
-// \param[in]   unknowns
-// A pointer to a buffer of unknowns of size nDirection * nStation * 8.
-// \param[in]   errors
-// A pointer to a buffer of errors of size nDirection * nStation * 8. If this
-// pointer is null (0), errors will not be estimated.
-    // Note that the cursors are passed by value, so a copy is made.
-    // In this way no reset of the cursor is needed.
-    bool EstimateNew::estimate (const vector<Block<bool> >& dirStations,
-                                const_cursor<Baseline> baselines,
-                                vector<const_cursor<fcomplex> > data,
-                                vector<const_cursor<dcomplex> > model,
-                                const_cursor<bool> flag,
-                                const_cursor<float> weight,
-                                const_cursor<dcomplex> mix,
-                                size_t nUnknowns)
-bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
-    size_t nChannel, const_cursor<Baseline> baselines,
-    vector<const_cursor<fcomplex> > data, vector<const_cursor<dcomplex> > model,
-    const_cursor<bool> flag, const_cursor<float> weight,
-    const_cursor<dcomplex> mix, double *unknowns);
-// @}
-
-// Estimate for a variable nr of stations per source.
-bool estimateSel(size_t nDirection, size_t nStation, size_t nBaseline,
-                 size_t nChannel, const_cursor<Baseline> baselines,
-                 vector<const_cursor<fcomplex> > data,
-                 vector<const_cursor<dcomplex> > model,
-                 const_cursor<bool> flag, const_cursor<float> weight,
-                 const_cursor<dcomplex> mix, double *unknowns,
-                 size_t nUnknowns,
-                 vector<dcomplex>& M, vector<dcomplex>& dM,
-                 vector<double>& dR, vector<double>& dI);
-
+      // Get the last solution.
+      // It contains zeroes for the direction-stations not solved for.
+      const vector<double>& getSolution() const
+        { return itsSolution; }
 
     private:
+      // Initialize the solution. Nr must be a multiple of 8.
+      // The diagonal is set to (diag,0), off-diagonal to (0,0).
+      void initSolution (double* solution, size_t nr, double diag);
+
+      // Fill itsUnknowns from itsLastSolution for the unknowns to be used.
+      void fillUnknowns (const vector<vector<int> >& unknownsIndex);
+
+      // Update itsSolution and itsLastSolution from itsUnknowns for the
+      // unknowns to be used.
+      void fillSolution (const vector<vector<int> >& unknownsIndex);
+
+      // Fill itsDerivIndex for the unknowns of the given baseline
+      // to be able to pass the equations to LSQFit::makeNorm.
+      // It returns the number of unknowns.
+      uint fillDerivIndex (const vector<vector<int> >& unknownsIndex,
+                           const Baseline& baseline);
+
+      //# Data members
       size_t itsNrBaselines;
-      size_t itsNrStations
-      size_t itsNrChannel;
+      size_t itsNrStations;
+      size_t itsNrChannels;
       size_t itsMaxIter;
       bool   itsPropagateSolution;
-      vector<casa::uInt> itsDerivIndex;
+      casa::Block<bool>  itsSolveStation;  //# solve station i?
+      vector<casa::uInt> itsDerivIndex;    //# index for LSQFit::makeIndex
       vector<double>     itsUnknowns;
       vector<double>     itsSolution;
-      vector<dcomplex>&  itsM;
-      vector<dcomplex>&  itsdM;
-      vector<double>&    itsdR;
-      vector<double>&    itsdI;
-      casa::Block<bool>  itsSolveStation;
+      vector<double>     itsLastSolution;
+      vector<dcomplex>   itsM;
+      vector<dcomplex>   itsdM;
+      vector<double>     itsdR;
+      vector<double>     itsdI;
+    };
+
+    // @}
 
   } //# namespace DPPP
 } //# namespace LOFAR

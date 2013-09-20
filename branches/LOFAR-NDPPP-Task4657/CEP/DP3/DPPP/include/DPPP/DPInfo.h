@@ -122,7 +122,7 @@ namespace LOFAR {
         { return itsNCorr; }
       uint nchan() const
         { return itsNChan; }
-        uint origNChan() const
+      uint origNChan() const
         { return itsOrigNChan; }
       uint nchanAvg() const
         { return itsChanAvg; }

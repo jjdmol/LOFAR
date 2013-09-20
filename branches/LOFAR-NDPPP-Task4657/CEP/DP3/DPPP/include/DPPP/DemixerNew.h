@@ -98,12 +98,8 @@ namespace LOFAR {
       // Process the data collected in itsBuf.
       void processData();
 
-      // Let a worker process a chunk of data.
-      void processChunk (const DPBuffer* bufIn, int nbufin,
-                         DPBuffer* bufOut);
-
       // Export the solutions to a ParmDB.
-      void writeSolutions();
+      void writeSolutions (int ntimeSol);
 
       //# Data members.
       DPInput*                itsInput;
@@ -115,6 +111,7 @@ namespace LOFAR {
       vector<DemixWorker>     itsWorkers;
       vector<DPBuffer>        itsBufIn;
       vector<DPBuffer>        itsBufOut;
+      vector<vector<double> > itsSolutions; //# all solutions in a time window
       uint                    itsNTime;
       //# Timers.
       NSTimer itsTimer;

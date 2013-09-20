@@ -34,6 +34,7 @@
 #include <DPPP/Patch.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Filter.h>
+#include <DPPP/EstimateNew.h>
 #include <ParmDB/ParmDB.h>
 
 #include <casa/Arrays/Cube.h>
@@ -73,10 +74,7 @@ namespace LOFAR {
       // Process the data in the input buffers and store the result in the
       // output buffers.
       void process (const DPBuffer* bufin, uint nbufin,
-                    DPBuffer* bufout);
-
-      // Export the solutions to a ParmDB.
-      void dumpSolutions (BBS::ParmDB&);
+                    DPBuffer* bufout, vector<double>* solutions);
 
       // Get the number of solves.
       uint nSolves() const
@@ -114,9 +112,6 @@ namespace LOFAR {
       // </group>
 
     private:
-      // Initialize the solution to 1 on diagonal and 0 elsewhere.
-      void initSolution (vector<double>& solution);
-
       // Setup the demix processing steps for this piece of data.
       // It fills itsFirstSteps, etc. for the sources to be demixed.
       // It also determines how to handle the target (include,deproject,ignore).
@@ -170,10 +165,10 @@ namespace LOFAR {
                       uint resultIndex);
 
       // Do the demixing.
-      void handleDemix (DPBuffer* bufout);
+      void handleDemix (DPBuffer* bufout, vector<double>* solutions);
 
       // Solve gains and subtract sources.
-      void demix (DPBuffer* bufout);
+      void demix (vector<double>* solutions);
 
       // Merge the data of the selected baselines from the subtract buffer
       // into the full buffer.
@@ -240,19 +235,8 @@ namespace LOFAR {
       //# Per station and source the index in the unknowns vector.
       //# Note there are 8 unknowns (4 pol, ampl/phase) per source/station.
       vector<vector<int> >                  itsUnknownsIndex;
-      //# Per direction tell which stations to solve.
-      vector<casa::Vector<bool> >           itsSrcStatSolveFlag;
-      //# Tell which stations to use (for any source).
-      casa::Vector<bool>                    itsStationSolveFlag;
-      //# Variables to do the solve.
-      uint                                  itsNUnknown;
-      vector<double>                        itsUnknowns;
-      vector<double>                        itsPrevSolution;
-      vector<vector<double> >               itsSolutions;
-      vector<dcomplex>                      itsM;    //# workspace for estimate
-      vector<dcomplex>                      itsdM;   //# workspace for estimate
-      vector<double>                        itsdR;   //# workspace for estimate
-      vector<double>                        itsdI;   //# workspace for estimate
+      //# The estimater (solver).
+      EstimateNew                           itsEstimate;
       //# Variables for the predict.
       casa::Matrix<double>                  itsUVW;
       vector<dcomplex>                      itsModelVis;

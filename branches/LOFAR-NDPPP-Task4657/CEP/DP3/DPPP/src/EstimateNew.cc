@@ -21,9 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <DPPP/EstimateMixed.h>
+#include <DPPP/EstimateNew.h>
 #include <Common/LofarLogger.h>
+
 #include <scimath/Fitting/LSQFit.h>
+
 
 namespace LOFAR {
   namespace DPPP {
@@ -31,44 +33,50 @@ namespace LOFAR {
     EstimateNew::EstimateNew()
     {}
 
-    EstimateNew::update (size_t ndir, size_t nBaseline, size_t nStation,
-                         size_t maxIter, bool propagateSolution)
+    void EstimateNew::update (size_t maxndir, size_t nBaseline, size_t nStation,
+                              size_t nChannel, size_t maxIter,
+                              bool propagateSolution)
     {
-      itsUnknowns.resize (ndir * nStation * 4 * 2);
-      itsSolution.resize (itsUnknowns.size());
-      initSolution (&(itsSolution[0]), itsSolution.size());
-      ///itsDerivIndex.resize (nBaseline * ndir * 32);
-      itsDerivIndex.resize (ndir*32);
-      itsM.resize  (ndir*4);
-      itsdM.resize (ndir*16);
-      itsdR.resize (ndir*8);
-      itsdI.resize (ndir*8);
-      itsMaxIter = maxIter;
+      itsNrBaselines = nBaseline;
+      itsNrStations  = nStation;
+      itsNrChannels  = nChannel;
+      itsMaxIter     = maxIter;
       itsPropagateSolution = propagateSolution;
+      itsSolveStation.resize (nStation);
+      itsUnknowns.resize (maxndir * nStation * 4 * 2);
+      itsSolution.resize (itsUnknowns.size());
+      itsLastSolution.resize (itsUnknowns.size());
+      initSolution (&(itsLastSolution[0]), itsLastSolution.size(), 1.);
+      ///itsDerivIndex.resize (nBaseline * maxndir * 32);
+      itsDerivIndex.resize (maxndir*4*2*4);
+      itsM.resize  (maxndir*4);
+      itsdM.resize (maxndir*4*4);
+      itsdR.resize (maxndir*8);
+      itsdI.resize (maxndir*8);
     }
 
-    void EstimateNew::initSolution (double* solution, size_t nr)
+    void EstimateNew::initSolution (double* solution, size_t nr, double diag)
     {
       // 4 complex unknowns, thus 8 real unknowns.
-      // Initialize to 1+0i on the diagonal, elsewhere 0+0i.
+      // Initialize to diag+0i on the diagonal, elsewhere 0+0i.
       for (size_t i=0; i<nr; i+=8) {
-        solution[i+0] = 1.;
+        solution[i+0] = diag;
         solution[i+1] = 0.;
         solution[i+2] = 0.;
         solution[i+3] = 0.;
         solution[i+4] = 0.;
         solution[i+5] = 0.;
-        solution[i+6] = 1.;
+        solution[i+6] = diag;
         solution[i+7] = 0.;
       }
     }
 
-    void EstimateNew::fillUnknowns (const vector<Vector<Int> >& unknownsIndex)
+    void EstimateNew::fillUnknowns (const vector<vector<int> >& unknownsIndex)
     {
       // Fill the unknowns for the direction-stations to solve.
       // Copy previous solution if needed.
       double* unknowns = &(itsUnknowns[0]);
-      const double* solution = &(itsSolution[0]);
+      const double* solution = &(itsLastSolution[0]);
       for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
         for (size_t st=0; st<unknownsIndex.size(); ++st) {
           if (unknownsIndex[dr][st] >= 0) {
@@ -77,7 +85,7 @@ namespace LOFAR {
                 *unknowns++ = *solution++;
               }
             } else {
-              initSolution (unknowns, 8);
+              initSolution (unknowns, 8, 1.);
               unknowns += 8;
             }
           } else {
@@ -88,21 +96,25 @@ namespace LOFAR {
       }
     }
 
-    void EstimateNew::fillSolution (const vector<Vector<Int> >& unknownsIndex)
+    void EstimateNew::fillSolution (const vector<vector<int> >& unknownsIndex)
     {
       // Copy the solution for the direction-stations to solve.
       // Use initial values for other direction-stations.
       const double* unknowns = &(itsUnknowns[0]);
       double* solution = &(itsSolution[0]);
+      double* lastSolution = &(itsLastSolution[0]);
       for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
         for (size_t st=0; st<unknownsIndex.size(); ++st) {
           if (unknownsIndex[dr][st] >= 0) {
             for (size_t k=0; k<8; ++k) {
-              *solution++ = *unknowns++;
+              *solution++ = *unknowns;
+              *lastSolution++ = *unknowns++;
             }
           } else {
-            initSolution (solution, 8);
+            initSolution (solution, 8, 0.);
+            initSolution (lastSolution, 8, 1.);
             solution += 8;
+            lastSolution += 8;
           }
         }
       }
@@ -117,37 +129,39 @@ namespace LOFAR {
     // x 2 (scalar) unknowns = (no. of directions) x 8. For each of these
     // unknowns the value of the partial derivative of the model with respect
     // to the unknown has to be computed.
-    uint EstimateNew::makeDerivIndex (const vector<Vector<Int> >& unknownsIndex,
+    uint EstimateNew::fillDerivIndex (const vector<vector<int> >& unknownsIndex,
                                       const Baseline& baseline)
     {
-      // Per direction a baseline has information about 16 unknowns:
-      // real and imag part of p00,p01,p10,p11,q00,q01,q10,q11
+      // Per direction a baseline has 32 equations with information about
+      // 16 unknowns: real and imag part of p00,p01,p10,p11,q00,q01,q10,q11
       // where p and q are the stations forming the baseline.
       // However, only fill if a station has to be solved.
       size_t n = 0;
       for (size_t cr=0; cr<4; ++cr) {
         for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
-          size_t idx0 = 8*unknownsIndex[dr][baseline.first];
-          if (idx0 >= 0) {
-            for (size_t k=0; k<8; ++k) {
-              itsIndex[n++] = idx0+k;
-            }
+          if (unknownsIndex[dr][baseline.first] >= 0) {
+            size_t idx0 = unknownsIndex[dr][baseline.first] + (cr/2)*4;
+            itsDerivIndex[n++] = idx0;
+            itsDerivIndex[n++] = idx0 + 1;
+            itsDerivIndex[n++] = idx0 + 2;
+            itsDerivIndex[n++] = idx0 + 3;
           }
-          size_t idx1 = 8*unknownsIndex[dr][baseline.second];
-          if (idx1 >= 0) {
-            for (size_t k=0; k<8; ++k) {
-              itsIndex[n++] = idx1+k;
-            }
+          if (unknownsIndex[dr][baseline.second] >= 0) {
+            size_t idx1 = unknownsIndex[dr][baseline.second] + (cr%2)*4;
+            itsDerivIndex[n++] = idx1;
+            itsDerivIndex[n++] = idx1 + 1;
+            itsDerivIndex[n++] = idx1 + 2;
+            itsDerivIndex[n++] = idx1 + 3;
           }
         }
       }
-      return n;
+      // Return nr of partial derivatives per correlation.
+      return n/4;
     }
 
     // Note that the cursors are passed by value, so a copy is made.
     // In this way no explicit reset of the cursor is needed on a next call.
-    bool EstimateNew::estimate (const vector<Vector<Int> >& unknownsIndex,
-                                const Block<bool>& solveStations,
+    bool EstimateNew::estimate (const vector<vector<int> >& unknownsIndex,
                                 const_cursor<Baseline> baselines,
                                 vector<const_cursor<fcomplex> > data,
                                 vector<const_cursor<dcomplex> > model,
@@ -155,34 +169,46 @@ namespace LOFAR {
                                 const_cursor<float> weight,
                                 const_cursor<dcomplex> mix)
     {
+      // Determine if a station has to be solved for any source.
+      itsSolveStation = false;
+      size_t nUnknowns = 0;
+      for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
+        for (size_t st=0; st<itsNrStations; ++st) {
+          if (unknownsIndex[dr][st] >= 0) {
+            itsSolveStation[st] = true;
+            nUnknowns += 8;
+          }
+        }
+      }
       // Initialize LSQ solver.
       casa::LSQFit solver(nUnknowns);
-      const size_t nDirection = dirStations.size();
+      const size_t nDirection = unknownsIndex.size();
 
       // Iterate until convergence.
       size_t nIterations = 0;
-      while (!solver.isReady()  &&  nIterations < maxIter) {
-        for (size_t bl=0; bl<nBaseline; ++bl) {
+      while (!solver.isReady()  &&  nIterations < itsMaxIter) {
+        for (size_t bl=0; bl<itsNrBaselines; ++bl) {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
           // Only compute if no autocorr and if a station needs to be solved.
-          if (p != q  &&  (solveStation[p] || solveStation[q])) {
+          if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
-            size_t nPartial = makeDerivIndex (unknownsIndex, *baselines);
-
-            for (size_t ch=0; ch<nChannel; ++ch) {
+            size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
+            // Generate equations for each channel.
+            for (size_t ch=0; ch<itsNrChannels; ++ch) {
               for (size_t dr=0; dr<nDirection; ++dr) {
                 // Jones matrix for station P.
-                const double *Jp = &(itsSolution[dr * nStation * 8 + p * 8]);
+                const double *Jp = &(itsSolution[(dr * itsNrStations + p) * 8]);
                 const dcomplex Jp_00(Jp[0], Jp[1]);
                 const dcomplex Jp_01(Jp[2], Jp[3]);
                 const dcomplex Jp_10(Jp[4], Jp[5]);
                 const dcomplex Jp_11(Jp[6], Jp[7]);
 
                 // Jones matrix for station Q, conjugated.
-                const double *Jq = &(itsSolution[dr * nStation * 8 + q * 8]);
+                const double *Jq = &(itsSolution[(dr * itsNrStations + q) * 8]);
                 const dcomplex Jq_00(Jq[0], -Jq[1]);
                 const dcomplex Jq_01(Jq[2], -Jq[3]);
+
                 const dcomplex Jq_10(Jq[4], -Jq[5]);
                 const dcomplex Jq_11(Jq[6], -Jq[7]);
 
@@ -250,41 +276,57 @@ namespace LOFAR {
               // Thus real partial derivatives wrt a,b,c,d are c,-d,a,-b.
               // Imaginary partial derivatives wrt a,b,c,d are d,c,b,a
               for (size_t cr=0; cr<4; ++cr) {
+                // Only use visibility if not flagged.
                 if (!flag[cr]) {
+                  // For each direction a set of equations is generated.
                   for (size_t tg=0; tg<nDirection; ++tg) {
                     dcomplex visibility(0.0, 0.0);
+                    // Each direction is dependent on all directions.
                     for (size_t dr=0; dr<nDirection; ++dr) {
-                      // Look-up mixing weight.
-                      const dcomplex mix_weight = *mix;
-                      // Sum weighted model visibility.
-                      visibility += mix_weight * M[dr * 4 + cr];
+                      bool do1 = unknownsIndex[dr][p] >= 0;
+                      bool do2 = unknownsIndex[dr][q] >= 0;
+                      // Only generate equations if a station has to be solved
+                      // for this direction.
+                      if (do1 || do2) {
+                        // Look-up mixing weight.
+                        const dcomplex mix_weight = *mix;
+                        // Sum weighted model visibilities.
+                        visibility += mix_weight * itsM[dr * 4 + cr];
 
-                      // Compute weighted partial derivatives.
-                      dcomplex derivative(0.0, 0.0);
-                      derivative = mix_weight * itsdM[dr * 16 + cr * 4];
-                      itsdR[dr * 8] = real(derivative);
-                      itsdI[dr * 8] = imag(derivative);
-                      itsdR[dr * 8 + 1] = -imag(derivative);
-                      itsdI[dr * 8 + 1] = real(derivative);
-
-                      derivative = mix_weight * itsdM[dr * 16 + cr * 4 + 1];
-                      itsdR[dr * 8 + 4] = real(derivative);
-                      itsdI[dr * 8 + 4] = imag(derivative);
-                      itsdR[dr * 8 + 5] = -imag(derivative);
-                      itsdI[dr * 8 + 5] = real(derivative);
-
-                      derivative = mix_weight * itsdM[dr * 16 + cr * 4 + 2];
-                      itsdR[dr * 8 + 2] = real(derivative);
-                      itsdI[dr * 8 + 2] = imag(derivative);
-                      itsdR[dr * 8 + 3] = imag(derivative);
-                      itsdI[dr * 8 + 3] = -real(derivative);
-
-                      derivative = mix_weight * itsdM[dr * 16 + cr * 4 + 3];
-                      itsdR[dr * 8 + 6] = real(derivative);
-                      itsdI[dr * 8 + 6] = imag(derivative);
-                      itsdR[dr * 8 + 7] = imag(derivative);
-                      itsdI[dr * 8 + 7] = -real(derivative);
-
+                        // Compute weighted partial derivatives.
+                        size_t off = 0;
+                        if (do1) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = -imag(der);
+                          itsdI[off + 1] = real(der);
+                          off += 2;
+                        }
+                        if (do2) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 1]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = -imag(der);
+                          itsdI[off + 1] = real(der);
+                          off += 2;
+                        }
+                        if (do1) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = imag(der);
+                          itsdI[off + 1] = -real(der);
+                          off += 2;
+                        }
+                        if (do2) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 3]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = imag(der);
+                          itsdI[off + 1] = -real(der);
+                        }
+                      }
                       // Move to next source direction.
                       mix.forward(1);
                     } // Source directions.
@@ -330,12 +372,12 @@ namespace LOFAR {
 
             // Reset cursors to the start of the baseline.
             for (size_t dr=0; dr<nDirection; ++dr) {
-              model[dr].backward(1, nChannel);
-              data[dr].backward(1, nChannel);
+              model[dr].backward(1, itsNrChannels);
+              data[dr].backward(1, itsNrChannels);
             }
-            flag.backward(1, nChannel);
-            weight.backward(1, nChannel);
-            mix.backward(3, nChannel);
+            flag.backward(1, itsNrChannels);
+            weight.backward(1, itsNrChannels);
+            mix.backward(3, itsNrChannels);
           }
 
           // Move cursors to the next baseline.
@@ -351,17 +393,17 @@ namespace LOFAR {
 
         // Reset all cursors for the next iteration.
         for (size_t dr=0; dr<nDirection; ++dr) {
-          model[dr].backward(2, nBaseline);
-          data[dr].backward(2, nBaseline);
+          model[dr].backward(2, itsNrBaselines);
+          data[dr].backward(2, itsNrBaselines);
         }
-        flag.backward(2, nBaseline);
-        weight.backward(2, nBaseline);
-        mix.backward(4, nBaseline);
-        baselines -= nBaseline;
+        flag.backward(2, itsNrBaselines);
+        weight.backward(2, itsNrBaselines);
+        mix.backward(4, itsNrBaselines);
+        baselines -= itsNrBaselines;
 
         // Perform LSQ iteration.
         casa::uInt rank;
-        bool status = solver.solveLoop(rank, unknowns, true);
+        bool status = solver.solveLoop(rank, &(itsUnknowns[0]), true);
         ASSERT(status);
 
         // Update iteration count.
