@@ -48,13 +48,14 @@ namespace LOFAR
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -94,6 +95,11 @@ namespace LOFAR
       setArg(3, subbandFrequency);
       setArg(4, SAP);
       Kernel::enqueue(queue, counter);
+    }
+
+    void BeamFormerKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

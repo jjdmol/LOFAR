@@ -75,7 +75,13 @@ namespace LOFAR
 
       void enqueue(gpu::Stream &queue, PerformanceCounter &counter,
                    float subbandFrequency, unsigned SAP);
-    };
+
+    private:
+      // Dump output buffers of a given kernel to disk.
+      // \attention This method is for debugging purposes only, as it has a
+      // severe impact on performance.
+      virtual void dumpBuffers() const;
+   };
 
     // Specialization of the KernelFactory for
     // BeamFormerKernel

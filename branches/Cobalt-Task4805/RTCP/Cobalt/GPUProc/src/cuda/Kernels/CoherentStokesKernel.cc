@@ -47,6 +47,7 @@ namespace LOFAR
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
       timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
 
@@ -54,7 +55,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
@@ -69,6 +70,11 @@ namespace LOFAR
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
+    }
+
+    void CoherentStokesKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

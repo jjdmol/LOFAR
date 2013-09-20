@@ -51,13 +51,14 @@ namespace LOFAR
       transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -91,6 +92,11 @@ namespace LOFAR
       setArg(2, subbandFrequency);
       setArg(3, SAP);
       Kernel::enqueue(queue, counter);
+    }
+
+    void DelayAndBandPassKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

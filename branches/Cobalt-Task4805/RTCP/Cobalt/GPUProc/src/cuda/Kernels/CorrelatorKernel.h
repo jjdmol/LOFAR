@@ -38,6 +38,11 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+      };
+
       enum BufferType
       {
         INPUT_DATA,
@@ -48,6 +53,12 @@ namespace LOFAR
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
+
+    private:
+      // Dump output buffers of a given kernel to disk.
+      // \attention This method is for debugging purposes only, as it has a
+      // severe impact on performance.
+      virtual void dumpBuffers() const;
     };
 
     // Specialization of the KernelFactory for

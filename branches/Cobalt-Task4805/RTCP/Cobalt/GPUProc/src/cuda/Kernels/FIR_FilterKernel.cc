@@ -44,13 +44,14 @@ namespace LOFAR
       nrPPFTaps(ps.nrPPFTaps()),
       nrSubbands(1)
     {
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction)),
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
       params(params),
       historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
@@ -124,6 +125,11 @@ namespace LOFAR
         // Shift the flags to index 0
         historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
       }
+    }
+
+    void FIR_FilterKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

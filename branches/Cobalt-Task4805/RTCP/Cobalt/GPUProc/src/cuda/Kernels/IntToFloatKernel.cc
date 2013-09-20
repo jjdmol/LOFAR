@@ -43,13 +43,14 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrTAPs(ps.nrPPFTaps())
     {
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -63,6 +64,11 @@ namespace LOFAR
       nrOperations = nrSamples * 2;
       nrBytesRead = nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
+    }
+
+    void IntToFloatKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

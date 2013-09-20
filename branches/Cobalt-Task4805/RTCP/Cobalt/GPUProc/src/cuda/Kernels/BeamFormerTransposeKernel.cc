@@ -44,6 +44,7 @@ namespace LOFAR
     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
     }
 
     BeamFormerTransposeKernel::
@@ -51,7 +52,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
@@ -66,6 +67,11 @@ namespace LOFAR
       nrBytesRead = nrBytesWritten =
         (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannelsPerSubband * 
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
+    }
+
+    void BeamFormerTransposeKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//

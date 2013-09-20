@@ -90,6 +90,11 @@ namespace LOFAR
       void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
 
     private:
+      // Dump output buffers of a given kernel to disk.
+      // \attention This method is for debugging purposes only, as it has a
+      // severe impact on performance.
+      virtual void dumpBuffers() const;
+
       // The Kernel parameters as given to the constructor
       const Parameters params;
 

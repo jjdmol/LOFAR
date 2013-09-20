@@ -25,8 +25,6 @@
 #include <iosfwd>
 #include <cuda.h>
 
-// #include <CoInterface/Parset.h>
-
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
@@ -51,6 +49,7 @@ namespace LOFAR
         size_t nrSamplesPerChannel;
         size_t nrSamplesPerSubband;
         size_t nrPolarizations;
+        bool dumpBuffers;
       };
 
       enum BufferType
@@ -81,14 +80,28 @@ namespace LOFAR
 
     protected:
       // Construct a kernel.
-      Kernel(const gpu::Stream& stream, const gpu::Function& function);
+      Kernel(const gpu::Stream& stream, const gpu::Function& function, 
+             bool dumpBuffers=true);//false);
 
+      // Explicit destructor, because the implicitly generated one is public.
+      ~Kernel();
+      
       gpu::Event event;
       gpu::Stream itsStream;
       const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
+
+    private:
+      // Flag indicating whether output buffers should be dumped to disk or not.
+      bool itsDumpBuffers;
+
+      // Dump output buffers of a given kernel to disk.
+      // \note This method should be overridden in the derived classes.
+      // \attention This method is for debugging purposes only, as it has a
+      // severe impact on performance.
+      virtual void dumpBuffers() const;
     };
   }
 }

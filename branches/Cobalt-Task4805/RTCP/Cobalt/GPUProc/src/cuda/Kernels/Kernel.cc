@@ -41,17 +41,24 @@ namespace LOFAR
       nrChannelsPerSubband(ps.nrChannelsPerSubband()),
       nrSamplesPerChannel(ps.nrSamplesPerChannel()),
       nrSamplesPerSubband(ps.nrSamplesPerSubband()),
-      nrPolarizations(NR_POLARIZATIONS)
+      nrPolarizations(NR_POLARIZATIONS),
+      dumpBuffers(false)
+    {
+    }
+
+    Kernel::~Kernel()
     {
     }
 
     Kernel::Kernel(const gpu::Stream& stream, 
-                   const gpu::Function& function)
+                   const gpu::Function& function,
+                   bool dumpBuffers)
       : 
       gpu::Function(function),
       event(stream.getContext()),
       itsStream(stream),
-      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
+      itsDumpBuffers(dumpBuffers)
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
@@ -89,6 +96,8 @@ namespace LOFAR
         << " supported threads/block" );
       
       queue.launchKernel(*this, grid, block);
+
+      if (itsDumpBuffers) dumpBuffers();
     }
 
     void Kernel::enqueue(PerformanceCounter &counter) const
@@ -97,6 +106,12 @@ namespace LOFAR
       enqueue(itsStream);
       itsStream.recordEvent(counter.stop);
     }
+
+    void Kernel::dumpBuffers() const
+    {
+      ASSERTSTR(false, "Kernel::dumpBuffers() base class method called");
+    }
+
   }
 }
 

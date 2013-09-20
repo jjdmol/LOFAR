@@ -53,11 +53,17 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 # endif
 
+    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps)
+    {
+      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -98,6 +104,11 @@ namespace LOFAR
       nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
       nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) nrBaselines * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+    }
+
+    void CorrelatorKernel::dumpBuffers() const
+    {
+      LOG_INFO("Dumping output buffer");
     }
 
     //--------  Template specializations for KernelFactory  --------//
