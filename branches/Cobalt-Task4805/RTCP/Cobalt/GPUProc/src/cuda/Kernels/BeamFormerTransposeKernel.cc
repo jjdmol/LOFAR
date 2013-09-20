@@ -26,8 +26,9 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-
 #include <GPUProc/global_defines.h>
+
+#include <fstream>
 
 using boost::lexical_cast;
 
@@ -52,7 +53,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
+      itsBuffers(buffers)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
@@ -72,6 +74,10 @@ namespace LOFAR
     void BeamFormerTransposeKernel::dumpBuffers() const
     {
       LOG_INFO("Dumping output buffer");
+      gpu::HostMemory buf(itsBuffers.output.fetch());
+      std::ofstream ofs("BeamFormerTransposeKernel_OutputBuffer.raw",
+                        std::ios::binary);
+      ofs.write(buf.get<char>(), buf.size());
     }
 
     //--------  Template specializations for KernelFactory  --------//

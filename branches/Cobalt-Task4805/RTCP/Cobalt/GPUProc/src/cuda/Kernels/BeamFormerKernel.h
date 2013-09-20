@@ -81,6 +81,9 @@ namespace LOFAR
       // \attention This method is for debugging purposes only, as it has a
       // severe impact on performance.
       virtual void dumpBuffers() const;
+
+      // Keep a local (reference counted) copy of the buffers we're using
+      Buffers itsBuffers;
    };
 
     // Specialization of the KernelFactory for

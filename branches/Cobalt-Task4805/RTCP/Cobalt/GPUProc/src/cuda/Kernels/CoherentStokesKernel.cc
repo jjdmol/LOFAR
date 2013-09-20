@@ -28,6 +28,8 @@
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
 
+#include <fstream>
+
 using boost::lexical_cast;
 
 namespace LOFAR
@@ -55,7 +57,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
+      itsBuffers(buffers)
     {
       ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
@@ -75,6 +78,10 @@ namespace LOFAR
     void CoherentStokesKernel::dumpBuffers() const
     {
       LOG_INFO("Dumping output buffer");
+      gpu::HostMemory buf(itsBuffers.output.fetch());
+      std::ofstream ofs("CoherentStokesKernel_OutputBuffer.raw",
+                        std::ios::binary);
+      ofs.write(buf.get<char>(), buf.size());
     }
 
     //--------  Template specializations for KernelFactory  --------//

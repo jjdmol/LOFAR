@@ -24,13 +24,14 @@
 
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Align.h>
 #include <CoInterface/Exceptions.h>
-
 #include <GPUProc/global_defines.h>
+
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
@@ -63,7 +64,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
+      itsBuffers(buffers)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -109,6 +111,10 @@ namespace LOFAR
     void CorrelatorKernel::dumpBuffers() const
     {
       LOG_INFO("Dumping output buffer");
+      gpu::HostMemory buf(itsBuffers.output.fetch());
+      std::ofstream ofs("CorrelatorKernel_OutputBuffer.raw",
+                        std::ios::binary);
+      ofs.write(buf.get<char>(), buf.size());
     }
 
     //--------  Template specializations for KernelFactory  --------//

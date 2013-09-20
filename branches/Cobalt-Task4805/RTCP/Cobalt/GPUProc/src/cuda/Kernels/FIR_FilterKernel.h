@@ -95,6 +95,9 @@ namespace LOFAR
       // severe impact on performance.
       virtual void dumpBuffers() const;
 
+      // Keep a local (reference counted) copy of the buffers we're using
+      Buffers itsBuffers;
+
       // The Kernel parameters as given to the constructor
       const Parameters params;
 

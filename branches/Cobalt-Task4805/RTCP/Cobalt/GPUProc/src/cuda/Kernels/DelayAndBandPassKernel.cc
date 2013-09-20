@@ -27,9 +27,10 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-
 #include <GPUProc/global_defines.h>
 #include <GPUProc/BandPass.h>
+
+#include <fstream>
 
 using boost::lexical_cast;
 using boost::format;
@@ -58,7 +59,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
+      itsBuffers(buffers)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -97,6 +99,10 @@ namespace LOFAR
     void DelayAndBandPassKernel::dumpBuffers() const
     {
       LOG_INFO("Dumping output buffer");
+      gpu::HostMemory buf(itsBuffers.output.fetch());
+      std::ofstream ofs("DelayAndBandPassKernel_OutputBuffer.raw",
+                        std::ios::binary);
+      ofs.write(buf.get<char>(), buf.size());
     }
 
     //--------  Template specializations for KernelFactory  --------//

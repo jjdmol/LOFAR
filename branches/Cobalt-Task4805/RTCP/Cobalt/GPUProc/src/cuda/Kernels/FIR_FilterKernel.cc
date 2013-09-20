@@ -25,6 +25,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <complex>
+#include <fstream>
 
 using namespace std;
 using boost::lexical_cast;
@@ -52,6 +53,7 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
+      itsBuffers(buffers),
       params(params),
       historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
@@ -130,6 +132,10 @@ namespace LOFAR
     void FIR_FilterKernel::dumpBuffers() const
     {
       LOG_INFO("Dumping output buffer");
+      gpu::HostMemory buf(itsBuffers.output.fetch());
+      std::ofstream ofs("FIR_FilterKernel_OutputBuffer.raw",
+                        std::ios::binary);
+      ofs.write(buf.get<char>(), buf.size());
     }
 
     //--------  Template specializations for KernelFactory  --------//
