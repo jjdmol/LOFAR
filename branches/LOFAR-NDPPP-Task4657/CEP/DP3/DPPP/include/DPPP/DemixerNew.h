@@ -33,6 +33,7 @@
 #include <DPPP/Filter.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/lofar_smartptr.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR {
 
@@ -99,7 +100,7 @@ namespace LOFAR {
       void processData();
 
       // Export the solutions to a ParmDB.
-      void writeSolutions (int ntimeSol);
+      void writeSolutions (double startTime, int ntime);
 
       //# Data members.
       DPInput*                itsInput;
@@ -112,6 +113,7 @@ namespace LOFAR {
       vector<DPBuffer>        itsBufIn;
       vector<DPBuffer>        itsBufOut;
       vector<vector<double> > itsSolutions; //# all solutions in a time window
+      map<string,int>         itsParmIdMap; //# -1 = new parm name
       uint                    itsNTime;
       //# Timers.
       NSTimer itsTimer;

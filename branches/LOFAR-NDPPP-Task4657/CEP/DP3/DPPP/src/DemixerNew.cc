@@ -28,9 +28,7 @@
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmSet.h>
-#include <ParmDB/ParmCache.h>
-#include <ParmDB/Parm.h>
+#include <ParmDB/ParmValue.h>
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
@@ -242,7 +240,9 @@ namespace LOFAR {
       for (int i=0; i<2; ++i) {
         if (i == 0) {
           itsTimerDump.start();
-          writeSolutions (ntimeSol);
+          double startTime = (itsBufIn[0].getTime() +
+                              0.5 * itsBufIn[0].getExposure());
+          writeSolutions (startTime, ntimeSol);
           itsTimerDump.stop();
         } else {
           itsTimer.stop();
@@ -268,28 +268,22 @@ namespace LOFAR {
       getNextStep()->finish();
     }
 
-    void DemixerNew::writeSolutions (int ntimeSol)
+    void DemixerNew::writeSolutions (double startTime, int ntime)
     {
-      /*
-    ParmValueSet (const Grid& domainGrid,
-                  const std::vector<ParmValue::ShPtr>& values,
-                  const ParmValue& defaultValue = ParmValue(),
-                  ParmValue::FunkletType type = ParmValue::Scalar,
-                  double perturbation = 1e-6,
-                  bool pertRel = true);
-ParmValue pv;
-                  pv.setScalars (const Grid&, const casa::Array<double>&);
-       */
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
       const Vector<double>& freqWidth = getInfo().chanWidths();
       BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
         * 0.5, freqWidth[0], 1));
       BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
-                                (getInfo().startTime()
-                                 - getInfo().timeInterval() * 0.5,
-                                 itsDemixInfo.timeIntervalAvg(), ntimeSol));
+                                (startTime,
+                                 itsDemixInfo.timeIntervalAvg(), ntime));
       BBS::Grid solGrid(freqAxis, timeAxis);
+      // Create domain grid.
+      BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
+                                (startTime,
+                                 itsDemixInfo.timeIntervalAvg() * ntime, 1));
+      BBS::Grid domainGrid(freqAxis, tdomAxis);
 
       // Open the ParmDB at the first write.
       // In that way the instrumentmodel ParmDB can be in the MS directory.
@@ -297,101 +291,52 @@ ParmValue pv;
         itsParmDB = boost::shared_ptr<BBS::ParmDB>
           (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsInstrumentName),
                            true));
+        itsParmDB->lock();
         // Store the (freq, time) resolution of the solutions.
         vector<double> resolution(2);
         resolution[0] = freqWidth[0];
         resolution[1] = itsDemixInfo.timeIntervalAvg();
         itsParmDB->setDefaultSteps(resolution);
       }
-      // Write the solutions for each parameter.
-      const char*[] str01 = {"0","1"};
-      const char*[] strri = {"Real","Imag"};
+      // Write the solutions per parameter.
+      const char* str01[] = {"0:","1:"};
+      const char* strri[] = {"Real:","Imag:"};
+      Matrix<double> values(1, ntime);
       for (size_t dr=0; dr<itsDemixInfo.ateamList().size(); ++dr) {
+        int seqnr = 0;
         for (size_t st=0; st<itsDemixInfo.nstation(); ++st) {
-          string name(antennaNames[antennaUsed[st]]);
-          string suffix(name + ":" + itsDemixInfo.sourceNames()[dr]);
+          string suffix(itsDemixInfo.antennaNames()[st]);
+          suffix += ":" + itsDemixInfo.sourceNames()[dr];
           for (int i=0; i<2; ++i) {
             for (int j=0; j<2; j++) {
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:0:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:0:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:1:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:1:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:0:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:0:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:1:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:1:Imag:" + suffix)));
-        }
-      /*
-      BBS::ParmSet parmSet;
-      BBS::ParmCache parmCache(parmSet, solGrid.getBoundingBox());
-
-      // Map station indices in the solution array to the corresponding antenna
-      // names. This is required because solutions are only produced for
-      // stations that participate in one or more baselines. Due to the baseline
-      // selection or missing baselines, solutions may be available for less
-      // than the total number of station available in the observation.
-      const DPInfo &info = itsFilter.getInfo();
-      const vector<int> &antennaUsed = info.antennaUsed();
-      const Vector<String> &antennaNames = info.antennaNames();
-
-      vector<BBS::Parm> parms;
-      for (size_t dr=0; dr<itsDemixInfo.ateamList().size(); ++dr) {
-        for (size_t st=0; st<itsDemixInfo.nstation(); ++st) {
-          string name(antennaNames[antennaUsed[st]]);
-          string suffix(name + ":" + itsDemixInfo.sourceNames()[dr]);
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:0:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:0:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:1:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:0:1:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:0:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:0:Imag:" + suffix)));
-
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:1:Real:" + suffix)));
-          parms.push_back (BBS::Parm(parmCache, parmSet.addParm(*itsParmDB,
-            "DirectionalGain:1:1:Imag:" + suffix)));
+              for (int k=0; k<2; ++k) {
+                string name(string("DirectionalGain:") +
+                            str01[i] + str01[j] + strri[k] + suffix);
+                // Collect its solutions for all times in a single array.
+                for (int ts=0; ts<ntime; ++ts) {
+                  values(0, ts) = itsSolutions[ts][seqnr];
+                }
+                BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
+                pv->setScalars (solGrid, values);
+                BBS::ParmValueSet pvs(domainGrid,
+                                      vector<BBS::ParmValue::ShPtr>(1, pv));
+                map<string,int>::const_iterator pit = itsParmIdMap.find(name);
+                if (pit == itsParmIdMap.end()) {
+                  // First time, so a new nameId will be set.
+                  int nameId = -1;
+                  itsParmDB->putValues (name, nameId, pvs);
+                  itsParmIdMap[name] = nameId;
+                  cout << "stime="<<startTime<<' '<<nameId<<' '<<name<<endl;
+                } else {
+                  // Parm has been put before.
+                  int nameId = pit->second;
+                  itsParmDB->putValues (name, nameId, pvs);
+                }
+              }
+            }
+          }
         }
       }
-
-      // Cache parameter values.
-      parmCache.cacheValues();
-
-      // Assign solution grid to parameters.
-      for(size_t i=0; i<parms.size(); ++i) {
-        parms[i].setSolveGrid(solGrid);
-      }
-
-      // Write solutions.
-      for (int ts=0; ts<ntimeSol; ++ts) {
-        const double* sol = &(itsSolutions[ts][0]);
-        for (size_t i=0; i<parms.size(); ++i) {
-          parms[i].setCoeff (BBS::Location(0, ts), sol+i, 1);
-        }
-      }
-
-      // Flush solutions to disk.
-      parmCache.flush();
-      */
     }
 
 } //# end namespace DPPP

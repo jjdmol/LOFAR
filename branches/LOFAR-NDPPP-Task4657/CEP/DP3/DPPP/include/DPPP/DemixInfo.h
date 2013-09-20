@@ -111,6 +111,10 @@ namespace LOFAR {
       const casa::Vector<casa::Int>& getAnt2() const
         { return itsInfoSel.getAnt2(); }
 
+      // Get the antenna names and used antennas.
+      const casa::Vector<casa::String>& antennaNames() const
+        { return itsInfoSel.antennaNames(); }
+
       // Get cosine of the angular distance between two sky positions.
       static double getCosAngDist (double ra1, double dec1,
                                    double ra2, double dec2)
