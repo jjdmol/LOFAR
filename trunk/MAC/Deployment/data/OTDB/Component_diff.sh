@@ -4,12 +4,15 @@
 #
 # Usage:
 #
-# > Component_diff.sh -o <old_version> -p <old_branch> -n <new_version> 
-#                      -m <new branch>
-#
+# > Component_diff.sh -o <old_version> -n <new_version> -s -D <otdb database> 
+#                     -H <otdb host> 
+#                     
+# -s: Show list of all available revision numbers in OTDB; requires 
+#   -D: Database name; default is LOFAR_4
+#   -H: Database server; default is sasdb
 # If new version is omitted, we assume the latest (HEAD)
 # If no branch names are given, we assume trunk
-#
+# 
 
 
 # SyntaxError msg
@@ -59,6 +62,23 @@ function find_branch {
   
 }
 
+function show_list {
+  dbhost=$1
+  dbname=$2
+  versions=( `psql -q -t -h ${dbhost} -d ${dbname} -U postgres -c "select version from getvcnodelist('LOFAR',0,True) order by version asc;"` )
+  if [ ${#versions[@]} -eq 0 ]; then 
+    echo "Could not find LOFAR version in database ${dbname} on server ${dbhost}"
+  else 
+    echo "Available versionnrs:"
+    echo "====================="
+    for version in "${versions[@]}"
+    do
+      if [ "$version" != "" ]; then 
+        echo $version
+      fi
+    done
+  fi
+}
 
 #
 # MAIN
@@ -74,8 +94,11 @@ old_version=0
 new_version=HEAD
 old_branch=trunk
 new_branch=trunk
+showlist=0
+dbhost=sasdb
+dbname=LOFAR_4
 
-while getopts "ho:n:" OPTION
+while getopts "ho:n:sD:H:" OPTION
 do
      case $OPTION in
 
@@ -86,8 +109,17 @@ do
  	 o)
 	     old_version=$OPTARG
              ;;
-         n)  
+         n)
 	     new_version=$OPTARG
+             ;;
+         H)
+             dbhost=$OPTARG
+             ;;
+         D)
+             dbname=$OPTARG
+             ;;
+         s)  
+             showlist=1
              ;;
          ?)
              SyntaxError
@@ -95,6 +127,11 @@ do
              ;;
        esac
 done
+
+if [ $showlist -eq 1 ]; then 
+  show_list $dbhost $dbname
+  exit
+fi  
 
 find_branch $old_version
 old_branch=${branch}
