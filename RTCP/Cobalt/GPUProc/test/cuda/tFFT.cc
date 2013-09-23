@@ -87,8 +87,8 @@ int main() {
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
 
-  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(ctx, fftSize, nrFFTs, false, d_inout);
+  FFT_Kernel fftFwdKernel(stream, fftSize, nrFFTs, true, d_inout);
+  FFT_Kernel fftBwdKernel(stream, fftSize, nrFFTs, false, d_inout);
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);
@@ -122,7 +122,7 @@ int main() {
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
         
-    fftFwdKernel.enqueue(stream);
+    fftFwdKernel.enqueue();
     stream.readBuffer(inout, d_inout, true);
     stream.synchronize();
     // do a call to the stats functionality 
@@ -140,7 +140,7 @@ int main() {
     }
 
     // Backward FFT: compute and I/O
-    fftFwdKernel.enqueue(stream);
+    fftFwdKernel.enqueue();
     stream.synchronize();
     stream.readBuffer(inout, d_inout, true);
 
@@ -181,7 +181,7 @@ int main() {
 
     // GPU: Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
-    fftFwdKernel.enqueue(stream);
+    fftFwdKernel.enqueue();
     stream.readBuffer(inout, d_inout, true);
 
     // FFTW: Forward FFT
