@@ -283,9 +283,20 @@ GCFEvent::TResult SoftwareMonitor::checkPrograms(GCFEvent& event, GCFPortInterfa
 		_buildProcessMap();		// reconstruct map for current processlist.(name,pid)
 
 		// Note: swlevel v1.6 20081229 (svn 12378) returns current level as return value.
-		int curLevel = abs((int8)(system("swlevel >>/dev/null") >> 8));
+//		int curLevel = abs((int8)(system("swlevel >>/dev/null") >> 8));
 
+		int	curLevel(-1);
+		FILE*	swRes = popen("/opt/lofar/bin/swlevel -P", "r");
+		if (swRes) {
+			char	buf[5];
+			if (fgets(buf, 5, swRes)) {
+				buf[4]='\0';
+				curLevel = atoi(buf);
+			}
+			pclose (swRes);
+		}
 		ASSERTSTR(curLevel >= 0, "Program 'swlevel' not in my execution path");
+
 		LOG_DEBUG_STR("Current level is " << curLevel);
 		itsOwnPropertySet->setValue(PN_SWM_SW_LEVEL, GCFPVInteger(curLevel));
 
@@ -480,74 +491,79 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 	LOG_DEBUG_STR("_updateProcess(" << iter->DPname << "," << pid << "," << curLevel << ")");
 
 	if (pid) {					// process is running?
-		// mark it operational whether or not it should be running
-		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OPERATIONAL, true);	// force
-		iter->errorCnt = 0;
+		// update startTime when not uptodate
+		if (iter->startTime <= iter->stopTime) {
+			int				fd;
+			char			statFile  [256];
+			struct stat		statStruct;
+			snprintf(statFile, sizeof statFile, "/proc/%d/cmdline", iter->pid);
+			if ((fd = stat(statFile, &statStruct)) != -1) {
+				iter->startTime = statStruct.st_ctime;
+			}
+			else {	// retrieval of time failed assume 'now'
+				iter->startTime = itsPMtime;
+			}
+			LOG_INFO_STR("starttime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->startTime)));
+			itsDPservice->setValue(iter->DPname+".process.startTime", 
+									GCFPVString(to_iso_extended_string(from_time_t(iter->startTime))));
+			itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
+		}
 
-		// update startTime when not done before
-		if (iter->startTime) {
+		// mark it operational whether or not it should be running
+		if (curLevel >= iter->level) {
+			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OPERATIONAL, true);	// force
+			iter->errorCnt = 0;
 			return;
 		}
-
-		int				fd;
-		char			statFile  [256];
-		struct stat		statStruct;
-		snprintf(statFile, sizeof statFile, "/proc/%d/cmdline", iter->pid);
-		if ((fd = stat(statFile, &statStruct)) != -1) {
-			iter->startTime = statStruct.st_ctime;
-		}
-		else {	// retrieval of time failed assume 'now'
-			iter->startTime = itsPMtime;
-		}
-		LOG_DEBUG_STR("starttime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->startTime)));
-		itsDPservice->setValue(iter->DPname+".process.startTime", 
-								GCFPVString(to_iso_extended_string(from_time_t(iter->startTime))));
-		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
-		return;
-	}
-
-	// pid = 0 ==> process is not running
-	itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
-
-	if (iter->level > curLevel) {										// should it be down?
-		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// yes
-		iter->errorCnt = 0;
+		// program is running while it should not, handle this later.
 	}
 	else {
-		// When switching from swlevel 1 to eg. swlevel 5 may take some time when the RSPboards
-		// are running in low-power mode. During this time you don't want the processes that
-		// are not yet running being reported are broken. With the conf file of the SoftwareMonitor
-		// you can set the number of cycles a process is not reported as suspicious or broken.
-		if (iter->errorCnt >= itsBrokenThreshold) {				// serious problem
-			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
-							iter->DPname, RTDB_OBJ_STATE_BROKEN);
-			if (iter->errorCnt % itsRestartInterval == 0) {
-				_restartProgram(iter->name);
-			}
+		// pid = 0 ==> process is not running
+		// update stopTime is not done already.
+		if (iter->startTime > iter->stopTime) {
+			iter->stopTime = itsPMtime;
+			LOG_INFO_STR("stoptime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->stopTime)));
+			itsDPservice->setValue(iter->DPname+".process.stopTime", 
+										GCFPVString(to_iso_extended_string(from_time_t(iter->stopTime))));
+			itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(0));
+			iter->startTime = 0;
 		}
-		else if (iter->errorCnt >= itsSuspThreshold) {			// allow start/stop times
-			setObjectState(formatString("%s: %s not running", getName().c_str(), iter->name.c_str()), 
-							iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
+
+		iter->pid = 0;
+		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(iter->pid));
+
+		if (curLevel < iter->level) {									// should it be down?
+			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// yes
+			iter->errorCnt = 0;
+			return;
+		}
+	}
+
+	// all 'good' situation' are handled, left are situation where a process is still running while the swlevel
+	// is lower OR when a process is not running while it should!
+
+	// When switching from swlevel 1 to eg. swlevel 5 may take some time when the RSPboards
+	// are running in low-power mode. During this time you don't want the processes that
+	// are not yet running being reported are broken. With the conf file of the SoftwareMonitor
+	// you can set the number of cycles a process is not reported as suspicious or broken.
+	string	how = (pid ? "not" : "still");
+	if (iter->errorCnt >= itsBrokenThreshold) {				// serious problem
+		setObjectState(formatString("%s: %s is %s running", getName().c_str(), iter->name.c_str(), how.c_str()),
+						iter->DPname, RTDB_OBJ_STATE_BROKEN);
+		if (iter->errorCnt % itsRestartInterval == 0) {
 			_restartProgram(iter->name);
 		}
-		else {
-			setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force
-		}
-		if (iter->errorCnt == 0) {		// first error? set stoptime
-			iter->stopTime = 0;			// force update of stoptime
-		}
-		iter->errorCnt++;
-	} // proces not running but it should have been running
-		
-	// update stopTime is not done already.
-	if (iter->startTime > iter->stopTime) {
-		iter->stopTime = itsPMtime;
-		LOG_DEBUG_STR("stoptime of " << iter->name << " = " << to_iso_extended_string(from_time_t(iter->stopTime)));
-		itsDPservice->setValue(iter->DPname+".process.stopTime", 
-									GCFPVString(to_iso_extended_string(from_time_t(iter->stopTime))));
-		itsDPservice->setValue(iter->DPname+".process.processID", GCFPVInteger(0));
-		iter->startTime = 0;
 	}
+	else if (iter->errorCnt >= itsSuspThreshold) {			// allow start/stop times
+			setObjectState(formatString("%s: %s is %s running", getName().c_str(), iter->name.c_str(), how.c_str()),
+							iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
+			_restartProgram(iter->name);
+	}
+	else {
+		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force
+	}
+	iter->errorCnt++;
+		
 }
 
 //
