@@ -68,7 +68,7 @@ int main() {
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
   IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, buffers));
 
   kernel->enqueue(stream);
   stream.synchronize();
