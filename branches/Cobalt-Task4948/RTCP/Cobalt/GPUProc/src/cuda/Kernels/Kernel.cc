@@ -48,7 +48,6 @@ namespace LOFAR
                    const gpu::Function& function)
       : 
       gpu::Function(function),
-      event(stream.getContext()),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {

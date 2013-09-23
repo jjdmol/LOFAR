@@ -133,7 +133,7 @@ int main() {
   unsigned sap = 0;
 
   PerformanceCounter counter(ctx);
-  kernel->enqueue(stream, counter, subbandFreq, sap);
+  kernel->enqueue(counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;
