@@ -70,7 +70,7 @@ namespace LOFAR
       };
 
       // protected: called by tIntToFloatKernel
-      void enqueue(const gpu::Stream &queue) const;
+      void enqueue(/*const gpu::Stream &queue*/) const;
 
       // // protected: called by CorrelatorSubbandProc
       // void enqueue(const gpu::Stream &queue, PerformanceCounter &counter) const;

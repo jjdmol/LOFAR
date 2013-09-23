@@ -70,7 +70,7 @@ int main() {
   IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
   auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
 
-  kernel->enqueue(stream);
+  kernel->enqueue();
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();

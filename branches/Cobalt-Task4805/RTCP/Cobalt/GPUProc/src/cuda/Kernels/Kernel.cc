@@ -76,9 +76,10 @@ namespace LOFAR
     //   queue.recordEvent(counter.stop);
     // }
 
-    void Kernel::enqueue(const gpu::Stream &queue) const
+    void Kernel::enqueue(/*const gpu::Stream &queue*/) const
     {
-      // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
+      // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
+      //       (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
       assert(globalWorkSize.x % block.x == 0 &&
              globalWorkSize.y % block.y == 0 &&
@@ -95,7 +96,7 @@ namespace LOFAR
         << " creates more than the " << maxThreadsPerBlock
         << " supported threads/block" );
       
-      queue.launchKernel(*this, grid, block);
+      itsStream.launchKernel(*this, grid, block);
 
       if (itsDumpBuffers) dumpBuffers();
     }
@@ -103,7 +104,7 @@ namespace LOFAR
     void Kernel::enqueue(PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);
-      enqueue(itsStream);
+      enqueue();
       itsStream.recordEvent(counter.stop);
     }
 
