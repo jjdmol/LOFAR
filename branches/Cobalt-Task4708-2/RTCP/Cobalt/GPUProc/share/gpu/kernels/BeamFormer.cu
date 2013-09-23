@@ -60,7 +60,7 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * ----------------------- | ------------------------| 
  * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
- * Note that this kernel assumes  NR_POLARIZATIONS == 2 and COMPLEX == 2
+ * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *
  * Execution configuration:
  * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
@@ -348,7 +348,6 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
 #if NR_STATIONS_PER_PASS >= 32
     fcomplex weight_31;
-
     if (first_station + 31 < NR_STATIONS) {
       float delay = (*delays)[sap][first_station + 31][tab];
       weight_31 = phaseShift(frequency, delay) * WEIGHT_CORRECTION;

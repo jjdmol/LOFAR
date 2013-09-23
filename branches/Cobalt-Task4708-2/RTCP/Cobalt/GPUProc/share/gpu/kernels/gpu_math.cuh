@@ -102,13 +102,13 @@ typedef short2 short_complex;
 // so we cannot make it a POD type. Then we got redundant member inits in the
 // constructor, causing races when declaring variables in shared memory.
 // Now, avoid complex<T> and just work with cmul() and a few extra lines.
-__device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
+inline __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
 {
   return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
                      lhs.x * rhs.y + lhs.y * rhs.x);
 }
 
-__device__ fcomplex phaseShift(float frequency, float delay)
+inline __device__ fcomplex phaseShift(float frequency, float delay)
 {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
