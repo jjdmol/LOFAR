@@ -93,7 +93,8 @@ namespace LOFAR
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(queue, counter);
+      // Kernel::enqueue(queue, counter);
+      Kernel::enqueue(counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
