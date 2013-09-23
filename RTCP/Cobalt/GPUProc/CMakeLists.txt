@@ -14,7 +14,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
     list(APPEND CUDA_NVCC_FLAGS -g -G)
   endif()
 
-  if(1)  # for dev to see what is available how; disabled to reduce spam
+  if(0)  # for dev to see what is available how; disabled to reduce spam
     message(STATUS "CUDA_FOUND = ${CUDA_FOUND}")
     message(STATUS "CUDA_VERSION_MAJOR = ${CUDA_VERSION_MAJOR}")
     message(STATUS "CUDA_VERSION_MINOR = ${CUDA_VERSION_MINOR}")
