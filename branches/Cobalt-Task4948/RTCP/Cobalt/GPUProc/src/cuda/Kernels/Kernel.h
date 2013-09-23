@@ -67,14 +67,9 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const gpu::Stream &queue) const;
-
-      // // protected: called by CorrelatorSubbandProc
-      // void enqueue(const gpu::Stream &queue, PerformanceCounter &counter) const;
+      void enqueue() const;
 
       void enqueue(PerformanceCounter &counter) const;
-
-      void enqueue() const;
 
     protected:
       // Construct a kernel.
