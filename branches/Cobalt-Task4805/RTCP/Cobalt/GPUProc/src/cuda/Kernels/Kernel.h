@@ -69,10 +69,8 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      // protected: called by tIntToFloatKernel
       void enqueue() const;
 
-      // protected: called by BeamFormerSubbandProc
       void enqueue(PerformanceCounter &counter) const;
 
     protected:
@@ -83,7 +81,6 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
       
-      // gpu::Event event;
       gpu::Stream itsStream;
       const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;

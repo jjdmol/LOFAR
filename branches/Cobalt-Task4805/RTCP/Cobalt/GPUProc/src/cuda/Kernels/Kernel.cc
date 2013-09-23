@@ -55,7 +55,6 @@ namespace LOFAR
                    bool dumpBuffers)
       : 
       gpu::Function(function),
-      // event(stream.getContext()),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsDumpBuffers(dumpBuffers)
@@ -68,15 +67,7 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    // void Kernel::enqueue(const gpu::Stream &queue,
-    //                      PerformanceCounter &counter) const
-    // {
-    //   queue.recordEvent(counter.start);   
-    //   enqueue(queue);
-    //   queue.recordEvent(counter.stop);
-    // }
-
-    void Kernel::enqueue(/*const gpu::Stream &queue*/) const
+    void Kernel::enqueue() const
     {
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
       //       (+ remove assertion): add protected setThreadDim()

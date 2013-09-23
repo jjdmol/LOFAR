@@ -322,7 +322,6 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      // correlatorKernel->enqueue(queue, counters.correlator);
       correlatorKernel->enqueue(counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the

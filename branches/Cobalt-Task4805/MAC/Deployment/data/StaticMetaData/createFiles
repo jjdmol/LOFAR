@@ -545,9 +545,14 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
     """
     Copies the right AntennaArrays.conf file for this station
     """
-    # Copy file <stationname>-antennaarrays.conf> to
-    # /opt/lofar/etc/AntennaArray.conf
-    srcFile = dataDir + "/" + stationName.upper() + "-AntennaArrays.conf"
+    stationName = stationName.upper()
+    if stationName[0:2] == "CS":
+        srcFile = dataDir + "/AntennaArrays_CS.conf"
+    elif stationName[0:2] == "RS":
+        srcFile = dataDir + "/AntennaArrays_RS.conf"
+    else:
+        srcFile = dataDir + "/AntennaArrays_Int.conf"
+    
     if (os.access(srcFile,os.F_OK) == False):
         print "Cannot find or open file ",srcFile," for creating AntennaArrays.conf"
         print "Will create AntennaArrays_default.conf instead"
@@ -557,7 +562,6 @@ def createAntennaArraysFile(resultDir, stationName, dataDir):
         destFile = resultDir + "/AntennaArrays.conf"
 
     command = "cp -f "+srcFile+ " " + destFile
-    #print command
     os.system(command)
 
 def createAntennaFieldFile(resultDir, stationName, dataDir):
@@ -596,27 +600,6 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
     else:
         destFile = resultDir + "/CableDelays.conf"
     
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
-def createHBADeltasFile(resultDir, stationName, dataDir):
-    """
-    Copies the right HBADeltas.conf file for this station
-    """
-    # Copy file <stationname>-hbadeltas.conf> to
-    # /opt/lofar/etc/HBADeltas.conf
-    
-    # stationName is in lowercase!
-    srcFile = dataDir + "/" + stationName.upper() + "-HBADeltas.conf"
-    if (os.access(srcFile,os.F_OK) == False):
-        print "Cannot find or open file ",srcFile," for creating HBADeltas.conf"
-        print "Will create HBADeltas_default.conf instead"
-        srcFile = dataDir + "/HBADeltas_default.conf"
-        destFile= resultDir + "/HBADeltas.conf"
-    else:
-        destFile = resultDir + "/HBADeltas.conf"
-
     command = "cp -f "+srcFile+ " " + destFile
     #print command
     os.system(command)
@@ -748,7 +731,6 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" ):
                 createAntennaArraysFile(resultDir, stationName, dataDir)
                 createAntennaFieldFile (resultDir, stationName, dataDir)
                 createCableDelaysFile  (resultDir, stationName, dataDir)
-                createHBADeltasFile    (resultDir, stationName, dataDir)
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
@@ -800,7 +782,6 @@ else:
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createAntennaFieldFile (resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
-        createHBADeltasFile    (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)

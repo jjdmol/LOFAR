@@ -20,14 +20,45 @@ SyntaxError()
 
         [ -z "${Msg}" ] || echo "ERROR: ${Msg}"
         echo ""
-        echo "Syntax: $(basename $0) -o <old_version> -p <old_branch> -n <new_version>"
-	echo "           -m <new branch>"
+        echo "Syntax: $(basename $0) -o <old_revision> -n <new_revision>"
         echo ""
 	echo "  - If new version is omitted, we assume the latest (HEAD)"
-	echo "  - If no branch names are given, we assume trunk"
-        echo "  - If only one branchname given, we assume same for both"
+        echo "  - Script will find out which branch revision number belongs to"
         echo ""
 }
+
+function find_branch_name {
+  line=$1
+  branch=`echo $line | awk -F/ '{print $2}'`
+  if [ "$branch" != "trunk" ]; then
+    branch=`echo $line | awk -F/ '{print $3}' | awk '{print $1}'`
+    
+  fi
+#  echo $branch
+}
+
+function find_branch {
+  rev=$1
+  svn log -v --incremental -c ${rev} https://svn.astron.nl/LOFAR > /tmp/svn_log_$$
+
+  branch=""
+  nextline=0
+  while read line 
+  do
+    if [ $nextline -eq 1 ]; then
+      find_branch_name "$line"
+      nextline=2
+      break
+    fi
+
+    if [ "$line" == "Changed paths:" ]; then
+      nextline=1
+    fi
+  done < /tmp/svn_log_$$
+  rm -f /tmp/svn_log_$$
+  
+}
+
 
 #
 # MAIN
@@ -44,7 +75,7 @@ new_version=HEAD
 old_branch=trunk
 new_branch=trunk
 
-while getopts "ho:p:n:m:" OPTION
+while getopts "ho:n:" OPTION
 do
      case $OPTION in
 
@@ -58,12 +89,6 @@ do
          n)  
 	     new_version=$OPTARG
              ;;
-         p)  
-	     old_branch=$OPTARG
-             ;;
-	 m)  
-	     new_branch=$OPTARG
-	     ;;
          ?)
              SyntaxError
              exit 1
@@ -71,16 +96,13 @@ do
        esac
 done
 
-if [ "$old_branch" != "$new_branch" ]; then 
-    if [ "$old_branch" == "trunk" ]; then 
-        old_branch=$new_branch
-    elif [ "$new_branch" == "trunk" ]; then 
-        new_branch=$old_branch
-    fi
-fi
+find_branch $old_version
+old_branch=${branch}
+find_branch $new_version
+new_branch=${branch}
 
 echo "Comparing rev. $new_version of branch $new_branch with rev. $old_version of branch $old_branch"
-               
+            
 mkdir -p /tmp/comp_$new_version
 cd /tmp/comp_$new_version
 if [ "$new_branch" == "trunk" ]; then 
