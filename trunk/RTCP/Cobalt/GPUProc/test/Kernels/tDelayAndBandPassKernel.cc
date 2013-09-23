@@ -67,7 +67,7 @@ int main() {
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
   PerformanceCounter counter(ctx);
-  kernel->enqueue(stream, counter, centralFrequency, SAP);
+  kernel->enqueue(counter, centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

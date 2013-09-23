@@ -33,7 +33,7 @@ namespace LOFAR
     class Filter_FFT_Kernel : public FFT_Kernel
     {
     public:
-      Filter_FFT_Kernel(const Parset &ps, gpu::Context &context,
+      Filter_FFT_Kernel(const Parset &ps, const gpu::Stream &stream,
                         gpu::DeviceMemory &devFilteredData);
 
     };
