@@ -87,8 +87,7 @@ namespace LOFAR
                              const Parameters &param);
 
 
-      void enqueue(gpu::Stream &queue,
-                    PerformanceCounter &counter,
+      void enqueue(PerformanceCounter &counter,
                    float subbandFrequency, size_t SAP);
 
     private:

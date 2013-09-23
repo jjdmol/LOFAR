@@ -127,13 +127,13 @@ int main() {
 
   BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devDelaysMemory);
 
-  auto_ptr<BeamFormerKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<BeamFormerKernel> kernel(factory.create(stream, buffers));
 
   float subbandFreq = 60e6f;
   unsigned sap = 0;
 
   PerformanceCounter counter(ctx);
-  kernel->enqueue(stream, counter, subbandFreq, sap);
+  kernel->enqueue(counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

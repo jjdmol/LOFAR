@@ -55,7 +55,7 @@ namespace LOFAR
                    bool dumpBuffers)
       : 
       gpu::Function(function),
-      event(stream.getContext()),
+      // event(stream.getContext()),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsDumpBuffers(dumpBuffers)
