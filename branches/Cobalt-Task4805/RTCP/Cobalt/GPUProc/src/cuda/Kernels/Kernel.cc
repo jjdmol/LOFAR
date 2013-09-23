@@ -68,13 +68,13 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    void Kernel::enqueue(const gpu::Stream &queue,
-                         PerformanceCounter &counter) const
-    {
-      queue.recordEvent(counter.start);   
-      enqueue(queue);
-      queue.recordEvent(counter.stop);
-    }
+    // void Kernel::enqueue(const gpu::Stream &queue,
+    //                      PerformanceCounter &counter) const
+    // {
+    //   queue.recordEvent(counter.start);   
+    //   enqueue(queue);
+    //   queue.recordEvent(counter.stop);
+    // }
 
     void Kernel::enqueue(const gpu::Stream &queue) const
     {

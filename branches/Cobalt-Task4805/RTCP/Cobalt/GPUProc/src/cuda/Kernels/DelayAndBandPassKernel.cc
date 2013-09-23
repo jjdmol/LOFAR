@@ -93,7 +93,8 @@ namespace LOFAR
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(queue, counter);
+      // Kernel::enqueue(queue, counter);
+      Kernel::enqueue(counter);
     }
 
     void DelayAndBandPassKernel::dumpBuffers() const
