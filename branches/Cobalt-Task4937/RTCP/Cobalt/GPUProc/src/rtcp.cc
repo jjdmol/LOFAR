@@ -333,7 +333,11 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (correlatorEnabled) {
+  if (subbandDistribution[rank].empty()) {
+    // no operation -- don't even create a pipeline!
+    pipeline = NULL;
+    outputType = CORRELATED_DATA;
+  } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
     outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
