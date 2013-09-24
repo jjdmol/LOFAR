@@ -42,9 +42,8 @@ using namespace std;
 using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
-using LOFAR::Exception;
 
-// The tests succeeds for different values of stations, channels, samples and tabs.
+// The tests succeed for different values of stations, channels, samples and TABs.
 unsigned NR_STATIONS = 4;  
 unsigned NR_CHANNELS = 4;
 unsigned NR_SAMPLES_PER_CHANNEL = 4;
@@ -53,10 +52,13 @@ unsigned NR_TABS = 4;
 unsigned NR_POLARIZATIONS = 2;
 
 
-// Create the data arrays
-size_t lengthDelaysData = NR_SAPS * NR_STATIONS * NR_TABS; // float
+// Length in elements of the data arrays
+size_t lengthDelaysData = NR_SAPS * NR_STATIONS * NR_TABS; // double
 size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS; // complex<float>
 size_t lengthComplexVoltagesData = NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS; // complex<float>
+
+
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 
 void exit_with_print(const complex<float> *outputOnHostPtr)
@@ -90,10 +92,10 @@ void exit_with_print(const complex<float> *outputOnHostPtr)
 
 HostMemory runTest(Context ctx,
                    Stream cuStream,
-                   float * delaysData,
+                   double * delaysData,
                    complex<float> * bandPassCorrectedData,
                    complex<float> * complexVoltagesData,
-                   float subbandFrequency,
+                   double subbandFrequency,
                    unsigned sap,
                    string function,
                    float weightCorrection,
@@ -127,10 +129,10 @@ HostMemory runTest(Context ctx,
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeDelaysData = lengthDelaysData * sizeof(float);
+  size_t sizeDelaysData = lengthDelaysData * sizeof(double);
   DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
   HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
-  float *rawDelaysPtr = rawDelaysData.get<float>();
+  double *rawDelaysPtr = rawDelaysData.get<double>();
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
     rawDelaysPtr[idx] = delaysData[idx];
   cuStream.writeBuffer(devDelaysMemory, rawDelaysData);
@@ -173,9 +175,6 @@ HostMemory runTest(Context ctx,
   return rawComplexVoltagesData; 
 }
 
-Exception::TerminateHandler t(Exception::terminate);
-
-
 int main()
 {
   INIT_LOGGER("tBeamFormer");
@@ -201,12 +200,12 @@ int main()
   // ************************************************************* 
   complex<float>* complexVoltagesData = new complex<float>[lengthComplexVoltagesData];
   complex<float>* bandPassCorrectedData = new complex<float>[lengthBandPassCorrectedData];
-  float * delaysData= new float[lengthDelaysData];
+  double * delaysData= new double[lengthDelaysData];
   complex<float>* outputOnHostPtr;
 
   complex<float> refVal;
 
-  float subbandFrequency = 1.5e8f; // Hz
+  double subbandFrequency = 1.5e8; // Hz
   unsigned sap = 0;
 
   float weightCorrection = 1.0f;
@@ -231,7 +230,7 @@ int main()
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 0.0f;
+    delaysData[idx] = 0.0;
   }
 
   HostMemory outputOnHost1 = runTest(ctx, cuStream, delaysData,
@@ -281,7 +280,7 @@ int main()
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = 1.0;
   }
 
   HostMemory outputOnHost2 = runTest(ctx, cuStream, delaysData,
@@ -323,7 +322,7 @@ int main()
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0e-6f;
+    delaysData[idx] = 1.0e-6;
   }
 
   HostMemory outputOnHost3 = runTest(ctx, cuStream, delaysData,
@@ -368,7 +367,7 @@ int main()
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = 1.0;
   }
 
   HostMemory outputOnHost4 = runTest(ctx, cuStream, delaysData,
@@ -413,7 +412,7 @@ int main()
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = 1.0;
   }
 
   HostMemory outputOnHost5 = runTest(ctx, cuStream, delaysData,
