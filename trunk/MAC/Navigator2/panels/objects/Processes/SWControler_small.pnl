@@ -67,6 +67,13 @@ void levelChanged(string dp1, int swlvl,
 private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
+    if (updateConnected) {
+    if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
+                                           baseDP +\".status.state:_online.._invalid\") == -1) { 
+      updateConnected = false;
+    }
+  }
+
   firstObservation = \"\";
   string firstPipeline = \"\";
   // for now the object will only show the controller for the first observation
@@ -100,14 +107,14 @@ private void observationChanged(string dp1, dyn_string observations,
 }
   
 private void reload() {
-  
-  // check if the required datapoint for this view are enabled and accessible
-  if (updateConnected) {
+    if (updateConnected) {
     if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
                                            baseDP +\".status.state:_online.._invalid\") == -1) { 
       updateConnected = false;
     }
   }
+
+  // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(baseDP+\".status.state\")) {
     if (dpExists(baseDP+\".status.state\")) {
       if (dpConnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
