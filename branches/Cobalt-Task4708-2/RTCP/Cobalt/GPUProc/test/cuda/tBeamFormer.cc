@@ -118,7 +118,7 @@ HostMemory runTest(Context ctx,
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
   definitions["WEIGHT_CORRECTION"] = str(boost::format("%.7ff") % weightCorrection);
-  definitions["SUBBAND_BANDWIDTH"] = str(boost::format("%.7ff") % subbandBandwidth);
+  definitions["SUBBAND_BANDWIDTH"] = str(boost::format("%.7f") % subbandBandwidth);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
@@ -302,13 +302,12 @@ int main()
       cerr << "The data returned by the kernel should be all zero: All inputs are zero";
       exit_with_print(outputOnHostPtr);
     }
-    
 
-#if 0
+
   // ***********************************************************
   // Test 3: all inputs 1 (including imag)
-  // with only the real delay set to 1.
-  // all outputs should be 4
+  // with only the delays set to 1e-6.
+  // All outputs should have the val of (NR_STATIONS, NR_STATIONS).
   cout << "test 3" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
@@ -316,15 +315,15 @@ int main()
     complexVoltagesData[idx].imag(42.0f);
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
   {
-    bandPassCorrectedData[idx] = 1.0f;
-    bandPassCorrectedData[idx] = 1.0f;
+    bandPassCorrectedData[idx].real(1.0f);
+    bandPassCorrectedData[idx].imag(1.0f);
   }
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = 1.0e-6f;
   }
 
   HostMemory outputOnHost3 = runTest(ctx, cuStream, delaysData,
@@ -334,15 +333,20 @@ int main()
                                      function,
                                      weightCorrection, subbandBandwidth);
 
+  refVal.real((float)NR_STATIONS);
+  refVal.imag((float)NR_STATIONS);
+
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost3.get<float>();
+  outputOnHostPtr = outputOnHost3.get<complex<float> >();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    if (outputOnHostPtr[idx] != NR_STATIONS * 1.0f)
+    if (!fpEquals(outputOnHostPtr[idx], refVal))
     {
       cerr << "all the data returned by the kernel should be (" << NR_STATIONS << ", " << NR_STATIONS << ")" ;
       exit_with_print(outputOnHostPtr);
     }
     
+
+#if 0
   // ***********************************************************
   // Test 4: all inputs 1 (including imag)
   // with only the real delay set to 1 and imag also 1
@@ -375,7 +379,7 @@ int main()
                                      weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost4.get<float>();
+  outputOnHostPtr = outputOnHost4.get<complex<float> >();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
     if (outputOnHostPtr[idx].real() != 0.0f)
@@ -420,7 +424,7 @@ int main()
                                      2.01f, subbandBandwidth);
 
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost5.get<float>();
+  outputOnHostPtr = outputOnHost5.get<complex<float> >();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
     if (outputOnHostPtr[idx].real() != NR_STATIONS * 1.0f * 2.01f)
     {

@@ -29,7 +29,6 @@
 // currently needed. It can be extended when needed. We do \e not plan to
 // provide a complete set of C++-operators for all the different CUDA types.
 
-#include <vector_functions.h>
 
 // Provide the equivalent of the OpenCL swizzle feature. Obviously, the OpenCL
 // \c swizzle operation is more powerful, because it's a language built-in.
@@ -79,45 +78,55 @@ inline __device__ float4& operator /= (float4 &a, float4 b)
   return a;
 }
 
-inline __device__ float2 operator * (float2 a, float b)
-{
-  return make_float2(a.x * b, a.y);
-}
-
-inline __device__ float2 operator * (float a, float2 b)
-{
-  return make_float2(b.x * a, b.y);
-}
-
-
 
 // to distinguish complex float/double from other uses of float2/double2
-typedef float2 fcomplex;
+typedef float2  fcomplex;
 typedef double2 dcomplex;
 
 typedef char2  char_complex;
 typedef short2 short_complex;
 
-// Keep it simple. We had complex<T> defined, but we need operator overloads,
-// so we cannot make it a POD type. Then we got redundant member inits in the
-// constructor, causing races when declaring variables in shared memory.
-// Now, avoid complex<T> and just work with cmul() and a few extra lines.
-inline __device__ fcomplex cmul(fcomplex lhs, fcomplex rhs)
+
+// Operator overloads for complex values
+//
+// Do not implement a type with these, as it must be non-POD.
+// This introduces redundant member inits in the constructor,
+// causing races when declaring variables in shared memory.
+inline __device__ fcomplex operator+(fcomplex a, fcomplex b)
 {
-  return make_float2(lhs.x * rhs.x - lhs.y * rhs.y,
-                     lhs.x * rhs.y + lhs.y * rhs.x);
+  return make_float2(a.x + b.x, a.y + b.y);
 }
 
-inline __device__ fcomplex phaseShift(float frequency, float delay)
+inline __device__ fcomplex operator*(fcomplex a, fcomplex b)
+{
+  return make_float2(a.x * b.x - a.y * b.y,
+                     a.x * b.y + a.y * b.x);
+}
+
+inline __device__ fcomplex operator*(fcomplex a, float b)
+{
+  return make_float2(a.x * b, a.y * b);
+}
+
+inline __device__ fcomplex operator*(float a, fcomplex b)
+{
+  return make_float2(a * b.x, a * b.y);
+}
+
+
+inline __device__ dcomplex dphaseShift(double frequency, double delay)
 {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
-  const float pi2 = -6.28318530717958647688f; // -2.0f * M_PI_F
-  float phaseShift = delay * frequency;
-  float phi = pi2 * phaseShift;
+  //
+  // This needs to be done in double precision, because phi may become
+  // large after we multiply a small delay and a very large freq,
+  // Then we need to compute a good sin(phi) and cos(phi).
+  const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
+  double phi = pi2 * delay * frequency;
 
-  fcomplex rv;
-  sincosf(phi, &rv.y, &rv.x); // store (cos(), sin())
+  dcomplex rv;
+  sincos(phi, &rv.y, &rv.x); // store (cos(), sin())
   return rv;
 }
 
