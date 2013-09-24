@@ -89,7 +89,10 @@ namespace LOFAR
       
       itsStream.launchKernel(*this, grid, block);
 
-      if (itsDumpBuffers) dumpBuffers();
+      if (itsDumpBuffers) {
+        itsStream.synchronize();
+        dumpBuffers();
+      }
     }
 
     void Kernel::enqueue(PerformanceCounter &counter) const
