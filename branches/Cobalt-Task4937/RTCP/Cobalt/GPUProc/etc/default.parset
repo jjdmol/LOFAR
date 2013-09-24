@@ -124,8 +124,8 @@ Cobalt.Correlator.nrChannelsPerSubband=64
 Cobalt.Correlator.nrBlocksPerIntegration=1  # only 1 is currently supported
 
 # A filename and location for each subband
-Observation.DataProducts.Output_Correlated.filenames=[SB000.MS]    # filename 
-Observation.DataProducts.Output_Correlated.locations=[localhost:.] # host:directory
+Observation.DataProducts.Output_Correlated.filenames=[SB000.MS,SB001.MS,SB002.MS]    # filename 
+Observation.DataProducts.Output_Correlated.locations=[3*localhost:.] # host:directory
  
 # ===============================
 # Beamformer pipeline information
