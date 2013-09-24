@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 123 95 N "_3DFace" 2
+PANEL,-1 -1 399 95 N "_3DFace" 2
 "$name"
 "$station"
 "main()
@@ -20,16 +20,46 @@ PANEL,-1 -1 123 95 N "_3DFace" 2
       $name == \"BeamControl\" ||    // Station
       $name == \"TBBControl\") {    // Station
 
+    string lvlDP = station+\"LOFAR_PermSW_Daemons_SoftwareMonitor\";
+
+    if (navFunct_dpReachable(lvlDP)) {
+      if(dpExists(lvlDP+\".SWLevel\")) {
+        if (dpConnect(\"levelChanged\", lvlDP+\".SWLevel:_online.._value\",
+                                      lvlDP+\".SWLevel:_online.._invalid\") == -1) {
+          LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+lvlDP+\".SWLevel\");
+        }
+      } else {
+        LOG_ERROR(\"SWController_small.pnl:main|\"+lvlDP+\".SWLevel not found\");
+      }
+    }
+  }	else {
+    reload();
+  }
+}
+
+void levelChanged(string dp1, int swlvl,
+                  string dp2, bool invalid) {
+  if (swlvl == 6 ) {
+    if (observationChangedConnected) {
+      if (dpDisconnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
+                                          MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
+        observationChangedConnected = false;
+      }
+    }
+      
     if (navFunct_dpReachable(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
       if (dpConnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
         LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
+      } else {
+        observationChangedConnected = true;
       }
     } else {
       if (!isStandalone()) LOG_ERROR(\"SWController_small.pnl:main|\"+MainDBName+\" seems offline\");
     }
-  }	else {
-    reload();
+  } else {
+    updateSWController(baseDP,0,baseDP,invalid);
   }
 }
 
@@ -40,6 +70,7 @@ private void observationChanged(string dp1, dyn_string observations,
   firstObservation = \"\";
   string firstPipeline = \"\";
   // for now the object will only show the controller for the first observation
+  // We also have to check if the swleve;l is higher then 6 for the obs dependant ctrl'ers
   if (dynlen(observations) >= 1) {
     for (int i = 1; i <= dynlen(observations); i++)  {
       if ($name != \"PythonControl\" && navFunct_isObservation(observations[i])) {
@@ -71,11 +102,19 @@ private void observationChanged(string dp1, dyn_string observations,
 private void reload() {
   
   // check if the required datapoint for this view are enabled and accessible
-  if (navFunct_dpReachable(baseDP+\".process.startTime\")) {
-    if (dpExists(baseDP+\".process.startTime\")) {
+  if (updateConnected) {
+    if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
+                                           baseDP +\".status.state:_online.._invalid\") == -1) { 
+      updateConnected = false;
+    }
+  }
+  if (navFunct_dpReachable(baseDP+\".status.state\")) {
+    if (dpExists(baseDP+\".status.state\")) {
       if (dpConnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
                                           baseDP +\".status.state:_online.._invalid\") == -1) {
         setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      } else {
+        updateConnected = true;
       }
     } else {
         setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
@@ -88,6 +127,20 @@ private void reload() {
 updateSWController(string dp1, int status,
                    string dp2, bool invalid) {
   
+  
+  int lvl = 0;
+  dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
+
+  if (lvl < 6 && ($name == \"ObservationControl\" ||    // MCU
+      $name == \"OnlineControl\" ||    // CCU
+      $name == \"PythonControl\" ||    // CCU
+      $name == \"CalibrationControl\" ||    // Station
+      $name == \"BeamControl\" ||    // Station
+      $name == \"TBBControl\")) {    // Station
+    setValue(\"process\", \"backCol\", \"Lofar_off\");
+    return;
+  }
+   
   if (invalid) {
     setValue(\"process\", \"backCol\", \"Lofar_invalid\");
   } else {
@@ -118,6 +171,8 @@ string firstObservation=\"\";
 int    curSWLevel = 0;
 int    hookedSWLevel = 0;
 bool bDoubleClicked  = false;
+bool observationChangedConnected = false;
+bool updateConnected = false;
 
 // routine for single mouse click
 void click() {
