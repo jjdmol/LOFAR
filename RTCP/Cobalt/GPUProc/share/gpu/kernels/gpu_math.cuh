@@ -122,11 +122,10 @@ inline __device__ dcomplex dphaseShift(double frequency, double delay)
   // This needs to be done in double precision, because phi may become
   // large after we multiply a small delay and a very large freq,
   // Then we need to compute a good sin(phi) and cos(phi).
-  const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
-  double phi = pi2 * delay * frequency;
+  double phi = -2.0 * delay * frequency; // -2.0 * M_PI: M_PI below in sincospi()
 
   dcomplex rv;
-  sincos(phi, &rv.y, &rv.x); // store (cos(), sin())
+  sincospi(phi, &rv.y, &rv.x); // store (cos(), sin())
   return rv;
 }
 
