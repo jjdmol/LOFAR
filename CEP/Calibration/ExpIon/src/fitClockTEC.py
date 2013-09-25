@@ -797,32 +797,46 @@ def writeClocktoParmdb(ionmodel,average=False,create_new = True):
 
 def writePhaseScreentoParmdb(ionmodel,create_new = True):
     N_sources=ionmodel.N_sources
+    N_pol = min(len(ionmodel.polarizations),2)
     if not hasattr(ionmodel,'globaldb'):
         ionmodel.globaldb='./'
-    for n_source in range(N_sources):
-       if ionmodel.DirectionalGainEnable:
-          source = ionmodel.sources[n_source]
-          identifier = ':'.join([str(pol), station, source])
-       else:
-          identifier = ':'.join([str(pol), station])
+    if not hasattr(ionmodel,'DirectionalGainEnable'):
+        ionmodel.DirectionalGainEnable=False
+    parms = {}
+    parm = {}
+    parm[ 'freqs' ] = np.array( [ .5e9 ] )
+    parm[ 'freqwidths' ] = np.array( [ 1.0e9 ] )
+    parm[ 'times' ] = ionmodel.times[:].ravel()
+    parm[ 'timewidths' ] = ionmodel.timewidths[:].ravel()
 
-       # TEC
-       TEC_parm = parm.copy()
-       parmname = ':'.join(['TEC', identifier])
-       TEC_parm[ 'values' ] = ionmodel.TEC[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TEC_parm
+    for n_pol in range(N_pol):
 
-       #TECfit
-       TECfit_parm = parm.copy()
-       parmname = ':'.join(['TECfit', identifier])
-       TECfit_parm[ 'values' ] = ionmodel.TECfit[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TECfit_parm
+        for n_station in range(len(ionmodel.stations[:])):
+            station = ionmodel.stations[n_station]
+            for n_source in range(N_sources):
+                if ionmodel.DirectionalGainEnable:
+                    source = ionmodel.sources[n_source]
+                    identifier = ':'.join([str(n_pol), station, source])
+                else:
+                    identifier = ':'.join([str(n_pol), station])
 
-       #TECfit_white
-       TECfit_white_parm = parm.copy()
-       parmname = ':'.join(['TECfit_white', identifier])
-       TECfit_white_parm[ 'values' ] = ionmodel.TECfit_white[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TECfit_white_parm
+            # TEC
+            TEC_parm = parm.copy()
+            parmname = ':'.join(['TEC', identifier])
+            TEC_parm[ 'values' ] = ionmodel.TEC[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TEC_parm
+            
+            #TECfit
+            TECfit_parm = parm.copy()
+            parmname = ':'.join(['TECfit', identifier])
+            TECfit_parm[ 'values' ] = ionmodel.TECfit[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TECfit_parm
+            
+            #TECfit_white
+            TECfit_white_parm = parm.copy()
+            parmname = ':'.join(['TECfit_white', identifier])
+            TECfit_white_parm[ 'values' ] = ionmodel.TECfit_white[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TECfit_white_parm
 
     # Piercepoints
       
@@ -859,26 +873,25 @@ def writePhaseScreentoParmdb(ionmodel,create_new = True):
         Piercepoint_zenithangle_parm['values'] = za
         parms[ parmname ] = Piercepoint_zenithangle_parm
 
-     time_start = ionmodel.times[0] - ionmodel.timewidths[0]/2
-     time_end = ionmodel.times[-1] + ionmodel.timewidths[-1]/2
+    time_start = ionmodel.times[0] - ionmodel.timewidths[0]/2
+    time_end = ionmodel.times[-1] + ionmodel.timewidths[-1]/2
 
+    parm[ 'times' ] = array([(time_start + time_end) / 2])
+    parm[ 'timewidths' ] = array([time_end - time_start])
+    
+    height_parm = parm.copy()
+    height_parm[ 'values' ] = array( ionmodel.piercepoints.attrs.height )
+    parms[ 'height' ] = height_parm
+    
+    beta_parm = parm.copy()
+    beta_parm[ 'values' ] = array( ionmodel.TECfit_white.attrs.beta )
+    parms[ 'beta' ] = beta_parm
+     
+    r_0_parm = parm.copy()
+    r_0_parm[ 'values' ] = array(  ionmodel.TECfit_white.attrs.r_0 )
+    parms[ 'r_0' ] = r_0_parm
 
-     parm[ 'times' ] = numpy.array([(time_start + time_end) / 2])
-     parm[ 'timewidths' ] = numpy.array([time_end - time_start])
-
-     height_parm = parm.copy()
-     height_parm[ 'values' ] = numpy.array( ionmodel.piercepoints.attrs.height )
-     parms[ 'height' ] = height_parm
-
-     beta_parm = parm.copy()
-     beta_parm[ 'values' ] = numpy.array( ionmodel.TECfit_white.attrs.beta )
-     parms[ 'beta' ] = beta_parm
-
-     r_0_parm = parm.copy()
-     r_0_parm[ 'values' ] = numpy.array(  ionmodel.TECfit_white.attrs.r_0 )
-     parms[ 'r_0' ] = r_0_parm
-
-     parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
+    parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
 
 
 def writePhaseScreenInfo(ionmodel,filename="clocktec.xmmlss.send"):

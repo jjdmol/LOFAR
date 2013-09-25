@@ -34,6 +34,8 @@ import atexit
 #from IPython.parallel import client
 from numpy import *
 #from pylab import *
+from numpy.linalg.linalg import inv
+from numpy import linalg
 import scipy.optimize
 
 # import user modules
@@ -80,7 +82,8 @@ class IonosphericModel:
          row['position'] = list(self.pointing)
          row.append()
          source_table.flush()
-    
+      if not 'timewidths' in self.hdf5.root:
+         self.timewidths=(self.times[1]-self.times[0])*ones(self.times.shape)
       self.sources = self.hdf5.root.sources[:]['name']
       self.source_positions = self.hdf5.root.sources[:]['position']
       self.N_sources = len(self.sources)
@@ -105,7 +108,7 @@ class IonosphericModel:
       
    def calculate_piercepoints(self, time_steps = [], station_select=[],height = 200.e3):
       if ( len( time_steps ) == 0 ):
-         n_list = range( self.times.shape[0] )
+         n_list = range( self.times[:].shape[0] )
       else:
          n_list = time_steps
       self.n_list = n_list
@@ -146,7 +149,7 @@ class IonosphericModel:
 
    def calculate_Sage_piercepoints(self, sage_group=0,time_steps = [], station_select=[],height = 200.e3):
       if ( len( time_steps ) == 0 ):
-         n_list = range( self.times.shape[0] )
+         n_list = range( self.times[:].shape[0] )
       else:
          n_list = time_steps
       self.sage_n_list = n_list
@@ -227,7 +230,7 @@ class IonosphericModel:
          self.S_list.append(S)
       p.finished()
 
-   def fit_model  ( self ) :
+   def fit_model  ( self) :
       #N_stations = len(self.stations)
       N_stations = len(self.stat_select[:])
       N_times = len(self.times)
@@ -236,10 +239,10 @@ class IonosphericModel:
       G = kron(eye( N_sources ), ( eye( N_stations ) - ones((N_stations, N_stations)) / N_stations))
 
       if 'TECfit' in self.hdf5.root: self.hdf5.root.TECfit.remove()
-      self.TECfit = self.hdf5.createArray(self.hdf5.root, 'TECfit', zeros(self.TEC.shape))
+      self.TECfit = self.hdf5.createArray(self.hdf5.root, 'TECfit', zeros(self.TEC[:].shape))
       
       if 'TECfit_white' in self.hdf5.root: self.hdf5.root.TECfit_white.remove()
-      self.TECfit_white = self.hdf5.createArray(self.hdf5.root, 'TECfit_white', zeros(self.TEC.shape))
+      self.TECfit_white = self.hdf5.createArray(self.hdf5.root, 'TECfit_white', zeros(self.TEC[:].shape))
       
       self.offsets = zeros((len(self.n_list),N_pol))
       p = ProgressBar(len(self.n_list), "Fitting phase screen: ")
@@ -296,10 +299,10 @@ class IonosphericModel:
          #v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
          v=self.TECfit_white[ i, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
          tecs=[]
-         for ist in range(stations.shape[0]):
+         for ist in range(stations[:].shape[0]):
             tecs.append(get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp[0,ist]))
          TEC_out.append(tecs)
-      return np.array(pp_out),np.array(am_out),np.array(TEC_out)
+      return array(pp_out),array(am_out),array(TEC_out)
 
    def get_TEC_frame(self,time=0,pol=0,scale=1.1,steps=10):
       N_stations = len(self.stat_select[:])
@@ -312,8 +315,8 @@ class IonosphericModel:
       pp=self.piercepoints[time]['positions'].reshape(N_piercepoints,2)
       Xp_table=reshape(self.piercepoints[time]['positions_xyz'], (N_piercepoints, 3))
       v=self.TECfit_white[ time, :, : ,pol][self.stat_select[:]].reshape((N_piercepoints,1))
-      myxlim=[np.min(pp[:,0]),np.max(pp[:,0])]
-      myylim=[np.min(pp[:,1]),np.max(pp[:,1])]
+      myxlim=[min(pp[:,0]),max(pp[:,0])]
+      myylim=[min(pp[:,1]),max(pp[:,1])]
       diff=(myxlim[1]-myxlim[0])*(scale-1.)*0.5
       myxlim[0]-=diff
       myxlim[1]+=diff
@@ -324,21 +327,21 @@ class IonosphericModel:
       myylim[1]+=diff
       ysize=(myylim[1]-myylim[0])*scale/(steps+1)
       myylim[1]+=ysize
-      length=np.sqrt(np.dot(Xp_table[0],Xp_table[0].T))
+      length=sqrt(dot(Xp_table[0],Xp_table[0].T))
       #print "length",length,myxlim,myylim,xsize,ysize
       iy=0
       ix=0
-      phi=np.zeros((steps,steps),dtype=float)
-      for lat in np.arange(myylim[0],myylim[1],ysize): 
-         for lon in np.arange(myxlim[0],myxlim[1],xsize): 
-            xyzpp=[np.cos(lat)*np.cos(lon)*length,np.cos(lat)*np.sin(lon)*length,np.sin(lat)*length]
+      phi=zeros((steps,steps),dtype=float)
+      for lat in arange(myylim[0],myylim[1],ysize): 
+         for lon in arange(myxlim[0],myxlim[1],xsize): 
+            xyzpp=[cos(lat)*cos(lon)*length,cos(lat)*sin(lon)*length,sin(lat)*length]
             #print "my",ix,iy,lon,lat,xyzpp
             #print Xp_table[0]
             phi[iy,ix]=get_interpolated_TEC_white(Xp_table,v,beta,r_0,xyzpp)
             ix+=1
          ix=0
          iy+=1
-      return phi,np.arange(myxlim[0],myxlim[1],xsize),np.arange(myylim[0],myylim[1],ysize)
+      return phi,arange(myxlim[0],myxlim[1],xsize),arange(myylim[0],myylim[1],ysize)
 
    def make_movie( self, extent = 0, npixels = 100, vmin = 0, vmax = 0 ):
       """
@@ -351,7 +354,7 @@ class IonosphericModel:
       #tc = client.TaskClient( task_furl )
       tc = client.TaskClient( )
       N_stations = len(self.stations)
-      N_times = self.TECfit.shape[1]
+      N_times = self.TECfit[:].shape[1]
       N_sources = len(self.sources)
       N_piercepoints = N_stations * N_sources
       N_pol = len(self.polarizations)
@@ -430,7 +433,7 @@ class IonosphericModel:
 
       print self.n_list
       if 'STEC_facets' in self.hdf5.root: self.hdf5.root.STEC_facets.remove()
-      self.STEC_facets = self.hdf5.createCArray(self.hdf5.root, 'STEC_facets', tables.Float32Atom(), shape = (self.N_pol, self.n_list.shape[0],  self.N_facets, self.N_stations))
+      self.STEC_facets = self.hdf5.createCArray(self.hdf5.root, 'STEC_facets', tables.Float32Atom(), shape = (self.N_pol, self.n_list[:].shape[0],  self.N_facets, self.N_stations))
 
       #if 'facet_piercepoints' in self.hdf5.root: self.hdf5.root.facet_piercepoints.remove()
       #description = {'positions':tables.Float64Col((self.N_facets, self.N_stations,2)), \
@@ -484,25 +487,25 @@ def fillarray( a, v ) :
 
 def calculate_frame(Xp_table, v, beta, r_0, npixels, w):
    import numpy
-   phi = numpy.zeros((npixels,npixels))
+   phi = zeros((npixels,npixels))
    N_piercepoints = Xp_table.shape[0]
-   P = numpy.eye(N_piercepoints) - numpy.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
+   P = eye(N_piercepoints) - ones((N_piercepoints, N_piercepoints)) / N_piercepoints
    # calculate structure matrix
-   D = numpy.resize( Xp_table, ( N_piercepoints, N_piercepoints, 2 ) )
-   D = numpy.transpose( D, ( 1, 0, 2 ) ) - D
-   D2 = numpy.sum( D**2, 2 )
+   D = resize( Xp_table, ( N_piercepoints, N_piercepoints, 2 ) )
+   D = transpose( D, ( 1, 0, 2 ) ) - D
+   D2 = sum( D**2, 2 )
    C = -(D2 / ( r_0**2 ) )**( beta / 2.0 )/2.0
-   C = numpy.dot(numpy.dot(P, C ), P)
-   v = numpy.dot(numpy.linalg.pinv(C), v)
+   C = dot(dot(P, C ), P)
+   v = dot(linalg.pinv(C), v)
 
    for x_idx in range(0, npixels):
       x = -w + 2*x_idx*w/( npixels-1 )  
       for y_idx in range(0, npixels):
          y = -w + 2*y_idx*w/(npixels-1)
-         #D2 = numpy.sum((6378452*(Xp_table - numpy.array([ x, y ])))**2,1)
-         D2 = numpy.sum(((Xp_table - numpy.array([ x, y ])))**2,1)
+         #D2 = sum((6378452*(Xp_table - array([ x, y ])))**2,1)
+         D2 = sum(((Xp_table - array([ x, y ])))**2,1)
          C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-         phi[y_idx, x_idx] = numpy.dot(C, v)
+         phi[y_idx, x_idx] = dot(C, v)
    return phi, w
 
 
@@ -514,23 +517,23 @@ def get_interpolated_TEC(Xp_table,v,beta,r_0,pp):
    if n_axes!=pp.shape[0]:
       print "wrong number of axes, original:",n_axes,"requested:",pp.shape[0]
       return -1
-   P = numpy.eye(N_piercepoints) - numpy.ones((N_piercepoints, N_piercepoints)) / N_piercepoints
+   P = eye(N_piercepoints) - ones((N_piercepoints, N_piercepoints)) / N_piercepoints
    # calculate structure matrix
-   D = numpy.resize( Xp_table, ( N_piercepoints, N_piercepoints, n_axes ) )
-   D = numpy.transpose( D, ( 1, 0, 2 ) ) - D
-   D2 = numpy.sum( D**2, 2 )
+   D = resize( Xp_table, ( N_piercepoints, N_piercepoints, n_axes ) )
+   D = transpose( D, ( 1, 0, 2 ) ) - D
+   D2 = sum( D**2, 2 )
    C = -(D2 / ( r_0**2 ) )**( beta / 2.0 )/2.0
-   C = numpy.dot(numpy.dot(P, C ), P)
-   v = numpy.dot(numpy.linalg.pinv(C), v)
-   D2 = numpy.sum((Xp_table - pp)**2,axis=1)
+   C = dot(dot(P, C ), P)
+   v = dot(linalg.pinv(C), v)
+   D2 = sum((Xp_table - pp)**2,axis=1)
    C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-   return numpy.dot(C, v)
+   return dot(C, v)
 
 
 def get_interpolated_TEC_white(Xp_table,v,beta,r_0,pp):
-   D2 = numpy.sum((Xp_table - pp)**2,axis=1)
+   D2 = sum((Xp_table - pp)**2,axis=1)
    C = (D2 / ( r_0**2 ) )**( beta / 2. ) / -2.
-   return numpy.dot(C, v)
+   return dot(C, v)
 
 
 
