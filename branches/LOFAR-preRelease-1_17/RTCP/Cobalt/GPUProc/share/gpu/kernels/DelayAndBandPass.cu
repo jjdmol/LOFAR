@@ -233,11 +233,11 @@ extern "C" {
 #endif
 
 #if defined DELAY_COMPENSATION    
-    sampleX = cmul(sampleX, fvX);
-    sampleY = cmul(sampleY, fvY);
+    sampleX = sampleX * fvX;
+    sampleY = sampleY * fvY;
     // The calculations are with exponentional complex for: multiplication for correct phase shift
-    fvX = cmul(fvX, fdvX);
-    fvY = cmul(fvY, fdvY);
+    fvX = fvX * fdvX;
+    fvY = fvY * fdvY;
 #elif defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;

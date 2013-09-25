@@ -59,6 +59,9 @@ namespace LOFAR
         gpu::DeviceMemory delaysAtBegin;
         gpu::DeviceMemory delaysAfterEnd;
         gpu::DeviceMemory phaseOffsets;
+        // We don't have tabDelays here, as it is only for bf.
+        // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
+        // similar to the bandpass correction and FIR filter weights (also not here).
         gpu::DeviceMemory inputSamples;
 
         DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
@@ -74,6 +77,9 @@ namespace LOFAR
       // Which block this InputData represents
       struct BlockID blockID;
 
+      // Delays are computed and applied in double precision,
+      // otherwise the to be computed phase shifts become too inprecise.
+
       //!< Whole sample delays at the start of the workitem      
       MultiDimArrayHostBuffer<double, 3> delaysAtBegin;
 
@@ -84,7 +90,7 @@ namespace LOFAR
       MultiDimArrayHostBuffer<double, 2> phaseOffsets;
 
       //!< Delays for TABs (aka pencil beams) after station beam correction
-      MultiDimArrayHostBuffer<float, 3> tabDelays;
+      MultiDimArrayHostBuffer<double, 3> tabDelays;
 
       // inputdata with flagged data set to zero
       MultiDimArrayHostBuffer<char, 4> inputSamples;
