@@ -57,7 +57,8 @@ namespace LOFAR
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps)
     {
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", true);
     }
 
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
@@ -108,7 +109,7 @@ namespace LOFAR
       nrBytesWritten = (size_t) nrBaselines * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
-    void CorrelatorKernel::dumpBuffers() const
+    void CorrelatorKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

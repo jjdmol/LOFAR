@@ -312,17 +312,17 @@ namespace LOFAR
       // Otherwise, a kernel arg may not be set...
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(counters.fir, input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(counters.fft);
+        firFilterKernel->enqueue(input.blockID, counters.fir, input.blockID.subbandProcSubbandIdx);
+        fftKernel.enqueue(input.blockID, counters.fft);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(counters.delayBp, 
+      delayAndBandPassKernel->enqueue(input.blockID, counters.delayBp, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(counters.correlator);
+      correlatorKernel->enqueue(input.blockID, counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.

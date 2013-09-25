@@ -28,6 +28,7 @@
 #include <UnitTest++.h>
 #include <memory>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/BlockID.h>
 
 using namespace LOFAR::Cobalt;
 using namespace LOFAR;
@@ -81,7 +82,8 @@ TEST(FIR_FilterKernel)
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   PerformanceCounter counter(context);
-  kernel->enqueue(counter, 0);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, 0);
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);

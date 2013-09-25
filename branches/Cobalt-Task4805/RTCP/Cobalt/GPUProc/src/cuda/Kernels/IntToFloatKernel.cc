@@ -44,7 +44,8 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrTAPs(ps.nrPPFTaps())
     {
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", true);
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
@@ -68,7 +69,7 @@ namespace LOFAR
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
 
-    void IntToFloatKernel::dumpBuffers() const
+    void IntToFloatKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

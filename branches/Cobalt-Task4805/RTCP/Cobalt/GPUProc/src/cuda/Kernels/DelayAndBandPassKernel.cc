@@ -52,7 +52,8 @@ namespace LOFAR
       transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", true);
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
@@ -89,14 +90,16 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(PerformanceCounter &counter, float subbandFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
+                                         PerformanceCounter &counter,
+                                         float subbandFrequency, size_t SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(counter);
+      Kernel::enqueue(blockId, counter);
     }
 
-    void DelayAndBandPassKernel::dumpBuffers() const
+    void DelayAndBandPassKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

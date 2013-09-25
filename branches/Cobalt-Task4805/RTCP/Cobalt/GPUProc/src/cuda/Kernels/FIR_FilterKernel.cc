@@ -45,7 +45,8 @@ namespace LOFAR
       nrPPFTaps(ps.nrPPFTaps()),
       nrSubbands(1)
     {
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", true);
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
@@ -103,10 +104,12 @@ namespace LOFAR
         historyFlags.origin()[n].include(0, params.nrHistorySamples);
     }
 
-    void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
+    void FIR_FilterKernel::enqueue(const BlockID &blockId,
+                                   PerformanceCounter &counter,
+                                   size_t subbandIdx)
     {
       setArg(4, subbandIdx);
-      Kernel::enqueue(counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
@@ -129,7 +132,7 @@ namespace LOFAR
       }
     }
 
-    void FIR_FilterKernel::dumpBuffers() const
+    void FIR_FilterKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

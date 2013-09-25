@@ -33,8 +33,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declaration
+    //# Forward declarations
     class Parset;
+    struct BlockID;
 
     class Kernel : public gpu::Function
     {
@@ -69,9 +70,9 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue() const;
+      void enqueue(const BlockID &blockId) const;
 
-      void enqueue(PerformanceCounter &counter) const;
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
 
     protected:
       // Construct a kernel.
@@ -91,11 +92,12 @@ namespace LOFAR
       // Flag indicating whether output buffers should be dumped to disk or not.
       bool itsDumpBuffers;
 
-      // Dump output buffers of a given kernel to disk.
+      // Dump output buffers of a given kernel to disk. Use \a blockId to
+      // distinguish between the different blocks and subbands.
       // \note This method should be overridden in the derived classes.
       // \attention This method is for debugging purposes only, as it has a
       // severe impact on performance.
-      virtual void dumpBuffers() const;
+      virtual void dumpBuffers(const BlockID &blockId) const;
     };
   }
 }

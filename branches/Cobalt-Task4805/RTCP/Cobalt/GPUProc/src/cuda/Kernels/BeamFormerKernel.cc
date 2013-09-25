@@ -28,6 +28,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
 
 #include <fstream>
 
@@ -48,9 +49,12 @@ namespace LOFAR
       subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      nrChannelsPerSubband = 
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", true);
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
@@ -92,15 +96,16 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerKernel::enqueue(PerformanceCounter &counter,
+    void BeamFormerKernel::enqueue(const BlockID &blockId,
+                                   PerformanceCounter &counter,
                                    float subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(counter);
+      Kernel::enqueue(blockId, counter);
     }
 
-    void BeamFormerKernel::dumpBuffers() const
+    void BeamFormerKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

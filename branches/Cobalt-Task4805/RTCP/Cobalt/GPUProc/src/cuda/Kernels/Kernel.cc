@@ -28,6 +28,7 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <Common/LofarLogger.h>
 
 using namespace std;
@@ -67,7 +68,7 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    void Kernel::enqueue() const
+    void Kernel::enqueue(const BlockID &blockId) const
     {
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
       //       (+ remove assertion): add protected setThreadDim()
@@ -91,18 +92,19 @@ namespace LOFAR
 
       if (itsDumpBuffers) {
         itsStream.synchronize();
-        dumpBuffers();
+        dumpBuffers(blockId);
       }
     }
 
-    void Kernel::enqueue(PerformanceCounter &counter) const
+    void Kernel::enqueue(const BlockID &blockId, 
+                         PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);
-      enqueue();
+      enqueue(blockId);
       itsStream.recordEvent(counter.stop);
     }
 
-    void Kernel::dumpBuffers() const
+    void Kernel::dumpBuffers(const BlockID &blockId) const
     {
       ASSERTSTR(false, "Kernel::dumpBuffers() base class method called");
     }

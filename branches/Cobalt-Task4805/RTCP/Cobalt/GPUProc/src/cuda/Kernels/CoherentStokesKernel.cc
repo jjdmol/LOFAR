@@ -49,7 +49,8 @@ namespace LOFAR
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
       timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.CoherentStokesKernel.dumpOutput", true);
     }
 
 
@@ -75,7 +76,7 @@ namespace LOFAR
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
     }
 
-    void CoherentStokesKernel::dumpBuffers() const
+    void CoherentStokesKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());

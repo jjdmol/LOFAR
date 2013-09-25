@@ -29,6 +29,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
+#include <CoInterface/BlockID.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
 
@@ -86,6 +87,8 @@ int main() {
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
   gpu::DeviceMemory d_inout(ctx, size  * sizeof(fcomplex));
 
+  // Dummy Block-ID
+  BlockID blockId;
 
   FFT_Kernel fftFwdKernel(stream, fftSize, nrFFTs, true, d_inout);
   FFT_Kernel fftBwdKernel(stream, fftSize, nrFFTs, false, d_inout);
@@ -122,7 +125,7 @@ int main() {
     // Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
         
-    fftFwdKernel.enqueue();
+    fftFwdKernel.enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
     stream.synchronize();
     // do a call to the stats functionality 
@@ -140,7 +143,7 @@ int main() {
     }
 
     // Backward FFT: compute and I/O
-    fftFwdKernel.enqueue();
+    fftFwdKernel.enqueue(blockId);
     stream.synchronize();
     stream.readBuffer(inout, d_inout, true);
 
@@ -181,7 +184,7 @@ int main() {
 
     // GPU: Forward FFT: compute and I/O
     stream.writeBuffer(d_inout, inout);
-    fftFwdKernel.enqueue();
+    fftFwdKernel.enqueue(blockId);
     stream.readBuffer(inout, d_inout, true);
 
     // FFTW: Forward FFT

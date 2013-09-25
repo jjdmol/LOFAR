@@ -87,14 +87,15 @@ namespace LOFAR
                              const Parameters &param);
 
 
-      void enqueue(PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
                    float subbandFrequency, size_t SAP);
 
     private:
-      // Dump output buffers of a given kernel to disk.
+      // Dump output buffers of a given kernel to disk. Use \a blockId to
+      // distinguish between the different blocks and subbands.
       // \attention This method is for debugging purposes only, as it has a
       // severe impact on performance.
-      virtual void dumpBuffers() const;
+      virtual void dumpBuffers(const BlockID &blockId) const;
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;

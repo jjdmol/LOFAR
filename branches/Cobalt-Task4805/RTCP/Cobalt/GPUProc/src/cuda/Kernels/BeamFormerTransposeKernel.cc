@@ -43,9 +43,12 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
-      dumpBuffers = true; // TODO: Add a key to the parset to specify this
+      nrChannelsPerSubband =
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.BeamFormerTransposeKernel.dumpOutput", true);
     }
 
     BeamFormerTransposeKernel::
@@ -71,7 +74,7 @@ namespace LOFAR
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
     }
 
-    void BeamFormerTransposeKernel::dumpBuffers() const
+    void BeamFormerTransposeKernel::dumpBuffers(const BlockID &blockId) const
     {
       LOG_INFO("Dumping output buffer");
       gpu::HostMemory buf(itsBuffers.output.fetch());
