@@ -58,7 +58,6 @@ fi
 
 echo "Testing $PARSET"
 
-RUNDIR=`pwd`
 OUTDIR=`basename "${PARSET%.parset}.output"`
 
 function parse_logs
@@ -89,22 +88,14 @@ function parse_logs
 }
 
 (
-  # create output dir
-  mkdir -p $OUTDIR &&
-  cd $OUTDIR &&
-
-  # enable debugging
-  echo "Global 20" >> rtcp.debug &&
-  cp $srcdir/../src/rtcp.log_prop . && # Get correct log4cplus output format
-
-  # be able to find the GPU kernels
-  export LOFARROOT=$srcdir/.. &&
+  # Create fake LOFARROOT environment
+  mklofarroot $OUTDIR
 
   # run correlator -- without profiling
-  $RUNDIR/runrtcp.sh $PARSET > performance_normal.txt 2>&1 &&
+  runObservation.sh -F -l 4 $PARSET > performance_normal.txt 2>&1 || error "Observation failed"
 
   # compare output
-  if [ "x" != "x$REFDIR" ]
+  if [ -n "$REFDIR" ]
   then
     # create script to accept output (ie. copy it to the source dir for check in)
     echo "#!/bin/bash
@@ -116,23 +107,27 @@ function parse_logs
 
     # Generally (tCorrelate_*), the first 5 decimals are ok; occasionally, the 5th is off.
     # For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
-    # Taking 32*..., we still get a few dozen miscomparisons, so resort to:
-    eps_factor=64.0
-    EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
-
-    for f in *.MS
+    # Taking 32*..., we still get a few dozen miscomparisons, so resort to 64.0
+    #
+    # Try bigger epsilons as well to see how big the error actually is.
+    for eps_factor in 1024.0 512.0 256.0 128.0
     do
-      $RUNDIR/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || exit 1
+      EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
+
+      for f in *.MS
+      do
+        $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
+      done
     done
-  fi &&
+  fi
 
   # run correlator -- with profiling
-  $RUNDIR/runrtcp.sh -p $PARSET > performance_profiled.txt 2>&1 &&
+  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
 
   # check logs
-  parse_logs performance_normal.txt performance_profiled.txt && # Remove this && and remove the last line for output
+  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
   # toss output if everything is ok
-  (cd $RUNDIR && rm -rf $OUTDIR) # Comment this line for output
+  rm -rf $testdir/$OUTDIR # Comment this line for output
 ) || exit 1
 

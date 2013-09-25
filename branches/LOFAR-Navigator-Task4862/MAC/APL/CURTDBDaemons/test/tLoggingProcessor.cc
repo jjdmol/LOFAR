@@ -31,6 +31,15 @@ using namespace LOFAR;
 
 int main (int	argc, char*		argv[])
 {
+	if (argc != 2) {
+		cout << "Invocation error! Syntax: " << argv[0] << " 1|2|3|4" << endl;
+		cout << "1: Test the 'good' situation: register in line 2 on INFO level." << endl;
+		cout << "2: Register at wrong level in line 2 on INFO level in line 4." << endl;
+		cout << "3: Don't register at all and produce more than 10 messages." << endl;
+		cout << "4: Register with invalid database point and produce more than 10 messages." << endl;
+		exit (EXIT_FAILURE);
+	}
+
 	INIT_LOGGER(basename(argv[0]));
 
 	switch (atoi(argv[1])) {
@@ -66,15 +75,15 @@ int main (int	argc, char*		argv[])
 	break;
 
 	case 4: {	// Register with wrong DP and produce more that 10 messages
+		LOG_INFO("MACProcessScope: LOFAR.Logger.WrongTest");
 		for (int i = 1; i < 15; i++) {
-			LOG_INFO("MACProcessScope: LOFAR.Logger.WrongTest");
 			LOG_INFO_STR("TEST4: Message " << i);
 		}
 	}
 	break;
 
 	default:
-		cout << "Syntax: tLoggingProcessor testnr" << endl;
+		cout << "Syntax: tLoggingProcessor testnr (1..4)" << endl;
 		break;
 	}
 

@@ -85,7 +85,7 @@ namespace LOFAR
       static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
 
       // second FFT
-      static const size_t BEAM_FORMER_NR_CHANNELS = 2048;
+      static const size_t BEAM_FORMER_NR_CHANNELS = 4096;
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -160,7 +160,7 @@ namespace LOFAR
       std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
 
       // beam former
-      gpu::DeviceMemory devBeamFormerWeights;
+      gpu::DeviceMemory devBeamFormerDelays;
       BeamFormerKernel::Buffers beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 

@@ -47,9 +47,14 @@ namespace LOFAR { namespace CEP {
 
   int MPIConnection::getMessageLength()
   {
-    int result = MPI_SUCCESS;
+    int result;
     MPI_Status status;
     result = MPI_Probe (itsDestRank, itsTag, MPI_COMM_WORLD, &status);
+    if (result != MPI_SUCCESS) {
+      THROW (MWError, "MPIConnection::probe on rank " << getRank()
+		   << " failed from rank " << itsDestRank
+		   << " using tag " << itsTag);
+    }
     int size;
     MPI_Get_count (&status, MPI_BYTE, &size);
     return size;
@@ -59,7 +64,7 @@ namespace LOFAR { namespace CEP {
   {
     //cout << "MPI receive " << size << " bytes on rank " << getRank()
     //     << " from rank " << itsDestRank << ", tag " << itsTag << endl;
-    int result = MPI_SUCCESS;
+    int result;
     MPI_Status status;
     result = MPI_Recv (buf, size, MPI_BYTE,
 		       itsDestRank, itsTag, MPI_COMM_WORLD, &status);
@@ -74,7 +79,7 @@ namespace LOFAR { namespace CEP {
   {
     //cout << "MPI send " << size << " bytes on rank " << getRank()
     //     << " to rank " << itsDestRank << ", tag " << itsTag << endl;
-    int result = MPI_SUCCESS;
+    int result;
     result = MPI_Send (const_cast<void*>(buf), size, MPI_BYTE,
 		       itsDestRank, itsTag, MPI_COMM_WORLD);
     if (result != MPI_SUCCESS) {

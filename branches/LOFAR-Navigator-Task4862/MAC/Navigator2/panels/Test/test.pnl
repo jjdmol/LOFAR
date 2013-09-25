@@ -63,7 +63,7 @@ EP_setDP()
 {
 dyn_errClass err;
 
-  string query = \"SELECT '_online.._value' FROM 'LOFAR*.**.status.childState' REMOTE 'CS010:'\";
+  string query = \"SELECT '_online.._value' FROM 'LOFAR*.**.status.childState' REMOTE 'CS011:'\";
   dyn_dyn_anytype tab;
   dpQuery(query,tab);
   DebugN(\"Found: \"+tab);
@@ -76,7 +76,7 @@ dyn_errClass err;
 }
 
 // SimpleCtrlScript {EP_setDP}
-// DP1 {CS010:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.status.leaf}
+// DP1 {CS011:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.status.leaf}
 // Config1 {:_original.._value}
 // Type1 {bool}
 // Value1 {1}

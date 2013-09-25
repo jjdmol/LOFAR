@@ -75,7 +75,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT
-      fftKernel(ps, context, devFilteredData),
+      fftKernel(ps, queue, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -308,18 +308,21 @@ namespace LOFAR
 
       // *********************************************
       // Run the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
+
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel->enqueue(counters.fir, input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(queue, counters.fft);
+        fftKernel.enqueue(counters.fft);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue, counters.delayBp, 
+      delayAndBandPassKernel->enqueue(counters.delayBp, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue, counters.correlator);
+      correlatorKernel->enqueue(counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.

@@ -201,11 +201,10 @@ int test()
   stream.readBuffer(rawFilteredData, devFilteredData, true);
 
   // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
-  // However, in modes other than 16 bit mode, all amplitudes are scaled to
-  // match 16 bit mode. For 8 bit mode, this means *256.
+  // However, in modes other than 16 bit mode, all gains are scaled to match 16 bit mode.
   unsigned scale = 1;
   if (NR_BITS_PER_SAMPLE != 16)
-    scale = 256;
+    scale = 16;
   if (rawFilteredData.get<float>()[0] != 6.0f * scale) 
   {
     cerr << "FIR_FilterTest 1: Expected at idx 0: " << 6 * scale 
@@ -563,6 +562,12 @@ int test()
 int main()
 {
   INIT_LOGGER("tFIR_Filter");
+  try {
+    gpu::Platform pf;
+  } catch (gpu::GPUException&) {
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
+    return 3;
+  }
   return test() > 0;
 }
 

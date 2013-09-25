@@ -22,7 +22,6 @@ file(GLOB staticmeta_data
   AntennaArrays/*.conf
   AntennaPos/*.conf
   CableDelays/*.conf
-  HBADeltas/*.conf
   iHBADeltas/*.conf
   AntennaFields/*.conf
   TBBConnections.dat

@@ -355,6 +355,9 @@ namespace LOFAR
         // module \a module.
         Function(const Module &module, const std::string &name);
 
+        // Return the name of the function.
+        std::string name() const;
+
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
         // Not for device memory objects (be it as DeviceMemory or as void *).
@@ -457,7 +460,7 @@ namespace LOFAR
         // \param flags must be 0 for CUDA < 5.0
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
-        Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
+        explicit Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.

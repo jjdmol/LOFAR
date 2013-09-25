@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include "BeamFormerKernel.h"
 
@@ -39,8 +40,10 @@ namespace LOFAR
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
+      nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f)  // TODO: Add a key to the parset to specify this
+      weightCorrection(1.0f), // TODO: pass FFT size
+      subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
@@ -55,7 +58,7 @@ namespace LOFAR
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, buffers.beamFormerWeights);
+      setArg(2, buffers.beamFormerDelays);
 
       size_t maxChannelParallisation = std::min(params.nrChannelsPerSubband, maxThreadsPerBlock / NR_POLARIZATIONS / params.nrTABs);
 
@@ -69,7 +72,7 @@ namespace LOFAR
                                  maxChannelParallisation);
 
 #if 0
-      size_t nrWeightsBytes = bufferSize(ps, BEAM_FORMER_WEIGHTS);
+      size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
       size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
       size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
 
@@ -79,10 +82,18 @@ namespace LOFAR
 
       nrOperations = count * params.nrStations * params.nrTABs * 8;
       nrBytesRead = 
-        nrWeightsBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
+        nrDelaysBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
         nrComplexVoltagesBytesPerPass;
       nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
 #endif
+    }
+
+    void BeamFormerKernel::enqueue(PerformanceCounter &counter,
+                                   double subbandFrequency, unsigned SAP)
+    {
+      setArg(3, subbandFrequency);
+      setArg(4, SAP);
+      Kernel::enqueue(counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -93,16 +104,16 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
           NR_POLARIZATIONS * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
           NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
-      case BeamFormerKernel::BEAM_FORMER_WEIGHTS:
+      case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          itsParameters.nrStations * itsParameters.nrTABs * itsParameters.nrChannelsPerSubband * 
-          sizeof(std::complex<float>);
+          itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
+          sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -115,10 +126,14 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["NR_SAPS"] =
+        lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["WEIGHT_CORRECTION"] =
-        lexical_cast<string>(itsParameters.weightCorrection);
+        str(boost::format("%.7ff") % itsParameters.weightCorrection);
+      defs["SUBBAND_BANDWIDTH"] =
+        str(boost::format("%.7f") % itsParameters.subbandBandwidth);
 
       return defs;
     }

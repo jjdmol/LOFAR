@@ -37,6 +37,8 @@
   def read_rsr(tc, msg, procid='all', rspId=['rsp0'], applev=21)
   def write_rsr_timestamp(tc, msg, timestamp=0, timemode=1, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   def read_rsr_timestamp(tc, msg, fpgaId=['rsp', 'blp0'], rspId=['rsp0'], applev=21)
+  def write_rsr_beam_mode(tc, msg, beam_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
+  def read_rsr_beam_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   def write_rsr_sdo_mode(tc, msg, sdo_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   def read_rsr_sdo_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21)
   
@@ -156,7 +158,7 @@ c_ei_status_ado_offset       =  c_ei_status_rsu_offset       +                 c
 c_ei_status_ado_size         =  8
 c_ei_status_rad_offset       =  c_ei_status_ado_offset       + c_nof_blp     * c_ei_status_ado_size
 c_ei_status_rad_size         =  4  # For each link
-c_ei_status_rcuh_test_offset =  c_ei_status_rad_offset       + c_rad_nof_rx_status * c_ei_status_rad_size]
+c_ei_status_rcuh_test_offset =  c_ei_status_rad_offset       + c_rad_nof_rx_status * c_ei_status_rad_size
 c_ei_status_rcuh_test_size   =  4  # For each AP
 c_ei_status_rsr_offset       =  0  # = c_ei_status_rsp_tvolt_offset
 c_ei_status_rsr_size         =  c_ei_status_rcuh_test_offset + c_nof_blp     * c_ei_status_rcuh_test_size
@@ -1407,6 +1409,63 @@ def read_rsr_timestamp(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
   return ret
 
     
+def write_rsr_beam_mode(tc, msg, beam_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR write beam mode
+
+  Input:
+  - tc        = Testcase
+  - msg       = MepMessage
+  - beam_mode = Select beam mode 0, 1, or 2
+  - fpgaId    = List of ['rsp', 'blp#']
+  - rspId     = List of 'rsp#' 
+  - applev    = Append log level
+  Report:
+    tc appendlog messages are reported.
+  Return: void
+  """ 
+  tc.appendLog(applev, '>>> RSP-%s, FPGA-%s write RSR beam mode = %d : %s:' % (rspId, fpgaId, beam_mode, c_beam_mode_str[beam_mode]))
+  offset = 1
+  for ri in rspId:
+      msg.packAddr(fpgaId, 'rsr', 'beammode')
+      msg.packPayload([beam_mode],1)
+      rspctl(tc, '--writeblock=%s,%s,%d,%s' % (ri[3:], msg.hexAddr, offset, msg.hexPayload))
+  rspctl_write_sleep()
+
+
+def read_rsr_beam_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
+  """RSR read beam mode
+
+  Input:
+  - tc     = Testcase
+  - msg    = MepMessage
+  - fpgaId = List of ['rsp', 'blp#']
+  - rspId  = List of ['rsp#']
+  - applev = Append log level
+  Report:  
+    tc appendlog messages are reported.
+  Return:
+  - read active beam_mode if all are equal else -1
+  """
+  fpga_beam_modes_max = []  # Maximum beam mode 0, 1, or 2 that is supported in the hardware
+  fpga_beam_modes_act = []  # Selected beam mode 0, 1, or 2 that is currently active
+  for ri in rspId:
+      for fi in fpgaId:
+          read_mem(tc, msg, 'rsr', 'beammode', 2, [fi], [ri], 'h', 1, 0)
+          msg.setOffset(0)
+          beam_max = msg.readUnsigned(1)
+          beam_act = msg.readUnsigned(1)
+          fpga_beam_modes_max.append(beam_max)
+          fpga_beam_modes_act.append(beam_act)
+          tc.appendLog(applev, '>>> RSR beam mode:')
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : max = %d (read only), active = %d' % (ri, fi, beam_max, beam_act))
+      
+  ret = fpga_beam_modes_act[0]
+  for si in fpga_beam_modes_act:
+      if ret != si:
+          ret = -1
+  return ret
+
+
 def write_rsr_sdo_mode(tc, msg, sdo_mode=0, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
   """RSR write subband data output (SDO) mode
 
@@ -1431,7 +1490,7 @@ def write_rsr_sdo_mode(tc, msg, sdo_mode=0, fpgaId=['rsp'], rspId=['rsp0'], appl
 
 
 def read_rsr_sdo_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
-  """RSR SDO mode
+  """RSR read SDO mode
 
   Input:
   - tc     = Testcase
@@ -1450,14 +1509,12 @@ def read_rsr_sdo_mode(tc, msg, fpgaId=['rsp'], rspId=['rsp0'], applev=21):
       for fi in fpgaId:
           read_mem(tc, msg, 'rsr', 'sdomode', 2, [fi], [ri], 'h', 1, 0)
           msg.setOffset(0)
-          fpga_SDO_modes_max.append(msg.readUnsigned(1))
-          fpga_SDO_modes_act.append(msg.readUnsigned(1))
-  index = 0
-  for ri in rspId:
-      for fi in fpgaId:
+          sdo_max = msg.readUnsigned(1)
+          sdo_act = msg.readUnsigned(1)
+          fpga_SDO_modes_max.append(sdo_max)
+          fpga_SDO_modes_act.append(sdo_act)
           tc.appendLog(applev, '>>> RSR sdo mode:')
-          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : max = %d (read only), active = %d' % (ri, fi, fpga_SDO_modes_max[index], fpga_SDO_modes_act[index]))
-          index += 1
+          tc.appendLog(applev, '    . RSP-%s, FPGA-%s : max = %d (read only), active = %d' % (ri, fi, sdo_max, sdo_act))
       
   ret = fpga_SDO_modes_act[0]
   for si in fpga_SDO_modes_act:

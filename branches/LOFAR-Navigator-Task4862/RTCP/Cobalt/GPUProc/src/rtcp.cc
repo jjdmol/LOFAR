@@ -151,12 +151,13 @@ int main(int argc, char **argv)
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
 
-  LOG_INFO_STR("===== INIT =====");
+  // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
+  LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
 #else
-  LOG_WARN_STR("Running without MPI!");
+  LOG_WARN("Running without MPI!");
 #endif
 
   /*
@@ -183,10 +184,22 @@ int main(int argc, char **argv)
     THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
 
   /*
+   * Initialise OpenMP
+   */
+
+  LOG_INFO("----- Initialising OpenMP");
+
+  // Allow usage of nested omp calls
+  omp_set_nested(true);
+
+  // Allow OpenMP thread registration
+  OMPThread::init();
+
+  /*
    * INIT stage
    */
 
-  LOG_INFO_STR("----- Reading Parset");
+  LOG_INFO("----- Reading Parset");
 
   // Create a parameters set object based on the inputs
   Parset ps(argv[optind]);
@@ -197,12 +210,13 @@ int main(int argc, char **argv)
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
   }
 
-  LOG_INFO_STR("----- Initialising GPUs");
+  LOG_INFO("----- Initialising GPUs");
 
   gpu::Platform platform;
+  LOG_INFO_STR("GPU platform " << platform.getName());
   vector<gpu::Device> allDevices(platform.devices());
 
-  LOG_INFO_STR("----- Initialising NUMA bindings");
+  LOG_INFO("----- Initialising NUMA bindings");
 
   // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
@@ -247,20 +261,13 @@ int main(int argc, char **argv)
     LOG_WARN_STR("Cannot bind memory (no libnuma support)");
 #endif
 
-    // Bindings are done -- Lock everything in memory
-    if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-      THROW_SYSCALL("mlockall");
-
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-    vector<string> gpuPciIds;
     for (size_t i = 0; i < gpuIds.size(); ++i) {
       gpu::Device &d = allDevices[gpuIds[i]];
 
       devices.push_back(d);
-      gpuPciIds.push_back(d.pciId());
     }
-    LOG_DEBUG_STR("Binding to GPUs " << gpuIds << " = " << gpuPciIds);
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
     const string nic = ps.settings.nodes[rank].nic;
@@ -276,11 +283,17 @@ int main(int argc, char **argv)
     devices = allDevices;
   }
 
-  /*
-   * Initialise OpenMP
-   */
+  for (size_t i = 0; i < devices.size(); ++i)
+    LOG_INFO_STR("Bound to GPU #" << i << ": " << devices[i].pciId() << " " << devices[i].getName() << ". Compute capability: " <<
+                 devices[i].getComputeCapabilityMajor() << "." <<
+                 devices[i].getComputeCapabilityMinor() <<
+                 " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
 
-  LOG_INFO_STR("----- Initialising OpenMP");
+  // Bindings are done -- Lock everything in memory
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
+    THROW_SYSCALL("mlockall");
+
+  LOG_DEBUG("All memory is now pinned.");
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
@@ -292,11 +305,11 @@ int main(int argc, char **argv)
   SmartPtr<StorageProcesses> storageProcesses;
 
   if (rank == 0) {
-    LOG_INFO_STR("----- Starting OutputProc");
+    LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
 
-  LOG_INFO_STR("----- Initialising Pipeline");
+  LOG_INFO("----- Initialising Pipeline");
 
   // Distribute the subbands over the MPI ranks
   SubbandDistribution subbandDistribution; // rank -> [subbands]
@@ -311,7 +324,7 @@ int main(int argc, char **argv)
   bool beamFormerEnabled = ps.settings.beamFormer.enabled;
 
   if (correlatorEnabled && beamFormerEnabled) {
-    LOG_ERROR_STR("Commensal observations (correlator+beamformer) not supported yet.");
+    LOG_ERROR("Commensal observations (correlator+beamformer) not supported yet.");
     exit(1);
   }
 
@@ -340,7 +353,7 @@ int main(int argc, char **argv)
   // Initialise and query MPI
   int provided_mpi_thread_support;
 
-  LOG_INFO_STR("----- Initialising MPI");
+  LOG_INFO("----- Initialising MPI");
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
     cerr << "MPI_Init_thread failed" << endl;
     exit(1);
@@ -364,7 +377,7 @@ int main(int argc, char **argv)
    * RUN stage
    */
 
-  LOG_INFO_STR("===== LAUNCH =====");
+  LOG_INFO("===== LAUNCH =====");
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
 
@@ -391,7 +404,7 @@ int main(int argc, char **argv)
   /*
    * COMPLETING stage
    */
-  LOG_INFO_STR("===== FINALISE =====");
+  LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
     time_t completing_start = time(0);
@@ -420,7 +433,7 @@ int main(int argc, char **argv)
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
     if (LOFARROOT != NULL) {
-      string feedbackFilename = str(format("%s/var/run/Observation_%s.feedback") % LOFARROOT % ps.observationID());
+      string feedbackFilename = str(format("%s/var/run/Observation%s_feedback") % LOFARROOT % ps.observationID());
 
       try {
         feedbackLTA.writeFile(feedbackFilename, false);
@@ -428,10 +441,10 @@ int main(int argc, char **argv)
         LOG_ERROR_STR("Could not write feedback file " << feedbackFilename << ": " << ex);
       }
     } else {
-      LOG_WARN_STR("Could not write feedback file: $LOFARROOT not set.");
+      LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
     }
   }
-  LOG_INFO_STR("===== SUCCESS =====");
+  LOG_INFO("===== SUCCESS =====");
 
 #ifdef HAVE_MPI
   MPI_Finalize();

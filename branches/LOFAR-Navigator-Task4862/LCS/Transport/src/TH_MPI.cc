@@ -84,7 +84,7 @@ bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag, int, DataHolder*)
   LOG_TRACE_RTTI_STR("TH_MPI recvBlocking(" << buf << "," 
 		     << nbytes << ", MPI_BYTE, " << itsSourceNode 
 		     << ", " << tag << ",... )");
-  int result = MPI_SUCCESS;
+  int result;
   
   MPI_Status status;
   
@@ -132,12 +132,15 @@ bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int tag, DataHolder*)
 void TH_MPI::readTotalMsgLengthBlocking(int tag, int& nrBytes)
 {
   LOG_TRACE_RTTI( "TH_MPI::readTotalMsgLengthBlocking" );
-  int result = MPI_SUCCESS;
+  int result;
 
   MPI_Status status;
 
   LOG_TRACE_STAT("MPI::probe ....");
   result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
+  if (MPI_SUCCESS != result) {
+    LOG_ERROR_STR( "TH_MPI::probe result = " << result );
+  }
   MPI_Get_count(&status, MPI_BYTE, &nrBytes);
 }
 
@@ -148,13 +151,15 @@ bool TH_MPI::readTotalMsgLengthNonBlocking(int tag, int& nrBytes)
   return true;
 
 //   LOG_TRACE_RTTI( "TH_MPI::readTotalMsgLengthBlocking" );
-//   int result = MPI_SUCCESS;
+//   int result;
 
 //   MPI_Status status;
 
 //   LOG_TRACE_STAT("MPI::probe ....");
 //   result = MPI_IProbe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
-//   if (result == MPI_SUCCESS)
+//   if (MPI_SUCCESS != result) {
+//     LOG_ERROR_STR( "TH_MPI::iprobe result = " << result );
+//   }
 //   nrBytes = status.count;
 //   //iprobe
 }

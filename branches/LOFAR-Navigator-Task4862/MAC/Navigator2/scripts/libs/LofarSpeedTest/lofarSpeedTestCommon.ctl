@@ -1,5 +1,5 @@
 const string STATION1 = "CS001:";
-const string STATION2 = "CS010:";
+const string STATION2 = "CS011:";
 const string STATION3 = "CS008:";
 const string STATION4 = "CS016:";
 
