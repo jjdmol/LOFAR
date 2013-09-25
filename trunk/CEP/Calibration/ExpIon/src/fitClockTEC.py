@@ -76,8 +76,8 @@ def getClockTECAll(ph,amp,freqs,stationname,stIdx,polIdx):
 
     maxTimesteps=500
     #first unwrap data and get initial guess
-    nT=ph.shape[0]
-    nF=freqs.shape[0]
+    nT=ph[:].shape[0]
+    nF=freqs[:].shape[0]
 
     stepDelay=.03
     if 'CS' in stationname:
@@ -493,12 +493,12 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
     if allBaselines and not doClockTEC:
         doClockTEC=True
 
-    polshape=ionmodel.phases.shape[-1]
-    nT=ionmodel.times.shape[0]
+    polshape=ionmodel.phases[:].shape[-1]
+    nT=ionmodel.times[:].shape[0]
     if timerange=='all':
         timerange=[0,nT]
     nT=timerange[1]-timerange[0]
-    nF=ionmodel.freqs.shape[0]
+    nF=ionmodel.freqs[:].shape[0]
     freqs=ionmodel.freqs[:]
     if SBselect=='all':
         SBselect=np.ones(nF,dtype=bool)
@@ -521,9 +521,9 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         stations=list(ionmodel.stations[:][stationSelect])
     print "stations",stations
     if doClockTEC:
-        clockarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
-        tecarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
-        offsetarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
+        clockarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
+        tecarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
+        offsetarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
         residualarray=np.zeros((len(ionmodel.times),len(ionmodel.freqs),len(ionmodel.stations),2))
         ph=ionmodel.phases
         amp=ionmodel.amplitudes
@@ -545,7 +545,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 ampdata=amp[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
             if hasattr(ionmodel,'TEC') and initFromPrevious:
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                if len(ionmodel.TEC.shape)>3:
+                if len(ionmodel.TEC[:].shape)>3:
                     initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,0,pol]
                 else:
                     initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,pol]
@@ -687,10 +687,10 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
 def SwapClockTECAxes(ionmodel):
     print "swap axes will reshape your Clock and TEC solutions. The order of Clock is now times  x stations x polarizations and of TEC: times x stations x sources x polarizations"
     TEC =ionmodel.TEC;
-    TECshape=TEC.shape
+    TECshape=TEC[:].shape
     Clock =ionmodel.Clock;
-    Clockshape=Clock.shape
-    nT=ionmodel.times.shape[0]
+    Clockshape=Clock[:].shape
+    nT=ionmodel.times[:].shape[0]
     nst=ionmodel.stations[:].shape[0]
     nsources=ionmodel.N_sources
     newshape=(nT,nsources,nst,2)
