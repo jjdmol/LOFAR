@@ -92,7 +92,7 @@ namespace LOFAR
 
     void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
                                          PerformanceCounter &counter,
-                                         float subbandFrequency, size_t SAP)
+                                         double subbandFrequency, size_t SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);

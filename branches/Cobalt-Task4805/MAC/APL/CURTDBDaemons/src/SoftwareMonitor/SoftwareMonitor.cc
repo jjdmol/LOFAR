@@ -546,18 +546,22 @@ void SoftwareMonitor::_updateProcess(vector<Process>::iterator	iter, int	pid, in
 	// are running in low-power mode. During this time you don't want the processes that
 	// are not yet running being reported are broken. With the conf file of the SoftwareMonitor
 	// you can set the number of cycles a process is not reported as suspicious or broken.
-	string	how = (pid ? "not" : "still");
+	string	how = (pid ? "still" : "not");
 	if (iter->errorCnt >= itsBrokenThreshold) {				// serious problem
-		setObjectState(formatString("%s: %s is %s running", getName().c_str(), iter->name.c_str(), how.c_str()),
+		if (iter->errorCnt == itsBrokenThreshold) {			// report it only once
+			setObjectState(formatString("%s: %s is %s running", getName().c_str(), iter->name.c_str(), how.c_str()),
 						iter->DPname, RTDB_OBJ_STATE_BROKEN);
-		if (iter->errorCnt % itsRestartInterval == 0) {
+		}
+		if (!pid && iter->errorCnt % itsRestartInterval == 0) {
 			_restartProgram(iter->name);
 		}
 	}
 	else if (iter->errorCnt >= itsSuspThreshold) {			// allow start/stop times
 			setObjectState(formatString("%s: %s is %s running", getName().c_str(), iter->name.c_str(), how.c_str()),
 							iter->DPname, RTDB_OBJ_STATE_SUSPICIOUS);
-			_restartProgram(iter->name);
+			if (!pid) {
+				_restartProgram(iter->name);
+			}
 	}
 	else {
 		setObjectState(getName(), iter->DPname, RTDB_OBJ_STATE_OFF, true);	// force

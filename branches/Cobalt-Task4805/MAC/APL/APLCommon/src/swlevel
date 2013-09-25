@@ -51,6 +51,7 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
 	echo "-s: Show current level, exit (-S: only print number)"
+	echo "-p: Print last set level from logfile (-P: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
@@ -464,6 +465,27 @@ show_level()
         exit $level
 }
 
+print_level()
+{
+        if [ -e /tmp/level.admin ]; then
+          level=`cat /tmp/level.admin`
+	  if [ "$1" != "P" ]; then
+	     echo -n "Last set level is "
+	  fi
+	  echo $level
+          if [ "$1" = "P" -o "$1" = "p" ]; then
+            exit
+          fi
+        else
+          level=-1
+          if [ "$1" != "S" ]; then
+             echo "Last set level unknown"
+          fi
+        fi
+        # argument -s/-S only returns level, no list
+        exit $level
+}
+
 show_lofar_version()
 {
         if [ -e /opt/lofar/Version.txt ]; then
@@ -494,11 +516,14 @@ handle_args()
         echo "Warning: all arguments except level $1 will be ignored"
       fi
   fi
-  while getopts  "hSsVvi:l:q:r:" flag
+  while getopts  "hSsPpVvi:l:q:r:" flag
   do
     case "$flag" in
     [sS])
     show_level $flag
+    ;;
+    [pP])
+    print_level $flag
     ;;
     [vV])
     show_lofar_version $flag

@@ -88,7 +88,7 @@ namespace LOFAR
 
 
       void enqueue(const BlockID &blockId, PerformanceCounter &counter,
-                   float subbandFrequency, size_t SAP);
+                   double subbandFrequency, size_t SAP);
 
     private:
       // Dump output buffers of a given kernel to disk. Use \a blockId to

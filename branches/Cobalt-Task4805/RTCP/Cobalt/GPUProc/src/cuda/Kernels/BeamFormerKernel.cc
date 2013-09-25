@@ -45,7 +45,7 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f),  // TODO: Add a key to the parset to specify this
+      weightCorrection(1.0f), // TODO: pass FFT size
       subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
@@ -98,7 +98,7 @@ namespace LOFAR
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
                                    PerformanceCounter &counter,
-                                   float subbandFrequency, unsigned SAP)
+                                   double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
@@ -130,7 +130,7 @@ namespace LOFAR
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
           itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-          sizeof(float);
+          sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -150,7 +150,7 @@ namespace LOFAR
       defs["WEIGHT_CORRECTION"] =
         str(boost::format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
+        str(boost::format("%.7f") % itsParameters.subbandBandwidth);
 
       return defs;
     }
