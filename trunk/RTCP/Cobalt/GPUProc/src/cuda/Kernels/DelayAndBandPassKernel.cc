@@ -86,7 +86,7 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(PerformanceCounter &counter, float subbandFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(PerformanceCounter &counter, double subbandFrequency, size_t SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
