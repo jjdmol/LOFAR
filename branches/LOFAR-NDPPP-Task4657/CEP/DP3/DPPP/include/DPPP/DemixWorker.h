@@ -96,6 +96,12 @@ namespace LOFAR {
       // Get nr of times a source was demixed.
       const casa::Vector<uint>& nsourcesDemixed() const
         { return itsNrSourcesDemixed; }
+      // Get nr of times a station was demixed.
+      const casa::Vector<uint>& nstationsDemixed() const
+        { return itsNrStationsDemixed; }
+      // Get nr of times a station/source was demixed.
+      const casa::Matrix<uint>& statSourceDemixed() const
+        { return itsStatSourceDemixed; }
 
       // Get the timings of the various processing steps.
       // <group>
@@ -190,6 +196,8 @@ namespace LOFAR {
       //# Result of averaging the target at the subtract resolution.
       MultiResultStep*                      itsAvgResultFull;
       MultiResultStep*                      itsAvgResultSubtr;
+      //# The sources to demix (including target).
+      vector<Patch::ConstPtr>               itsDemixList;
 
       //# Variables set by setupDemix and used by handleDemix.
       uint                                  itsNDir;
@@ -232,6 +240,7 @@ namespace LOFAR {
       double                                itsTargetMaxAmpl;
       //# Per A-source the stations to use (matching the minimum amplitude).
       vector<vector<uint> >                 itsStationsToUse;
+      casa::Block<bool>                     itsSolveStation; //# solve station i?
       //# Per station and source the index in the unknowns vector.
       //# Note there are 8 unknowns (4 pol, ampl/phase) per source/station.
       vector<vector<int> >                  itsUnknownsIndex;
@@ -251,7 +260,12 @@ namespace LOFAR {
       uint                                  itsNrIncludeCloseTarget;
       uint                                  itsNrIgnoreTarget;
       uint                                  itsNrDeprojectTarget;
+      //# Nr of times a source is demixed.
       casa::Vector<uint>                    itsNrSourcesDemixed;
+      //# Nr of times a station is demixed.
+      casa::Vector<uint>                    itsNrStationsDemixed;
+      //# Nr of times a source/station is demixed.
+      casa::Matrix<uint>                    itsStatSourceDemixed;
       //# Timers.
       NSTimer                               itsTimer;
       NSTimer                               itsTimerPredict;

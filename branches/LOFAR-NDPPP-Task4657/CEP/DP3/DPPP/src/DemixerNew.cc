@@ -110,6 +110,8 @@ namespace LOFAR {
       uint nignore        = 0;
       uint ndeproject     = 0;
       Vector<uint> nsources(itsDemixInfo.ateamList().size(), 0);
+      Vector<uint> nstation(itsDemixInfo.nstation(), 0);
+      Matrix<uint> statsrcs(nsources.size(), nstation.size(), 0);
       for (size_t i=0; i<itsWorkers.size(); ++i) {
         nsolves        += itsWorkers[i].nSolves();
         nconverged     += itsWorkers[i].nConverged();
@@ -119,22 +121,38 @@ namespace LOFAR {
         nignore        += itsWorkers[i].nIgnoreTarget();
         ndeproject     += itsWorkers[i].nDeprojectTarget();
         nsources       += itsWorkers[i].nsourcesDemixed();
-      }
-      os << "Nr of time chunks with:" << endl;
-      os << setw(8) << nnodemix   << "  no demixing" << endl;
-      os << setw(8) << nignore    << "  target ignored" << endl; 
-      os << setw(8) << ndeproject << "  target deprojected" << endl; 
-      os << setw(8) << nincludeStrong
-         << "  target included because strong" << endl; 
-      os << setw(8) << nincludeClose
-         << "  target included because close" << endl; 
-      os << "Nr of time chunks a source is demixed:" << endl;
-      for (size_t i=0; i<nsources.size(); ++i) {
-        os << setw(8) << nsources[i] << "  "
-           << itsDemixInfo.ateamList()[i]->name() << endl;
+        nstation       += itsWorkers[i].nstationsDemixed();
+        statsrcs       += itsWorkers[i].statSourceDemixed();
       }
       os << "Converged solves: " << nconverged << " cells out of "
          << nsolves << endl;
+      os << "Nr of time chunks with:" << endl;
+      os << setw(8) << nnodemix   << " times no demixing" << endl;
+      os << setw(8) << nignore    << " times target ignored" << endl; 
+      os << setw(8) << ndeproject << " times target deprojected" << endl; 
+      os << setw(8) << nincludeStrong
+         << " times target included because strong" << endl; 
+      os << setw(8) << nincludeClose
+         << " times target included because close" << endl; 
+      os << "Nr of time chunks a station/source is demixed:" << endl;
+      os << setw(12) << " ";
+      for (size_t i=0; i<nsources.size(); ++i) {
+        os << setw(8) << itsDemixInfo.ateamList()[i]->name();
+      }
+      os << "   Total" << endl;
+      for (size_t j=0; j<nstation.size(); ++j) {
+        uint inx = itsFilter.getInfo().antennaUsed()[j];
+        os << setw(12) << itsFilter.getInfo().antennaNames()[inx];
+        for (size_t i=0; i<nsources.size(); ++i) {
+          os << setw(8) << statsrcs(i,j);
+        }
+        os << setw(8) << nstation[j] << endl;
+      }
+      os << setw(12) << "Total";
+      for (size_t i=0; i<nsources.size(); ++i) {
+        os << setw(8) << nsources[i] << "  ";
+      }
+      os << endl;
     }
 
     void DemixerNew::showTimings (std::ostream& os, double duration) const
@@ -270,6 +288,8 @@ namespace LOFAR {
 
     void DemixerNew::writeSolutions (double startTime, int ntime)
     {
+      /// Note: make sure that all times have the same parms
+      /// Different workers might decide differently on solving a source!!!
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
       const Vector<double>& freqWidth = getInfo().chanWidths();
@@ -306,7 +326,7 @@ namespace LOFAR {
         int seqnr = 0;
         for (size_t st=0; st<itsDemixInfo.nstation(); ++st) {
           string suffix(itsDemixInfo.antennaNames()[st]);
-          suffix += ":" + itsDemixInfo.sourceNames()[dr];
+          suffix += ":" + itsDemixInfo.ateamList()[dr]->name();
           for (int i=0; i<2; ++i) {
             for (int j=0; j<2; j++) {
               for (int k=0; k<2; ++k) {

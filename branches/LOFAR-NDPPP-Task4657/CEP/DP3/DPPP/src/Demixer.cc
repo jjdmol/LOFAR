@@ -895,12 +895,14 @@ namespace LOFAR {
           const_cursor<double> cr_uvw =
             casa_const_cursor(itsAvgResults[dr]->get()[ts].getUVW());
           splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
+          cout<<"uvw"<<dr<<'='<<storage.uvw<<endl;
 
           cursor<dcomplex> cr_model(&(storage.model[dr * nSamples]), 3,
             stride_model);
           simulate(itsPatchList[dr]->position(), itsPatchList[dr], nSt,
             nBl, nCh, cr_baseline, cr_freq, cr_uvw_split, cr_model);
         }
+        cout<<"modelvis="<<storage.model<<endl;
 
         // Estimate Jones matrices.
         //

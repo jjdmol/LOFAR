@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <DPPP/EstimateNew.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h> ///
 
 #include <scimath/Fitting/LSQFit.h>
 
@@ -71,10 +72,10 @@ namespace LOFAR {
       }
     }
 
+    /*
     void EstimateNew::fillUnknowns (const vector<vector<int> >& unknownsIndex)
     {
       // Fill the unknowns for the direction-stations to solve.
-      // Copy previous solution if needed.
       double* unknowns = &(itsUnknowns[0]);
       const double* solution = &(itsLastSolution[0]);
       for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
@@ -95,6 +96,7 @@ namespace LOFAR {
         }
       }
     }
+    */
 
     void EstimateNew::fillSolution (const vector<vector<int> >& unknownsIndex)
     {
@@ -104,7 +106,7 @@ namespace LOFAR {
       double* solution = &(itsSolution[0]);
       double* lastSolution = &(itsLastSolution[0]);
       for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
-        for (size_t st=0; st<unknownsIndex.size(); ++st) {
+        for (size_t st=0; st<unknownsIndex[dr].size(); ++st) {
           if (unknownsIndex[dr][st] >= 0) {
             for (size_t k=0; k<8; ++k) {
               *solution++ = *unknowns;
@@ -180,6 +182,7 @@ namespace LOFAR {
           }
         }
       }
+      cout<<"unkindex="<<unknownsIndex<<endl;
       // Initialize LSQ solver.
       casa::LSQFit solver(nUnknowns);
       const size_t nDirection = unknownsIndex.size();
@@ -187,6 +190,7 @@ namespace LOFAR {
       // Iterate until convergence.
       size_t nIterations = 0;
       while (!solver.isReady()  &&  nIterations < itsMaxIter) {
+        cout<<endl<<"iteration " << nIterations << endl;
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
@@ -194,18 +198,19 @@ namespace LOFAR {
           if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
+            cout<<"derinx="<<itsDerivIndex<<endl;
             // Generate equations for each channel.
             for (size_t ch=0; ch<itsNrChannels; ++ch) {
               for (size_t dr=0; dr<nDirection; ++dr) {
                 // Jones matrix for station P.
-                const double *Jp = &(itsSolution[(dr * itsNrStations + p) * 8]);
+                const double *Jp = &(itsLastSolution[(dr * itsNrStations + p) * 8]);
                 const dcomplex Jp_00(Jp[0], Jp[1]);
                 const dcomplex Jp_01(Jp[2], Jp[3]);
                 const dcomplex Jp_10(Jp[4], Jp[5]);
                 const dcomplex Jp_11(Jp[6], Jp[7]);
 
                 // Jones matrix for station Q, conjugated.
-                const double *Jq = &(itsSolution[(dr * itsNrStations + q) * 8]);
+                const double *Jq = &(itsLastSolution[(dr * itsNrStations + q) * 8]);
                 const dcomplex Jq_00(Jq[0], -Jq[1]);
                 const dcomplex Jq_01(Jq[2], -Jq[3]);
 
@@ -265,6 +270,8 @@ namespace LOFAR {
                 itsdM[dr * 16 + 14] = itsdM[dr * 16 + 10];
                 itsdM[dr * 16 + 15] = itsdM[dr * 16 + 11];
               }
+                    cout<<"M="<<itsM<<endl;
+                    cout<<"dM="<<itsdM<<endl;
 
               // Now compute the equations (per pol) for D*M=A where
               //  D is the NxN demixing weight matrix
@@ -282,6 +289,7 @@ namespace LOFAR {
                   for (size_t tg=0; tg<nDirection; ++tg) {
                     dcomplex visibility(0.0, 0.0);
                     // Each direction is dependent on all directions.
+                    size_t off = 0;
                     for (size_t dr=0; dr<nDirection; ++dr) {
                       bool do1 = unknownsIndex[dr][p] >= 0;
                       bool do2 = unknownsIndex[dr][q] >= 0;
@@ -294,7 +302,6 @@ namespace LOFAR {
                         visibility += mix_weight * itsM[dr * 4 + cr];
 
                         // Compute weighted partial derivatives.
-                        size_t off = 0;
                         if (do1) {
                           dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
                           itsdR[off]     = real(der);
@@ -325,6 +332,7 @@ namespace LOFAR {
                           itsdI[off]     = imag(der);
                           itsdR[off + 1] = imag(der);
                           itsdI[off + 1] = -real(der);
+                          off += 2;
                         }
                       }
                       // Move to next source direction.
@@ -344,6 +352,11 @@ namespace LOFAR {
                                     &(itsDerivIndex[cr * nPartial]), &(itsdI[0]),
                                     static_cast<double>(weight[cr]),
                                     imag(residual));
+                    cout<<"makeres "<<real(residual)<<' '<<weight[cr]<<' '<<nPartial;
+                    for (uint i=0; i<nPartial; ++i) {
+                      cout << ' '<<itsDerivIndex[cr*nPartial+i]<<' '<<itsdR[i];
+                    }
+                    cout<<endl;
 
                     // Move to next target direction.
                     mix.backward(1, nDirection);
@@ -405,6 +418,10 @@ namespace LOFAR {
         casa::uInt rank;
         bool status = solver.solveLoop(rank, &(itsUnknowns[0]), true);
         ASSERT(status);
+        // Copy the unknowns to the full solution.
+        fillSolution (unknownsIndex);
+        cout<<"unknowns="<<nUnknowns<<' '<<itsUnknowns<<endl;
+        cout<<"solution="<<itsLastSolution<<endl;
 
         // Update iteration count.
         ++nIterations;

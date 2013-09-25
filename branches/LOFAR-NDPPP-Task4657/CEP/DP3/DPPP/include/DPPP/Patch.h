@@ -46,6 +46,7 @@ class Patch
 public:
     typedef shared_ptr<Patch>       Ptr;
     typedef shared_ptr<const Patch> ConstPtr;
+    typedef vector<ModelComponent::ConstPtr>::const_iterator const_iterator;
 
     template <typename T>
     Patch(const string &name, T first, T last);
@@ -57,11 +58,14 @@ public:
     size_t nComponents() const;
     ModelComponent::ConstPtr component(size_t i) const;
 
-    typedef vector<ModelComponent::ConstPtr>::const_iterator const_iterator;
     const_iterator begin() const;
     const_iterator end() const;
 
+    // Compute the position as the average of the positions of the components.
+    void computePosition();
+
 private:
+
     string                              itsName;
     Position                            itsPosition;
     vector<ModelComponent::ConstPtr>    itsComponents;
@@ -78,7 +82,9 @@ template <typename T>
 Patch::Patch(const string &name, T first, T last)
     :   itsName(name),
         itsComponents(first, last)
-{}
+{
+    computePosition();
+}
 
 inline const string &Patch::name() const
 {
@@ -114,6 +120,7 @@ inline Patch::const_iterator Patch::end() const
 {
     return itsComponents.end();
 }
+
 
 } //# namespace DPPP
 } //# namespace LOFAR

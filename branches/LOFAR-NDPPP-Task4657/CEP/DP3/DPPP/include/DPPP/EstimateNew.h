@@ -95,9 +95,6 @@ namespace LOFAR {
       // The diagonal is set to (diag,0), off-diagonal to (0,0).
       void initSolution (double* solution, size_t nr, double diag);
 
-      // Fill itsUnknowns from itsLastSolution for the unknowns to be used.
-      void fillUnknowns (const vector<vector<int> >& unknownsIndex);
-
       // Update itsSolution and itsLastSolution from itsUnknowns for the
       // unknowns to be used.
       void fillSolution (const vector<vector<int> >& unknownsIndex);

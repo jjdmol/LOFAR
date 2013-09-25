@@ -126,9 +126,11 @@ vector<Patch::ConstPtr> makePatches(SourceDB &sourceDB,
   for (uint i=0; i<componentsList.size(); ++i) {
     ASSERTSTR (!componentsList[i].empty(), "No sources found for patch "
                << patchNames[i]);
-    patchList.push_back (Patch::Ptr (new Patch(patchNames[i],
-                                               componentsList[i].begin(),
-                                               componentsList[i].end())));
+    Patch::Ptr ppatch(new Patch(patchNames[i],
+                                componentsList[i].begin(),
+                                componentsList[i].end()));
+    ppatch->computePosition();
+    patchList.push_back (ppatch);
   }
   return patchList;
 }

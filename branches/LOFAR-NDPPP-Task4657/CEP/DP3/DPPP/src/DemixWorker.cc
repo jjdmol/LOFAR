@@ -31,7 +31,6 @@
 #include <DPPP/EstimateMixed.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Simulate.h>
-#include <DPPP/SourceDBUtil.h>
 #include <DPPP/SubtractMixed.h>
 
 #include <ParmDB/Axis.h>
@@ -94,6 +93,7 @@ namespace LOFAR {
       itsOrigPhaseShifts.reserve (ndir);
       itsOrigFirstSteps.reserve  (ndir+1);   // also needed for target direction
       itsAvgResults.reserve  (ndir+1);
+      itsDemixList.resize (ndir+1);
 
       // Create the solve and subtract steps for the sources to be removed.
       // Solving consists of the following steps:
@@ -179,8 +179,13 @@ namespace LOFAR {
       for (uint i=0; i<ndir+1; ++i) {
         itsUnknownsIndex[i].resize (itsMix->nstation());
       }
+      itsSolveStation.resize (itsMix->nstation());
       itsNrSourcesDemixed.resize (ndir);
       itsNrSourcesDemixed = 0;
+      itsNrStationsDemixed.resize (itsMix->nstation());
+      itsNrStationsDemixed = 0;
+      itsStatSourceDemixed.resize (ndir, itsMix->nstation());
+      itsStatSourceDemixed = 0;
       itsPredictVis.resize (itsMix->ncorr(), itsMix->nchanOut(),
                             itsMix->nbl());
       itsModelVis.resize (itsMix->ncorr() * itsMix->nchanOutSubtr() *
@@ -409,6 +414,8 @@ namespace LOFAR {
         for (uint j=0; j<antCount.size(); ++j) {
           if (antCount[j] >= itsMix->minNStation()) {
             itsStationsToUse[i].push_back (j);
+            itsStatSourceDemixed(i,j)++;
+            itsSolveStation[j] = true;
           } else {
             cout << "ignore station " << j << " for src " << i << endl;
           }
@@ -417,6 +424,12 @@ namespace LOFAR {
         if (! itsStationsToUse[i].empty()) {
           itsIndices.push_back (i);
           itsNrSourcesDemixed[i]++;
+        }
+      }
+      // Add to statistics if a station is solved for.
+      for (size_t i=0; i<itsSolveStation.size(); ++i) {
+        if (itsSolveStation[i]) {
+          itsNrStationsDemixed[i]++;
         }
       }
     }
@@ -451,7 +464,8 @@ namespace LOFAR {
       // Determine their minimum and maximum amplitude.
       for (uint i=0; i<nsrc; ++i) {
         itsPhaseShifts[i] = itsOrigPhaseShifts[itsIndices[i]];
-        itsFirstSteps[i] = itsOrigFirstSteps[itsIndices[i]];
+        itsFirstSteps[i]  = itsOrigFirstSteps[itsIndices[i]];
+        itsDemixList[i]   = itsMix->ateamList()[itsIndices[i]];
         float sumAmpl = sum(itsTargetAmpl[itsIndices[i]]);
         if (sumAmpl < minSumAmpl) {
           minSumAmpl = sumAmpl;
@@ -469,13 +483,11 @@ namespace LOFAR {
           targetSumAmpl > itsMix->targetAmplThreshold()) {
         itsIncludeTarget = true;
         itsNrIncludeStrongTarget++;
-        itsNModel++;
       } else if (! itsMix->isAteamNearby()) {
         itsNrDeprojectTarget++;
       } else if (targetSumAmpl / minSumAmpl > itsMix->ratio2()) {
         itsIncludeTarget = true;
         itsNrIncludeCloseTarget++;
-        itsNModel++;
       } else {
         itsIgnoreTarget = true;
         itsNrIgnoreTarget++;
@@ -502,6 +514,7 @@ namespace LOFAR {
       std::fill (itsUnknownsIndex[ndir].begin(),
                  itsUnknownsIndex[ndir].end(), -1);
       if (itsIncludeTarget) {
+        itsDemixList[itsNModel++] = itsMix->targetDemix();
         for (uint j=0; j<itsUnknownsIndex[ndir].size(); ++j) {
           itsUnknownsIndex[ndir][j] = nUnknown;
           nUnknown += 8;
@@ -795,10 +808,11 @@ namespace LOFAR {
       for (size_t ts=0; ts<nTime; ++ts) {
         // Compute the model visibilities for each A-team source.
         size_t stride_model[3] = {1, nCr, nCr*nCh};
-        for (size_t dr=0; dr<nDr; ++dr) {
+        for (size_t dr=0; dr<itsNModel; ++dr) {
           // Split the baseline UVW coordinates per station.
           nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                      itsAvgResults[dr]->get()[ts].getUVW(), itsUVW);
+          cout <<"uvw"<<dr<<'='<<itsUVW;
           // Create cursors to step through UVW and model buffer.
           const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
           cursor<dcomplex> cr_model(&(itsModelVis[dr * nSamples]), 3,
@@ -806,25 +820,11 @@ namespace LOFAR {
           // Initialize this part of the buffer.
           std::fill (itsModelVis.begin() + dr*nSamples,
                      itsModelVis.begin() + (dr+1)*nSamples, dcomplex());
-          simulate(itsMix->ateamList()[dr]->position(),
-                   itsMix->ateamList()[dr],
+          simulate(itsDemixList[dr]->position(),
+                   itsDemixList[dr],
                    nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
         }
-        if (itsIncludeTarget) {
-          // Do the same for the target sources which are added up.
-          nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
-                     itsAvgResults[nDr]->get()[ts].getUVW(), itsUVW);
-          std::fill (itsModelVis.begin() + nDr*nSamples,
-                     itsModelVis.begin() + (nDr+1)*nSamples, dcomplex());
-          for (size_t dr=0; dr<itsMix->targetList().size(); ++dr) {
-            const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
-            cursor<dcomplex> cr_model(&(itsModelVis[nDr * nSamples]), 3,
-                                      stride_model);
-            simulate(itsMix->ateamList()[dr]->position(),
-                     itsMix->ateamList()[dr],
-                     nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
-          }
-        }
+        cout<<"modelvis="<<itsModelVis<<endl;
         // A Jones matrix will be estimated for each pair of stations and
         // direction.
         // A single (overdetermined) non-linear set of equations for all

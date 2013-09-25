@@ -27,6 +27,7 @@
 #include <DPPP/EstimateMixed.h>
 #include <Common/LofarLogger.h>
 #include <scimath/Fitting/LSQFit.h>
+#include <Common/StreamUtil.h> ///
 
 namespace LOFAR
 {
@@ -96,6 +97,7 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
     size_t nIterations = 0;
     while(!solver.isReady() && nIterations < 50)
     {
+        cout<<endl<<"iteration " << nIterations << endl;
         for(size_t bl = 0; bl < nBaseline; ++bl)
         {
             const size_t p = baselines->first;
@@ -105,6 +107,7 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
             {
                 // Create partial derivative index for current baseline.
                 makeIndex(nDirection, nStation, *baselines, &(dIndex[0]));
+            cout<<"derinx="<<dIndex<<endl;
 
                 for(size_t ch = 0; ch < nChannel; ++ch)
                 {
@@ -176,6 +179,8 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
                         dM[dr * 16 + 14] = dM[dr * 16 + 10];
                         dM[dr * 16 + 15] = dM[dr * 16 + 11];
                     }
+                    cout<<"M="<<M<<endl;
+                    cout<<"dM="<<dM<<endl;
 
                     for(size_t cr = 0; cr < 4; ++cr)
                     {
@@ -240,6 +245,11 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
                                     &(dIndex[cr * nPartial]), &(dI[0]),
                                     static_cast<double>(weight[cr]),
                                     imag(residual));
+                                cout<<"makeres "<<real(residual)<<' '<<weight[cr]<<' '<<nPartial;
+                    for (uint i=0; i<nPartial; ++i) {
+                      cout << ' '<<dIndex[cr*nPartial+i]<<' '<<dR[i];
+                    }
+                    cout<<endl;
 
                                 // Move to next target direction.
                                 mix.backward(1, nDirection);
@@ -305,6 +315,11 @@ bool estimate(size_t nDirection, size_t nStation, size_t nBaseline,
         casa::uInt rank;
         bool status = solver.solveLoop(rank, unknowns, true);
         ASSERT(status);
+        cout<<"solution=[";
+        for (uint i=0; i<nUnknowns; ++i) {
+          cout << unknowns[i]<<',';
+        }
+        cout<<endl;
 
         // Update iteration count.
         ++nIterations;
