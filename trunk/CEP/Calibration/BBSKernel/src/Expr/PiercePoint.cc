@@ -44,66 +44,41 @@ namespace LOFAR
 namespace BBS
 {
 
+const double earth_ellipsoid_a = 6378137.0;
+const double earth_ellipsoid_a2 = earth_ellipsoid_a*earth_ellipsoid_a;
+const double earth_ellipsoid_b = 6356752.3142;
+const double earth_ellipsoid_b2 = earth_ellipsoid_b*earth_ellipsoid_b;
+const double earth_ellipsoid_e2 = (earth_ellipsoid_a2 - earth_ellipsoid_b2) / earth_ellipsoid_a2;
+
+
 PiercePoint::PiercePoint(const casa::MPosition &position,
-    const Expr<Vector<2> >::ConstPtr &direction,
+    const Expr<Vector<3> >::ConstPtr &direction,
     const Expr<Scalar>::ConstPtr &height)
-    :   BasicBinaryExpr<Vector<2>, Scalar, Vector<4> >(direction, height),
+    :   BasicBinaryExpr<Vector<3>, Scalar, Vector<4> >(direction, height),
         itsPosition(casa::MPosition::Convert(position,
             casa::MPosition::ITRF)())
 {
-    // Get geodetic longitude, geodetic lattitude, and height above the
-    // ellipsoid (WGS84).
-    casa::MPosition mPositionWGS84 =
-        casa::MPosition::Convert(itsPosition, casa::MPosition::WGS84)();
-    const casa::MVPosition &mvPositionWGS84 = mPositionWGS84.getValue();
-    itsLon = mvPositionWGS84.getLong();
-    itsLat = mvPositionWGS84.getLat();
-
-    // Compute the distance from the center of gravity of the earth to the
-    // station position.
-    itsPositionRadius = itsPosition.getValue().getLength().getValue();
-
-    // Use height above the ellipsoid to compute the earth radius at the
-    // position of the station.
-    //
-    // TODO: You cannot just subtract the height above the ellipsoid from the
-    // length of the ITRF position vector and expect to get the earth radius at
-    // the station position. Assuming "earth radius" means distance from the
-    // center of mass of the earth to the position on the ellipsoid specified by
-    // itsLat, itsLon, then still this is incorrect because the position vector
-    // is generally not parallel to the ellipsoidal normal vector at the
-    // position on the ellipsoid at itsLat, itsLon (along which the height above
-    // the ellipsoid is measured).
-    //
-    // TODO: This earth radius is specific to the station position, yet it is
-    // also used when computing the length of the pierce point vector (which
-    // intersects the earth's surface at a different position, where the earth
-    // radius may be different!).
-    itsEarthRadius = itsPositionRadius - mvPositionWGS84.getLength().getValue();
-
-//    LOG_DEBUG_STR("Antenna: Longitude: " << (itsLon * 180.0) / casa::C::pi
-//        << " deg, Lattitude: " << (itsLat * 180.0) / casa::C::pi
-//        << " deg, Height: " << itsHeight << " m, Radius: " << radius
-//        << " m, Earth radius: " << itsEarthRadius << " m");
-//    LOG_DEBUG_STR("Antenna: Longitude: " << itsLon
-//        << " rad, Lattitude: " << itsLat
-//        << " rad, Height: " << itsHeight << " m, Radius: " << radius
-//        << " m, Earth radius: " << itsEarthRadius << " m");
 }
 
 const Vector<4>::View PiercePoint::evaluateImpl(const Grid &grid,
-    const Vector<2>::View &azel, const Scalar::View &height) const
+    const Vector<3>::View &direction, const Scalar::View &height) const
 {
     const size_t nTime = grid[TIME]->size();
+    const size_t nFreq = grid[FREQ]->size();
 
     // Allocate space for the result.
     // TODO: This is a hack! The Matrix class does not support 1xN or Nx1
     // "matrices".
-    Matrix out_x, out_y, out_z, out_alpha;
-    double *x = out_x.setDoubleFormat(1, nTime);
-    double *y = out_y.setDoubleFormat(1, nTime);
-    double *z = out_z.setDoubleFormat(1, nTime);
-    double *alpha = out_alpha.setDoubleFormat(1, nTime);
+    Matrix out_x, out_y, out_z, out_airmass;
+    double *out_x_ptr = out_x.setDoubleFormat(nFreq, nTime);
+    double *out_y_ptr = out_y.setDoubleFormat(nFreq, nTime);
+    double *out_z_ptr = out_z.setDoubleFormat(nFreq, nTime);
+    double *out_airmass_ptr = out_airmass.setDoubleFormat(nFreq, nTime);
+    double pp_x, pp_y, pp_z, pp_airmass;
+
+
+    ASSERT(!height().isArray());
+    double h = height().getDouble();
 
     // Get station position in ITRF coordinates.
     const casa::MVPosition &mPosition = itsPosition.getValue();
@@ -111,109 +86,90 @@ const Vector<4>::View PiercePoint::evaluateImpl(const Grid &grid,
     double stationY = mPosition(1);
     double stationZ = mPosition(2);
 
-//    LOG_DEBUG_STR("Geocentric lattitude: " << std::atan2(stationZ, std::sqrt(stationX * stationX + stationY * stationY)));
+    const double ion_ellipsoid_a = earth_ellipsoid_a + h;
+    const double ion_ellipsoid_a2_inv = 1.0 / (ion_ellipsoid_a * ion_ellipsoid_a);
+    const double ion_ellipsoid_b = earth_ellipsoid_b + h;
+    const double ion_ellipsoid_b2_inv = 1.0 / (ion_ellipsoid_b * ion_ellipsoid_b);
 
-    // Precompute rotation matrix to transform from local ENU (East, North, Up)
-    // coordinates to ITRF coordinates (see e.g.
-    // http://en.wikipedia.org/wiki/Geodetic_system).
-    //
-    // TODO: Use measures to compute a direction vector in ITRF directly,
-    // instead of going from (RA, Dec) to (azimuth, elevation), to ENU to ITRF.
-    double sinlon = std::sin(itsLon);
-    double coslon = std::cos(itsLon);
-    double sinlat = std::sin(itsLat);
-    double coslat = std::cos(itsLat);
-    double R[3][3] = {{-sinlon, -sinlat * coslon, coslat * coslon},
-                      { coslon, -sinlat * sinlon, coslat * sinlon},
-                      {    0.0,           coslat,          sinlat}};
-
-//    {
-//        // A first stab at using the measures to compute a direction vector
-//        // in ITRF coordinates directly. Needs more work.
-//        casa::Quantity qEpoch(grid[TIME]->center(0), "s");
-//        casa::MEpoch mEpoch(qEpoch, casa::MEpoch::UTC);
-
-//        // Create and initialize a frame.
-//        casa::MeasFrame frame;
-//        frame.set(itsPosition);
-//        frame.set(mEpoch);
-
-//        // Create conversion engine.
-//        casa::MDirection mDirection(casa::MVDirection(4.33961, 1.09537),
-//            casa::MDirection::Ref(casa::MDirection::J2000));
-
-//        casa::MDirection::Convert converter =
-//            casa::MDirection::Convert(mDirection,
-//                casa::MDirection::Ref(casa::MDirection::ITRF, frame));
-
-//        LOG_DEBUG_STR("Convertor: " << converter);
-
-//        // Compute XYZ direction vector.
-//        casa::MVDirection mvXYZ(converter().getValue());
-//        const casa::Vector<casa::Double> xyz = mvXYZ.getValue();
-//        LOG_DEBUG_STR("XYZ direction (from measures): " << xyz(0) << " "
-//            << xyz(1) << " " << xyz(2));
-//    }
-
-    ASSERT(azel(0).isArray() && azel(0).nx() == 1);
-    ASSERT(azel(1).isArray() && azel(1).nx() == 1);
-    ASSERT(!height().isArray());
-
-    // TODO: itsEarthRadius is valid only for the station position, which is
-    // generally not equal to the position where the pierce point vector
-    // intersects the ellipsoid. The question is how the height of the
-    // ionospheric layer should be defined. A layer with a fixed distance from
-    // the earth center of mass is probably easiest.
-    double ionosphereRadius = itsEarthRadius + height().getDouble();
+    double x = stationX/ion_ellipsoid_a;
+    double y = stationY/ion_ellipsoid_a;
+    double z = stationZ/ion_ellipsoid_b;
+    double c = x*x + y*y + z*z - 1.0;
 
     for(size_t i = 0; i < nTime; ++i)
     {
-        double az = azel(0).getDouble(0, i);
-        double el = azel(1).getDouble(0, i);
+      double directionX = direction(0).getDouble(0, i);
+      double directionY = direction(1).getDouble(0, i);
+      double directionZ = direction(2).getDouble(0, i);
 
-        // Calculate alpha, this is the angle of the line of sight with the
-        // normal of the ionospheric layer at the pierce point location (i.e.
-        // alpha' (alpha prime) in the memo).
-        *alpha =
-            std::asin(std::cos(el) * (itsPositionRadius / ionosphereRadius));
+      double dx = directionX / ion_ellipsoid_a;
+      double dy = directionY / ion_ellipsoid_a;
+      double dz = directionZ / ion_ellipsoid_b;
 
-        // Compute direction vector in local ENU (East, North, Up) coordinates.
-        double cosel = std::cos(el);
-        double dx = std::sin(az) * cosel;
-        double dy = std::cos(az) * cosel;
-        double dz = std::sin(el);
+      double a = dx*dx + dy*dy + dz*dz;
+      double b = x*dx + y*dy  + z*dz;
+      double alpha = (-b + std::sqrt(b*b - a*c))/a;
 
-        // Transform the direction vector from the local ENU frame to the ITRF
-        // frame.
-        double dxr = R[0][0] * dx + R[0][1] * dy + R[0][2] * dz;
-        double dyr = R[1][0] * dx + R[1][1] * dy + R[1][2] * dz;
-        double dzr = R[2][0] * dx + R[2][1] * dy + R[2][2] * dz;
+      pp_x = stationX + alpha*directionX;
+      pp_y = stationY + alpha*directionY;
+      pp_z = stationZ + alpha*directionZ;
+      double normal_x = pp_x * ion_ellipsoid_a2_inv;
+      double normal_y = pp_y * ion_ellipsoid_a2_inv;
+      double normal_z = pp_z * ion_ellipsoid_b2_inv;
+      double norm_normal2 = normal_x*normal_x + normal_y*normal_y + normal_z*normal_z;
+      double norm_normal = std::sqrt(norm_normal2);
+      double sin_lat2 = normal_z*normal_z / norm_normal2;
 
-//        if(i == 0)
-//        {
-//            LOG_DEBUG_STR("XYZ direction (from az, el): " << dxr << " " << dyr
-//                << " " << dzr);
-//        }
+      double g = 1.0 - earth_ellipsoid_e2*sin_lat2;
+      double sqrt_g = std::sqrt(g);
 
-        // Compute the distance from the station to the pierce point, i.e.
-        // equation 6 in the memo. The equation below is equivalent to that in
-        // the memo, but it is expressed in elevation instead of zenith angle.
-        double radius = ionosphereRadius * std::cos(el + *alpha) / cosel;
+      double M = earth_ellipsoid_b2 / ( earth_ellipsoid_a * g * sqrt_g );
+      double N = earth_ellipsoid_a / sqrt_g;
 
-        // Compute the pierce point location in ITRF coordinates.
-        *x = stationX + radius * dxr;
-        *y = stationY + radius * dyr;
-        *z = stationZ + radius * dzr;
+      double local_ion_ellipsoid_e2 = (M-N) / ((M+h)*sin_lat2 - N - h);
+      double local_ion_ellipsoid_a = (N+h) * std::sqrt(1.0 - local_ion_ellipsoid_e2*sin_lat2);
+      double local_ion_ellipsoid_b = local_ion_ellipsoid_a*std::sqrt(1.0 - local_ion_ellipsoid_e2);
 
-        ++x; ++y; ++z; ++alpha;
+      double z_offset = ((1.0-earth_ellipsoid_e2)*N + h - (1.0-local_ion_ellipsoid_e2)*(N+h)) * std::sqrt(sin_lat2);
+
+      double x1 = stationX/local_ion_ellipsoid_a;
+      double y1 = stationY/local_ion_ellipsoid_a;
+      double z1 = (stationZ-z_offset)/local_ion_ellipsoid_b;
+      double c1 = x1*x1 + y1*y1 + z1*z1 - 1.0;
+
+      dx = directionX / local_ion_ellipsoid_a;
+      dy = directionY / local_ion_ellipsoid_a;
+      dz = directionZ / local_ion_ellipsoid_b;
+      a = dx*dx + dy*dy + dz*dz;
+      b = x1*dx + y1*dy  + z1*dz;
+      alpha = (-b + std::sqrt(b*b - a*c1))/a;
+
+      pp_x = stationX + alpha*directionX;
+      pp_y = stationY + alpha*directionY;
+      pp_z = stationZ + alpha*directionZ;
+
+      normal_x = pp_x / (local_ion_ellipsoid_a * local_ion_ellipsoid_a);
+      normal_y = pp_y / (local_ion_ellipsoid_a * local_ion_ellipsoid_a);
+      normal_z = (pp_z-z_offset) / (local_ion_ellipsoid_b * local_ion_ellipsoid_b);
+
+      norm_normal2 = normal_x*normal_x + normal_y*normal_y + normal_z*normal_z;
+      norm_normal = std::sqrt(norm_normal2);
+      
+      pp_airmass = norm_normal / (directionX*normal_x + directionY*normal_y + directionZ*normal_z);
+      
+      for(size_t j = 0; j < nFreq; ++j) {
+        *(out_x_ptr++) = pp_x;
+        *(out_y_ptr++) = pp_y;
+        *(out_z_ptr++) = pp_z;
+        *(out_airmass_ptr++) = pp_airmass;
+      }
     }
-
     // Create result.
     Vector<4>::View result;
     result.assign(0, out_x);
     result.assign(1, out_y);
     result.assign(2, out_z);
-    result.assign(3, out_alpha);
+    result.assign(3, out_airmass);
 
     return result;
 }
