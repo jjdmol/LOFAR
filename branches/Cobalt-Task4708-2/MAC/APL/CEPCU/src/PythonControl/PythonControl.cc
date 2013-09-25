@@ -88,6 +88,9 @@ PythonControl::PythonControl(const string&	cntlrName) :
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
+	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_PYTHON_CONTROL, getName(), 
+																	globalParameterSet()->getString("_DPname")));
+
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
 
