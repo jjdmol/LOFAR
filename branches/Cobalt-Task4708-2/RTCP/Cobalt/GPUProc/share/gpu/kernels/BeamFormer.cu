@@ -385,10 +385,8 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     }
 #endif
 
-    // Loop over all the samples in time
-    // TODO: This is a candidate to be added as an extra parallelization dim.
-    // problem: we already have the x,y and z filled with parallel parameters. Make the polarization implicit?
-    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)  // Perform the addition for 16 timesteps
+    // Loop over all the samples in time. Perform the addition for 16 time steps.
+    for (unsigned time = 0; time < NR_SAMPLES_PER_CHANNEL; time += 16)
     {
       // Optimized memory transfer: Threads load from memory in parallel
       for (unsigned i = threadIdx.x + NR_POLARIZATIONS * threadIdx.y;
