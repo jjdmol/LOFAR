@@ -50,7 +50,7 @@ namespace LOFAR
                           ps.settings.observationID))
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", true);
+        ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", false);
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,

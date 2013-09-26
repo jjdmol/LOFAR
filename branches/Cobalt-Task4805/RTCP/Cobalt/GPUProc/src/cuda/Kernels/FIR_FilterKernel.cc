@@ -52,7 +52,7 @@ namespace LOFAR
                           ps.settings.observationID))
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", true);
+        ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", false);
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,

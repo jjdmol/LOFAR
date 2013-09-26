@@ -57,7 +57,7 @@ namespace LOFAR
       nrSamplesPerChannel =
         ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", true);
+        ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", false);
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,

@@ -60,7 +60,7 @@ namespace LOFAR
                           ps.settings.observationID))
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", true);
+        ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", false);
     }
 
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,

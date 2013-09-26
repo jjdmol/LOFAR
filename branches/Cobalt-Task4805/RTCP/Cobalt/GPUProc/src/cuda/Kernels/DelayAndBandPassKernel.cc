@@ -60,7 +60,7 @@ namespace LOFAR
             (transpose ? "T" : "t")))
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", true);
+        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", false);
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
