@@ -47,6 +47,7 @@ namespace LOFAR
         size_t nrStokes;
         size_t timeIntegrationFactor;
         size_t timeParallelFactor;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -56,9 +57,9 @@ namespace LOFAR
       };
 
       CoherentStokesKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+                           const gpu::Module &module,
+                           const Buffers &buffers,
+                           const Parameters &param);
 
     private:
       // Dump output buffers of a given kernel to disk. Use \a blockId to
@@ -69,10 +70,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // CoherentStokesKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const;
 

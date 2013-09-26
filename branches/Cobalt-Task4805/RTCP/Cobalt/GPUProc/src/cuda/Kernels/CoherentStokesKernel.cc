@@ -20,17 +20,20 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-
 #include "CoherentStokesKernel.h"
 
+#include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -43,8 +46,12 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
-      timeIntegrationFactor(ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
-    {
+      timeIntegrationFactor(
+        ps.settings.beamFormer.coherentSettings.timeIntegrationFactor),
+      dumpFilePattern(
+        str(format("L%d_SB%%03d_BL%%04d_CoherentStokesKernel.dat") % 
+            ps.settings.observationID))
+     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
@@ -59,7 +66,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
@@ -78,10 +86,12 @@ namespace LOFAR
 
     void CoherentStokesKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("CoherentStokesKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 
