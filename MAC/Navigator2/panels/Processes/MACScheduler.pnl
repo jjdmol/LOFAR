@@ -388,7 +388,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  28 618 322 742
+0  28 618 322 722
 0
 
 E
@@ -429,7 +429,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  358 618 652 742
+0  358 618 652 722
 0
 
 E
@@ -459,7 +459,7 @@ LANG:1 20 Active Observations:
 17 34
 "FinishedObservationList"
 ""
-1 690 620.8 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 690 620.8336134453781 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -470,7 +470,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  688 619 982 742
+0  688 619 982 722
 0
 
 E
