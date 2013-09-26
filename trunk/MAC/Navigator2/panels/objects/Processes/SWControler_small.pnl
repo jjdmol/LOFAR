@@ -99,10 +99,14 @@ private void observationChanged(string dp1, dyn_string observations,
       }
       
     }
-    // get real name from claimmanager
-    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
-    baseDP = station+obsDP+\"_\"+$name;
-    reload();
+    if (firstObservation == \"\") {
+      updateSWController(baseDP,0,baseDP,invalid);
+    } else {
+      // get real name from claimmanager
+      obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
+      baseDP = station+obsDP+\"_\"+$name;
+      reload();
+    }
   }
 }
   
