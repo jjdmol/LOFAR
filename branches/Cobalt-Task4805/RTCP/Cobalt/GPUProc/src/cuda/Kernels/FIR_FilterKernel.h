@@ -52,6 +52,7 @@ namespace LOFAR
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -107,10 +108,14 @@ namespace LOFAR
       //
       // Dimensions: [nrSubbands][nrStations]
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // FIR_FilterKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

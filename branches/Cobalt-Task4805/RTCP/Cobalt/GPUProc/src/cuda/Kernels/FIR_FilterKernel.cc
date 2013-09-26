@@ -22,13 +22,17 @@
 
 #include "FIR_FilterKernel.h"
 #include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
 #include <complex>
 #include <fstream>
 
 using namespace std;
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -43,7 +47,9 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
       nrPPFTaps(ps.nrPPFTaps()),
-      nrSubbands(1)
+      nrSubbands(1),
+      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_FIR_FilterKernel.dat") % 
+                          ps.settings.observationID))
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", true);
@@ -56,7 +62,8 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
       itsBuffers(buffers),
       params(params),
-      historyFlags(boost::extents[params.nrSubbands][params.nrStations])
+      historyFlags(boost::extents[params.nrSubbands][params.nrStations]),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -134,10 +141,12 @@ namespace LOFAR
 
     void FIR_FilterKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("FIR_FilterKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 
