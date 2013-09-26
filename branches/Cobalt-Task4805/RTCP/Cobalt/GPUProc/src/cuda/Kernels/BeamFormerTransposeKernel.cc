@@ -22,15 +22,18 @@
 
 #include "BeamFormerTransposeKernel.h"
 
-#include <boost/lexical_cast.hpp>
-
+#include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -41,7 +44,10 @@ namespace LOFAR
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
+      dumpFilePattern(
+        str(format("L%d_SB%%03d_BL%%04d_BeamFormerTransposeKernel.dat") % 
+            ps.settings.observationID))
     {
       nrChannelsPerSubband =
         ps.settings.beamFormer.coherentSettings.nrChannels;
@@ -57,7 +63,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
@@ -76,10 +83,12 @@ namespace LOFAR
 
     void BeamFormerTransposeKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("BeamFormerTransposeKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 

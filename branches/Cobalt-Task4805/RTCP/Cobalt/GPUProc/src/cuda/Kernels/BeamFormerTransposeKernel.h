@@ -43,6 +43,7 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         size_t nrTABs;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -65,10 +66,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // BeamFormerTransposeKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const;
 
