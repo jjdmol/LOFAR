@@ -111,13 +111,6 @@ private void observationChanged(string dp1, dyn_string observations,
 }
   
 private void reload() {
-    if (updateConnected) {
-      if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
-                                             baseDP +\".status.state:_online.._invalid\") == -1) { 
-        LOG_ERROR(\"SWController_small.pnl:reload|Couldn't disconnect updateSWController: \"+getLastError());
-    }
-  }
-  updateConnected = false;
 
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(baseDP+\".status.state\")) {
