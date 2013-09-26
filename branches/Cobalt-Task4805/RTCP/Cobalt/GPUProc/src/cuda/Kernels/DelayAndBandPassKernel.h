@@ -51,6 +51,7 @@ namespace LOFAR
         bool correctBandPass;
         bool transpose;
         double subbandBandwidth;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -99,10 +100,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // DelayAndBandPassKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
 

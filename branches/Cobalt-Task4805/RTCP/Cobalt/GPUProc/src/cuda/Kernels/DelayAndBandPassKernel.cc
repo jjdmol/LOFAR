@@ -20,15 +20,16 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
 #include "DelayAndBandPassKernel.h"
 
-#include <Common/lofar_complex.h>
-#include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
 #include <GPUProc/BandPass.h>
+#include <CoInterface/BlockID.h>
+#include <Common/lofar_complex.h>
+#include <Common/LofarLogger.h>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include <fstream>
 
@@ -50,7 +51,10 @@ namespace LOFAR
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
       transpose(correctBandPass), // sane for correlator; bf redefines
-      subbandBandwidth(ps.settings.subbandWidth())
+      subbandBandwidth(ps.settings.subbandWidth()),
+      dumpFilePattern(
+        str(format("L%d_SB%%03d_BL%%04d_DelayAndBandPassKernel.dat") % 
+            ps.settings.observationID))
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", true);
@@ -61,7 +65,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -101,10 +106,12 @@ namespace LOFAR
 
     void DelayAndBandPassKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("DelayAndBandPassKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 
