@@ -33,6 +33,7 @@
 #include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -46,7 +47,9 @@ namespace LOFAR
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       weightCorrection(1.0f), // TODO: pass FFT size
-      subbandBandwidth(ps.settings.subbandWidth())
+      subbandBandwidth(ps.settings.subbandWidth()),
+      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_BeamFormerKernel.dat") % 
+                          ps.settings.observationID))
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = 
@@ -62,7 +65,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -107,9 +111,12 @@ namespace LOFAR
 
     void BeamFormerKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("BeamFormerKernel_OutputBuffer.raw", std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 
@@ -148,9 +155,9 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["WEIGHT_CORRECTION"] =
-        str(boost::format("%.7ff") % itsParameters.weightCorrection);
+        str(format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7f") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
 
       return defs;
     }

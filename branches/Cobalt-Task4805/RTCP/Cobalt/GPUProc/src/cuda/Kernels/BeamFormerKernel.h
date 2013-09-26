@@ -46,6 +46,7 @@ namespace LOFAR
         unsigned nrTABs;
         float weightCorrection; // constant weight applied to all weights
         double subbandBandwidth;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -85,10 +86,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
-   };
 
-    // Specialization of the KernelFactory for
-    // BeamFormerKernel
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
+    };
+
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 
