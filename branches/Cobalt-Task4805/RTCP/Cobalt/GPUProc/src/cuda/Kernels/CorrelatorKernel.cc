@@ -22,16 +22,16 @@
 
 #include "CorrelatorKernel.h"
 
-#include <vector>
-#include <algorithm>
-#include <fstream>
-
+#include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Exceptions.h>
-#include <GPUProc/global_defines.h>
 
+#include <boost/format.hpp>
+
+#include <fstream>
+
+using boost::format;
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
@@ -55,7 +55,9 @@ namespace LOFAR
 # endif
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps)
+      Kernel::Parameters(ps),
+      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_CorrelatorKernel.dat") % 
+                          ps.settings.observationID))
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", true);
@@ -66,7 +68,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -111,10 +114,12 @@ namespace LOFAR
 
     void CorrelatorKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("CorrelatorKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 

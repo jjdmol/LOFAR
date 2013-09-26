@@ -21,11 +21,8 @@
 #ifndef LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_KERNEL_H
 
-#include <CoInterface/Parset.h>
-
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/KernelFactory.h>
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -41,6 +38,7 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -50,9 +48,9 @@ namespace LOFAR
       };
 
       CorrelatorKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+                       const gpu::Module &module,
+                       const Buffers &buffers,
+                       const Parameters &param);
 
     private:
       // Dump output buffers of a given kernel to disk. Use \a blockId to
@@ -63,10 +61,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // CorrelatorKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
   }
