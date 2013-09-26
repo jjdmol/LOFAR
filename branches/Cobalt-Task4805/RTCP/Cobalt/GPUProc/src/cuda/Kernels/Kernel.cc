@@ -90,7 +90,7 @@ namespace LOFAR
       
       itsStream.launchKernel(*this, grid, block);
 
-      if (itsDumpBuffers) {
+      if (itsDumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
