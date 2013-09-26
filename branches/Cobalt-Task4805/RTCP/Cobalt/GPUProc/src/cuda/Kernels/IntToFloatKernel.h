@@ -45,6 +45,7 @@ namespace LOFAR
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrTAPs;
+        std::string dumpFilePattern;
       };
 
       enum BufferType
@@ -67,10 +68,14 @@ namespace LOFAR
 
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
+
+      // Dump file pattern. Contains place holders for Observation ID, subband
+      // number, and block number.
+      std::string itsDumpFilePattern;
     };
 
-    // Specialization of the KernelFactory for
-    // IntToFloatKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const;
 

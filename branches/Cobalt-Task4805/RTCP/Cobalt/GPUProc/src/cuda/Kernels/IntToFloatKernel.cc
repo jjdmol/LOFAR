@@ -22,14 +22,17 @@
 
 #include "IntToFloatKernel.h"
 
-#include <boost/lexical_cast.hpp>
-
-#include <Common/lofar_complex.h>
 #include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
+#include <Common/lofar_complex.h>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 #include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -42,7 +45,9 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrTAPs(ps.nrPPFTaps())
+      nrTAPs(ps.nrPPFTaps()),
+      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_IntToFloatKernel.dat") % 
+                          ps.settings.observationID))
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", true);
@@ -53,7 +58,8 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers)
+      itsBuffers(buffers),
+      itsDumpFilePattern(params.dumpFilePattern)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -71,10 +77,12 @@ namespace LOFAR
 
     void IntToFloatKernel::dumpBuffers(const BlockID &blockId) const
     {
-      LOG_INFO("Dumping output buffer");
+      std::string dumpFile = str(format(itsDumpFilePattern) %
+                                 blockId.globalSubbandIdx %
+                                 blockId.block);
+      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
       gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs("IntToFloatKernel_OutputBuffer.raw",
-                        std::ios::binary);
+      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
       ofs.write(buf.get<char>(), buf.size());
     }
 
