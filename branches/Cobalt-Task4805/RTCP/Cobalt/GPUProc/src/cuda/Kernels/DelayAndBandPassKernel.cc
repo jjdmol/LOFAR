@@ -53,8 +53,11 @@ namespace LOFAR
       transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth()),
       dumpFilePattern(
-        str(format("L%d_SB%%03d_BL%%04d_DelayAndBandPassKernel.dat") % 
-            ps.settings.observationID))
+        str(format("L%d_SB%%03d_BL%%04d_DelayAndBandPassKernel_%c%c%c.dat") % 
+            ps.settings.observationID %
+            (correctBandPass ? "B" : "b") %
+            (delayCompensation ? "D" : "d") %
+            (transpose ? "T" : "t")))
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", true);
