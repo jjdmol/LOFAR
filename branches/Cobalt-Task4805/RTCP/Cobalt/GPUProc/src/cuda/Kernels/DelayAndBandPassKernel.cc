@@ -68,9 +68,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers),
-      itsDumpFilePattern(params.dumpFilePattern)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers,
+             buffers, params.dumpFilePattern)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -106,14 +105,6 @@ namespace LOFAR
       setArg(2, subbandFrequency);
       setArg(3, SAP);
       Kernel::enqueue(blockId, counter);
-    }
-
-    void DelayAndBandPassKernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(format(itsDumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
     }
 
     //--------  Template specializations for KernelFactory  --------//

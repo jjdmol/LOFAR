@@ -92,15 +92,6 @@ namespace LOFAR
       void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
 
     private:
-      // Dump output buffers of a given kernel to disk. Use \a blockId to
-      // distinguish between the different blocks and subbands.
-      // \attention This method is for debugging purposes only, as it has a
-      // severe impact on performance.
-      virtual void dumpBuffers(const BlockID &blockId) const;
-
-      // Keep a local (reference counted) copy of the buffers we're using
-      Buffers itsBuffers;
-
       // The Kernel parameters as given to the constructor
       const Parameters params;
 
@@ -108,10 +99,6 @@ namespace LOFAR
       //
       // Dimensions: [nrSubbands][nrStations]
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
-
-      // Dump file pattern. Contains place holders for Observation ID, subband
-      // number, and block number.
-      std::string itsDumpFilePattern;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//

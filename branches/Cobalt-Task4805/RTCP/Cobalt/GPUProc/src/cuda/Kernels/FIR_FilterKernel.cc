@@ -60,11 +60,10 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers),
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers,
+             buffers, params.dumpFilePattern),
       params(params),
-      historyFlags(boost::extents[params.nrSubbands][params.nrStations]),
-      itsDumpFilePattern(params.dumpFilePattern)
+      historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -138,14 +137,6 @@ namespace LOFAR
         // Shift the flags to index 0
         historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
       }
-    }
-
-    void FIR_FilterKernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(format(itsDumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
     }
 
     //--------  Template specializations for KernelFactory  --------//

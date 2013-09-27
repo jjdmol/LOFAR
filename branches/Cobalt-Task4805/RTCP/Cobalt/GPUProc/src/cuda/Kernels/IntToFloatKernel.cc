@@ -58,9 +58,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers),
-      itsDumpFilePattern(params.dumpFilePattern)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers,
+             buffers, params.dumpFilePattern)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -74,14 +73,6 @@ namespace LOFAR
       nrOperations = nrSamples * 2;
       nrBytesRead = nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = nrSamples * sizeof(std::complex<float>);
-    }
-
-    void IntToFloatKernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(format(itsDumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
     }
 
     //--------  Template specializations for KernelFactory  --------//

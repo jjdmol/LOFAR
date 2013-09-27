@@ -63,9 +63,8 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers),
-      itsBuffers(buffers),
-      itsDumpFilePattern(params.dumpFilePattern)
+      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers,
+             buffers, params.dumpFilePattern)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
@@ -80,14 +79,6 @@ namespace LOFAR
       nrBytesRead = nrBytesWritten =
         (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannelsPerSubband * 
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
-    }
-
-    void BeamFormerTransposeKernel::dumpBuffers(const BlockID &blockId) const
-    {
-      dumpBuffer(itsBuffers.output,
-                 str(format(itsDumpFilePattern) %
-                     blockId.globalSubbandIdx %
-                     blockId.block));
     }
 
     //--------  Template specializations for KernelFactory  --------//

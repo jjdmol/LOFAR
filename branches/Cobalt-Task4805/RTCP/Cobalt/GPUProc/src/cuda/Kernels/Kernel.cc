@@ -53,12 +53,16 @@ namespace LOFAR
 
     Kernel::Kernel(const gpu::Stream& stream, 
                    const gpu::Function& function,
-                   bool dumpBuffers)
+                   bool dumpBuffers,
+                   const Buffers &buffers,
+                   const std::string &dumpFilePattern)
       : 
       gpu::Function(function),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
-      itsDumpBuffers(dumpBuffers)
+      itsDumpBuffers(dumpBuffers),
+      itsBuffers(buffers),
+      itsDumpFilePattern(dumpFilePattern)
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
@@ -106,7 +110,10 @@ namespace LOFAR
 
     void Kernel::dumpBuffers(const BlockID &blockId) const
     {
-      ASSERTSTR(false, "Kernel::dumpBuffers() base class method called");
+      dumpBuffer(itsBuffers.output,
+                 str(boost::format(itsDumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
     }
 
   }

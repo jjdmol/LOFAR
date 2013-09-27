@@ -57,19 +57,6 @@ namespace LOFAR
                              const Buffers &buffers,
                              const Parameters &param);
 
-    private:
-      // Dump output buffers of a given kernel to disk. Use \a blockId to
-      // distinguish between the different blocks and subbands.
-      // \attention This method is for debugging purposes only, as it has a
-      // severe impact on performance.
-      virtual void dumpBuffers(const BlockID &blockId) const;
-
-      // Keep a local (reference counted) copy of the buffers we're using
-      Buffers itsBuffers;
-
-      // Dump file pattern. Contains place holders for Observation ID, subband
-      // number, and block number.
-      std::string itsDumpFilePattern;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
