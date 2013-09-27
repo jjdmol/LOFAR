@@ -83,7 +83,8 @@ namespace LOFAR {
                      vector<const_cursor<dcomplex> > model,
                      const_cursor<bool> flag,
                      const_cursor<float> weight,
-                     const_cursor<dcomplex> mix);
+                     const_cursor<dcomplex> mix,
+                     uint verbose);
 
       // Get the last solution.
       // It contains zeroes for the direction-stations not solved for.

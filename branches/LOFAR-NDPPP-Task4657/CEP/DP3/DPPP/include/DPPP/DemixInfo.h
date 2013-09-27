@@ -64,6 +64,7 @@ namespace LOFAR {
       void show (ostream&) const;
 
       //# Data members
+      uint   verbose() const                     {return itsVerbose;}
       uint   maxIter() const                     {return itsMaxIter;}
       uint   minNStation() const                 {return itsMinNStation;}
       uint   nstation() const                    {return itsNStation;}
@@ -134,6 +135,10 @@ namespace LOFAR {
       vector<Patch::ConstPtr> makePatchList (const string& sdbName,
                                              const vector<string>& patchNames);
 
+      // Make the estimate patch list if no estimate source model is given.
+      // It takes all patches from the demix source model as point sources.
+      void makePredictPatchList();
+
       // Make the target list for demixing with a detailed model for the
       // possible Ateam sources in it.
       void makeTargetDemixList();
@@ -156,6 +161,7 @@ namespace LOFAR {
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
+      uint                    itsVerbose;            //# trace verbosity level
       uint                    itsMaxIter;            //# max #iter in solve
       uint                    itsMinNStation;        //# min #stations for solve
       uint                    itsNStation;

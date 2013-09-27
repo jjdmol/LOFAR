@@ -54,12 +54,14 @@
 namespace LOFAR {
   namespace DPPP {
 
-    void DPRun::execute (const string& parsetName)
+    void DPRun::execute (const string& parsetName, int argc, char* argv[])
     {
       casa::Timer timer;
       NSTimer nstimer;
       nstimer.start();
       ParameterSet parset (parsetName);
+      // Adopt possible parameters given at the command line.
+      parset.adoptArgv (argc, argv); //# works fine if argc==0 and argv==0
       DPLogger::useLogger = parset.getBool ("uselogger", false);
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);

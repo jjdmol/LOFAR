@@ -169,7 +169,8 @@ namespace LOFAR {
                                 vector<const_cursor<dcomplex> > model,
                                 const_cursor<bool> flag,
                                 const_cursor<float> weight,
-                                const_cursor<dcomplex> mix)
+                                const_cursor<dcomplex> mix,
+                                uint verbose)
     {
       // Determine if a station has to be solved for any source.
       itsSolveStation = false;
@@ -182,7 +183,9 @@ namespace LOFAR {
           }
         }
       }
-      cout<<"unkindex="<<unknownsIndex<<endl;
+      if (verbose > 13) {
+        cout<<"unkindex="<<unknownsIndex<<endl;
+      }
       // Initialize LSQ solver.
       casa::LSQFit solver(nUnknowns);
       const size_t nDirection = unknownsIndex.size();
@@ -190,7 +193,9 @@ namespace LOFAR {
       // Iterate until convergence.
       size_t nIterations = 0;
       while (!solver.isReady()  &&  nIterations < itsMaxIter) {
-        cout<<endl<<"iteration " << nIterations << endl;
+        if (verbose > 13) {
+          cout<<endl<<"iteration " << nIterations << endl;
+        }
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
@@ -198,7 +203,9 @@ namespace LOFAR {
           if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
-            cout<<"derinx="<<itsDerivIndex<<endl;
+            if (verbose > 13) {
+              cout<<"derinx="<<itsDerivIndex<<endl;
+            }
             // Generate equations for each channel.
             for (size_t ch=0; ch<itsNrChannels; ++ch) {
               for (size_t dr=0; dr<nDirection; ++dr) {
@@ -270,8 +277,10 @@ namespace LOFAR {
                 itsdM[dr * 16 + 14] = itsdM[dr * 16 + 10];
                 itsdM[dr * 16 + 15] = itsdM[dr * 16 + 11];
               }
-                    cout<<"M="<<itsM<<endl;
-                    cout<<"dM="<<itsdM<<endl;
+              if (verbose > 13) {
+                cout<<"M="<<itsM<<endl;
+                cout<<"dM="<<itsdM<<endl;
+              }
 
               // Now compute the equations (per pol) for D*M=A where
               //  D is the NxN demixing weight matrix
@@ -352,11 +361,14 @@ namespace LOFAR {
                                     &(itsDerivIndex[cr * nPartial]), &(itsdI[0]),
                                     static_cast<double>(weight[cr]),
                                     imag(residual));
-                    cout<<"makeres "<<real(residual)<<' '<<weight[cr]<<' '<<nPartial;
-                    for (uint i=0; i<nPartial; ++i) {
-                      cout << ' '<<itsDerivIndex[cr*nPartial+i]<<' '<<itsdR[i];
+                    if (verbose > 13) {
+                      cout<<"makeres "<<real(residual)<<' '<<weight[cr]
+                          <<' '<<nPartial;
+                      for (uint i=0; i<nPartial; ++i) {
+                        cout << ' '<<itsDerivIndex[cr*nPartial+i]<<' '<<itsdR[i];
+                      }
+                      cout<<endl;
                     }
-                    cout<<endl;
 
                     // Move to next target direction.
                     mix.backward(1, nDirection);
@@ -420,9 +432,10 @@ namespace LOFAR {
         ASSERT(status);
         // Copy the unknowns to the full solution.
         fillSolution (unknownsIndex);
-        cout<<"unknowns="<<nUnknowns<<' '<<itsUnknowns<<endl;
-        cout<<"solution="<<itsLastSolution<<endl;
-
+        if (verbose > 12) {
+          cout<<"unknowns="<<nUnknowns<<' '<<itsUnknowns<<endl;
+          cout<<"solution="<<itsLastSolution<<endl;
+        }
         // Update iteration count.
         ++nIterations;
       }

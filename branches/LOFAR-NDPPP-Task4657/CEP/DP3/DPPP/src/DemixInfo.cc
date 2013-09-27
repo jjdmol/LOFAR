@@ -44,7 +44,7 @@ namespace LOFAR {
     DemixInfo::DemixInfo (const ParameterSet& parset, const string& prefix)
       : itsSelBL            (parset, prefix, false, "cross"),
         itsSelBLEstimate    (parset, prefix+"estimate.", false, "cross", "CS*&"),
-        itsPredictModelName (parset.getString(prefix+"estimate.skymodel")),
+        itsPredictModelName (parset.getString(prefix+"estimate.skymodel", "")),
         itsDemixModelName   (parset.getString(prefix+"ateam.skymodel")),
         itsTargetModelName  (parset.getString(prefix+"target.skymodel")),
         itsSourceNames      (parset.getStringVector (prefix+"sources")),
@@ -58,6 +58,7 @@ namespace LOFAR {
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
+        itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
         itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
         itsMinNStation      (parset.getUint   (prefix+"minnstation", 6)),
         itsNStation         (0),
@@ -81,21 +82,27 @@ namespace LOFAR {
       // Get delta in arcsec and take cosine of it (convert to radians first).
       double delta = parset.getDouble (prefix+"target.delta", 60.);
       itsCosTargetDelta = cos (delta / 3600. * casa::C::pi / 180.);
-      ASSERTSTR (!(itsPredictModelName.empty() || itsDemixModelName.empty() ||
-                   itsTargetModelName.empty()),
+      ASSERTSTR (!(itsTargetModelName.empty() || itsDemixModelName.empty()),
                  "An empty name is given for a sky model");
-      itsAteamList = makePatchList (itsPredictModelName, itsSourceNames);
-      // Use all predict patch names if no source names given.
-      // In this way we're sure both A-team lists have the same sources
-      // in the same order.
-      if (itsSourceNames.empty()) {
-        itsSourceNames.reserve (itsAteamList.size());
-        for (size_t i=0; i<itsAteamList.size(); ++i) {
-          itsSourceNames.push_back (itsAteamList[i]->name());
+      // If the estimate source model is given, read it.
+      if (! itsPredictModelName.empty()) {
+        itsAteamList = makePatchList (itsPredictModelName, itsSourceNames);
+        // Use all predict patch names if no source names given.
+        // In this way we're sure both A-team lists have the same sources
+        // in the same order.
+        if (itsSourceNames.empty()) {
+          itsSourceNames.reserve (itsAteamList.size());
+          for (size_t i=0; i<itsAteamList.size(); ++i) {
+            itsSourceNames.push_back (itsAteamList[i]->name());
+          }
         }
       }
       itsAteamDemixList = makePatchList (itsDemixModelName, itsSourceNames);
       itsTargetList     = makePatchList (itsTargetModelName, vector<string>());
+      // If no estimate model is given, make each demix patch a point source.
+      if (itsAteamList.empty()) {
+        makePredictPatchList();
+      }
       // Note that the A-team models are in the same order of name.
       // Check they have matching positions.
       ASSERT (itsAteamList.size() == itsAteamDemixList.size());
@@ -197,7 +204,9 @@ namespace LOFAR {
       itsUVWSplitIndex = nsetupSplitUVW (itsInfoSel.nantenna(),
                                          itsInfoSel.getAnt1(),
                                          itsInfoSel.getAnt2());
-      cout << "splitindex="<<itsUVWSplitIndex<<endl;
+      if (itsVerbose > 1) {
+        cout << "splitindex="<<itsUVWSplitIndex<<endl;
+      }
 
       // Determine which baselines to use when estimating A-team and target.
       ////itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
@@ -402,9 +411,42 @@ namespace LOFAR {
         patchPosition[0] = patchInfo[0].getRa();
         patchPosition[1] = patchInfo[0].getDec();
         ppatch->setPosition (patchPosition);
+        ppatch->setBrightness (patchInfo[0].apparentBrightness());
         patchList.push_back (ppatch);
       }
       return patchList;
+    }
+
+    void DemixInfo::makePredictPatchList()
+    {
+      // Make the estimate patch list from the detailed demix patch list.
+      // Each patch is treated as a point source and its brightness (summed flux)
+      // is the Stokes I flux.
+      vector<ModelComponent::Ptr> componentList(1);
+      Position position;
+      Stokes stokes;
+      stokes.V = 0;
+      stokes.Q = 0;
+      stokes.U = 0;
+      vector<string> names;
+      names.reserve (itsAteamDemixList.size());
+      itsAteamList.reserve (itsAteamDemixList.size());
+      for (size_t i=0; i<itsAteamDemixList.size(); ++i) {
+        position = itsAteamDemixList[i]->position();
+        stokes.I = itsAteamDemixList[i]->brightness();
+        componentList[0] = PointSource::Ptr(new PointSource(position, stokes));
+        Patch::Ptr ppatch(new Patch(itsAteamDemixList[i]->name(),
+                                    componentList.begin(),
+                                    componentList.end()));
+        ppatch->setPosition   (position);
+        ppatch->setBrightness (itsAteamDemixList[i]->brightness());
+        itsAteamList.push_back (ppatch);
+        names.push_back (itsAteamDemixList[i]->name());
+      }
+      // Fill the source names if not given.
+      if (itsSourceNames.empty()) {
+        itsSourceNames.swap (names);
+      }
     }
 
 

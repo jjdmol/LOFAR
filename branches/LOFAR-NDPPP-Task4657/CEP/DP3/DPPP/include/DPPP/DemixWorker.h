@@ -74,7 +74,8 @@ namespace LOFAR {
       // Process the data in the input buffers and store the result in the
       // output buffers.
       void process (const DPBuffer* bufin, uint nbufin,
-                    DPBuffer* bufout, vector<double>* solutions);
+                    DPBuffer* bufout, vector<double>* solutions,
+                    float* percSubtr);
 
       // Get the number of solves.
       uint nSolves() const
@@ -102,6 +103,10 @@ namespace LOFAR {
       // Get nr of times a station/source was demixed.
       const casa::Matrix<uint>& statSourceDemixed() const
         { return itsStatSourceDemixed; }
+      const casa::Matrix<float>& amplTotal() const
+        { return itsAmplTotal; }
+      const casa::Cube<float>& amplSubtr() const
+        { return itsAmplSubtr; }
 
       // Get the timings of the various processing steps.
       // <group>
@@ -171,10 +176,11 @@ namespace LOFAR {
                       uint resultIndex);
 
       // Do the demixing.
-      void handleDemix (DPBuffer* bufout, vector<double>* solutions);
+      void handleDemix (DPBuffer* bufout, vector<double>* solutions,
+                        float* percSubtr);
 
       // Solve gains and subtract sources.
-      void demix (vector<double>* solutions);
+      void demix (vector<double>* solutions, float* percSubtr);
 
       // Merge the data of the selected baselines from the subtract buffer
       // into the full buffer.
@@ -252,6 +258,8 @@ namespace LOFAR {
       uint                                  itsNTimeOut;
       uint                                  itsNTimeOutSubtr;
       uint                                  itsTimeIndex;
+      vector<float>                         itsObservedAmpl;
+      vector<float>                         itsSourceAmpl;
       //# Statistics
       uint                                  itsNrSolves;
       uint                                  itsNrConverged;
@@ -266,6 +274,10 @@ namespace LOFAR {
       casa::Vector<uint>                    itsNrStationsDemixed;
       //# Nr of times a source/station is demixed.
       casa::Matrix<uint>                    itsStatSourceDemixed;
+      //# Total amplitude observed [nch,nbl]
+      casa::Matrix<float>                   itsAmplTotal;
+      //# Total amplitude subtracted [nch,nbl,nsrc]
+      casa::Cube<float>                     itsAmplSubtr;
       //# Timers.
       NSTimer                               itsTimer;
       NSTimer                               itsTimerPredict;

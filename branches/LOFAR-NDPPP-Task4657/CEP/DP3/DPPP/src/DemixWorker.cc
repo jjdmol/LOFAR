@@ -31,7 +31,7 @@
 #include <DPPP/EstimateMixed.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Simulate.h>
-#include <DPPP/SubtractMixed.h>
+#include <DPPP/SubtractNew.h>
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
@@ -166,9 +166,11 @@ namespace LOFAR {
       }
       itsAvgStepSubtr->setInfo (info);
 
-      // Size the various work buffers.
+      // Size the various work buffers to the maximum size possibly needed.
+      // As few as possible dynamic buffers are used, because each malloc
+      // requires a thread-lock.
       itsFactorBuf.resize (IPosition(4, itsMix->ncorr(), itsMix->nchanIn(),
-                                      itsMix->nbl(), ndir*(ndir+1)/2));
+                                     itsMix->nbl(), ndir*(ndir+1)/2));
       itsFactorBufSubtr.resize (itsFactorBuf.shape());
       itsAvgUVW.resize (3, itsMix->nbl());
       itsStationUVW.resize (3, itsMix->nstation(), itsMix->ntimeOutSubtr());
@@ -197,13 +199,20 @@ namespace LOFAR {
       }
       itsTargetAmpl.resize (itsMix->nchanOut(), itsMix->nbl(),
                             itsMix->ntimeOut());
+      itsObservedAmpl.resize (itsMix->nbl());
+      itsSourceAmpl.resize   (itsMix->nbl());
+      itsAmplTotal.resize (itsMix->nchanOutSubtr(), itsMix->nbl());
+      itsAmplSubtr.resize (itsMix->nchanOutSubtr(), itsMix->nbl(), ndir);
+      itsAmplTotal = 0.;
+      itsAmplSubtr = 0.;
       itsEstimate.update (ndir+1, itsMix->nbl(), itsMix->nstation(),
                           itsMix->nchanOut(), itsMix->maxIter(),
                           itsMix->propagateSolution());
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
-                               DPBuffer* bufout, vector<double>* solutions)
+                               DPBuffer* bufout, vector<double>* solutions,
+                               float* percSubtr)
     {
       itsTimer.start();
       itsTimerPredict.start();
@@ -278,7 +287,7 @@ namespace LOFAR {
       }
 
       // Estimate gains and subtract source contributions.
-      handleDemix (bufout, solutions);
+      handleDemix (bufout, solutions, percSubtr);
       itsTimer.stop();
     }
 
@@ -309,14 +318,18 @@ namespace LOFAR {
         }
         // Average the UVWs.
         itsAvgUVW /= double(ntodo);
-        ///        cout<<"avguvw="<<ntodo<<itsAvgUVW<<endl;
+        if (itsMix->verbose() > 12) {
+          cout<<"avguvw="<<ntodo<<itsAvgUVW<<endl;
+        }
         nleft -= ntodo;
         // Split the baseline UVW coordinates per station.
         nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                    itsAvgUVW, uvwIter.matrix());
         uvwIter.next();
       }
-      /// cout<<"stationuwv="<<itsStationUVW;
+      if (itsMix->verbose() > 12) {
+        cout<<"stationuwv="<<itsStationUVW;
+      }
       return ntime;
     }
 
@@ -364,7 +377,9 @@ namespace LOFAR {
         // Add amplitude.
         *amplp++ += 0.5*(a + abs(*iter));
       }
-      cout << "min/max ampl="<<min(ampl)<<' '<<max(ampl)<<endl;
+      if (itsMix->verbose() > 11) {
+        cout << "min/max ampl="<<min(ampl)<<' '<<max(ampl)<<endl;
+      }
     }
 
     void DemixWorker::predictAteam (const vector<Patch::ConstPtr>& patchList,
@@ -406,7 +421,10 @@ namespace LOFAR {
           if (max(miter.matrix()) > itsMix->ateamAmplThreshold()) {
             antCount[itsMix->getAnt1()[j]]++;
             antCount[itsMix->getAnt2()[j]]++;
-            cout<<"baseline "<<itsMix->getAnt1()[j]<<' '<<itsMix->getAnt2()[j]<<" has ampl " << max(miter.matrix())<<endl;
+            if (itsMix->verbose() > 11) {
+              cout<<"baseline "<<itsMix->getAnt1()[j]<<' '<<itsMix->getAnt2()[j]
+                  <<" has ampl " << max(miter.matrix())<<endl;
+            }
           }
         }
         // Determine which stations have sufficient occurrence.
@@ -417,7 +435,9 @@ namespace LOFAR {
             itsStatSourceDemixed(i,j)++;
             itsSolveStation[j] = true;
           } else {
-            cout << "ignore station " << j << " for src " << i << endl;
+            if (itsMix->verbose() > 11) {
+              cout << "ignore station " << j << " for src " << i << endl;
+            }
           }
         }
         // Use this A-team source if some stations have matched.
@@ -509,7 +529,9 @@ namespace LOFAR {
           nUnknown += 8;
         }
       }
-      cout<<"nunkb="<<nUnknown<<endl;
+      if (itsMix->verbose() > 11) {
+        cout<<"nunkb="<<nUnknown<<endl;
+      }
       // Do the same for the target if it has to be solved as well.
       std::fill (itsUnknownsIndex[ndir].begin(),
                  itsUnknownsIndex[ndir].end(), -1);
@@ -520,17 +542,20 @@ namespace LOFAR {
           nUnknown += 8;
         }
       }
-      cout<<"nunka="<<nUnknown<<endl;
+      if (itsMix->verbose() > 11) {
+        cout<<"nunka="<<nUnknown<<endl;
+      }
     }
 
     void DemixWorker::applyBeam (double time, const Position& dir)
     {
     }
 
-    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions)
+    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions,
+                                   float* percSubtr)
     {
       itsTimerSolve.start();
-      demix (solutions);
+      demix (solutions, percSubtr);
       itsTimerSolve.stop();
       // If selection was done, merge the subtract results back into the
       // buffer.
@@ -542,10 +567,11 @@ namespace LOFAR {
         itsAvgResults[i]->clear();
       }
       // Store the output buffers.
-      for (uint i=0; i<itsMix->ntimeOutSubtr(); ++i) {
+      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+        // DPBuffer copying uses reference semantics which is fine.
+        // At the end the itsAvgResultxxx buffers get removed, thus the ones
+        // in bufout cannot be overwritten.
         if (itsMix->selBL().hasSelection()) {
-          /// Probably make a deep copy, because in next iteration avgresult gets
-          /// overridden.
           bufout[i] = itsAvgResultFull->get()[i];
         } else {
           bufout[i] = itsAvgResultSubtr->get()[i];
@@ -786,9 +812,8 @@ namespace LOFAR {
       factors.reference (newFactors);
     }
 
-    void DemixWorker::demix (vector<double>* solutions)
+    void DemixWorker::demix (vector<double>* solutions, float* percSubtr)
     {
-      cout << "demix called"<<endl;
       // Determine the various sizes.
       const size_t nTime = itsAvgResults[0]->get().size();
       const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
@@ -812,7 +837,9 @@ namespace LOFAR {
           // Split the baseline UVW coordinates per station.
           nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                      itsAvgResults[dr]->get()[ts].getUVW(), itsUVW);
-          cout <<"uvw"<<dr<<'='<<itsUVW;
+          if (itsMix->verbose() > 12) {
+            cout <<"uvw"<<dr<<'='<<itsUVW;
+          }
           // Create cursors to step through UVW and model buffer.
           const_cursor<double> cr_uvw = casa_const_cursor(itsUVW);
           cursor<dcomplex> cr_model(&(itsModelVis[dr * nSamples]), 3,
@@ -824,7 +851,9 @@ namespace LOFAR {
                    itsDemixList[dr],
                    nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
         }
-        cout<<"modelvis="<<itsModelVis<<endl;
+        if (itsMix->verbose() > 12) {
+          cout<<"modelvis="<<itsModelVis<<endl;
+        }
         // A Jones matrix will be estimated for each pair of stations and
         // direction.
         // A single (overdetermined) non-linear set of equations for all
@@ -850,7 +879,8 @@ namespace LOFAR {
         bool converged = itsEstimate.estimate (itsUnknownsIndex,
                                                cr_baseline, cr_data,
                                                cr_model, cr_flag,
-                                               cr_weight, cr_mix);
+                                               cr_weight, cr_mix,
+                                               itsMix->verbose());
         // Copy solutions to overall solution array.
         solutions[ts] = itsEstimate.getSolution();
         itsNrSolves++;
@@ -869,7 +899,20 @@ namespace LOFAR {
         for (size_t ts_subtr = multiplier * ts,
                ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
              ts_subtr != ts_subtr_end; ++ts_subtr) {
-          for (size_t dr = 0; dr < nDr; ++dr) {
+          // Get the observed amplitude per baseline summed over channel/time.
+          const Complex* data =
+            itsAvgResultSubtr->get()[ts_subtr].getData().data();
+          for (size_t bl=0; bl<nBl; ++bl) {
+            float ampl = 0;
+            for (size_t ch=0; ch<nChSubtr; ++ch) {
+              float tampl = 0.5 * abs(data[0]) + abs(data[3]);
+              ampl += tampl;
+              itsAmplTotal(ch,bl) += tampl;
+              data += 4;
+            }
+            itsObservedAmpl[bl] = ampl;
+          }
+          for (size_t dr=0; dr<nDr; ++dr) {
             // Re-use simulation used for estimating Jones matrices if possible.
             cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
                                             3, stride_model);
@@ -920,24 +963,37 @@ namespace LOFAR {
             // convention, i.e. index itsNDir - 1. The directions to subtract
             // have the lowest indices by convention, i.e. indices
             // [0, nDrSubtr).
-            const IPosition &stride_mix_subtr =
+            const IPosition& stride_mix_subtr =
               itsFactorsSubtr[ts_subtr].steps();
             size_t stride_mix_subtr_slice[3] = {
               static_cast<size_t>(stride_mix_subtr[2]),
               static_cast<size_t>(stride_mix_subtr[3]),
               static_cast<size_t>(stride_mix_subtr[4])
             };
-            ASSERT(stride_mix_subtr_slice[0] == itsNDir * itsNDir
-                   && stride_mix_subtr_slice[1] == itsNDir * itsNDir * nCr
-                   && stride_mix_subtr_slice[2] == itsNDir * itsNDir * nCr * nChSubtr);
+            ASSERT(stride_mix_subtr_slice[0] == itsNDir*itsNDir  &&
+                   stride_mix_subtr_slice[1] == itsNDir*itsNDir*nCr  &&
+                   stride_mix_subtr_slice[2] == itsNDir*itsNDir*nCr*nChSubtr);
 
             IPosition offset(5, itsNDir - 1, dr, 0, 0, 0);
-            const_cursor<dcomplex> cr_mix_subtr(&(itsFactorsSubtr[ts_subtr](offset)), 3,
-                                                stride_mix_subtr_slice);
+            const_cursor<dcomplex> cr_mix_subtr
+              (&(itsFactorsSubtr[ts_subtr](offset)), 3, stride_mix_subtr_slice);
 
             // Subtract the source.
+            // It fills in the subtracted amplitude per baseline.
             subtract (nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
-                      cr_mix_subtr);
+                      cr_mix_subtr, itsSourceAmpl,
+                      &(itsAmplSubtr(0,0,dr)));
+            // Calculate the percentage amplitude subtracted per source.
+            // This array is ordered [nbl,nsrc,ntime]
+            /// Note: dr should be mapped to actual source index.
+            float* pperc = percSubtr + (ts_subtr * nDr + dr ) * nBl;
+            for (size_t bl=0; bl<nBl; ++bl) {
+              if (itsObservedAmpl[bl] == 0) {
+                *pperc++ = 0.;
+              } else {
+                *pperc++ = itsSourceAmpl[bl] / itsObservedAmpl[bl] * 100.;
+              }
+            }
           }
         }
       }

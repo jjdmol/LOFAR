@@ -102,6 +102,9 @@ namespace LOFAR {
       // Export the solutions to a ParmDB.
       void writeSolutions (double startTime, int ntime);
 
+      // Show a percentage with 1 decimal.
+      void showPerc1 (ostream& os, float perc) const;
+
       //# Data members.
       DPInput*                itsInput;
       string                  itsName;
@@ -113,8 +116,10 @@ namespace LOFAR {
       vector<DPBuffer>        itsBufIn;
       vector<DPBuffer>        itsBufOut;
       vector<vector<double> > itsSolutions; //# all solutions in a time window
+      casa::Cube<float>       itsPercSubtr; //# % subtracted [nbl,nsrc,ntimeout]
       map<string,int>         itsParmIdMap; //# -1 = new parm name
       uint                    itsNTime;
+      uint                    itsNTimeOut;
       //# Timers.
       NSTimer itsTimer;
       NSTimer itsTimerDemix;
