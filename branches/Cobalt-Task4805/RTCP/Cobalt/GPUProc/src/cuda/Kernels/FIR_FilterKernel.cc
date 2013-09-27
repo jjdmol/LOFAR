@@ -48,12 +48,14 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrHistorySamples(ps.nrHistorySamples()),
       nrPPFTaps(ps.nrPPFTaps()),
-      nrSubbands(1),
-      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_FIR_FilterKernel.dat") % 
-                          ps.settings.observationID))
+      nrSubbands(1)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_FIR_FilterKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,

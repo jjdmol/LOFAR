@@ -47,7 +47,6 @@ namespace LOFAR
         size_t nrStokes;
         size_t timeIntegrationFactor;
         size_t timeParallelFactor;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

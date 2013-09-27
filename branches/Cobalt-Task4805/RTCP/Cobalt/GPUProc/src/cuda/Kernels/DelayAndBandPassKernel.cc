@@ -52,16 +52,16 @@ namespace LOFAR
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
       transpose(correctBandPass), // sane for correlator; bf redefines
-      subbandBandwidth(ps.settings.subbandWidth()),
-      dumpFilePattern(
+      subbandBandwidth(ps.settings.subbandWidth())
+    {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", false);
+      dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%04d_DelayAndBandPassKernel_%c%c%c.dat") % 
             ps.settings.observationID %
             (correctBandPass ? "B" : "b") %
             (delayCompensation ? "D" : "d") %
-            (transpose ? "T" : "t")))
-    {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", false);
+            (transpose ? "T" : "t"));
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,

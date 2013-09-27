@@ -48,10 +48,7 @@ namespace LOFAR
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
       timeIntegrationFactor(
-        ps.settings.beamFormer.coherentSettings.timeIntegrationFactor),
-      dumpFilePattern(
-        str(format("L%d_SB%%03d_BL%%04d_CoherentStokesKernel.dat") % 
-            ps.settings.observationID))
+        ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
      {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
@@ -59,6 +56,10 @@ namespace LOFAR
       timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.CoherentStokesKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_CoherentStokesKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
 

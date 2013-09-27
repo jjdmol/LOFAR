@@ -46,7 +46,6 @@ namespace LOFAR
         unsigned nrTABs;
         float weightCorrection; // constant weight applied to all weights
         double subbandBandwidth;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

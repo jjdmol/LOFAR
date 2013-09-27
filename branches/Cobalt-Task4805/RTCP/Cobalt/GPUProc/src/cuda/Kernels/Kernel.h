@@ -51,6 +51,7 @@ namespace LOFAR
         size_t nrSamplesPerSubband;
         size_t nrPolarizations;
         bool dumpBuffers;
+        std::string dumpFilePattern;
       };
 
       enum BufferType

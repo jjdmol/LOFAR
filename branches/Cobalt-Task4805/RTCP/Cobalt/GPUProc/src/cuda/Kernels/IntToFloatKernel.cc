@@ -46,12 +46,13 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrTAPs(ps.nrPPFTaps()),
-      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_IntToFloatKernel.dat") % 
-                          ps.settings.observationID))
+      nrTAPs(ps.nrPPFTaps())
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_IntToFloatKernel.dat") % 
+            ps.settings.observationID);
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,

@@ -45,7 +45,6 @@ namespace LOFAR
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrTAPs;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

@@ -52,7 +52,6 @@ namespace LOFAR
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

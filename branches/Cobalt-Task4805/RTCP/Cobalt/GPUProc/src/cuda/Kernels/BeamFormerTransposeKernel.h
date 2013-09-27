@@ -43,7 +43,6 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         size_t nrTABs;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

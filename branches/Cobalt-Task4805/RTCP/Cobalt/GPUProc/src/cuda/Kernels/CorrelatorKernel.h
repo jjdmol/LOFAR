@@ -38,7 +38,6 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        std::string dumpFilePattern;
       };
 
       enum BufferType

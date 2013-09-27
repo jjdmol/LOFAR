@@ -51,7 +51,6 @@ namespace LOFAR
         bool correctBandPass;
         bool transpose;
         double subbandBandwidth;
-        std::string dumpFilePattern;
       };
 
       enum BufferType

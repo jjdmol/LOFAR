@@ -45,10 +45,7 @@ namespace LOFAR
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      dumpFilePattern(
-        str(format("L%d_SB%%03d_BL%%04d_BeamFormerTransposeKernel.dat") % 
-            ps.settings.observationID))
+      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
       nrChannelsPerSubband =
         ps.settings.beamFormer.coherentSettings.nrChannels;
@@ -56,6 +53,10 @@ namespace LOFAR
         ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.BeamFormerTransposeKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_BeamFormerTransposeKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
     BeamFormerTransposeKernel::

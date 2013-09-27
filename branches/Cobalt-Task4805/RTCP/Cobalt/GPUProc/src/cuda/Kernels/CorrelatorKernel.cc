@@ -56,12 +56,13 @@ namespace LOFAR
 # endif
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
-      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_CorrelatorKernel.dat") % 
-                          ps.settings.observationID))
+      Kernel::Parameters(ps)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_CorrelatorKernel.dat") % 
+            ps.settings.observationID);
     }
 
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,

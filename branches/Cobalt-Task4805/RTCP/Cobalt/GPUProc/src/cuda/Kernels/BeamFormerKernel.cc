@@ -48,9 +48,7 @@ namespace LOFAR
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       weightCorrection(1.0f), // TODO: pass FFT size
-      subbandBandwidth(ps.settings.subbandWidth()),
-      dumpFilePattern(str(format("L%d_SB%%03d_BL%%04d_BeamFormerKernel.dat") % 
-                          ps.settings.observationID))
+      subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = 
@@ -59,6 +57,9 @@ namespace LOFAR
         ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%04d_BeamFormerKernel.dat") % 
+            ps.settings.observationID);
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
