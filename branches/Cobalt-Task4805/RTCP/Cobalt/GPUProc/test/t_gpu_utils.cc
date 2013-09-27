@@ -25,6 +25,7 @@
 
 #include <cstdio>    // for remove()
 #include <cstdlib>   // for unsetenv()
+#include <vector>
 #include <fstream>
 #include <stdexcept>
 #include <UnitTest++.h>
@@ -117,6 +118,45 @@ TEST_FIXTURE(CreateFixture, CreateModuleHighestArch)
                                      defaultCompileFlags(), 
                                      vector<gpu::Device>())),
               gpu::GPUException);
+}
+
+TEST(DumpBuffer)
+{
+  typedef unsigned element_type;
+  const char* dumpFile("tDevMem.dat");
+  const size_t num_elements(1024);
+  const size_t num_bytes(num_elements * sizeof(element_type));
+  vector<element_type> input(num_elements), output(num_elements);
+
+  // Initialize input vector
+  for(size_t i = 0; i < num_elements; i++) 
+    input[i] = element_type(i);
+
+  // Initialize GPU device, context, and stream.
+  gpu::Device device(gpu::Platform().devices()[0]);
+  gpu::Context ctx(device);
+  gpu::Stream stream(ctx);
+
+  // Allocate memory on host and device
+  gpu::HostMemory hostMem(ctx, num_bytes);
+  gpu::DeviceMemory devMem(ctx, num_bytes);
+
+  // Copy input vector to host memory
+  copy(input.begin(), input.end(), hostMem.get<element_type>());
+
+  // Transfer to device memory
+  stream.writeBuffer(devMem, hostMem);
+
+  // Dump device memory to file
+  dumpBuffer(devMem, dumpFile);
+
+  // Read raw data back from file into output vector and remove file
+  ifstream ifs(dumpFile, ios::binary);
+  ifs.read(reinterpret_cast<char*>(&output[0]), num_bytes);
+  remove(dumpFile);
+
+  // Compare input and output vector.
+  CHECK_ARRAY_EQUAL(input, output, num_elements);
 }
 
 int main()
