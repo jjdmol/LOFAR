@@ -79,9 +79,8 @@ namespace LOFAR
       // Construct a kernel.
       Kernel(const gpu::Stream& stream,
              const gpu::Function& function,
-             bool dumpBuffers,
-             const Buffers &buffers, 
-             const std::string &dumpFilePattern);
+             const Buffers &buffers,
+             const Parameters &params);
 
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
@@ -93,15 +92,11 @@ namespace LOFAR
       size_t nrOperations, nrBytesRead, nrBytesWritten;
 
     private:
-      // Flag indicating whether output buffers should be dumped to disk or not.
-      bool itsDumpBuffers;
-
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
 
-      // Dump file pattern. Contains place holders for Observation ID, subband
-      // number, and block number.
-      std::string itsDumpFilePattern;
+      // The parameters as given to the constructor.
+      Parameters itsParameters;
 
       // Dump output buffer of a this kernel to disk. Use \a blockId to
       // distinguish between the different blocks and subbands.

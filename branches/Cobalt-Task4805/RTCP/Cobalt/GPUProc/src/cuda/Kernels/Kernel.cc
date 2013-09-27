@@ -53,16 +53,14 @@ namespace LOFAR
 
     Kernel::Kernel(const gpu::Stream& stream, 
                    const gpu::Function& function,
-                   bool dumpBuffers,
                    const Buffers &buffers,
-                   const std::string &dumpFilePattern)
+                   const Parameters &params)
       : 
       gpu::Function(function),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
-      itsDumpBuffers(dumpBuffers),
       itsBuffers(buffers),
-      itsDumpFilePattern(dumpFilePattern)
+      itsParameters(params)
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
@@ -94,7 +92,7 @@ namespace LOFAR
       
       itsStream.launchKernel(*this, grid, block);
 
-      if (itsDumpBuffers && blockId.block >= 0) {
+      if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
@@ -111,7 +109,7 @@ namespace LOFAR
     void Kernel::dumpBuffers(const BlockID &blockId) const
     {
       dumpBuffer(itsBuffers.output,
-                 str(boost::format(itsDumpFilePattern) %
+                 str(boost::format(itsParameters.dumpFilePattern) %
                      blockId.globalSubbandIdx %
                      blockId.block));
     }

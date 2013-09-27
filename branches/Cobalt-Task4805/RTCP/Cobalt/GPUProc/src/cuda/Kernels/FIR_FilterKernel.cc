@@ -62,8 +62,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), params.dumpBuffers,
-             buffers, params.dumpFilePattern),
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
       params(params),
       historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
