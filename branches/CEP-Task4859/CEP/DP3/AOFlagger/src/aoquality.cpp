@@ -551,18 +551,19 @@ void actionHistogram(const std::string &filename, const std::string &query, bool
 		actionCollectHistogram(filename, collection, mwaChannels, 0, std::set<size_t>());
 		MeasurementSet set(filename);
 		size_t antennaCount = set.AntennaCount();
-		AntennaInfo antennae[antennaCount];
+		vector<AntennaInfo> antennae;
+                antennae.reserve(antennaCount);
 		for(size_t a=0;a<antennaCount;++a)
-			antennae[a] = set.GetAntennaInfo(a);
+                    antennae.push_back(set.GetAntennaInfo(a));
 		
 		HistogramCollection *summedCollection = collection.CreateSummedPolarizationCollection();
 		const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = summedCollection->GetRFIHistogram(0);
-		printRFISlopeForHistogram(histogramMap, '*', antennae);
+		printRFISlopeForHistogram(histogramMap, '*', &antennae[0]);
 		delete summedCollection;
 		for(unsigned p=0;p<polarizationCount;++p)
 		{
 			const std::map<HistogramCollection::AntennaPair, LogHistogram*> &histogramMap = collection.GetRFIHistogram(p);
-			printRFISlopeForHistogram(histogramMap, '0' + p, antennae);
+			printRFISlopeForHistogram(histogramMap, '0' + p, &antennae[0]);
 		}
 	} else if(query == "remove")
 	{
