@@ -77,6 +77,10 @@ namespace LOFAR
     return os;
   }
 
+  //# Forward declaration, to keep compiler happy.
+  template<typename T>
+  ostream& operator<<(ostream& os, const vector<T>& v);
+
   // Write any container to the given ostream.
   template<typename ITER>
   inline void print (std::ostream& os, ITER begin, ITER end, 
