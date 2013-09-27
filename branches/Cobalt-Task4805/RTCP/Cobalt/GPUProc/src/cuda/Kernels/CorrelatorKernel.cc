@@ -61,7 +61,7 @@ namespace LOFAR
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%04d_CorrelatorKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
             ps.settings.observationID);
     }
 

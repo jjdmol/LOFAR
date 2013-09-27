@@ -54,7 +54,7 @@ namespace LOFAR
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.BeamFormerTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%04d_BeamFormerTransposeKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_BeamFormerTransposeKernel.dat") % 
             ps.settings.observationID);
 
     }

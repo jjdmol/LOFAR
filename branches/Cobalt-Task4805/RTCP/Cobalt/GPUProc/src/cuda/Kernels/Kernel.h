@@ -85,13 +85,15 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
       
-      gpu::Stream itsStream;
       const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
 
     private:
+      // The GPU Stream associated with this kernel.
+      gpu::Stream itsStream;
+
       // Keep a local (reference counted) copy of the buffers we're using
       Buffers itsBuffers;
 

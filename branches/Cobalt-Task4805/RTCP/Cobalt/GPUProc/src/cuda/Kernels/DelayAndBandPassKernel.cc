@@ -57,7 +57,7 @@ namespace LOFAR
       dumpBuffers = 
         ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%04d_DelayAndBandPassKernel_%c%c%c.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_DelayAndBandPassKernel_%c%c%c.dat") % 
             ps.settings.observationID %
             (correctBandPass ? "B" : "b") %
             (delayCompensation ? "D" : "d") %
