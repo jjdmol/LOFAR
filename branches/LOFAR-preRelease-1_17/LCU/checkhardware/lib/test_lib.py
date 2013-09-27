@@ -8,6 +8,8 @@ import os
 import numpy as np
 import logging
 
+test_version = '0913'
+
 logger = None
 def init_test_lib():
     global logger
@@ -90,9 +92,11 @@ class cRCUdata:
                 self.testSignal_Y = ssY[subband]
                 self.testSubband_Y = subband
                 return                
+            else:
+                logger.debug("Test signal on subband %d not strong enough X=%3.1fdB Y=%3.1fdB" %(subband, ssX[subband], ssY[subband]))
                 
         # no subband given or not in requested range, look for better
-        for i in range(ssX.shape[0]):
+        for i in range(1,ssX.shape[0],1):
             if ssX[i] > minsignal  and ssX[i] < maxsignal and ssX[i] > self.testSignal_X:
                 self.testSignal_X = ssX[i]
                 self.testSubband_X = i
@@ -541,10 +545,13 @@ class cHBA:
         
         time.sleep(2.0)
         ctrlstr1 = ('128,'* 16)[:-1] 
-        ctrlstr2 = ('253,'* 16)[:-1]
+        #ctrlstr2 = ('252,'* 16)[:-1]
+        ctrlstr2 = ('252,'* 16)[:-1]
         for ctrl in (ctrlstr1, ctrlstr2):
-            rspctl('--hbadelay=%s' %(ctrl), wait=10.0)
+            #rsp_hba_delay(delay=ctrl, n_rcus=self.db.nr_rcu)
+            rspctl('--hbadelay=%s' %(ctrl), wait=12.0)
             data = rspctl('--realdelays', wait=0.0).splitlines()
+            
             ctrllist = ctrl.split(',')
             for line in data:
                 if line[:3] == 'HBA':
@@ -577,7 +584,7 @@ class cHBA:
             turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
             self.hba.resetRcuState()
             
-        rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=10.0)
+        rspctl('--hbadelay=%s' %(('252,'* 16)[:-1]), wait=10.0)
         self.rcudata.record(rec_time=1)
         
         logger.debug("- test X -")
@@ -611,7 +618,7 @@ class cHBA:
             turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
             self.hba.resetRcuState()
         
-        rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=10.0)
+        rspctl('--hbadelay=%s' %(('252,'* 16)[:-1]), wait=10.0)
         clean = False
         while not clean:
             clean = True
@@ -647,7 +654,7 @@ class cHBA:
             if tile.x.rcu_off or tile.y.rcu_off:
                 logger.info("skip low-noise test for tile %d, RCUs turned off" %(tile.nr))
                 
-        rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=10.0)
+        rspctl('--hbadelay=%s' %(('252,'* 16)[:-1]), wait=10.0)
         self.rcudata.record(rec_time=record_time)
         
         
@@ -724,7 +731,7 @@ class cHBA:
             turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
             self.hba.resetRcuState()
             
-        rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=10.0)
+        rspctl('--hbadelay=%s' %(('252,'* 16)[:-1]), wait=10.0)
         self.rcudata.record(rec_time=1)
         
         # result is a sorted list on maxvalue
@@ -754,15 +761,15 @@ class cHBA:
         
         # check twice
         # 128 ...
-        # 253 ...
+        # 248 ...
         
         for tile in self.hba.tile:
             if tile.x.rcu_off or tile.y.rcu_off:
                 logger.info("skip signal test for tile %d, RCUs turned off" %(tile.nr))
                     
-        for ctrl in ('128,', '253,'):
+        for ctrl in ('128,', '252,'):
             if ctrl == '128,': ctrl_nr = 0
-            elif ctrl == '253,': ctrl_nr = 1
+            elif ctrl == '252,': ctrl_nr = 1
                 
             logger.info("HBA signal test, ctrl word %s" %(ctrl[:-1]))
             
@@ -841,7 +848,7 @@ class cHBA:
                         logger.info("HBA Tile=%d  Error:  X=%3.1fdB  Y=%3.1fdB" %\
                                      (tile.nr, ssdataX[tile.nr], ssdataY[tile.nr]))
                         
-        rspctl('--hbadelay=%s' %(('253,'* 16)[:-1]), wait=8.0)
+        rspctl('--hbadelay=%s' %(('252,'* 16)[:-1]), wait=8.0)
         logger.info("Done HBA signal test")
         
         self.hba.signal_check_done = 1
@@ -875,15 +882,18 @@ class cHBA:
         turnoffRCUs()
         turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
         self.hba.resetRcuState()
-        
-        n_rcus_off = 0
-        delay_start  = 0
-        for ctrl in ('128', '253'):
+       
+        n_rcus_off  = 0
+        delay_start = 0
+        for ctrl in ('128', '248'):
             if ctrl == '128': ctrl_nr = 0
-            elif ctrl == '253': ctrl_nr = 1
+            elif ctrl == '248': ctrl_nr = 1
+             
+            # delay command for first element             
+            ctrlstring = (ctrl+',' + '2,'*15)[:33]
+            rspctl('--hbadelay=%s' %(ctrlstring), wait=0.0)
+            delay_start = time.time()
             
-            #ctrlstring = (ctrl+',' + '2,'*15)[:33]
-            #rspctl('--hbadelay=%s' %(ctrlstring), wait=10.0)
             for elem in range(self.hba.tile[0].nr_elements):
                 logger.info("check elements %d, ctrlword=%s" %(elem+1, ctrl))
                 if n_rcus_off > 0:
@@ -897,9 +907,17 @@ class cHBA:
                 clean = False
                 while not clean:
                     clean = True
-                    ctrlstring = ('2,'*elem + ctrl + ',' + '2,'*15)[:33]
-                    rspctl('--hbadelay=%s' %(ctrlstring), wait=10.0)
+                    # wait if delay command ot ready
+                    if (time.time() - delay_start) < 10.0:
+                        time.sleep(10.0 - (time.time() - delay_start))
                     self.rcudata.record(rec_time=record_time)
+                    
+                    # Record done. While analysing set delay for next run
+                    next_elem = elem + 1
+                    if next_elem < self.hba.tile[0].nr_elements:
+                        ctrlstring = ('2,'*next_elem + ctrl + ',' + '2,'*15)[:33]
+                        rspctl('--hbadelay=%s' %(ctrlstring), wait=0.0)
+                        delay_start = time.time()
                     
                     clean, n_off = self.checkOscillationElements(elem)
                     n_rcus_off += n_off
@@ -919,6 +937,7 @@ class cHBA:
         rspctl('--hbadelay=%s' %(('128,'* 16)[:-1]), wait=8.0)
         return
     
+    # Do a complete element test testing only the signal
     def checkElementsSignal(self, mode, subband, rf_min_signal, rf_low_deviation, rf_high_deviation):
                       
         logger.info("=== Start HBA element based signal test in mode %d ===" %(mode))
@@ -928,14 +947,17 @@ class cHBA:
         turnonRCUs(mode=mode, rcus=self.db.nr_rcu)
         self.hba.resetRcuState()
         
-        n_rcus_off = 0
-        delay_start  = 0
-        for ctrl in ('128', '253'):
+        n_rcus_off  = 0
+        delay_start = 0
+        for ctrl in ('128', '248'):
             if ctrl == '128': ctrl_nr = 0
-            elif ctrl == '253': ctrl_nr = 1
+            elif ctrl == '248': ctrl_nr = 1
             
+            # delay command for first element
             ctrlstring = (ctrl+',' + '2,'*15)[:33]
-            rspctl('--hbadelay=%s' %(ctrlstring), wait=10.0)
+            rspctl('--hbadelay=%s' %(ctrlstring), wait=0.0)
+            delay_start = time.time()
+            
             for elem in range(self.hba.tile[0].nr_elements):
                 logger.info("check elements %d, ctrlword=%s" %(elem+1, ctrl))
                 if n_rcus_off > 0:
@@ -946,18 +968,20 @@ class cHBA:
                         self.turnOffTile(tile.nr)
                         n_rcus_off += 1
                         logger.info("skip tile %d, modem error" %(tile.nr))
-                clean = False
-                while not clean:
-                    clean = True
-                    if (time.time() - delay_start) < 10.0:
-                        time.sleep(10.0 - (time.time() - delay_start))
-                    
-                    self.rcudata.record(rec_time=2)
-                    
-                    ctrlstring = ('2,'*elem + ctrl + ',' + '2,'*15)[:33]
+                
+                # wait if delay command ot ready
+                if (time.time() - delay_start) < 10.0:
+                    time.sleep(10.0 - (time.time() - delay_start))
+                self.rcudata.record(rec_time=2)
+
+                # Record done. While analysing set delay for next run
+                next_elem = elem + 1
+                if next_elem < self.hba.tile[0].nr_elements:
+                    ctrlstring = ('2,'*next_elem + ctrl + ',' + '2,'*15)[:33]
                     rspctl('--hbadelay=%s' %(ctrlstring), wait=0.0)
                     delay_start = time.time()
-                    self.checkSignalElements(elem, ctrl_nr, subband, rf_min_signal, rf_low_deviation, rf_high_deviation)
+                
+                self.checkSignalElements(elem, ctrl_nr, subband, rf_min_signal, rf_low_deviation, rf_high_deviation)
 
         self.hba.element_check_done = 1
         self.db.addTestDone('ES%d' %(mode))
