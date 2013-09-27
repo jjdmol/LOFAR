@@ -43,9 +43,9 @@ const char* srcFile("t_gpu_utils.cl");
 #error "Either USE_CUDA or USE_OPENCL must be defined"
 #endif
 
-struct Fixture
+struct CreateFixture
 {
-  Fixture() {
+  CreateFixture() {
     ofstream ofs(srcFile);
     if (!ofs) throw runtime_error("Failed to create file: " + string(srcFile));
     ofs << "#if defined FOO && FOO != 42\n"
@@ -58,38 +58,38 @@ struct Fixture
 #endif
         << endl;
   }
-  ~Fixture() {
+  ~CreateFixture() {
     remove(srcFile);
   }
 };
 
-TEST_FIXTURE(Fixture, CreatePtx)
+TEST_FIXTURE(CreateFixture, CreatePtx)
 {
   createPTX(srcFile);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxExtraDef)
+TEST_FIXTURE(CreateFixture, CreatePtxExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "42";
   createPTX(srcFile, defs);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxWrongExtraDef)
+TEST_FIXTURE(CreateFixture, CreatePtxWrongExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "24";
   CHECK_THROW(createPTX(srcFile, defs), GPUProcException);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxExtraFlag)
+TEST_FIXTURE(CreateFixture, CreatePtxExtraFlag)
 {
   CompileFlags flags;
   flags.insert("--source-in-ptx");
   createPTX(srcFile, defaultCompileDefinitions(), flags);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
+TEST_FIXTURE(CreateFixture, CreatePtxWrongExtraFlag)
 {
   CompileFlags flags;
   flags.insert("--yaddayadda");
@@ -97,13 +97,13 @@ TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
               GPUProcException);
 }
 
-TEST_FIXTURE(Fixture, CreateModule)
+TEST_FIXTURE(CreateFixture, CreateModule)
 {
   gpu::Device device(gpu::Platform().devices()[0]);
   createModule(gpu::Context(device), srcFile, createPTX(srcFile));
 }
 
-TEST_FIXTURE(Fixture, CreateModuleHighestArch)
+TEST_FIXTURE(CreateFixture, CreateModuleHighestArch)
 {
   // Highest known architecture is 3.5. 
   // Only perform this test if we do NOT have a device with that capability.
