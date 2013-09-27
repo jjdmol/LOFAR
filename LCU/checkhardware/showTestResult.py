@@ -76,16 +76,11 @@ def main():
         
     RCUx = RCUy = 0
     
-    banner = "\n"
-    banner += "------------------------------------------------------------------------------------------------------\n"
-    banner += " #       #     ###  #####       ###  #  #  ####   ###  #  #       ####   ####   ###   #   #  #   #####\n"
-    banner += " #      # #   #       #        #     #  #  #     #     # #        #   #  #     #      #   #  #     #  \n"
-    banner += " #     #   #   ###    #        #     ####  ###   #     ##         ####   ###    ###   #   #  #     #  \n"
-    banner += " #     #####      #   #        #     #  #  #     #     # #        #  #   #         #  #   #  #     #  \n"
-    banner += " ####  #   #   ###    #    o    ###  #  #  ####   ###  #  #   o   #   #  ####   ###    ###   ####  #  \n"
-    banner += "------------------------------------------------------------------------------------------------------\n"
-    print banner
     
+    print "\n"+"-"*103
+    print ">"*36+"   LAST STATION-CHECK RESULT   "+"<"*36
+    print "-"*103
+
     _part = ''
     _part_nr = -1
     _element_nr = -1
@@ -129,9 +124,10 @@ def main():
             continue
         date = d[0]
         
-        if last_date != date:
-            print '\n'+'#'*103
-        last_date = date
+        if args.has_key('D'):
+            if last_date != date:
+                print '\n'+'#'*103
+            last_date = date
         
         if first_date != 0 and int(date) < int(first_date):
             continue
@@ -161,17 +157,20 @@ def main():
             #    print "   NEW TEST  "*8
             #    print '-'*103
             #    
+            if msg == 'VERSIONS':
+                print "Used script versions: checkHardware=%s, test_db=%s, test_lib=%s, search_lib=%s\n" %(kv.get('CHECK'), kv.get('DB'), kv.get('TEST'), kv.get('SEARCH'))
+                
             if msg == 'STATION':
-                print ">> Station name : %s" %(kv.get('NAME'))
+                print "-- Station name     : %s" %(kv.get('NAME'))
             
             if msg == 'RUNTIME':
-                print ">> Check runtime: %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
+                print "-- Check runtime    : %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
             
             if msg == 'CHECKS':
-                print ">> Checks done  : %s" %(string.join(d[4:],', ')) 
+                print "-- Checks done      : %s" %(string.join(d[4:],', ')) 
             
             if msg == 'STATISTICS':
-                print ">> Bad antennas : LBL=%s, LBH=%s, HBA=%s" %\
+                print "-- Bad antennas     : LBL=%s, LBH=%s, HBA=%s" %\
                       (kv.get('BAD_LBL'), kv.get('BAD_LBH'), kv.get('BAD_HBA'))
             
         if part == 'RSP':
@@ -226,8 +225,8 @@ def main():
                 print hdr + "="*(104-len(hdr))    
             
             lbaNumber = partnumber
-            if part == 'LBL':
-                lbaNumber += 48
+            #if part == 'LBL':
+            #    lbaNumber += 48
             
             if msg == 'NOSIGNAL':
                 print "   NO test signal found"
