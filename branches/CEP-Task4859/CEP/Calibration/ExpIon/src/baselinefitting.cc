@@ -104,14 +104,17 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
     for(int i=0; i<N_parm; ++i) cEq[i] = 0.0;
     
     int N_thread = OpenMP::maxThreads();
-    LSQFit lnl[N_thread];
+    // LSQFit lnl[N_thread];
+    vector<LSQFit> lnl;
+    lnl.reserve(N_thread);
     
     uInt nr = 0;
     
     for (int iter = 0; iter<1000; iter++)
     {
         for(int i = 0; i<N_thread; i++) {
-            lnl[i] = LSQFit(N_parm);
+            // lnl[i] = LSQFit(N_parm);
+            lnl.push_back(LSQFit(N_parm));
         }
         #pragma omp parallel
         {
@@ -178,7 +181,6 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
         Float eq[2];
         eq[0] = 1.0;
         eq[1] = -1.0;
-        uInt idx[2];
 
         if ((!no_constant_parm) )
         {
