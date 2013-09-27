@@ -22,6 +22,7 @@
 
 #include "FIR_FilterKernel.h"
 #include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
 #include <CoInterface/BlockID.h>
 
 #include <boost/lexical_cast.hpp>
@@ -141,13 +142,10 @@ namespace LOFAR
 
     void FIR_FilterKernel::dumpBuffers(const BlockID &blockId) const
     {
-      std::string dumpFile = str(format(itsDumpFilePattern) %
-                                 blockId.globalSubbandIdx %
-                                 blockId.block);
-      LOG_INFO_STR("Dumping output buffer to file: " << dumpFile);
-      gpu::HostMemory buf(itsBuffers.output.fetch());
-      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
-      ofs.write(buf.get<char>(), buf.size());
+      dumpBuffer(itsBuffers.output,
+                 str(format(itsDumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
     }
 
     //--------  Template specializations for KernelFactory  --------//
