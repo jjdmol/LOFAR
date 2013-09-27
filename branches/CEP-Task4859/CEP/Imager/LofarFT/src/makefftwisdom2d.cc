@@ -143,8 +143,8 @@ int main (int argc, char* argv[])
     fftwf_init_threads();
 
     fftwf_plan_with_nthreads (1);
-    const int* sizes = FFTCMatrix::getOptimalOddFFTSizes();
-    int nsizes = FFTCMatrix::nOptimalOddFFTSizes();
+    // const int* sizes = FFTCMatrix::getOptimalOddFFTSizes();
+    // int nsizes = FFTCMatrix::nOptimalOddFFTSizes();
     // for (int i=0; i<nsizes && sizes[i]<maxsize; ++i) {
     //   cerr << ' ' << sizes[i];
     //   fftmat.plan (sizes[i], true, FFTW_PATIENT);
