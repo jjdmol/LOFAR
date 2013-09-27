@@ -6,6 +6,8 @@ from subprocess import (Popen, PIPE)
 import time
 import os
 
+general_version = '0913'
+
 def writeMessage(msg):
     res = sendCmd('wall', msg)
     return
