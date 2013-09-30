@@ -19,8 +19,12 @@ if [ $? -ne 0 ]; then
   exit 3
 fi
 
+
 # This requires that tMSWriterCorrelated has found static meta data files.
 # Otherwise, the tables are not created, an exception is caught and printed,
 # but tMSWriterCorrelated returns 0. This will then fail (if taql is found).
+
+# The taql needs the storage manager library to read our LOFAR correlator MS output.
+export LD_LIBRARY_PATH=@CMAKE_BINARY_DIR@/RTCP/LofarStMan/src:$LD_LIBRARY_PATH
 taql 'select ELEMENT_FLAG[,0] from tMSWriterCorrelated.in_1/SB000.MS::LOFAR_ANTENNA_FIELD'
 
