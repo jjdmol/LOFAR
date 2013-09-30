@@ -26,6 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <CoInterface/BlockID.h>
 #include "../TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
@@ -133,7 +134,8 @@ int main() {
   unsigned sap = 0;
 
   PerformanceCounter counter(ctx);
-  kernel->enqueue(counter, subbandFreq, sap);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

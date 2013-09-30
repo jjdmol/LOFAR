@@ -29,6 +29,7 @@
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 
+#include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
@@ -59,6 +60,9 @@ void runTest( Context &ctx, Stream &stream )
 
   KernelFactory<BeamFormerTransposeKernel> factory(params);
 
+  // Define dummy Block-ID
+  BlockID blockId;
+
   // Define and fill input with unique values
   DeviceMemory dInput(ctx, factory.bufferSize(BeamFormerTransposeKernel::INPUT_DATA));
   MultiDimArrayHostBuffer<fcomplex, 4> hInput(boost::extents[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS], ctx);
@@ -76,7 +80,7 @@ void runTest( Context &ctx, Stream &stream )
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);
-  kernel->enqueue();
+  kernel->enqueue(blockId);
   stream.readBuffer(hOutput, dOutput, true);
 
   // Verify output

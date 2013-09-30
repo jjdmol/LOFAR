@@ -20,15 +20,21 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-
 #include "CoherentStokesKernel.h"
 
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -41,12 +47,19 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
-      timeIntegrationFactor(ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
-    {
+      timeIntegrationFactor(
+        ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
+     {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
       timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.CoherentStokesKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_CoherentStokesKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
 
@@ -54,7 +67,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
