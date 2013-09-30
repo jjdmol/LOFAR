@@ -71,7 +71,11 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
+  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
+  cerr << "beam-forming for the Pulsar mode." << endl;
+  cerr << endl;
+  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
