@@ -12,6 +12,9 @@
 
 . $srcdir/testFuncs.sh
 
+# Check for GPU
+haveGPU || exit 3
+
 # Create and use LOFARROOT environment
 mklofarroot tProductionParsets_tmp.lofarroot
 
