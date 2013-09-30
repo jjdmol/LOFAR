@@ -1,4 +1,4 @@
-//# tDelayAndBandpass.cc: test delay and bandpass CUDA kernel
+//# tCorrelator.cc: test correlator CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -154,7 +154,9 @@ int main()
   unsigned nr_kernel_functions =
     sizeof(kernel_functions) / sizeof(kernel_functions[0]);
 
-  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) {
+  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) 
+  {
+    cerr << kernel_functions[func_idx] << endl;
     const char* function = kernel_functions[func_idx];
 
     // ***********************************************************
@@ -290,14 +292,87 @@ int main()
               delete [] inputData;
               delete [] outputData;
               return -1;
-            }
+           }
           }
           cerr << outputData[idx_in_output_data] << ", ";
         }
         cerr << endl;
       }
     }
-    // Validate that the channel 8 had fringes
+    
+    // ***********************************************************
+    // test 3: If all input data is zero the output should be zero
+    // except a specific set of values
+    cerr << "Length input data:" << inputData << endl;
+    for (unsigned idx = 0; idx < lengthInputData; ++idx)
+      inputData[idx] = 0;
+
+    // insert some values at specific locations in the input matrix
+    unsigned timestep = NR_POLARIZATIONS*COMPLEX;
+    unsigned chanstep =  NR_POLARIZATIONS*COMPLEX*NR_SAMPLES_PER_CHANNEL;
+    unsigned stationstep =  NR_POLARIZATIONS*COMPLEX*NR_SAMPLES_PER_CHANNEL*NR_CHANNELS;
+    // [0][5][7][0][0] = 2
+    // [0][5][7][0][1] = 3
+    inputData[chanstep * 5 + timestep * 7] = 2;
+    inputData[chanstep * 5 + timestep * 7 + 1] = 3;
+    // [1][5][7][1][0] = 4
+    // [1][5][7][1][1] = 5
+    inputData[stationstep + chanstep * 5 + timestep * 7 + NR_POLARIZATIONS] = 4;
+    inputData[stationstep + chanstep * 5 + timestep * 7 + NR_POLARIZATIONS + 1] = 5;
+
+    outputOnHost = runTest(ctx, cuStream, inputData, function);
+
+    // Copy the output data to a local array
+    outputOnHostPtr = outputOnHost.get<float>();
+    for (unsigned idx = 0; idx < lengthOutputData; ++idx)
+      outputData[idx] = outputOnHostPtr[idx];
+
+    // Now validate the outputdata
+    for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES; ++idx_baseline)
+    {
+      cerr << "baseline: " << idx_baseline << endl;
+      for (unsigned idx_channels = 0; idx_channels < NR_CHANNELS; ++idx_channels)
+      {
+        cerr << idx_channels << " : ";
+        for (unsigned idx = 0; idx < 8; ++idx)
+        {
+          unsigned idx_in_output_data =
+            idx_baseline * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
+            idx_channels * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
+            idx;
+          cerr << idx_in_output_data << ":" << outputData[idx_in_output_data] << ", ";
+          if ( idx_channels != 0)
+            if (outputData[idx_in_output_data] != 0)
+            {
+              // We need to find 4 specific indexes with values:
+              // THe output location of the values does not change with differing input size
+              if (idx_baseline == 0 &&  idx_channels == 5 && idx == 0)
+                if ( outputData[idx_in_output_data] == 13)
+                  continue; // ok value continue
+              
+              if (idx_baseline == 1 &&  idx_channels == 5 && idx == 2)
+                if ( outputData[idx_in_output_data] == 23)
+                  continue; // ok value continue
+
+              if (idx_baseline == 1 &&  idx_channels == 5 && idx == 3)
+                if ( outputData[idx_in_output_data] == 2)
+                  continue; // ok value continue
+              
+              if (idx_baseline == 2 &&  idx_channels == 5 && idx == 6)
+                if ( outputData[idx_in_output_data] == 41)
+                  continue; // ok value continue
+
+
+              cerr << "Non zero number encountered while all input data was zero. Exit -1";
+              delete [] inputData;
+              delete [] outputData;
+              return -1;
+            }
+        }
+        cerr << endl;
+      }
+    }
+
 
   } // for func_idx
 
@@ -305,4 +380,3 @@ int main()
   delete [] outputData;
   return 0;
 }
-
