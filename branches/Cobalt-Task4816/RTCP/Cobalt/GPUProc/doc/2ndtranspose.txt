@@ -1,0 +1,132 @@
+Jan David's raw notes for 2nd transpose investigation
+--------------------------------------------------------
+
+The beam-formed data is transposed when transported from GPUProc (rtcp) to OutputProc (outputProc).
+
+The rtcp process has:
+  * All TABs and Stokes of 1 subbands per thread,
+
+The outputProc process needs:
+  * All subbands of 1 Stokes of 1 TAB per thread.
+
+
+Generic transpose code:
+  writer:
+    - one thread / receiver node
+    - one write queue / receiver node
+    - data supplier copies data into queue:
+        * data
+        * ID (tab, subband, block)
+
+  reader:
+    - one thread / writer node
+    - one read queue / writer node
+    - receives block (tab, subband, block, data):
+       - must construct several blocks for tabs simultaneously
+
+         received(tab, subband, block, data) {
+           ASSERT(blocks.find(block) != blocks.end());
+
+           if (block < blocks.min()) {
+             // block too old -- discard
+             return;
+           }
+
+           if (block > blocks.max()) {
+             // TODO: block too new!
+             return;
+           }
+
+           blocks[block].subbands[subband] = data;
+           if (--blocks[block].subbandsLeft == 0) {
+             // all subbands received -- forward block to writer
+
+             blocks.erase(block);
+           }
+         }
+
+Needs a generic 'subband collector' on the receiver side:
+
+(Hooks into CoInterface/src/TABTranspose.h)
+
+class TABBlockWriter {
+public:
+  void write() {
+    SmartPtr<TABBlock> block;
+
+    Stream stream(connectToDisk(writerRank));
+
+    while ((block = outputPool.filled.remove()) != NULL) {
+      block->write(stream);
+
+      outputPool.free.append(block);
+    }
+  }
+private:
+  Pool< SmartPtr<TABBlock> > &outputPool;
+};
+
+class TransposeReceiver {
+public:
+  TransposeReceiver(std::map<size_t,TABBlockCollector> &collectors)
+  :
+    collector(collector)
+  {
+  }
+
+  void receiveSubbands(Stream &stream)
+  {
+    TABSubband subband;
+
+    for(;;) {
+      subband.read(stream);
+
+      collectors.at(subband.fileIdx).addSubband(subband);
+    }
+  }
+
+private:
+  std::map<size_t,TABBlockCollector> &collectors;
+};
+
+class TransposeSender {
+public:
+  TransposeSender()
+  {
+  }
+
+  void send(BeamFormedData &data) {
+    const size_t nrStokes = data.shape()[0];
+
+    for (size_t fileIdx = 0; fileIdx < data.shape()[0]; ++fileIdx) {
+      size_t writerRank = outputProcRank(stokesIdx);
+
+      SmartPtr<TABSubband> subband = writerPool[writerRank].free.remove();
+
+      subband->fileIdx = fileIdx;
+      subband->subband = data.blockID.globalSubbandIdx;
+      subband->block   = data.blockID.block;
+
+      memcpy(subband->data.origin(), &data[fileIdx].origin(), subband->data.size() * sizeof *subband->data.origin());
+
+      writerPool[writerRank].filled.append(subband);
+    }
+  }
+
+  // One thread per receiving node,
+  // note that we could use select() or epoll() instead.
+  void writeOutput(size_t writerRank) {
+    SmartPtr<TABSubband> subband;
+
+    Stream stream(connectToOutputProc(writerRank));
+
+    while ((subband = writerPool[writerRank].filled.remove()) != NULL) {
+      subband->write(stream);
+
+      writerPool[writerRank].free.append(subband);
+    }
+  }
+
+private:
+};
+
