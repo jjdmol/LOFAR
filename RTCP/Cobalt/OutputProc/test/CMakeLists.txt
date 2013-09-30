@@ -4,9 +4,12 @@ include(LofarCTest)
 
 lofar_add_test(tMeasurementSetFormat tMeasurementSetFormat.cc)
 lofar_add_test(tMSWriterDAL tMSWriterDAL.cc)
-# The MS Writer needs to locate static meta data files.
-# For production, LOFARROOT is used, but the source dir structure is different.
-# So for regression tests, pass the source dir.
+# The MS Writer needs the LOFAR Storage manager and static meta data files.
+# For production, LOFARROOT is used, but build/source dir structure differs
+# from installed dir. For regression tests, have cmake provide paths.
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated.run.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated.run @ONLY)
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated.parset.in
   ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated.parset @ONLY)
