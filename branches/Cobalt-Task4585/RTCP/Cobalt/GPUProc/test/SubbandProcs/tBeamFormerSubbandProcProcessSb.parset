@@ -2,7 +2,7 @@ Cobalt.correctBandPass			 = F
 Cobalt.delayCompensation		 = F
 Observation.sampleClock			 = 200
 Observation.nrBitsPerSample  = 16
-Cobalt.blockSize             = 32768
+Cobalt.blockSize             = 65536
 
 Observation.VirtualInstrument.stationList = [CS002]
 Observation.antennaSet = HBA_DUAL
