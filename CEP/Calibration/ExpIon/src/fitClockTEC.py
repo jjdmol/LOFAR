@@ -421,10 +421,10 @@ def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,st
                     iD1=-4
                     iD2=4
                  else:
-                    iTEC1=-1
-                    iTEC2=1
-                    iD1=-200
-                    iD2=200
+                    iTEC1=-2
+                    iTEC2=2
+                    iD1=-300
+                    iD2=300
                 print "First",iTEC1,iTEC2,iD1,iD2
                     
 
