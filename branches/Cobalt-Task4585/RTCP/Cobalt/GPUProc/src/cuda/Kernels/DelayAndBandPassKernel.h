@@ -87,9 +87,8 @@ namespace LOFAR
                              const Parameters &param);
 
 
-      void enqueue(gpu::Stream &queue,
-                    PerformanceCounter &counter,
-                   float subbandFrequency, size_t SAP);
+      void enqueue(PerformanceCounter &counter,
+                   double subbandFrequency, size_t SAP);
     };
 
     // Specialization of the KernelFactory for

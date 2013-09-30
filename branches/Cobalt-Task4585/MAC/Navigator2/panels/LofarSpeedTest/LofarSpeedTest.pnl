@@ -850,7 +850,7 @@ LANG:1 0
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 CS010:
+LANG:1 6 CS011:
 2 46
 "PRIMITIVE_TEXT21"
 ""
@@ -1284,7 +1284,7 @@ LANG:1 0
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 CS010:
+LANG:1 6 CS011:
 14 75
 "TEXT_FIELD20"
 ""
@@ -1678,7 +1678,7 @@ LANG:1 0
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 CS010:
+LANG:1 6 CS011:
 14 88
 "TEXT_FIELD26"
 ""
@@ -2072,7 +2072,7 @@ LANG:1 0
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 6 CS010:
+LANG:1 6 CS011:
 13 157
 "PUSH_BUTTON73"
 ""

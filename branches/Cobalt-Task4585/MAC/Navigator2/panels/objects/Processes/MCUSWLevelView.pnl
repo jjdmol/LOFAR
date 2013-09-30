@@ -19,10 +19,10 @@ PANEL,-1 -1 765 50 N "_3DFace" 1
     if(dpExists(baseDP+\".SWLevel\")) {
       if (dpConnect(\"setSWLine\", baseDP+\".SWLevel:_online.._value\",
                                           baseDP+\".SWLevel:_online.._invalid\") == -1) {
-        LOG_ERROR(\"StationSWLevelView.pnl:main|Couldn't connect to: \"+baseDP+\".SWLevel\");
+        LOG_ERROR(\"MCUSWLevelView.pnl:main|Couldn't connect to: \"+baseDP+\".SWLevel\");
       }
     } else {
-      LOG_ERROR(\"StationSWLevelView.pnl:main|\"+baseDP+\".SWLevel not found\");
+      LOG_ERROR(\"MCUSWLevelView.pnl:main|\"+baseDP+\".SWLevel not found\");
     }
   }  
 }
@@ -91,19 +91,19 @@ E E 0 1 1 2 1 E U  0 E 70 80 71 93
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
 LANG:1 0 
-1 17 1 "" 0
+1 31 1 "" 0
 0
-1 18 2 "" 0
+1 32 2 "" 0
 0
-1 19 3 "" 0
+1 33 3 "" 0
 0
-1 20 4 "" 0
+1 34 4 "" 0
 0
-1 21 11 "" 0
+1 35 11 "" 0
 0
-1 22 12 "" 0
+1 36 12 "" 0
 0
-1 23 13 "" 0
+1 37 13 "" 0
 0
 4 24
 "swline1"

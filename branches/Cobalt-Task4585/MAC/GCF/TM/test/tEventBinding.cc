@@ -322,7 +322,7 @@ GCFEvent::TResult tEventBinding::bindDefaultOnSignal(GCFEvent& event, GCFPortInt
 		
 	case ECHO_ECHO: {
 		EchoEchoEvent	echo(event);
-		ASSERTSTR(echo.seqnr == 401 && gCounter1 == 0 || echo.seqnr == 402 && gCounter1 == 1, "DEFAULT BINDING ON SIGNAL DOES NOT WORK.");
+		ASSERTSTR( (echo.seqnr == 401 && gCounter1 == 0) || (echo.seqnr == 402 && gCounter1 == 1), "DEFAULT BINDING ON SIGNAL DOES NOT WORK.");
 		switch (echo.seqnr) {
 		case 401: {
 			EchoPingEvent	ping;

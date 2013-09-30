@@ -32,6 +32,7 @@
 #include <GPUProc/BandPass.h>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -85,11 +86,11 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter, float subbandFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(PerformanceCounter &counter, double subbandFrequency, size_t SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(queue, counter);
+      Kernel::enqueue(counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -102,7 +103,8 @@ namespace LOFAR
         if (itsParameters.nrChannelsPerSubband == 1)
           return 
             itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+            itsParameters.nrSamplesPerSubband *
+            itsParameters.nrBytesPerComplexSample;
         else
           return 
             itsParameters.nrStations * NR_POLARIZATIONS * 
@@ -113,10 +115,11 @@ namespace LOFAR
           itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrSAPs * itsParameters.nrStations * 
+          NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::PHASE_OFFSETS:
         return
-          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(float);
+          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
           itsParameters.nrChannelsPerSubband * sizeof(float);
@@ -135,7 +138,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";

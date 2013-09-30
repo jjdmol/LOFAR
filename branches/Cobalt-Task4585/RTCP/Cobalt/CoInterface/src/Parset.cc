@@ -189,7 +189,20 @@ namespace LOFAR
           // Observation.VirtualInstrument.stationList can contain full
           // antennafield names such as CS001LBA.
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
-          result.push_back(AntennaFieldName(station.substr(0,5), station.substr(5)));
+
+          // Do not assume the standard station name format (sily "S9").
+          string stName;
+          string antFieldName;
+          if (station.length() <= 1)
+            stName = station; // if stName or antFieldName is empty, writing an MS table will fail
+          else if (station.length() <= 5) {
+            stName = station.substr(0, station.length()-1);
+            antFieldName = station.substr(station.length()-1);
+          } else {
+            stName = station.substr(0, 5);
+            antFieldName = station.substr(5);
+          }
+          result.push_back(AntennaFieldName(stName, antFieldName));
           continue;
         }
 

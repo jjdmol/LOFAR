@@ -67,19 +67,14 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const gpu::Stream &queue) const;
-
-      void enqueue(const gpu::Stream &queue, PerformanceCounter &counter) const;
+      void enqueue() const;
 
       void enqueue(PerformanceCounter &counter) const;
-
-      void enqueue() const;
 
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream, const gpu::Function& function);
 
-      gpu::Event event;
       gpu::Stream itsStream;
       const size_t maxThreadsPerBlock;
       gpu::Grid globalWorkSize;

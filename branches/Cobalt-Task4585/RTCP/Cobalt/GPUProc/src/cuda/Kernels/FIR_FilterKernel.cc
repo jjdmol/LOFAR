@@ -109,7 +109,7 @@ namespace LOFAR
     void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
     {
       setArg(4, subbandIdx);
-      Kernel::enqueue(itsStream, counter);
+      Kernel::enqueue(counter);
     }
 
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {

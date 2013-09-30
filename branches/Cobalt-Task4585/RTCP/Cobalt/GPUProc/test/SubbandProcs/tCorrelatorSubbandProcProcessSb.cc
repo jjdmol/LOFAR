@@ -65,10 +65,9 @@ int main() {
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), ps.settings.nrPolarisations,
-                          ps.settings.beamFormer.maxNrTABsPerSAP(), 
+                          ps.settings.beamFormer.maxNrTABsPerSAP(),
                            ps.nrSamplesPerSubband(), ps.nrBytesPerComplexSample(), ctx);
   cout << "#st=" << ps.nrStations() << " #sampl/sb=" << ps.nrSamplesPerSubband() <<
-          " #pol=" << NR_POLARIZATIONS <<
           " #bytes/complexSampl=" << ps.nrBytesPerComplexSample() <<
           " Total bytes=" << in.inputSamples.size() << endl;
 
@@ -92,7 +91,8 @@ int main() {
   // Initialize subbands partitioning administration (struct BlockID). We only do the 1st block of whatever.
   in.blockID.block = 0;            // Block number: 0 .. inf
   in.blockID.globalSubbandIdx = 0; // Subband index in the observation: [0, ps.nrSubbands())
-  in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
+  in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline: [0, subbandIndices.size())
+  in.blockID.subbandProcSubbandIdx = 0; // Subband index for this subbandProc: [0, nrSubbandsPerSubbandProc)
   in.blockID.subbandProcSubbandIdx = 0; // Subband index for this SubbandProc
 
   // Initialize delays. We skip delay compensation, but init anyway,
@@ -123,10 +123,10 @@ int main() {
   // The int2float conversion scales its output to the same amplitude as in 16 bit mode.
   // For 8 bit mode, that is a factor 256.
   // Since we inserted all (1, 1) vals, for 8 bit mode this means that the correlator
-  // outputs 256*256. It then sums over nrSamplesPerSb values.
+  // outputs 16*16. It then sums over nrSamplesPerSb values.
   unsigned scale = 1*1;
   if (ps.nrBitsPerSample() == 8)
-    scale = 256*256;
+    scale = 16*16;
   bool unexpValueFound = false;
   for (size_t b = 0; b < nbaselines; b++)
     for (size_t c = 0; c < ps.nrChannelsPerSubband(); c++)

@@ -61,14 +61,14 @@ namespace LOFAR
       intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
 
       // FFT: B -> B
-      firstFFT(context, DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS, true, devB),
+      firstFFT(queue, DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS, true, devB),
 
       // delayComp: B -> A
       delayCompensationBuffers(devB, devA, devInput.delaysAtBegin, devInput.delaysAfterEnd, devInput.phaseOffsets, devNull),
       delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
-      secondFFT(context, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
+      secondFFT(queue, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
 
       // bandPass: A -> B
       devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -86,7 +86,7 @@ namespace LOFAR
       transposeKernel(factories.transpose.create(queue, transposeBuffers)),
 
       // inverse FFT: B -> B
-      inverseFFT(context, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
+      inverseFFT(queue, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
       // TODO: do a FIR for each individual TAB!!
@@ -96,7 +96,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(context, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
+      finalFFT(queue, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
       
 
       // coherentStokes: 1ch: A -> B, Nch: B -> A
@@ -207,27 +207,26 @@ namespace LOFAR
       // Otherwise, a kernel arg may not be set...
       intToFloatKernel->enqueue(counters.intToFloat);
 
-      firstFFT.enqueue(queue, counters.firstFFT);
-      delayCompensationKernel->enqueue(queue, counters.delayBp,
+      firstFFT.enqueue(counters.firstFFT);
+      delayCompensationKernel->enqueue(counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      secondFFT.enqueue(queue, counters.secondFFT);
-      correctBandPassKernel->enqueue(queue, counters.correctBandpass,
+      secondFFT.enqueue(counters.secondFFT);
+      correctBandPassKernel->enqueue(counters.correctBandpass,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(queue,
-        counters.beamformer,
+      beamFormerKernel->enqueue(counters.beamformer,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
       transposeKernel->enqueue(counters.transpose);
 
-      inverseFFT.enqueue(queue, counters.inverseFFT);
+      inverseFFT.enqueue(counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
         firFilterKernel->enqueue(counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
-        finalFFT.enqueue(queue, counters.finalFFT);
+        finalFFT.enqueue(counters.finalFFT);
       }
 
       if (ps.settings.beamFormer.coherentSettings.type != STOKES_XXYY) {

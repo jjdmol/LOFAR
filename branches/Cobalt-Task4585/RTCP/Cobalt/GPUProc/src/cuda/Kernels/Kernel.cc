@@ -27,6 +27,8 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <Common/LofarLogger.h>
+
 using namespace std;
 
 namespace LOFAR
@@ -46,23 +48,21 @@ namespace LOFAR
                    const gpu::Function& function)
       : 
       gpu::Function(function),
-      event(stream.getContext()),
       itsStream(stream),
       maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
     {
-      }
-
-    void Kernel::enqueue(const gpu::Stream &queue,
-                         PerformanceCounter &counter) const
-    {
-      queue.recordEvent(counter.start);   
-      enqueue(queue);
-      queue.recordEvent(counter.stop);
+      LOG_INFO_STR(
+        "Function " << function.name() << ":" << 
+        "\n  max. threads per block: " << 
+        function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
+        "\n  nr. of registers used : " <<
+        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    void Kernel::enqueue(const gpu::Stream &queue) const
+    void Kernel::enqueue() const
     {
-      // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
+      // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
+      //       (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
       assert(globalWorkSize.x % block.x == 0 &&
              globalWorkSize.y % block.y == 0 &&
@@ -79,18 +79,13 @@ namespace LOFAR
         << " creates more than the " << maxThreadsPerBlock
         << " supported threads/block" );
       
-      queue.launchKernel(*this, grid, block);
-    }
-
-    void Kernel::enqueue() const
-    {
-      enqueue(itsStream);
+      itsStream.launchKernel(*this, grid, block);
     }
 
     void Kernel::enqueue(PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);
-      enqueue(itsStream);
+      enqueue();
       itsStream.recordEvent(counter.stop);
     }
   }

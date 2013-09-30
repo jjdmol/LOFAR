@@ -9,8 +9,9 @@ from numpy import ma, fft, power, arange, asarray, isscalar, NaN, Inf, zeros
 from sys import exit
 import logging
 
-logger = logging.getLogger()
+search_version = '0913'
 
+logger = logging.getLogger()
 
 """
 search for all peaks (min & max) in spectra

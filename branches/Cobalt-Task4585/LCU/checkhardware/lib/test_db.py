@@ -4,6 +4,8 @@ from general_lib import *
 from lofar_lib import *
 import logging
 
+db_version = '0913'
+
 logger = None
 def init_test_db():
     global logger
@@ -20,6 +22,8 @@ class cDB:
         self.nr_lbh = nLBH
         self.nr_hba = nHBA
         self.nr_tbb = nTBB
+        
+        self.script_versions = ''
         
         self.rcumode = -1
         self.tests   = ''
@@ -109,7 +113,8 @@ class cDB:
         print logdir
         date = getShortDateStr(self.check_start_time)
         log = cTestLogger(logdir)
-
+        log.addLine("%s,NFO,---,VERSIONS,%s" %(date, self.script_versions))
+        
         log.addLine("%s,NFO,---,STATION,NAME=%s" %(date, getHostName()))   
         log.addLine("%s,NFO,---,RUNTIME,START=%s,STOP=%s" %(date, getDateTimeStr(self.check_start_time), getDateTimeStr(self.check_stop_time)))
         log.addLine("%s,NFO,---,CHECKS%s" %(date, self.tests))
@@ -160,28 +165,28 @@ class cDB:
                 for ant in lba.ant:
                     if ant.down:
                             log.addLine("%s,%s,%03d,DOWN  ,X=%3.1f,Y=%3.1f,Xoff=%d,Yoff=%d" %\
-                                       (date, lba.label, ant.nr, ant.x.test_signal, ant.y.test_signal, ant.x.offset, ant.y.offset))
+                                       (date, lba.label, ant.nr_pvss, ant.x.test_signal, ant.y.test_signal, ant.x.offset, ant.y.offset))
                     else:
                         if lba.signal_check_done:
                             valstr = ''
                             if ant.x.too_low or ant.x.too_high: valstr += ",X=%3.1f" %(ant.x.test_signal)
                             if ant.y.too_low or ant.y.too_high: valstr += ",Y=%3.1f" %(ant.y.test_signal)    
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,RF_FAIL%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,RF_FAIL%s" %(date, lba.label, ant.nr_pvss, valstr))
                         
                         if lba.oscillation_check_done:
                             valstr = ''
                             if ant.x.osc: valstr += ',X=1'
                             if ant.y.osc: valstr += ',Y=1'
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,OSCILLATION%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,OSCILLATION%s" %(date, lba.label, ant.nr_pvss, valstr))
                         
                         if lba.spurious_check_done:
                             valstr = ''
                             if ant.x.spurious: valstr += ',X=1'
                             if ant.y.spurious: valstr += ',Y=1'
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,SPURIOUS%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,SPURIOUS%s" %(date, lba.label, ant.nr_pvss, valstr))
                             
                         if lba.noise_check_done:
                             noise = False
@@ -193,7 +198,7 @@ class cDB:
                                 proc = (100.0 / ant.y.low_seconds) * ant.y.low_bad_seconds
                                 valstr += ',Yproc=%5.3f,Yval=%3.1f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.low_val, ant.y.low_diff, ant.y.low_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr_pvss, valstr))
                                 noise = True
                         
                             valstr = ''
@@ -204,7 +209,7 @@ class cDB:
                                 proc = (100.0 / ant.y.high_seconds) * ant.y.high_bad_seconds
                                 valstr += ',Yproc=%5.3f,Yval=%3.1f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.high_val, ant.y.high_diff, ant.y.high_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr_pvss, valstr))
                                 noise = True
                             
                             valstr = ''
@@ -215,7 +220,7 @@ class cDB:
                                 proc = (100.0 / ant.y.jitter_seconds) * ant.y.jitter_bad_seconds
                                 valstr += ',Xproc=%5.3f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.jitter_val, ant.y.jitter_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,JITTER%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,JITTER%s" %(date, lba.label, ant.nr_pvss, valstr))
         # end lbl/lbh                
         
         
@@ -475,7 +480,8 @@ class cDB:
         class cAntenna:
             def __init__(self, nr, nr_offset):
                 self.nr = nr
-                self.nr_total = nr + nr_offset
+                self.nr_pvss = nr + nr_offset
+                #self.nr_pvss = nr
                 self.x = cDB.cPolarity(rcu=(nr*2))
                 self.y = cDB.cPolarity(rcu=(nr*2+1))
                 
