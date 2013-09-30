@@ -40,8 +40,7 @@ namespace LOFAR
     IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrTAPs(ps.nrPPFTaps())
+      nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
     }
 
@@ -91,8 +90,6 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_TAPS"] =
-        lexical_cast<string>(itsParameters.nrTAPs);
       return defs;
     }
 

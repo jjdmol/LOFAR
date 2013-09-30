@@ -295,8 +295,6 @@ namespace LOFAR
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
-      settings.nrPPFTaps = 16;
-
       // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
@@ -496,11 +494,7 @@ namespace LOFAR
           // Obtain settings of selected stokes
           set->type = stokesType(getString(prefix + ".which", "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
-          if (set->nrChannels == 0) {
-            // apply default
-            set->nrChannels = settings.correlator.nrChannels;
-          }
+          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
           set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
           set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
           if (set->nrSubbandsPerFile == 0) {
@@ -1172,22 +1166,12 @@ namespace LOFAR
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return settings.correlator.nrSamplesPerChannel;
-    }
-
-    unsigned Parset::nrHistorySamples() const
-    {
-      return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
-    }
-
-    unsigned Parset::nrPPFTaps() const
-    {
-      return settings.nrPPFTaps;
+      return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
     }
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return settings.correlator.nrChannels;
+      return settings.correlator.enabled ? settings.correlator.nrChannels : 0;
     }
 
     size_t Parset::nrSubbands() const
