@@ -89,6 +89,7 @@ namespace LOFAR
       inverseFFT(queue, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
+      // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
       devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
@@ -97,7 +98,6 @@ namespace LOFAR
 
       // final FFT: A -> A
       finalFFT(queue, ps.settings.beamFormer.coherentSettings.nrChannels, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
-      
 
       // coherentStokes: 1ch: A -> B, Nch: B -> A
       coherentStokesBuffers(
@@ -106,7 +106,7 @@ namespace LOFAR
       coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
 
       // result buffer
-      devResult(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY ? coherentStokesBuffers.input : coherentStokesBuffers.output)
+      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
     {
       // initialize history data
       devFilterHistoryData.set(0);
@@ -205,33 +205,31 @@ namespace LOFAR
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
-      intToFloatKernel->enqueue(counters.intToFloat);
+      intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
-      firstFFT.enqueue(counters.firstFFT);
-      delayCompensationKernel->enqueue(counters.delayBp,
+      firstFFT.enqueue(input.blockID, counters.firstFFT);
+      delayCompensationKernel->enqueue(input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      secondFFT.enqueue(counters.secondFFT);
-      correctBandPassKernel->enqueue(counters.correctBandpass,
+      secondFFT.enqueue(input.blockID, counters.secondFFT);
+      correctBandPassKernel->enqueue(input.blockID, counters.correctBandpass,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(counters.beamformer,
+      beamFormerKernel->enqueue(input.blockID, counters.beamformer,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
-      transposeKernel->enqueue(counters.transpose);
+      transposeKernel->enqueue(input.blockID, counters.transpose);
 
-      inverseFFT.enqueue(counters.inverseFFT);
+      inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue(counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
-        finalFFT.enqueue(counters.finalFFT);
+        firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
+        finalFFT.enqueue(input.blockID, counters.finalFFT);
       }
 
-      if (ps.settings.beamFormer.coherentSettings.type != STOKES_XXYY) {
-        coherentStokesKernel->enqueue(counters.coherentStokes);
-      }
+      coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
 
       // TODO: Propagate flags
 
@@ -245,7 +243,6 @@ namespace LOFAR
       {
         // assure that the queue is done so all events are fished
         queue.synchronize();
-
         // Update the counters
         if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
         {
@@ -260,10 +257,7 @@ namespace LOFAR
         counters.beamformer.logTime();
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
-
-        if (ps.settings.beamFormer.coherentSettings.type != STOKES_XXYY) {
-          counters.coherentStokes.logTime();
-        }
+        counters.coherentStokes.logTime();
 
         counters.samples.logTime();
         counters.visibilities.logTime();

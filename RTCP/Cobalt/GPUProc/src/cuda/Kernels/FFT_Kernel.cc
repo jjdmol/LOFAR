@@ -25,6 +25,8 @@
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
+
 #include "FFT_Kernel.h"
 
 namespace LOFAR
@@ -46,14 +48,15 @@ namespace LOFAR
     {
     }
 
-    void FFT_Kernel::enqueue(PerformanceCounter &counter)
+    void FFT_Kernel::enqueue(const BlockID &blockId, 
+                             PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start); 
-      enqueue();
+      enqueue(blockId);
       itsStream.recordEvent(counter.stop); 
     }
 
-    void FFT_Kernel::enqueue()
+    void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
       gpu::ScopedCurrentContext scc(context);
 

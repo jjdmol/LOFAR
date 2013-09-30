@@ -22,12 +22,18 @@
 
 #include "FIR_FilterKernel.h"
 #include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
 #include <complex>
+#include <fstream>
 
 using namespace std;
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -43,6 +49,12 @@ namespace LOFAR
       nrSTABs(nrStations), // default to filter station data
       nrSubbands(1)
     {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_FIR_FilterKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
     const size_t FIR_FilterKernel::Parameters::nrTaps;
@@ -56,7 +68,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction)),
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
       params(params),
       historyFlags(boost::extents[params.nrSubbands][params.nrSTABs])
     {
@@ -106,10 +118,12 @@ namespace LOFAR
         historyFlags.origin()[n].include(0, params.nrHistorySamples());
     }
 
-    void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
+    void FIR_FilterKernel::enqueue(const BlockID &blockId,
+                                   PerformanceCounter &counter,
+                                   size_t subbandIdx)
     {
       setArg(4, subbandIdx);
-      Kernel::enqueue(counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {

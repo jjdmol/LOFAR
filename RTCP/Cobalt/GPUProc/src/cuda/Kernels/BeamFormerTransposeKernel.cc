@@ -22,14 +22,19 @@
 
 #include "BeamFormerTransposeKernel.h"
 
-#include <boost/lexical_cast.hpp>
-
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/global_defines.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -42,8 +47,16 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      nrChannelsPerSubband =
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.BeamFormerTransposeKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_BeamFormerTransposeKernel.dat") % 
+            ps.settings.observationID);
+
     }
 
     BeamFormerTransposeKernel::
@@ -51,7 +64,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);

@@ -89,7 +89,8 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
-      void enqueue(PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId,
+                   PerformanceCounter &counter,
                    size_t subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
@@ -107,8 +108,8 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
-    // Specialization of the KernelFactory for
-    // FIR_FilterKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

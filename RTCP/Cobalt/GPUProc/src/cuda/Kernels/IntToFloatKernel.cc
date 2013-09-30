@@ -22,13 +22,18 @@
 
 #include "IntToFloatKernel.h"
 
-#include <boost/lexical_cast.hpp>
-
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 
-#include <GPUProc/global_defines.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -42,13 +47,18 @@ namespace LOFAR
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_IntToFloatKernel.dat") % 
+            ps.settings.observationID);
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);

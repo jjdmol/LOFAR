@@ -87,12 +87,13 @@ namespace LOFAR
                              const Parameters &param);
 
 
-      void enqueue(PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
                    double subbandFrequency, size_t SAP);
+
     };
 
-    // Specialization of the KernelFactory for
-    // DelayAndBandPassKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
 

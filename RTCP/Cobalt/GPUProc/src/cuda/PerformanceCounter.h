@@ -22,11 +22,7 @@
 #define LOFAR_GPUPROC_CUDA_PERFORMANCECOUNTER_H
 
 
-#include <Common/Thread/Mutex.h>
-#include <Common/Thread/Condition.h>
-
-#include <GPUProc/gpu_wrapper.h> // GPUException
-
+#include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
@@ -36,7 +32,7 @@ namespace LOFAR
     class PerformanceCounter
     {
     public:
-      PerformanceCounter(const LOFAR::Cobalt::gpu::Context &context);
+      PerformanceCounter(const gpu::Context &context);
 
       void logTime();
 
