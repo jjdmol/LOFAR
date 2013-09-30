@@ -229,23 +229,25 @@ namespace LOFAR
         /*
          * Send a certain block downstream.
          */
-        void emit(size_t block) {
+        void emit(size_t blockIdx) {
           // should emit in-order
           if (!canDrop) {
-            ASSERT((ssize_t)block == lastEmitted + 1);
+            ASSERT((ssize_t)blockIdx == lastEmitted + 1);
           } else {
-            ASSERT((ssize_t)block > lastEmitted);
+            ASSERT((ssize_t)blockIdx > lastEmitted);
           }
-          lastEmitted = block;
+          lastEmitted = blockIdx;
 
           // clear data we didn't receive
-          block.zeroRemainingSubbands();
+          SmartPtr<Block> &block = blocks.at(blockIdx);
+
+          block->zeroRemainingSubbands();
           
           // emit to outputPool.filled()
-          outputPool.filled.append(blocks.at(block));
+          outputPool.filled.append(block);
 
           // remove from our administration
-          blocks.erase(block);
+          blocks.erase(blockIdx);
         }
 
         /*
