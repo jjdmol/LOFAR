@@ -1,6 +1,11 @@
 #!/bin/bash
 
 ./tMSWriterCorrelated
+status=$?
+if [ $status -ne 0 ]; then
+  echo "./tMSWriterCorrelated failed with exit status $status"
+  exit $status
+fi
 
 # add path to casacore for lhn001, but don't fail if this does not work
 (

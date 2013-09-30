@@ -21,7 +21,8 @@
 #ifndef LOFAR_GPUPROC_BLOCKID_H
 #define LOFAR_GPUPROC_BLOCKID_H
 
-#include <iostream>
+#include <sys/types.h> // ssize_t
+#include <iosfwd>
 
 namespace LOFAR
 {
