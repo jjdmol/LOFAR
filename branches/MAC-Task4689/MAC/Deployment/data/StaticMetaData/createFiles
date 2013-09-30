@@ -335,6 +335,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_02@",   "3")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_03@",   "4")
+            
       
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
