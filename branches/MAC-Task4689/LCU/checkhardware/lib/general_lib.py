@@ -6,6 +6,8 @@ from subprocess import (Popen, PIPE)
 import time
 import os
 
+general_version = '0913'
+
 def writeMessage(msg):
     res = sendCmd('wall', msg)
     return
@@ -15,9 +17,15 @@ def getShortDateStr(tm=time.gmtime()):
     return (time.strftime("%Y%m%d", tm))
 
 # Return time string in the following format HH:MM:SS
+def getDateStr(tm=time.gmtime()):
+    return (time.strftime("%d-%m-%Y", tm))    
+    
+# Return time string in the following format HH:MM:SS
 def getTimeStr(tm=time.gmtime()):
     return (time.strftime("%H:%M:%S", tm))
-
+# Return time string in the following format HH:MM:SS
+def getDateTimeStr(tm=time.gmtime()):
+    return (time.strftime("%d-%m-%YT%H:%M:%S", tm))    
 
 # Run cmd with args and return response 
 def sendCmd(cmd='', args=''):

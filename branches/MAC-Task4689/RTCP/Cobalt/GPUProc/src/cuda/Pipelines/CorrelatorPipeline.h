@@ -44,7 +44,10 @@ namespace LOFAR
     public:
       // subbandIndices is the list of subbands that are processed by this
       // pipeline, out of the range [0, ps.nrSubbands()).
-      CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices);
+      CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
+
+      // Destructor, when profiling is enabled prints the gpu performance counters
+      ~CorrelatorPipeline();
     };
   }
 }

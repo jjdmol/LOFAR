@@ -34,7 +34,10 @@ namespace LOFAR
     class BeamFormerPipeline : public Pipeline
     {
     public:
-      BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices);
+      BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
+
+      // When gpuProfiling isenabled will print the kernel statistics
+      ~BeamFormerPipeline();
     };
   }
 }

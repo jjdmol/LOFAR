@@ -25,39 +25,85 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-
-#define NR_WORKQUEUES_PER_DEVICE  2
+#include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
-      Pipeline(ps, subbandIndices)
+      Pipeline(ps, subbandIndices, devices)
     {
-      // If profiling, use one workqueue: with >1 workqueues decreased
-      // computation / I/O overlap can affect optimization gains.
-      unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrSubbandProcs);
-
-      CorrelatorFactories factories(ps);
+      CorrelatorFactories factories(ps, nrSubbandsPerSubbandProc);
 
       // Create the SubbandProcs
-      for (size_t i = 0; i < nrSubbandProcs; ++i) {
+      for (size_t i = 0; i < workQueues.size(); ++i) 
+      {
         gpu::Context context(devices[i % devices.size()]);
 
         workQueues[i] = new CorrelatorSubbandProc(ps, context, factories);
       }
+    }
 
+    CorrelatorPipeline::~CorrelatorPipeline()
+    {
+      try
+      { 
+        // TODO: I'm not really happy with this construction: Pipeline needs to know
+        // to much about the subbandProc, codesmell.
+        if(gpuProfiling)
+        {
+          // gpu kernel counters
+          RunningStatistics fir;
+          RunningStatistics fft;
+          RunningStatistics delayBp;
+          RunningStatistics correlator;
+
+          // gpu transfer counters
+          RunningStatistics samples;
+          RunningStatistics visibilities;
+          for (size_t idx_queue = 0; idx_queue < workQueues.size(); ++idx_queue)
+          {
+            //We know we are in the correlator pipeline, this queue can only contain correlatorSubbandprocs
+            CorrelatorSubbandProc *proc = dynamic_cast<CorrelatorSubbandProc *>(workQueues[idx_queue].get());
+
+            // Print the individual counters
+            proc->counters.printStats();
+
+            // Calculate aggregate statistics for the whole pipeline
+            fir += proc->counters.fir.stats;
+            fft += proc->counters.fft.stats;
+            delayBp += proc->counters.delayBp.stats;
+            correlator += proc->counters.correlator.stats;
+            samples += proc->counters.samples.stats;
+            visibilities += proc->counters.visibilities.stats;
+          }
+
+          // Now print the aggregate statistics.
+          LOG_INFO_STR("**** GPU runtimes for the complete Correlator pipeline n=" << workQueues.size()
+                        << " ****" << endl <<
+                        std::setw(20) << "(fir)" << fir << endl <<
+                        std::setw(20) << "(fft)" << fft << endl <<
+                        std::setw(20) << "(delayBp)" << delayBp << endl <<
+                        std::setw(20) << "(correlator)" << correlator << endl <<
+                        std::setw(20) << "(samples)" << samples << endl <<
+                        std::setw(20) << "(visibilities)" << visibilities << endl);
+        }
+      }
+      catch(...) // Log all errors at this stage. DO NOT THROW IN DESTRUCTOR
+      {
+        LOG_ERROR_STR("Received an Exception desctructing CorrelatorPipline, while print performance");
+      }
     }
   }
 }
-

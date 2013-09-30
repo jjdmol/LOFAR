@@ -4,6 +4,8 @@ from general_lib import *
 from lofar_lib import *
 import logging
 
+db_version = '0913'
+
 logger = None
 def init_test_db():
     global logger
@@ -20,6 +22,8 @@ class cDB:
         self.nr_lbh = nLBH
         self.nr_hba = nHBA
         self.nr_tbb = nTBB
+        
+        self.script_versions = ''
         
         self.rcumode = -1
         self.tests   = ''
@@ -54,7 +58,13 @@ class cDB:
         if self.tests.find(name) == -1:
             self.tests += ','
             self.tests += name
-
+    
+    # check if already done
+    def isTestDone(self, name):
+        if self.tests.find(name) == -1:
+            return (False)
+        return (True)
+        
     # test
     def test(self, logdir):
         if self.rspdriver_version != "ok" or self.rspctl_version != "ok":
@@ -101,18 +111,14 @@ class cDB:
     # make standard log file
     def makeLogFile(self, logdir):
         print logdir
-        date = getShortDateStr()
+        date = getShortDateStr(self.check_start_time)
         log = cTestLogger(logdir)
-
-
-        log.addLine("%s,NFO,---,STATION,NAME=%s" %\
-                   (date, getHostName()))    
-        log.addLine("%s,NFO,---,RUNTIME,START=%s,STOP=%s" %\
-                   (date, getTimeStr(self.check_start_time), getTimeStr(self.check_stop_time)))
+        log.addLine("%s,NFO,---,VERSIONS,%s" %(date, self.script_versions))
         
+        log.addLine("%s,NFO,---,STATION,NAME=%s" %(date, getHostName()))   
+        log.addLine("%s,NFO,---,RUNTIME,START=%s,STOP=%s" %(date, getDateTimeStr(self.check_start_time), getDateTimeStr(self.check_stop_time)))
         log.addLine("%s,NFO,---,CHECKS%s" %(date, self.tests))
-        log.addLine("%s,NFO,---,STATISTICS,BAD_LBL=%d,BAD_LBH=%d,BAD_HBA=%d" %\
-                   (date, self.lbl.nr_bad_antennas, self.lbh.nr_bad_antennas, self.hba.nr_bad_tiles))
+        log.addLine("%s,NFO,---,STATISTICS,BAD_LBL=%d,BAD_LBH=%d,BAD_HBA=%d" %(date, self.lbl.nr_bad_antennas, self.lbh.nr_bad_antennas, self.hba.nr_bad_tiles))
         
         if self.rspdriver_version != "ok" or self.rspctl_version != "ok":
             log.addLine("%s,RSP,---,VERSION,RSPDRIVER=%s,RSPCTL=%s" %\
@@ -159,28 +165,28 @@ class cDB:
                 for ant in lba.ant:
                     if ant.down:
                             log.addLine("%s,%s,%03d,DOWN  ,X=%3.1f,Y=%3.1f,Xoff=%d,Yoff=%d" %\
-                                       (date, lba.label, ant.nr, ant.x.test_signal, ant.y.test_signal, ant.x.offset, ant.y.offset))
+                                       (date, lba.label, ant.nr_pvss, ant.x.test_signal, ant.y.test_signal, ant.x.offset, ant.y.offset))
                     else:
                         if lba.signal_check_done:
                             valstr = ''
                             if ant.x.too_low or ant.x.too_high: valstr += ",X=%3.1f" %(ant.x.test_signal)
                             if ant.y.too_low or ant.y.too_high: valstr += ",Y=%3.1f" %(ant.y.test_signal)    
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,RF_FAIL%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,RF_FAIL%s" %(date, lba.label, ant.nr_pvss, valstr))
                         
                         if lba.oscillation_check_done:
                             valstr = ''
                             if ant.x.osc: valstr += ',X=1'
                             if ant.y.osc: valstr += ',Y=1'
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,OSCILLATION%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,OSCILLATION%s" %(date, lba.label, ant.nr_pvss, valstr))
                         
                         if lba.spurious_check_done:
                             valstr = ''
                             if ant.x.spurious: valstr += ',X=1'
                             if ant.y.spurious: valstr += ',Y=1'
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,SPURIOUS%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,SPURIOUS%s" %(date, lba.label, ant.nr_pvss, valstr))
                             
                         if lba.noise_check_done:
                             noise = False
@@ -192,7 +198,7 @@ class cDB:
                                 proc = (100.0 / ant.y.low_seconds) * ant.y.low_bad_seconds
                                 valstr += ',Yproc=%5.3f,Yval=%3.1f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.low_val, ant.y.low_diff, ant.y.low_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,LOW_NOISE%s" %(date, lba.label, ant.nr_pvss, valstr))
                                 noise = True
                         
                             valstr = ''
@@ -203,7 +209,7 @@ class cDB:
                                 proc = (100.0 / ant.y.high_seconds) * ant.y.high_bad_seconds
                                 valstr += ',Yproc=%5.3f,Yval=%3.1f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.high_val, ant.y.high_diff, ant.y.high_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,HIGH_NOISE%s" %(date, lba.label, ant.nr_pvss, valstr))
                                 noise = True
                             
                             valstr = ''
@@ -214,7 +220,7 @@ class cDB:
                                 proc = (100.0 / ant.y.jitter_seconds) * ant.y.jitter_bad_seconds
                                 valstr += ',Xproc=%5.3f,Ydiff=%5.3f,Yref=%3.1f' %(proc, ant.y.jitter_val, ant.y.jitter_ref)
                             if len(valstr):
-                                log.addLine("%s,%s,%03d,JITTER%s" %(date, lba.label, ant.nr, valstr))
+                                log.addLine("%s,%s,%03d,JITTER%s" %(date, lba.label, ant.nr_pvss, valstr))
         # end lbl/lbh                
         
         
@@ -305,53 +311,53 @@ class cDB:
                         
                         if elem.no_modem or elem.modem_error:
                             if elem.no_modem:
-                                valstr += ",M%d=??" %(elem.nr+1)
+                                valstr += ",M%d=??" %(elem.nr)
                             
                             elif elem.modem_error:
-                                valstr += ",M%d=error" %(elem.nr+1)
+                                valstr += ",M%d=error" %(elem.nr)
                         else:
                             if elem.x.osc or elem.y.osc:
                                 if elem.x.osc:
-                                    valstr += ",OX%d=1" %(elem.nr+1)
+                                    valstr += ",OX%d=1" %(elem.nr)
                                 if elem.y.osc:
-                                    valstr += ",OY%d=1" %(elem.nr+1)
+                                    valstr += ",OY%d=1" %(elem.nr)
                             
                             elif elem.x.spurious or elem.y.spurious:
                                 if elem.x.spurious:
-                                    valstr += ",SPX%d=1" %(elem.nr+1)
+                                    valstr += ",SPX%d=1" %(elem.nr)
                                 if elem.y.spurious:
-                                    valstr += ",SPY%d=1" %(elem.nr+1)
+                                    valstr += ",SPY%d=1" %(elem.nr)
                             
                             elif elem.x.low_noise or elem.x.high_noise or elem.y.low_noise or elem.y.high_noise or elem.x.jitter or elem.y.jitter:
                                 if elem.x.low_noise:
-                                    valstr += ",LNX%d=%3.1f %5.3f" %(elem.nr+1, elem.x.low_val, elem.x.low_diff)
+                                    valstr += ",LNX%d=%3.1f %5.3f" %(elem.nr, elem.x.low_val, elem.x.low_diff)
                                 
                                 if elem.x.high_noise:
-                                    valstr += ",HNX%d=%3.1f %5.3f" %(elem.nr+1, elem.x.high_val, elem.x.high_diff)
+                                    valstr += ",HNX%d=%3.1f %5.3f" %(elem.nr, elem.x.high_val, elem.x.high_diff)
                                 
                                 if (not elem.x.low_noise) and (not elem.x.high_noise) and (elem.x.jitter > 0.0):
-                                    valstr += ",JX%d=%5.3f" %(elem.nr+1, elem.x.jitter)
+                                    valstr += ",JX%d=%5.3f" %(elem.nr, elem.x.jitter)
                                     
                                 if elem.y.low_noise:
-                                    valstr += ",LNY%d=%3.1f %5.3f" %(elem.nr+1, elem.y.low_val, elem.y.low_diff)               
+                                    valstr += ",LNY%d=%3.1f %5.3f" %(elem.nr, elem.y.low_val, elem.y.low_diff)               
                                 
                                 if elem.y.high_noise:
-                                    valstr += ",HNY%d=%3.1f %5.3f" %(elem.nr+1, elem.y.high_val, elem.y.high_diff)
+                                    valstr += ",HNY%d=%3.1f %5.3f" %(elem.nr, elem.y.high_val, elem.y.high_diff)
                                 
                                 if (not elem.y.low_noise) and (not elem.y.high_noise) and (elem.y.jitter > 0.0):
-                                    valstr += ",JY%d=%5.3f" %(elem.nr+1, elem.y.jitter)
+                                    valstr += ",JY%d=%5.3f" %(elem.nr, elem.y.jitter)
                             
                             elif elem.x.ref_signal[0] == 0 or elem.y.ref_signal[0] == 0:
                                 log.addLine("%s,HBA,%03d,NOSIGNAL" %(date, tile.nr))
                             else:
                                 if elem.x.error:
                                     valstr += ",X%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                              (elem.nr+1, elem.x.test_signal[0], elem.x.test_subband[0], elem.x.ref_signal[0],\
+                                              (elem.nr, elem.x.test_signal[0], elem.x.test_subband[0], elem.x.ref_signal[0],\
                                                           elem.x.test_signal[1], elem.x.test_subband[1], elem.x.ref_signal[1])
                                 
                                 if elem.y.error:
                                     valstr += ",Y%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                              (elem.nr+1, elem.y.test_signal[0], elem.y.test_subband[0], elem.y.ref_signal[0],\
+                                              (elem.nr, elem.y.test_signal[0], elem.y.test_subband[0], elem.y.ref_signal[0],\
                                                           elem.y.test_signal[1], elem.y.test_subband[1], elem.y.ref_signal[1])
                 
                     if len(valstr):
@@ -474,7 +480,8 @@ class cDB:
         class cAntenna:
             def __init__(self, nr, nr_offset):
                 self.nr = nr
-                self.nr_total = nr + nr_offset
+                self.nr_pvss = nr + nr_offset
+                #self.nr_pvss = nr
                 self.x = cDB.cPolarity(rcu=(nr*2))
                 self.y = cDB.cPolarity(rcu=(nr*2+1))
                 
@@ -549,7 +556,7 @@ class cDB:
                 self.c_summator_error = 0
                 self.nr_elements      = 16
                 self.element = list()
-                for i in range(self.nr_elements):
+                for i in range(1,self.nr_elements+1,1):
                     self.element.append(self.cElement(i))
                 return
             

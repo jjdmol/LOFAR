@@ -138,7 +138,7 @@ makeScalarPhaseExpr(Scope &scope,
 Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
-    const Expr<Vector<2> >::Ptr &exprAzEl,
+    const Expr<Vector<3> >::Ptr &exprDirection,
     const IonosphereExpr::Ptr &exprIonosphere);
 
 // Right multiply \p lhs by \p rhs. Return \p rhs if \p lhs is uninitialized.

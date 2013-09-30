@@ -49,6 +49,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    class PerformanceCounter;
     namespace gpu
     {
 
@@ -106,6 +107,14 @@ namespace LOFAR
 
         // Returns the name of the CUDA platform. (currently, "NVIDIA CUDA")
         std::string getName() const;
+
+        // Return the maximum number of threads per block, that
+        // is supported by all devices on the platform.
+        // 
+        // Hardware dependent.
+        // - Returns at least 512 (except for ancient hardware)
+        // - Returns 1024 for K10 (= Cobalt hardware)
+        size_t getMaxThreadsPerBlock() const;
       };
 
       // Wrap a CUDA Device.
@@ -116,6 +125,9 @@ namespace LOFAR
         // \param ordinal is the device number; 
         //        valid range: [0, Platform.size()-1]
         Device(int ordinal = 0);
+
+        // Order Devices by PCI ID (used in std::sort)
+        bool operator<(const Device &other) const;
 
         // Return the name of the device in human readable form.
         std::string getName() const;
@@ -134,6 +146,16 @@ namespace LOFAR
 
         // Return the total amount of constant memory
         size_t getTotalConstMem() const;
+
+        // Return the PCI ID (bus:device) of this GPU
+        std::string pciId() const;
+
+        // Return the maximum number of threads per block
+        // 
+        // Hardware dependent.
+        // - Returns at least 512 (except for ancient hardware)
+        // - Returns 1024 for K10 (= Cobalt hardware)
+        size_t getMaxThreadsPerBlock() const;
 
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
@@ -250,6 +272,13 @@ namespace LOFAR
         // Return a device pointer as a handle to the memory.
         void *get() const;
 
+        // Fill the first \a n bytes of memory with the constant byte \a uc.
+        // \param c Constant byte value to put into memory
+        // \param n Number of bytes to set. Defaults to the complete block.
+        //          If \a n is larger than the current memory block size, then
+        //          the complete block will be set to \a uc.
+        void set(unsigned char uc, size_t n = -1);
+
         // Return the size of this memory block.
         size_t size() const;
 
@@ -325,6 +354,9 @@ namespace LOFAR
         // Construct a function object by looking up the function \a name in the
         // module \a module.
         Function(const Module &module, const std::string &name);
+
+        // Return the name of the function.
+        std::string name() const;
 
         // Set kernel immediate argument number \a index to \a val.
         // \a val must outlive kernel execution.
@@ -428,7 +460,7 @@ namespace LOFAR
         // \param flags must be 0 for CUDA < 5.0
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
-        Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
+        explicit Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
 
         // Transfer data from host memory \a hostMem to device memory \a devMem.
         // \param devMem Device memory that will be copied to.
@@ -438,6 +470,17 @@ namespace LOFAR
         void writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
                          bool synchronous = false) const;
 
+        // Transfer data from host memory \a hostMem to device memory \a devMem.
+        // When gpuProfiling is enabled this transfer is synchronous
+        // \param devMem Device memory that will be copied to.
+        // \param hostMem Host memory that will be copied from.
+        // \param counter PerformanceCounter that will receive transfer duration
+        // if  gpuProfiling is enabled
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously. Default == false
+        void writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
+                         const PerformanceCounter &counter, bool synchronous = false) const;
+
         // Transfer data from device memory \a devMem to host memory \a hostMem.
         // \param hostMem Host memory that will be copied to.
         // \param devMem Device memory that will be copied from.
@@ -445,6 +488,17 @@ namespace LOFAR
         //        synchronously or asynchronously.
         void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
                         bool synchronous = false) const;
+
+        // Transfer data from device memory \a devMem to host memory \a hostMem.
+        // When gpuProfiling is enabled this transfer is synchronous
+        // \param hostMem Host memory that will be copied to.
+        // \param devMem Device memory that will be copied from.
+        // \param counter PerformanceCounter that will receive transfer duration
+        // if  gpuProfiling is enabled
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously. Default == false
+        void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
+                        const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
@@ -464,7 +518,7 @@ namespace LOFAR
         void waitEvent(const Event &event) const;
 
         // Record the event \a event for this stream.
-        void recordEvent(const Event &event);
+        void recordEvent(const Event &event) const;
 
         // Return the underlying CUDA stream. TODO: try to get rid of CUstream here: FFT thing to here or make it friend
         CUstream get() const;

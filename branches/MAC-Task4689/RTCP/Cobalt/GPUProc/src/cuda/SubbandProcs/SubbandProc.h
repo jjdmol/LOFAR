@@ -59,6 +59,9 @@ namespace LOFAR
         gpu::DeviceMemory delaysAtBegin;
         gpu::DeviceMemory delaysAfterEnd;
         gpu::DeviceMemory phaseOffsets;
+        // We don't have tabDelays here, as it is only for bf.
+        // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
+        // similar to the bandpass correction and FIR filter weights (also not here).
         gpu::DeviceMemory inputSamples;
 
         DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
@@ -74,14 +77,20 @@ namespace LOFAR
       // Which block this InputData represents
       struct BlockID blockID;
 
+      // Delays are computed and applied in double precision,
+      // otherwise the to be computed phase shifts become too inprecise.
+
       //!< Whole sample delays at the start of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAtBegin;
+      MultiDimArrayHostBuffer<double, 3> delaysAtBegin;
 
       //!< Whole sample delays at the end of the workitem      
-      MultiDimArrayHostBuffer<float, 3> delaysAfterEnd;
+      MultiDimArrayHostBuffer<double, 3> delaysAfterEnd;
 
       //!< Remainder of delays
-      MultiDimArrayHostBuffer<float, 2> phaseOffsets;
+      MultiDimArrayHostBuffer<double, 2> phaseOffsets;
+
+      //!< Delays for TABs (aka pencil beams) after station beam correction
+      MultiDimArrayHostBuffer<double, 3> tabDelays;
 
       // inputdata with flagged data set to zero
       MultiDimArrayHostBuffer<char, 4> inputSamples;
@@ -89,9 +98,12 @@ namespace LOFAR
       // The input flags
       MultiDimArray<SparseSet<unsigned>, 1> inputFlags;
 
+      // CPU-side holder for the Meta Data
+      std::vector<SubbandMetaData> metaData; // [station]
+
       // Create the inputData object we need shared host/device memory on the supplied devicequeue
       SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                         size_t n_samples, size_t bytes_per_complex_sample,
+                         size_t n_tabs, size_t n_samples, size_t bytes_per_complex_sample,
                          gpu::Context &context, unsigned int hostBufferFlags = 0)
         :
         delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
@@ -100,9 +112,12 @@ namespace LOFAR
                        context, hostBufferFlags),
         phaseOffsets(boost::extents[n_stations][n_polarizations],
                        context, hostBufferFlags),
+        tabDelays(boost::extents[n_beams][n_stations][n_tabs],
+                       context, hostBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
-        inputFlags(boost::extents[n_stations])
+        inputFlags(boost::extents[n_stations]),
+        metaData(n_stations)
       {
       }
 
@@ -158,7 +173,6 @@ namespace LOFAR
       virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected
-      std::map<std::string, SmartPtr<PerformanceCounter> > counters;
       std::map<std::string, SmartPtr<NSTimer> > timers;
 
       class Flagger
@@ -177,6 +191,9 @@ namespace LOFAR
       // computed on in parallel.
       Pool<SubbandProcInputData> inputPool;
 
+      // A pool of input data, that has been pre processed.
+      Pool<SubbandProcInputData> processPool;
+
       // A pool of output data, to allow items to be filled
       // and written in parallel.
       Pool<StreamableData> outputPool;
@@ -192,7 +209,6 @@ namespace LOFAR
 
       gpu::Stream queue;
 
-      void addCounter(const std::string &name);
       void addTimer(const std::string &name);
     };
   }

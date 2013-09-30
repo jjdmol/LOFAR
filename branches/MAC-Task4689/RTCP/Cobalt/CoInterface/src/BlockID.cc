@@ -22,20 +22,30 @@
 
 #include "BlockID.h"
 
+#include <iostream>
+
 namespace LOFAR
 {
   namespace Cobalt
   {
+    BlockID::BlockID() :
+      block(0),
+      globalSubbandIdx(0),
+      localSubbandIdx(0),
+      subbandProcSubbandIdx(0)
+    {
+    }
+
     bool BlockID::operator<(const struct BlockID &other) const {
       if (block != other.block)
         return block < other.block;
-
       return globalSubbandIdx < other.globalSubbandIdx;
     }
 
-    std::ostream &operator<<(std::ostream &str, const struct BlockID &id) {
-      str << "block " << id.block << " subband " << id.globalSubbandIdx << " (local index " << id.localSubbandIdx << ")";
-
+    std::ostream &operator<<(std::ostream &str, const struct BlockID &id)
+    {
+      str << "block " << id.block << " subband " << id.globalSubbandIdx 
+          << " (local index " << id.localSubbandIdx << ")";
       return str;
     }
 

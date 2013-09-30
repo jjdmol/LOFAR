@@ -84,12 +84,12 @@ void subscribeObjectStateChange() {
 // of the state's and childstate's of the ones in the stations
 //
 // Msg something like: Station:Dp.state=state
-//                e.g. CS010:LOFAR_ObsSW_Oservation10.status.state=broken
+//                e.g. CS011:LOFAR_ObsSW_Oservation10.status.state=broken
 //
 // Points of interrest:
-//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS010.status.state/childState
-//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS010.status.state/childState
-//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS010.status.state/childState
+//    StnObservation  --> Station --> MCU*:LOFAR_ObsSW_Observation*_*_CS011.status.state/childState
+//    StnPermSW       --> Station --> MCU*:LOFAR_PermSW_*_CS011.status.state/childState
+//    StnPic          --> Station --> MCU*:LOFAR_PIC_*_CS011.status.state/childState
 //    if an Antenna changes state or childstate, the rcu belonging to this antenna should trigger its childstate
 //
 // Added 26-3-2007 A.Coolen
@@ -307,7 +307,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (state > -1) {
+    if (state > -1 && state != aVal) {
       if (force) {
         dpSet(datapoint+"."+element,state);
       } else {

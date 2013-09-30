@@ -1,4 +1,4 @@
-//# tDelayAndBandpass.cc: test delay and bandpass CUDA kernel
+//# tDelayAndBandPass.cc: test delay and bandpass CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,290 +21,519 @@
 #include <lofar_config.h>
 
 #include <cstdlib>
-#include <cmath> 
+#include <cmath>
+#include <cassert>
 #include <string>
 #include <sstream>
 #include <typeinfo>
 #include <vector>
 
-#include <Common/Exception.h>
-#include <Common/LofarLogger.h>
-
-#include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <UnitTest++.h>
 
-#include "TestUtil.h"
+#include <Common/LofarLogger.h>
+#include <Common/LofarTypes.h>
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 
 using namespace std;
-using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
 
-// 
-float * runTest(float bandPassFactor,
-                float frequency = 0.0,
-                float subbandWidth = 0.0,
-                bool delayCompensation = false, 
-                float delayBegin = 0.0,
-                float delayEnd = 0.0,
-                float PhaseOffset = 0.0)
+using LOFAR::i16complex;
+using LOFAR::i8complex;
+
+typedef complex<float> fcomplex;
+
+gpu::Stream *stream;
+
+// default compile definitions
+const unsigned NR_STATIONS = 2;
+const unsigned NR_CHANNELS = 16;
+const unsigned NR_SAMPLES_PER_CHANNEL = 64;
+const unsigned NR_SAMPLES_PER_SUBBAND = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS;
+const unsigned NR_BITS_PER_SAMPLE = 8;
+const unsigned NR_POLARIZATIONS = 2;
+
+const unsigned NR_SAPS = 8;
+const double SUBBAND_BANDWIDTH = 0.0 * NR_CHANNELS;
+const bool BANDPASS_CORRECTION = true;
+const bool DELAY_COMPENSATION = false;
+const bool DO_TRANSPOSE = true;
+
+
+// Initialize input AND output before calling runKernel().
+// We copy both to the GPU, to make sure the final output is really from the
+// kernel.  T is an LCS i*complex type, or complex<float> when #chnl > 1.
+template <typename T>
+void runKernel(gpu::Function kfunc,
+               MultiDimArrayHostBuffer<fcomplex, 4> &outputData,
+               MultiDimArrayHostBuffer<T,        4> &inputData,
+               MultiDimArrayHostBuffer<double,   3> &delaysAtBegin,
+               MultiDimArrayHostBuffer<double,   3> &delaysAfterEnd,
+               MultiDimArrayHostBuffer<double,   2> &phaseOffsets,
+               MultiDimArrayHostBuffer<float,    1> &bandPassFactors,
+               double subbandFrequency,
+               unsigned beam)
 {
-  // Set up environment
-  try {
-    gpu::Platform pf;
-    cout << "Detected " << pf.size() << " CUDA devices" << endl;
-  } catch (gpu::CUDAException& e) {
-    cerr << e.what() << endl;
-    exit(3);
-  }
-  gpu::Device device(0);
-  vector<gpu::Device> devices(1, device);
-  gpu::Context ctx(device);
-  Stream cuStream(ctx);
-  std::stringstream tostrstream("");
+  gpu::Context ctx(stream->getContext());
 
-  string kernelPath = "DelayAndBandPass.cu";  //The test copies the kernel to the current dir (also the complex header, needed for compilation)
- 
-  // Get an instantiation of the default parameters
-  CompileDefinitions definitions;
-  CompileFlags flags = defaultCompileFlags();
+  gpu::DeviceMemory devOutput         (ctx, outputData.size());
+  gpu::DeviceMemory devInput          (ctx, inputData.size());
+  gpu::DeviceMemory devDelaysAtBegin  (ctx, delaysAtBegin.size());
+  gpu::DeviceMemory devDelaysAfterEnd (ctx, delaysAfterEnd.size());
+  gpu::DeviceMemory devPhaseOffsets   (ctx, phaseOffsets.size());
+  gpu::DeviceMemory devBandPassFactors(ctx, bandPassFactors.size());
 
-  // ****************************************
-  // Compile to ptx
-  // Set op string string pairs to be provided to the compiler as defines
-  definitions["NR_CHANNELS"] = "16";
-  unsigned NR_CHANNELS = 16;
-  definitions["NR_STATIONS"] = "2";
-  unsigned NR_STATIONS = 2;
-  definitions["NR_SAMPLES_PER_CHANNEL"] = "64";
-  unsigned NR_SAMPLES_PER_CHANNEL = 64;
-  definitions["NR_SAMPLES_PER_SUBBAND"] = "1024";
-  //unsigned NR_SAMPLES_PER_SUBBAND = 1024;
-  definitions["NR_BITS_PER_SAMPLE"] = "8";
-  //unsigned NR_BITS_PER_SAMPLE = 8;
-  definitions["NR_POLARIZATIONS"] = "2";
-  unsigned NR_POLARIZATIONS = 2;
-  definitions["NR_SAPS"] = "8";
-  unsigned NR_SAPS = 8;
-  definitions["USE_CUDA"] = "1";
-  definitions["COMPLEX"] = "2";
-  unsigned COMPLEX = 2;
-  tostrstream << subbandWidth;
-  definitions["SUBBAND_BANDWIDTH"] = tostrstream.str();
-  tostrstream.clear();
-  //float SUBBAND_BANDWIDTH = subbandWidth;
-  definitions["BANDPASS_CORRECTION"] = "1";
-  if (delayCompensation)
-    definitions["DELAY_COMPENSATION"] = "1";
-  string ptx = createPTX(kernelPath, definitions, flags, devices);
+  kfunc.setArg(0, devOutput);
+  kfunc.setArg(1, devInput);
+  kfunc.setArg(2, subbandFrequency);
+  kfunc.setArg(3, beam);
+  kfunc.setArg(4, devDelaysAtBegin);
+  kfunc.setArg(5, devDelaysAfterEnd);
+  kfunc.setArg(6, devPhaseOffsets);
+  kfunc.setArg(7, devBandPassFactors);
+
+  gpu::Grid globalWorkSize(1,
+                           NR_CHANNELS == 1 ? 1 : NR_CHANNELS / 16,
+                           NR_STATIONS);
+  gpu::Block localWorkSize(256, 1, 1);
+
+  // Overwrite devOutput, so result verification is more reliable.
+  stream->writeBuffer(devOutput,          outputData);
+  stream->writeBuffer(devInput,           inputData);
+  stream->writeBuffer(devDelaysAtBegin,   delaysAtBegin);
+  stream->writeBuffer(devDelaysAfterEnd,  delaysAfterEnd);
+  stream->writeBuffer(devPhaseOffsets,    phaseOffsets);
+  stream->writeBuffer(devBandPassFactors, bandPassFactors);
+
+  stream->launchKernel(kfunc, globalWorkSize, localWorkSize);
+  stream->readBuffer(outputData, devOutput);
+  stream->synchronize(); // wait until transfer completes
+}
+
+gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs)
+{
+  // Compile to ptx. Copies the kernel to the current dir
+  // (also the complex header, needed for compilation).
+  string kernelPath("DelayAndBandPass.cu");
+  CompileFlags flags(defaultCompileFlags());
+  vector<gpu::Device> devices(1, gpu::Device(0));
+  string ptx(createPTX(kernelPath, defs, flags, devices));
   gpu::Module module(createModule(ctx, kernelPath, ptx));
-  Function  hKernel(module, "applyDelaysAndCorrectBandPass");  // c function this no argument overloading
+  gpu::Function kfunc(module, "applyDelaysAndCorrectBandPass");
 
-  // *************************************************************
-  // Create the data arrays  
-  size_t sizeFilteredData = NR_STATIONS * NR_POLARIZATIONS * NR_SAMPLES_PER_CHANNEL * NR_CHANNELS * COMPLEX * sizeof(float);
-  DeviceMemory DevFilteredMemory(ctx, sizeFilteredData);
-  HostMemory rawFilteredData = getInitializedArray(ctx, sizeFilteredData, 1.0f);
-  cuStream.writeBuffer(DevFilteredMemory, rawFilteredData);
+  return kfunc;
+}
 
-  size_t sizeCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX * sizeof(float);
-  DeviceMemory DevCorrectedMemory(ctx, sizeCorrectedData);
-  HostMemory rawCorrectedData = getInitializedArray(ctx, sizeCorrectedData, 42.0f); 
-  cuStream.writeBuffer(DevCorrectedMemory, rawCorrectedData);
+CompileDefinitions getDefaultCompileDefinitions()
+{
+  CompileDefinitions defs;
 
-  size_t sizeDelaysAtBeginData = NR_STATIONS * NR_SAPS * 2 * sizeof(float);  
-  DeviceMemory DevDelaysAtBeginMemory(ctx, sizeDelaysAtBeginData);
-  HostMemory rawDelaysAtBeginData = getInitializedArray(ctx, sizeDelaysAtBeginData, delayBegin);
-  cuStream.writeBuffer(DevDelaysAtBeginMemory, rawDelaysAtBeginData);
-    
-  size_t sizeDelaysAfterEndData = NR_STATIONS * NR_SAPS * 2 * sizeof(float); 
-  DeviceMemory DevDelaysAfterEndMemory(ctx, sizeDelaysAfterEndData);
-  HostMemory rawDelaysAfterEndData = getInitializedArray(ctx, sizeDelaysAfterEndData, delayEnd);
-  cuStream.writeBuffer(DevDelaysAfterEndMemory, rawDelaysAfterEndData);
-    
-  size_t sizePhaseOffsetData = NR_STATIONS * 2*sizeof(float); 
-  DeviceMemory DevPhaseOffsetMemory(ctx, sizePhaseOffsetData);
-  HostMemory rawPhaseOffsetData = getInitializedArray(ctx, sizePhaseOffsetData, PhaseOffset);
-  cuStream.writeBuffer(DevPhaseOffsetMemory, rawPhaseOffsetData);
+  defs["NR_STATIONS"] =
+    boost::lexical_cast<string>(NR_STATIONS);
+  defs["NR_CHANNELS"] =
+    boost::lexical_cast<string>(NR_CHANNELS);
+  defs["NR_SAMPLES_PER_CHANNEL"] =
+    boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
+  defs["NR_SAMPLES_PER_SUBBAND"] =
+    boost::lexical_cast<string>(NR_SAMPLES_PER_SUBBAND);
+  defs["NR_BITS_PER_SAMPLE"] =
+    boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
+  defs["NR_POLARIZATIONS"] =
+    boost::lexical_cast<string>(NR_POLARIZATIONS);
+  defs["NR_SAPS"] =
+    boost::lexical_cast<string>(NR_SAPS);
+  defs["SUBBAND_BANDWIDTH"] =
+    boost::lexical_cast<string>(SUBBAND_BANDWIDTH);
 
-  size_t sizebandPassFactorsData = NR_CHANNELS * sizeof(float);
-  DeviceMemory DevbandPassFactorsMemory(ctx, sizebandPassFactorsData);
-  HostMemory rawbandPassFactorsData = getInitializedArray(ctx, sizebandPassFactorsData, bandPassFactor);
-  cuStream.writeBuffer(DevbandPassFactorsMemory, rawbandPassFactorsData);
+  if (BANDPASS_CORRECTION)
+    defs["BANDPASS_CORRECTION"] = "1";
+  if (DELAY_COMPENSATION)
+    defs["DELAY_COMPENSATION"] = "1";
+  if (DO_TRANSPOSE)
+    defs["DO_TRANSPOSE"] = "1";
 
-  // ****************************************************************************
-  // Run the kernel on the created data
-  hKernel.setArg(0, DevCorrectedMemory);
-  hKernel.setArg(1, DevFilteredMemory);
-  hKernel.setArg(2, frequency);
-  hKernel.setArg(3, 0U);
-  hKernel.setArg(4, DevDelaysAtBeginMemory);
-  hKernel.setArg(5, DevDelaysAfterEndMemory);
-  hKernel.setArg(6, DevPhaseOffsetMemory);
-  hKernel.setArg(7, DevbandPassFactorsMemory);
+  return defs;
+}
 
-  // Calculate the number of threads in total and per blovk
-  Grid globalWorkSize(1, NR_CHANNELS == 1? 1: NR_CHANNELS/16, NR_STATIONS);  
-  Block localWorkSize(256, 1,1); 
+// T is an LCS i*complex type, or complex<float> when #chnl > 1.
+// It is the value type of the data input array.
+template <typename T>
+vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
+                         double subbandFrequency,
+                         unsigned beam,
+                         double delayBegin,
+                         double delayEnd,
+                         double phaseOffset,
+                         float bandPassFactor)
+{
+  gpu::Context ctx(stream->getContext());
 
-  // Run the kernel
-  cuStream.synchronize(); // assure memory is copied
-  cuStream.launchKernel(hKernel, globalWorkSize, localWorkSize);
-  cuStream.synchronize(); // assure that the kernel is finished
-  
-  // Copy output vector from GPU buffer to host memory.
-  cuStream.readBuffer(rawCorrectedData, DevCorrectedMemory);
-  cuStream.synchronize(); //assure copy from device is done
-  
-  // *************************************
-  // Create the return values
-  float *firstAndLastComplex = new float[4];
-  // Return the first complex
-  firstAndLastComplex[0] = rawCorrectedData.get<float>()[0];
-  firstAndLastComplex[1] = rawCorrectedData.get<float>()[1];
-  //return the last complex number
-  firstAndLastComplex[2] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 2];
-  firstAndLastComplex[3] = rawCorrectedData.get<float>()[(sizeCorrectedData / sizeof(float)) - 1];
+  boost::scoped_ptr<MultiDimArrayHostBuffer<fcomplex, 4> > outputData;
+  boost::scoped_ptr<MultiDimArrayHostBuffer<T,        4> > inputData;
 
-  // *************************************
-  // cleanup memory
+  if(compileDefs.find("DO_TRANSPOSE") != compileDefs.end())
+    outputData.reset(
+      new MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents
+                                               [NR_STATIONS]
+                                               [NR_SAMPLES_PER_CHANNEL]
+                                               [NR_CHANNELS]
+                                               [NR_POLARIZATIONS],
+                                               ctx));
+  else // no transpose
+    outputData.reset(
+      new MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents
+                                               [NR_STATIONS]
+                                               [NR_POLARIZATIONS]
+                                               [NR_SAMPLES_PER_CHANNEL]
+                                               [NR_CHANNELS],
+                                               ctx));
 
-  return firstAndLastComplex;
+  CompileDefinitions::const_iterator cit;
+  ASSERT((cit = compileDefs.find("NR_CHANNELS")) != compileDefs.end());
+
+  unsigned nchnl = boost::lexical_cast<unsigned>(cit->second);
+  if (nchnl == 1) // integer input data (FIR+FFT skipped)
+    inputData.reset(
+      new MultiDimArrayHostBuffer<T, 4>(boost::extents
+                                        [NR_STATIONS]
+                                        [NR_SAMPLES_PER_CHANNEL]
+                                        [NR_CHANNELS]
+                                        [NR_POLARIZATIONS],
+                                        ctx));
+  else // specify fcomplex, which T must be too in this case
+    inputData.reset(
+      new MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents
+                                               [NR_STATIONS]
+                                               [NR_POLARIZATIONS]
+                                               [NR_SAMPLES_PER_CHANNEL]
+                                               [NR_CHANNELS],
+                                               ctx));
+
+  MultiDimArrayHostBuffer<double, 3> delaysAtBegin(boost::extents
+                                                   [NR_SAPS]
+                                                   [NR_STATIONS]
+                                                   [NR_POLARIZATIONS],
+                                                   ctx);
+  MultiDimArrayHostBuffer<double, 3> delaysAfterEnd(boost::extents
+                                                    [NR_SAPS]
+                                                    [NR_STATIONS]
+                                                    [NR_POLARIZATIONS],
+                                                    ctx);
+  MultiDimArrayHostBuffer<double, 2> phaseOffsets(boost::extents
+                                                  [NR_STATIONS]
+                                                  [NR_POLARIZATIONS],
+                                                  ctx);
+  MultiDimArrayHostBuffer<float, 1> bandPassFactors(boost::extents
+                                                    [NR_CHANNELS],
+                                                    ctx);
+
+  // set inputs
+  for (size_t i = 0; i < inputData->num_elements(); i++) {
+    inputData->origin()[i].real() = 1.0f;
+    inputData->origin()[i].imag() = 1.0f;
+  }
+  for (size_t i = 0; i < delaysAtBegin.num_elements(); i++) {
+    delaysAtBegin.origin()[i] = delayBegin;
+  }
+  for (size_t i = 0; i < delaysAfterEnd.num_elements(); i++) {
+    delaysAfterEnd.origin()[i] = delayEnd;
+  }
+  for (size_t i = 0; i < phaseOffsets.num_elements(); i++) {
+    phaseOffsets.origin()[i] = phaseOffset;
+  }
+  for (size_t i = 0; i < bandPassFactors.num_elements(); i++) {
+    bandPassFactors.origin()[i] = bandPassFactor;
+  }
+
+  // set output for proper verification later
+  for (size_t i = 0; i < outputData->num_elements(); i++) {
+    outputData->origin()[i].real() = 42.0f;
+    outputData->origin()[i].imag() = 42.0f;
+  }
+
+  gpu::Function kfunc(initKernel(ctx, compileDefs));
+
+  runKernel(kfunc, *outputData, *inputData,
+            delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassFactors,
+            subbandFrequency, beam);
+
+  // Tests that use this function only check the first and last 2 output floats.
+  const unsigned nrResultVals = 2;
+  ASSERT(outputData->num_elements() >=
+         nrResultVals * sizeof(fcomplex) / sizeof(float));
+  vector<fcomplex> resultVals(nrResultVals);
+  resultVals[0] = outputData->origin()[0];
+  resultVals[1] = outputData->origin()[outputData->num_elements() - 1];
+
+  return resultVals;
 }
 
 TEST(BandPass)
 {
   // ***********************************************************
   // Test if the bandpass correction factor is applied correctly in isolation
-  float bandPassFactor = 2.0;
-  float * results;
+  float bandPassFactor = 2.0f;
 
-  // The input samples are all ones
-  // After correction, multiply with 2.
-  // The first and the last complex values are retrieved. They should be scaled with the bandPassFactor == 2
-  results = runTest(bandPassFactor);
+  CompileDefinitions defs(getDefaultCompileDefinitions());
 
-  CHECK_CLOSE(2.0, results[0], 0.00001);
-  CHECK_CLOSE(2.0, results[1], 0.00001);
-  CHECK_CLOSE(2.0, results[2], 0.00001);
-  CHECK_CLOSE(2.0, results[3], 0.00001);
+  // The input samples are all ones. After correction, multiply with 2.
+  // The first and the last complex values are retrieved. They should be scaled
+  // with the bandPassFactor == 2
+  vector<fcomplex> results(runTest<fcomplex>(
+                             defs,
+                             0.0, // sb freq
+                             0U,  // beam
+                             0.0, // delays begin
+                             0.0, // delays end
+                             0.0, // phase offsets
+                             bandPassFactor)); // bandpass factor
 
-  delete[] results;
+  CHECK_CLOSE(2.0, results[0].real(), 0.000001);
+  CHECK_CLOSE(2.0, results[0].imag(), 0.000001);
+  CHECK_CLOSE(2.0, results[1].real(), 0.000001);
+  CHECK_CLOSE(2.0, results[1].imag(), 0.000001);
 }
 
 TEST(PhaseOffsets)
 {
-  float * results;
-
   //**********************************************************************
   // Delaycompensation but only for the phase ofsets:
-  // All computations the drop except the phase ofset of 1,0 which is fed into a cosisin
-  // cosisin(pi) = -1
-  results = runTest(1.0,   // bandpass factor
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    0.0,   // delays begin  
-                    0.0,   // delays end
-                    M_PI); // phase offsets
+  // All computations the drop except the phase ofset of 1,0 which is fed into a
+  // cosisin (or sincos) cosisin(pi) = -1
+  CompileDefinitions defs(getDefaultCompileDefinitions());
+  defs["DELAY_COMPENSATION"] = "1";
+  defs["SUBBAND_BANDWIDTH"] = "1.0";
 
-  CHECK_CLOSE(-1.0, results[0], 0.00001);
-  CHECK_CLOSE(-1.0, results[1], 0.00001);
-  CHECK_CLOSE(-1.0, results[2], 0.00001);
-  CHECK_CLOSE(-1.0, results[3], 0.00001);
+  vector<fcomplex> results(runTest<fcomplex>(
+                             defs,
+                             1.0,    // sb freq
+                             0U,     // beam
+                             0.0,    // delays begin
+                             0.0,    // delays end
+                             M_PI,   // phase offsets
+                             1.0f)); // bandpass factor
 
-  delete[] results;
+  CHECK_CLOSE(-1.0, results[0].real(), 0.000001);
+  CHECK_CLOSE(-1.0, results[0].imag(), 0.000001);
+  CHECK_CLOSE(-1.0, results[1].real(), 0.000001);
+  CHECK_CLOSE(-1.0, results[1].imag(), 0.000001);
 }
 
 SUITE(DelayCompensation)
 {
   TEST(ConstantDelay)
   {
-    float * results;
-
-    //****************************************************************************
-    // delays  begin and end both 1 no phase offset frequency 1 width 1
-    // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
+    //*************************************************************************
+    // delays: begin 1, end 1; no phase offset; frequency 1; subband width 1
+    // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
+    //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
     //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
     // cosisin(-3.14159+0 i) == -1
-    results = runTest(1.0,   // bandpass factor
-                      1.0,   // frequency
-                      1.0,   
-                      true,  // delayCompensation
-                      1.0,   // delays begin  
-                      1.0,   // delays end
-                      0.0);  // phase offsets
+    CompileDefinitions defs(getDefaultCompileDefinitions());
+    defs["DELAY_COMPENSATION"] = "1";
+    defs["SUBBAND_BANDWIDTH"] = "1.0";
 
-    CHECK_CLOSE(-1.0, results[0], 0.00001);
-    CHECK_CLOSE(-1.0, results[1], 0.00001);
-    CHECK_CLOSE(-1.0, results[2], 0.00001);
-    CHECK_CLOSE(-1.0, results[3], 0.00001);
+    vector<fcomplex> results(runTest<fcomplex>(
+                               defs,
+                               1.0,    // sb freq
+                               0U,     // beam
+                               1.0,    // delays begin
+                               1.0,    // delays end
+                               0.0,    // phase offsets
+                               1.0f)); // bandpass factor
 
-    delete[] results;
+    CHECK_CLOSE(-1.0, results[0].real(), 0.000001);
+    CHECK_CLOSE(-1.0, results[0].imag(), 0.000001);
+
+    // For verification: for the following vals, the kernel computes:
+    // major: offset within block of 16 samples
+    // frequency = 1.0 - 0.5*1.0 + (0 + 15) * (1.0 / 16) = 0.5 + 15/16 = 1.4375
+    // phiBegin = -2.0 * 3.141593 * delayAtBegin = -6.283185 * 1.0 = -6.283185
+    // deltaPhi = (phiEnd - phiBegin) / 64 = 0
+    // myPhiBegin = (-6.283185 + major * deltaPhi) * frequency + phaseOffset
+    //            = (-6.283185 + 0.0) * 1.4375 + 0.0 = -9.032079
+    // myPhiDelta = 16 (= time step) * deltaPhi * frequency = 0
+    // vX = ( cos(myPhiBegin.x), sin(myPhiBegin.x) ) = (-0.923880, -0.382683)
+    // vY = idem (as delays begin == delays end)
+    // dvX = ( cos(myPhiDelta.x), sin(myPhiDelta.x) ) = (1, 0)
+    // dvY = idem
+    // (vX, vY) *= weight (*1.0)
+    // sampleX = sampleY = (1.0, 1.0)
+    // After 64/16 rounds, (vX, vY) have been updated 64/16 times with
+    // (dvX, dvY).
+    // In this case, (dvX, dvY) stays (1, 0), so for the last sample, we get:
+    // sampleY = cmul(sampleY, vY) = -0.923880 - -0.382683 = -0.541196 (real)
+    //                             = -0.923880 + -0.382683 = -1.306563 (imag)
+
+    CHECK_CLOSE(-0.541196, results[1].real(), 0.000001);
+    CHECK_CLOSE(-1.306563, results[1].imag(), 0.000001);
   }
 
   TEST(SlopedDelay)
   {
-    float * results;
+    //*************************************************************************
+    // delays: begin 1, end 0; no phase offset; frequency 1; subband width 1;
+    // all (complex) input samples are set to (1.0, 1.0) in runTest().
+    //
+    // timeStep  = 16 (hard-coded)
+    // channel   = 0
+    // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
+    //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
+    // phiBegin  = -2.0 * PI * delayAtBegin  = -6.283185 * 1.0 = -6.283185
+    // phiEnd    = -2.0 * PI * delayAfterEnd = -6.283185 * 0.0 =  0.0
+    // deltaPhi  = (phiEnd - phiBegin) / (NR_SAMPLES_PER_CHANNEL)
+    //           = (0.0 - -6.283135) / 64 = 0.0981748
+    //
+    // For result[0]:
+    // major = 0
+    // frequency  = 1.0 - 0.5 * 1.0 + (0 + 0) * (1.0 / 16) = 1 - 0.5 + 0 = 0.5
+    // myPhiBegin = (phiBegin + major * deltaPhi) * frequency + phaseOffset
+    //            = (-6.283185 + 0.0 * 0.0981748) * 0.5 + 0.0 = -3.141593
+    // myPhiDelta = timeStep * deltaPhi * frequency
+    //            = 16 * 0.0981748 * 0.5 = 0.785398
+    // vX =  vY   = (cos(myPhiBegin) + sin(myPhiBegin)j)
+    //            = (cos(-3.141593) + sin(-3.141593)j) = (-1 + 0j)
+    // dvX = dvY  = (cos(myPhiDelta) + sin(myPhiDelta)j)
+    //            = (cos(0.785398) + sin(0.785398)j) = (0.707107 + 0.707107j)
+    // sample     = sample * (cos(myPhiBegin) + sin(myPhiBegin)j)
+    //            = (1 + j) * (-1, 0j) = (-1, -j)
+    //
+    // For result[1]:
+    // major = 15
+    // frequency  = 1.0 - 0.5 * 1.0 + (0 + 15) * (1.0 / 16)
+    //            = 0.5 + 15/16 = 1.4375
+    // myPhiBegin = (phiBegin + major * deltaPhi) * frequency + phaseOffset
+    //            = (-6.283185 + 15 * 0.0981748) * 1.4375 + 0.0 = -6.915185
+    // myPhiDelta = timeStep * deltaPhi * frequency
+    //            = 16 * 0.0981748 * 1.4375 = 2.258020
+    // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) =
+    //            = (cos(-6.915185) + sin(-6.915185)j) = (0.806848 + -0.590760j)
+    // dvX = dvY  = (cos(myPhiDelta, sin(myPhiDelta))
+    //            = (cos(2.258020) + sin(2.258020)j) = (-0.634393 + 0.773010j)
+    //   After ((NR_SAMPLES_PER_CHANNEL - 1) / timeStep) rounds, we have
+    //   applied 63 / 16 = 3 times a phase rotation
+    // myPhiEnd   = myPhiBegin + 3 * myPhiDelta
+    // sample     = sample * (cos(myPhiEnd) + sin(myPhiEnd)j)
+    //            = (1, j) * (0.990058 + -0.140658j) = (1.130716 + 0.849400j)
 
-    //****************************************************************************
-    // delays  begin 1 and end 0 no phase offset frequency 1 width 1
-    // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-    //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-    // cosisin(-3.14159+0 i) == -1
-    // The later sets of samples are calculate as:
-    // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
-    // Ask john Romein for more details
-    results = runTest(1.0,   // bandpass factor
-                      1.0,   // frequency
-                      1.0,   
-                      true,  // delayCompensation
-                      1.0,   // delays begin  
-                      0.0,   // delays end
-                      0.0);  // phase offsets
+    CompileDefinitions defs(getDefaultCompileDefinitions());
+    defs["DELAY_COMPENSATION"] = "1";
+    defs["SUBBAND_BANDWIDTH"] = "1.0";
 
-    CHECK_CLOSE(-1.0,     results[0], 0.00001);
-    CHECK_CLOSE(-1.0,     results[1], 0.00001);
-    CHECK_CLOSE(1.047860, results[2], 0.00001);
-    CHECK_CLOSE(0.949728, results[3], 0.00001);
+    vector<fcomplex> results(runTest<fcomplex>(
+                               defs,
+                               1.0,    // sb freq
+                               0U,     // beam
+                               1.0,    // delays begin
+                               0.0,    // delays end
+                               0.0,    // phase offsets
+                               1.0f)); // bandpass factor
 
-    delete[] results;
+    CHECK_CLOSE(-1.0,     results[0].real(), 0.000001);
+    CHECK_CLOSE(-1.0,     results[0].imag(), 0.000001);
+    CHECK_CLOSE(1.130716, results[1].real(), 0.000001);
+    CHECK_CLOSE(0.849400, results[1].imag(), 0.000001);
   }
 }
 
 TEST(AllAtOnce)
 {
-  float * results;
+  //**************************************************************************
+  // delays: begin 1, end 0; phase offset 1 rad.; frequency: 1;
+  // subband width: 1; band-pass factor: 2
+  //
+  // timeStep  = 16 (hard-coded)
+  // channel   = 0
+  // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
+  //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
+  // phiBegin  = -2.0 * PI * delayAtBegin  = -6.283185 * 1.0 = -6.283185
+  // phiEnd    = -2.0 * PI * delayAfterEnd = -6.283185 * 0.0 =  0.0
+  // deltaPhi  = (phiEnd - phiBegin) / (NR_SAMPLES_PER_CHANNEL)
+  //           = (0.0 - -6.283135) / 64 = 0.0981748
+  //
+  // For result[0]:
+  // major = 0
+  // frequency  = 1.0 - 0.5 * 1.0 + (0 + 0) * (1.0 / 16) = 1 - 0.5 + 0 = 0.5
+  // myPhiBegin = (phiBegin + major * deltaPhi) * frequency + phaseOffset
+  //            = (-6.283185 + 0.0 * 0.0981748) * 0.5 + 1.0 = -2.141593
+  // myPhiDelta = timeStep * deltaPhi * frequency
+  //            = 16 * 0.0981748 * 0.5 = 0.785398
+  // vX =  vY   = (cos(myPhiBegin) + sin(myPhiBegin))
+  //            = (cos(-2.141593) + sin(-2.141593)j) = (-0.540302 + -0.841471j)
+  // dvX = dvY  = (cos(myPhiDelta) + sin(myPhiDelta))
+  //            = (cos(0.785398) + sin(0.785398)j) = (0.707107 + 0.707107j)
+  // sample     = sample * weight * (cos(myPhiBegin) + sin(myPhiBegin)j)
+  //            = (1, j) * 2 * (-0.540302 + -0.841471j) =
+  //
+  // For result[1]:
+  // major = 15
+  // frequency  = 1.0 - 0.5 * 1.0 + (0 + 15) * (1.0 / 16)
+  //            = 0.5 + 15/16 = 1.4375
+  // myPhiBegin = (phiBegin + major * deltaPhi) * frequency + phaseOffset
+  //            = (-6.283185 + 15 * 0.0981748) * 1.4375 + 1.0 = -5.915185
+  // myPhiDelta = timeStep * deltaPhi * frequency
+  //            = 16 * 0.0981748 * 1.4375 = 2.258020
+  // vX  = vY   = (cos(myPhiBegin) + sin(myPhiBegin)j) =
+  //            = (cos(-5.915185), sin(-5.915185)j) = (0.933049 + 0.359750j)
+  // dvX = dvY  = (cos(myPhiDelta + sin(myPhiDelta)j)
+  //            = (cos(2.258020) + sin(2.258020)j) = (-0.634393 + 0.773010j)
+  //   After ((NR_SAMPLES_PER_CHANNEL - 1) / timeStep) rounds, we have
+  //   applied 63 / 16 = 3 times a phase rotation
+  // myPhiEnd   = myPhiBegin + 3 * myPhiDelta = 0.858874
+  // sample     = sample * weight * (cos(myPhiEnd) + sin(myPhiEnd)j)
+  //            = (1 + j) * 2 * (0.653291 + 0.757107j) = (-0.207633 + 2.820796j)
 
-  //****************************************************************************
-  // delays  begin 1 and end 0 no phase offset frequency 1 width 1
-  // frequency = subbandFrequency - .5f * SUBBAND_BANDWIDTH + (channel + minor) * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-  //  (delaysbegin * - 2 * pi ) * (frequency == 0.5) == -3.14
-  // cosisin(-3.14159+0 i) == -1
-  // The later sets of samples are calculate as:
-  // vX = vX * dvX;  The delays are multiplied because we are calculating with exponents
-  // Ask john Romein for more details
-  // In this test the phase offsets are also compensated
-  results = runTest(2.0,   // bandpass factor (weights == 2)
-                    1.0,   // frequency
-                    1.0,   
-                    true,  // delayCompensation
-                    1.0,   // delays begin  
-                    0.0,   // delays end
-                    1.0);  // phase offsets (correct with e = 2.71828)
+  CompileDefinitions defs(getDefaultCompileDefinitions());
+  defs["DELAY_COMPENSATION"] = "1";
+  defs["SUBBAND_BANDWIDTH"] = "1.0";
 
-  CHECK_CLOSE( 0.602337, results[0], 0.00001);
-  CHECK_CLOSE(-2.763550, results[1], 0.00001);
-  CHECK_CLOSE(-0.466011, results[2], 0.00001);
-  CHECK_CLOSE( 2.789770, results[3], 0.00001);
+  vector<fcomplex> results(runTest<fcomplex>(
+                             defs,
+                             1.0,    // sb freq
+                             0U,     // beam
+                             1.0,    // delays begin
+                             0.0,    // delays end
+                             1.0,    // phase offsets (1 rad)
+                             2.0f)); // bandpass factor (weights == 2)
 
-  delete[] results;
+  CHECK_CLOSE( 0.602337, results[0].real(), 0.000001);
+  CHECK_CLOSE(-2.763547, results[0].imag(), 0.000001);
+  CHECK_CLOSE(-0.207633, results[1].real(), 0.000001);
+  CHECK_CLOSE( 2.820796, results[1].imag(), 0.000001);
+}
+
+
+
+gpu::Stream initDevice()
+{
+  // Set up device (GPU) environment
+  try {
+    gpu::Platform pf;
+    cout << "Detected " << pf.size() << " GPU devices" << endl;
+  } catch (gpu::CUDAException& e) {
+    cerr << e.what() << endl;
+    exit(3); // test skipped
+  }
+  gpu::Device device(0);
+  vector<gpu::Device> devices(1, device);
+  gpu::Context ctx(device);
+  gpu::Stream cuStream(ctx);
+
+  return cuStream;
 }
 
 int main()
 {
   INIT_LOGGER("tDelayAndBandPass");
 
-  return UnitTest::RunAllTests() > 0;
+  // init global(s): device, context/stream.
+  gpu::Stream strm(initDevice());
+  stream = &strm;
+
+  int exitStatus = UnitTest::RunAllTests();
+  return exitStatus > 0 ? 1 : 0;
 }
 

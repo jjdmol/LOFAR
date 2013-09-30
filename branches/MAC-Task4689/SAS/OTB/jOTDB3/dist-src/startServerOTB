@@ -1,4 +1,10 @@
 #!/bin/sh
+#
+# Script to start OTB server. Default port is 12500, another portnumber  
+# can be provided on the commandline, e.g.
+#
+# startServerOTB 12600
+# 
 
 # Check if portnumber is added to commandline; if yes, use it.
 if [ -z $1 ]; then
@@ -16,6 +22,7 @@ export JAVA_HOME=/usr/java/jdk1.7.0_02
 echo
 echo --- Starting OTB Server ---
 
+# Prevent javadoc and source jar files to play a role
 jotdb3file=`ls $OTB_DIR/jOTDB3*.jar | grep -v javadoc | grep -v sources`
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OTB_DIR
 export OTB_APP=$OTB_DIR/`basename $jotdb3file`
@@ -33,7 +40,8 @@ curdate=`date +%Y%m%dT%H%M%S`
 logfile="/localhome/log/OTBServer_${port1}_${curdate}.log"
 echo "Logging serverlogs to file $logfile"
 serverpid=0
-ps -ef | grep -v grep | grep java | grep $port1 2>&1 1>/dev/null
+# Find out if other server running already (with same port)
+ps -ef | grep -v grep | grep java | grep server | grep $port1 2>&1 1>/dev/null
 if [ $? -ne 0 ]; then
     $JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.jotdb3.jOTDBserver -s sas001 -d sasdb -p $port1 -o $port2 2>&1 1>&$logfile &
     serverpid=$!

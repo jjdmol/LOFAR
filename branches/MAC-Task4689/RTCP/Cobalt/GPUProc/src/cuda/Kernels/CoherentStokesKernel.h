@@ -46,6 +46,7 @@ namespace LOFAR
         size_t nrTABs;
         size_t nrStokes;
         size_t timeIntegrationFactor;
+        size_t timeParallelFactor;
       };
 
       enum BufferType
@@ -55,13 +56,14 @@ namespace LOFAR
       };
 
       CoherentStokesKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+                           const gpu::Module &module,
+                           const Buffers &buffers,
+                           const Parameters &param);
+
     };
 
-    // Specialization of the KernelFactory for
-    // CoherentStokesKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const;
 

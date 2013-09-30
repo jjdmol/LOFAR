@@ -10,8 +10,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 set(_gpuproc_sources
   #Package__Version.cc
   BandPass.cc
+  cpu_utils.cc
   FilterBank.cc
   global_defines.cc
+  RunningStatistics.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
   Storage/SSH.cc
@@ -103,3 +105,18 @@ if(USE_OPENCL)
   lofar_add_library(gpuproc_opencl ${_gpuproc_sources})
   #lofar_add_bin_program(rtcp_opencl rtcp.cc)
 endif()
+
+lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
+
+# install the scripts for MAC
+install(PROGRAMS
+  scripts/runObservation.sh
+  scripts/startBGL.sh
+  scripts/stopBGL.sh
+  DESTINATION bin)
+
+# install the logprop file
+install(FILES
+  rtcp.log_prop
+  Station/mpi_node_list.log_prop
+  DESTINATION etc)

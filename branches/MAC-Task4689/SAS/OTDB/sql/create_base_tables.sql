@@ -21,18 +21,18 @@
 --
 --  $Id$
 --
-DROP TABLE classification CASCADE;
-DROP TABLE constr_type 	  CASCADE;
-DROP TABLE param_type 	  CASCADE;
-DROP TABLE pvss_type 	  CASCADE;
-DROP TABLE validation 	  CASCADE;
-DROP TABLE unit		 	  CASCADE;
-DROP TABLE treetype 	  CASCADE;
-DROP TABLE treestate 	  CASCADE;
+DROP TABLE IF EXISTS classification CASCADE;
+DROP TABLE IF EXISTS constr_type 	  CASCADE;
+DROP TABLE IF EXISTS param_type 	  CASCADE;
+DROP TABLE IF EXISTS pvss_type 	  CASCADE;
+DROP TABLE IF EXISTS validation 	  CASCADE;
+DROP TABLE IF EXISTS unit		 	  CASCADE;
+DROP TABLE IF EXISTS treetype 	  CASCADE;
+DROP TABLE IF EXISTS treestate 	  CASCADE;
 
-DROP SEQUENCE			  campaignID;
-DROP TABLE campaign 	  CASCADE;
-DROP TABLE operator 	  CASCADE;
+DROP SEQUENCE IF EXISTS			  campaignID;
+DROP TABLE IF EXISTS campaign 	  CASCADE;
+DROP TABLE IF EXISTS operator 	  CASCADE;
 
 --
 -- Classification table
@@ -302,7 +302,7 @@ INSERT INTO operator VALUES (2, 'gargamel', '0123456789');
 --
 -- All allowed combinations of processType, processSubtype and strategy
 --
---DROP TABLE processTypes;
+--DROP TABLE IF EXISTS processTypes;
 --CREATE TABLE processTypes  (
 --	processType		VARCHAR(20)	  NOT NULL DEFAULT '',
 --	processSubtype	VARCHAR(50)   NOT NULL DEFAULT '',

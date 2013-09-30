@@ -12,10 +12,8 @@ def printHelp():
     print "possible option for this script"
     print "-------------------------------"
     print "-h            print this help screen"
-    print "-s=CS002C     station to show 'CS002C'"
     print "-d=2          show last 2 days"
     print "-f=full_path_filename"
-    #print "-p=full_path  path too this script"
     print "-------------------------------"
     sys.exit(0)
 
@@ -44,7 +42,7 @@ sys.path.insert(0, libPath)
 from general_lib import *
 from lofar_lib import *
 
-StID = args.get('S', getHostName()).upper()
+StID = getHostName().upper()
 
 def main():
     f = open(runPath+r'/checkHardware.conf', 'r')
@@ -78,16 +76,11 @@ def main():
         
     RCUx = RCUy = 0
     
-    banner = "\n"
-    banner += "------------------------------------------------------------------------------------------------------\n"
-    banner += " #       #     ###  #####       ###  #  #  ####   ###  #  #       ####   ####   ###   #   #  #   #####\n"
-    banner += " #      # #   #       #        #     #  #  #     #     # #        #   #  #     #      #   #  #     #  \n"
-    banner += " #     #   #   ###    #        #     ####  ###   #     ##         ####   ###    ###   #   #  #     #  \n"
-    banner += " #     #####      #   #        #     #  #  #     #     # #        #  #   #         #  #   #  #     #  \n"
-    banner += " ####  #   #   ###    #    o    ###  #  #  ####   ###  #  #   o   #   #  ####   ###    ###   ####  #  \n"
-    banner += "------------------------------------------------------------------------------------------------------\n"
-    print banner
     
+    print "\n"+"-"*103
+    print ">"*36+"   LAST STATION-CHECK RESULT   "+"<"*36
+    print "-"*103
+
     _part = ''
     _part_nr = -1
     _element_nr = -1
@@ -131,9 +124,10 @@ def main():
             continue
         date = d[0]
         
-        if last_date != date:
-            print '\n'+'#'*103
-        last_date = date
+        if args.has_key('D'):
+            if last_date != date:
+                print '\n'+'#'*103
+            last_date = date
         
         if first_date != 0 and int(date) < int(first_date):
             continue
@@ -163,18 +157,20 @@ def main():
             #    print "   NEW TEST  "*8
             #    print '-'*103
             #    
+            if msg == 'VERSIONS':
+                print "Used script versions: checkHardware=%s, test_db=%s, test_lib=%s, search_lib=%s\n" %(kv.get('CHECK'), kv.get('DB'), kv.get('TEST'), kv.get('SEARCH'))
+                
             if msg == 'STATION':
-                print ">> Station name : %s" %(kv.get('NAME'))
+                print "-- Station name     : %s" %(kv.get('NAME'))
             
             if msg == 'RUNTIME':
-                print ">> Check date   : %s-%s-%s" %(date[6:], date[4:6], date[:4])
-                print ">> Check runtime: %s .. %s" %(kv.get('START'), kv.get('STOP'))
+                print "-- Check runtime    : %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
             
             if msg == 'CHECKS':
-                print ">> Checks done  : %s" %(string.join(d[4:],', ')) 
+                print "-- Checks done      : %s" %(string.join(d[4:],', ')) 
             
             if msg == 'STATISTICS':
-                print ">> Bad antennas : LBL=%s, LBH=%s, HBA=%s" %\
+                print "-- Bad antennas     : LBL=%s, LBH=%s, HBA=%s" %\
                       (kv.get('BAD_LBL'), kv.get('BAD_LBH'), kv.get('BAD_HBA'))
             
         if part == 'RSP':
@@ -229,8 +225,8 @@ def main():
                 print hdr + "="*(104-len(hdr))    
             
             lbaNumber = partnumber
-            if part == 'LBL':
-                lbaNumber += 48
+            #if part == 'LBL':
+            #    lbaNumber += 48
             
             if msg == 'NOSIGNAL':
                 print "   NO test signal found"

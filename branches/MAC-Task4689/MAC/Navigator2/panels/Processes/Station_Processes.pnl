@@ -253,16 +253,6 @@ E E 0 1 1 2 1 E U  1 E 415 212 449 225
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 0 1
 LANG:1 6 logMsg
-1 252 20 "" 4
-0
-1 253 20 "" 3
-0
-1 254 20 "0" 1
-0
-1 255 20 "" 2
-0
-1 256 20 "" 6
-0
 1 257 21 "" 4
 0
 1 258 21 "" 3
@@ -482,47 +472,43 @@ LANG:1 0
 "objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -41
 1
 "$name""SASGateway"
-3 20 "PANEL_REF21" -1
-"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -50
-1
-"$name""AMCServer"
 3 21 "PANEL_REF22" -1
-"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 -12
+"objects\\Processes\\controller_small.pnl" 0 270 T 35 1 0 1 0 80
 1
 "$name""BeamServer"
 3 22 "PANEL_REF23" -1
-"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -44
+"objects\\Processes\\controller_small.pnl" 0 330 T 36 1 0 1 0 -10
 1
 "$name""CalServer"
 3 25 "PANEL_REF26" -1
-"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 -66
+"objects\\Processes\\controller_small.pnl" 0 380 T 37 1 0 1 0 30
 1
 "$name""SHMInfoServer"
 3 28 "PANEL_REF29" -1
-"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -88
+"objects\\Processes\\controller_small.pnl" 10 430 T 39 1 0 1 -10 -170
 1
 "$name""RSPDriver"
 3 31 "PANEL_REF32" -1
 "objects\\Processes\\ObsSW_Station.pnl" 100 502 T 39 1 0 1 -100 20.00000000000001
 0
 3 32 "PANEL_REF33" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -100
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -180
 1
 "$name""TBBDriver"
 3 34 "PANEL_REF35" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -72
+"objects\\Processes\\controller_small.pnl" 10 470 T 40 1 0 1 -10 -30
 1
 "$name""StationControl"
 3 36 "PANEL_REF37" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 -26.7370242214534
+"objects\\Processes\\controller_small.pnl" 10 470 T 42 1 0 0.9653979238754328 -10 16.2629757785466
 1
 "$name""ClockControl"
 3 37 "PANEL_REF38" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -15
+"objects\\Processes\\controller_small.pnl" 10 470 T 43 1 0 1 -10 -90
 1
 "$name""HardwareMonitor"
 3 38 "PANEL_REF39" -1
-"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 14
+"objects\\Processes\\controller_small.pnl" 10 470 T 44 1 0 1 -10 -240
 1
 "$name""SoftwareMonitor"
 0

@@ -21,21 +21,28 @@
 #ifndef LOFAR_GPUPROC_BLOCKID_H
 #define LOFAR_GPUPROC_BLOCKID_H
 
-#include <iostream>
+#include <sys/types.h> // ssize_t
+#include <iosfwd>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
     struct BlockID {
-      // Block number: 0 .. inf
-      size_t block;
+      // Default constructor to provide sane defaults for our data members.
+      BlockID();
+
+      // Block number: -inf .. inf (blocks before start have negative values)
+      ssize_t block;
 
       // Subband index in the observation: [0, ps.nrSubbands())
       size_t globalSubbandIdx;
 
       // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
       size_t localSubbandIdx;
+
+      // Index of this subband within the SubbandProc
+      size_t subbandProcSubbandIdx;
 
       bool operator<(const struct BlockID &other) const;
     };

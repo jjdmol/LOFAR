@@ -24,20 +24,25 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
 #include "FFT_Plan.h"
+#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    //# Forward declarations
+    struct BlockID;
+
     class FFT_Kernel
     {
     public:
-      FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs,
-                 bool forward, gpu::DeviceMemory &buffer);
+      FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrFFTs,
+                 bool forward, const gpu::DeviceMemory &buffer);
 
-      void enqueue(gpu::Stream &stream/*, PerformanceCounter &counter*/);
+      void enqueue(const BlockID &blockId) const;
+
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
 
       enum BufferType
       {
@@ -49,16 +54,15 @@ namespace LOFAR
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
 
     private:
+
       gpu::Context context;
 
       const unsigned nrFFTs, fftSize;
       const int direction;
       FFT_Plan plan;
-      gpu::DeviceMemory &buffer;
-      //gpu::Event event;
+      gpu::DeviceMemory buffer;
+      gpu::Stream itsStream;
     };
   }
 }
-
 #endif
-

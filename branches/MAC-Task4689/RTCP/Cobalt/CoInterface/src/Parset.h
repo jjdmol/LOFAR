@@ -87,6 +87,11 @@ namespace LOFAR
       double subbandWidth() const;
 
       // The number of samples in one block of one subband.
+      //
+      // key: Cobalt.blockSize
+      size_t blockSize;
+
+      // Alias for blockSize
       size_t nrSamplesPerSubband() const;
 
       // The number of seconds represented by each block.
@@ -135,9 +140,6 @@ namespace LOFAR
       };
       
       struct DelayCompensation delayCompensation;
-
-      // Number of PPF taps. Set to 16.
-      unsigned nrPPFTaps;
 
       /*
        * Station information
@@ -206,6 +208,39 @@ namespace LOFAR
       //
       // length: len(OLAP.storageStationNames)
       std::vector<struct Station> stations;
+
+      ssize_t stationIndex(const std::string &name) const;
+
+      /*
+       * Resources information:
+       *   - what hardware we use (cpus/gpus)
+       *   - which nodes receive which stations
+       */ 
+
+      struct Node {
+        // MPI rank of this node, is the
+        // same as the index in the `nodes' vector.
+        int rank;
+
+        // Host name
+        std::string hostName;
+
+        // CPU number to bind to
+        size_t cpu;
+
+        // CUDA GPU numbers to bind to
+        std::vector<unsigned> gpus;
+
+        // NIC(s) to bind to (comma seperated)
+        //
+        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        std::string nic;
+
+        // Station indices to forward data for
+        std::vector<size_t> stations;
+      };
+
+      std::vector<struct Node> nodes;
 
       /*
        * Pointing information
@@ -454,6 +489,9 @@ namespace LOFAR
           // key: *.timeIntegrationFactor
           size_t timeIntegrationFactor;
 
+          // return the number of samples per channel
+          size_t nrSamples(size_t inputBlockSize) const;
+
           // The number of subbands to store in each file.
           // The last file can have fewer subbands.
           //
@@ -557,8 +595,6 @@ namespace LOFAR
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
-      unsigned                    nrHistorySamples() const;
-      unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;

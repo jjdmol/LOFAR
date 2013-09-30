@@ -34,7 +34,7 @@ T
 LANG:1 10 Set state.
 "main()
 {
-  string dpName=\"CS010:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0\";
+  string dpName=\"CS011:LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0\";
   dpSet(\"__navObjectState.DPName\",dpName,\"__navObjectState.stateNr\",3,\"__navObjectState.message\",\"just an error\");
 }" 0
  E E E

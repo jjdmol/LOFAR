@@ -397,11 +397,11 @@ makeScalarPhaseExpr(Scope &scope,
 Expr<JonesMatrix>::Ptr
 makeIonosphereExpr(const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
-    const Expr<Vector<2> >::Ptr &exprAzEl,
+    const Expr<Vector<3> >::Ptr &exprDirection,
     const IonosphereExpr::Ptr &exprIonosphere)
 {
     return exprIonosphere->construct(refPosition, station->position(),
-        exprAzEl);
+        exprDirection);
 }
 
 Expr<JonesMatrix>::Ptr

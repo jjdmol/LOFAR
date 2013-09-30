@@ -455,6 +455,9 @@ int main (Int argc, char** argv)
     inputs.create ("applyIonosphere", "false",
                    "apply ionospheric correction",
                    "bool");
+    inputs.create ("parmdbname", "instrument",
+                   "Name of parmdb (default is instrument",
+                   "string");
     inputs.create ("splitbeam", "true",
                    "Evaluate station beam and element beam separately (splitbeam = true is faster)",
                    "bool");
@@ -533,6 +536,7 @@ int main (Int argc, char** argv)
     Bool UseEJones      = inputs.getBool("UseEJones");
     Bool MakeDirtyCorr  = inputs.getBool("MakeDirtyCorr");
     Bool applyIonosphere = inputs.getBool("applyIonosphere");
+    String parmdbname = inputs.getString("parmdbname");
     Bool splitbeam = inputs.getBool("splitbeam");
     Bool constrainFlux  = inputs.getBool("constrainflux");
     Bool preferVelocity = inputs.getBool("prefervelocity");
@@ -733,6 +737,7 @@ int main (Int argc, char** argv)
     params.define ("RowBlock", RowBlock);
     params.define ("doPSF", doPSF);
     params.define ("applyIonosphere", applyIonosphere);
+    params.define ("parmdbname", parmdbname);
     params.define ("splitbeam", splitbeam);
     params.define ("MakeDirtyCorr", MakeDirtyCorr);
     params.define ("UVmin", UVmin);

@@ -270,6 +270,13 @@
 				</Point>
 			</Placemark>
 			<Placemark>
+				<description>RS210</description>
+				<styleUrl>#msn_placemark_circle6</styleUrl>
+				<Point>
+					<coordinates>6.8742114,52.3310447,69.59 </coordinates>
+				</Point>
+			</Placemark>
+			<Placemark>
 				<description>RS305</description>
 				<styleUrl>#msn_placemark_circle6</styleUrl>
 				<Point>

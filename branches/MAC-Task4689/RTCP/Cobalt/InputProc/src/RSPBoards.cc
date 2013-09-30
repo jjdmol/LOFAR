@@ -49,7 +49,7 @@ namespace LOFAR
 
       ASSERT(nrBoards > 0);
 
-      LOG_INFO_STR( logPrefix << "Start" );
+      LOG_DEBUG_STR( logPrefix << "Start" );
 
 # pragma omp parallel sections num_threads(3)
       {
@@ -77,7 +77,7 @@ namespace LOFAR
 #   pragma omp section
         {
           // start log statistics
-          LOG_INFO_STR( logPrefix << "Starting log statistics" );
+          LOG_DEBUG_STR( logPrefix << "Starting log statistics" );
 
           OMPThread::ScopedRun sr(threads[0 + nrBoards]);
 
@@ -98,7 +98,7 @@ namespace LOFAR
 #   pragma omp section
         {
           // wait until we have to stop
-          LOG_INFO_STR( logPrefix << "Waiting for stop signal" );
+          LOG_DEBUG_STR( logPrefix << "Waiting for stop signal" );
           waiter.waitForever();
 
           // kill all boards
@@ -113,7 +113,7 @@ namespace LOFAR
         }
       }
 
-      LOG_INFO_STR( logPrefix << "End" );
+      LOG_DEBUG_STR( logPrefix << "End" );
     }
 
     void RSPBoards::stop()

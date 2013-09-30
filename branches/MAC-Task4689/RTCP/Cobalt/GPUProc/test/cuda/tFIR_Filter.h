@@ -298,10 +298,9 @@ namespace LOFAR
 
         // Expected output: St0, pol0, ch0, sampl0: 6. The rest all 0.
         // However, in modes other than 16 bit mode, all amplitudes are scaled to match 16 bit mode.
-        // For 8 bit mode, this means *256.
         unsigned scale = 1;
         if (NR_BITS_PER_SAMPLE != 16)
-          scale = 256;
+          scale = 16;
         if((*filteredData)[0][0][0][0][0] != 6.0f * scale) 
         {
           // int maxSample = NR_SAMPLES_PER_CHANNEL;

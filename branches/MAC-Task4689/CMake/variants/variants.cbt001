@@ -12,4 +12,5 @@ option(USE_CUDA      "Use CUDA"      ON)
 
 set(CASACORE_ROOT_DIR /globalhome/mol/root-x86_64)
 set(DAL_ROOT_DIR /globalhome/mol/root-x86_64)
+set(MPI_ROOT_DIR /opt/openmpi)
 

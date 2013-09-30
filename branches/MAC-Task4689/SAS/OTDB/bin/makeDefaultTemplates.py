@@ -217,10 +217,6 @@ if __name__ == '__main__':
     dbHost = options.dbHost
     newVersion = options.newVersion
 
-    # get info from database.py
-    #dbName=getDBname()
-    #dbHost=getDBhost()
-
     # calling stored procedures only works from the pg module for some reason.
     otdb = pg.connect(user="postgres", host=dbHost, dbname=dbName)
 

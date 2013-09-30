@@ -24,6 +24,21 @@ namespace LOFAR {
       return keys;
     }
 
+    // Returns the keys of an std::map, for non-empty elements
+    template<typename K, typename V>
+    std::vector<K> keys_nonempty( const std::map<K, std::vector<V> > &m )
+    {
+      std::vector<K> keys;
+
+      keys.reserve(m.size());
+      for (typename std::map<K, std::vector<V> >::const_iterator i = m.begin(); i != m.end(); ++i) {
+        if (!i->second.empty())
+          keys.push_back(i->first);
+      }
+
+      return keys;
+    }
+
 
     // Returns the set of unique values of an std::map.
     template<typename K, typename V>

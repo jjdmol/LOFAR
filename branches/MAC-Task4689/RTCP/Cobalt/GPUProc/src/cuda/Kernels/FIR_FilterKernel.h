@@ -46,15 +46,28 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
-        size_t nrHistorySamples;
-        size_t nrPPFTaps;
+
+        // The number of stations or TABs to filter. The FIR filter will
+        // deal with either in the same way.
+        size_t nrSTABs;
+
+        // The number of subbands \e this kernel instance will process,
+        // typically equal to \c nrSubbandsPerSubbandProc.
+        size_t nrSubbands;
+
+        // The number of PPF filter taps.
+        static const size_t nrTaps = 16;
+
+        // The number of history samples used for each block
+        size_t nrHistorySamples() const;
       };
 
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA,
-        FILTER_WEIGHTS
+        FILTER_WEIGHTS,
+        HISTORY_DATA
       };
 
       // Buffers that must be passed to the constructor of the FIR_FilterKernel
@@ -63,20 +76,40 @@ namespace LOFAR
       {
         Buffers(const gpu::DeviceMemory& in, 
                 const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& fw) :
-          Kernel::Buffers(in, out), filterWeights(fw)
+                const gpu::DeviceMemory& fw,
+                const gpu::DeviceMemory& hs) :
+          Kernel::Buffers(in, out), filterWeights(fw), historySamples(hs)
         {}
         gpu::DeviceMemory filterWeights;
+        gpu::DeviceMemory historySamples;
       };
 
       FIR_FilterKernel(const gpu::Stream& stream,
                        const gpu::Module& module,
                        const Buffers& buffers,
                        const Parameters& param);
+
+      void enqueue(const BlockID &blockId,
+                   PerformanceCounter &counter,
+                   size_t subbandIdx);
+
+      // Put the historyFlags[subbandIdx] in front of the given inputFlags,
+      // and update historyFlags[subbandIdx] with the flags of the last samples
+      // in inputFlags.
+      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
+
+    private:
+      // The Kernel parameters as given to the constructor
+      const Parameters params;
+
+      // The flags of the history samples.
+      //
+      // Dimensions: [nrSubbands][nrStations]
+      MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
-    // Specialization of the KernelFactory for
-    // FIR_FilterKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

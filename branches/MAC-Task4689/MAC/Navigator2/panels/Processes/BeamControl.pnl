@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1013 750 N "_3DFace" 0
+PANEL,-1 -1 1013 765 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -173,24 +173,22 @@ LANG:1 0
 0
 1 93 0 "" 12
 0
-1 94 0 "" 13
+1 94 0 "" 15
 0
-1 95 0 "" 15
+1 95 0 "" 16
 0
-1 96 0 "" 16
+1 96 0 "" 17
 0
-1 97 0 "" 17
+1 97 0 "" 18
 0
-1 98 0 "" 18
+1 98 0 "" 19
 0
-1 99 0 "" 19
-0
-1 100 0 "" 20
+1 99 0 "" 20
 0
 2 50
 "PRIMITIVE_TEXT8"
 ""
-1 30 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 580 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -200,8 +198,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 320 95 333
-0 2 2 "0s" 0 0 0 192 0 0  30 320 1
+E E 0 1 1 2 1 E U  1 E 30 580 95 593
+0 2 2 "0s" 0 0 0 192 0 0  30 580 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -219,11 +217,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -50 -20 1 E 160 340 175 355
+E E 0 1 1 2 1 E 1 0 1 -60 237 1 E 160 340 175 355
 2 65
 "PRIMITIVE_TEXT9"
 ""
-1 30 344 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -233,8 +231,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 344 83 357
-0 2 2 "0s" 0 0 0 192 0 0  30 344 1
+E E 0 1 1 2 1 E U  1 E 30 600 83 613
+0 2 2 "0s" 0 0 0 192 0 0  30 600 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -242,7 +240,7 @@ LANG:1 9 subArray:
 14 66
 "subArrayText"
 ""
-1 110 340 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 598 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 31 0 0 0 0 0
 E E E
@@ -253,12 +251,12 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  108 338 992 359
+0  98 596 982 617
 2 "0s" 0 0 0 0 0 -1  E E E
 25 82
 "beamTable"
 ""
-1 30 390 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 30 640 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 38 0 0 0 0 0
 E E E
@@ -269,7 +267,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0  28 388 992 577
+0  28 638 992 752
 EE 1 0 1 6 8 "Name" 8 1 0 "s" 1
 LANG:1 4 Name
 E
@@ -294,13 +292,13 @@ E
 1
 LANG:1 0 
 
-100 "subbands" 51 1 0 "s" 1
+100 "subbands" 25 1 0 "s" 1
 LANG:1 8 subbands
 E
 1
 LANG:1 0 
 
-285 "beamlets" 6 1 0 "s" 1
+285 "beamlets" 25 1 0 "s" 1
 LANG:1 8 beamlets
 E
 1
@@ -331,7 +329,7 @@ LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
 2 83
 "PRIMITIVE_TEXT10"
 ""
-1 30 370 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 620 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 39 0 0 0 0 0
 E E E
@@ -341,8 +339,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 370 71 383
-0 2 2 "0s" 0 0 0 192 0 0  30 370 1
+E E 0 1 1 2 1 E U  1 E 30 620 71 633
+0 2 2 "0s" 0 0 0 192 0 0  30 620 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -377,7 +375,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "PANEL_REF1" -1
-"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
+"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1.00494233937397 1.4432899320127e-014 -40.24711696869851
 1
 "$ctrlName""BeamControl"
 0

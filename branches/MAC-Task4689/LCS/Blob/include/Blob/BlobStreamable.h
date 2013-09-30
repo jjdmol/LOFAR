@@ -75,7 +75,7 @@ namespace LOFAR
 
   // Factory that can be used to generate new BlobStreamable objects.
   // The factory is defined as a singleton.
-  typedef Singleton< ObjectFactory< BlobStreamable(), string > >
+  typedef Singleton< ObjectFactory< BlobStreamable*(), string > >
   BlobStreamableFactory;
 
   // @}

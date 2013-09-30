@@ -79,6 +79,8 @@ void OTDBconnection::disconnect()
 		itsConnection->disconnect();
 	}
 	itsIsConnected = false;
+	delete itsConnection;
+	itsConnection = 0;
 }
 
 //
