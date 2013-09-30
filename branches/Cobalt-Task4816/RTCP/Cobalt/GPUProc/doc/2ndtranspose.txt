@@ -22,72 +22,17 @@ Generic transpose code:
     - one thread / writer node
     - one read queue / writer node
     - receives block (tab, subband, block, data):
-       - must construct several blocks for tabs simultaneously
-
-         received(tab, subband, block, data) {
-           ASSERT(blocks.find(block) != blocks.end());
-
-           if (block < blocks.min()) {
-             // block too old -- discard
-             return;
-           }
-
-           if (block > blocks.max()) {
-             // TODO: block too new!
-             return;
-           }
-
-           blocks[block].subbands[subband] = data;
-           if (--blocks[block].subbandsLeft == 0) {
-             // all subbands received -- forward block to writer
-
-             blocks.erase(block);
-           }
-         }
-
-Needs a generic 'subband collector' on the receiver side:
+       - must construct several blocks for tabs simultaneously (BlockCollector)
 
 (Hooks into CoInterface/src/TABTranspose.h)
 
-class TABBlockWriter {
-public:
-  void write() {
-    SmartPtr<TABBlock> block;
+-------------------------
+SENDER (GPUProc)
+-------------------------
 
-    Stream stream(connectToDisk(writerRank));
+* One thread per subband to split each block into its TABs:
 
-    while ((block = outputPool.filled.remove()) != NULL) {
-      block->write(stream);
-
-      outputPool.free.append(block);
-    }
-  }
-private:
-  Pool< SmartPtr<TABBlock> > &outputPool;
-};
-
-class TransposeReceiver {
-public:
-  TransposeReceiver(std::map<size_t,TABBlockCollector> &collectors)
-  :
-    collector(collector)
-  {
-  }
-
-  void receiveSubbands(Stream &stream)
-  {
-    TABSubband subband;
-
-    for(;;) {
-      subband.read(stream);
-
-      collectors.at(subband.fileIdx).addSubband(subband);
-    }
-  }
-
-private:
-  std::map<size_t,TABBlockCollector> &collectors;
-};
+* One thread per receiving node to send the TAB blocks:
 
 class TransposeSender {
 public:
@@ -101,7 +46,7 @@ public:
     for (size_t fileIdx = 0; fileIdx < data.shape()[0]; ++fileIdx) {
       size_t writerRank = outputProcRank(stokesIdx);
 
-      SmartPtr<TABSubband> subband = writerPool[writerRank].free.remove();
+      SmartPtr<Subband> subband = writerPool[writerRank].free.remove();
 
       subband->fileIdx = fileIdx;
       subband->subband = data.blockID.globalSubbandIdx;
@@ -114,9 +59,8 @@ public:
   }
 
   // One thread per receiving node,
-  // note that we could use select() or epoll() instead.
   void writeOutput(size_t writerRank) {
-    SmartPtr<TABSubband> subband;
+    SmartPtr<Subband> subband;
 
     Stream stream(connectToOutputProc(writerRank));
 
@@ -128,5 +72,54 @@ public:
   }
 
 private:
+};
+
+
+-------------------------
+RECEIVER (OutputProc)
+-------------------------
+
+* In receiving side, one thread per sending node:
+
+class TransposeReceiver {
+public:
+  TransposeReceiver(std::map<size_t,BlockCollector> &collectors)
+  :
+    collector(collector)
+  {
+  }
+
+  void receiveSubbands(Stream &stream)
+  {
+    Subband subband;
+
+    for(;;) {
+      subband.read(stream);
+
+      collectors.at(subband.fileIdx).addSubband(subband);
+    }
+  }
+
+private:
+  std::map<size_t,BlockCollector> &collectors;
+};
+
+* And, of course, one output thread per TAB to write to disk:
+
+class BlockWriter {
+public:
+  void write() {
+    SmartPtr<Block> block;
+
+    Stream stream(connectToDisk(writerRank));
+
+    while ((block = outputPool.filled.remove()) != NULL) {
+      block->write(stream);
+
+      outputPool.free.append(block);
+    }
+  }
+private:
+  Pool< SmartPtr<Block> > &outputPool;
 };
 
