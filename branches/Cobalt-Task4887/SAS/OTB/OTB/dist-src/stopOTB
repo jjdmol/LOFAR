@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Stop running OTB client 
+#
+# Usage: stopOTBServer [<port>]
+# where <port> is the portnumber used by the client (default 12500)
+#
+# Author: A.P. Schoenmakers
+
+if [ -z $1 ]; then
+  port=12500
+else
+  port=$1
+fi
+
+echo "Finding clients using port $port"
+
+client_users=( `ps -eaf | grep "otb\/client\/" | grep java | grep $port | awk '{print $1}'` )
+client_pids=( `ps -eaf | grep "otb\/client\/" | grep java | grep $port| awk '{print $2}'` )
+
+if [ ${#client_users[@]} == 0 ]; then
+  echo "No OTB clients running that use port $port"
+  exit
+else
+  for client_pid in ${client_pids[@]}
+  do 
+    echo "Found OTB with PID $client_pid; killing it now"
+    sudo kill $client_pid
+  done
+fi
+
