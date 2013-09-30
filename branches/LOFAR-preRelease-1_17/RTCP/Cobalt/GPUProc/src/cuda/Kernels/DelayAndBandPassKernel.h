@@ -88,7 +88,7 @@ namespace LOFAR
 
 
       void enqueue(PerformanceCounter &counter,
-                   double subbandFrequency, size_t SAP);
+                   float subbandFrequency, size_t SAP);
     };
 
     // Specialization of the KernelFactory for

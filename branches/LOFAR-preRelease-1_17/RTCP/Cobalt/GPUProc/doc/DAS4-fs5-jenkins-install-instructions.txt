@@ -15,21 +15,20 @@ Environment
   module load cuda55/toolkit
   module load cuda55/fft
   module load hwloc
-* We assume PATH contains $HOME/root/bin
-  and LD_LIBRARY_PATH contains $HOME/root/lib
-  and PYTHONPATH contains $HOME/root/lib64/python2.6/site-packages
+* We assume PATH contains ~/root/bin
+  and LD_LIBRARY_PATH contains ~/root/lib
 
-* Always pass at least -DCMAKE_INSTALL_PREFIX=$HOME/root to cmake, or --prefix=$HOME/root to ./configure.
+* Always pass at least -DCMAKE_INSTALL_PREFIX=~/root to cmake, or --prefix=/home/jenkins/root to ./configure.
 * Make sure everything is linked using the same library versions (esp. for libhdf5).
 
 
 Relevant files and directories
 ------------------------------
 
-$HOME/root/				installation root
-$HOME/root/src/			source and build directories
-$HOME/root/share/aips++/data/	CASA measures table location
-$HOME/jenkins/			location of the jenkins continuous build and integration system
+~/root/				installation root
+~/root/src/			source and build directories
+~/root/share/aips++/data/	CASA measures table location
+~/jenkins/			location of the jenkins continuous build and integration system
 
 
 Data Access Library (DAL)
@@ -37,14 +36,13 @@ Data Access Library (DAL)
 
 Dependency for: LOFAR/RTCP/Cobalt/OutputProc
 
-  cd $HOME/root/src
+  cd ~/root/src
   git clone https://github.com/nextgen-astrodata/DAL.git DAL
-  mkdir DAL/build
-  cd DAL/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root ..
+  mkdir build
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=~/root ..
   make -j 8 install
   ctest    # optional
-  python -c 'import dal'  # optional (test), should print nothing and exit 0
 
 
 cfitsio
@@ -52,11 +50,11 @@ cfitsio
 
 Dependency for: casacore, wcslib
 
-  cd $HOME/root/src
+  cd ~/root/src
   wget ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio_latest.tar.gz
   tar zxf cfitsio_latest.tar.gz
   cd cfitsio
-  ./configure --prefix=$HOME/root --enable-reentrant --enable-sse2 --enable-ssse3
+  ./configure --prefix=/home/jenkins/root --enable-reentrant --enable-sse2 --enable-ssse3
   make -j 8 shared
   make install
 
@@ -66,11 +64,11 @@ wcslib
 
 Dependency for: casacore
 
-  cd $HOME/root/src
+  cd ~/root/src
   wget ftp://ftp.atnf.csiro.au/pub/software/wcslib/wcslib.tar.bz2
   tar jxf wcslib.tar.bz2
   cd wcslib-4.18    # or whatever version you have
-  ./configure --prefix=$HOME/root --with-cfitsiolib=$HOME/root/lib --with-cfitsioinc=$HOME/root/include
+  ./configure --prefix=/home/jenkins/root --with-cfitsiolib=/home/jenkins/root/lib --with-cfitsioinc=/home/jenkins/root/include
   make -j 8 install
 
 
@@ -79,7 +77,7 @@ CASA measures tables
 
 Dependency for: casacore (keep the measure tables up to date, automatically!)
 
-  cd $HOME/root/share    # or wherever
+  cd ~/root/share    # or wherever
   mkdir aips++
   cd aips++
   wget ftp://ftp.atnf.csiro.au/pub/software/measures_data/measures_data.tar.bz2 ftp://ftp.atnf.csiro.au/pub/software/measures_data/measures_data.tar.bz2.md5sum
@@ -97,67 +95,30 @@ Dependency for: LOFAR/RTCP/Cobalt
 Since we keep the measure data up to date (and since this install is the testing env standard), 
 we use -DDATA_DIR=..., such that others can use our install AND measures tables.
 
-  cd $HOME/root/src
+  cd ~/root/src
   svn co http://casacore.googlecode.com/svn/trunk/ casacore
-  mkdir casacore/build
-  cd casacore/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=$HOME/root/share/aips++/data ..
+  mkdir build
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=~/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=~/root/share/aips++/data ..
   make -j 8 install
   ctest    # optional
 
-  findmeastable    # optional; verify that casacore can find the measures tables
-
-
-pyrap (optional for LOFAR Cobalt)
------
-
-Dependency for: various LOFAR/CEP packages
-Depends on: python boost-python casacore numpy scons
-
-  cd $HOME/root/src
-  svn co http://pyrap.googlecode.com/svn/trunk pyrap
-  cd pyrap
-  ./batchbuild-trunk.py --casacore-root=$HOME/root --enable-hdf5 --cfitsio-root=$HOME/root --wcs-root=$HOME/root --prefix=$HOME/root --python-prefix=$HOME/root/lib64/python2.6/site-packages
-  python -c 'import pyrap'  # optional (test), should print nothing and exit 0
-
-
-log4cplus
----------
-
-  cd $HOME/root/src
-  wget http://downloads.sourceforge.net/project/log4cplus/log4cplus-stable/1.1.1/log4cplus-1.1.1.tar.gz   # or whatever recent version you like
-  tar zxf log4cplus-1.1.1.tar.gz
-  cd log4cplus-1.1.1
-  ./configure --prefix=$HOME/root
-  make -j 8 install
-  make check  # optional
-
-
-libssh2
--------
-
-  cd $HOME/root/src
-  wget http://www.libssh2.org/download/libssh2-1.4.3.tar.gz   # or whatever recent version you like
-  tar zxf libssh2-1.4.3.tar.gz
-  cd libssh2-1.4.3
-  ./configure --prefix=$HOME/root
-  make -j 8 install
-  make check  # optional
+  findmeastable    # verify that casacore can find the measures tables
 
 
 LOFAR (Cobalt only)
 -------------------
 
-  cd $HOME/root/src
+  cd ~/root/src
   svn co --username USERNAME -N https://svn.astron.nl/LOFAR/trunk LOFAR
   cd LOFAR
   svn up RTCP CMake LCS
-  svn up    # Guarantee the same version for all paths in case somebody commits while 'svn up'-ing multiple subdirs.
+  svn up    # Guarantee the same version in case somebody commits while 'svn up'-ing multiple subdirs.
   cd .. 
   mkdir -p LOFAR-build/gnu_opt
   cd LOFAR-build/gnu_opt
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DBUILD_PACKAGES=Cobalt -DUSE_CUDA=ON ../../LOFAR    # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
+  cmake -DCMAKE_INSTALL_PREFIX=~/root -DBUILD_PACKAGES=Cobalt ../../LOFAR    # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
   make -j 8 install
-  ctest -j 8    # optional
-  . $HOME/root/lofarinit.sh    # required to use some of the LOFAR tools, but we will do this through jenkins
+  ctest    # optional
+  . ~/root/lofarinit.sh    # often needed, but we will do this through jenkins
 

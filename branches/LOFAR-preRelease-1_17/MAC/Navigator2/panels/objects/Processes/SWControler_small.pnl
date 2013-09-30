@@ -43,15 +43,15 @@ void levelChanged(string dp1, int swlvl,
     if (observationChangedConnected) {
       if (dpDisconnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
-        LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations: \"+getLastError);
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
+        observationChangedConnected = false;
       }
     }
-    observationChangedConnected = false;
       
     if (navFunct_dpReachable(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
       if (dpConnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
-        LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations: \"+getLastError());
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't connect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations\");
       } else {
         observationChangedConnected = true;
       }
@@ -95,23 +95,24 @@ private void observationChanged(string dp1, dyn_string observations,
         setValue(\"process\", \"backCol\", \"Lofar_off\");
         return;
       } else if ($name == \"PythonControl\") {
-//        firstObservation=firstPipeline;
+        firstObservation=firstPipeline;
       }
       
     }
-  }
-  if (firstObservation == \"\") {
-    updateSWController(baseDP,0,baseDP,invalid);
-  } else {
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+firstObservation);
     baseDP = station+obsDP+\"_\"+$name;
     reload();
   }
 }
- 
   
 private void reload() {
+    if (updateConnected) {
+    if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
+                                           baseDP +\".status.state:_online.._invalid\") == -1) { 
+      updateConnected = false;
+    }
+  }
 
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(baseDP+\".status.state\")) {
@@ -119,8 +120,6 @@ private void reload() {
       if (dpConnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
                                           baseDP +\".status.state:_online.._invalid\") == -1) {
         setValue(\"process\", \"backCol\", \"Lofar_dpdoesnotexist\");
-        LOG_ERROR(\"SWController_small.pnl:reload|Couldn't connect updateSWController: \"+getLastError());
-       
       } else {
         updateConnected = true;
       }
@@ -139,13 +138,6 @@ updateSWController(string dp1, int status,
   int lvl = 0;
   dpGet(\"LOFAR_PermSW_Daemons_SoftwareMonitor.SWLevel:_online.._value\",lvl);
 
-  if (invalid) {
-    setValue(\"process\", \"backCol\", \"Lofar_invalid\");
-    return;
-  } else {
-    setValue(\"process\", \"backCol\", getStateColor(status));
-  }
-
   if (lvl < 6 && ($name == \"ObservationControl\" ||    // MCU
       $name == \"OnlineControl\" ||    // CCU
       $name == \"PythonControl\" ||    // CCU
@@ -153,8 +145,14 @@ updateSWController(string dp1, int status,
       $name == \"BeamControl\" ||    // Station
       $name == \"TBBControl\")) {    // Station
     setValue(\"process\", \"backCol\", \"Lofar_off\");
+    return;
   }
-    return;   
+   
+  if (invalid) {
+    setValue(\"process\", \"backCol\", \"Lofar_invalid\");
+  } else {
+    setValue(\"process\", \"backCol\", getStateColor(status));
+  }
 }
   
 " 0

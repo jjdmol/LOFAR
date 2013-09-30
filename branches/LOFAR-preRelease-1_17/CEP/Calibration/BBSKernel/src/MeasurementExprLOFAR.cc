@@ -243,13 +243,13 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             {
                 // Create an AZ, EL expression for the centroid direction of the
                 // patch.
-//                 Expr<Vector<2> >::Ptr exprAzEl =
-//                     makeAzElExpr(instrument->station(j)->position(),
-//                     exprPatch->position());
+                Expr<Vector<2> >::Ptr exprAzEl =
+                    makeAzElExpr(instrument->station(j)->position(),
+                    exprPatch->position());
 
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                    instrument->position(), exprAzEl, exprIonosphere));
             }
         }
 
@@ -549,9 +549,15 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the phase reference
+                    // direction.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprRefPhase);
+
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }
@@ -577,6 +583,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         makeDirectionalGainExpr(itsScope,
                         instrument->station(i), patch, config.usePhasors()));
                 }
+
                 // Beam.
                 if(config.useBeam())
                 {
@@ -622,9 +629,15 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
+                    // Create an AZ, EL expression for the centroid direction of
+                    // the patch.
+                    Expr<Vector<2> >::Ptr exprAzEl =
+                        makeAzElExpr(instrument->station(i)->position(),
+                        exprPatch->position());
+
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                        instrument->position(), exprAzEl, exprIonosphere));
                 }
             }
         }

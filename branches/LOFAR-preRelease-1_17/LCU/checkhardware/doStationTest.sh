@@ -1,104 +1,47 @@
 #!/bin/bash
- 
-
- # default values
-START=""
-STOP=""
-LEVEL=2
-UPDATE="no"
-SERVICE="no"
-HELP="no"
-
-# get command line options
-while getopts s:e:tTurh option
-do
-    case "${option}"
-    in
-        s) START=${OPTARG};;
-        e) STOP=${OPTARG};;
-        t) LEVEL=1;;
-        T) LEVEL=2;;
-        u) UPDATE="yes";;
-        r) SERVICE="yes";;
-        h) HELP="yes";;
-    esac
-done
-
-if [ $HELP == "yes" ]
-then
-    echo "Usage:"
-    echo "   doStationTest.sh -s 20130624_04:00:00 -e 20130624_06:00:00 -u"
-    echo "   -s : start time"
-    echo "   -e : end time"
-    echo "   -u : update pvss"
-    echo "   -t : do short test L1"
-    echo "   -T : do long test L2 (default)"
-    echo "   -r : do service test and show results"
-    echo "   -h : show this screen"
-    exit
-fi
-
+# 
+# nohup lcurun -s today -c '/opt/stationtest/doStationTest.sh start=20130624_04:00:00 stop=20130624_06:00:00 &' &
+#
 host=`hostname -s`
 
-# set filenames and dirs
 locallogdir="/opt/stationtest/data/"
 globallogdir="/globalhome/log/"
 
-filenameNow=$host"_StationTest.csv"
-if [ $SERVICE == "yes" ]
-then
-    filenameLocal=$host"_S_StationTest.csv"
-    filenameLocalHistory=$host"_S_StationTestHistory.csv"
-else
-    filenameLocal=$host"_L"$LEVEL"_StationTest.csv"
-    filenameLocalHistory=$host"_L"$LEVEL"_StationTestHistory.csv"
-fi
+filenameNow=$locallogdir$host"_StationTest.csv"
+filenameHistory=$locallogdir$host"_L2_StationTestHistory.csv"
 
-# set test level
-level="-l="$LEVEL
-
-# set start and stop time if given
+# Check hardware in CheckLevel 2, do all tests
 start=""
 stop=""
-if [ -n "$STOP" ]
+if [ $# -eq "2" ]
 then
-    echo "STOP not empty"
-    if [ -n "$START" ]
-    then
-        echo "START not empty"
-        start="-start="$START
-    fi
-    stop="-stop="$STOP
+    start="-$1"
+    stop="-$2"
+fi
+if [ $# -eq "1" ]
+then
+    stop="-$1"
 fi
 
-# Check hardware
-checkHardware.py $level $start $stop
+checkHardware.py -l=2 $start $stop
 
 err=$?
 echo $err
 if [ $err -eq 0 ]
 then
-    # Copy to Lx file in local dir
-    cp $locallogdir$filenameNow $locallogdir$filenameLocal
-    
     # Add to history
-    cat $locallogdir$filenameNow >> $locallogdir$filenameLocalHistory
+    cat $filenameNow >> $filenameHistory
+
+    # Copy to L2 file in local dir
+    cp $filenameNow $locallogdir$host"_L2_StationTest.csv"
 
     # Copy from local to global dir
-    cp $locallogdir$filenameLocal $globallogdir
-    cp $locallogdir$filenameLocalHistory $globallogdir
+    cp $filenameNow $globallogdir$host"_L2_StationTest.csv"
+    cp $filenameHistory $globallogdir
 
     # Add test results too PVSS and make bad_rcu_file
-    #updatePVSS.py -N=5,50,1 -J=5,50,2 -S=20 -E
     #new settings by Wilfred, 9-7-2013
-    if [ $UPDATE == "yes" ]
-    then
-        updatePVSS.py S=10 -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
-    fi
-fi
+    # add lbl and lbh settings aug-2013
+    updatePVSS.py S=10 -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
 
-if [ $SERVICE == "yes" ]
-then
-    # Show last results on screen
-    showTestResult.py -f=$locallogdir$filenameNow
 fi

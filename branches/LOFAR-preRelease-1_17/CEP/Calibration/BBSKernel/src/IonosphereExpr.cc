@@ -111,10 +111,10 @@ MIMExpr::MIMExpr(const IonosphereConfig &config, Scope &scope)
 }
 
 Expr<JonesMatrix>::Ptr MIMExpr::construct(const casa::MPosition &refPosition,
-    const casa::MPosition &station, const Expr<Vector<3> >::ConstPtr &direction)
+    const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
     const
 {
-    PiercePoint::Ptr piercePoint(new PiercePoint(station, direction, itsHeight));
+    PiercePoint::Ptr piercePoint(new PiercePoint(station, azel, itsHeight));
 
     PolynomialLayer::Ptr shift(new PolynomialLayer(refPosition, piercePoint,
         itsCoeff.begin(), itsCoeff.end()));
@@ -166,10 +166,10 @@ ExpIonExpr::ExpIonExpr(const IonosphereConfig&, Scope &scope)
 }
 
 Expr<JonesMatrix>::Ptr ExpIonExpr::construct(const casa::MPosition&,
-    const casa::MPosition &station, const Expr<Vector<3> >::ConstPtr &direction)
+    const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
     const
 {
-    PiercePoint::Ptr piercePoint(new PiercePoint(station, direction, itsHeight));
+    PiercePoint::Ptr piercePoint(new PiercePoint(station, azel, itsHeight));
 
     IonPhaseShift::Ptr shift(new IonPhaseShift(piercePoint, itsR0, itsBeta));
     shift->setCalibratorPiercePoints(itsCalPiercePoint.begin(),

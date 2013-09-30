@@ -62,7 +62,7 @@ public:
     virtual ~IonosphereExpr();
 
     virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
-        const casa::MPosition &station, const Expr<Vector<3> >::ConstPtr &direction)
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
         const = 0;
 };
 
@@ -75,7 +75,7 @@ public:
     MIMExpr(const IonosphereConfig &config, Scope &scope);
 
     virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
-        const casa::MPosition &station, const Expr<Vector<3> >::ConstPtr &direction)
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
         const;
 
 private:
@@ -92,7 +92,7 @@ public:
     ExpIonExpr(const IonosphereConfig&, Scope &scope);
 
     virtual Expr<JonesMatrix>::Ptr construct(const casa::MPosition &refPosition,
-        const casa::MPosition &station, const Expr<Vector<3> >::ConstPtr &direction)
+        const casa::MPosition &station, const Expr<Vector<2> >::ConstPtr &azel)
         const;
 
 private:

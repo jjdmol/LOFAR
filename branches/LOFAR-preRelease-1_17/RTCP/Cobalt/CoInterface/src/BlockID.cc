@@ -22,8 +22,6 @@
 
 #include "BlockID.h"
 
-#include <iostream>
-
 namespace LOFAR
 {
   namespace Cobalt

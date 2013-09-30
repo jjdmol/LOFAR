@@ -1,4 +1,4 @@
-V 11
+V 10
 1
 LANG:1 0 
 PANEL,-1 -1 1013 754 N "_3DFace" 0
@@ -138,22 +138,24 @@ LANG:1 0
 0
 1 82 0 "" 12
 0
-1 83 0 "" 15
+1 83 0 "" 13
 0
-1 84 0 "" 16
+1 84 0 "" 15
 0
-1 85 0 "" 17
+1 85 0 "" 16
 0
-1 86 0 "" 18
+1 86 0 "" 17
 0
-1 87 0 "" 19
+1 87 0 "" 18
 0
-1 88 0 "" 20
+1 88 0 "" 19
+0
+1 89 0 "" 20
 0
 2 50
 "PRIMITIVE_TEXT8"
 ""
-1 30 590 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 340 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -163,11 +165,12 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 590 95 603
-0 2 2 "0s" 0 0 0 192 0 0  30 590 1
+E E 0 1 1 2 1 E U  1 E 30 340 95 354
+0 2 2 "0s" 0 0 0 192 0 0  30 340 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 10 Connected:
 6 51
 "connectedText"
@@ -182,11 +185,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 0 247 1 E 160 340 175 355
+E E 0 1 1 2 1 E 1 0 1 0 -5 1 E 160 340 175 355
 2 52
 "PRIMITIVE_TEXT9"
 ""
-1 30 620 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 374 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 27 0 0 0 0 0
 E E E
@@ -196,16 +199,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 620 106 633
-0 2 2 "0s" 0 0 0 192 0 0  30 620 1
+E E 0 1 1 2 1 E U  1 E 30 374 106 388
+0 2 2 "0s" 0 0 0 192 0 0  30 374 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 13 Actual Clock:
 14 53
 "actualClockText"
 ""
-1 160 617 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 160 370 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -215,13 +219,14 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  158 615 282 636
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 158 368 282 389
 2 "0s" 0 0 0 0 0 -1  E E E
 2 71
 "PRIMITIVE_TEXT10"
 ""
-1 30 650 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 30 404 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -231,16 +236,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 650 131 663
-0 2 2 "0s" 0 0 0 192 0 0  30 650 1
+E E 0 1 1 2 1 E U  1 E 30 404 131 418
+0 2 2 "0s" 0 0 0 192 0 0  30 404 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
 LANG:1 16 Requested Clock:
 14 72
 "requestedClockText"
 ""
-1 160 647 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 160 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -250,8 +256,9 @@ LANG:1 0
 
 0
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  158 645 282 666
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 158 398 282 419
 2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
@@ -282,7 +289,7 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1" -1
+3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
 "$ctrlName""ClockControl"
