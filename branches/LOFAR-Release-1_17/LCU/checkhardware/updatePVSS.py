@@ -296,9 +296,9 @@ def addDataToPVSS(data):
                 if len(lbaj_limits) > 1:
                     proc_limit_1 = float(lbaj_limits[0])
                     proc_limit_2 = float(lbaj_limits[1])
-                    diff_limit = float(lbla_limits[2])
+                    diff_limit = float(lbaj_limits[2])
                 else:
-                    proc_limit_1 = float(lbla_limits)
+                    proc_limit_1 = float(lbaj_limits)
                 
                 if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
                     if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
@@ -345,7 +345,7 @@ def addDataToPVSS(data):
                         comment += "Y"
                         flag = True        
                 if flag:
-                    p#rint 'LBL %3.1f (%3.1f) %3.1f (%3.1f)' %(X, RFrefX, Y, RFrefY)
+                    #print 'LBL %3.1f (%3.1f) %3.1f (%3.1f)' %(X, RFrefX, Y, RFrefY)
                     sendToPVSS(comment, "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
                 bad_lba[partNr] = 1
             
