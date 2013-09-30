@@ -44,7 +44,6 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
-        size_t nrTAPs;
       };
 
       enum BufferType
