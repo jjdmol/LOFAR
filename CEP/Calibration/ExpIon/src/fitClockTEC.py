@@ -537,8 +537,13 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         print 'selected CS',CSstations
         for pol in range(2):
             if combine_pol:
-                phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
-                ampdata=amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
+                #phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
+                ampdata=np.logical_or(amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]==1,amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]==1)
+
+                cdata1=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices])
+                cdata2=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices])
+                phdata=np.angle((cdata1+cdata2)/2.)
+                
                 #return phdata
             else:
                 phdata=ph[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
@@ -605,12 +610,12 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #!!!!!!!!!!!!!!!!TESTESTESTSETTE!!!
                 #phdata[:,:,np.arange(1,46,2)]+=0.01*np.arange(1,46,2)
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                if combine_pol:
-                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
-                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
-                else:
-                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
-                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
+                #if combine_pol:
+                #    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
+                #    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
+                #else:
+                initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
+                initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
                 #initSol[:,1]=np.average(clockarray[:,stationIndices,pol]-clockarray[:,[0],pol],axis=0)+steps[1]*np.round(wraps[stationIndices])
                 print "wraps",np.round(wraps[stationIndices])
                 print "prev solutions", clockarray[timerange[0],stationIndices,pol]
@@ -634,8 +639,8 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                         'fixedClockforCS':fixedClockforCS}
                 getClockTECBaselineFit(**kwargs)
             if combine_pol:
-                tecarray/=2.
-                clockarray/=2.
+                #tecarray/=2.
+                #clockarray/=2.
                 break;
             
     else:            
