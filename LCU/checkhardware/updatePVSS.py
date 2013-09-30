@@ -345,7 +345,7 @@ def addDataToPVSS(data):
                         comment += "Y"
                         flag = True        
                 if flag:
-                    p#rint 'LBL %3.1f (%3.1f) %3.1f (%3.1f)' %(X, RFrefX, Y, RFrefY)
+                    #print 'LBL %3.1f (%3.1f) %3.1f (%3.1f)' %(X, RFrefX, Y, RFrefY)
                     sendToPVSS(comment, "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
                 bad_lba[partNr] = 1
             
