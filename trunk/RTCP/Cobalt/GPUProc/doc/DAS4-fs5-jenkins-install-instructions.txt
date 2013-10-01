@@ -15,6 +15,8 @@ Environment
   module load cuda55/toolkit
   module load cuda55/fft
   module load hwloc
+  (If the jenkins system is in control (JENKINS_SERVER_COOKIE has a value),
+   we set modules and PATH-like env vars in the jenkins build/test scripts.) 
 * We assume PATH contains $HOME/root/bin
   and LD_LIBRARY_PATH contains $HOME/root/lib
   and PYTHONPATH contains $HOME/root/lib64/python2.6/site-packages
