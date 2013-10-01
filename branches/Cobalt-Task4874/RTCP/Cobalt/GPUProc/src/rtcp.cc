@@ -71,7 +71,11 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
+  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
+  cerr << "beam-forming for the Pulsar mode." << endl;
+  cerr << endl;
+  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
@@ -177,11 +181,19 @@ int main(int argc, char **argv)
   // mess.
   // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
+  // Create a parameters set object based on the inputs
+  LOG_INFO("----- Reading Parset");
+  Parset ps(argv[optind]);
+
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
-
   if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
-    THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  {
+    if (ps.settings.realTime)
+      THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+    else
+      LOG_WARN("Cannot setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  }
 
   /*
    * Initialise OpenMP
@@ -198,11 +210,6 @@ int main(int argc, char **argv)
   /*
    * INIT stage
    */
-
-  LOG_INFO("----- Reading Parset");
-
-  // Create a parameters set object based on the inputs
-  Parset ps(argv[optind]);
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
@@ -255,10 +262,10 @@ int main(int argc, char **argv)
 
       LOG_DEBUG_STR("Bound to memory on nodes " << nodestrs);
     } else {
-      LOG_WARN_STR("Cannot bind memory (libnuma says there is no numa available)");
+      LOG_WARN("Cannot bind memory (libnuma says there is no numa available)");
     }
 #else
-    LOG_WARN_STR("Cannot bind memory (no libnuma support)");
+    LOG_WARN("Cannot bind memory (no libnuma support)");
 #endif
 
     // derive the set of gpus we're allowed to use
@@ -291,9 +298,14 @@ int main(int argc, char **argv)
 
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-    THROW_SYSCALL("mlockall");
-
-  LOG_DEBUG("All memory is now pinned.");
+  {
+    if (ps.settings.realTime)
+      THROW_SYSCALL("mlockall");
+    else
+      LOG_WARN("Cannot mlockall(MCL_CURRENT | MCL_FUTURE)");
+  } else {
+    LOG_DEBUG("All memory is now pinned.");
+  }
 
   // Allow usage of nested omp calls
   omp_set_nested(true);

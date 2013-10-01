@@ -211,4 +211,10 @@ PIC.Core.RS205HBA.clockCorrectionTime = 0
 PIC.Core.RS205HBA.phaseCenter = [3831479.670,463487.529,5060989.903]
 PIC.Core.RS205HBA.position = [3831479.670,463487.529,5060989.903]
 PIC.Core.Station.RS205HBA.RSP.ports = [file:/var/scratch/mol/test_sets/3sec/rs205.udp]
-
+Cobalt.Correlator.BeamFormerKernel.dumpOutput = false
+Cobalt.Correlator.BeamFormerTransposeKernel.dumpOutput = false
+Cobalt.Correlator.CoherentStokesKernel.dumpOutput = false
+Cobalt.Correlator.CorrelatorKernel.dumpOutput = false
+Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput = false
+Cobalt.Correlator.FIR_FilterKernel.dumpOutput = false
+Cobalt.Correlator.IntToFloatKernel.dumpOutput = false

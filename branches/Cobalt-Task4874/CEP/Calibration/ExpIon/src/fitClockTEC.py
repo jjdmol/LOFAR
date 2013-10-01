@@ -76,8 +76,8 @@ def getClockTECAll(ph,amp,freqs,stationname,stIdx,polIdx):
 
     maxTimesteps=500
     #first unwrap data and get initial guess
-    nT=ph.shape[0]
-    nF=freqs.shape[0]
+    nT=ph[:].shape[0]
+    nF=freqs[:].shape[0]
 
     stepDelay=.03
     if 'CS' in stationname:
@@ -421,10 +421,10 @@ def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,st
                     iD1=-4
                     iD2=4
                  else:
-                    iTEC1=-1
-                    iTEC2=1
-                    iD1=-200
-                    iD2=200
+                    iTEC1=-2
+                    iTEC2=2
+                    iD1=-300
+                    iD2=300
                 print "First",iTEC1,iTEC2,iD1,iD2
                     
 
@@ -493,12 +493,12 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
     if allBaselines and not doClockTEC:
         doClockTEC=True
 
-    polshape=ionmodel.phases.shape[-1]
-    nT=ionmodel.times.shape[0]
+    polshape=ionmodel.phases[:].shape[-1]
+    nT=ionmodel.times[:].shape[0]
     if timerange=='all':
         timerange=[0,nT]
     nT=timerange[1]-timerange[0]
-    nF=ionmodel.freqs.shape[0]
+    nF=ionmodel.freqs[:].shape[0]
     freqs=ionmodel.freqs[:]
     if SBselect=='all':
         SBselect=np.ones(nF,dtype=bool)
@@ -521,9 +521,9 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         stations=list(ionmodel.stations[:][stationSelect])
     print "stations",stations
     if doClockTEC:
-        clockarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
-        tecarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
-        offsetarray=np.zeros(ionmodel.times.shape+ionmodel.stations[:].shape+(2,))
+        clockarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
+        tecarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
+        offsetarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
         residualarray=np.zeros((len(ionmodel.times),len(ionmodel.freqs),len(ionmodel.stations),2))
         ph=ionmodel.phases
         amp=ionmodel.amplitudes
@@ -537,15 +537,20 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         print 'selected CS',CSstations
         for pol in range(2):
             if combine_pol:
-                phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
-                ampdata=amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
+                #phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
+                ampdata=np.logical_or(amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]==1,amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]==1)
+
+                cdata1=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices])
+                cdata2=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices])
+                phdata=np.angle((cdata1+cdata2)/2.)
+                
                 #return phdata
             else:
                 phdata=ph[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
                 ampdata=amp[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
             if hasattr(ionmodel,'TEC') and initFromPrevious:
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                if len(ionmodel.TEC.shape)>3:
+                if len(ionmodel.TEC[:].shape)>3:
                     initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,0,pol]
                 else:
                     initSol[:,0]=ionmodel.TEC[:][timerange[0],stationIndices,pol]
@@ -605,12 +610,12 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #!!!!!!!!!!!!!!!!TESTESTESTSETTE!!!
                 #phdata[:,:,np.arange(1,46,2)]+=0.01*np.arange(1,46,2)
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                if combine_pol:
-                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
-                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
-                else:
-                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
-                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
+                #if combine_pol:
+                #    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
+                #    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
+                #else:
+                initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
+                initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
                 #initSol[:,1]=np.average(clockarray[:,stationIndices,pol]-clockarray[:,[0],pol],axis=0)+steps[1]*np.round(wraps[stationIndices])
                 print "wraps",np.round(wraps[stationIndices])
                 print "prev solutions", clockarray[timerange[0],stationIndices,pol]
@@ -634,8 +639,8 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                         'fixedClockforCS':fixedClockforCS}
                 getClockTECBaselineFit(**kwargs)
             if combine_pol:
-                tecarray/=2.
-                clockarray/=2.
+                #tecarray/=2.
+                #clockarray/=2.
                 break;
             
     else:            
@@ -687,10 +692,10 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
 def SwapClockTECAxes(ionmodel):
     print "swap axes will reshape your Clock and TEC solutions. The order of Clock is now times  x stations x polarizations and of TEC: times x stations x sources x polarizations"
     TEC =ionmodel.TEC;
-    TECshape=TEC.shape
+    TECshape=TEC[:].shape
     Clock =ionmodel.Clock;
-    Clockshape=Clock.shape
-    nT=ionmodel.times.shape[0]
+    Clockshape=Clock[:].shape
+    nT=ionmodel.times[:].shape[0]
     nst=ionmodel.stations[:].shape[0]
     nsources=ionmodel.N_sources
     newshape=(nT,nsources,nst,2)
@@ -797,32 +802,46 @@ def writeClocktoParmdb(ionmodel,average=False,create_new = True):
 
 def writePhaseScreentoParmdb(ionmodel,create_new = True):
     N_sources=ionmodel.N_sources
+    N_pol = min(len(ionmodel.polarizations),2)
     if not hasattr(ionmodel,'globaldb'):
         ionmodel.globaldb='./'
-    for n_source in range(N_sources):
-       if ionmodel.DirectionalGainEnable:
-          source = ionmodel.sources[n_source]
-          identifier = ':'.join([str(pol), station, source])
-       else:
-          identifier = ':'.join([str(pol), station])
+    if not hasattr(ionmodel,'DirectionalGainEnable'):
+        ionmodel.DirectionalGainEnable=False
+    parms = {}
+    parm = {}
+    parm[ 'freqs' ] = np.array( [ .5e9 ] )
+    parm[ 'freqwidths' ] = np.array( [ 1.0e9 ] )
+    parm[ 'times' ] = ionmodel.times[:].ravel()
+    parm[ 'timewidths' ] = ionmodel.timewidths[:].ravel()
 
-       # TEC
-       TEC_parm = parm.copy()
-       parmname = ':'.join(['TEC', identifier])
-       TEC_parm[ 'values' ] = ionmodel.TEC[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TEC_parm
+    for n_pol in range(N_pol):
 
-       #TECfit
-       TECfit_parm = parm.copy()
-       parmname = ':'.join(['TECfit', identifier])
-       TECfit_parm[ 'values' ] = ionmodel.TECfit[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TECfit_parm
+        for n_station in range(len(ionmodel.stations[:])):
+            station = ionmodel.stations[n_station]
+            for n_source in range(N_sources):
+                if ionmodel.DirectionalGainEnable:
+                    source = ionmodel.sources[n_source]
+                    identifier = ':'.join([str(n_pol), station, source])
+                else:
+                    identifier = ':'.join([str(n_pol), station])
 
-       #TECfit_white
-       TECfit_white_parm = parm.copy()
-       parmname = ':'.join(['TECfit_white', identifier])
-       TECfit_white_parm[ 'values' ] = ionmodel.TECfit_white[:,n_station,n_source,n_pol]
-       parms[ parmname ] = TECfit_white_parm
+            # TEC
+            TEC_parm = parm.copy()
+            parmname = ':'.join(['TEC', identifier])
+            TEC_parm[ 'values' ] = ionmodel.TEC[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TEC_parm
+            
+            #TECfit
+            TECfit_parm = parm.copy()
+            parmname = ':'.join(['TECfit', identifier])
+            TECfit_parm[ 'values' ] = ionmodel.TECfit[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TECfit_parm
+            
+            #TECfit_white
+            TECfit_white_parm = parm.copy()
+            parmname = ':'.join(['TECfit_white', identifier])
+            TECfit_white_parm[ 'values' ] = ionmodel.TECfit_white[:,n_station,n_source,n_pol]
+            parms[ parmname ] = TECfit_white_parm
 
     # Piercepoints
       
@@ -859,26 +878,25 @@ def writePhaseScreentoParmdb(ionmodel,create_new = True):
         Piercepoint_zenithangle_parm['values'] = za
         parms[ parmname ] = Piercepoint_zenithangle_parm
 
-     time_start = ionmodel.times[0] - ionmodel.timewidths[0]/2
-     time_end = ionmodel.times[-1] + ionmodel.timewidths[-1]/2
+    time_start = ionmodel.times[0] - ionmodel.timewidths[0]/2
+    time_end = ionmodel.times[-1] + ionmodel.timewidths[-1]/2
 
+    parm[ 'times' ] = array([(time_start + time_end) / 2])
+    parm[ 'timewidths' ] = array([time_end - time_start])
+    
+    height_parm = parm.copy()
+    height_parm[ 'values' ] = array( ionmodel.piercepoints.attrs.height )
+    parms[ 'height' ] = height_parm
+    
+    beta_parm = parm.copy()
+    beta_parm[ 'values' ] = array( ionmodel.TECfit_white.attrs.beta )
+    parms[ 'beta' ] = beta_parm
+     
+    r_0_parm = parm.copy()
+    r_0_parm[ 'values' ] = array(  ionmodel.TECfit_white.attrs.r_0 )
+    parms[ 'r_0' ] = r_0_parm
 
-     parm[ 'times' ] = numpy.array([(time_start + time_end) / 2])
-     parm[ 'timewidths' ] = numpy.array([time_end - time_start])
-
-     height_parm = parm.copy()
-     height_parm[ 'values' ] = numpy.array( ionmodel.piercepoints.attrs.height )
-     parms[ 'height' ] = height_parm
-
-     beta_parm = parm.copy()
-     beta_parm[ 'values' ] = numpy.array( ionmodel.TECfit_white.attrs.beta )
-     parms[ 'beta' ] = beta_parm
-
-     r_0_parm = parm.copy()
-     r_0_parm[ 'values' ] = numpy.array(  ionmodel.TECfit_white.attrs.r_0 )
-     parms[ 'r_0' ] = r_0_parm
-
-     parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
+    parmdbmain.store_parms( ionmodel.globaldb + '/ionosphere', parms, create_new = create_new)
 
 
 def writePhaseScreenInfo(ionmodel,filename="clocktec.xmmlss.send"):

@@ -31,15 +31,18 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    //# Forward declarations
+    struct BlockID;
+
     class FFT_Kernel
     {
     public:
       FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrFFTs,
                  bool forward, const gpu::DeviceMemory &buffer);
 
-      void enqueue();
+      void enqueue(const BlockID &blockId) const;
 
-      void enqueue(PerformanceCounter &counter);
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
 
       enum BufferType
       {

@@ -31,7 +31,7 @@ PANEL,-1 -1 120 400 N "_3DFace" 1
                           baseDP + \".status.childState\",
  	                  baseDP + \".status.state:_online.._invalid\");
     if (!navFunct_dpReachable(baseDP)) {
-      updateRCU(\"\",0,\"\",true);
+      updateRCU(\"\",0,\"\",0,\"\",true);
     } 
   } else {
     setValue(\"RCUstr\", \"backCol\", \"Lofar_dpdoesnotexist\");

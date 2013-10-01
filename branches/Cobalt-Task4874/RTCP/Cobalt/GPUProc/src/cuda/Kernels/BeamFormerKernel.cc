@@ -28,8 +28,13 @@
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
+
+#include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -42,19 +47,26 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f),  // TODO: Add a key to the parset to specify this
+      weightCorrection(1.0f), // TODO: pass FFT size
       subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      nrChannelsPerSubband = 
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_BeamFormerKernel.dat") % 
+            ps.settings.observationID);
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
@@ -88,12 +100,13 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerKernel::enqueue(PerformanceCounter &counter,
-                                   float subbandFrequency, unsigned SAP)
+    void BeamFormerKernel::enqueue(const BlockID &blockId,
+                                   PerformanceCounter &counter,
+                                   double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -113,7 +126,7 @@ namespace LOFAR
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
           itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-          sizeof(float);
+          sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -131,9 +144,9 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["WEIGHT_CORRECTION"] =
-        str(boost::format("%.7ff") % itsParameters.weightCorrection);
+        str(format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
 
       return defs;
     }

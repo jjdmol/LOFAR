@@ -1,8 +1,11 @@
 #!/bin/bash
 
-PARSET=$PWD/tMACfeedback.in_parset
-
 . $srcdir/testFuncs.sh
+
+# Check for GPU
+haveGPU || exit 3
+
+PARSET=$PWD/tMACfeedback.in_parset
 
 # Create and use LOFARROOT environment
 mklofarroot tMACfeedback_tmp.lofarroot
