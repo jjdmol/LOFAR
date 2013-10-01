@@ -553,6 +553,8 @@ namespace LOFAR {
       }
       info().init (itsNrCorr, itsNrChan, ntime, itsStartTime,
                    itsTimeInterval, itsMSName, antennaSet);
+      info().setDataColName(itsDataColName);
+      info().setWeightColName(itsWeightColName);
       // Read the center frequencies of all channels.
       Table spwtab(itsMS.keywordSet().asTable("SPECTRAL_WINDOW"));
       ROArrayColumn<double> freqCol  (spwtab, "CHAN_FREQ");

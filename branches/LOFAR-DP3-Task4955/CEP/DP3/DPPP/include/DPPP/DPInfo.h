@@ -87,6 +87,16 @@ namespace LOFAR {
                 const casa::Vector<casa::Int>& ant1,
                 const casa::Vector<casa::Int>& ant2);
 
+      // Set the name of the data column
+      void setDataColName(const casa::String& dataColName) {
+        itsDataColName=dataColName;
+      }
+
+      // Set the name of the weight column
+      void setWeightColName(const casa::String& weightColName) {
+        itsWeightColName=weightColName;
+      }
+
       // Update the info for the given average factors.
       // If chanAvg is higher than the actual nr of channels, it is reset.
       // The same is true for timeAvg.
@@ -156,6 +166,10 @@ namespace LOFAR {
         { return itsResolutions; }
       const casa::Vector<double>& effectiveBW() const
         { return itsEffectiveBW; }
+      const casa::String& getDataColName() const
+        { return itsDataColName; }
+      const casa::String& getWeightColName() const
+        { return itsWeightColName; }
       double totalBW() const
         { return itsTotalBW; }
       double refFreq() const
@@ -201,6 +215,8 @@ namespace LOFAR {
       bool   itsNeedVisData;    //# Are the visibility data needed?
       int    itsNeedWrite;      //# Does the last step need to write data/flags?
       string itsMSName;
+      casa::String itsDataColName;
+      casa::String itsWeightColName;
       string itsAntennaSet;
       uint   itsNCorr;
       uint   itsStartChan;

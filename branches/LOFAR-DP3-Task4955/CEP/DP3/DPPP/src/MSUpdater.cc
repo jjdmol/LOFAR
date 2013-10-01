@@ -27,13 +27,14 @@
 #include <DPPP/MSWriter.h>
 #include <DPPP/DPBuffer.h>
 #include <Common/ParameterSet.h>
-
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ColumnDesc.h>
 #include <casa/Containers/Record.h>
 #include <casa/Utilities/LinearSearch.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 #include <iostream>
 
 using namespace casa;
@@ -41,42 +42,23 @@ using namespace casa;
 namespace LOFAR {
   namespace DPPP {
 
-    MSUpdater::MSUpdater (MSReader* reader, const ParameterSet& parset,
-                          const string& prefix, int needWrite)
-      : itsReader       (reader),
-        itsWriteData    ((needWrite & DPInfo::NeedWriteData) != 0),
-        itsWriteWeight  ((needWrite & DPInfo::NeedWriteWeight) != 0),
-        itsNrDone       (0),
-        itsDataColAdded (false),
-        itsWeightColAdded (false)
+    MSUpdater::MSUpdater (String msName, const ParameterSet& parset,
+                          const string& prefix, MSReader* reader)
+      : itsMSName         (msName),
+        itsReader         (reader),
+        itsParset         (parset),
+        itsWriteData      (false),
+        itsWriteWeight    (false),
+        itsWriteFlags     (false),
+        itsNrDone         (0),
+        itsDataColAdded   (false),
+        itsWeightColAdded (false),
+        itsWriteHistory   (true)
     {
-      itsDataColName  = parset.getString (prefix+"datacolumn",
-                                          itsReader->dataColumnName());
-      itsWeightColName  = parset.getString (prefix+"weightcolumn",
-        itsReader->weightColumnName()=="WEIGHT" ? "WEIGHT_SPECTRUM":
-        itsReader->weightColumnName());
-      ASSERT(itsWeightColName!="WEIGHT");
-      if (itsWeightColName != itsReader->weightColumnName()) {
-        itsWriteWeight = true;
-      }
+      itsMS = MeasurementSet (msName, TableLock::AutoNoReadLocking);
+      itsDataColName  = parset.getString (prefix+"datacolumn",  "");
+      itsWeightColName  = parset.getString (prefix+"weightcolumn","");
       itsNrTimesFlush = parset.getUint (prefix+"flush", 0);
-      NSTimer::StartStop sstime(itsTimer);
-      // Reopen the MS for read/write.
-      itsReader->table().reopenRW();
-      // Add the data + weight column if needed and if it does not exist yet.
-      if (itsWriteData) {
-        // use same layout as DATA column
-        ColumnDesc cd = itsReader->table().tableDesc().columnDesc("DATA");
-        itsDataColAdded = addColumn(itsDataColName, TpComplex, cd);
-      }
-      if (itsWriteWeight) {
-        IPosition dataShape =
-            itsReader->table().tableDesc().columnDesc("DATA").shape();
-        ArrayColumnDesc<float> cd("WEIGHT_SPECTRUM", "weight per corr/chan",
-            dataShape, ColumnDesc::FixedShape);
-        itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);
-      }
-      MSWriter::writeHistory (reader->table(), parset);
     }
 
     MSUpdater::~MSUpdater()
@@ -92,7 +74,7 @@ namespace LOFAR {
       return colName != reader->dataColumnName();
     }
 
-    bool MSUpdater::updateAllowed (DPInfo& info, MSReader* reader,
+    bool MSUpdater::updateAllowed (const DPInfo& info, String msName,
                                     bool throwError) {
       if (info.nchanAvg() != 1 || info.ntimeAvg() != 1) {
         if (throwError) {
@@ -106,8 +88,13 @@ namespace LOFAR {
         }
         return false;
       }
-      if (info.antennaNames().size() != reader->getInfo().antennaNames().size() ||
-          ! allEQ(info.antennaNames(), reader->getInfo().antennaNames())) {
+
+      MeasurementSet ms(msName, TableLock::AutoNoReadLocking);
+      Table anttab(ms.keywordSet().asTable("ANTENNA"));
+      ROScalarColumn<String> nameCol (anttab, "NAME");
+      Vector<String> antNames = nameCol.getColumn();
+      if (info.antennaNames().size() != antNames.size() ||
+          ! allEQ(info.antennaNames(), antNames)) {
         if (throwError) {
           THROW(Exception, "A new MS has to be given if antennas are added or removed");
         }
@@ -118,9 +105,9 @@ namespace LOFAR {
 
     bool MSUpdater::addColumn(const string& colName, const casa::DataType
         dataType, const ColumnDesc& cd) {
-      Table& tab = itsReader->table();
-      if (tab.tableDesc().isColumn(colName)) {
-        const ColumnDesc& cd = tab.tableDesc().columnDesc(colName);
+
+      if (itsMS.tableDesc().isColumn(colName)) {
+        const ColumnDesc& cd = itsMS.tableDesc().columnDesc(colName);
         ASSERTSTR (cd.dataType() == dataType  &&  cd.isArray(),
                    "Column " << itsDataColName
                    << " already exists, but is not of the right type");
@@ -132,7 +119,7 @@ namespace LOFAR {
 
       // Use the same data manager as the DATA column.
       // Get the data manager info and find the DATA column in it.
-      Record dminfo = tab.dataManagerInfo();
+      Record dminfo = itsMS.dataManagerInfo();
       Record colinfo;
       for (uInt i=0; i<dminfo.nfields(); ++i) {
         const Record& subrec = dminfo.subRecord(i);
@@ -144,35 +131,114 @@ namespace LOFAR {
       }
       ASSERT(colinfo.nfields()>0);
       colinfo.define ("NAME", colName + "_dm");
-      tab.addColumn (td, colinfo);
+      itsMS.addColumn (td, colinfo);
       return true;
     }
 
     bool MSUpdater::process (const DPBuffer& buf)
     {
       NSTimer::StartStop sstime(itsTimer);
-      putFlags (buf.getRowNrs(), buf.getFlags());
+      if (itsWriteFlags) {
+        putFlags (buf.getRowNrs(), buf.getFlags());
+      }
       if (itsWriteData) {
         putData (buf.getRowNrs(), buf.getData());
       }
       if (itsWriteWeight) {
-        putWeights (buf.getRowNrs(),
-            itsReader->fetchWeights(buf, buf.getRowNrs(), itsTimer));
+        if (!buf.getWeights().empty()) { // Read weights from buffer
+          putWeights (buf.getRowNrs(), buf.getWeights());
+        }
+        else {     // Read weights from reader, if possible
+          if (MSUpdater::updateAllowed(info(),itsMSName,false)) {
+            THROW(Exception, "Copying weights column can only be done for the original MS");
+          } else {
+            putWeights (buf.getRowNrs(),
+              itsReader->fetchWeights(buf, buf.getRowNrs(), itsTimer));
+          }
+        }
       }
       itsNrDone++;
       if (itsNrTimesFlush > 0  &&  itsNrDone%itsNrTimesFlush == 0) {
-        itsReader->table().flush();
+        itsMS.flush();
       }
+      getNextStep()->process(buf);
       return true;
     }
 
     void MSUpdater::finish()
     {}
 
+    void MSUpdater::updateInfo (const DPInfo& infoIn)
+    {
+      info()=infoIn;
+
+      itsWriteFlags=( (info().needWrite()&&DPInfo::NeedWriteFlags) != 0);
+
+      String origDataColName=info().getDataColName();
+      if (itsDataColName=="") {
+        itsDataColName=origDataColName;
+      }
+
+      String origWeightColName=info().getWeightColName();
+      if (itsWeightColName=="") {
+        if (origWeightColName == "WEIGHT") {
+          itsWeightColName = "WEIGHT_SPECTRUM";
+        } else {
+          itsWeightColName = origWeightColName;
+        }
+      }
+      ASSERT(itsWeightColName!="WEIGHT");
+      if (itsWeightColName != origWeightColName) {
+        itsWriteWeight = true;
+      }
+
+      itsWriteData    = (info().needWrite() & DPInfo::NeedWriteData) != 0;
+      itsWriteWeight  = itsWriteWeight || (info().needWrite() & DPInfo::NeedWriteWeight) != 0;
+
+      // If another output column, but no output MS is given the data
+      // need to be read and written.
+      if (itsDataColName != origDataColName) {
+        info().setNeedVisData();
+        info().setNeedWrite (DPInfo::NeedWriteData);
+        itsWriteData=true;
+      }
+
+      if (!MSUpdater::updateAllowed(info(),itsMSName)) {
+        THROW(Exception, "Updating an existing MS is not possible with the current operations");
+      }
+
+      // Tell the reader if visibility data needs to be read.
+      itsReader->setReadVisData (info().needVisData());
+
+      NSTimer::StartStop sstime(itsTimer);
+      // Reopen the MS for read/write.
+      itsMS.reopenRW();
+      // Add the data + weight column if needed and if it does not exist yet.
+      if (itsWriteData) {
+        // use same layout as DATA column
+        ColumnDesc cd = itsMS.tableDesc().columnDesc("DATA");
+        itsDataColAdded = addColumn(itsDataColName, TpComplex, cd);
+      }
+      if (itsWriteWeight) {
+        IPosition dataShape =
+            itsMS.tableDesc().columnDesc("DATA").shape();
+        ArrayColumnDesc<float> cd("WEIGHT_SPECTRUM", "weight per corr/chan",
+            dataShape, ColumnDesc::FixedShape);
+        itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);
+      }
+    }
+
+    void MSUpdater::addToMS (const string&) {
+      getPrevStep()->addToMS(itsMSName);
+      if (itsWriteHistory) {
+        MSWriter::writeHistory (itsMS, itsParset);
+      }
+    }
+
     void MSUpdater::show (std::ostream& os) const
     {
       os << "MSUpdater" << std::endl;
-      os << "  MS:             " << itsReader->msName() << std::endl;
+      os << "  MS:             " << itsMSName << std::endl;
       os << "  datacolumn:     " << itsDataColName;
       if (itsDataColAdded) {
         os << "  (has been added to the MS)";
@@ -200,8 +266,8 @@ namespace LOFAR {
       if (! rowNrs.rowVector().empty()) {
         Slicer colSlicer(IPosition(2, 0, info().startchan()),
                          IPosition(2, info().ncorr(), info().nchan()) );
-        ArrayColumn<bool> flagCol(itsReader->table(), "FLAG");
-        ScalarColumn<bool> flagRowCol(itsReader->table(), "FLAG_ROW");
+        ArrayColumn<bool> flagCol(itsMS, "FLAG");
+        ScalarColumn<bool> flagRowCol(itsMS, "FLAG_ROW");
         // Loop over all rows of this subset.
         // (it also avoids StandardStMan putCol with RefRows problem).
         Vector<uint> rows = rowNrs.convert();
@@ -226,7 +292,7 @@ namespace LOFAR {
       if (! rowNrs.rowVector().empty()) {
         Slicer colSlicer(IPosition(2, 0, info().startchan()),
                          IPosition(2, info().ncorr(), info().nchan()) );
-        ArrayColumn<float> weightCol(itsReader->table(), itsWeightColName);
+        ArrayColumn<float> weightCol(itsMS, itsWeightColName);
         // Loop over all rows of this subset.
         // (it also avoids StandardStMan putCol with RefRows problem).
         Vector<uint> rows = rowNrs.convert();
@@ -243,11 +309,10 @@ namespace LOFAR {
                              const Cube<Complex>& data)
     {
       // Only put if rownrs are filled, thus if data were not inserted.
-      //cout << "Data shape"<< data.shape()<<endl;
       if (! rowNrs.rowVector().empty()) {
         Slicer colSlicer(IPosition(2, 0, info().startchan()),
                          IPosition(2, info().ncorr(), info().nchan()) );
-        ArrayColumn<Complex> dataCol(itsReader->table(), itsDataColName);
+        ArrayColumn<Complex> dataCol(itsMS, itsDataColName);
         // Loop over all rows of this subset.
         // (it also avoids StandardStMan putCol with RefRows problem).
         Vector<uint> rows = rowNrs.convert();
@@ -258,6 +323,5 @@ namespace LOFAR {
         }
       }
     }
-
   } //# end namespace
 }
