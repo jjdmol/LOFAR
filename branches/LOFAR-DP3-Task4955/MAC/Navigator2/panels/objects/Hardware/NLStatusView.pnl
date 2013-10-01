@@ -1,0 +1,435 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 224 213 N "_3DFace" 0
+"main()
+{
+  baseDP = MainDBName+\"LOFAR_PIC_Remote\";
+  
+  dyn_string s = coreStations;
+  dynAppend(stations,s);
+  s=remoteStations;
+  dynAppend(stations,s);
+  
+  reload();
+}
+  
+private void reload() {
+  
+  dynClear(LBAbroken);
+  dynClear(HBAbroken);
+  lbacount=0;
+  hbacount=0;
+
+  for (int i = 1; i<= dynlen(stations); i++) {
+    dynAppend(LBAbroken,0);
+  }
+
+  for (int i = 1; i<= dynlen(stations); i++) {
+    dynAppend(HBAbroken,0);
+  }
+  fillLBASymbol();
+  fillHBASymbol();
+}
+
+private void fillLBASymbol() {
+  
+  for (int i=1; i<= dynlen(stations); i++) {
+    string query = \"SELECT  '_online.._value', '_online.._invalid' FROM 'LOFAR_PIC_LBA*.status.state' REMOTE '\"+stations[i]+\"'\";
+
+    if (navFunct_dpReachable(stations[i]+\":\")) {
+      if (dpQueryConnectAll(\"updateLBAInfo\", TRUE, stations[i],query) == -1) {
+        LBAbroken[i]=-1;
+        lbacount++;
+      }
+    } else {
+      LBAbroken[i]=-1;
+      lbacount++;
+    }
+  }
+  if (lbacount == dynlen(stations)) updateAll (\"LBA\");
+}
+
+private void fillHBASymbol() {
+  
+  for (int i=1; i<= dynlen(stations); i++) {
+    string query = \"SELECT  '_online.._value', '_online.._invalid' FROM 'LOFAR_PIC_HBA*.status.state' REMOTE '\"+stations[i]+\"'\";
+
+
+    if (navFunct_dpReachable(stations[i]+\":\")) {
+      if (dpQueryConnectAll(\"updateHBAInfo\", TRUE, stations[i],query) == -1) {
+        HBAbroken[i]=-1;
+        hbacount++;
+      }
+    } else {
+      HBAbroken[i]=-1;
+      hbacount++;
+    }
+  }	
+  if (hbacount == dynlen(stations)) updateAll (\"HBA\");  
+}
+
+void updateLBAInfo(string ident, dyn_dyn_anytype tab)
+{
+
+  if (dynlen(tab) <= 1) return;
+  
+  if (lbacount < dynlen(stations)) lbacount++;
+  
+  if (tab[2][3] == TRUE) {
+    return;
+  }
+  string station = ident+\":\";
+  int cnt = dynContains(stations,ident);
+  
+  
+  // get nr of Antennas for this station/layout
+  int nrAntennas = 0;
+  string dp = station+\"LOFAR_PIC_StationInfo.N_LBAS\";
+  dpGet(dp,nrAntennas);
+
+  if (nrAntennas <= 0 ) {
+    LOG_ERROR(\"superTerpStatusView.pnl:updateLBAInfo|nrAntennas not found\");
+  }  
+  nrlba+= nrAntennas;
+
+
+  int nrBroken = 0;
+  int z; 
+  for(z=2;z<=dynlen(tab);z++) {
+    if (tab[z][2] >= 20) nrBroken++;
+  }
+  
+  LBAbroken[cnt] = nrBroken; 
+
+}
+
+void updateHBAInfo(string ident, dyn_dyn_anytype tab)
+{
+
+  if (dynlen(tab) <= 1) return;
+  
+  if (hbacount < dynlen(stations)) hbacount++;
+  
+  if (tab[2][3] == TRUE) {
+    return;
+  }
+  string station = ident+\":\";
+  int cnt = dynContains(stations,ident);
+  
+  
+  // get nr of Antennas for this station/layout
+  int nrAntennas = 0;
+  string dp = station+\"LOFAR_PIC_StationInfo.N_HBAS\";
+  dpGet(dp,nrAntennas);
+
+  if (nrAntennas <= 0 ) {
+    LOG_ERROR(\"superTerpStatusView.pnl:updateHBAInfo|nrAntennas not found\");
+  }  
+  nrhba+= nrAntennas;
+
+  int nrBroken = 0;
+  int z; 
+  for(z=2;z<=dynlen(tab);z++) {
+    if (tab[z][2] >= 20) nrBroken++;
+  }
+  
+  HBAbroken[cnt] = nrBroken;
+
+}
+
+
+
+void updateAll(string type) {
+  string includesMissing=\"\";
+  string color = \"Lofar_operational\";
+  dyn_int broken;
+  int nrAntennas=0;
+
+  if (type == \"LBA\") {
+    broken = LBAbroken;
+    nrAntennas=nrlba;
+  } else {
+    broken = HBAbroken;
+    nrAntennas=nrhba;
+  }
+ 
+  float step = (float)nrAntennas / 100.;
+  
+  int nrBroken = 0;
+  int  percent = 0;
+  int cnt = 0;
+  for (int i=1; i<= dynlen(stations); i++) {
+    if (broken[i] == -1) {
+      includesMissing = \"Not all stations are reachable\";
+    } else {
+      cnt++;
+      nrBroken+=broken[i];
+    }
+  }
+  
+  if (nrBroken > 0) {
+    percent = (int) ((float)nrBroken/step);
+  }  
+
+  if (nrBroken == 0 && cnt > 0) {
+    color = \"Lofar_operational\";
+  } else if (percent > 0 && percent < 5) {
+    color = \"Lofar_maintenance\";
+  } else if ( percent >=5 && percent < 20) {
+    color = \"Lofar_suspicious\";
+  } else if ( percent >= 20 && percent < 100) {
+    color = \"Lofar_broken\";
+  } else if (nrBroken == nrAntennas || cnt == 0) {
+    color = \"black\";
+  }      
+
+  setValue(type+\"Object\",\"toolTipText\",includesMissing +\"<br> - faulty \"+type+\"<br> # antenna's \"+nrBroken + \" = \"+percent+\"%\" );
+  setValue(type+\"Object\", \"backCol\", color);
+  setValue(type+\"Text\",\"text\",100.0-percent+\"%\");
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP=\"\";
+
+dyn_string stations;
+dyn_int LBAbroken;
+dyn_int HBAbroken;
+
+int lbacount=0;
+int hbacount=0;
+int cnt = 0;
+int nrlba = 0;
+int nrhba = 0;
+
+bool    bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {  
+    navPanel_setEvent(\"Remote\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  panelSelection=\"RemoteOverview.pnl\";
+  navPanel_setEvent(\"panelChoice:\"+panelSelection,\"ChangePanel\");
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Remote\",\"EventRightClick\");
+}
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+9 1
+"HBAObject"
+""
+1 100 70 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 1 1 E 3.25 0 3.299999999999999 -259.0000000000001 -164.9999999999999 1 E 100 70 20 20
+ 0 100 90 100 10 1
+9 2
+"LBAObject"
+""
+1 100 70 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 1 1 E -3.25 0 3.300000000000001 390 -165 1 E 100 70 20 20
+ 0 100 90 100 10 1
+2 4
+"HBAText"
+""
+1 70 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 70 50 71 63
+0 2 2 "0s" 0 0 0 192 0 0  70 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+2 5
+"LBAText"
+""
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+
+5 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main(int x, int y)
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  0 E 10 50 11 63
+0 2 2 "0s" 0 0 0 192 0 0  10 50 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+2 7
+"PRIMITIVE_TEXT1"
+""
+1 -142 -158.180229011307 E E E 1 E 1 E N "_3DFace" E N "_Window" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 1 0 0.9545454545454546 -74 -72.27272727272728 0 E 90 170 189 210
+0 2 2 "0s" 0 0 0 192 0 0  90 170 2
+1
+LANG:1 35 MS Shell Dlg 2,12,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 11 Netherlands
+1
+LANG:1 35 MS Shell Dlg 2,12,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 0 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
