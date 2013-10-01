@@ -1,4 +1,4 @@
-//# tDelayAndBandpass.cc: test delay and bandpass CUDA kernel
+//# tCorrelator.cc: test correlator CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -30,6 +30,7 @@
 #include <Common/Exception.h>
 #include <Common/LofarLogger.h>
 
+#include <CoInterface/MultiDimArray.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
@@ -139,13 +140,9 @@ int main()
   gpu::Context ctx(device);
   Stream cuStream(ctx);
 
-  // Define dependend paramters
-  unsigned lengthInputData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
-  unsigned lengthOutputData = NR_BASELINES * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX;
-
   // Create data members
-  float * inputData = new float[lengthInputData];
-  float * outputData = new float[lengthOutputData];
+  MultiDimArray<float, 3> inputData(boost::extents[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX]);
+  MultiDimArray<float, 3> outputData(boost::extents[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX]);
   float * outputOnHostPtr;
 
   const char * kernel_functions[] = {
@@ -154,21 +151,23 @@ int main()
   unsigned nr_kernel_functions =
     sizeof(kernel_functions) / sizeof(kernel_functions[0]);
 
-  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) {
+  for (unsigned func_idx = 0; func_idx < nr_kernel_functions; func_idx++) 
+  {
+    cerr << kernel_functions[func_idx] << endl;
     const char* function = kernel_functions[func_idx];
 
     // ***********************************************************
     // Baseline test: If all input data is zero the output should be zero
     // The output array is initialized with 42s
-    for (unsigned idx = 0; idx < lengthInputData; ++idx)
-      inputData[idx] = 0;
+    for (unsigned idx = 0; idx < inputData.num_elements(); ++idx)
+      inputData.origin()[idx] = 0;
 
-    HostMemory outputOnHost = runTest(ctx, cuStream, inputData, function);
+    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
-    for (unsigned idx = 0; idx < lengthOutputData; ++idx)
-      outputData[idx] = outputOnHostPtr[idx];
+    for (unsigned idx = 0; idx < outputData.num_elements(); ++idx)
+      outputData.origin()[idx] = outputOnHostPtr[idx];
 
     // Now validate the outputdata
     for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES; ++idx_baseline)
@@ -177,20 +176,15 @@ int main()
       for (unsigned idx_channels = 0; idx_channels < NR_CHANNELS; ++idx_channels)
       {
         cerr << idx_channels << " : ";
-        for (unsigned idx = 0; idx < 8; ++idx)
+        for (unsigned idx = 0; idx < NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX; ++idx)
         {
-          unsigned idx_in_output_data =
-            idx_baseline * NR_CHANNELS * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
-            idx_channels * NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX +
-            idx;
-          cerr << outputData[idx_in_output_data] << ", ";
-          if ( idx_channels != 0)
-            if (outputData[idx_in_output_data] != 0)
+          float sample = outputData[idx_baseline][idx_channels][idx];
+          cerr << sample << ", ";
+          if (idx_channels != 0)
+            if (sample != 0)
             {
-              cerr << "Non zero number encountered while all input data was zero. Exit -1";
-              delete [] inputData;
-              delete [] outputData;
-              return -1;
+              cerr << "Non-zero number encountered while all input data were zero." << endl;
+              return 1;
             }
         }
         cerr << endl;
@@ -206,11 +200,11 @@ int main()
     // It should be length NR_SAMPLES_PER_CHANNEL plus padding at both side to encompass the delay
     unsigned padding = 7; // We have 15 channels with content 2 * 7 delays + delay 0
     unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * padding * 4;
-    float * randomInputData = new float[lengthRandomData];
+    vector<float> randomInputData(lengthRandomData);
 
     // Create the random signal, seed random generator with zero
     srand (0);
-    for (unsigned idx = 0; idx < lengthRandomData; ++idx)
+    for (unsigned idx = 0; idx < randomInputData.size(); ++idx)
       randomInputData[idx] = ((rand() % 1024 + 1) * 1.0  // make float
                               - 512.0) / 512.0;          // centre around zero and normalize
 
@@ -225,12 +219,6 @@ int main()
              idx_datapoint< NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
              ++idx_datapoint)
         {
-          // In the input array step trough the channel
-          unsigned idx_inputdata =
-            idx_station * 16 * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX +
-            idx_channel * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX +
-            idx_datapoint;
-
           // Pick from the random array the same number of samples
           // But with an offset depending on the channel number
           unsigned padding_offset = 32;
@@ -244,21 +232,21 @@ int main()
           unsigned idx_randomdata = padding_offset + padding + idx_datapoint;
 
           //assign the signal;
-          inputData[idx_inputdata] = randomInputData[idx_randomdata];
+          inputData[idx_station][idx_channel][idx_datapoint] = randomInputData[idx_randomdata];
           if (idx_datapoint < 16)        // plot first part if the input signal for debugging purpose
-            cerr << inputData[idx_inputdata] << " : ";
+            cerr << inputData[idx_station][idx_channel][idx_datapoint] << " : ";
         }
         cerr << endl;
       }
     }
 
     // Run the kernel
-    outputOnHost = runTest(ctx, cuStream, inputData, function);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
-    for (unsigned idx = 0; idx < lengthOutputData; ++idx)
-      outputData[idx] = outputOnHostPtr[idx];
+    for (unsigned idx = 0; idx < outputData.num_elements(); ++idx)
+      outputData.origin()[idx] = outputOnHostPtr[idx];
 
     // Target value for correlation channel
     float targetValues[8] = {36.2332, 0, -7.83033, 3.32368, -7.83033, -3.32368, 42.246, 0};
@@ -270,39 +258,97 @@ int main()
       for (unsigned idx_channels = 0; idx_channels < NR_CHANNELS; ++idx_channels)
       {
         cerr << idx_channels << " : ";
-        for (unsigned idx = 0; idx < 8; ++idx)
+        for (unsigned idx = 0; idx < NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX; ++idx)
         {
-          unsigned idx_in_output_data = idx_baseline * NR_CHANNELS * 8 +
-                                        idx_channels * 8 +
-                                        idx;
-          if ( idx_baseline == 1 && idx_channels == 8)
+          float sample = outputData[idx_baseline][idx_channels][idx];
+          if (idx_baseline == 1 && idx_channels == 8)
           {
 
             //validate that the correct value is found
-            if ( abs(outputData[idx_in_output_data] - targetValues[idx]) > 0.0001)
+            if (abs(sample - targetValues[idx]) > 0.0001)
             {
               cerr << "The correlated data found was not within an acceptable delta:" << endl
-                   << "Expected: " << outputData[idx_in_output_data] << endl
+                   << "Expected: " << sample << endl
                    << "Found: " << targetValues[idx] << endl
-                   << "Difference: " << outputData[idx_in_output_data] - targetValues[idx]
-                   << "  Delta: " << 0.0001;
+                   << "Difference: " << sample - targetValues[idx]
+                   << "  Delta: " << 0.0001 << endl;
 
-              delete [] inputData;
-              delete [] outputData;
-              return -1;
-            }
+              return 1;
+           }
           }
-          cerr << outputData[idx_in_output_data] << ", ";
+          cerr << sample << ", ";
         }
         cerr << endl;
       }
     }
-    // Validate that the channel 8 had fringes
+    
+    // ***********************************************************
+    // test 3: If all input data is zero the output should be zero
+    // except a specific set of values
+    cerr << "Length input data:" << inputData.num_elements() << endl;
+    for (unsigned idx = 0; idx < inputData.num_elements(); ++idx)
+      inputData.origin()[idx] = 0;
+
+    // insert some values at specific locations in the input matrix
+    unsigned timestep = NR_POLARIZATIONS*COMPLEX;
+    // [0][5][7][0][0] = 2
+    // [0][5][7][0][1] = 3
+    inputData[0][5][timestep * 7] = 2;
+    inputData[0][5][timestep * 7 + 1] = 3;
+    // [1][5][7][1][0] = 4
+    // [1][5][7][1][1] = 5
+    inputData[1][5][timestep * 7 + NR_POLARIZATIONS] = 4;
+    inputData[1][5][timestep * 7 + NR_POLARIZATIONS + 1] = 5;
+
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
+
+    // Copy the output data to a local array
+    outputOnHostPtr = outputOnHost.get<float>();
+    for (unsigned idx = 0; idx < outputData.num_elements(); ++idx)
+      outputData.origin()[idx] = outputOnHostPtr[idx];
+
+    // Now validate the outputdata
+    for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES; ++idx_baseline)
+    {
+      cerr << "baseline: " << idx_baseline << endl;
+
+      // skip channel 0
+      for (unsigned idx_channels = 1; idx_channels < NR_CHANNELS; ++idx_channels)
+      {
+        cerr << idx_channels << " : ";
+        for (unsigned idx = 0; idx < NR_POLARIZATIONS * NR_POLARIZATIONS * COMPLEX; ++idx)
+        {
+          float sample = outputData[idx_baseline][idx_channels][idx];
+          float expected = 0.0f;
+
+          cerr << idx << ":" << sample << ", ";
+
+          // We need to find 4 specific indexes with values:
+          // THe output location of the values does not change with differing input size
+          if (idx_baseline == 0 &&  idx_channels == 5 && idx == 0)
+            expected = 13.0f;
+          
+          if (idx_baseline == 1 &&  idx_channels == 5 && idx == 2)
+            expected = 23.0f;
+
+          if (idx_baseline == 1 &&  idx_channels == 5 && idx == 3)
+            expected = 2.0f;
+          
+          if (idx_baseline == 2 &&  idx_channels == 5 && idx == 6)
+            expected = 41.0f;
+
+          if (sample != expected)
+          {
+            cerr << "Unexpected number encountered: got " << sample << " but expected " << expected << endl;
+            return 1;
+          }
+        }
+        cerr << endl;
+      }
+    }
+
 
   } // for func_idx
 
-  delete [] inputData;
-  delete [] outputData;
   return 0;
 }
-
