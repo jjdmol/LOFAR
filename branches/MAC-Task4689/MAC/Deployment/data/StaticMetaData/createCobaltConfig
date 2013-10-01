@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat RSPConnections.dat.tmpl | perl -ne '
+cat RSPConnections_Cobalt.dat | perl -ne '
 
 /^(\w+) RSP_([01]) (.*)/ || next;
 
