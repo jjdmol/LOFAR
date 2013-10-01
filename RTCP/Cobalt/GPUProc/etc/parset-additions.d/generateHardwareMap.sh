@@ -33,8 +33,6 @@ while ($line = <$fh>) {
     $stations[$rank] .= ", ";
   }
   $stations[$rank] .= $station;
-
-  printf "host cbm%03d socket %s receives %s\n", $hostnr, $socket, $station;
 }
 
 printf "Cobalt.Hardware.nrNodes=%s\n", $numranks;
