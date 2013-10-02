@@ -1,2 +1,0 @@
-Main-Class: nl.astron.lofar.sas.otb.jotdb2.jOTDBserver
-
