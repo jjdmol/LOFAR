@@ -59,7 +59,7 @@ namespace DPPP
 void subtract(size_t nBaseline, size_t nChannel,
               const_cursor<Baseline> baselines, cursor<fcomplex> data,
               const_cursor<dcomplex> model, const_cursor<dcomplex> weight,
-              vector<float>& sumAmpl, float* sumChanAmpl);
+              vector<float>& sumAmpl);
 // @}
 
 } //# namespace DPPP

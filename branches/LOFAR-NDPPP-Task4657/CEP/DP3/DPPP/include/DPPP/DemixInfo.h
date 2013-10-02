@@ -63,6 +63,10 @@ namespace LOFAR {
       // Show parameters.
       void show (ostream&) const;
 
+      // Get the DPInfo object.
+      const DPInfo& getInfo() const
+        { return itsInfoSel; }
+
       //# Data members
       uint   verbose() const                     {return itsVerbose;}
       uint   maxIter() const                     {return itsMaxIter;}

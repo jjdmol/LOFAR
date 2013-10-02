@@ -74,8 +74,7 @@ namespace LOFAR {
       // Process the data in the input buffers and store the result in the
       // output buffers.
       void process (const DPBuffer* bufin, uint nbufin,
-                    DPBuffer* bufout, vector<double>* solutions,
-                    float* percSubtr);
+                    DPBuffer* bufout, vector<double>* solutions);
 
       // Get the number of solves.
       uint nSolves() const
@@ -107,19 +106,29 @@ namespace LOFAR {
         { return itsAmplTotal; }
       const casa::Cube<float>& amplSubtr() const
         { return itsAmplSubtr; }
+      const casa::Matrix<double>& amplSubtrMean() const
+        { return itsAmplSubtrMean; }
+      const casa::Matrix<double>& amplSubtrM2() const
+        { return itsAmplSubtrM2; }
+      const casa::Matrix<size_t>& amplSubtrNr() const
+        { return itsAmplSubtrNr; }
 
       // Get the timings of the various processing steps.
       // <group>
       double getTotalTime() const
         { return itsTimer.getElapsed(); }
-      double getPredictTime() const
-        { return itsTimerPredict.getElapsed(); }
+      double getCoarseTime() const
+        { return itsTimerCoarse.getElapsed(); }
       double getPhaseShiftTime() const
         { return itsTimerPhaseShift.getElapsed(); }
       double getDemixTime() const
         { return itsTimerDemix.getElapsed(); }
+      double getPredictTime() const
+        { return itsTimerPredict.getElapsed(); }
       double getSolveTime() const
         { return itsTimerSolve.getElapsed(); }
+      double getSubtractTime() const
+        { return itsTimerSubtract.getElapsed(); }
       // </group>
 
     private:
@@ -176,11 +185,10 @@ namespace LOFAR {
                       uint resultIndex);
 
       // Do the demixing.
-      void handleDemix (DPBuffer* bufout, vector<double>* solutions,
-                        float* percSubtr);
+      void handleDemix (DPBuffer* bufout, vector<double>* solutions);
 
       // Solve gains and subtract sources.
-      void demix (vector<double>* solutions, float* percSubtr);
+      void demix (vector<double>* solutions);
 
       // Merge the data of the selected baselines from the subtract buffer
       // into the full buffer.
@@ -229,10 +237,10 @@ namespace LOFAR {
       vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
 
       //# Indices telling which Ateam sources to use.
-      vector<uint>                          itsIndices;
-      casa::Matrix<double>                  itsAvgUVW;      //# temp buffer
+      vector<uint>                          itsSrcSet;
       //# UVW per station per demix time slot
       casa::Cube<double>                    itsStationUVW;  //# UVW per station
+      casa::Matrix<double>                  itsAvgUVW;      //# temp buffer
       casa::Cube<dcomplex>                  itsPredictVis;  //# temp buffer
       casa::Cube<dcomplex>                  itsSubtractVis; //# temp buffer
       //# #nfreq x #bl x #time StokesI amplitude per A-source.
@@ -278,12 +286,20 @@ namespace LOFAR {
       casa::Matrix<float>                   itsAmplTotal;
       //# Total amplitude subtracted [nch,nbl,nsrc]
       casa::Cube<float>                     itsAmplSubtr;
+      //# Average amplitude subtracted for middle channel [nbl,nsrc]
+      casa::Matrix<double>                  itsAmplSubtrMean;
+      //# M2n to calculate stddev online in stable way (see Wikipedia)
+      casa::Matrix<double>                  itsAmplSubtrM2;
+      //# N for mean/stddev amplitude calculations.
+      casa::Matrix<size_t>                  itsAmplSubtrNr;
       //# Timers.
       NSTimer                               itsTimer;
-      NSTimer                               itsTimerPredict;
+      NSTimer                               itsTimerCoarse;
       NSTimer                               itsTimerPhaseShift;
       NSTimer                               itsTimerDemix;
+      NSTimer                               itsTimerPredict;
       NSTimer                               itsTimerSolve;
+      NSTimer                               itsTimerSubtract;
     };
 
   } //# end namespace

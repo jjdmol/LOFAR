@@ -30,21 +30,21 @@ namespace LOFAR {
     void subtract (size_t nBaseline, size_t nChannel,
                    const_cursor<Baseline> baselines, cursor<fcomplex> data,
                    const_cursor<dcomplex> model, const_cursor<dcomplex> weight,
-                   vector<float>& sumAmpl, float* sumChanAmpl)
+                   vector<float>& ampl)
     {
       dcomplex vis[4];
       for (size_t bl=0; bl<nBaseline; ++bl) {
         // Only for cross correlations.
-        double ampl = 0;
         if (baselines->first != baselines->second) {
           for (size_t ch=0; ch<nChannel; ++ch) {
             for (size_t cr=0; cr<4; ++cr) {
               vis[cr] = (*weight++) * (*model++);
               *data++ -= static_cast<fcomplex>(vis[cr]);
             }
-            float am = (abs(vis[0]) + abs(vis[3])) * 0.5;
-            ampl += am;
-            sumChanAmpl[ch] += am;
+            // Return subtracted ampltide for middle channel.
+            if (ch == nChannel/2) {
+              ampl[bl] = (abs(vis[0]) + abs(vis[3])) * 0.5;
+            }
             // Move to the next channel.
             weight -= 4;
             weight.forward(1);
@@ -56,15 +56,15 @@ namespace LOFAR {
           weight.backward(1, nChannel);
           model.backward(1, nChannel);
           data.backward(1, nChannel);
+        } else {
+          ampl[bl] = 0.;
         }
 
         // Move to the next baseline.
-        sumAmpl[bl] = ampl;
         weight.forward(2);
         model.forward(2);
         data.forward(2);
         ++baselines;
-        sumChanAmpl += nChannel;
       } // Baselines.
     }
 

@@ -42,13 +42,12 @@ namespace LOFAR {
       itsNrStations  = nStation;
       itsNrChannels  = nChannel;
       itsMaxIter     = maxIter;
+      itsNrDir        = maxndir;
       itsPropagateSolution = propagateSolution;
       itsSolveStation.resize (nStation);
       itsUnknowns.resize (maxndir * nStation * 4 * 2);
       itsSolution.resize (itsUnknowns.size());
-      itsLastSolution.resize (itsUnknowns.size());
-      initSolution (&(itsLastSolution[0]), itsLastSolution.size(), 1.);
-      ///itsDerivIndex.resize (nBaseline * maxndir * 32);
+      std::fill (itsSolution.begin(), itsSolution.end(), 0.);
       itsDerivIndex.resize (maxndir*4*2*4);
       itsM.resize  (maxndir*4);
       itsdM.resize (maxndir*4*4);
@@ -56,67 +55,55 @@ namespace LOFAR {
       itsdI.resize (maxndir*8);
     }
 
-    void EstimateNew::initSolution (double* solution, size_t nr, double diag)
+    // Initialize the solution to 0 for sources/stations not to solve.
+    // At other places set to 1 where diagonal is 0.
+    void EstimateNew::initSolution (const vector<vector<int> >& unknownsIndex,
+                                    const vector<uint>& srcSet)
     {
-      // 4 complex unknowns, thus 8 real unknowns.
-      // Initialize to diag+0i on the diagonal, elsewhere 0+0i.
-      for (size_t i=0; i<nr; i+=8) {
-        solution[i+0] = diag;
-        solution[i+1] = 0.;
-        solution[i+2] = 0.;
-        solution[i+3] = 0.;
-        solution[i+4] = 0.;
-        solution[i+5] = 0.;
-        solution[i+6] = diag;
-        solution[i+7] = 0.;
-      }
-    }
-
-    /*
-    void EstimateNew::fillUnknowns (const vector<vector<int> >& unknownsIndex)
-    {
-      // Fill the unknowns for the direction-stations to solve.
-      double* unknowns = &(itsUnknowns[0]);
-      const double* solution = &(itsLastSolution[0]);
-      for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
-        for (size_t st=0; st<unknownsIndex.size(); ++st) {
-          if (unknownsIndex[dr][st] >= 0) {
-            if (itsPropagateSolution) {
-              for (size_t k=0; k<8; ++k) {
-                *unknowns++ = *solution++;
+      uint dr=0;
+      double* solution = &(itsSolution[0]);
+      for (size_t i=0; i<itsNrDir; ++i) {
+        if (dr < srcSet.size()  &&  srcSet[dr] == i) {
+          // This source is to be solved.
+          for (size_t st=0; st<itsNrStations; ++st) {
+            if (unknownsIndex[dr][st] >= 0) {
+              if (! itsPropagateSolution) {
+                std::fill (solution, solution+8, 0.);
               }
+              // Solvable; set diagonal to 1 if it is 0.
+              if (solution[0] == 0) solution[0] = 1;
+              if (solution[6] == 0) solution[6] = 1;
             } else {
-              initSolution (unknowns, 8, 1.);
-              unknowns += 8;
+              // Set non-solvable station-source to 0.
+              std::fill (solution, solution+8, 0.);
             }
-          } else {
-            // Skip this solution.
             solution += 8;
           }
+          dr++;
+        } else {
+          // Set entire non-solvable source to 0.
+          std::fill (solution, solution + 8*itsNrStations, 0.);
+          solution += 8*itsNrStations;
         }
       }
     }
-    */
 
-    void EstimateNew::fillSolution (const vector<vector<int> >& unknownsIndex)
+    void EstimateNew::fillSolution (const vector<vector<int> >& unknownsIndex,
+                                    const vector<uint>& srcSet)
     {
       // Copy the solution for the direction-stations to solve.
-      // Use initial values for other direction-stations.
+      // Note that the solution vector contains all possible sources/stations.
       const double* unknowns = &(itsUnknowns[0]);
-      double* solution = &(itsSolution[0]);
-      double* lastSolution = &(itsLastSolution[0]);
-      for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
-        for (size_t st=0; st<unknownsIndex[dr].size(); ++st) {
+      for (size_t dr=0; dr<srcSet.size(); ++dr) {
+        size_t inx = srcSet[dr] * itsNrStations * 8;
+        double* solution = &(itsSolution[inx]);
+        for (size_t st=0; st<itsNrStations; ++st) {
           if (unknownsIndex[dr][st] >= 0) {
             for (size_t k=0; k<8; ++k) {
-              *solution++ = *unknowns;
-              *lastSolution++ = *unknowns++;
+              *solution++ = *unknowns++;
             }
           } else {
-            initSolution (solution, 8, 0.);
-            initSolution (lastSolution, 8, 1.);
             solution += 8;
-            lastSolution += 8;
           }
         }
       }
@@ -164,6 +151,7 @@ namespace LOFAR {
     // Note that the cursors are passed by value, so a copy is made.
     // In this way no explicit reset of the cursor is needed on a next call.
     bool EstimateNew::estimate (const vector<vector<int> >& unknownsIndex,
+                                const vector<uint>& srcSet,
                                 const_cursor<Baseline> baselines,
                                 vector<const_cursor<fcomplex> > data,
                                 vector<const_cursor<dcomplex> > model,
@@ -172,6 +160,7 @@ namespace LOFAR {
                                 const_cursor<dcomplex> mix,
                                 uint verbose)
     {
+      initSolution (unknownsIndex, srcSet);
       // Determine if a station has to be solved for any source.
       itsSolveStation = false;
       size_t nUnknowns = 0;
@@ -199,8 +188,9 @@ namespace LOFAR {
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
-          // Only compute if no autocorr and if a station needs to be solved.
-          if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) {
+          // Only compute if no autocorr and if stations need to be solved.
+          ///if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) { ????
+          if (p != q  &&  (itsSolveStation[p] && itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
             if (verbose > 13) {
@@ -209,15 +199,16 @@ namespace LOFAR {
             // Generate equations for each channel.
             for (size_t ch=0; ch<itsNrChannels; ++ch) {
               for (size_t dr=0; dr<nDirection; ++dr) {
+                uint drOrig = srcSet[dr];
                 // Jones matrix for station P.
-                const double *Jp = &(itsLastSolution[(dr * itsNrStations + p) * 8]);
+                const double *Jp = &(itsSolution[(drOrig*itsNrStations + p)*8]);
                 const dcomplex Jp_00(Jp[0], Jp[1]);
                 const dcomplex Jp_01(Jp[2], Jp[3]);
                 const dcomplex Jp_10(Jp[4], Jp[5]);
                 const dcomplex Jp_11(Jp[6], Jp[7]);
 
                 // Jones matrix for station Q, conjugated.
-                const double *Jq = &(itsLastSolution[(dr * itsNrStations + q) * 8]);
+                const double *Jq = &(itsSolution[(drOrig*itsNrStations + q)*8]);
                 const dcomplex Jq_00(Jq[0], -Jq[1]);
                 const dcomplex Jq_01(Jq[2], -Jq[3]);
 
@@ -331,7 +322,7 @@ namespace LOFAR {
                           dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
                           itsdR[off]     = real(der);
                           itsdI[off]     = imag(der);
-                          itsdR[off + 1] = imag(der);
+                          itsdR[off + 1] = imag(der);  // conjugate
                           itsdI[off + 1] = -real(der);
                           off += 2;
                         }
@@ -431,15 +422,14 @@ namespace LOFAR {
         bool status = solver.solveLoop(rank, &(itsUnknowns[0]), true);
         ASSERT(status);
         // Copy the unknowns to the full solution.
-        fillSolution (unknownsIndex);
+        fillSolution (unknownsIndex, srcSet);
         if (verbose > 12) {
           cout<<"unknowns="<<nUnknowns<<' '<<itsUnknowns<<endl;
-          cout<<"solution="<<itsLastSolution<<endl;
+          cout<<"solution="<<itsSolution<<endl;
         }
         // Update iteration count.
         ++nIterations;
       }
-
       bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT  ||
                         solver.isReady() == casa::LSQFit::DERIVLEVEL);
       return converged;

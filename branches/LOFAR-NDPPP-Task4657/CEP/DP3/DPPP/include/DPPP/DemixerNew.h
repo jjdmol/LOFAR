@@ -102,6 +102,15 @@ namespace LOFAR {
       // Export the solutions to a ParmDB.
       void writeSolutions (double startTime, int ntime);
 
+      // Add the mean and M2 (square of differences) of a part in a
+      // numerically stable way.
+      void addMeanM2 (double& mean, double& m2, size_t& nr,
+                      double partmean, double partm2, size_t partnr) const;
+
+      // Show a statistic.
+      void showStat (ostream& os, double n, double ntot,
+                     const string& str1, const string& str2) const;
+
       // Show a percentage with 1 decimal.
       void showPerc1 (ostream& os, float perc) const;
 
@@ -116,7 +125,6 @@ namespace LOFAR {
       vector<DPBuffer>        itsBufIn;
       vector<DPBuffer>        itsBufOut;
       vector<vector<double> > itsSolutions; //# all solutions in a time window
-      casa::Cube<float>       itsPercSubtr; //# % subtracted [nbl,nsrc,ntimeout]
       map<string,int>         itsParmIdMap; //# -1 = new parm name
       uint                    itsNTime;
       uint                    itsNTimeOut;

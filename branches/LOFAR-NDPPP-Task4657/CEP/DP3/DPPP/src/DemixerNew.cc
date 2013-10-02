@@ -75,9 +75,6 @@ namespace LOFAR {
       itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.chunkSize());
       itsBufOut.resize(itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeOutSubtr());
       itsSolutions.resize(itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeOut());
-      itsPercSubtr.resize(itsDemixInfo.nbl(), itsDemixInfo.ateamList().size(),
-                          getInfo().ntime());
-      itsPercSubtr = -100;
       // Create a worker per thread.
       int nthread = OpenMP::maxThreads();
       itsWorkers.reserve (nthread);
@@ -113,13 +110,21 @@ namespace LOFAR {
       uint nincludeClose  = 0;
       uint nignore        = 0;
       uint ndeproject     = 0;
-      Vector<uint> nsources(itsDemixInfo.ateamList().size(), 0);
+      // Sum the counts from all workers.
+      uint ndir           = itsDemixInfo.ateamList().size();
+      Vector<uint> nsources(ndir, 0);
       Vector<uint> nstation(itsDemixInfo.nstation(), 0);
-      Matrix<uint> statsrcs(nsources.size(), nstation.size(), 0);
+      Matrix<uint> statsrcs(ndir, nstation.size(), 0);
       Matrix<float> amplTotal (itsDemixInfo.nchanOutSubtr(),
                                itsDemixInfo.nbl(), 0.);
       Cube<float>   amplSubtr (itsDemixInfo.nchanOutSubtr(), itsDemixInfo.nbl(),
-                               itsDemixInfo.ateamList().size(), 0.);
+                               ndir, 0.);
+      Matrix<double> amplSubtrMean (itsDemixInfo.nbl(), ndir, 0.);
+      Matrix<double> amplSubtrM2   (itsDemixInfo.nbl(), ndir, 0.);
+      Matrix<size_t> amplSubtrNr   (itsDemixInfo.nbl(), ndir, 0);
+      double* amplmean = amplSubtrMean.data();
+      double* amplm2   = amplSubtrM2.data();
+      size_t* amplnr   = amplSubtrNr.data();
       for (size_t i=0; i<itsWorkers.size(); ++i) {
         nsolves        += itsWorkers[i].nSolves();
         nconverged     += itsWorkers[i].nConverged();
@@ -133,89 +138,136 @@ namespace LOFAR {
         statsrcs       += itsWorkers[i].statSourceDemixed();
         amplTotal      += itsWorkers[i].amplTotal();
         amplSubtr      += itsWorkers[i].amplSubtr();
+        const double* partmean = itsWorkers[i].amplSubtrMean().data();
+        const double* partm2   = itsWorkers[i].amplSubtrM2().data();
+        const size_t* partnr   = itsWorkers[i].amplSubtrNr().data();
+        for (uint j=0; j<amplSubtrNr.size(); ++j) {
+          // Calculate overall mean and m2 for each baseline/direction.
+          addMeanM2 (amplmean[j], amplm2[j], amplnr[j],
+                     partmean[j], partm2[j], partnr[j]);
+        }
       }
+      uint ntimes = (nnodemix + nignore + ndeproject +
+                     nincludeStrong + nincludeClose);
       // Show statistics.
-      os << "Converged solves: " << nconverged << " cells out of "
-         << nsolves << endl;
-      os << "Nr of time chunks with:" << endl;
-      os << setw(8) << nnodemix   << " times no demixing" << endl;
-      os << setw(8) << nignore    << " times target ignored" << endl; 
-      os << setw(8) << ndeproject << " times target deprojected" << endl; 
-      os << setw(8) << nincludeStrong
-         << " times target included because strong" << endl; 
-      os << setw(8) << nincludeClose
-         << " times target included because close" << endl;
+      showStat (os, nconverged,     nsolves, "Converged solves:      ", "cells");
+      showStat (os, nnodemix,       ntimes,  "No demixing:           ", "times");
+      showStat (os, nignore,        ntimes,  "Target ignored:        ", "times");
+      showStat (os, ndeproject,     ntimes,  "Target deprojected:    ", "times");
+      showStat (os, nincludeStrong, ntimes,  "Strong target included:", "times");
+      showStat (os, nincludeClose,  ntimes,  "Close target included: ", "times");
       // Show how often a source/station is demixed.
-      os << endl << "Nr of time chunks a station/source is demixed:" << endl;
+      os << endl << "Percentage of times a station/source is demixed:" << endl;
       os << setw(15) << " ";
-      for (size_t dr=0; dr<nsources.size(); ++dr) {
+      for (size_t dr=0; dr<ndir; ++dr) {
         os << setw(8) << itsDemixInfo.ateamList()[dr]->name();
       }
       os << " Overall" << endl;
       for (size_t st=0; st<nstation.size(); ++st) {
         os << setw(4) << st << ' ';
+        // Show 10 characters of the source names; append with blanks as needed.
         uint inx = itsFilter.getInfo().antennaUsed()[st];
         string nm = itsFilter.getInfo().antennaNames()[inx];
         os << nm.substr(0,10);
         if (nm.size() < 10) {
           os << setw(10 - nm.size()) << ' ';
         }
-        for (size_t dr=0; dr<nsources.size(); ++dr) {
-          os << setw(8) << statsrcs(dr,st);
+        for (size_t dr=0; dr<ndir; ++dr) {
+          os << "  ";
+          showPerc1 (os, statsrcs(dr,st) / double(ntimes));
         }
-        os << setw(8) << nstation[st] << endl;
-      }
-      os << "     Overall" << setw(3) << ' ';
-      for (size_t dr=0; dr<nsources.size(); ++dr) {
-        os << setw(8) << nsources[dr];
-      }
-      os << endl;
-      // Show the subtract percentage medians in time per baseline/source.
-      ASSERT (itsNTimeOut == itsPercSubtr.shape()[2]);
-      Matrix<float> medianPerc = partialMedians(itsPercSubtr, IPosition(1,2));
-      if (itsDemixInfo.verbose() > 12) {
-        cout<<"percsubtr="<<itsPercSubtr<<medianPerc;
-      }
-      os << endl << "Median percentage of Stokes I amplitude subtracted" << endl;
-      os << " baseline";
-      for (size_t dr=0; dr<nsources.size(); ++dr) {
-        os << setw(8) << itsDemixInfo.ateamList()[dr]->name();
-      }
-      os << "   Total" << endl;
-      for (int bl=0; bl<medianPerc.shape()[0]; ++bl) {
-        os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
-           << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
-        float sumPerc = 0;
-        for (int dr=0; dr<medianPerc.shape()[1]; ++dr) {
-          showPerc1 (os, medianPerc(bl,dr));
-          sumPerc += medianPerc(bl,dr);
-        }
-        showPerc1 (os, sumPerc);
+        os << "  ";
+        showPerc1 (os, nstation(st) / double(ntimes));
         os << endl;
       }
-      // Show the totals.
-      if (itsDemixInfo.verbose() > 12) {
-        cout <<"ampltotal="<<amplTotal;
-        cout <<"amplsubtr="<<amplSubtr;
+      os << "     Overall" << setw(3) << ' ';
+      for (size_t dr=0; dr<ndir; ++dr) {
+        os << "  ";
+        showPerc1 (os, nsources[dr] / double(ntimes));
       }
-      // Sum over channel and baseline.
-      float atot = sum(amplTotal);
-      Vector<float> asub = partialSums(amplSubtr, IPosition(2,0,1));
-      os << "  Total  ";
-      float sumPerc = 0;
-      for (uint dr=0; dr<asub.size(); ++dr) {
-        float perc = (atot==0 ? 0 : asub[dr]/atot*100.);
-        showPerc1 (os, perc);
-        sumPerc += perc;
-      }
-      showPerc1 (os, sumPerc);
       os << endl;
+      // Show percentage subtracted.
+      os << endl << "Mean/stddev percentage of subtracted Stokes I amplitude"
+         << " for the middle channel" << endl;
+      os << "     ";
+      for (size_t dr=0; dr<ndir; ++dr) {
+        os << setw(13) << itsDemixInfo.ateamList()[dr]->name();
+      }
+      os << setw(13) << "Total" << endl;
+      os << " baseline";
+      for (size_t dr=0; dr<ndir+1; ++dr) {
+        os << "  mean stddev";
+      }
+      os << endl;
+      vector<double> totsump(ndir, 0.);
+      vector<double> totm2p (ndir, 0.);
+      vector<size_t> totnrp (ndir, 0);
+      for (int bl=0; bl<amplSubtrMean.shape()[0]; ++bl) {
+        os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
+           << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
+        double sump = 0;
+        double m2p  = 0;
+        size_t nrp  = 0;
+        for (uint dr=0; dr<ndir; ++dr) {
+          showPerc1 (os, amplSubtrMean(bl,dr));
+          double stddev = 0;
+          if (amplSubtrNr(bl,dr) > 1) {
+            stddev = sqrt(amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1));
+          }
+          showPerc1 (os, stddev);
+          os << ' ';
+          addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
+                     amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
+                     amplSubtrNr(bl,dr));
+          addMeanM2 (sump, m2p, nrp,
+                     amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
+                     amplSubtrNr(bl,dr));
+        }
+        showPerc1 (os, sump);
+        showPerc1 (os, nrp>1  ?  sqrt(m2p/(nrp-1)) : 0.);
+        os << endl;
+      }
+      double sump = 0;
+      double m2p  = 0;
+      size_t nrp  = 0;
+      os << "  Total  ";
+      for (uint dr=0; dr<ndir; ++dr) {
+        showPerc1 (os, totsump[dr]);
+        showPerc1 (os, totnrp[dr]>1  ?  sqrt(totm2p[dr]/(totnrp[dr]-1)) : 0.);
+        os << ' ';
+        addMeanM2 (sump, m2p, nrp, totsump[dr], totm2p[dr], totnrp[dr]);
+      }
+      showPerc1 (os, sump);
+      showPerc1 (os, nrp>1  ?  sqrt(m2p/(nrp-1)) : 0.);
+      os << endl;
+    }
+
+    void DemixerNew::addMeanM2 (double& mean, double& m2, size_t& nr,
+                                double partmean, double partm2,
+                                size_t partnr) const
+    {
+      // Calculate overall mean and m2 (for stddev) from two partitions.
+      // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+      double delta = partmean - mean;
+      double mp    = mean*nr + partmean*partnr;
+      double nab   = double(nr) / (nr+partnr) * partnr;
+      nr  += partnr;
+      mean = mp / nr;
+      m2  += partm2 + delta*nab*delta;
+    }
+
+    void DemixerNew::showStat (ostream& os, double n, double ntot,
+                               const string& str1, const string& str2) const
+    {
+      os << str1 << ' ';
+      showPerc1 (os, ntot==0 ? 0 : n/ntot);
+      os << "  ("<< n << ' '<< str2 << " out of " << ntot << ')' << endl;
     }
 
     void DemixerNew::showPerc1 (ostream& os, float perc) const
     {
-      int p = int(10*perc + 0.5);
-      os << std::setw(5) << p/10 << '.' << p%10 << '%';
+      int p = int(1000*perc + 0.5);
+      os << std::setw(3) << p/10 << '.' << p%10 << '%';
     }
 
     void DemixerNew::showTimings (std::ostream& os, double duration) const
@@ -223,16 +275,20 @@ namespace LOFAR {
       double self  = itsTimer.getElapsed();
       double demix = itsTimerDemix.getElapsed();
       double tottime = 0;
-      double pretime = 0;
+      double coatime = 0;
       double psatime = 0;
       double demtime = 0;
+      double pretime = 0;
       double soltime = 0;
+      double subtime = 0;
       for (uint i=0; i<itsWorkers.size(); ++i) {
         tottime += itsWorkers[i].getTotalTime();
-        pretime += itsWorkers[i].getPredictTime();
+        coatime += itsWorkers[i].getCoarseTime();
         psatime += itsWorkers[i].getPhaseShiftTime();
         demtime += itsWorkers[i].getDemixTime();
+        pretime += itsWorkers[i].getPredictTime();
         soltime += itsWorkers[i].getSolveTime();
+        subtime += itsWorkers[i].getSubtractTime();
       }
       os << "  ";
       FlagCounter::showPerc1 (os, self, duration);
@@ -241,8 +297,8 @@ namespace LOFAR {
       FlagCounter::showPerc1 (os, demix, self);
       os << " of it spent in demixing the data of which" << endl;
       os << "                ";
-      FlagCounter::showPerc1 (os, pretime, tottime);
-      os << " in predicting coarse model" << endl;
+      FlagCounter::showPerc1 (os, coatime, tottime);
+      os << " in predicting coarse source models" << endl;
       os << "                ";
       FlagCounter::showPerc1 (os, psatime, tottime);
       os << " in phase shifting/averaging data" << endl;
@@ -250,8 +306,14 @@ namespace LOFAR {
       FlagCounter::showPerc1 (os, demtime, tottime);
       os << " in calculating decorrelation factors" << endl;
       os << "                ";
+      FlagCounter::showPerc1 (os, pretime, tottime);
+      os << " in predicting demix source models" << endl;
+      os << "                ";
       FlagCounter::showPerc1 (os, soltime, tottime);
-      os << " in estimating gains and computing residuals" << endl;
+      os << " in solving complex gains" << endl;
+      os << "                ";
+      FlagCounter::showPerc1 (os, subtime, tottime);
+      os << " in subtracting source models" << endl;
       os << "          ";
       FlagCounter::showPerc1 (os, itsTimerDump.getElapsed(), self);
       os << " of it spent in writing gain solutions to disk" << endl;
@@ -297,10 +359,6 @@ namespace LOFAR {
                       / itsDemixInfo.ntimeAvgSubtr());
       int ntimeSol = ((itsNTime + itsDemixInfo.ntimeAvg() - 1)
                       / itsDemixInfo.ntimeAvg());
-      if (itsDemixInfo.verbose() > 10) {
-        cout<<"NTimeOut="<<itsNTimeOut<<itsPercSubtr.shape()<<ntimeOut<<endl;
-      }
-      ASSERT (itsNTimeOut + ntimeOut <= itsPercSubtr.shape()[2]);
       ///#pragma omp parallel for schedule dynamic
       for (int i=0; i<=lastChunk; ++i) {
         if (i == lastChunk) {
@@ -310,8 +368,7 @@ namespace LOFAR {
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), lastNTimeIn,
              &(itsBufOut[i*timeWindowOut]),
-             &(itsSolutions[i*timeWindowSol]),
-             &(itsPercSubtr(0, 0, itsNTimeOut + i*timeWindowOut)));
+             &(itsSolutions[i*timeWindowSol]));
         } else {
           if (itsDemixInfo.verbose() > 10) {
             cout<<"chunk="<<i*timeWindowIn<<' '<<timeWindowIn<<endl;
@@ -319,8 +376,7 @@ namespace LOFAR {
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), timeWindowIn,
              &(itsBufOut[i*timeWindowOut]),
-             &(itsSolutions[i*timeWindowSol]),
-             &(itsPercSubtr(0, 0, itsNTimeOut + i*timeWindowOut)));
+             &(itsSolutions[i*timeWindowSol]));
         }
       }
       itsTimerDemix.stop();

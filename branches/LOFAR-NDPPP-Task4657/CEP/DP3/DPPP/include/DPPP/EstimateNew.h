@@ -78,6 +78,7 @@ namespace LOFAR {
       // <br>Note that the cursors are passed by value, so a copy is made.
       // In this way no reset of the cursor is needed.
       bool estimate (const vector<vector<int> >& unknownsIndex,
+                     const vector<uint>& srcSet,
                      const_cursor<Baseline> baselines,
                      vector<const_cursor<fcomplex> > data,
                      vector<const_cursor<dcomplex> > model,
@@ -94,11 +95,12 @@ namespace LOFAR {
     private:
       // Initialize the solution. Nr must be a multiple of 8.
       // The diagonal is set to (diag,0), off-diagonal to (0,0).
-      void initSolution (double* solution, size_t nr, double diag);
+      void initSolution (const vector<vector<int> >& unknownsIndex,
+                         const vector<uint>& srcSet);
 
-      // Update itsSolution and itsLastSolution from itsUnknowns for the
-      // unknowns to be used.
-      void fillSolution (const vector<vector<int> >& unknownsIndex);
+      // Update itsSolution from itsUnknowns for the unknowns to be used.
+      void fillSolution (const vector<vector<int> >& unknownsIndex,
+                         const vector<uint>& srcSet);
 
       // Fill itsDerivIndex for the unknowns of the given baseline
       // to be able to pass the equations to LSQFit::makeNorm.
@@ -111,12 +113,12 @@ namespace LOFAR {
       size_t itsNrStations;
       size_t itsNrChannels;
       size_t itsMaxIter;
+      size_t itsNrDir;
       bool   itsPropagateSolution;
       casa::Block<bool>  itsSolveStation;  //# solve station i?
       vector<casa::uInt> itsDerivIndex;    //# index for LSQFit::makeIndex
       vector<double>     itsUnknowns;
       vector<double>     itsSolution;
-      vector<double>     itsLastSolution;
       vector<dcomplex>   itsM;
       vector<dcomplex>   itsdM;
       vector<double>     itsdR;

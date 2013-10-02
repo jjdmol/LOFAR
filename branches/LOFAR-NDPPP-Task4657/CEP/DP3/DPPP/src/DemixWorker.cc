@@ -55,6 +55,8 @@
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/MatrixIter.h>
 #include <scimath/Mathematics/MatrixMathLA.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
 
 using namespace casa;
 
@@ -175,7 +177,7 @@ namespace LOFAR {
       itsAvgUVW.resize (3, itsMix->nbl());
       itsStationUVW.resize (3, itsMix->nstation(), itsMix->ntimeOutSubtr());
       itsUVW.resize (3, itsMix->nstation());
-      itsIndices.resize (ndir);
+      itsSrcSet.reserve (ndir+1);
       itsStationsToUse.resize (ndir);
       itsUnknownsIndex.resize (ndir+1);
       for (uint i=0; i<ndir+1; ++i) {
@@ -203,19 +205,24 @@ namespace LOFAR {
       itsSourceAmpl.resize   (itsMix->nbl());
       itsAmplTotal.resize (itsMix->nchanOutSubtr(), itsMix->nbl());
       itsAmplSubtr.resize (itsMix->nchanOutSubtr(), itsMix->nbl(), ndir);
-      itsAmplTotal = 0.;
-      itsAmplSubtr = 0.;
+      itsAmplSubtrMean.resize (itsMix->nbl(), ndir);
+      itsAmplSubtrM2.resize   (itsMix->nbl(), ndir);
+      itsAmplSubtrNr.resize   (itsMix->nbl(), ndir);
+      itsAmplTotal     = 0.;
+      itsAmplSubtr     = 0.;
+      itsAmplSubtrMean = 0.;
+      itsAmplSubtrM2   = 0.;
+      itsAmplSubtrNr   = 0;
       itsEstimate.update (ndir+1, itsMix->nbl(), itsMix->nstation(),
                           itsMix->nchanOut(), itsMix->maxIter(),
                           itsMix->propagateSolution());
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
-                               DPBuffer* bufout, vector<double>* solutions,
-                               float* percSubtr)
+                               DPBuffer* bufout, vector<double>* solutions)
     {
       itsTimer.start();
-      itsTimerPredict.start();
+      itsTimerCoarse.start();
       // Average and split the baseline UVW coordinates per station.
       // Do this at the demix time resolution.
       // The buffer has not been filtered yet, so the UVWs have to be filtered.
@@ -228,8 +235,8 @@ namespace LOFAR {
       // It also fills in the baselines that do not need to used.
       predictAteam (itsMix->ateamList(), ntime, time, timeStep);
       // If no sources to demix, simply average the input buffers.
-      if (itsIndices.empty()) {
-        itsTimerPredict.stop();
+      if (itsSrcSet.empty()) {
+        itsTimerCoarse.stop();
         itsTimerPhaseShift.start();
         average (bufin, nbufin, bufout);
         itsTimerPhaseShift.stop();
@@ -241,7 +248,7 @@ namespace LOFAR {
       // Determine what needs to be done.
       // It fills in the steps to perform for the sources to demix.
       setupDemix();
-      itsTimerPredict.stop();
+      itsTimerCoarse.stop();
       // Loop over the buffers and process them.
       itsNTimeOut = 0;
       itsNTimeOutSubtr = 0;
@@ -287,7 +294,7 @@ namespace LOFAR {
       }
 
       // Estimate gains and subtract source contributions.
-      handleDemix (bufout, solutions, percSubtr);
+      handleDemix (bufout, solutions);
       itsTimer.stop();
     }
 
@@ -336,9 +343,9 @@ namespace LOFAR {
     void DemixWorker::predictTarget (const vector<Patch::ConstPtr>& patchList,
                                      uint ntime, double time, double timeStep)
     {
-      // This is only needed for the short baselines.
-      // So better to have a Bool array telling which baselines to use.
-      // Also no filter step needed at beginning.
+      // This is only needed for the short baselines, but it takes hardly
+      // any time to do it for all selecte dbaselines.
+      // So no effort is spent on further selection.
       itsTargetAmpl = 0;
       MatrixIterator<float> miter(itsTargetAmpl);
       MatrixIterator<double> uvwiter(itsStationUVW);
@@ -411,7 +418,7 @@ namespace LOFAR {
         }
       }
       // Determine per A-source which stations to use.
-      itsIndices.resize (0);
+      itsSrcSet.resize (0);
       vector<uint> antCount (itsMix->nstation());
       for (uint i=0; i<patchList.size(); ++i) {
         // Count the stations of baselines with sufficient amplitude.
@@ -442,7 +449,7 @@ namespace LOFAR {
         }
         // Use this A-team source if some stations have matched.
         if (! itsStationsToUse[i].empty()) {
-          itsIndices.push_back (i);
+          itsSrcSet.push_back (i);
           itsNrSourcesDemixed[i]++;
         }
       }
@@ -473,7 +480,7 @@ namespace LOFAR {
       // Decide if the target has to be included, ignored, or deprojected
       // which depends on the ratio target/Ateam of the total ampl.
       // Fill in the steps to be executed by removing the too weak A-sources.
-      uint nsrc = itsIndices.size();
+      uint nsrc = itsSrcSet.size();
       itsPhaseShifts.resize (nsrc);
       itsFirstSteps.resize (nsrc+1);
       // Add target.
@@ -483,10 +490,10 @@ namespace LOFAR {
       // Add sources to be demixed.
       // Determine their minimum and maximum amplitude.
       for (uint i=0; i<nsrc; ++i) {
-        itsPhaseShifts[i] = itsOrigPhaseShifts[itsIndices[i]];
-        itsFirstSteps[i]  = itsOrigFirstSteps[itsIndices[i]];
-        itsDemixList[i]   = itsMix->ateamList()[itsIndices[i]];
-        float sumAmpl = sum(itsTargetAmpl[itsIndices[i]]);
+        itsPhaseShifts[i] = itsOrigPhaseShifts[itsSrcSet[i]];
+        itsFirstSteps[i]  = itsOrigFirstSteps[itsSrcSet[i]];
+        itsDemixList[i]   = itsMix->ateamList()[itsSrcSet[i]];
+        float sumAmpl = sum(itsTargetAmpl[itsSrcSet[i]]);
         if (sumAmpl < minSumAmpl) {
           minSumAmpl = sumAmpl;
         }
@@ -521,7 +528,7 @@ namespace LOFAR {
       uint ndir = itsStationsToUse.size();
       uint nUnknown = 0;
       for (uint i=0; i<ndir; ++i) {
-        // Initialize unknowns index.
+        // Initialize first.
         std::fill (itsUnknownsIndex[i].begin(), itsUnknownsIndex[i].end(), -1);
         for (uint j=0; j<itsStationsToUse[i].size(); ++j) {
           uint st = itsStationsToUse[i][j];
@@ -533,10 +540,13 @@ namespace LOFAR {
         cout<<"nunkb="<<nUnknown<<endl;
       }
       // Do the same for the target if it has to be solved as well.
-      std::fill (itsUnknownsIndex[ndir].begin(),
-                 itsUnknownsIndex[ndir].end(), -1);
+      // Solve for all stations.
+      // Also add the target step.
       if (itsIncludeTarget) {
+        itsSrcSet.push_back (ndir);
         itsDemixList[itsNModel++] = itsMix->targetDemix();
+        std::fill (itsUnknownsIndex[ndir].begin(),
+                   itsUnknownsIndex[ndir].end(), -1);
         for (uint j=0; j<itsUnknownsIndex[ndir].size(); ++j) {
           itsUnknownsIndex[ndir][j] = nUnknown;
           nUnknown += 8;
@@ -547,16 +557,17 @@ namespace LOFAR {
       }
     }
 
-    void DemixWorker::applyBeam (double time, const Position& dir)
+    void DemixWorker::applyBeam (double time, const Position& pos)
     {
+      // Convert the directions to ITRF.
+      ///      MDirection dir(MDirection::Convert (itsMix->getInfo().phaseCenter(),
+      ///                                    MDirection::ITRF)());
+  ///Vector<double> xyz (dir.getValue().getValue());
     }
 
-    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions,
-                                   float* percSubtr)
+    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions)
     {
-      itsTimerSolve.start();
-      demix (solutions, percSubtr);
-      itsTimerSolve.stop();
+      demix (solutions);
       // If selection was done, merge the subtract results back into the
       // buffer.
       if (itsMix->selBL().hasSelection()) {
@@ -812,7 +823,7 @@ namespace LOFAR {
       factors.reference (newFactors);
     }
 
-    void DemixWorker::demix (vector<double>* solutions, float* percSubtr)
+    void DemixWorker::demix (vector<double>* solutions)
     {
       // Determine the various sizes.
       const size_t nTime = itsAvgResults[0]->get().size();
@@ -831,6 +842,7 @@ namespace LOFAR {
       const_cursor<Baseline> cr_baseline(&(itsMix->baselines()[0]));
       // Do a solve and subtract for each predict time slot.
       for (size_t ts=0; ts<nTime; ++ts) {
+        itsTimerPredict.start();
         // Compute the model visibilities for each A-team source.
         size_t stride_model[3] = {1, nCr, nCr*nCh};
         for (size_t dr=0; dr<itsNModel; ++dr) {
@@ -850,7 +862,8 @@ namespace LOFAR {
           simulate(itsDemixList[dr]->position(),
                    itsDemixList[dr],
                    nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
-        }
+        } // end nModel
+        itsTimerPredict.stop();
         if (itsMix->verbose() > 12) {
           cout<<"modelvis="<<itsModelVis<<endl;
         }
@@ -860,6 +873,7 @@ namespace LOFAR {
         // stations and directions is solved iteratively. The influence of
         // each direction on each other direction is given by the mixing
         // matrix.
+        itsTimerSolve.start();
         const_cursor<bool> cr_flag =
           casa_const_cursor(itsAvgResults[0]->get()[ts].getFlags());
         const_cursor<float> cr_weight =
@@ -877,6 +891,7 @@ namespace LOFAR {
         }
         // If solving the system succeeds, increment nconverged.
         bool converged = itsEstimate.estimate (itsUnknownsIndex,
+                                               itsSrcSet,
                                                cr_baseline, cr_data,
                                                cr_model, cr_flag,
                                                cr_weight, cr_mix,
@@ -887,6 +902,7 @@ namespace LOFAR {
         if (converged) {
           itsNrConverged++;
         }
+        itsTimerSolve.stop();
 
         // Compute the residual.
         //
@@ -896,6 +912,7 @@ namespace LOFAR {
         //
         // Note that the resolution of the residual can differ from the
         // resolution at which the Jones matrices were estimated.
+        itsTimerSubtract.start();
         for (size_t ts_subtr = multiplier * ts,
                ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
              ts_subtr != ts_subtr_end; ++ts_subtr) {
@@ -913,6 +930,7 @@ namespace LOFAR {
             itsObservedAmpl[bl] = ampl;
           }
           for (size_t dr=0; dr<nDr; ++dr) {
+            uint drOrig = itsSrcSet[dr];
             // Re-use simulation used for estimating Jones matrices if possible.
             cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
                                             3, stride_model);
@@ -928,7 +946,7 @@ namespace LOFAR {
               // the Jones matrices were estimated, of course).
               cursor<double> cr_uvw_split = casa_cursor(itsUVW);
               rotateUVW (itsMix->phaseRef(),
-                         itsMix->targetList()[dr]->position(), nSt,
+                         itsMix->targetList()[drOrig]->position(), nSt,
                          cr_uvw_split);
               // Initialize the visibility buffer.
               std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
@@ -936,8 +954,8 @@ namespace LOFAR {
               size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
               cr_model_subtr = cursor<dcomplex>(&(itsModelVis[0]), 3,
                                                 stride_model_subtr);
-              simulate(itsMix->ateamList()[dr]->position(),
-                       itsMix->ateamList()[dr], nSt, nBl,
+              simulate(itsMix->ateamList()[drOrig]->position(),
+                       itsMix->ateamList()[drOrig], nSt, nBl,
                        nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
                        cr_model_subtr);
             }
@@ -981,22 +999,26 @@ namespace LOFAR {
             // Subtract the source.
             // It fills in the subtracted amplitude per baseline.
             subtract (nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
-                      cr_mix_subtr, itsSourceAmpl,
-                      &(itsAmplSubtr(0,0,dr)));
-            // Calculate the percentage amplitude subtracted per source.
-            // This array is ordered [nbl,nsrc,ntime]
+                      cr_mix_subtr, itsSourceAmpl);
+            // Calculate the mean percentage amplitude subtracted per source.
+            // This array is ordered [nbl,nsrc]
             /// Note: dr should be mapped to actual source index.
-            float* pperc = percSubtr + (ts_subtr * nDr + dr ) * nBl;
             for (size_t bl=0; bl<nBl; ++bl) {
-              if (itsObservedAmpl[bl] == 0) {
-                *pperc++ = 0.;
-              } else {
-                *pperc++ = itsSourceAmpl[bl] / itsObservedAmpl[bl] * 100.;
+              if (itsObservedAmpl[bl] != 0) {
+                // Calculate mean and stddev in a running way using a
+                // numerically stable algorithm
+                // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+                itsAmplSubtrNr(bl,drOrig)++;
+                double perc  = itsSourceAmpl[bl] / itsObservedAmpl[bl];
+                double delta = perc - itsAmplSubtrMean(bl,drOrig);
+                itsAmplSubtrMean(bl,drOrig) += delta/itsAmplSubtrNr(bl,drOrig);
+                itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
               }
-            }
-          }
-        }
-      }
+            } // end nBl
+          } // end nDr
+        } // end ts_subtr
+        itsTimerSubtract.stop();
+      }  // end nTime
     }
 
 
