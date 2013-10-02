@@ -1,20 +1,20 @@
 [DEFAULT]
-lofarroot = @CMAKE_INSTALL_PREFIX@
-casaroot = @CASACORE_ROOT_DIR@
-pyraproot = @PYRAP_ROOT_DIR@
-hdf5root = $ENV{HDF5_ROOT}
-wcsroot = @WCSLIB_ROOT_DIR@
-pythonpath = @PYTHON_INSTALL_DIR@
+lofarroot = /lustre/jhome17/htb00/htb003/LOFAR-DEV/lofar/release
+casaroot = /lustre/jhome17/htb00/htb003/LOFAR-DEV/local
+pyraproot = /lustre/jhome17/htb00/htb003/LOFAR-DEV/local
+hdf5root = 
+wcsroot = /lustre/jhome17/htb00/htb003/LOFAR-DEV/local
+pythonpath = /lustre/jhome17/htb00/htb003/LOFAR-DEV/lofar/release/lib/python2.7/site-packages
 runtime_directory = %(lofarroot)s/var/run/pipeline
 recipe_directories = [%(pythonpath)s/lofarpipe/recipes]
-working_directory = /data/scratch/$ENV{USER}
+working_directory = /lustre/jwork/htb00/htb003/working_dir
 task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
 
 [layout]
 job_directory = %(runtime_directory)s/%(job_name)s
 
 [cluster]
-clusterdesc = %(lofarroot)s/share/cep2.clusterdesc
+clusterdesc = %(lofarroot)s/share/local.clusterdesc
 
 [deploy]
 engine_ppath = %(pythonpath)s:%(pyraproot)s/lib:/opt/cep/pythonlibs/lib/python/site-packages
@@ -23,3 +23,8 @@ engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s
 [logging]
 log_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/pipeline.log
 xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistics.xml
+
+# possible options for remotecommand execution: local, ssh, juropa_mpi
+[remote]
+method = juropa_mpi
+max_per_node = 8

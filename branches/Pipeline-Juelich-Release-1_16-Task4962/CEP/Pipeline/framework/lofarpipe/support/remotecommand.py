@@ -86,6 +86,10 @@ def run_remote_command(config, logger, host, command, env, arguments=None):
         return run_via_paramiko(logger, host, command, env, arguments, key_filename)
     elif method == "mpirun":
         return run_via_mpirun(logger, host, command, env, arguments)
+    elif method == "local":
+        return run_via_local(logger, command, arguments)
+    elif method == "juropa_mpi":
+        return run_via_mpiexec(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -111,13 +115,38 @@ def run_via_mpirun(logger, host, command, environment, arguments):
     process.kill = lambda : os.kill(process.pid, signal.SIGTERM)
     return process
 
+# let the mpi demon manage free resources to start jobs
+def run_via_mpiexec(logger, command, arguments, host):
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring = ["mpiexec","-x","-np=1","/bin/sh", "-c", "hostname && "+command]
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
+
+def run_via_local(logger, command, arguments):
+    commandstring = ["/bin/sh","-c"]
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring.append(command)
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
+
 def run_via_ssh(logger, host, command, environment, arguments):
     """
     Dispatch a remote command via SSH.
 
     We return a Popen object pointing at the SSH session, to which we add a
     kill method for shutting down the connection if required.
+
+    hack/
+    if host is localhost run without ssh
+    /hack
     """
+    #if host == "localhost":
+    #    logger.debug("Running command locally")
+    #    return run_via_local(logger, command, arguments)
     logger.debug("Dispatching command to %s with ssh" % host)
     ssh_cmd = ["ssh", "-n", "-tt", "-x", host, "--", "/bin/sh", "-c"]
 
@@ -157,6 +186,7 @@ class ProcessLimiter(defaultdict):
     :type nproc: integer or none
     """
     def __init__(self, nproc=None):
+        #nproc=8
         if nproc:
             super(ProcessLimiter, self).__init__(
                 lambda: BoundedSemaphore(int(nproc))
@@ -214,6 +244,7 @@ class ComputeJob(object):
                 self.host,
                 self.command,
                 {
+                    "PATH": os.environ.get('PATH'),
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
@@ -307,11 +338,14 @@ class RemoteCommandRecipeMixIn(object):
         """
         threadpool = []
         jobpool = {}
+        if not max_per_node and self.config.has_option('remote','max_per_node'):
+            max_per_node = self.config.getint('remote','max_per_node')
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
 
         if max_per_node:
             self.logger.info("Limiting to %d simultaneous jobs/node" % max_per_node)
+            self.logger.info("There are %d jobs to process" % len(jobs))
 
         with job_server(self.logger, jobpool, self.error) as (jobhost, jobport):
             self.logger.debug("Job dispatcher at %s:%d" % (jobhost, jobport))

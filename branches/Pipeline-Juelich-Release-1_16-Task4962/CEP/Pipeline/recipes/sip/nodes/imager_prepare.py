@@ -10,6 +10,7 @@ import shutil
 import os
 import subprocess
 import copy
+import pyrap.tables as pt
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
@@ -18,8 +19,8 @@ from lofarpipe.support.lofarnode import  LOFARnodeTCP
 from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
-
-import pyrap.tables as pt
+# import was put before other lofa imports because otherwise the converters would not work. compiler version gcc 4.6.3
+#import pyrap.tables as pt
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
@@ -157,37 +158,40 @@ class imager_prepare(LOFARnodeTCP):
             if input_item.skip == True:
                 exit_status = 1 # 
 
-            # construct copy command
-            command = ["rsync", "-r", "{0}:{1}".format(
+            # skip the copy if machine is the same (execution on localhost) 
+            # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
+            if input_item.host != "localhost":
+                # construct copy command
+                command = ["rsync", "-r", "{0}:{1}".format(
                             input_item.host, input_item.file),
                                "{0}".format(processed_ms_dir)]
 
-            self.logger.debug("executing: " + " ".join(command))
+                self.logger.debug("executing: " + " ".join(command))
 
-            # Spawn a subprocess and connect the pipes
-            # The copy step is performed 720 at once in that case which might
-            # saturate the cluster.
-            copy_process = subprocess.Popen(
+                # Spawn a subprocess and connect the pipes
+                # The copy step is performed 720 at once in that case which might
+                # saturate the cluster.
+                copy_process = subprocess.Popen(
                         command,
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE)
 
-            # Wait for finish of copy inside the loop: enforce single tread
-            # copy
-            (stdoutdata, stderrdata) = copy_process.communicate()
+                # Wait for finish of copy inside the loop: enforce single tread
+                # copy
+                (stdoutdata, stderrdata) = copy_process.communicate()
 
-            exit_status = copy_process.returncode
+                exit_status = copy_process.returncode
 
-            #if copy failed log the missing file and update the skip fields 
-            if  exit_status != 0:
-                input_item.skip = True
-                copied_item.skip = True
-                self.logger.warning(
+                #if copy failed log the missing file and update the skip fields 
+                if  exit_status != 0:
+                    input_item.skip = True
+                    copied_item.skip = True
+                    self.logger.warning(
                             "Failed loading file: {0}".format(input_item.file))
-                self.logger.warning(stderrdata)
+                    self.logger.warning(stderrdata)
 
-            self.logger.debug(stdoutdata)
+                self.logger.debug(stdoutdata)
 
         return copied_ms_map
 
@@ -314,8 +318,11 @@ class imager_prepare(LOFARnodeTCP):
                 create_directory(temp_slice_path)
 
                 # construct copy command
+                # indeirect read uses some tmp directory.
+                # didnt work, but now it does?! no idea why. further testing? or just be happy and get on with it
                 self.logger.info(time_slice)
-                command = [rficonsole_executable, "-indirect-read",
+                command = [rficonsole_executable,
+                            "-indirect-read",
                             time_slice]
                 self.logger.info("executing rficonsole command: {0}".format(
                             " ".join(command)))

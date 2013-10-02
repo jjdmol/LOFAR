@@ -11,10 +11,10 @@ set(LOFAR_BUILD_VARIANTS DEBUG OPT)
 
 # GNU compiler suite
 set(GNU_COMPILERS GNU_C GNU_CXX GNU_Fortran GNU_ASM)
-set(GNU_C         /usr/bin/gcc)      # GNU C compiler
-set(GNU_CXX       /usr/bin/g++)      # GNU C++ compiler
-set(GNU_Fortran   /usr/bin/gfortran) # GNU Fortran compiler
-set(GNU_ASM       /usr/bin/gcc)      # GNU assembler
+set(GNU_C         /usr/local/gcc/gcc-4.6.3/bin/gcc)      # GNU C compiler
+set(GNU_CXX       /usr/local/gcc/gcc-4.6.3/bin/g++)      # GNU C++ compiler
+set(GNU_Fortran   /usr/local/gcc/gcc-4.6.3/bin/gfortran) # GNU Fortran compiler
+set(GNU_ASM       /usr/local/gcc/gcc-4.6.3/bin/gcc)      # GNU assembler
 
 set(GNU_C_FLAGS)
 set(GNU_C_FLAGS_DEBUG    "-g")

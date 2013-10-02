@@ -66,10 +66,10 @@ if(NOT DEFINED LOFAR_INIT_INCLUDED)
   endif(EXISTS "${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 
   # Bail out if the top-level source directory name is not LOFAR
-  if(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
-    message(FATAL_ERROR 
-      "${CMAKE_SOURCE_DIR} is not inside the LOFAR source code tree!")
-  endif(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
+#  if(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
+#    message(FATAL_ERROR 
+#      "${CMAKE_SOURCE_DIR} is not inside the LOFAR source code tree!")
+#  endif(NOT CMAKE_SOURCE_DIR MATCHES "/LOFAR$")
 
   # Root directory of the LOFAR source code tree
   set(LOFAR_ROOT ${CMAKE_SOURCE_DIR} CACHE INTERNAL "LOFAR root directory")
