@@ -36,9 +36,8 @@ using boost::format;
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
-//
-// TODO: 2x2 kernel produces different output than the 1x1 kernel!
-//#define USE_2X2
+
+#define USE_2X2
 
 namespace LOFAR
 {

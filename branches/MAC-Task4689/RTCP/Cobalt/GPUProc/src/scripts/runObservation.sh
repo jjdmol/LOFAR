@@ -145,7 +145,13 @@ do
 done
 
 # Run in the background to allow signals to propagate
-mpirun.sh -H "$HOSTS" $MPIRUN_PARAMS rtcp $RTCP_PARAMS "$PARSET" &
+#
+# -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
+# -H              The host list to run on, derived earlier.
+mpirun.sh -x LOFARROOT="$LOFARROOT" \
+          -H "$HOSTS" \
+          $MPIRUN_PARAMS \
+          `which rtcp` $RTCP_PARAMS "$PARSET" &
 PID=$!
 
 # Propagate SIGTERM
