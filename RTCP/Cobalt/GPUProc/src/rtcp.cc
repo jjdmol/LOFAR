@@ -61,6 +61,7 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
+#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 
@@ -313,14 +314,6 @@ int main(int argc, char **argv)
   // Allow OpenMP thread registration
   OMPThread::init();
 
-  // Only ONE host should start the Storage processes
-  SmartPtr<StorageProcesses> storageProcesses;
-
-  if (rank == 0) {
-    LOG_INFO("----- Starting OutputProc");
-    storageProcesses = new StorageProcesses(ps, "");
-  }
-
   LOG_INFO("----- Initialising Pipeline");
 
   // Distribute the subbands over the MPI ranks
@@ -360,6 +353,16 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  // Only ONE host should start the Storage processes
+  SmartPtr<StorageProcesses> storageProcesses;
+
+  LOG_INFO("----- Initialising SSH library");
+  SSH_Init();
+
+  if (rank == 0) {
+    LOG_INFO("----- Starting OutputProc");
+    storageProcesses = new StorageProcesses(ps, "");
+  }
 
 #ifdef HAVE_MPI
   /*
@@ -461,6 +464,8 @@ int main(int argc, char **argv)
     }
   }
   LOG_INFO("===== SUCCESS =====");
+
+  SSH_Finalize();
 
 #ifdef HAVE_MPI
   MPI_Finalize();
