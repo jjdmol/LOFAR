@@ -31,31 +31,30 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    /* Generate RSP packets */
-
+    // Generic factory for creating standard RSP packets.
     class PacketFactory
     {
     public:
-      PacketFactory( const struct BoardMode &mode );
+      PacketFactory( const BoardMode &mode );
+
       virtual ~PacketFactory();
 
-      /*
-       * Fill an RSP packet for a certain RSP board and time stamp.
-       */
-      virtual void makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
+      // Fill an RSP packet for a certain RSP board and time stamp.
+      // \return \c true if successful, \c false otherwise.
+      bool makePacket( RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
     protected:
-      const struct BoardMode mode;
+      const BoardMode boardMode;
 
-      /*
-       * Fill packet.header.
-       */
-      virtual void makeHeader( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr);
+      // Fill RSP packet header.
+      // \return \c true if successful, \c false otherwise.
+      virtual bool makeHeader( RSP &packet, const TimeStamp &timestamp, size_t boardNr);
 
-      /*
-       * Fill packet.payload. Called after makeHeader().
-       */
-      virtual void makePayload( struct RSP &packet );
+      // Fill RSP packet payload.
+      // \return \c true if successful, \c false otherwise.
+      // \attention This method creates dummy data. Please override it in a
+      // derived class if you want to have useful payload data.
+      virtual bool makePayload( RSP &packet );
     };
 
   }

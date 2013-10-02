@@ -97,7 +97,7 @@ namespace LOFAR
       } header;
 
       // Payload, allocated for maximum size.
-      union {
+      union Payload {
         char data[8130];
 
         // samples are structured as samples[nrBlocks][nrBeamlets],
@@ -108,11 +108,11 @@ namespace LOFAR
         //  low octet: real      (2's complement)
         // high octet: imaginary (2's complement)
 
-        struct { int16 Xr, Xi, Yr, Yi;
+        struct samples16bit_t { int16 Xr, Xi, Yr, Yi;
         } samples16bit[61 * 16];
-        struct { int8 Xr, Xi, Yr, Yi;
+        struct samples8bit_t { int8 Xr, Xi, Yr, Yi;
         } samples8bit[122 * 16];
-        struct { int8 X, Y;
+        struct samples4bit_t { int8 X, Y;
         } samples4bit[244 * 16];
       } payload;
 
