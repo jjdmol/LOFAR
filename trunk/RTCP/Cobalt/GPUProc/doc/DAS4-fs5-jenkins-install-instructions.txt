@@ -123,6 +123,21 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   findmeastable    # optional; verify that casacore can find the measures tables
 
 
+casarest (not needed for LOFAR Cobalt)
+--------
+
+Dependency for: LOFAR Calibration package, maybe others
+
+  cd $HOME/root/src
+  svn co https://svn.astron.nl/casarest/trunk/casarest
+  mkdir casarest/build
+  cd casarest/build
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DCASACORE_ROOT_DIR=$HOME/root -DLIB_EXTRA_SYNTHESIS=gfortran -DBUILD_ALL=1 ..  # if you need ALL...
+  # On DAS-4 casarest r8758, 'make' searches for a boost lib in /usr/lib64/lib64. Patch that away.
+  # grep -r -l lib64/lib64 * | xargs sed -i -e 's/lib64\/lib64/lib64\//g'
+  make -j 8 install
+
+
 pyrap (optional for LOFAR Cobalt)
 -----
 
