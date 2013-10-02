@@ -39,13 +39,10 @@
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
 
 namespace LOFAR {
 
@@ -159,6 +156,9 @@ namespace LOFAR {
       // Apply the beam for the given sky direction.
       void applyBeam (double time, const Position& dir);
 
+      // Convert a direction to ITRF.
+      StationResponse::vector3r_t dir2Itrf (const casa::MDirection&);
+
       // Calculate the StokesI amplitude from the predicted visibilities.
       // (0.5 * (XX+YY))
       void calcStokesI (casa::Matrix<float>& ampl);
@@ -226,7 +226,6 @@ namespace LOFAR {
       //# cube of shape #correlations x #channels x #baselines of matrices of
       //# shape #directions x #directions.
       vector<casa::Array<casa::DComplex> >  itsFactors;
-
       //# Accumulator used for computing the demixing weights. The shape of this
       //# buffer is #correlations x #channels x #baselines x #directions
       //# x #directions (fastest axis first).
@@ -235,6 +234,11 @@ namespace LOFAR {
       //# cube of shape #correlations x #channels x #baselines of matrices of
       //# shape #directions x #directions.
       vector<casa::Array<casa::DComplex> >  itsFactorsSubtr;
+
+      //# Variables for conversion of directions to ITRF.
+      casa::MeasFrame                       itsMeasFrame;
+      casa::MDirection::Convert             itsMeasConverter;
+      casa::Matrix<StationResponse::matrix22c_t> itsBeamValues; //# [nst,nch]
 
       //# Indices telling which Ateam sources to use.
       vector<uint>                          itsSrcSet;

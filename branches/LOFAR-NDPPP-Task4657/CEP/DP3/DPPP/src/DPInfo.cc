@@ -225,7 +225,7 @@ namespace LOFAR {
       if (itsAntUsed.size() < itsAntMap.size()) {
         // First remove stations.
         Vector<String> antNames (itsAntUsed.size());
-        Vector<Double> antDiam (itsAntUsed.size());;
+        Vector<Double> antDiam (itsAntUsed.size());
         vector<MPosition> antPos;
         antPos.reserve (itsAntUsed.size());
         for (uint i=0; i<itsAntUsed.size(); ++i) {
@@ -237,6 +237,15 @@ namespace LOFAR {
         itsAntNames.reference (antNames);
         itsAntDiam.reference (antDiam);
         itsAntPos.swap (antPos);
+        // Renumber beam info if present.
+        if (! itsAntBeamInfo.empty()) {
+          vector<StationResponse::Station::Ptr> antBeamInfo;
+          antBeamInfo.reserve (itsAntUsed.size());
+          for (uint i=0; i<itsAntUsed.size(); ++i) {
+            antBeamInfo.push_back (itsAntBeamInfo[itsAntUsed[i]]);
+          }
+          itsAntBeamInfo.swap (antBeamInfo);
+        }
         // Renumber the baselines.
         for (uint i=0; i<itsAnt1.size(); ++i) {
           itsAnt1[i] = itsAntMap[itsAnt1[i]];

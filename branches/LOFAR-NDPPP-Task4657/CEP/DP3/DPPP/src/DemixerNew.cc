@@ -63,14 +63,14 @@ namespace LOFAR {
     void DemixerNew::updateInfo (const DPInfo& infoIn)
     {
       info() = infoIn;
-      // Handle possible data selection.
-      itsFilter.updateInfo (infoIn);
-      // Update itsDemixInfo and info().
-      itsDemixInfo.update (itsFilter.getInfo(), info());
       // Update the info of this object.
       info().fillAntennaBeamInfo (itsInput);
       info().setNeedVisData();
       info().setNeedWrite();
+      // Handle possible data selection.
+      itsFilter.updateInfo (info());
+      // Update itsDemixInfo and info().
+      itsDemixInfo.update (itsFilter.getInfo(), info());
       // Size the buffers.
       itsBufIn.resize (itsDemixInfo.ntimeChunk() * itsDemixInfo.chunkSize());
       itsBufOut.resize(itsDemixInfo.ntimeChunk() * itsDemixInfo.ntimeOutSubtr());
@@ -248,12 +248,14 @@ namespace LOFAR {
     {
       // Calculate overall mean and m2 (for stddev) from two partitions.
       // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-      double delta = partmean - mean;
-      double mp    = mean*nr + partmean*partnr;
-      double nab   = double(nr) / (nr+partnr) * partnr;
-      nr  += partnr;
-      mean = mp / nr;
-      m2  += partm2 + delta*nab*delta;
+      if (partnr > 0) {
+        double delta = partmean - mean;
+        double mp    = mean*nr + partmean*partnr;
+        double nab   = double(nr) / (nr+partnr) * partnr;
+        nr  += partnr;
+        mean = mp / nr;
+        m2  += partm2 + delta*nab*delta;
+      }
     }
 
     void DemixerNew::showStat (ostream& os, double n, double ntot,
@@ -418,8 +420,7 @@ namespace LOFAR {
 
     void DemixerNew::writeSolutions (double startTime, int ntime)
     {
-      /// Note: make sure that all times have the same parms
-      /// Different workers might decide differently on solving a source!!!
+      /// todo: skip solutions that are all 0.
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
       const Vector<double>& freqWidth = getInfo().chanWidths();

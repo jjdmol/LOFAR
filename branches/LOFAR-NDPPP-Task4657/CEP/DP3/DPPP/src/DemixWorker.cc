@@ -216,6 +216,13 @@ namespace LOFAR {
       itsEstimate.update (ndir+1, itsMix->nbl(), itsMix->nstation(),
                           itsMix->nchanOut(), itsMix->maxIter(),
                           itsMix->propagateSolution());
+      // Create the Measure ITRF conversion info given the array position.
+      // The time and direction are filled in later.
+      itsMeasFrame.set (info.arrayPos(), MDirection());
+      itsMeasFrame.set (MEpoch());
+      itsMeasConverter.set (MDirection(),
+                            MDirection::Ref(MDirection::ITRF, itsMeasFrame));
+      itsBeamValues.resize (itsMix->nchanOut(), itsMix->nstation());
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
@@ -240,6 +247,17 @@ namespace LOFAR {
         itsTimerPhaseShift.start();
         average (bufin, nbufin, bufout);
         itsTimerPhaseShift.stop();
+        // Set all solutions to 0.
+        uint nout = (nbufin + itsMix->nchanAvg() - 1) / itsMix->nchanAvg();
+        for (size_t i=0; i<nout; ++i) {
+          solutions[i].resize ((itsMix->ateamList().size() + 1) *
+                               itsMix->nstation() * 8);
+          std::fill (solutions[i].begin(), solutions[i].end(), 0.);
+        }
+        // Set statistics to 0.
+        itsAmplSubtrMean = 0.;
+        itsAmplSubtrM2   = 0.;
+        itsAmplSubtrNr   = 0;
         itsTimer.stop();
         return;
       }
@@ -344,7 +362,7 @@ namespace LOFAR {
                                      uint ntime, double time, double timeStep)
     {
       // This is only needed for the short baselines, but it takes hardly
-      // any time to do it for all selecte dbaselines.
+      // any time to do it for all selected baselines.
       // So no effort is spent on further selection.
       itsTargetAmpl = 0;
       MatrixIterator<float> miter(itsTargetAmpl);
@@ -559,10 +577,60 @@ namespace LOFAR {
 
     void DemixWorker::applyBeam (double time, const Position& pos)
     {
-      // Convert the directions to ITRF.
-      ///      MDirection dir(MDirection::Convert (itsMix->getInfo().phaseCenter(),
-      ///                                    MDirection::ITRF)());
-  ///Vector<double> xyz (dir.getValue().getValue());
+      // Convert the directions to ITRF for the given time.
+      ///      StationResponse::vector3r_t srcdir,refdir,tiledir;
+      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time), MEpoch::UTC));
+      StationResponse::vector3r_t refdir =
+        dir2Itrf(itsMix->getInfo().delayCenter());
+      StationResponse::vector3r_t tiledir =
+        dir2Itrf(itsMix->getInfo().tileBeamDir());
+      MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
+      StationResponse::vector3r_t srcdir = dir2Itrf(dir);
+      // Get the beam values for each station.
+      for (size_t st=0; st<itsMix->nstation(); ++st) {
+        itsMix->getInfo().antennaBeamInfo()[st]->response
+          (itsMix->nchanOut(), time, itsMix->getInfo().chanFreqs().begin(),
+           srcdir, itsMix->getInfo().refFreq(), refdir, tiledir,
+           &(itsBeamValues(0, st)));
+      }
+      // Apply the beam values of both stations to the predicted data.
+      dcomplex tmp[4];
+      dcomplex* data = itsPredictVis.data();
+      for (size_t bl=0; bl<itsMix->nbl(); ++bl) {
+        const StationResponse::matrix22c_t* left =
+          &(itsBeamValues(0, itsMix->getAnt1()[bl]));
+        const StationResponse::matrix22c_t* right =
+          &(itsBeamValues(0, itsMix->getAnt2()[bl]));
+        for (size_t ch=0; ch<itsMix->nchanOut(); ++ch) {
+          // left*data
+          dcomplex l[] = {left[ch][0][0], left[ch][0][1],
+                          left[ch][1][0], left[ch][1][1]};
+          tmp[0] = l[0] * data[0] + l[1] * data[2];
+          tmp[1] = l[0] * data[1] + l[1] * data[3];
+          tmp[2] = l[2] * data[0] + l[3] * data[2];
+          tmp[3] = l[2] * data[1] + l[3] * data[3];
+          // data*conj(right)
+          // Form transposed conjugate of right.
+          dcomplex r[] = {conj(right[ch][0][0]), conj(right[ch][1][0]),
+                          conj(right[ch][0][1]), conj(right[ch][1][1])};
+          data[0] = tmp[0] * r[0] + tmp[1] * r[2];
+          data[1] = tmp[0] * r[1] + tmp[1] * r[3];
+          data[2] = tmp[2] * r[0] + tmp[3] * r[2];
+          data[3] = tmp[2] * r[1] + tmp[3] * r[3];
+          data += 4;
+        }
+      }
+    }
+
+    StationResponse::vector3r_t DemixWorker::dir2Itrf (const MDirection& dir)
+    {
+      const MDirection& ndir = itsMeasConverter(dir);
+      const Vector<Double>& itrf = ndir.getValue().getValue();
+      StationResponse::vector3r_t vec;
+      vec[0] = itrf[0];
+      vec[1] = itrf[1];
+      vec[2] = itrf[2];
+      return vec;
     }
 
     void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions)
