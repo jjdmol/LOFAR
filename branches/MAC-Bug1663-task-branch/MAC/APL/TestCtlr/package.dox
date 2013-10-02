@@ -1,7 +1,0 @@
-// \ingroup APL
-// \defgroup TestCtlr Testprograms for testing MAC controllers.
-//
-// The TestCtlr package contains testprograms for testing MAC controllers.
-// A Controllermenu is provided that acts as a 'parent' controller for the
-// controller under test.
-
