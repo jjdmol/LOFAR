@@ -806,6 +806,7 @@ void MeasurementExprLOFAR::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
+// i is baseline index, index in baselineseq
 const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
 {
     JonesMatrix result;
