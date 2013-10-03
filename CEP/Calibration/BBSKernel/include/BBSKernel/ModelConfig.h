@@ -39,10 +39,37 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
+// Configuration options specific to the clock.
+class ClockConfig
+{
+public:
+    ClockConfig();
+    ClockConfig(bool splitClock);
+
+    bool splitClock() const;
+
+private:
+    bool itsSplitClock;
+};
+
+// Configuration options specific to the elevation cut-off.
+class ElevationCutConfig
+{
+public:
+    ElevationCutConfig();
+    ElevationCutConfig(double threshold);
+
+    double threshold() const;
+
+private:
+    double itsThreshold;
+};
+
 // Configuration options specific to the beam model.
 class BeamConfig
 {
 public:
+    int notdef;
     enum Mode
     {
         DEFAULT,
@@ -72,6 +99,7 @@ private:
 class IonosphereConfig
 {
 public:
+    int notdef;
     enum ModelType
     {
         MIM,
@@ -92,19 +120,6 @@ public:
 private:
     ModelType       itsModelType;
     unsigned int    itsDegree;
-};
-
-// Configuration options specific to the elevation cut-off.
-class ElevationCutConfig
-{
-public:
-    ElevationCutConfig();
-    ElevationCutConfig(double threshold);
-
-    double threshold() const;
-
-private:
-    double itsThreshold;
 };
 
 // Configuration options specific to the condition number flagger.
@@ -133,7 +148,9 @@ public:
     void setBandpass(bool value = true);
 
     bool useClock() const;
-    void setClock(bool value = true);
+    void setClockConfig(const ClockConfig &config);
+    const ClockConfig &getClockConfig() const;
+    void clearClockConfig();
 
     bool useGain() const;
     void setGain(bool value = true);
@@ -213,6 +230,7 @@ private:
 
     bool                itsModelOptions[N_ModelOptions];
 
+    ClockConfig         itsConfigClock;
     ElevationCutConfig  itsConfigElevationCut;
     BeamConfig          itsConfigBeam;
     IonosphereConfig    itsConfigIonosphere;
@@ -221,10 +239,11 @@ private:
     vector<string>      itsSources;
 };
 
-ostream &operator<<(ostream &out, const FlaggerConfig &obj);
-ostream &operator<<(ostream &out, const IonosphereConfig &obj);
-ostream &operator<<(ostream &out, const BeamConfig &obj);
+ostream &operator<<(ostream &out, const ClockConfig &obj);
 ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
+ostream &operator<<(ostream &out, const BeamConfig &obj);
+ostream &operator<<(ostream &out, const IonosphereConfig &obj);
+ostream &operator<<(ostream &out, const FlaggerConfig &obj);
 ostream &operator<<(ostream &out, const ModelConfig &obj);
 
 // @}
