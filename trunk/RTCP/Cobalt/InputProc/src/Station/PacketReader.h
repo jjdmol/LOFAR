@@ -67,6 +67,8 @@ namespace LOFAR
       size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
 
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
+
+      double lastLogTime; // time since last log print, to monitor data rates
     };
 
 
