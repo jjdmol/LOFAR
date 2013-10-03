@@ -138,6 +138,19 @@ Dependency for: LOFAR Calibration package, maybe others
   make -j 8 install
 
 
+pyrap (optional for LOFAR Cobalt)
+-----
+
+Dependency for: various LOFAR/CEP packages
+Depends on: python boost-python casacore numpy scons
+
+  cd $HOME/root/src
+  svn co http://pyrap.googlecode.com/svn/trunk pyrap
+  cd pyrap
+  ./batchbuild-trunk.py --casacore-root=$HOME/root --enable-hdf5 --cfitsio-root=$HOME/root --wcs-root=$HOME/root --prefix=$HOME/root --python-prefix=$HOME/root/lib64/python2.6/site-packages
+  python -c 'import pyrap'  # optional (test), should print nothing and exit 0
+
+
 libpqxx (easier to install using your OS' package manager, not needed for LOFAR Cobalt)
 -------
 
@@ -152,17 +165,17 @@ Depends on: libpq (we refer to the pg_config script installed by pbspro, but it 
   make -j 8 install
 
 
-pyrap (optional for LOFAR Cobalt)
------
+blitz++ (easier to install using your OS' package manager, not needed for LOFAR Cobalt)
+-------
 
-Dependency for: various LOFAR/CEP packages
-Depends on: python boost-python casacore numpy scons
+Dependency for: some LOFAR MAC packages
 
   cd $HOME/root/src
-  svn co http://pyrap.googlecode.com/svn/trunk pyrap
-  cd pyrap
-  ./batchbuild-trunk.py --casacore-root=$HOME/root --enable-hdf5 --cfitsio-root=$HOME/root --wcs-root=$HOME/root --prefix=$HOME/root --python-prefix=$HOME/root/lib64/python2.6/site-packages
-  python -c 'import pyrap'  # optional (test), should print nothing and exit 0
+  wget http://sourceforge.net/projects/blitz/files/blitz/Blitz%2B%2B%200.10/blitz-0.10.tar.gz  # or whatever recent version you like
+  tar zxf blitz-0.10.tar.gz
+  cd blitz-0.10
+  ./configure --prefix=$HOME/root --enable-shared --enable-optimize
+  make -j 8 install
 
 
 valgrind (easier to install using your OS' package manager; optional for LOFAR Cobalt)
