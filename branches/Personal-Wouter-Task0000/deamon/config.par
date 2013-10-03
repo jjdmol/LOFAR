@@ -1,3 +1,0 @@
-headnode_port=9090
-nodes=['lce068', 'lce069', 'lce070', 'lce071']
-nodes_port=9090
