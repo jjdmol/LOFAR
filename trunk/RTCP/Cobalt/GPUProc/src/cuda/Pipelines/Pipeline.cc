@@ -151,7 +151,7 @@ namespace LOFAR
 
             data->metaData[stat] = metaData;
 
-            nrFlaggedSamples[ps.nrStations()] += metaData.flags.count();
+            nrFlaggedSamples[stat] += metaData.flags.count();
           }
 
           queue.inputPool.filled.append(data);
@@ -167,7 +167,7 @@ namespace LOFAR
           if (flagPerc == 0.0)
             cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
           else
-            flagStr << str(boost::format("%s: %.5f%%, ") % ps.settings.stations[stat].name % flagPerc);
+            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
         }
 
         LOG_INFO_STR("[block " << block << "] No flagging: " << cleanStr.str());
