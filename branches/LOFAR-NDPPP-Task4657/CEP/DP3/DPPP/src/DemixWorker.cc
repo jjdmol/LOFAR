@@ -243,10 +243,7 @@ namespace LOFAR {
       predictAteam (itsMix->ateamList(), ntime, time, timeStep);
       // If no sources to demix, simply average the input buffers.
       if (itsSrcSet.empty()) {
-        itsTimerCoarse.stop();
-        itsTimerPhaseShift.start();
-        average (bufin, nbufin, bufout);
-        itsTimerPhaseShift.stop();
+        itsNrNoDemix++;
         // Set all solutions to 0.
         uint nout = (nbufin + itsMix->nchanAvg() - 1) / itsMix->nchanAvg();
         for (size_t i=0; i<nout; ++i) {
@@ -258,6 +255,10 @@ namespace LOFAR {
         itsAmplSubtrMean = 0.;
         itsAmplSubtrM2   = 0.;
         itsAmplSubtrNr   = 0;
+        itsTimerCoarse.stop();
+        itsTimerPhaseShift.start();
+        average (bufin, nbufin, bufout);
+        itsTimerPhaseShift.stop();
         itsTimer.stop();
         return;
       }
