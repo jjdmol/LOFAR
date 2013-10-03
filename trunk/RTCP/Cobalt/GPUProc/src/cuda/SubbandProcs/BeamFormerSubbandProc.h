@@ -73,7 +73,7 @@ namespace LOFAR
     class BeamFormerSubbandProc : public SubbandProc
     {
     public:
-      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context, BeamFormerFactories &factories);
+      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context, BeamFormerFactories &factories, size_t nrSubbandsPerSubbandProc = 1);
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
