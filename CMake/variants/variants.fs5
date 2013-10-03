@@ -16,6 +16,8 @@ set(CASACORE_ROOT_DIR       /home/jenkins/root)
 set(CASAREST_ROOT_DIR       /home/jenkins/root)
 set(PYRAP_ROOT_DIR          /home/jenkins/root)
 set(LIBSSH2_ROOT_DIR        /home/jenkins/root)
+set(VALGRIND_ROOT_DIR       /home/jenkins/root)  # also in /usr, but not the includes (needed for what?)
+set(PQXX_ROOT_DIR           /home/jenkins/root)
 set(DAL_ROOT_DIR            /home/jenkins/root)
 set(UNITTEST++_ROOT_DIR     /cm/shared/apps/UnitTest++)
 
