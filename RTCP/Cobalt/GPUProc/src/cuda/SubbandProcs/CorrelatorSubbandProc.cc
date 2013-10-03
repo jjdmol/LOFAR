@@ -53,9 +53,9 @@ namespace LOFAR
      * and provide the input in devFilteredData.
      */
     CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset &parset,
-      gpu::Context &context, CorrelatorFactories &factories)
+      gpu::Context &context, CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc)
     :
-      SubbandProc( parset, context ),       
+      SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
       counters(context),
       prevBlock(-1),
       prevSAP(-1),
@@ -96,7 +96,7 @@ namespace LOFAR
       devFilterHistoryData.set(0);
 
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < std::max(3UL, ps.nrSubbands()); ++i) {
+      for (size_t i = 0; i < std::max(3UL, 2 * nrSubbandsPerSubbandProc); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),

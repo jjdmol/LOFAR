@@ -169,7 +169,7 @@ namespace LOFAR
      */
     class SubbandProc {
     public:
-      SubbandProc(const Parset &ps, gpu::Context &context);
+      SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc = 1);
       virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected

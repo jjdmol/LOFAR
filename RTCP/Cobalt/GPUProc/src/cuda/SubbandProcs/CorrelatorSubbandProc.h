@@ -91,7 +91,7 @@ namespace LOFAR
     {
     public:
       CorrelatorSubbandProc(const Parset &parset, gpu::Context &context,
-                          CorrelatorFactories &factories);
+                          CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc = 1);
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
