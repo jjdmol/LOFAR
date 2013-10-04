@@ -100,7 +100,7 @@ namespace LOFAR
       union {
         char data[8130];
 
-        // samples are structured as samples[nrBlocks][nrBeamlets],
+        // samples are structured as samples[nrBeamlets][nrBlocks],
         // so first all blocks of the first beamlet, then all blocks of the second
         // beamlet, etc.
         //
