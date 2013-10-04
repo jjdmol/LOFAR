@@ -366,7 +366,7 @@ namespace LOFAR {
                       / itsDemixInfo.ntimeAvgSubtr());
       int ntimeSol = ((itsNTime + itsDemixInfo.ntimeAvg() - 1)
                       / itsDemixInfo.ntimeAvg());
-      ///#pragma omp parallel for schedule dynamic
+      #pragma omp parallel for schedule dynamic
       for (int i=0; i<=lastChunk; ++i) {
         if (i == lastChunk) {
           if (itsDemixInfo.verbose() > 10) {

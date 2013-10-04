@@ -300,8 +300,8 @@ namespace LOFAR {
       os << "  target.delta:       "
          << acos(itsCosTargetDelta) * 3600. / casa::C::pi * 180.
          << " arcsec" << endl;
-      os << "  distance.threshold: " << itsAngdistThreshold << "arcsec" << endl;
-      os << "  distance.reffreq:   " << itsAngdistRefFreq << endl;
+      os << "  distance.threshold: " << itsAngdistThreshold << " arcsec" << endl;
+      os << "  distance.reffreq:   " << itsAngdistRefFreq << " Hz" << endl;
       os << "  minnstation:        " << itsMinNStation << endl;
       os << "  propagatesolutions: " << itsPropagateSolution << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;

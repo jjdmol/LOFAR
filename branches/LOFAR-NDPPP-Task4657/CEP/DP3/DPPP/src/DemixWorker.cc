@@ -284,6 +284,13 @@ namespace LOFAR {
         }
         // Do the average and filter step for the output for all data.
         itsAvgStepSubtr->process (bufin[i]);
+        // Finish averaging when last buffer.
+        if (i == nbufin-1) {
+          for (size_t j=0; j<itsFirstSteps.size(); ++j) {
+            itsFirstSteps[j]->finish();
+          }
+        }
+        itsAvgStepSubtr->finish();
         itsTimerPhaseShift.stop();
 
         // For each NTimeAvg times, calculate the phase rotation per direction
@@ -514,7 +521,7 @@ namespace LOFAR {
         itsPhaseShifts[i] = itsOrigPhaseShifts[itsSrcSet[i]];
         itsFirstSteps[i]  = itsOrigFirstSteps[itsSrcSet[i]];
         itsDemixList[i]   = itsMix->ateamList()[itsSrcSet[i]];
-        float sumAmpl = sum(itsTargetAmpl[itsSrcSet[i]]);
+        float sumAmpl = sum(itsTargetAmpl[i]);
         if (sumAmpl < minSumAmpl) {
           minSumAmpl = sumAmpl;
         }
@@ -526,6 +533,7 @@ namespace LOFAR {
       itsIncludeTarget = false;
       itsIgnoreTarget = false;
       itsNModel = nsrc;
+      itsNSubtr = nsrc;
       itsNDir   = nsrc+1;
       // For special purpose (testing) it is possible to set target handling,
       // but normally it is dependent on the data.
@@ -573,7 +581,7 @@ namespace LOFAR {
       // Solve for all stations.
       // Also add the target step.
       if (itsIncludeTarget) {
-        itsSrcSet.push_back (itsNModel);
+        itsSrcSet.push_back (itsMix->ateamList().size());
         //std::fill (itsUnknownsIndex[ndir].begin(),
         //           itsUnknownsIndex[ndir].end(), -1);
         for (uint j=0; j<itsUnknownsIndex[itsNModel].size(); ++j) {
@@ -928,9 +936,10 @@ namespace LOFAR {
         // Compute the model visibilities for each A-team source.
         size_t stride_model[3] = {1, nCr, nCr*nCh};
         for (size_t dr=0; dr<itsNModel; ++dr) {
+          uint drOrig = itsSrcSet[dr];
           // Split the baseline UVW coordinates per station.
           nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
-                     itsAvgResults[dr]->get()[ts].getUVW(), itsUVW);
+                     itsAvgResults[drOrig]->get()[ts].getUVW(), itsUVW);
           if (itsMix->verbose() > 12) {
             cout <<"uvw"<<dr<<'='<<itsUVW;
           }
@@ -965,8 +974,9 @@ namespace LOFAR {
         vector<const_cursor<fcomplex> > cr_data(itsNModel);
         vector<const_cursor<dcomplex> > cr_model(itsNModel);
         for (size_t dr=0; dr<itsNModel; ++dr) {
+          uint drOrig = itsSrcSet[dr];
           cr_data[dr] =
-            casa_const_cursor(itsAvgResults[dr]->get()[ts].getData());
+            casa_const_cursor(itsAvgResults[drOrig]->get()[ts].getData());
           cr_model[dr] =
             const_cursor<dcomplex>(&(itsModelVis[dr * nSamples]), 3,
                                    stride_model);
@@ -1012,7 +1022,7 @@ namespace LOFAR {
             }
             itsObservedAmpl[bl] = ampl;
           }
-          for (size_t dr=0; dr<itsNModel; ++dr) {
+          for (size_t dr=0; dr<itsNSubtr; ++dr) {
             uint drOrig = itsSrcSet[dr];
             // Re-use simulation used for estimating Jones matrices if possible.
             cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
@@ -1029,7 +1039,7 @@ namespace LOFAR {
               // the Jones matrices were estimated, of course).
               cursor<double> cr_uvw_split = casa_cursor(itsUVW);
               rotateUVW (itsMix->phaseRef(),
-                         itsMix->targetList()[drOrig]->position(), nSt,
+                         itsMix->ateamList()[drOrig]->position(), nSt,
                          cr_uvw_split);
               // Initialize the visibility buffer.
               std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
@@ -1045,7 +1055,7 @@ namespace LOFAR {
 
             // Apply Jones matrices.
             size_t stride_unknowns[2] = {1, 8};
-            const_cursor<double> cr_unknowns(&(solutions[ts][dr * nSt * 8]),
+            const_cursor<double> cr_unknowns(&(solutions[ts][drOrig * nSt * 8]),
                                              2, stride_unknowns);
             apply (nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
 
@@ -1085,7 +1095,6 @@ namespace LOFAR {
                       cr_mix_subtr, itsSourceAmpl);
             // Calculate the mean percentage amplitude subtracted per source.
             // This array is ordered [nbl,nsrc]
-            /// Note: dr should be mapped to actual source index.
             for (size_t bl=0; bl<nBl; ++bl) {
               if (itsObservedAmpl[bl] != 0) {
                 // Calculate mean and stddev in a running way using a
@@ -1098,7 +1107,7 @@ namespace LOFAR {
                 itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
               }
             } // end nBl
-          } // end itsNModel
+          } // end itsNSubtr
         } // end ts_subtr
         itsTimerSubtract.stop();
       }  // end nTime

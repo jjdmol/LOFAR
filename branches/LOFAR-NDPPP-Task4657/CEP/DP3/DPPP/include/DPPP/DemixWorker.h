@@ -219,6 +219,7 @@ namespace LOFAR {
       //# Variables set by setupDemix and used by handleDemix.
       uint                                  itsNDir;
       uint                                  itsNModel;
+      uint                                  itsNSubtr;
       bool                                  itsIgnoreTarget;
       bool                                  itsIncludeTarget;
       //# Accumulator used for computing the demixing weights at the demix
