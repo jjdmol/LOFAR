@@ -2,17 +2,16 @@
 #
 # Script to start, stop, restart and ask status of the OTB server and client
 #
-# Run as user lofarsys on any host that runs the OTB (sas001/sas099)
+# Run as user lofarsys or user tomcat on any host that runs the OTB (sas001/sas099)
 #
 
-
-adapter_logdir=/opt/tomcat/mom-otdb-adapter-logs/
 adapter_logdir=/opt/tomcat/mom-otdb-adapter/logs
 otdb_conf_file=/opt/tomcat/mom-otdb-adapter/conf/config-otdb.xml
 
 syntaxerror()
 {
     echo "Usage: OTB [start|stop|status|serverstart|serverstop|serverstatus] [port]"
+    echo "       Run OTB as user lofarsys or user tomcat (depending on your needs)"
 }
 
 status()
@@ -90,10 +89,17 @@ if [ ${#client_users[@]} == 0 ]; then
   echo "No OTB clients running that use port $port"
   exit
 else
+  count=0
   for client_pid in ${client_pids[@]}
   do
-    echo "Found OTB with PID $client_pid; killing it now"
-    sudo kill $client_pid
+    echo -n "Found OTB started by user ${client_users[${count}]} with PID $client_pid;"
+    if [ "${USER}" == "lofarsys" ]; then  
+      echo " killing it now"
+      sudo kill $client_pid
+    else
+      echo " not allowed to kill the process"
+    fi
+    let count+=1
   done
 fi
 }
@@ -184,10 +190,14 @@ else
   user=`echo $user_port | awk '{print $1}'`
   pid=`echo $user_port | awk '{print $2}'`
   echo "Found server running by user $user with PID $pid; killing it now"
-  if [ "$user" == "lofarsys" ]; then
+  if [ "$user" == "lofarsys" -a ${USER} == "lofarsys" ]; then
      kill $pid
-  else
+  elif [ "$user" == "tomcat" -a ${USER} == "tomcat" ]; then
+     kill $pid
+  elif [ "$user" == "lofarsys" ]; then 
     sudo -u $user kill $pid
+  else
+    echo "Cannot stop running server (no permissions)"
   fi
 fi
 
@@ -196,8 +206,8 @@ fi
 
 # ========== MAIN ===========
 
-if [ "$USER" != "lofarsys" ]; then 
-  echo "You must be lofarsys to run this"
+if [ "${USER}" != "lofarsys" -a "${USER}" != "tomcat" ]; then
+  echo You must be user lofarsys or user tomcat to run this
   exit
 fi 
 

@@ -32,12 +32,10 @@ SyntaxError()
 
 function find_branch_name {
   line=$1
-  branch=`echo $line | awk -F/ '{print $2}'`
-  if [ "$branch" != "trunk" ]; then
+  head=`echo $line | awk -F/ '{print $2}'`
+  if [ "$head" != "trunk" ]; then
     branch=`echo $line | awk -F/ '{print $3}' | awk '{print $1}'`
-    
   fi
-#  echo $branch
 }
 
 function find_branch {
@@ -134,8 +132,10 @@ if [ $showlist -eq 1 ]; then
 fi  
 
 find_branch $old_version
+old_head=${head}
 old_branch=${branch}
 find_branch $new_version
+new_head=${head}
 new_branch=${branch}
 
 echo "Comparing rev. $new_version of branch $new_branch with rev. $old_version of branch $old_branch"
@@ -145,7 +145,7 @@ cd /tmp/comp_$new_version
 if [ "$new_branch" == "trunk" ]; then 
   co_newdir="trunk/MAC/Deployment/data"
 else
-  co_newdir="branches/${new_branch}/MAC/Deployment/data"
+  co_newdir="${new_head}/${new_branch}/MAC/Deployment/data"
 fi
 svn co -r ${new_version} https://svn.astron.nl/LOFAR/${co_newdir} data >& /dev/null
 cd data/OTDB 
@@ -160,7 +160,7 @@ cd /tmp/comp_$old_version
 if [ "$old_branch" == "trunk" ]; then 
    co_olddir="trunk/MAC/Deployment/data"
 else
-  co_olddir="branches/${old_branch}/MAC/Deployment/data"
+  co_olddir="${old_head}/${old_branch}/MAC/Deployment/data"
 fi
 svn co -r ${old_version} https://svn.astron.nl/LOFAR/${co_olddir} data >& /dev/null
 cd data/OTDB
@@ -200,14 +200,14 @@ do
   grep -v -e 'Id:\|create_OTDB_comps' /tmp/comp_$new_version/data/OTDB/${line} > /tmp/comp_$new_version/data/OTDB/tmp
   they_diff=`diff -b -B -q /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp 2>&1 1>/dev/null ; echo $?`
   if [ $they_diff -eq 1 ]; then 
-    echo "Differences in file ${line} between rev. $new_version ($new_branch) and rev. $old_version ($old_branch):" > tmp
-    echo "" >> tmp
-    diff -bB -u -U 100 /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp >> tmp
-    echo "====================" >> tmp
-    cat tmp | grep -v "\-\-\-" | grep -v "+++" | grep -v "\@\@"
+    echo "Differences in file ${line} between rev. $new_version ($new_branch) and rev. $old_version ($old_branch):" > tmp_$$
+    echo "" >> tmp_$$
+    diff -bB -u -U 100 /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp >> tmp_$$
+    echo "====================" >> tmp_$$
+    cat tmp_$$ | grep -v "\-\-\-" | grep -v "+++" | grep -v "\@\@"
     rm -f /tmp/comp_$old_version/data/OTDB/tmp
     rm -f /tmp/comp_$new_version/data/OTDB/tmp
-    rm -f tmp
+    rm -f tmp_$$
 
   fi
 done < ${curdir}/all_present.lst
