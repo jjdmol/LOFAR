@@ -51,16 +51,18 @@ struct options_t {
   unsigned bitmode;
   unsigned clockmode;
   unsigned subbands;
+
+  string outputStreamDesc;
 };
 
-options_t default_options = { 0, INT_MAX, 16, 200, 61 };
+options_t default_options = { 0, INT_MAX, 16, 200, 61, "file:/dev/stdout" };
 
 void usage()
 {
   char from_string[256], to_string[256];
   const char* format = "%Y-%m-%d %H:%M:%S";
-  strftime(from_string, 255, format, gmtime(&default_options.from));
-  strftime(to_string, 255, format, gmtime(&default_options.to));
+  strftime(from_string, sizeof from_string, format, gmtime(&default_options.from));
+  strftime(to_string, sizeof to_string, format, gmtime(&default_options.to));
   cerr << "\nUsage: generateRSP [options] < input.asc > output.rsp\n\n"
        << "-b bitmode    Bitmode `bitmode' (16, 8, or 4)"
        << " (default: " << default_options.bitmode << ")\n"
@@ -73,6 +75,8 @@ void usage()
        << " (default: " << default_options.subbands << ")\n"
        << "-t to         End time `to' (format: '2012-01-01 11:12:00')"
        << " (default: '" << to_string << "')\n"
+       << "-o streamdesc Stream descriptor for output"
+       << " (default: '" << default_options.outputStreamDesc << "')\n"
        << endl;
 }
 
@@ -96,10 +100,11 @@ int main(int argc, char **argv)
   unsigned bitmode = default_options.bitmode;
   unsigned clockmode = default_options.clockmode;
   unsigned subbands = default_options.subbands;
+  string outputStreamDesc = default_options.outputStreamDesc;
 
   try {
     // parse all command-line options
-    while((opt = getopt(argc, argv, "b:c:f:hs:t:")) != -1) {
+    while((opt = getopt(argc, argv, "b:c:f:hs:t:o:")) != -1) {
       switch(opt) {
       default:
         usage();
@@ -115,11 +120,15 @@ int main(int argc, char **argv)
         break;
       case 'h':
         usage();
+        return 0;
       case 's':
         subbands = atoi(optarg);
         break;
       case 't':
         to = parseTime(optarg);
+        break;
+      case 'o':
+        outputStreamDesc = optarg;
         break;
       }
     }
@@ -138,6 +147,7 @@ int main(int argc, char **argv)
     }
 
     ifstream inStream("/dev/stdin");
+    SmartPtr<Stream> outStream = createStream(outputStreamDesc, false);
 
     BoardMode boardMode(bitmode, clockmode);
     unsigned boardNr(0);
@@ -150,7 +160,7 @@ int main(int argc, char **argv)
 
     while(current < end && packetFactory.makePacket(packet, current, boardNr)) {
       // Write packet
-      fwrite(&packet, packet.packetSize(), 1, stdout);
+      outStream->write(&packet, packet.packetSize());
       // Increment time stamp
       current += packet.header.nrBlocks;
     }
