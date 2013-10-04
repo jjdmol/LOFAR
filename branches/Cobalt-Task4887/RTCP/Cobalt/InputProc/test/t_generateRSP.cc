@@ -21,12 +21,12 @@
 
 #include <lofar_config.h>
 
+#include <cmath>      // for min(), max()
 #include <cstdlib>    // for rand(), srand(), system()
 #include <fstream>
 #include <iostream>
 
 #include <boost/format.hpp>
-#include <UnitTest++.h>
 
 #include <Common/LofarLogger.h>
 #include <Stream/FileStream.h>
@@ -46,15 +46,13 @@ void generate_input(ostream& os, unsigned bitMode,
 {
   srand(0);
   const unsigned mask = (1 << bitMode) - 1;
-  // const unsigned offset = mask >> 1;
-  const unsigned offset = 1 << (bitMode - 1);
-  cout << "bitMode = " << bitMode << ", mask = " << mask << ", offset = " << offset << endl;
+  const unsigned offset = mask >> 1;
   for(unsigned packet = 0; packet < nrPackets; packet++) {
     for(unsigned subband = 0; subband < nrSubbands; subband++) {
       for(unsigned block = 0; block < NR_BLOCKS; block++) {
         for(unsigned pol = 0; pol < NR_POLS; pol++) {
           for(unsigned ri = 0; ri < COMPLEX; ri++) {
-            int sample = (rand() & mask) - offset;
+            int sample = min((rand() & mask) - offset, offset);
             os << sample << " ";
           }
         }
@@ -95,9 +93,8 @@ int main()
   INIT_LOGGER("t_generateRSP");
 
   unsigned bitMode[] = {16, 8, 4};
-  unsigned nrPackets[] = {1};//, 2, 3, 5};
-  // unsigned nrSubbands[8] = {1, 37, 61, 103, 122, 156, 244, 250};
-  unsigned nrSubbands[] = {1};//, 37, 61};
+  unsigned nrPackets[] = {1, 2, 3, 5};
+  unsigned nrSubbands[] = {1, 37, 61, 103, 122, 156, 244, 250};
   string ascFile, rspFile, outFile, command;
 
   for(unsigned b = 0; b < sizeof(bitMode) / sizeof(unsigned); b++) {
@@ -107,6 +104,9 @@ int main()
         cout << "bitmode: " << bitMode[b] << ", "
              << "nrPackets: " << nrPackets[p] << ", "
              << "nrSubbands: " << nrSubbands[s] << endl;
+
+        // Skip if number of subbands exceeds capacity of one RSP board
+        if(nrSubbands[s] > 122 * 8 / bitMode[b]) break;
 
         ascFile = str(format("t_generateRSP_tmp_b%d_p%d_s%d.asc") %
                       bitMode[b] % nrPackets[p] % nrSubbands[s]);

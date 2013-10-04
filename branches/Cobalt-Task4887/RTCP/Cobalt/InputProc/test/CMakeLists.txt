@@ -10,14 +10,13 @@ if(UNITTEST++_FOUND)
 
   lofar_add_test(tDelays tDelays.cc)
   lofar_add_test(tRSPTimeStamp tRSPTimeStamp.cc)
-
-  lofar_add_test(t_generateRSP t_generateRSP.cc)
 endif(UNITTEST++_FOUND)
 
 lofar_add_test(tRSP tRSP.cc)
 lofar_add_test(tPacketReader tPacketReader.cc)
 lofar_add_test(tPacketFactory tPacketFactory.cc)
 lofar_add_test(tGenerator tGenerator.cc)
+lofar_add_test(t_generateRSP t_generateRSP.cc)
 
 lofar_add_test(tPacketWriter tPacketWriter.cc)
 lofar_add_test(tPacketsToBuffer tPacketsToBuffer.cc)
