@@ -36,9 +36,9 @@ namespace LOFAR
   {
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(const Parset &parset,
-      gpu::Context &context, BeamFormerFactories &factories)
+      gpu::Context &context, BeamFormerFactories &factories, size_t nrSubbandsPerSubbandProc)
     :
-      SubbandProc( parset, context ),
+      SubbandProc(parset, context, nrSubbandsPerSubbandProc),
       counters(context),
       prevBlock(-1),
       prevSAP(-1),
@@ -112,7 +112,7 @@ namespace LOFAR
       devFilterHistoryData.set(0);
 
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) {
+      for (size_t i = 0; i < std::max(3UL, 2 * nrSubbandsPerSubbandProc); ++i) {
         outputPool.free.append(new BeamFormedData(
                 ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes,
                 ps.settings.beamFormer.coherentSettings.nrChannels,
@@ -205,31 +205,31 @@ namespace LOFAR
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
-      intToFloatKernel->enqueue(counters.intToFloat);
+      intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
-      firstFFT.enqueue(counters.firstFFT);
-      delayCompensationKernel->enqueue(counters.delayBp,
+      firstFFT.enqueue(input.blockID, counters.firstFFT);
+      delayCompensationKernel->enqueue(input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      secondFFT.enqueue(counters.secondFFT);
-      correctBandPassKernel->enqueue(counters.correctBandpass,
+      secondFFT.enqueue(input.blockID, counters.secondFFT);
+      correctBandPassKernel->enqueue(input.blockID, counters.correctBandpass,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      beamFormerKernel->enqueue(counters.beamformer,
+      beamFormerKernel->enqueue(input.blockID, counters.beamformer,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
-      transposeKernel->enqueue(counters.transpose);
+      transposeKernel->enqueue(input.blockID, counters.transpose);
 
-      inverseFFT.enqueue(counters.inverseFFT);
+      inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
       if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue(counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
-        finalFFT.enqueue(counters.finalFFT);
+        firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
+        finalFFT.enqueue(input.blockID, counters.finalFFT);
       }
 
-      coherentStokesKernel->enqueue(counters.coherentStokes);
+      coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
 
       // TODO: Propagate flags
 

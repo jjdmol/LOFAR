@@ -73,7 +73,7 @@ namespace LOFAR
       cufftDestroy(plan);
     }
 
-    void FFT_Plan::setStream(gpu::Stream &stream)
+    void FFT_Plan::setStream(const gpu::Stream &stream) const
     {
       cufftResult error;
 

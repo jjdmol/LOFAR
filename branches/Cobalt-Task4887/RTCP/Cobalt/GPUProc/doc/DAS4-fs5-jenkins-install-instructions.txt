@@ -15,6 +15,8 @@ Environment
   module load cuda55/toolkit
   module load cuda55/fft
   module load hwloc
+  (If the jenkins system is in control (JENKINS_SERVER_COOKIE has a value),
+   we set modules and PATH-like env vars in the jenkins build/test scripts.) 
 * We assume PATH contains $HOME/root/bin
   and LD_LIBRARY_PATH contains $HOME/root/lib
   and PYTHONPATH contains $HOME/root/lib64/python2.6/site-packages
@@ -32,22 +34,35 @@ $HOME/root/share/aips++/data/	CASA measures table location
 $HOME/jenkins/			location of the jenkins continuous build and integration system
 
 
-Data Access Library (DAL)
--------------------------
+log4cplus (easier to install using your OS' package manager)
+---------
 
-Dependency for: LOFAR/RTCP/Cobalt/OutputProc
+Dependency for: LOFAR
 
   cd $HOME/root/src
-  git clone https://github.com/nextgen-astrodata/DAL.git DAL
-  mkdir DAL/build
-  cd DAL/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root ..
+  wget http://downloads.sourceforge.net/project/log4cplus/log4cplus-stable/1.1.1/log4cplus-1.1.1.tar.gz   # or whatever recent version you like
+  tar zxf log4cplus-1.1.1.tar.gz
+  cd log4cplus-1.1.1
+  ./configure --prefix=$HOME/root
   make -j 8 install
-  ctest    # optional
-  python -c 'import dal'  # optional (test), should print nothing and exit 0
+  make check  # optional
 
 
-cfitsio
+libssh2 (easier to install using your OS' package manager)
+-------
+
+Dependency for: LOFAR
+
+  cd $HOME/root/src
+  wget http://www.libssh2.org/download/libssh2-1.4.3.tar.gz   # or whatever recent version you like
+  tar zxf libssh2-1.4.3.tar.gz
+  cd libssh2-1.4.3
+  ./configure --prefix=$HOME/root
+  make -j 8 install
+  make check  # optional
+
+
+cfitsio (easier to install using your OS' package manager)
 -------
 
 Dependency for: casacore, wcslib
@@ -61,7 +76,7 @@ Dependency for: casacore, wcslib
   make install
 
 
-wcslib
+wcslib (easier to install using your OS' package manager)
 ------
 
 Dependency for: casacore
@@ -86,7 +101,7 @@ Dependency for: casacore (keep the measure tables up to date, automatically!)
   md5sum measures_data.tar.bz2    # verify that md5 hash is equal to hash in measures_data.tar.bz2.md5sum (if you automate it, note that the .md5sum file contains a CSIRO full path name)
   tar jxf measures_data.tar.bz2
 
-  # Now, add it to cron or jenkins (and update using symlink repointing, harden against network failures, partial downloads, etc, if there is a chance that you or others use it at any time)
+  # Now, add updating it to a cron or jenkins job
 
 
 casacore
@@ -108,6 +123,21 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   findmeastable    # optional; verify that casacore can find the measures tables
 
 
+casarest (not needed for LOFAR Cobalt)
+--------
+
+Dependency for: LOFAR Calibration package, maybe others
+
+  cd $HOME/root/src
+  svn co https://svn.astron.nl/casarest/trunk/casarest
+  mkdir casarest/build
+  cd casarest/build
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DCASACORE_ROOT_DIR=$HOME/root -DLIB_EXTRA_SYNTHESIS=gfortran -DBUILD_ALL=1 ..  # if you need ALL...
+  # On DAS-4 casarest r8758, 'make' searches for a boost lib in /usr/lib64/lib64. Patch that away.
+  # grep -r -l lib64/lib64 * | xargs sed -i -e 's/lib64\/lib64/lib64\//g'
+  make -j 8 install
+
+
 pyrap (optional for LOFAR Cobalt)
 -----
 
@@ -121,28 +151,60 @@ Depends on: python boost-python casacore numpy scons
   python -c 'import pyrap'  # optional (test), should print nothing and exit 0
 
 
-log4cplus
----------
-
-  cd $HOME/root/src
-  wget http://downloads.sourceforge.net/project/log4cplus/log4cplus-stable/1.1.1/log4cplus-1.1.1.tar.gz   # or whatever recent version you like
-  tar zxf log4cplus-1.1.1.tar.gz
-  cd log4cplus-1.1.1
-  ./configure --prefix=$HOME/root
-  make -j 8 install
-  make check  # optional
-
-
-libssh2
+libpqxx (easier to install using your OS' package manager, not needed for LOFAR Cobalt)
 -------
 
+Dependency for: some LOFAR packages
+Depends on: libpq (we refer to the pg_config script installed by pbspro, but it will just use the OS' libpq)
+
   cd $HOME/root/src
-  wget http://www.libssh2.org/download/libssh2-1.4.3.tar.gz   # or whatever recent version you like
-  tar zxf libssh2-1.4.3.tar.gz
-  cd libssh2-1.4.3
+  wget http://pqxx.org/download/software/libpqxx/libpqxx-4.0.1.tar.gz  # or whatever 3.x or recent version you like
+  tar zxf libpqxx-4.0.1.tar.gz
+  cd libpqxx-4.0.1
+  ./configure --prefix=$HOME/root --enable-shared PG_CONFIG=/cm/shared/apps/pbspro/11.0.2.110766/pgsql/bin/pg_config
+  make -j 8 install
+
+
+blitz++ (easier to install using your OS' package manager, not needed for LOFAR Cobalt)
+-------
+
+Dependency for: some LOFAR MAC packages
+
+  cd $HOME/root/src
+  wget http://sourceforge.net/projects/blitz/files/blitz/Blitz%2B%2B%200.10/blitz-0.10.tar.gz  # or whatever recent version you like
+  tar zxf blitz-0.10.tar.gz
+  cd blitz-0.10
+  ./configure --prefix=$HOME/root --enable-shared --enable-optimize
+  make -j 8 install
+
+
+valgrind (easier to install using your OS' package manager; optional for LOFAR Cobalt)
+--------
+
+Dependency for: running LOFAR tests under valgrind
+
+  cd $HOME/root/src
+  wget http://valgrind.org/downloads/valgrind-3.8.1.tar.bz2  # or whatever version you like
+  tar jxf valgrind-3.8.1.tar.bz2
+  cd valgrind-3.8.1
   ./configure --prefix=$HOME/root
   make -j 8 install
-  make check  # optional
+  valgrind ls -l   # optional (test), should exit 0
+
+
+Data Access Library (DAL)
+-------------------------
+
+Dependency for: LOFAR/RTCP/Cobalt/OutputProc
+
+  cd $HOME/root/src
+  git clone https://github.com/nextgen-astrodata/DAL.git DAL
+  mkdir DAL/build
+  cd DAL/build
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root ..
+  make -j 8 install
+  ctest    # optional
+  python -c 'import dal'  # optional (test), should print nothing and exit 0
 
 
 LOFAR (Cobalt only)
@@ -151,12 +213,12 @@ LOFAR (Cobalt only)
   cd $HOME/root/src
   svn co --username USERNAME -N https://svn.astron.nl/LOFAR/trunk LOFAR
   cd LOFAR
-  svn up RTCP CMake LCS
+  svn up RTCP CMake LCS MAC    # MAC: only need MAC/Deployment/data/StaticMetaData/ for a test case
   svn up    # Guarantee the same version for all paths in case somebody commits while 'svn up'-ing multiple subdirs.
   cd .. 
   mkdir -p LOFAR-build/gnu_opt
   cd LOFAR-build/gnu_opt
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DBUILD_PACKAGES=Cobalt -DUSE_CUDA=ON ../../LOFAR    # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DBUILD_PACKAGES="Cobalt StaticMetaData" -DUSE_CUDA=ON ../../LOFAR    # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
   make -j 8 install
   ctest -j 8    # optional
   . $HOME/root/lofarinit.sh    # required to use some of the LOFAR tools, but we will do this through jenkins

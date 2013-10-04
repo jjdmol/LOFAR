@@ -41,6 +41,7 @@ OLAP.Storage.msWriter = /globalhome/mol/projects/LOFAR/installed/gnu_opt/bin/Sto
 OLAP.Storage.sshIdentityFile = /globalhome/mol/.ssh/id_rsa
 OLAP.Storage.targetDirectory = /data
 OLAP.Storage.userName = mol
+OLAP.Storage.StaticMetaDataDirectory = @CMAKE_SOURCE_DIR@/MAC/Deployment/data/StaticMetaData  # for regression testing
 OLAP.coherentDedisperseChannels = T
 OLAP.correctBandPass = T
 OLAP.correctClocks = T

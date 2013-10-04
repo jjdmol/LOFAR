@@ -81,7 +81,7 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
                                  baseDPY+ \".status.state\",
                                  antennaDP  + \".status.state:_online.._invalid\");
     if (!navFunct_dpReachable(antennaDP)) {
-      updateHBAAntenna(\"\",0,\"\",false,\"\",false,\"\",0,\"\",0,\"\",true);
+      updateHBAAntenna(\"\",0,\"\",0,\"\",false,\"\",false,\"\",0,\"\",0,\"\",true);
     }
   } else {
     setValue(\"HBA\", \"backCol\", \"Lofar_dpdoesnotexist\");

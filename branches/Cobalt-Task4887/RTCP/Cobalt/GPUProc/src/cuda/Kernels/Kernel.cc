@@ -27,6 +27,8 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <Common/LofarLogger.h>
 
 using namespace std;
@@ -40,16 +42,25 @@ namespace LOFAR
       nrChannelsPerSubband(ps.nrChannelsPerSubband()),
       nrSamplesPerChannel(ps.nrSamplesPerChannel()),
       nrSamplesPerSubband(ps.nrSamplesPerSubband()),
-      nrPolarizations(NR_POLARIZATIONS)
+      nrPolarizations(NR_POLARIZATIONS),
+      dumpBuffers(false)
+    {
+    }
+
+    Kernel::~Kernel()
     {
     }
 
     Kernel::Kernel(const gpu::Stream& stream, 
-                   const gpu::Function& function)
+                   const gpu::Function& function,
+                   const Buffers &buffers,
+                   const Parameters &params)
       : 
       gpu::Function(function),
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsStream(stream),
-      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
+      itsBuffers(buffers),
+      itsParameters(params)
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
@@ -59,7 +70,7 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    void Kernel::enqueue() const
+    void Kernel::enqueue(const BlockID &blockId) const
     {
       // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
       //       (+ remove assertion): add protected setThreadDim()
@@ -80,14 +91,29 @@ namespace LOFAR
         << " supported threads/block" );
       
       itsStream.launchKernel(*this, grid, block);
+
+      if (itsParameters.dumpBuffers && blockId.block >= 0) {
+        itsStream.synchronize();
+        dumpBuffers(blockId);
+      }
     }
 
-    void Kernel::enqueue(PerformanceCounter &counter) const
+    void Kernel::enqueue(const BlockID &blockId, 
+                         PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);
-      enqueue();
+      enqueue(blockId);
       itsStream.recordEvent(counter.stop);
     }
+
+    void Kernel::dumpBuffers(const BlockID &blockId) const
+    {
+      dumpBuffer(itsBuffers.output,
+                 str(boost::format(itsParameters.dumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
+    }
+
   }
 }
 

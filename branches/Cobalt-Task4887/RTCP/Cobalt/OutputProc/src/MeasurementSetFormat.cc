@@ -192,6 +192,11 @@ namespace LOFAR
           if (lofarroot) {
             configLocator.addPathAtFront(lofarroot);
           }
+          // Add static meta data path from parset at the front for regression testing.
+          string staticMetaDataDir = itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
+          if (!staticMetaDataDir.empty()) {
+            configLocator.addPathAtFront(staticMetaDataDir);
+          }
           LOG_DEBUG_STR("Config locator search path: " << 
                         configLocator.getPath());
           // Fill the tables containing the beam info.

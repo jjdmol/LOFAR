@@ -80,7 +80,13 @@ int StationNodeAllocation::receiverRank() const
 
 std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 {
-  vector<string> inputStreamDescs = parset.getStringVector(str(format("PIC.Core.Station.%s.RSP.ports") % stationID.name()), true);
+  const string key = str(format("PIC.Core.Station.%s.RSP.ports") % stationID.name());
+
+  // default to one board, reading from /dev/null (so no data will ever arive).
+  vector<string> inputStreamDescs = parset.isDefined(key)
+                                    ? parset.getStringVector(key, true)
+                                    : vector<string>(1, "file:/dev/null");
+
   vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
 
   for (size_t board = 0; board < inputStreamDescs.size(); ++board) {

@@ -56,8 +56,10 @@ public:
     // Return the unique id of this expression.
     ExprId id() const;
 
+    // how many nodes depend on the result of this node (important for caching)
     unsigned int nConsumers() const;
 
+    // depends on a parameter that is solved for
     virtual bool isDependent() const;
 
     void setCachePolicy(Cache::Policy policy) const;
@@ -126,6 +128,8 @@ public:
     using ExprBase::id;
     using ExprBase::nConsumers;
 
+    // request can contain multiple grids, in practice almost always 0
+    // takes care of caching, calls evaluateExpr
     virtual const T_EXPR_VALUE evaluate(const Request &request, Cache &cache,
         unsigned int grid) const;
 

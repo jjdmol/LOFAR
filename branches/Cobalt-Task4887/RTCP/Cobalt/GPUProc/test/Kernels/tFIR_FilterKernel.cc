@@ -28,6 +28,7 @@
 #include <UnitTest++.h>
 #include <memory>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/BlockID.h>
 
 using namespace LOFAR::Cobalt;
 using namespace LOFAR;
@@ -81,7 +82,8 @@ TEST(FIR_FilterKernel)
   FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   PerformanceCounter counter(context);
-  kernel->enqueue(counter, 0);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, 0);
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
@@ -113,7 +115,9 @@ TEST(HistoryFlags)
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  FIR_FilterKernel::Parameters params(ps);
+
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -148,7 +152,7 @@ TEST(HistoryFlags)
   kernel->prefixHistoryFlags(inputFlags, 0);
 
   // the first set of history flags are all flagged, and so is our last sample
-  CHECK_EQUAL(ps.nrHistorySamples() + 1, inputFlags[0].count());
+  CHECK_EQUAL(params.nrHistorySamples() + 1, inputFlags[0].count());
 
   /*
    * Block 1: no samples are flagged
@@ -184,8 +188,8 @@ TEST(HistoryFlags)
   kernel->prefixHistoryFlags(inputFlags, 0);
 
   // only the history samples should be flagged
-  CHECK_EQUAL(ps.nrHistorySamples(), inputFlags[0].count());
-  CHECK_EQUAL(ps.nrHistorySamples(), inputFlags[0].subset(0, ps.nrHistorySamples()).count());
+  CHECK_EQUAL(params.nrHistorySamples(), inputFlags[0].count());
+  CHECK_EQUAL(params.nrHistorySamples(), inputFlags[0].subset(0, params.nrHistorySamples()).count());
 }
 
 int main()

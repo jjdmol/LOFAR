@@ -127,7 +127,7 @@ function parse_logs
   # check logs
   parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
-  # toss output if everything is ok
-  rm -rf $testdir/$OUTDIR # Comment this line for output
+  # toss output if everything is ok, but do not fail test if removal fails
+  rm -rf $testdir/$OUTDIR || true # Comment this line for output
 ) || exit 1
 

@@ -93,7 +93,7 @@ then
     #new settings by Wilfred, 9-7-2013
     if [ $UPDATE == "yes" ]
     then
-        updatePVSS.py S=10 -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
+        updatePVSS.py -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBLS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
     fi
 fi
 

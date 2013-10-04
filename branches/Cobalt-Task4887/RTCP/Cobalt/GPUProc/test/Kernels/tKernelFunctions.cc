@@ -23,6 +23,7 @@
 
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <sstream>
 
@@ -83,7 +84,8 @@ TEST(tKernelFunctions)
   // **************************************
   // excercise it
   PerformanceCounter counter(context);  //create a counter
-  kernel->enqueue(counter, 0);          // insert in kernel queue
+  BlockID blockId;                      // create a dummy block-ID struct
+  kernel->enqueue(blockId, counter, 0); // insert in kernel queue
 
 
   stream.readBuffer(hOutput, dOutput);
