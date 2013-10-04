@@ -92,6 +92,10 @@ namespace LOFAR {
       const vector<double>& getSolution() const
         { return itsSolution; }
 
+      // Get the nr of iterations used.
+      size_t nIterations() const
+        { return itsNrIter; }
+
     private:
       // Initialize the solution. Nr must be a multiple of 8.
       // The diagonal is set to (diag,0), off-diagonal to (0,0).
@@ -113,6 +117,7 @@ namespace LOFAR {
       size_t itsNrStations;
       size_t itsNrChannels;
       size_t itsMaxIter;
+      size_t itsNrIter;
       size_t itsNrDir;
       bool   itsPropagateSolution;
       casa::Block<bool>  itsSolveStation;  //# solve station i?

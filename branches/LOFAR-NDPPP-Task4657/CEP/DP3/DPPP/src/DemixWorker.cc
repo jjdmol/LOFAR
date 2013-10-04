@@ -52,6 +52,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/MatrixIter.h>
 #include <scimath/Mathematics/MatrixMathLA.h>
@@ -78,6 +79,7 @@ namespace LOFAR {
         itsFilter      (input, mixInfo.selBL()),
         itsNrSolves    (0),
         itsNrConverged (0),
+        itsNrIter      (0),
         itsNrNoDemix   (0),
         itsNrIncludeStrongTarget (0),
         itsNrIncludeCloseTarget  (0),
@@ -89,13 +91,13 @@ namespace LOFAR {
       itsFilter.setNextStep (nullStep);
       // The worker will process up to chunkSize input time slots.
       // Size buffers accordingly.
-      uint ndir = itsMix->ateamList().size();
+      uint nsrc = itsMix->ateamList().size();
       itsFactors.resize      (itsMix->chunkSize());
       itsFactorsSubtr.resize (itsMix->ntimeOutSubtr());
-      itsOrigPhaseShifts.reserve (ndir);
-      itsOrigFirstSteps.reserve  (ndir+1);   // also needed for target direction
-      itsAvgResults.reserve  (ndir+1);
-      itsDemixList.resize (ndir+1);
+      itsOrigPhaseShifts.reserve (nsrc);
+      itsOrigFirstSteps.reserve  (nsrc+1);   // also needed for target direction
+      itsAvgResults.reserve  (nsrc+1);
+      itsDemixList.resize (nsrc+1);
 
       // Create the solve and subtract steps for the sources to be removed.
       // Solving consists of the following steps:
@@ -116,7 +118,7 @@ namespace LOFAR {
       // MultiResultStep is used to catch the results of all time chunks.
       const vector<Patch::ConstPtr>& patchList = itsMix->ateamDemixList();
       vector<string> sourceVec(2);
-      for (uint i=0; i<ndir; ++i) {
+      for (uint i=0; i<nsrc; ++i) {
         // First make the phaseshift and average steps for each demix source.
         // The resultstep gets the result.
         // The phasecenter can be given in a parameter. Its name is the default.
@@ -172,30 +174,30 @@ namespace LOFAR {
       // As few as possible dynamic buffers are used, because each malloc
       // requires a thread-lock.
       itsFactorBuf.resize (IPosition(4, itsMix->ncorr(), itsMix->nchanIn(),
-                                     itsMix->nbl(), ndir*(ndir+1)/2));
+                                     itsMix->nbl(), nsrc*(nsrc+1)/2));
       itsFactorBufSubtr.resize (itsFactorBuf.shape());
       itsAvgUVW.resize (3, itsMix->nbl());
       itsStationUVW.resize (3, itsMix->nstation(), itsMix->ntimeOutSubtr());
       itsUVW.resize (3, itsMix->nstation());
-      itsSrcSet.reserve (ndir+1);
-      itsStationsToUse.resize (ndir);
-      itsUnknownsIndex.resize (ndir+1);
-      for (uint i=0; i<ndir+1; ++i) {
+      itsSrcSet.reserve (nsrc+1);
+      itsStationsToUse.resize (nsrc);
+      itsUnknownsIndex.resize (nsrc+1);
+      for (uint i=0; i<nsrc+1; ++i) {
         itsUnknownsIndex[i].resize (itsMix->nstation());
       }
       itsSolveStation.resize (itsMix->nstation());
-      itsNrSourcesDemixed.resize (ndir);
+      itsNrSourcesDemixed.resize (nsrc);
       itsNrSourcesDemixed = 0;
       itsNrStationsDemixed.resize (itsMix->nstation());
       itsNrStationsDemixed = 0;
-      itsStatSourceDemixed.resize (ndir, itsMix->nstation());
+      itsStatSourceDemixed.resize (nsrc, itsMix->nstation());
       itsStatSourceDemixed = 0;
       itsPredictVis.resize (itsMix->ncorr(), itsMix->nchanOut(),
                             itsMix->nbl());
       itsModelVis.resize (itsMix->ncorr() * itsMix->nchanOutSubtr() *
-                          itsMix->nbl() * (ndir+1));
-      itsAteamAmpl.resize (ndir);
-      for (uint i=0; i<ndir; ++i) {
+                          itsMix->nbl() * (nsrc+1));
+      itsAteamAmpl.resize (nsrc);
+      for (uint i=0; i<nsrc; ++i) {
         itsAteamAmpl[i].resize (itsMix->nchanOut(), itsMix->nbl(),
                                 itsMix->ntimeOut());
       }
@@ -204,23 +206,23 @@ namespace LOFAR {
       itsObservedAmpl.resize (itsMix->nbl());
       itsSourceAmpl.resize   (itsMix->nbl());
       itsAmplTotal.resize (itsMix->nchanOutSubtr(), itsMix->nbl());
-      itsAmplSubtr.resize (itsMix->nchanOutSubtr(), itsMix->nbl(), ndir);
-      itsAmplSubtrMean.resize (itsMix->nbl(), ndir);
-      itsAmplSubtrM2.resize   (itsMix->nbl(), ndir);
-      itsAmplSubtrNr.resize   (itsMix->nbl(), ndir);
+      itsAmplSubtr.resize (itsMix->nchanOutSubtr(), itsMix->nbl(), nsrc);
+      itsAmplSubtrMean.resize (itsMix->nbl(), nsrc);
+      itsAmplSubtrM2.resize   (itsMix->nbl(), nsrc);
+      itsAmplSubtrNr.resize   (itsMix->nbl(), nsrc);
       itsAmplTotal     = 0.;
       itsAmplSubtr     = 0.;
       itsAmplSubtrMean = 0.;
       itsAmplSubtrM2   = 0.;
       itsAmplSubtrNr   = 0;
-      itsEstimate.update (ndir+1, itsMix->nbl(), itsMix->nstation(),
+      itsEstimate.update (nsrc+1, itsMix->nbl(), itsMix->nstation(),
                           itsMix->nchanOut(), itsMix->maxIter(),
                           itsMix->propagateSolution());
       // Create the Measure ITRF conversion info given the array position.
       // The time and direction are filled in later.
-      itsMeasFrame.set (info.arrayPos(), MDirection());
+      itsMeasFrame.set (info.arrayPos());
       itsMeasFrame.set (MEpoch());
-      itsMeasConverter.set (MDirection(),
+      itsMeasConverter.set (MDirection::J2000,
                             MDirection::Ref(MDirection::ITRF, itsMeasFrame));
       itsBeamValues.resize (itsMix->nchanOut(), itsMix->nstation());
     }
@@ -525,8 +527,18 @@ namespace LOFAR {
       itsIgnoreTarget = false;
       itsNModel = nsrc;
       itsNDir   = nsrc+1;
-      if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
-          targetSumAmpl > itsMix->targetAmplThreshold()) {
+      // For special purpose (testing) it is possible to set target handling,
+      // but normally it is dependent on the data.
+      if (itsMix->targetHandling() == 1) {
+        itsIncludeTarget = true;
+        itsNrIncludeCloseTarget++;
+      } else if (itsMix->targetHandling() == 2) {
+        itsNrDeprojectTarget++;
+      } else if (itsMix->targetHandling() == 3) {
+        itsIgnoreTarget = true;
+        itsNrIgnoreTarget++;
+      } else if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
+                 targetSumAmpl > itsMix->targetAmplThreshold()) {
         itsIncludeTarget = true;
         itsNrIncludeStrongTarget++;
       } else if (! itsMix->isAteamNearby()) {
@@ -544,9 +556,8 @@ namespace LOFAR {
       // Their names are DirectionalGain:i:j:Type::Station::Direction
       // where i:j gives the Jones element and Type is Real or Imag.
       // Fill the map of source/station to unknown seqnr (4 pol, ampl/phase).
-      uint ndir = itsStationsToUse.size();
       uint nUnknown = 0;
-      for (uint i=0; i<ndir; ++i) {
+      for (uint i=0; i<itsNModel; ++i) {
         // Initialize first.
         std::fill (itsUnknownsIndex[i].begin(), itsUnknownsIndex[i].end(), -1);
         for (uint j=0; j<itsStationsToUse[i].size(); ++j) {
@@ -562,14 +573,14 @@ namespace LOFAR {
       // Solve for all stations.
       // Also add the target step.
       if (itsIncludeTarget) {
-        itsSrcSet.push_back (ndir);
-        itsDemixList[itsNModel++] = itsMix->targetDemix();
-        std::fill (itsUnknownsIndex[ndir].begin(),
-                   itsUnknownsIndex[ndir].end(), -1);
-        for (uint j=0; j<itsUnknownsIndex[ndir].size(); ++j) {
-          itsUnknownsIndex[ndir][j] = nUnknown;
+        itsSrcSet.push_back (itsNModel);
+        //std::fill (itsUnknownsIndex[ndir].begin(),
+        //           itsUnknownsIndex[ndir].end(), -1);
+        for (uint j=0; j<itsUnknownsIndex[itsNModel].size(); ++j) {
+          itsUnknownsIndex[itsNModel][j] = nUnknown;
           nUnknown += 8;
         }
+        itsDemixList[itsNModel++] = itsMix->targetDemix();
       }
       if (itsMix->verbose() > 11) {
         cout<<"nunka="<<nUnknown<<endl;
@@ -580,7 +591,7 @@ namespace LOFAR {
     {
       // Convert the directions to ITRF for the given time.
       ///      StationResponse::vector3r_t srcdir,refdir,tiledir;
-      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time), MEpoch::UTC));
+      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
       StationResponse::vector3r_t refdir =
         dir2Itrf(itsMix->getInfo().delayCenter());
       StationResponse::vector3r_t tiledir =
@@ -594,6 +605,7 @@ namespace LOFAR {
            srcdir, itsMix->getInfo().refFreq(), refdir, tiledir,
            &(itsBeamValues(0, st)));
       }
+      //cout <<"beamvalues="<<itsBeamValues;
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
       dcomplex* data = itsPredictVis.data();
@@ -621,12 +633,14 @@ namespace LOFAR {
           data += 4;
         }
       }
+      DBGASSERT (data == itsPredictVis.data() + itsPredictVis.size());
+      //cout <<"itsPredictVis="<<itsPredictVis;
     }
 
     StationResponse::vector3r_t DemixWorker::dir2Itrf (const MDirection& dir)
     {
-      const MDirection& ndir = itsMeasConverter(dir);
-      const Vector<Double>& itrf = ndir.getValue().getValue();
+      const MDirection& itrfDir = itsMeasConverter(dir);
+      const Vector<Double>& itrf = itrfDir.getValue().getValue();
       StationResponse::vector3r_t vec;
       vec[0] = itrf[0];
       vec[1] = itrf[1];
@@ -898,7 +912,6 @@ namespace LOFAR {
       const size_t nTime = itsAvgResults[0]->get().size();
       const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
       const size_t multiplier = itsMix->ntimeAvg() / itsMix->ntimeAvgSubtr();
-      const size_t nDr = itsPhaseShifts.size();
       const size_t nSt = itsMix->nstation();
       const size_t nBl = itsMix->baselines().size();
       const size_t nCh = itsMix->freqDemix().size();
@@ -970,6 +983,7 @@ namespace LOFAR {
         itsNrSolves++;
         if (converged) {
           itsNrConverged++;
+          itsNrIter += itsEstimate.nIterations();
         }
         itsTimerSolve.stop();
 
@@ -998,7 +1012,7 @@ namespace LOFAR {
             }
             itsObservedAmpl[bl] = ampl;
           }
-          for (size_t dr=0; dr<nDr; ++dr) {
+          for (size_t dr=0; dr<itsNModel; ++dr) {
             uint drOrig = itsSrcSet[dr];
             // Re-use simulation used for estimating Jones matrices if possible.
             cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
@@ -1084,7 +1098,7 @@ namespace LOFAR {
                 itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
               }
             } // end nBl
-          } // end nDr
+          } // end itsNModel
         } // end ts_subtr
         itsTimerSubtract.stop();
       }  // end nTime

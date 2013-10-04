@@ -58,6 +58,7 @@ namespace LOFAR {
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
+        itsTargetHandling   (parset.getUint   (prefix+"targethandling", 0)),
         itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
         itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
         itsMinNStation      (parset.getUint   (prefix+"minnstation", 6)),

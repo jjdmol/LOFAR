@@ -79,6 +79,9 @@ namespace LOFAR {
       // Get the number of converged solves.
       uint nConverged() const
         { return itsNrConverged; }
+      // Get the total nr of iterations used.
+      uint nIterations() const
+        { return itsNrIter; }
       // Get the number of times no demix was needed.
       uint nNoDemix() const
         { return itsNrNoDemix; }
@@ -275,6 +278,7 @@ namespace LOFAR {
       //# Statistics
       uint                                  itsNrSolves;
       uint                                  itsNrConverged;
+      uint                                  itsNrIter;
       uint                                  itsNrNoDemix;
       uint                                  itsNrIncludeStrongTarget;
       uint                                  itsNrIncludeCloseTarget;

@@ -67,7 +67,9 @@ namespace LOFAR {
       const DPInfo& getInfo() const
         { return itsInfoSel; }
 
-      //# Data members
+      // Get settings.
+      //#    0=test 1=include 2=deproject 3=ignore
+      uint   targetHandling() const              {return itsTargetHandling;}
       uint   verbose() const                     {return itsVerbose;}
       uint   maxIter() const                     {return itsMaxIter;}
       uint   minNStation() const                 {return itsMinNStation;}
@@ -165,6 +167,7 @@ namespace LOFAR {
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
+      uint                    itsTargetHandling;
       uint                    itsVerbose;            //# trace verbosity level
       uint                    itsMaxIter;            //# max #iter in solve
       uint                    itsMinNStation;        //# min #stations for solve

@@ -42,7 +42,7 @@ namespace LOFAR {
       itsNrStations  = nStation;
       itsNrChannels  = nChannel;
       itsMaxIter     = maxIter;
-      itsNrDir        = maxndir;
+      itsNrDir       = maxndir;
       itsPropagateSolution = propagateSolution;
       itsSolveStation.resize (nStation);
       itsUnknowns.resize (maxndir * nStation * 4 * 2);
@@ -164,12 +164,18 @@ namespace LOFAR {
       // Determine if a station has to be solved for any source.
       itsSolveStation = false;
       size_t nUnknowns = 0;
-      for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
+      const size_t nDirection = srcSet.size();
+      for (size_t dr=0; dr<nDirection; ++dr) {
+        uint drOrig = srcSet[dr];
+        const double* solution = &(itsSolution[drOrig*itsNrStations*8]);
         for (size_t st=0; st<itsNrStations; ++st) {
-          if (unknownsIndex[dr][st] >= 0) {
+          uint drOrig = srcSet[dr];
+          if (unknownsIndex[drOrig][st] >= 0) {
             itsSolveStation[st] = true;
+            std::copy (solution, solution+8, itsUnknowns.begin()+nUnknowns);
             nUnknowns += 8;
           }
+          solution += 8;
         }
       }
       if (verbose > 13) {
@@ -177,13 +183,11 @@ namespace LOFAR {
       }
       // Initialize LSQ solver.
       casa::LSQFit solver(nUnknowns);
-      const size_t nDirection = unknownsIndex.size();
-
       // Iterate until convergence.
-      size_t nIterations = 0;
-      while (!solver.isReady()  &&  nIterations < itsMaxIter) {
-        if (verbose > 13) {
-          cout<<endl<<"iteration " << nIterations << endl;
+      itsNrIter = 0;
+      while (!solver.isReady()  &&  itsNrIter < itsMaxIter) {
+        if (verbose > 12) {
+          cout<<endl<<"iteration " << itsNrIter << endl;
         }
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
           const size_t p = baselines->first;
@@ -193,7 +197,7 @@ namespace LOFAR {
           if (p != q  &&  (itsSolveStation[p] && itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
-            if (verbose > 13) {
+            if (verbose > 12) {
               cout<<"derinx="<<itsDerivIndex<<endl;
             }
             // Generate equations for each channel.
@@ -291,8 +295,9 @@ namespace LOFAR {
                     // Each direction is dependent on all directions.
                     size_t off = 0;
                     for (size_t dr=0; dr<nDirection; ++dr) {
-                      bool do1 = unknownsIndex[dr][p] >= 0;
-                      bool do2 = unknownsIndex[dr][q] >= 0;
+                      uint drOrig = srcSet[dr];
+                      bool do1 = unknownsIndex[drOrig][p] >= 0;
+                      bool do2 = unknownsIndex[drOrig][q] >= 0;
                       // Only generate equations if a station has to be solved
                       // for this direction.
                       if (do1 || do2) {
@@ -428,7 +433,7 @@ namespace LOFAR {
           cout<<"solution="<<itsSolution<<endl;
         }
         // Update iteration count.
-        ++nIterations;
+        itsNrIter++;
       }
       bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT  ||
                         solver.isReady() == casa::LSQFit::DERIVLEVEL);

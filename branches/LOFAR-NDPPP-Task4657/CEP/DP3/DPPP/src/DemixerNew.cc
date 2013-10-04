@@ -105,6 +105,7 @@ namespace LOFAR {
       // Add the statistics of all workers.
       uint nsolves        = 0;
       uint nconverged     = 0;
+      uint niter          = 0;
       uint nnodemix       = 0;
       uint nincludeStrong = 0;
       uint nincludeClose  = 0;
@@ -128,6 +129,7 @@ namespace LOFAR {
       for (size_t i=0; i<itsWorkers.size(); ++i) {
         nsolves        += itsWorkers[i].nSolves();
         nconverged     += itsWorkers[i].nConverged();
+        niter          += itsWorkers[i].nIterations();
         nnodemix       += itsWorkers[i].nNoDemix();
         nincludeStrong += itsWorkers[i].nIncludeStrongTarget();
         nincludeClose  += itsWorkers[i].nIncludeCloseTarget();
@@ -151,6 +153,8 @@ namespace LOFAR {
                      nincludeStrong + nincludeClose);
       // Show statistics.
       showStat (os, nconverged,     nsolves, "Converged solves:      ", "cells");
+      os << "  Average nr of iterations in converged solves: "
+         << uint(double(niter)/nconverged + 0.5) << endl;
       showStat (os, nnodemix,       ntimes,  "No demixing:           ", "times");
       showStat (os, nignore,        ntimes,  "Target ignored:        ", "times");
       showStat (os, ndeproject,     ntimes,  "Target deprojected:    ", "times");
