@@ -155,48 +155,6 @@ int main(int argc, char **argv)
       current += packet.header.nrBlocks;
     }
 
-
-/*
-  SmartPtr<Stream> inputStream = createStream("file:/dev/stdin", true);
-  PacketReader reader("", *inputStream);
-  struct RSP packet;
-
-  try {
-  for(;; ) {
-  if( reader.readPacket(packet) ) {
-  // **** Apply FROM filter ****
-  if (from > 0 && packet.header.timestamp < from)
-  continue;
-
-  // **** Apply TO filter ****
-  if (to > 0 && packet.header.timestamp >= to)
-  continue;
-
-  // **** Apply BITMODE filter ****
-  if (bitmode > 0 && packet.bitMode() != bitmode)
-  continue;
-
-  // **** Apply CLOCK filter ****
-  if (clock > 0 && packet.clockMHz() != clock)
-  continue;
-
-  // **** Apply NRBEAMLETS filter ****
-  if (nrbeamlets > 0) {
-  // the new number of beamlets has to be valid
-  ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
-
-  // convert
-  packet.header.nrBeamlets = nrbeamlets;
-  }
-
-  // Write packet
-  fwrite(&packet, packet.packetSize(), 1, stdout);
-  }
-  }
-  } catch(Stream::EndOfStreamException&) {
-  }
-*/
-
   } catch (Exception& ex) {
     cerr << ex << endl;
     return 1;
