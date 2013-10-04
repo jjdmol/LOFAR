@@ -190,8 +190,10 @@ namespace LOFAR
       // decode the 4-bit complex type.
       static std::complex<int> decode4bit( int8 sample )
       {
-        int8 re = (sample << 4) >> 4; // preserve sign
-        int8 im = (sample     ) >> 4; // preserve sign
+        // intermediate after << will be int, not int8,
+        // so cast to get a signed int8 value.
+        int8 re = (int8)(sample << 4) >> 4; // preserve sign
+        int8 im =       (sample     ) >> 4; // preserve sign
 
         // balance range to [-7..7], subject to change!
         if (re == -8) re = -7;
