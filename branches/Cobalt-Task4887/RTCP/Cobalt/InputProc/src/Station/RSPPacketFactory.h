@@ -23,7 +23,7 @@
 #define LOFAR_INPUT_PROC_RSPPACKETFACTORY_H
 
 #include "PacketFactory.h"
-#include <fstream>
+#include <istream>
 
 namespace LOFAR
 {
@@ -35,9 +35,9 @@ namespace LOFAR
     class RSPPacketFactory : public PacketFactory
     {
     public:
-      // Construct a factory that will read its input from a text file \a
-      // inputFile. 
-      RSPPacketFactory(const std::string &inputFile, 
+      // Construct a factory that will read its input from the input stream \a
+      // inStream.
+      RSPPacketFactory(std::istream &inStream, 
                        const BoardMode &mode,
                        unsigned nrSubbands);
 
@@ -63,8 +63,8 @@ namespace LOFAR
       // Number of subbands (or beamlets) to produce.
       unsigned itsNrSubbands;
 
-      // Input file stream
-      std::ifstream itsInputStream;
+      // Input stream
+      std::istream &itsInputStream;
     };
 
   }

@@ -1,4 +1,5 @@
-//# filterRSP.h
+//# generateRSP.cc
+//#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -60,13 +61,14 @@ void usage()
   const char* format = "%Y-%m-%d %H:%M:%S";
   strftime(from_string, 255, format, gmtime(&default_options.from));
   strftime(to_string, 255, format, gmtime(&default_options.to));
-  cerr << "\nUsage: generateRSP [options] input.asc > output.udp\n\n"
+  cerr << "\nUsage: generateRSP [options] < input.asc > output.rsp\n\n"
        << "-b bitmode    Bitmode `bitmode' (16, 8, or 4)"
        << " (default: " << default_options.bitmode << ")\n"
        << "-c clockmode  Clock frequency (MHz) `clock' (200 or 160)"
        << " (default: " << default_options.clockmode << ")\n"
        << "-f from       Start time `from' (format: '2012-01-01 11:12:00')"
        << " (default: '" << from_string << "')\n"
+       << "-h help       Print this help message\n"
        << "-s subbands   Number of `subbands` (or beamlets)"
        << " (default: " << default_options.subbands << ")\n"
        << "-t to         End time `to' (format: '2012-01-01 11:12:00')"
@@ -97,7 +99,7 @@ int main(int argc, char **argv)
 
   try {
     // parse all command-line options
-    while((opt = getopt(argc, argv, "b:c:f:s:t:")) != -1) {
+    while((opt = getopt(argc, argv, "b:c:f:hs:t:")) != -1) {
       switch(opt) {
       default:
         usage();
@@ -111,6 +113,8 @@ int main(int argc, char **argv)
       case 'f':
         from = parseTime(optarg);
         break;
+      case 'h':
+        usage();
       case 's':
         subbands = atoi(optarg);
         break;
@@ -127,21 +131,19 @@ int main(int argc, char **argv)
     ASSERTSTR(clockmode == 160 || clockmode == 200, "clockmode = " << clockmode);
     ASSERTSTR(subbands > 0, "subbands = " << subbands);
 
-    // Remaining command-line argument must be the input file name.
-    if (optind == argc) {
+    // we expect no further arguments
+    if (optind != argc) {
       usage();
       return 1;
     }
 
-    string inFile(argv[optind]);
+    ifstream inStream("/dev/stdin");
+
     BoardMode boardMode(bitmode, clockmode);
     unsigned boardNr(0);
 
-    RSPPacketFactory packetFactory(inFile, boardMode, subbands);
+    RSPPacketFactory packetFactory(inStream, boardMode, subbands);
     RSP packet;
-
-    // TimeStamp t(unsigned seqId, unsigned blockId, unsigned clockSpeed);
-    // TimeStamp t(              ,                 , boardMode.clockHz());
 
     TimeStamp current(from);
     TimeStamp end(to);

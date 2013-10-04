@@ -22,7 +22,6 @@
 #include <lofar_config.h>
 
 #include "RSPPacketFactory.h"
-#include <fstream>
 #include <cstring>
 
 using namespace std;
@@ -32,16 +31,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    RSPPacketFactory::RSPPacketFactory(const string &inFile,
+    RSPPacketFactory::RSPPacketFactory(istream &inStream,
                                        const BoardMode &mode,
                                        unsigned nrSubbands) :
       PacketFactory(mode),
       itsNrSubbands(nrSubbands),
-      itsInputStream(inFile.c_str())
+      itsInputStream(inStream)
     {
-      if (!itsInputStream) {
-        THROW(Exception, "Failed to open input file: " << inFile);
-      }
       if (nrSubbands == 0 || nrSubbands > mode.nrBeamletsPerBoard()) {
         THROW(Exception, "Invalid number of subbands: " << nrSubbands);
       }
