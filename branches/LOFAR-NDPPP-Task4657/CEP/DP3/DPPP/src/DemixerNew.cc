@@ -34,6 +34,7 @@
 #include <Common/OpenMP.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 
 #include <casa/Arrays/ArrayPartMath.h>
 
