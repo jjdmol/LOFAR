@@ -51,8 +51,7 @@ struct options_t {
   unsigned bitmode;
   unsigned clockmode;
   unsigned subbands;
-
-  string outputStreamDesc;
+  string streamdesc;
 };
 
 options_t default_options = { 0, INT_MAX, 16, 200, 61, "file:/dev/stdout" };
@@ -71,12 +70,12 @@ void usage()
        << "-f from       Start time `from' (format: '2012-01-01 11:12:00')"
        << " (default: '" << from_string << "')\n"
        << "-h help       Print this help message\n"
+       << "-o streamdesc Stream descriptor for output"
+       << " (default: '" << default_options.streamdesc << "')\n"
        << "-s subbands   Number of `subbands` (or beamlets)"
        << " (default: " << default_options.subbands << ")\n"
        << "-t to         End time `to' (format: '2012-01-01 11:12:00')"
        << " (default: '" << to_string << "')\n"
-       << "-o streamdesc Stream descriptor for output"
-       << " (default: '" << default_options.outputStreamDesc << "')\n"
        << endl;
 }
 
@@ -100,11 +99,11 @@ int main(int argc, char **argv)
   unsigned bitmode = default_options.bitmode;
   unsigned clockmode = default_options.clockmode;
   unsigned subbands = default_options.subbands;
-  string outputStreamDesc = default_options.outputStreamDesc;
+  string streamdesc = default_options.streamdesc;
 
   try {
     // parse all command-line options
-    while((opt = getopt(argc, argv, "b:c:f:hs:t:o:")) != -1) {
+    while((opt = getopt(argc, argv, "b:c:f:ho:s:t:")) != -1) {
       switch(opt) {
       default:
         usage();
@@ -121,14 +120,14 @@ int main(int argc, char **argv)
       case 'h':
         usage();
         return 0;
+      case 'o':
+        streamdesc = optarg;
+        break;
       case 's':
         subbands = atoi(optarg);
         break;
       case 't':
         to = parseTime(optarg);
-        break;
-      case 'o':
-        outputStreamDesc = optarg;
         break;
       }
     }
@@ -147,7 +146,7 @@ int main(int argc, char **argv)
     }
 
     ifstream inStream("/dev/stdin");
-    SmartPtr<Stream> outStream = createStream(outputStreamDesc, false);
+    SmartPtr<Stream> outStream = createStream(streamdesc, false);
 
     BoardMode boardMode(bitmode, clockmode);
     unsigned boardNr(0);
