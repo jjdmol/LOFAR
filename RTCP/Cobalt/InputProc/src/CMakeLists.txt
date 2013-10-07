@@ -19,6 +19,7 @@ set(_inputproc_sources
   Station/PacketFactory.cc
   Station/PacketReader.cc
   Station/PacketsToBuffer.cc
+  Station/RSPPacketFactory.cc
 )
 
 if(MPI_FOUND)
@@ -36,6 +37,7 @@ endif(UNIX AND NOT APPLE)
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
+lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(capture Station/capture.cc)
 

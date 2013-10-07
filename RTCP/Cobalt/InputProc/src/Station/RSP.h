@@ -97,7 +97,7 @@ namespace LOFAR
       } header;
 
       // Payload, allocated for maximum size.
-      union {
+      union Payload {
         char data[8130];
 
         // samples are structured as samples[nrBeamlets][nrBlocks],
@@ -108,11 +108,11 @@ namespace LOFAR
         //  low octet: real      (2's complement)
         // high octet: imaginary (2's complement)
 
-        struct { int16 Xr, Xi, Yr, Yi;
+        struct samples16bit_t { int16 Xr, Xi, Yr, Yi;
         } samples16bit[61 * 16];
-        struct { int8 Xr, Xi, Yr, Yi;
+        struct samples8bit_t { int8 Xr, Xi, Yr, Yi;
         } samples8bit[122 * 16];
-        struct { int8 X, Y;
+        struct samples4bit_t { int8 X, Y;
         } samples4bit[244 * 16];
       } payload;
 
@@ -126,14 +126,41 @@ namespace LOFAR
         return header.sourceInfo1 & 0x1F;
       }
 
+      void rspBoard(unsigned nr)
+      {
+        header.sourceInfo1 &= ~0x1F;
+        header.sourceInfo1 |= (nr & 0x1F);
+      }
+
       bool payloadError() const
       {
         return header.sourceInfo1 & 0x40;
       }
 
+      void payloadError(bool error)
+      {
+        if (error)
+          header.sourceInfo1 |= 0x40;
+        else 
+          header.sourceInfo1 &= ~0x40;
+      }
+
       unsigned clockMHz() const
       {
         return header.sourceInfo1 & 0x80 ? 200 : 160;
+      }
+
+      void clockMHz(unsigned freq)
+      {
+        switch (freq) {
+        default:
+        case 200:
+          header.sourceInfo1 |= 0x80; 
+          break;
+        case 160:
+          header.sourceInfo1 &= ~0x80;
+          break;
+        }
       }
 
       unsigned bitMode() const
@@ -146,9 +173,32 @@ namespace LOFAR
         }
       }
 
+      void bitMode(unsigned mode)
+      {
+        header.sourceInfo2 &= ~0x3;
+        switch (mode) {
+        default:
+        case 16:
+          header.sourceInfo2 |= 0x0;
+          break;
+        case 8 :
+          header.sourceInfo2 |= 0x1;
+          break;
+        case 4 :
+          header.sourceInfo2 |= 0x2;
+          break;
+        }
+      }
+
       TimeStamp timeStamp() const
       {
         return TimeStamp(header.timestamp, header.blockSequenceNumber, clockMHz() * 1000000);
+      }
+
+      void timeStamp(const TimeStamp& ts)
+      {
+        header.timestamp = ts.getSeqId();
+        header.blockSequenceNumber = ts.getBlockId();
       }
 
       size_t packetSize() const
