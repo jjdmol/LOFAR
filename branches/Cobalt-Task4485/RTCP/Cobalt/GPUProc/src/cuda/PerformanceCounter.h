@@ -36,9 +36,11 @@ namespace LOFAR
 
       void logTime();
 
-      // public events: they need to be inserted in streams..
+      // Public event: it needs to be inserted into a stream.
+      // @{
       gpu::Event start;
       gpu::Event stop;
+      // @}
 
       RunningStatistics stats;
     private:
