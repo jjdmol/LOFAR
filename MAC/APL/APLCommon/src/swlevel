@@ -49,10 +49,11 @@ SyntaxError()
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
 	echo ""
-	echo "Syntax: $(basename $0) [-s/S/v/V] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
+	echo "Syntax: $(basename $0) [-s/S/v/V/u/U] [-i x] [-r/q processname] [-l][ 0 |1 |2 |3 |4 |5 |6 ]"
 	echo "-s: Show current level, exit (-S: only print number)"
 	echo "-p: Print last set level from logfile (-P: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
+        echo "-u: Show users owning running processes (-U: same)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
         echo "-q: Quit process with name processname"
@@ -244,15 +245,45 @@ stop_prog()
 	for pid in `/sbin/pidof ${prog}`
 	do 
 		echo "Softly killing ${prog}(${pid})"
-		$asroot kill $pid
+		$asroot kill $pid 1>/dev/null 2>&1
 		usleep 500000
 	done
 
-	# when normal kill did not work, kill is with -9
+	# when normal kill did not work, kill it with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
+		usleep 500000
+	done
+
+	# if user0 or lofarsys, try normal kill as root
+	for pid in `/sbin/pidof ${prog}`
+	do
+	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
+		    sudo kill $pid 1>/dev/null 2>&1
+                    usleep 50000
+                fi
+        done
+
+	# if user0 or lofarsys, try hard kill as root
+ 	for pid in `/sbin/pidof ${prog}`
+	do
+	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
+		    sudo kill -9 $pid 1>/dev/null 2>&1
+                    usleep 50000
+                fi
+        done
+    
+	# if still alive, write a message
+ 	for pid in `/sbin/pidof ${prog}`
+	do
+	        echo -n "Could not kill ${prog}(${pid}); "
+	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
+                  echo "tried it as root as well, giving up..."
+                else
+                  echo "probably run by another user, contact your system administrator"
+		fi
 	done
 }
 
@@ -292,6 +323,7 @@ status_prog()
 
 		# find out the processID of the possibly (running) process
 		obsid=()
+                pid_user=()
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=( `/sbin/pidof ${prog}` )
@@ -299,6 +331,9 @@ status_prog()
 			for apid in ${pid[@]}
 			do
 			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
+			  if [ $show_users -eq 1 ]; then 
+  			    pid_user[i]=`ps -p $apid -o user=`
+			  fi
 			  i=$i+1
 			done
 			# If a program is running in a level higher than the level
@@ -310,9 +345,11 @@ status_prog()
 		fi
 
 		if [ "$pid" != "DOWN" ] && [ ${#obsid[0]} != 0 ]; then 
-    		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		   echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		elif [ "$pid" != "DOWN" ] && [ ${show_users} -eq 1 ]; then 
+                  echo ${levelnr}:${prog}:${pid[*]}:${pid_user[*]} | awk -F: '{ printf "%s : %-25s %s [%s]\n", $1, $2, $3, $4 }'
 		else
-                  echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3 }'
+                  echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3}'
 		fi
 		# Some Checks
 		# Controllers must have one instance, only. Some programs may have more instances.
@@ -516,9 +553,13 @@ handle_args()
         echo "Warning: all arguments except level $1 will be ignored"
       fi
   fi
-  while getopts  "hSsPpVvi:l:q:r:" flag
+  while getopts  "hSsPpVvi:l:q:r:uU" flag
   do
     case "$flag" in
+    [uU])
+    show_users=1
+    show_level
+    ;;
     [sS])
     show_level $flag
     ;;
@@ -589,6 +630,7 @@ fi
 
 
 # All users can ask for current level
+show_users=0
 if [ -z $1 ]; then 
   show_level 
 fi
