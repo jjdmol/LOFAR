@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     Parset parset(&controlStream);
     Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
-    vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
+    const vector<string> &hostnames = parset.settings.outputProcHosts;
     ASSERT(myRank < hostnames.size());
     string myHostName = hostnames[myRank];
 

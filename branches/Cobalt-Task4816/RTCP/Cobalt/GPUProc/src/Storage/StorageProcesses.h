@@ -97,9 +97,6 @@ namespace LOFAR
       // start the processes and control threads
       void start();
 
-      // list all the host names to start a Storage Process on
-      std::vector<std::string> hosts() const;
-
       void finalMetaDataThread();
     };
 
