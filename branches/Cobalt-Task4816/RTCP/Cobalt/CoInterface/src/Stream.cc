@@ -62,16 +62,10 @@ namespace LOFAR
         return new SocketStream(split[1].c_str(), boost::lexical_cast<unsigned short>(split[2]), SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline);
       else if (split.size() == 3 && split[0] == "udpkey")
         return new SocketStream(split[1].c_str(), 0, SocketStream::UDP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
-#ifdef USE_THREADS
       else if (split.size() == 4 && split[0] == "tcpbroker")
         return asServer ? static_cast<Stream*>(new PortBroker::ServerStream(split[3])) : static_cast<Stream*>(new PortBroker::ClientStream(split[1], boost::lexical_cast<unsigned short>(split[2]), split[3]));
-#endif
       else if (split.size() == 3 && split[0] == "tcpkey")
-#if defined CLUSTER_SCHEDULING
-        return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, 30000, split[2].c_str());
-#else
         return new SocketStream(split[1].c_str(), 0, SocketStream::TCP, asServer ? SocketStream::Server : SocketStream::Client, deadline, split[2].c_str());
-#endif
       else if (split.size() > 1 && split[0] == "file") {
         // don't use split[1] to allow : in filenames
         const string filename = descriptor.substr(5);
