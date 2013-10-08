@@ -503,7 +503,6 @@ namespace LOFAR {
                   values(0, ts) = itsSolutions[ts][seqnr];
                 }
                 seqnr++;
-                cout <<"val="<< values<<endl;
                 BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
                 pv->setScalars (solGrid, values);
                 BBS::ParmValueSet pvs(domainGrid,
