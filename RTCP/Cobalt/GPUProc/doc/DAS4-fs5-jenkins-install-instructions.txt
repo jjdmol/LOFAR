@@ -116,7 +116,7 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   svn co http://casacore.googlecode.com/svn/trunk/ casacore
   mkdir casacore/build
   cd casacore/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=$HOME/root/share/aips++/data ..
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=/home/jenkins/root/share/aips++/data ..  # don't use ~ or $HOME in -DDATA_DIR to force using jenkins' measures tables for any user
   make -j 8 install
   ctest    # optional
 
