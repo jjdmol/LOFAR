@@ -28,7 +28,7 @@ Environment
 Relevant files and directories
 ------------------------------
 
-$HOME/root/				installation root
+$HOME/root/			installation root
 $HOME/root/src/			source and build directories
 $HOME/root/share/aips++/data/	CASA measures table location
 $HOME/jenkins/			location of the jenkins continuous build and integration system
@@ -218,7 +218,7 @@ LOFAR (Cobalt only)
   cd .. 
   mkdir -p LOFAR-build/gnu_opt
   cd LOFAR-build/gnu_opt
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DBUILD_PACKAGES="Cobalt StaticMetaData" -DUSE_CUDA=ON ../../LOFAR    # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DBUILD_PACKAGES="Cobalt StaticMetaData" -DUSE_CUDA=ON -DUSE_OPENMP=ON -DUSE_MPI=ON ../../LOFAR  # assumes you have all deps installed and a LOFAR/CMake/variants/variants.<hostname> file is in place
   make -j 8 install
   ctest -j 8    # optional
   . $HOME/root/lofarinit.sh    # required to use some of the LOFAR tools, but we will do this through jenkins
