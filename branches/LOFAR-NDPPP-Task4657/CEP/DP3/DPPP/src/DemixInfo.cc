@@ -138,9 +138,9 @@ namespace LOFAR {
       // Also these sources must be removed from the A-team model.
       vector<Patch::ConstPtr> targetDemixList;
       uint ncomponent = 0;
-      targetDemixList.reserve (itsTargetList.size());
+      itsTargetDemixList.reserve (itsTargetList.size());
       for (size_t i=0; i<itsTargetList.size(); ++i) {
-        targetDemixList.push_back (itsTargetList[i]);
+        itsTargetDemixList.push_back (itsTargetList[i]);
         ncomponent += itsTargetList[i]->nComponents();
         // Look if an A-team source matches this target source.
         for (size_t j=0; j<patchList.size(); ++j) {
@@ -150,14 +150,14 @@ namespace LOFAR {
                            patchList[j]->position()[1],
                            itsCosTargetDelta)) {
             // Match, so use the detailed A-team model.
-            targetDemixList[i] = patchList[j];
+            itsTargetDemixList[i] = patchList[j];
             ncomponent += (patchList[j]->nComponents() -
                            itsTargetList[i]->nComponents());
             itsTargetReplaced.push_back (patchList[j]->name());
             // A-source is in target, so remove from A-team models (if in there).
             for (size_t k=0; k<itsAteamList.size(); ++k) {
-              if (testAngDist (targetDemixList[i]->position()[0],
-                               targetDemixList[i]->position()[1],
+              if (testAngDist (itsTargetDemixList[i]->position()[0],
+                               itsTargetDemixList[i]->position()[1],
                                itsAteamList[k]->position()[0],
                                itsAteamList[k]->position()[1],
                                itsCosTargetDelta)) {
@@ -171,18 +171,6 @@ namespace LOFAR {
           }
         }
       }
-      // For demixing a single patch is used with the field center
-      // as the patch center. So combine all sources in a single patch.
-      vector<ModelComponent::ConstPtr> componentList;
-      componentList.reserve (ncomponent);
-      for (size_t i=0; i<targetDemixList.size(); ++i) {
-        componentList.insert (componentList.end(),
-                              targetDemixList[i]->begin(),
-                              targetDemixList[i]->end());
-      }
-      itsTargetDemix = Patch::Ptr(new Patch("target",
-                                            componentList.begin(),
-                                            componentList.end()));
     }
  
     void DemixInfo::update (const DPInfo& infoSel, DPInfo& info)
@@ -257,7 +245,6 @@ namespace LOFAR {
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()[0],
                              angles.getBaseValue()[1]);
-      itsTargetDemix->setPosition (itsPhaseRef);
 
       // Determine if the minimum distance (scaled with freq) of A-sources
       // to target is within the threshold.
@@ -402,12 +389,13 @@ namespace LOFAR {
           componentList.push_back(source);
         }
 
-        // Add the component list to the list of patches.
+        // Add the component list as a patch to the list of patches.
         Patch::Ptr ppatch(new Patch(*pnamesIter,
                                     componentList.begin(),
                                     componentList.end()));
         vector<BBS::PatchInfo> patchInfo(sdb.getPatchInfo(-1, *pnamesIter));
         ASSERT (patchInfo.size() == 1);
+        // Set the position and apparent flux of the patch.
         Position patchPosition;
         patchPosition[0] = patchInfo[0].getRa();
         patchPosition[1] = patchInfo[0].getDec();

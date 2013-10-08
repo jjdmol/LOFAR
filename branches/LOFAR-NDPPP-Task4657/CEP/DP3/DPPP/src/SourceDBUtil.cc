@@ -129,7 +129,15 @@ vector<Patch::ConstPtr> makePatches(SourceDB &sourceDB,
     Patch::Ptr ppatch(new Patch(patchNames[i],
                                 componentsList[i].begin(),
                                 componentsList[i].end()));
-    ppatch->computePosition();
+    vector<BBS::PatchInfo> patchInfo(sourceDB.getPatchInfo(-1, patchNames[i]));
+    ASSERT (patchInfo.size() == 1);
+    // Set the position and apparent flux of the patch.
+    Position patchPosition;
+    patchPosition[0] = patchInfo[0].getRa();
+    patchPosition[1] = patchInfo[0].getDec();
+    ppatch->setPosition (patchPosition);
+    ppatch->setBrightness (patchInfo[0].apparentBrightness());
+    ///    ppatch->computePosition();
     patchList.push_back (ppatch);
   }
   return patchList;

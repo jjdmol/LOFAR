@@ -188,10 +188,11 @@ namespace LOFAR {
                       uint resultIndex);
 
       // Do the demixing.
-      void handleDemix (DPBuffer* bufout, vector<double>* solutions);
+      void handleDemix (DPBuffer* bufout, vector<double>* solutions,
+                        double time, double timeStep);
 
       // Solve gains and subtract sources.
-      void demix (vector<double>* solutions);
+      void demix (vector<double>* solutions, double time, double timeStep);
 
       // Merge the data of the selected baselines from the subtract buffer
       // into the full buffer.
@@ -213,7 +214,7 @@ namespace LOFAR {
       //# Result of averaging the target at the subtract resolution.
       MultiResultStep*                      itsAvgResultFull;
       MultiResultStep*                      itsAvgResultSubtr;
-      //# The sources to demix (including target).
+      //# The sources to demix (excluding target).
       vector<Patch::ConstPtr>               itsDemixList;
 
       //# Variables set by setupDemix and used by handleDemix.

@@ -109,8 +109,8 @@ namespace LOFAR {
       const vector<Patch::ConstPtr>& targetList() const  {return itsTargetList;}
       const vector<Patch::ConstPtr>& ateamDemixList() const
         {return itsAteamDemixList;}
-      const Patch::Ptr& targetDemix() const
-        {return itsTargetDemix;}
+      const vector<Patch::ConstPtr>& targetDemixList() const
+        {return itsTargetDemixList;}
 
       // Get the baselines.
       const casa::Vector<casa::Int>& getAnt1() const
@@ -194,7 +194,7 @@ namespace LOFAR {
       vector<Patch::ConstPtr> itsAteamList;
       vector<Patch::ConstPtr> itsTargetList;
       vector<Patch::ConstPtr> itsAteamDemixList;
-      Patch::Ptr              itsTargetDemix;
+      vector<Patch::ConstPtr> itsTargetDemixList;
       vector<string>          itsAteamRemoved;
       vector<string>          itsTargetReplaced;
     };

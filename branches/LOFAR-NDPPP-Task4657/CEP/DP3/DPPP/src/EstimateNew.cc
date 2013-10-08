@@ -118,7 +118,8 @@ namespace LOFAR {
     // x 2 (scalar) unknowns = (no. of directions) x 8. For each of these
     // unknowns the value of the partial derivative of the model with respect
     // to the unknown has to be computed.
-    uint EstimateNew::fillDerivIndex (const vector<vector<int> >& unknownsIndex,
+    uint EstimateNew::fillDerivIndex (size_t ndir,
+                                      const vector<vector<int> >& unknownsIndex,
                                       const Baseline& baseline)
     {
       // Per direction a baseline has 32 equations with information about
@@ -127,7 +128,7 @@ namespace LOFAR {
       // However, only fill if a station has to be solved.
       size_t n = 0;
       for (size_t cr=0; cr<4; ++cr) {
-        for (size_t dr=0; dr<unknownsIndex.size(); ++dr) {
+        for (size_t dr=0; dr<ndir; ++dr) {
           if (unknownsIndex[dr][baseline.first] >= 0) {
             size_t idx0 = unknownsIndex[dr][baseline.first] + (cr/2)*4;
             itsDerivIndex[n++] = idx0;
@@ -169,8 +170,7 @@ namespace LOFAR {
         uint drOrig = srcSet[dr];
         const double* solution = &(itsSolution[drOrig*itsNrStations*8]);
         for (size_t st=0; st<itsNrStations; ++st) {
-          uint drOrig = srcSet[dr];
-          if (unknownsIndex[drOrig][st] >= 0) {
+          if (unknownsIndex[dr][st] >= 0) {
             itsSolveStation[st] = true;
             std::copy (solution, solution+8, itsUnknowns.begin()+nUnknowns);
             nUnknowns += 8;
@@ -178,7 +178,7 @@ namespace LOFAR {
           solution += 8;
         }
       }
-      if (verbose > 13) {
+      if (verbose > 11) {
         cout<<"unkindex="<<unknownsIndex<<endl;
       }
       // Initialize LSQ solver.
@@ -186,7 +186,7 @@ namespace LOFAR {
       // Iterate until convergence.
       itsNrIter = 0;
       while (!solver.isReady()  &&  itsNrIter < itsMaxIter) {
-        if (verbose > 12) {
+        if (verbose > 11) {
           cout<<endl<<"iteration " << itsNrIter << endl;
         }
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
@@ -196,7 +196,8 @@ namespace LOFAR {
           ///if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) { ????
           if (p != q  &&  (itsSolveStation[p] && itsSolveStation[q])) {
             // Create partial derivative index for current baseline.
-            size_t nPartial = fillDerivIndex (unknownsIndex, *baselines);
+            size_t nPartial = fillDerivIndex (srcSet.size(), unknownsIndex,
+                                              *baselines);
             if (verbose > 12) {
               cout<<"derinx="<<itsDerivIndex<<endl;
             }
@@ -295,12 +296,11 @@ namespace LOFAR {
                     // Each direction is dependent on all directions.
                     size_t off = 0;
                     for (size_t dr=0; dr<nDirection; ++dr) {
-                      uint drOrig = srcSet[dr];
-                      bool do1 = unknownsIndex[drOrig][p] >= 0;
-                      bool do2 = unknownsIndex[drOrig][q] >= 0;
+                      bool do1 = unknownsIndex[dr][p] >= 0;
+                      bool do2 = unknownsIndex[dr][q] >= 0;
                       // Only generate equations if a station has to be solved
                       // for this direction.
-                      if (do1 || do2) {
+                      if (do1 && do2) {
                         // Look-up mixing weight.
                         const dcomplex mix_weight = *mix;
                         // Sum weighted model visibilities.

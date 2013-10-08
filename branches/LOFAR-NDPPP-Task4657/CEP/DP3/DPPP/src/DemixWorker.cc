@@ -92,7 +92,7 @@ namespace LOFAR {
       // The worker will process up to chunkSize input time slots.
       // Size buffers accordingly.
       uint nsrc = itsMix->ateamList().size();
-      itsFactors.resize      (itsMix->chunkSize());
+      itsFactors.resize      (itsMix->ntimeOut());
       itsFactorsSubtr.resize (itsMix->ntimeOutSubtr());
       itsOrigPhaseShifts.reserve (nsrc);
       itsOrigFirstSteps.reserve  (nsrc+1);   // also needed for target direction
@@ -247,7 +247,7 @@ namespace LOFAR {
       if (itsSrcSet.empty()) {
         itsNrNoDemix++;
         // Set all solutions to 0.
-        uint nout = (nbufin + itsMix->nchanAvg() - 1) / itsMix->nchanAvg();
+        uint nout = (nbufin + itsMix->ntimeAvg() - 1) / itsMix->ntimeAvg();
         for (size_t i=0; i<nout; ++i) {
           solutions[i].resize ((itsMix->ateamList().size() + 1) *
                                itsMix->nstation() * 8);
@@ -289,8 +289,8 @@ namespace LOFAR {
           for (size_t j=0; j<itsFirstSteps.size(); ++j) {
             itsFirstSteps[j]->finish();
           }
+          itsAvgStepSubtr->finish();
         }
-        itsAvgStepSubtr->finish();
         itsTimerPhaseShift.stop();
 
         // For each NTimeAvg times, calculate the phase rotation per direction
@@ -299,7 +299,7 @@ namespace LOFAR {
         addFactors (selBuf, itsFactorBuf);
         if ((i+1) % itsMix->ntimeAvg() == 0  ||  i == nbufin-1) {
           makeFactors (itsFactorBuf, itsFactors[itsNTimeOut],
-                       itsAvgResults[0]->get()[itsNTimeOut].getWeights(),
+                       itsAvgResults[itsSrcSet[0]]->get()[itsNTimeOut].getWeights(),
                        itsMix->nchanOut(),
                        itsMix->nchanAvg());
           // Deproject sources without a model.
@@ -322,7 +322,7 @@ namespace LOFAR {
       }
 
       // Estimate gains and subtract source contributions.
-      handleDemix (bufout, solutions);
+      handleDemix (bufout, solutions, time, timeStep);
       itsTimer.stop();
     }
 
@@ -453,13 +453,14 @@ namespace LOFAR {
         std::fill (antCount.begin(), antCount.end(), 0);
         MatrixIterator<float> miter(itsAteamAmpl[i], 0, 2);
         for (uint j=0; j<itsMix->nbl(); ++j, miter.next()) {
+          if (itsMix->verbose() > 11) {
+            cout<<"source "<<i<<", baseline "<<itsMix->getAnt1()[j]
+                <<' '<<itsMix->getAnt2()[j]
+                <<" has max ampl " << max(miter.matrix())<<endl;
+          }
           if (max(miter.matrix()) > itsMix->ateamAmplThreshold()) {
             antCount[itsMix->getAnt1()[j]]++;
             antCount[itsMix->getAnt2()[j]]++;
-            if (itsMix->verbose() > 11) {
-              cout<<"baseline "<<itsMix->getAnt1()[j]<<' '<<itsMix->getAnt2()[j]
-                  <<" has ampl " << max(miter.matrix())<<endl;
-            }
           }
         }
         // Determine which stations have sufficient occurrence.
@@ -520,7 +521,7 @@ namespace LOFAR {
       for (uint i=0; i<nsrc; ++i) {
         itsPhaseShifts[i] = itsOrigPhaseShifts[itsSrcSet[i]];
         itsFirstSteps[i]  = itsOrigFirstSteps[itsSrcSet[i]];
-        itsDemixList[i]   = itsMix->ateamList()[itsSrcSet[i]];
+        itsDemixList[i]   = itsMix->ateamDemixList()[itsSrcSet[i]];
         float sumAmpl = sum(itsTargetAmpl[i]);
         if (sumAmpl < minSumAmpl) {
           minSumAmpl = sumAmpl;
@@ -559,18 +560,23 @@ namespace LOFAR {
         itsNrIgnoreTarget++;
       }
       // Determine the unknowns to be solved.
-      // The unknowns are complex values of a Jones matrix per direction-station.
-      // thus 8 real unknowns per direction-station.
-      // Their names are DirectionalGain:i:j:Type::Station::Direction
+      // The unknowns are complex values of a Jones matrix per source/station.
+      // thus 8 real unknowns per source/station.
+      // Their names are DirectionalGain:i:j:Type::Station::Source
       // where i:j gives the Jones element and Type is Real or Imag.
       // Fill the map of source/station to unknown seqnr (4 pol, ampl/phase).
       uint nUnknown = 0;
-      for (uint i=0; i<itsNModel; ++i) {
+      for (uint dr=0; dr<itsNModel; ++dr) {
+        uint drOrig = itsSrcSet[dr];
         // Initialize first.
-        std::fill (itsUnknownsIndex[i].begin(), itsUnknownsIndex[i].end(), -1);
-        for (uint j=0; j<itsStationsToUse[i].size(); ++j) {
-          uint st = itsStationsToUse[i][j];
-          itsUnknownsIndex[i][st] = nUnknown;
+        std::fill (itsUnknownsIndex[dr].begin(), itsUnknownsIndex[dr].end(), -1);
+        if (itsMix->verbose() > 11) {
+          cout << "stationstouse "<<drOrig<<" = "<<itsStationsToUse[drOrig]
+               << endl;
+        }
+        for (uint j=0; j<itsStationsToUse[drOrig].size(); ++j) {
+          uint st = itsStationsToUse[drOrig][j];
+          itsUnknownsIndex[dr][st] = nUnknown;
           nUnknown += 8;
         }
       }
@@ -580,15 +586,15 @@ namespace LOFAR {
       // Do the same for the target if it has to be solved as well.
       // Solve for all stations.
       // Also add the target step.
+      std::fill (itsUnknownsIndex[itsNModel].begin(),
+                 itsUnknownsIndex[itsNModel].end(), -1);
       if (itsIncludeTarget) {
         itsSrcSet.push_back (itsMix->ateamList().size());
-        //std::fill (itsUnknownsIndex[ndir].begin(),
-        //           itsUnknownsIndex[ndir].end(), -1);
         for (uint j=0; j<itsUnknownsIndex[itsNModel].size(); ++j) {
           itsUnknownsIndex[itsNModel][j] = nUnknown;
           nUnknown += 8;
         }
-        itsDemixList[itsNModel++] = itsMix->targetDemix();
+        itsNModel++;
       }
       if (itsMix->verbose() > 11) {
         cout<<"nunka="<<nUnknown<<endl;
@@ -598,7 +604,6 @@ namespace LOFAR {
     void DemixWorker::applyBeam (double time, const Position& pos)
     {
       // Convert the directions to ITRF for the given time.
-      ///      StationResponse::vector3r_t srcdir,refdir,tiledir;
       itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
       StationResponse::vector3r_t refdir =
         dir2Itrf(itsMix->getInfo().delayCenter());
@@ -654,50 +659,6 @@ namespace LOFAR {
       vec[1] = itrf[1];
       vec[2] = itrf[2];
       return vec;
-    }
-
-    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions)
-    {
-      demix (solutions);
-      // If selection was done, merge the subtract results back into the
-      // buffer.
-      if (itsMix->selBL().hasSelection()) {
-	mergeSubtractResult ();
-      }
-      // Clear the input buffers.
-      for (size_t i=0; i<itsAvgResults.size(); ++i) {
-        itsAvgResults[i]->clear();
-      }
-      // Store the output buffers.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        // DPBuffer copying uses reference semantics which is fine.
-        // At the end the itsAvgResultxxx buffers get removed, thus the ones
-        // in bufout cannot be overwritten.
-        if (itsMix->selBL().hasSelection()) {
-          bufout[i] = itsAvgResultFull->get()[i];
-        } else {
-          bufout[i] = itsAvgResultSubtr->get()[i];
-        }
-      }
-      // Clear the output buffers.
-      itsAvgResultFull->clear();
-      itsAvgResultSubtr->clear();
-    }
-
-    void DemixWorker::mergeSubtractResult()
-    {
-      // Merge the selected baselines from the subtract buffer into the
-      // full buffer. Do it for all timestamps.
-      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
-        const Array<Complex>& arr = itsAvgResultSubtr->get()[i].getData();
-        size_t nr = arr.shape()[0] * arr.shape()[1];
-        const Complex* in = arr.data();
-        Complex* out = itsAvgResultFull->get()[i].getData().data();
-        for (size_t j=0; j<itsFilter.getIndicesBL().size(); ++j) {
-          size_t inx = itsFilter.getIndicesBL()[j];
-          memcpy (out+inx*nr, in+j*nr, nr*sizeof(Complex));
-        }
-      }
     }
 
     void DemixWorker::addFactors (const DPBuffer& newBuf,
@@ -827,6 +788,7 @@ namespace LOFAR {
           dirnr++;
         }
       }
+      //cout<<"makefactors "<<weightSums<<bufOut;
     }
 
     void DemixWorker::deproject (Array<DComplex>& factors,
@@ -843,8 +805,9 @@ namespace LOFAR {
       if (itsNDir <= 1  ||  nrDeproject == 0) return;
       // Get pointers to the data for the various directions.
       vector<Complex*> resultPtr(itsNDir);
-      for (uint j=0; j<itsNDir; ++j) {
-        resultPtr[j] = avgResults[j]->get()[resultIndex].getData().data();
+      for (uint dr=0; dr<itsNDir; ++dr) {
+        uint drOrig = itsSrcSet[dr];
+        resultPtr[dr] = avgResults[drOrig]->get()[resultIndex].getData().data();
       }
       // The projection matrix is given by
       //     P = I - A * inv(A.T.conj * A) * A.T.conj
@@ -914,10 +877,56 @@ namespace LOFAR {
       factors.reference (newFactors);
     }
 
-    void DemixWorker::demix (vector<double>* solutions)
+    void DemixWorker::handleDemix (DPBuffer* bufout, vector<double>* solutions,
+                                   double time, double timeStep)
+    {
+      demix (solutions, time, timeStep);
+      // If selection was done, merge the subtract results back into the
+      // buffer.
+      if (itsMix->selBL().hasSelection()) {
+	mergeSubtractResult ();
+      }
+      // Clear the input buffers.
+      for (size_t i=0; i<itsAvgResults.size(); ++i) {
+        itsAvgResults[i]->clear();
+      }
+      // Store the output buffers.
+      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+        // DPBuffer copying uses reference semantics which is fine.
+        // At the end the itsAvgResultxxx buffers get removed, thus the ones
+        // in bufout cannot be overwritten.
+        if (itsMix->selBL().hasSelection()) {
+          bufout[i] = itsAvgResultFull->get()[i];
+        } else {
+          bufout[i] = itsAvgResultSubtr->get()[i];
+        }
+      }
+      // Clear the output buffers.
+      itsAvgResultFull->clear();
+      itsAvgResultSubtr->clear();
+    }
+
+    void DemixWorker::mergeSubtractResult()
+    {
+      // Merge the selected baselines from the subtract buffer into the
+      // full buffer. Do it for all timestamps.
+      for (uint i=0; i<itsNTimeOutSubtr; ++i) {
+        const Array<Complex>& arr = itsAvgResultSubtr->get()[i].getData();
+        size_t nr = arr.shape()[0] * arr.shape()[1];
+        const Complex* in = arr.data();
+        Complex* out = itsAvgResultFull->get()[i].getData().data();
+        for (size_t j=0; j<itsFilter.getIndicesBL().size(); ++j) {
+          size_t inx = itsFilter.getIndicesBL()[j];
+          memcpy (out+inx*nr, in+j*nr, nr*sizeof(Complex));
+        }
+      }
+    }
+
+    void DemixWorker::demix (vector<double>* solutions,
+                             double time, double timeStep)
     {
       // Determine the various sizes.
-      const size_t nTime = itsAvgResults[0]->get().size();
+      const size_t nTime = itsAvgResults[itsSrcSet[0]]->get().size();
       const size_t nTimeSubtr = itsAvgResultSubtr->get().size();
       const size_t multiplier = itsMix->ntimeAvg() / itsMix->ntimeAvgSubtr();
       const size_t nSt = itsMix->nstation();
@@ -950,9 +959,27 @@ namespace LOFAR {
           // Initialize this part of the buffer.
           std::fill (itsModelVis.begin() + dr*nSamples,
                      itsModelVis.begin() + (dr+1)*nSamples, dcomplex());
-          simulate(itsDemixList[dr]->position(),
-                   itsDemixList[dr],
-                   nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
+          if (dr == itsNSubtr) {
+            // This is the target which consists of multiple sources.
+            // To each of them the beam must be applied.
+            for (uint i=0; i<itsMix->targetDemixList().size(); ++i) {
+              itsPredictVis = dcomplex();
+              simulate (itsMix->phaseRef(),
+                        itsMix->targetDemixList()[i],
+                        nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw,
+                        casa_cursor<dcomplex>(itsPredictVis));
+              applyBeam (time, itsMix->targetDemixList()[i]->position());
+              dcomplex* model = &(itsModelVis[dr*nSamples]);
+              const dcomplex* pred = itsPredictVis.data(); 
+              for (uint j=0; j<nBl*nCh*4; ++j) {
+                model[j] += pred[j];
+              }
+            }
+          } else {
+            simulate(itsDemixList[dr]->position(),
+                     itsDemixList[dr],
+                     nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
+          }
         } // end nModel
         itsTimerPredict.stop();
         if (itsMix->verbose() > 12) {
@@ -966,10 +993,13 @@ namespace LOFAR {
         // matrix.
         itsTimerSolve.start();
         const_cursor<bool> cr_flag =
-          casa_const_cursor(itsAvgResults[0]->get()[ts].getFlags());
+          casa_const_cursor(itsAvgResults[itsSrcSet[0]]->get()[ts].getFlags());
         const_cursor<float> cr_weight =
-          casa_const_cursor(itsAvgResults[0]->get()[ts].getWeights());
+          casa_const_cursor(itsAvgResults[itsSrcSet[0]]->get()[ts].getWeights());
         const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
+        if (itsMix->verbose() > 13) {
+          cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
+        }
         // Create a cursor per source.
         vector<const_cursor<fcomplex> > cr_data(itsNModel);
         vector<const_cursor<dcomplex> > cr_model(itsNModel);
@@ -1110,6 +1140,7 @@ namespace LOFAR {
           } // end itsNSubtr
         } // end ts_subtr
         itsTimerSubtract.stop();
+        time += timeStep;
       }  // end nTime
     }
 

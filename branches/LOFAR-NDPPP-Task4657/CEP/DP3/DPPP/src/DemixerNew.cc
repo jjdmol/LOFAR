@@ -196,12 +196,16 @@ namespace LOFAR {
          << " for the middle channel" << endl;
       os << "     ";
       for (size_t dr=0; dr<ndir; ++dr) {
-        os << setw(13) << itsDemixInfo.ateamList()[dr]->name();
+        if (nsources[dr] > 0) {
+          os << setw(13) << itsDemixInfo.ateamList()[dr]->name();
+        }
       }
       os << setw(13) << "Total" << endl;
       os << " baseline";
       for (size_t dr=0; dr<ndir+1; ++dr) {
-        os << "  mean stddev";
+        if (nsources[dr] > 0) {
+          os << "  mean stddev";
+        }
       }
       os << endl;
       vector<double> totsump(ndir, 0.);
@@ -210,40 +214,46 @@ namespace LOFAR {
       for (int bl=0; bl<amplSubtrMean.shape()[0]; ++bl) {
         os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
            << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
-        double sump = 0;
-        double m2p  = 0;
-        size_t nrp  = 0;
+        double sumavg = 0;
+        double sumvar = 0;
         for (uint dr=0; dr<ndir; ++dr) {
-          showPerc1 (os, amplSubtrMean(bl,dr));
-          double stddev = 0;
-          if (amplSubtrNr(bl,dr) > 1) {
-            stddev = sqrt(amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1));
+          if (nsources[dr] > 0) {
+            showPerc1 (os, amplSubtrMean(bl,dr));
+            double variance = 0;
+            if (amplSubtrNr(bl,dr) > 1) {
+              variance = amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1);
+            }
+            showPerc1 (os, sqrt(variance));
+            os << ' ';
+            addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
+                       amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
+                       amplSubtrNr(bl,dr));
+            sumavg += amplSubtrMean(bl,dr);
+            sumvar += variance;
           }
-          showPerc1 (os, stddev);
-          os << ' ';
-          addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
-                     amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
-                     amplSubtrNr(bl,dr));
-          addMeanM2 (sump, m2p, nrp,
-                     amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
-                     amplSubtrNr(bl,dr));
         }
-        showPerc1 (os, sump);
-        showPerc1 (os, nrp>1  ?  sqrt(m2p/(nrp-1)) : 0.);
+        showPerc1 (os, sumavg);
+        showPerc1 (os, sqrt(sumvar));
         os << endl;
       }
-      double sump = 0;
-      double m2p  = 0;
-      size_t nrp  = 0;
+      double sumavg = 0;
+      double sumvar = 0;
       os << "  Total  ";
       for (uint dr=0; dr<ndir; ++dr) {
-        showPerc1 (os, totsump[dr]);
-        showPerc1 (os, totnrp[dr]>1  ?  sqrt(totm2p[dr]/(totnrp[dr]-1)) : 0.);
-        os << ' ';
-        addMeanM2 (sump, m2p, nrp, totsump[dr], totm2p[dr], totnrp[dr]);
+        if (nsources[dr] > 0) {
+          double variance = 0;
+          if (totnrp[dr] > 1) {
+            variance = totm2p[dr] / (totnrp[dr] - 1);
+          }
+          showPerc1 (os, totsump[dr]);
+          showPerc1 (os, sqrt(variance));
+          os << ' ';
+          sumavg += totsump[dr];
+          sumvar += variance;
+        }
       }
-      showPerc1 (os, sump);
-      showPerc1 (os, nrp>1  ?  sqrt(m2p/(nrp-1)) : 0.);
+      showPerc1 (os, sumavg);
+      showPerc1 (os, sqrt(sumvar));
       os << endl;
     }
 
@@ -413,6 +423,8 @@ namespace LOFAR {
 
     void DemixerNew::finish()
     {
+      cerr << "  " << itsNTime << " time slots to finish in SmartDemixer ..."
+           << endl;
       itsTimer.start();
       // Process remaining entries.
       if (itsNTime > 0) {
@@ -425,6 +437,20 @@ namespace LOFAR {
 
     void DemixerNew::writeSolutions (double startTime, int ntime)
     {
+      if (itsDemixInfo.verbose() > 11) {
+        for (int i=0; i<ntime; ++i) {
+          cout << "solution " << i << endl;
+          const double* sol = &(itsSolutions[i][0]);
+          for (size_t dr=0; dr<itsSolutions[i].size()/(8*itsDemixInfo.nstation()); ++dr) {
+            for (size_t st=0; st<itsDemixInfo.nstation(); ++ st) {
+              cout << dr<<','<<st<<' ';
+              print (cout, sol, sol+8);
+              cout << endl;
+              sol += 8;
+            }
+          }
+        }
+      }
       /// todo: skip solutions that are all 0.
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
@@ -458,11 +484,15 @@ namespace LOFAR {
       const char* str01[] = {"0:","1:"};
       const char* strri[] = {"Real:","Imag:"};
       Matrix<double> values(1, ntime);
-      for (size_t dr=0; dr<itsDemixInfo.ateamList().size(); ++dr) {
-        int seqnr = 0;
+      uint seqnr = 0;
+      for (size_t dr=0; dr<itsDemixInfo.ateamList().size()+1; ++dr) {
         for (size_t st=0; st<itsDemixInfo.nstation(); ++st) {
           string suffix(itsDemixInfo.antennaNames()[st]);
-          suffix += ":" + itsDemixInfo.ateamList()[dr]->name();
+          if (dr == itsDemixInfo.ateamList().size()) {
+            suffix += ":Target";
+          } else {
+            suffix += ":" + itsDemixInfo.ateamList()[dr]->name();
+          }
           for (int i=0; i<2; ++i) {
             for (int j=0; j<2; j++) {
               for (int k=0; k<2; ++k) {
@@ -472,6 +502,8 @@ namespace LOFAR {
                 for (int ts=0; ts<ntime; ++ts) {
                   values(0, ts) = itsSolutions[ts][seqnr];
                 }
+                seqnr++;
+                cout <<"val="<< values<<endl;
                 BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
                 pv->setScalars (solGrid, values);
                 BBS::ParmValueSet pvs(domainGrid,

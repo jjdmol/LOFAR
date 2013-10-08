@@ -109,7 +109,8 @@ namespace LOFAR {
       // Fill itsDerivIndex for the unknowns of the given baseline
       // to be able to pass the equations to LSQFit::makeNorm.
       // It returns the number of unknowns.
-      uint fillDerivIndex (const vector<vector<int> >& unknownsIndex,
+      uint fillDerivIndex (size_t ndir,
+                           const vector<vector<int> >& unknownsIndex,
                            const Baseline& baseline);
 
       //# Data members
