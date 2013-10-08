@@ -148,6 +148,8 @@ namespace LOFAR {
       writeHistory (itsMS, itsParset);
       itsMS.flush (true, true);
       DPLOG_INFO ("Finished preparing output MS", false);
+
+      info().setNeedWrite(0);
     }
 
     void MSWriter::show (std::ostream& os) const

@@ -889,6 +889,38 @@ void testClear()
 }
 
 
+void testMultiOut()
+{
+  cout << endl << "** testMultiOut **" << endl;
+  // Test if update data works fine with multiple outputs:
+  // read from tNDPPP_tmp.MS, write to copy3, update to copy3
+  Array<Complex> data;
+  Array<bool> flags;
+  {
+    ofstream ostr("tNDPPP_tmp.parset");
+    ostr << "msin=tNDPPP_tmp.MS" << endl;
+    ostr << "steps=[scaledata,out1,out2]" << endl;
+    ostr << "scaledata.coeffs=2" << endl;
+    ostr << "scaledata.stations=*" << endl;
+    ostr << "scaledata.scalesize=false" << endl;
+    ostr << "out1.type=out" << endl;
+    ostr << "out1.name=tNDPPP_tmp.MS_copy3" << endl;
+    ostr << "out2.type=out" << endl;
+    ostr << "out2.name=." << endl; // Defaults to the previous out, so _copy3
+    ostr << "out2.datacolumn=DATA_2" << endl;
+    ostr << "msout=tNDPPP_tmp.MS_copy4" << endl;   // same name means update
+  }
+  DPRun::execute ("tNDPPP_tmp.parset");
+  // Check that tables exist, contain the specified columns
+  {
+    //Table tab("tNDPPP_tmp.MS_copy2");
+    //data *= Complex(2,0);
+    //ASSERT (allNear(ROArrayColumn<Complex>(tab,"DATA").getColumn(), data, 1e-5));
+  }
+}
+
+
+
 int main()
 {
   try
@@ -911,6 +943,7 @@ int main()
     testFilter2();
     testFilter3();
     testClear();
+    testMultiOut();
   } catch (std::exception& err) {
     std::cerr << "Error detected: " << err.what() << std::endl;
     return 1;

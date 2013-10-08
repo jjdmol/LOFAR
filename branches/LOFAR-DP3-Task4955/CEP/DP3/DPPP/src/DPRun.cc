@@ -211,6 +211,8 @@ namespace LOFAR {
       } else {
         reader = new MultiMSReader (inNames, parset, "msin.");
       }
+      casa::Path pathIn (reader->msName());
+      casa::String currentMSName=pathIn.absoluteName();
 
       firstStep = DPStep::ShPtr (reader);
       lastStep = firstStep;
@@ -247,7 +249,8 @@ namespace LOFAR {
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
         } else if (type == "out" || type=="output") {
-          step = makeOutputStep(reader, parset, prefix, inNames.size()>1);
+          step = makeOutputStep(reader, parset, prefix,
+              inNames.size()>1,currentMSName);
         }
           else {
           THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
@@ -259,7 +262,8 @@ namespace LOFAR {
           firstStep = step;
         }
       }
-      step = makeOutputStep(reader, parset, "msout.", inNames.size()>1);
+      step = makeOutputStep(reader, parset, "msout.", inNames.size()>1,
+          currentMSName);
       lastStep->setNextStep (step);
       lastStep = step;
 
@@ -278,9 +282,10 @@ namespace LOFAR {
 
 
     DPStep::ShPtr DPRun::makeOutputStep(MSReader* reader,
-      const ParameterSet& parset, const string& prefix, bool multipleInputs) {
+      const ParameterSet& parset, const string& prefix, bool multipleInputs,
+      casa::String& currentMSName) {
       DPStep::ShPtr step;
-      string outName;
+      casa::String outName;
       bool doUpdate = false;
 
       if (prefix=="msout.") { // We are handling the last step
@@ -298,28 +303,31 @@ namespace LOFAR {
       casa::Path pathIn (reader->msName());
       if (! outName.empty()) {
         if (outName == ".") {
-          outName = pathIn.absoluteName();
+          outName = currentMSName;
           doUpdate = true;
         } else {
           casa::Path pathOut(outName);
-          if (pathIn.absoluteName() == pathOut.absoluteName()) {
+          if (currentMSName == pathOut.absoluteName()) {
             doUpdate = true;
+            outName=pathOut.absoluteName();
           }
         }
       } else {
-        outName = pathIn.absoluteName();
+        outName = currentMSName;
         doUpdate = true;
       }
 
       if (doUpdate) { // Create MSUpdater
         ASSERTSTR (! multipleInputs,
                    "No update can be done if multiple input MSs are used");
-        step = DPStep::ShPtr(new MSUpdater(outName, parset, prefix, reader));
+        step = DPStep::ShPtr(new MSUpdater(reader, outName, parset, prefix,
+            !(currentMSName==outName))); // do not write history twice
       } else {
         step = DPStep::ShPtr(new MSWriter (reader, outName, parset, prefix));
         reader->setReadVisData (true);
       }
 
+      currentMSName = outName;
       return step;
     }
 

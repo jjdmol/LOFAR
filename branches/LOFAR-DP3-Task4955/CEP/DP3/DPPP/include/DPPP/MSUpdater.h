@@ -53,8 +53,9 @@ namespace LOFAR {
     class MSUpdater: public DPStep
     {
     public:
-      MSUpdater (casa::String msName, const ParameterSet& parset,
-                 const std::string& prefix, MSReader* reader);
+      MSUpdater (MSReader* reader, casa::String msName,
+                const ParameterSet& parset, const std::string& prefix,
+                bool writeHistory=true);
 
       virtual ~MSUpdater();
 
@@ -109,9 +110,9 @@ namespace LOFAR {
           const casa::ColumnDesc& cd);
 
       //# Data members
+      MSReader*   itsReader;
       casa::String itsMSName;
       casa::Table  itsMS;
-      MSReader*   itsReader;
       const ParameterSet& itsParset;
       casa::String itsDataColName;
       casa::String itsWeightColName;

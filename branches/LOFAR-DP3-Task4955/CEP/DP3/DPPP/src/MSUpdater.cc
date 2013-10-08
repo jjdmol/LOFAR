@@ -42,10 +42,10 @@ using namespace casa;
 namespace LOFAR {
   namespace DPPP {
 
-    MSUpdater::MSUpdater (String msName, const ParameterSet& parset,
-                          const string& prefix, MSReader* reader)
-      : itsMSName         (msName),
-        itsReader         (reader),
+    MSUpdater::MSUpdater (MSReader* reader, String msName, const ParameterSet& parset,
+                          const string& prefix, bool writeHistory)
+      : itsReader         (reader),
+        itsMSName         (msName),
         itsParset         (parset),
         itsWriteData      (false),
         itsWriteWeight    (false),
@@ -53,9 +53,8 @@ namespace LOFAR {
         itsNrDone         (0),
         itsDataColAdded   (false),
         itsWeightColAdded (false),
-        itsWriteHistory   (true)
+        itsWriteHistory   (writeHistory)
     {
-      itsMS = MeasurementSet (msName, TableLock::AutoNoReadLocking);
       itsDataColName  = parset.getString (prefix+"datacolumn",  "");
       itsWeightColName  = parset.getString (prefix+"weightcolumn","");
       itsNrTimesFlush = parset.getUint (prefix+"flush", 0);
@@ -149,7 +148,7 @@ namespace LOFAR {
           putWeights (buf.getRowNrs(), buf.getWeights());
         }
         else {     // Read weights from reader, if possible
-          if (MSUpdater::updateAllowed(info(),itsMSName,false)) {
+          if (!MSUpdater::updateAllowed(info(),itsMSName,false)) {
             THROW(Exception, "Copying weights column can only be done for the original MS");
           } else {
             putWeights (buf.getRowNrs(),
@@ -210,6 +209,8 @@ namespace LOFAR {
       // Tell the reader if visibility data needs to be read.
       itsReader->setReadVisData (info().needVisData());
 
+      // Todo: do not open MS if no writing is necessary (e.g. when only count is done)
+      itsMS = MeasurementSet (itsMSName, TableLock::AutoNoReadLocking);
       NSTimer::StartStop sstime(itsTimer);
       // Reopen the MS for read/write.
       itsMS.reopenRW();
@@ -226,6 +227,8 @@ namespace LOFAR {
             dataShape, ColumnDesc::FixedShape);
         itsWeightColAdded = addColumn(itsWeightColName, TpFloat, cd);
       }
+
+      info().setNeedWrite(0);
     }
 
     void MSUpdater::addToMS (const string&) {

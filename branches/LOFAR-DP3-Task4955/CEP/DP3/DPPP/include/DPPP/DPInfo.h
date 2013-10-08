@@ -195,7 +195,7 @@ namespace LOFAR {
 
       // Set if visibility data needs to be read.
       void setNeedVisData()
-        { itsNeedVisData = true; } 
+        { itsNeedVisData = true; }
       // Set if the last step needs to write data and/or flags (default both).
       void setNeedWrite (int needWrite = NeedWriteData+NeedWriteFlags)
         { itsNeedWrite |= needWrite; }
