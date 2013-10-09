@@ -20,12 +20,13 @@
 //# $Id$
 
 // \file
+
 // This file contains a CUDA implementation of the GPU kernel for the Incoherent
-// Stokes part of the beam-former pipeline. It calculates station beams by
-// adding the Stokes parameters of the station antennas without correcting for
-// delays; hence the term \e incoherent. For Stokes \e I this means calculating
-// the sum of squares of the complex voltages. Compare this with Coherent
-// Stokes, where you calculate the square of sums of the complex voltages.
+// Stokes part of the beam-former pipeline. It adds the Stokes parameters of the
+// station beams without correcting for delays; hence the term \e
+// incoherent. For Stokes \e I this means calculating the sum of squares of the
+// complex voltages. Compare this with Coherent Stokes, where you calculate the
+// square of sums of the complex voltages.
 
 #if !(INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1)
 #error Precondition violated: INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1
@@ -58,8 +59,8 @@ typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANN
 typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR];
 
 // Compute the \e incoherent Stokes parameters. The incoherent Stokes
-// parameters are calculated by adding the complex voltages of the station
-// antennas without correcting for delays due to tied-array beam forming.
+// parameters are calculated by adding the Stokes parameters of the station
+// beams without correcting for delays due to tied-array beam forming.
 //
 // Pre-processor input symbols (some are tied to the execution configuration)
 // Symbol                  | Valid Values            | Description
