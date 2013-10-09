@@ -27,13 +27,13 @@
 // Implementation of ACC/PLC ProcessControl class
 
 //# Includes
-#include <BBSControl/Strategy.h>
-#include <BBSControl/CalSession.h>
-
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
 #include <ParmDB/Axis.h>
 #include <LMWCommon/VdsDesc.h>
+
+#include <BBSControl/Strategy.h>
+#include <BBSControl/CalSession.h>
 
 namespace LOFAR
 {
