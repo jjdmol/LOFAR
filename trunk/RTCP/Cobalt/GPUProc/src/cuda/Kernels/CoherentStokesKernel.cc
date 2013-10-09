@@ -55,7 +55,7 @@ namespace LOFAR
 
       timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.CoherentStokesKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_CoherentStokesKernel.dat") % 
             ps.settings.observationID);

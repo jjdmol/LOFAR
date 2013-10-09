@@ -55,7 +55,7 @@ namespace LOFAR
       subbandBandwidth(ps.settings.subbandWidth())
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.DelayAndBandPassKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_DelayAndBandPassKernel_%c%c%c.dat") % 
             ps.settings.observationID %
