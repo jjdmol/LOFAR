@@ -42,15 +42,17 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrTABs;
-        float weightCorrection;   // constant weight applied to all weights
+        unsigned nrSAPs;
+        unsigned nrTABs;
+        float weightCorrection; // constant weight applied to all weights
+        double subbandBandwidth;
       };
 
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA,
-        BEAM_FORMER_WEIGHTS
+        BEAM_FORMER_DELAYS
       };
 
       // Buffers that must be passed to the constructor of the BeamFormerKernel
@@ -59,21 +61,25 @@ namespace LOFAR
       {
         Buffers(const gpu::DeviceMemory& in, 
                 const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& beamFormerWeights) :
-          Kernel::Buffers(in, out), beamFormerWeights(beamFormerWeights)
+                const gpu::DeviceMemory& beamFormerDelays) :
+          Kernel::Buffers(in, out), beamFormerDelays(beamFormerDelays)
         {}
 
-        gpu::DeviceMemory beamFormerWeights;
+        gpu::DeviceMemory beamFormerDelays;
       };
 
       BeamFormerKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
+
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+                   double subbandFrequency, unsigned SAP);
+
     };
 
-    // Specialization of the KernelFactory for
-    // BeamFormerKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 

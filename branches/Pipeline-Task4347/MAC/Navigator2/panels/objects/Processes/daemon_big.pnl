@@ -153,7 +153,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0  28 168 992 462
+0  28 168 992 562
 EE 1 0 1 5 1 "time" 12 1 0 "s" 1
 LANG:1 4 time
 E
@@ -337,25 +337,6 @@ E E 0 1 1 2 1 E U  1 E 34 150 119 163
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
 LANG:1 13 Log Messages:
-2 13
-"PRIMITIVE_TEXT6"
-""
-1 32 472 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-19 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 472 124 485
-0 2 2 "0s" 0 0 0 192 0 0  32 472 1
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
-0 1
-LANG:1 14 Daemon Values:
 2 15
 "PRIMITIVE_TEXT7"
 ""

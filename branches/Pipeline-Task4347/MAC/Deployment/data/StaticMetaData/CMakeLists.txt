@@ -22,11 +22,8 @@ file(GLOB staticmeta_data
   AntennaArrays/*.conf
   AntennaPos/*.conf
   CableDelays/*.conf
-  HBADeltas/*.conf
   iHBADeltas/*.conf
-  AntennaFields/*.conf
-  TBBConnections.dat
-  RSPConnections_CCU.dat)
+  AntennaFields/*.conf)
 install(FILES
   ${staticmeta_data}
   DESTINATION etc/StaticMetaData)

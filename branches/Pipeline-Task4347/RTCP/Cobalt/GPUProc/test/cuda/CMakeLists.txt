@@ -23,21 +23,22 @@ lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 lofar_add_test(tIntToFloat tIntToFloat.cc)
 lofar_add_test(tFIR_Filter tFIR_Filter.cc)
 lofar_add_test(tFFT tFFT.cc)
-#lofar_add_test(tFFT_leakage tFFT_leakage.cc)
+#lofar_add_executable(tFFT_leakage tFFT_leakage.cc)  # not an automatic test, keep buildable (doesn't right now)
 lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tTranspose tTranspose.cc)
+lofar_add_test(tTranspose2 tTranspose2.cc)
 
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
 set_tests_properties(
   tFIR_Filter
-  #tFFT_leakage
   tCorrelator
   tIntToFloat
   tBeamFormer
   tTranspose
+  tTranspose2
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 

@@ -22,15 +22,22 @@
 
 #include "CorrelatorKernel.h"
 
-#include <vector>
-#include <algorithm>
-
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Exceptions.h>
 
-#include <GPUProc/global_defines.h>
+#include <boost/format.hpp>
+
+#include <fstream>
+
+using boost::format;
+
+// For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
+// performance.
+
+#define USE_2X2
 
 namespace LOFAR
 {
@@ -47,17 +54,26 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 # endif
 
+    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps)
+    {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Correlator.CorrelatorKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
+            ps.settings.observationID);
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      size_t maxNrThreads, preferredMultiple;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      size_t preferredMultiple;
 
       gpu::Platform pf;
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
@@ -80,7 +96,7 @@ namespace LOFAR
 # else
       unsigned nrBlocks = nrBaselines;
 # endif
-      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrPasses = (nrBlocks + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
       unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
       nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
 

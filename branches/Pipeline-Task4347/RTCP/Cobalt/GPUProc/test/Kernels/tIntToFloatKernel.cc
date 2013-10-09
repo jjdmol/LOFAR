@@ -22,6 +22,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
@@ -40,7 +41,7 @@ int main() {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
   } catch (gpu::GPUException& e) {
-    cerr << e.what() << endl;
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
   gpu::Device device(0);
@@ -68,9 +69,10 @@ int main() {
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
   IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, buffers));
 
-  kernel->enqueue(stream);
+  BlockID blockId;
+  kernel->enqueue(blockId);
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();
@@ -80,7 +82,7 @@ int main() {
   // The inputs were all -128 with bits per sample 8. 
   // Therefore they should all be converted to -127 (but scaled to 16 bit amplitute values).
   for (size_t idx =0; idx < nSampledData; ++idx)
-    if (samplesFloat[idx] != -127 * 256)
+    if (samplesFloat[idx] != -127 * 16)
     {
         cerr << "Found an uncorrect sample in the output array at idx: " << idx << endl
              << "Value found: " << samplesFloat[idx] << endl

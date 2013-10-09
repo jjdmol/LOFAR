@@ -23,8 +23,12 @@
 #include "FFT_Plan.h"
 #include <GPUProc/gpu_wrapper.h>
 
+#if 0
 // CUDA 5.5RC crashes if cuFFT is linked in but not used,
 // so we provide a workaround by always using cuFFT.
+//
+// CUDA 5.5 final release fixes this issue, so this code will
+// soon be dead.
 #if CUDA_VERSION == 5050
 namespace {
   int use_cuFFT() {
@@ -41,6 +45,7 @@ namespace {
 };
 
 static int __using_cuFFT = use_cuFFT();
+#endif
 #endif
 
 namespace LOFAR
@@ -68,7 +73,7 @@ namespace LOFAR
       cufftDestroy(plan);
     }
 
-    void FFT_Plan::setStream(gpu::Stream &stream)
+    void FFT_Plan::setStream(const gpu::Stream &stream) const
     {
       cufftResult error;
 

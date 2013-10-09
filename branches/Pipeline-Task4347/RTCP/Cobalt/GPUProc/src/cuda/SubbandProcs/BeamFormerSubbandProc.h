@@ -49,12 +49,12 @@ namespace LOFAR
     /*
      * Our output data type
      */
-    class BeamFormedData: public MultiDimArrayHostBuffer<fcomplex, 3>, public StreamableData
+    class BeamFormedData: public MultiDimArrayHostBuffer<float, 3>, public StreamableData
     {
     public:
       BeamFormedData(unsigned nrStokes, unsigned nrChannels, size_t nrSamples, gpu::Context &context)
       :
-        MultiDimArrayHostBuffer<fcomplex, 3>(boost::extents[nrStokes][nrChannels][nrSamples], context, 0)
+        MultiDimArrayHostBuffer<float, 3>(boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
       {
       }
 
@@ -73,7 +73,7 @@ namespace LOFAR
     class BeamFormerSubbandProc : public SubbandProc
     {
     public:
-      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context, BeamFormerFactories &factories);
+      BeamFormerSubbandProc(const Parset &parset, gpu::Context &context, BeamFormerFactories &factories, size_t nrSubbandsPerSubbandProc = 1);
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
@@ -85,7 +85,7 @@ namespace LOFAR
       static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
 
       // second FFT
-      static const size_t BEAM_FORMER_NR_CHANNELS = 2048;
+      static const size_t BEAM_FORMER_NR_CHANNELS = 4096;
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -160,7 +160,7 @@ namespace LOFAR
       std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
 
       // beam former
-      gpu::DeviceMemory devBeamFormerWeights;
+      gpu::DeviceMemory devBeamFormerDelays;
       BeamFormerKernel::Buffers beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
@@ -172,6 +172,7 @@ namespace LOFAR
 
       // PPF
       gpu::DeviceMemory devFilterWeights;
+      gpu::DeviceMemory devFilterHistoryData;
       FIR_FilterKernel::Buffers firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       FFT_Kernel finalFFT;
@@ -186,13 +187,13 @@ namespace LOFAR
 
     struct BeamFormerFactories
     {
-      BeamFormerFactories(const Parset &ps) :
+      BeamFormerFactories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1) :
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
         correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
-        firFilter(firFilterParams(ps)),
+        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps))
       {
       }
@@ -210,8 +211,7 @@ namespace LOFAR
         params.nrChannelsPerSubband = BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
         params.correctBandPass = false;
-
-        // TODO: Don't transpose data
+        params.transpose = false;
 
         return params;
       }
@@ -221,8 +221,7 @@ namespace LOFAR
         params.nrChannelsPerSubband = BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
         params.delayCompensation = false;
-
-        // TODO: Don't transpose data
+        params.transpose = true;
 
         return params;
       }
@@ -243,13 +242,19 @@ namespace LOFAR
         return params;
       }
 
-      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps) const {
+      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
         FIR_FilterKernel::Parameters params(ps);
 
-        params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
+
+        // define at least 16 channels to get the FIR_Filter.cu to compile, even
+        // if we won't use it.
+        params.nrChannelsPerSubband = std::max(16U, ps.settings.beamFormer.coherentSettings.nrChannels);
 
         // time integration has not taken place yet, so calculate the nrSamples manually
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        params.nrSubbands = nrSubbandsPerSubbandProc;
 
         return params;
       }

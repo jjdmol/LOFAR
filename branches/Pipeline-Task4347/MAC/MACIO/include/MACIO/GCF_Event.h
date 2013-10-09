@@ -49,7 +49,7 @@ namespace LOFAR {
  * file contains definitions of GCFEvent sub classes, one for each event. 
  */
 
-#define SIZEOF_EVENT(e) ((ssize_t) (sizeof((e).signal) + sizeof((e).length) + (e).length))
+#define SIZEOF_EVENT(e) ((uint32) (sizeof((e).signal) + sizeof((e).length) + (e).length))
 
 class GCFEvent
 {

@@ -27,6 +27,10 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
+#include <Common/LofarLogger.h>
+
 using namespace std;
 
 namespace LOFAR
@@ -38,31 +42,38 @@ namespace LOFAR
       nrChannelsPerSubband(ps.nrChannelsPerSubband()),
       nrSamplesPerChannel(ps.nrSamplesPerChannel()),
       nrSamplesPerSubband(ps.nrSamplesPerSubband()),
-      nrPolarizations(NR_POLARIZATIONS)
+      nrPolarizations(NR_POLARIZATIONS),
+      dumpBuffers(false)
+    {
+    }
+
+    Kernel::~Kernel()
     {
     }
 
     Kernel::Kernel(const gpu::Stream& stream, 
-                   const gpu::Function& function)
+                   const gpu::Function& function,
+                   const Buffers &buffers,
+                   const Parameters &params)
       : 
       gpu::Function(function),
-      event(stream.getContext()),
+      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsStream(stream),
-      maxThreadsPerBlock(stream.getContext().getDevice().getMaxThreadsPerBlock())
+      itsBuffers(buffers),
+      itsParameters(params)
     {
-      }
-
-    void Kernel::enqueue(const gpu::Stream &queue,
-                         PerformanceCounter &counter) const
-    {
-      queue.recordEvent(counter.start);   
-      enqueue(queue);
-      queue.recordEvent(counter.stop);
+      LOG_INFO_STR(
+        "Function " << function.name() << ":" << 
+        "\n  max. threads per block: " << 
+        function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
+        "\n  nr. of registers used : " <<
+        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
-    void Kernel::enqueue(const gpu::Stream &queue) const
+    void Kernel::enqueue(const BlockID &blockId) const
     {
-      // TODO: to globalWorkSize in terms of localWorkSize (CUDA) (+ remove assertion): add protected setThreadDim()
+      // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
+      //       (+ remove assertion): add protected setThreadDim()
       gpu::Block block(localWorkSize);
       assert(globalWorkSize.x % block.x == 0 &&
              globalWorkSize.y % block.y == 0 &&
@@ -79,20 +90,30 @@ namespace LOFAR
         << " creates more than the " << maxThreadsPerBlock
         << " supported threads/block" );
       
-      queue.launchKernel(*this, grid, block);
+      itsStream.launchKernel(*this, grid, block);
+
+      if (itsParameters.dumpBuffers && blockId.block >= 0) {
+        itsStream.synchronize();
+        dumpBuffers(blockId);
+      }
     }
 
-    void Kernel::enqueue() const
-    {
-      enqueue(itsStream);
-    }
-
-    void Kernel::enqueue(PerformanceCounter &counter) const
+    void Kernel::enqueue(const BlockID &blockId, 
+                         PerformanceCounter &counter) const
     {
       itsStream.recordEvent(counter.start);
-      enqueue(itsStream);
+      enqueue(blockId);
       itsStream.recordEvent(counter.stop);
     }
+
+    void Kernel::dumpBuffers(const BlockID &blockId) const
+    {
+      dumpBuffer(itsBuffers.output,
+                 str(boost::format(itsParameters.dumpFilePattern) %
+                     blockId.globalSubbandIdx %
+                     blockId.block));
+    }
+
   }
 }
 

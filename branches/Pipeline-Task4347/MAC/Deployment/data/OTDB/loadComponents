@@ -36,7 +36,7 @@ SyntaxError()
 	echo ""
 	echo "Syntax: $(basename $0) -D databasename [-v versionnr] [-q qualifier]" 
 	echo "                       [-H hostname] [-d directory] [-l]"
-	echo "        - databasename is always needed"
+	echo "        - if database name is empty, only tmp files are created (for comparison)"
 	echo "        - versionnumber is svn revision number (max 6 digits) [Current]"
 	echo "        - qualifier can be development|test|operational|example []"
 	echo "        - hostname is the hostname of the database server [sasdb]" 
@@ -149,6 +149,7 @@ QUAL=
 HOST='sasdb'
 DIR="/opt/lofar/bin"
 localUse=0
+DB_Update=1
 wdir="/opt/lofar/etc/otdb" # default location of comp, gcomp files 
 while getopts "hD:v:q:H:d:l" OPTION
 do
@@ -184,9 +185,7 @@ do
 done
 
 if [[ -z $DATABASE ]]; then 
-  echo "Please provide a database name!"
-  SyntaxError
-  exit
+  DB_Update=0
 fi
 
 # Determine SVN version of build or check out, needed for versioning comp.
@@ -200,7 +199,6 @@ if [[ -z $VERSION ]]; then
   fi
 fi 
 
-if [ -e $DIR/load_OTDB_comps ]; then 
   cd $wdir
 
   # We use a lot of tmpfile to make life easier.
@@ -241,34 +239,39 @@ if [ -e $DIR/load_OTDB_comps ]; then
   makeOrderFile
   rm -f ${RELATIONSFILE} ${LEVELFILE}
 
-  # Construct commandline for load_OTDB_comps
-  arguments=$DATABASE
-  arguments=$arguments" "${ORDERFILE}
-  arguments=$arguments" -v "$VERSION 
-  arguments=$arguments" -h "$HOST
-  if [ "$QUAL" != "" ]; then 
-    arguments=$arguments" -q "$QUAL 
-  fi
-  if [ $localUse = 0 ]; then
-    logfile="/opt/lofar/var/log/loadComponents.log"
-  else
-    logfile="./loadComponents.log"
-  fi
-
-  echo "Executing: load_OTDB_comps $arguments 2>&1 1>$logfile"
-  load_OTDB_comps $arguments 2>&1 1>$logfile
-  # when there are files we didn't use report that to the user
-  if [ -s ${UNUSEDFILES} ]; then
+if [ $DB_Update -eq 1 ]; then
+  if [ -x $DIR/load_OTDB_comps ]; then 
+    # Construct commandline for load_OTDB_comps
+    arguments=$DATABASE
+    arguments=$arguments" "${ORDERFILE}
+    arguments=$arguments" -v "$VERSION 
+    arguments=$arguments" -h "$HOST
+    if [ "$QUAL" != "" ]; then 
+      arguments=$arguments" -q "$QUAL 
+    fi
+    if [ $localUse = 0 ]; then
+      logfile="/opt/lofar/var/log/loadComponents.log"
+    else
+      logfile="./loadComponents.log"
+    fi
+  
+    echo "Executing: load_OTDB_comps $arguments 2>&1 1>$logfile"
+    load_OTDB_comps $arguments 2>&1 1>$logfile
+    # when there are files we didn't use report that to the user
+    if [ -s ${UNUSEDFILES} ]; then
 	echo
 	echo "  The following files are NOT LOADED into the database because they are NOT part of the current defined LOFAR tree:"
 	cat ${UNUSEDFILES}
-  fi
-  echo "Done; Logfile is $logfile"
+    fi
+    echo "Done; Logfile is $logfile"
 
-  # Cleanup
-  rm -f ${UNUSEDFILES} ${ORDERFILE}
+    # Cleanup
+    rm -f ${UNUSEDFILES} ${ORDERFILE}
+  else
+    echo "Cannot execute load_OTDB_comps (not there, or not executable)"
+  fi
 else
-  echo "Cannot execute load_OTDB_comps (not there, or not executable)"
+  echo "All component files created; no database upload requested. See ${ORDERFILE} for used and ${UNUSEDFILES} for unused component files"
 fi
 
 exit

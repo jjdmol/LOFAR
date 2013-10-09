@@ -4,7 +4,7 @@ LANG:1 4 text
 PANEL,-1 -1 399 400 N "_3DFace" 0
 "main()
 {
-  string aDP=\"CS010:LOFAR\";
+  string aDP=\"CS011:LOFAR\";
   // Init the connection Watchdog
   GCFCWD_Init();
   Debug(\"Does \"+aDP+\".status.state exist?\");

@@ -23,6 +23,7 @@
 
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <sstream>
 
@@ -40,8 +41,8 @@ TEST(tKernelFunctions)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  ps.add("OLAP.CNProc.integrationSteps", "1048576");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.blockSize", "262144");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.updateSettings();
 
@@ -54,16 +55,19 @@ TEST(tKernelFunctions)
   gpu::DeviceMemory
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
     dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA)),
-    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
+    dCoeff(context,  factory.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+    dHistory(context,  factory.bufferSize(FIR_FilterKernel::HISTORY_DATA));
 
   gpu::HostMemory
     hInput(context, dInput.size()),
     hOutput(context, dOutput.size()),
-    hCoeff(context, dCoeff.size());
+    hCoeff(context, dCoeff.size()),
+    hHistory(context, dHistory.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
   cout << "dCoeff.size() = " << dCoeff.size() << endl;
+  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -74,13 +78,14 @@ TEST(tKernelFunctions)
 
   stream.writeBuffer(dInput, hInput);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff);
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
 
   // **************************************
   // excercise it
   PerformanceCounter counter(context);  //create a counter
-  kernel->enqueue(counter);             // insert in kernel queue
+  BlockID blockId;                      // create a dummy block-ID struct
+  kernel->enqueue(blockId, counter, 0); // insert in kernel queue
 
 
   stream.readBuffer(hOutput, dOutput);

@@ -189,7 +189,20 @@ namespace LOFAR
           // Observation.VirtualInstrument.stationList can contain full
           // antennafield names such as CS001LBA.
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
-          result.push_back(AntennaFieldName(station.substr(0,5), station.substr(5)));
+
+          // Do not assume the standard station name format (sily "S9").
+          string stName;
+          string antFieldName;
+          if (station.length() <= 1)
+            stName = station; // if stName or antFieldName is empty, writing an MS table will fail
+          else if (station.length() <= 5) {
+            stName = station.substr(0, station.length()-1);
+            antFieldName = station.substr(station.length()-1);
+          } else {
+            stName = station.substr(0, 5);
+            antFieldName = station.substr(5);
+          }
+          result.push_back(AntennaFieldName(stName, antFieldName));
           continue;
         }
 
@@ -282,61 +295,9 @@ namespace LOFAR
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
-      settings.nrPPFTaps = 16;
-
-      // Station information
+      // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
-
-      vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
-
-      vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
-
-      size_t nrStations = fieldNames.size();
-
-      settings.stations.resize(nrStations);
-      for (unsigned i = 0; i < nrStations; ++i) {
-        struct ObservationSettings::Station &station = settings.stations[i];
-
-        station.name              = fieldNames[i].fullName();
-        station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
-        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-
-        string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
-        if (!isDefined(key)) key = "Observation.rspBoardList";
-        station.rspBoardMap = getUint32Vector(key, emptyVectorUnsigned, true);
-
-        key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % station.name));
-        if (!isDefined(key)) key = "Observation.rspSlotList";
-        station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
-      }
-
-      // Resource information
-      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
-      settings.nodes.resize(nrNodes);
-      for (size_t i = 0; i < nrNodes; ++i) {
-        struct ObservationSettings::Node &node = settings.nodes[i];
-
-        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
-
-        node.rank     = i;
-        node.hostName = getString(prefix + "host", "localhost");
-        node.cpu      = getUint32(prefix + "cpu",  0);
-        node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
-
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
-
-        for (size_t j = 0; j < stationNames.size(); ++j) {
-          ssize_t index = settings.stationIndex(stationNames[j]);
-
-          if (index >= 0)
-            node.stations.push_back(index);
-        }
-      }
 
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
@@ -381,6 +342,62 @@ namespace LOFAR
         settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
       } else {
         settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+      }
+
+      // Station information (used pointing information to verify settings)
+      vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+
+      vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
+
+      size_t nrStations = fieldNames.size();
+
+      settings.stations.resize(nrStations);
+      for (unsigned i = 0; i < nrStations; ++i) {
+        struct ObservationSettings::Station &station = settings.stations[i];
+
+        station.name              = fieldNames[i].fullName();
+        station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
+        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+
+        string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
+        if (!isDefined(key)) key = "Observation.rspBoardList";
+        station.rspBoardMap = getUint32Vector(key, emptyVectorUnsigned, true);
+
+        ASSERTSTR(station.rspBoardMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspBoardMap.size() << " subbands. Please correct either Observation.rspBoardList or Observation.Dataslots." << station.name << ".RSPBoardList" );
+
+        key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % station.name));
+        if (!isDefined(key)) key = "Observation.rspSlotList";
+        station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
+
+        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".rspSlotList" );
+      }
+
+      // Resource information
+      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
+      settings.nodes.resize(nrNodes);
+      for (size_t i = 0; i < nrNodes; ++i) {
+        struct ObservationSettings::Node &node = settings.nodes[i];
+
+        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
+
+        node.rank     = i;
+        node.hostName = getString(prefix + "host", "localhost");
+        node.cpu      = getUint32(prefix + "cpu",  0);
+        node.nic      = getString(prefix + "nic",  "");
+        node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
+
+        for (size_t j = 0; j < stationNames.size(); ++j) {
+          ssize_t index = settings.stationIndex(stationNames[j]);
+
+          if (index >= 0)
+            node.stations.push_back(index);
+        }
       }
 
       /* ===============================
@@ -477,11 +494,7 @@ namespace LOFAR
           // Obtain settings of selected stokes
           set->type = stokesType(getString(prefix + ".which", "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
-          if (set->nrChannels == 0) {
-            // apply default
-            set->nrChannels = settings.correlator.nrChannels;
-          }
+          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
           set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
           set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
           if (set->nrSubbandsPerFile == 0) {
@@ -501,6 +514,10 @@ namespace LOFAR
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+
+          // unused until we support rings
+          (void)nrRings;
+          (void)ringWidth;
 
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
@@ -1149,22 +1166,12 @@ namespace LOFAR
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return settings.correlator.nrSamplesPerChannel;
-    }
-
-    unsigned Parset::nrHistorySamples() const
-    {
-      return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
-    }
-
-    unsigned Parset::nrPPFTaps() const
-    {
-      return settings.nrPPFTaps;
+      return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
     }
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return settings.correlator.nrChannels;
+      return settings.correlator.enabled ? settings.correlator.nrChannels : 0;
     }
 
     size_t Parset::nrSubbands() const

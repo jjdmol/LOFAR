@@ -25,6 +25,7 @@
 
 #include <cstdio>    // for remove()
 #include <cstdlib>   // for unsetenv()
+#include <vector>
 #include <fstream>
 #include <stdexcept>
 #include <UnitTest++.h>
@@ -43,9 +44,9 @@ const char* srcFile("t_gpu_utils.cl");
 #error "Either USE_CUDA or USE_OPENCL must be defined"
 #endif
 
-struct Fixture
+struct CreateFixture
 {
-  Fixture() {
+  CreateFixture() {
     ofstream ofs(srcFile);
     if (!ofs) throw runtime_error("Failed to create file: " + string(srcFile));
     ofs << "#if defined FOO && FOO != 42\n"
@@ -58,38 +59,38 @@ struct Fixture
 #endif
         << endl;
   }
-  ~Fixture() {
+  ~CreateFixture() {
     remove(srcFile);
   }
 };
 
-TEST_FIXTURE(Fixture, CreatePtx)
+TEST_FIXTURE(CreateFixture, CreatePtx)
 {
   createPTX(srcFile);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxExtraDef)
+TEST_FIXTURE(CreateFixture, CreatePtxExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "42";
   createPTX(srcFile, defs);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxWrongExtraDef)
+TEST_FIXTURE(CreateFixture, CreatePtxWrongExtraDef)
 {
   CompileDefinitions defs;
   defs["FOO"] = "24";
   CHECK_THROW(createPTX(srcFile, defs), GPUProcException);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxExtraFlag)
+TEST_FIXTURE(CreateFixture, CreatePtxExtraFlag)
 {
   CompileFlags flags;
   flags.insert("--source-in-ptx");
   createPTX(srcFile, defaultCompileDefinitions(), flags);
 }
 
-TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
+TEST_FIXTURE(CreateFixture, CreatePtxWrongExtraFlag)
 {
   CompileFlags flags;
   flags.insert("--yaddayadda");
@@ -97,13 +98,13 @@ TEST_FIXTURE(Fixture, CreatePtxWrongExtraFlag)
               GPUProcException);
 }
 
-TEST_FIXTURE(Fixture, CreateModule)
+TEST_FIXTURE(CreateFixture, CreateModule)
 {
   gpu::Device device(gpu::Platform().devices()[0]);
   createModule(gpu::Context(device), srcFile, createPTX(srcFile));
 }
 
-TEST_FIXTURE(Fixture, CreateModuleHighestArch)
+TEST_FIXTURE(CreateFixture, CreateModuleHighestArch)
 {
   // Highest known architecture is 3.5. 
   // Only perform this test if we do NOT have a device with that capability.
@@ -117,6 +118,45 @@ TEST_FIXTURE(Fixture, CreateModuleHighestArch)
                                      defaultCompileFlags(), 
                                      vector<gpu::Device>())),
               gpu::GPUException);
+}
+
+TEST(DumpBuffer)
+{
+  typedef unsigned element_type;
+  const char* dumpFile("tDevMem.dat");
+  const size_t num_elements(1024);
+  const size_t num_bytes(num_elements * sizeof(element_type));
+  vector<element_type> input(num_elements), output(num_elements);
+
+  // Initialize input vector
+  for(size_t i = 0; i < num_elements; i++) 
+    input[i] = element_type(i);
+
+  // Initialize GPU device, context, and stream.
+  gpu::Device device(gpu::Platform().devices()[0]);
+  gpu::Context ctx(device);
+  gpu::Stream stream(ctx);
+
+  // Allocate memory on host and device
+  gpu::HostMemory hostMem(ctx, num_bytes);
+  gpu::DeviceMemory devMem(ctx, num_bytes);
+
+  // Copy input vector to host memory
+  copy(input.begin(), input.end(), hostMem.get<element_type>());
+
+  // Transfer to device memory
+  stream.writeBuffer(devMem, hostMem);
+
+  // Dump device memory to file
+  dumpBuffer(devMem, dumpFile);
+
+  // Read raw data back from file into output vector and remove file
+  ifstream ifs(dumpFile, ios::binary);
+  ifs.read(reinterpret_cast<char*>(&output[0]), num_bytes);
+  remove(dumpFile);
+
+  // Compare input and output vector.
+  CHECK_ARRAY_EQUAL(input, output, num_elements);
 }
 
 int main()

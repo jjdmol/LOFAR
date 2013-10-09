@@ -114,7 +114,7 @@ namespace LOFAR {
     uInt inxRowWCorr(0);
 
     // Loop over all visibility rows to process.
-    for (Int inx=0; inx<rows.size(); ++inx) {
+    for (uInt inx=0; inx<rows.size(); ++inx) {
       Int irow = rows[inx];
 
       // Float icorr=(abs(wvec[inxRowWCorr])-wcf)/wStep;
@@ -281,7 +281,7 @@ namespace LOFAR {
     // Loop over all visibility rows to process.
 
 
-    for (Int inx=0; inx<rows.size(); ++inx) {
+    for (uInt inx=0; inx<rows.size(); ++inx) {
       Int irow = rows[inx];
     // for (Int inx=rbeg; inx<=rend; ++inx) {
     //   Int irow = rows[inx];

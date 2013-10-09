@@ -181,11 +181,7 @@ void MSWriterCorrelated::augment(const FinalMetaData &finalMetaData)
 
   LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
 
-  try {
-    FailedTileInfo::writeFailed(ms, before, during);
-  } catch (AipsError &ex) {
-    LOG_FATAL_STR("AipsError: " << ex.what());
-  }
+  FailedTileInfo::writeFailed(ms, before, during);
 }
 
 

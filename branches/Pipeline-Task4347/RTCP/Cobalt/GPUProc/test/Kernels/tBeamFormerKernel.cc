@@ -26,6 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <CoInterface/BlockID.h>
 #include "../TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
@@ -44,7 +45,7 @@ int main() {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
   } catch (gpu::GPUException& e) {
-    cerr << e.what() << endl;
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
   gpu::Device device(0);
@@ -56,10 +57,10 @@ int main() {
 
   KernelFactory<BeamFormerKernel> factory(ps);
 
-  // Calculate bandpass weights and transfer to the device.
+  // Calculate beamformer delays and transfer to the device.
   // *************************************************************
-  size_t lengthWeightsData = 
-    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_WEIGHTS) / 
+  size_t lengthDelaysData = 
+    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS) / 
     sizeof(float);
   size_t lengthBandPassCorrectedData =
     factory.bufferSize(BeamFormerKernel::INPUT_DATA) /
@@ -72,7 +73,7 @@ int main() {
   // ************************************************************* 
   float * complexVoltagesData = new float[lengthComplexVoltagesData];
   float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
-  float * weightsData= new float[lengthWeightsData];
+  float * delaysData= new float[lengthDelaysData];
 
   // ***********************************************************
   // Baseline test: If all weight data is zero the output should be zero
@@ -90,19 +91,19 @@ int main() {
     bandPassCorrectedData[idx * 2+ 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthWeightsData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
   {
-    weightsData[idx * 2] = 0.0f;
-    weightsData[idx * 2 + 1] = 0.0f;
+    delaysData[idx * 2] = 0.0f;
+    delaysData[idx * 2 + 1] = 0.0f;
   }
 
-  size_t sizeWeightsData = lengthWeightsData * sizeof(float);
-  DeviceMemory devWeightsMemory(ctx, sizeWeightsData);
-  HostMemory rawWeightsData = getInitializedArray(ctx, sizeWeightsData, 1.0f);
-  float *rawWeightsPtr = rawWeightsData.get<float>();
-  for (unsigned idx = 0; idx < lengthWeightsData; ++idx)
-    rawWeightsPtr[idx] = weightsData[idx];
-  stream.writeBuffer(devWeightsMemory, rawWeightsData);
+  size_t sizeDelaysData = lengthDelaysData * sizeof(float);
+  DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
+  HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
+  float *rawDelaysPtr = rawDelaysData.get<float>();
+  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
+    rawDelaysPtr[idx] = delaysData[idx];
+  stream.writeBuffer(devDelaysMemory, rawDelaysData);
 
   size_t sizeBandPassCorrectedData = 
     lengthBandPassCorrectedData * sizeof(float);
@@ -125,11 +126,16 @@ int main() {
   // Write output content.
   stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
 
-  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devWeightsMemory);
+  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devDelaysMemory);
 
-  auto_ptr<BeamFormerKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<BeamFormerKernel> kernel(factory.create(stream, buffers));
 
-  kernel->enqueue(stream);
+  float subbandFreq = 60e6f;
+  unsigned sap = 0;
+
+  PerformanceCounter counter(ctx);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

@@ -69,15 +69,7 @@ char stdoutbuf[1024], stderrbuf[1024];
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  char *dirc = strdup(argv[0]);
-
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
-
-  free(dirc);
-#elif defined HAVE_LOG4CXX
-  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
-  Context::initialize();
-  setLevel("Global",8);
+  INIT_LOGGER("outputProc");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("OutputProc@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif

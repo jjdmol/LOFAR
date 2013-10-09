@@ -25,6 +25,7 @@
 #include <DPPP/ApplyCal.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
+#include <DPPP/MSReader.h>
 #include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
@@ -58,8 +59,6 @@ namespace LOFAR {
         itsUseAP       (false)
     {
       ASSERT (!itsParmDBName.empty());
-      // Possible corrections one (or more?) of:
-      //   Gain (real/imag or ampl/phase), RM, TEC, Clock, Bandpass
     }
 
     ApplyCal::~ApplyCal()
@@ -70,6 +69,7 @@ namespace LOFAR {
       info() = infoIn;
       info().setNeedVisData();
       info().setNeedWrite();
+      info().setNeedWrite(info().needWrite() | DPInfo::NeedWriteWeight);
       itsTimeInterval = infoIn.timeInterval();
       itsNCorr = infoIn.ncorr();
 
@@ -121,7 +121,7 @@ namespace LOFAR {
           itsParmExprs.push_back("Gain:1:1:Real");
           itsParmExprs.push_back("Gain:1:1:Imag");
         }
-      }  else if (itsCorrectType == "tec") {
+      } else if (itsCorrectType == "tec") {
         itsParmExprs.push_back("TEC");
       } else if (itsCorrectType == "clock") {
         if (itsParmDB->getNames("Clock:0:*").empty() &&
@@ -132,12 +132,18 @@ namespace LOFAR {
           itsParmExprs.push_back("Clock:0");
           itsParmExprs.push_back("Clock:1");
         }
-      } else {
+      } else if (itsCorrectType == "commonrotationangle") {
+        itsParmExprs.push_back("CommonRotationAngle");
+      } else if (itsCorrectType == "commonscalarphase") {
+        itsParmExprs.push_back("CommonScalarPhase");
+      }
+      else {
         THROW (Exception, "Correction type " + itsCorrectType +
                          " is unknown");
       }
 
       initDataArrays();
+      itsFlagCounter.init(getInfo());
     }
 
     void ApplyCal::show (std::ostream& os) const
@@ -178,6 +184,7 @@ namespace LOFAR {
 
       Complex* data = buf.getData().data();
 
+      buf.setWeights(itsInput->fetchWeights (buf, rowNrs, itsTimer));
       float* weight = buf.getWeights().data();
 
       size_t nchan = buf.getData().shape()[1];
@@ -185,7 +192,7 @@ namespace LOFAR {
 #pragma omp parallel for
       for (size_t bl=0; bl<nbl; ++bl) {
         for (size_t chan=0;chan<nchan;chan++) {
-          if (itsCorrectType=="fullgain") {
+          if (itsParms.size()>2) {
             applyFull( &data[bl * itsNCorr * nchan + chan * itsNCorr ],
                 &weight[bl * itsNCorr * nchan + chan * itsNCorr ],
                 info().getAnt1()[bl], info().getAnt2()[bl], chan, itsTimeStep);
@@ -197,6 +204,8 @@ namespace LOFAR {
           }
         }
       }
+
+      MSReader::flagInfNaN(buf.getData(),buf.getFlags(),itsFlagCounter);
 
       itsTimer.stop();
       getNextStep()->process(buf);
@@ -342,6 +351,16 @@ namespace LOFAR {
                   parmvalues[1][ant][tf] * freq * casa::C::_2pi);
             }
           }
+          else if (itsCorrectType=="commonrotationangle") {
+            itsParms[0][ant][tf] =  cos(parmvalues[0][ant][tf]);
+            itsParms[1][ant][tf] = -sin(parmvalues[0][ant][tf]);
+            itsParms[2][ant][tf] =  sin(parmvalues[0][ant][tf]);
+            itsParms[3][ant][tf] =  cos(parmvalues[0][ant][tf]);
+          }
+          else if (itsCorrectType=="commonscalarphase") {
+            itsParms[0][ant][tf] = polar(1., parmvalues[0][ant][tf]);
+            itsParms[1][ant][tf] = polar(1., parmvalues[0][ant][tf]);
+          }
         }
       }
     }
@@ -351,7 +370,7 @@ namespace LOFAR {
       uint tfDomainSize=itsTimeSlotsPerParmUpdate*info().chanFreqs().size();
 
       uint numParms;
-      if (itsCorrectType=="fullgain") {
+      if (itsCorrectType=="fullgain" || itsCorrectType=="commonrotationangle") {
         numParms = 4;
       }
       else {
@@ -382,11 +401,10 @@ namespace LOFAR {
       vis[2] /= diag1A * conj(diag0B);
       vis[3] /= diag1A * conj(diag1B);
 
-      // TODO: implement DPInput::getWeights
-      //weight[0]*= real(diag0A) * real(diag0A) * real(diag0B) * real(diag0B);
-      //weight[1]*= real(diag0A) * real(diag0A) * real(diag1B) * real(diag1B);
-      //weight[2]*= real(diag1A) * real(diag1A) * real(diag0B) * real(diag0B);
-      //weight[3]*= real(diag1A) * real(diag1A) * real(diag1B) * real(diag1B);
+      weight[0] *= norm(diag0A) * norm(diag0B);
+      weight[1] *= norm(diag0A) * norm(diag1B);
+      weight[2] *= norm(diag1A) * norm(diag0B);
+      weight[3] *= norm(diag1A) * norm(diag1B);
     }
 
     // Inverts complex 2x2 input matrix
@@ -440,9 +458,46 @@ namespace LOFAR {
         }
       }
 
-      // TODO: weights for this case are not implemented
-      // see combination of BBS + python script covariance2weight.py (cookbook)
-      // for what to do (diagonal of covariance matrix is transferred to WEIGHT)
+      // The code below does the same as the combination of BBS + python script
+      // covariance2weight.py (cookbook), except it stores weights per freq.
+      // The diagonal of covariance matrix is transferred to the weights.
+      // Note that the real covariance (mixing of noise terms after which they
+      // are not independent anymore) is not stored.
+      // The input covariance matrix C is assumed to be diagonal with elements
+      // w_i (the weights), the result the diagonal of
+      // (gainA kronecker gainB^H).C.(gainA kronecker gainB^H)^H
+      float cov[4], normGainA[4], normGainB[4];
+      for (uint i=0;i<4;++i) {
+        cov[i]=1./weight[i];
+        normGainA[i]=norm(gainA[i]);
+        normGainB[i]=norm(gainB[i]);
+      }
+
+      weight[0]=cov[0]*(normGainA[0]*normGainB[0])
+               +cov[1]*(normGainA[0]*normGainB[1])
+               +cov[2]*(normGainA[1]*normGainB[0])
+               +cov[3]*(normGainA[1]*normGainB[1]);
+      weight[0]=1./weight[0];
+
+      weight[1]=cov[0]*(normGainA[0]*normGainB[2])
+               +cov[1]*(normGainA[0]*normGainB[3])
+               +cov[2]*(normGainA[1]*normGainB[2])
+               +cov[3]*(normGainA[1]*normGainB[3]);
+      weight[1]=1./weight[1];
+
+      weight[2]=cov[0]*(normGainA[2]*normGainB[0])
+               +cov[1]*(normGainA[2]*normGainB[1])
+               +cov[2]*(normGainA[3]*normGainB[0])
+               +cov[3]*(normGainA[3]*normGainB[1]);
+      weight[2]=1./weight[2];
+
+      weight[3]=cov[0]*(normGainA[2]*normGainB[2])
+               +cov[1]*(normGainA[2]*normGainB[3])
+               +cov[2]*(normGainA[3]*normGainB[2])
+               +cov[3]*(normGainA[3]*normGainB[3]);
+      weight[3]=1./weight[3];
+
     }
+
   } //# end namespace
 }

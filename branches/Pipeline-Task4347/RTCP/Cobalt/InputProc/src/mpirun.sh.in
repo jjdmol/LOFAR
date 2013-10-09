@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Script to start MPI. It tries to wrap (part of) the different scripts that
 # exist to start MPI (e.g., mpirun, mpiexec, etc.)
@@ -9,40 +9,34 @@ error()
   exit 1
 }
 
-# Ignore all mpirun options
-parse_nompi_options()
-{
-  # Assume the last "option" is the name of the executable
-  while [ $# -gt 1 ]
-  do
-    shift
-  done
-  EXECUTABLE=$1
-}
+declare -A ENVVARS
 
-parse_openmpi_options()
+parse_options()
 {
-  # Assume the last "option" is the name of the executable
-  while [ $# -gt 1 ]
-  do
-    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS $1"
-    shift
-  done
-  EXECUTABLE=$1
-}
-
-parse_mvapich2_options()
-{
+  # Parse the given MPI options into environment
+  # variables. We mimic the OpenMPI interface.
   while :
   do
     case $1 in
       -c | -np | --np)
-        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $2"
+        # number of processes
+        NUMPROCS="$2"
         shift 2 || error "argument for option $1 missing"
         ;;
       -H | -host | --host)
-        MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $2"
+        # comma-separated host list
+        HOSTS="$2"
         shift 2 || error "argument for option $1 missing"
+        ;;
+      -x)
+        # environment variable to marshall,
+        # we only support the VAR=VALUE format
+        KEYVAL="$2"
+        shift 2 || error "argument for option $1 missing"
+
+        KEY=`echo "$KEYVAL" | cut -d= -f1`
+        VAL=`echo "$KEYVAL" | cut -d= -f2-`
+        ENVVARS["$KEY"]="$VAL"
         ;;
       -*)
         error "$1 is an unknown option"
@@ -50,9 +44,64 @@ parse_mvapich2_options()
         ;;
       *) # no more options
         EXECUTABLE="$1"
+        shift || error "no executable given"
+        ARGS="$@"
         break;
         ;;
     esac
+  done
+}
+
+set_nompi_options()
+{
+  # Ignore all mpirun options
+  :
+
+  for KEY in "${!ENVVARS[*]}"
+  do
+    VAL=${ENVVARS[$KEY]}
+
+    export $KEY="$VAL"
+  done
+}
+
+set_openmpi_options()
+{
+  if [ -n "$NUMPROCS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $NUMPROCS"
+  fi
+
+  if [ -n "$HOSTS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -H $HOSTS"
+  fi
+
+  for KEY in "${!ENVVARS[*]}"
+  do
+    VAL=${ENVVARS[$KEY]}
+
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -x $KEY=$VAL"
+  done
+}
+
+set_mvapich2_options()
+{
+  if [ -n "$NUMPROCS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -np $NUMPROCS"
+  fi
+
+  if [ -n "$HOSTS" ]
+  then
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $HOSTS"
+  fi
+
+  for KEY in "${!ENVVARS[*]}"
+  do
+    VAL=${ENVVARS[$KEY]}
+
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -env $KEY $VAL"
   done
 }
 
@@ -78,9 +127,29 @@ else
   MPI_FLAVOUR=nompi
 fi
 
-parse_${MPI_FLAVOUR}_options "$@"
+parse_options "$@"
+set_${MPI_FLAVOUR}_options
 
-COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS}"
+# Construct the command to call.
+#
+# &: Execute in the background to be able to propagate signals.
+# Put the & here, and not after eval, because we don't want
+# to background the 'eval' command itself!
+COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS} &"
 
 echo "Executing: $COMMAND"
+
 eval $COMMAND
+PID=$!
+
+# Propagate SIGTERM
+trap "echo mpirun.sh: killing $PID; kill $PID" SIGTERM SIGINT SIGQUIT SIGHUP
+
+# Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
+# receives a signal.
+#
+# Return code:
+#   signal:    >128
+#   no signal: return code of $COMMAND
+wait $PID
+

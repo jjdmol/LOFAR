@@ -81,7 +81,8 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         if(config.useClock())
         {
             itsExpr[i] = compose(itsExpr[i],
-                makeClockExpr(itsScope, instrument->station(i)));
+                makeClockExpr(itsScope, instrument->station(i),
+                    config.getClockConfig()));
         }
 
         // Bandpass.
@@ -134,7 +135,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 " correction can only be applied for a single direction on the"
                 " sky.");
         }
-
+        
         // Beam reference position on the sky.
         Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
         Expr<Vector<3> >::Ptr exprRefDelayITRF =
@@ -187,15 +188,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the phase reference
-                    // direction.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprRefPhase);
-
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -221,7 +216,6 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                         makeDirectionalGainExpr(itsScope,
                         instrument->station(i), patch, config.usePhasors()));
                 }
-
                 // Beam.
                 if(config.useBeam())
                 {
@@ -266,15 +260,9 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the centroid direction of
-                    // the patch.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprPatch->position());
-
                     itsExpr[i] = compose(itsExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }
@@ -477,7 +465,7 @@ PatchExprBase::Ptr StationExprLOFAR::makePatchExpr(const string &name,
             it->second));
     }
 
-    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
+    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name, 
         refPhase));
 }
 

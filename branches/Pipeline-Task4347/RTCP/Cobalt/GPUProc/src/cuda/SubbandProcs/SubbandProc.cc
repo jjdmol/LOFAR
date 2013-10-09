@@ -30,26 +30,22 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context)
+    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
       ps(ps),
       queue(gpu::Stream(context))
     {
       // put enough objects in the inputPool to operate
-      // TODO: Tweak the number of inputPool objects per SubbandProc,
-      // probably something like max(3, nrSubbands/nrSubbandProcs * 2), because
-      // there both need to be enough items to receive all subbands at
-      // once, and enough items to process the same amount in the
-      // mean time.
       //
       // At least 3 items are needed for a smooth Pool operation.
-      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
+      size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
                 ps.nrStations(),
-                NR_POLARIZATIONS,
-                ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+                ps.settings.nrPolarisations,
+                ps.settings.beamFormer.maxNrTABsPerSAP(),
+                ps.nrSamplesPerSubband(),
                 ps.nrBytesPerComplexSample(),
                 context));
       }
@@ -85,6 +81,22 @@ namespace LOFAR
       delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAtBegin;
       delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAfterEnd;
       phaseOffsets[station][1]        = ps.settings.stations[station].phaseCorrection.y;
+
+
+      if (ps.settings.beamFormer.enabled)
+      {
+        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
+        {
+          // we already compensated for the delay for the first beam
+          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                     metaData.stationBeam.delayAtBegin) * 0.5;
+
+          // subtract the delay that was already compensated for
+          tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
+                                          metaData.TABs[tab].delayAfterEnd) * 0.5 -
+                                         compensatedDelay;
+        }
+      }
     }
 
 
@@ -112,6 +124,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       // Assure that the nrChannels is more then zero: never ending loop 

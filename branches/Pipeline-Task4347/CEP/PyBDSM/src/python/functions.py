@@ -1089,10 +1089,23 @@ def read_image_from_file(filename, img, indir, quiet=False):
         if img.use_io == 'fits':
             try:
                 from astropy.io import fits as pyfits
+                old_pyfits = False
+                use_sections = True
             except ImportError, err:
                 import pyfits
+                if StrictVersion(pyfits.__version__) < StrictVersion('2.2'):
+                    old_pyfits = True
+                    use_sections = False
+                elif StrictVersion(pyfits.__version__) < StrictVersion('2.4'):
+                    old_pyfits = False
+                    use_sections = False
+                else:
+                    old_pyfits = False
             try:
-                fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
+                if not old_pyfits:
+                    fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
+                else:
+                    fits = pyfits.open(image_file, mode="readonly")
             except IOError, err:
                 img._reason = 'Problem reading file.\nOriginal error: {0}'.format(str(err))
                 return None
@@ -1110,8 +1123,19 @@ def read_image_from_file(filename, img, indir, quiet=False):
         try:
             try:
                 from astropy.io import fits as pyfits
+                old_pyfits = False
+                use_sections = True
             except ImportError, err:
                 import pyfits
+                if StrictVersion(pyfits.__version__) < StrictVersion('2.2'):
+                    old_pyfits = True
+                    use_sections = False
+                elif StrictVersion(pyfits.__version__) < StrictVersion('2.4'):
+                    old_pyfits = False
+                    use_sections = False
+                else:
+                    old_pyfits = False
+                    use_sections = True
             has_pyfits = True
         except ImportError, err:
             raise RuntimeError("Astropy or PyFITS is required.")
@@ -1127,7 +1151,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
         failed_read = False
         reason = 0
         try:
-            fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
+            if not old_pyfits:
+                fits = pyfits.open(image_file, mode="readonly", ignore_missing_end=True)
+            else:
+                fits = pyfits.open(image_file, mode="readonly")
             img.use_io = 'fits'
         except IOError, err:
             e_pyfits = str(err)
@@ -1152,17 +1179,20 @@ def read_image_from_file(filename, img, indir, quiet=False):
     if not quiet:
         mylogger.userinfo(mylog, "Opened '"+image_file+"'")
     if img.use_io == 'rap':
-        hdr = convert_pyrap_header(inputimage)
+        tmpdir = img.parentname+'_tmp'
+        hdr = convert_pyrap_header(inputimage, tmpdir)
     if img.use_io == 'fits':
         hdr = fits[0].header
 
     # Make sure data is in proper order. Final order is [pol, chan, x (RA), y (DEC)],
     # so we need to rearrange dimensions if they are not in this order. Use the
-    # ctype FITS keywords to determine order of dimensions.
+    # ctype FITS keywords to determine order of dimensions. Note that both PyFITS
+    # and pyrap reverse the order of the axes relative to NAXIS, so we must too.
     naxis = hdr['NAXIS']
     data_shape = []
     for i in range(naxis):
         data_shape.append(hdr['NAXIS'+str(i+1)])
+    data_shape.reverse()
     data_shape = tuple(data_shape)
     mylog.info("Original data shape of " + image_file +': ' +str(data_shape))
     ctype_in = []
@@ -1170,7 +1200,6 @@ def read_image_from_file(filename, img, indir, quiet=False):
         key_val_raw = hdr['CTYPE' + str(i+1)]
         key_val = key_val_raw.split('-')[0]
         ctype_in.append(key_val.strip())
-
     if 'RA' not in ctype_in or 'DEC' not in ctype_in:
         if 'GLON' not in ctype_in or 'GLAT' not in ctype_in:
             raise RuntimeError("Image data not found")
@@ -1181,8 +1210,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
 
     # Check for incorrect spectral units. For example, "M/S" is not
     # recognized by PyWCS as velocity ("S" is actually Siemens, not
-    # seconds).
-    for i in range(naxis):
+    # seconds). Note that we check CUNIT3 and CUNIT4 even if the
+    # image has only 2 axes, as the header may still have these
+    # entries.
+    for i in range(4):
         key_val_raw = hdr.get('CUNIT' + str(i+1))
         if key_val_raw != None:
             if 'M/S' in key_val_raw or 'm/S' in key_val_raw or 'M/s' in key_val_raw:
@@ -1192,6 +1223,7 @@ def read_image_from_file(filename, img, indir, quiet=False):
             if 'DEG' in key_val_raw or 'Deg' in key_val_raw:
                 hdr['CUNIT' + str(i+1)] = 'deg'
 
+    # Make sure that the spectral axis has been identified properly
     if len(ctype_in) > 2 and 'FREQ' not in ctype_in:
         try:
             from astropy.wcs import WCS
@@ -1208,6 +1240,9 @@ def read_image_from_file(filename, img, indir, quiet=False):
         if spec_indx != -1:
             ctype_in[spec_indx] = 'FREQ'
 
+    # Now reverse the axes order to match PyFITS/pyrap order and define the
+    # final desired order (cytpe_out) and shape (shape_out).
+    ctype_in.reverse()
     if lat_lon:
         ctype_out = ['STOKES', 'FREQ', 'GLON', 'GLAT']
     else:
@@ -1223,15 +1258,10 @@ def read_image_from_file(filename, img, indir, quiet=False):
         shape_out[0] = data_shape[indx_out[0]]
     if indx_out[1] != -1:
         shape_out[1] = data_shape[indx_out[1]]
+    indx_out = [a for a in indx_out if a >= 0] # trim unused axes
 
-    ### now we need to transpose columns to get the right order
-    axes = range(naxis)
-    for indx in indx_out:
-        if indx != -1:
-            axes.remove(indx)
-            axes.insert(0, indx)
-
-    ### adjust header if trim_box is specified
+    # Read in data. If only a subsection of the image is desired (as defined
+    # by the trim_box option), we can try to use PyFITS to read only that section.
     if img.opts.trim_box != None:
         img.trim_box = img.opts.trim_box
         xmin, xmax, ymin, ymax = img.trim_box
@@ -1241,6 +1271,9 @@ def read_image_from_file(filename, img, indir, quiet=False):
         if ymax > shape_out[3]: ymax = shape_out[3]
         if xmin >= xmax or ymin >= ymax:
             raise RuntimeError("The trim_box option does not specify a valid part of the image.")
+        shape_out_untrimmed = shape_out[:]
+        shape_out[2] = xmax-xmin
+        shape_out[3] = ymax-ymin
 
         if img.use_io == 'fits':
             sx = slice(int(xmin),int(xmax))
@@ -1250,32 +1283,36 @@ def read_image_from_file(filename, img, indir, quiet=False):
             for i in range(naxis-2):
                 s_array.append(sn)
             s_array.reverse() # to match ordering of data array returned by PyFITS
-            if naxis == 2:
-                data = fits[0].section[s_array[0], s_array[1]]
-            elif naxis == 3:
-                data = fits[0].section[s_array[0], s_array[1], s_array[2]]
-            elif naxis == 4:
-                data = fits[0].section[s_array[0], s_array[1], s_array[2], s_array[3]]
+            if not old_pyfits and use_sections:
+                if naxis == 2:
+                    data = fits[0].section[s_array[0], s_array[1]]
+                elif naxis == 3:
+                    data = fits[0].section[s_array[0], s_array[1], s_array[2]]
+                elif naxis == 4:
+                    data = fits[0].section[s_array[0], s_array[1], s_array[2], s_array[3]]
+                else:
+                    # If more than 4 axes, just read in the whole image and
+                    # do the trimming after reordering.
+                    data = fits[0].data
             else:
-                # If more than 4 axes, just read in the whole image and
-                # do the trimming after reordering.
                 data = fits[0].data
             fits.close()
-            data = data.transpose(*axes)
+            data = data.transpose(*indx_out) # transpose axes to final order
             data.shape = data.shape[0:4] # trim unused dimensions (if any)
-            if naxis > 4:
-                data = data[:, :, xmin:xmax, ymin:ymax]
-            shape_trim = [shape_out[0], shape_out[1], xmax-xmin, ymax-ymin]
-            data = data.reshape(shape_trim)
+            if naxis > 4 or not use_sections:
+                data = data.reshape(shape_out_untrimmed) # Add axes if needed
+                data = data[:, :, xmin:xmax, ymin:ymax] # trim to trim_box
+            else:
+                data = data.reshape(shape_out) # Add axes if needed
         else:
-            # With pyrap, just read in the whole image
+            # With pyrap, just read in the whole image and then trim
             data = inputimage.getdata()
-            data = data.transpose(*axes)
+            data = data.transpose(*indx_out) # transpose axes to final order
             data.shape = data.shape[0:4] # trim unused dimensions (if any)
-            data = data.reshape(shape_out)
-            data = data[:, :, xmin:xmax, ymin:ymax]
+            data = data.reshape(shape_out_untrimmed) # Add axes if needed
+            data = data[:, :, xmin:xmax, ymin:ymax] # trim to trim_box
 
-        # Adjust WCS keywords
+        # Adjust WCS keywords for trim_box starting x and y.
         hdr['crpix1'] -= xmin
         hdr['crpix2'] -= ymin
     else:
@@ -1284,9 +1321,9 @@ def read_image_from_file(filename, img, indir, quiet=False):
             fits.close()
         else:
             data = inputimage.getdata()
-        data = data.transpose(*axes)
+        data = data.transpose(*indx_out) # transpose axes to final order
         data.shape = data.shape[0:4] # trim unused dimensions (if any)
-        data = data.reshape(shape_out)
+        data = data.reshape(shape_out) # Add axes if needed
 
     mylog.info("Final data shape (npol, nchan, x, y): " + str(data.shape))
 
@@ -1297,17 +1334,28 @@ def read_image_from_file(filename, img, indir, quiet=False):
     return data, hdr
 
 
-def convert_pyrap_header(pyrap_image):
+def convert_pyrap_header(pyrap_image, tmpdir):
     """Converts a pyrap header to a PyFITS header."""
     import tempfile
+    import os
+    import atexit
+    import shutil
     try:
         from astropy.io import fits as pyfits
     except ImportError, err:
         import pyfits
 
-    tfile = tempfile.NamedTemporaryFile(delete=False)
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
+    tfile = tempfile.NamedTemporaryFile(delete=False, dir=tmpdir)
     pyrap_image.tofits(tfile.name)
     hdr = pyfits.getheader(tfile.name)
+    if os.path.isfile(tfile.name):
+        os.remove(tfile.name)
+
+    # Register deletion of temp directory at exit to be sure it is deleted
+    atexit.register(shutil.rmtree, tmpdir, ignore_errors=True)
+
     return hdr
 
 
@@ -1497,6 +1545,14 @@ def store_map(img, map_name, map_data):
     outfile = file(filename, 'wb')
     N.save(outfile, map_data)
     outfile.close()
+
+def del_map(img, map_name):
+    """Deletes a cached map."""
+    import os
+
+    filename = get_name(img, map_name)
+    if os.path.isfile(filename):
+        os.remove(filename)
 
 def get_name(img, map_name):
     """Returns name of cache file."""
@@ -2050,3 +2106,72 @@ def make_curvature_map(subim):
     sys.stdout = original_stdout  # turn STDOUT back on
 
     return curv_map
+
+
+def bstat(indata, mask, kappa_npixbeam):
+    """Numpy version of the c++ bstat routine
+
+    Uses the PySE method for calculating the clipped mean and rms of an array.
+    This method is superior to the c++ bstat routine (see section 2.7.3 of
+    http://dare.uva.nl/document/174052 for details) and, since the Numpy
+    functions used here are written in c, there should be no big computational
+    penalty in using Python code.
+    """
+    import numpy
+    from scipy.special import erf, erfcinv
+
+    # Flatten array
+    skpix = indata.flatten()
+    if mask is not None:
+        msk_flat = mask.flatten()
+        unmasked = numpy.where(~msk_flat)
+        skpix = skpix[unmasked]
+
+    ct = skpix.size
+    iter = 0
+    c1 = 1.0
+    c2 = 0.0
+    maxiter = 200
+    converge_num = 1e-6
+    m_raw = numpy.mean(skpix)
+    r_raw = numpy.std(skpix, ddof=1)
+
+    while (c1 >= c2) and (iter < maxiter):
+        npix = skpix.size
+        if kappa_npixbeam > 0.0:
+            kappa = kappa_npixbeam
+        else:
+            npixbeam = abs(kappa_npixbeam)
+            kappa = numpy.sqrt(2.0)*erfcinv(1.0 / (2.0*npix/npixbeam))
+            if kappa < 3.0:
+                kappa = 3.0
+        lastct = ct
+        medval = numpy.median(skpix)
+        sig = numpy.std(skpix)
+        wsm = numpy.where(abs(skpix-medval) < kappa*sig)
+        ct = len(wsm[0])
+        if ct > 0:
+            skpix = skpix[wsm]
+
+        c1 = abs(ct - lastct)
+        c2 = converge_num * lastct
+        iter += 1
+
+
+    mean  = numpy.mean(skpix)
+    median = numpy.median(skpix)
+    sigma = numpy.std(skpix, ddof=1)
+    mode = 2.5*median - 1.5*mean
+
+    skew_par = abs(mean - median)/sigma
+    if skew_par <= 0.3:
+        m = mode
+    else:
+        m = median
+
+    r1 = numpy.sqrt(2.0*numpy.pi)*erf(kappa/numpy.sqrt(2.0))
+    r = numpy.sqrt(sigma**2 * (r1 / (r1 - 2.0*kappa*numpy.exp(-kappa**2/2.0))))
+
+    return m_raw, r_raw, m, r, iter
+
+

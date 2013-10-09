@@ -60,14 +60,8 @@ class Op_readimage(Op):
         else:
             img.indir = img.opts.indir
 
-        image_file = os.path.basename(img.opts.filename)
-        result = read_image_from_file(image_file, img, img.indir)
-        if result == None:
-            raise RuntimeError("Cannot open file " + repr(image_file) + ". " + img._reason)
-        else:
-            data, hdr = result
-
-        # Try to trim common extensions from filename
+        # Try to trim common extensions from filename and store various
+        # paths
         root, ext = os.path.splitext(img.opts.filename)
         if ext in ['.fits', '.FITS', '.image']:
             fname = root
@@ -84,6 +78,14 @@ class Op_readimage(Op):
         img.imagename = fname + '.pybdsm'
         img.basedir = './' + fname + '_pybdsm/'
 
+        # Read in data and header
+        image_file = os.path.basename(img.opts.filename)
+        result = read_image_from_file(image_file, img, img.indir)
+        if result == None:
+            raise RuntimeError("Cannot open file " + repr(image_file) + ". " + img._reason)
+        else:
+            data, hdr = result
+
         # Check whether caching is to be used. If it is, set up a
         # temporary directory. The temporary directory will be
         # removed automatically upon exit.
@@ -96,16 +98,12 @@ class Op_readimage(Op):
             tmpdir = img.parentname+'_tmp'
             if not os.path.exists(tmpdir):
                 os.makedirs(tmpdir)
-                img._tempdir_parent = TempDir(tmpdir)
+            img._tempdir_parent = TempDir(tmpdir)
             img.tempdir = TempDir(tempfile.mkdtemp(dir=tmpdir))
+            import atexit, shutil
+            atexit.register(shutil.rmtree, img._tempdir_parent, ignore_errors=True)
         else:
             img.tempdir = None
-
-        # Check for zeros and blank if blank_zeros = True
-        if img.opts.blank_zeros:
-            zero_pixels = N.where(data[0] == 0.0)
-            mylog.info('Blanking %i zeros in image' % len(zero_pixels[1]))
-            data[0][zero_pixels] = N.nan
 
         # Store data and header in img. If polarisation_do = False, only store pol == 'I'
         img.nchan = data.shape[1]
@@ -603,5 +601,7 @@ class TempDir(str):
 
     Directory is deleted when garbage collected/zero references """
     def __del__(self):
-        shutil.rmtree(self.__str__())
+        import os
+        if os.path.exists(self.__str__()):
+            shutil.rmtree(self.__str__())
 

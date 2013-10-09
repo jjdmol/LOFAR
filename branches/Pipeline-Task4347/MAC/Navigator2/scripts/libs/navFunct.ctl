@@ -400,7 +400,7 @@ void navFunct_updateObservations(string dp1, dyn_string active,
 //   for now (CS1-20 fase) it will return Core, later something smart has to be
 //   done to give the other ringnames correctly.
 //   It is needed to get the correct datapoints in constructions like:
-//   LOFAR_PermSW_Core_CS010.state when you get a CS010:LOFAR_PermSW.state
+//   LOFAR_PermSW_Core_CS011.state when you get a CS011:LOFAR_PermSW.state
 //   change.
 //
 // Returns:
@@ -1732,7 +1732,7 @@ void navFunct_fillStationLists() {
                                "CS401",
                                "CS501");
 //  coreStations = makeDynString("CS001","CS002","CS003","CS004","CS005","CS006","CS007",
-//                               "CS010","CS011","CS012","CS013","CS014","CS016","CS017","CS018",
+//                               "CS011","CS012","CS013","CS014","CS016","CS017","CS018",
 //                               "CS020","CS021","CS022","CS023","CS024","CS026","CS028",
 //                               "CS030","CS031","CS032",
 //                               "CS101","CS103",

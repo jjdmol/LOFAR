@@ -28,6 +28,7 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/BlockID.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -40,7 +41,7 @@ int main() {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
   } catch (gpu::GPUException& e) {
-    cerr << e.what() << endl;
+    cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
   gpu::Device device(0);
@@ -67,7 +68,8 @@ int main() {
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
   PerformanceCounter counter(ctx);
-  kernel->enqueue(stream, counter, centralFrequency, SAP);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

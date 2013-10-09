@@ -34,7 +34,7 @@
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
-#include "Interface/Parset.h"
+#include <CoInterface/Parset.h>
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>
@@ -106,7 +106,7 @@ int main() {
   SubbandProcInputData::DeviceBuffers devInput(ps.nrBeams(),
     ps.nrStations(),
     NR_POLARIZATIONS,
-    ps.nrHistorySamples() + ps.nrSamplesPerSubband(),
+    ps.nrSamplesPerSubband(),
     ps.nrBytesPerComplexSample(),
     ctx,
     // reserve enough space in inputSamples for the output of
@@ -153,9 +153,8 @@ int main() {
   double freq_steps = 37.0;
   amplitudes << "freq_begin," << "freq_end," << "freq_steps," << "fftSize" << endl;
   amplitudes << freq_begin << ","<< freq_end << "," << freq_steps << "," << fftSize << endl;
-  size_t numberInputSamples = (ps.nrHistorySamples() + ps.nrSamplesPerSubband()) ;
   MultiDimArrayHostBuffer<i16complex,2 > inputDataRaw(
-    boost::extents[(ps.nrHistorySamples() + ps.nrSamplesPerSubband())][2], ctx);
+    boost::extents[ps.nrSamplesPerSubband()][2], ctx);
 
   // Initialize the input data with a sinus
   for( double freq = freq_begin; freq <= freq_end; freq += 1.0/freq_steps) //dus niet 128 hz  // eenheid in fft window widths
@@ -166,7 +165,7 @@ int main() {
     const double amplitude = 32767.0;
 
     // init buffers
-    for (size_t i = 0; i < numberInputSamples; i++) {
+    for (size_t i = 0; i < ps.nrSamplesPerSubband(); i++) {
       const double phase = (double)i * 2.0 * M_PI * freq / fftSize;
       const double real = amplitude * cos(phase);
       const double imag = amplitude * sin(phase);

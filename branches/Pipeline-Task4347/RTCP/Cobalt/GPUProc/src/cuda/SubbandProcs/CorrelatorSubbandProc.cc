@@ -53,9 +53,9 @@ namespace LOFAR
      * and provide the input in devFilteredData.
      */
     CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset &parset,
-      gpu::Context &context, CorrelatorFactories &factories)
+      gpu::Context &context, CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc)
     :
-      SubbandProc( parset, context ),       
+      SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
       counters(context),
       prevBlock(-1),
       prevSAP(-1),
@@ -70,11 +70,12 @@ namespace LOFAR
 
       // FIR filter
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights),
+      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      firFilterBuffers(devInput.inputSamples, devFilteredData, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT
-      fftKernel(ps, context, devFilteredData),
+      fftKernel(ps, queue, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -91,9 +92,11 @@ namespace LOFAR
                         devFilteredData),
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
     {
+      // initialize history data to zero
+      devFilterHistoryData.set(0);
+
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < 3; ++i) 
-      {
+      for (size_t i = 0; i < std::max(3UL, 2 * nrSubbandsPerSubbandProc); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
@@ -305,23 +308,32 @@ namespace LOFAR
 
       // *********************************************
       // Run the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
+
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(queue, counters.fir);
-        fftKernel.enqueue(queue, counters.fft);
+        firFilterKernel->enqueue(input.blockID, counters.fir, input.blockID.subbandProcSubbandIdx);
+        fftKernel.enqueue(input.blockID, counters.fft);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue, counters.delayBp, 
+      delayAndBandPassKernel->enqueue(input.blockID, counters.delayBp, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue, counters.correlator);
+      correlatorKernel->enqueue(input.blockID, counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
 
       // Propagate the flags.
+      if (ps.nrChannelsPerSubband() > 1) {
+        // Put the history flags in front of the sample flags,
+        // because Flagger::propagateFlags expects it that way.
+        firFilterKernel->prefixHistoryFlags(input.inputFlags, input.blockID.subbandProcSubbandIdx);
+      }
+
       Flagger::propagateFlags(ps, input.inputFlags, output);
 
       // Wait for the GPU to finish.

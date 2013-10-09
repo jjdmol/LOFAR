@@ -35,20 +35,14 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char *argv[])
 {
-  // Locate TBB connection mapping file.
-  // Select from either: argv[1], $LOFARROOT/etc/StaticMetaData/TBBConnections.dat, or tTBB_Writer.in_1/TBBConnections.dat
+  // Select TBB connection mapping file.
+  // Select from either: argv[1], or tTBB_StaticMapping.in_1/TBBConnections.dat
+  // (Potential installed location is $LOFARROOT/etc/StaticMetaData/TBBConnections.dat )
   string tbbMappingFilename;
   if (argc > 1) {
     tbbMappingFilename = argv[1];
-  } else {
-    const string defaultTbbMappingFilename("TBBConnections.dat");
-    char* lrpath = getenv("LOFARROOT");
-    if (lrpath != NULL) {
-      tbbMappingFilename = string(lrpath) + "/etc/StaticMetaData/";
-    } else {
-      tbbMappingFilename = "tTBB_StaticMapping.in_1/";
-    }
-    tbbMappingFilename.append(defaultTbbMappingFilename);
+  } else { // default input file
+    tbbMappingFilename = "tTBB_StaticMapping.in_1/" "TBBConnections.dat";
   }
 
   try {

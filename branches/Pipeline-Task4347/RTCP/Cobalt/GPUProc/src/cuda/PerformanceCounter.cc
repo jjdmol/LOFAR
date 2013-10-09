@@ -22,17 +22,11 @@
 
 #include "PerformanceCounter.h"
 
-#include <iostream>
-
-#include <Common/LofarLogger.h>
-
-using namespace std;
-
 namespace LOFAR
 {
   namespace Cobalt
   {
-    PerformanceCounter::PerformanceCounter(const LOFAR::Cobalt::gpu::Context &context)
+    PerformanceCounter::PerformanceCounter(const gpu::Context &context)
       :
     start(context),
     stop(context)

@@ -44,7 +44,6 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
-        size_t nrTAPs;
       };
 
       enum BufferType
@@ -57,10 +56,11 @@ namespace LOFAR
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
+
     };
 
-    // Specialization of the KernelFactory for
-    // IntToFloatKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const;
 

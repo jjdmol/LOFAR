@@ -22,13 +22,13 @@
 //# $Id:
 
 #include <lofar_config.h>
-#include <Common/SystemUtil.h>
-#include <Common/Exception.h>
-#include <BBSControl/Package__Version.h>
-#include <BBSControl/CalSession.h>
 #include <BBSControl/CommandHandlerEstimator.h>
+#include <BBSControl/CalSession.h>
 #include <BBSControl/OptionParser.h>
 #include <BBSControl/Util.h>
+#include <BBSControl/Package__Version.h>
+#include <Common/SystemUtil.h>
+#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;

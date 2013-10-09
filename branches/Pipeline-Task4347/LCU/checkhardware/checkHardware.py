@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 versiondate = 'September 2013'
+check_version = '0913'
 
 import sys
 import os
@@ -17,6 +18,7 @@ from general_lib import *
 from lofar_lib import *
 from test_lib import *
 from test_db import *
+from search_lib import search_version
 
 os.umask(001)
 
@@ -65,7 +67,7 @@ def printHelp():
 
 rcu_m1_keys  = ('LBL','O1','SP1','N1','S1')
 rcu_m3_keys  = ('LBH','O3','SP3','N3','S3')
-rcu_m5_keys  = ('HBA','M','O5','SN','SP5','N5','S5','EHBA','ES7')
+rcu_m5_keys  = ('HBA','M','O5','SN','SP5','N5','S5','S7','EHBA','ES7')
 rsp_keys     = ('RV',) + rcu_m1_keys + rcu_m3_keys + rcu_m5_keys
 tbb_keys     = ('TV','TM')
 control_keys = ('R','START','STOP')
@@ -92,7 +94,9 @@ testInfo['O5']     = "HBA mode-5 Oscillation test"
 testInfo['SP5']    = "HBA mode-5 Spurious test"
 testInfo['N5']     = "HBA mode-5 Noise test"
 testInfo['S5']     = "HBA mode-5 RF test"
+testInfo['S7']     = "HBA mode-7 RF test"
 testInfo['EHBA']   = "HBA mode-5 Element tests"
+testInfo['ES7']    = "HBA mode-7 Element signal tests"
 testInfo['M']      = "HBA mode-5 Modem test"
 testInfo['SN']     = "HBA mode-5 Summator noise test"
 testInfo['RV']     = "RSP Version test"
@@ -329,8 +333,11 @@ def main():
 
     # setup intern database with station layout
     db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA)
-
+    
+    db.script_versions = 'CHECK=%s,DB=%s,TEST=%s,SEARCH=%s,LOFAR=%s,GENERAL=%s' %\
+                         (check_version, db_version, test_version, search_version, lofar_version, general_version)
     db.check_start_time = time.gmtime()
+    
     writeMessage('!!!  This station will be in use for a test! Please do not use the station!  (script version %s)  !!!' %(versiondate))
     start_level = swlevel()
     sw_level = swlevel(2)

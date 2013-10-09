@@ -73,7 +73,6 @@ TimeStamp from;
 TimeStamp to;
 const size_t blockSize = BLOCKSIZE * clockHz / 1024;
 map<int, std::vector<size_t> > beamletDistribution;
-const size_t nrHistorySamples = 16;
 
 SubbandMetaData metaData;
 
@@ -95,12 +94,14 @@ void sender()
   struct BufferSettings settings(stationID, false);
   struct BoardMode mode(16, clockMHz);
 
+  settings.nrBoards = 1;
+
   // sync readers and writers to prevent data loss
   // if the reader is delayed w.r.t. the generator
 
   SmartPtr<SyncLock> syncLock;
 
-  syncLock = new SyncLock(settings);
+  syncLock = new SyncLock(settings, NRBEAMLETS);
   settings.syncLock = syncLock;
   settings.sync = true;
 
@@ -109,8 +110,8 @@ void sender()
   OMPThread::init();
 
   // Transfer of packets from generator to buffer
-  std::vector< SmartPtr<Stream> > inputStreams(4);
-  std::vector< SmartPtr<Stream> > outputStreams(4);
+  std::vector< SmartPtr<Stream> > inputStreams(settings.nrBoards);
+  std::vector< SmartPtr<Stream> > outputStreams(settings.nrBoards);
   for (size_t i = 0; i < inputStreams.size(); ++i) {
     const string desc = str(format("tcp:127.0.0.%d:%u") % (rank + 1) % (4346+i));
 
@@ -129,7 +130,7 @@ void sender()
 
   MultiPacketsToBuffer station( settings, inputStreams );
   PacketFactory factory( mode );
-  Generator generator( settings, outputStreams, factory, from - nrHistorySamples, to );
+  Generator generator( settings, outputStreams, factory, from, to );
 
   #pragma omp parallel sections
   {
@@ -146,19 +147,33 @@ void sender()
     {
       struct BufferSettings s(stationID, true);
 
-      LOG_INFO_STR("Detected " << s);
-      LOG_INFO_STR("Connecting to receivers to send " << from << " to " << to);
-      BlockReader<SampleT> reader(s, mode, values(beamletDistribution), nrHistorySamples, 0.1);
-      MPISendStation sender(s, rank, beamletDistribution);
+      LOG_INFO_STR("[" << stationID << "] Detected: " << s);
+      LOG_INFO_STR("[" << stationID << "] Connecting to receivers to send " << from << " to " << to);
 
-      LOG_INFO_STR("Sending to receivers");
-      for (TimeStamp current = from; current + blockSize < to; current += blockSize) {
-        SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, std::vector<ssize_t>(values(beamletDistribution).size(), 0)));
+      vector<int> targetRanks = keys(beamletDistribution);
 
-        std::vector<SubbandMetaData> metaDatas(block->beamlets.size(), metaData);
+      #pragma omp parallel for num_threads(targetRanks.size())
+      for (size_t i = 0; i < targetRanks.size(); ++i) {
+        int targetRank = targetRanks[i];
 
-        sender.sendBlock<SampleT>(*block, metaDatas);
+        LOG_INFO_STR("[" << stationID << "] Sending to receiver " << i << " at rank " << targetRank);
+
+        vector<size_t> &subbands = beamletDistribution.at(targetRank);
+        MPISendStation sender(s, rank, targetRank, subbands);
+        BlockReader<SampleT> reader(s, mode, subbands, 0.1);
+
+        size_t blockNr = 0;
+        for (TimeStamp current = from; current + blockSize < to; current += blockSize, ++blockNr) {
+          LOG_INFO_STR("[" << stationID << " to rank " << targetRank << "] Reading block " << blockNr);
+
+          SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, std::vector<ssize_t>(subbands.size(), 0)));
+
+          LOG_INFO_STR("[" << stationID << " to rank " << targetRank << "] Sending block " << blockNr);
+          std::vector<SubbandMetaData> metaDatas(block->beamlets.size(), metaData);
+          sender.sendBlock<SampleT>(*block, metaDatas);
+        }
       }
+      LOG_INFO_STR("[" << stationID << "] Done");
 
       generator.stop();
       station.stop();
@@ -174,10 +189,10 @@ void receiver()
   LOG_INFO_STR("Receiver node " << rank << " starts, handling " << beamlets.size() << " subbands from " << nrStations << " stations." );
   LOG_INFO_STR("Connecting to senders to receive " << from << " to " << to);
 
-  MPIReceiveStations receiver(nrStations, beamlets, blockSize + nrHistorySamples);
+  MPIReceiveStations receiver(nrStations, beamlets, blockSize);
 
   // create space for the samples
-  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize + nrHistorySamples]);
+  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize]);
 
   // create blocks -- they all have to be the right size already
   std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
@@ -204,7 +219,7 @@ void receiver()
     }
 
     // calculate flagging average
-    const size_t nrSamples = nrStations * nrBeamlets * (blockSize + nrHistorySamples);
+    const size_t nrSamples = nrStations * nrBeamlets * blockSize;
     size_t nrFlaggedSamples = 0;
 
     for (int s = 0; s < nrStations; ++s) {

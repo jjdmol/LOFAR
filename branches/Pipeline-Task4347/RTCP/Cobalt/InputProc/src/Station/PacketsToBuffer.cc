@@ -45,7 +45,7 @@ namespace LOFAR
       settings(settings),
       boardNr(boardNr)
     {
-      LOG_INFO_STR( logPrefix << "Initialised" );
+      LOG_DEBUG_STR( logPrefix << "Initialised" );
     }
 
 
@@ -118,7 +118,7 @@ namespace LOFAR
       SampleBuffer<T> buffer(settings, SharedMemoryArena::READWRITE);
       PacketWriter<T> writer(logPrefix, buffer, mode, boardNr);
 
-      LOG_INFO_STR( logPrefix << "Processing packets" );
+      LOG_DEBUG_STR( logPrefix << "Processing packets" );
 
       try {
         // Process lingering packet from previous run, if any
@@ -155,7 +155,7 @@ namespace LOFAR
 
       writer.noMoreWriting();
 
-      LOG_INFO_STR( logPrefix << "End");
+      LOG_DEBUG_STR( logPrefix << "End");
     }
 
 

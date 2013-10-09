@@ -32,9 +32,6 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/global_defines.h>
-
-#define NR_WORKQUEUES_PER_DEVICE  2
 
 namespace LOFAR
 {
@@ -44,18 +41,12 @@ namespace LOFAR
       :
       Pipeline(ps, subbandIndices, devices)
     {
+      BeamFormerFactories factories(ps, nrSubbandsPerSubbandProc);
 
-      // If profiling, use one workqueue: with >1 workqueues decreased
-      // computation / I/O overlap can affect optimization gains.
-      unsigned nrSubbandProcs = (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size();
-      workQueues.resize(nrSubbandProcs);
-
-      BeamFormerFactories factories(ps);
-
-      for (size_t i = 0; i < nrSubbandProcs; ++i) {
+      for (size_t i = 0; i < workQueues.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
+        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
       }
     }
 

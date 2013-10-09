@@ -141,9 +141,6 @@ namespace LOFAR
       
       struct DelayCompensation delayCompensation;
 
-      // Number of PPF taps. Set to 16.
-      unsigned nrPPFTaps;
-
       /*
        * Station information
        */
@@ -233,6 +230,11 @@ namespace LOFAR
 
         // CUDA GPU numbers to bind to
         std::vector<unsigned> gpus;
+
+        // NIC(s) to bind to (comma seperated)
+        //
+        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        std::string nic;
 
         // Station indices to forward data for
         std::vector<size_t> stations;
@@ -593,8 +595,6 @@ namespace LOFAR
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
-      unsigned                    nrHistorySamples() const;
-      unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;

@@ -56,7 +56,6 @@ namespace LOFAR
       BlockReader( const BufferSettings &settings,
                    const struct BoardMode &mode,
                    const std::vector<size_t> beamlets, 
-                   size_t nrHistorySamples = 0,
                    double maxDelay = 0.0 );
       ~BlockReader();
 
@@ -83,7 +82,7 @@ namespace LOFAR
         friend class BlockReader<T>;
       };
 
-      // Returns information for copying the block [from - nrHistorySamples - offset, to - offset).
+      // Returns information for copying the block [from - offset, to - offset).
       // The Block's from and to fields do not take the offset into account.
       SmartPtr<struct LockedBlock> block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets );
 
@@ -93,7 +92,6 @@ namespace LOFAR
       SampleBuffer<T> buffer;
 
       const std::vector<size_t> beamlets;
-      const size_t nrHistorySamples;
 
     private:
       const TimeStamp maxDelay;
