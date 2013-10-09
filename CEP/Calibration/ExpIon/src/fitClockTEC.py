@@ -514,7 +514,6 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         SBselect=np.logical_and(SBselect,myrms1<cutlevel)
         print "flagging",np.sum(np.logical_not(SBselect)),"channels"
     freqs=freqs[SBselect]
-        
     if isinstance(stationSelect,str): 
         stations=[st for st in list(ionmodel.stations[:]) if stationSelect in st]   
     else:
@@ -581,11 +580,11 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 if CStec0:
 
                     #get slope of average TECvs lattitude
-                    lats=np.average(ionmodel.piercepoints.cols.positions[:][timerange[0]:timerange[1],0,:,1],axis=0)
+                    lats=ionmodel.piercepoints.cols.positions[:][timerange[0]:timerange[1],0,:,1]
                     stat_select=ionmodel.stat_select[:]
-                    lats=lats[stationIndices[stat_select]]
-                    lats-=lats[0]  #relative -> no offset
-
+                    lats=lats[:,stationIndices[stat_select]]
+                    lats-=lats[:,[0]]  #relative -> no offset
+                    lats=np.average(lats,axis=0)
                     avgtec=np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
                     
 
