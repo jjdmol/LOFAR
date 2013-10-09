@@ -578,7 +578,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #halfwraps=np.remainder(np.round(np.absolute(wraps[stationIndices]*2)),2)==1
                 #print "found halfwraps for",np.array(stations)[halfwraps]
                 if CStec0:
-                    pos=myion.station_positions[:]
+                    pos=ionmodel.station_positions[:]
                     lats=np.degrees(np.arctan2(pos[:,2],np.sqrt(pos[:,0]*pos[:,0]+pos[:,1]*pos[:,1])))
                     lats-=lats[0]
                     lats=lats[stationIndices]
