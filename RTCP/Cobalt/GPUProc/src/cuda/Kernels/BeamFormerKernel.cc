@@ -56,7 +56,7 @@ namespace LOFAR
       nrSamplesPerChannel =
         ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.BeamFormerKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_BeamFormerKernel.dat") % 
             ps.settings.observationID);

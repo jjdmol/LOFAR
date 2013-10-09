@@ -50,7 +50,7 @@ namespace LOFAR
       nrSubbands(1)
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.FIR_FilterKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_FIR_FilterKernel.dat") % 
             ps.settings.observationID);

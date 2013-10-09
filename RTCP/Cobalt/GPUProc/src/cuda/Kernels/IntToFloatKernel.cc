@@ -48,7 +48,7 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Correlator.IntToFloatKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.IntToFloatKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_IntToFloatKernel.dat") % 
             ps.settings.observationID);
