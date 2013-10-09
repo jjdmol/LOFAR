@@ -588,7 +588,7 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                     chi2select=chi2<np.average(chi2)
                     print "wraps",wraps
                     print "slope",slope[chi2select][0]                    
-                    offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select,np.newaxis]),axis=0)*2.*np.pi/steps[0]
+                    offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select,np.newaxis],axis=0))*2.*np.pi/steps[0]
                     print "step",steps[0]
                     print offsets
                     remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
