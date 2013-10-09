@@ -42,4 +42,5 @@ par subbands_per_image      I    uint    -     10    0    1           -      'Nu
 par mask_patch_size         I    uint    -     10    0    1           -      'Size of extension of source patches (in pixels)'
 par maxbaseline             I    uint    -     10    0    10000       -      'The maximum baseline length in meters'
 par auto_imaging_specs      I    bool    -     10    0    false       -      'Automatic determination of imaging specifications (cell_size, npix, w_max, w_proj_planes, fov)'
-par fov                     I    float   -     10    0    0.0        -       'Clamp the Field of view for the produces image at this value, other specs. are relative to this. Use instead of auto_imaging_specs'
+par specify_fov             I    bool    -     10    0    true        -      'true: specify fov; false: specify cellsize and npix
+par fov                     I    float   -     10    0    0.0         -      'The Field of view of the image, other specs. are relative to this. Use instead of auto_imaging_specs'
