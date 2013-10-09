@@ -22,8 +22,10 @@
 // \file
 // This file contains a CUDA implementation of the GPU kernel for the Incoherent
 // Stokes part of the beam-former pipeline. It calculates station beams by
-// adding the complex voltages of the station antennas without correcting for
-// delays; hence the term \e incoherent.
+// adding the Stokes parameters of the station antennas without correcting for
+// delays; hence the term \e incoherent. For Stokes \e I this means calculating
+// the sum of squares of the complex voltages. Compare this with Coherent
+// Stokes, where you calculate the square of sums of the complex voltages.
 
 #if !(INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1)
 #error Precondition violated: INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1
@@ -45,28 +47,31 @@
 #error Precondition violated: NR_STATIONS >= 1
 #endif
 
+// 3-D output array of incoherent stokes values. Its dimensions are
+// <tt>[stokes][time][channels]</tt>, where <tt>[stokes]</tt> can be either 1
+// (Stokes \e I), or 4 (Stokes \e I, \e Q, \e U, and \e V).
 typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
+
+// 4-D array of input samples. Note that, actually, the data is 3-D
+// (<tt>[stations][channels][time]</tt>), but the time dimension has been split
+// in two parts to make time integration easier.
 typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR];
 
-
-/*!
- * Computes the \e incoherent Stokes parameters. The incoherent Stokes
- * parameters are calculated by adding the complex voltages of the station
- * antennas without correcting for delays due to (pencil) beam forming.
- *
- * Pre-processor input symbols (some are tied to the execution configuration)
- * Symbol                  | Valid Values            | Description
- * ----------------------- | ----------------------- | -----------
- * INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | >= 1  | number of samples to sum into one output sample
- * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
- * NR_INCOHERENT_STOKES    | 1, 4                    | number of Stokes parameters; either 1 (I) or 4 (I,Q,U,V)
- * NR_SAMPLES_PER_CHANNEL  | multiple of INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | number of input samples per channel
- * NR_STATIONS             | >= 1                    | number of antenna fields
- *
- */
-
-/* __kernel void incoherentStokes(__global void *restrict stokesPtr, */
-/*                                __global const void *restrict inputPtr) */
+// Compute the \e incoherent Stokes parameters. The incoherent Stokes
+// parameters are calculated by adding the complex voltages of the station
+// antennas without correcting for delays due to tied-array beam forming.
+//
+// Pre-processor input symbols (some are tied to the execution configuration)
+// Symbol                  | Valid Values            | Description
+// ----------------------- | ----------------------- | -----------
+// INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | >= 1  | number of samples to sum into one output sample
+// NR_CHANNELS             | >= 1                    | number of frequency channels per subband
+// NR_INCOHERENT_STOKES    | 1, 4                    | number of Stokes parameters; either 1 (\e I) or 4 (\e I,\e Q,\e U,\e V)
+// NR_SAMPLES_PER_CHANNEL  | multiple of INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | number of input samples per channel
+// NR_STATIONS             | >= 1                    | number of antenna fields
+//
+// \param stokes [out] 3-D array of incoherent Stokes parameters
+// \param input [in] 4-D array of input samples
 extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
                                             const InputType input)
 {
