@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
 
 namespace LOFAR
@@ -34,11 +35,39 @@ namespace LOFAR
     class IncoherentStokesKernel : public Kernel
     {
     public:
-      IncoherentStokesKernel(const Parset &ps,
-                             gpu::Context &context,
-                             gpu::DeviceMemory &devIncoherentStokes,
-                             gpu::DeviceMemory &devInputSamples);
+      static std::string theirSourceFile;
+      static std::string theirFunction;
+
+      // Parameters that must be passed to the constructor of the
+      // IncoherentStokesKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(const Parset& ps);
+        size_t nrChannelsPerSubband;
+        size_t nrSamplesPerChannel;
+        size_t timeIntegrationFactor;
+      };
+
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
+      IncoherentStokesKernel(const gpu::Stream &stream,
+                             const gpu::Module &module,
+                             const Buffers &buffers,
+                             const Parameters &param);
+
     };
+
+    //# --------  Template specializations for KernelFactory  -------- #//
+
+    template<> size_t
+    KernelFactory<IncoherentStokesKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<IncoherentStokesKernel>::compileDefinitions() const;
 
   }
 }
