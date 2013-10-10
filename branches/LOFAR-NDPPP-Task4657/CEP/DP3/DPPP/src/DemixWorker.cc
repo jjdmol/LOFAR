@@ -522,7 +522,7 @@ namespace LOFAR {
         itsPhaseShifts[i] = itsOrigPhaseShifts[itsSrcSet[i]];
         itsFirstSteps[i]  = itsOrigFirstSteps[itsSrcSet[i]];
         itsDemixList[i]   = itsMix->ateamDemixList()[itsSrcSet[i]];
-        float sumAmpl = sum(itsTargetAmpl[i]);
+        float sumAmpl = sum(itsAteamAmpl[i]);
         if (sumAmpl < minSumAmpl) {
           minSumAmpl = sumAmpl;
         }
