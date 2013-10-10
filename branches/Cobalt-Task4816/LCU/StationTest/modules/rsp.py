@@ -187,8 +187,10 @@ c_cdo_settings_size          = 30   # nof bytes in CDO settings register
 c_cdo_settings_ctrl_offset   = 6    # byte index of the first byte of the ctrl field in CDO settings register
 c_cdo_transport_size         = 28   # nof bytes in CDO transport header register (IPv4 + UDP = 20 + 8 = 28)
 
+c_beam_mode_str              = ['1 x 16-bit', '2 x 8-bit', '4 x 4-bit']                # bm = 0, 1 or 2
+
 # SDO = Subband Data Output
-c_sdo_mode_str               = ['1 x 16-bit', '2 x 8-bit', '3 x 5-bit', '4 x 4-bit']
+c_sdo_mode_str               = ['1 x 16-bit', '2 x 8-bit', '3 x 5-bit', '4 x 4-bit']   # sm = 0, 1, 2 or 3
 c_ss_sel_zero                = 0x8000
 
 c_sdo_nof_subbands           = 36                               # Number of SDO subbands per SP

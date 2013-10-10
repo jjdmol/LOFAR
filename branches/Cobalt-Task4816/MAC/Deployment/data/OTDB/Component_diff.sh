@@ -4,12 +4,15 @@
 #
 # Usage:
 #
-# > Component_diff.sh -o <old_version> -p <old_branch> -n <new_version> 
-#                      -m <new branch>
-#
+# > Component_diff.sh -o <old_version> -n <new_version> -s -D <otdb database> 
+#                     -H <otdb host> 
+#                     
+# -s: Show list of all available revision numbers in OTDB; requires 
+#   -D: Database name; default is LOFAR_4
+#   -H: Database server; default is sasdb
 # If new version is omitted, we assume the latest (HEAD)
 # If no branch names are given, we assume trunk
-#
+# 
 
 
 # SyntaxError msg
@@ -20,13 +23,59 @@ SyntaxError()
 
         [ -z "${Msg}" ] || echo "ERROR: ${Msg}"
         echo ""
-        echo "Syntax: $(basename $0) -o <old_version> -p <old_branch> -n <new_version>"
-	echo "           -m <new branch>"
+        echo "Syntax: $(basename $0) -o <old_revision> -n <new_revision>"
         echo ""
 	echo "  - If new version is omitted, we assume the latest (HEAD)"
-	echo "  - If no branch names are given, we assume trunk"
-        echo "  - If only one branchname given, we assume same for both"
+        echo "  - Script will find out which branch revision number belongs to"
         echo ""
+}
+
+function find_branch_name {
+  line=$1
+  head=`echo $line | awk -F/ '{print $2}'`
+  if [ "$head" != "trunk" ]; then
+    branch=`echo $line | awk -F/ '{print $3}' | awk '{print $1}'`
+  fi
+}
+
+function find_branch {
+  rev=$1
+  svn log -v --incremental -c ${rev} https://svn.astron.nl/LOFAR > /tmp/svn_log_$$
+
+  branch=""
+  nextline=0
+  while read line 
+  do
+    if [ $nextline -eq 1 ]; then
+      find_branch_name "$line"
+      nextline=2
+      break
+    fi
+
+    if [ "$line" == "Changed paths:" ]; then
+      nextline=1
+    fi
+  done < /tmp/svn_log_$$
+  rm -f /tmp/svn_log_$$
+  
+}
+
+function show_list {
+  dbhost=$1
+  dbname=$2
+  versions=( `psql -q -t -h ${dbhost} -d ${dbname} -U postgres -c "select version from getvcnodelist('LOFAR',0,True) order by version asc;"` )
+  if [ ${#versions[@]} -eq 0 ]; then 
+    echo "Could not find LOFAR version in database ${dbname} on server ${dbhost}"
+  else 
+    echo "Available versionnrs:"
+    echo "====================="
+    for version in "${versions[@]}"
+    do
+      if [ "$version" != "" ]; then 
+        echo $version
+      fi
+    done
+  fi
 }
 
 #
@@ -43,8 +92,11 @@ old_version=0
 new_version=HEAD
 old_branch=trunk
 new_branch=trunk
+showlist=0
+dbhost=sasdb
+dbname=LOFAR_4
 
-while getopts "ho:p:n:m:" OPTION
+while getopts "ho:n:sD:H:" OPTION
 do
      case $OPTION in
 
@@ -55,15 +107,18 @@ do
  	 o)
 	     old_version=$OPTARG
              ;;
-         n)  
+         n)
 	     new_version=$OPTARG
              ;;
-         p)  
-	     old_branch=$OPTARG
+         H)
+             dbhost=$OPTARG
              ;;
-	 m)  
-	     new_branch=$OPTARG
-	     ;;
+         D)
+             dbname=$OPTARG
+             ;;
+         s)  
+             showlist=1
+             ;;
          ?)
              SyntaxError
              exit 1
@@ -71,22 +126,26 @@ do
        esac
 done
 
-if [ "$old_branch" != "$new_branch" ]; then 
-    if [ "$old_branch" == "trunk" ]; then 
-        old_branch=$new_branch
-    elif [ "$new_branch" == "trunk" ]; then 
-        new_branch=$old_branch
-    fi
-fi
+if [ $showlist -eq 1 ]; then 
+  show_list $dbhost $dbname
+  exit
+fi  
+
+find_branch $old_version
+old_head=${head}
+old_branch=${branch}
+find_branch $new_version
+new_head=${head}
+new_branch=${branch}
 
 echo "Comparing rev. $new_version of branch $new_branch with rev. $old_version of branch $old_branch"
-               
+            
 mkdir -p /tmp/comp_$new_version
 cd /tmp/comp_$new_version
 if [ "$new_branch" == "trunk" ]; then 
   co_newdir="trunk/MAC/Deployment/data"
 else
-  co_newdir="branches/${new_branch}/MAC/Deployment/data"
+  co_newdir="${new_head}/${new_branch}/MAC/Deployment/data"
 fi
 svn co -r ${new_version} https://svn.astron.nl/LOFAR/${co_newdir} data >& /dev/null
 cd data/OTDB 
@@ -101,7 +160,7 @@ cd /tmp/comp_$old_version
 if [ "$old_branch" == "trunk" ]; then 
    co_olddir="trunk/MAC/Deployment/data"
 else
-  co_olddir="branches/${old_branch}/MAC/Deployment/data"
+  co_olddir="${old_head}/${old_branch}/MAC/Deployment/data"
 fi
 svn co -r ${old_version} https://svn.astron.nl/LOFAR/${co_olddir} data >& /dev/null
 cd data/OTDB
@@ -141,14 +200,14 @@ do
   grep -v -e 'Id:\|create_OTDB_comps' /tmp/comp_$new_version/data/OTDB/${line} > /tmp/comp_$new_version/data/OTDB/tmp
   they_diff=`diff -b -B -q /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp 2>&1 1>/dev/null ; echo $?`
   if [ $they_diff -eq 1 ]; then 
-    echo "Differences in file ${line} between rev. $new_version ($new_branch) and rev. $old_version ($old_branch):" > tmp
-    echo "" >> tmp
-    diff -bB -u -U 100 /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp >> tmp
-    echo "====================" >> tmp
-    cat tmp | grep -v "\-\-\-" | grep -v "+++" | grep -v "\@\@"
+    echo "Differences in file ${line} between rev. $new_version ($new_branch) and rev. $old_version ($old_branch):" > tmp_$$
+    echo "" >> tmp_$$
+    diff -bB -u -U 100 /tmp/comp_$old_version/data/OTDB/tmp /tmp/comp_$new_version/data/OTDB/tmp >> tmp_$$
+    echo "====================" >> tmp_$$
+    cat tmp_$$ | grep -v "\-\-\-" | grep -v "+++" | grep -v "\@\@"
     rm -f /tmp/comp_$old_version/data/OTDB/tmp
     rm -f /tmp/comp_$new_version/data/OTDB/tmp
-    rm -f tmp
+    rm -f tmp_$$
 
   fi
 done < ${curdir}/all_present.lst

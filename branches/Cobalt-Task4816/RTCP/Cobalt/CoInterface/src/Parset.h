@@ -141,9 +141,6 @@ namespace LOFAR
       
       struct DelayCompensation delayCompensation;
 
-      // Number of PPF taps. Set to 16.
-      unsigned nrPPFTaps;
-
       /*
        * Station information
        */
@@ -601,8 +598,6 @@ namespace LOFAR
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
-      unsigned                    nrHistorySamples() const;
-      unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;

@@ -6,6 +6,8 @@ import time
 from general_lib import sendCmd
 import logging
 
+lofar_version = '0913'
+
 CoreStations          = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C',\
                          'CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031',\
                          'CS032C','CS101C','CS103C','CS201C','CS301C','CS302C','CS401C','CS501C')
@@ -19,6 +21,8 @@ InternationalStations =	('DE601C','DE602C','DE603C','DE604C','DE605C','FR606C','
 StationType = dict( CS=1, RS=2, IS=3 )
 
 logger = None
+rcumode = -1
+
 def init_lofar_lib():
     global logger
     logger = logging.getLogger()
@@ -214,6 +218,8 @@ def resetRSPsettings():
 
 def turnonRCUs(mode, rcus):
     global logger
+    global rcumode
+    start_mode = rcumode
     logger.info("turn RCU's on, mode %d" %(mode))
     logger.info("enable rcus")
     rspctl('--rcuenable=1', wait=0.0)
@@ -225,19 +231,25 @@ def turnonRCUs(mode, rcus):
         rspctl('--specinv=0', wait=0.0)
     logger.info("set rcu mode")
     rsp_rcu_mode(mode, rcus)
-    if mode >= 5:
+    if mode >= 5 and mode != start_mode:
         logger.info("set hbadelays to 0 for 1 second")
         rspctl('--hbadelay=%s' %(('0,'* 16)[:-1]), wait=8.0)
+        rsp_hba_delay(('128,'*16)[:-1], rcus)
+    rcumode = mode
     
 def turnoffRCUs():
     global logger
+    global rcumode
     logger.info("RCU's off, mode 0")
     rspctl('--rcumode=0', wait=0.0)
     rspctl('--rcuenable=0', wait=0.0)
     rspctl('--aweights=0,0', wait=1.0)
+    rcumode = 0
 
 # set rcu mode, if mode > 4(hba) turn on hba's in steps to avoid power dips
 def rsp_rcu_mode(mode, n_rcus=96):
+    global rcumode
+    rcumode = mode
     if mode > 0 and mode < 5: # lba modes
         rspctl('--rcumode=%d' %(mode), wait=3.0)
         return (0)
@@ -252,14 +264,36 @@ def rsp_rcu_mode(mode, n_rcus=96):
         if jump < 2: jump = 2
         
         for step in range(steps):
-            selection = '--select='
+            selection = ''
             for rcu in range(step*2, n_rcus, jump):
                 selection += '%d,%d,' %(rcu,rcu+1)
-            rspctl('--rcumode=%d %s' %(mode, selection[:-1]), wait=0.5)
+            rspctl('--rcumode=%d --select=%s' %(mode, selection[:-1]), wait=0.5)
         time.sleep(2.5)
         return (0) 
     else:
         return (-1)
         
+# set hba_delays in steps to avoid power dips
+def rsp_hba_delay(delay, n_rcus=96):
+    if delay == 0:
+        rspctl('--hbadelay=%s' %(delay), wait=4.0)
+        return (0)
+    else:
+        #n_rcus = n_boards * 8
+        n_pwr_rcus = n_rcus / 2
+        # maximum 24 power RCUs each step
+        steps = n_pwr_rcus / 24 # 4 steps for NL stations, 8 steps for IS stations
+        jump = n_rcus / 24      # jump = 8 for NL stations and 16 for IS stations
+        
+        if steps == 0: steps = 1
+        if jump < 2: jump = 2
+        
+        for step in range(steps):
+            selection = ''
+            for rcu in range(step*2, n_rcus, jump):
+                selection += '%d,%d,' %(rcu,rcu+1)
+            rspctl('--hbadelay=%s --select=%s' %(delay, selection[:-1]), wait=2.0)
+        time.sleep(2.0)
+        return (0) 
 
     

@@ -138,50 +138,7 @@ void dblClick(int row) {
   bDoubleClicked = false;  
 }
 
-// routine for acknowledge all click
-void ackAllClicked() {
-  LOG_TRACE(\"navigator_alerts.pnl:ackAllClicked|Acknowledge all click received.\");
-  
-  if (alarmTable.lineCount() < 1) {
-    LOG_TRACE(\"navigator_alerts.pnl:ackAllClicked|No alarms in table, so exit\");
-    return;
-  }
-  
-  // loop over alarmtable and remove all alarms that can be removed
-  for (int row=alarmTable.lineCount()-1;row>=0;row--) {
-    dyn_anytype result = alarmTable.getLineN(row);
-  
-    string dp = navFunct_ObsToTemp(result[2])+\".status.state\"; 
-    string message = result[3];
-    int status=-1;
-    if (result[4] == \"ACK\") {
-      status = ACK;
-    } else if (result[4] == \"WENT\") {
-      status = WENT;
-    } else if (result[4] == \"CAME\") {
-      status = CAME;
-    }  
 
-    int iPos=-1;
-
-    //to narrow actions determine if the state is 'acknowledgable'
-    if (status != ACK) {
-
-      // ok rest should be possible to acknowledge
-      // find the entry in the table
-      if (g_alarms[\"DPNAME\"] == \"\") return;
-      if ( dynlen(g_alarms[\"DPNAME\"]) >= 1) {
-        iPos=dynContains(g_alarms[\"DPNAME\"],dp);  
-  
-        if (iPos < 1) {
-          LOG_ERROR(\"navigator_alerts.pnl:ackAllClicked|Strange, couldn't find chosen entry in alarm global list: \" + dp);
-        } else {
-          acknowledgeAlarm(iPos,getCurrentTime(),dp,message,0);
-        }
-      }
-    }    
-  } 
-}
 
 // routine for right mouse click
 void rClick(int row) {
@@ -497,7 +454,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT1"
 ""
-1 964 -98.88888888888893 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 962 -191.4814814814816 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -513,30 +470,6 @@ E E 0 1 1 2 1 E 1 0 1.666666666666667 -2 -26.66666666666667 1 E 972 22 1025 35
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
 LANG:1 9 # Alarms:
-13 17
-"ack_all_button"
-""
-1 970 60 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-29 0 0 0 0 0
-E E E
-0
-1
-LANG:1 22 Acknowledge all alarms
-
-0
-1
-LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  968 58 1032 84
-
-T 
-1
-LANG:1 8 Ack. all
-"main()
-{
-  ackAllClicked();
-}" 0
- E E E
 0
 LAYER, 1 
 1

@@ -82,6 +82,7 @@ namespace
     if (itsApplyIonosphere) 
     {
       String parmdbname = ms.tableName() + "/instrument";
+      if (itsParameters.fieldNumber("parmdbname") > -1) parmdbname = ms.tableName() + "/" + itsParameters.asString("parmdbname");
       cout << parmdbname << endl;
       initParmDB(parmdbname);
       cout << cal_pp_names << endl;
@@ -118,12 +119,12 @@ namespace
     if (this->itsApplyIonosphere) 
     {
       this->time = epoch.get(casa::Unit("s")).getValue();
-      cout << "Epoch set to " << this->time << " reading parms..." << flush;
-      double freq = 50e6; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
+//       cout << "Epoch set to " << this->time << " reading parms..." << flush;
+      double freq = 60447692.87109375; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
                           // this frequency should be within the range specified in the parmdbname
                           // this range is again quite arbitrary
                           
-      Record parms = this->pdb->getValues ("*", freq, freq+0.5, 1.0, this->time, this->time + 0.5, 1.0 );
+      Record parms = this->pdb->getValuesGrid ("*", 0, 1e9, this->time, this->time + 0.01);
       this->r0 = get_parmvalue(parms, "r_0");
       this->beta = get_parmvalue(parms, "beta");
       this->height = get_parmvalue(parms, "height");
@@ -132,8 +133,9 @@ namespace
         this->cal_pp(1, i) = get_parmvalue(parms, "Piercepoint:Y:" + this->cal_pp_names(i));
         this->cal_pp(2, i) = get_parmvalue(parms, "Piercepoint:Z:" + this->cal_pp_names(i));
         this->tec_white(i) = get_parmvalue(parms, "TECfit_white:0:" + this->cal_pp_names(i));
+
       }
-      cout << "done." << endl;
+//       cout << "done." << endl;
     }
   }
   
@@ -377,6 +379,8 @@ namespace
     const uint nX = map.directions.shape()[1];
     const uint nY = map.directions.shape()[2];
     
+//     cout << "LofarATerm::evaluateIonosphere " << nX << " " << nY << endl;
+    
     const uint nFreq = freq.size();
     
     const casa::MVPosition p = this->itsInstrument->station(station)->position().getValue();
@@ -467,6 +471,7 @@ namespace
       {
         for(uint k = 0 ; k < cal_pp_names.size(); ++k) 
         {
+//           cout << piercepoints(0,i,j) << " " << piercepoints(1,i,j) << " " << piercepoints(2,i,j) << " " << tec_white(k) << endl;
           Double dx = cal_pp(0, k) - piercepoints(0,i,j);
           Double dy = cal_pp(1, k) - piercepoints(1,i,j);
           Double dz = cal_pp(2, k) - piercepoints(2,i,j);
@@ -486,8 +491,10 @@ namespace
         for(uint k = 0 ; k < nY; ++k) 
         {
           Double phase = -tec(j,k) * a; 
+//           cout << phase << " ";
           IF(j,k,i) = DComplex(cos(phase), sin(phase));
         }
+//         cout << endl;
       }
     }
     return IF;

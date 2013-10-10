@@ -30,20 +30,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context)
+    SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
       ps(ps),
       queue(gpu::Stream(context))
     {
       // put enough objects in the inputPool to operate
-      // TODO: Tweak the number of inputPool objects per SubbandProc,
-      // probably something like max(3, nrSubbands/nrSubbandProcs * 2), because
-      // there both need to be enough items to receive all subbands at
-      // once, and enough items to process the same amount in the
-      // mean time.
       //
       // At least 3 items are needed for a smooth Pool operation.
-      size_t nrInputDatas = std::max(3UL, ps.nrSubbands());
+      size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
         inputPool.free.append(new SubbandProcInputData(
                 ps.nrBeams(),
@@ -97,10 +92,9 @@ namespace LOFAR
                                      metaData.stationBeam.delayAtBegin) * 0.5;
 
           // subtract the delay that was already compensated for
-          tabDelays[SAP][station][tab] = static_cast<float>(
-                                         (metaData.TABs[tab].delayAtBegin +
+          tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -
-                                         compensatedDelay);
+                                         compensatedDelay;
         }
       }
     }

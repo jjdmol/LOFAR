@@ -46,7 +46,7 @@ namespace LOFAR
       for (size_t i = 0; i < workQueues.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
+        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
       }
     }
 

@@ -22,21 +22,22 @@
 
 #include "CorrelatorKernel.h"
 
-#include <vector>
-#include <algorithm>
-
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Exceptions.h>
 
-#include <GPUProc/global_defines.h>
+#include <boost/format.hpp>
+
+#include <fstream>
+
+using boost::format;
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
-//
-// TODO: 2x2 kernel produces different output than the 1x1 kernel!
-//#define USE_2X2
+
+#define USE_2X2
 
 namespace LOFAR
 {
@@ -53,11 +54,21 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 # endif
 
+    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps)
+    {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
+            ps.settings.observationID);
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);

@@ -46,12 +46,20 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
-        size_t nrHistorySamples;
-        size_t nrPPFTaps;
+
+        // The number of stations or TABs to filter. The FIR filter will
+        // deal with either in the same way.
+        size_t nrSTABs;
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
         size_t nrSubbands;
+
+        // The number of PPF filter taps.
+        static const size_t nrTaps = 16;
+
+        // The number of history samples used for each block
+        size_t nrHistorySamples() const;
       };
 
       enum BufferType
@@ -81,7 +89,8 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
-      void enqueue(PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId,
+                   PerformanceCounter &counter,
                    size_t subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
@@ -99,8 +108,8 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
-    // Specialization of the KernelFactory for
-    // FIR_FilterKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

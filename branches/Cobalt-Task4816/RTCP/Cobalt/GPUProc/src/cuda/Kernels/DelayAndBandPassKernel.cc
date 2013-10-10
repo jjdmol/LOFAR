@@ -20,16 +20,19 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
 #include "DelayAndBandPassKernel.h"
 
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/BandPass.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/BandPass.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <fstream>
 
 using boost::lexical_cast;
 using boost::format;
@@ -51,13 +54,21 @@ namespace LOFAR
       transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_DelayAndBandPassKernel_%c%c%c.dat") % 
+            ps.settings.observationID %
+            (correctBandPass ? "B" : "b") %
+            (delayCompensation ? "D" : "d") %
+            (transpose ? "T" : "t"));
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -86,11 +97,13 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter, float subbandFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
+                                         PerformanceCounter &counter,
+                                         double subbandFrequency, size_t SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(queue, counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//

@@ -22,6 +22,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
@@ -68,9 +69,10 @@ int main() {
   //stream.writeBuffer(devConvertedData, sampledData, true);
 
   IntToFloatKernel::Buffers buffers(devSampledData, devConvertedData);
-  auto_ptr<IntToFloatKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<IntToFloatKernel> kernel(factory.create(stream, buffers));
 
-  kernel->enqueue(stream);
+  BlockID blockId;
+  kernel->enqueue(blockId);
   stream.synchronize();
   stream.readBuffer(convertedData, devConvertedData, true);
   stream.synchronize();

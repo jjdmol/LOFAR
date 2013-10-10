@@ -12,8 +12,11 @@
 
 . $srcdir/testFuncs.sh
 
+# Check for GPU
+haveGPU || exit 3
+
 # Create and use LOFARROOT environment
-mklofarroot tMACfeedback_tmp.lofarroot
+mklofarroot tProductionParsets_tmp.lofarroot
 
 # The directory containing the parsets to test
 PARSETDIR=$testdir/tProductionParsets.in_parsets

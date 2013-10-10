@@ -243,13 +243,13 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             {
                 // Create an AZ, EL expression for the centroid direction of the
                 // patch.
-                Expr<Vector<2> >::Ptr exprAzEl =
-                    makeAzElExpr(instrument->station(j)->position(),
-                    exprPatch->position());
+//                 Expr<Vector<2> >::Ptr exprAzEl =
+//                     makeAzElExpr(instrument->station(j)->position(),
+//                     exprPatch->position());
 
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprAzEl, exprIonosphere));
+                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
             }
         }
 
@@ -300,7 +300,8 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         if(config.useClock())
         {
             exprDIE[i] = compose(exprDIE[i],
-                makeClockExpr(itsScope, instrument->station(i)));
+                makeClockExpr(itsScope, instrument->station(i),
+                    config.getClockConfig()));
         }
 
         // Bandpass.
@@ -419,7 +420,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         if(config.useClock())
         {
             stationExpr[i] = compose(stationExpr[i],
-                makeClockExpr(itsScope, instrument->station(i)));
+                makeClockExpr(itsScope, instrument->station(i),
+                  config.getClockConfig()));
         }
 
         // Bandpass.
@@ -549,15 +551,9 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the phase reference
-                    // direction.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprRefPhase);
-
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
                 }
             }
         }
@@ -583,7 +579,6 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                         makeDirectionalGainExpr(itsScope,
                         instrument->station(i), patch, config.usePhasors()));
                 }
-
                 // Beam.
                 if(config.useBeam())
                 {
@@ -629,15 +624,9 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 // Ionosphere.
                 if(config.useIonosphere())
                 {
-                    // Create an AZ, EL expression for the centroid direction of
-                    // the patch.
-                    Expr<Vector<2> >::Ptr exprAzEl =
-                        makeAzElExpr(instrument->station(i)->position(),
-                        exprPatch->position());
-
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprAzEl, exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
                 }
             }
         }
@@ -817,6 +806,7 @@ void MeasurementExprLOFAR::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
+// i is baseline index, index in baselineseq
 const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
 {
     JonesMatrix result;
