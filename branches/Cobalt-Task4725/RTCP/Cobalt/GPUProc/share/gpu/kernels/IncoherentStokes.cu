@@ -28,8 +28,8 @@
 // complex voltages. Compare this with Coherent Stokes, where you calculate the
 // square of sums of the complex voltages.
 
-#if !(INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1)
-#error Precondition violated: INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR >= 1
+#if !(TIME_INTEGRATION_FACTOR >= 1)
+#error Precondition violated: TIME_INTEGRATION_FACTOR >= 1
 #endif
 
 #if !(NR_CHANNELS >= 1)
@@ -40,8 +40,8 @@
 #error Precondition violated: NR_INCOHERENT_STOKES == 1 || NR_INCOHERENT_STOKES == 4
 #endif
 
-#if !(NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR == 0)
-#error Precondition violated: NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR == 0
+#if !(NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % TIME_INTEGRATION_FACTOR == 0)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % TIME_INTEGRATION_FACTOR == 0
 #endif
 
 #if !(NR_STATIONS >= 1)
@@ -51,12 +51,12 @@
 // 3-D output array of incoherent stokes values. Its dimensions are
 // <tt>[stokes][time][channels]</tt>, where <tt>[stokes]</tt> can be either 1
 // (Stokes \e I), or 4 (Stokes \e I, \e Q, \e U, and \e V).
-typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][NR_CHANNELS];
+typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][NR_CHANNELS];
 
 // 4-D array of input samples. Note that, actually, the data is 3-D
 // (<tt>[stations][channels][time]</tt>), but the time dimension has been split
 // in two parts to make time integration easier.
-typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR][INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR];
+typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][TIME_INTEGRATION_FACTOR];
 
 // Compute the \e incoherent Stokes parameters. The incoherent Stokes
 // parameters are calculated by adding the Stokes parameters of the station
@@ -65,10 +65,10 @@ typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / I
 // Pre-processor input symbols (some are tied to the execution configuration)
 // Symbol                  | Valid Values            | Description
 // ----------------------- | ----------------------- | -----------
-// INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | >= 1  | number of samples to sum into one output sample
+// TIME_INTEGRATION_FACTOR | >= 1                    | number of samples to sum into one output sample
 // NR_CHANNELS             | >= 1                    | number of frequency channels per subband
 // NR_INCOHERENT_STOKES    | 1, 4                    | number of Stokes parameters; either 1 (\e I) or 4 (\e I,\e Q,\e U,\e V)
-// NR_SAMPLES_PER_CHANNEL  | multiple of INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR | number of input samples per channel
+// NR_SAMPLES_PER_CHANNEL  | multiple of TIME_INTEGRATION_FACTOR | number of input samples per channel
 // NR_STATIONS             | >= 1                    | number of antenna fields
 //
 // \param stokes [out] 3-D array of incoherent Stokes parameters
@@ -81,7 +81,7 @@ extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
   uint time = blockIdx.x * blockDim.x + threadIdx.x;
   uint channel = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if (time >= NR_SAMPLES_PER_CHANNEL / INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR)
+  if (time >= NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR)
     return;
 
   float stokesI = 0;
@@ -90,7 +90,7 @@ extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
 #endif
 
   for (uint station = 0; station < NR_STATIONS; station++) {
-    for (uint t = 0; t < INCOHERENT_STOKES_TIME_INTEGRATION_FACTOR; t++) {
+    for (uint t = 0; t < TIME_INTEGRATION_FACTOR; t++) {
       /* float4 sample = (*input)[station][channel][time][t]; */
       /* float2 X = sample.xy; */
       /* float2 Y = sample.zw; */
