@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 
@@ -33,7 +34,9 @@ using namespace std;
 using namespace boost;
 using namespace LOFAR::Cobalt;
 
-struct Fixture
+typedef complex<float> fcomplex;
+
+struct ParsetFixture
 {
   static const size_t 
     timeIntegrationFactor = 3,
@@ -42,46 +45,85 @@ struct Fixture
     blockSize = timeIntegrationFactor * nrChannels * nrSamples,
     nrStations = 43;
 
-  Parset ps;
+  Parset parset;
 
-  Fixture() {
-    ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
-    ps.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
-           lexical_cast<string>(timeIntegrationFactor));
-    ps.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
-           lexical_cast<string>(nrChannels));
-    ps.add("OLAP.CNProc_IncoherentStokes.which", "IQUV");
-    ps.add("Observation.VirtualInstrument.stationList",
-           str(format("[%d*RS000]") % nrStations));
-    ps.add("Cobalt.blockSize", lexical_cast<string>(blockSize)); 
-    ps.updateSettings();
+  ParsetFixture() {
+    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
+               "true");
+    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
+               lexical_cast<string>(timeIntegrationFactor));
+    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
+               lexical_cast<string>(nrChannels));
+    parset.add("OLAP.CNProc_IncoherentStokes.which",
+               "IQUV");
+    parset.add("Observation.VirtualInstrument.stationList",
+               str(format("[%d*RS000]") % nrStations));
+    parset.add("Cobalt.blockSize", 
+               lexical_cast<string>(blockSize)); 
+    parset.updateSettings();
   }
 };
 
 const size_t
-  Fixture::timeIntegrationFactor,
-  Fixture::nrChannels,
-  Fixture::nrSamples,
-  Fixture::blockSize,
-  Fixture::nrStations;
+  ParsetFixture::timeIntegrationFactor,
+  ParsetFixture::nrChannels,
+  ParsetFixture::nrSamples,
+  ParsetFixture::blockSize,
+  ParsetFixture::nrStations;
 
-TEST_FIXTURE(Fixture, BufferSizes)
+TEST_FIXTURE(ParsetFixture, BufferSizes)
 {
   // Test correctness of reported buffer sizes
   const ObservationSettings::BeamFormer::StokesSettings &settings = 
-    ps.settings.beamFormer.incoherentSettings;
+    parset.settings.beamFormer.incoherentSettings;
 
   CHECK_EQUAL(timeIntegrationFactor, settings.timeIntegrationFactor);
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-  CHECK_EQUAL(nrStations, ps.nrStations());
+  CHECK_EQUAL(nrStations, parset.nrStations());
   CHECK_EQUAL(nrSamples, settings.nrSamples(blockSize));
 }
 
-TEST_FIXTURE(Fixture, KernelFactory)
+TEST_FIXTURE(ParsetFixture, KernelFactory)
 {
   // Test if we can succesfully create a KernelFactory
-  KernelFactory<IncoherentStokesKernel> kf(ps);
+  KernelFactory<IncoherentStokesKernel> kf(parset);
+}
+
+struct KernelFixture : ParsetFixture
+{
+  KernelFactory<IncoherentStokesKernel> factory;
+  gpu::Device device;
+  gpu::Context context;
+  gpu::Stream stream;
+  gpu::DeviceMemory dInput, dOutput;
+  gpu::HostMemory hInput, hOutput;
+
+  KernelFixture() :
+    factory(parset),
+    device(gpu::Platform().devices()[0]),
+    context(device),
+    stream(context),
+    dInput(context, factory.bufferSize(IncoherentStokesKernel::INPUT_DATA)),
+    dOutput(context, factory.bufferSize(IncoherentStokesKernel::OUTPUT_DATA)),
+    hInput(context, dInput.size()),
+    hOutput(context, dOutput.size())
+  {
+    cout << "dInput.size() = " << dInput.size() << endl;
+    cout << "dOutput.size() = " << dOutput.size() << endl;
+  }
+};
+
+TEST_FIXTURE(KernelFixture, BasicTest)
+{
+  size_t nrStokes = parset.settings.beamFormer.incoherentSettings.nrStokes;
+  MultiDimArrayHostBuffer<fcomplex, 3> 
+    input(
+      boost::extents[nrStations][nrChannels][nrSamples],
+      context),
+    output(
+      boost::extents[nrStokes][nrSamples / timeIntegrationFactor][nrChannels],
+      context);
 }
 
 int main()
