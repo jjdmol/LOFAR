@@ -26,18 +26,21 @@
 #include <Common/lofar_complex.h>
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
     using boost::format;
+    using boost::lexical_cast;
 
     string IncoherentStokesKernel::theirSourceFile = "IncoherentStokes.cu";
     string IncoherentStokesKernel::theirFunction = "incoherentStokes";
 
     IncoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
+      nrStokes(ps.settings.beamFormer.incoherentSettings.nrStokes),
       timeIntegrationFactor(
         ps.settings.beamFormer.incoherentSettings.timeIntegrationFactor)
     {
@@ -79,13 +82,19 @@ namespace LOFAR
     //--------  Template specializations for KernelFactory  --------//
 
     template<> size_t
-    KernelFactory<IncoherentStokesKernel>::bufferSize(BufferType bufferType) const
+    KernelFactory<IncoherentStokesKernel>::
+    bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
       case IncoherentStokesKernel::INPUT_DATA:
-        return 0;
+        return 
+          itsParameters.nrStations * itsParameters.nrChannelsPerSubband *
+          itsParameters.nrSamplesPerChannel * sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
-        return 0;
+        return 
+          itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
+          itsParameters.timeIntegrationFactor * 
+          itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -96,6 +105,16 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["TIME_INTEGRATION_FACTOR"] = 
+        lexical_cast<string>(itsParameters.timeIntegrationFactor);
+      defs["NR_CHANNELS"] = 
+        lexical_cast<string>(itsParameters.nrChannelsPerSubband);
+      defs["NR_INCOHERENT_STOKES"] = 
+        lexical_cast<string>(itsParameters.nrStokes);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+      defs["NR_STATIONS"] = 
+        lexical_cast<string>(itsParameters.nrStations);
       return defs;
     }
 

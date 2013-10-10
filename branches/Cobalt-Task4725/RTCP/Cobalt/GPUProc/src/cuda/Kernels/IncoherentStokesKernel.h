@@ -45,6 +45,7 @@ namespace LOFAR
         Parameters(const Parset& ps);
         size_t nrChannelsPerSubband;
         size_t nrSamplesPerChannel;
+        size_t nrStokes;
         size_t timeIntegrationFactor;
       };
 
