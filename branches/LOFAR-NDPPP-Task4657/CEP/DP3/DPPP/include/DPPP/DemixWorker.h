@@ -71,7 +71,8 @@ namespace LOFAR {
       // Process the data in the input buffers and store the result in the
       // output buffers.
       void process (const DPBuffer* bufin, uint nbufin,
-                    DPBuffer* bufout, vector<double>* solutions);
+                    DPBuffer* bufout, vector<double>* solutions,
+                    uint chunkNr);
 
       // Get the number of solves.
       uint nSolves() const
@@ -135,7 +136,7 @@ namespace LOFAR {
       // Setup the demix processing steps for this piece of data.
       // It fills itsFirstSteps, etc. for the sources to be demixed.
       // It also determines how to handle the target (include,deproject,ignore).
-      void setupDemix();
+      void setupDemix (uint chunkNr);
 
       // Average the baseline UVWs in bufin and split them into UVW per station.
       // It returns the number of time averages.
@@ -156,8 +157,14 @@ namespace LOFAR {
       // Add the StokesI of itsPredictVis to ampl.
       void addStokesI (casa::Matrix<float>& ampl);
 
-      // Apply the beam for the given sky direction.
-      void applyBeam (double time, const Position& dir);
+      // Calculate the beam for demix resolution and apply to itsPredictVis.
+      void applyBeam (double time, const Position& pos);
+
+      // Calculate the beam for the given sky direction.
+      // Apply it to the data.
+      void applyBeam (double time, const Position& pos,
+                      const casa::Vector<double>& chanFreqs,
+                      dcomplex* data);
 
       // Convert a direction to ITRF.
       StationResponse::vector3r_t dir2Itrf (const casa::MDirection&);
@@ -243,7 +250,7 @@ namespace LOFAR {
       //# Variables for conversion of directions to ITRF.
       casa::MeasFrame                       itsMeasFrame;
       casa::MDirection::Convert             itsMeasConverter;
-      casa::Matrix<StationResponse::matrix22c_t> itsBeamValues; //# [nst,nch]
+      vector<StationResponse::matrix22c_t>  itsBeamValues;  //# [nst,nch]
 
       //# Indices telling which Ateam sources to use.
       vector<uint>                          itsSrcSet;

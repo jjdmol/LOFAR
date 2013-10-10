@@ -58,6 +58,7 @@ namespace LOFAR {
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
+        itsApplyBeam        (parset.getBool   (prefix+"applybeam", true)),
         itsTargetHandling   (parset.getUint   (prefix+"targethandling", 0)),
         itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
         itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
@@ -100,9 +101,15 @@ namespace LOFAR {
       }
       itsAteamDemixList = makePatchList (itsDemixModelName, itsSourceNames);
       itsTargetList     = makePatchList (itsTargetModelName, vector<string>());
-      // If no estimate model is given, make each demix patch a point source.
+      // If no estimate model is given, use the demix model.
       if (itsAteamList.empty()) {
-        makePredictPatchList();
+        itsAteamList = itsAteamDemixList;
+      }
+      if (itsSourceNames.empty()) {
+        itsSourceNames.reserve (itsAteamList.size());
+        for (size_t i=0; i<itsAteamList.size(); ++i) {
+          itsSourceNames.push_back (itsAteamList[i]->name());
+        }
       }
       // Note that the A-team models are in the same order of name.
       // Check they have matching positions.
@@ -404,38 +411,6 @@ namespace LOFAR {
         patchList.push_back (ppatch);
       }
       return patchList;
-    }
-
-    void DemixInfo::makePredictPatchList()
-    {
-      // Make the estimate patch list from the detailed demix patch list.
-      // Each patch is treated as a point source and its brightness (summed flux)
-      // is the Stokes I flux.
-      vector<ModelComponent::Ptr> componentList(1);
-      Position position;
-      Stokes stokes;
-      stokes.V = 0;
-      stokes.Q = 0;
-      stokes.U = 0;
-      vector<string> names;
-      names.reserve (itsAteamDemixList.size());
-      itsAteamList.reserve (itsAteamDemixList.size());
-      for (size_t i=0; i<itsAteamDemixList.size(); ++i) {
-        position = itsAteamDemixList[i]->position();
-        stokes.I = itsAteamDemixList[i]->brightness();
-        componentList[0] = PointSource::Ptr(new PointSource(position, stokes));
-        Patch::Ptr ppatch(new Patch(itsAteamDemixList[i]->name(),
-                                    componentList.begin(),
-                                    componentList.end()));
-        ppatch->setPosition   (position);
-        ppatch->setBrightness (itsAteamDemixList[i]->brightness());
-        itsAteamList.push_back (ppatch);
-        names.push_back (itsAteamDemixList[i]->name());
-      }
-      // Fill the source names if not given.
-      if (itsSourceNames.empty()) {
-        itsSourceNames.swap (names);
-      }
     }
 
 

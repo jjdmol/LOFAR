@@ -32,6 +32,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Simulate.h>
 #include <DPPP/SubtractNew.h>
+#include <DPPP/DPLogger.h>
 
 #include <ParmDB/Axis.h>
 #include <ParmDB/SourceDB.h>
@@ -194,8 +195,12 @@ namespace LOFAR {
       itsStatSourceDemixed = 0;
       itsPredictVis.resize (itsMix->ncorr(), itsMix->nchanOut(),
                             itsMix->nbl());
-      itsModelVis.resize (itsMix->ncorr() * itsMix->nchanOutSubtr() *
-                          itsMix->nbl() * (nsrc+1));
+      // itsModel is used to predict all sources at demix freq resolution
+      // and to predict a source at subtract freq resolution.
+      // So size to the largest.
+      itsModelVis.resize (itsMix->ncorr() * itsMix->nbl() *
+                          std::max (itsMix->nchanOutSubtr(),
+                                    itsMix->nchanOut() * (nsrc+1)));
       itsAteamAmpl.resize (nsrc);
       for (uint i=0; i<nsrc; ++i) {
         itsAteamAmpl[i].resize (itsMix->nchanOut(), itsMix->nbl(),
@@ -218,17 +223,21 @@ namespace LOFAR {
       itsEstimate.update (nsrc+1, itsMix->nbl(), itsMix->nstation(),
                           itsMix->nchanOut(), itsMix->maxIter(),
                           itsMix->propagateSolution());
+      itsBeamValues.resize (itsMix->nchanOutSubtr() * itsMix->nstation());
       // Create the Measure ITRF conversion info given the array position.
       // The time and direction are filled in later.
       itsMeasFrame.set (info.arrayPos());
-      itsMeasFrame.set (MEpoch());
+      itsMeasFrame.set (MEpoch(MVEpoch(info.startTime()/86400), MEpoch::UTC));
       itsMeasConverter.set (MDirection::J2000,
                             MDirection::Ref(MDirection::ITRF, itsMeasFrame));
-      itsBeamValues.resize (itsMix->nchanOut(), itsMix->nstation());
+      // Do a dummy conversion, because Measure initialization does not
+      // seem to be thread-safe.
+      dir2Itrf(itsMix->getInfo().delayCenter());
     }
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
-                               DPBuffer* bufout, vector<double>* solutions)
+                               DPBuffer* bufout, vector<double>* solutions,
+                               uint chunkNr)
     {
       itsTimer.start();
       itsTimerCoarse.start();
@@ -268,7 +277,7 @@ namespace LOFAR {
       predictTarget (itsMix->targetList(), ntime, time, timeStep);
       // Determine what needs to be done.
       // It fills in the steps to perform for the sources to demix.
-      setupDemix();
+      setupDemix (chunkNr);
       itsTimerCoarse.stop();
       // Loop over the buffers and process them.
       itsNTimeOut = 0;
@@ -390,7 +399,7 @@ namespace LOFAR {
                     casa_const_cursor<double>(itsMix->freqDemix()),
                     casa_const_cursor<double>(uvwiter.matrix()),
                     casa_cursor<dcomplex>(itsPredictVis));
-          // Apply beam for target patch.
+          // Get and apply beam for target patch.
           applyBeam (t, patchList[i]->position());
           addStokesI (miter.matrix());
         }
@@ -436,7 +445,7 @@ namespace LOFAR {
                     casa_const_cursor<double>(itsMix->freqDemix()),
                     casa_const_cursor<double>(itsStationUVW),
                     casa_cursor<dcomplex>(itsPredictVis));
-          // Apply beam.
+          // Get and apply beam.
           applyBeam (t, patchList[i]->position());
           // Keep the StokesI ampl ((XX+YY)/2).
           addStokesI (miter.matrix());
@@ -476,8 +485,9 @@ namespace LOFAR {
             }
           }
         }
-        // Use this A-team source if some stations have matched.
-        if (! itsStationsToUse[i].empty()) {
+        // Use this A-team source if more than 3 stations have matched.
+        // For fewer stations there are insufficient baselines.
+        if (itsStationsToUse[i].size() > 3) {
           itsSrcSet.push_back (i);
           itsNrSourcesDemixed[i]++;
         }
@@ -504,7 +514,7 @@ namespace LOFAR {
       itsAvgResultFull->clear();
     }
 
-    void DemixWorker::setupDemix()
+    void DemixWorker::setupDemix (uint chunkNr)
     {
       // Decide if the target has to be included, ignored, or deprojected
       // which depends on the ratio target/Ateam of the total ampl.
@@ -536,7 +546,7 @@ namespace LOFAR {
       itsNModel = nsrc;
       itsNSubtr = nsrc;
       itsNDir   = nsrc+1;
-      // For special purpose (testing) it is possible to set target handling,
+      // For special purposes (testing) it is possible to set target handling,
       // but normally it is dependent on the data.
       if (itsMix->targetHandling() == 1) {
         itsIncludeTarget = true;
@@ -599,10 +609,43 @@ namespace LOFAR {
       if (itsMix->verbose() > 11) {
         cout<<"nunka="<<nUnknown<<endl;
       }
+      // Show info if needed.
+      if (itsMix->verbose() == 1) {
+        ostringstream os;
+        os << "chunk" << setw(5) << chunkNr << ": ";
+        if (itsIncludeTarget) {
+          os << " include target  ";
+        } else if (itsIgnoreTarget) {
+          os << " ignore target   ";
+        } else {
+          os << " deproject target";
+        }
+        os << "   ";
+        for (size_t i=0; i<itsNSubtr; ++i) {
+          if (i > 0) os << ", ";
+          os << itsMix->ateamList()[itsSrcSet[i]]->name() << " ("
+             << itsStationsToUse.size() << " st)";
+        }
+        DPLOG_INFO (os.str(), true);
+      }
     }
+
 
     void DemixWorker::applyBeam (double time, const Position& pos)
     {
+      // Get the beam for demix resolution and apply to itsPredictVis.
+      applyBeam (time, pos, itsMix->freqDemix(), itsPredictVis.data());
+    }
+
+    void DemixWorker::applyBeam (double time, const Position& pos,
+                                 const Vector<double>& chanFreqs,
+                                 dcomplex* data)
+    {
+      // For test purposes applying the beam can be defeated.
+      // In this way an exact comparison with the old demixer is possible.
+      if (! itsMix->applyBeam()) {
+        return;
+      }
       // Convert the directions to ITRF for the given time.
       itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
       StationResponse::vector3r_t refdir =
@@ -612,33 +655,32 @@ namespace LOFAR {
       MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
       StationResponse::vector3r_t srcdir = dir2Itrf(dir);
       // Get the beam values for each station.
+      uint nchan = chanFreqs.size();
       for (size_t st=0; st<itsMix->nstation(); ++st) {
         itsMix->getInfo().antennaBeamInfo()[st]->response
-          (itsMix->nchanOut(), time, itsMix->getInfo().chanFreqs().begin(),
+          (nchan, time, chanFreqs.cbegin(),
            srcdir, itsMix->getInfo().refFreq(), refdir, tiledir,
-           &(itsBeamValues(0, st)));
+           &(itsBeamValues[nchan*st]));
       }
-      //cout <<"beamvalues="<<itsBeamValues;
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
-      dcomplex* data = itsPredictVis.data();
       for (size_t bl=0; bl<itsMix->nbl(); ++bl) {
         const StationResponse::matrix22c_t* left =
-          &(itsBeamValues(0, itsMix->getAnt1()[bl]));
+          &(itsBeamValues[nchan * itsMix->getAnt1()[bl]]);
         const StationResponse::matrix22c_t* right =
-          &(itsBeamValues(0, itsMix->getAnt2()[bl]));
-        for (size_t ch=0; ch<itsMix->nchanOut(); ++ch) {
-          // left*data
+          &(itsBeamValues[nchan * itsMix->getAnt2()[bl]]);
+        for (size_t ch=0; ch<nchan; ++ch) {
           dcomplex l[] = {left[ch][0][0], left[ch][0][1],
                           left[ch][1][0], left[ch][1][1]};
+          // Form transposed conjugate of right.
+          dcomplex r[] = {conj(right[ch][0][0]), conj(right[ch][1][0]),
+                          conj(right[ch][0][1]), conj(right[ch][1][1])};
+          // left*data
           tmp[0] = l[0] * data[0] + l[1] * data[2];
           tmp[1] = l[0] * data[1] + l[1] * data[3];
           tmp[2] = l[2] * data[0] + l[3] * data[2];
           tmp[3] = l[2] * data[1] + l[3] * data[3];
           // data*conj(right)
-          // Form transposed conjugate of right.
-          dcomplex r[] = {conj(right[ch][0][0]), conj(right[ch][1][0]),
-                          conj(right[ch][0][1]), conj(right[ch][1][1])};
           data[0] = tmp[0] * r[0] + tmp[1] * r[2];
           data[1] = tmp[0] * r[1] + tmp[1] * r[3];
           data[2] = tmp[2] * r[0] + tmp[3] * r[2];
@@ -646,8 +688,6 @@ namespace LOFAR {
           data += 4;
         }
       }
-      DBGASSERT (data == itsPredictVis.data() + itsPredictVis.size());
-      //cout <<"itsPredictVis="<<itsPredictVis;
     }
 
     StationResponse::vector3r_t DemixWorker::dir2Itrf (const MDirection& dir)
@@ -806,7 +846,8 @@ namespace LOFAR {
       // Get pointers to the data for the various directions.
       vector<Complex*> resultPtr(itsNDir);
       for (uint dr=0; dr<itsNDir; ++dr) {
-        uint drOrig = itsSrcSet[dr];
+        uint drOrig = avgResults.size() - 1;
+        if (dr < itsSrcSet.size()) drOrig = itsSrcSet[dr];
         resultPtr[dr] = avgResults[drOrig]->get()[resultIndex].getData().data();
       }
       // The projection matrix is given by
@@ -940,6 +981,8 @@ namespace LOFAR {
       const_cursor<double> cr_freqSubtr = casa_const_cursor(itsMix->freqSubtr());
       const_cursor<Baseline> cr_baseline(&(itsMix->baselines()[0]));
       // Do a solve and subtract for each predict time slot.
+      // Determine the time step for the subtract.
+      double subtrTimeStep = timeStep / multiplier;
       for (size_t ts=0; ts<nTime; ++ts) {
         itsTimerPredict.start();
         // Compute the model visibilities for each A-team source.
@@ -960,7 +1003,8 @@ namespace LOFAR {
           std::fill (itsModelVis.begin() + dr*nSamples,
                      itsModelVis.begin() + (dr+1)*nSamples, dcomplex());
           if (dr == itsNSubtr) {
-            // This is the target which consists of multiple sources.
+            dcomplex* model = &(itsModelVis[dr*nSamples]);
+            // This is the target which consists of multiple components.
             // To each of them the beam must be applied.
             for (uint i=0; i<itsMix->targetDemixList().size(); ++i) {
               itsPredictVis = dcomplex();
@@ -969,16 +1013,18 @@ namespace LOFAR {
                         nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw,
                         casa_cursor<dcomplex>(itsPredictVis));
               applyBeam (time, itsMix->targetDemixList()[i]->position());
-              dcomplex* model = &(itsModelVis[dr*nSamples]);
               const dcomplex* pred = itsPredictVis.data(); 
-              for (uint j=0; j<nBl*nCh*4; ++j) {
+              for (uint j=0; j<nSamples; ++j) {
                 model[j] += pred[j];
               }
             }
           } else {
-            simulate(itsDemixList[dr]->position(),
-                     itsDemixList[dr],
-                     nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
+            simulate (itsDemixList[dr]->position(),
+                      itsDemixList[dr],
+                      nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
+            applyBeam (time, itsMix->ateamDemixList()[drOrig]->position(),
+                       itsMix->freqDemix(),
+                       &(itsModelVis[dr * nSamples]));
           }
         } // end nModel
         itsTimerPredict.stop();
@@ -1036,6 +1082,8 @@ namespace LOFAR {
         // Note that the resolution of the residual can differ from the
         // resolution at which the Jones matrices were estimated.
         itsTimerSubtract.start();
+        // Get middle of first subtract time interval.
+        double subtrTime = time - 0.5*(timeStep - subtrTimeStep);
         for (size_t ts_subtr = multiplier * ts,
                ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
              ts_subtr != ts_subtr_end; ++ts_subtr) {
@@ -1081,6 +1129,9 @@ namespace LOFAR {
                        itsMix->ateamList()[drOrig], nSt, nBl,
                        nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
                        cr_model_subtr);
+              applyBeam (subtrTime, itsMix->ateamDemixList()[drOrig]->position(),
+                         itsMix->freqSubtr(),
+                         &(itsModelVis[0]));
             }
 
             // Apply Jones matrices.
@@ -1138,6 +1189,7 @@ namespace LOFAR {
               }
             } // end nBl
           } // end itsNSubtr
+          subtrTime += subtrTimeStep;
         } // end ts_subtr
         itsTimerSubtract.stop();
         time += timeStep;

@@ -128,6 +128,7 @@ namespace LOFAR {
       map<string,int>         itsParmIdMap; //# -1 = new parm name
       uint                    itsNTime;
       uint                    itsNTimeOut;
+      uint                    itsNChunk;
       //# Timers.
       NSTimer itsTimer;
       NSTimer itsTimerDemix;

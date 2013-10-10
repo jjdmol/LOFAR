@@ -94,6 +94,7 @@ namespace LOFAR {
       double targetAmplThreshold() const         {return itsTargetAmplThreshold;}
       bool   isAteamNearby() const               {return itsIsAteamNearby;}
       bool   propagateSolution() const           {return itsPropagateSolution;}
+      bool   applyBeam() const                   {return itsApplyBeam;}
       const BaselineSelection& selBL() const     {return itsSelBL;}
       const vector<int>& uvwSplitIndex() const   {return itsUVWSplitIndex;}
       const string& predictModelName() const     {return itsPredictModelName;}
@@ -141,10 +142,6 @@ namespace LOFAR {
       vector<Patch::ConstPtr> makePatchList (const string& sdbName,
                                              const vector<string>& patchNames);
 
-      // Make the estimate patch list if no estimate source model is given.
-      // It takes all patches from the demix source model as point sources.
-      void makePredictPatchList();
-
       // Make the target list for demixing with a detailed model for the
       // possible Ateam sources in it.
       void makeTargetDemixList();
@@ -167,6 +164,7 @@ namespace LOFAR {
       double                  itsAngdistRefFreq;
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
+      bool                    itsApplyBeam;
       uint                    itsTargetHandling;
       uint                    itsVerbose;            //# trace verbosity level
       uint                    itsMaxIter;            //# max #iter in solve

@@ -55,7 +55,8 @@ namespace LOFAR {
                                             "instrument")),
         itsFilter         (input, itsDemixInfo.selBL()),
         itsNTime          (0),
-        itsNTimeOut       (0)
+        itsNTimeOut       (0),
+        itsNChunk         (0)
     {
       ASSERTSTR (! itsInstrumentName.empty(),
                  "An empty name is given for the instrument model");
@@ -385,7 +386,8 @@ namespace LOFAR {
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), lastNTimeIn,
              &(itsBufOut[i*timeWindowOut]),
-             &(itsSolutions[i*timeWindowSol]));
+             &(itsSolutions[i*timeWindowSol]),
+             itsNChunk+i);
         } else {
           if (itsDemixInfo.verbose() > 10) {
             cout<<"chunk="<<i*timeWindowIn<<' '<<timeWindowIn<<endl;
@@ -393,9 +395,11 @@ namespace LOFAR {
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), timeWindowIn,
              &(itsBufOut[i*timeWindowOut]),
-             &(itsSolutions[i*timeWindowSol]));
+             &(itsSolutions[i*timeWindowSol]),
+             itsNChunk+i);
         }
       }
+      itsNChunk += lastChunk+1;
       itsTimerDemix.stop();
       // Write the solutions into the instrument ParmDB.
       // Let the next steps process the results.
