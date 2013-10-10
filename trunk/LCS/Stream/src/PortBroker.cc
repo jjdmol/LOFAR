@@ -165,7 +165,7 @@ bool PortBroker::serverStarted()
 }
 
 
-FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, time_t deadline ) {
+PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, bool prefix, time_t deadline ) {
   struct timespec deadline_ts = { deadline, 0 };
 
   LOG_DEBUG_STR( "PortBroker server: registering " << resource );
@@ -178,25 +178,39 @@ FileDescriptorBasedStream *PortBroker::waitForClient( const string &resource, ti
   ScopedLock sl(itsMutex);
 
   while(!itsDone) {
-    requestMapType::iterator it = itsRequestMap.find(key);
+    requestMapType::iterator it = itsRequestMap.end();
+    
+    if (prefix) {
+      for( it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
+        if (it->first.find(resource) == 0) {
+          // found an entry starting with 'resource'
+          break;
+        }
+      }
+    } else {
+      it = itsRequestMap.find(key);
+    }
 
     if (it != itsRequestMap.end()) {
       auto_ptr<FileDescriptorBasedStream> serverStream(it->second);
 
       itsRequestMap.erase(it);
 
-      return serverStream.release();
+      ConnectedClient result;
+      result.resource = it->first;
+      result.stream   = serverStream.release();
+      return result;
     }
 
     if (deadline > 0) {
       if (!itsCondition.wait(itsMutex, deadline_ts))
-        THROW(TimeOutException, "port broker client: server did not register");
+        THROW(TimeOutException, "port broker client: server did not register before deadline");
     } else {
       itsCondition.wait(itsMutex);
     }
   }
 
-  return 0;
+  THROW(TimeOutException, "port broker client: server did not register before PortBroker shut down");
 }
 
 
@@ -209,16 +223,26 @@ void PortBroker::requestResource(Stream &stream, const string &resource)
 }
 
 
-PortBroker::ServerStream::ServerStream( const string &resource )
+PortBroker::ServerStream::ServerStream( const string &resource, bool prefix, time_t deadline )
 {
   ASSERTSTR( serverStarted(), "PortBroker service is not started" );
 
   // wait for client to request our service
-  auto_ptr<FileDescriptorBasedStream> stream(PortBroker::instance().waitForClient(resource));
+  ConnectedClient client(PortBroker::instance().waitForClient(resource, deadline, prefix));
+  auto_ptr<FileDescriptorBasedStream> stream(client.stream);
 
   // transfer ownership
   fd = stream->fd;
   stream->fd = -1;
+
+  // set resource as reported (needed if prefix = true)
+  this->resource = client.resource;
+}
+
+
+std::string PortBroker::ServerStream::getResource() const
+{
+  return resource;
 }
 
 
