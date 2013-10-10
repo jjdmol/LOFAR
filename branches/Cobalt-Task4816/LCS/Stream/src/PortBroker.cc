@@ -204,16 +204,13 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
 
     if (deadline > 0) {
       if (!itsCondition.wait(itsMutex, deadline_ts))
-        THROW(TimeOutException, "port broker client: server did not register");
+        THROW(TimeOutException, "port broker client: server did not register before deadline");
     } else {
       itsCondition.wait(itsMutex);
     }
   }
 
-  ConnectedClient result;
-  result.resource = "";
-  result.stream   = 0;
-  return result;
+  THROW(TimeOutException, "port broker client: server did not register before PortBroker shut down");
 }
 
 
