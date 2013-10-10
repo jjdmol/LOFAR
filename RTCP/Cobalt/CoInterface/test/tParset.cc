@@ -877,6 +877,6 @@ int main(void)
 {
   INIT_LOGGER("tParset");
 
-  return UnitTest::RunAllTests() > 0;
+  return UnitTest::RunAllTests();
 }
 

@@ -26,13 +26,14 @@
 
 #include <Common/Timer.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SubbandMetaData.h>
 #include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+
+#include "Pool.h"
 
 namespace LOFAR
 {
