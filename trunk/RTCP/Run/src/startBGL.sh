@@ -18,12 +18,36 @@ OBSID=$5
 
 source /opt/lofar/bin/locations.sh
 
+
 (
 
 echo "---------------"
 date
 echo starting obs $OBSID
 echo "---------------"
+
+if [ "$ROUTE_TO_COBALT" -eq 1 ]
+then
+  # Reroute to Cobalt
+  echo "Rerouting to Cobalt"
+
+  # Prepare parset
+  echo "Preparing parset..."
+  <$PARSET sed 's/\(locus...\)/\1\.cep2\.lofar/g' > /tmp/foo
+
+  # Copy parset to Cobalt
+  echo "Transferring parset to Cobalt..."
+  COBALT_PARSET="/globalhome/mol/parsets/`basename $PARSET`"
+  scp /tmp/foo "mol@10.168.96.1:$COBALT_PARSET"
+
+  # Start the observation on Cobalt
+  echo "Signalling start to Cobalt..."
+  ssh mol@10.168.96.1 startBGL.sh 1 2 3 "$COBALT_PARSET" $OBSID
+
+  # And.. done!
+  echo "Done"
+  exit 0
+fi
 
 # Convert keys where needed
 /opt/lofar/bin/LOFAR/Parset.py -P $PARTITION $PARSET /opt/lofar/etc/OLAP.parset <(echo "$EXTRA_KEYS") > $IONPROC_PARSET &&

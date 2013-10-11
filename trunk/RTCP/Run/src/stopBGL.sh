@@ -18,4 +18,16 @@ OBSID=$2
 # an observation. Sleep a bit so that OLAP can temrinate on its own
 # in the latter case.
 
+if [ $ROUTE_TO_COBALT -eq 1 ]
+then
+  # Reroute to Cobalt
+  echo "Rerouting to Cobalt"
+
+  # Start the observation on Cobalt
+  ssh mol@10.168.96.1 stopBGL.sh 1 $OBSID
+
+  # And.. done!
+  exit 0
+fi
+
 /opt/lofar/bin/commandOLAP.py -P $PARTITION cancel $OBSID
