@@ -6,6 +6,7 @@ configure_file(
   @ONLY)
 
 install(PROGRAMS 
+  routeToCobalt
   startBGL.sh
   stopBGL.sh
   BGPPartition.sh
