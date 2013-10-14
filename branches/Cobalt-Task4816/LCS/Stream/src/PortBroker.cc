@@ -194,11 +194,12 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
     if (it != itsRequestMap.end()) {
       auto_ptr<FileDescriptorBasedStream> serverStream(it->second);
 
-      itsRequestMap.erase(it);
-
       ConnectedClient result;
       result.resource = it->first;
       result.stream   = serverStream.release();
+
+      itsRequestMap.erase(it);
+
       return result;
     }
 
