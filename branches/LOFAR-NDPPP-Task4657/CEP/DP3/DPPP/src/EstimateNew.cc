@@ -178,7 +178,7 @@ namespace LOFAR {
           solution += 8;
         }
       }
-      if (verbose > 11) {
+      if (verbose > 12) {
         cout<<"unkindex="<<unknownsIndex<<endl;
       }
       // Initialize LSQ solver.
@@ -186,7 +186,7 @@ namespace LOFAR {
       // Iterate until convergence.
       itsNrIter = 0;
       while (!solver.isReady()  &&  itsNrIter < itsMaxIter) {
-        if (verbose > 11) {
+        if (verbose > 12) {
           cout<<endl<<"iteration " << itsNrIter << endl;
         }
         for (size_t bl=0; bl<itsNrBaselines; ++bl) {
@@ -198,7 +198,7 @@ namespace LOFAR {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (srcSet.size(), unknownsIndex,
                                               *baselines);
-            if (verbose > 12) {
+            if (verbose > 13) {
               cout<<"derinx="<<itsDerivIndex<<endl;
             }
             // Generate equations for each channel.
@@ -273,7 +273,7 @@ namespace LOFAR {
                 itsdM[dr * 16 + 14] = itsdM[dr * 16 + 10];
                 itsdM[dr * 16 + 15] = itsdM[dr * 16 + 11];
               }
-              if (verbose > 13) {
+              if (verbose > 14) {
                 cout<<"M="<<itsM<<endl;
                 cout<<"dM="<<itsdM<<endl;
               }
@@ -357,7 +357,7 @@ namespace LOFAR {
                                     &(itsDerivIndex[cr * nPartial]), &(itsdI[0]),
                                     static_cast<double>(weight[cr]),
                                     imag(residual));
-                    if (verbose > 13) {
+                    if (verbose > 14) {
                       cout<<"makeres "<<real(residual)<<' '<<weight[cr]
                           <<' '<<nPartial;
                       for (uint i=0; i<nPartial; ++i) {
@@ -428,7 +428,7 @@ namespace LOFAR {
         ASSERT(status);
         // Copy the unknowns to the full solution.
         fillSolution (unknownsIndex, srcSet);
-        if (verbose > 12) {
+        if (verbose > 13) {
           cout<<"unknowns="<<nUnknowns<<' '<<itsUnknowns<<endl;
           cout<<"solution="<<itsSolution<<endl;
         }

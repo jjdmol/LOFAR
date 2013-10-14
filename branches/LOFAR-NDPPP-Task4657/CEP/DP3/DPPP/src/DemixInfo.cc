@@ -50,10 +50,11 @@ namespace LOFAR {
         itsSourceNames      (parset.getStringVector (prefix+"sources")),
         itsRatio1           (parset.getDouble (prefix+"ratio1", 5.)),
         itsRatio2           (parset.getDouble (prefix+"ratio2", 0.25)),
+        // Default thresholds depend on freq, so filled by function update.
         itsAteamAmplThreshold  (parset.getDouble (prefix+"ateam.threshold",
-                                                  20.)),
+                                                  0.)),
         itsTargetAmplThreshold (parset.getDouble (prefix+"target.threshold",
-                                                  20.)),
+                                                  0.)),
         itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60)),
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
@@ -62,7 +63,8 @@ namespace LOFAR {
         itsTargetHandling   (parset.getUint   (prefix+"targethandling", 0)),
         itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
         itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
-        itsMinNStation      (parset.getUint   (prefix+"minnstation", 6)),
+        itsMinNBaseline     (parset.getUint   (prefix+"minnbaseline", 6)),
+        itsMinNStation      (parset.getUint   (prefix+"minnstation", 5)),
         itsNStation         (0),
         itsNBl              (0),
         itsNCorr            (0),
@@ -189,12 +191,27 @@ namespace LOFAR {
       itsNChanIn = infoSel.nchan();
       itsNCorr   = infoSel.ncorr();
       ASSERTSTR (itsNCorr==4, "Demixing requires data with 4 polarizations");
-
       // NB. The number of baselines and stations refer to the number of
       // selected baselines and the number of unique stations participating
       // in the selected baselines.
       itsNBl = infoSel.nbaselines();
       itsNStation = infoSel.antennaUsed().size();
+
+      // The default thresholds depend on frequency.
+      if (itsAteamAmplThreshold <= 0) {
+        if (info.refFreq() < 100e6) {
+          itsAteamAmplThreshold = 50;
+        } else {
+          itsAteamAmplThreshold = 5;
+        }
+      }
+      if (itsTargetAmplThreshold <= 0) {
+        if (info.refFreq() < 100e6) {
+          itsTargetAmplThreshold = 200;
+        } else {
+          itsTargetAmplThreshold = 100;
+        }
+      }
 
       // Setup the baseline index vector used to split the UVWs.
       itsUVWSplitIndex = nsetupSplitUVW (itsInfoSel.nantenna(),
@@ -272,9 +289,13 @@ namespace LOFAR {
                                            itsAteamList[i]->position()[1],
                                            targetRa, targetDec));
         dist *= freqRatio;
+        if (verbose() > 10) {
+          cout << "Target distance to " << itsAteamList[i]->name()
+               << " = " << dist*180./C::pi << " deg" << endl;
+        }
         if (dist < minDist) minDist = dist;
       }
-      itsIsAteamNearby = cos(minDist) > cos(itsAngdistThreshold);
+      itsIsAteamNearby = cos(minDist) > cos(itsAngdistThreshold*C::pi/180.);
     }
 
     void DemixInfo::show (ostream& os) const
@@ -294,9 +315,11 @@ namespace LOFAR {
       os << "  target.delta:       "
          << acos(itsCosTargetDelta) * 3600. / casa::C::pi * 180.
          << " arcsec" << endl;
-      os << "  distance.threshold: " << itsAngdistThreshold << " arcsec" << endl;
+      os << "  distance.threshold: " << itsAngdistThreshold << " deg" << endl;
       os << "  distance.reffreq:   " << itsAngdistRefFreq << " Hz" << endl;
+      os << "  minnbaseline:       " << itsMinNBaseline << endl;
       os << "  minnstation:        " << itsMinNStation << endl;
+      os << "  maxiter:            " << itsMaxIter << endl;
       os << "  propagatesolutions: " << itsPropagateSolution << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;

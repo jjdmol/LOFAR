@@ -380,18 +380,12 @@ namespace LOFAR {
 #pragma omp parallel for schedule(dynamic)
       for (int i=0; i<=lastChunk; ++i) {
         if (i == lastChunk) {
-          if (itsDemixInfo.verbose() > 10) {
-            cout<<"chunk="<<i*timeWindowIn<<' '<<lastNTimeIn<<endl;
-          }
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), lastNTimeIn,
              &(itsBufOut[i*timeWindowOut]),
              &(itsSolutions[i*timeWindowSol]),
              itsNChunk+i);
         } else {
-          if (itsDemixInfo.verbose() > 10) {
-            cout<<"chunk="<<i*timeWindowIn<<' '<<timeWindowIn<<endl;
-          }
           itsWorkers[OpenMP::threadNum()].process
             (&(itsBufIn[i*timeWindowIn]), timeWindowIn,
              &(itsBufOut[i*timeWindowOut]),
@@ -441,7 +435,7 @@ namespace LOFAR {
 
     void DemixerNew::writeSolutions (double startTime, int ntime)
     {
-      if (itsDemixInfo.verbose() > 11) {
+      if (itsDemixInfo.verbose() > 12) {
         for (int i=0; i<ntime; ++i) {
           cout << "solution " << i << endl;
           const double* sol = &(itsSolutions[i][0]);

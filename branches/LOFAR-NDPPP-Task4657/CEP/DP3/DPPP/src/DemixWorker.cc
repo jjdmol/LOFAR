@@ -241,6 +241,11 @@ namespace LOFAR {
     {
       itsTimer.start();
       itsTimerCoarse.start();
+      if (itsMix->verbose() > 10) {
+        cout << endl << "Info for time chunk " << chunkNr
+             << " ( "<< nbufin << " time slots)"
+             << endl << "===================" << endl;
+      }
       // Average and split the baseline UVW coordinates per station.
       // Do this at the demix time resolution.
       // The buffer has not been filtered yet, so the UVWs have to be filtered.
@@ -421,9 +426,6 @@ namespace LOFAR {
         // Add amplitude.
         *amplp++ += 0.5*(a + abs(*iter));
       }
-      if (itsMix->verbose() > 11) {
-        cout << "min/max ampl="<<min(ampl)<<' '<<max(ampl)<<endl;
-      }
     }
 
     void DemixWorker::predictAteam (const vector<Patch::ConstPtr>& patchList,
@@ -475,21 +477,28 @@ namespace LOFAR {
         // Determine which stations have sufficient occurrence.
         itsStationsToUse[i].resize (0);
         for (uint j=0; j<antCount.size(); ++j) {
-          if (antCount[j] >= itsMix->minNStation()) {
+          if (antCount[j] >= itsMix->minNBaseline()) {
             itsStationsToUse[i].push_back (j);
             itsStatSourceDemixed(i,j)++;
             itsSolveStation[j] = true;
           } else {
-            if (itsMix->verbose() > 11) {
-              cout << "ignore station " << j << " for src " << i << endl;
+            if (itsMix->verbose() > 10) {
+              cout << "ignore station " << j << " for source "
+                   << patchList[i]->name()
+                   << "  (occurs in " << antCount[j] << " baselines)" << endl;
             }
           }
         }
-        // Use this A-team source if more than 3 stations have matched.
+        // Use this A-team source if more than N stations have matched.
         // For fewer stations there are insufficient baselines.
-        if (itsStationsToUse[i].size() > 3) {
+        if (itsStationsToUse[i].size() >= itsMix->minNStation()) {
           itsSrcSet.push_back (i);
           itsNrSourcesDemixed[i]++;
+        } else {
+          if (itsMix->verbose() > 10) {
+            cout << "ignore source " << patchList[i]->name()
+                 << " (" << itsStationsToUse.size() << " stations)" << endl;
+          }
         }
       }
       // Add to statistics if a station is solved for.
@@ -541,6 +550,7 @@ namespace LOFAR {
         }
       }
       float targetSumAmpl = sum(itsTargetAmpl);
+      float targetMaxAmpl = max(itsTargetAmpl);
       itsIncludeTarget = false;
       itsIgnoreTarget = false;
       itsNModel = nsrc;
@@ -556,18 +566,38 @@ namespace LOFAR {
       } else if (itsMix->targetHandling() == 3) {
         itsIgnoreTarget = true;
         itsNrIgnoreTarget++;
-      } else if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
-                 targetSumAmpl > itsMix->targetAmplThreshold()) {
-        itsIncludeTarget = true;
-        itsNrIncludeStrongTarget++;
-      } else if (! itsMix->isAteamNearby()) {
-        itsNrDeprojectTarget++;
-      } else if (targetSumAmpl / minSumAmpl > itsMix->ratio2()) {
-        itsIncludeTarget = true;
-        itsNrIncludeCloseTarget++;
       } else {
-        itsIgnoreTarget = true;
-        itsNrIgnoreTarget++;
+        if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
+            targetMaxAmpl > itsMix->targetAmplThreshold()) {
+          itsIncludeTarget = true;
+          itsNrIncludeStrongTarget++;
+          if (itsMix->verbose() > 10) {
+            cout << "include strong target" << endl;
+          }
+        } else if (! itsMix->isAteamNearby()) {
+          if (itsMix->verbose() > 10) {
+            cout << "deproject target" << endl;
+          }
+          itsNrDeprojectTarget++;
+        } else if (targetSumAmpl / minSumAmpl > itsMix->ratio2()) {
+          itsIncludeTarget = true;
+          itsNrIncludeCloseTarget++;
+          if (itsMix->verbose() > 10) {
+            cout << "include close target" << endl;
+          }
+        } else {
+          itsIgnoreTarget = true;
+          itsNrIgnoreTarget++;
+          if (itsMix->verbose() > 10) {
+            cout << "ignore target" << endl;
+          }
+        }
+        if (itsMix->verbose() > 10) {
+          cout << " targetMaxAmpl=" << targetMaxAmpl
+               << " targetSumAmpl=" << targetSumAmpl
+               << " maxAteamSumAmpl=" << maxSumAmpl
+               << " minAteamSumAmpl=" << minSumAmpl << endl;
+        }
       }
       // Determine the unknowns to be solved.
       // The unknowns are complex values of a Jones matrix per source/station.
@@ -610,7 +640,7 @@ namespace LOFAR {
         cout<<"nunka="<<nUnknown<<endl;
       }
       // Show info if needed.
-      if (itsMix->verbose() == 1) {
+      if (itsMix->verbose() > 0) {
         ostringstream os;
         os << "chunk" << setw(5) << chunkNr << ": ";
         if (itsIncludeTarget) {
@@ -992,7 +1022,7 @@ namespace LOFAR {
           // Split the baseline UVW coordinates per station.
           nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
                      itsAvgResults[drOrig]->get()[ts].getUVW(), itsUVW);
-          if (itsMix->verbose() > 12) {
+          if (itsMix->verbose() > 13) {
             cout <<"uvw"<<dr<<'='<<itsUVW;
           }
           // Create cursors to step through UVW and model buffer.
@@ -1028,7 +1058,7 @@ namespace LOFAR {
           }
         } // end nModel
         itsTimerPredict.stop();
-        if (itsMix->verbose() > 12) {
+        if (itsMix->verbose() > 13) {
           cout<<"modelvis="<<itsModelVis<<endl;
         }
         // A Jones matrix will be estimated for each pair of stations and
@@ -1043,7 +1073,7 @@ namespace LOFAR {
         const_cursor<float> cr_weight =
           casa_const_cursor(itsAvgResults[itsSrcSet[0]]->get()[ts].getWeights());
         const_cursor<dcomplex> cr_mix = casa_const_cursor(itsFactors[ts]);
-        if (itsMix->verbose() > 13) {
+        if (itsMix->verbose() > 14) {
           cout << "demixfactor "<<ts<<" = "<<itsFactors[ts]<<endl;
         }
         // Create a cursor per source.

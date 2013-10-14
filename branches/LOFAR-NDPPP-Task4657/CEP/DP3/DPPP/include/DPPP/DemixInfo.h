@@ -72,6 +72,7 @@ namespace LOFAR {
       uint   targetHandling() const              {return itsTargetHandling;}
       uint   verbose() const                     {return itsVerbose;}
       uint   maxIter() const                     {return itsMaxIter;}
+      uint   minNBaseline() const                {return itsMinNBaseline;}
       uint   minNStation() const                 {return itsMinNStation;}
       uint   nstation() const                    {return itsNStation;}
       uint   nbl() const                         {return itsNBl;}
@@ -168,6 +169,7 @@ namespace LOFAR {
       uint                    itsTargetHandling;
       uint                    itsVerbose;            //# trace verbosity level
       uint                    itsMaxIter;            //# max #iter in solve
+      uint                    itsMinNBaseline;       //# min #baselines for solve
       uint                    itsMinNStation;        //# min #stations for solve
       uint                    itsNStation;
       uint                    itsNBl;
