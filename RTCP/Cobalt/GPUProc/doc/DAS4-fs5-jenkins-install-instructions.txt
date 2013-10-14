@@ -199,8 +199,7 @@ LOFAR (Cobalt only)
   cd $HOME/root/src
   svn co --username USERNAME -N https://svn.astron.nl/LOFAR/trunk LOFAR
   cd LOFAR
-  svn up RTCP CMake LCS MAC    # MAC: only need MAC/Deployment/data/StaticMetaData/ for a test case
-  svn up    # Guarantee the same version for all paths in case somebody commits while 'svn up'-ing multiple subdirs.
+  svn up CMake  # cmake will fetch what is needed
   cd .. 
   mkdir -p LOFAR-build/gnu_opt
   cd LOFAR-build/gnu_opt
