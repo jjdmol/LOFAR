@@ -100,6 +100,10 @@ namespace LOFAR {
       itsAvgResults.reserve  (nsrc+1);
       itsDemixList.resize (nsrc+1);
 
+      // Read the antenna beam info from the MS.
+      // Only take the stations actually used.
+      input->fillBeamInfo (itsAntBeamInfo, itsMix->antennaNames());
+
       // Create the solve and subtract steps for the sources to be removed.
       // Solving consists of the following steps:
       // - select the requested baselines (longer baselines may need no demix)
@@ -654,7 +658,7 @@ namespace LOFAR {
         for (size_t i=0; i<itsNSubtr; ++i) {
           if (i > 0) os << ", ";
           os << itsMix->ateamList()[itsSrcSet[i]]->name() << " ("
-             << itsStationsToUse.size() << " st)";
+             << itsStationsToUse[itsSrcSet[i]].size() << " st)";
         }
         DPLOG_INFO (os.str(), true);
       }
@@ -687,10 +691,10 @@ namespace LOFAR {
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
       for (size_t st=0; st<itsMix->nstation(); ++st) {
-        itsMix->getInfo().antennaBeamInfo()[st]->response
-          (nchan, time, chanFreqs.cbegin(),
-           srcdir, itsMix->getInfo().refFreq(), refdir, tiledir,
-           &(itsBeamValues[nchan*st]));
+        itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
+                                      srcdir, itsMix->getInfo().refFreq(),
+                                      refdir, tiledir,
+                                      &(itsBeamValues[nchan*st]));
       }
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];

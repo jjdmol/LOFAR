@@ -27,7 +27,6 @@
 // @file
 // @brief General info about DPPP data processing attributes like averaging
 
-#include <StationResponse/Station.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
@@ -110,9 +109,6 @@ namespace LOFAR {
       void setPhaseCenter (const casa::MDirection& phaseCenter, bool original)
         { itsPhaseCenter=phaseCenter; itsPhaseCenterIsOriginal = original; }
 
-      // Fill the antenna beam info from the input source (if not filled yet).
-      void fillAntennaBeamInfo (DPInput*);
-
       // Get the info.
       const string& msName() const
         { return itsMSName; }
@@ -148,8 +144,6 @@ namespace LOFAR {
         { return itsAntDiam; }
       const vector<casa::MPosition>& antennaPos() const
         { return itsAntPos; }
-      const vector<StationResponse::Station::Ptr>& antennaBeamInfo() const
-        { return itsAntBeamInfo; }
       const casa::MPosition& arrayPos() const
         { return itsArrayPos; }
       const casa::MDirection& phaseCenter() const
@@ -236,7 +230,6 @@ namespace LOFAR {
       casa::Vector<casa::String> itsAntNames;
       casa::Vector<casa::Double> itsAntDiam;
       vector<casa::MPosition>    itsAntPos;
-      vector<StationResponse::Station::Ptr> itsAntBeamInfo;
       vector<int>                itsAntUsed;
       vector<int>                itsAntMap;
       casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines

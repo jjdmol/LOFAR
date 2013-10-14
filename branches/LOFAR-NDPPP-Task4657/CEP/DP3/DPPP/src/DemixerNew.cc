@@ -66,11 +66,10 @@ namespace LOFAR {
     {
       info() = infoIn;
       // Update the info of this object.
-      info().fillAntennaBeamInfo (itsInput);
       info().setNeedVisData();
       info().setNeedWrite();
       // Handle possible data selection.
-      itsFilter.updateInfo (info());
+      itsFilter.updateInfo (getInfo());
       // Update itsDemixInfo and info().
       itsDemixInfo.update (itsFilter.getInfo(), info());
       // Size the buffers.

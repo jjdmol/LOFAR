@@ -786,11 +786,26 @@ namespace LOFAR {
     }
     */
 
-    void MSReader::fillBeamInfo (vector<StationResponse::Station::Ptr>& vec)
+    void MSReader::fillBeamInfo (vector<StationResponse::Station::Ptr>& vec,
+                                 const Vector<String>& antNames)
     {
-      // Create a vector that can hold all stations.
-      vec.resize (getInfo().antennaNames().size());
-      StationResponse::readStations (itsMS, vec.begin());
+      // Get the names of all stations in the MS.
+      const Vector<String>& allNames = getInfo().antennaNames();
+      // Create a vector holding the beam info of all stations.
+      vector<StationResponse::Station::Ptr> beams (allNames.size());
+      StationResponse::readStations (itsMS, beams.begin());
+      // Copy only the ones for which the station name matches.
+      // Note: the order of the station names in both vectors match.
+      vec.resize (antNames.size());
+      uint ant = 0;
+      for (uint i=0; i<allNames.size(); ++i) {
+        if (ant < antNames.size()  &&  allNames[i] == antNames[ant]) {
+          vec[ant] = beams[i];
+          ant++;
+        }
+      }
+      ASSERTSTR (ant == vec.size(), "MSReader::fillBeamInfo -"
+                 " some stations miss the beam info");
     }
 
   } //# end namespace

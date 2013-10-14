@@ -145,14 +145,6 @@ namespace LOFAR {
       }
     }
 
-    void DPInfo::fillAntennaBeamInfo (DPInput* msp)
-    {
-      if (itsAntBeamInfo.empty()) {
-        itsAntBeamInfo.resize (itsAntNames.size());
-        msp->fillBeamInfo (itsAntBeamInfo);
-      }
-    }
-
     uint DPInfo::update (uint chanAvg, uint timeAvg)
     {
       if (chanAvg > itsNChan) {
@@ -237,15 +229,6 @@ namespace LOFAR {
         itsAntNames.reference (antNames);
         itsAntDiam.reference (antDiam);
         itsAntPos.swap (antPos);
-        // Renumber beam info if present.
-        if (! itsAntBeamInfo.empty()) {
-          vector<StationResponse::Station::Ptr> antBeamInfo;
-          antBeamInfo.reserve (itsAntUsed.size());
-          for (uint i=0; i<itsAntUsed.size(); ++i) {
-            antBeamInfo.push_back (itsAntBeamInfo[itsAntUsed[i]]);
-          }
-          itsAntBeamInfo.swap (antBeamInfo);
-        }
         // Renumber the baselines.
         for (uint i=0; i<itsAnt1.size(); ++i) {
           itsAnt1[i] = itsAntMap[itsAnt1[i]];

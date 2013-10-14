@@ -35,6 +35,7 @@
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Filter.h>
 #include <DPPP/EstimateNew.h>
+#include <StationResponse/Station.h>
 #include <ParmDB/ParmDB.h>
 
 #include <casa/Arrays/Cube.h>
@@ -223,6 +224,8 @@ namespace LOFAR {
       MultiResultStep*                      itsAvgResultSubtr;
       //# The sources to demix (excluding target).
       vector<Patch::ConstPtr>               itsDemixList;
+      //# The info needed to calculate the station beams.
+      vector<StationResponse::Station::Ptr> itsAntBeamInfo;
 
       //# Variables set by setupDemix and used by handleDemix.
       uint                                  itsNDir;

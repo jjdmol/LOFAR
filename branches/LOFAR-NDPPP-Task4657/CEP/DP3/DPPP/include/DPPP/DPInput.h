@@ -83,8 +83,10 @@ namespace LOFAR {
       virtual casa::String msName() const;
 
       // Fill the vector with station beam info from the input source (MS).
+      // Only fill it for the given station names.
       // The default implementation throws an exception.
-      virtual void fillBeamInfo (vector<StationResponse::Station::Ptr>&);
+      virtual void fillBeamInfo (vector<StationResponse::Station::Ptr>&,
+                                 const casa::Vector<casa::String>& antNames);
 
       // Fetch the FullRes flags.
       // If defined in the buffer, they are taken from there.
