@@ -108,11 +108,13 @@ endif()
 
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 
-# install the scripts for MAC
+# install the scripts for MAC and for auto-updating casacore measures tables
 install(PROGRAMS
   scripts/runObservation.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
+  scripts/get_casacore_measures_data.sh
+  scripts/apply_casacore_measures_data.sh
   DESTINATION bin)
 
 # install the logprop file
