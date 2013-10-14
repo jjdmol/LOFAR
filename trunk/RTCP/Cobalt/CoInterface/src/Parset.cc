@@ -270,6 +270,10 @@ namespace LOFAR
     {
       struct ObservationSettings settings;
 
+      // the set of hosts on which outputProc has to run, which will
+      // be constructed during the parsing of the parset
+      set<string> outputProcHosts;
+
       // NOTE: Make sure that all keys have defaults, to make test parsets
       // a lot shorter.
 
@@ -449,6 +453,8 @@ namespace LOFAR
           settings.correlator.files.resize(settings.subbands.size());
           for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
             settings.correlator.files[i].location = getFileLocation("Correlated", i);
+
+            outputProcHosts.insert(settings.correlator.files[i].location.host);
           }
         }
       }
@@ -552,11 +558,23 @@ namespace LOFAR
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
+
+              outputProcHosts.insert(file.location.host);
             }
           }
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.Beamformer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
+      }
+
+      // set output hosts
+      settings.outputProcHosts.clear();
+      for (set<string>::const_iterator i = outputProcHosts.begin(); i != outputProcHosts.end(); ++i) {
+        // skip empty host names
+        if (*i == "")
+          continue;
+
+        settings.outputProcHosts.push_back(*i);
       }
 
       return settings;

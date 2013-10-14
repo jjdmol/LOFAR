@@ -8,4 +8,5 @@ lofar_add_test(tSparseSet tSparseSet.cc)
 
 if(UNITTEST++_FOUND)
   lofar_add_test(tParset tParset.cc)
+  lofar_add_test(tTABTranspose tTABTranspose.cc)
 endif(UNITTEST++_FOUND)
