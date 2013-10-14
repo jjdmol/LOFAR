@@ -46,6 +46,52 @@ public:
   std::vector<FileDescriptorBasedStream *> poll( int timeout_ms, size_t maxevents );
 };
 
+template <typename T> class StreamSet
+{
+public:
+  typedef void (T::*handlerFunc)( FileDescriptorBasedStream &s );
+
+  StreamSet();
+
+  void add( FileDescriptorBasedStream *s, handlerFunc handler, bool reading, bool writing )
+  {
+    handlers[s] = handler;
+    poller.add(s, reading, writing);
+  }
+
+  void remove( FileDescriptorBasedStream *s )
+  {
+    handlers.erase(s);
+    poller.remove(s);
+  }
+
+  void poll( int timeout_ms )
+  {
+    std::vector<FileDescriptorBasedStream *> readySet = poller.poll(timeout_ms, handlers.size());
+
+    for (size_t i = 0; i < readySet.size(); ++i) {
+      FileDescriptorBasedStream *stream = readySet[i];
+
+      handlers[stream].second(stream);
+    }
+  }
+
+private:
+  Poll poller;
+  struct Status {
+    bool reading;
+    size_t readOffset;
+    size_t readSize;
+
+    bool writing;
+    size_t writeOffset;
+    size_t writeSize;
+
+    handlerFunc handler;
+  };
+  std::map<FileDescriptorBasedStream *, handlerFunc> handlers;
+};
+
 Poll::Poll()
 {
   fd = epoll_create1(EPOLL_CLOEXEC);
@@ -72,8 +118,14 @@ void Poll::remove( FileDescriptorBasedStream *s )
 
   struct epoll_event ev;
 
-  if (epoll_ctl(fd, EPOLL_CTL_DEL, s->fd, &ev) == -1)
-    THROW_SYSCALL("epoll_ctl");
+  if (epoll_ctl(fd, EPOLL_CTL_DEL, s->fd, &ev) == -1) {
+    // Since closed sockets are removed automatically, we could
+    // have a race condition removing it ourselves, resulting
+    // in ENOENT.
+    if (errno != ENOENT) {
+      THROW_SYSCALL("epoll_ctl");
+    }
+  }
 }
 
 std::vector<FileDescriptorBasedStream *> Poll::poll( int timeout_ms, size_t maxevents )

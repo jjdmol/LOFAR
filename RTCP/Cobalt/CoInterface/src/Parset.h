@@ -535,6 +535,9 @@ namespace LOFAR
       // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
       // ("CS001","CS002") and the antenna set.
       static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+
+      // List of host names to start outputProc on
+      std::vector<std::string> outputProcHosts;
     };
 
 

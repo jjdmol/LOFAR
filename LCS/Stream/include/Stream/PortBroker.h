@@ -53,11 +53,25 @@ class PortBroker: protected SocketStream {
 
     size_t nrOutstandingRequests() const;
 
+    /*
+     * ServerStream waits for a client to connect asking for a specific
+     * resource (prefix=false), or a class of resources (prefix=true).
+     */
     class ServerStream: public FileDescriptorBasedStream {
       public:
-        ServerStream( const std::string &resource );
+        // Listen for a client offering resource `resource'. If prefix = true,
+        // the resource only has to start with the given string.
+        ServerStream( const std::string &resource, bool prefix = false, time_t deadline = 0 );
+
+        // The resource that was requested (useful if prefix == true)
+        std::string getResource() const;
+      private:
+        std::string resource;
     };
 
+    /*
+     * ClientStream connects to a ServerStream to obtain a specific resource.
+     */
     class ClientStream: public SocketStream {
       public:
         ClientStream( const std::string &hostname, uint16 port, const std::string &resource, time_t deadline = 0 );
@@ -65,7 +79,17 @@ class PortBroker: protected SocketStream {
 
   protected:
     static void requestResource( Stream &stream, const std::string &resource );
-    FileDescriptorBasedStream *waitForClient( const std::string &resource, time_t deadline = 0 );
+
+    // Information about a connected client
+    struct ConnectedClient {
+      // The data stream
+      FileDescriptorBasedStream *stream;
+
+      // The name of the requested resource
+      string resource;
+    };
+
+    ConnectedClient waitForClient( const std::string &resource, bool prefix, time_t deadline );
 
   private:
     PortBroker( uint16 port );
