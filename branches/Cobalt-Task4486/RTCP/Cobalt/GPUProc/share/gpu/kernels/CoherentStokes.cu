@@ -39,23 +39,25 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
 /*!
  * Computes the first or all 4 stokes parameters.
  * http://www.astron.nl/~romein/papers/EuroPar-11/EuroPar-11.pdf 
- *  
- * I = X *  con(X) + Y * con(Y)
- * Q = X *  con(X) - Y * con(Y)
- * U = 2 * RE(X * con(Y))
- * V = 2 * IM(X * con(Y))
- * This reduces to (validate on paper by Wouter and John):
- * PX = RE(X) * RE(X) + IM(X) * IM(X)
- * PY = RE(Y) * RE(Y) + IM(Y) * IM(Y)
- * I = PX + PY
- * Q = PX - PY
- * U = 2 * (RE(X) * RE(Y) + IM(X) * IM(Y))
- * V = 2 * (IM(X) * RE(Y) - RE(X) * IM(Y))
+ * \code
+ * I = X * conj(X) + Y * conj(Y)
+ * Q = X * conj(X) - Y * conj(Y)
+ * U = 2 * real(X * con(Y))
+ * V = 2 * imag(X * con(Y))
+ * \endcode
+ * This reduces to (validated on paper by Wouter and John):
+ * \code
+ * Px = real(X) * real(X) + imag(X) * imag(X)
+ * Py = real(Y) * real(Y) + imag(Y) * imag(Y)
+ * I = Px + Py
+ * Q = Px - Py
+ * U = 2 * (real(X) * real(Y) + imag(X) * imag(Y))
+ * V = 2 * (imag(X) * real(Y) - real(X) * imag(Y))
+ * \endcode
  * 
- * The kernel's first parallel dimension is on the channels
- * Then second dimension is in time. Then on the tabs.
+ * The kernel's first parallel dimension is on the channels; the second dimension is in time; the third on the tabs.
  * The thread block size based on these factors could be larger then the hardmare max.
- * Therefore NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR should no be more than the hardware maximum of threads (K10 == 1024)
+ * Therefore<tt> NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR </tt>should not exceed the hardware maximum of threads (1024 on a K10).
  *
  * \param[out] outputPtr         4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_STOKES timeseries of channels 
  *                               The dimensions are: NR_TABS by NR_COHERENT_STOKES by (NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE)  by NR_CHANNELS.
@@ -66,14 +68,13 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
  * NR_STATIONS             | >= 1                    | number of antenna fields
- * NR_SAMPLES_PER_CHANNEL  | multiple of             |
- *                         | INTEGRATION_SIZE        | number of input samples per channel
+ * NR_SAMPLES_PER_CHANNEL  | multiple of INTEGRATION_SIZE | number of input samples per channel
  * NR_CHANNELS             | 1 or 16                 | number of frequency channels per subband
  * NR_TABS                 | >= 1                    | number of tabs to create
  * NR_COHERENT_STOKES      | 1 or 4                  | number of stokes paramters to create
  * INTEGRATION_SIZE        | >= 1                    | amount of samples to integrate to a single output sample
  * TIME_PARALLEL_FACTOR    | >= 1                    | amount of parallel threads to work on a full timerange
- *                         |                         | the  
+ *
  * Note that this kernel assumes and needs NR_POLARIZATIONS == 2 and COMPLEX == 2
  * 
  * The TIME_PARALLEL_FACTOR splits the time range in a number of portions which get worked on by 
