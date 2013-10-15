@@ -123,9 +123,9 @@ namespace LOFAR
 
   // Write a vector to an ostream with a given separator, prefix and postfix.
   template<class T>
-  void writeVector (std::ostream& os, const std::vector<T>& vec,
-		    const char* separator,
-		    const char* prefix, const char* postfix)
+  inline void writeVector (std::ostream& os, const std::vector<T>& vec,
+                           const char* separator,
+                           const char* prefix, const char* postfix)
   {
     print (os, vec.begin(), vec.end(), separator, prefix, postfix);
   }
