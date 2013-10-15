@@ -53,7 +53,7 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   string strColor   = \"yellow\";
     
   string strToolTip=\"Antenna: \"+curHBA;
-  strToolTip += \"<br> last status log:\" + logMsg;
+  strToolTip += \"<br> last status msg:\" + logMsg;
   strToolTip += \"<br> located on: Cabinet:\" + cabinet;
   strToolTip += \"<br> ->Subrack\" + subrack;
   strToolTip += \"<br> -> TBB\" + tbboard;
