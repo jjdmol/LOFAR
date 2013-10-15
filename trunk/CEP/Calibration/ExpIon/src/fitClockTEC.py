@@ -485,7 +485,7 @@ def add_to_h5_func(h5file,data,name='test'):
 
     
 
-def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=30000.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all',CStec0=False):
+def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='BA',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=30000.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all',CStec0=False,ignore_stations=["NOTHING_TO_IGNORE",]):
     global tecarray
     global clockarray
     global offsetarray
@@ -507,17 +507,19 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
     if flagBadChannels:
         rms=lambda x,y: np.sqrt(np.mean(np.square(x-np.mean(x,axis=y)),axis=y))
         ph=ionmodel.phases[timerange[0]:timerange[1],:,1,0,0]-ionmodel.phases[timerange[0]:timerange[1],:,0,0,0]
-        myrms1=rms(ph[:,SBselect],0)
-        freqselect=myrms1<flagcut*np.average(myrms1)
+        #myrms1=rms(ph[:,SBselect],0)
+        myrms1=rms(ph[:],0)
+        freqselect=myrms1[SBselect]<flagcut*np.average(myrms1[SBselect])
         cutlevel=flagcut*np.average(rms(ph[:,SBselect][:,freqselect],0))
-        myrms1=rms(ph[:,SBselect],0)
         SBselect=np.logical_and(SBselect,myrms1<cutlevel)
         print "flagging",np.sum(np.logical_not(SBselect)),"channels"
     freqs=freqs[SBselect]
     if isinstance(stationSelect,str): 
-        stations=[st for st in list(ionmodel.stations[:]) if stationSelect in st]   
+        stations=[st for st in list(ionmodel.stations[:]) if stationSelect]   
     else:
         stations=list(ionmodel.stations[:][stationSelect])
+    for ignore in ignore_stations:
+        stations=[st for st in stations if not ignore in st]
     print "stations",stations
     if doClockTEC:
         clockarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
