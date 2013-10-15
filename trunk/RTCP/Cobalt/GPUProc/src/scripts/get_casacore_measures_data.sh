@@ -17,7 +17,7 @@ measures_data_filename=measures_data.tar.bz2
 measures_md5sum_filename=$measures_data_filename.md5sum
 
 
-# Get the data from CSIRO's (slow from NL) FTP server. About 1 MB may take a minute.
+# Get the data from CSIRO's (slow from NL) FTP server. About 8 MB may take 30 seconds.
 # By default, when wget downloads a file, the timestamp is set to match the timestamp from the remote file.
 download()
 {
