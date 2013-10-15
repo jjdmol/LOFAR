@@ -48,10 +48,12 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   tbboard  = navFunct_receiver2TBB(curXRCU);
   rspboard = navFunct_receiver2RSP(curXRCU); 
   
-  
+  string logMsg;
+  dpGet(antenneDP+\"status.logMsg\",logMsg);
   string strColor   = \"yellow\";
-  
+    
   string strToolTip=\"Antenna: \"+curHBA;
+  strToolTip += \"<br> logMsg:\" + logMsg;
   strToolTip += \"<br> located on: Cabinet:\" + cabinet;
   strToolTip += \"<br> ->Subrack\" + subrack;
   strToolTip += \"<br> -> TBB\" + tbboard;
