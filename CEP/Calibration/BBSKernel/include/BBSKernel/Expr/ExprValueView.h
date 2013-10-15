@@ -68,7 +68,6 @@ private:
     bool    itsBindMask; // which element Matrix's are bound?
 };
 
-template <>
 template <unsigned int LENGTH>
 class ExprValueView<Vector<LENGTH> >
 {
