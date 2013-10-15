@@ -58,10 +58,10 @@ void show (const string& name, const string& mode)
   // Read all patches from the SourceDB and write them.
   vector<PatchInfo> patch (in.getPatchInfo());
   for (size_t i=0; i<patch.size(); ++i) {
-    if (mode != "showsource") {
+    if (mode != "source") {
       cout << patch[i] << endl;
     }
-    if (mode != "showpatch") {
+    if (mode != "patch") {
       vector<SourceData> sources(in.getPatchSourceData (patch[i].getName()));
       for (vector<SourceData>::const_iterator iter=sources.begin();
            iter!=sources.end(); ++iter) {
