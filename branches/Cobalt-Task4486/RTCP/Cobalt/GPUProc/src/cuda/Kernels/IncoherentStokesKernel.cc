@@ -89,12 +89,13 @@ namespace LOFAR
       case IncoherentStokesKernel::INPUT_DATA:
         return 
           itsParameters.nrStations * itsParameters.nrChannelsPerSubband *
-          itsParameters.nrSamplesPerChannel * sizeof(std::complex<float>);
+          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
+          sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
         return 
           itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
           itsParameters.timeIntegrationFactor * 
-          itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

@@ -53,7 +53,8 @@
 // (Stokes \e I), or 4 (Stokes \e I, \e Q, \e U, and \e V).
 typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][NR_CHANNELS];
 
-// 4-D array of input samples. Note that, actually, the data is 3-D
+// 4-D array of input samples. Each sample contains two complex
+// polarizations. Note that, actually, the data is 3-D
 // (<tt>[stations][channels][time]</tt>), but the time dimension has been split
 // in two parts to make time integration easier.
 typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][TIME_INTEGRATION_FACTOR];
