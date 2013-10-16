@@ -23,31 +23,6 @@
 #include "FFT_Plan.h"
 #include <GPUProc/gpu_wrapper.h>
 
-#if 0
-// CUDA 5.5RC crashes if cuFFT is linked in but not used,
-// so we provide a workaround by always using cuFFT.
-//
-// CUDA 5.5 final release fixes this issue, so this code will
-// soon be dead.
-#if CUDA_VERSION == 5050
-namespace {
-  int use_cuFFT() {
-      cufftHandle plan;
-      cufftResult error;
-
-      error = cufftPlan1d(&plan, 256, CUFFT_C2C, 1);
-
-      if (error == CUFFT_SUCCESS)
-        cufftDestroy(plan);
-
-      return 0;
-  }
-};
-
-static int __using_cuFFT = use_cuFFT();
-#endif
-#endif
-
 namespace LOFAR
 {
   namespace Cobalt
