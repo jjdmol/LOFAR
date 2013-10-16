@@ -197,7 +197,7 @@ SUITE(corrections) {
   }
 
   TEST(dedisperse) {
-    TESTKEYS("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
+    TESTKEYS("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
       TESTBOOL {
         MAKEPS(keystr, valstr);
 
