@@ -29,6 +29,7 @@
 //# Includes
 #include <ParmDB/ParmFacadeRep.h>
 #include <LMWCommon/SocketConnectionSet.h>
+#include <LMWCommon/MWBlobIO.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
 
@@ -49,13 +50,30 @@ namespace LOFAR { namespace BBS {
   // It starts the remote processes and connects to them. At the end it
   // sends them a quit message.
   //
-  // The class provides a few functions:
+  // The remote processes are started via ssh using startdistproc (in LMWCommon).
+  // It starts the script 'parmdbremote-scr' in the background piping its
+  // stdout and stderr output to the log file parmdbremote_$USER_$$. Because it
+  // is started in the background, no ssh-connection is kept open.
+  // In its turn parmdbremote-scr starts the program parmdbremote which connects
+  // to ParmFacadeDistr and sends an initial message containing the ParmDB name,
+  // the parm names it contains and all default values.
+  // Thereafter it waits for requests which can be one of the following:
   // <ul>
-  // <li> getNames returns a vector of the parameter names in the table
-  // <li> getRange returns a vector of 4 elements giving the boundary box
-  //    of the domains of the parameters.
-  // <li> getValues returns the values of the parameters a calculated on
-  //      a grid given by the caller.
+  //  <li> Quit: end the remote client.
+  //  <li> GetRange: return a vector of 4 elements giving the boundary box
+  //       of the domains of the parameters.
+  //  <li> GetValues: return the values of the parms calculated on a given grid
+  //  <li> GetValuesVec: as above with grid given as vectors
+  //  <li> GetValuesGrid: return parm values in box using default freq/time step
+  //  <li> GetCoeff: return the coefficients of polynomial parms
+  //  <li> ClearTables: clear all tables (remove all values and defaults)
+  //  <li> Flush: flush the ParmDB
+  //  <li> Lock: lock the ParmDB
+  //  <li> Unlock: unlock and flush the ParmDB
+  //  <li> SetDefaultSteps: set the default freq and time step
+  //  <li> AddDefValues: add one or more default parm values
+  //  <li> DeleteDefValues: delete one or more default parm values
+  //  <li> DeleteValues: delete one or more parm values
   // </ul>
   //
   // The parameter names can be given as a pattern. This is the same as a
@@ -197,6 +215,12 @@ namespace LOFAR { namespace BBS {
     string getPort();
     void freePort();
     // </group>
+
+    // Check the return status of a client.
+    bool checkStatus (LOFAR::CEP::MWBlobIn& bbi, int i) const;
+
+    // Check the return status of all clients.
+    void checkStatusAll() const;
 
     // Read a Record from the BlobStream.
     void getRecord (BlobIStream& bis, casa::Record& rec);

@@ -30,12 +30,14 @@
 if test "$srcdir" = ""; then
   srcdir=../../../../../LOFAR/CEP/ParmDB/test
 fi
-srcdir=`cd $srcdir/../src > /dev/null && pwd`
 curdir=`pwd`
+srcdir=`cd $srcdir/../src > /dev/null && pwd`
 exedir=`cd ../src > /dev/null && pwd`
+mwsdir=`cd $srcdir/../../LMWCommon/src > /dev/null && pwd`
+mwedir=`cd ../../LMWCommon/src > /dev/null && pwd`
 
 # Extend PATH.
-PATH=$curdir:$srcdir:$exedir:$PATH
+PATH=$curdir:$srcdir:$exedir:$mwsdir:$mwedir:$PATH
 export PATH
 
 
@@ -116,4 +118,6 @@ if test "$1" = ""; then
   # The other output is created by startdistproc and is too system specific.
   sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out1
   sed -n -e '/^>start</,/^>end</p' tParmFacadeDistr_tmp.out2
+  # Remove the parmdbremote log files.
+  rm -f parmdbremote.log_*
 fi

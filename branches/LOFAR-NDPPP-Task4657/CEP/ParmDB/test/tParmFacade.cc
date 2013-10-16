@@ -94,6 +94,12 @@ void showValues (ParmFacade& acc, const string& pattern, int nf, int nt,
   // Get the coeff and errors.
   cout << ">start<" << endl;
   cout << acc.getCoeff (pattern) << endl;
+  // Set and get the default freq/time step.
+  vector<double> steps(2);
+  steps[0] = 1.;
+  steps[1] = 1.5;
+  acc.setDefaultSteps (steps);
+  cout << "defaultsteps=" << acc.getDefaultSteps() << endl;
   cout << ">end<" << endl;
 }
 

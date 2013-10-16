@@ -79,6 +79,7 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
       [5]
   }
 
+defaultsteps=[1,1.5]
 >end<
 
 includedefaults=true...
@@ -162,6 +163,7 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
       [5]
   }
 
+defaultsteps=[1,1.5]
 >end<
 >start<
 get default values ...
@@ -255,6 +257,7 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
       [5]
   }
 
+defaultsteps=[1,1.5]
 >end<
 
 includedefaults=true...
@@ -337,6 +340,7 @@ parm2 Axis Lengths: [1, 1]  (NB: Matrix in Row/Column order)
       [5]
   }
 
+defaultsteps=[1,1.5]
 >end<
 >start<
 get default values ...
