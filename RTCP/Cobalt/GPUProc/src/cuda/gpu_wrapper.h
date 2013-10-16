@@ -277,7 +277,7 @@ namespace LOFAR
         // \param n Number of bytes to set. Defaults to the complete block.
         //          If \a n is larger than the current memory block size, then
         //          the complete block will be set to \a uc.
-        void set(unsigned char uc, size_t n = -1);
+        void set(unsigned char uc, size_t n = (size_t)-1);
 
         // Return the size of this memory block.
         size_t size() const;
