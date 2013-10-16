@@ -294,7 +294,7 @@ namespace LOFAR
 
       settings.corrections.bandPass   = getBool(renamedKey("Cobalt.correctBandPass", "OLAP.correctBandPass"), true);
       settings.corrections.clock      = getBool(renamedKey("Cobalt.correctClocks", "OLAP.correctClocks"), true);
-      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
+      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
@@ -564,7 +564,7 @@ namespace LOFAR
           }
         }
 
-        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.Beamformer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
+        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
       }
 
       // set output hosts
