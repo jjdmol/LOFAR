@@ -86,6 +86,10 @@ def run_remote_command(config, logger, host, command, env, arguments=None):
         return run_via_paramiko(logger, host, command, env, arguments, key_filename)
     elif method == "mpirun":
         return run_via_mpirun(logger, host, command, env, arguments)
+    elif method == "local":
+        return run_via_local(logger, command, arguments)
+    elif method == "juropa_mpi":
+        return run_via_mpiexec(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -109,6 +113,24 @@ def run_via_mpirun(logger, host, command, environment, arguments):
     # mpirun should be killed with a SIGTERM to enable it to shut down the
     # remote command.
     process.kill = lambda : os.kill(process.pid, signal.SIGTERM)
+    return process
+
+# let the mpi demon manage free resources to start jobs
+def run_via_mpiexec(logger, command, arguments, host):
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring = ["mpiexec","-x","-np=1","/bin/sh", "-c", "hostname && "+command]
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
+
+def run_via_local(logger, command, arguments):
+    commandstring = ["/bin/sh","-c"]
+    for arg in arguments:
+        command = command + " " + str(arg)
+    commandstring.append(command)
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
 
 def run_via_ssh(logger, host, command, environment, arguments):
@@ -214,6 +236,7 @@ class ComputeJob(object):
                 self.host,
                 self.command,
                 {
+                    "PATH": os.environ.get('PATH'),
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
@@ -307,6 +330,8 @@ class RemoteCommandRecipeMixIn(object):
         """
         threadpool = []
         jobpool = {}
+        if not max_per_node and self.config.has_option('remote','max_per_node'):
+            max_per_node = self.config.getint('remote','max_per_node')
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
 

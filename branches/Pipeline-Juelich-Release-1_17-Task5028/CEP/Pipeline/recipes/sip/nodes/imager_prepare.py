@@ -10,6 +10,7 @@ import shutil
 import os
 import subprocess
 import copy
+import pyrap.tables as pt
 from lofarpipe.support.pipelinelogging import CatchLog4CPlus
 from lofarpipe.support.pipelinelogging import log_time
 from lofarpipe.support.utilities import patch_parset
@@ -19,7 +20,6 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
 
-import pyrap.tables as pt
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
@@ -157,6 +157,10 @@ class imager_prepare(LOFARnodeTCP):
             if input_item.skip == True:
                 exit_status = 1 # 
 
+            # skip the copy if machine is the same (execution on localhost) 
+            # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
+            if input_item.host == "localhost":           
+                continue
             # construct copy command
             command = ["rsync", "-r", "{0}:{1}".format(
                             input_item.host, input_item.file),
