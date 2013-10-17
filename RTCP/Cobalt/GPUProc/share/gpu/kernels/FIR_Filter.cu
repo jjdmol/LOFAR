@@ -59,7 +59,7 @@ typedef signed char SampleType;
 #error Precondition violated: COMPLEX == 2
 #endif
 
-// NR_STABS means #stations (correlator) or #TABs (beamformer).
+//# NR_STABS means #stations (correlator) or #TABs (beamformer).
 typedef SampleType (*SampledDataType)[NR_STABS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef SampleType (*HistoryDataType)[NR_SUBBANDS][NR_STABS][NR_TAPS - 1][NR_CHANNELS][NR_POLARIZATIONS * COMPLEX];
 typedef float (*FilteredDataType)[NR_STABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS][COMPLEX];
@@ -80,6 +80,8 @@ typedef const float (*WeightsType)[NR_CHANNELS][NR_TAPS];
  * \param[out] filteredDataPtr         4D output array of floats
  * \param[in]  sampledDataPtr          4D input array of signed chars or shorts
  * \param[in]  weightsPtr              2D per-channel FIR filter coefficient array of floats (considering float16 as a dim)
+ * \param[in]  historyDataPtr          5D input array of history input samples needed to initialize the FIR filter
+ * \param[in]  subbandIdx              index of the subband to process
  *
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values                | Description
