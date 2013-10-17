@@ -321,7 +321,7 @@ substitute_cobaltnode_cobaltnic()
 			    cnode = int(cnic/4);    
 			    dpname=$1;
 			    
-                            newname = sprintf("Cobalt_CBT%03d_CobaltNIC%02d",cnode,cnic);
+                            newname = sprintf("CBT%03d_CobaltNIC%02d",cnode,cnic);
                             sub("@cobaltnode@_@cobaltnic@", newname, dpname);
 			    print dpname"	"$2;
 			}
