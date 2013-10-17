@@ -173,10 +173,6 @@ int main(int argc, char **argv)
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
 
-  // Tie to local X server (TODO: does CUDA really need this?)
-  if (setenv("DISPLAY", ":0", 1) < 0)
-    THROW_SYSCALL("setenv(DISPLAY)");
-
   // Restrict access to (tmp build) files we create to owner
   // JD: Don't do that! We want to be able to clean up each other's
   // mess.
