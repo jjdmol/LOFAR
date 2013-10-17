@@ -25,6 +25,8 @@
 #include <map>
 #include <cstring>
 #include <Common/Thread/Mutex.h>
+#include <Common/Thread/Thread.h>
+#include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
 #include "Pool.h"
@@ -45,18 +47,29 @@ namespace LOFAR
       struct Subband {
         MultiDimArray<float, 2> data; // [samples][channels]
 
-        Subband( size_t nrSamples, size_t nrChannels )
+        Subband( size_t nrSamples = 0, size_t nrChannels = 0 )
         :
-          data(boost::extents[nrSamples][nrChannels]),
-          fileIdx(0),
-          subband(0),
-          block(0)
+          data(boost::extents[nrSamples][nrChannels])
         {
+          id.fileIdx = 0;
+          id.subband = 0;
+          id.block   = 0;
         }
 
-        size_t fileIdx;
-        size_t subband;
-        size_t block;
+        struct {
+          size_t fileIdx;
+          size_t subband;
+          size_t block;
+        } id;
+
+        void write(Stream &stream) const {
+          stream.write(&id, sizeof id);
+          stream.write(data.origin(), data.num_elements() * sizeof *data.origin());
+        }
+
+        void read(Stream &stream) {
+          stream.read(&id, sizeof id);
+        }
       };
 
       /*
@@ -89,8 +102,8 @@ namespace LOFAR
         void addSubband( const Subband &subband ) {
           ASSERT(nrSubbandsLeft > 0);
 
-          memcpy(data[subband.subband].origin(), subband.data.origin(), subband.data.size() * sizeof subband.data.origin());
-          subbandWritten[subband.subband] = true;
+          memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.size() * sizeof subband.data.origin());
+          subbandWritten[subband.id.subband] = true;
 
           nrSubbandsLeft--;
         }
@@ -156,7 +169,7 @@ namespace LOFAR
         void addSubband( const Subband &subband ) {
           ScopedLock sl(mutex);
 
-          const size_t &blockIdx = subband.block;
+          const size_t &blockIdx = subband.id.block;
 
           if (!have(blockIdx)) {
             if (canDrop) {
@@ -283,6 +296,79 @@ namespace LOFAR
         }
       };
 
+      class Sender {
+      public:
+        Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false )
+        :
+          stream(stream),
+          queue(queueSize, canDrop),
+          thread(this, &Sender::sendLoop)
+        {
+        }
+
+
+        void finish()
+        {
+          queue.noMore();
+        }
+
+
+        void append( SmartPtr<Subband> subband )
+        {
+          queue.append(subband);
+        }
+
+      private:
+        Stream &stream;
+        BestEffortQueue< SmartPtr<Subband> > queue;
+        Thread thread;
+
+        void sendLoop()
+        {
+          SmartPtr<Subband> subband;
+
+          while( (subband = queue.remove()) != NULL) {
+            subband->write(stream);
+          }
+        }
+      };
+
+      class Receiver {
+      public:
+        typedef map<size_t, SmartPtr<BlockCollector> > CollectorMap;
+
+        Receiver( Stream &stream, CollectorMap &collectors )
+        :
+          stream(stream),
+          collectors(collectors),
+          thread(this, &Receiver::receiveLoop)
+        {
+        }
+
+      private:
+        Stream &stream;
+        CollectorMap &collectors;
+        Thread thread;
+
+
+        void receiveLoop()
+        {
+          try {
+            Subband subband;
+
+            for(;;) {
+              subband.read(stream);
+
+              const size_t fileIdx = subband.id.fileIdx;
+
+              ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of TAB " << fileIdx << ", which is unknown to me");
+
+              collectors.at(fileIdx)->addSubband(subband);
+            }
+          } catch (Stream::EndOfStreamException &) {
+          }
+        }
+      };
     } // namespace TABTranspose
   } // namespace Cobalt
 } // namespace LOFAR
