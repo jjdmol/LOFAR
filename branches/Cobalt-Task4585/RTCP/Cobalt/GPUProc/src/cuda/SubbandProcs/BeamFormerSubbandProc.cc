@@ -177,7 +177,7 @@ namespace LOFAR
     {
       // We are in the BeamFormerSubbandProc, we know that we are beamforming.
       // therefore gogo static cast ( see outputPool)
-      BeamFormedData &output = static_cast<BeamFormedData&>(_output);
+      BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
