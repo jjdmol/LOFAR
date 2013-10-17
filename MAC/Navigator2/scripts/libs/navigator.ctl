@@ -72,6 +72,10 @@ global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices i
 global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
 global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
+global dyn_int    g_cobaltRackList;    // holds valid cobaltracks for choices in viewBox
+global dyn_int    g_cobaltNodeList;    // holds valid cobaltnodesplanes for choices in viewBox
+global dyn_int    g_cobaltNICList;     // holds valid cobaltNICs for choices in viewBox
+
 
 global dyn_string strPlannedObs;
 global dyn_string strHighlight;        // contains highlight info for mainpanels

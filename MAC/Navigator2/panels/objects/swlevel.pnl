@@ -198,51 +198,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 0 
-6 16
-"station_highLight"
-""
-1 240 10 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-16 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-"main()
-{
-  dpConnect( \"swlevel_stationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
-}
-
-void swlevel_stationCallback(string dp1, bool aTrig) {
-  
-  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
-  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|Found highlight : \" + highlight + \" Looking for station\");
-  bool bHighlight=false;
-  if (dynContains(highlight,station)) {
-    bHighlight=true;
-  }
-  LOG_DEBUG(\"swlevel.pnl:swlevel_stationCallback|Highlight request: \"+bHighlight);
-  station_highLight.visible = bHighlight;
-  
-}
-
-" 0
- "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E 1 0 1 2 1 1 E 0 8 33 23
 6 0
 "level1_text"
 ""
@@ -268,11 +223,11 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -180 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -190 -150 1 E 230 150 234 159
 2 1
 "station_text"
 ""
-1 5 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 0 -1 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick(station);
@@ -294,8 +249,8 @@ E "main(int x, int y)
 {
   click(station);
 }" 0
- 0 1 1 2 1 E U  0 E 5 10 33 23
-0 2 2 "0s" 0 0 0 192 0 0  5 10 1
+ 0 1 1 2 1 E U  0 E 0 -1 28 12
+0 2 2 "0s" 0 0 0 192 0 0  0 -1 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1
@@ -325,7 +280,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -175 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -185 -150 1 E 230 150 234 159
 6 3
 "level3_text"
 ""
@@ -351,7 +306,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -170 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -180 -150 1 E 230 150 234 159
 6 4
 "level4_text"
 ""
@@ -377,7 +332,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -165 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -175 -150 1 E 230 150 234 159
 6 5
 "level5_text"
 ""
@@ -403,7 +358,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -160 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -170 -150 1 E 230 150 234 159
 6 6
 "level6_text"
 ""
@@ -429,7 +384,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -155 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -165 -150 1 E 230 150 234 159
 6 7
 "level7_text"
 ""
@@ -455,7 +410,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -150 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -160 -150 1 E 230 150 234 159
 6 8
 "level8_text"
 ""
@@ -481,7 +436,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -145 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -155 -150 1 E 230 150 234 159
 6 9
 "level9_text"
 ""
@@ -507,7 +462,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -140 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -150 -150 1 E 230 150 234 159
 6 10
 "level10_text"
 ""
@@ -533,7 +488,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -135 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -145 -150 1 E 230 150 234 159
 6 11
 "level11_text"
 ""
@@ -559,7 +514,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -130 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -140 -150 1 E 230 150 234 159
 6 12
 "level12_text"
 ""
@@ -585,7 +540,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -125 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -135 -150 1 E 230 150 234 159
 6 13
 "level13_text"
 ""
@@ -611,7 +566,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -120 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -130 -150 1 E 230 150 234 159
 6 14
 "level14_text"
 ""
@@ -637,7 +592,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -115 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -125 -150 1 E 230 150 234 159
 6 15
 "level15_text"
 ""
@@ -663,7 +618,7 @@ E "main(int x, int y)
 {
   click(this.name);
 }" 0
- 0 1 1 2 1 E 1 0 1 -110 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -120 -150 1 E 230 150 234 159
 0
 LAYER, 1 
 1
