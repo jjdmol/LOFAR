@@ -49,7 +49,7 @@ void updateAntennaInfo(string ident, dyn_dyn_anytype tab)
   dpGet(dp,nrAntennas);
 
   if (nrAntennas <= 0 ) {
-    color = \"Lofar_error\";
+    color = \"Lofar_invalid\";
     setValue(\"antenna\",\"toolTipText\",\"nrAntennas not found\");
     setValue(\"antenna\", \"backCol\", color);
   }  
