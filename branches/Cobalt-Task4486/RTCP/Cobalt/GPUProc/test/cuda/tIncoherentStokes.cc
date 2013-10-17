@@ -147,7 +147,7 @@ struct KernelFixture : ParsetFixture
   }
 
   // Initialize all the elements of the input host buffer to zero, and all
-  // elements of the output host buffer to 42.0.
+  // elements of the output host buffer to NaN.
   void initializeHostBuffers()
   {
     cout << "\nInitializing host buffers..."
