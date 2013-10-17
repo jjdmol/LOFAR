@@ -54,7 +54,7 @@ void updateLBAInfo(string ident, dyn_dyn_anytype tab)
   dpGet(dp,nrAntennas);
 
   if (nrAntennas <= 0 ) {
-    color = \"Lofar_error\";
+    color = \"Lofar_invalid\";
     setValue(\"LBAObject\",\"toolTipText\",\"nrAntennas not found\");
     setValue(\"LBAObject\", \"backCol\", color);
   }  
@@ -106,7 +106,7 @@ void updateHBAInfo(string ident, dyn_dyn_anytype tab)
   dpGet(dp,nrAntennas);
 
   if (nrAntennas <= 0 ) {
-    color = \"Lofar_error\";
+    color = \"Lofar_invalid\";
     setValue(\"HBAObject\",\"toolTipText\",\"nrAntennas not found\");
     setValue(\"HBAObject\", \"backCol\", color);
   }  
@@ -298,7 +298,7 @@ E "main(int x, int y)
 2 3
 "stationName"
 ""
-1 10 35.00000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 30.00000000000001 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();
