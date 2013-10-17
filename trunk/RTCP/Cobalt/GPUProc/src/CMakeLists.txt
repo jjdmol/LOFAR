@@ -40,7 +40,7 @@ if(USE_CUDA)
     cuda/Kernels/FFT_Plan.cc
     cuda/Kernels/Filter_FFT_Kernel.cc
     cuda/Kernels/FIR_FilterKernel.cc
-    #cuda/Kernels/IncoherentStokesKernel.cc
+    cuda/Kernels/IncoherentStokesKernel.cc
     cuda/Kernels/IntToFloatKernel.cc
     #cuda/Kernels/UHEP_BeamFormerKernel.cc
     #cuda/Kernels/UHEP_InvFFT_Kernel.cc

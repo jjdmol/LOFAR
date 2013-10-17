@@ -20,7 +20,7 @@
 
 #include "gpu_math.cuh"
 
-// Some defines used to determine the correct way the process the data
+//# Some defines used to determine the correct way the process the data
 #define MAX(A,B) ((A)>(B) ? (A) : (B))
 
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
@@ -32,7 +32,7 @@
 #error "need more passes to beam for this number of stations"
 #endif
 
-// Typedefs used to map input data on arrays
+//# Typedefs used to map input data on arrays
 typedef  double (*DelaysType)[NR_SAPS][NR_STATIONS][NR_TABS];
 typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
@@ -42,7 +42,7 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * of the provided input data.
  *
  * \param[out] complexVoltagesPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
- * \param[in]  correctedDataPtr        3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
+ * \param[in]  samplesPtr              3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
  * \param[in]  delaysPtr               3D input array of complex valued delays to be applied to the correctData samples. There is a delay for each Sub-Array Pointing, station, and Tied Array Beam triplet.
  * \param[in]  subbandFrequency        central frequency of the subband
  * \param[in]  sap                     number (index) of the Sub-Array Pointing (aka (station) beam)
@@ -57,7 +57,6 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * NR_TABS                 | >= 1                    | number of Tied Array Beams (old name: pencil beams) to create
  * WEIGHT_CORRECTION       | float                   | weighting applied to all weights derived from the delays, primarily used for correcting FFT and iFFT chain multiplication correction
  * SUBBAND_BANDWIDTH       | double, multiple of NR_CHANNELS | Bandwidth of a subband in Hz
- * ----------------------- | ------------------------| 
  * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
  * Note that this kernel assumes  NR_POLARIZATIONS == 2

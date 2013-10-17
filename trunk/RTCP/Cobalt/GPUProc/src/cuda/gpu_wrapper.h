@@ -224,6 +224,7 @@ namespace LOFAR
       {
       public:
         // Allocate \a size bytes of host memory.
+        // \param context CUDA context associated with this HostMemory object.
         // \param size number of bytes to allocate
         // \param flags affect allocation
         // \note To create pinned memory, we need to set
@@ -273,10 +274,10 @@ namespace LOFAR
         void *get() const;
 
         // Fill the first \a n bytes of memory with the constant byte \a uc.
-        // \param c Constant byte value to put into memory
-        // \param n Number of bytes to set. Defaults to the complete block.
-        //          If \a n is larger than the current memory block size, then
-        //          the complete block will be set to \a uc.
+        // \param uc Constant byte value to put into memory
+        // \param n  Number of bytes to set. Defaults to the complete block.
+        //           If \a n is larger than the current memory block size, then
+        //           the complete block will be set to \a uc.
         void set(unsigned char uc, size_t n = (size_t)-1);
 
         // Return the size of this memory block.
@@ -307,6 +308,7 @@ namespace LOFAR
 
         // Load the module in the file \a fname into the given \a context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
+        // \param context CUDA context associated with this Module object.
         // \param fname name of a module file
         // \note For details, please refer to the documentation of \c
         // cuModuleLoad in the CUDA Driver API.
@@ -315,6 +317,7 @@ namespace LOFAR
         // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
+        // \param context CUDA context associated with this Module object.
         // \param image pointer to a module image in memory
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadData in the CUDA Driver API.
@@ -323,6 +326,7 @@ namespace LOFAR
         // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
+        // \param context CUDA context associated with this Module object.
         // \param image pointer to a module image in memory
         // \param options map of \c CUjit_option items, with their associated
         // values.
@@ -458,6 +462,7 @@ namespace LOFAR
       public:
         // Create a stream.
         // \param flags must be 0 for CUDA < 5.0
+        // \param context CUDA context associated with this Stream object.
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
         explicit Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
