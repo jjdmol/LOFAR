@@ -356,6 +356,8 @@ namespace LOFAR
           try {
             Subband subband;
 
+            ASSERT(false);
+
             for(;;) {
               subband.read(stream);
 
