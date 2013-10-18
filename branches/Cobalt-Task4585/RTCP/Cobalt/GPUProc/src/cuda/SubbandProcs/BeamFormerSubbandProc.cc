@@ -89,8 +89,6 @@ namespace LOFAR
       inverseFFT(queue, BEAM_FORMER_NR_CHANNELS, ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
 
       // FIR filter: B -> A
-      // TODO: provide history samples separately
-      // TODO: do a FIR for each individual TAB!!
       devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
       devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
@@ -175,8 +173,6 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
-      // We are in the BeamFormerSubbandProc, we know that we are beamforming.
-      // therefore gogo static cast ( see outputPool)
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
