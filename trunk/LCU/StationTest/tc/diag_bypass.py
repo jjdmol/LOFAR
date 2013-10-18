@@ -11,10 +11,13 @@
        5   siy    =  SI enable Y
        6   sync   =  DIAG result buffer use sync
        7   resync =  DIAG result buffer use resync
-       8   pftsw  =  PFT switching disable
-    10:9   bank   =  DIAG result buffer for BM bank 
-      11   bp     =  DIAG result buffer for BP      
+       8   pft_sw =  PFT switching disable
+    10:9   res_ap =  DIAG result buffer for AP BM bank 0, 1, 2, or 3
+      11   res_bp =  DIAG result buffer for BP selected lane or CDO
       12   swap   =  Page swap on system sync       
+      13   b_dis  =  RAD tx beamlet disable
+      14   x_dis  =  RAD tx crosslet disable
+      15   s_dis  =  RAD tx subband disable
    
    Write DIAG bypass:
    > python verify.py --brd rsp0 -v 21 --te tc/diag_bypass.py --hexdata 1001
