@@ -205,13 +205,13 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
 
     if (deadline > 0) {
       if (!itsCondition.wait(itsMutex, deadline_ts))
-        THROW(TimeOutException, "port broker client: server did not register before deadline");
+        THROW(TimeOutException, "port broker server: client did not register before deadline");
     } else {
       itsCondition.wait(itsMutex);
     }
   }
 
-  THROW(TimeOutException, "port broker client: server did not register before PortBroker shut down");
+  THROW(TimeOutException, "port broker server: client did not register before PortBroker shut down");
 }
 
 
@@ -229,7 +229,7 @@ PortBroker::ServerStream::ServerStream( const string &resource, bool prefix, tim
   ASSERTSTR( serverStarted(), "PortBroker service is not started" );
 
   // wait for client to request our service
-  ConnectedClient client(PortBroker::instance().waitForClient(resource, deadline, prefix));
+  ConnectedClient client(PortBroker::instance().waitForClient(resource, prefix, deadline));
   auto_ptr<FileDescriptorBasedStream> stream(client.stream);
 
   // transfer ownership
