@@ -214,7 +214,7 @@ namespace LOFAR
         std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
         std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
         std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
-        std::setw(20) << "(incoherentStokes)" << incoherentStokes.stats << endl <<
+        std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT.stats << endl <<
         std::setw(20) << "(incoherentStokes)" <<  incoherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<
         std::setw(20) << "(copyBuffers)" << copyBuffers.stats << endl <<

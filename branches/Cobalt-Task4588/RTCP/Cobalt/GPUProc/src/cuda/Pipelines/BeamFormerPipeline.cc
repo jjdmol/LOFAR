@@ -70,10 +70,16 @@ namespace LOFAR
         RunningStatistics firFilterKernel;
         RunningStatistics finalFFT;
         RunningStatistics coherentStokes;
+        RunningStatistics incoherentInverseFFT;
+        RunningStatistics incoherentFirFilterKernel;
+        RunningStatistics incoherentFinalFFT;
+        RunningStatistics incoherentStokes;
 
         // gpu transfer counters
         RunningStatistics samples;
         RunningStatistics visibilities;
+        RunningStatistics copyBuffers;
+        RunningStatistics incoherentOutput;
           for (size_t idx_queue = 0; idx_queue < workQueues.size(); ++idx_queue)
           {
             //We know we are in the correlator pipeline, this queue can only contain correlatorSubbandprocs
@@ -94,9 +100,15 @@ namespace LOFAR
             firFilterKernel += proc->counters.firFilterKernel.stats;
             finalFFT += proc->counters.finalFFT.stats;
             coherentStokes += proc->counters.coherentStokes.stats;
-            
+            incoherentInverseFFT += proc->counters.incoherentInverseFFT.stats;
+            incoherentFirFilterKernel += proc->counters.incoherentFirFilterKernel.stats;
+            incoherentFinalFFT += proc->counters.incoherentFinalFFT.stats;
+            incoherentStokes += proc->counters.incoherentStokes.stats;
+          
             samples += proc->counters.samples.stats;
             visibilities += proc->counters.visibilities.stats;
+            copyBuffers += proc->counters.copyBuffers.stats;
+            incoherentOutput += proc->counters.incoherentOutput.stats;
           }
 
           // Now print the aggregate statistics.
@@ -113,7 +125,13 @@ namespace LOFAR
                        std::setw(20) << "(firFilterKernel)" << firFilterKernel << endl <<
                        std::setw(20) << "(finalFFT)" << finalFFT << endl <<
                        std::setw(20) << "(coherentStokes)" << coherentStokes << endl <<
+                       std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT << endl <<
+                       std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel << endl <<
+                       std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT << endl <<
+                       std::setw(20) << "(incoherentStokes)" << incoherentStokes << endl <<
                        std::setw(20) << "(samples)" << samples << endl <<
+                       std::setw(20) << "(copyBuffers)" << copyBuffers << endl <<
+                       std::setw(20) << "(incoherentOutput)" << incoherentOutput << endl <<
                        std::setw(20) << "(visibilities)" << visibilities << endl);
         }
       }
@@ -124,3 +142,4 @@ namespace LOFAR
     }
   }
 }
+
