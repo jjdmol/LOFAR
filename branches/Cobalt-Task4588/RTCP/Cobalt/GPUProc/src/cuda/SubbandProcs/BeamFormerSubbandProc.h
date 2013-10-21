@@ -107,10 +107,17 @@ namespace LOFAR
         PerformanceCounter finalFFT;
         PerformanceCounter coherentStokes;
 
+        PerformanceCounter incoherentInverseFFT;
+        PerformanceCounter incoherentFirFilterKernel;
+        PerformanceCounter incoherentFinalFFT;
+        PerformanceCounter incoherentStokes;
+
+
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
         PerformanceCounter copyBuffers;
+        PerformanceCounter incoherentOutput;
         // Print the mean and std of each performance counter on the logger
         void printStats();
       };
@@ -196,15 +203,15 @@ namespace LOFAR
       FFT_Kernel incoherentInverseFFT;
 
       //// PPF
-      //gpu::DeviceMemory devIncoherentFilterWeights;
-      //gpu::DeviceMemory devIncoherentFilterHistoryData;
-      //FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
-      //std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
-      //FFT_Kernel incoherentFinalFFT;
+      gpu::DeviceMemory devIncoherentFilterWeights;
+      gpu::DeviceMemory devIncoherentFilterHistoryData;
+      FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
+      std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
+      FFT_Kernel incoherentFinalFFT;
 
       //// Incoherent Stokes
-      //IncoherentStokesKernel::Buffers incoherentStokesBuffers;
-      //std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
+      IncoherentStokesKernel::Buffers incoherentStokesBuffers;
+      std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
 
       //output for Incoherent stokes 
       gpu::DeviceMemory &devIncoherentStokes;
@@ -221,7 +228,10 @@ namespace LOFAR
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
-        coherentStokes(coherentStokesParams(ps))
+        coherentStokes(coherentStokesParams(ps)),
+        incoherentFirFilter(incoherentFirFilterParams(ps,
+                            nrSubbandsPerSubbandProc)),
+        incoherentStokes(incoherentStokesParams(ps))
       {
       }
 
@@ -232,6 +242,8 @@ namespace LOFAR
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
+      KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+      KernelFactory<IncoherentStokesKernel> incoherentStokes;
 
       DelayAndBandPassKernel::Parameters delayCompensationParams(const Parset &ps) const {
         DelayAndBandPassKernel::Parameters params(ps);
@@ -286,9 +298,36 @@ namespace LOFAR
         return params;
       }
 
+      FIR_FilterKernel::Parameters incoherentFirFilterParams(const Parset &ps,
+            size_t nrSubbandsPerSubbandProc) const {
+        FIR_FilterKernel::Parameters params(ps);
+
+        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
+
+        // define at least 16 channels to get the FIR_Filter.cu to compile, even
+        // if we won't use it.
+        params.nrChannelsPerSubband = std::max(16U, ps.settings.beamFormer.incoherentSettings.nrChannels);
+
+        // time integration has not taken place yet, so calculate the nrSamples manually
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        params.nrSubbands = nrSubbandsPerSubbandProc;
+
+        return params;
+      }
+
       CoherentStokesKernel::Parameters coherentStokesParams(const Parset &ps) const {
         CoherentStokesKernel::Parameters params(ps);
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
+        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        return params;
+      }
+
+       IncoherentStokesKernel::Parameters incoherentStokesParams(const Parset &ps) const {
+        IncoherentStokesKernel::Parameters params(ps);
+        //TODO: beamformer params
+        params.nrChannelsPerSubband = ps.settings.beamFormer.incoherentSettings.nrChannels;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;

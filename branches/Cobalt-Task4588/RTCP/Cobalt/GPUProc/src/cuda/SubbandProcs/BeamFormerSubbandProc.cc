@@ -77,8 +77,8 @@ namespace LOFAR
       correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
       correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
 
-
-
+      //**************************************************************
+      //coherent stokes
       // beamForm: B -> A
       // TODO: support >1 SAP
       devBeamFormerDelays(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
@@ -113,14 +113,38 @@ namespace LOFAR
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
       //**************************************************************
       //incoherent stokes
-
+      //Hier moet dus nog een transpose
       // inverse FFT: C -> C
       incoherentInverseFFT(queue, BEAM_FORMER_NR_CHANNELS,
                  ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * 
                  ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devC),
 
+      // FIR filter: C -> D
+      // TODO: provide history samples separately
+      // TODO: do a FIR for each individual TAB!!
+      devIncoherentFilterWeights(context,
+           factories.incoherentFirFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      devIncoherentFilterHistoryData(context,
+           factories.incoherentFirFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      incoherentFirFilterBuffers(devC, devD,
+              devIncoherentFilterWeights, devIncoherentFilterHistoryData),
+      incoherentFirFilterKernel(
+          factories.incoherentFirFilter.create(
+                queue, incoherentFirFilterBuffers)),
 
-      devIncoherentStokes(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
+      // final FFT: D -> D
+      incoherentFinalFFT(queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
+                                ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
+                                ps.settings.beamFormer.incoherentSettings.nrChannels, true, devD),
+
+      // incoherentstokes kernel
+      incoherentStokesBuffers(
+          ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devD : devC,
+          ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devC : devD),
+      incoherentStokesKernel(
+          factories.incoherentStokes.create(queue, incoherentStokesBuffers)),
+
+      devIncoherentStokes(ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devC : devD)
     {
       // initialize history data
       devFilterHistoryData.set(0);
@@ -161,9 +185,14 @@ namespace LOFAR
     firFilterKernel(context),
     finalFFT(context),
     coherentStokes(context),
+    incoherentInverseFFT(context),
+    incoherentFirFilterKernel(context),
+    incoherentFinalFFT(context),
+    incoherentStokes(context),
     samples(context),
     visibilities(context),
-    copyBuffers(context)
+    copyBuffers(context),
+    incoherentOutput(context)
     {
     }
 
@@ -176,24 +205,32 @@ namespace LOFAR
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
         std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
-        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<
+        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<        
         std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
         std::setw(20) << "(transpose)" << transpose.stats << endl <<
         std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
         std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
         std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
         std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
+        std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
+        std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
+        std::setw(20) << "(incoherentStokes)" << incoherentStokes.stats << endl <<
+        std::setw(20) << "(incoherentStokes)" <<  incoherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<
+        std::setw(20) << "(copyBuffers)" << copyBuffers.stats << endl <<
         std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
-        std::setw(20) << "(copyBuffers )" << copyBuffers.stats << endl); 
+        std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl); 
+
 
     }
 
-    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
+    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
+      StreamableData &_output)
     {
       // We are in the BeamFormerSubbandProc, we know that we are beamforming.
       // therefore gogo static cast ( see outputPool)
       BeamFormedData &output = static_cast<BeamFormedData&>(_output);
+      BeamFormedData &incoherentOutput = static_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
@@ -236,7 +273,8 @@ namespace LOFAR
       // TODO: To allow the copy of data to new buffer we need a sync here?  
       queue.copyBuffer(devC, devB, counters.copyBuffers, true);
 
-
+      // ********************************************************************
+      // coherent stokes kernels
       beamFormerKernel->enqueue(input.blockID, counters.beamformer,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
@@ -249,15 +287,25 @@ namespace LOFAR
         finalFFT.enqueue(input.blockID, counters.finalFFT);
       }
 
-
-
       coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
 
+      // ********************************************************************
+      // incoherent stokes kernels
+      incoherentInverseFFT.enqueue(input.blockID, counters.incoherentInverseFFT);
+
+      if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) {
+        incoherentFirFilterKernel->enqueue(input.blockID, counters.incoherentFirFilterKernel,
+             input.blockID.subbandProcSubbandIdx);
+        incoherentFinalFFT.enqueue(input.blockID, counters.incoherentFinalFFT);
+      }
+
+      incoherentStokesKernel->enqueue(input.blockID, counters.incoherentStokes);
       // TODO: Propagate flags
 
       queue.synchronize();
 
       queue.readBuffer(output, devResult, counters.visibilities, true);
+      queue.readBuffer(incoherentOutput, devIncoherentStokes, counters.incoherentOutput, true);
 
             // ************************************************
       // Perform performance statistics if needed
@@ -280,10 +328,15 @@ namespace LOFAR
         counters.transpose.logTime();
         counters.inverseFFT.logTime();
         counters.coherentStokes.logTime();
+        counters.incoherentInverseFFT.logTime();
+        counters.incoherentFirFilterKernel.logTime();
+        counters.incoherentFinalFFT.logTime();
+        counters.incoherentStokes.logTime();
 
         counters.samples.logTime();
         counters.visibilities.logTime();
         counters.copyBuffers.logTime();
+        counters.incoherentOutput.logTime();
       }
     }
 
