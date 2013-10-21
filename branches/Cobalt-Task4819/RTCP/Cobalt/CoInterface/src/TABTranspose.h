@@ -26,6 +26,7 @@
 #include <cstring>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
+#include <Stream/Stream.h>
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
@@ -47,14 +48,7 @@ namespace LOFAR
       struct Subband {
         MultiDimArray<float, 2> data; // [samples][channels]
 
-        Subband( size_t nrSamples = 0, size_t nrChannels = 0 )
-        :
-          data(boost::extents[nrSamples][nrChannels])
-        {
-          id.fileIdx = 0;
-          id.subband = 0;
-          id.block   = 0;
-        }
+        Subband( size_t nrSamples = 0, size_t nrChannels = 0 );
 
         struct {
           size_t fileIdx;
@@ -62,29 +56,8 @@ namespace LOFAR
           size_t block;
         } id;
 
-        void write(Stream &stream) const {
-          stream.write(&id, sizeof id);
-
-          size_t dim1 = data.shape()[0];
-          size_t dim2 = data.shape()[1];
-          stream.write(&dim1, sizeof dim1);
-          stream.write(&dim2, sizeof dim2);
-          stream.write(data.origin(), data.num_elements() * sizeof *data.origin());
-          LOG_DEBUG_STR("Written block");
-        }
-
-        void read(Stream &stream) {
-          LOG_DEBUG_STR("Reading block id");
-          stream.read(&id, sizeof id);
-          LOG_DEBUG_STR("Read block id");
-
-          size_t dim1, dim2;
-          stream.read(&dim1, sizeof dim1);
-          stream.read(&dim2, sizeof dim2);
-          data.resize(boost::extents[dim1][dim2]);
-          stream.read(data.origin(), data.num_elements() * sizeof *data.origin());
-          LOG_DEBUG_STR("Read block");
-        }
+        void write(Stream &stream) const;
+        void read(Stream &stream);
       };
 
       /*
@@ -103,44 +76,23 @@ namespace LOFAR
         size_t fileIdx;
         size_t block;
 
-        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
-        :
-          data(boost::extents[nrSubbands][nrSamples][nrChannels]),
-          subbandWritten(nrSubbands, false),
-          nrSubbandsLeft(nrSubbands)
-        {
-        }
+        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
          * Add data for a single subband.
          */
-        void addSubband( const Subband &subband ) {
-          ASSERT(nrSubbandsLeft > 0);
-
-          memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.size() * sizeof subband.data.origin());
-          subbandWritten[subband.id.subband] = true;
-
-          nrSubbandsLeft--;
-        }
+        void addSubband( const Subband &subband );
 
         /*
-         * Add data for a single subband.
+         * Zero data of subbands that weren't added.
          */
-        void zeroRemainingSubbands() {
-          for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
-            if (!subbandWritten[subbandIdx]) {
-              memset(data[subbandIdx].origin(), 0, data[subbandIdx].size() * sizeof data[subbandIdx].origin());
-            }
-          }
-        }
+        void zeroRemainingSubbands();
 
         /*
          * Return whether the block is complete, that is, all
          * subbands have been added.
          */
-        bool complete() const {
-          return nrSubbandsLeft == 0;
-        }
+        bool complete() const;
 
       private:
         // The number of subbands left to receive.
@@ -172,63 +124,18 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
-        BlockCollector( Pool<Block> &outputPool, size_t maxBlocksInFlight = 0 )
-        :
-          outputPool(outputPool),
-          maxBlocksInFlight(maxBlocksInFlight),
-          canDrop(maxBlocksInFlight > 0),
-          lastEmitted(-1)
-        {
-        }
+        BlockCollector( Pool<Block> &outputPool, size_t maxBlocksInFlight = 0 );
 
-        void addSubband( const Subband &subband ) {
-          ScopedLock sl(mutex);
-
-          const size_t &blockIdx = subband.id.block;
-
-          if (!have(blockIdx)) {
-            if (canDrop) {
-              if ((ssize_t)blockIdx <= lastEmitted) {
-                // too late -- discard packet
-                return;
-              }
-            } else {
-              // if we can't drop, we shouldn't have written
-              // this block yet.
-              ASSERT((ssize_t)blockIdx > lastEmitted);
-            }
-
-            create(blockIdx);
-          }
-
-          // augment existing block
-          SmartPtr<Block> &block = blocks.at(blockIdx);
-
-          block->addSubband(subband);
-
-          if (block->complete()) {
-            // Block is complete -- send it downstream,
-            // and everything before it. We know we won't receive
-            // data from earlier blocks, because all subbands
-            // are sent in-order.
-            emitUpTo(blockIdx);
-          }
-        }
+	/*
+         * Add a subband of any block.
+         */
+        void addSubband( const Subband &subband );
 
         /*
          * Send all remaining blocks downstream,
          * followed by the end-of-stream marker.
          */
-        void finish() {
-          ScopedLock sl(mutex);
-
-          if (!blocks.empty()) {
-            emitUpTo(maxBlock());
-          }
-
-          // Signal end-of-stream
-          outputPool.filled.append(NULL);
-        }
+        void finish();
 
       private:
         std::map<size_t, SmartPtr<Block> > blocks;
@@ -244,162 +151,68 @@ namespace LOFAR
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
 
-        size_t minBlock() const {
-          ASSERT(!blocks.empty());
+        // The oldest block in flight.
+        size_t minBlock() const;
 
-          return blocks.begin()->first;
-        }
-
-        size_t maxBlock() const {
-          ASSERT(!blocks.empty());
-
-          return blocks.rbegin()->first;
-        }
+        // The youngest block in flight.
+        size_t maxBlock() const;
 
         /*
          * Send a certain block downstream.
          */
-        void emit(size_t blockIdx) {
-          // should emit in-order
-          if (!canDrop) {
-            ASSERT((ssize_t)blockIdx == lastEmitted + 1);
-          } else {
-            ASSERT((ssize_t)blockIdx > lastEmitted);
-          }
-          lastEmitted = blockIdx;
-
-          // clear data we didn't receive
-          SmartPtr<Block> &block = blocks.at(blockIdx);
-
-          block->zeroRemainingSubbands();
-          
-          // emit to outputPool.filled()
-          outputPool.filled.append(block);
-
-          // remove from our administration
-          blocks.erase(blockIdx);
-        }
+        void emit(size_t blockIdx);
 
         /*
          * Send all blocks downstream up to
          * and including `block', in-order, as the
          * writer will expect.
          */
-        void emitUpTo(size_t block) {
-          while (!blocks.empty() && minBlock() <= block) {
-            emit(minBlock());
-          }
-        }
+        void emitUpTo(size_t block);
 
         /*
          * Do we manage a certain block?
          */
-        bool have(size_t block) const {
-          return blocks.find(block) != blocks.end();
-        }
+        bool have(size_t block) const;
 
         /*
          * Fetch a new block.
          */
-        void create(size_t block) {
-          ASSERT(!have(block));
-
-          if (canDrop && blocks.size() >= maxBlocksInFlight) {
-            // No more room -- force out oldest block
-            emit(minBlock());
-          }
-
-          blocks[block] = outputPool.free.remove();
-        }
+        void fetch(size_t block);
       };
+
 
       class Sender {
       public:
-        Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false )
-        :
-          stream(stream),
-          queue(queueSize, canDrop),
-          thread(this, &Sender::sendLoop)
-        {
-        }
+        Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false );
 
+        bool finish();
 
-        bool finish()
-        {
-          queue.noMore();
-
-          thread.wait();
-
-          return !thread.caughtException();
-        }
-
-
-        void append( SmartPtr<Subband> subband )
-        {
-          queue.append(subband);
-        }
+        void append( SmartPtr<Subband> subband );
 
       private:
         Stream &stream;
         BestEffortQueue< SmartPtr<Subband> > queue;
         Thread thread;
 
-        void sendLoop()
-        {
-          SmartPtr<Subband> subband;
-
-          while( (subband = queue.remove()) != NULL) {
-            subband->write(stream);
-          }
-        }
+        void sendLoop();
       };
 
       class Receiver {
       public:
         typedef map<size_t, SmartPtr<BlockCollector> > CollectorMap;
 
-        Receiver( Stream &stream, CollectorMap &collectors )
-        :
-          stream(stream),
-          collectors(collectors),
-          thread(this, &Receiver::receiveLoop)
-        {
-        }
+        Receiver( Stream &stream, CollectorMap &collectors );
 
-
-        bool finish()
-        {
-          thread.wait();
-
-          return !thread.caughtException();
-        }
+        bool finish();
 
       private:
         Stream &stream;
         CollectorMap &collectors;
         Thread thread;
 
-
-        void receiveLoop()
-        {
-          try {
-            Subband subband;
-
-            for(;;) {
-              subband.read(stream);
-
-              const size_t fileIdx = subband.id.fileIdx;
-
-              ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of TAB " << fileIdx << ", which is unknown to me");
-
-              LOG_DEBUG_STR("TAB " << fileIdx << ": Adding subband " << subband.id.subband);
-
-              collectors.at(fileIdx)->addSubband(subband);
-            }
-          } catch (Stream::EndOfStreamException &) {
-          }
-        }
+        void receiveLoop();
       };
+
     } // namespace TABTranspose
   } // namespace Cobalt
 } // namespace LOFAR
