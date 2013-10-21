@@ -27,6 +27,7 @@
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
 #include <Stream/Stream.h>
+#include <Stream/PortBroker.h>
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
@@ -124,7 +125,7 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
-        BlockCollector( Pool<Block> &outputPool, size_t maxBlocksInFlight = 0 );
+        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight = 0 );
 
 	/*
          * Add a subband of any block.
@@ -140,6 +141,7 @@ namespace LOFAR
       private:
         std::map<size_t, SmartPtr<Block> > blocks;
         Pool<Block> &outputPool;
+        const size_t fileIdx;
         Mutex mutex;
 
         // upper limit for blocks.size(), or 0 if unlimited
@@ -193,6 +195,12 @@ namespace LOFAR
          */
         Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false );
 
+        // Calls kill()
+        ~Sender();
+
+        // Kills the sender thread.
+        void kill();
+
         /*
          * Waits for the queue to empty.
          *
@@ -221,12 +229,18 @@ namespace LOFAR
       class Receiver {
       public:
         // [fileIdx] -> BlockCollector
-        typedef map<size_t, SmartPtr<BlockCollector> > CollectorMap;
+        typedef std::map<size_t, SmartPtr<BlockCollector> > CollectorMap;
 
         /*
          * Start receiving from `stream', into `collectors'.
          */
         Receiver( Stream &stream, CollectorMap &collectors );
+
+        // Calls kill()
+        ~Receiver();
+
+        // Kills the receiver thread.
+        void kill();
 
         /*
          * Waits for the stream to disconnect and the queue to empty.
@@ -241,6 +255,39 @@ namespace LOFAR
         Thread thread;
 
         void receiveLoop();
+      };
+
+      /*
+       * MultiReceiver listens on a PortBroker port for multiple streams,
+       * dispatching a Receiver for each one.
+       */
+      class MultiReceiver {
+      public:
+        MultiReceiver( const std::string &servicePrefix, Receiver::CollectorMap &collectors );
+
+        // Calls kill()
+        ~MultiReceiver();
+
+        // Kills the listening thread and all client threads.
+        //
+        // hard: if false, stop listening but allow running clients to disconnect
+        //       if true, stop listening and kill running clients
+        void kill(bool hard);
+
+      private:
+        struct Client {
+          SmartPtr<PortBroker::ServerStream> stream;
+          SmartPtr<Receiver> receiver;
+        };
+
+        const std::string servicePrefix;
+        Receiver::CollectorMap &collectors;
+        std::vector<struct Client> clients;
+        Thread thread;
+
+        void listenLoop();
+
+        void dispatch( PortBroker::ServerStream *stream );
       };
 
     } // namespace TABTranspose

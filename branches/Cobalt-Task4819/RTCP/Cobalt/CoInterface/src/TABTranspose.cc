@@ -18,7 +18,10 @@
 //#
 //# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
 
+#include <lofar_config.h>
 #include "TABTranspose.h"
+
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 namespace Cobalt {
@@ -64,6 +67,8 @@ Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
   data(boost::extents[nrSubbands][nrSamples][nrChannels]),
   subbandWritten(nrSubbands, false),
+  fileIdx(0),
+  block(0),
   nrSubbandsLeft(nrSubbands)
 {
 }
@@ -72,7 +77,11 @@ Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 void Block::addSubband( const Subband &subband ) {
   ASSERT(nrSubbandsLeft > 0);
 
-  memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.size() * sizeof subband.data.origin());
+  // Only add subbands that match our ID
+  ASSERT(subband.id.fileIdx == fileIdx);
+  ASSERT(subband.id.block   == block);
+
+  memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof subband.data.origin());
   subbandWritten[subband.id.subband] = true;
 
   nrSubbandsLeft--;
@@ -93,9 +102,10 @@ bool Block::complete() const {
 }
 
 
-BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t maxBlocksInFlight )
+BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight )
 :
   outputPool(outputPool),
+  fileIdx(fileIdx),
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1)
@@ -206,6 +216,10 @@ void BlockCollector::fetch(size_t block) {
   }
 
   blocks[block] = outputPool.free.remove();
+
+  // Annotate
+  blocks[block]->fileIdx = fileIdx;
+  blocks[block]->block = block;
 }
 
 
@@ -215,6 +229,18 @@ Sender::Sender( Stream &stream, size_t queueSize, bool canDrop )
   queue(queueSize, canDrop),
   thread(this, &Sender::sendLoop)
 {
+}
+
+
+Sender::~Sender()
+{
+  kill();
+}
+
+
+void Sender::kill()
+{
+  thread.cancel();
 }
 
 
@@ -253,6 +279,18 @@ Receiver::Receiver( Stream &stream, CollectorMap &collectors )
 }
 
 
+Receiver::~Receiver()
+{
+  kill();
+}
+
+
+void Receiver::kill()
+{
+  thread.cancel();
+}
+
+
 bool Receiver::finish()
 {
   thread.wait();
@@ -279,6 +317,75 @@ void Receiver::receiveLoop()
     }
   } catch (Stream::EndOfStreamException &) {
   }
+}
+
+
+MultiReceiver::MultiReceiver( const std::string &servicePrefix, Receiver::CollectorMap &collectors )
+:
+  servicePrefix(servicePrefix),
+  collectors(collectors),
+  thread(this, &MultiReceiver::listenLoop)
+{
+}
+
+
+MultiReceiver::~MultiReceiver()
+{
+  kill(true);
+}
+
+
+void MultiReceiver::kill(bool hard)
+{
+  thread.cancel();
+
+  // Wait for thread to die so we can access `clients'
+  // safely.
+  thread.wait();
+
+  // Kill all client connections
+  for (size_t i = 0; i < clients.size(); ++i) {
+    if (hard) {
+      clients[i].receiver->kill();
+    } else {
+      clients[i].receiver->finish();
+    }
+  }
+}
+
+
+void MultiReceiver::listenLoop()
+{
+  for(;;) {
+    // Accept a new client
+    SmartPtr<PortBroker::ServerStream> stream;
+   
+    try {
+      stream = new PortBroker::ServerStream(servicePrefix, true);
+    } catch(SocketStream::TimeOutException &) {
+      // fail silently if no client connected
+      LOG_DEBUG_STR("TABTranspose::MultiReceiver: Timed out");
+      break;
+    }
+
+    LOG_DEBUG_STR("TABTranspose::MultiReceiver: Accepted resource " << stream->getResource());
+
+    // Dispatch a Receiver for the client
+    dispatch(stream.release());
+  }
+}
+
+
+void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
+{
+  struct Client client;
+
+  client.stream = stream;
+  client.receiver = new Receiver(*stream, collectors);
+
+  clients.push_back(client);
+
+  LOG_DEBUG_STR("TABTranspose::MultiReceiver: Dispatched client for resource " << stream->getResource());
 }
 
 } // namespace TABTranspose

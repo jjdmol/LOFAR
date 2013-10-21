@@ -34,7 +34,7 @@ using namespace std;
 using boost::format;
 
 SUITE(Block) {
-  TEST(orderedArrival) {
+  TEST(OrderedArrival) {
     const size_t nrSubbands = 10;
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
@@ -52,7 +52,7 @@ SUITE(Block) {
     CHECK(block.complete());
   }
 
-  TEST(unorderedArrival) {
+  TEST(UnorderedArrival) {
     const size_t nrSubbands = 10;
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
@@ -94,7 +94,7 @@ struct Fixture {
 
   Fixture()
   :
-    ctr(outputPool)
+    ctr(outputPool, 0)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
       outputPool.free.append(new Block(nrSubbands, nrSamples, nrChannels));
@@ -109,7 +109,7 @@ struct Fixture_Loss: public Fixture {
 
   Fixture_Loss()
   :
-    ctr_loss(outputPool, maxInFlight)
+    ctr_loss(outputPool, 0, maxInFlight)
   {
     // add some subbands for both blocks
     for (size_t blockIdx = 0; blockIdx < maxInFlight; ++blockIdx) {
@@ -268,6 +268,12 @@ SUITE(SendReceive) {
     CHECK(sender.finish());
   }
 
+  // Test teardown if Sender is destructed
+  TEST(SenderDies) {
+    StringStream str;
+    Sender sender(str);
+  }
+
   TEST(NullReceiver) {
     StringStream str;
     Receiver::CollectorMap collectors;
@@ -277,6 +283,13 @@ SUITE(SendReceive) {
     str.close();
 
     CHECK(receiver.finish());
+  }
+
+  // Test teardown if Receiver is destructed
+  TEST(ReceiverDies) {
+    StringStream str;
+    Receiver::CollectorMap collectors;
+    Receiver receiver(str, collectors);
   }
 
   TEST(IllegalReceive) {
@@ -304,7 +317,7 @@ SUITE(SendReceive) {
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      collectors[i] = new BlockCollector(outputPool);
+      collectors[i] = new BlockCollector(outputPool, i);
     }
 
     StringStream str;
@@ -318,6 +331,12 @@ SUITE(SendReceive) {
       sb->id.fileIdx = i % nrTABs;
       sb->id.block = 0;
       sb->id.subband = i / nrTABs;
+
+      /* fill data */
+      size_t x = 0;
+      for (size_t s = 0; s < nrSamples; ++s)
+        for (size_t c = 0; c < nrChannels; ++c)
+          sb->data[s][c] = (i+1) * ++x;
 
       sender.append(sb);
     }
@@ -336,13 +355,86 @@ SUITE(SendReceive) {
 
       CHECK(block != NULL);
       CHECK(block->complete());
+
+      CHECK_EQUAL(0UL, block->block);
+
+      /* check data */
+      for (size_t sb = 0; sb < nrSubbands; ++sb) {
+        size_t x = 0;
+
+        for (size_t s = 0; s < nrSamples; ++s)
+          for (size_t c = 0; c < nrChannels; ++c) {
+            size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
+            size_t actual = block->data[sb][s][c];
+
+            if (expected != actual)
+              LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
+            CHECK_EQUAL(expected, actual);
+          }
+      }
     }
+  }
+}
+
+SUITE(MultiReceiver) {
+  TEST(MultiReceiverDies) {
+    Receiver::CollectorMap collectors;
+    MultiReceiver mr("foo", collectors);
+  }
+
+  TEST(Connect) {
+    Receiver::CollectorMap collectors;
+    MultiReceiver mr("foo-", collectors);
+
+    // Connect with multiple clients
+    PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+    PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
+  }
+
+  TEST_FIXTURE(Fixture, Transfer) {
+    // Set up receiver
+    Receiver::CollectorMap collectors;
+
+    collectors[0] = new BlockCollector(outputPool, 0);
+
+    MultiReceiver mr("foo-", collectors);
+
+    // Connect
+    {
+      PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+
+      Sender sender(cs);
+
+      // Send one block
+      {
+        SmartPtr<Subband> sb = new Subband(11, 13);
+        sb->id.fileIdx = 0;
+
+        sender.append(sb);
+      }
+
+      CHECK(sender.finish());
+
+      // Disconnect (~cs)
+    }
+
+    // Flush receiver, but wait for data to arrive
+    mr.kill(false);
+
+    // Flush collecting of blocks
+    collectors[0]->finish();
+
+    // Check if data arrived, resulting in one (incomplete) block,
+    // plus NULL marker.
+    CHECK_EQUAL(2UL, outputPool.filled.size());
   }
 }
 
 int main(void)
 {
   INIT_LOGGER("tTABTranspose");
+
+  PortBroker::createInstance(PortBroker::DEFAULT_PORT);
 
   return UnitTest::RunAllTests() > 0;
 }
