@@ -54,6 +54,7 @@ namespace LOFAR
                context),
       devA(devInput.inputSamples),
       devB(context, devA.size()),
+      devC(context, devA.size()),
       devNull(context, 1),
 
       // intToFloat: input -> B
@@ -74,6 +75,9 @@ namespace LOFAR
       devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
       correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
       correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
+
+      //cOPU b TO c
+
 
       // beamForm: B -> A
       // TODO: support >1 SAP
@@ -148,7 +152,8 @@ namespace LOFAR
     finalFFT(context),
     coherentStokes(context),
     samples(context),
-    visibilities(context)
+    visibilities(context),
+    copyBuffers(context)
     {
     }
 
@@ -169,7 +174,8 @@ namespace LOFAR
         std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
         std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<
-        std::setw(20) << "(visibilities)" << visibilities.stats << endl);
+        std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
+        std::setw(20) << "(copyBuffers )" << copyBuffers.stats << endl); 
 
     }
 
@@ -217,6 +223,10 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
+      // TODO: To allow the copy of data to new buffer we need a sync here?  
+      queue.copyBuffer(devC, devB, counters.copyBuffers, true);
+
+
       beamFormerKernel->enqueue(input.blockID, counters.beamformer,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
@@ -228,6 +238,8 @@ namespace LOFAR
         firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
         finalFFT.enqueue(input.blockID, counters.finalFFT);
       }
+
+
 
       coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
 
@@ -261,6 +273,7 @@ namespace LOFAR
 
         counters.samples.logTime();
         counters.visibilities.logTime();
+        counters.copyBuffers.logTime();
       }
     }
 

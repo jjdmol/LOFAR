@@ -109,7 +109,7 @@ namespace LOFAR
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
-
+        PerformanceCounter copyBuffers;
         // Print the mean and std of each performance counter on the logger
         void printStats();
       };
@@ -129,8 +129,8 @@ namespace LOFAR
 
       gpu::DeviceMemory devA;
       gpu::DeviceMemory devB;
-
-
+      gpu::DeviceMemory devC;
+      
 
     private:
       // NULL placeholder for unused DeviceMemory parameters
