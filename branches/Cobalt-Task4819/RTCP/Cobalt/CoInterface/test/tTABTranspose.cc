@@ -265,7 +265,7 @@ SUITE(SendReceive) {
 
     Sender sender(str);
 
-    sender.finish();
+    CHECK(sender.finish());
   }
 
   TEST(NullReceiver) {
@@ -275,52 +275,67 @@ SUITE(SendReceive) {
     Receiver receiver(str, collectors);
 
     str.close();
+
+    CHECK(receiver.finish());
+  }
+
+  TEST(IllegalReceive) {
+    StringStream str;
+    Receiver::CollectorMap collectors;
+
+    Receiver receiver(str, collectors);
+
+    // Receiver is not configured to receive any TABs,
+    // so any write should result in the receiveLoop
+    // throwing an exception.
+    Subband sb;
+    sb.id.fileIdx = 0;
+    sb.id.block = 0;
+    sb.id.subband = 0;
+    sb.write(str);
+    str.close();
+
+    // Receiver thread should have thrown an exception
+    CHECK(!receiver.finish());
   }
 
   TEST_FIXTURE(Fixture, OneToOne) {
+    const size_t nrTABs = nrBlocks; // we know we have enough outputPool.free for nrBlocks TABs
     Receiver::CollectorMap collectors;
 
-    // We wrap this in a SmartPtr, but prevent freeing, because we haven't
-    // malloc()ed ctr!
+    for (size_t i = 0; i < nrTABs; ++i) {
+      collectors[i] = new BlockCollector(outputPool);
+    }
 
-    SmartPtr<BlockCollector> collptr(&ctr);
-    collectors[0] = collptr;
+    StringStream str;
 
-    try {
-      {
-        StringStream str;
+    Receiver receiver(str, collectors);
 
-        Receiver receiver(str, collectors);
-        Sender sender(str);
+    Sender sender(str);
 
-        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
-        sb->id.fileIdx = 0;
-        sb->id.block = 0;
-        sb->id.subband = 0;
+    for (size_t i = 0; i < nrTABs * nrSubbands; ++i) {
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.fileIdx = i % nrTABs;
+      sb->id.block = 0;
+      sb->id.subband = i / nrTABs;
 
-        sender.append(sb);
-        sender.finish();
+      sender.append(sb);
+    }
 
-        str.close();
-      }
+    CHECK(sender.finish());
+    str.close();
 
-      // force block emission
-      ctr.finish();
+    // Wait for the receiver to receive and process everything
+    CHECK(receiver.finish());
 
-      CHECK_EQUAL(2UL, outputPool.filled.size()); // block, plus NULL
+    // Should have one complete block
+    CHECK_EQUAL(nrTABs, outputPool.filled.size());
 
-      // We didn't new() ctr, so don't let it be free()d!!
-      collectors[0].release();
-    } catch(LOFAR::Exception &ex) {
-      LOG_FATAL_STR("Caught exception: " << ex);
-      // We didn't new() ctr, so don't let it be free()d!!
-      collectors[0].release();
-      throw;
-    } catch(...) {
-      // We didn't new() ctr, so don't let it be free()d!!
-      collectors[0].release();
+    for (size_t i = 0; i < nrTABs; ++i) {
+      SmartPtr<Block> block = outputPool.filled.remove();
 
-      throw;
+      CHECK(block != NULL);
+      CHECK(block->complete());
     }
   }
 }

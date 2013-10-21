@@ -64,11 +64,26 @@ namespace LOFAR
 
         void write(Stream &stream) const {
           stream.write(&id, sizeof id);
+
+          size_t dim1 = data.shape()[0];
+          size_t dim2 = data.shape()[1];
+          stream.write(&dim1, sizeof dim1);
+          stream.write(&dim2, sizeof dim2);
           stream.write(data.origin(), data.num_elements() * sizeof *data.origin());
+          LOG_DEBUG_STR("Written block");
         }
 
         void read(Stream &stream) {
+          LOG_DEBUG_STR("Reading block id");
           stream.read(&id, sizeof id);
+          LOG_DEBUG_STR("Read block id");
+
+          size_t dim1, dim2;
+          stream.read(&dim1, sizeof dim1);
+          stream.read(&dim2, sizeof dim2);
+          data.resize(boost::extents[dim1][dim2]);
+          stream.read(data.origin(), data.num_elements() * sizeof *data.origin());
+          LOG_DEBUG_STR("Read block");
         }
       };
 
@@ -207,7 +222,9 @@ namespace LOFAR
         void finish() {
           ScopedLock sl(mutex);
 
-          emitUpTo(maxBlock());
+          if (!blocks.empty()) {
+            emitUpTo(maxBlock());
+          }
 
           // Signal end-of-stream
           outputPool.filled.append(NULL);
@@ -307,9 +324,13 @@ namespace LOFAR
         }
 
 
-        void finish()
+        bool finish()
         {
           queue.noMore();
+
+          thread.wait();
+
+          return !thread.caughtException();
         }
 
 
@@ -345,6 +366,14 @@ namespace LOFAR
         {
         }
 
+
+        bool finish()
+        {
+          thread.wait();
+
+          return !thread.caughtException();
+        }
+
       private:
         Stream &stream;
         CollectorMap &collectors;
@@ -362,6 +391,8 @@ namespace LOFAR
               const size_t fileIdx = subband.id.fileIdx;
 
               ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of TAB " << fileIdx << ", which is unknown to me");
+
+              LOG_DEBUG_STR("TAB " << fileIdx << ": Adding subband " << subband.id.subband);
 
               collectors.at(fileIdx)->addSubband(subband);
             }
