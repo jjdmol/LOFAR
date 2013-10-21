@@ -38,6 +38,7 @@
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
+#include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
@@ -130,6 +131,7 @@ namespace LOFAR
       gpu::DeviceMemory devA;
       gpu::DeviceMemory devB;
       gpu::DeviceMemory devC;
+      gpu::DeviceMemory devD;
       
 
     private:
@@ -159,6 +161,8 @@ namespace LOFAR
       DelayAndBandPassKernel::Buffers correctBandPassBuffers;
       std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
 
+      // *****************************************************************
+      //  Objects needed to produce Coherent stokes output
       // beam former
       gpu::DeviceMemory devBeamFormerDelays;
       BeamFormerKernel::Buffers beamFormerBuffers;
@@ -183,6 +187,29 @@ namespace LOFAR
 
       // end result
       gpu::DeviceMemory &devResult;
+      // ****************************************************************
+
+      // *****************************************************************
+      //  Objects needed to produce incoherent stokes output
+
+      // inverse FFT
+      FFT_Kernel incoherentInverseFFT;
+
+      //// PPF
+      //gpu::DeviceMemory devIncoherentFilterWeights;
+      //gpu::DeviceMemory devIncoherentFilterHistoryData;
+      //FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
+      //std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
+      //FFT_Kernel incoherentFinalFFT;
+
+      //// Incoherent Stokes
+      //IncoherentStokesKernel::Buffers incoherentStokesBuffers;
+      //std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
+
+      //output for Incoherent stokes 
+      gpu::DeviceMemory &devIncoherentStokes;
+      // *****************************************************************
+
     };
 
     struct BeamFormerFactories

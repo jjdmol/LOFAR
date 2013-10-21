@@ -55,6 +55,7 @@ namespace LOFAR
       devA(devInput.inputSamples),
       devB(context, devA.size()),
       devC(context, devA.size()),
+      devD(context, devA.size()),
       devNull(context, 1),
 
       // intToFloat: input -> B
@@ -76,7 +77,6 @@ namespace LOFAR
       correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
       correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
 
-      //cOPU b TO c
 
 
       // beamForm: B -> A
@@ -110,7 +110,17 @@ namespace LOFAR
       coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
 
       // result buffer
-      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
+      devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
+      //**************************************************************
+      //incoherent stokes
+
+      // inverse FFT: C -> C
+      incoherentInverseFFT(queue, BEAM_FORMER_NR_CHANNELS,
+                 ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * 
+                 ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devC),
+
+
+      devIncoherentStokes(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA)
     {
       // initialize history data
       devFilterHistoryData.set(0);
