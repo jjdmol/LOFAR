@@ -26,6 +26,7 @@
 
 #include <UnitTest++.h>
 #include <boost/format.hpp>
+#include <omp.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -362,15 +363,16 @@ SUITE(SendReceive) {
       for (size_t sb = 0; sb < nrSubbands; ++sb) {
         size_t x = 0;
 
-        for (size_t s = 0; s < nrSamples; ++s)
+        for (size_t s = 0; s < nrSamples; ++s) {
           for (size_t c = 0; c < nrChannels; ++c) {
             size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
-            size_t actual = block->data[sb][s][c];
+            size_t actual = static_cast<size_t>(block->data[sb][s][c]);
 
             if (expected != actual)
               LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
             CHECK_EQUAL(expected, actual);
           }
+        }
       }
     }
   }
@@ -387,8 +389,14 @@ SUITE(MultiReceiver) {
     MultiReceiver mr("foo-", collectors);
 
     // Connect with multiple clients
-    PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
-    PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
+    {
+      PortBroker::ClientStream cs1("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
+      PortBroker::ClientStream cs2("localhost", PortBroker::DEFAULT_PORT, "foo-2", 1);
+
+      // Disconnect them too! (~cs)
+    }
+
+    mr.kill(2);
   }
 
   TEST_FIXTURE(Fixture, Transfer) {
@@ -403,7 +411,7 @@ SUITE(MultiReceiver) {
     {
       PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
-      Sender sender(cs);
+      Sender sender(cs, 3, false);
 
       // Send one block
       {
@@ -419,7 +427,7 @@ SUITE(MultiReceiver) {
     }
 
     // Flush receiver, but wait for data to arrive
-    mr.kill(false);
+    mr.kill(1);
 
     // Flush collecting of blocks
     collectors[0]->finish();
@@ -428,11 +436,162 @@ SUITE(MultiReceiver) {
     // plus NULL marker.
     CHECK_EQUAL(2UL, outputPool.filled.size());
   }
+
+  TEST(Transpose) {
+    LOG_DEBUG_STR("Transpose test started");
+
+    const size_t nrSubbands = 10;
+    const size_t nrBlocks = 2;
+    const size_t nrTABs = 3;
+    const size_t nrSamples = 16;
+    const size_t nrChannels = 1;
+
+    // Give both senders and receivers multiple tasks
+    const size_t nrSenders = 4;
+    const size_t nrReceivers = 2;
+
+    Semaphore sendersDone;
+
+    LOG_DEBUG_STR("Spawning threads");
+
+    // Set up sinks -- can all draw from the same outputPool
+#   pragma omp parallel sections num_threads(2)
+    {
+      // Receivers
+#     pragma omp section
+      {
+#       pragma omp parallel for num_threads(nrReceivers)
+        for (int r = 0; r < nrReceivers; ++r) {
+          LOG_DEBUG_STR("Receiver thread " << r);
+
+          // Set up pool where all data ends up
+          Pool<Block> outputPool;
+
+          LOG_DEBUG_STR("Populating outputPool");
+
+          for (size_t i = 0; i < nrBlocks * nrTABs; ++i) {
+            outputPool.free.append(new Block(nrSubbands, nrSamples, nrChannels));
+          }
+
+          // collect our TABs
+          Receiver::CollectorMap collectors;
+
+          for (size_t t = 0; t < nrTABs; ++t) {
+            if (t % nrReceivers != r)
+              continue;
+
+            collectors[t] = new BlockCollector(outputPool, t);
+          }
+
+          LOG_DEBUG_STR("Starting receiver " << r);
+          MultiReceiver mr(str(format("foo-%u-") % r), collectors);
+
+          // Wait for end of data
+          LOG_DEBUG_STR("Receiver " << r << ": Waiting for senders");
+          sendersDone.down();
+          LOG_DEBUG_STR("Receiver " << r << ": Shutting down");
+          mr.kill(nrSenders);
+
+          // Wrap up any incomplete blocks
+          for (size_t t = 0; t < nrTABs; ++t) {
+            if (t % nrReceivers != r)
+              continue;
+
+            collectors[t]->finish();
+          }
+
+          // Check if all blocks arrived, plus NULL marker.
+          CHECK_EQUAL(collectors.size() * (nrBlocks + 1UL), outputPool.filled.size());
+
+          while(!outputPool.filled.empty()) {
+            SmartPtr<Block> block = outputPool.filled.remove();
+
+            if (block == NULL)
+              continue;
+
+            CHECK(block->complete());
+#if 0
+            CHECK_EQUAL(0UL, block->block);
+
+            /* check data */
+            for (size_t sb = 0; sb < nrSubbands; ++sb) {
+              size_t x = 0;
+
+              for (size_t s = 0; s < nrSamples; ++s) {
+                for (size_t c = 0; c < nrChannels; ++c) {
+                  size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
+                  size_t actual = block->data[sb][s][c];
+
+                  if (expected != actual)
+                    LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
+                  CHECK_EQUAL(expected, actual);
+                }
+              }
+            }
+#endif
+          }
+        }
+      }
+
+      // Senders
+#     pragma omp section
+      {
+#       pragma omp parallel for num_threads(nrSenders)
+        for (int s = 0; s < nrSenders; ++s) {
+          LOG_DEBUG_STR("Sender thread " << s);
+
+          vector< SmartPtr<PortBroker::ClientStream> > clientStreams(nrReceivers);
+          vector< SmartPtr<Sender> > senders(nrReceivers);
+
+          // Connect to receivers
+          for (size_t r = 0; r < nrReceivers; ++r) {
+            clientStreams[r] = new PortBroker::ClientStream("localhost", PortBroker::DEFAULT_PORT, str(format("foo-%u-%u") % r % s), 1);
+
+            LOG_DEBUG_STR("Starting sender " << s << " to receiver " << r);
+            senders[r] = new Sender(*clientStreams[r], 3, false);
+          }
+
+          // Send blocks
+          for (size_t b = 0; b < nrBlocks; ++b) {
+            // Send our subbands
+            for (size_t sb = 0; sb < nrSubbands; ++sb) {
+              if (sb % nrSenders != s)
+                continue;
+
+              // Send all TABs
+              for (size_t t = 0; t < nrTABs; ++t) {
+                SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
+                subband->id.fileIdx = t;
+                subband->id.block = b;
+                subband->id.subband = sb;
+
+                LOG_DEBUG_STR("Sender " << s << ": sending TAB " << t << " block " << b << " subband " << sb);
+                senders[t % nrReceivers]->append(subband);
+              }
+            }
+          }
+
+          // Wrap up senders
+          for (size_t r = 0; r < nrReceivers; ++r) {
+            LOG_DEBUG_STR("Stopping sender " << s << " to receiver " << r);
+            senders[r]->finish();
+          }
+        }
+
+        // Signal end of data
+        LOG_DEBUG_STR("Senders done.");
+        sendersDone.up(nrReceivers);
+      }
+    }
+
+  }
 }
 
 int main(void)
 {
   INIT_LOGGER("tTABTranspose");
+
+  omp_set_nested(true);
 
   PortBroker::createInstance(PortBroker::DEFAULT_PORT);
 

@@ -28,6 +28,8 @@
 #include <Common/Thread/Thread.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
@@ -265,16 +267,20 @@ namespace LOFAR
       public:
         MultiReceiver( const std::string &servicePrefix, Receiver::CollectorMap &collectors );
 
-        // Calls kill()
+        // Calls kill(0)
         ~MultiReceiver();
 
         // Kills the listening thread and all client threads.
         //
-        // hard: if false, stop listening but allow running clients to disconnect
-        //       if true, stop listening and kill running clients
-        void kill(bool hard);
+        // minNrClients: Minimum number of clients to wait to connect and finish.
+        //               if minNrClients > 0, all running connections are allowed to
+        //               finish, also those beyond minNrClients.
+        void kill(size_t minNrClients);
 
       private:
+        Mutex mutex;
+        Condition newClient;
+
         struct Client {
           SmartPtr<PortBroker::ServerStream> stream;
           SmartPtr<Receiver> receiver;

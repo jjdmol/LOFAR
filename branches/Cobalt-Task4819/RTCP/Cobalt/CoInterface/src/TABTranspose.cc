@@ -127,7 +127,7 @@ void BlockCollector::addSubband( const Subband &subband ) {
     } else {
       // if we can't drop, we shouldn't have written
       // this block yet.
-      ASSERT((ssize_t)blockIdx > lastEmitted);
+      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for TAB " << subband.id.fileIdx << " subband " << subband.id.subband);
     }
 
     fetch(blockIdx);
@@ -331,12 +331,23 @@ MultiReceiver::MultiReceiver( const std::string &servicePrefix, Receiver::Collec
 
 MultiReceiver::~MultiReceiver()
 {
-  kill(true);
+  kill(0);
 }
 
 
-void MultiReceiver::kill(bool hard)
+void MultiReceiver::kill(size_t minNrClients)
 {
+  {
+    ScopedLock sl(mutex);
+
+    while(clients.size() < minNrClients) {
+      LOG_DEBUG_STR("MultiReceiver::kill: " << clients.size() << " clients connected, waiting for " << minNrClients);
+      newClient.wait(mutex);
+    }
+
+  }
+
+  // Kill listenLoop, but keep clients alive
   thread.cancel();
 
   // Wait for thread to die so we can access `clients'
@@ -345,7 +356,7 @@ void MultiReceiver::kill(bool hard)
 
   // Kill all client connections
   for (size_t i = 0; i < clients.size(); ++i) {
-    if (hard) {
+    if (minNrClients == 0) {
       clients[i].receiver->kill();
     } else {
       clients[i].receiver->finish();
@@ -378,12 +389,17 @@ void MultiReceiver::listenLoop()
 
 void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 {
+  ScopedLock sl(mutex);
+
   struct Client client;
 
   client.stream = stream;
   client.receiver = new Receiver(*stream, collectors);
 
   clients.push_back(client);
+
+  // Inform of change in collectors
+  newClient.signal();
 
   LOG_DEBUG_STR("TABTranspose::MultiReceiver: Dispatched client for resource " << stream->getResource());
 }
