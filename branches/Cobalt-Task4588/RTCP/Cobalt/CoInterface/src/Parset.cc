@@ -1288,6 +1288,33 @@ namespace LOFAR
     {
       return getString("_DPname","");
     }
+
+    size_t ObservationSettings::BeamFormer::SAP::nrCoherent() const
+    {
+      size_t count = 0;
+      for ( std::vector<struct TAB>::const_iterator itter = TABs.begin();
+            itter != TABs.end();
+            itter++)
+      {
+        if ( itter->coherent)
+          count ++;
+      }
+      return count;
+    }
+
+    size_t ObservationSettings::BeamFormer::SAP::nrIncoherent() const
+    {
+      size_t count = 0;
+      for ( std::vector<struct TAB>::const_iterator itter = TABs.begin();
+            itter != TABs.end();
+            itter++)
+      {
+        if ( ! itter->coherent)
+          count ++;
+      }
+      return count;
+    }
+
   } // namespace Cobalt
 } // namespace LOFAR
 

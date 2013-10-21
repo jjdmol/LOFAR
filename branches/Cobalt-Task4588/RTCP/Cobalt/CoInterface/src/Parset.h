@@ -454,6 +454,13 @@ namespace LOFAR
           //
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
+
+          // Return the number of coherentstokes tabs
+          size_t nrCoherent() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherent() const;
+
         };
 
         // All SAPs, with information about the TABs to form.
@@ -461,6 +468,7 @@ namespace LOFAR
         // size: len(Observation.nrBeams)
         std::vector<struct SAP> SAPs;
 
+        // TODO: THIS RETURN INVALID VALUES WHEN BOTH INCOHERENT AND COHERENT TAB IN THE PARSET
         size_t maxNrTABsPerSAP() const;
 
         struct StokesSettings {
