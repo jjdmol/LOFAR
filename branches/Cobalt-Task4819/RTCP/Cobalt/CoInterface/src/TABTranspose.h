@@ -187,6 +187,10 @@ namespace LOFAR
        */
       class Sender {
       public:
+        /*
+         * Start sending blocks over `stream'. `queueSize' and `canDrop'
+         * are BestEffortQueue constructor parameters.
+         */
         Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false );
 
         /*
@@ -219,6 +223,9 @@ namespace LOFAR
         // [fileIdx] -> BlockCollector
         typedef map<size_t, SmartPtr<BlockCollector> > CollectorMap;
 
+        /*
+         * Start receiving from `stream', into `collectors'.
+         */
         Receiver( Stream &stream, CollectorMap &collectors );
 
         /*
