@@ -829,6 +829,14 @@ namespace LOFAR
           checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
         }
 
+        void memcpyDtoDAsync(CUdeviceptr targetPtr, CUdeviceptr sourcePtr, 
+                             size_t size)
+        {
+          ScopedCurrentContext scc(_context);
+
+          checkCuCall(cuMemcpyDtoDAsync(targetPtr, sourcePtr, size, _stream));
+        }
+
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
                           unsigned blockZ, unsigned sharedMemBytes,
@@ -935,6 +943,43 @@ namespace LOFAR
         else
         {
           writeBuffer(devMem, hostMem, synchronous);
+        }
+      }
+
+      void Stream::copyBuffer(const DeviceMemory &devTarget, 
+                              const DeviceMemory &devSource,
+                              bool synchronous) const
+      {
+        // tmp check: avoid async writeBuffer request that will fail later.
+        // TODO: This interface may still change at which point a cleaner solution can be used.
+        if (devTarget.size() > devSource.size())
+        {
+          THROW(CUDAException, "copyBuffer(): host buffer too large for device buffer: host buffer is " << devSource.size() << " bytes, device buffer is " << devTarget.size() << " bytes");
+        }
+
+        _impl->memcpyDtoDAsync((CUdeviceptr)devTarget.get(), 
+                               (CUdeviceptr)devSource.get(),
+                               devSource.size());
+        if (synchronous || force_synchronous) 
+        {
+          synchronize();
+        }
+      }
+
+      void Stream::copyBuffer(const DeviceMemory &devTarget, 
+                              const DeviceMemory &devSource,
+                              const PerformanceCounter &counter,
+                              bool synchronous) const
+      {
+        if (gpuProfiling)
+        {
+          recordEvent(counter.start);
+          copyBuffer(devTarget, devSource, synchronous); 
+          recordEvent(counter.stop);
+        }
+        else
+        {
+          copyBuffer(devTarget, devSource, synchronous);
         }
       }
 
