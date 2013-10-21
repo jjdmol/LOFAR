@@ -181,12 +181,24 @@ namespace LOFAR
       };
 
 
+      /*
+       * Multiplexes Subband objects on a stream, and sends
+       * them in the background.
+       */
       class Sender {
       public:
         Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false );
 
+        /*
+         * Waits for the queue to empty.
+         *
+         * Returns: true if the sender thread raised an exception.
+         */
         bool finish();
 
+        /*
+         * Queue a Subband object for transfer.
+         */
         void append( SmartPtr<Subband> subband );
 
       private:
@@ -197,12 +209,23 @@ namespace LOFAR
         void sendLoop();
       };
 
+      /*
+       * Reads multiplexed Subband objects from a stream, and
+       * forwards them to set of BlockCollectors. The reception
+       * is done in a separate thread.
+       */
       class Receiver {
       public:
+        // [fileIdx] -> BlockCollector
         typedef map<size_t, SmartPtr<BlockCollector> > CollectorMap;
 
         Receiver( Stream &stream, CollectorMap &collectors );
 
+        /*
+         * Waits for the stream to disconnect and the queue to empty.
+         *
+         * Returns: true if the receiver thread raised an exception.
+         */
         bool finish();
 
       private:
