@@ -95,7 +95,7 @@ class Thread
     template <typename T> static void *stub(void *);
 
     const std::string logPrefix;
-    Semaphore	      finished;
+    Semaphore	      started, finished;
     pthread_t	      thread;
 
     bool              caught_exception;
@@ -177,6 +177,9 @@ inline Thread::~Thread()
 
 inline void Thread::cancel()
 {
+  started.down();
+  started.up(); // allow multiple cancels
+
   (void)pthread_cancel(thread); // could return ESRCH ==> ignore
 }
 
@@ -242,6 +245,9 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   ThreadMap::ScopedRegistration sr(ThreadMap::instance(), logPrefix);
 
   try {
+    // allow cancellation from here, to guarantee finished.up()
+    started.up();
+
     (args->object->*args->method)();
   } catch (Exception &ex) {
     // split exception message into lines to be able to add the logPrefix to each line
