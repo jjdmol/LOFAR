@@ -35,6 +35,24 @@ namespace LOFAR
   namespace Cobalt
   {
 
+    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
+                                   size_t nrSamples, gpu::Context &context) :
+      MultiDimArrayHostBuffer<float, 3>(
+        boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
+    {
+    }
+
+    void BeamFormedData::readData(Stream *str, unsigned)
+    {
+      str->read(origin(), size());
+    }
+
+    void BeamFormedData::writeData(Stream *str, unsigned)
+    {
+      str->write(origin(), size());
+    }
+
+
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
       gpu::Context &context,

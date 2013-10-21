@@ -54,23 +54,10 @@ namespace LOFAR
     {
     public:
       BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-                     size_t nrSamples, gpu::Context &context)
-        :
-        MultiDimArrayHostBuffer<float, 3>(
-          boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
-      {
-      }
-
-    protected:
-      virtual void readData(Stream *str, unsigned)
-      {
-        str->read(origin(), size());
-      }
-
-      virtual void writeData(Stream *str, unsigned)
-      {
-        str->write(origin(), size());
-      }
+                     size_t nrSamples, gpu::Context &context);
+    private:
+      virtual void readData(Stream *str, unsigned);
+      virtual void writeData(Stream *str, unsigned);
     };
 
     struct BeamFormerFactories;
