@@ -3,6 +3,12 @@
 # Install downloaded casacore measures tables atomically and verify which tables are in use.
 # Written for jenkins@fs5 (DAS-4).
 #
+# BUGS:
+#  * Spaces in file- or directory names are not support.
+#  * This script does not work if findmeastable cannot be located or if
+#    findmeastable finds the Observatory tables in a directory different
+#    from that set locally in $working_dir
+#   
 # $Id$
 
 # Keep these vars in sync with get_casacore_measures_tables.sh
