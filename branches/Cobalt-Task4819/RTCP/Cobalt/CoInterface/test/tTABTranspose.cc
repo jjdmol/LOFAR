@@ -411,7 +411,7 @@ SUITE(MultiReceiver) {
     {
       PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
-      Sender sender(cs, 3, false);
+      Sender sender(cs, 3, false); // don't drop!
 
       // Send one block
       {
@@ -446,7 +446,8 @@ SUITE(MultiReceiver) {
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
 
-    // Give both senders and receivers multiple tasks
+    // Give both senders and receivers multiple tasks,
+    // but not all the same amount.
     const size_t nrSenders = 4;
     const size_t nrReceivers = 2;
 
@@ -469,18 +470,20 @@ SUITE(MultiReceiver) {
 
           LOG_DEBUG_STR("Populating outputPool");
 
-          for (size_t i = 0; i < nrBlocks * nrTABs; ++i) {
-            outputPool.free.append(new Block(nrSubbands, nrSamples, nrChannels));
-          }
-
           // collect our TABs
+          std::map<size_t, SmartPtr< Pool<Block> > > outputPools;
           Receiver::CollectorMap collectors;
 
           for (size_t t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
 
-            collectors[t] = new BlockCollector(outputPool, t);
+            outputPools[t] = new Pool<Block>;
+
+            for (size_t i = 0; i < nrBlocks; ++i) {
+              outputPools[t]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
+            }
+            collectors[t] = new BlockCollector(*outputPools[t], t);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -498,37 +501,19 @@ SUITE(MultiReceiver) {
               continue;
 
             collectors[t]->finish();
-          }
 
-          // Check if all blocks arrived, plus NULL marker.
-          CHECK_EQUAL(collectors.size() * (nrBlocks + 1UL), outputPool.filled.size());
+            // Check if all blocks arrived, plus NULL marker.
+            CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
-          while(!outputPool.filled.empty()) {
-            SmartPtr<Block> block = outputPool.filled.remove();
+            for (size_t b = 0; b < nrBlocks; ++b) {
+              SmartPtr<Block> block = outputPools[t]->filled.remove();
 
-            if (block == NULL)
-              continue;
+              CHECK(block != NULL);
+              CHECK(block->complete());
 
-            CHECK(block->complete());
-#if 0
-            CHECK_EQUAL(0UL, block->block);
-
-            /* check data */
-            for (size_t sb = 0; sb < nrSubbands; ++sb) {
-              size_t x = 0;
-
-              for (size_t s = 0; s < nrSamples; ++s) {
-                for (size_t c = 0; c < nrChannels; ++c) {
-                  size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
-                  size_t actual = block->data[sb][s][c];
-
-                  if (expected != actual)
-                    LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
-                  CHECK_EQUAL(expected, actual);
-                }
-              }
+              // Blocks should have arrived in-order
+              CHECK_EQUAL(b, block->block);
             }
-#endif
           }
         }
       }
@@ -548,7 +533,7 @@ SUITE(MultiReceiver) {
             clientStreams[r] = new PortBroker::ClientStream("localhost", PortBroker::DEFAULT_PORT, str(format("foo-%u-%u") % r % s), 1);
 
             LOG_DEBUG_STR("Starting sender " << s << " to receiver " << r);
-            senders[r] = new Sender(*clientStreams[r], 3, false);
+            senders[r] = new Sender(*clientStreams[r], 3, false); // don't drop!
           }
 
           // Send blocks
