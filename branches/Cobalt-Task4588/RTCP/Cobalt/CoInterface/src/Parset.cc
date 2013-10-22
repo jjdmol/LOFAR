@@ -528,7 +528,9 @@ namespace LOFAR
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
           sap.TABs.resize(nrTABs);
-          for (unsigned j = 0; j < nrTABs; ++j) {
+          sap.nrCoherent= 0;
+          for (unsigned j = 0; j < nrTABs; ++j) 
+          {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
             const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
@@ -538,6 +540,8 @@ namespace LOFAR
             tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
 
             tab.coherent          = getBool(prefix + ".coherent", true);
+            if (tab.coherent)
+              sap.nrCoherent++;
             tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
@@ -562,6 +566,7 @@ namespace LOFAR
               outputProcHosts.insert(file.location.host);
             }
           }
+          sap.nrIncoherent = nrTABs - sap.nrCoherent;
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
@@ -1289,31 +1294,16 @@ namespace LOFAR
       return getString("_DPname","");
     }
 
-    size_t ObservationSettings::BeamFormer::SAP::nrCoherent() const
+    size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
     {
-      size_t count = 0;
-      for ( std::vector<struct TAB>::const_iterator itter = TABs.begin();
-            itter != TABs.end();
-            itter++)
-      {
-        if ( itter->coherent)
-          count ++;
-      }
-      return count;
+      return nrCoherent;
     }
 
-    size_t ObservationSettings::BeamFormer::SAP::nrIncoherent() const
+    size_t ObservationSettings::BeamFormer::SAP::nrIncoherentTAB() const
     {
-      size_t count = 0;
-      for ( std::vector<struct TAB>::const_iterator itter = TABs.begin();
-            itter != TABs.end();
-            itter++)
-      {
-        if ( ! itter->coherent)
-          count ++;
-      }
-      return count;
+      return nrIncoherent;
     }
+
 
   } // namespace Cobalt
 } // namespace LOFAR

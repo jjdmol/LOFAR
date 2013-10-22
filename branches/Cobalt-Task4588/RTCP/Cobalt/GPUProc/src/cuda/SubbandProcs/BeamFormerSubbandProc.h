@@ -217,6 +217,7 @@ namespace LOFAR
       gpu::DeviceMemory &devIncoherentStokes;
       // *****************************************************************
 
+      bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };
 
     struct BeamFormerFactories
