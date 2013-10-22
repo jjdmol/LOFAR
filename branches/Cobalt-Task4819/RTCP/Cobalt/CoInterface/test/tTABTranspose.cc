@@ -261,20 +261,6 @@ SUITE(BlockCollector) {
 }
 
 SUITE(SendReceive) {
-  TEST(NullSender) {
-    StringStream str;
-
-    Sender sender(str);
-
-    CHECK(sender.finish());
-  }
-
-  // Test teardown if Sender is destructed
-  TEST(SenderDies) {
-    StringStream str;
-    Sender sender(str);
-  }
-
   TEST(NullReceiver) {
     StringStream str;
     Receiver::CollectorMap collectors;
@@ -325,8 +311,6 @@ SUITE(SendReceive) {
 
     Receiver receiver(str, collectors);
 
-    Sender sender(str);
-
     for (size_t i = 0; i < nrTABs * nrSubbands; ++i) {
       SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
       sb->id.fileIdx = i % nrTABs;
@@ -339,10 +323,9 @@ SUITE(SendReceive) {
         for (size_t c = 0; c < nrChannels; ++c)
           sb->data[s][c] = (i+1) * ++x;
 
-      sender.append(sb);
+      sb->write(str);
     }
 
-    CHECK(sender.finish());
     str.close();
 
     // Wait for the receiver to receive and process everything
@@ -411,17 +394,13 @@ SUITE(MultiReceiver) {
     {
       PortBroker::ClientStream cs("localhost", PortBroker::DEFAULT_PORT, "foo-1", 1);
 
-      Sender sender(cs, 3, false); // don't drop!
-
       // Send one block
       {
         SmartPtr<Subband> sb = new Subband(11, 13);
         sb->id.fileIdx = 0;
 
-        sender.append(sb);
+        sb->write(cs);
       }
-
-      CHECK(sender.finish());
 
       // Disconnect (~cs)
     }
@@ -526,14 +505,12 @@ SUITE(MultiReceiver) {
           LOG_DEBUG_STR("Sender thread " << s);
 
           vector< SmartPtr<PortBroker::ClientStream> > clientStreams(nrReceivers);
-          vector< SmartPtr<Sender> > senders(nrReceivers);
 
           // Connect to receivers
           for (size_t r = 0; r < nrReceivers; ++r) {
             clientStreams[r] = new PortBroker::ClientStream("localhost", PortBroker::DEFAULT_PORT, str(format("foo-%u-%u") % r % s), 1);
 
             LOG_DEBUG_STR("Starting sender " << s << " to receiver " << r);
-            senders[r] = new Sender(*clientStreams[r], 3, false); // don't drop!
           }
 
           // Send blocks
@@ -551,15 +528,9 @@ SUITE(MultiReceiver) {
                 subband->id.subband = sb;
 
                 LOG_DEBUG_STR("Sender " << s << ": sending TAB " << t << " block " << b << " subband " << sb);
-                senders[t % nrReceivers]->append(subband);
+                subband->write(*clientStreams[t % nrReceivers]);
               }
             }
-          }
-
-          // Wrap up senders
-          for (size_t r = 0; r < nrReceivers; ++r) {
-            LOG_DEBUG_STR("Stopping sender " << s << " to receiver " << r);
-            senders[r]->finish();
           }
         }
 

@@ -223,53 +223,6 @@ void BlockCollector::fetch(size_t block) {
 }
 
 
-Sender::Sender( Stream &stream, size_t queueSize, bool canDrop )
-:
-  stream(stream),
-  queue(queueSize, canDrop),
-  thread(this, &Sender::sendLoop)
-{
-}
-
-
-Sender::~Sender()
-{
-  kill();
-}
-
-
-void Sender::kill()
-{
-  thread.cancel();
-}
-
-
-bool Sender::finish()
-{
-  queue.noMore();
-
-  thread.wait();
-
-  return !thread.caughtException();
-}
-
-
-void Sender::append( SmartPtr<Subband> subband )
-{
-  queue.append(subband);
-}
-
-
-void Sender::sendLoop()
-{
-  SmartPtr<Subband> subband;
-
-  while( (subband = queue.remove()) != NULL) {
-    subband->write(stream);
-  }
-}
-
-
 Receiver::Receiver( Stream &stream, CollectorMap &collectors )
 :
   stream(stream),

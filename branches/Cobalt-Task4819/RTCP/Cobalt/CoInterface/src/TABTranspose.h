@@ -184,45 +184,6 @@ namespace LOFAR
         void fetch(size_t block);
       };
 
-
-      /*
-       * Multiplexes Subband objects on a stream, and sends
-       * them in the background.
-       */
-      class Sender {
-      public:
-        /*
-         * Start sending blocks over `stream'. `queueSize' and `canDrop'
-         * are BestEffortQueue constructor parameters.
-         */
-        Sender( Stream &stream, size_t queueSize = 3, bool canDrop = false );
-
-        // Calls kill()
-        ~Sender();
-
-        // Kills the sender thread.
-        void kill();
-
-        /*
-         * Waits for the queue to empty.
-         *
-         * Returns: true if the sender thread raised an exception.
-         */
-        bool finish();
-
-        /*
-         * Queue a Subband object for transfer.
-         */
-        void append( SmartPtr<Subband> subband );
-
-      private:
-        Stream &stream;
-        BestEffortQueue< SmartPtr<Subband> > queue;
-        Thread thread;
-
-        void sendLoop();
-      };
-
       /*
        * Reads multiplexed Subband objects from a stream, and
        * forwards them to set of BlockCollectors. The reception
