@@ -528,7 +528,6 @@ namespace LOFAR
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
           sap.TABs.resize(nrTABs);
-          sap.nrCoherent= 0;
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
@@ -542,6 +541,8 @@ namespace LOFAR
             tab.coherent          = getBool(prefix + ".coherent", true);
             if (tab.coherent)
               sap.nrCoherent++;
+            else
+              sap.nrIncoherent++;
             tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
@@ -565,8 +566,7 @@ namespace LOFAR
 
               outputProcHosts.insert(file.location.host);
             }
-          }
-          sap.nrIncoherent = nrTABs - sap.nrCoherent;
+          }         
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);

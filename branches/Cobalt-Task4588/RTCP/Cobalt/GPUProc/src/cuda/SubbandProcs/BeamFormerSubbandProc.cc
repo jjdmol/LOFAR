@@ -275,7 +275,6 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
-
       queue.writeBuffer(devInput.inputSamples, input.inputSamples, counters.samples, true);
 
       if (ps.delayCompensation())
@@ -316,68 +315,90 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
 
       // ********************************************************************
       // coherent stokes kernels
-      beamFormerKernel->enqueue(input.blockID, counters.beamformer,
-        ps.settings.subbands[subband].centralFrequency,
-        ps.settings.subbands[subband].SAP);
-      transposeKernel->enqueue(input.blockID, counters.transpose);
+      if (coherentBeamformer)
+      {
+        beamFormerKernel->enqueue(input.blockID, counters.beamformer,
+          ps.settings.subbands[subband].centralFrequency,
+          ps.settings.subbands[subband].SAP);
 
-      inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+        transposeKernel->enqueue(input.blockID, counters.transpose);
 
-      if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-        firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
-        finalFFT.enqueue(input.blockID, counters.finalFFT);
+        inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+
+        if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
+          firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
+          finalFFT.enqueue(input.blockID, counters.finalFFT);
+        }
+        
+        coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
       }
+      else
+      {
+        // ********************************************************************
+        // incoherent stokes kernels
+        incoherentInverseFFT.enqueue(input.blockID, counters.incoherentInverseFFT);
 
-      coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
+        if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) {
+          incoherentFirFilterKernel->enqueue(input.blockID, counters.incoherentFirFilterKernel,
+            input.blockID.subbandProcSubbandIdx);
+          incoherentFinalFFT.enqueue(input.blockID, counters.incoherentFinalFFT);
+        }
 
-      // ********************************************************************
-      // incoherent stokes kernels
-      incoherentInverseFFT.enqueue(input.blockID, counters.incoherentInverseFFT);
-
-      if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) {
-        incoherentFirFilterKernel->enqueue(input.blockID, counters.incoherentFirFilterKernel,
-             input.blockID.subbandProcSubbandIdx);
-        incoherentFinalFFT.enqueue(input.blockID, counters.incoherentFinalFFT);
+        incoherentStokesKernel->enqueue(input.blockID, counters.incoherentStokes);
+        // TODO: Propagate flags
       }
-
-      incoherentStokesKernel->enqueue(input.blockID, counters.incoherentStokes);
-      // TODO: Propagate flags
-
       queue.synchronize();
 
-      queue.readBuffer(output, devResult, counters.visibilities, true);
-      queue.readBuffer(incoherentOutput, devIncoherentStokes, counters.incoherentOutput, true);
+      if (coherentBeamformer)
+        queue.readBuffer(output, devResult, counters.visibilities, true);
+      else
+        queue.readBuffer(incoherentOutput, devIncoherentStokes, counters.incoherentOutput, true);
 
             // ************************************************
       // Perform performance statistics if needed
       if (gpuProfiling)
       {
+        LOG_INFO_STR("*************Profiling started *******************");
         // assure that the queue is done so all events are fished
         queue.synchronize();
         // Update the counters
-        if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
-        {
-          counters.firFilterKernel.logTime();
-          counters.finalFFT.logTime();
-        }
         counters.intToFloat.logTime();
         counters.firstFFT.logTime();
         counters.delayBp.logTime();
         counters.secondFFT.logTime();
         counters.correctBandpass.logTime();
-        counters.beamformer.logTime();
-        counters.transpose.logTime();
-        counters.inverseFFT.logTime();
-        counters.coherentStokes.logTime();
-        counters.incoherentInverseFFT.logTime();
-        counters.incoherentFirFilterKernel.logTime();
-        counters.incoherentFinalFFT.logTime();
-        counters.incoherentStokes.logTime();
 
         counters.samples.logTime();
-        counters.visibilities.logTime();
         counters.copyBuffers.logTime();
-        counters.incoherentOutput.logTime();
+        if (coherentBeamformer)
+        {
+          if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
+          {
+            counters.firFilterKernel.logTime();
+            counters.finalFFT.logTime();
+          }
+
+          LOG_INFO_STR("debug 4");
+          counters.beamformer.logTime();
+          counters.transpose.logTime();
+          counters.inverseFFT.logTime();
+          counters.coherentStokes.logTime();
+          counters.visibilities.logTime();
+          LOG_INFO_STR("debug 5");
+        }
+        else
+        {
+          LOG_INFO_STR("debug 6");
+          counters.incoherentInverseFFT.logTime();
+          if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) 
+          {
+            counters.incoherentFirFilterKernel.logTime();
+            counters.incoherentFinalFFT.logTime();
+          }
+          counters.incoherentStokes.logTime();
+          LOG_INFO_STR("debug 7");
+          counters.incoherentOutput.logTime();
+        }
       }
     }
 
@@ -385,5 +406,6 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
     {
       (void)_output;
     }
+
   }
 }

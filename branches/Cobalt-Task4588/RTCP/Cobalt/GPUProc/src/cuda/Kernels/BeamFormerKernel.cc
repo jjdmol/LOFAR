@@ -78,10 +78,11 @@ namespace LOFAR
 
       globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
                                  params.nrTABs, 
-                                 params.nrChannelsPerSubband);
+                                 params.nrChannelsPerSubband * 8);  // TODO: Quickfix to allow beamformer run
       localWorkSize = gpu::Block(NR_POLARIZATIONS, 
                                  params.nrTABs, 
-                                 maxChannelParallisation);
+                                 maxChannelParallisation / 8); // TODO: Quickfix to allow beamformer run
+
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);

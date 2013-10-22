@@ -41,6 +41,7 @@ namespace LOFAR
       :
       Pipeline(ps, subbandIndices, devices)
     {
+          
       BeamFormerFactories factories(ps, nrSubbandsPerSubbandProc);
 
       for (size_t i = 0; i < workQueues.size(); ++i) {
