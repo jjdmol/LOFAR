@@ -46,11 +46,13 @@
 #error Precondition violated: TIME_PARALLEL_FACTOR >= 1
 #endif
 
-//4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels 
-typedef float2 (*inputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
+//4D output array of stokes values. Each sample contains 1 or 4 stokes
+//paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels
+typedef float2 (*InputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
 
-//4D input array of complex samples. For each tab and polarization there are timelines with data for each channel
-typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE][NR_CHANNELS];
+//4D input array of complex samples. For each tab and polarization there are
+//timelines with data for each channel
+typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE][NR_CHANNELS];
 
 /*!
  * Computes the first or all 4 stokes parameters.
@@ -71,52 +73,62 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * V = 2 * (imag(X) * real(Y) - real(X) * imag(Y))
  * \endcode
  * 
- * The kernel's first parallel dimension is on the channels; the second dimension is in time; the third on the tabs.
- * The thread block size based on these factors could be larger then the hardmare max.
- * Therefore<tt> NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR </tt>should not exceed the hardware maximum of threads (1024 on a K10).
+ * The kernel's first parallel dimension is on the channels; the second
+ * dimension is in time; the third on the tabs.  The thread block size based on
+ * these factors could be larger then the hardmare max.  Therefore<tt>
+ * NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR </tt>should not exceed the
+ * hardware maximum of threads (1024 on a K10).
  *
- * \param[out] outputPtr         4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels 
- *                               The dimensions are: NR_TABS by NR_COHERENT_STOKES by (NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE)  by NR_CHANNELS.
- * \param[in]  inputPtr          4D input array of complex samples. For each tab and polarization there are timelines with data for each channel
- *                               The dimensions are: NR_TABS by NR_POLARIZATIONS by NR_SAMPLES_PER_CHANNEL by NR_CHANNELS
+ * \param[out] outputPtr
+ *             4D output array of stokes values. Each sample contains 1 or 4
+ *             stokes paramters. For each tab, there are \c NR_COHERENT_STOKES
+ *             timeseries of channels The dimensions are: \c NR_TABS by \c
+ *             NR_COHERENT_STOKES by<tt>
+ *             (NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE) </tt>by \c NR_CHANNELS.
+ * \param[in]  inputPtr
+ *             4D input array of complex samples. For each tab and polarization
+ *             there are timelines with data for each channel. The dimensions
+ *             are: \c NR_TABS by \c NR_POLARIZATIONS by \c
+ *             NR_SAMPLES_PER_CHANNEL by \c NR_CHANNELS
  *
  * Pre-processor input symbols (some are tied to the execution configuration)
- * Symbol                  | Valid Values            | Description
- * ----------------------- | ----------------------- | -----------
- * INTEGRATION_SIZE        | >= 1                    | amount of samples to integrate to a single output sample
- * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
- * NR_COHERENT_STOKES      | 1 or 4                  | number of stokes paramters to create
- * NR_POLARIZATIONS        | 2                       | number of polarizations
- * NR_SAMPLES_PER_CHANNEL  | multiple of INTEGRATION_SIZE | number of input samples per channel
- * NR_TABS                 | >= 1                    | number of tabs to create
- * TIME_PARALLEL_FACTOR    | >= 1                    | amount of parallel threads to work on a full timerange
- *
+ * Symbol                 | Valid Values  | Description
+ * ---------------------- | ------------- | -----------
+ * INTEGRATION_SIZE       | >= 1          | amount of samples to integrate to a single output sample
+ * NR_CHANNELS            | >= 1          | number of frequency channels per subband
+ * NR_COHERENT_STOKES     | 1 or 4        | number of stokes paramters to create
+ * NR_POLARIZATIONS       | 2             | number of polarizations
+ * NR_SAMPLES_PER_CHANNEL | multiple of INTEGRATION_SIZE | number of input samples per channel
+ * NR_TABS                | >= 1          | number of tabs to create
+ * TIME_PARALLEL_FACTOR   | >= 1          | amount of parallel threads to work on a full timerange
  * 
- * The TIME_PARALLEL_FACTOR splits the time range in a number of portions which get worked on by 
- * seperate threads (in parallel).
+ * The \c TIME_PARALLEL_FACTOR splits the time range in a number of portions
+ * which get worked on by seperate threads (in parallel).
  *  
  * Execution configuration:
- * - LocalWorkSize = 3 dimensional; (NR_CHANNELS, TIME_PARALLEL_FACTOR, NR_TABS)
- *                   The product of the three should not be larger then max thread size.
- *                   The max thread size depends on the hardware used. 512 For odl hardware. K10 and higher have 1024 threads 
- * - GlobalWorkSize = 3 dimensional; depends on the size of NR_TABS, NR_CHANNELS and the max thread size
- *                   Ideally the work fits in a single block. If not the remainder could
- *                   be computed with a second (differently sized) block
+ * - LocalWorkSize = 3 dimensional; (\c NR_CHANNELS, \c TIME_PARALLEL_FACTOR, \c
+ *                   NR_TABS).  The product of the three should not be larger
+ *                   then max thread size.  The max thread size depends on the
+ *                   hardware used. 512 For odl hardware. K10 and higher have
+ *                   1024 threads
+ * - GlobalWorkSize = 3 dimensional; depends on the size of \c NR_TABS, \c
+ *                   NR_CHANNELS and the max thread size. Ideally the work fits
+ *                   in a single block. If not the remainder could be computed
+ *                   with a second (differently sized) block.
  */
-extern "C" __global__ void coherentStokes(void *outputPtr, const void *inputPtr) 
+extern "C" __global__ void coherentStokes(OutputDataType output,
+                                          const InputDataType input) 
 {
-  inputDataType input = (inputDataType) inputPtr;
-  outputDataType output = (outputDataType) outputPtr;
-
   // Define the indexes in the data depending on the block and thread idx
   unsigned channel_idx = threadIdx.x;  // If we have channels do the read and write with 16 in parallel
   unsigned time_idx = threadIdx.y;     
   unsigned tab_idx = threadIdx.z;    
 
   // Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
-  // The time_idx determines which part of (or the whole of) the timerange this thread is working on:
-  // Work from the start of the time frame (pending your threadIdx.y) untill the next timeframe
-  // Step within this timerange with integration size steps. These substeps are done in the inner loop
+  // The time_idx determines which part of (or the whole of) the time range this
+  // thread is working on.  Work from the start of the time frame (pending your
+  // threadIdx.y) until the next timeframe.  Step within this time range with
+  // integration size steps. These substeps are done in the inner loop.
   for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR) ; 
                    idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR)
                 && idx_stride < NR_SAMPLES_PER_CHANNEL;
