@@ -29,6 +29,7 @@
 
 #include <Common/LofarLogger.h>
 
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>

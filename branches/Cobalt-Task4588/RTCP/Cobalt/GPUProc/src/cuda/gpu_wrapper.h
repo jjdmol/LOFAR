@@ -114,7 +114,7 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        size_t getMaxThreadsPerBlock() const;
+        unsigned getMaxThreadsPerBlock() const;
       };
 
       // Wrap a CUDA Device.
@@ -155,7 +155,20 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        size_t getMaxThreadsPerBlock() const;
+        unsigned getMaxThreadsPerBlock() const;
+
+        // Return the maximum dimensions of a block of threads.
+        struct Block getMaxBlockDims() const;
+
+        // Return the maximum dimensions of a grid of blocks.
+        struct Grid getMaxGridDims() const;
+
+        // Return the number of multi-processors.
+        unsigned getMultiProcessorCount() const;
+
+        // Return the maximum number of threads that can be
+        // resident on a multi-processor.
+        unsigned getMaxThreadsPerMultiProcessor() const;
 
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute

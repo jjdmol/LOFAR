@@ -20,23 +20,46 @@
 
 #include <lofar_config.h>
 
-#include <iomanip>
 #include "BeamFormerSubbandProc.h"
-
-#include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
-#include <CoInterface/Parset.h>
+#include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
+
+#include <CoInterface/Parset.h>
+#include <ApplCommon/PosixTime.h>
+#include <Common/LofarLogger.h>
+
+#include <iomanip>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    BeamFormerSubbandProc::BeamFormerSubbandProc(const Parset &parset,
-      gpu::Context &context, BeamFormerFactories &factories, size_t nrSubbandsPerSubbandProc)
+    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
+                                   size_t nrSamples, gpu::Context &context) :
+      MultiDimArrayHostBuffer<float, 3>(
+        boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
+    {
+    }
+
+    void BeamFormedData::readData(Stream *str, unsigned)
+    {
+      str->read(origin(), size());
+    }
+
+    void BeamFormedData::writeData(Stream *str, unsigned)
+    {
+      str->write(origin(), size());
+    }
+
+
+    BeamFormerSubbandProc::BeamFormerSubbandProc(
+      const Parset &parset,
+      gpu::Context &context,
+      BeamFormerFactories &factories,
+      size_t nrSubbandsPerSubbandProc)
     :
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),
       counters(context),
@@ -45,12 +68,14 @@ namespace LOFAR
 
       // NOTE: Make sure the history samples are dealt with properly until the
       // FIR, which the beam former does in a later stage!
-      devInput(std::max(
+      devInput(
+        std::max(
                  factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
-                 factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)
-               ),
-               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::DELAYS),
-               factories.delayCompensation.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
+          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
+        factories.delayCompensation.bufferSize(
+          DelayAndBandPassKernel::DELAYS),
+        factories.delayCompensation.bufferSize(
+          DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
       // coherent stokes buffers
       devA(devInput.inputSamples),
@@ -65,25 +90,43 @@ namespace LOFAR
       intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
 
       // FFT: B -> B
-      firstFFT(queue, DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS, true, devB),
+      firstFFT(queue,
+               DELAY_COMPENSATION_NR_CHANNELS,
+               (ps.nrStations() * NR_POLARIZATIONS *
+                ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS),
+               true, devB),
 
       // delayComp: B -> A
-      delayCompensationBuffers(devB, devA, devInput.delaysAtBegin, devInput.delaysAfterEnd, devInput.phaseOffsets, devNull),
-      delayCompensationKernel(factories.delayCompensation.create(queue, delayCompensationBuffers)),
+      delayCompensationBuffers(devB, devA, devInput.delaysAtBegin,
+                               devInput.delaysAfterEnd,
+                               devInput.phaseOffsets, devNull),
+      delayCompensationKernel(
+        factories.delayCompensation.create(queue, delayCompensationBuffers)),
 
       // FFT: A -> A
-      secondFFT(queue, BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS), true, devA),
+      secondFFT(queue,
+                BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS,
+                (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+                 (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS)),
+                true, devA),
 
       // bandPass: A -> B
-      devBandPassCorrectionWeights(context, factories.correctBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      correctBandPassBuffers(devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
-      correctBandPassKernel(factories.correctBandPass.create(queue, correctBandPassBuffers)),
+      devBandPassCorrectionWeights(
+        context,
+        factories.correctBandPass.bufferSize(
+          DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
+      correctBandPassBuffers(
+        devA, devB, devNull, devNull, devNull, devBandPassCorrectionWeights),
+      correctBandPassKernel(
+        factories.correctBandPass.create(queue, correctBandPassBuffers)),
 
       //**************************************************************
       //coherent stokes
       // beamForm: B -> A
       // TODO: support >1 SAP
-      devBeamFormerDelays(context, factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
+      devBeamFormerDelays(
+        context,
+        factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
       beamFormerBuffers(devB, devA, devBeamFormerDelays),
       beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
 
@@ -92,29 +135,38 @@ namespace LOFAR
       transposeKernel(factories.transpose.create(queue, transposeBuffers)),
 
       // inverse FFT: B -> B
-      inverseFFT(queue, BEAM_FORMER_NR_CHANNELS, 
-          ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devB),
+      inverseFFT(
+        queue,
+        BEAM_FORMER_NR_CHANNELS,
+        (ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS *
+         ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS),
+        false, devB),
 
       // FIR filter: B -> A
-      // TODO: provide history samples separately
-      // TODO: do a FIR for each individual TAB!!
-      devFilterWeights(context, factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(context, factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
+      devFilterWeights(
+        context,
+        factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
+      devFilterHistoryData(
+        context,
+        factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(devB, devA, devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: A -> A
-      finalFFT(queue, ps.settings.beamFormer.coherentSettings.nrChannels,
-          ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels,
-          true, devA),
+      finalFFT(
+        queue,
+        ps.settings.beamFormer.coherentSettings.nrChannels,
+        (ps.settings.beamFormer.maxNrTABsPerSAP() *
+         NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+         ps.settings.beamFormer.coherentSettings.nrChannels),
+        true, devA),
 
       // coherentStokes: 1ch: A -> B, Nch: B -> A
       coherentStokesBuffers(
           ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devA : devB,
           ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
-      coherentStokesKernel(factories.coherentStokes.create(queue, coherentStokesBuffers)),
+      coherentStokesKernel(
+        factories.coherentStokes.create(queue, coherentStokesBuffers)),
 
       // result buffer
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
@@ -185,10 +237,13 @@ namespace LOFAR
         //**********************************************************************
         // Coherent/incoheren switch
         if (coherentBeamformer) 
-          outputPool.free.append(new BeamFormedData(
-                ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes,
+        outputPool.free.append(
+          new BeamFormedData(
+            (ps.settings.beamFormer.maxNrTABsPerSAP() *
+             ps.settings.beamFormer.coherentSettings.nrStokes),
                 ps.settings.beamFormer.coherentSettings.nrChannels,
-                ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.coherentSettings.nrSamples(
+              ps.nrSamplesPerSubband()),
                 context));
         else
           outputPool.free.append(new BeamFormedData(
@@ -269,14 +324,13 @@ namespace LOFAR
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
       StreamableData &_output)
     {
-      // We are in the BeamFormerSubbandProc, we know that we are beamforming.
-      // therefore gogo static cast ( see outputPool)
-      BeamFormedData &output = static_cast<BeamFormedData&>(_output);
+      BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
       BeamFormedData &incoherentOutput = static_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
-      queue.writeBuffer(devInput.inputSamples, input.inputSamples, counters.samples, true);
+      queue.writeBuffer(devInput.inputSamples, input.inputSamples,
+                        counters.samples, true);
 
       if (ps.delayCompensation())
       {
@@ -284,11 +338,14 @@ namespace LOFAR
 
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-          queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
-          queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
-          queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
-
-          queue.writeBuffer(devBeamFormerDelays,     input.tabDelays,      false);
+          queue.writeBuffer(devInput.delaysAtBegin,
+                            input.delaysAtBegin, false);
+          queue.writeBuffer(devInput.delaysAfterEnd,
+                            input.delaysAfterEnd, false);
+          queue.writeBuffer(devInput.phaseOffsets,
+                            input.phaseOffsets, false);
+          queue.writeBuffer(devBeamFormerDelays,
+                            input.tabDelays, false);
 
           prevSAP = SAP;
           prevBlock = block;
@@ -302,12 +359,14 @@ namespace LOFAR
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFT.enqueue(input.blockID, counters.firstFFT);
-      delayCompensationKernel->enqueue(input.blockID, counters.delayBp,
+      delayCompensationKernel->enqueue(
+        input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
       secondFFT.enqueue(input.blockID, counters.secondFFT);
-      correctBandPassKernel->enqueue(input.blockID, counters.correctBandpass,
+      correctBandPassKernel->enqueue(
+        input.blockID, counters.correctBandpass,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
