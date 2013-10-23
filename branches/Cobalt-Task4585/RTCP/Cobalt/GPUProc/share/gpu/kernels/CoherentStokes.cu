@@ -67,7 +67,6 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
- * NR_STATIONS             | >= 1                    | number of antenna fields
  * NR_SAMPLES_PER_CHANNEL  | multiple of INTEGRATION_SIZE | number of input samples per channel
  * NR_CHANNELS             | 1 or 16                 | number of frequency channels per subband
  * NR_TABS                 | >= 1                    | number of tabs to create
