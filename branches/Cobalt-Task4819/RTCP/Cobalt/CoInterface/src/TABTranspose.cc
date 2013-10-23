@@ -22,6 +22,11 @@
 #include "TABTranspose.h"
 
 #include <Common/LofarLogger.h>
+#include <boost/format.hpp>
+#include <algorithm>
+
+using namespace std;
+using boost::format;
 
 namespace LOFAR {
 namespace Cobalt {
@@ -355,6 +360,70 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
   newClient.signal();
 
   LOG_DEBUG_STR("TABTranspose::MultiReceiver: Dispatched client for resource " << stream->getResource());
+}
+
+
+MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop )
+:
+  hostMap(hostMap)
+{
+  for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
+    if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
+      hosts.push_back(i->second);
+  }
+
+  for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
+    queues[i->hostName] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
+  }
+}
+
+
+void MultiSender::process()
+{
+#pragma omp parallel for num_threads(hosts.size())
+  for (int i = 0; i < hosts.size(); ++i) {
+    try {
+      const struct Host &host = hosts[i];
+
+      LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
+
+      PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service);
+
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
+
+      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host.hostName);
+
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
+
+      SmartPtr<struct Subband> subband;
+
+      while ((subband = queue->remove()) != NULL) {
+        subband->write(stream);
+      }
+
+      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");
+    } catch (Exception &ex) {
+      LOG_ERROR_STR("Caught exception: " << ex);
+    }
+  }
+}
+
+
+void MultiSender::append( SmartPtr<struct Subband> &subband )
+{
+  // Find the host to send these data to
+  const struct Host &host = hostMap.at(subband->id.fileIdx);
+
+  // Append the data to the respective queue
+  queues.at(host.hostName)->append(subband);
+}
+
+
+void MultiSender::finish()
+{
+  for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
+    queues.at(i->hostName)->noMore();
+  }
 }
 
 } // namespace TABTranspose

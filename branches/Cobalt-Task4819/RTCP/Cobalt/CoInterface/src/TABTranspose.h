@@ -257,6 +257,38 @@ namespace LOFAR
         void dispatch( PortBroker::ServerStream *stream );
       };
 
+      /*
+       * MultiSender sends data to various receivers.
+       */
+
+      class MultiSender {
+      public:
+        struct Host {
+          std::string hostName;
+          uint16 brokerPort;
+          std::string service;
+
+          bool operator==(const struct Host &other) const {
+            return hostName == other.hostName && brokerPort == other.brokerPort && service == other.service;
+          };
+        };
+
+        typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
+
+        MultiSender( const HostMap &hostMap, size_t queueSize = 3, bool canDrop = false );
+
+        void process();
+
+        void append( SmartPtr<struct Subband> &subband );
+
+        void finish();
+
+      protected:
+        const HostMap hostMap;
+        std::vector<struct Host> hosts;
+	std::map<std::string, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
+      };
+
     } // namespace TABTranspose
   } // namespace Cobalt
 } // namespace LOFAR

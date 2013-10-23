@@ -416,12 +416,17 @@ SUITE(MultiReceiver) {
     CHECK_EQUAL(2UL, outputPool.filled.size());
   }
 
+  TEST(MultiSender) {
+    MultiSender::HostMap hostMap;
+    MultiSender msender(hostMap, 3, false);
+  }
+
   TEST(Transpose) {
     LOG_DEBUG_STR("Transpose test started");
 
-    const size_t nrSubbands = 10;
+    const size_t nrSubbands = 4;
     const size_t nrBlocks = 2;
-    const size_t nrTABs = 3;
+    const size_t nrTABs = 2;
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
 
@@ -500,36 +505,57 @@ SUITE(MultiReceiver) {
       // Senders
 #     pragma omp section
       {
+
 #       pragma omp parallel for num_threads(nrSenders)
         for (int s = 0; s < nrSenders; ++s) {
           LOG_DEBUG_STR("Sender thread " << s);
 
-          vector< SmartPtr<PortBroker::ClientStream> > clientStreams(nrReceivers);
+          MultiSender::HostMap hostMap;
 
-          // Connect to receivers
-          for (size_t r = 0; r < nrReceivers; ++r) {
-            clientStreams[r] = new PortBroker::ClientStream("localhost", PortBroker::DEFAULT_PORT, str(format("foo-%u-%u") % r % s), 1);
+          for (size_t t = 0; t < nrTABs; ++t) {
+            int r = t % nrReceivers;
 
-            LOG_DEBUG_STR("Starting sender " << s << " to receiver " << r);
+            struct MultiSender::Host host;
+
+            host.hostName = str(format("127.0.0.%u") % (r+1));
+            host.brokerPort = PortBroker::DEFAULT_PORT;
+            host.service = str(format("foo-%s-%s") % r % s);
+
+            hostMap[t] = host;
           }
 
-          // Send blocks
-          for (size_t b = 0; b < nrBlocks; ++b) {
-            // Send our subbands
-            for (size_t sb = 0; sb < nrSubbands; ++sb) {
-              if (sb % nrSenders != s)
-                continue;
+          MultiSender msender(hostMap, 3, false);
 
-              // Send all TABs
-              for (size_t t = 0; t < nrTABs; ++t) {
-                SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-                subband->id.fileIdx = t;
-                subband->id.block = b;
-                subband->id.subband = sb;
+#         pragma omp parallel sections num_threads(2)
+          {
+#           pragma omp section
+            {
+              msender.process();
+            }
 
-                LOG_DEBUG_STR("Sender " << s << ": sending TAB " << t << " block " << b << " subband " << sb);
-                subband->write(*clientStreams[t % nrReceivers]);
+#           pragma omp section
+            {
+              // Send blocks
+              for (size_t b = 0; b < nrBlocks; ++b) {
+                // Send our subbands
+                for (size_t sb = 0; sb < nrSubbands; ++sb) {
+                  if (sb % nrSenders != s)
+                    continue;
+
+                  // Send all TABs
+                  for (size_t t = 0; t < nrTABs; ++t) {
+                    SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
+                    subband->id.fileIdx = t;
+                    subband->id.block = b;
+                    subband->id.subband = sb;
+
+                    LOG_DEBUG_STR("Sender " << s << ": sending TAB " << t << " block " << b << " subband " << sb);
+                    msender.append(subband);
+                  }
+                }
               }
+
+              msender.finish();
             }
           }
         }
