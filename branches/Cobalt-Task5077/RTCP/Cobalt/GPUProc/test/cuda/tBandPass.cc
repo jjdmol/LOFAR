@@ -1,4 +1,4 @@
-//# tDelayAndBandPass.cc: test delay and bandpass CUDA kernel
+//# tBandPass.cc: test delay and bandpass CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -56,13 +56,6 @@ const unsigned NR_SAMPLES_PER_SUBBAND = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS;
 const unsigned NR_BITS_PER_SAMPLE = 8;
 const unsigned NR_POLARIZATIONS = 2;
 
-const unsigned NR_SAPS = 8;
-const double SUBBAND_BANDWIDTH = 0.0 * NR_CHANNELS;
-const bool BANDPASS_CORRECTION = true;
-const bool DELAY_COMPENSATION = false;
-const bool DO_TRANSPOSE = true;
-
-
 // Initialize input AND output before calling runKernel().
 // We copy both to the GPU, to make sure the final output is really from the
 // kernel.  T is an LCS i*complex type, or complex<float> when #chnl > 1.
@@ -70,30 +63,17 @@ template <typename T>
 void runKernel(gpu::Function kfunc,
                MultiDimArrayHostBuffer<fcomplex, 4> &outputData,
                MultiDimArrayHostBuffer<T,        4> &inputData,
-               MultiDimArrayHostBuffer<double,   3> &delaysAtBegin,
-               MultiDimArrayHostBuffer<double,   3> &delaysAfterEnd,
-               MultiDimArrayHostBuffer<double,   2> &phaseOffsets,
-               MultiDimArrayHostBuffer<float,    1> &bandPassFactors,
-               double subbandFrequency,
-               unsigned beam)
+               MultiDimArrayHostBuffer<float,    1> &bandPassFactors)
 {
   gpu::Context ctx(stream->getContext());
 
   gpu::DeviceMemory devOutput         (ctx, outputData.size());
   gpu::DeviceMemory devInput          (ctx, inputData.size());
-  gpu::DeviceMemory devDelaysAtBegin  (ctx, delaysAtBegin.size());
-  gpu::DeviceMemory devDelaysAfterEnd (ctx, delaysAfterEnd.size());
-  gpu::DeviceMemory devPhaseOffsets   (ctx, phaseOffsets.size());
   gpu::DeviceMemory devBandPassFactors(ctx, bandPassFactors.size());
 
   kfunc.setArg(0, devOutput);
   kfunc.setArg(1, devInput);
-  kfunc.setArg(2, subbandFrequency);
-  kfunc.setArg(3, beam);
-  kfunc.setArg(4, devDelaysAtBegin);
-  kfunc.setArg(5, devDelaysAfterEnd);
-  kfunc.setArg(6, devPhaseOffsets);
-  kfunc.setArg(7, devBandPassFactors);
+  kfunc.setArg(2, devBandPassFactors);
 
   gpu::Grid globalWorkSize(1,
                            NR_CHANNELS == 1 ? 1 : NR_CHANNELS / 16,
@@ -103,9 +83,6 @@ void runKernel(gpu::Function kfunc,
   // Overwrite devOutput, so result verification is more reliable.
   stream->writeBuffer(devOutput,          outputData);
   stream->writeBuffer(devInput,           inputData);
-  stream->writeBuffer(devDelaysAtBegin,   delaysAtBegin);
-  stream->writeBuffer(devDelaysAfterEnd,  delaysAfterEnd);
-  stream->writeBuffer(devPhaseOffsets,    phaseOffsets);
   stream->writeBuffer(devBandPassFactors, bandPassFactors);
 
   stream->launchKernel(kfunc, globalWorkSize, localWorkSize);
@@ -117,12 +94,12 @@ gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs)
 {
   // Compile to ptx. Copies the kernel to the current dir
   // (also the complex header, needed for compilation).
-  string kernelPath("DelayAndBandPass.cu");
+  string kernelPath("BandPass.cu");
   CompileFlags flags(defaultCompileFlags());
   vector<gpu::Device> devices(1, gpu::Device(0));
   string ptx(createPTX(kernelPath, defs, flags, devices));
   gpu::Module module(createModule(ctx, kernelPath, ptx));
-  gpu::Function kfunc(module, "applyDelaysAndCorrectBandPass");
+  gpu::Function kfunc(module, "correctBandPass");
 
   return kfunc;
 }
@@ -137,23 +114,10 @@ CompileDefinitions getDefaultCompileDefinitions()
     boost::lexical_cast<string>(NR_CHANNELS);
   defs["NR_SAMPLES_PER_CHANNEL"] =
     boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
-  defs["NR_SAMPLES_PER_SUBBAND"] =
-    boost::lexical_cast<string>(NR_SAMPLES_PER_SUBBAND);
-  defs["NR_BITS_PER_SAMPLE"] =
-    boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
   defs["NR_POLARIZATIONS"] =
     boost::lexical_cast<string>(NR_POLARIZATIONS);
-  defs["NR_SAPS"] =
-    boost::lexical_cast<string>(NR_SAPS);
-  defs["SUBBAND_BANDWIDTH"] =
-    boost::lexical_cast<string>(SUBBAND_BANDWIDTH);
-
   if (BANDPASS_CORRECTION)
     defs["BANDPASS_CORRECTION"] = "1";
-  if (DELAY_COMPENSATION)
-    defs["DELAY_COMPENSATION"] = "1";
-  if (DO_TRANSPOSE)
-    defs["DO_TRANSPOSE"] = "1";
 
   return defs;
 }
@@ -162,11 +126,6 @@ CompileDefinitions getDefaultCompileDefinitions()
 // It is the value type of the data input array.
 template <typename T>
 vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
-                         double subbandFrequency,
-                         unsigned beam,
-                         double delayBegin,
-                         double delayEnd,
-                         double phaseOffset,
                          float bandPassFactor)
 {
   gpu::Context ctx(stream->getContext());
@@ -211,39 +170,16 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
                                                [NR_SAMPLES_PER_CHANNEL]
                                                [NR_CHANNELS],
                                                ctx));
-
-  MultiDimArrayHostBuffer<double, 3> delaysAtBegin(boost::extents
-                                                   [NR_SAPS]
-                                                   [NR_STATIONS]
-                                                   [NR_POLARIZATIONS],
-                                                   ctx);
-  MultiDimArrayHostBuffer<double, 3> delaysAfterEnd(boost::extents
-                                                    [NR_SAPS]
-                                                    [NR_STATIONS]
-                                                    [NR_POLARIZATIONS],
-                                                    ctx);
-  MultiDimArrayHostBuffer<double, 2> phaseOffsets(boost::extents
-                                                  [NR_STATIONS]
-                                                  [NR_POLARIZATIONS],
-                                                  ctx);
   MultiDimArrayHostBuffer<float, 1> bandPassFactors(boost::extents
                                                     [NR_CHANNELS],
-                                                    ctx);
+                                                   ctx);
 
   // set inputs
   for (size_t i = 0; i < inputData->num_elements(); i++) {
     inputData->origin()[i].real() = 1.0f;
     inputData->origin()[i].imag() = 1.0f;
   }
-  for (size_t i = 0; i < delaysAtBegin.num_elements(); i++) {
-    delaysAtBegin.origin()[i] = delayBegin;
-  }
-  for (size_t i = 0; i < delaysAfterEnd.num_elements(); i++) {
-    delaysAfterEnd.origin()[i] = delayEnd;
-  }
-  for (size_t i = 0; i < phaseOffsets.num_elements(); i++) {
-    phaseOffsets.origin()[i] = phaseOffset;
-  }
+
   for (size_t i = 0; i < bandPassFactors.num_elements(); i++) {
     bandPassFactors.origin()[i] = bandPassFactor;
   }
@@ -256,9 +192,7 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
 
   gpu::Function kfunc(initKernel(ctx, compileDefs));
 
-  runKernel(kfunc, *outputData, *inputData,
-            delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassFactors,
-            subbandFrequency, beam);
+  runKernel(kfunc, *outputData, *inputData, bandPassFactors);
 
   // Tests that use this function only check the first and last 2 output floats.
   const unsigned nrResultVals = 2;

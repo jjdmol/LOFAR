@@ -33,19 +33,9 @@
  * @attention The following pre-processor variables must be supplied when
  * compiling this program. Please take the pre-conditions for these variables
  * into account:
- * - @c NR_CHANNELS: 1 or a multiple of 16
- * - if @c NR_CHANNELS == 1 (input data is in integer format):
- *   - @c NR_BITS_PER_SAMPLE: 8 or 16
- *   - @c NR_SAMPLES_PER_SUBBAND: a multiple of 16
- * - if @c NR_CHANNELS > 1 (input data is in floating point format):
- *   - @c NR_SAMPLES_PER_CHANNEL: a multiple of 16
- * - @c NR_SAPS: > 0
  * - @c NR_POLARIZATIONS: 2
- * - @c SUBBAND_BANDWIDTH: a multiple of @c NR_CHANNELS
+ 
  *
- * - @c DELAY_COMPENSATION: defined or not
- * - @c BANDPASS_CORRECTION: defined or not
- * - @c DO_TRANSPOSE: defined or not
  */
 
 #include "gpu_math.cuh"
