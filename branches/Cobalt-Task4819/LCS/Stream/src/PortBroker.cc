@@ -46,6 +46,14 @@ void PortBroker::createInstance( uint16 port )
   instance().start();
 }
 
+
+void PortBroker::destroyInstance()
+{
+  ASSERTSTR(pbInstance.get(), "PortBroker instance not created");
+
+  pbInstance.reset(0);
+}
+
 PortBroker &PortBroker::instance()
 {
   return *pbInstance;
@@ -65,6 +73,9 @@ PortBroker::~PortBroker()
 
   // break serverLoop explicitly
   itsThread->cancel();
+
+  // wait for thread to finish
+  itsThread->wait();
 
   {
     ScopedLock sl(itsMutex);
@@ -200,6 +211,7 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
 
       itsRequestMap.erase(it);
 
+      LOG_DEBUG_STR( "PortBroker server: found match for " << resource );
       return result;
     }
 
