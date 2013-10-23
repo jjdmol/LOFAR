@@ -13,6 +13,7 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tIncoherentStokes tIncoherentStokes.cc)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
+  lofar_add_test(tBandPass tBandPass.cc)
 endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
@@ -46,6 +47,7 @@ set_tests_properties(
 if(UNITTEST++_FOUND)
   set_tests_properties(
     tDelayAndBandPass
+    tBandPass
     tCoherentStokes
     tIncoherentStokes
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
