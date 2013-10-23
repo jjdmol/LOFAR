@@ -27,6 +27,7 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;

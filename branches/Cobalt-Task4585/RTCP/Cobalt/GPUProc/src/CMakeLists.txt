@@ -53,6 +53,7 @@ if(USE_CUDA)
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/SubbandProcs/SubbandProc.cc
     cuda/SubbandProcs/BeamFormerSubbandProc.cc
+    cuda/SubbandProcs/BeamFormerFactories.cc
     cuda/SubbandProcs/CorrelatorSubbandProc.cc
 #    cuda/SubbandProcs/UHEP_SubbandProc.cc
   )

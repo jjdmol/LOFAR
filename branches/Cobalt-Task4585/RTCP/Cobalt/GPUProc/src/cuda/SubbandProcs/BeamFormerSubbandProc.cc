@@ -20,15 +20,17 @@
 
 #include <lofar_config.h>
 
-#include <iomanip>
 #include "BeamFormerSubbandProc.h"
-
-#include <Common/LofarLogger.h>
-#include <ApplCommon/PosixTime.h>
-#include <CoInterface/Parset.h>
+#include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
+
+#include <CoInterface/Parset.h>
+#include <ApplCommon/PosixTime.h>
+#include <Common/LofarLogger.h>
+
+#include <iomanip>
 
 namespace LOFAR
 {
