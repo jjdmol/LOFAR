@@ -7,7 +7,7 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tSubbandProc tSubbandProc.cc)
 endif()
 
-#lofar_add_test(tBeamFormerSubbandProcProcessSb tBeamFormerSubbandProcProcessSb.cc)
+lofar_add_test(tBeamFormerSubbandProcProcessSb tBeamFormerSubbandProcProcessSb.cc)
 lofar_add_test(tCorrelatorSubbandProcProcessSb tCorrelatorSubbandProcProcessSb.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking

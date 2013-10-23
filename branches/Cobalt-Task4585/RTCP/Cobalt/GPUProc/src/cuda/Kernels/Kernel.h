@@ -85,7 +85,7 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
       
-      const size_t maxThreadsPerBlock;
+      const unsigned maxThreadsPerBlock;
       gpu::Grid globalWorkSize;
       gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

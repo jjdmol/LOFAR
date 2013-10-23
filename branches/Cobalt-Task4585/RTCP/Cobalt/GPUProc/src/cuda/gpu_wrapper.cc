@@ -262,14 +262,14 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
-      size_t Platform::getMaxThreadsPerBlock() const
+      unsigned Platform::getMaxThreadsPerBlock() const
       {
         const std::vector<Device> _devices = devices();
 
-        size_t lowest = 0;
+        unsigned lowest = 0;
 
         for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
-          const size_t maxThreadsPerBlock = i->getMaxThreadsPerBlock();
+          const unsigned maxThreadsPerBlock = i->getMaxThreadsPerBlock();
 
           if (i == _devices.begin() || maxThreadsPerBlock < lowest)
             lowest = maxThreadsPerBlock;
@@ -353,9 +353,37 @@ namespace LOFAR
         return str(format("%04x:%04x") % bus % device);
       }
 
-      size_t Device::getMaxThreadsPerBlock() const
+      unsigned Device::getMaxThreadsPerBlock() const
       {
-        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+      }
+
+      struct Block Device::getMaxBlockDims() const
+      {
+        Block block;
+        block.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X);
+        block.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y);
+        block.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z);
+        return block;
+      }
+
+      struct Grid Device::getMaxGridDims() const
+      {
+        Grid grid;
+        grid.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X);
+        grid.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y);
+        grid.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z);
+        return grid;
+      }
+
+      unsigned Device::getMultiProcessorCount() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
+      }
+
+      unsigned Device::getMaxThreadsPerMultiProcessor() const
+      {
+        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
