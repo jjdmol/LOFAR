@@ -88,14 +88,14 @@ namespace LOFAR
       switch (bufferType) {
       case IncoherentStokesKernel::INPUT_DATA:
         return 
-          itsParameters.nrStations * itsParameters.nrChannelsPerSubband *
-          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
-          sizeof(std::complex<float>);
+          (size_t) itsParameters.nrStations * itsParameters.nrChannelsPerSubband *
+            itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
+            sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
         return 
-          itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
-          itsParameters.timeIntegrationFactor * 
-          itsParameters.nrChannelsPerSubband * sizeof(float);
+          (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
+            itsParameters.timeIntegrationFactor * 
+            itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

@@ -90,8 +90,8 @@ namespace LOFAR
       case BeamFormerTransposeKernel::INPUT_DATA: 
       case BeamFormerTransposeKernel::OUTPUT_DATA:
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
-          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
