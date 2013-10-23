@@ -79,17 +79,18 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR </tt>should not exceed the
  * hardware maximum of threads (1024 on a K10).
  *
- * \param[out] outputPtr
+ * \param[out] output
  *             4D output array of stokes values. Each sample contains 1 or 4
  *             stokes paramters. For each tab, there are \c NR_COHERENT_STOKES
- *             timeseries of channels The dimensions are: \c NR_TABS by \c
- *             NR_COHERENT_STOKES by<tt>
- *             (NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE) </tt>by \c NR_CHANNELS.
- * \param[in]  inputPtr
+ *             time series of channels. The dimensions are: \c NR_TABS, \c
+ *             NR_COHERENT_STOKES,
+ *             <tt>(NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE)</tt>, \c
+ *             NR_CHANNELS.
+ * \param[in]  input
  *             4D input array of complex samples. For each tab and polarization
- *             there are timelines with data for each channel. The dimensions
- *             are: \c NR_TABS by \c NR_POLARIZATIONS by \c
- *             NR_SAMPLES_PER_CHANNEL by \c NR_CHANNELS
+ *             there are time lines with data for each channel. The dimensions
+ *             are: \c NR_TABS, \c NR_POLARIZATIONS, \c NR_SAMPLES_PER_CHANNEL,
+ *             \c NR_CHANNELS
  *
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                 | Valid Values  | Description
@@ -109,8 +110,8 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * - LocalWorkSize = 3 dimensional; (\c NR_CHANNELS, \c TIME_PARALLEL_FACTOR, \c
  *                   NR_TABS).  The product of the three should not be larger
  *                   then max thread size.  The max thread size depends on the
- *                   hardware used. 512 For odl hardware. K10 and higher have
- *                   1024 threads
+ *                   hardware used: 512 for old hardware, 1024 for K10 and
+ *                   higher.
  * - GlobalWorkSize = 3 dimensional; depends on the size of \c NR_TABS, \c
  *                   NR_CHANNELS and the max thread size. Ideally the work fits
  *                   in a single block. If not the remainder could be computed
@@ -119,23 +120,23 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
 extern "C" __global__ void coherentStokes(OutputDataType output,
                                           const InputDataType input) 
 {
-  // Define the indexes in the data depending on the block and thread idx
-  unsigned channel_idx = threadIdx.x;  // If we have channels do the read and write with 16 in parallel
+  //# Define the indexes in the data depending on the block and thread idx
+  unsigned channel_idx = threadIdx.x;  //# If we have channels do the read and write with 16 in parallel
   unsigned time_idx = threadIdx.y;     
   unsigned tab_idx = threadIdx.z;    
 
-  // Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
-  // The time_idx determines which part of (or the whole of) the time range this
-  // thread is working on.  Work from the start of the time frame (pending your
-  // threadIdx.y) until the next timeframe.  Step within this time range with
-  // integration size steps. These substeps are done in the inner loop.
+  //# Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
+  //# The time_idx determines which part of (or the whole of) the time range this
+  //# thread is working on.  Work from the start of the time frame (pending your
+  //# threadIdx.y) until the next timeframe.  Step within this time range with
+  //# integration size steps. These substeps are done in the inner loop.
   for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR) ; 
                    idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / TIME_PARALLEL_FACTOR)
                 && idx_stride < NR_SAMPLES_PER_CHANNEL;
                 idx_stride += INTEGRATION_SIZE)
   {
-    // We are integrating all values in the current stride
-    // local variable
+    //# We are integrating all values in the current stride
+    //# local variable
     float stokesI = 0;
 #   if NR_COHERENT_STOKES == 4
     float stokesQ = 0;
@@ -143,13 +144,13 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
     float halfStokesV = 0;
 #   endif
 
-    // Do the integration
+    //# Do the integration
     for (unsigned idx_step = 0; idx_step < INTEGRATION_SIZE; idx_step++) 
     {
       float2 X = (*input)[tab_idx][0][idx_stride + idx_step][channel_idx];    
       float2 Y = (*input)[tab_idx][1][idx_stride + idx_step][channel_idx];
 
-      // Calculate the partial solutions
+      //# Calculate the partial solutions
       float powerX = X.x * X.x + X.y * X.y;
       float powerY = Y.x * Y.x + Y.y * Y.y;
       stokesI += powerX + powerY;
@@ -159,7 +160,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
       halfStokesV += X.y * Y.x - X.x * Y.y;
 #     endif
     }
-    // We step in the data with INTEGRATION_SIZE
+    //# We step in the data with INTEGRATION_SIZE
     unsigned write_idx = idx_stride / INTEGRATION_SIZE;
 
     (*output)[tab_idx][0][write_idx][channel_idx] = stokesI;
@@ -168,6 +169,6 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
     (*output)[tab_idx][2][write_idx][channel_idx] = 2 * halfStokesU;
     (*output)[tab_idx][3][write_idx][channel_idx] = 2 * halfStokesV;
 #   endif  
-    // No baries needed. All computations are fully parallel
+    //# No baries needed. All computations are fully parallel
   }
 }
