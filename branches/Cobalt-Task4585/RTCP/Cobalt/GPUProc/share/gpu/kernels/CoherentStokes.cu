@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: CoherentStokes.cu 24553 2013-04-09 14:21:56Z mol $
+//# $Id$
 
 #if !(INTEGRATION_SIZE >= 1)
 #error Precondition violated: INTEGRATION_SIZE >= 1
