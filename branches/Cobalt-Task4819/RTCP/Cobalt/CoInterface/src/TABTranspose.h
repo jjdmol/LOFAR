@@ -263,6 +263,8 @@ namespace LOFAR
 
       class MultiSender {
       public:
+        // A host to send data to, that is, enough information
+        // to connect to the PortBroker of the receiver.
         struct Host {
           std::string hostName;
           uint16 brokerPort;
@@ -271,22 +273,40 @@ namespace LOFAR
           bool operator==(const struct Host &other) const {
             return hostName == other.hostName && brokerPort == other.brokerPort && service == other.service;
           };
+          bool operator<(const struct Host &other) const {
+            if (hostName != other.hostName)
+              return hostName < other.hostName;
+
+            if (brokerPort != other.brokerPort)
+              return brokerPort < other.brokerPort;
+
+            return service < other.service;
+          };
         };
 
         typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
 
         MultiSender( const HostMap &hostMap, size_t queueSize = 3, bool canDrop = false );
 
+        // Send the data from the queues to the receiving hosts. Will run until
+        // 'finish()' is called.
         void process();
 
+        // Add a subband for sending. Ownership of the data is taken.
         void append( SmartPtr<struct Subband> &subband );
 
+        // Flush the queues.
         void finish();
 
       protected:
+        // fileIdx -> host mapping
         const HostMap hostMap;
+
+        // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;
-	std::map<std::string, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
+
+        // A queue for data to be sent to each host
+	      std::map<struct Host, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

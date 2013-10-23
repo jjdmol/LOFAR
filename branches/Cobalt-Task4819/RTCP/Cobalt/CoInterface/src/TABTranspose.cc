@@ -373,7 +373,7 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues[i->hostName] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
+    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
   }
 }
 
@@ -381,7 +381,7 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
 void MultiSender::process()
 {
 #pragma omp parallel for num_threads(hosts.size())
-  for (int i = 0; i < hosts.size(); ++i) {
+  for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
     try {
       const struct Host &host = hosts[i];
 
@@ -391,7 +391,7 @@ void MultiSender::process()
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
 
-      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host.hostName);
+      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
@@ -415,14 +415,14 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
   const struct Host &host = hostMap.at(subband->id.fileIdx);
 
   // Append the data to the respective queue
-  queues.at(host.hostName)->append(subband);
+  queues.at(host)->append(subband);
 }
 
 
 void MultiSender::finish()
 {
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues.at(i->hostName)->noMore();
+    queues.at(*i)->noMore();
   }
 }
 
