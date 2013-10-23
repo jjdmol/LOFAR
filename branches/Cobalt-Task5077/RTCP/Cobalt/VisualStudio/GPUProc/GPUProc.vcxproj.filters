@@ -679,6 +679,9 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\Kernels\FFT_Plan.cc">
       <Filter>src\opencl\Kernels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPass.cc">
+      <Filter>test\cuda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -898,5 +901,8 @@
     <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\BandPass.cu">
+      <Filter>share</Filter>
+    </None>
   </ItemGroup>
 </Project>

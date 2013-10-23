@@ -116,9 +116,6 @@ CompileDefinitions getDefaultCompileDefinitions()
     boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   defs["NR_POLARIZATIONS"] =
     boost::lexical_cast<string>(NR_POLARIZATIONS);
-  if (BANDPASS_CORRECTION)
-    defs["BANDPASS_CORRECTION"] = "1";
-
   return defs;
 }
 
@@ -218,11 +215,6 @@ TEST(BandPass)
   // with the bandPassFactor == 2
   vector<fcomplex> results(runTest<fcomplex>(
                              defs,
-                             0.0, // sb freq
-                             0U,  // beam
-                             0.0, // delays begin
-                             0.0, // delays end
-                             0.0, // phase offsets
                              bandPassFactor)); // bandpass factor
 
   CHECK_CLOSE(2.0, results[0].real(), 0.000001);
@@ -243,11 +235,6 @@ TEST(PhaseOffsets)
 
   vector<fcomplex> results(runTest<fcomplex>(
                              defs,
-                             1.0,    // sb freq
-                             0U,     // beam
-                             0.0,    // delays begin
-                             0.0,    // delays end
-                             M_PI,   // phase offsets
                              1.0f)); // bandpass factor
 
   CHECK_CLOSE(-1.0, results[0].real(), 0.000001);
@@ -272,11 +259,6 @@ SUITE(DelayCompensation)
 
     vector<fcomplex> results(runTest<fcomplex>(
                                defs,
-                               1.0,    // sb freq
-                               0U,     // beam
-                               1.0,    // delays begin
-                               1.0,    // delays end
-                               0.0,    // phase offsets
                                1.0f)); // bandpass factor
 
     CHECK_CLOSE(-1.0, results[0].real(), 0.000001);
@@ -359,11 +341,6 @@ SUITE(DelayCompensation)
 
     vector<fcomplex> results(runTest<fcomplex>(
                                defs,
-                               1.0,    // sb freq
-                               0U,     // beam
-                               1.0,    // delays begin
-                               0.0,    // delays end
-                               0.0,    // phase offsets
                                1.0f)); // bandpass factor
 
     CHECK_CLOSE(-1.0,     results[0].real(), 0.000001);
@@ -426,11 +403,6 @@ TEST(AllAtOnce)
 
   vector<fcomplex> results(runTest<fcomplex>(
                              defs,
-                             1.0,    // sb freq
-                             0U,     // beam
-                             1.0,    // delays begin
-                             0.0,    // delays end
-                             1.0,    // phase offsets (1 rad)
                              2.0f)); // bandpass factor (weights == 2)
 
   CHECK_CLOSE( 0.602337, results[0].real(), 0.000001);
