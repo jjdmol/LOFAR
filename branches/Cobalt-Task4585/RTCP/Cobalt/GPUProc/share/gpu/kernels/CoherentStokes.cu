@@ -18,19 +18,35 @@
 //#
 //# $Id: CoherentStokes.cu 24553 2013-04-09 14:21:56Z mol $
 
-#if NR_SAMPLES_PER_CHANNEL % INTEGRATION_SIZE != 0 
-  #error  unsupported INTEGRATION_SIZE for NR_SAMPLES_PER_CHANNEL
-#elif NR_COHERENT_STOKES != 1
-  #if NR_COHERENT_STOKES != 4
-     #error  unsupported NR_COHERENT_STOKES
-  #endif
-#elif NR_CHANNELS % 16 != 0
-  #if NR_CHANNELS != 1
-    #error unsupported NR_CHANNELS
-  #endif
+#if !(INTEGRATION_SIZE >= 1)
+#error Precondition violated: INTEGRATION_SIZE >= 1
 #endif
 
-//4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_STOKES timeseries of channels 
+#if !(NR_CHANNELS >= 1)
+#error Precondition violated: NR_CHANNELS >= 1
+#endif
+
+#if !(NR_COHERENT_STOKES == 1 || NR_COHERENT_STOKES == 4)
+#error Precondition violated: NR_COHERENT_STOKES == 1 || NR_COHERENT_STOKES == 4
+#endif
+
+#if !(NR_POLARIZATIONS == 2)
+#error Precondition violated: NR_POLARIZATIONS == 2
+#endif
+
+#if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % INTEGRATION_SIZE == 0)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % INTEGRATION_SIZE == 0
+#endif
+
+#if !(NR_TABS >= 1)
+#error Precondition violated: NR_TABS >= 1
+#endif
+
+#if !(TIME_PARALLEL_FACTOR >= 1)
+#error Precondition violated: TIME_PARALLEL_FACTOR >= 1
+#endif
+
+//4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels 
 typedef float2 (*inputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
 
 //4D input array of complex samples. For each tab and polarization there are timelines with data for each channel
@@ -59,7 +75,7 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * The thread block size based on these factors could be larger then the hardmare max.
  * Therefore<tt> NR_CHANNELS * NR_TABS * TIME_PARALLEL_FACTOR </tt>should not exceed the hardware maximum of threads (1024 on a K10).
  *
- * \param[out] outputPtr         4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_STOKES timeseries of channels 
+ * \param[out] outputPtr         4D output array of stokes values. Each sample contains 1 or 4 stokes paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels 
  *                               The dimensions are: NR_TABS by NR_COHERENT_STOKES by (NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE)  by NR_CHANNELS.
  * \param[in]  inputPtr          4D input array of complex samples. For each tab and polarization there are timelines with data for each channel
  *                               The dimensions are: NR_TABS by NR_POLARIZATIONS by NR_SAMPLES_PER_CHANNEL by NR_CHANNELS
@@ -67,14 +83,14 @@ typedef float (*outputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
- * NR_SAMPLES_PER_CHANNEL  | multiple of INTEGRATION_SIZE | number of input samples per channel
- * NR_CHANNELS             | 1 or 16                 | number of frequency channels per subband
- * NR_TABS                 | >= 1                    | number of tabs to create
- * NR_COHERENT_STOKES      | 1 or 4                  | number of stokes paramters to create
  * INTEGRATION_SIZE        | >= 1                    | amount of samples to integrate to a single output sample
+ * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
+ * NR_COHERENT_STOKES      | 1 or 4                  | number of stokes paramters to create
+ * NR_POLARIZATIONS        | 2                       | number of polarizations
+ * NR_SAMPLES_PER_CHANNEL  | multiple of INTEGRATION_SIZE | number of input samples per channel
+ * NR_TABS                 | >= 1                    | number of tabs to create
  * TIME_PARALLEL_FACTOR    | >= 1                    | amount of parallel threads to work on a full timerange
  *
- * Note that this kernel assumes and needs NR_POLARIZATIONS == 2 and COMPLEX == 2
  * 
  * The TIME_PARALLEL_FACTOR splits the time range in a number of portions which get worked on by 
  * seperate threads (in parallel).
