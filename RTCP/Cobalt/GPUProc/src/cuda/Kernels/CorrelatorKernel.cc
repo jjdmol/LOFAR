@@ -73,7 +73,7 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      size_t preferredMultiple;
+      unsigned preferredMultiple;
 
       gpu::Platform pf;
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
@@ -116,17 +116,17 @@ namespace LOFAR
     template<> size_t 
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {
-      size_t nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
+      unsigned nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
 
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
-          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          nrBaselines * itsParameters.nrChannelsPerSubband * 
-          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) nrBaselines * itsParameters.nrChannelsPerSubband * 
+            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

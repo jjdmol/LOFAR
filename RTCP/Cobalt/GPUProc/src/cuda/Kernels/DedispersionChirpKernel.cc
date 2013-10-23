@@ -42,7 +42,7 @@ namespace LOFAR
       setArg(0, buffer);
       setArg(1, DMs);
 
-      size_t maxNrThreads;
+      unsigned maxNrThreads;
       //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned fftSize = ps.dedispersionFFTsize();

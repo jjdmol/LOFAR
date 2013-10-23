@@ -129,16 +129,16 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+            itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+            itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-          sizeof(double);
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
+            sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
