@@ -116,6 +116,13 @@ CompileDefinitions getDefaultCompileDefinitions()
     boost::lexical_cast<string>(NR_SAMPLES_PER_CHANNEL);
   defs["NR_POLARIZATIONS"] =
     boost::lexical_cast<string>(NR_POLARIZATIONS);
+  defs["NR_BITS_PER_SAMPLE"] =
+    boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
+
+
+
+
+
   return defs;
 }
 
