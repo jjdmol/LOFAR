@@ -35,7 +35,10 @@ namespace LOFAR
   {
 
 
-    InputThread::InputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix)
+    InputThread::InputThread(const Parset &parset, OutputType outputType,
+                             unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue,
+                             Queue<SmartPtr<StreamableData> > &receiveQueue,
+                             const std::string &logPrefix)
       :
       itsLogPrefix(logPrefix + "[InputThread] "),
       itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, outputType, streamNr)),

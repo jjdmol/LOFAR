@@ -36,12 +36,14 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
+    
 
     class SubbandWriter
     {
     public:
-      SubbandWriter(const Parset &, OutputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix);
+      SubbandWriter(const Parset &, OutputType,
+                    unsigned streamNr, bool isBigEndian,
+                    const std::string &logPrefix);
 
       void augment(const FinalMetaData &finalMetaData);
 

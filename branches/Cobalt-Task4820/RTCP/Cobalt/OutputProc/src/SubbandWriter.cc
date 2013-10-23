@@ -35,10 +35,13 @@ namespace LOFAR
       itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
       itsInputThread->start();
 
-      try {
+      try 
+      {
         itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
         itsOutputThread->start();
-      } catch (...) {
+      } 
+      catch (...) 
+      {
         itsInputThread->cancel();
         throw;
       }

@@ -115,16 +115,21 @@ int main(int argc, char *argv[])
 
       vector<SmartPtr<SubbandWriter> > subbandWriters;
 
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
-        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) {
-          if (parset.getHostName(outputType, streamNr) == myHostName) {
+      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) 
+      {
+        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) 
+        {
+          if (parset.getHostName(outputType, streamNr) == myHostName) 
+          {
             unsigned writerNr = 0;
 
             // lookup PVSS writer number for this file
-            for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) {
+            for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) 
+            {
               Observation::StreamToStorage &s = obs.streamsToStorage[i];
 
-              if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) {
+              if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) 
+              {
                 writerNr = s.writerNr;
                 break;
               }
@@ -132,11 +137,18 @@ int main(int argc, char *argv[])
 
             string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
 
-            try {
-              subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, sbLogPrefix));
-            } catch (Exception &ex) {
+            try 
+            {
+              subbandWriters.push_back(
+                  new SubbandWriter(parset, outputType,
+                                    streamNr, isBigEndian, sbLogPrefix));
+            } 
+            catch (Exception &ex) 
+            {
               LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex);
-            } catch (exception &ex) {
+            } 
+            catch (exception &ex) 
+            {
               LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex.what());
             }
           }

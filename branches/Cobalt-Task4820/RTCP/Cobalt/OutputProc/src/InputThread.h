@@ -42,7 +42,12 @@ namespace LOFAR
     class InputThread
     {
     public:
-      InputThread(const Parset &parset, OutputType index, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix);
+      InputThread(const Parset &parset,
+                  OutputType index,
+                  unsigned streamNr,
+                  Queue<SmartPtr<StreamableData> > &freeQueue,
+                  Queue<SmartPtr<StreamableData> > &receiveQueue,
+                  const std::string &logPrefix);
 
       void                             start();
       void                             cancel();
