@@ -952,9 +952,11 @@ namespace LOFAR
       {
         // tmp check: avoid async writeBuffer request that will fail later.
         // TODO: This interface may still change at which point a cleaner solution can be used.
-        if (devTarget.size() > devSource.size())
+        if (devSource.size() > devTarget.size())
         {
-          THROW(CUDAException, "copyBuffer(): host buffer too large for device buffer: host buffer is " << devSource.size() << " bytes, device buffer is " << devTarget.size() << " bytes");
+          THROW(CUDAException, "copyBuffer(): device source buffer too large for device target buffer: " <<
+                "source buffer is " << devSource.size() << " bytes, " << 
+                "device buffer is " << devTarget.size() << " bytes");
         }
 
         _impl->memcpyDtoDAsync((CUdeviceptr)devTarget.get(), 

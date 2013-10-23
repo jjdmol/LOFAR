@@ -217,7 +217,7 @@ SUITE(Memory) {
       s.writeBuffer(dm, hm, true);
 
       //copy between buffers on the device
-      s.copyBuffer(dm_target, dm,counter, true);
+      s.copyBuffer(dm_target, dm, counter, true);
 
       // Clear host memory
       memset(hm.get<void>(), 0, size);

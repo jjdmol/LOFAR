@@ -507,22 +507,23 @@ namespace LOFAR
 
         // Transfer data from device memory \a devSource to device memory \a devTarget.
         // \param devTarget Device memory that will be copied to.
-        // \param devSource Host memory that will be copied from.
+        // \param devSource Device memory that will be copied from.
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously.
         void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
-                         bool synchronous = false) const;
+                        bool synchronous = false) const;
 
         // Transfer data from device memory \a devSource to device memory \a devTarget.
         // When gpuProfiling is enabled this transfer is synchronous
         // \param devTarget Device memory that will be copied to.
-        // \param devSource Host memory that will be copied from.
+        // \param devSource Device memory that will be copied from.
         // \param counter PerformanceCounter that will receive transfer duration
-        // if  gpuProfiling is enabled
+        //        if gpuProfiling is enabled
         // \param synchronous Indicates whether the transfer must be done
-        //        synchronously or asynchronously. Default == false
+        //        synchronously or asynchronously. Defaults to \c false
+        //        (asynchronously).
         void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
-                         const PerformanceCounter &counter, bool synchronous = false) const;
+                        const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Launch a CUDA function.
         // \param function object containing the function to launch
