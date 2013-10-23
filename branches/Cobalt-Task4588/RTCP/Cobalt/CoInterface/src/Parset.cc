@@ -1303,8 +1303,5 @@ namespace LOFAR
     {
       return nrIncoherent;
     }
-
-
   } // namespace Cobalt
 } // namespace LOFAR
-

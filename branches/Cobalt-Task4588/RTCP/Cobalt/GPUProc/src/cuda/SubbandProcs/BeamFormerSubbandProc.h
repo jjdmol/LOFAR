@@ -138,8 +138,7 @@ namespace LOFAR
       gpu::DeviceMemory devA;
       gpu::DeviceMemory devB;
       gpu::DeviceMemory devC;
-      gpu::DeviceMemory devD;
-      
+      gpu::DeviceMemory devD;     
 
     private:
       // NULL placeholder for unused DeviceMemory parameters
@@ -194,12 +193,9 @@ namespace LOFAR
 
       // end result
       gpu::DeviceMemory &devResult;
-      // ****************************************************************
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
-
-      // inverse FFT
       FFT_Kernel incoherentInverseFFT;
 
       //// PPF
@@ -215,7 +211,6 @@ namespace LOFAR
 
       //output for Incoherent stokes 
       gpu::DeviceMemory &devIncoherentStokes;
-      // *****************************************************************
 
       bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };
@@ -282,7 +277,9 @@ namespace LOFAR
         return params;
       }
 
-      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
+      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps,
+          size_t nrSubbandsPerSubbandProc) const 
+      {
         FIR_FilterKernel::Parameters params(ps);
 
         params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
@@ -299,15 +296,18 @@ namespace LOFAR
         return params;
       }
 
-      FIR_FilterKernel::Parameters incoherentFirFilterParams(const Parset &ps,
-            size_t nrSubbandsPerSubbandProc) const {
+      FIR_FilterKernel::Parameters incoherentFirFilterParams(
+            const Parset &ps,
+            size_t nrSubbandsPerSubbandProc) const 
+      {
         FIR_FilterKernel::Parameters params(ps);
 
         params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
 
         // define at least 16 channels to get the FIR_Filter.cu to compile, even
         // if we won't use it.
-        params.nrChannelsPerSubband = std::max(16U, ps.settings.beamFormer.incoherentSettings.nrChannels);
+        params.nrChannelsPerSubband = std::max(16U,
+          ps.settings.beamFormer.incoherentSettings.nrChannels);
 
         // time integration has not taken place yet, so calculate the nrSamples manually
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
@@ -317,7 +317,8 @@ namespace LOFAR
         return params;
       }
 
-      CoherentStokesKernel::Parameters coherentStokesParams(const Parset &ps) const {
+      CoherentStokesKernel::Parameters coherentStokesParams(const Parset &ps) const 
+      {
         CoherentStokesKernel::Parameters params(ps);
         params.nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;

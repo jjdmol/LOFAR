@@ -41,7 +41,6 @@ namespace LOFAR
       :
       Pipeline(ps, subbandIndices, devices)
     {
-          
       BeamFormerFactories factories(ps, nrSubbandsPerSubbandProc);
 
       for (size_t i = 0; i < workQueues.size(); ++i) {
@@ -59,18 +58,22 @@ namespace LOFAR
         // to much about the subbandProc, codesmell.
         if(gpuProfiling)
         {
-        // gpu kernel counters
+        //shared bu coherent and incoherent
         RunningStatistics intToFloat;
         RunningStatistics firstFFT;
         RunningStatistics delayBp;
         RunningStatistics secondFFT;
         RunningStatistics correctBandpass;
+
+        // Coherent stokes
         RunningStatistics beamformer;
         RunningStatistics transpose;
         RunningStatistics inverseFFT;
         RunningStatistics firFilterKernel;
         RunningStatistics finalFFT;
         RunningStatistics coherentStokes;
+
+        //incoherent
         RunningStatistics incoherentInverseFFT;
         RunningStatistics incoherentFirFilterKernel;
         RunningStatistics incoherentFinalFFT;
@@ -143,4 +146,3 @@ namespace LOFAR
     }
   }
 }
-

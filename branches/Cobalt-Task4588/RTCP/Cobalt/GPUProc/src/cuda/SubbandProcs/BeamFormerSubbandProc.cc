@@ -52,8 +52,10 @@ namespace LOFAR
                factories.delayCompensation.bufferSize(DelayAndBandPassKernel::DELAYS),
                factories.delayCompensation.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
                context),
+      // coherent stokes buffers
       devA(devInput.inputSamples),
       devB(context, devA.size()),
+      // Buffers for incoherent stokes
       devC(context, devA.size()),
       devD(context, devA.size()),
       devNull(context, 1),
@@ -105,7 +107,8 @@ namespace LOFAR
       // final FFT: A -> A
       finalFFT(queue, ps.settings.beamFormer.coherentSettings.nrChannels,
           ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS * 
-ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, true, devA),
+          ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels,
+          true, devA),
 
       // coherentStokes: 1ch: A -> B, Nch: B -> A
       coherentStokesBuffers(
@@ -117,7 +120,7 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
       //**************************************************************
       //incoherent stokes
-      //Hier moet dus nog een transpose
+      // TODO: Add a transpose
       // inverse FFT: C -> C
       incoherentInverseFFT(queue, BEAM_FORMER_NR_CHANNELS,
                  NR_POLARIZATIONS * 
@@ -153,12 +156,10 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
       // initialize history data
       devFilterHistoryData.set(0);
 
-      // count the number of coherent and incoherent saps
       // TODO For now we only allow pure coherent and incoherent runs
+      // count the number of coherent and incoherent saps
       size_t nrCoherent = 0;
       size_t nrIncoherent = 0;
-
-      // TODO use iterators
       for (size_t idx_sap = 0; idx_sap < ps.settings.beamFormer.SAPs.size(); ++idx_sap)
       {
         if (ps.settings.beamFormer.SAPs[idx_sap].nrIncoherent != 0)
@@ -182,7 +183,7 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
       for (size_t i = 0; i < std::max(3UL, 2 * nrSubbandsPerSubbandProc); ++i) 
       {
         //**********************************************************************
-        // Coherent incoheren switch
+        // Coherent/incoheren switch
         if (coherentBeamformer) 
           outputPool.free.append(new BeamFormedData(
                 ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes,
@@ -325,8 +326,11 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
 
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
-        if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) {
-          firFilterKernel->enqueue(input.blockID, counters.firFilterKernel, input.blockID.subbandProcSubbandIdx);
+        if (ps.settings.beamFormer.coherentSettings.nrChannels > 1) 
+        {
+          firFilterKernel->enqueue(input.blockID, 
+            counters.firFilterKernel,
+            input.blockID.subbandProcSubbandIdx);
           finalFFT.enqueue(input.blockID, counters.finalFFT);
         }
         
@@ -338,7 +342,8 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
         // incoherent stokes kernels
         incoherentInverseFFT.enqueue(input.blockID, counters.incoherentInverseFFT);
 
-        if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) {
+        if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) 
+        {
           incoherentFirFilterKernel->enqueue(input.blockID, counters.incoherentFirFilterKernel,
             input.blockID.subbandProcSubbandIdx);
           incoherentFinalFFT.enqueue(input.blockID, counters.incoherentFinalFFT);
@@ -358,7 +363,6 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
       // Perform performance statistics if needed
       if (gpuProfiling)
       {
-        LOG_INFO_STR("*************Profiling started *******************");
         // assure that the queue is done so all events are fished
         queue.synchronize();
         // Update the counters
@@ -378,17 +382,14 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
             counters.finalFFT.logTime();
           }
 
-          LOG_INFO_STR("debug 4");
           counters.beamformer.logTime();
           counters.transpose.logTime();
           counters.inverseFFT.logTime();
           counters.coherentStokes.logTime();
           counters.visibilities.logTime();
-          LOG_INFO_STR("debug 5");
         }
         else
         {
-          LOG_INFO_STR("debug 6");
           counters.incoherentInverseFFT.logTime();
           if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) 
           {
@@ -396,7 +397,6 @@ ps.nrSamplesPerSubband() / ps.settings.beamFormer.coherentSettings.nrChannels, t
             counters.incoherentFinalFFT.logTime();
           }
           counters.incoherentStokes.logTime();
-          LOG_INFO_STR("debug 7");
           counters.incoherentOutput.logTime();
         }
       }

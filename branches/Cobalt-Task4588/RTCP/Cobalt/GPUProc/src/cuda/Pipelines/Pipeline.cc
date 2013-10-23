@@ -352,10 +352,8 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcInputData> input;
 
-
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.processPool.filled.remove()) != NULL) {
-
         const struct BlockID id = input->blockID;
 
         LOG_DEBUG_STR("[" << id << "] Processing start");
