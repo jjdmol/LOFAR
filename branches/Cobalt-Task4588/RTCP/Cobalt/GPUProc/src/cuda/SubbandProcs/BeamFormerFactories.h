@@ -29,6 +29,7 @@
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/IncoherentStokesKernel.h>
 
 namespace LOFAR
 {
@@ -49,6 +50,8 @@ namespace LOFAR
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
+      KernelFactory<IncoherentStokesKernel> incoherentStokes;
+      KernelFactory<FIR_FilterKernel> incoherentFirFilter;
 
       BeamFormerKernel::Parameters
       beamFormerParams(const Parset &ps) const;
@@ -67,6 +70,13 @@ namespace LOFAR
 
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;
+
+      FIR_FilterKernel::Parameters 
+      incoherentFirFilterParams(const Parset &ps,
+            size_t nrSubbandsPerSubbandProc) const ;
+
+      IncoherentStokesKernel::Parameters 
+      incoherentStokesParams(const Parset &ps) const;
     };
 
   }
