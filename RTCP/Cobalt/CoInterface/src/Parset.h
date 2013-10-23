@@ -454,6 +454,16 @@ namespace LOFAR
           //
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
+
+          // Return the number of coherentstokes tabs, 
+          size_t nrCoherentTAB() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherentTAB() const;
+
+          // calculated at construction time
+          size_t nrCoherent;
+          size_t nrIncoherent;
         };
 
         // All SAPs, with information about the TABs to form.

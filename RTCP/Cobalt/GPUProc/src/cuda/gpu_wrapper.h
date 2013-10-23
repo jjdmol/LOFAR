@@ -114,7 +114,7 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        size_t getMaxThreadsPerBlock() const;
+        unsigned getMaxThreadsPerBlock() const;
       };
 
       // Wrap a CUDA Device.
@@ -155,7 +155,20 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        size_t getMaxThreadsPerBlock() const;
+        unsigned getMaxThreadsPerBlock() const;
+
+        // Return the maximum dimensions of a block of threads.
+        struct Block getMaxBlockDims() const;
+
+        // Return the maximum dimensions of a grid of blocks.
+        struct Grid getMaxGridDims() const;
+
+        // Return the number of multi-processors.
+        unsigned getMultiProcessorCount() const;
+
+        // Return the maximum number of threads that can be
+        // resident on a multi-processor.
+        unsigned getMaxThreadsPerMultiProcessor() const;
 
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
@@ -503,6 +516,26 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously. Default == false
         void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
+                        const PerformanceCounter &counter, bool synchronous = false) const;
+
+        // Transfer data from device memory \a devSource to device memory \a devTarget.
+        // \param devTarget Device memory that will be copied to.
+        // \param devSource Device memory that will be copied from.
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously.
+        void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
+                        bool synchronous = false) const;
+
+        // Transfer data from device memory \a devSource to device memory \a devTarget.
+        // When gpuProfiling is enabled this transfer is synchronous
+        // \param devTarget Device memory that will be copied to.
+        // \param devSource Device memory that will be copied from.
+        // \param counter PerformanceCounter that will receive transfer duration
+        //        if gpuProfiling is enabled
+        // \param synchronous Indicates whether the transfer must be done
+        //        synchronously or asynchronously. Defaults to \c false
+        //        (asynchronously).
+        void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
                         const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Launch a CUDA function.

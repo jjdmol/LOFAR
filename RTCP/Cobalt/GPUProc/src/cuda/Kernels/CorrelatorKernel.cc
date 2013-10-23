@@ -102,7 +102,7 @@ namespace LOFAR
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1UL);
+      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1U);
       globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
       localWorkSize = gpu::Block(nrThreads, 1);
 

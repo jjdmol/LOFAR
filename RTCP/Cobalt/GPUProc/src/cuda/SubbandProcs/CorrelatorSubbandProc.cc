@@ -275,7 +275,7 @@ namespace LOFAR
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
-      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatedDataHostBuffer &output = dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
       // Get the id of the block we are processing
       size_t block = input.blockID.block;
@@ -366,7 +366,7 @@ namespace LOFAR
 
     void CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
     {
-      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatedDataHostBuffer &output = dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities

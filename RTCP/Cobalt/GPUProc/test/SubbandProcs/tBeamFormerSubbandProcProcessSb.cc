@@ -27,6 +27,7 @@
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
@@ -127,9 +128,11 @@ int main() {
   // For 8 bit mode, that is a factor 256.
   // Since we inserted all (1, 1) vals, for 8 bit mode this means that the correlator
   // outputs 256*256. It then sums over nrSamplesPerSb values.
+#if 0
   unsigned scale = 1*1;
   if (ps.nrBitsPerSample() == 8)
     scale = 256*256;
+#endif
   bool unexpValueFound = false;
   for (size_t b = 0; b < ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes; b++)
     for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.nrSamplesPerSubband()); t++)

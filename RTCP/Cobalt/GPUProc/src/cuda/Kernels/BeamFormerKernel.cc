@@ -72,16 +72,28 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      size_t maxChannelParallisation = std::min(params.nrChannelsPerSubband, maxThreadsPerBlock / NR_POLARIZATIONS / params.nrTABs);
+      // Try #chnl/blk where 256 <= block size <= maxThreadsPerBlock && blockDim.z <= maxBlockDimZ.
+      // Violations for small input are fine. This should be auto-tuned for large inputs.
+      unsigned nrThreadsXY = params.nrPolarizations * params.nrTABs;
+      unsigned prefBlockSize = 256;
+      unsigned prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
+      prefBlockSize = prefNrThreadsZ * nrThreadsXY;
+      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z; // low, so check
+      unsigned maxNrThreadsPerBlock = std::min(std::min(maxThreadsPerBlock,
+                                                        maxBlockDimZ * nrThreadsXY),
+                                               params.nrChannelsPerSubband * nrThreadsXY);
+      if (prefBlockSize > maxNrThreadsPerBlock) {
+        prefBlockSize = maxNrThreadsPerBlock;
+        prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
+      }
+      unsigned nrChannelsPerBlock = prefNrThreadsZ;
 
-      ASSERT(params.nrChannelsPerSubband % maxChannelParallisation == 0);
-
-      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
+      globalWorkSize = gpu::Grid(params.nrPolarizations, 
                                  params.nrTABs, 
-                                 params.nrChannelsPerSubband);
-      localWorkSize = gpu::Block(NR_POLARIZATIONS, 
+                                 params.nrChannelsPerSubband); 
+      localWorkSize = gpu::Block(params.nrPolarizations, 
                                  params.nrTABs, 
-                                 maxChannelParallisation);
+                                 nrChannelsPerBlock);
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
@@ -89,7 +101,7 @@ namespace LOFAR
       size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
 
       size_t count = 
-        params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+        params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrPolarizations;
       unsigned nrPasses = std::max((params.nrStations + 6) / 16, 1U);
 
       nrOperations = count * params.nrStations * params.nrTABs * 8;
@@ -118,11 +130,11 @@ namespace LOFAR
       case BeamFormerKernel::INPUT_DATA: 
         return
           itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          NR_POLARIZATIONS * itsParameters.nrStations * sizeof(std::complex<float>);
+          itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
           itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+          itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
           itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
