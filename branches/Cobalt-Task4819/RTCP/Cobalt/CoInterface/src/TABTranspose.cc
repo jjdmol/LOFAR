@@ -86,7 +86,7 @@ void Block::addSubband( const Subband &subband ) {
   ASSERT(subband.id.fileIdx == fileIdx);
   ASSERT(subband.id.block   == block);
 
-  memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof subband.data.origin());
+  memcpy(data[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof *subband.data.origin());
   subbandWritten[subband.id.subband] = true;
 
   nrSubbandsLeft--;
@@ -96,7 +96,7 @@ void Block::addSubband( const Subband &subband ) {
 void Block::zeroRemainingSubbands() {
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
-      memset(data[subbandIdx].origin(), 0, data[subbandIdx].size() * sizeof data[subbandIdx].origin());
+      memset(data[subbandIdx].origin(), 0, data[subbandIdx].size() * sizeof *data[subbandIdx].origin());
     }
   }
 }
