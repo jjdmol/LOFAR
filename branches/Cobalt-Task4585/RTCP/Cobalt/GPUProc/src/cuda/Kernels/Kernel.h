@@ -45,11 +45,11 @@ namespace LOFAR
       struct Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrStations;
-        size_t nrChannelsPerSubband;
-        size_t nrSamplesPerChannel;
-        size_t nrSamplesPerSubband;
-        size_t nrPolarizations;
+        unsigned nrStations;
+        unsigned nrChannelsPerSubband;
+        unsigned nrSamplesPerChannel;
+        unsigned nrSamplesPerSubband;
+        unsigned nrPolarizations;
         bool dumpBuffers;
         std::string dumpFilePattern;
       };

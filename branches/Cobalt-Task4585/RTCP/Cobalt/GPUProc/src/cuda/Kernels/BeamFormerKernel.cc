@@ -78,11 +78,13 @@ namespace LOFAR
       unsigned prefBlockSize = 256;
       unsigned prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
       prefBlockSize = prefNrThreadsZ * nrThreadsXY;
-      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z;
-      unsigned maxNrThreadsPerBlock = std::min(maxThreadsPerBlock, maxBlockDimZ * nrThreadsXY);
-      if (prefBlockSize > maxNrThreadsPerBlock) { // stay below low max blockDim.z
-        maxNrThreadsPerBlock = prefBlockSize;
-        prefNrThreadsZ = (maxNrThreadsPerBlock + nrThreadsXY-1) / nrThreadsXY;
+      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z; // low, so check
+      unsigned maxNrThreadsPerBlock = std::min(std::min(maxThreadsPerBlock,
+                                                        maxBlockDimZ * nrThreadsXY),
+                                               params.nrChannelsPerSubband * nrThreadsXY);
+      if (prefBlockSize > maxNrThreadsPerBlock) {
+        prefBlockSize = maxNrThreadsPerBlock;
+        prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
       }
       unsigned nrChannelsPerBlock = prefNrThreadsZ;
 
