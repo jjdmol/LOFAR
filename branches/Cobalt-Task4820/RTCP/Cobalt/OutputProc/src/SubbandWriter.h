@@ -45,6 +45,8 @@ namespace LOFAR
                     unsigned streamNr,
                     const std::string &logPrefix);
 
+      void process();
+
       void augment(const FinalMetaData &finalMetaData);
 
       ParameterSet feedbackLTA() const;

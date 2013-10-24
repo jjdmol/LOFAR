@@ -49,20 +49,7 @@ namespace LOFAR
     }
 
 
-    void InputThread::start()
-    {
-      itsThread = new Thread(this, &InputThread::mainLoop, itsLogPrefix);
-    }
-
-
-    void InputThread::cancel()
-    {
-      if (itsThread)
-        itsThread->cancel();
-    }
-
-
-    void InputThread::mainLoop()
+    void InputThread::process()
     {
       try {
         LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );

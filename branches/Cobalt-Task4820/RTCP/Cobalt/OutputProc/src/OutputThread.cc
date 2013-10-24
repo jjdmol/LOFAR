@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <Common/StringUtil.h>
 #include <Common/SystemCallException.h>
@@ -88,7 +89,7 @@ namespace LOFAR
       string curdir;
       vector<string> splitName;
 
-      split(splitName, dirname, is_any_of("/"));
+      boost::split(splitName, dirname, boost::is_any_of("/"));
 
       for (unsigned i = 0; i < splitName.size(); i++) {
         curdir += splitName[i] + '/';
@@ -111,12 +112,6 @@ namespace LOFAR
       itsNrExpectedBlocks(0),
       itsNextSequenceNumber(0)
     {
-    }
-
-
-    void OutputThread::start()
-    {
-      itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
     }
 
 
@@ -259,11 +254,6 @@ namespace LOFAR
 
     void OutputThread::augment( const FinalMetaData &finalMetaData )
     {
-      // wait for writer thread to finish, so we'll have an itsWriter
-      ASSERT(itsThread.get());
-
-      itsThread = 0;
-
       // augment the data product
       ASSERT(itsWriter.get());
 
@@ -271,9 +261,9 @@ namespace LOFAR
     }
 
 
-    void OutputThread::mainLoop()
+    void OutputThread::process()
     {
-      LOG_DEBUG_STR(itsLogPrefix << "OutputThread::mainLoop() entered");
+      LOG_DEBUG_STR(itsLogPrefix << "OutputThread::process() entered");
 
       try {
         createMS();

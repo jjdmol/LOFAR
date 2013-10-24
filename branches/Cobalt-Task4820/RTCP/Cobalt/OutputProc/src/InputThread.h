@@ -25,7 +25,6 @@
 
 #include <string>
 
-#include <Common/Thread/Thread.h>
 #include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
@@ -49,15 +48,11 @@ namespace LOFAR
                   Queue<SmartPtr<StreamableData> > &receiveQueue,
                   const std::string &logPrefix);
 
-      void                             start();
-      void                             cancel();
+      void                             process();
 
     private:
-      void                             mainLoop();
-
       const std::string itsLogPrefix, itsInputDescriptor;
       Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
-      SmartPtr<Thread>                 itsThread;
       const double itsDeadline;
     };
 

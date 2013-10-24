@@ -33,22 +33,27 @@ namespace LOFAR
     SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &logPrefix)
     {
       itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
-      itsInputThread->start();
-
-      try 
-      {
-        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
-        itsOutputThread->start();
-      } 
-      catch (...) 
-      {
-        itsInputThread->cancel();
-        throw;
-      }
+      itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
 
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
         itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
+    }
 
+    
+    void SubbandWriter::process()
+    {
+#     pragma omp parallel sections num_threads(2)
+      {
+#       pragma omp section
+        {
+          itsInputThread->process();
+        }
+
+#       pragma omp section
+        {
+          itsOutputThread->process();
+        }
+      }
     }
 
     void SubbandWriter::augment( const FinalMetaData &finalMetaData )

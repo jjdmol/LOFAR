@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <omp.h>
 
 #include <string>
 #include <vector>
@@ -139,6 +140,10 @@ void process(Stream &controlStream, size_t myRank)
 
     vector<SmartPtr<SubbandWriter> > subbandWriters;
 
+    /*
+     * Construct writers
+     */
+
     // Process correlated data
     if (parset.settings.correlator.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
@@ -170,6 +175,16 @@ void process(Stream &controlStream, size_t myRank)
     }
 
     /*
+     * PROCESS
+     */
+
+#   pragma omp parallel for num_threads(subbandWriters.size())
+    for (int i = 0; i < (int)subbandWriters.size(); ++i)
+    {
+      subbandWriters[i]->process();
+    }
+
+    /*
      * FINAL META DATA
      */
     readFinalMetaData(controlStream, subbandWriters);
@@ -193,6 +208,8 @@ int main(int argc, char *argv[])
 
   setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
   setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
+
+  omp_set_nested(true);
 
   LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
 

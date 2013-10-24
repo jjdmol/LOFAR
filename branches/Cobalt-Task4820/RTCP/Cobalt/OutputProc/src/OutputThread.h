@@ -27,7 +27,6 @@
 #include <vector>
 
 #include <Common/Thread/Queue.h>
-#include <Common/Thread/Thread.h>
 #include <Stream/FileStream.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
@@ -46,7 +45,7 @@ namespace LOFAR
     public:
       OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory = "");
 
-      void                             start();
+      void           process();
 
       // needed in createHeaders.cc
       void           createMS();
@@ -59,7 +58,6 @@ namespace LOFAR
     private:
       void                             checkForDroppedData(StreamableData *);
       void                             doWork();
-      void                             mainLoop();
 
       const Parset                     &itsParset;
       const OutputType itsOutputType;
@@ -73,7 +71,6 @@ namespace LOFAR
       unsigned itsNrExpectedBlocks;
       unsigned itsNextSequenceNumber;
       SmartPtr<MSWriter>               itsWriter;
-      SmartPtr<Thread>                 itsThread;
     };
 
 
