@@ -24,6 +24,7 @@
 #include "gpu_wrapper.h"
 
 #include <string>
+#include <iostream>
 #include <algorithm>  // for std::min and std::max
 
 #include <boost/noncopyable.hpp>
@@ -209,12 +210,22 @@ namespace LOFAR
       {
       }
 
+      std::ostream& operator<<(std::ostream& os, const Block& block)
+      {
+        os << block.x << ", " << block.y << ", " << block.z;
+        return os;
+      }
 
       Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
       }
 
+      std::ostream& operator<<(std::ostream& os, const Grid& grid)
+      {
+        os << grid.x << ", " << grid.y << ", " << grid.z;
+        return os;
+      }
 
       Platform::Platform(unsigned int flags)
       {

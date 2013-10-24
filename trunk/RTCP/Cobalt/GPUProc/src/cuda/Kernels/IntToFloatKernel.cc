@@ -65,8 +65,8 @@ namespace LOFAR
 
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      globalWorkSize = gpu::Grid(maxNrThreads, params.nrStations);
-      localWorkSize = gpu::Block(maxNrThreads, 1);
+      setEnqueueWorkSizes( gpu::Grid(maxNrThreads, params.nrStations),
+                           gpu::Block(maxNrThreads, 1) );
 
       unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
       nrOperations = (size_t) nrSamples * 2;
