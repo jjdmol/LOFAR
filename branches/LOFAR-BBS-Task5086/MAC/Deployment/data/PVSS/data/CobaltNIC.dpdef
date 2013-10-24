@@ -1,0 +1,17 @@
+# Node name (cbt001 .. cbt009)
+Node string
+
+# CPU 0 or 1
+CPU int
+
+# Interface name (eth2 .. eth5)
+Interface string
+
+# IP address (10.168.X.Y)
+IP string
+
+# MAC address
+MAC string
+
+# List of stations received on this interface
+stationList stringArr
