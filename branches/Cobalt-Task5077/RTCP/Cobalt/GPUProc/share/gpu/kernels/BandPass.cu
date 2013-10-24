@@ -34,27 +34,16 @@
  * compiling this program. Please take the pre-conditions for these variables
  * into account:
  * - @c NR_POLARIZATIONS: 2
- 
- *
+  *
  */
 
 #include "gpu_math.cuh"
-
 #include "IntToFloat.cuh"
 
-#if defined DO_TRANSPOSE
-typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
-#else
-typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-#endif
 
-//# TODO: Unify #dims in input type to 4: [NR_SAMPLES_PER_SUBBAND] -> [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS] (see kernel test)
-//#       It is technically incorrect, but different dims for the same input type is a real pain to use/supply.
-//#       Also unify order of #chn, #sampl to [NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]
-
-typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
-
+typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS_1 * NR_CHANNELS_2][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
+typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS_1][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS_2];
+typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
 
 /**
  * This kernel performs (up to) three operations on the input data:
@@ -83,46 +72,47 @@ extern "C" {
                                   const fcomplex * filteredDataPtr,
                                   const float * bandPassFactorsPtr)
 {
+  
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData   = (InputDataType)  filteredDataPtr;
 
+  
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
+  
+  // fasted dims
+  unsigned chan2        = (blockIdx.x * blockDim.x + threadIdx.x) % NR_CHANNELS_2  ;
+  unsigned sample       = (blockIdx.x * blockDim.x + threadIdx.x) / NR_CHANNELS_2;
+  
+  // second dim
+  unsigned station      = blockIdx.y * blockDim.y + threadIdx.y;
 
-
-  unsigned major       = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
-  unsigned minor       = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
-  unsigned channelBase = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
-
-  unsigned channel = channelBase + minor;
-
-  unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
-
-  float weight((*bandPassFactors)[channel]);
-
-  for (unsigned timeBase = 0; timeBase < NR_SAMPLES_PER_CHANNEL; timeBase += 16)
+  for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
   {
-    unsigned time = timeBase + major;
-
-    fcomplex sampleX = (*inputData)[station][0][time][channel];
-    fcomplex sampleY = (*inputData)[station][1][time][channel];
-
+    
+    unsigned combined_channel = idx_channel1 * NR_CHANNELS_2 + chan2;
+    float weight((*bandPassFactors)[combined_channel]);
+    fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
+    fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
+    
     sampleX.x *= weight;
     sampleX.y *= weight;
     sampleY.x *= weight;
     sampleY.y *= weight;
 
-// Support all variants of NR_CHANNELS and DO_TRANSPOSE for testing etc.
-// Transpose: data order is [station][channel][time][pol]
-    __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+//// Support all variants of NR_CHANNELS and DO_TRANSPOSE for testing etc.
+//// Transpose: data order is [station][channel][time][pol]
+//    __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+//
+//    tmp[major][minor][0] = sampleX;
+//    tmp[major][minor][1] = sampleY;
+//    __syncthreads();
 
-    tmp[major][minor][0] = sampleX;
-    tmp[major][minor][1] = sampleY;
-    __syncthreads();
-    (*outputData)[station][channelBase + major][timeBase + minor][0] = tmp[minor][major][0];
-    (*outputData)[station][channelBase + major][timeBase + minor][1] = tmp[minor][major][1];
-    __syncthreads();
-
-
+    //(*outputData)[station][combined_channel][sample][0] = sampleX; //tmp[minor][major][0];
+    //(*outputData)[station][combined_channel][sample][1] = sampleY; //tmp[minor][major][1];
+    
+    (*outputData)[station][combined_channel][sample][0] = sampleX; //tmp[minor][major][0];
+    (*outputData)[station][combined_channel][sample][1] = sampleY; //tmp[minor][major][1];
+    //__syncthreads();
   }
 }
 }
