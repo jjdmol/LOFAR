@@ -109,8 +109,9 @@ extern "C" {
     tmp[threadIdx.y][threadIdx.x][1] = sampleY;
     __syncthreads();
     // Write data to global with the sample moving the 
-    (*outputData)[station][combined_channel][sample][0] = tmp[threadIdx.x][threadIdx.y][0];
-    (*outputData)[station][combined_channel][sample][1] = tmp[threadIdx.x][threadIdx.y][1];
+    // Use correct coallesced writes: 2 ms
+    (*outputData)[station][idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y][blockIdx.y * blockDim.y + threadIdx.x][0] = tmp[threadIdx.x][threadIdx.y][0];
+    (*outputData)[station][idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y][blockIdx.y * blockDim.y + threadIdx.x][1] = tmp[threadIdx.x][threadIdx.y][1];
     __syncthreads();
 #else
     // 5.5 ms
