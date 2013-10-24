@@ -33,7 +33,7 @@ namespace LOFAR
     public:
       virtual ~Format();
 
-      virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian) = 0;
+      virtual void addSubband(const std::string MSname, unsigned subband) = 0;
     };
 
   } // namespace Cobalt

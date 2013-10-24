@@ -97,12 +97,11 @@ namespace LOFAR
     }
 
 
-    OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
+    OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory)
       :
       itsParset(parset),
       itsOutputType(outputType),
       itsStreamNr(streamNr),
-      itsIsBigEndian(isBigEndian),
       itsLogPrefix(logPrefix + "[OutputThread] "),
       itsTargetDirectory(targetDirectory),
       itsFreeQueue(freeQueue),
@@ -138,12 +137,12 @@ namespace LOFAR
         // HDF5 writer requested
         switch (itsOutputType) {
         case CORRELATED_DATA:
-          itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
           break;
 
 #ifdef HAVE_DAL
         case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
+          itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr);
           break;
 #endif
 

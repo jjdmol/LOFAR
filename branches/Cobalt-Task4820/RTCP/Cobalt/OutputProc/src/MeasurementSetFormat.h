@@ -69,7 +69,7 @@ namespace LOFAR
       MeasurementSetFormat(const Parset &, uint32 alignment = 1);
       virtual ~MeasurementSetFormat();
 
-      virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian);
+      virtual void addSubband(const std::string MSname, unsigned subband);
 
       // casacore/measurementset mutex
       static Mutex sharedMutex;
@@ -92,7 +92,7 @@ namespace LOFAR
       const uint32 itsAlignment;
 
       void createMSTables(const std::string &MSname, unsigned subband);
-      void createMSMetaFile(const std::string &MSname, unsigned subband, bool isBigEndian);
+      void createMSMetaFile(const std::string &MSname, unsigned subband);
 
       void fillFeed();
       void fillAntenna(const casa::Block<casa::MPosition>& antMPos);

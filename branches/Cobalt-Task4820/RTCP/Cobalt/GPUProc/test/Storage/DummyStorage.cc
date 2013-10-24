@@ -102,11 +102,10 @@ int main(int argc, char **argv)
 {
   INIT_LOGGER("DummyStorage");
 
-  ASSERT(argc == 4);
+  ASSERT(argc == 3);
 
   observationID = boost::lexical_cast<int>(argv[1]);
   rank = boost::lexical_cast<unsigned>(argv[2]);
-  //bool isBigEndian = boost::lexical_cast<bool>(argv[3]);
 
   // set up broker server
   PortBroker::createInstance(storageBrokerPort(observationID));

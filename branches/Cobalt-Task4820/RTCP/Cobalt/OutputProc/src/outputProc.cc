@@ -88,7 +88,7 @@ SubbandWriter *startWriter(const Parset &parset, OutputType outputType, unsigned
 
   try 
   {
-    return new SubbandWriter(parset, outputType, streamNr, false, sbLogPrefix);
+    return new SubbandWriter(parset, outputType, streamNr, sbLogPrefix);
   } 
   catch (Exception &ex) 
   {
@@ -145,20 +145,16 @@ int main(int argc, char *argv[])
   CasaLogSink::attach();
 
   try {
-    if (argc != 4)
-      throw StorageException(str(boost::format("usage: %s obsid rank is_bigendian") % argv[0]), THROW_ARGS);
+    if (argc < 3)
+      throw StorageException(str(boost::format("usage: %s obsid rank") % argv[0]), THROW_ARGS);
 
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3]);
+    LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
 
     int observationID = boost::lexical_cast<int>(argv[1]);
     unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
-    bool isBigEndian = boost::lexical_cast<bool>(argv[3]);
-
-    // We only support little-endian data anymore.
-    ASSERT(isBigEndian == false);
 
     setIOpriority();
     setRTpriority();

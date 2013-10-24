@@ -42,7 +42,7 @@ namespace LOFAR
     {
     public:
       SubbandWriter(const Parset &, OutputType,
-                    unsigned streamNr, bool isBigEndian,
+                    unsigned streamNr,
                     const std::string &logPrefix);
 
       void augment(const FinalMetaData &finalMetaData);

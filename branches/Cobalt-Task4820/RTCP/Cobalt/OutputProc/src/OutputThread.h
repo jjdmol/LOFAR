@@ -44,7 +44,7 @@ namespace LOFAR
     class OutputThread
     {
     public:
-      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
+      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory = "");
 
       void                             start();
 
@@ -64,7 +64,6 @@ namespace LOFAR
       const Parset                     &itsParset;
       const OutputType itsOutputType;
       const unsigned itsStreamNr;
-      const bool itsIsBigEndian;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
 

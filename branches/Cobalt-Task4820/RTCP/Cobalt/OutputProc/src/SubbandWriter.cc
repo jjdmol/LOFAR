@@ -30,14 +30,14 @@ namespace LOFAR
   {
 
 
-    SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix)
+    SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, const std::string &logPrefix)
     {
       itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
       itsInputThread->start();
 
       try 
       {
-        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
+        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
         itsOutputThread->start();
       } 
       catch (...) 
