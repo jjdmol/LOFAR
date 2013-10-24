@@ -52,7 +52,7 @@ gpu::Stream *stream;
 const unsigned NR_STATIONS = 48;
 const unsigned NR_CHANNELS_1 = 64;
 const unsigned NR_CHANNELS_2 = 32;
-const unsigned NR_SAMPLES_PER_CHANNEL = 48;
+const unsigned NR_SAMPLES_PER_CHANNEL = 32;
 const unsigned NR_BITS_PER_SAMPLE = 8;
 const unsigned NR_POLARIZATIONS = 2;
 
@@ -99,10 +99,11 @@ void runKernel(gpu::Function kfunc,
     xdim_local = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS_2 ;
    
   // 
-  gpu::Grid globalWorkSize((NR_SAMPLES_PER_CHANNEL * NR_CHANNELS_2) / xdim_local,
-                           NR_STATIONS, 1);
+  gpu::Grid globalWorkSize(NR_SAMPLES_PER_CHANNEL / 16,
+                           NR_CHANNELS_2 / 16,
+                           NR_STATIONS);
 
-  gpu::Block localWorkSize(xdim_local, 1, 1);
+  gpu::Block localWorkSize(16, 16, 1);
 
   
   // Overwrite devOutput, so result verification is more reliable.

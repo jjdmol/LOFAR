@@ -80,11 +80,11 @@ extern "C" {
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
   
   // fasted dims
-  unsigned chan2        = (blockIdx.x * blockDim.x + threadIdx.x) % NR_CHANNELS_2  ;
-  unsigned sample       = (blockIdx.x * blockDim.x + threadIdx.x) / NR_CHANNELS_2;
-  
-  // second dim
-  unsigned station      = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x ;
+  unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned station      = blockIdx.z * blockDim.z + threadIdx.z;
+
+
 
   for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
   {
