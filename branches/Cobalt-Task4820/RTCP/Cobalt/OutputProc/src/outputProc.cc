@@ -184,11 +184,7 @@ void process(Stream &controlStream, size_t myRank)
 
 int main(int argc, char *argv[])
 {
-#if defined HAVE_LOG4CPLUS
   INIT_LOGGER("outputProc");
-#else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("OutputProc@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
-#endif
 
   CasaLogSink::attach();
 
