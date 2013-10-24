@@ -29,7 +29,6 @@
 #include <MSLofar/MSLofar.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
-#include "Format.h"
 
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>
@@ -63,13 +62,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class MeasurementSetFormat : public Format
+    class MeasurementSetFormat
     {
     public:
       MeasurementSetFormat(const Parset &, uint32 alignment = 1);
-      virtual ~MeasurementSetFormat();
+      ~MeasurementSetFormat();
 
-      virtual void addSubband(const std::string MSname, unsigned subband);
+      void addSubband(const std::string MSname, unsigned subband);
 
       // casacore/measurementset mutex
       static Mutex sharedMutex;

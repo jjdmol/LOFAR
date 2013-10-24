@@ -19,7 +19,6 @@ lofar_add_library(outputproc
   MSWriterDAL.cc
   MSWriterNull.cc
   MSWriterFile.cc
-  Format.cc
   MeasurementSetFormat.cc
   TBB_StaticMapping.cc
 #  TBB_Writer.cc
