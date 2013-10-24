@@ -66,7 +66,7 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
  *                                 ::BandPassFactorsType, a 1D array [channel] of
  *                                 float, containing bandpass correction factors
  */
-
+#define SHARED
 extern "C" {
  __global__ void correctBandPass( fcomplex * correctedDataPtr,
                                   const fcomplex * filteredDataPtr,
@@ -80,7 +80,7 @@ extern "C" {
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
   
   // fasted dims
-  unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x ;
+  unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
   unsigned station      = blockIdx.z * blockDim.z + threadIdx.z;
 
@@ -91,6 +91,7 @@ extern "C" {
     
     unsigned combined_channel = idx_channel1 * NR_CHANNELS_2 + chan2;
     float weight((*bandPassFactors)[combined_channel]);
+    // Read from memory in the quickest dimension (optimal)
     fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
     fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
     
@@ -99,21 +100,23 @@ extern "C" {
     sampleY.x *= weight;
     sampleY.y *= weight;
 
-//// Support all variants of NR_CHANNELS and DO_TRANSPOSE for testing etc.
-//// Transpose: data order is [station][channel][time][pol]
-//    __shared__ fcomplex tmp[NR_SAMPLES_PER_CHANNEL][NR_CHANNELS_2 + 1][2]; // one too wide to avoid bank-conflicts on read
-//
-//    tmp[sample][chan2][0] = sampleX;
-//    tmp[sample][chan2][1] = sampleY;
-//    __syncthreads();
-
-//    (*outputData)[station][combined_channel][sample][0] = tmp[chan2][sample][0];
-//    (*outputData)[station][combined_channel][sample][1] = tmp[chan2][sample][1];
-    
-    // No use of shared mem
+#if defined SHARED
+    //  4.6 ms
+    // Write blocks of memory 16 by 16 in chared
+    __shared__ fcomplex tmp[16][16 + 1][2]; // one too wide to avoid bank-conflicts on read
+    // 
+    tmp[threadIdx.y][threadIdx.x][0] = sampleX;
+    tmp[threadIdx.y][threadIdx.x][1] = sampleY;
+    __syncthreads();
+    // Write data to global with the sample moving the 
+    (*outputData)[station][combined_channel][sample][0] = tmp[threadIdx.x][threadIdx.y][0];
+    (*outputData)[station][combined_channel][sample][1] = tmp[threadIdx.x][threadIdx.y][1];
+    __syncthreads();
+#else
+    // 5.5 ms
     (*outputData)[station][combined_channel][sample][0] = sampleX; //tmp[minor][major][0];
     (*outputData)[station][combined_channel][sample][1] = sampleY; //tmp[minor][major][1];
-    //__syncthreads();
+#endif
   }
 }
 }
