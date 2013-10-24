@@ -24,9 +24,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <sys/select.h>
-#include <unistd.h>
-#include <libgen.h>
 
 #include <string>
 #include <vector>
@@ -34,23 +31,17 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
-#if defined HAVE_MPI
-#include <mpi.h>
-#endif
-
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
-#include <Common/Thread/Thread.h>
 #include <ApplCommon/Observation.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
-#include <OutputProc/Package__Version.h>
 #include "SubbandWriter.h"
 #include "IOPriority.h"
 
