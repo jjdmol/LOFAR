@@ -101,15 +101,16 @@ extern "C" {
 
 //// Support all variants of NR_CHANNELS and DO_TRANSPOSE for testing etc.
 //// Transpose: data order is [station][channel][time][pol]
-//    __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
+//    __shared__ fcomplex tmp[NR_SAMPLES_PER_CHANNEL][NR_CHANNELS_2 + 1][2]; // one too wide to avoid bank-conflicts on read
 //
-//    tmp[major][minor][0] = sampleX;
-//    tmp[major][minor][1] = sampleY;
+//    tmp[sample][chan2][0] = sampleX;
+//    tmp[sample][chan2][1] = sampleY;
 //    __syncthreads();
 
-    //(*outputData)[station][combined_channel][sample][0] = sampleX; //tmp[minor][major][0];
-    //(*outputData)[station][combined_channel][sample][1] = sampleY; //tmp[minor][major][1];
+//    (*outputData)[station][combined_channel][sample][0] = tmp[chan2][sample][0];
+//    (*outputData)[station][combined_channel][sample][1] = tmp[chan2][sample][1];
     
+    // No use of shared mem
     (*outputData)[station][combined_channel][sample][0] = sampleX; //tmp[minor][major][0];
     (*outputData)[station][combined_channel][sample][1] = sampleY; //tmp[minor][major][1];
     //__syncthreads();
