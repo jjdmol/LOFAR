@@ -52,6 +52,7 @@ usage()
     echo "  --parmdb-name        basename for the parameter database (default:"
     echo "                       instrument)"
     echo "  --replace-parmdb     replace the parameter database"
+    echo "  -t --numthreads      set the number of threads to use (default: 1)"
     exit 1
 }
 
@@ -101,6 +102,7 @@ sourcedb_basename="sky"
 replace_parmdb=0
 parmdb=
 parmdb_basename="instrument"
+numthreads=1
 
 # Arguments
 observation=
@@ -163,6 +165,18 @@ do
     elif test "${1}" = "--replace-parmdb"; then
         shift
         replace_parmdb=1
+    elif test "${1}" = "-t" -o "${1}" = "--numthreads"; then
+        if test $# -le 1; then
+            error "${1} needs an additional argument"
+        fi
+        shift
+
+        if [[ $1 =~ ^[0-9]+$ ]]; then
+            numthreads=${1}
+        else
+            error "Number of threads should be an integer"
+        fi
+        shift
     else
         break
     fi
@@ -257,6 +271,7 @@ if test ${verbose} -eq 1; then
     echo "    parmdb: ${parmdb}"
     echo "    parmdb name: ${parmdb_basename}"
     echo "    replace parmdb: ${replace_parmdb}"
+    echo "    number of threads: ${numthreads}"
     echo
 fi
 
@@ -365,7 +380,7 @@ fi
 notice "execute bbs-reducer"
 
 if test ${verbose} -eq 1 -o ${dry} -eq 1; then
-    echo "bbs-reducer --sourcedb=\"${sourcedb_path}\" --parmdb=\"${parmdb_path}\" \"${observation}\" \"${parset}\""
+    echo "bbs-reducer --numthreads=${numthreads} --sourcedb=\"${sourcedb_path}\" --parmdb=\"${parmdb_path}\" \"${observation}\" \"${parset}\""
 fi
 
 if test ${dry} -eq 1; then
