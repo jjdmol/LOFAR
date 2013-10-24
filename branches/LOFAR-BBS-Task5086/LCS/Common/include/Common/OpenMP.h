@@ -47,6 +47,16 @@ namespace LOFAR {
 #endif
     }
 
+    // Set the number of threads.
+    // It overrides the env.var. OMP_NUM_THREADS.
+    // If OpenMP is not used, it does nothing
+    inline void setNumThreads(int numThreads)
+    {
+#ifdef _OPENMP
+      omp_set_num_threads(numThreads);
+#endif
+    }
+
     // Get the number of threads used in a parallel piece of code.
     // If OpenMP is not used, 1 is returned.
     inline uint numThreads()
