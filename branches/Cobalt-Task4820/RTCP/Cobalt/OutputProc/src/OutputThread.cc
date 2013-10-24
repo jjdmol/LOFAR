@@ -197,31 +197,17 @@ namespace LOFAR
     }
 
 
-    static Semaphore writeSemaphore(300);
-
-
     void OutputThread::doWork()
     {
       time_t prevlog = 0;
 
       for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
-        //NSTimer writeTimer("write data", false, false);
-
-        //writeTimer.start();
-        writeSemaphore.down();
-
         try {
           itsWriter->write(data);
           checkForDroppedData(data);
         } catch (SystemCallException &ex) {
           LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
-        } catch (...) {
-          writeSemaphore.up();
-          throw;
         }
-
-        writeSemaphore.up();
-        //writeTimer.stop();
 
         time_t now = time(0L);
 
