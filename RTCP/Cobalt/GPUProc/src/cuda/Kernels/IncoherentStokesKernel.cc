@@ -72,10 +72,8 @@ namespace LOFAR
       unsigned nrTimesPerPass = 
         (nrTimes + nrPasses - 1) / nrPasses;
 
-      globalWorkSize = 
-        gpu::Grid(nrTimesPerPass * nrPasses, params.nrChannelsPerSubband);
-      localWorkSize = 
-        gpu::Block(nrTimesPerPass, 1);
+      setEnqueueWorkSizes( gpu::Grid(nrTimesPerPass * nrPasses, params.nrChannelsPerSubband),
+                           gpu::Block(nrTimesPerPass, 1) );
 
     }
 

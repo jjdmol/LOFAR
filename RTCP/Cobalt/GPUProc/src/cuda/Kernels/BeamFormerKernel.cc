@@ -88,12 +88,8 @@ namespace LOFAR
       }
       unsigned nrChannelsPerBlock = prefNrThreadsZ;
 
-      globalWorkSize = gpu::Grid(params.nrPolarizations, 
-                                 params.nrTABs, 
-                                 params.nrChannelsPerSubband); 
-      localWorkSize = gpu::Block(params.nrPolarizations, 
-                                 params.nrTABs, 
-                                 nrChannelsPerBlock);
+      setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
+                           gpu::Block(params.nrPolarizations, params.nrTABs, nrChannelsPerBlock) );
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);

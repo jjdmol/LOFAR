@@ -45,8 +45,8 @@ namespace LOFAR
       for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
         ;
 
-      globalWorkSize = gpu::Grid(1024, NR_POLARIZATIONS, ps.nrTABs(0));
-      localWorkSize = gpu::Block(nrThreads, 1, 1);
+      setEnqueueWorkSizes( gpu::Grid(1024, NR_POLARIZATIONS, ps.nrTABs(0)),
+                           gpu::Block(nrThreads, 1, 1) );
 
       size_t count = ps.nrTABs(0) * NR_POLARIZATIONS * 1024;
       nrOperations = count * ps.nrSamplesPerChannel() * NR_STATION_FILTER_TAPS * 2;

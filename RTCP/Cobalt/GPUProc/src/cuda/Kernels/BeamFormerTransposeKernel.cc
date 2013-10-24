@@ -70,10 +70,8 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      globalWorkSize = gpu::Grid(256,
-                                 (params.nrTABs + 15) / 16, 
-                                 params.nrSamplesPerChannel / 16);
-      localWorkSize = gpu::Block(256, 1, 1);
+      setEnqueueWorkSizes( gpu::Grid(256, (params.nrTABs + 15) / 16, params.nrSamplesPerChannel / 16),
+                           gpu::Block(256, 1, 1) );
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =

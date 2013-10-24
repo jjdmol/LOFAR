@@ -103,8 +103,8 @@ namespace LOFAR
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1U);
-      globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
-      localWorkSize = gpu::Block(nrThreads, 1);
+      setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
+                           gpu::Block(nrThreads, 1) );
 
       nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
       nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);

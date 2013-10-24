@@ -84,8 +84,8 @@ namespace LOFAR
         params.nrChannelsPerSubband * params.nrPolarizations * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
 
-      globalWorkSize = gpu::Grid(totalNrThreads, params.nrSTABs);
-      localWorkSize = gpu::Block(totalNrThreads / nrPasses, 1);
+      setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
+                           gpu::Block(totalNrThreads / nrPasses, 1) );
 
       unsigned nrSamples = 
         params.nrSTABs * params.nrChannelsPerSubband * 
