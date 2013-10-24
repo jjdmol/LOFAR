@@ -679,24 +679,6 @@ namespace LOFAR
 
     void Parset::check() const
     {
-      checkInputConsistency();
-      checkVectorLength("Observation.beamList", nrSubbands());
-
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++)
-        if (outputThisType(outputType)) {
-          std::string prefix = keyPrefix(outputType);
-          unsigned expected = nrStreams(outputType);
-
-          checkVectorLength(prefix + ".locations", expected);
-          checkVectorLength(prefix + ".filenames", expected);
-        }
-
-      if (CNintegrationSteps() % dedispersionFFTsize() != 0)
-        THROW(CoInterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
-
-      if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
-        // second transpose is performed
-      }
     }
 
 
@@ -725,7 +707,6 @@ namespace LOFAR
       switch (outputType) {
       case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
       case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
-      case TRIGGER_DATA:      return "Observation.DataProducts.Output_Trigger";
       default:                THROW(CoInterfaceException, "Unknown output type");
       }
     }
@@ -734,9 +715,12 @@ namespace LOFAR
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
-        return settings.correlator.files[streamNr].location.host; // TODO: add to check() to reject parset or obsconfig early to avoid segfault here if streamNr >= settings.correlator.files.size()
+        return settings.correlator.files[streamNr].location.host;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.host;
+
+      return "unknown";
     }
 
 
@@ -745,16 +729,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.filename;
 
-      const std::string keyname = keyPrefix(outputType) + ".filenames";
-      if (!isDefined(keyname))
-        THROW(CoInterfaceException, "Could not find filename key: " << keyname);
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.filename;
 
-      const std::vector<std::string> filenames = getStringVector(keyname, true);
-
-      if (streamNr >= filenames.size())
-        THROW(CoInterfaceException, "Filename index out of bounds for key " << keyname << ": " << streamNr << " >= " << filenames.size());
-
-      return filenames[streamNr];
+      return "unknown";
     }
 
 
@@ -763,7 +741,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.directory;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.directory;
+
+      return "unknown";
     }
 
 
@@ -773,9 +754,8 @@ namespace LOFAR
         return 0;
 
       switch (outputType) {
-      case CORRELATED_DATA:   return settings.correlator.files.size();
-      case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      return settings.beamFormer.files.size();
+      case CORRELATED_DATA:    return settings.correlator.files.size();
+      case BEAM_FORMED_DATA:   return settings.beamFormer.files.size();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
     }

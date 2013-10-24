@@ -139,14 +139,29 @@ void process(Stream &controlStream, size_t myRank)
 
     vector<SmartPtr<SubbandWriter> > subbandWriters;
 
-    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) 
-    {
-      for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) 
+    // Process correlated data
+    if (parset.settings.correlator.enabled) {
+      for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
       {
-        if (parset.getHostName(outputType, streamNr) != myHostName) 
+        if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        SubbandWriter *writer = startWriter(parset, outputType, streamNr);
+        SubbandWriter *writer = startWriter(parset, CORRELATED_DATA, fileIdx);
+        if (writer == NULL)
+          continue;
+
+        subbandWriters.push_back(writer);
+      }
+    }
+
+    // Process beam-formed data
+    if (parset.settings.beamFormer.enabled) {
+      for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
+      {
+        if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
+          continue;
+
+        SubbandWriter *writer = startWriter(parset, BEAM_FORMED_DATA, fileIdx);
         if (writer == NULL)
           continue;
 
