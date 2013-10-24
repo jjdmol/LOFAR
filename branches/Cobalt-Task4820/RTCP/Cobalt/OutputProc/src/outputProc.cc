@@ -134,6 +134,48 @@ void writeFeedbackLTA( Stream &controlStream, vector< SmartPtr<SubbandWriter> > 
   feedbackLTA.write(&controlStream);
 }
 
+
+void process(Stream &controlStream, size_t myRank)
+{
+  Parset parset(&controlStream);
+
+  const vector<string> &hostnames = parset.settings.outputProcHosts;
+  ASSERT(myRank < hostnames.size());
+  string myHostName = hostnames[myRank];
+
+  {
+    // make sure "parset" stays in scope for the lifetime of the SubbandWriters
+
+    vector<SmartPtr<SubbandWriter> > subbandWriters;
+
+    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) 
+    {
+      for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) 
+      {
+        if (parset.getHostName(outputType, streamNr) != myHostName) 
+          continue;
+
+        SubbandWriter *writer = startWriter(parset, outputType, streamNr);
+        if (writer == NULL)
+          continue;
+
+        subbandWriters.push_back(writer);
+      }
+    }
+
+    /*
+     * FINAL META DATA
+     */
+    readFinalMetaData(controlStream, subbandWriters);
+
+    /*
+     * LTA FEEDBACK
+     */
+    writeFeedbackLTA(controlStream, subbandWriters);
+  }
+}
+
+
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
@@ -144,70 +186,31 @@ int main(int argc, char *argv[])
 
   CasaLogSink::attach();
 
-  try {
-    if (argc < 3)
-      throw StorageException(str(boost::format("usage: %s obsid rank") % argv[0]), THROW_ARGS);
+  if (argc < 3)
+    throw StorageException(str(boost::format("usage: %s obsid rank") % argv[0]), THROW_ARGS);
 
-    setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-    setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
+  setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
+  setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
-    LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
+  LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
 
-    int observationID = boost::lexical_cast<int>(argv[1]);
-    unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
+  int observationID = boost::lexical_cast<int>(argv[1]);
+  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
 
-    setIOpriority();
-    setRTpriority();
-    lockInMemory();
+  setIOpriority();
+  setRTpriority();
+  lockInMemory();
 
-    PortBroker::createInstance(storageBrokerPort(observationID));
+  PortBroker::createInstance(storageBrokerPort(observationID));
 
-    // retrieve the parset
-    string resource = getStorageControlDescription(observationID, myRank);
-    PortBroker::ServerStream controlStream(resource);
+  // retrieve the parset
+  string resource = getStorageControlDescription(observationID, myRank);
+  PortBroker::ServerStream controlStream(resource);
 
-    Parset parset(&controlStream);
-
-    const vector<string> &hostnames = parset.settings.outputProcHosts;
-    ASSERT(myRank < hostnames.size());
-    string myHostName = hostnames[myRank];
-
-    {
-      // make sure "parset" stays in scope for the lifetime of the SubbandWriters
-
-      vector<SmartPtr<SubbandWriter> > subbandWriters;
-
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) 
-      {
-        for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) 
-        {
-          if (parset.getHostName(outputType, streamNr) != myHostName) 
-            continue;
-
-          SubbandWriter *writer = startWriter(parset, outputType, streamNr);
-          if (writer == NULL)
-            continue;
-
-          subbandWriters.push_back(writer);
-        }
-      }
-
-      /*
-       * FINAL META DATA
-       */
-      readFinalMetaData(controlStream, subbandWriters);
-
-      /*
-       * LTA FEEDBACK
-       */
-      writeFeedbackLTA(controlStream, subbandWriters);
-    }
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("Caught Exception: " << ex);
-    return 1;
-  }
+  process(controlStream, myRank);
 
   LOG_INFO_STR("Program end");
+
   return 0;
 }
 
