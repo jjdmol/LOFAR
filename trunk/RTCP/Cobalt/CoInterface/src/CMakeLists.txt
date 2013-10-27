@@ -15,7 +15,8 @@ lofar_add_library(cointerface
   DataFactory.cc
   FinalMetaData.cc
   Stream.cc
-  Parset.cc)
+  Parset.cc
+  TABTranspose.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 

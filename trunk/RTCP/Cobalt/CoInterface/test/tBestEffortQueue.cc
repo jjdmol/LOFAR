@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 #include <Common/LofarLogger.h>
-#include <GPUProc/BestEffortQueue.h>
+#include <CoInterface/BestEffortQueue.h>
 
 using namespace LOFAR;
 using namespace Cobalt;

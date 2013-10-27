@@ -89,7 +89,7 @@ void OneRequest::clientThread() {
 }
 
 void OneRequest::serverThread() {
-  PortBroker::ServerStream ss(resource, 0, prefix);
+  PortBroker::ServerStream ss(resource, prefix);
 
   unsigned x = msg;
 
@@ -185,14 +185,15 @@ int main(int /*argc*/, const char* argv[])
 
     start();
 
-    one_request();
-    two_requests();
-    prefix();
+    //one_request();
+    //two_requests();
+    //prefix();
   } catch (Exception& e) {
     LOG_ERROR_STR(e);
     return 1;
   }
   LOG_INFO("Program terminated successfully");
+  PortBroker::destroyInstance();
   return 0;
 }
 

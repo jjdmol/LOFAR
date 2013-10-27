@@ -47,6 +47,8 @@ class PortBroker: protected SocketStream {
     virtual ~PortBroker();
 
     static void createInstance( uint16 port );
+    static void destroyInstance();
+
     static PortBroker &instance();
     
     void start();
