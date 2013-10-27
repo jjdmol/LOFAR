@@ -8,6 +8,19 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
   //Point to show the datastreamlevel of a certain station
   
   station = $station;
+  if (station == \"CCU001\" || station == \"MCU001\") {
+    setValue(\"stream0-1_text\",\"visible\",false);
+    setValue(\"stream0-2_text\",\"visible\",false);
+    setValue(\"stream0-3_text\",\"visible\",false);
+    setValue(\"stream0-4_text\",\"visible\",false);
+    setValue(\"stream0-5_text\",\"visible\",false);
+    setValue(\"stream1-1_text\",\"visible\",false);
+    setValue(\"stream1-2_text\",\"visible\",false);
+    setValue(\"stream1-3_text\",\"visible\",false);
+    setValue(\"stream1-4_text\",\"visible\",false);
+    setValue(\"stream1-5_text\",\"visible\",false);
+    return;
+  }
   
   baseDP = station+\":LOFAR_PIC_StationInfo\";
   if (navFunct_dpReachable(baseDP)) {
@@ -200,7 +213,9 @@ addStream(int streamnr,int stream,string changed)
   
   LOG_TRACE(\"dataStreamLlevel.pnl:addlevel|streamnr -stream: \" + streamnr + \" - \"+stream);
 
-  string toolTip = changed+\"<br>  stream: \"+stream;
+  string streamon=\"true\";
+  if (!stream) streamon=\"false\";
+  string toolTip = changed+\"<br>  stream: \"+streamon;
   
   string streamcolor=\"\";
   if (!stream) {
@@ -272,7 +287,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -230 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -230 -150 1 E 230 150 234 159
 6 2
 "stream0-2_text"
 ""
@@ -298,7 +313,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -225 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -225 -150 1 E 230 150 234 159
 6 3
 "stream0-3_text"
 ""
@@ -324,7 +339,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -220 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -220 -150 1 E 230 150 234 159
 6 4
 "stream0-4_text"
 ""
@@ -350,7 +365,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -215 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -215 -150 1 E 230 150 234 159
 6 5
 "stream0-5_text"
 ""
@@ -376,7 +391,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -210 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -210 -150 1 E 230 150 234 159
 6 8
 "stream1-1_text"
 ""
@@ -402,7 +417,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -195 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -195 -150 1 E 230 150 234 159
 6 9
 "stream1-2_text"
 ""
@@ -428,7 +443,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -190 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -190 -150 1 E 230 150 234 159
 6 10
 "stream1-3_text"
 ""
@@ -454,7 +469,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -185 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -185 -150 1 E 230 150 234 159
 6 11
 "stream1-4_text"
 ""
@@ -480,7 +495,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -180 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -180 -150 1 E 230 150 234 159
 6 12
 "stream1-5_text"
 ""
@@ -506,7 +521,7 @@ E "main(int x, int y)
 {
   click();
 }" 0
- 0 1 1 2 1 E 1 0 1 -175 -140 1 E 230 150 234 159
+ 0 1 1 2 1 E 1 0 1 -175 -150 1 E 230 150 234 159
 2 16
 "PRIMITIVE_TEXT1"
 ""

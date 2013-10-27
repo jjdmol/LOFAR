@@ -6,7 +6,6 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-lofar_add_test(tBestEffortQueue tBestEffortQueue.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tfpequals tfpequals.cc)
 lofar_add_test(tstartBGL DEPENDS rtcp)
@@ -24,12 +23,14 @@ lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp cmpfloat)
+lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
 #lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
 set_tests_properties(
   tCorrelate_1sec_1st_5sb_noflagging
   tCorrelate_3sec_1st_5sb
   tCorrelate_3sec_2st_5sb
   tBeamform_1sec_1st_5sb_noflagging
+  tBeamform_incoherent_2sec_1st_5sb_noflagging
   PROPERTIES RUN_SERIAL ON
 )
 

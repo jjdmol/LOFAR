@@ -228,7 +228,7 @@ namespace LOFAR
         bool splitClock = false;
         if(itsModelConfig.useClock()) {
           splitClock = ps.getBool("Model.Clock.Split",
-              itsModelConfig.getClockConfig().splitClock());
+              parentConfig.splitClock());
         } else {
           splitClock = ps.getBool("Model.Clock.Split",false);
         }

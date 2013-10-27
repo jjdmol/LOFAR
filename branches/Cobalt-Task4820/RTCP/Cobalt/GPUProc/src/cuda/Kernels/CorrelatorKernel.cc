@@ -73,7 +73,7 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      size_t preferredMultiple;
+      unsigned preferredMultiple;
 
       gpu::Platform pf;
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
@@ -102,9 +102,9 @@ namespace LOFAR
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1UL);
-      globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
-      localWorkSize = gpu::Block(nrThreads, 1);
+      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1U);
+      setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
+                           gpu::Block(nrThreads, 1) );
 
       nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
       nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -116,17 +116,17 @@ namespace LOFAR
     template<> size_t 
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {
-      size_t nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
+      unsigned nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
 
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
-          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          nrBaselines * itsParameters.nrChannelsPerSubband * 
-          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) nrBaselines * itsParameters.nrChannelsPerSubband * 
+            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

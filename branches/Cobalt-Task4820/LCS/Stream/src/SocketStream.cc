@@ -270,7 +270,8 @@ void SocketStream::accept(time_t deadline)
   }
 
   if ((fd = ::accept(listen_sk, 0, 0)) < 0)
-    THROW_SYSCALL("accept");
+    //THROW_SYSCALL("accept");
+    return;
 }
 
 

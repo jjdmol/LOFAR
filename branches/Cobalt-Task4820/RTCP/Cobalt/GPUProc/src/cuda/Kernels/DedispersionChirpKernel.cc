@@ -42,13 +42,14 @@ namespace LOFAR
       setArg(0, buffer);
       setArg(1, DMs);
 
-      size_t maxNrThreads;
+      unsigned maxNrThreads;
       //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       unsigned fftSize = ps.dedispersionFFTsize();
 
-      globalWorkSize = gpu::Grid(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
+      gpu::Grid globalWorkSize(fftSize, ps.nrSamplesPerChannel() / fftSize, ps.nrChannelsPerSubband());
       //std::cout << "globalWorkSize = NDRange(" << fftSize << ", " << ps.nrSamplesPerChannel() / fftSize << ", " << ps.nrChannelsPerSubband() << ')' << std::endl;
+      gpu::Block localWorkSize;
 
       if (fftSize <= maxNrThreads) {
         localWorkSize = gpu::Block(fftSize, 1, maxNrThreads / fftSize);
@@ -62,6 +63,8 @@ namespace LOFAR
         localWorkSize = gpu::Block(fftSize / divisor, 1, 1);
         //std::cout << "localWorkSize = NDRange(" << fftSize / divisor << ", 1, 1))" << std::endl;
       }
+
+      setEnqueueWorkSizes(globalWorkSize, localWorkSize);
 
       nrOperations = (size_t) NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel() * (9 * ps.nrTABs(0) + 17),
       nrBytesRead = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();

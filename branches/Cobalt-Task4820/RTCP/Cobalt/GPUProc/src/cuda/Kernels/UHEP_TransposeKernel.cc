@@ -38,8 +38,8 @@ namespace LOFAR
       setArg(1, devComplexVoltages);
       setArg(2, devReverseSubbandMapping);
 
-      globalWorkSize = gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, 512 / 16);
-      localWorkSize = gpu::Block(256, 1, 1);
+      setEnqueueWorkSizes( gpu::Grid(256, (ps.nrTABs(0) + 15) / 16, 512 / 16),
+                           gpu::Block(256, 1, 1) );
 
       nrOperations = 0;
       nrBytesRead = (size_t) ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * ps.nrTABs(0) * NR_POLARIZATIONS * sizeof(std::complex<float>);

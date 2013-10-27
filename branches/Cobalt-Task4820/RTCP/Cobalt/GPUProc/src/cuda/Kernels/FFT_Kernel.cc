@@ -93,8 +93,8 @@ namespace LOFAR
       case INPUT_DATA: 
       case OUTPUT_DATA:
         return
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+          (size_t) ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

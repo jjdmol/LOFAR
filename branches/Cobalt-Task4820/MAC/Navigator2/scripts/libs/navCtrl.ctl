@@ -123,6 +123,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait HeadLines ChangeInfo");
       
     }
+    return;
   }
   
   // Panel needs to be changed
@@ -179,6 +180,7 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     dpSet(VIEWBOXACTIONDP,"Reload");
 
     navFunct_waitObjectReady(500,"handleViewBoxEvent:Reload wait ViewBox Reload");
+    return;
       
   }
   
@@ -431,6 +433,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait FastJumper ChangeSelection");
       
     }
+    return;
   }  
   
   // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
@@ -471,9 +474,9 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
         navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait BottomDetailSelection Update");
       
     }
+    LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
     return;
   } 
-  LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -549,6 +552,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         typeSelector=sel[1];
         if (dynlen(sel) >= 2 ) observationType=sel[2];
         if (dynlen(sel) >= 3 ) selection=sel[3];
+
       } else {
         typeSelector=sel[1];
         observationType="";
@@ -567,6 +571,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait TopDetailSelection Update");
       
     }
+    return;
   }
   
   // Fill highlight string        
@@ -593,10 +598,19 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
               dynAppend(highlight,selection);
             }
           }
-          
-          // if selection == observation, add involved hardware && software
-          navCtrl_highlightAddHardwareFromObservation(selection);
-          navCtrl_highlightAddProcessesFromObservation(selection);
+      // if on one of the "main" groups we need to add all observations that are within this group    
+          if (selection == "planned" || selection == "active" || selection == "finished") {
+            dyn_string selections="";
+            dpGet("MCU001:LOFAR_PermSW_MACScheduler."+selection+"Observations",selections);
+            for (int o=1; o <=dynlen(selections) ; o++) {
+              navCtrl_highlightAddHardwareFromObservation(selections[o]);
+              navCtrl_highlightAddProcessesFromObservation(selection[o]);
+            }
+          } else { 
+            // if selection == observation, add involved hardware && software
+            navCtrl_highlightAddHardwareFromObservation(selection);
+            navCtrl_highlightAddProcessesFromObservation(selection);
+          }
         } else if (sel[1] == "Hardware") {  // Hardware
           typeSelector=sel[1];
           observationType="";
@@ -624,6 +638,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       dpSet(DPNAME_NAVIGATOR + g_navigatorID+".objectTrigger",true);
           
     }
+    return;
   }
   
   if (anEvent == "ChangePanel") {
@@ -674,7 +689,8 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
       
     }
-  }       
+  }
+  return;  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -737,6 +753,7 @@ void navCtrl_handleLocatorEvent(string dp,string value){
         navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait HeadLines ChangeInfo ");
       
     }
+    return;
   }  
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -879,6 +896,7 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait HeadLines ChangeInfo " + aSelection);
       
     }
+    return;
   }
 
 }
@@ -939,6 +957,7 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
       
 
     }
+    return;
   }
   
 }

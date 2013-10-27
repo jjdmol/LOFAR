@@ -41,8 +41,8 @@ namespace LOFAR
       setArg(2, devBeamFormerWeights);
 
 #if 1
-      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrSubbands());
-      localWorkSize = gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), 1);
+      setEnqueueWorkSizes( gpu::Grid(NR_POLARIZATIONS, ps.nrTABs(0), ps.nrSubbands()),
+                           gpu::Block(NR_POLARIZATIONS, ps.nrTABs(0), 1) );
 
       size_t count = ps.nrSubbands() * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1) * NR_POLARIZATIONS;
       size_t nrWeightsBytes = ps.nrStations() * ps.nrTABs(0) * ps.nrSubbands() * NR_POLARIZATIONS * sizeof(std::complex<float>);

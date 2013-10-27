@@ -31,7 +31,7 @@
 #include <InputProc/Transpose/ReceiveStations.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <GPUProc/BestEffortQueue.h>
+#include <CoInterface/BestEffortQueue.h>
 
 namespace LOFAR {
   namespace Cobalt {

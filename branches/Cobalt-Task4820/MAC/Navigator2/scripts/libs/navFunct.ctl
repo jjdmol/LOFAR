@@ -679,6 +679,8 @@ int navFunct_BGPMidplane2BGPRack(int midplaneNr) {
   return floor(midplaneNr/2);
 }
 
+
+
 // ****************************************
 // Name : navFunct_dpStripLastElement
 // ****************************************
@@ -1479,7 +1481,7 @@ void navFunct_fillHardwareTree() {
         }
         lvl="BGPMidplane";
       }
-      
+
       //add Ionodes
       if (dynlen(g_IONodeList) > 0) {
         for (int i = 1; i <= dynlen(g_IONodeList); i++) {
@@ -1493,6 +1495,27 @@ void navFunct_fillHardwareTree() {
           dp = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr+"_IONode"+g_IONodeList[i];
           dynAppend(result,connectTo+",IONode"+g_IONodeList[i]+","+dp);
         }
+      }
+
+      //add CobaltRacks
+      if (dynlen(g_cobaltRackList) > 0) {
+        for (int i = 1; i <= dynlen(g_cobaltRackList); i++) {
+          dp = station+":LOFAR_PIC_Cobalt"+g_cobaltRackList[i];
+          dynAppend(result,baseConnect+",Cobalt"+","+dp);
+        }
+        lvl="CobaltRack";
+      }
+      
+      //add CobaltNodes
+      if (dynlen(g_cobaltNodeList) > 0) {
+        for (int i = 1; i <= dynlen(g_cobaltNodeList); i++) {
+          if (lvl == "CobaltRack") {
+            connectTo = station+":LOFAR_PIC_Cobalt";
+          }
+          dp = station+":LOFAR_PIC_Cobalt_CBT"+navFunct_formatInt(g_cobaltNodeList[i],999);
+          dynAppend(result,connectTo+",CBT"+navFunct_formatInt(g_cobaltNodeList[i],999)+","+dp);
+        }
+        lvl="CobaltNode";
       }
 
       // add OSRacks
@@ -1693,6 +1716,9 @@ void navFunct_clearGlobalLists() {
   dynClear(g_IONodeList);
   dynClear(g_OSRackList);
   dynClear(g_locusNodeList);
+  dynClear(g_cobaltRackList);
+  dynClear(g_cobaltNodeList);
+  dynClear(g_cobaltNICList);
 
   dynClear(g_observationsList);
   dynClear(g_processesList);

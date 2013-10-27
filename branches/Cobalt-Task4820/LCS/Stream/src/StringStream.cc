@@ -32,6 +32,7 @@ namespace LOFAR {
 
 StringStream::~StringStream()
 {
+  close();
 }
 
 
@@ -39,7 +40,15 @@ size_t StringStream::tryRead(void *ptr, size_t size)
 {
   Cancellation::point(); // keep behaviour consistent with real I/O streams
 
-  return itsBuffer.readsome(static_cast<char*>(ptr), size);
+  if (!dataWritten.down(size))
+    THROW(EndOfStreamException, "Stream has been closed");
+
+  {
+    ScopedLock sl(itsMutex);
+    itsBuffer.read(static_cast<char*>(ptr), size);
+  }
+
+  return size;
 }
 
 
@@ -47,9 +56,20 @@ size_t StringStream::tryWrite(const void *ptr, size_t size)
 {
   Cancellation::point(); // keep behaviour consistent with real I/O streams
 
-  itsBuffer.write(static_cast<const char*>(ptr), size);
+  {
+    ScopedLock sl(itsMutex);
+    itsBuffer.write(static_cast<const char*>(ptr), size);
+  }
+
+  dataWritten.up(size);
 
   return size;
+}
+
+
+void StringStream::close()
+{
+  dataWritten.noMore();
 }
 
 } // namespace LOFAR

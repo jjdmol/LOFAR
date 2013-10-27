@@ -44,9 +44,9 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrBitsPerSample;
-        size_t nrBytesPerComplexSample;
-        size_t nrSAPs;
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample;
+        unsigned nrSAPs;
         bool delayCompensation;
         bool correctBandPass;
         bool transpose;
@@ -88,7 +88,7 @@ namespace LOFAR
 
 
       void enqueue(const BlockID &blockId, PerformanceCounter &counter,
-                   double subbandFrequency, size_t SAP);
+                   double subbandFrequency, unsigned SAP);
 
     };
 
