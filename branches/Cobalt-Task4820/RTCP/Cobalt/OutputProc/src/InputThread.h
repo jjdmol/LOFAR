@@ -26,7 +26,6 @@
 #include <string>
 
 #include <Common/Thread/Queue.h>
-#include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
@@ -37,18 +36,43 @@ namespace LOFAR
   namespace Cobalt
   {
 
-
     class InputThread
     {
     public:
-      InputThread(const Parset &parset,
-                  OutputType index,
+      virtual ~InputThread();
+
+      virtual void process() = 0;
+    };
+
+
+    class InputCorrelated: public InputThread
+    {
+    public:
+      InputCorrelated(const Parset &parset,
                   unsigned streamNr,
                   Queue<SmartPtr<StreamableData> > &freeQueue,
                   Queue<SmartPtr<StreamableData> > &receiveQueue,
                   const std::string &logPrefix);
 
-      void                             process();
+      virtual void process();
+
+    private:
+      const std::string itsLogPrefix, itsInputDescriptor;
+      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+      const double itsDeadline;
+    };
+
+
+    class InputBeamFormed: public InputThread
+    {
+    public:
+      InputBeamFormed(const Parset &parset,
+                  unsigned streamNr,
+                  Queue<SmartPtr<StreamableData> > &freeQueue,
+                  Queue<SmartPtr<StreamableData> > &receiveQueue,
+                  const std::string &logPrefix);
+
+      virtual void process();
 
     private:
       const std::string itsLogPrefix, itsInputDescriptor;

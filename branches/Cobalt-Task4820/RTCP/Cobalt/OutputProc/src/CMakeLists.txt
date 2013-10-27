@@ -12,7 +12,7 @@ lofar_add_library(outputproc
   FastFileStream.cc
   InputThread.cc
   OutputThread.cc
-  SubbandWriter.cc
+  Writer.cc
   MSWriter.cc
   MSWriterCorrelated.cc
   MSWriterDAL.cc

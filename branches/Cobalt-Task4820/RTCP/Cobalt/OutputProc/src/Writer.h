@@ -1,4 +1,4 @@
-//# SubbandWriter.h: Write subband(s) in an AIPS++ Measurement Set
+//# Writer.h: Write visibilites and beam-formed data
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -36,29 +36,65 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    
 
-    class SubbandWriter
+    class Writer
     {
     public:
-      SubbandWriter(const Parset &, OutputType,
+      virtual ~Writer();
+
+      virtual void process() = 0;
+
+      virtual void augment(const FinalMetaData &finalMetaData) = 0;
+
+      virtual ParameterSet feedbackLTA() const = 0;
+    };
+    
+
+    class SubbandWriter: public Writer
+    {
+    public:
+      SubbandWriter(const Parset &,
                     unsigned streamNr,
                     const std::string &logPrefix);
 
-      void process();
+      virtual void process();
 
-      void augment(const FinalMetaData &finalMetaData);
+      virtual void augment(const FinalMetaData &finalMetaData);
 
-      ParameterSet feedbackLTA() const;
+      virtual ParameterSet feedbackLTA() const;
 
     private:
       static const unsigned maxReceiveQueueSize = 3;
 
       Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
-      SmartPtr<InputThread>            itsInputThread;
-      SmartPtr<OutputThread>           itsOutputThread;
+      InputCorrelated itsInputThread;
+      OutputThread    itsOutputThread;
     };
+    
+
+    class TABWriter: public Writer
+    {
+    public:
+      TABWriter(const Parset &,
+                    unsigned streamNr,
+                    const std::string &logPrefix);
+
+      virtual void process();
+
+      virtual void augment(const FinalMetaData &finalMetaData);
+
+      virtual ParameterSet feedbackLTA() const;
+
+    private:
+      static const unsigned maxReceiveQueueSize = 3;
+
+      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
+
+      InputBeamFormed itsInputThread;
+      OutputThread    itsOutputThread;
+    };
+
 
 
   } // namespace Cobalt

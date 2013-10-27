@@ -43,7 +43,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
-#include "SubbandWriter.h"
+#include "Writer.h"
 #include "IOPriority.h"
 
 // install a new handler to produce backtraces for bad_alloc
@@ -58,7 +58,7 @@ Exception::TerminateHandler t(Exception::terminate);
 
 char stdoutbuf[1024], stderrbuf[1024];
 
-SubbandWriter *startWriter(const Parset &parset, OutputType outputType, unsigned streamNr)
+Writer *startWriter(const Parset &parset, OutputType outputType, unsigned streamNr)
 {
   unsigned writerNr = 0;
 
@@ -80,7 +80,14 @@ SubbandWriter *startWriter(const Parset &parset, OutputType outputType, unsigned
 
   try 
   {
-    return new SubbandWriter(parset, outputType, streamNr, sbLogPrefix);
+    switch (outputType) {
+      default:
+      case CORRELATED_DATA:
+        return new SubbandWriter(parset, streamNr, sbLogPrefix);
+
+      case BEAM_FORMED_DATA:
+        return new TABWriter(parset, streamNr, sbLogPrefix);
+    }
   } 
   catch (Exception &ex) 
   {
@@ -94,7 +101,7 @@ SubbandWriter *startWriter(const Parset &parset, OutputType outputType, unsigned
   return NULL;
 }
 
-void readFinalMetaData( Stream &controlStream, vector< SmartPtr<SubbandWriter> > &subbandWriters )
+void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
 {
   // Add final meta data (broken tile information, etc)
   // that is obtained after the end of an observation.
@@ -111,7 +118,7 @@ void readFinalMetaData( Stream &controlStream, vector< SmartPtr<SubbandWriter> >
     }
 }
 
-void writeFeedbackLTA( Stream &controlStream, vector< SmartPtr<SubbandWriter> > &subbandWriters )
+void writeFeedbackLTA( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
 {
   LOG_INFO_STR("Retrieving LTA feedback");
   Parset feedbackLTA;
@@ -138,7 +145,7 @@ void process(Stream &controlStream, size_t myRank)
   {
     // make sure "parset" stays in scope for the lifetime of the SubbandWriters
 
-    vector<SmartPtr<SubbandWriter> > subbandWriters;
+    vector<SmartPtr<Writer> > subbandWriters;
 
     /*
      * Construct writers
@@ -151,7 +158,7 @@ void process(Stream &controlStream, size_t myRank)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        SubbandWriter *writer = startWriter(parset, CORRELATED_DATA, fileIdx);
+        Writer *writer = startWriter(parset, CORRELATED_DATA, fileIdx);
         if (writer == NULL)
           continue;
 
@@ -166,7 +173,7 @@ void process(Stream &controlStream, size_t myRank)
         if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
           continue;
 
-        SubbandWriter *writer = startWriter(parset, BEAM_FORMED_DATA, fileIdx);
+        Writer *writer = startWriter(parset, BEAM_FORMED_DATA, fileIdx);
         if (writer == NULL)
           continue;
 
