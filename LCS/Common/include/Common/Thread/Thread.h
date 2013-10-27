@@ -74,6 +74,11 @@ class Thread
     bool		  wait(const struct timespec &);
     bool      isDone();
 
+
+    // Returns whether the thread threw an exception. This function will wait for the thread
+    // to finish.
+    bool      caughtException();
+
   private:
     Thread(const Thread&);
     Thread& operator=(const Thread&);
@@ -90,8 +95,10 @@ class Thread
     template <typename T> static void *stub(void *);
 
     const std::string logPrefix;
-    Semaphore	      finished;
+    Semaphore	      started, finished;
     pthread_t	      thread;
+
+    bool              caught_exception;
 };
 
 class ThreadMap {
@@ -127,7 +134,8 @@ private:
 
 template <typename T> inline Thread::Thread(T *object, void (T::*method)(), const std::string &logPrefix, size_t stackSize)
 :
-  logPrefix(logPrefix)
+  logPrefix(logPrefix),
+  caught_exception(false)
 {
   int retval;
 
@@ -169,6 +177,9 @@ inline Thread::~Thread()
 
 inline void Thread::cancel()
 {
+  started.down();
+  started.up(); // allow multiple cancels
+
   (void)pthread_cancel(thread); // could return ESRCH ==> ignore
 }
 
@@ -212,6 +223,15 @@ inline bool Thread::isDone()
 }
 
 
+inline bool Thread::caughtException()
+{
+  // thread must be finished for caught_exception to make sense
+  wait();
+
+  return caught_exception;
+}
+
+
 template <typename T> inline void Thread::stub(Args<T> *args)
 {
   // (un)register WITHIN the thread, since the thread id
@@ -225,6 +245,9 @@ template <typename T> inline void Thread::stub(Args<T> *args)
   ThreadMap::ScopedRegistration sr(ThreadMap::instance(), logPrefix);
 
   try {
+    // allow cancellation from here, to guarantee finished.up()
+    started.up();
+
     (args->object->*args->method)();
   } catch (Exception &ex) {
     // split exception message into lines to be able to add the logPrefix to each line
@@ -238,8 +261,12 @@ template <typename T> inline void Thread::stub(Args<T> *args)
 
     for (unsigned i = 1; i < exlines.size(); i ++)
       LOG_FATAL_STR(logPrefix << exlines[i]);
+
+    caught_exception = true;
   } catch (std::exception &ex) {
     LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
+
+    caught_exception = true;
   } catch (...) {
     LOG_DEBUG_STR(logPrefix << "Thread cancelled");
 

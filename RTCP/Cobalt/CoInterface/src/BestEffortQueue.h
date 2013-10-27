@@ -74,7 +74,7 @@ namespace LOFAR
   }
 }
 
-#include <GPUProc/BestEffortQueue.tcc>
+#include "BestEffortQueue.tcc"
 
 #endif
 

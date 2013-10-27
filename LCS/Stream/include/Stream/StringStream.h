@@ -23,6 +23,8 @@
 #ifndef LOFAR_LCS_STREAM_STRING_STREAM_H
 #define LOFAR_LCS_STREAM_STRING_STREAM_H
 
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Semaphore.h>
 #include <Stream/Stream.h>
 
 #include <sstream>
@@ -37,7 +39,12 @@ class StringStream : public Stream
     virtual size_t tryRead(void *ptr, size_t size);
     virtual size_t tryWrite(const void *ptr, size_t size);
 
+    void close();
+
   private:
+    Mutex itsMutex;
+    Semaphore dataWritten;
+
     std::stringstream itsBuffer;
 };
 
