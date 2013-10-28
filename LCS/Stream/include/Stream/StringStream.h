@@ -42,8 +42,10 @@ class StringStream : public Stream
     void close();
 
   private:
+#ifdef USE_THREADS
     Mutex itsMutex;
     Semaphore dataWritten;
+#endif
 
     std::stringstream itsBuffer;
 };
