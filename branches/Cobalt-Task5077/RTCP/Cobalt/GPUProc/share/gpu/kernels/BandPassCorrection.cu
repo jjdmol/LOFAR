@@ -32,7 +32,7 @@
  * - @c NR_CHANNELS_1: > 1
  * - @c NR_CHANNELS_2: a multiple of 16
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
- *
+ * - @c NR_BITS_PER_SAMPLE: 8 or 16
  */
 
 #include "gpu_math.cuh"
