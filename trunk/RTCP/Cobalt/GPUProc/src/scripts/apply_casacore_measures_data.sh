@@ -11,8 +11,8 @@
 # $Id$
 
 # Keep these vars in sync with get_casacore_measures_tables.sh
-working_dir=$HOME/root/share/aips++  
-dir_prefix=measures_data-
+working_dir=$HOME/root/share/casacore  
+dir_prefix=IERS-
 
 
 # find the latest
@@ -33,7 +33,7 @@ else
 fi
 
 # See if casacore uses the latest tables by extracting the path (token(s) 6,...) from findmeastable.
-# If ok, findmeastable prints: "Measures table Observatories found as /home/jenkins/root/share/aips++/data/geodetic/Observatories"
+# If ok, findmeastable prints: "Measures table Observatories found as /home/jenkins/root/share/casacore/data/geodetic/Observatories"
 if ! findmeastable > /dev/null; then exit 1; fi
 used_dir=`findmeastable | cut -d' ' -f 6-`
 if [ $? -ne 0 ]; then exit 1; fi
