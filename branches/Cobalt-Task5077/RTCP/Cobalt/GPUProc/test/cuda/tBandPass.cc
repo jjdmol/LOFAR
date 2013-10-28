@@ -234,13 +234,13 @@ TEST(BandPass)
   // The input samples are all ones. After correction, multiply with 2.
   // The first and the last complex values are retrieved. They should be scaled
   // with the bandPassFactor == 2
-  vector<fcomplex> results(runTest<fcomplex>(
-                             defs)); // bandpass factor
+  vector<fcomplex> results(runTest<fcomplex>(defs)); // bandpass factor
 
   // The bandpassarray is filled with straigth slope from 0 untill 1
   // idx_in_array / array_elements
   CHECK_CLOSE(0.0, results[0].real(), 0.000001);
   CHECK_CLOSE(0.0, results[0].imag(), 0.000001);
+
   // Last element is (array_elements - 1) / array_elements  index start at 0 until max-1
   CHECK_CLOSE((NR_CHANNELS_1 * NR_CHANNELS_2 * 1.0 - 1.0) / (NR_CHANNELS_1 * NR_CHANNELS_2), 
               results[1].real(), 0.000001);
