@@ -126,7 +126,7 @@ gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs)
   vector<gpu::Device> devices(1, gpu::Device(0));
   string ptx(createPTX(kernelPath, defs, flags, devices));
   gpu::Module module(createModule(ctx, kernelPath, ptx));
-  gpu::Function kfunc(module, "correctBandPass");
+  gpu::Function kfunc(module, "bandPassCorrection");
 
   return kfunc;
 }
