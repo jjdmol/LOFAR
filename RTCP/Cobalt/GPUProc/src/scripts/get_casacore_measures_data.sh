@@ -6,8 +6,8 @@
 # $Id$
 
 # Keep these vars in sync with apply_casacore_measures_tables.sh
-working_dir=$HOME/root/share/aips++
-dir_prefix=measures_data-
+working_dir=$HOME/root/share/casacore
+dir_prefix=IERS-
 
 
 update_id=$dir_prefix`date +%FT%T.%N`  # e.g. measures_data-2013-09-26T01:58:30.098006623
