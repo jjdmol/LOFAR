@@ -1,4 +1,4 @@
-//# BandPass.cu
+//# BandPassCorrection.cu
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 /** @file
  * This file contains a CUDA implementation of the GPU kernel for the 
- * bandpass correction. It can also transposes the data: The FFT produces
+ * BandPassCorrection correction. It can also transposes the data: The FFT produces
  * for each sample x channels in the fastest dimension. The channels and samles
  * are transposed. The samples will end up in the fastest dimension.
  *
@@ -43,12 +43,11 @@ typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS_1
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
 
 /**
- * This kernel performs (up to) three operations on the input data:
- * - Apply a fine delay by doing a per channel phase correction.
+ * This kernel performs on the input data:
  * - Apply a bandpass correction to compensate for the errors introduced by the
  *   polyphase filter that produced the subbands. This error is deterministic,
  *   hence it can be fully compensated for.
- * - Transpose the data so that the time slices for each channel are placed
+ * - Transpose the data so that the samples for each channel are placed
  *   consecutively in memory.
  *
  * @param[out] correctedDataPtr    pointer to output data of ::OutputDataType,
@@ -65,7 +64,7 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
  */
 #define SHARED
 extern "C" {
-__global__ void correctBandPass( fcomplex * correctedDataPtr,
+__global__ void bandPassCorrection( fcomplex * correctedDataPtr,
                                  const fcomplex * filteredDataPtr,
                                  const float * bandPassFactorsPtr)
 {

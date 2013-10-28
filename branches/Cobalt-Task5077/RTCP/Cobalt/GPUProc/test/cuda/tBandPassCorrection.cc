@@ -1,4 +1,4 @@
-//# tBandPass.cc: test delay and bandpass CUDA kernel
+//# tBandPassCorrection.cc: test delay and bandpass CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -121,7 +121,7 @@ gpu::Function initKernel(gpu::Context ctx, const CompileDefinitions& defs)
 {
   // Compile to ptx. Copies the kernel to the current dir
   // (also the complex header, needed for compilation).
-  string kernelPath("BandPass.cu");
+  string kernelPath("BandPassCorrection.cu");
   CompileFlags flags(defaultCompileFlags());
   vector<gpu::Device> devices(1, gpu::Device(0));
   string ptx(createPTX(kernelPath, defs, flags, devices));
@@ -269,7 +269,7 @@ gpu::Stream initDevice()
 
 int main()
 {
-  INIT_LOGGER("tDelayAndBandPass");
+  INIT_LOGGER("tBandPassCorrection");
 
   // init global(s): device, context/stream.
   gpu::Stream strm(initDevice());
