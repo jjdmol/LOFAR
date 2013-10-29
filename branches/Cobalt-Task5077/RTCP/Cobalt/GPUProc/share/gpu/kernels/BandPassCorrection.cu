@@ -29,7 +29,7 @@
  * into account:
  * - @c NR_POLARIZATIONS: 2
  * - @c NR_STATIONS: > 0
- * - @c NR_CHANNELS_1: > 1
+ * - @c NR_CHANNELS_1: > 1 
  * - @c NR_CHANNELS_2: a multiple of 16
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
  * - @c NR_BITS_PER_SAMPLE: 8 or 16
@@ -37,6 +37,31 @@
 
 #include "gpu_math.cuh"
 #include "IntToFloat.cuh"
+
+#if !(NR_POLARIZATIONS == 2)
+#error Precondition violated: NR_POLARIZATIONS == 2
+#endif
+
+#if !(NR_STATIONS > 0)
+#error Precondition violated: NR_STATIONS > 0
+#endif
+
+#if !(NR_CHANNELS_1 > 1)
+#error Precondition violated: NR_CHANNELS_1 > 1
+#endif
+
+#if !(NR_CHANNELS_2 % 16 == 0)
+#error Precondition violated: NR_CHANNELS_2 % 16 
+#endif
+
+#if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0
+#endif
+
+#if !(NR_BITS_PER_SAMPLE == 16 || NR_BITS_PER_SAMPLE == 8)
+#error Precondition violated: NR_BITS_PER_SAMPLE == 16 || NR_BITS_PER_SAMPLE == 8
+#endif
+
 
 typedef  fcomplex (* OutputDataType)[NR_STATIONS][NR_CHANNELS_1 * NR_CHANNELS_2][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
 typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS_1][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS_2];

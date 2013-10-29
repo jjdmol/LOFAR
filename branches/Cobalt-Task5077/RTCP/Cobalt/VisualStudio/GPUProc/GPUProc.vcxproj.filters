@@ -396,6 +396,9 @@
     <ClInclude Include="..\..\GPUProc\src\opencl\Kernels\FFT_Kernel.h">
       <Filter>src\opencl\Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -679,9 +682,14 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\Kernels\FFT_Plan.cc">
       <Filter>src\opencl\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPass.cc">
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc">
       <Filter>test\cuda</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -901,7 +909,7 @@
     <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
-    <None Include="..\..\GPUProc\share\gpu\kernels\BandPass.cu">
+    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
       <Filter>share</Filter>
     </None>
   </ItemGroup>
