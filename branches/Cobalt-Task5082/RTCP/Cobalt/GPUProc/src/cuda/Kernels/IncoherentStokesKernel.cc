@@ -72,9 +72,13 @@ namespace LOFAR
       unsigned nrTimesPerPass = 
         (nrTimes + nrPasses - 1) / nrPasses;
 
+      LOG_DEBUG_STR("nrTimes = " << nrTimes);
+      LOG_DEBUG_STR("nrPasses = " << nrPasses);
+      LOG_DEBUG_STR("nrTimesPerPass = " << nrTimesPerPass);
+
       setEnqueueWorkSizes(
-        gpu::Grid(nrTimesPerPass * nrPasses, params.nrChannelsPerSubband),
-        gpu::Block(nrTimesPerPass, 1));
+        gpu::Grid(params.nrChannelsPerSubband, nrTimesPerPass * nrPasses),
+        gpu::Block(1, nrTimesPerPass));
 
     }
 

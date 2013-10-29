@@ -89,8 +89,8 @@ typedef float (*OutputDataType)
 extern "C" __global__ void incoherentStokes(OutputDataType output,
                                             const InputDataType input)
 {
-  uint time = blockIdx.x * blockDim.x + threadIdx.x;
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y;
+  uint channel = blockIdx.x * blockDim.x + threadIdx.x;
+  uint time = blockIdx.y * blockDim.y + threadIdx.y;
 
   if (time >= NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR)
     return;
