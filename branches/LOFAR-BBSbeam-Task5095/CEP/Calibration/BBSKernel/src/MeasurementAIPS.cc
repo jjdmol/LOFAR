@@ -25,6 +25,8 @@
 #include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Exceptions.h>
 
+#include <StationResponse/LofarMetaDataUtil.h>
+
 #include <Common/Timer.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
@@ -1414,7 +1416,12 @@ Station::Ptr readStation(const Table &table, unsigned int id,
     {
         return Station::Ptr(new Station(name, position));
     }
-
+    else
+    {
+        StationResponse::Station::Ptr station = StationResponse::readStation(table, id);
+        return Station::Ptr(new StationLOFAR(name, position, station));
+    }
+/*
     Table tab_field = getSubTable(table, "LOFAR_ANTENNA_FIELD");
     tab_field = tab_field(tab_field.col("ANTENNA_ID") == static_cast<Int>(id));
 
@@ -1507,6 +1514,7 @@ Station::Ptr readStation(const Table &table, unsigned int id,
     }
 
     return station;
+    */
 }
 
 } //# namespace unnamed

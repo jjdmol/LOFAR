@@ -34,6 +34,7 @@
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <StationResponse/Station.h>
 
 #include <casa/Arrays.h>
 #include <casa/OS/Path.h>
@@ -47,6 +48,7 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
+/*
 class AntennaField
 {
 public:
@@ -93,6 +95,7 @@ private:
     vector<Vector3>         itsTileElements;
     vector<Element>         itsElements;
 };
+*/
 
 class Station
 {
@@ -101,27 +104,38 @@ public:
     typedef shared_ptr<const Station> ConstPtr;
 
     Station(const string &name, const casa::MPosition &position);
-
-    template <typename T>
-    Station(const string &name, const casa::MPosition &position, T first,
-        T last);
+    virtual ~Station()
+    {
+    }
 
     const string &name() const;
     const casa::MPosition &position() const;
 
-    bool isPhasedArray() const;
-    size_t nElement() const;
-    size_t nActiveElement() const;
-
-    unsigned int nField() const;
-    AntennaField::ConstPtr field(unsigned int i) const;
-
-    void append(const AntennaField::Ptr &field);
-
 private:
     string                      itsName;
     casa::MPosition             itsPosition;
-    vector<AntennaField::Ptr>   itsFields;
+};
+
+class StationLOFAR: public Station
+{
+public:
+    typedef shared_ptr<StationLOFAR>        Ptr;
+    typedef shared_ptr<const StationLOFAR>  ConstPtr;
+
+    StationLOFAR(const string &name, const casa::MPosition &position,
+            const StationResponse::Station::ConstPtr &station)
+        :   Station(name, position),
+            itsStation(station)
+    {
+    }
+
+    StationResponse::Station::ConstPtr station() const
+    {
+        return itsStation;
+    }
+
+private:
+    StationResponse::Station::ConstPtr  itsStation;
 };
 
 class Instrument
@@ -154,6 +168,7 @@ private:
 
 // @}
 
+/*
 // -------------------------------------------------------------------------- //
 // - Implementation: AntennaField                                           - //
 // -------------------------------------------------------------------------- //
@@ -195,7 +210,7 @@ Station::Station(const string &name, const casa::MPosition &position, T first,
         itsFields(first, last)
 {
 }
-
+*/
 // -------------------------------------------------------------------------- //
 // - Implementation: Instrument                                             - //
 // -------------------------------------------------------------------------- //

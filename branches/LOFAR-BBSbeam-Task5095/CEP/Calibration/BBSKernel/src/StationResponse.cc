@@ -83,8 +83,12 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
         {
             Station::ConstPtr station = instrument->station(i);
 
-            // Check preconditions.
-            if(!station->isPhasedArray())
+            try
+            {
+                itsExpr[i] = makeBeamExpr(station, refFreq, exprDirITRF,
+                        exprRefDelayITRF, exprRefTileITRF, beamConfig);
+            }
+            catch(BBSKernelException &e)
             {
                 LOG_WARN_STR("Station " << station->name() << " is not a LOFAR"
                     " station or the additional information needed to compute"
@@ -92,9 +96,6 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
                     " NOT be applied.");
                 continue;
             }
-
-            itsExpr[i] = makeBeamExpr(station, refFreq, exprDirITRF,
-                exprRefDelayITRF, exprRefTileITRF, beamConfig);
 
             if(inverse)
             {

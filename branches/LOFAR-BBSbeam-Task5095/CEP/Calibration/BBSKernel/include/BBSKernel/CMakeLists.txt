@@ -39,9 +39,9 @@ install(FILES
   VisSelection.h
   DESTINATION include/${PACKAGE_NAME})
 install(FILES
-  Expr/AntennaElementLBA.h
-  Expr/AntennaElementHBA.h
-  Expr/AntennaFieldThetaPhi.h
+#  Expr/AntennaElementLBA.h
+#  Expr/AntennaElementHBA.h
+#  Expr/AntennaFieldThetaPhi.h
   Expr/AzEl.h
   Expr/BasicExpr.h
   Expr/Cache.h
@@ -83,7 +83,7 @@ install(FILES
   Expr/MatrixSum.h
   Expr/MatrixTmp.h
   Expr/MergeFlags.h
-  Expr/ParallacticRotation.h
+#  Expr/ParallacticRotation.h
   Expr/PhaseShift.h
   Expr/PiercePoint.h
   Expr/PointCoherence.h
@@ -99,11 +99,12 @@ install(FILES
   Expr/ShapeletSource.h
   Expr/Source.h
   Expr/SpectralIndex.h
-  Expr/StationBeamFormer.h
+  Expr/StationBeam.h
+#  Expr/StationBeamFormer.h
   Expr/StationShift.h
   Expr/StationUVW.h
   Expr/StokesRM.h
   Expr/TECU2Phase.h
-  Expr/TileArrayFactor.h
+#  Expr/TileArrayFactor.h
   Expr/Timer.h
   DESTINATION include/${PACKAGE_NAME}/Expr)

@@ -33,7 +33,7 @@ namespace LOFAR
 {
 namespace BBS
 {
-
+/*
 AntennaField::AntennaField(const string &name, const Vector3 &position,
     const Vector3 &p, const Vector3 &q, const Vector3 &r)
     :   itsName(name),
@@ -79,6 +79,7 @@ void AntennaField::appendElement(const Element &element)
         ++itsActiveElementCount;
     }
 }
+*/
 
 Station::Station(const string &name, const casa::MPosition &position)
     :   itsName(name),
@@ -96,6 +97,7 @@ const casa::MPosition &Station::position() const
     return itsPosition;
 }
 
+/*
 bool Station::isPhasedArray() const
 {
     return !itsFields.empty();
@@ -135,6 +137,7 @@ void Station::append(const AntennaField::Ptr &field)
 {
     itsFields.push_back(field);
 }
+*/
 
 Instrument::Instrument(const string &name, const casa::MPosition &position)
     :   itsName(name),

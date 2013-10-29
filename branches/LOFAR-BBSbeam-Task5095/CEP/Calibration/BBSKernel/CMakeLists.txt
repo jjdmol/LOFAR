@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB ElementResponse)
+lofar_package(BBSKernel 1.0 DEPENDS Blob Common ParmDB StationResponse)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED)
