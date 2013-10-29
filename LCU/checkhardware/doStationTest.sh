@@ -4,9 +4,9 @@
  # default values
 START=""
 STOP=""
-LEVEL=2
+LEVEL=0
 UPDATE="no"
-SERVICE="no"
+SERVICE="yes"
 HELP="no"
 
 # get command line options
@@ -32,8 +32,8 @@ then
     echo "   -e : end time"
     echo "   -u : update pvss"
     echo "   -t : do short test L1"
-    echo "   -T : do long test L2 (default)"
-    echo "   -r : do service test and show results"
+    echo "   -T : do long test L2"
+    echo "   -r : do service test and show results (default)"
     echo "   -h : show this screen"
     exit
 fi
@@ -44,15 +44,22 @@ host=`hostname -s`
 locallogdir="/opt/stationtest/data/"
 globallogdir="/globalhome/log/"
 
+if [ $LEVEL -ne 0 ]
+then
+    SERVICE="no"
+fi
+
 filenameNow=$host"_StationTest.csv"
 if [ $SERVICE == "yes" ]
 then
+    LEVEL=2
     filenameLocal=$host"_S_StationTest.csv"
     filenameLocalHistory=$host"_S_StationTestHistory.csv"
 else
     filenameLocal=$host"_L"$LEVEL"_StationTest.csv"
     filenameLocalHistory=$host"_L"$LEVEL"_StationTestHistory.csv"
 fi
+filenameBadRCUs=$host"_bad_rcus.txt"
 
 # set test level
 level="-l="$LEVEL
@@ -78,7 +85,17 @@ err=$?
 echo $err
 if [ $err -eq 0 ]
 then
-    # Copy to Lx file in local dir
+    # Add test results too PVSS and make bad_rcu_file
+    #updatePVSS.py -N=5,50,1 -J=5,50,2 -S=20 -E
+    #new settings by Wilfred, 9-7-2013
+    if [ $UPDATE == "yes" ]
+    then
+        updatePVSS.py -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBLS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
+    else
+        updatePVSS.py -no_update -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBLS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
+    fi
+    
+    # Copy to local filename  file in local dir
     cp $locallogdir$filenameNow $locallogdir$filenameLocal
     
     # Add to history
@@ -87,14 +104,7 @@ then
     # Copy from local to global dir
     cp $locallogdir$filenameLocal $globallogdir
     cp $locallogdir$filenameLocalHistory $globallogdir
-
-    # Add test results too PVSS and make bad_rcu_file
-    #updatePVSS.py -N=5,50,1 -J=5,50,2 -S=20 -E
-    #new settings by Wilfred, 9-7-2013
-    if [ $UPDATE == "yes" ]
-    then
-        updatePVSS.py -N=5,50,3 -J=5,50,3 -E -S=10 -LBLN=5,50,3 -LBLJ=5,50,3 -LBLS=10 -LBHN=5,50,3 -LBHJ=5,50,3 -LBHS=10
-    fi
+    cp $locallogdir$filenameBadRCUs $globallogdir
 fi
 
 if [ $SERVICE == "yes" ]
