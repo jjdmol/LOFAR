@@ -42,8 +42,9 @@ class StringStream : public Stream
     void close();
 
   private:
-#ifdef USE_THREADS
     Mutex itsMutex;
+
+#ifdef USE_THREADS
     Semaphore dataWritten;
 #endif
 
