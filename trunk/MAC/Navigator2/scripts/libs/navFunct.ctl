@@ -54,6 +54,7 @@
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
 // navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
+// navFunct_getInputBuffersForStation         : returns all the InputBuffers that are connected to a station
 // navFunct_getLBABitmap                      : get the LBABitmap from a given observation on a given station
 // navFunct_getLocusNodesForObservation       : returns all the LocusNOdes that are in use for an observation
 // navFunct_getLogColor                       : returns the color that belongs to a log level
@@ -2353,6 +2354,26 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   return inputBuffers;
 }
 
+// ***************************
+// navFunct_getInputBuffersForStation
+// ***************************
+// station : the station in question
+//
+// Returns a dyn_string containing all InputBuffers used by this station
+// ***************************
+// 
+dyn_string navFunct_getInputBuffersForStation(string station) {
+  dyn_string inputBuffers;
+  dyn_dyn_anytype tab;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.stationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+station+"\"";
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    dynAppend(inputBuffers,dp);
+  }
+  dynSort(inputBuffers);
+  return inputBuffers;
+}
 
 // ***************************
 // navFunct_getAddersForObservation

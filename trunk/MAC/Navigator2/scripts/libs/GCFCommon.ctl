@@ -208,7 +208,7 @@ void showChildState(string aDP) {
       	    setValue("childStateBorder","foreCol","Lofar_invalid");
           } 
           if (!navFunct_dpReachable(aDP+".status.childState")) {
-            updateChildState("",0,"",true);
+            updateChildState("",0,"","","",true);
           }              
   	} 
   	else {
