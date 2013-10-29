@@ -37,7 +37,6 @@
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
-#include <ApplCommon/Observation.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
@@ -55,51 +54,6 @@ using namespace std;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
-
-char stdoutbuf[1024], stderrbuf[1024];
-
-Writer *startWriter(const Parset &parset, OutputType outputType, unsigned streamNr)
-{
-  unsigned writerNr = 0;
-
-  // lookup PVSS writer number for this file
-  Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
-
-  for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) 
-  {
-    Observation::StreamToStorage &s = obs.streamsToStorage[i];
-
-    if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) 
-    {
-      writerNr = s.writerNr;
-      break;
-    }
-  }
-
-  string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
-
-  try 
-  {
-    switch (outputType) {
-      default:
-      case CORRELATED_DATA:
-        return new SubbandWriter(parset, streamNr, sbLogPrefix);
-
-      case BEAM_FORMED_DATA:
-        return new TABWriter(parset, streamNr, sbLogPrefix);
-    }
-  } 
-  catch (Exception &ex) 
-  {
-    LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex);
-  } 
-  catch (exception &ex) 
-  {
-    LOG_WARN_STR(sbLogPrefix << "Could not create writer: " << ex.what());
-  }
-
-  return NULL;
-}
 
 void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
 {
@@ -158,10 +112,9 @@ void process(Stream &controlStream, size_t myRank)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        Writer *writer = startWriter(parset, CORRELATED_DATA, fileIdx);
-        if (writer == NULL)
-          continue;
+        string logPrefix = str(boost::format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
 
+        Writer *writer = new SubbandWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
       }
     }
@@ -173,10 +126,9 @@ void process(Stream &controlStream, size_t myRank)
         if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
           continue;
 
-        Writer *writer = startWriter(parset, BEAM_FORMED_DATA, fileIdx);
-        if (writer == NULL)
-          continue;
+        string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
+        Writer *writer = new TABWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
       }
     }
@@ -203,6 +155,7 @@ void process(Stream &controlStream, size_t myRank)
   }
 }
 
+char stdoutbuf[1024], stderrbuf[1024];
 
 int main(int argc, char *argv[])
 {
