@@ -2,6 +2,10 @@
 
 include(LofarCTest)
 
+if(UNITTEST++_FOUND)
+  lofar_add_test(tWriter tWriter.cc)
+endif()
+
 lofar_add_test(tMeasurementSetFormat tMeasurementSetFormat.cc)
 lofar_add_test(tMSWriterDAL tMSWriterDAL.cc)
 # The MS Writer needs the LOFAR Storage manager and static meta data files.
