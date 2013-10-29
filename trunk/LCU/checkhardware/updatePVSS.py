@@ -37,14 +37,11 @@ def main():
     
     if args.has_key('RESET'):
         resetPVSS(state=0)
-        addManualDataToPVSS()
     
     if args.has_key('NO_UPDATE'):
-        print "PVSS Update skipped"
-        sys.exit()
-        
-    if args.has_key('MANUAL'):
-        addManualDataToPVSS()
+            print "skip PVSS update"
+            
+    addManualDataToPVSS()
     
     # read last log file from checkhardware
     testfilename = '%s_StationTest.csv' %(getHostName())
@@ -70,7 +67,6 @@ def printHelp():
     print "Output of last stationcheck is always send to pvss also the bad_rcu file is made"
     print "-h                   : this help screen"
     
-    print "-manual              : send manual list"     
     print "-reset[=type]        : set all state fields to ok for type if given"
     print "                       type = all | lba | lbl | lbh | hba (all=default)"
     print "-no_update           : skip pvss update"
@@ -137,7 +133,10 @@ def getLogDir():
 # send comment, key and value to PVSS and write to file
 def sendToPVSS(comment, pvss_key, value):
     global logger, args
-    
+
+    if args.has_key('NO_UPDATE'):
+            return("")
+            
     if len(comment) > 0:
         comment = 'stationtest::'+comment
     else:
@@ -148,7 +147,7 @@ def sendToPVSS(comment, pvss_key, value):
         print arguments
     else:
         response = sendCmd('setObjectState', arguments)
-        sleep(0.05)
+        sleep(0.2)
         return(response)
     return("")
 
@@ -188,7 +187,7 @@ def resetPVSS(state=0):
     f.close()
     if not args.has_key('TEST'):
         sendCmd("setObjectState", "stationtes:reset %s" %(full_filename))
-        sleep(2.0)
+        sleep(5.0)
     
 
 
@@ -196,7 +195,7 @@ def resetPVSS(state=0):
 def addManualDataToPVSS():
     global State, logdir
     filename = "bad_antenna_list.txt"
-    full_filename = os.path.join(logdir, filename)
+    full_filename = "/globalhome/log/bad_antenna_list.txt"
     try:
         f = open(full_filename, 'r')
     except IOError:
@@ -283,8 +282,8 @@ def addDataToPVSS(data):
                     proc_limit_1 = float(lban_limits)
                     
                 if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
-                    if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
-                       (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit):
+                    if ((float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and (float(keyinfo.get('Xval','0.0')) - float(keyinfo.get('Xref','0.0'))) < diff_limit) and
+                        (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and (float(keyinfo.get('Yval','0.0')) - float(keyinfo.get('Yref','0.0'))) < diff_limit)):
                         pass
                     else:
                         sendToPVSS("noise", "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
@@ -301,31 +300,12 @@ def addDataToPVSS(data):
                     proc_limit_1 = float(lbaj_limits)
                 
                 if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
-                    if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
-                       (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit):
+                    if ((float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and
+                        (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit)):
                         pass
                     else:
                         sendToPVSS("jitter", "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
                 bad_lba[partNr] = 1
-
-            elif msgType == 'JITTER':
-                limits = args.get('LBHJ','0.0')
-                proc_limit_2 = 0.0
-                diff_limit = 0.0
-                if len(limits) > 1:
-                    proc_limit_1 = float(limits[0])
-                    proc_limit_2 = float(limits[1])
-                    diff_limit = float(limits[2])
-                else:
-                    proc_limit_1 = float(limits)
-                
-                if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
-                    if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
-                       (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit):
-                        pass
-                    else:
-                        sendToPVSS("jitter", "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
-                bad_lbh[partNr] = 1
             
             elif msgType == 'OSCILLATION':
                 sendToPVSS("oscillating", "LOFAR_PIC_LBA%03d" %(partNr), State['BROKEN'])
@@ -371,8 +351,8 @@ def addDataToPVSS(data):
                     proc_limit_1 = float(limits)
                     
                 if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
-                    if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
-                       (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit):
+                    if ((float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and (float(keyinfo.get('Xval','0.0')) - float(keyinfo.get('Xref','0.0'))) < diff_limit) and
+                        (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and (float(keyinfo.get('Yval','0.0')) - float(keyinfo.get('Yref','0.0'))) < diff_limit)):
                         pass
                     else:
                         sendToPVSS("noise", "LOFAR_PIC_HBA%02d" %(partNr), State['BROKEN'])
@@ -390,8 +370,8 @@ def addDataToPVSS(data):
                     proc_limit_1 = float(limits)
                 
                 if float(keyinfo.get('Xproc','0.0')) >= proc_limit_1 or float(keyinfo.get('Yproc','0.0')) >= proc_limit_1:
-                    if (float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and\
-                       (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit):
+                    if ((float(keyinfo.get('Xproc','0.0')) < proc_limit_2 and float(keyinfo.get('Xdiff','0.0')) < diff_limit) and
+                        (float(keyinfo.get('Yproc','0.0')) < proc_limit_2 and float(keyinfo.get('Ydiff','0.0')) < diff_limit)):
                         pass
                     else:
                         sendToPVSS("jitter", "LOFAR_PIC_HBA%02d" %(partNr), State['BROKEN'])
@@ -403,7 +383,7 @@ def addDataToPVSS(data):
                 bad_hba[partNr] = 1
                     
             elif msgType == 'C_SUMMATOR':
-                sendToPVSS("moden-fail", "LOFAR_PIC_HBA%02d" %(partNr), State['BROKEN'])
+                sendToPVSS("modem-fail", "LOFAR_PIC_HBA%02d" %(partNr), State['BROKEN'])
                 bad_hba[partNr] = 1
             
             elif msgType == 'SUMMATOR_NOISE':
@@ -505,39 +485,41 @@ def addDataToPVSS(data):
 # write bad rcu's to file in logdir
 def addDataToBadRcuFile(bad_lba, bad_hba):
     global nLBL
+    global nLBH
     
     # add bad rcus to file                               
     filename = '%s_bad_rcus.txt' %(getHostName())
     full_filename = os.path.join(logdir, filename) 
     f = open(full_filename, 'w')
 
-#    if nLBL:
-#        bad = ""
-#        for ant in sorted(bad_lbl):
-#            bad += "%d," %(ant*2)
-#            bad += "%d," %(ant*2+1)
-#        if len(bad):
-#            bad = bad[:-1]
-#        bad = "LBL=[" + bad + "]\n"
-#        f.write(bad)
-    
-    bad = ""
+    lbl = ""
+    lbh = ""
     for ant in sorted(bad_lba):
-        bad += "%d," %(ant*2)
-        bad += "%d," %(ant*2+1)
-    if len(bad):
-        bad = bad[:-1]
-    bad = "LBA=[" + bad + "]\n"
-    f.write(bad)
+        if (nLBL > 0) and (ant > nLBH):
+            lbl += "%d," %((ant-nLBL)*2)
+            lbl += "%d," %((ant-nLBL)*2+1)
+        else:
+            lbh += "%d," %(ant*2)
+            lbh += "%d," %(ant*2+1)
     
-    bad = ""
+    if len(lbl):
+        lbl = lbl[:-1]
+    lbl = "LBL=[" + lbl + "]\n"
+    f.write(lbl)
+
+    if len(lbh):
+        lbh = lbh[:-1]
+    lbh = "LBH=[" + lbh + "]\n"
+    f.write(lbh)
+
+    hba = ""
     for tile in sorted(bad_hba):
-        bad += "%d," %(tile*2)
-        bad += "%d," %(tile*2+1)
-    if len(bad):
-        bad = bad[:-1]
-    bad = "HBA=[" + bad + "]\n"
-    f.write(bad)
+        hba += "%d," %(tile*2)
+        hba += "%d," %(tile*2+1)
+    if len(hba):
+        hba = hba[:-1]
+    hba = "HBA=[" + hba + "]\n"
+    f.write(hba)
     
     f.close()
 
