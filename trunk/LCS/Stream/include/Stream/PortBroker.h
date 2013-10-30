@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: PortBroker.h 20465 2012-03-16 15:53:48Z mol $
+//# $Id$
 
 #ifndef LOFAR_LCS_STREAM_PORTBROKER_H
 #define LOFAR_LCS_STREAM_PORTBROKER_H
