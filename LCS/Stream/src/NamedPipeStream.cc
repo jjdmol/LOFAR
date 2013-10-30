@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: NamedPipeStream.cc 15528 2010-04-22 14:08:39Z romein $
+//# $Id$
 
 #include <lofar_config.h>
 
