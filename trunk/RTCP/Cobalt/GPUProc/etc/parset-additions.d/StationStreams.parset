@@ -1,5 +1,3 @@
-# List of streams to receive RSP data from all boards from all antenna fields
-
 PIC.Core.Station.CS001LBA.RSP.ports = [udp:10.168.102.1:10010, udp:10.168.102.1:10011, udp:10.168.102.1:10012, udp:10.168.102.1:10013]
 PIC.Core.Station.CS001HBA.RSP.ports = [udp:10.168.102.1:10010, udp:10.168.102.1:10011, udp:10.168.102.1:10012, udp:10.168.102.1:10013]
 PIC.Core.Station.CS001HBA0.RSP.ports = [udp:10.168.102.1:10010, udp:10.168.102.1:10011, udp:10.168.102.1:10012, udp:10.168.102.1:10013]
