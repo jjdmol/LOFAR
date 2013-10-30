@@ -138,7 +138,7 @@ const JonesMatrix::View StationBeam::evaluateImpl(const Grid &grid,
             StationResponse::vector3r_t q_station0 = {{p_station0[0][j], p_station0[1][j], p_station0[2][j]}};
             StationResponse::vector3r_t q_tile0 = {{p_tile0[0][j], p_tile0[1][j], p_tile0[2][j]}};
 
-            StationResponse::matrix22c_t J = itsStation->response(grid[TIME]->center(j), grid[FREQ]->center(j),
+            StationResponse::matrix22c_t J = itsStation->response(grid[TIME]->center(i), grid[FREQ]->center(j),
                     q_direction, itsRefFrequency, q_station0, q_tile0);
 
             *E00_re++ = real(J[0][0]);
