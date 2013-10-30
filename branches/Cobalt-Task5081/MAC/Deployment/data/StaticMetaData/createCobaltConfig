@@ -1,0 +1,63 @@
+#!/bin/bash
+
+cat RSPConnections_Cobalt.dat | perl -ne '
+
+/^(\w+) RSP_([01]) (.*)/ || next;
+
+$station = $1;
+$board = $2;
+$host = $3;
+
+$station =~ /^[A-Z][A-Z]([0-9]+)/;
+$nr = $1;
+
+# only parse cobalt nodes
+$host =~ /^cbt/ || next;
+
+if (not $cached) {
+  %lookup = {};
+
+  open $fh, "MAC+IP.dat"
+    or die "Cannot open MAC+IP.dat";
+
+  while($line = <$fh>) {
+    next if $line =~ /^#/;
+    ($name, $ip, $mac) = split(/\s+/, $line);
+
+    $lookup{$name} = $ip;
+  }
+
+  close $fh;
+
+  $cached = 1;
+}
+
+$dest = $lookup{$host};
+$baseport = 10000 + $nr * 10;
+
+$portstr = sprintf "[udp:%s:%d, udp:%s:%d, udp:%s:%d, udp:%s:%d]",
+  $dest, $baseport + ($board * 6) + 0,
+  $dest, $baseport + ($board * 6) + 1,
+  $dest, $baseport + ($board * 6) + 2,
+  $dest, $baseport + ($board * 6) + 3;
+
+if ($board == 0) {
+  printf "PIC.Core.Station.%sLBA.RSP.ports = %s\n",$station,$portstr;
+
+  printf "PIC.Core.Station.%sHBA.RSP.ports = %s\n",$station,$portstr;
+
+  if ($station =~ /^CS/) {
+    printf "PIC.Core.Station.%sHBA0.RSP.ports = %s\n",$station,$portstr;
+  } else {
+    print "\n";
+  }
+}
+
+if ($board == 1) {
+  printf "PIC.Core.Station.%sHBA1.RSP.ports = %s\n",$station,$portstr;
+  print "\n";
+}
+
+'
+
+
