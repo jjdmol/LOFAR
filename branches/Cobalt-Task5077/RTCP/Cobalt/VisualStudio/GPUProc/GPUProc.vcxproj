@@ -44,9 +44,9 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\Pool.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\UHEP_SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\FilterBank.h" />
@@ -160,6 +160,7 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.cc" />

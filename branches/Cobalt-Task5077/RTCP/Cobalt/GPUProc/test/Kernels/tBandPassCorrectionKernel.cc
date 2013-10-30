@@ -50,26 +50,24 @@ int main() {
   gpu::Stream stream(ctx);
 
   Parset ps("tBandPassCorrectionKernel.in_parset");
-  KernelFactory<BandPassCorrectionKernel> factory(ps);
+  BandPassCorrectionKernel::Parameters params(ps);
+  params.nrChannels1 = 64;
+  params.nrChannels2 = 63;
+
+  KernelFactory<BandPassCorrectionKernel> factory(params);
 
   gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
     filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA)),
-    delaysAtBegin(ctx, factory.bufferSize(BandPassCorrectionKernel::DELAYS)),
-    delaysAfterEnd(ctx, factory.bufferSize(BandPassCorrectionKernel::DELAYS)),
-    phaseOffsets(ctx, factory.bufferSize(BandPassCorrectionKernel::PHASE_OFFSETS)),
     bandPassCorrectionWeights(ctx, factory.bufferSize(BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
+  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData, bandPassCorrectionWeights);
 
   auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, buffers));
 
-  size_t subbandIdx = 0;
-  float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
-  size_t SAP = ps.settings.subbands[subbandIdx].SAP;
   PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, counter, centralFrequency, SAP);
+  kernel->enqueue(blockId, counter);
   stream.synchronize();
 
   return 0;

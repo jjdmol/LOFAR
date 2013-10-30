@@ -30,51 +30,64 @@ using namespace LOFAR::Cobalt;
 
 struct TestFixture
 {
-  TestFixture() : ps("tBandPassCorrectionKernel2.in_parset"), factory(ps) {}
+  TestFixture() 
+    : 
+  ps("tBandPassCorrectionKernel2.in_parset"),
+  params(ps)
+
+  {
+    BandPassCorrectionKernel::Parameters params(ps);
+    params.nrChannels1 = 64;
+    params.nrChannels2 = 63;
+    factory = new KernelFactory<BandPassCorrectionKernel>(params);
+  }
+
+
   ~TestFixture() {}
 
   Parset ps;
-  KernelFactory<BandPassCorrectionKernel> factory;
+  BandPassCorrectionKernel::Parameters params;
+  KernelFactory<BandPassCorrectionKernel> * factory;
 };
 
 TEST_FIXTURE(TestFixture, InputData)
 {
   CHECK_EQUAL(size_t(786432),
-              factory.bufferSize(
+              factory->bufferSize(
                 BandPassCorrectionKernel::INPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
   CHECK_EQUAL(size_t(786432),
-              factory.bufferSize(
+              factory->bufferSize(
                 BandPassCorrectionKernel::OUTPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, Delays)
 {
   CHECK_EQUAL(size_t(16),
-              factory.bufferSize(
+              factory->bufferSize(
                 BandPassCorrectionKernel::DELAYS));
 }
 
 TEST_FIXTURE(TestFixture, PhaseOffsets)
 {
   CHECK_EQUAL(size_t(16),
-              factory.bufferSize(
+              factory->bufferSize(
                 BandPassCorrectionKernel::PHASE_OFFSETS));
 }
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)
 {
   CHECK_EQUAL(size_t(64),
-              factory.bufferSize(
+              factory->bufferSize(
                 BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
 }
 
 TEST_FIXTURE(TestFixture, MustThrow)
 {
-  CHECK_THROW(factory.bufferSize(
+  CHECK_THROW(factory->bufferSize(
                 BandPassCorrectionKernel::BufferType(5)),
               GPUProcException);
 }

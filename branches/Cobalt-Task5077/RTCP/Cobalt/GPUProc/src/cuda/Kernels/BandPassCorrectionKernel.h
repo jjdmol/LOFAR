@@ -46,18 +46,14 @@ namespace LOFAR
         size_t nrBitsPerSample;
         size_t nrBytesPerComplexSample;
         size_t nrSAPs;
-        bool delayCompensation;
-        bool correctBandPass;
-        bool transpose;
-        double subbandBandwidth;
+        size_t nrChannels1;
+        size_t nrChannels2;
       };
 
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA,
-        DELAYS,
-        PHASE_OFFSETS,
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
@@ -67,16 +63,11 @@ namespace LOFAR
       {
         Buffers(const gpu::DeviceMemory& in, 
                 const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& delaysAtBegin,
-                const gpu::DeviceMemory& delaysAfterEnd,
-                const gpu::DeviceMemory& phaseOffsets,
                 const gpu::DeviceMemory& bandPassCorrectionWeights) :
-          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phaseOffsets(phaseOffsets), bandPassCorrectionWeights(bandPassCorrectionWeights)
+          Kernel::Buffers(in, out), 
+          bandPassCorrectionWeights(bandPassCorrectionWeights)
         {}
 
-        gpu::DeviceMemory delaysAtBegin;
-        gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phaseOffsets;
         gpu::DeviceMemory bandPassCorrectionWeights;
       };
 
@@ -84,10 +75,6 @@ namespace LOFAR
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
-
-
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
-                   double subbandFrequency, size_t SAP);
 
     };
 

@@ -38,9 +38,25 @@ namespace LOFAR
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
-        incoherentFirFilter(incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc))
+        incoherentFirFilter(incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
+        bandPassCorrection(bandPassCorrectionParams(ps))
 
       {
+      }
+
+      BandPassCorrectionKernel::Parameters
+      BeamFormerFactories::bandPassCorrectionParams(const Parset &ps) const
+      {
+        BandPassCorrectionKernel::Parameters params(ps);
+        params.nrChannels1 =
+          BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
+        params.nrChannels2 =
+          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS /
+          params.nrChannels1;
+        params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
+
+        return params;
       }
 
       DelayAndBandPassKernel::Parameters

@@ -132,9 +132,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\Pool.h">
-      <Filter>src\cuda\SubbandProcs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
@@ -401,6 +398,9 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\Kernels\BandPassCorrectionKernel.h">
       <Filter>src\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h">
+      <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -693,6 +693,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
+      <Filter>src\cuda\SubbandProcs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
