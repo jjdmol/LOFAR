@@ -399,6 +399,9 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\Kernels\BandPassCorrectionKernel.h">
+      <Filter>src\Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">

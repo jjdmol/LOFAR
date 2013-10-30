@@ -26,7 +26,6 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/KernelFactory.h>
 #include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
 
 namespace LOFAR
 {

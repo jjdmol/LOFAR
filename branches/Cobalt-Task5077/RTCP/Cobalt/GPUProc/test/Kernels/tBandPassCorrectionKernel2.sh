@@ -1,3 +1,3 @@
 #!/bin/bash
-./runctest.sh tBandPassKernelCorrection2
+./runctest.sh tBandPassCorrectionKernel2
 

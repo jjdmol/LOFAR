@@ -55,6 +55,7 @@
     <ClInclude Include="..\..\GPUProc\src\gpu_utils.h" />
     <ClInclude Include="..\..\GPUProc\src\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\KernelFactory.h" />
+    <ClInclude Include="..\..\GPUProc\src\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\CoherentStokesKernel.h" />

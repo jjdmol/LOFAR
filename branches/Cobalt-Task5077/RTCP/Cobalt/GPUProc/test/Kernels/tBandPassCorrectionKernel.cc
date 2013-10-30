@@ -34,7 +34,7 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 
 int main() {
-  INIT_LOGGER("tBandPassCorrectionKernell");
+  INIT_LOGGER("tBandPassCorrectionKernel");
 
   // Set up gpu environment
   try {
