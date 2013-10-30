@@ -189,13 +189,18 @@ namespace LOFAR
       // collect the log line
       std::stringstream logstr;
 
+      // compute average loss per board
       for (size_t b = 0; b < buffer.nrBoards; ++b) {
         const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
 
-        logstr << "lane " << b << " = " << avgloss << "% ";
+        if (b > 0)
+          logstr << ", ";
+
+        logstr << avgloss << "%";
       }
 
-      LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss: " << logstr.str());
+      // report average loss
+      LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
     }
 
 
@@ -224,10 +229,11 @@ namespace LOFAR
       bool do_log = false;
 
       for (size_t b = 0; b < buffer.nrBoards; ++b) {
-        // collect loss for [from_ts - offset, to_ts - offset)
+        // collect loss for [from_ts - maxdelay, to_ts - maxdelay)
         const struct BoardMode mode = *(buffer.boards[b].mode);
         const size_t Hz = mode.clockHz();
 
+        // timestamp = (seconds since 1970) * clock / 1024
         flags[b] = buffer.boards[b].flagPercentage(
           TimeStamp((from_ts - maxdelay) * Hz / 1024, Hz),
           TimeStamp((to_ts   - maxdelay) * Hz / 1024, Hz));
@@ -246,10 +252,13 @@ namespace LOFAR
         std::stringstream logstr;
 
         for (size_t b = 0; b < buffer.nrBoards; ++b) {
-          logstr << "lane " << b << " = " << flags[b] << "% ";
+          if (b > 0)
+            logstr << ", ";
+
+          logstr << flags[b] << "%";
         }
 
-        LOG_WARN_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Data loss: " << logstr.str());
+        LOG_WARN_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Data loss per board: " << logstr.str());
       }
 
       // start from here next time
