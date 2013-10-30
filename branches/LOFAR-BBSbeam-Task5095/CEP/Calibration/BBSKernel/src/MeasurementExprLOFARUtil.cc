@@ -365,7 +365,7 @@ makeBeamExpr(const Station::ConstPtr &station,
     */
 
     return Expr<JonesMatrix>::Ptr(new StationBeam(exprITRF, exprRefDelayITRF,
-            exprRefTileITRF, stationLOFAR->station()));
+            exprRefTileITRF, stationLOFAR->station(), refFreq));
 }
 
 Expr<JonesMatrix>::Ptr
