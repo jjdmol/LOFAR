@@ -39,7 +39,8 @@ namespace BBS
 // \addtogroup Expr
 // @{
 
-class StationBeam: public BasicTernaryExpr<Vector<3>, Vector<3>, Vector<3>, JonesMatrix>
+class StationBeam: public BasicTernaryExpr<Vector<3>, Vector<3>, Vector<3>,
+    JonesMatrix>
 {
 public:
     typedef shared_ptr<StationBeam>       Ptr;
@@ -48,15 +49,13 @@ public:
     StationBeam(const Expr<Vector<3> >::ConstPtr &direction,
         const Expr<Vector<3> >::ConstPtr &station0,
         const Expr<Vector<3> >::ConstPtr &tile0,
-        const StationResponse::Station::ConstPtr &station,
-        bool conjugate = false);
+        const StationResponse::Station::ConstPtr &station);
 
     StationBeam(const Expr<Vector<3> >::ConstPtr &direction,
         const Expr<Vector<3> >::ConstPtr &station0,
         const Expr<Vector<3> >::ConstPtr &tile0,
         const StationResponse::Station::ConstPtr &station,
-        double refFrequency,
-        bool conjugate = false);
+        double refFreq);
 
 protected:
     const JonesMatrix::View evaluateImpl(const Grid &grid,
@@ -64,21 +63,12 @@ protected:
         const Vector<3>::View &tile0) const;
 
 private:
-    //Expr<Vector<3> >::ConstPtr          itsDirection;
-    //Expr<Vector<3> >::ConstPtr          itsReference;
-    //vector<Expr<JonesMatrix>::ConstPtr> itsElementBeam;
-
     StationResponse::Station::ConstPtr  itsStation;
     bool                                itsUseChannelFreq;
-    double                              itsRefFrequency;
-    bool                                itsConjugateFlag;
+    double                              itsRefFreq;
 };
 
 // @}
-
-// -------------------------------------------------------------------------- //
-// - Implementation: StationBeam                                      - //
-// -------------------------------------------------------------------------- //
 
 } //# namespace BBS
 } //# namespace LOFAR
