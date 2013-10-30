@@ -88,7 +88,7 @@ class PortBroker: protected SocketStream {
       FileDescriptorBasedStream *stream;
 
       // The name of the requested resource
-      string resource;
+      std::string resource;
     };
 
     ConnectedClient waitForClient( const std::string &resource, bool prefix, time_t deadline );
@@ -112,8 +112,8 @@ class PortBroker: protected SocketStream {
     mutable Mutex itsMutex;
     Condition itsCondition;
 
-    typedef std::map<string, FileDescriptorBasedStream*> requestMapType;
-    requestMapType itsRequestMap;
+    typedef std::map<std::string, FileDescriptorBasedStream*> RequestMapType;
+    RequestMapType itsRequestMap;
 
     static bool serverStarted();
     void serverLoop();

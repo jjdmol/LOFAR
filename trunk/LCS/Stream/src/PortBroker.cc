@@ -81,7 +81,7 @@ PortBroker::~PortBroker()
     ScopedLock sl(itsMutex);
 
     // release all unfulfilled requests
-    for( requestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
+    for( RequestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
       LOG_DEBUG_STR( "PortBroker request: discarding " << it->first );
       delete it->second;
     }
@@ -189,7 +189,7 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
   ScopedLock sl(itsMutex);
 
   while(!itsDone) {
-    requestMapType::iterator it = itsRequestMap.end();
+    RequestMapType::iterator it;
     
     if (prefix) {
       for( it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
