@@ -40,6 +40,12 @@ then
   COBALT_PARSET="/globalhome/mol/parsets/`basename $PARSET`"
   scp /tmp/foo "mol@10.168.96.1:$COBALT_PARSET"
 
+  # Copy the parset to NFS for post processing
+  cp /tmp/foo $STORAGE_PARSET
+
+  # Make the /opt/lofar/var/log/latest symlink
+  ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/var/log/latest
+
   # Start the observation on Cobalt
   echo "Signalling start to Cobalt..."
   ssh mol@10.168.96.1 startBGL.sh 1 2 3 "$COBALT_PARSET" $OBSID
