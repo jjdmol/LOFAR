@@ -20,16 +20,17 @@
 
 /** @file
  * This file contains a CUDA implementation of the GPU kernel for the 
- * BandPassCorrection correction. It can also transposes the data: The FFT produces
- * for each sample x channels in the fastest dimension. The channels and samles
- * are transposed. The samples will end up in the fastest dimension.
+ * BandPassCorrection. It transposes the data: The FFT produces
+ * for each sample X channels in the fastest dimension. The channels and samples
+ * are transposed to allow faster processing in later stages.
+ * The samples will end up in the fastest dimension ( the time line).
  *
  * @attention The following pre-processor variables must be supplied when
  * compiling this program. Please take the pre-conditions for these variables
  * into account:
  * - @c NR_POLARIZATIONS: 2
  * - @c NR_STATIONS: > 0
- * - @c NR_CHANNELS_1: > 1 
+ * - @c NR_CHANNELS_1: > 0 
  * - @c NR_CHANNELS_2: a multiple of 16
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
  * - @c NR_BITS_PER_SAMPLE: 8 or 16
@@ -73,29 +74,26 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
  *   polyphase filter that produced the subbands. This error is deterministic,
  *   hence it can be fully compensated for.
  * - Transpose the data so that the samples for each channel are placed
- *   consecutively in memory.
+ *   consecutively in memory with both polarization next to each other.
  *
  * @param[out] correctedDataPtr    pointer to output data of ::OutputDataType,
- *                                 a 3D array [station][channel][sample][complex]
+ *                                 a 4D array  [station][channels1 * channels2][samples][pol]
  *                                 of ::complex (2 complex polarizations)
- * @param[in]  filteredDataPtr     pointer to input data; this can either be a
- *                                 4D array [station][polarization][sample][channel][complex]
- *                                 of ::fcomplex, or a 2D array [station][subband][complex]
- *                                 of ::short_complex2 or ::char_complex2,
- *                                 depending on the value of @c NR_CHANNELS
+ * @param[in]  intputDataPtr     pointer to input data; 
+ *                               5D array  [station][pol][channels1][samples][channels2]
  * @param[in]  bandPassFactorsPtr  pointer to bandpass correction data of
- *                                 ::BandPassFactorsType, a 1D array [channel] of
+ *                                 ::BandPassFactorsType, a 1D array [channels1 * channels2] of
  *                                 float, containing bandpass correction factors
  */
 #define SHARED
 extern "C" {
-__global__ void bandPassCorrection( fcomplex * correctedDataPtr,
-                                 const fcomplex * filteredDataPtr,
+__global__ void bandPassCorrection( fcomplex * outputDataPtr,
+                                 const fcomplex * intputDataPtr,
                                  const float * bandPassFactorsPtr)
 {
   
-  OutputDataType outputData = (OutputDataType) correctedDataPtr;
-  InputDataType inputData   = (InputDataType)  filteredDataPtr;
+  OutputDataType outputData = (OutputDataType) outputDataPtr;
+  InputDataType inputData   = (InputDataType)  intputDataPtr;
 
   // Band pass to apply to the channels  
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
@@ -134,10 +132,10 @@ __global__ void bandPassCorrection( fcomplex * correctedDataPtr,
 
     // Now write from shared to global memory.
     unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y;
-    // Use the threadidx.x for the highest array index: coalesced writes
+    // Use the threadidx.x for the highest array index: coalesced writes to the global memory
     unsigned sample_index = blockIdx.y * blockDim.y + threadIdx.x;
 
-    (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];
+    (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];  // The threadIdx.y in shared mem is not a problem
     (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.x][threadIdx.y][1];
     __syncthreads();  // assure are writes are done. The next for itteration reuses the array
   }

@@ -63,9 +63,6 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      ASSERT(params.nrSamplesPerChannel % 16 == 0);
-      ASSERT(params.nrChannels2 % 16 == 0);
-
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.bandPassCorrectionWeights);
