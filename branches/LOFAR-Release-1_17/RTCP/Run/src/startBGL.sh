@@ -31,17 +31,13 @@ then
   # Reroute to Cobalt
   echo "Rerouting to Cobalt"
 
-  # Prepare parset
-  echo "Preparing parset..."
-  <$PARSET sed 's/\(locus...\)/\1\.cep2\.lofar/g' > /tmp/foo
-
   # Copy parset to Cobalt
   echo "Transferring parset to Cobalt..."
   COBALT_PARSET="/globalhome/mol/parsets/`basename $PARSET`"
-  scp /tmp/foo "mol@10.168.96.1:$COBALT_PARSET"
+  scp $PARSET "mol@10.168.96.1:$COBALT_PARSET"
 
   # Copy the parset to NFS for post processing
-  cp /tmp/foo $STORAGE_PARSET
+  cp $PARSET $STORAGE_PARSET
 
   # Make the /opt/lofar/var/log/latest symlink
   ln -sfT `dirname $STORAGE_PARSET` /opt/lofar/var/log/latest
