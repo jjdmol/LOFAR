@@ -89,20 +89,27 @@ void streamCB(dyn_string dps, dyn_float values)
   for (int i=1; i<= dynlen(toollist);i++) {
     toolTipText += toollist[i];
   }
-  if (count > dynlen(values)*.2) {
-    color = \"Lofar_test\";
-    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
-  } else if (count >= dynlen(values)*.4) {
-    color = \"Lofar_maintenance\";
+  if (count >= dynlen(values)*.8) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_broken\") ) {
+      color = \"Lofar_broken\";
+    }
     toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
   } else if (count >= dynlen(values)*.6) {
-    color = \"Lofar_suspicious\";
+    if (getStateNumber(color) < getStateNumber(\"Lofar_suspicious\") ) {
+      color = \"Lofar_suspicious\";
+    }
     toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
-  } else if (count >= dynlen(values)*.8) {
-    color = \"Lofar_broken\";
+  } else if (count >= dynlen(values)*.4) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_maintenance\") ) {
+      color = \"Lofar_maintenance\";
+    }
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+  } else if (count > dynlen(values)*.2) {
+    if (getStateNumber(color) < getStateNumber(\"Lofar_test\") ) {
+      color = \"Lofar_test\";
+    }
     toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
   }
-
 
   setValue(\"streamObject\",\"toolTipText\",toolTipText);
   setValue(\"streamObject\", \"backCol\", color);
