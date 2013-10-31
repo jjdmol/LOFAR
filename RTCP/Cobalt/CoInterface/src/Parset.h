@@ -696,6 +696,7 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
+      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
