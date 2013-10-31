@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1024 757 N "_3DFace" 1
+PANEL,-1 -1 1200 855 N "_3DFace" 1
 "$name"
 "main(){
 
@@ -98,7 +98,7 @@ LANG:1 0
 28 18
 "tabView"
 ""
-1 351.934020618558 755.2214285714285 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 351.934020618558 848 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 16 0 0 0 0 0
 E E E
@@ -116,7 +116,7 @@ LANG:1 0
 }"
 1
 LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
-0  -2 8 1018 759
+0  -2 8 1201 854
 E5 "Hardware" 1
 LANG:1 8 Hardware
 0
@@ -136,7 +136,7 @@ LANG:1 6 Alerts
 13 13
 "testButton"
 ""
-1 920 2 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 1100 8 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -147,7 +147,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  918 0 1017 26
+0  1098 6 1197 32
 
 T 
 1
@@ -185,7 +185,7 @@ EP_childPanelOn()
 22 14
 "panelChoice"
 ""
-1 860 34 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+1 1043 36 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -196,7 +196,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  858 32 1012 53
+0  1041 34 1195 55
 0
 
 E

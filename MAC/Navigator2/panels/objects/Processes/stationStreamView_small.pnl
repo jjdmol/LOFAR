@@ -40,44 +40,52 @@ private void reload() {
 
 void stationStreamCB(dyn_string dps, dyn_float values)
 {
-  // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
-  // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
-  // values we set the color to orange, and if no bad percentages occur the color is green.
   
   string toolTipText = station+\"  \"+stream+\"<br>--------------<br>\";
-  
   int count=0;
-  string color = \"Lofar_operational\";
+  string color = \"Lofar_off\";
   dyn_string toollist;
-  for (int i = 1; i<= dynlen(values); i++) {
-    float val = values[i];
-    string dp = dps[i];
-    string ionode = substr(dp,strpos(dp,\"PSIONode\"),10);
-    if (val > 0.0) {
-      color = \"Lofar_suspicious\";
-      string aS=ionode+\"  :\"+val+\" %<br>\";
-      dynAppend(toollist,aS);
-      count++;
-      if (val > 10.0) {
-        color = \"Lofar_broken\";
+
+  // We need to know if this station is involved in an active observation to see if the inputbuffers are showing real values.
+  // if not connected then we grey out the symbol
+  
+  if (!navFunct_stationInObservation(station,\"active\")) {
+    color = \"Lofar_operational\";
+    // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
+    // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
+    // values we set the color to orange, and if no bad percentages occur the color is green.
+  
+  
+    for (int i = 1; i<= dynlen(values); i++) {
+      float val = values[i];
+      string dp = dps[i];
+      string ionode = substr(dp,strpos(dp,\"PSIONode\"),10);
+      if (val > 0.0) {
+        color = \"Lofar_suspicious\";
+        string aS=ionode+\"  :\"+val+\" %<br>\";
+        dynAppend(toollist,aS);
+        count++;
+        if (val > 10.0) {
+          color = \"Lofar_broken\";
+        }
       }
     }
-  }
-  if (!count) {
-    toolTipText += \"All ok\";
-  } else {  
-    dynSort(toollist);
-    for (int i=1; i<= dynlen(toollist);i++) {
-      toolTipText += toollist[i];
-    }
-    if (count > dynlen(values)/10) {
-      color = \"Lofar_broken\";
+    if (!count) {
+      toolTipText += \"All ok\";
+    } else {  
+      dynSort(toollist);
+      for (int i=1; i<= dynlen(toollist);i++) {
+        toolTipText += toollist[i];
+      }
+      if (count > dynlen(values)/10) {
+        color = \"Lofar_broken\";
+      }
     }
   }
   setValue(\"stationStreamObject\",\"toolTipText\",toolTipText);
   setValue(\"stationStreamObject\", \"backCol\", color);
 
- }" 0
+}" 0
  E "main(int x, int y)
 {
   click();

@@ -84,6 +84,7 @@
 // navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
 // navFunct_splitAction                       : Splits an actionstring into a dyn_string action + params
 // navFunct_splitEvent                        : Splits an event string into the essentials
+// navFunct_stationInObservation              : Look if a given station is used in an observation from a given pool (planned,active, finished)
 // navFunct_stationNameToIONode               : returns the IONode belonging to a station
 // navFunct_subrack2Cabinet                   : Returns the CabinetNr for a given Subrack
 // navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
@@ -2450,4 +2451,24 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
     dynAppend(writers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
   }
   return writers;
+}
+
+// ***************************
+// navFunct_stationInObservation
+// ***************************
+// station : the station in question
+// pool    : the pool to search into
+//
+// Returns true if a station is used in an observation defined in the pool
+// ***************************
+// 
+navFunct_stationInObservation(string station,string pool) {
+  for (int i = 1; i <= mappinglen(g_observations); i++ ) {
+    if (g_observations["SCHEDULE"] == pool) {
+      if (strpos(g_observations["STATIONLIST"],station) >= 0) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
