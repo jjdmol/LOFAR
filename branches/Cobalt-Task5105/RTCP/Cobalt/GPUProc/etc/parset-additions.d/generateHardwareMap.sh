@@ -45,6 +45,7 @@ for $rank (0 .. $numranks-1) {
 
   printf "Cobalt.Hardware.Node[%s].host=cbm%03d\n", $rank, $hostnr;
   printf "Cobalt.Hardware.Node[%s].cpu=%d\n", $rank, $socket;
+  printf "Cobalt.Hardware.Node[%s].nic=mlx4_%d\n", $rank, $socket;
   printf "Cobalt.Hardware.Node[%s].gpus=[%d, %d]\n", $rank, $firstgpu, $secondgpu;
   printf "Cobalt.Hardware.Node[%s].stations=[%s]\n", $rank, $stations[$rank];
 }
