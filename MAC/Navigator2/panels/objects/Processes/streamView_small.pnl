@@ -65,13 +65,13 @@ void streamCB(dyn_string dps, dyn_float values)
   for (int i = 1; i<= dynlen(values); i++) {
     float val = values[i];
     string dp = dps[i];
-    if (val > 0.0 && val < 25.0) {
+    if (val > 0.0 && val < 33.0) {
       color = \"Lofar_test\";
-    } else if (val >= 25.0 && val < 50.0) {
+    } else if (val >= 33.0 && val < 66.0) {
       color = \"Lofar_maintenance\";
-    } else if (val >= 50.0 && val < 75.0) {
+    } else if (val >= 66.0 && val < 100.0) {
       color = \"Lofar_suspicious\";
-    } else if (val >= 75.0) {
+    } else if (val >= 100.0) {
       color = \"Lofar_broken\";
     }
         
