@@ -94,7 +94,7 @@ namespace LOFAR
       switch (bufferType) {
       case BandPassCorrectionKernel::INPUT_DATA: 
         return 
-            itsParameters.nrStations * NR_POLARIZATIONS * 
+            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerChannel *
             itsParameters.nrChannels1 *
             itsParameters.nrChannels2 *
@@ -102,14 +102,14 @@ namespace LOFAR
 
       case BandPassCorrectionKernel::OUTPUT_DATA:
         return
-            itsParameters.nrStations * NR_POLARIZATIONS * 
+            (size_t)  itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerChannel *
             itsParameters.nrChannels1 *
             itsParameters.nrChannels2 *
             sizeof(std::complex<float>);
       case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
-            itsParameters.nrChannels1 *
+            (size_t)  itsParameters.nrChannels1 *
             itsParameters.nrChannels2 *
             sizeof(float);
       default:

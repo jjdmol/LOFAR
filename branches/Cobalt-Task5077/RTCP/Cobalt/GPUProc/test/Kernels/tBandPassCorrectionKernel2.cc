@@ -28,59 +28,48 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
+
 struct TestFixture
 {
-  TestFixture() 
-    : 
-  ps("tBandPassCorrectionKernel2.in_parset"),
-  params(ps)
+  TestFixture() : 
+    ps("tBandPassCorrectionKernel2.in_parset"), 
+    params(ps),
+    factory()
+    {
+    
+     params.nrChannels1 = 64;
+     params.nrChannels2 = 64;
+     params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
 
-  {
-    BandPassCorrectionKernel::Parameters params(ps);
-    params.nrChannels1 = 64;
-    params.nrChannels2 = 63;
-    factory = new KernelFactory<BandPassCorrectionKernel>(params);
-  }
-
+     factory = new KernelFactory<BandPassCorrectionKernel>(params);
+    }
 
   ~TestFixture() {}
 
   Parset ps;
   BandPassCorrectionKernel::Parameters params;
-  KernelFactory<BandPassCorrectionKernel> * factory;
+  KernelFactory<BandPassCorrectionKernel> *factory;
 };
 
 TEST_FIXTURE(TestFixture, InputData)
 {
-  CHECK_EQUAL(size_t(786432),
+  CHECK_EQUAL(size_t(1 * 2 * 64 *48 * 64 * 8),  // 1 station, 2 pol, 64 channels, 48 samples/channel, 64 2nd channel , n bytes in complex float
               factory->bufferSize(
                 BandPassCorrectionKernel::INPUT_DATA));
 }
 
 TEST_FIXTURE(TestFixture, OutputData)
 {
-  CHECK_EQUAL(size_t(786432),
+  CHECK_EQUAL(size_t(3145728),
               factory->bufferSize(
                 BandPassCorrectionKernel::OUTPUT_DATA));
 }
 
-TEST_FIXTURE(TestFixture, Delays)
-{
-  CHECK_EQUAL(size_t(16),
-              factory->bufferSize(
-                BandPassCorrectionKernel::DELAYS));
-}
-
-TEST_FIXTURE(TestFixture, PhaseOffsets)
-{
-  CHECK_EQUAL(size_t(16),
-              factory->bufferSize(
-                BandPassCorrectionKernel::PHASE_OFFSETS));
-}
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)
 {
-  CHECK_EQUAL(size_t(64),
+  CHECK_EQUAL(size_t(64 * 64 * 4),
               factory->bufferSize(
                 BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
 }

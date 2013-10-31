@@ -52,7 +52,9 @@ int main() {
   Parset ps("tBandPassCorrectionKernel.in_parset");
   BandPassCorrectionKernel::Parameters params(ps);
   params.nrChannels1 = 64;
-  params.nrChannels2 = 63;
+  params.nrChannels2 = 64;
+  params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
 
   KernelFactory<BandPassCorrectionKernel> factory(params);
 

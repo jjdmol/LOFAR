@@ -1,6 +1,6 @@
 OLAP.BeamsAreTransposed = True
 OLAP.CNProc.coresPerPset = 64
-OLAP.CNProc.integrationSteps = 3072
+OLAP.CNProc.integrationSteps = 3072 # settings.blockSize == nrSamplesPerChannel() 
 OLAP.CNProc.nrPPFTaps = 16
 OLAP.CNProc.partition = R00
 OLAP.CNProc.phaseOnePsets = [0]
@@ -171,7 +171,7 @@ Observation.antennaSet = HBA_DUAL
 Observation.bandFilter = HBA_110_190
 Observation.beamList = [5*0]
 Observation.channelWidth = 762.939453125
-Observation.channelsPerSubband = 16
+Observation.channelsPerSubband = 64
 Observation.claimPeriod = 25
 Observation.clockMode = <<Clock200
 Observation.longBaselines = false
