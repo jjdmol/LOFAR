@@ -2464,8 +2464,8 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
 // 
 bool navFunct_stationInObservation(string station,string pool) {
   for (int i = 1; i <= mappinglen(g_observations); i++ ) {
-    if (g_observations["SCHEDULE"] == pool) {
-      if (strpos(g_observations["STATIONLIST"],station) >= 0) {
+    if (g_observations["SCHEDULE"][i] == pool) {
+      if (strpos(g_observations["STATIONLIST"][i],station) >= 0) {
         return true;
       }
     }
