@@ -49,7 +49,7 @@ void stationStreamCB(dyn_string dps, dyn_float values)
   // We need to know if this station is involved in an active observation to see if the inputbuffers are showing real values.
   // if not connected then we grey out the symbol
   
-  if (!navFunct_stationInObservation(station,\"active\")) {
+  if (navFunct_stationInObservation(station,\"active\")) {
     color = \"Lofar_operational\";
     // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
     // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
