@@ -34,6 +34,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iosfwd>
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
@@ -71,6 +72,7 @@ namespace LOFAR
         unsigned int x;
         unsigned int y;
         unsigned int z;
+        friend std::ostream& operator<<(std::ostream& os, const Block& block);
       };
 
 
@@ -82,6 +84,7 @@ namespace LOFAR
         unsigned int x;
         unsigned int y;
         unsigned int z;
+        friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
       };
 
       // Forward declaration needed by Platform::devices.

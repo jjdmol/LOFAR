@@ -28,6 +28,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Mutex.h>
+#include <CoInterface/BestEffortQueue.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
@@ -36,7 +37,6 @@
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/BestEffortQueue.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 
 namespace LOFAR

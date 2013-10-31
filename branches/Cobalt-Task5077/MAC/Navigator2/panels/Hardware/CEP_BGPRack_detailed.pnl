@@ -1,6 +1,6 @@
 V 11
 1
-LANG:1 7 Station
+LANG:1 20 CEP_BGPRack_detailed
 PANEL,-1 -1 1011 662 N "_3DFace" 0
 "main()
 {

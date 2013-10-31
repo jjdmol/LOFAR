@@ -25,6 +25,12 @@
 #include <map>
 #include <cstring>
 #include <Common/Thread/Mutex.h>
+#include <Common/Thread/Thread.h>
+#include <Stream/Stream.h>
+#include <Stream/PortBroker.h>
+#include <Common/Thread/Condition.h>
+#include <Common/Thread/Mutex.h>
+#include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
 #include "Pool.h"
@@ -45,18 +51,16 @@ namespace LOFAR
       struct Subband {
         MultiDimArray<float, 2> data; // [samples][channels]
 
-        Subband( size_t nrSamples, size_t nrChannels )
-        :
-          data(boost::extents[nrSamples][nrChannels]),
-          fileIdx(0),
-          subband(0),
-          block(0)
-        {
-        }
+        Subband( size_t nrSamples = 0, size_t nrChannels = 0 );
 
-        size_t fileIdx;
-        size_t subband;
-        size_t block;
+        struct {
+          size_t fileIdx;
+          size_t subband;
+          size_t block;
+        } id;
+
+        void write(Stream &stream) const;
+        void read(Stream &stream);
       };
 
       /*
@@ -75,44 +79,23 @@ namespace LOFAR
         size_t fileIdx;
         size_t block;
 
-        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
-        :
-          data(boost::extents[nrSubbands][nrSamples][nrChannels]),
-          subbandWritten(nrSubbands, false),
-          nrSubbandsLeft(nrSubbands)
-        {
-        }
+        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
          * Add data for a single subband.
          */
-        void addSubband( const Subband &subband ) {
-          ASSERT(nrSubbandsLeft > 0);
-
-          memcpy(data[subband.subband].origin(), subband.data.origin(), subband.data.size() * sizeof subband.data.origin());
-          subbandWritten[subband.subband] = true;
-
-          nrSubbandsLeft--;
-        }
+        void addSubband( const Subband &subband );
 
         /*
-         * Add data for a single subband.
+         * Zero data of subbands that weren't added.
          */
-        void zeroRemainingSubbands() {
-          for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
-            if (!subbandWritten[subbandIdx]) {
-              memset(data[subbandIdx].origin(), 0, data[subbandIdx].size() * sizeof data[subbandIdx].origin());
-            }
-          }
-        }
+        void zeroRemainingSubbands();
 
         /*
          * Return whether the block is complete, that is, all
          * subbands have been added.
          */
-        bool complete() const {
-          return nrSubbandsLeft == 0;
-        }
+        bool complete() const;
 
       private:
         // The number of subbands left to receive.
@@ -144,65 +127,23 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
-        BlockCollector( Pool<Block> &outputPool, size_t maxBlocksInFlight = 0 )
-        :
-          outputPool(outputPool),
-          maxBlocksInFlight(maxBlocksInFlight),
-          canDrop(maxBlocksInFlight > 0),
-          lastEmitted(-1)
-        {
-        }
+        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight = 0 );
 
-        void addSubband( const Subband &subband ) {
-          ScopedLock sl(mutex);
-
-          const size_t &blockIdx = subband.block;
-
-          if (!have(blockIdx)) {
-            if (canDrop) {
-              if ((ssize_t)blockIdx <= lastEmitted) {
-                // too late -- discard packet
-                return;
-              }
-            } else {
-              // if we can't drop, we shouldn't have written
-              // this block yet.
-              ASSERT((ssize_t)blockIdx > lastEmitted);
-            }
-
-            create(blockIdx);
-          }
-
-          // augment existing block
-          SmartPtr<Block> &block = blocks.at(blockIdx);
-
-          block->addSubband(subband);
-
-          if (block->complete()) {
-            // Block is complete -- send it downstream,
-            // and everything before it. We know we won't receive
-            // data from earlier blocks, because all subbands
-            // are sent in-order.
-            emitUpTo(blockIdx);
-          }
-        }
+	/*
+         * Add a subband of any block.
+         */
+        void addSubband( const Subband &subband );
 
         /*
          * Send all remaining blocks downstream,
          * followed by the end-of-stream marker.
          */
-        void finish() {
-          ScopedLock sl(mutex);
-
-          emitUpTo(maxBlock());
-
-          // Signal end-of-stream
-          outputPool.filled.append(NULL);
-        }
+        void finish();
 
       private:
         std::map<size_t, SmartPtr<Block> > blocks;
         Pool<Block> &outputPool;
+        const size_t fileIdx;
         Mutex mutex;
 
         // upper limit for blocks.size(), or 0 if unlimited
@@ -214,73 +155,158 @@ namespace LOFAR
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
 
-        size_t minBlock() const {
-          ASSERT(!blocks.empty());
+        // The oldest block in flight.
+        size_t minBlock() const;
 
-          return blocks.begin()->first;
-        }
-
-        size_t maxBlock() const {
-          ASSERT(!blocks.empty());
-
-          return blocks.rbegin()->first;
-        }
+        // The youngest block in flight.
+        size_t maxBlock() const;
 
         /*
          * Send a certain block downstream.
          */
-        void emit(size_t blockIdx) {
-          // should emit in-order
-          if (!canDrop) {
-            ASSERT((ssize_t)blockIdx == lastEmitted + 1);
-          } else {
-            ASSERT((ssize_t)blockIdx > lastEmitted);
-          }
-          lastEmitted = blockIdx;
-
-          // clear data we didn't receive
-          SmartPtr<Block> &block = blocks.at(blockIdx);
-
-          block->zeroRemainingSubbands();
-          
-          // emit to outputPool.filled()
-          outputPool.filled.append(block);
-
-          // remove from our administration
-          blocks.erase(blockIdx);
-        }
+        void emit(size_t blockIdx);
 
         /*
          * Send all blocks downstream up to
          * and including `block', in-order, as the
          * writer will expect.
          */
-        void emitUpTo(size_t block) {
-          while (!blocks.empty() && minBlock() <= block) {
-            emit(minBlock());
-          }
-        }
+        void emitUpTo(size_t block);
 
         /*
          * Do we manage a certain block?
          */
-        bool have(size_t block) const {
-          return blocks.find(block) != blocks.end();
-        }
+        bool have(size_t block) const;
 
         /*
          * Fetch a new block.
          */
-        void create(size_t block) {
-          ASSERT(!have(block));
+        void fetch(size_t block);
+      };
 
-          if (canDrop && blocks.size() >= maxBlocksInFlight) {
-            // No more room -- force out oldest block
-            emit(minBlock());
-          }
+      /*
+       * Reads multiplexed Subband objects from a stream, and
+       * forwards them to set of BlockCollectors. The reception
+       * is done in a separate thread.
+       */
+      class Receiver {
+      public:
+        // [fileIdx] -> BlockCollector
+        typedef std::map<size_t, SmartPtr<BlockCollector> > CollectorMap;
 
-          blocks[block] = outputPool.free.remove();
-        }
+        /*
+         * Start receiving from `stream', into `collectors'.
+         */
+        Receiver( Stream &stream, CollectorMap &collectors );
+
+        // Calls kill()
+        ~Receiver();
+
+        // Kills the receiver thread.
+        void kill();
+
+        /*
+         * Waits for the stream to disconnect and the queue to empty.
+         *
+         * Returns: true if the receiver thread raised an exception.
+         */
+        bool finish();
+
+      private:
+        Stream &stream;
+        CollectorMap &collectors;
+        Thread thread;
+
+        void receiveLoop();
+      };
+
+      /*
+       * MultiReceiver listens on a PortBroker port for multiple streams,
+       * dispatching a Receiver for each one.
+       */
+      class MultiReceiver {
+      public:
+        MultiReceiver( const std::string &servicePrefix, Receiver::CollectorMap &collectors );
+
+        // Calls kill(0)
+        ~MultiReceiver();
+
+        // Kills the listening thread and all client threads.
+        //
+        // minNrClients: Minimum number of clients to wait to connect and finish.
+        //               if minNrClients > 0, all running connections are allowed to
+        //               finish, also those beyond minNrClients.
+        void kill(size_t minNrClients);
+
+      private:
+        Mutex mutex;
+        Condition newClient;
+
+        struct Client {
+          SmartPtr<PortBroker::ServerStream> stream;
+          SmartPtr<Receiver> receiver;
+        };
+
+        const std::string servicePrefix;
+        Receiver::CollectorMap &collectors;
+        std::vector<struct Client> clients;
+        Thread thread;
+
+        void listenLoop();
+
+        void dispatch( PortBroker::ServerStream *stream );
+      };
+
+      /*
+       * MultiSender sends data to various receivers.
+       */
+
+      class MultiSender {
+      public:
+        // A host to send data to, that is, enough information
+        // to connect to the PortBroker of the receiver.
+        struct Host {
+          std::string hostName;
+          uint16 brokerPort;
+          std::string service;
+
+          bool operator==(const struct Host &other) const {
+            return hostName == other.hostName && brokerPort == other.brokerPort && service == other.service;
+          };
+          bool operator<(const struct Host &other) const {
+            if (hostName != other.hostName)
+              return hostName < other.hostName;
+
+            if (brokerPort != other.brokerPort)
+              return brokerPort < other.brokerPort;
+
+            return service < other.service;
+          };
+        };
+
+        typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
+
+        MultiSender( const HostMap &hostMap, size_t queueSize = 3, bool canDrop = false );
+
+        // Send the data from the queues to the receiving hosts. Will run until
+        // 'finish()' is called.
+        void process();
+
+        // Add a subband for sending. Ownership of the data is taken.
+        void append( SmartPtr<struct Subband> &subband );
+
+        // Flush the queues.
+        void finish();
+
+      protected:
+        // fileIdx -> host mapping
+        const HostMap hostMap;
+
+        // Set of hosts to connect to (the list of unique values in hostMap)
+        std::vector<struct Host> hosts;
+
+        // A queue for data to be sent to each host
+	      std::map<struct Host, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

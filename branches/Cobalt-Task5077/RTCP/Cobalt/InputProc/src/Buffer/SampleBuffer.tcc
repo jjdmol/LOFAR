@@ -114,6 +114,17 @@ namespace LOFAR
 
 
     template<typename T>
+    double SampleBuffer<T>::Board::flagPercentage( const TimeStamp &from, const TimeStamp &to ) const
+    {
+      // count available samples in the given range
+      const size_t nrSamples = available.sparseSet(from, to).count();
+
+      // return percentage of samples NOT available in the given range
+      return 100.0 - (100.0 * nrSamples / (to - from));
+    }
+
+
+    template<typename T>
     void SampleBuffer<T>::noReadBefore( size_t beamlet, const TimeStamp &epoch )
     {
       if (sync) {

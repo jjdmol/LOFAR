@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <ostream>
+#include <sstream>
 #include <boost/format.hpp>
 #include <cuda_runtime.h>
 
@@ -70,27 +71,56 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
     }
 
+    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, gpu::Block localWorkSize)
+    {
+      gpu::Grid grid;
+      ostringstream errMsgs;
+
+      // Enforce by the hardware supported work sizes to see errors clearly and early.
+
+      gpu::Block maxLocalWorkSize = itsStream.getContext().getDevice().getMaxBlockDims();
+      if (localWorkSize.x > maxLocalWorkSize.x ||
+          localWorkSize.y > maxLocalWorkSize.y ||
+          localWorkSize.z > maxLocalWorkSize.z)
+        errMsgs << "  - localWorkSize must be at most " << maxLocalWorkSize << endl;
+
+      if (localWorkSize.x * localWorkSize.y * localWorkSize.z > maxThreadsPerBlock)
+        errMsgs << "  - localWorkSize total must be at most " << maxThreadsPerBlock << " threads/block" << endl;
+
+      // globalWorkSize may (in theory) be all zero (no work). Reject such localWorkSize.
+      if (localWorkSize.x == 0 || localWorkSize.y == 0 || localWorkSize.z == 0) {
+        errMsgs << "  - localWorkSize components must be non-zero" << endl;
+      } else {
+        // TODO: to globalWorkSize in terms of localWorkSize (CUDA) ('gridWorkSize').
+        if (globalWorkSize.x % localWorkSize.x != 0 ||
+            globalWorkSize.y % localWorkSize.y != 0 ||
+            globalWorkSize.z % localWorkSize.z != 0)
+          errMsgs << "  - globalWorkSize must divide localWorkSize" << endl;
+        grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
+                         globalWorkSize.y / localWorkSize.y,
+                         globalWorkSize.z / localWorkSize.z);
+
+        gpu::Grid maxGridWorkSize = itsStream.getContext().getDevice().getMaxGridDims();
+        if (grid.x > maxGridWorkSize.x ||
+            grid.y > maxGridWorkSize.y ||
+            grid.z > maxGridWorkSize.z)
+          errMsgs << "  - globalWorkSize / localWorkSize must be at most " << maxGridWorkSize << endl;
+      }
+
+
+      string errStr(errMsgs.str());
+      if (!errStr.empty())
+        THROW(gpu::GPUException, "setEnqueueWorkSizes(): unsupported globalWorkSize " <<
+              globalWorkSize << " and/or localWorkSize " << localWorkSize << " selected:" <<
+              endl << errStr);
+
+      itsGridDims = grid;
+      itsBlockDims = localWorkSize;
+    }
+
     void Kernel::enqueue(const BlockID &blockId) const
     {
-      // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
-      //       (+ remove assertion): add protected setThreadDim()
-      gpu::Block block(localWorkSize);
-      assert(globalWorkSize.x % block.x == 0 &&
-             globalWorkSize.y % block.y == 0 &&
-             globalWorkSize.z % block.z == 0);
-
-      gpu::Grid grid(globalWorkSize.x / block.x,
-                     globalWorkSize.y / block.y,
-                     globalWorkSize.z / block.z);
-
-      ASSERTSTR(block.x * block.y * block.z
-                <= maxThreadsPerBlock,
-        "Requested dimensions "
-        << block.x << ", " << block.y << ", " << block.z
-        << " creates more than the " << maxThreadsPerBlock
-        << " supported threads/block" );
-      
-      itsStream.launchKernel(*this, grid, block);
+      itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();

@@ -16,7 +16,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Mutex.h 15519 2010-04-22 10:00:35Z romein $
+//#  $Id$
 
 #ifndef LOFAR_LCS_COMMON_CONDITION_H
 #define LOFAR_LCS_COMMON_CONDITION_H

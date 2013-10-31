@@ -42,7 +42,7 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrTABs;
+        unsigned nrTABs;
       };
 
       enum BufferType

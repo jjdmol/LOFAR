@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: tKVpair.cc 11044 2008-03-21 08:38:09Z overeem $
+//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>

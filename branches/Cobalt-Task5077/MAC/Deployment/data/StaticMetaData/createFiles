@@ -704,6 +704,16 @@ def de601Exceptions(resultDir, stationName, dataDir):
         command = "cp -f "+srcFile+ " " + destFile
         #print command
         os.system(command)
+
+def rs307Exceptions(resultDir, stationName, dataDir):
+    """
+    Handle exceptions for station rs307. Data of RSP board 03 should use lane4
+    instead of lane3
+    """
+    if (stationName.lower() == "rs307"):
+        srcFile = resultDir + "/RSPDriver.conf"
+        command = "sed -i s/RSPDriver.LANE_03_BLET_OUT=3/RSPDriver.LANE_03_BLET_OUT=4/ " + srcFile
+        os.system(command)
       
 # MAIN
 
@@ -779,7 +789,8 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 if (sys.argv[1] == "test"):
                     createRSPDriverFile_Test(resultDir, stationName, dataDir, alias)
                 else:
-                    createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt) 
+                    createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt)
+                    
                 createTBBDriverFile    (resultDir, stationName, dataDir)
                 createRemoteStationFile(resultDir, stationName, dataDir)
                 createAntennaArraysFile(resultDir, stationName, dataDir)
@@ -788,6 +799,8 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
+                # Temporary corrections
+                rs307Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -844,6 +857,8 @@ else:
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
+        # Temporary corrections
+        rs307Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"

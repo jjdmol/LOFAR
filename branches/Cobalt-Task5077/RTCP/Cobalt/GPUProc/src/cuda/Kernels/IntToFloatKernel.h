@@ -42,8 +42,8 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrBitsPerSample;
-        size_t nrBytesPerComplexSample;
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample;
       };
 
       enum BufferType

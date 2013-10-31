@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: PortBroker.cc 20465 2012-03-16 15:53:48Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -46,6 +46,14 @@ void PortBroker::createInstance( uint16 port )
   instance().start();
 }
 
+
+void PortBroker::destroyInstance()
+{
+  ASSERTSTR(pbInstance.get(), "PortBroker instance not created");
+
+  pbInstance.reset(0);
+}
+
 PortBroker &PortBroker::instance()
 {
   return *pbInstance;
@@ -66,11 +74,14 @@ PortBroker::~PortBroker()
   // break serverLoop explicitly
   itsThread->cancel();
 
+  // wait for thread to finish
+  itsThread->wait();
+
   {
     ScopedLock sl(itsMutex);
 
     // release all unfulfilled requests
-    for( requestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
+    for( RequestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
       LOG_DEBUG_STR( "PortBroker request: discarding " << it->first );
       delete it->second;
     }
@@ -178,7 +189,7 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
   ScopedLock sl(itsMutex);
 
   while(!itsDone) {
-    requestMapType::iterator it = itsRequestMap.end();
+    RequestMapType::iterator it;
     
     if (prefix) {
       for( it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
@@ -200,18 +211,19 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
 
       itsRequestMap.erase(it);
 
+      LOG_DEBUG_STR( "PortBroker server: found match for " << resource );
       return result;
     }
 
     if (deadline > 0) {
       if (!itsCondition.wait(itsMutex, deadline_ts))
-        THROW(TimeOutException, "port broker client: server did not register before deadline");
+        THROW(TimeOutException, "port broker server: client did not register before deadline");
     } else {
       itsCondition.wait(itsMutex);
     }
   }
 
-  THROW(TimeOutException, "port broker client: server did not register before PortBroker shut down");
+  THROW(TimeOutException, "port broker server: client did not register before PortBroker shut down");
 }
 
 
@@ -229,7 +241,7 @@ PortBroker::ServerStream::ServerStream( const string &resource, bool prefix, tim
   ASSERTSTR( serverStarted(), "PortBroker service is not started" );
 
   // wait for client to request our service
-  ConnectedClient client(PortBroker::instance().waitForClient(resource, deadline, prefix));
+  ConnectedClient client(PortBroker::instance().waitForClient(resource, prefix, deadline));
   auto_ptr<FileDescriptorBasedStream> stream(client.stream);
 
   // transfer ownership
