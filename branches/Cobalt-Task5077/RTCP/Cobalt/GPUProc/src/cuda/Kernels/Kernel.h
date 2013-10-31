@@ -84,10 +84,11 @@ namespace LOFAR
 
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
+
+      void setEnqueueWorkSizes(gpu::Grid globalWorkSize, gpu::Block localWorkSize);
       
+
       const unsigned maxThreadsPerBlock;
-      gpu::Grid globalWorkSize;
-      gpu::Block localWorkSize;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
 
     private:
@@ -99,6 +100,13 @@ namespace LOFAR
 
       // The parameters as given to the constructor.
       Parameters itsParameters;
+
+      // The grid of blocks dimensions for kernel execution.
+      gpu::Grid itsGridDims;
+
+      // The block of threads dimensions for kernel execution.
+      gpu::Block itsBlockDims;
+
 
       // Dump output buffer of a this kernel to disk. Use \a blockId to
       // distinguish between the different blocks and subbands.

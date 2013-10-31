@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 235 131 N "_3DFace" 1
+PANEL,-1 -1 393 217 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -232,7 +232,7 @@ LANG:1 0
 0
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
-0  0 0 201 104
+0  0 0 279 199
 10 TreeWidget
 3
 0 "clicked" "(string id, int column)"

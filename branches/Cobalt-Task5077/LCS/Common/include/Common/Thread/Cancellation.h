@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Cancellation.h 27170 2013-10-31 11:15:15Z klijn $
+//#  $Id$
 
 #ifndef LOFAR_LCS_COMMON_CANCELLATION_H
 #define LOFAR_LCS_COMMON_CANCELLATION_H

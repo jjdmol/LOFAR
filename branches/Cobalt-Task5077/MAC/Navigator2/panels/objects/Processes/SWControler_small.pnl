@@ -43,7 +43,7 @@ void levelChanged(string dp1, int swlvl,
     if (observationChangedConnected) {
       if (dpDisconnect(\"observationChanged\", MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\",
                                           MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._invalid\") == -1) {
-        LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations: \"+getLastError);
+        LOG_ERROR(\"SWController_small.pnl:main|Couldn't disconnect to: \"+MainDBName+\":LOFAR_PermSW_MACScheduler.activeObservations: \"+getLastError());
       }
     }
     observationChangedConnected = false;

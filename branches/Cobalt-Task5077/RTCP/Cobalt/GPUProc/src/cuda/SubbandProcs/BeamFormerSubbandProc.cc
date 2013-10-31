@@ -231,8 +231,7 @@ namespace LOFAR
         coherentBeamformer = false;
       
       // put enough objects in the outputPool to operate
-      
-      for (size_t i = 0; i < std::max(3UL, 2 * nrSubbandsPerSubbandProc); ++i) 
+      for (size_t i = 0; i < nrOutputElements(); ++i)
       {
         //**********************************************************************
         // Coherent/incoheren switch

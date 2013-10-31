@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: FixedBufferStream.h 27170 2013-10-31 11:15:15Z klijn $
+//# $Id$
 
 #ifndef LOFAR_LCS_STREAM_STRING_STREAM_H
 #define LOFAR_LCS_STREAM_STRING_STREAM_H
