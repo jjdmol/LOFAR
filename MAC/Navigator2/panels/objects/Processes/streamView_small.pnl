@@ -49,9 +49,13 @@ private void reload() {
 
 void streamCB(dyn_string dps, dyn_float values)
 {
-  // Here we get all bad values and we have to determine how many are wrong. if a station has more then 10% bad data (i.e. a single value in the values list
-  // exceeds 10%, or more then 10% of the stations have bad data we need to set the color to red, if bad data occurs but its lower then the above mentioned
-  // values we set the color to orange, and if no bad percentages occur the color is green.
+  // Here we get all bad values and we have to determine how many are wrong. 
+  // if a station has more then 25% bad data (i.e. a single value in the values list exceeds 25%, 
+  //   or more then 25% of the stations have bad data we need to set the color to yellow, 
+  // if a station has more then 50% bad data (i.e. a single value in the values list exceeds 50%, 
+  //   or more then 50% of the stations have bad data we need to set the color to orange, 
+  // if a station has more then 75% bad data (i.e. a single value in the values list exceeds 75%, 
+  //   or more then 75% of the stations have bad data we need to set the color to red, 
   
   string toolTipText = observation+\" - \"+stream+\"<br>\";
   
@@ -61,8 +65,17 @@ void streamCB(dyn_string dps, dyn_float values)
   for (int i = 1; i<= dynlen(values); i++) {
     float val = values[i];
     string dp = dps[i];
-    if (val > 0.0) {
+    if (val > 0.0 && val < 25.0) {
+      color = \"Lofar_test\";
+    } else if (val >= 25.0 && val < 50.0) {
+      color = \"Lofar_maintenance\";
+    } else if (val >= 50.0 && val < 75.0) {
       color = \"Lofar_suspicious\";
+    } else if (val >= 75.0) {
+      color = \"Lofar_broken\";
+    }
+        
+    if (val > 0.0) {
       string station;
       int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
       string IONodeDP = navFunct_IONode2DPName(nr);
@@ -70,19 +83,26 @@ void streamCB(dyn_string dps, dyn_float values)
       string aS=station+\"</t> :\"+val+\"<br>\";
       dynAppend(toollist,aS);
       count++;
-      if (val > 10.0) {
-        color = \"Lofar_broken\";
-      }
     }
   }
   dynSort(toollist);
   for (int i=1; i<= dynlen(toollist);i++) {
     toolTipText += toollist[i];
   }
-  if (count > dynlen(values)/10) {
+  if (count > dynlen(values)*.2) {
+    color = \"Lofar_test\";
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+  } else if (count >= dynlen(values)*.4) {
+    color = \"Lofar_maintenance\";
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+  } else if (count >= dynlen(values)*.6) {
+    color = \"Lofar_suspicious\";
+    toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+  } else if (count >= dynlen(values)*.8) {
     color = \"Lofar_broken\";
     toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
   }
+
 
   setValue(\"streamObject\",\"toolTipText\",toolTipText);
   setValue(\"streamObject\", \"backCol\", color);

@@ -60,14 +60,24 @@ void stationStreamCB(dyn_string dps, dyn_float values)
       float val = values[i];
       string dp = dps[i];
       string ionode = substr(dp,strpos(dp,\"PSIONode\"),10);
-      if (val > 0.0) {
+      if (val > 0.0 && val < 25.0) {
+        color = \"Lofar_test\";
+      } else if (val >= 25.0 && val < 50.0) {
+        color = \"Lofar_maintenance\";
+      } else if (val >= 50.0 && val < 75.0) {
         color = \"Lofar_suspicious\";
-        string aS=ionode+\"  :\"+val+\" %<br>\";
+      } else if (val >= 75.0) {
+        color = \"Lofar_broken\";
+      }
+        
+      if (val > 0.0) {
+        string station;
+        int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
+        string IONodeDP = navFunct_IONode2DPName(nr);
+        dpGet(IONodeDP+\".usedStation\",station);
+        string aS=station+\"</t> :\"+val+\"<br>\";
         dynAppend(toollist,aS);
         count++;
-        if (val > 10.0) {
-          color = \"Lofar_broken\";
-        }
       }
     }
     if (!count) {
@@ -77,8 +87,18 @@ void stationStreamCB(dyn_string dps, dyn_float values)
       for (int i=1; i<= dynlen(toollist);i++) {
         toolTipText += toollist[i];
       }
-      if (count > dynlen(values)/10) {
+      if (count > dynlen(values)*.2) {
+        color = \"Lofar_test\";
+        toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+      } else if (count >= dynlen(values)*.4) {
+        color = \"Lofar_maintenance\";
+        toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+      } else if (count >= dynlen(values)*.6) {
+        color = \"Lofar_suspicious\";
+        toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
+      } else if (count >= dynlen(values)*.8) {
         color = \"Lofar_broken\";
+        toolTipText +=\"<br>\"+(float)(dynlen(values)/count)+\" % stations with bad values<br>\";
       }
     }
   }
