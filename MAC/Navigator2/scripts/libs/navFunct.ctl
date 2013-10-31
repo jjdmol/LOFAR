@@ -2462,7 +2462,7 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
 // Returns true if a station is used in an observation defined in the pool
 // ***************************
 // 
-navFunct_stationInObservation(string station,string pool) {
+bool navFunct_stationInObservation(string station,string pool) {
   for (int i = 1; i <= mappinglen(g_observations); i++ ) {
     if (g_observations["SCHEDULE"] == pool) {
       if (strpos(g_observations["STATIONLIST"],station) >= 0) {
