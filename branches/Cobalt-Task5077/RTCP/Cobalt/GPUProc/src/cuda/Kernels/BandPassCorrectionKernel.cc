@@ -70,6 +70,8 @@ namespace LOFAR
       globalWorkSize = gpu::Grid(params.nrChannels2,
                                  params.nrSamplesPerChannel,
                                  params.nrStations);
+
+      // The cu kernel uses a shared memory blocksize 
       localWorkSize = gpu::Block(16, 16, 1);
 
       size_t nrSamples = params.nrStations * params.nrSamplesPerChannel * params.nrChannels2 * params.nrChannels1 * NR_POLARIZATIONS;
