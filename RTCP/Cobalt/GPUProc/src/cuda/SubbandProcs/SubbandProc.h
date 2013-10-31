@@ -205,10 +205,15 @@ namespace LOFAR
 
     protected:
       const Parset &ps;
+      const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
 
       void addTimer(const std::string &name);
+
+      // Returns the number of output elements to create to get a smooth
+      // running pipeline.
+      size_t nrOutputElements() const;
     };
   }
 }

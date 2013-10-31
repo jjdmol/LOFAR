@@ -96,9 +96,7 @@ namespace LOFAR
       devFilterHistoryData.set(0);
 
       // put enough objects in the outputPool to operate
-      // since the best-effort queue can hold 3 objects/subband, we'll need at least 4
-      // to prevent stalls if no output can be written.
-      for (size_t i = 0; i < std::max(3UL, 4 * nrSubbandsPerSubbandProc); ++i) {
+      for (size_t i = 0; i < nrOutputElements(); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
