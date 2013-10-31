@@ -66,13 +66,11 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.bandPassCorrectionWeights);
-
-      globalWorkSize = gpu::Grid(params.nrChannels2,
+      
+      setEnqueueWorkSizes( gpu::Grid(params.nrChannels2,
                                  params.nrSamplesPerChannel,
-                                 params.nrStations);
-
-      // The cu kernel uses a shared memory blocksize 
-      localWorkSize = gpu::Block(16, 16, 1);
+                                 params.nrStations),
+                           gpu::Block(16, 16, 1) ); // The cu kernel uses a shared memory blocksize of 16 by 16 'samples'
 
       size_t nrSamples = params.nrStations * params.nrSamplesPerChannel * params.nrChannels2 * params.nrChannels1 * NR_POLARIZATIONS;
       nrOperations = nrSamples ;
