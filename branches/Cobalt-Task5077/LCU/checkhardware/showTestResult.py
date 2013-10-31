@@ -135,24 +135,14 @@ def main():
         part = d[1]
         if d[2] != '---':
             partnumber = int(d[2])
-            if part == 'LBL':
-                if (partnumber < 48):
-                    print "ERROR: LBL %d NOT a legal partnumber" %(partnumber)
-                    RCUx = 0
-                    RCUy = 0
-                else:
-                    RCUx = (partnumber - 48) * 2
-                    RCUy = (partnumber - 48) * 2 + 1
-            if part in ('LBH', 'HBA'):
-                RCUx = partnumber * 2
-                RCUy = partnumber * 2 + 1    
-        
+            RCUx = partnumber * 2
+            RCUy = partnumber * 2 + 1
         msg = d[3].strip()
         kv = dict()
         for i in range(4,len(d)):
             if d[i].find('=') != -1:
                 key, valstr = d[i].split('=')
-                vallist = valstr.split(' ')
+                vallist = valstr.split()
                 if len(vallist) == 1:
                     kv[key] = vallist[0]
                 elif len(vallist) > 1:
@@ -176,17 +166,6 @@ def main():
             if msg == 'RUNTIME':
                 print "-- Check runtime    : %s .. %s" %(kv.get('START').replace('T',' '), kv.get('STOP').replace('T',' '))
             
-            if msg == 'DRIVER':
-                if kv.has_key('RSPDRIVER'):
-                    print "-- RSPDriver        : DOWN" 
-                if kv.has_key('TBBDRIVER'):
-                    print "-- TBBDriver        : DOWN"
-            if msg == 'BOARD':
-                boardstr = ""
-                for i in range(24):
-                    if kv.has_key('RSP-%d' %(i)):
-                        boardstr += "%d, " %(i)
-                print "-- RSP board DOWN   : %s" %(boardstr[:-2]) 
             if msg == 'CHECKS':
                 print "-- Checks done      : %s" %(string.join(d[4:],', ')) 
             
@@ -194,10 +173,6 @@ def main():
                 print "-- Bad antennas     : LBL=%s, LBH=%s, HBA=%s" %\
                       (kv.get('BAD_LBL'), kv.get('BAD_LBH'), kv.get('BAD_HBA'))
             
-            if msg == 'BADLIST':
-                bad_ant_str = string.join(d[4:],';').replace('=','(').replace(' ',',').replace(';',')   ')+')'
-                print "-- bad-antenna-list : %s" %(bad_ant_str)  
-                    
         if part == 'RSP':
             if part != _part:
                 _part = part

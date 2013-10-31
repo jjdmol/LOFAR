@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: PortBroker.h 27170 2013-10-31 11:15:15Z klijn $
 
 #ifndef LOFAR_LCS_STREAM_PORTBROKER_H
 #define LOFAR_LCS_STREAM_PORTBROKER_H
@@ -47,8 +47,6 @@ class PortBroker: protected SocketStream {
     virtual ~PortBroker();
 
     static void createInstance( uint16 port );
-    static void destroyInstance();
-
     static PortBroker &instance();
     
     void start();
@@ -88,7 +86,7 @@ class PortBroker: protected SocketStream {
       FileDescriptorBasedStream *stream;
 
       // The name of the requested resource
-      std::string resource;
+      string resource;
     };
 
     ConnectedClient waitForClient( const std::string &resource, bool prefix, time_t deadline );
@@ -112,8 +110,8 @@ class PortBroker: protected SocketStream {
     mutable Mutex itsMutex;
     Condition itsCondition;
 
-    typedef std::map<std::string, FileDescriptorBasedStream*> RequestMapType;
-    RequestMapType itsRequestMap;
+    typedef std::map<string, FileDescriptorBasedStream*> requestMapType;
+    requestMapType itsRequestMap;
 
     static bool serverStarted();
     void serverLoop();

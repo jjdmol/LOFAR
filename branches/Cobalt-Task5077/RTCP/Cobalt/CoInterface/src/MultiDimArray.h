@@ -82,8 +82,8 @@ namespace LOFAR
         SuperType(construct ? new(ptr)T[nrElements(extents)] : ptr, extents),
         allocator(0),
         allocated_num_elements(nrElements(extents)),
-        alignment(defaultAlignment()),
-        padToAlignment(false),
+        alignment(alignment),
+        padToAlignment(padToAlignment),
         construct(construct)
       {
         // NOTE: Elements are not destructed even if construct == true!

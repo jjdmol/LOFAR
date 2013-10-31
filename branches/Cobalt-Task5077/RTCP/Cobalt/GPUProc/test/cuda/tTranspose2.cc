@@ -51,7 +51,6 @@ Exception::TerminateHandler t(Exception::terminate);
 void runTest( Context &ctx, Stream &stream )
 {
   Parset ps;
-  ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
   ps.updateSettings();
 
   BeamFormerTransposeKernel::Parameters params(ps);

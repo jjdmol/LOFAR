@@ -468,7 +468,8 @@ namespace LOFAR
       size_t bfStreamNr = 0;
 
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
-      if (settings.beamFormer.enabled) {
+      if (settings.beamFormer.enabled || true) { // for now, the values below are also used even if no beam forming is performed
+
         // Parse global settings
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -804,7 +805,7 @@ namespace LOFAR
       vector<string> stationList = StringUtil::split(stations, '+');
       for (unsigned i = 0; i < stationList.size(); i++)
       {
-        pos = position(stationList[i]);
+        pos = getDoubleVector("PIC.Core." + stationList[i] + ".position");
         posList.insert(posList.end(), pos.begin(), pos.end());
       }
 
@@ -823,18 +824,6 @@ namespace LOFAR
     }
 
 
-    vector<double> Parset::position( const std::string &name ) const
-    {
-      const string positionKey    = "PIC.Core." + name + ".position";
-      const string phaseCenterKey = "PIC.Core." + name + ".phaseCenter";
-
-      if (isDefined(positionKey))
-        return getDoubleVector(positionKey, true);
-      else
-        return getDoubleVector(phaseCenterKey, true);
-    }
-
-
     MultiDimArray<double,2> Parset::positions() const
     {
       const vector<ObservationSettings::Correlator::Station> &stations = settings.correlator.stations;
@@ -848,7 +837,7 @@ namespace LOFAR
         if (name.find("+") != string::npos)
           pos = centroidPos(name); // super station
         else
-          pos = position(name);
+          pos = getDoubleVector("PIC.Core." + name + ".position", true);
 
         ASSERT(pos.size() == 3);
 

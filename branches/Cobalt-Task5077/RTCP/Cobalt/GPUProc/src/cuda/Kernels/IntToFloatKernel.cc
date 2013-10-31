@@ -63,15 +63,15 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      unsigned maxNrThreads;
+      size_t maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      setEnqueueWorkSizes( gpu::Grid(maxNrThreads, params.nrStations),
-                           gpu::Block(maxNrThreads, 1) );
+      globalWorkSize = gpu::Grid(maxNrThreads, params.nrStations);
+      localWorkSize = gpu::Block(maxNrThreads, 1);
 
-      unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
-      nrOperations = (size_t) nrSamples * 2;
-      nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
-      nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
+      size_t nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
+      nrOperations = nrSamples * 2;
+      nrBytesRead = nrSamples * 2 * params.nrBitsPerSample / 8;
+      nrBytesWritten = nrSamples * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -82,12 +82,12 @@ namespace LOFAR
       switch (bufferType) {
       case IntToFloatKernel::INPUT_DATA:
         return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+          itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
       case IntToFloatKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+          itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

@@ -44,22 +44,22 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample;
+        size_t nrBitsPerSample;
+        size_t nrBytesPerComplexSample;
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.
-        unsigned nrSTABs;
+        size_t nrSTABs;
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
-        unsigned nrSubbands;
+        size_t nrSubbands;
 
         // The number of PPF filter taps.
-        static const unsigned nrTaps = 16;
+        static const size_t nrTaps = 16;
 
         // The number of history samples used for each block
-        unsigned nrHistorySamples() const;
+        size_t nrHistorySamples() const;
       };
 
       enum BufferType
@@ -91,12 +91,12 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId,
                    PerformanceCounter &counter,
-                   unsigned subbandIdx);
+                   size_t subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
       // and update historyFlags[subbandIdx] with the flags of the last samples
       // in inputFlags.
-      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx);
+      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
 
     private:
       // The Kernel parameters as given to the constructor

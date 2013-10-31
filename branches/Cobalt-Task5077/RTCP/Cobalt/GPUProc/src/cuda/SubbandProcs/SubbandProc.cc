@@ -33,7 +33,6 @@ namespace LOFAR
     SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
       ps(ps),
-      nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
       queue(gpu::Stream(context))
     {
       // put enough objects in the inputPool to operate
@@ -59,20 +58,6 @@ namespace LOFAR
     void SubbandProc::addTimer(const std::string &name)
     {
       timers[name] = new NSTimer(name, false, false);
-    }
-
-
-    size_t SubbandProc::nrOutputElements() const
-    {
-      /*
-       * Output elements can get stuck in:
-       *   Best-effort queue:       3 elements
-       *   In flight to outputProc: 1 element
-       *
-       * which means we'll need at least 5 elements
-       * in the pool to get a smooth operation.
-       */
-      return 5 * nrSubbandsPerSubbandProc;
     }
 
 

@@ -37,8 +37,8 @@ namespace LOFAR
       setArg(0, devFFTedData);
       setArg(1, devFFTedData);
 
-      setEnqueueWorkSizes( gpu::Grid(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel()),
-                           gpu::Block(128, 1) );
+      globalWorkSize = gpu::Grid(128, ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrSamplesPerChannel());
+      localWorkSize = gpu::Block(128, 1);
 
       size_t nrFFTs = (size_t) ps.nrTABs(0) * NR_POLARIZATIONS * (ps.nrSamplesPerChannel() + NR_STATION_FILTER_TAPS - 1);
       nrOperations = nrFFTs * 5 * 1024 * 10;

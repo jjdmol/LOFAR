@@ -57,9 +57,9 @@ namespace LOFAR
 
     }
 
-    const unsigned FIR_FilterKernel::Parameters::nrTaps;
+    const size_t FIR_FilterKernel::Parameters::nrTaps;
 
-    unsigned FIR_FilterKernel::Parameters::nrHistorySamples() const
+    size_t FIR_FilterKernel::Parameters::nrHistorySamples() const
     {
       return (nrTaps - 1) * nrChannelsPerSubband;
     }
@@ -77,29 +77,29 @@ namespace LOFAR
       setArg(2, buffers.filterWeights);
       setArg(3, buffers.historySamples);
 
-      unsigned maxNrThreads = 
+      size_t maxNrThreads = 
         getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
       unsigned totalNrThreads = 
         params.nrChannelsPerSubband * params.nrPolarizations * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
 
-      setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
-                           gpu::Block(totalNrThreads / nrPasses, 1) );
+      globalWorkSize = gpu::Grid(totalNrThreads, params.nrSTABs);
+      localWorkSize = gpu::Block(totalNrThreads / nrPasses, 1);
 
-      unsigned nrSamples = 
+      size_t nrSamples = 
         params.nrSTABs * params.nrChannelsPerSubband * 
         params.nrPolarizations;
 
       nrOperations = 
-        (size_t) nrSamples * params.nrSamplesPerChannel * params.nrTaps * 2 * 2;
+        nrSamples * params.nrSamplesPerChannel * params.nrTaps * 2 * 2;
 
       nrBytesRead = 
-        (size_t) nrSamples * (params.nrTaps - 1 + params.nrSamplesPerChannel) * 
-          params.nrBytesPerComplexSample;
+        nrSamples * (params.nrTaps - 1 + params.nrSamplesPerChannel) * 
+        params.nrBytesPerComplexSample;
 
       nrBytesWritten = 
-        (size_t) nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
+        nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
 
       // Note that these constant weights are now (unnecessarily) stored on the
       // device for every workqueue. A single copy per device could be used, but
@@ -120,14 +120,14 @@ namespace LOFAR
 
     void FIR_FilterKernel::enqueue(const BlockID &blockId,
                                    PerformanceCounter &counter,
-                                   unsigned subbandIdx)
+                                   size_t subbandIdx)
     {
       setArg(4, subbandIdx);
       Kernel::enqueue(blockId, counter);
     }
 
-    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx) {
-      for (unsigned stationIdx = 0; stationIdx < params.nrSTABs; ++stationIdx) {
+    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
+      for (size_t stationIdx = 0; stationIdx < params.nrSTABs; ++stationIdx) {
         // shift sample flags to the right to make room for the history flags
         inputFlags[stationIdx] += params.nrHistorySamples();
 
@@ -154,22 +154,22 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrSamplesPerSubband *
-            itsParameters.nrSTABs * itsParameters.nrPolarizations * 
-            itsParameters.nrBytesPerComplexSample;
+          itsParameters.nrSamplesPerSubband *
+          itsParameters.nrSTABs * itsParameters.nrPolarizations * 
+          itsParameters.nrBytesPerComplexSample;
       case FIR_FilterKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * sizeof(std::complex<float>);
+          itsParameters.nrSamplesPerSubband * itsParameters.nrSTABs * 
+          itsParameters.nrPolarizations * sizeof(std::complex<float>);
       case FIR_FilterKernel::FILTER_WEIGHTS:
         return 
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrTaps *
-            sizeof(float);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrTaps *
+          sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
         return
-          (size_t) itsParameters.nrSubbands *
-            itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
+          itsParameters.nrSubbands *
+          itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
+          itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

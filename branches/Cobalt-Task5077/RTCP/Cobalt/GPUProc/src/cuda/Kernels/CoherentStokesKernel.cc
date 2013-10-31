@@ -76,9 +76,8 @@ namespace LOFAR
       setArg(1, buffers.input);
 
       // TODO: params.nrTABs only works for one SAP
-      // TODO: this enqueues 1 block, which is very inefficient
-      setEnqueueWorkSizes( gpu::Grid (params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband) );
+      globalWorkSize = gpu::Grid(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
+      localWorkSize = gpu::Block(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband);
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -93,12 +92,12 @@ namespace LOFAR
       switch (bufferType) {
       case CoherentStokesKernel::INPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       case CoherentStokesKernel::OUTPUT_DATA:
         return 
-          (size_t) itsParameters.nrTABs * itsParameters.nrStokes * itsParameters.nrSamplesPerChannel /
-            itsParameters.timeIntegrationFactor * itsParameters.nrChannelsPerSubband * sizeof(float);
+          itsParameters.nrTABs * itsParameters.nrStokes * itsParameters.nrSamplesPerChannel /
+          itsParameters.timeIntegrationFactor * itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

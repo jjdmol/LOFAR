@@ -70,8 +70,10 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      setEnqueueWorkSizes( gpu::Grid(256, (params.nrTABs + 15) / 16, params.nrSamplesPerChannel / 16),
-                           gpu::Block(256, 1, 1) );
+      globalWorkSize = gpu::Grid(256,
+                                 (params.nrTABs + 15) / 16, 
+                                 params.nrSamplesPerChannel / 16);
+      localWorkSize = gpu::Block(256, 1, 1);
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =
@@ -88,8 +90,8 @@ namespace LOFAR
       case BeamFormerTransposeKernel::INPUT_DATA: 
       case BeamFormerTransposeKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
-            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

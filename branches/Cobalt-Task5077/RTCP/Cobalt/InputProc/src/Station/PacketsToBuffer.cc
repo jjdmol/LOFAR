@@ -39,7 +39,7 @@ namespace LOFAR
 
     PacketsToBuffer::PacketsToBuffer( Stream &inputStream, const BufferSettings &settings, unsigned boardNr )
       :
-      logPrefix(str(boost::format("[station %s board %u] [PacketsToBuffer] ") % settings.station.name() % boardNr)),
+      logPrefix(str(boost::format("[station %s board %u] [PacketsToBuffer] ") % settings.station.stationName % boardNr)),
       inputStream(inputStream),
       lastlog_timestamp(0),
       settings(settings),
@@ -163,115 +163,5 @@ namespace LOFAR
     template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
     template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
     template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
-
-
-    MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
-    :
-      RSPBoards("", inputStreams_.size()),
-
-      settings(settings),
-      buffer(settings, SharedMemoryArena::CREATE),
-      inputStreams(inputStreams_.size()),
-
-      lastlog_time(now()),
-      sum_flags(buffer.nrBoards, 0.0),
-      num_flags(0.0)
-    {
-      // Don't take over ownership!
-      for (size_t i = 0; i < inputStreams.size(); ++i) {
-        inputStreams[i] = inputStreams_[i];
-      }
-    }
-
-
-    MultiPacketsToBuffer::~MultiPacketsToBuffer()
-    {
-      // collect the log line
-      std::stringstream logstr;
-
-      // compute average loss per board
-      for (size_t b = 0; b < buffer.nrBoards; ++b) {
-        const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
-
-        if (b > 0)
-          logstr << ", ";
-
-        logstr << avgloss << "%";
-      }
-
-      // report average loss
-      LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
-    }
-
-
-    void MultiPacketsToBuffer::processBoard( size_t boardNr )
-    {
-      PacketsToBuffer board(*inputStreams[boardNr], settings, boardNr);
-
-      board.process();
-    }
-
-
-
-    void MultiPacketsToBuffer::logStatistics()
-    {
-      // No use to collect drop rates in non-real-time mode
-      if (settings.sync)
-        return;
-
-      const double from_ts  = lastlog_time;
-      const double to_ts    = now();
-      const double maxdelay = 0.5; // wait this many seconds for data to arrive
-
-      std::vector<double> flags(buffer.nrBoards);
-
-      // only log if at least one board flagged
-      bool do_log = false;
-
-      for (size_t b = 0; b < buffer.nrBoards; ++b) {
-        // collect loss for [from_ts - maxdelay, to_ts - maxdelay)
-        const struct BoardMode mode = *(buffer.boards[b].mode);
-        const size_t Hz = mode.clockHz();
-
-        // timestamp = (seconds since 1970) * clock / 1024
-        flags[b] = buffer.boards[b].flagPercentage(
-          TimeStamp((from_ts - maxdelay) * Hz / 1024, Hz),
-          TimeStamp((to_ts   - maxdelay) * Hz / 1024, Hz));
-
-        do_log = do_log || flags[b] > 0.0;
-
-        // update statistics
-        sum_flags[b] += flags[b] * (to_ts - from_ts);
-      }
-
-      // update statistics
-      num_flags += to_ts - from_ts;
-
-      if (do_log) {
-        // collect the log line
-        std::stringstream logstr;
-
-        for (size_t b = 0; b < buffer.nrBoards; ++b) {
-          if (b > 0)
-            logstr << ", ";
-
-          logstr << flags[b] << "%";
-        }
-
-        LOG_WARN_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Data loss per board: " << logstr.str());
-      }
-
-      // start from here next time
-      lastlog_time = to_ts;
-    }
-
-
-    double MultiPacketsToBuffer::now() const
-    {
-      struct timeval tv;
-      gettimeofday(&tv, NULL);
-
-      return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
-    }
   }
 }

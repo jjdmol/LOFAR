@@ -265,24 +265,16 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
-
-        LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|ACTIVE TAB: "+ACTIVE_TAB); 
    
         // if ACTIVE_TAB is hardware, we also want to look for all involved processes and observations
         if (ACTIVE_TAB == "Hardware") {
-          // if launched from mainscreen the TAB is hardware, but an Observation might have been clicked, 
-          // so evaluate this as being launched from Observation TAB
-          if (strpos(sel[j],"Observation") >=0 ) {
-            navCtrl_highlightAddHardwareFromObservation(sel[j]);
-            navCtrl_highlightAddProcessesFromObservation(sel[j]);
-          } else {
-            navCtrl_highlightAddObservationsFromHardware(sel[j]);
-            navCtrl_highlightAddProcessesFromHardware(sel[j]);
-          }
+          navCtrl_highlightAddObservationsFromHardware(sel[j]);
+          navCtrl_highlightAddProcessesFromHardware(sel[j]);
+  
         } else if (ACTIVE_TAB == "Observations") {
           // if selection == observation, add involved hardware
-          navCtrl_highlightAddHardwareFromObservation(sel[j]);
-          navCtrl_highlightAddProcessesFromObservation(sel[j]);
+           navCtrl_highlightAddHardwareFromObservation(sel[j]);
+           navCtrl_highlightAddProcessesFromObservation(sel[j]);
 
         } else if (ACTIVE_TAB == "Processes") {
           // The selected event was allready added to the selectionList above

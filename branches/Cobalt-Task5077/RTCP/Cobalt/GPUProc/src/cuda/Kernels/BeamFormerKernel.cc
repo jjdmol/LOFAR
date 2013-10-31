@@ -88,8 +88,12 @@ namespace LOFAR
       }
       unsigned nrChannelsPerBlock = prefNrThreadsZ;
 
-      setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrPolarizations, params.nrTABs, nrChannelsPerBlock) );
+      globalWorkSize = gpu::Grid(params.nrPolarizations, 
+                                 params.nrTABs, 
+                                 params.nrChannelsPerSubband); 
+      localWorkSize = gpu::Block(params.nrPolarizations, 
+                                 params.nrTABs, 
+                                 nrChannelsPerBlock);
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
@@ -125,16 +129,16 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+          itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+          itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-            sizeof(double);
+          itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
+          sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

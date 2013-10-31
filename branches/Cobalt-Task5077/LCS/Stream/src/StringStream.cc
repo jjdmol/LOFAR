@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: StringStream.cc 27170 2013-10-31 11:15:15Z klijn $
 
 #include <lofar_config.h>
 
@@ -32,7 +32,6 @@ namespace LOFAR {
 
 StringStream::~StringStream()
 {
-  close();
 }
 
 
@@ -40,17 +39,7 @@ size_t StringStream::tryRead(void *ptr, size_t size)
 {
   Cancellation::point(); // keep behaviour consistent with real I/O streams
 
-#ifdef USE_THREADS
-  if (!dataWritten.down(size))
-    THROW(EndOfStreamException, "Stream has been closed");
-#endif
-
-  {
-    ScopedLock sl(itsMutex);
-    itsBuffer.read(static_cast<char*>(ptr), size);
-  }
-
-  return size;
+  return itsBuffer.readsome(static_cast<char*>(ptr), size);
 }
 
 
@@ -58,24 +47,9 @@ size_t StringStream::tryWrite(const void *ptr, size_t size)
 {
   Cancellation::point(); // keep behaviour consistent with real I/O streams
 
-  {
-    ScopedLock sl(itsMutex);
-    itsBuffer.write(static_cast<const char*>(ptr), size);
-  }
-
-#ifdef USE_THREADS
-  dataWritten.up(size);
-#endif
+  itsBuffer.write(static_cast<const char*>(ptr), size);
 
   return size;
-}
-
-
-void StringStream::close()
-{
-#ifdef USE_THREADS
-  dataWritten.noMore();
-#endif
 }
 
 } // namespace LOFAR

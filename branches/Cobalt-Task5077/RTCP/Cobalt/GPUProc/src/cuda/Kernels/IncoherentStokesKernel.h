@@ -43,10 +43,10 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        unsigned nrChannelsPerSubband;
-        unsigned nrSamplesPerChannel;
-        unsigned nrStokes;
-        unsigned timeIntegrationFactor;
+        size_t nrChannelsPerSubband;
+        size_t nrSamplesPerChannel;
+        size_t nrStokes;
+        size_t timeIntegrationFactor;
       };
 
       enum BufferType

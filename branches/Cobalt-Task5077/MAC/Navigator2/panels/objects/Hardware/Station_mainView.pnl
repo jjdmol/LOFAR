@@ -55,14 +55,6 @@ LANG:1 0
 0
 1 24 8 "" 0
 0
-1 26 9 "" 0
-0
-1 27 10 "" 0
-0
-1 28 11 "" 0
-0
-1 29 12 "" 0
-0
 0
 LAYER, 1 
 1
@@ -120,27 +112,7 @@ LANG:1 0
 1
 "$station""$station"
 3 8 "PANEL_REF8" -1
-"objects\\Hardware\\BPtemp_small.pnl" 60 0 T 40 U 
+"objects/Hardware\\BPtemp_small.pnl" 60 0 T 40 U 
 1
 "$station""$station"
-3 9 "PANEL_REF9" -1
-"objects/Processes\\stationStreamView_small.pnl" 250 0 T 41 1 0 1 -20 0
-2
-"$station""$station"
-"$streamNr""0"
-3 10 "PANEL_REF10" -1
-"objects/Processes\\stationStreamView_small.pnl" 270 0 T 42 1 0 1 -20 0
-2
-"$station""$station"
-"$streamNr""1"
-3 11 "PANEL_REF11" -1
-"objects/Processes\\stationStreamView_small.pnl" 290 0 T 43 1 0 1 -20 0
-2
-"$station""$station"
-"$streamNr""2"
-3 12 "PANEL_REF12" -1
-"objects/Processes\\stationStreamView_small.pnl" 310 0 T 44 1 0 1 -20 0
-2
-"$station""$station"
-"$streamNr""3"
 0

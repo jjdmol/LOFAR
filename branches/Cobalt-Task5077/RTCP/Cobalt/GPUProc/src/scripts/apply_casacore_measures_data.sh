@@ -3,7 +3,8 @@
 # Install downloaded casacore measures tables atomically and verify which tables are in use.
 # Written for jenkins@fs5 (DAS-4).
 #
-# Known bug:
+# BUGS:
+#  * Spaces in file- or directory names are not support.
 #  * This script does not work if findmeastable cannot be located or if
 #    findmeastable finds the Observatory tables in a directory different
 #    from that set locally in $working_dir
@@ -11,8 +12,8 @@
 # $Id$
 
 # Keep these vars in sync with get_casacore_measures_tables.sh
-working_dir=$HOME/root/share/casacore  
-dir_prefix=IERS-
+working_dir=$HOME/root/share/aips++  
+dir_prefix=measures_data-
 
 
 # find the latest
@@ -32,10 +33,10 @@ else
   echo "No new table to apply."
 fi
 
-# See if casacore uses the latest tables by extracting the path (token(s) 6,...) from findmeastable.
-# If ok, findmeastable prints: "Measures table Observatories found as /home/jenkins/root/share/casacore/data/geodetic/Observatories"
+# See if casacore uses the latest tables by extracting the last token from findmeastable.
+# If ok, it prints: "Measures table Observatories found as /home/jenkins/root/share/aips++/data/geodetic/Observatories"
 if ! findmeastable > /dev/null; then exit 1; fi
-used_dir=`findmeastable | cut -d' ' -f 6-`
+used_dir=`findmeastable | awk -F\  '{print $NF}'`
 if [ $? -ne 0 ]; then exit 1; fi
 used_path=`readlink -f "$used_dir/../../../data"`
 if [ $? -ne 0 ]; then exit 1; fi

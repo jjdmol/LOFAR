@@ -18,13 +18,11 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: StringStream.h 27170 2013-10-31 11:15:15Z klijn $
 
 #ifndef LOFAR_LCS_STREAM_STRING_STREAM_H
 #define LOFAR_LCS_STREAM_STRING_STREAM_H
 
-#include <Common/Thread/Mutex.h>
-#include <Common/Thread/Semaphore.h>
 #include <Stream/Stream.h>
 
 #include <sstream>
@@ -39,15 +37,7 @@ class StringStream : public Stream
     virtual size_t tryRead(void *ptr, size_t size);
     virtual size_t tryWrite(const void *ptr, size_t size);
 
-    void close();
-
   private:
-    Mutex itsMutex;
-
-#ifdef USE_THREADS
-    Semaphore dataWritten;
-#endif
-
     std::stringstream itsBuffer;
 };
 

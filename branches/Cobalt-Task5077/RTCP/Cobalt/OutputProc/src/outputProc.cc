@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
+    Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
     const vector<string> &hostnames = parset.settings.outputProcHosts;
     ASSERT(myRank < hostnames.size());
@@ -117,7 +118,19 @@ int main(int argc, char *argv[])
       for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
         for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) {
           if (parset.getHostName(outputType, streamNr) == myHostName) {
-            string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr);
+            unsigned writerNr = 0;
+
+            // lookup PVSS writer number for this file
+            for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) {
+              Observation::StreamToStorage &s = obs.streamsToStorage[i];
+
+              if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) {
+                writerNr = s.writerNr;
+                break;
+              }
+            }
+
+            string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
 
             try {
               subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, sbLogPrefix));

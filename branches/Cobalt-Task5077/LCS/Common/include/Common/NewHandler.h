@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: NewHandler.h 27170 2013-10-31 11:15:15Z klijn $
 
 #ifndef LOFAR_COMMON_NEWHANDLER_H
 #define LOFAR_COMMON_NEWHANDLER_H
