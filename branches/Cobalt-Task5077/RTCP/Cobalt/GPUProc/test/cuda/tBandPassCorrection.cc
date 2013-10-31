@@ -78,26 +78,6 @@ void runKernel(gpu::Function kfunc,
   kfunc.setArg(1, devInput);
   kfunc.setArg(2, devBandPassFactors);
 
-  // Runtime calculate the block dimensions
-  // THe test only works on power 2 dimensions...
-  unsigned max_worksize = 512;
-  unsigned xdim_local = 0;
-  if (NR_SAMPLES_PER_CHANNEL * NR_CHANNELS_2 > max_worksize)
-  {
-    for (unsigned exponent_idx =  8; exponent_idx > 2; -- exponent_idx)
-    {
-      // If the dimension is can be devided a whole number 2 ^ exp
-      if ( (NR_SAMPLES_PER_CHANNEL * NR_CHANNELS_2) % unsigned(pow(2, exponent_idx)) == 0)
-      {
-        xdim_local = pow(2, exponent_idx);
-        break;
-      }
-    }
-     ASSERT(xdim_local != 0);
-  }
-  else
-    xdim_local = NR_SAMPLES_PER_CHANNEL * NR_CHANNELS_2 ;
-   
   // 
   gpu::Grid globalWorkSize(NR_SAMPLES_PER_CHANNEL / 16,
                            NR_CHANNELS_2 / 16,
@@ -239,13 +219,10 @@ TEST(BandPass)
   // The bandpassarray is filled with straigth slope from 0 untill 1
   // idx_in_array / array_elements
   CHECK_CLOSE(0.0, results[0].real(), 0.000001);
-  CHECK_CLOSE(0.0, results[0].imag(), 0.000001);
 
   // Last element is (array_elements - 1) / array_elements  index start at 0 until max-1
   CHECK_CLOSE((NR_CHANNELS_1 * NR_CHANNELS_2 * 1.0 - 1.0) / (NR_CHANNELS_1 * NR_CHANNELS_2), 
               results[1].real(), 0.000001);
-  CHECK_CLOSE((NR_CHANNELS_1 * NR_CHANNELS_2 * 1.0 - 1.0) / (NR_CHANNELS_1 * NR_CHANNELS_2),
-              results[1].imag(), 0.000001);
 }
 
 

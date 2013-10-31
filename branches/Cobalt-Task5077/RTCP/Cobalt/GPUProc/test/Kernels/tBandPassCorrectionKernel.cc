@@ -1,4 +1,4 @@
-//# tDelayAndBandPassKernel.cc: test Kernels/DelayAndBandPassKernel class
+//# tBandPassCorrectionKernel.cc: test Kernels/BandPassCorrectionKernel class
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -58,6 +58,7 @@ int main() {
 
   KernelFactory<BandPassCorrectionKernel> factory(params);
 
+  // Get the buffers as created by factory
   gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
     filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA)),

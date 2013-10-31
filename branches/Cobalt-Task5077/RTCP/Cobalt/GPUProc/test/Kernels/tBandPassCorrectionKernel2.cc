@@ -1,4 +1,4 @@
-//# tBandPassCorrectionKernel2.cc: test DelayAndBandPassKernel class
+//# tBandPassCorrectionKernel2.cc: test BandPassCorrectionKernel class
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -36,10 +36,10 @@ struct TestFixture
     params(ps),
     factory()
     {
-    
-     params.nrChannels1 = 64;
-     params.nrChannels2 = 64;
-     params.nrSamplesPerChannel = 
+      // Default parameters parsed from parset are not correct
+      params.nrChannels1 = 64;
+      params.nrChannels2 = 64;
+      params.nrSamplesPerChannel = 
           ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
 
      factory = new KernelFactory<BandPassCorrectionKernel>(params);

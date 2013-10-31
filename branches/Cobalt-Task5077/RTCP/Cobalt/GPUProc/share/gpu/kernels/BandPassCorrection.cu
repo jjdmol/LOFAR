@@ -112,10 +112,10 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 
   for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
   {
-    unsigned combined_channel = idx_channel1 * NR_CHANNELS_2 + chan2;
-    float weight((*bandPassFactors)[combined_channel]);
+    // idx_channel1 steps with NR_CHANNELS_2 tru the channel weights 
+    float weight((*bandPassFactors)[idx_channel1 * NR_CHANNELS_2 + chan2]);
 
-    // Read from memory in the quickest dimension (optimal)
+    // Read from global memory in the quickest dimension (optimal)
     fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
     fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
     
@@ -125,14 +125,18 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
     sampleY.y *= weight;
 
     // Write the data to shared memory
-
     tmp[threadIdx.y][threadIdx.x][0] = sampleX;
     tmp[threadIdx.y][threadIdx.x][1] = sampleY;
     __syncthreads();  // assures all writes are done
 
     // Now write from shared to global memory.
+    //         for loop index step with NR_CHANNELS_2  
+    //         + The blockidx is used to paralellize work items larged then the shared memory
+    //         + The slow changing threadIdx 
     unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y;
     // Use the threadidx.x for the highest array index: coalesced writes to the global memory
+    //         Use the blockIdx to select the correct part of the work items
+    //         + The fast changin threadIdx to allow fast writes 
     unsigned sample_index = blockIdx.y * blockDim.y + threadIdx.x;
 
     (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];  // The threadIdx.y in shared mem is not a problem
