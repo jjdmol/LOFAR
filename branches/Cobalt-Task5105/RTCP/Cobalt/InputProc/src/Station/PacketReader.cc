@@ -138,6 +138,8 @@ namespace LOFAR
       nrBadOther = 0;
 
       hadSizeError = false;
+
+      lastLogTime = now;
     }
 
 
