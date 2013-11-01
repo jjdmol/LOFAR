@@ -204,8 +204,15 @@ namespace LOFAR {
 
       // wait for block start (but only in real-time mode)
       if (!buffer.sync) {
-        LOG_DEBUG_STR("Waiting until " << (to + maxDelay) << " for " << from << " to " << to);
-        waiter.waitUntil(to + maxDelay);
+        const TimeStamp deadline = to + maxDelay;
+
+        LOG_DEBUG_STR("Waiting until " << deadline << " for " << from << " to " << to);
+        if (deadline < TimeStamp::now(deadline.getClock())) {
+          // We're too late!
+          LOG_ERROR_STR("Not running at real time! Deadline was " << deadline << " for " << from << " to " << to);
+        }
+
+        waiter.waitUntil(deadline);
       }
 
       return new LockedBlock(*this, from, to, beamletOffsets);
