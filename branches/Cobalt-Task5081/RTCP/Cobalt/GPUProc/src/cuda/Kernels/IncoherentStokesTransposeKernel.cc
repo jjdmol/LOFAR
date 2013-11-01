@@ -23,6 +23,7 @@
 #include "IncoherentStokesTransposeKernel.h"
 
 #include <GPUProc/global_defines.h>
+#include <CoInterface/Align.h>
 #include <Common/lofar_complex.h>
 
 #include <boost/format.hpp>
@@ -61,22 +62,31 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      unsigned nrBlocks = params.nrSamplesPerChannel;
-      unsigned nrPasses = 
-        (nrBlocks + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
-      unsigned nrThreads = 
-        (nrBlocks + nrPasses - 1) / nrPasses;
+      const unsigned blockSize = 16;
+      // const unsigned nrThreads = blockSize * blockSize;
+      // const unsigned nrBlocks = params.nrSamplesPerChannel;
+      // const unsigned nrPasses = (nrBlocks + nrThreads - 1) / nrThreads;
 
-      LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
-      LOG_DEBUG_STR("nrPasses = " << nrPasses);
-      LOG_DEBUG_STR("nrThreads = " << nrThreads);
+      // LOG_DEBUG_STR("nrThreads = " << nrThreads);
+      // LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
+      // LOG_DEBUG_STR("nrPasses = " << nrPasses);
+
+      LOG_DEBUG_STR("align(params.nrSamplesPerChannel, blockSize) = " << 
+                    "align(" << params.nrSamplesPerChannel <<
+                    ", " << blockSize << ") = " <<
+                    align(params.nrSamplesPerChannel, blockSize));
+      LOG_DEBUG_STR("align(params.nrChannelsPerSubband, blockSize)) = " <<
+                    "align(" << params.nrChannelsPerSubband <<
+                    ", " << blockSize << ") = " <<
+                    align(params.nrChannelsPerSubband, blockSize));
 
       setEnqueueWorkSizes(
-        // gpu::Grid(nrTimesPerPass * nrPasses, params.nrChannelsPerSubband),
-        // gpu::Block(nrTimesPerPass, 1));
-        gpu::Grid(nrPasses * nrThreads, params.nrChannelsPerSubband),
-        gpu::Block(nrThreads, 1));
-
+        // gpu::Grid(nrPasses * nrThreads, params.nrChannelsPerSubband),
+        // gpu::Block(nrThreads, 1));
+        gpu::Grid(align(params.nrSamplesPerChannel, blockSize), 
+                  align(params.nrChannelsPerSubband, blockSize)),
+        // The GPU kernel uses a shared memory block of 16x16 samples.
+        gpu::Block(blockSize, blockSize));
     }
 
     //--------  Template specializations for KernelFactory  --------//

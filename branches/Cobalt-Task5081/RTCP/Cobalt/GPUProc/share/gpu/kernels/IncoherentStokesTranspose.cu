@@ -18,6 +18,9 @@
 //#
 //# $Id$
 
+//#define NAIVE
+#define SHARED_MEM
+
 #if !(NR_CHANNELS >= 1)
 #error Precondition violated: NR_CHANNELS >= 1
 #endif
@@ -85,10 +88,37 @@ __global__ void transpose(OutputDataType output,
   unsigned time = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned channel = blockIdx.y * blockDim.y + threadIdx.y;
 
+#if defined(NAIVE)
   // Naive approach: directly reading from and writing to global memory.
   for (int station = 0; station < NR_STATIONS; station++) {
-    float4 sample = (*input)[station][channel][time];
-    (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
-    (*output)[station][1][time][channel] = make_float2(sample.z, sample.w);
+    if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) {
+      float4 sample = (*input)[station][channel][time];
+      (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
+      (*output)[station][1][time][channel] = make_float2(sample.z, sample.w);
+    }
   }
+#elif defined(SHARED_MEM)
+  // Use shared memory to do a block transpose. Both reads and writes to global
+  // memory can then be made coalesced.
+  __shared__ float4 tmp[16][17];
+
+  for (int station = 0; station < NR_STATIONS; station++) {
+    // Inside our data cube?
+    if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) {
+      // Read data
+      tmp[threadIdx.y][threadIdx.x] =  (*input)[station][channel][time];
+    }
+    __syncthreads();
+
+    if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) {
+      // Write data
+      float4 sample = tmp[threadIdx.y][threadIdx.x];
+      (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
+      (*output)[station][1][time][channel] = make_float2(sample.z, sample.w);
+    }
+    __syncthreads();
+
+  }
+#endif
+
 }

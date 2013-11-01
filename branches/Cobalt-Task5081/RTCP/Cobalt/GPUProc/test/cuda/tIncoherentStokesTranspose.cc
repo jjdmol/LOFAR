@@ -34,6 +34,7 @@
 #include <boost/lexical_cast.hpp>
 #include <complex>
 #include <iostream>
+#include <cstdlib>
 
 using namespace std;
 using namespace LOFAR;
@@ -41,9 +42,15 @@ using namespace LOFAR::Cobalt;
 
 typedef complex<float> fcomplex;
 
+#if 1
 unsigned NR_CHANNELS = 64;
 unsigned NR_SAMPLES_PER_CHANNEL = 16;
 unsigned NR_STATIONS = 48;
+#else
+unsigned NR_CHANNELS = 983;
+unsigned NR_SAMPLES_PER_CHANNEL = 16 * 19;
+unsigned NR_STATIONS = 29;
+#endif
 unsigned NR_POLARIZATIONS = 2;
 
 Exception::TerminateHandler t(Exception::terminate);
@@ -78,12 +85,13 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
            [NR_POLARIZATIONS],
            ctx);
   for (size_t i = 0; i < hInput.num_elements(); ++i)
-    hInput.origin()[i] = fcomplex(2 * i, 2 * i + 1);
+    hInput.data()[i] = fcomplex(2 * i, 2 * i + 1);
 
-  // Define output
+  // Define output and initialize to zero
   gpu::DeviceMemory 
     dOutput(ctx, 
             factory.bufferSize(IncoherentStokesTransposeKernel::OUTPUT_DATA));
+  dOutput.set(0);
   MultiDimArrayHostBuffer<fcomplex, 4>
     hOutput(boost::extents
             [NR_STATIONS]
@@ -91,6 +99,7 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
             [NR_SAMPLES_PER_CHANNEL]
             [NR_CHANNELS],
             ctx);
+  fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), fcomplex());
 
   // Create kernel
   IncoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
@@ -102,12 +111,21 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
   kernel->enqueue(blockId);
   stream.readBuffer(hOutput, dOutput, true);
 
-  // Verify output
-  for (size_t s = 0; s < NR_STATIONS; ++s)
-    for (size_t p = 0; p < NR_POLARIZATIONS; ++p)
-      for (size_t t = 0; t < NR_SAMPLES_PER_CHANNEL; ++t)
-        for (size_t c = 0; c < NR_CHANNELS; ++c)
-          ASSERT(hOutput[s][p][t][c] == hInput[s][c][t][p]);
+  // Verify output if we're not profiling.
+  if (!getenv("CUDA_PROFILING")) {
+    for (size_t s = 0; s < NR_STATIONS; ++s)
+      for (size_t p = 0; p < NR_POLARIZATIONS; ++p)
+        for (size_t t = 0; t < NR_SAMPLES_PER_CHANNEL; ++t)
+          for (size_t c = 0; c < NR_CHANNELS; ++c)
+            ASSERTSTR(hOutput[s][p][t][c] == hInput[s][c][t][p],
+                      "hOutput[" << s << "][" << p << "][" << t << "][" << c <<
+                      "] = " << hOutput[s][p][t][c] << "\t" <<
+                      "hInput[" << s << "][" << c << "][" << t << "][" << p <<
+                      "] = " << hInput[s][c][t][p]);
+    cout << "Test OK" << endl;
+  } else {
+    cout << "Output data not verified" << endl;
+  }
 }
 
 
