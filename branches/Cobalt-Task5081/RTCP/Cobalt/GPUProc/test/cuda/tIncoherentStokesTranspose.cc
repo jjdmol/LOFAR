@@ -118,9 +118,9 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
         for (size_t t = 0; t < NR_SAMPLES_PER_CHANNEL; ++t)
           for (size_t c = 0; c < NR_CHANNELS; ++c)
             ASSERTSTR(hOutput[s][p][t][c] == hInput[s][c][t][p],
-                      "hOutput[" << s << "][" << p << "][" << t << "][" << c <<
-                      "] = " << hOutput[s][p][t][c] << "\t" <<
-                      "hInput[" << s << "][" << c << "][" << t << "][" << p <<
+                      "\n  hOutput[" << s << "][" << p << "][" << t << "][" << c <<
+                      "] = " << hOutput[s][p][t][c] << 
+                      ",    hInput[" << s << "][" << c << "][" << t << "][" << p <<
                       "] = " << hInput[s][c][t][p]);
     cout << "Test OK" << endl;
   } else {
