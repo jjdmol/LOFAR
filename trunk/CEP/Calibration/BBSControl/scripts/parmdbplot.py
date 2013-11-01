@@ -275,7 +275,9 @@ class Parm:
         if self._calType == 'Clock': return QColor('#fff1bf')
         if self._calType == 'TEC': return QColor('#bfffda')
         if self._calType == 'CommonScalarPhase': return QColor('#ffbfbf')
+        if self._calType == 'ScalarPhase': return QColor('#ffbf00')
         if self._calType == 'RM': return QColor('#84f0aa')
+        return QColor('#000000')
 
     def valueAmp(self, domain=None, resolution=None, asPolar=True):
         self.updateValue(domain, resolution)
