@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <ios>
+#include <cfloat> // for DBL_MAX
 #include <sys/time.h>
 #include <boost/format.hpp>
 
@@ -101,7 +102,8 @@ namespace LOFAR
     class MultiPacketsToBuffer : public RSPBoards
     {
     public:
-      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ );
+      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_,
+                            double logFrom = DBL_MAX, double logTo = 0.0);
 
       virtual ~MultiPacketsToBuffer();
 
@@ -117,6 +119,8 @@ namespace LOFAR
 
       // log statistics
       double lastlog_time;           // last time we logged
+      const double logFrom;          // start logging at this time
+      const double logTo;            // stop logging at this time
       std::vector<double> sum_flags; // sum of flags/second
       double num_flags;              // number of seconds measured
 

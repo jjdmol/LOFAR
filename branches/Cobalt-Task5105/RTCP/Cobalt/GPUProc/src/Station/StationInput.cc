@@ -90,7 +90,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
 
   // Set up the data transports
-  MultiPacketsToBuffer station(settings, inputStreams);
+  MultiPacketsToBuffer station(settings, inputStreams, ps.settings.startTime, ps.settings.stopTime);
 
   // Signal the creation of the SHM buffer
   bufferReady.up();

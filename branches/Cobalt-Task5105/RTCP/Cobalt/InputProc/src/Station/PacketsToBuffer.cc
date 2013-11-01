@@ -165,7 +165,7 @@ namespace LOFAR
     template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
 
 
-    MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
+    MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_, double logFrom, double logTo )
     :
       RSPBoards("", inputStreams_.size()),
 
@@ -174,6 +174,8 @@ namespace LOFAR
       inputStreams(inputStreams_.size()),
 
       lastlog_time(now()),
+      logFrom(logFrom),
+      logTo(logTo),
       sum_flags(buffer.nrBoards, 0.0),
       num_flags(0.0)
     {
@@ -219,8 +221,14 @@ namespace LOFAR
       if (settings.sync)
         return;
 
-      const double from_ts  = lastlog_time;
-      const double to_ts    = now();
+      // Constrain time frame to specified logging period
+      const double from_ts  = std::max(lastlog_time, logFrom);
+      const double to_ts    = std::min(now(), logTo);
+
+      // Don't do anything if there is nothing to log
+      if (from_ts >= to_ts)
+        return;
+
       const double maxdelay = 0.5; // wait this many seconds for data to arrive
 
       std::vector<double> flags(buffer.nrBoards);
@@ -233,10 +241,9 @@ namespace LOFAR
         const struct BoardMode mode = *(buffer.boards[b].mode);
         const size_t Hz = mode.clockHz();
 
-        // timestamp = (seconds since 1970) * clock / 1024
         flags[b] = buffer.boards[b].flagPercentage(
-          TimeStamp((from_ts - maxdelay) * Hz / 1024, Hz),
-          TimeStamp((to_ts   - maxdelay) * Hz / 1024, Hz));
+          TimeStamp::convert(from_ts - maxdelay, Hz),
+          TimeStamp::convert(to_ts   - maxdelay, Hz));
 
         do_log = do_log || flags[b] > 0.0;
 
