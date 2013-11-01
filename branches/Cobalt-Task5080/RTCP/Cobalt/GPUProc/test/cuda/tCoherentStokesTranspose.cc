@@ -1,4 +1,4 @@
-//# tTranspose.cc: test Transpose CUDA kernel
+//# tCoherentStokesTranspose.cc: test Transpose CUDA kernel
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -32,7 +32,7 @@
 #include <CoInterface/BlockID.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
 
 using namespace std;
 using namespace boost;
@@ -54,30 +54,30 @@ void runTest( Context &ctx, Stream &stream )
   ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
   ps.updateSettings();
 
-  BeamFormerTransposeKernel::Parameters params(ps);
+  CoherentStokesTransposeKernel::Parameters params(ps);
   params.nrChannelsPerSubband = NR_CHANNELS;
   params.nrSamplesPerChannel = NR_SAMPLES_PER_CHANNEL;
   params.nrTABs = NR_TABS;
 
-  KernelFactory<BeamFormerTransposeKernel> factory(params);
+  KernelFactory<CoherentStokesTransposeKernel> factory(params);
 
   // Define dummy Block-ID
   BlockID blockId;
 
   // Define and fill input with unique values
-  DeviceMemory dInput(ctx, factory.bufferSize(BeamFormerTransposeKernel::INPUT_DATA));
+  DeviceMemory dInput(ctx, factory.bufferSize(CoherentStokesTransposeKernel::INPUT_DATA));
   MultiDimArrayHostBuffer<fcomplex, 4> hInput(boost::extents[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS], ctx);
 
   for (size_t i = 0; i < hInput.num_elements(); ++i)
     hInput.origin()[i] = fcomplex(2 * i, 2 * i + 1);
 
   // Define output
-  DeviceMemory dOutput(ctx, factory.bufferSize(BeamFormerTransposeKernel::OUTPUT_DATA));
+  DeviceMemory dOutput(ctx, factory.bufferSize(CoherentStokesTransposeKernel::OUTPUT_DATA));
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput(boost::extents[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL], ctx);
 
   // Create kernel
-  BeamFormerTransposeKernel::Buffers buffers(dInput, dOutput);
-  std::auto_ptr<BeamFormerTransposeKernel> kernel(factory.create(stream, buffers));
+  CoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
+  std::auto_ptr<CoherentStokesTransposeKernel> kernel(factory.create(stream, buffers));
 
   // Run kernel
   stream.writeBuffer(dInput, hInput, false);
@@ -96,7 +96,7 @@ void runTest( Context &ctx, Stream &stream )
 
 int main()
 {
-  INIT_LOGGER("tTranspose2");
+  INIT_LOGGER("CoherentStokesTransposeKernel");
   try 
   {
     gpu::Platform pf;

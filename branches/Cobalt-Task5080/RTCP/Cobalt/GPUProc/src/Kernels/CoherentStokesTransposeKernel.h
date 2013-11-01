@@ -22,17 +22,17 @@
 // \file
 // Include the right GPU API include with our options.
 
-#ifndef LOFAR_GPUPROC_BEAM_FORMER_TRANSPOSE_KERNEL_H
-#define LOFAR_GPUPROC_BEAM_FORMER_TRANSPOSE_KERNEL_H
+#ifndef LOFAR_GPUPROC__COHERENT_STOKES_TRANSPOSE_KERNEL_H
+#define LOFAR_GPUPROC__COHERENT_STOKES_TRANSPOSE_KERNEL_H
 
 #if defined (USE_CUDA) && defined (USE_OPENCL)
 # error "Either CUDA or OpenCL must be enabled, not both"
 #endif
 
 #if defined (USE_CUDA)
-# include <GPUProc/cuda/Kernels/BeamFormerTransposeKernel.h>
+# include <GPUProc/cuda/Kernels/CoherentStokesTransposeKernel.h>
 #elif defined (USE_OPENCL)
-# include <GPUProc/opencl/Kernels/BeamFormerTransposeKernel.h>
+# include <GPUProc/opencl/Kernels/CoherentStokesTransposeKernel.h>
 #else
 # error "Either CUDA or OpenCL must be enabled, not neither"
 #endif

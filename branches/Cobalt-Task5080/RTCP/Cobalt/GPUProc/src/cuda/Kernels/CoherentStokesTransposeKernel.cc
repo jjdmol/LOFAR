@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFormerTransposeKernel.h"
+#include "CoherentStokesTransposeKernel.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
@@ -40,10 +40,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    string BeamFormerTransposeKernel::theirSourceFile = "Transpose.cu";
-    string BeamFormerTransposeKernel::theirFunction = "transpose";
+    string CoherentStokesTransposeKernel::theirSourceFile = "CoherentStokesTranspose.cu";
+    string CoherentStokesTransposeKernel::theirFunction = "coherentStokesTranspose";
 
-    BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
+    CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
     {
@@ -52,15 +52,15 @@ namespace LOFAR
       nrSamplesPerChannel =
         ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.BeamFormerTransposeKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.CoherentStokesTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_BeamFormerTransposeKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%CoherentStokesTransposeKernel.dat") % 
             ps.settings.observationID);
 
     }
 
-    BeamFormerTransposeKernel::
-    BeamFormerTransposeKernel(const gpu::Stream& stream,
+    CoherentStokesTransposeKernel::
+    CoherentStokesTransposeKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
@@ -82,11 +82,11 @@ namespace LOFAR
     //--------  Template specializations for KernelFactory  --------//
 
     template<> size_t 
-    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const
+    KernelFactory<CoherentStokesTransposeKernel>::bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
-      case BeamFormerTransposeKernel::INPUT_DATA: 
-      case BeamFormerTransposeKernel::OUTPUT_DATA:
+      case CoherentStokesTransposeKernel::INPUT_DATA: 
+      case CoherentStokesTransposeKernel::OUTPUT_DATA:
         return
           (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
             NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
@@ -96,7 +96,7 @@ namespace LOFAR
     }
 
     template<> CompileDefinitions
-    KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const
+    KernelFactory<CoherentStokesTransposeKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);

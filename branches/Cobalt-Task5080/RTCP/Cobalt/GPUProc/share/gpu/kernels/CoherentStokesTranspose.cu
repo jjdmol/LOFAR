@@ -56,7 +56,7 @@ typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_
 typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]; // [NR_POLARIZATIONS];
 
 extern "C"
-__global__ void transpose(void *transposedDataPtr,
+__global__ void coherentStokesTranspose(void *transposedDataPtr,
                           const void *complexVoltagesPtr)
 {
   TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;

@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_TRANSPOSE_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_TRANSPOSE_KERNEL_H
+#ifndef LOFAR_GPUPROC_CUDA_COHERENT_STOKES_TRANSPOSE_KERNEL_H
+#define LOFAR_GPUPROC_CUDA_COHERENT_STOKES_TRANSPOSE_KERNEL_H
 
 #include <CoInterface/Parset.h>
 
@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerTransposeKernel : public Kernel
+    class CoherentStokesTransposeKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
@@ -51,7 +51,7 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      BeamFormerTransposeKernel(const gpu::Stream &stream,
+      CoherentStokesTransposeKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
@@ -61,10 +61,10 @@ namespace LOFAR
     //# --------  Template specializations for KernelFactory  -------- #//
 
     template<> size_t
-    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const;
+    KernelFactory<CoherentStokesTransposeKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
-    KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const;
+    KernelFactory<CoherentStokesTransposeKernel>::compileDefinitions() const;
 
   }
 }
