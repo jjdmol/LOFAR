@@ -69,12 +69,9 @@ namespace LOFAR
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      cout << "**************************" << endl;
-      cout << params.nrTABs << " " << params.nrSamplesPerChannel << " " << params.nrChannelsPerSubband << endl;
-      setEnqueueWorkSizes( gpu::Grid(params.nrTABs, params.nrSamplesPerChannel, params.nrChannelsPerSubband),
-      //setEnqueueWorkSizes( gpu::Grid(params.nrTABs, 16, 1),
+      setEnqueueWorkSizes( gpu::Grid(params.nrTABs, params.nrSamplesPerChannel, params.nrChannelsPerSubband  ),
                            gpu::Block(16, 16, 1) );
-      cout << "**************************" << endl;
+
 
 
 
