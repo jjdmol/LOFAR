@@ -49,22 +49,79 @@
  *   + middle dim (y): 16 TABs can be processed in a block. Number of blocks required, rounded-up. eg for 17 tabs we need 2 blocks
  *   + outer dim (z): 16 samples per channel can be processed in a block. Number of blocks required (fits exactly). 32 channels is 2 blocks
  */
+#include "gpu_math.cuh"
 
-typedef float2 (*TransposedDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL]; //last dims of this needs to be swapped
+typedef fcomplex (*OutputDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL]; //last dims of this needs to be swapped
 
 // last dim within float4 is NR_POLARIZATIONS
-typedef float4 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]; // [NR_POLARIZATIONS];
+typedef fcomplex (*InputDataType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS]; // [NR_POLARIZATIONS];
+
+
+
+
 
 extern "C"
-__global__ void coherentStokesTranspose(void *transposedDataPtr,
-                          const void *complexVoltagesPtr)
+__global__ void coherentStokesTranspose(void *OutputDataPtr,
+                          const void *InputDataPtr)
 {
-  TransposedDataType transposedData = (TransposedDataType) transposedDataPtr;
-  ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
 
-  // last dim within float4 is NR_POLARIZATIONS
-  __shared__ float4 tmp[16][17]; // padding to avoid bank conflicts
+  OutputDataType outputData = (OutputDataType) OutputDataPtr;
+  InputDataType inputData = (InputDataType) InputDataPtr;
+     
+  // fasted dims
+  unsigned tab          = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned channel       = blockIdx.z * blockDim.z + threadIdx.z;
 
+  (*outputData)[tab][0][channel][sample] = (*inputData) [channel][sample][tab][0];
+  (*outputData)[tab][1][channel][sample] = (*inputData)[channel][sample][tab][1];
+
+
+
+
+  // Shared memory to perform a transpose in shared memory
+  //// one too wide to avoid bank-conflicts on read
+  //// 16 by 16 limitation for the channels2 and samples per channel are caused by the
+  //// dimensions of this array
+  //// TODO: Increasing to 32 x 32 allows for a speedup of 13%
+  //__shared__ fcomplex tmp[16][16 + 1][2];
+
+  //for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
+  //{
+  //  unsigned combined_channel = idx_channel1 * NR_CHANNELS_2 + chan2;
+  //  float weight((*bandPassFactors)[combined_channel]);
+
+  //  // Read from memory in the quickest dimension (optimal)
+  //  fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
+  //  fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
+
+  //  sampleX.x *= weight;
+  //  sampleX.y *= weight;
+  //  sampleY.x *= weight;
+  //  sampleY.y *= weight;
+
+  //  // Write the data to shared memory
+
+  //  tmp[threadIdx.y][threadIdx.x][0] = sampleX;
+  //  tmp[threadIdx.y][threadIdx.x][1] = sampleY;
+  //  __syncthreads();  // assures all writes are done
+
+  //  // Now write from shared to global memory.
+  //  unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y;
+  //  // Use the threadidx.x for the highest array index: coalesced writes to the global memory
+  //  unsigned sample_index = blockIdx.y * blockDim.y + threadIdx.x;
+
+  //  (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];  // The threadIdx.y in shared mem is not a problem
+  //  (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.x][threadIdx.y][1];
+  //  __syncthreads();  // assure are writes are done. The next for itteration reuses the array
+  //}
+
+#ifdef SKIP
+  /*
+   41.89%  5.5789ms         1  5.5789ms  5.5789ms  5.5789ms  [CUDA memcpy HtoD]
+   38.80%  5.1674ms         1  5.1674ms  5.1674ms  5.1674ms  [CUDA memcpy DtoH]
+   19.30%  2.5703ms         1  2.5703ms  2.5703ms  2.5703ms  coherentStokesTranspose
+  */
   unsigned tabBase = 16 * blockDim.y * blockIdx.y + threadIdx.y;
   unsigned timeBase = 16 * blockDim.z * blockIdx.z + threadIdx.z;
 
@@ -96,5 +153,7 @@ __global__ void coherentStokesTranspose(void *transposedDataPtr,
     }
 
     __syncthreads();
+
   }
+  #endif
 }
