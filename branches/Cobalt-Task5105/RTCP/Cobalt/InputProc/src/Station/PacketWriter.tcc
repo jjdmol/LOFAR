@@ -66,7 +66,9 @@ void PacketWriter<T>::noMoreWriting()
 template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet )
 {
   if (packet.bitMode() != mode.bitMode || packet.clockMHz() != mode.clockMHz) {
-    THROW(BadModeException, "Mode switch to " << packet.bitMode() << " bit, " << packet.clockMHz() << " MHz");
+    throw BadModeException("Mode switch",
+                           BoardMode(packet.bitMode(), packet.clockMHz()),
+                           THROW_ARGS);
   }
 
   const uint8 &nrBeamlets  = packet.header.nrBeamlets;

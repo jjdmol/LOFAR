@@ -51,17 +51,14 @@ namespace LOFAR
 
     void PacketsToBuffer::process()
     {
-      // Holder for packet
-      struct RSP packet;
-
       // Create the buffer, regardless of mode
       GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
 
       // Keep track of the desired mode
       struct BoardMode mode;
 
-      // Whether packet has been read already
-      bool packetValid = false;
+      std::vector<struct RSP> packets(16);
+      std::vector<bool>       write(packets.size(), false);
 
       // Keep reading if mode changes
       for(;; ) {
@@ -69,15 +66,15 @@ namespace LOFAR
           // Process packets based on (expected) bit mode
           switch(mode.bitMode) {
           case 16:
-            process< SampleType<i16complex> >(packet, mode, packetValid);
+            process< SampleType<i16complex> >(mode, packets, write);
             break;
 
           case 8:
-            process< SampleType<i8complex> >(packet, mode, packetValid);
+            process< SampleType<i8complex> >(mode, packets, write);
             break;
 
           case 4:
-            process< SampleType<i4complex> >(packet, mode, packetValid);
+            process< SampleType<i4complex> >(mode, packets, write);
             break;
           }
 
@@ -85,14 +82,10 @@ namespace LOFAR
           break;
         } catch (BadModeException &ex) {
           // Mode switch detected
-          LOG_INFO_STR(logPrefix << "Mode switch detected to " << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit");
+          LOG_INFO_STR(logPrefix << "Mode switch detected to " << ex.mode.clockMHz << " MHz, " << ex.mode.bitMode << " bit");
 
           // change mode
-          mode.bitMode = packet.bitMode();
-          mode.clockMHz = packet.clockMHz();
-
-          // Process packet again
-          packetValid = true;
+          mode = ex.mode;
         }
       }
     }
@@ -109,7 +102,7 @@ namespace LOFAR
 
 
     template<typename T>
-    void PacketsToBuffer::process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket )
+    void PacketsToBuffer::process( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write )
     {
       // Create input structures
       PacketReader reader(logPrefix, inputStream);
@@ -121,18 +114,21 @@ namespace LOFAR
       LOG_DEBUG_STR( logPrefix << "Processing packets" );
 
       try {
-        // Process lingering packet from previous run, if any
-        if (writeGivenPacket) {
-          writer.writePacket(packet);
-          logStatistics(reader, packet);
-        }
-
         // Transport packets from reader to writer
-        for(;; ) {
-          if (reader.readPacket(packet)) {
-            writer.writePacket(packet);
-            logStatistics(reader, packet);
+        for(;;) {
+          // Write first, in case we're given packets to write
+          for (size_t i = 0; i < packets.size(); ++i) {
+            if (!write[i])
+              continue;
+
+            writer.writePacket(packets[i]);
+            logStatistics(reader, packets[i]);
+
+            // mark packet as written
+            write[i] = false;
           }
+
+          reader.readPackets(packets, write);
         }
 
       } catch (BadModeException &ex) {
@@ -160,9 +156,9 @@ namespace LOFAR
 
 
     // Explcitly create the instances we use
-    template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
-    template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
-    template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
+    template void PacketsToBuffer::process< SampleType<i16complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
+    template void PacketsToBuffer::process< SampleType<i8complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
+    template void PacketsToBuffer::process< SampleType<i4complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
 
 
     MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_, double logFrom, double logTo )
