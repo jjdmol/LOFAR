@@ -44,7 +44,7 @@ template<typename T> PacketWriter<T>::PacketWriter( const std::string &logPrefix
 {
   // Set mode for this board if necessary
   if (mode != *board.mode) {
-    LOG_INFO_STR(logPrefix << "Switching buffer to mode " << mode.bitMode << " bit, " << mode.clockMHz << " MHz");
+    LOG_DEBUG_STR(logPrefix << "Switching buffer to mode " << mode.bitMode << " bit, " << mode.clockMHz << " MHz");
 
     board.changeMode(mode);
   }
