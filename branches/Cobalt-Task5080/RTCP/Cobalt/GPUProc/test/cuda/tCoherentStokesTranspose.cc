@@ -41,10 +41,11 @@ using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
-unsigned NR_CHANNELS = 2048;
+unsigned NR_CHANNELS = 1024;
 unsigned NR_SAMPLES_PER_CHANNEL = 64;
-unsigned NR_TABS = 16;
+unsigned NR_TABS = 32;
 unsigned NR_POLARIZATIONS = 2;
+
 
 Exception::TerminateHandler t(Exception::terminate);
 
@@ -98,12 +99,6 @@ void runTest( Context &ctx, Stream &stream )
           //ASSERT(hOutput[t][p][c][s] == hInput[c][s][t][p]);
         }
 }
-
-
-
-
-
-
 
 
 

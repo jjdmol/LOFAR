@@ -62,33 +62,65 @@ typedef fcomplex2 (*InputDataType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS]
 extern "C"
 __global__ void coherentStokesTranspose(void *OutputDataPtr,
                           const void *InputDataPtr)
-{
-
+{ 
   OutputDataType outputData = (OutputDataType) OutputDataPtr;
   InputDataType inputData = (InputDataType) InputDataPtr;
-     
-  // fasted dims
-  unsigned tab           = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned sample        = blockIdx.y * blockDim.y + threadIdx.y;
-  unsigned channel       = blockIdx.z * blockDim.z + threadIdx.z;
+  
 
-  __shared__ fcomplex2 tmp[16][16 + 1];
+//#define BLOCKREORDER 1
+#ifdef BLOCKREORDER
+  // Reorder the grid block indexing: to prevent global memory access bank conflicts
+  // blockIdx.x start at the diagonal
+  unsigned block_x;
+  unsigned block_y;
+  if ( NR_SAMPLES_PER_CHANNEL == NR_TABS)  // if workload is square
+  {
+     block_x= (blockIdx.y + blockIdx.x) % gridDim.x; 
+     block_y = blockIdx.x;
+  } 
+  else
+  {
+    unsigned bid = blockIdx.x + gridDim.x * blockIdx.y;
+     block_y = bid % gridDim.y;
+     block_x = ((bid % gridDim.y) + block_y) % gridDim.x;    
 
-  tmp[threadIdx.y][threadIdx.x] = (*inputData) [channel][sample][tab];
-  __syncthreads();  // assures all writes are done
+  }
+  unsigned tab           = block_x * blockDim.x + threadIdx.x;
+  unsigned sample        = block_y * blockDim.y + threadIdx.y;
+#else
+  unsigned block_x      = blockIdx.x ;
+  unsigned block_y      = blockIdx.y ; 
+#endif
 
-  // OPtimal write to global memory
-  //  6.43%  757.00us         1  757.00us  757.00us  757.00us  coherentStokesTranspose
-  //   6.06%  710.37us         1  710.37us  710.37us  710.37us  coherentStokesTranspose float4
+  unsigned tab           = block_x * blockDim.x + threadIdx.x;
+  unsigned sample        = block_y * blockDim.y + threadIdx.y;
 
-  tab           = blockIdx.x * blockDim.x + threadIdx.y;
-  sample        = blockIdx.y * blockDim.y + threadIdx.x;
-  (*outputData)[tab][0][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].x,
-                                                       tmp[threadIdx.x][threadIdx.y].y) ;
+  for (unsigned idx = 0; idx < 1; ++idx)  // Do more work in a kernel allows hiding of preparation work
+  {
+    unsigned channel       = blockIdx.z * blockDim.z + idx;
 
-  (*outputData)[tab][1][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].z,
-                                                       tmp[threadIdx.x][threadIdx.y].w) ;
+    // Use shared memory for the transpose
+    __shared__ fcomplex2 tmp[16][16 + 1];  // plus one to prevent bank conflicts in shared memory
+    
+    tmp[threadIdx.y][threadIdx.x] = (*inputData) [channel][sample][tab];
+    __syncthreads();  // assures all writes are done
 
-  __syncthreads();  // assures all writes are done
+    // Reassign the tab and sample to allow the threadIdx.x to write in the highest dimension
+    tab           = block_x * blockDim.x + threadIdx.y;
+    sample        = block_y * blockDim.y + threadIdx.x;
+    (*outputData)[tab][0][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].x,
+                                                         tmp[threadIdx.x][threadIdx.y].y) ;
 
+    (*outputData)[tab][1][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].z,
+                                                         tmp[threadIdx.x][threadIdx.y].w) ;
+
+    __syncthreads();  // assures all writes are done
+  }
 }
+    // OPtimal write to global memory
+    //  6.43%  757.00us         1  757.00us  757.00us  757.00us  coherentStokesTranspose
+    //   6.06%  710.37us         1  710.37us  710.37us  710.37us  coherentStokesTranspose float4
+    // 5.51  642.34us       1  642.34us  642.34us  642.34us  coherentStokesTranspose 4 channel in for loop
+    // 5.74  671.17us       1  671.17us  671.17us  671.17us  coherentStokesTranspose 8 channel
+    // 5.23  607.53us       1  607.53us  607.53us  607.53us  coherentStokesTranspose
+    // With blovkr reordering idx = 0  4.70  543.05us       1  543.05us  543.05us  543.05us  coherentStokesTranspose
