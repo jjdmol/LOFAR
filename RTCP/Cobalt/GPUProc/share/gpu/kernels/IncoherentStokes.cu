@@ -20,7 +20,6 @@
 //# $Id$
 
 // \file
-
 // This file contains a CUDA implementation of the GPU kernel for the Incoherent
 // Stokes part of the beam-former pipeline. It adds the Stokes parameters of the
 // station beams without correcting for delays; hence the term \e
@@ -40,6 +39,10 @@
 #error Precondition violated: NR_INCOHERENT_STOKES == 1 || NR_INCOHERENT_STOKES == 4
 #endif
 
+#if !(NR_POLARIZATIONS == 2)
+#error Precondition violated: NR_POLARIZATIONS == 2
+#endif
+
 #if !(NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % TIME_INTEGRATION_FACTOR == 0)
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL && NR_SAMPLES_PER_CHANNEL % TIME_INTEGRATION_FACTOR == 0
 #endif
@@ -48,39 +51,46 @@
 #error Precondition violated: NR_STATIONS >= 1
 #endif
 
+// 5-D input array of complex samples. Note that, actually, the data is 4-D
+// (<tt>[station][pol][time][channel]</tt>). The 5th dimension is just a
+// convenience to make striding through the array in the time domain (used for
+// time integration) easier.
+typedef float2 (*InputDataType)
+[NR_STATIONS]
+[NR_POLARIZATIONS]
+[NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR]
+[TIME_INTEGRATION_FACTOR]
+[NR_CHANNELS];
+
 // 3-D output array of incoherent stokes values. Its dimensions are
 // <tt>[stokes][time][channels]</tt>, where <tt>[stokes]</tt> can be either 1
 // (Stokes \e I), or 4 (Stokes \e I, \e Q, \e U, and \e V).
-typedef float (*IncoherentStokesType)[NR_INCOHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][NR_CHANNELS];
-
-// 4-D array of input samples. Each sample contains two complex
-// polarizations. Note that, actually, the data is 3-D
-// (<tt>[stations][channels][time]</tt>), but the time dimension has been split
-// in two parts to make time integration easier.
-typedef float4 (*InputType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][TIME_INTEGRATION_FACTOR];
+typedef float (*OutputDataType)
+[NR_INCOHERENT_STOKES]
+[NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR]
+[NR_CHANNELS];
 
 // Compute the \e incoherent Stokes parameters. The incoherent Stokes
 // parameters are calculated by adding the Stokes parameters of the station
 // beams without correcting for delays due to tied-array beam forming.
 //
 // Pre-processor input symbols (some are tied to the execution configuration)
-// Symbol                  | Valid Values            | Description
-// ----------------------- | ----------------------- | -----------
-// TIME_INTEGRATION_FACTOR | >= 1                    | number of samples to sum into one output sample
-// NR_CHANNELS             | >= 1                    | number of frequency channels per subband
-// NR_INCOHERENT_STOKES    | 1, 4                    | number of Stokes parameters; either 1 (\e I) or 4 (\e I,\e Q,\e U,\e V)
+// Symbol                  | Valid Values | Description
+// ----------------------- | ------------ | -----------
+// TIME_INTEGRATION_FACTOR | >= 1         | number of samples to sum into one output sample
+// NR_CHANNELS             | >= 1         | number of frequency channels per subband
+// NR_INCOHERENT_STOKES    | 1, 4         | number of Stokes parameters; either 1 (\e I) or 4 (\e I,\e Q,\e U,\e V)
+// NR_POLARIZATIONS        | 2            | number of polarizations
 // NR_SAMPLES_PER_CHANNEL  | multiple of TIME_INTEGRATION_FACTOR | number of input samples per channel
-// NR_STATIONS             | >= 1                    | number of antenna fields
+// NR_STATIONS             | >= 1         | number of antenna fields
 //
-// \param stokes [out] 3-D array of incoherent Stokes parameters
-// \param input [in] 4-D array of input samples
-extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
-                                            const InputType input)
+// \param output [out] 3-D array of incoherent Stokes parameters
+// \param input [in] 5-D array of input samples
+extern "C" __global__ void incoherentStokes(OutputDataType output,
+                                            const InputDataType input)
 {
-  /* uint time = get_global_id(0); */
-  /* uint channel = get_global_id(1); */
-  uint time = blockIdx.x * blockDim.x + threadIdx.x;
-  uint channel = blockIdx.y * blockDim.y + threadIdx.y;
+  uint channel = blockIdx.x * blockDim.x + threadIdx.x;
+  uint time = blockIdx.y * blockDim.y + threadIdx.y;
 
   if (time >= NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR)
     return;
@@ -93,11 +103,10 @@ extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
   for (uint station = 0; station < NR_STATIONS; station++) {
     for (uint t = 0; t < TIME_INTEGRATION_FACTOR; t++) {
       /* float4 sample = (*input)[station][channel][time][t]; */
-      /* float2 X = sample.xy; */
-      /* float2 Y = sample.zw; */
-      float4 sample = (*input)[station][channel][time][t];
-      float2 X = make_float2(sample.x, sample.y);
-      float2 Y = make_float2(sample.z, sample.w);
+      /* float2 X = make_float2(sample.x, sample.y); */
+      /* float2 Y = make_float2(sample.z, sample.w); */
+      float2 X = (*input)[station][0][time][t][channel];
+      float2 Y = (*input)[station][1][time][t][channel];
       float powerX = X.x * X.x + X.y * X.y;
       float powerY = Y.x * Y.x + Y.y * Y.y;
 
@@ -110,11 +119,11 @@ extern "C" __global__ void incoherentStokes(IncoherentStokesType stokes,
     }
   }
 
-  (*stokes)[0][time][channel] = stokesI;
+  (*output)[0][time][channel] = stokesI;
 #if NR_INCOHERENT_STOKES == 4
-  (*stokes)[1][time][channel] = stokesQ;
-  (*stokes)[2][time][channel] = 2 * halfStokesU;
-  (*stokes)[3][time][channel] = 2 * halfStokesV;
+  (*output)[1][time][channel] = stokesQ;
+  (*output)[2][time][channel] = 2 * halfStokesU;
+  (*output)[3][time][channel] = 2 * halfStokesV;
 #endif
 }
 
