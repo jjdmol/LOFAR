@@ -99,7 +99,7 @@ void stationStreamCB(dyn_string dps, dyn_float values)
       }
       setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
       setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
-      if (strpos(station,\"CS\") <= 0) {
+      if (strpos(station,\"CS\") < 0) {
         rsppos=1;
         setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
         setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
