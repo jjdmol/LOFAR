@@ -31,10 +31,23 @@ private void reload() {
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
     if (dpConnect(\"stationStreamCB\", connectTo) == -1) {
-      setValue(\"stationStreamObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
     }
   } else {
-    setValue(\"stationStreamObject\", \"backCol\", \"Lofar_dpOffline\");
+    if (dynlen(connectTo) <= 0) {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+    } else {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpOffline\");
+    }
   }
 }
 
@@ -57,6 +70,7 @@ void stationStreamCB(dyn_string dps, dyn_float values)
   
   
     for (int i = 1; i<= dynlen(values); i++) {
+      int rsppos = 0;
       float val = values[i];
       string dp = dps[i];
       string ionode = substr(dp,strpos(dp,\"PSIONode\"),10);
@@ -72,20 +86,32 @@ void stationStreamCB(dyn_string dps, dyn_float values)
         
       if (val > 0.0) {
         string station;
+        string usedRSP=\"\";
         int nr  = substr(dp,strpos(dp,\"PSIONode\")+8,2);
         string IONodeDP = navFunct_IONode2DPName(nr);
         dpGet(IONodeDP+\".usedStation\",station);
-        string aS=station+\"</t> :\"+val+\"<br>\";
+        dpGet(IONodeDP+\".usedRSP\",usedRSP);
+        if (usedRSP == \"RSP1\") rsppos = 1;
+        
+        string aS=station+\"  HBA\"+rsppos+\"</t> :\"+val+\"<br>\";
         dynAppend(toollist,aS);
         count++;
       }
+      setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
+      setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
+      if (strpos(station,\"CS\") <= 0) {
+        rsppos=1;
+        setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
+        setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
+      }
+
     }
     if (!count) {
       toolTipText += \"All ok\";
     }
   }
-  setValue(\"stationStreamObject\",\"toolTipText\",toolTipText);
-  setValue(\"stationStreamObject\", \"backCol\", color);
+  setValue(\"stationStreamObject0\",\"toolTipText\",toolTipText);
+  setValue(\"stationStreamObject1\",\"toolTipText\",toolTipText);
 
 }" 0
  E "main(int x, int y)
@@ -148,7 +174,7 @@ LAYER, 0
 1
 LANG:1 0 
 6 0
-"stationStreamObject"
+"RECTANGLE1"
 ""
 1 230 150 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
  "main()
@@ -173,6 +199,34 @@ E "main()
   click();
 }" 0
  0 1 1 2 1 E U  1 E 0 0 14 9
+6 2
+"stationStreamObject0"
+""
+1 130 20 E E E 1 E 1 E N "_Transparent" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 1 0 1 1 1 1 E 0 0 6 7
+6 3
+"stationStreamObject1"
+""
+1 130 20 E E E 1 E 1 E N "_Transparent" E N "_3DFace" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 0 1 2 1 E 1 0 1 0 1 1 E 7 0 13 7
 0
 LAYER, 1 
 1
