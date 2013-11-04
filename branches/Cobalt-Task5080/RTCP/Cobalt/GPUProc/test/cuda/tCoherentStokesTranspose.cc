@@ -41,11 +41,10 @@ using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
-unsigned NR_CHANNELS = 1024;
-unsigned NR_SAMPLES_PER_CHANNEL = 64;
+unsigned NR_CHANNELS = 512;
+unsigned NR_SAMPLES_PER_CHANNEL = 256;
 unsigned NR_TABS = 32;
 unsigned NR_POLARIZATIONS = 2;
-
 
 Exception::TerminateHandler t(Exception::terminate);
 

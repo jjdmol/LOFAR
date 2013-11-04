@@ -71,9 +71,8 @@ namespace LOFAR
       setArg(1, buffers.input);
       setEnqueueWorkSizes( gpu::Grid(params.nrTABs,
                                      params.nrSamplesPerChannel,
-                                     params.nrChannelsPerSubband / 1),
+                                     params.nrChannelsPerSubband),
                            gpu::Block(16, 16, 1) );
-
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =
