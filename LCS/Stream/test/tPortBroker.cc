@@ -177,29 +177,28 @@ void prefix()
   ASSERT( PortBroker::instance().nrOutstandingRequests() == 0 );
 }
 
-int main(int /*argc*/, const char* argv[])
+int main()
 {
-  INIT_LOGGER(argv[0]);
+  INIT_LOGGER("tPortBroker");
   try {
     alarm(30);
 
     start();
 
-    //one_request();
-    //two_requests();
-    //prefix();
+    one_request();
+    two_requests();
+    prefix();
   } catch (Exception& e) {
     LOG_ERROR_STR(e);
     return 1;
   }
   LOG_INFO("Program terminated successfully");
-  PortBroker::destroyInstance();
   return 0;
 }
 
 #else // USE_THREADS
 
-int main(int /*argc*/, const char* /*argv[]*/)
+int main()
 {
   return 0;
 }
