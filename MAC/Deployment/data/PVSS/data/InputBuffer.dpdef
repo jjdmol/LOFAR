@@ -1,6 +1,5 @@
 # InputBuffer
 stationName			string
-rspName			string
 observationName		string
 
 # statistics of the 4 input streams
