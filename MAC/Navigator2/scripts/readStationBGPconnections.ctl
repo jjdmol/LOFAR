@@ -110,9 +110,10 @@ main()
                              + " ip: "+ip+ " mac: "+mac);
       if (dpExists(ioname)) {
         dpSet(ioname+".IP"+stationPlace,ip);
+        dpSet(ioname+".usedRSP","RSP"+rsp[2]);  
         if (macForeign != "") {
           dpSet(ioname+".MACForeign",macForeign);
-          dpSet(ioname+".station1",station);          
+          dpSet(ioname+".station1",station);  
         } else {
           dpSet(ioname+".MAC"+stationPlace,mac);
           dpSet(ioname+".station0",station);
