@@ -76,9 +76,6 @@ namespace LOFAR
         LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
       } catch (SystemCallException &ex) {
         LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
-      } catch (...) {
-        itsReceiveQueue.append(0); // no more data
-        throw;
       }
 
       itsReceiveQueue.append(0); // no more data
@@ -121,9 +118,6 @@ namespace LOFAR
         LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
       } catch (SystemCallException &ex) {
         LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
-      } catch (...) {
-        itsReceiveQueue.append(0); // no more data
-        throw;
       }
 
       itsReceiveQueue.append(0); // no more data

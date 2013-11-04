@@ -148,6 +148,11 @@ namespace LOFAR
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
         itsWriter = new MSWriterNull;
+#if defined HAVE_AIPSPP
+      } catch (casa::AipsError &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
+        cleanUp();
+#endif
       }
 
       // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
@@ -265,19 +270,8 @@ namespace LOFAR
     {
       LOG_DEBUG_STR(itsLogPrefix << "OutputThread::process() entered");
 
-      try {
-        createMS();
-        doWork();
-#if defined HAVE_AIPSPP
-      } catch (casa::AipsError &ex) {
-        LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
-        cleanUp();
-#endif
-      } catch (...) {
-        cleanUp(); // Of course, C++ does not need "finally" >:(
-        throw;
-      }
-
+      createMS();
+      doWork();
       cleanUp();
     }
 
