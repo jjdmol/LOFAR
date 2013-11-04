@@ -37,7 +37,7 @@
  * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *
  * Execution configuration:
- * - LocalWorkSize = 1 dimensional; (16, 16, 1) is in use.
+ * - LocalWorkSize = 2 dimensional; (16, 16, 1) is in use.
  * - GlobalWorkSize = 3 dimensional:
  *   + inner dim (x): nr tabs (/ 16)
  *   + middle dim (y): nr samples ( /16)
