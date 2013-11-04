@@ -21,9 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
+#include <cstdio> // for setvbuf
 #include <omp.h>
 
 #include <string>
@@ -34,15 +32,14 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
-#include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/FinalMetaData.h>
 #include "Writer.h"
+#include "GPUProcIO.h"
 #include "IOPriority.h"
 
 // install a new handler to produce backtraces for bad_alloc
@@ -54,106 +51,6 @@ using namespace std;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
-
-void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
-{
-  // Add final meta data (broken tile information, etc)
-  // that is obtained after the end of an observation.
-  LOG_INFO_STR("Waiting for final meta data");
-  FinalMetaData finalMetaData;
-  finalMetaData.read(controlStream);
-
-  LOG_INFO_STR("Processing final meta data");
-  for (size_t i = 0; i < subbandWriters.size(); ++i)
-    try {
-      subbandWriters[i]->augment(finalMetaData);
-    } catch (Exception &ex) {
-      LOG_WARN_STR("Could not add final meta data: " << ex);
-    }
-}
-
-void writeFeedbackLTA( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
-{
-  LOG_INFO_STR("Retrieving LTA feedback");
-  Parset feedbackLTA;
-  for (size_t i = 0; i < subbandWriters.size(); ++i)
-    try {
-      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
-    } catch (Exception &ex) {
-      LOG_WARN_STR("Could not obtain feedback for LTA: " << ex);
-    }
-
-  LOG_INFO_STR("Forwarding LTA feedback");
-  feedbackLTA.write(&controlStream);
-}
-
-
-void process(Stream &controlStream, size_t myRank)
-{
-  Parset parset(&controlStream);
-
-  const vector<string> &hostnames = parset.settings.outputProcHosts;
-  ASSERT(myRank < hostnames.size());
-  string myHostName = hostnames[myRank];
-
-  {
-    // make sure "parset" stays in scope for the lifetime of the SubbandWriters
-
-    vector<SmartPtr<Writer> > subbandWriters;
-
-    /*
-     * Construct writers
-     */
-
-    // Process correlated data
-    if (parset.settings.correlator.enabled) {
-      for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
-      {
-        if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
-          continue;
-
-        string logPrefix = str(boost::format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
-
-        Writer *writer = new SubbandWriter(parset, fileIdx, logPrefix);
-        subbandWriters.push_back(writer);
-      }
-    }
-
-    // Process beam-formed data
-    if (parset.settings.beamFormer.enabled) {
-      for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
-      {
-        if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
-          continue;
-
-        string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
-
-        Writer *writer = new TABWriter(parset, fileIdx, logPrefix);
-        subbandWriters.push_back(writer);
-      }
-    }
-
-    /*
-     * PROCESS
-     */
-
-#   pragma omp parallel for num_threads(subbandWriters.size())
-    for (int i = 0; i < (int)subbandWriters.size(); ++i)
-    {
-      subbandWriters[i]->process();
-    }
-
-    /*
-     * FINAL META DATA
-     */
-    readFinalMetaData(controlStream, subbandWriters);
-
-    /*
-     * LTA FEEDBACK
-     */
-    writeFeedbackLTA(controlStream, subbandWriters);
-  }
-}
 
 char stdoutbuf[1024], stderrbuf[1024];
 

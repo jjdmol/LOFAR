@@ -10,6 +10,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 lofar_add_library(outputproc 
   Package__Version.cc
   FastFileStream.cc
+  GPUProcIO.cc
   InputThread.cc
   OutputThread.cc
   Writer.cc
