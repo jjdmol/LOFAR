@@ -91,12 +91,12 @@ namespace LOFAR
       switch (bufferType) {
       case IncoherentStokesKernel::INPUT_DATA:
         return 
-          itsParameters.nrStations * NR_POLARIZATIONS * 
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
           itsParameters.nrSamplesPerChannel * 
           itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
         return 
-          itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
+          (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
           itsParameters.timeIntegrationFactor * 
           itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
