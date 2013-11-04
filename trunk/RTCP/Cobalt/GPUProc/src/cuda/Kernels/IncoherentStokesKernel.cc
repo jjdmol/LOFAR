@@ -72,8 +72,13 @@ namespace LOFAR
       unsigned nrTimesPerPass = 
         (nrTimes + nrPasses - 1) / nrPasses;
 
-      setEnqueueWorkSizes( gpu::Grid(nrTimesPerPass * nrPasses, params.nrChannelsPerSubband),
-                           gpu::Block(nrTimesPerPass, 1) );
+      LOG_DEBUG_STR("nrTimes = " << nrTimes);
+      LOG_DEBUG_STR("nrPasses = " << nrPasses);
+      LOG_DEBUG_STR("nrTimesPerPass = " << nrTimesPerPass);
+
+      setEnqueueWorkSizes(
+        gpu::Grid(params.nrChannelsPerSubband, nrTimesPerPass * nrPasses),
+        gpu::Block(1, nrTimesPerPass));
 
     }
 
@@ -86,14 +91,14 @@ namespace LOFAR
       switch (bufferType) {
       case IncoherentStokesKernel::INPUT_DATA:
         return 
-          (size_t) itsParameters.nrStations * itsParameters.nrChannelsPerSubband *
-            itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
-            sizeof(std::complex<float>);
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+          itsParameters.nrSamplesPerChannel * 
+          itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
         return 
           (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
-            itsParameters.timeIntegrationFactor * 
-            itsParameters.nrChannelsPerSubband * sizeof(float);
+          itsParameters.timeIntegrationFactor * 
+          itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
