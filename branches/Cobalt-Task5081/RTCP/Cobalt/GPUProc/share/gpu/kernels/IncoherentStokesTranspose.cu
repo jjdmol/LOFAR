@@ -23,8 +23,9 @@
 //#define NAIVE
 #define SHARED_MEM
 
-// TODO: Must be set on the command line, i.e. through the C++ kernel class.
-#define TILE_SIZE 16
+#if !(TILE_SIZE == 16)
+#error Precondition violated: TILE_SIZE == 16
+#endif
 
 #if !(NR_CHANNELS >= 1)
 #error Precondition violated: NR_CHANNELS >= 1
@@ -90,12 +91,13 @@ extern "C"
 __global__ void transpose(OutputDataType output,
                           const InputDataType input)
 {
-  unsigned time = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned channel = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned time, channel;
 
 #if defined(NAIVE)
   // Naive approach: directly reading from and writing to global memory.
   for (int station = 0; station < NR_STATIONS; station++) {
+    time = blockIdx.x * blockDim.x + threadIdx.x;
+    channel = blockIdx.y * blockDim.y + threadIdx.y;
     if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) {
       float4 sample = (*input)[station][channel][time];
       (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
@@ -105,34 +107,27 @@ __global__ void transpose(OutputDataType output,
 #elif defined(SHARED_MEM)
   // Use shared memory to do a block transpose. Both reads and writes to global
   // memory can then be made coalesced.
-  __shared__ float4 tmp[TILE_SIZE][TILE_SIZE+1];
+  __shared__ float4 tmp[TILE_SIZE][TILE_SIZE + 1];
 
   for (int station = 0; station < NR_STATIONS; station++) {
+    time = blockIdx.x * blockDim.x + threadIdx.x;
+    channel = blockIdx.y * blockDim.y + threadIdx.y;
     // Inside our data cube?
-    /* if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) { */
+    if (channel < NR_CHANNELS && time < NR_SAMPLES_PER_CHANNEL) {
       // Read data
       tmp[threadIdx.y][threadIdx.x] =  (*input)[station][channel][time];
-    /* } */
+    }
     __syncthreads();
 
-    // Write data
-#if 0  /* This produces correct output but is SLOW */
-    if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) {
-      float4 sample = tmp[threadIdx.y][threadIdx.x];
-      (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
-      (*output)[station][1][time][channel] = make_float2(sample.z, sample.w);
-    }
-#else
-    channel = blockIdx.y * blockDim.y + threadIdx.x;
     time = blockIdx.x * blockDim.x + threadIdx.y;
-    /* if (time < NR_SAMPLES_PER_CHANNEL && channel < NR_CHANNELS) { */
-      /* printf("time = %d\n", time); */
-      /* printf("channel = %d\n", channel); */
+    channel = blockIdx.y * blockDim.y + threadIdx.x;
+    // Inside our data cube?
+    if (channel < NR_CHANNELS && time < NR_SAMPLES_PER_CHANNEL) {
+      // Write data
       float4 sample = tmp[threadIdx.x][threadIdx.y];
       (*output)[station][0][time][channel] = make_float2(sample.x, sample.y);
       (*output)[station][1][time][channel] = make_float2(sample.z, sample.w);
-    /* } */
-#endif
+    }
     __syncthreads();
 
   }

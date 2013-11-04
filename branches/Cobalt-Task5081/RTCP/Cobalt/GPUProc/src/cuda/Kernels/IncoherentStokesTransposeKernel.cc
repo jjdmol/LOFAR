@@ -42,7 +42,8 @@ namespace LOFAR
       "transpose";
 
     IncoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps)
+      Kernel::Parameters(ps),
+      tileSize(16)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IncoherentStokesTransposeKernel.dumpOutput",
@@ -62,7 +63,6 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      const unsigned blockSize = 16;
       // const unsigned nrThreads = blockSize * blockSize;
       // const unsigned nrBlocks = params.nrSamplesPerChannel;
       // const unsigned nrPasses = (nrBlocks + nrThreads - 1) / nrThreads;
@@ -71,22 +71,22 @@ namespace LOFAR
       // LOG_DEBUG_STR("nrBlocks = " << nrBlocks);
       // LOG_DEBUG_STR("nrPasses = " << nrPasses);
 
-      LOG_DEBUG_STR("align(params.nrSamplesPerChannel, blockSize) = " << 
+      LOG_DEBUG_STR("align(params.nrSamplesPerChannel, params.tileSize) = " << 
                     "align(" << params.nrSamplesPerChannel <<
-                    ", " << blockSize << ") = " <<
-                    align(params.nrSamplesPerChannel, blockSize));
-      LOG_DEBUG_STR("align(params.nrChannelsPerSubband, blockSize)) = " <<
+                    ", " << params.tileSize << ") = " <<
+                    align(params.nrSamplesPerChannel, params.tileSize));
+      LOG_DEBUG_STR("align(params.nrChannelsPerSubband, params.tileSize)) = " <<
                     "align(" << params.nrChannelsPerSubband <<
-                    ", " << blockSize << ") = " <<
-                    align(params.nrChannelsPerSubband, blockSize));
+                    ", " << params.tileSize << ") = " <<
+                    align(params.nrChannelsPerSubband, params.tileSize));
 
       setEnqueueWorkSizes(
         // gpu::Grid(nrPasses * nrThreads, params.nrChannelsPerSubband),
         // gpu::Block(nrThreads, 1));
-        gpu::Grid(align(params.nrSamplesPerChannel, blockSize), 
-                  align(params.nrChannelsPerSubband, blockSize)),
+        gpu::Grid(align(params.nrSamplesPerChannel, params.tileSize), 
+                  align(params.nrChannelsPerSubband, params.tileSize)),
         // The GPU kernel uses a shared memory block of 16x16 samples.
-        gpu::Block(blockSize, blockSize));
+        gpu::Block(params.tileSize, params.tileSize));
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -113,6 +113,7 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+      defs["TILE_SIZE"] = lexical_cast<string>(itsParameters.tileSize);
       return defs;
     }
 

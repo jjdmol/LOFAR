@@ -44,6 +44,7 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        unsigned tileSize;  ///< Tile size used in the GPU kernel
       };
 
       enum BufferType

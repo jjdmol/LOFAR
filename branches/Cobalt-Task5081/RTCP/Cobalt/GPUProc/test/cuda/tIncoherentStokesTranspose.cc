@@ -27,10 +27,6 @@
 #include <CoInterface/BlockID.h>
 #include <Common/Exception.h>
 
-// #include <Common/LofarLogger.h>
-
-
-#include <UnitTest++.h>
 #include <boost/lexical_cast.hpp>
 #include <complex>
 #include <iostream>
@@ -42,13 +38,13 @@ using namespace LOFAR::Cobalt;
 
 typedef complex<float> fcomplex;
 
-#if 1
+#if 0
 unsigned NR_CHANNELS = 64;
 unsigned NR_SAMPLES_PER_CHANNEL = 16;
 unsigned NR_STATIONS = 48;
 #else
 unsigned NR_CHANNELS = 983;
-unsigned NR_SAMPLES_PER_CHANNEL = 16 * 19;
+unsigned NR_SAMPLES_PER_CHANNEL = 16 * 89; // 16 * 19;
 unsigned NR_STATIONS = 29;
 #endif
 unsigned NR_POLARIZATIONS = 2;
