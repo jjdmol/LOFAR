@@ -18,8 +18,17 @@ PANEL,-1 -1 114 72 N "_3DFace" 2
   
 private void reload() {
   
-  // get all the InputBuffers used by this observation
-  inputBuffers = navFunct_getInputBuffersForObservation(observation);
+  // get all the InputBuffers used by this observation there might be a delay before the info is set into the inputbuffers, so in that case do a few retries
+  int retry=0;
+  dynClear(inputBuffers);
+  while (dynlen(inputBuffers) <= 0) {
+    inputBuffers = navFunct_getInputBuffersForObservation(observation);
+    delay(0,100);
+    retry++;
+    if (retry >= 60) {
+      break;
+    }
+  }
   
   if ($streamNr == 1) {
     string obsDP = claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
