@@ -82,7 +82,7 @@ void stationStreamCB(dyn_string dps, dyn_float values)
         color = \"Lofar_suspicious\";
       } else if (val >= 100.0) {
         color = \"Lofar_broken\";
-      }
+      }                                                                                                                                                                                                                          
         
       if (val > 0.0) {
         string station;
