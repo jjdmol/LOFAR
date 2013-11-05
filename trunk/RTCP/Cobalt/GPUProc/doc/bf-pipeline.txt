@@ -86,7 +86,7 @@ Incoherent Stokes:
    X            [station][channel][samples][pol]        [48][4096][48][2]   = 144 MiB               B
    |
    V
-Transpose + Copy  (*** requires new kernel: different input/output format ***)
+Transpose + Copy
    |            [station][pol][samples][channel]        [48][2][48][4096]   = 144 MiB               A
    V
 iFFT-4k {inplace}
