@@ -36,15 +36,19 @@ namespace LOFAR
     class IncoherentStokesTransposeKernel : public Kernel
     {
     public:
-      static std::string theirSourceFile;
-      static std::string theirFunction;
+      // Name of the CUDA kernel source file.
+      static const std::string theirSourceFile;
+
+      // Name of the kernel function to invoke.
+      static const std::string theirFunction;
 
       // Parameters that must be passed to the constructor of the
       // IncoherentStokesTransposeKernel class.
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        unsigned tileSize;  ///< Tile size used in the GPU kernel
+        // Size of the square shared memory tile to be used.
+        const unsigned tileSize;
       };
 
       enum BufferType
