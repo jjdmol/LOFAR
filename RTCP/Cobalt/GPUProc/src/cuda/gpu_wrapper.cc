@@ -212,7 +212,7 @@ namespace LOFAR
 
       std::ostream& operator<<(std::ostream& os, const Block& block)
       {
-        os << block.x << ", " << block.y << ", " << block.z;
+        os << "[" << block.x << ", " << block.y << ", " << block.z << "]";
         return os;
       }
 
@@ -223,7 +223,7 @@ namespace LOFAR
 
       std::ostream& operator<<(std::ostream& os, const Grid& grid)
       {
-        os << grid.x << ", " << grid.y << ", " << grid.z;
+        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
         return os;
       }
 
