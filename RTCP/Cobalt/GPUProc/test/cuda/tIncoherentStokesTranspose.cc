@@ -35,8 +35,7 @@
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
-
-typedef complex<float> fcomplex;
+using namespace LOFAR::TYPES;
 
 unsigned NR_CHANNELS = 61;
 unsigned NR_SAMPLES_PER_CHANNEL = 47;
