@@ -114,9 +114,6 @@ namespace LOFAR
               globalWorkSize << " and/or localWorkSize " << localWorkSize << " selected:" <<
               endl << errStr);
 
-      LOG_DEBUG_STR("CUDA Grid size: " << grid);
-      LOG_DEBUG_STR("CUDA Block size: " << localWorkSize);
-
       itsGridDims = grid;
       itsBlockDims = localWorkSize;
     }

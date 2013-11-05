@@ -29,7 +29,6 @@ lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tTranspose tTranspose.cc)
 lofar_add_test(tTranspose2 tTranspose2.cc)
-lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 
 
 # Trick tests that compile kernels that need to be installed into thinking
@@ -41,7 +40,6 @@ set_tests_properties(
   tBeamFormer
   tTranspose
   tTranspose2
-  tIncoherentStokesTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 
