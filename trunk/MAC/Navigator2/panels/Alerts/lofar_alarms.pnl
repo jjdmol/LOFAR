@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1022 777 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
    // Initialise the Panel
@@ -58,7 +58,7 @@ LANG:1 0
 28 0
 "Alarms"
 ""
-1 0 -2.842170943040401e-014 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 0 -3.11213968697036e-014 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 0 0 0 0 0 0
 E E E
@@ -68,9 +68,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- -2 -2 1014 760
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  -2 -2 1192 832
 E2 "New Alarms" 1
 LANG:1 10 New Alarms
 1 "objects/Alerts/alarms.pnl" 1
