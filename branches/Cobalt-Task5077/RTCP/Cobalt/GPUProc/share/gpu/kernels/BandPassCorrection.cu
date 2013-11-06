@@ -37,7 +37,6 @@
  */
 
 #include "gpu_math.cuh"
-#include "IntToFloat.cuh"
 
 #if !(NR_POLARIZATIONS == 2)
 #error Precondition violated: NR_POLARIZATIONS == 2
@@ -85,15 +84,13 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
  *                                 ::BandPassFactorsType, a 1D array [channels1 * channels2] of
  *                                 float, containing bandpass correction factors
  */
-#define SHARED
 extern "C" {
 __global__ void bandPassCorrection( fcomplex * outputDataPtr,
-                                 const fcomplex * intputDataPtr,
+                                 const fcomplex * inputDataPtr,
                                  const float * bandPassFactorsPtr)
-{
-  
+{ 
   OutputDataType outputData = (OutputDataType) outputDataPtr;
-  InputDataType inputData   = (InputDataType)  intputDataPtr;
+  InputDataType inputData   = (InputDataType)  inputDataPtr;
 
   // Band pass to apply to the channels  
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
@@ -108,7 +105,7 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
   // 16 by 16 limitation for the channels2 and samples per channel are caused by the
   // dimensions of this array
   // TODO: Increasing to 32 x 32 allows for a speedup of 13%
-  __shared__ fcomplex tmp[16][16 + 1][2];
+  __shared__ fcomplex tmp[16][16 + 1][NR_POLARIZATIONS];
 
   for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
   {
@@ -131,7 +128,7 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 
     // Now write from shared to global memory.
     //         for loop index step with NR_CHANNELS_2  
-    //         + The blockidx is used to paralellize work items larged then the shared memory
+    //         + The blockidx is used to parallelize work items larged then the shared memory
     //         + The slow changing threadIdx 
     unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y;
     // Use the threadidx.x for the highest array index: coalesced writes to the global memory
@@ -141,7 +138,7 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 
     (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];  // The threadIdx.y in shared mem is not a problem
     (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.x][threadIdx.y][1];
-    __syncthreads();  // assure are writes are done. The next for itteration reuses the array
+    __syncthreads();  // ensure are writes are done. The next for itteration reuses the array
   }
 }
 }

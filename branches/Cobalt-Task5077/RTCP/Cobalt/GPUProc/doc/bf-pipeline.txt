@@ -46,7 +46,7 @@ Delay compensation (*: no transpose) {I/O: delays}
 FFT-64 {inplace}
    |            [station][pol][chan1][samples][chan2]   [48][2][64][48][64] = 144 MiB               A
    V
-BandPass + Transpose {I/O: weights}  (*** input format currently incorrect ***)
+BandPass + Transpose {I/O: weights}
    |            [station][chan1][chan2][samples][pol]   [48][64][64][48][2] = 144 MiB               B
    V          = [stations][channel][samples][pol]
    X
