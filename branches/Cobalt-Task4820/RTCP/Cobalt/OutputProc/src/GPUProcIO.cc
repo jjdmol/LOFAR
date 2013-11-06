@@ -41,6 +41,9 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 
+namespace LOFAR {
+namespace Cobalt {
+
 void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
 {
   // Add final meta data (broken tile information, etc)
@@ -140,3 +143,7 @@ void process(Stream &controlStream, size_t myRank)
     writeFeedbackLTA(controlStream, subbandWriters);
   }
 }
+
+}
+}
+

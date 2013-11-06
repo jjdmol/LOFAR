@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
 
   int observationID = boost::lexical_cast<int>(argv[1]);
-  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
+  size_t myRank = boost::lexical_cast<size_t>(argv[2]);
 
   setIOpriority();
   setRTpriority();
