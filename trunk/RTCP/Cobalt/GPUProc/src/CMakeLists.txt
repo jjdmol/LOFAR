@@ -30,6 +30,7 @@ if(USE_CUDA)
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc
     cuda/Kernels/BeamFormerTransposeKernel.cc
+    cuda/Kernels/CoherentStokesTransposeKernel.cc
     cuda/Kernels/CoherentStokesKernel.cc
     cuda/Kernels/CorrelatorKernel.cc
     #cuda/Kernels/DedispersionBackwardFFTkernel.cc
