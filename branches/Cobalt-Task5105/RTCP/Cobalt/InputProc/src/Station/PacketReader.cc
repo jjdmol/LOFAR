@@ -73,6 +73,8 @@ namespace LOFAR
 
         size_t numRead = sstream.recvmmsg( packets );
 
+        nrReceived += numRead;
+
         // validate received packets
         for (size_t i = 0; i < numRead; ++i) {
           valid[i] = validatePacket(packets[i]);
@@ -86,6 +88,8 @@ namespace LOFAR
         // fall-back for non-UDP streams, emit packets
         // one at a time to avoid data loss on EndOfStream.
         valid[0] = readPacket(packets[0]);
+
+        nrReceived++;
 
         for (size_t i = 1; i < packets.size(); ++i) {
           valid[i] = false;
@@ -145,7 +149,8 @@ namespace LOFAR
       // discard packets with errors
       if (packet.payloadError()) {
         ++nrBadData;
-        return false;
+        // only count for now, emulate BGP and let the packets through
+        //return false;
       }
 
       // everything is ok
