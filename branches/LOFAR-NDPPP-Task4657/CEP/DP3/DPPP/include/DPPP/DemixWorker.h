@@ -270,8 +270,6 @@ namespace LOFAR {
       casa::Matrix<bool>                    itsAteamAmplSel;
       //# #nfreq x #bl x #time StokesI amplitude of target.
       casa::Cube<float>                     itsTargetAmpl;
-      //# #bl telling if target baseline contains core stations only.
-      casa::Vector<bool>                    itsTargetAmplSel;
       //# Temporary buffer to determine medians.
       vector<float>                         itsTmpAmpl;
       //# Per A-source and for target the min and max amplitude.

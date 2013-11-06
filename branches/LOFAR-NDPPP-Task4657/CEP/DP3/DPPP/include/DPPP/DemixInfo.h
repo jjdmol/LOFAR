@@ -96,6 +96,7 @@ namespace LOFAR {
       bool   isAteamNearby() const               {return itsIsAteamNearby;}
       bool   propagateSolution() const           {return itsPropagateSolution;}
       bool   applyBeam() const                   {return itsApplyBeam;}
+      bool   doSubtract() const                  {return itsDoSubtract;}
       const BaselineSelection& selBL() const     {return itsSelBL;}
       const vector<int>& uvwSplitIndex() const   {return itsUVWSplitIndex;}
       const string& predictModelName() const     {return itsPredictModelName;}
@@ -166,6 +167,7 @@ namespace LOFAR {
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
       bool                    itsApplyBeam;
+      bool                    itsDoSubtract;
       uint                    itsTargetHandling;
       uint                    itsVerbose;            //# trace verbosity level
       uint                    itsMaxIter;            //# max #iter in solve

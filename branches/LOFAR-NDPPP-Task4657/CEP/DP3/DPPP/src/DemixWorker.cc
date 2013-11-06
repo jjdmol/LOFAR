@@ -986,8 +986,8 @@ namespace LOFAR {
       demix (solutions, time, timeStep);
       // If selection was done, merge the subtract results back into the
       // buffer.
-      if (itsMix->selBL().hasSelection()) {
-	mergeSubtractResult ();
+      if (itsMix->doSubtract()  &&  itsMix->selBL().hasSelection()) {
+	mergeSubtractResult();
       }
       // Clear the input buffers.
       for (size_t i=0; i<itsAvgResults.size(); ++i) {
@@ -998,7 +998,7 @@ namespace LOFAR {
         // DPBuffer copying uses reference semantics which is fine.
         // At the end the itsAvgResultxxx buffers get removed, thus the ones
         // in bufout cannot be overwritten.
-        if (itsMix->selBL().hasSelection()) {
+        if (itsMix->doSubtract()  &&  itsMix->selBL().hasSelection()) {
           bufout[i] = itsAvgResultFull->get()[i];
         } else {
           bufout[i] = itsAvgResultSubtr->get()[i];
@@ -1143,117 +1143,120 @@ namespace LOFAR {
         //
         // Note that the resolution of the residual can differ from the
         // resolution at which the Jones matrices were estimated.
-        itsTimerSubtract.start();
-        // Get middle of first subtract time interval.
-        double subtrTime = time - 0.5*(timeStep - subtrTimeStep);
-        for (size_t ts_subtr = multiplier * ts,
-               ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
-             ts_subtr != ts_subtr_end; ++ts_subtr) {
-          // Get the observed amplitude per baseline summed over channel/time.
-          const Complex* data =
-            itsAvgResultSubtr->get()[ts_subtr].getData().data();
-          for (size_t bl=0; bl<nBl; ++bl) {
-            float ampl = 0;
-            for (size_t ch=0; ch<nChSubtr; ++ch) {
-              float tampl = 0.5 * abs(data[0]) + abs(data[3]);
-              ampl += tampl;
-              itsAmplTotal(ch,bl) += tampl;
-              data += 4;
-            }
-            itsObservedAmpl[bl] = ampl;
-          }
-          for (size_t dr=0; dr<itsNSubtr; ++dr) {
-            uint drOrig = itsSrcSet[dr];
-            // Re-use simulation used for estimating Jones matrices if possible.
-            cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
-                                            3, stride_model);
-            // Re-simulate if required.
-            if (multiplier != 1 || nCh != nChSubtr) {
-              nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
-                         itsAvgResultSubtr->get()[ts_subtr].getUVW(), itsUVW);
-              // Rotate the UVW coordinates for the target direction to the
-              // direction of source to subtract. This is required because at
-              // the resolution of the residual the UVW coordinates for
-              // directions other than the target are unavailable (unless the
-              // resolution of the residual is equal to the resolution at which
-              // the Jones matrices were estimated, of course).
-              cursor<double> cr_uvw_split = casa_cursor(itsUVW);
-              rotateUVW (itsMix->phaseRef(),
-                         itsMix->ateamList()[drOrig]->position(), nSt,
-                         cr_uvw_split);
-              // Initialize the visibility buffer.
-              std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
-              // Simulate visibilities at the resolution of the residual.
-              size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
-              cr_model_subtr = cursor<dcomplex>(&(itsModelVis[0]), 3,
-                                                stride_model_subtr);
-              simulate(itsMix->ateamList()[drOrig]->position(),
-                       itsMix->ateamList()[drOrig], nSt, nBl,
-                       nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
-                       cr_model_subtr);
-              applyBeam (subtrTime, itsMix->ateamDemixList()[drOrig]->position(),
-                         itsMix->freqSubtr(),
-                         &(itsModelVis[0]));
-            }
-
-            // Apply Jones matrices.
-            size_t stride_unknowns[2] = {1, 8};
-            const_cursor<double> cr_unknowns(&(solutions[ts][drOrig * nSt * 8]),
-                                             2, stride_unknowns);
-            apply (nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
-
-            // Subtract the source contribution from the data.
-            cursor<fcomplex> cr_residual =
-              casa_cursor(itsAvgResultSubtr->get()[ts_subtr].getData());
-
-            // Construct a cursor to iterate over a slice of the mixing matrix
-            // at the resolution of the residual. The "to" and "from" direction
-            // are fixed. Since the full mixing matrix is 5-D, the slice is
-            // therefore 3-D. Each individual value in the slice quantifies the
-            // influence of the source to subtract on the target direction for
-            // a particular correlation, channel, and baseline.
-            //
-            // The target direction is the direction with the highest index by
-            // convention, i.e. index itsNDir - 1. The directions to subtract
-            // have the lowest indices by convention, i.e. indices
-            // [0, nDrSubtr).
-            const IPosition& stride_mix_subtr =
-              itsFactorsSubtr[ts_subtr].steps();
-            size_t stride_mix_subtr_slice[3] = {
-              static_cast<size_t>(stride_mix_subtr[2]),
-              static_cast<size_t>(stride_mix_subtr[3]),
-              static_cast<size_t>(stride_mix_subtr[4])
-            };
-            ASSERT(stride_mix_subtr_slice[0] == itsNDir*itsNDir  &&
-                   stride_mix_subtr_slice[1] == itsNDir*itsNDir*nCr  &&
-                   stride_mix_subtr_slice[2] == itsNDir*itsNDir*nCr*nChSubtr);
-
-            IPosition offset(5, itsNDir - 1, dr, 0, 0, 0);
-            const_cursor<dcomplex> cr_mix_subtr
-              (&(itsFactorsSubtr[ts_subtr](offset)), 3, stride_mix_subtr_slice);
-
-            // Subtract the source.
-            // It fills in the subtracted amplitude per baseline.
-            subtract (nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
-                      cr_mix_subtr, itsSourceAmpl);
-            // Calculate the mean percentage amplitude subtracted per source.
-            // This array is ordered [nbl,nsrc]
+        if (itsMix->doSubtract()) {
+          itsTimerSubtract.start();
+          // Get middle of first subtract time interval.
+          double subtrTime = time - 0.5*(timeStep - subtrTimeStep);
+          for (size_t ts_subtr = multiplier * ts,
+                 ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
+               ts_subtr != ts_subtr_end; ++ts_subtr) {
+            // Get the observed amplitude per baseline summed over channel/time.
+            const Complex* data =
+              itsAvgResultSubtr->get()[ts_subtr].getData().data();
             for (size_t bl=0; bl<nBl; ++bl) {
-              if (itsObservedAmpl[bl] != 0) {
-                // Calculate mean and stddev in a running way using a
-                // numerically stable algorithm
-                // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-                itsAmplSubtrNr(bl,drOrig)++;
-                double perc  = itsSourceAmpl[bl] / itsObservedAmpl[bl];
-                double delta = perc - itsAmplSubtrMean(bl,drOrig);
-                itsAmplSubtrMean(bl,drOrig) += delta/itsAmplSubtrNr(bl,drOrig);
-                itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
+              float ampl = 0;
+              for (size_t ch=0; ch<nChSubtr; ++ch) {
+                float tampl = 0.5 * (abs(data[0]) + abs(data[3]));
+                ampl += tampl;
+                itsAmplTotal(ch,bl) += tampl;
+                data += 4;
               }
-            } // end nBl
-          } // end itsNSubtr
-          subtrTime += subtrTimeStep;
-        } // end ts_subtr
-        itsTimerSubtract.stop();
+              itsObservedAmpl[bl] = ampl;
+            }
+            for (size_t dr=0; dr<itsNSubtr; ++dr) {
+              uint drOrig = itsSrcSet[dr];
+              // Re-use simulation used for estimating Jones matrices if possible.
+              cursor<dcomplex> cr_model_subtr(&(itsModelVis[dr * nSamples]),
+                                              3, stride_model);
+              // Re-simulate if required.
+              if (multiplier != 1 || nCh != nChSubtr) {
+                nsplitUVW (itsMix->uvwSplitIndex(), itsMix->baselines(),
+                           itsAvgResultSubtr->get()[ts_subtr].getUVW(), itsUVW);
+                // Rotate the UVW coordinates for the target direction to the
+                // direction of source to subtract. This is required because at
+                // the resolution of the residual the UVW coordinates for
+                // directions other than the target are unavailable (unless the
+                // resolution of the residual is equal to the resolution at which
+                // the Jones matrices were estimated, of course).
+                cursor<double> cr_uvw_split = casa_cursor(itsUVW);
+                rotateUVW (itsMix->phaseRef(),
+                           itsMix->ateamList()[drOrig]->position(), nSt,
+                           cr_uvw_split);
+                // Initialize the visibility buffer.
+                std::fill (itsModelVis.begin(), itsModelVis.end(), dcomplex());
+                // Simulate visibilities at the resolution of the residual.
+                size_t stride_model_subtr[3] = {1, nCr, nCr * nChSubtr};
+                cr_model_subtr = cursor<dcomplex>(&(itsModelVis[0]), 3,
+                                                  stride_model_subtr);
+                simulate(itsMix->ateamList()[drOrig]->position(),
+                         itsMix->ateamList()[drOrig], nSt, nBl,
+                         nChSubtr, cr_baseline, cr_freqSubtr, cr_uvw_split,
+                         cr_model_subtr);
+                applyBeam (subtrTime,
+                           itsMix->ateamDemixList()[drOrig]->position(),
+                           itsMix->freqSubtr(),
+                           &(itsModelVis[0]));
+              }
+              
+              // Apply Jones matrices.
+              size_t stride_unknowns[2] = {1, 8};
+              const_cursor<double> cr_unknowns(&(solutions[ts][drOrig * nSt * 8]),
+                                               2, stride_unknowns);
+              apply (nBl, nChSubtr, cr_baseline, cr_unknowns, cr_model_subtr);
+              
+              // Subtract the source contribution from the data.
+              cursor<fcomplex> cr_residual =
+                casa_cursor(itsAvgResultSubtr->get()[ts_subtr].getData());
+              
+              // Construct a cursor to iterate over a slice of the mixing matrix
+              // at the resolution of the residual. The "to" and "from" direction
+              // are fixed. Since the full mixing matrix is 5-D, the slice is
+              // therefore 3-D. Each individual value in the slice quantifies the
+              // influence of the source to subtract on the target direction for
+              // a particular correlation, channel, and baseline.
+              //
+              // The target direction is the direction with the highest index by
+              // convention, i.e. index itsNDir - 1. The directions to subtract
+              // have the lowest indices by convention, i.e. indices
+              // [0, nDrSubtr).
+              const IPosition& stride_mix_subtr =
+                itsFactorsSubtr[ts_subtr].steps();
+              size_t stride_mix_subtr_slice[3] = {
+                static_cast<size_t>(stride_mix_subtr[2]),
+                static_cast<size_t>(stride_mix_subtr[3]),
+                static_cast<size_t>(stride_mix_subtr[4])
+              };
+              ASSERT(stride_mix_subtr_slice[0] == itsNDir*itsNDir  &&
+                     stride_mix_subtr_slice[1] == itsNDir*itsNDir*nCr  &&
+                     stride_mix_subtr_slice[2] == itsNDir*itsNDir*nCr*nChSubtr);
+              
+              IPosition offset(5, itsNDir - 1, dr, 0, 0, 0);
+              const_cursor<dcomplex> cr_mix_subtr
+                (&(itsFactorsSubtr[ts_subtr](offset)), 3, stride_mix_subtr_slice);
+              
+              // Subtract the source.
+              // It fills in the subtracted amplitude per baseline.
+              subtract (nBl, nChSubtr, cr_baseline, cr_residual, cr_model_subtr,
+                        cr_mix_subtr, itsSourceAmpl);
+              // Calculate the mean percentage amplitude subtracted per source.
+              // This array is ordered [nbl,nsrc]
+              for (size_t bl=0; bl<nBl; ++bl) {
+                if (itsObservedAmpl[bl] != 0) {
+                  // Calculate mean and stddev in a running way using a
+                  // numerically stable algorithm
+                  // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+                  itsAmplSubtrNr(bl,drOrig)++;
+                  double perc  = itsSourceAmpl[bl] / itsObservedAmpl[bl];
+                  double delta = perc - itsAmplSubtrMean(bl,drOrig);
+                  itsAmplSubtrMean(bl,drOrig) += delta/itsAmplSubtrNr(bl,drOrig);
+                  itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
+                }
+              } // end nBl
+            } // end itsNSubtr
+            subtrTime += subtrTimeStep;
+          } // end ts_subtr
+          itsTimerSubtract.stop();
+        } // end doSubtract
         time += timeStep;
       }  // end nTime
     }

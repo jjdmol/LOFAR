@@ -41,7 +41,7 @@ namespace LOFAR {
               vis[cr] = (*weight++) * (*model++);
               *data++ -= static_cast<fcomplex>(vis[cr]);
             }
-            // Return subtracted ampltide for middle channel.
+            // Return subtracted amplitude for middle channel.
             if (ch == nChannel/2) {
               ampl[bl] = (abs(vis[0]) + abs(vis[3])) * 0.5;
             }

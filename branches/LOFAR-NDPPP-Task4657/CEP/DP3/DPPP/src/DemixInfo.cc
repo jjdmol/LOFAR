@@ -60,6 +60,7 @@ namespace LOFAR {
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
         itsApplyBeam        (parset.getBool   (prefix+"applybeam", true)),
+        itsDoSubtract       (parset.getBool   (prefix+"subtract", true)),
         itsTargetHandling   (parset.getUint   (prefix+"targethandling", 0)),
         itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
         itsMaxIter          (parset.getUint   (prefix+"maxiter", 50)),
@@ -322,14 +323,17 @@ namespace LOFAR {
       os << "  maxiter:            " << itsMaxIter << endl;
       os << "  propagatesolutions: " << (itsPropagateSolution ? "True":"False")
          << endl;
+      os << "  subtract:           " << (itsDoSubtract ? "True":"False") << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;
       os << "  demixfreqstep:      " << itsNChanAvg << endl;
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
       os << "  chunksize:          " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
+      os << "  demix";
       itsSelBL.show (os, "    ");
-      itsSelBLTarget.show (os, "  target");
+      os << "  target estimate";
+      itsSelBLTarget.show (os, "    ");
     }
 
     vector<Patch::ConstPtr>

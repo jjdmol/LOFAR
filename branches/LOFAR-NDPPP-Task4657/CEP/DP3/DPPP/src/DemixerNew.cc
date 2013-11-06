@@ -165,7 +165,7 @@ namespace LOFAR {
       os << endl << "Percentage of times a station/source is demixed:" << endl;
       os << setw(15) << " ";
       for (size_t dr=0; dr<ndir; ++dr) {
-        os << setw(8) << itsDemixInfo.ateamList()[dr]->name();
+        os << setw(8) << itsDemixInfo.ateamList()[dr]->name().substr(0,8);
       }
       os << " Overall" << endl;
       for (size_t st=0; st<nstation.size(); ++st) {
@@ -191,44 +191,66 @@ namespace LOFAR {
         showPerc1 (os, nsources[dr] / double(ntimes));
       }
       os << endl;
+
       // Show percentage subtracted.
-      os << endl << "Mean/stddev percentage of subtracted Stokes I amplitude"
-         << " for the middle channel" << endl;
-      os << "     ";
-      for (size_t dr=0; dr<ndir; ++dr) {
-        if (nsources[dr] > 0) {
-          os << setw(13) << itsDemixInfo.ateamList()[dr]->name();
+      if (itsDemixInfo.doSubtract()) {
+        os << endl << "Mean/stddev percentage of subtracted Stokes I amplitude"
+           << " for the middle channel" << endl;
+        os << "     ";
+        for (size_t dr=0; dr<ndir; ++dr) {
+          if (nsources[dr] > 0) {
+            os << setw(13) << itsDemixInfo.ateamList()[dr]->name().substr(0,13);
+          }
         }
-      }
-      os << setw(13) << "Total" << endl;
-      os << " baseline";
-      for (size_t dr=0; dr<ndir+1; ++dr) {
-        if (nsources[dr] > 0) {
-          os << "  mean stddev";
+        os << setw(13) << "Total" << endl;
+        os << " baseline";
+        for (size_t dr=0; dr<ndir+1; ++dr) {
+          if (nsources[dr] > 0) {
+            os << "  mean stddev";
+          }
         }
-      }
-      os << endl;
-      vector<double> totsump(ndir, 0.);
-      vector<double> totm2p (ndir, 0.);
-      vector<size_t> totnrp (ndir, 0);
-      for (int bl=0; bl<amplSubtrMean.shape()[0]; ++bl) {
-        os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
-           << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
+        os << endl;
+        vector<double> totsump(ndir, 0.);
+        vector<double> totm2p (ndir, 0.);
+        vector<size_t> totnrp (ndir, 0);
+        for (int bl=0; bl<amplSubtrMean.shape()[0]; ++bl) {
+          os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
+             << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
+          double sumavg = 0;
+          double sumvar = 0;
+          for (uint dr=0; dr<ndir; ++dr) {
+            if (nsources[dr] > 0) {
+              showPerc1 (os, amplSubtrMean(bl,dr));
+              double variance = 0;
+              if (amplSubtrNr(bl,dr) > 1) {
+                variance = amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1);
+              }
+              showPerc1 (os, sqrt(variance));
+              os << ' ';
+              addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
+                         amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
+                         amplSubtrNr(bl,dr));
+              sumavg += amplSubtrMean(bl,dr);
+              sumvar += variance;
+            }
+          }
+          showPerc1 (os, sumavg);
+          showPerc1 (os, sqrt(sumvar));
+          os << endl;
+        }
         double sumavg = 0;
         double sumvar = 0;
+        os << "  Total  ";
         for (uint dr=0; dr<ndir; ++dr) {
           if (nsources[dr] > 0) {
-            showPerc1 (os, amplSubtrMean(bl,dr));
             double variance = 0;
-            if (amplSubtrNr(bl,dr) > 1) {
-              variance = amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1);
+            if (totnrp[dr] > 1) {
+              variance = totm2p[dr] / (totnrp[dr] - 1);
             }
+            showPerc1 (os, totsump[dr]);
             showPerc1 (os, sqrt(variance));
             os << ' ';
-            addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
-                       amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
-                       amplSubtrNr(bl,dr));
-            sumavg += amplSubtrMean(bl,dr);
+            sumavg += totsump[dr];
             sumvar += variance;
           }
         }
@@ -236,27 +258,8 @@ namespace LOFAR {
         showPerc1 (os, sqrt(sumvar));
         os << endl;
       }
-      double sumavg = 0;
-      double sumvar = 0;
-      os << "  Total  ";
-      for (uint dr=0; dr<ndir; ++dr) {
-        if (nsources[dr] > 0) {
-          double variance = 0;
-          if (totnrp[dr] > 1) {
-            variance = totm2p[dr] / (totnrp[dr] - 1);
-          }
-          showPerc1 (os, totsump[dr]);
-          showPerc1 (os, sqrt(variance));
-          os << ' ';
-          sumavg += totsump[dr];
-          sumvar += variance;
-        }
-      }
-      showPerc1 (os, sumavg);
-      showPerc1 (os, sqrt(sumvar));
-      os << endl;
     }
-
+      
     void DemixerNew::addMeanM2 (double& mean, double& m2, size_t& nr,
                                 double partmean, double partm2,
                                 size_t partnr) const
