@@ -456,7 +456,7 @@ goto_level()
                 exit 1
               fi 
             fi
-            if [ -e $BINDIR/tbbctl ]; then
+	    if [ -e $BINDIR/tbbctl ]; then
 	      # Now make sure TBB images are properly loaded
               # Introduce a timeout of 60 sec for images to initialize
 	      echo "Waiting for TBB images to be initialized"
@@ -464,15 +464,23 @@ goto_level()
 	      sleep 1
               for (( s=0 ; s<timeout; s++ ))
 	      do 
-		tbb_ready=`( tbbctl --version | grep "not" ) >& /dev/null; echo $?`
-	        if [ $tbb_ready == 1 ]; then
+                tbb_respons=`tbbctl --version`
+		tbb_ready=`( echo $tbb_respons | grep "0\ V" ) >& /dev/null; echo $?`
+	        if [ $tbb_ready -eq 0 ]; then
 		    echo "TBB Images are loaded"
 		    break
 	        fi
-                sleep 1
+                tbb_down=`( echo $tbb_respons | grep "TBBDriver is NOT responding" )>& /dev/null; echo $?`
+                if [ $tbb_down -eq 0 ]; then
+                    echo "TBBDriver is not responding; cannot continue start of TBBs"
+		    # Trigger swlevel to exit
+		    s=$timeout
+		    break
+		fi
+		sleep 1
               done
               if [ $s == $timeout ]; then 
-                echo "Could not load TBB images in time; Reset TBB boards"
+                echo "Could not load TBB images; Reset TBB boards"
                 exit 1
               fi 
             fi
