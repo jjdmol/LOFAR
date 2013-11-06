@@ -1,0 +1,243 @@
+#!/bin/bash
+#
+# Script to start, stop, restart and ask status of the OTB server and client
+#
+# Run as user lofarsys or user tomcat on any host that runs the OTB (sas001/sas099)
+#
+
+adapter_logdir=/opt/tomcat/mom-otdb-adapter/logs
+otdb_conf_file=/opt/tomcat/mom-otdb-adapter/conf/config-otdb.xml
+
+syntaxerror()
+{
+    echo "Usage: OTB [start|stop|status|serverstart|serverstop|serverstatus] [port]"
+    echo "       Run OTB as user lofarsys or user tomcat (depending on your needs)"
+}
+
+status()
+{
+echo "Finding OTB clients:"
+
+user_ports=( `ps -eaf | grep "otb\/client\/" | grep java | awk '{print $1":"$2":"$(NF-4)}'` )
+
+if [ "$user_ports" == "" ]; then
+  echo "No OTB clients running"
+  exit
+fi
+
+for user_port in "${user_ports[@]}"
+  do
+    user=`echo $user_port | awk -F: '{print $1}'`
+    pid=`echo $user_port | awk -F: '{print $2}'`
+    port=`echo $user_port | awk -F: '{print $3}'`
+    echo "Found client using port $port started by user $user with PID $pid"
+  done
+}
+
+start()
+{
+# Check if portnumber is added to commandline; if yes, use it.
+if [ -z $1 ]; then
+  port1=12500
+else
+  port1=$1
+fi
+echo "Using port $port1 for this client"
+
+export OTB_DIR=/opt/sas/otb/client
+export JAVA_HOME=/usr/java/jdk1.7.0_02
+
+echo
+echo --- Starting OTB Client ---
+
+otbfile=`ls $OTB_DIR/OTB*.jar | grep -v javadoc | grep -v sources`
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OTB_DIR
+export OTB_APP=$OTB_DIR/`basename $otbfile`
+export CLASSPATH=$OTB_APP
+
+for JAR_DEPENDENCY in $OTB_DIR/lib/*.jar
+do
+        echo -- Adding dependency to CLASSPATH: `basename $JAR_DEPENDENCY`
+        export CLASSPATH=$CLASSPATH:$JAR_DEPENDENCY
+done
+
+echo Starting up ...
+curdate=`date +%Y%m%dT%H%M%S`
+logfile="/localhome/log/OTBClient_${port1}_${curdate}.log"
+echo "Logging client logs to file $logfile"
+
+$JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.Main -s sas001 -p $port1 -d LOFAR_4 -u busyman 2>&1 1>$logfile &
+
+clientpid=$!
+echo Started OTB client with PID: $clientpid
+}
+
+stop()
+{
+if [ -z $1 ]; then
+  port=12500
+else
+  port=$1
+fi
+
+echo "Finding clients using port $port"
+
+client_users=( `ps -eaf | grep "otb\/client\/" | grep java | grep $port | awk '{print $1}'` )
+client_pids=( `ps -eaf | grep "otb\/client\/" | grep java | grep $port| awk '{print $2}'` )
+
+if [ ${#client_users[@]} == 0 ]; then
+  echo "No OTB clients running that use port $port"
+  exit
+else
+  count=0
+  for client_pid in ${client_pids[@]}
+  do
+    echo -n "Found OTB started by user ${client_users[${count}]} with PID $client_pid;"
+    if [ "${USER}" == "lofarsys" ]; then  
+      echo " killing it now"
+      sudo kill $client_pid
+    else
+      echo " not allowed to kill the process"
+    fi
+    let count+=1
+  done
+fi
+}
+
+serverstatus()
+{
+echo "Finding OTB servers:"
+
+user_ports=( `ps -eaf | grep server | grep java | awk '{print $1":"$2":"$NF-1}'`
+ )
+
+if [ "$user_ports" == "" ]; then
+  echo "No such servers running"
+  exit
+fi
+
+for user_port in "${user_ports[@]}"
+  do
+    user=`echo $user_port | awk -F: '{print $1}'`
+    pid=`echo $user_port | awk -F: '{print $2}'`
+    port=`echo $user_port | awk -F: '{print $3}'`
+    echo "Found server using port $port started by user $user with PID $pid"
+  done
+
+}
+
+serverstart()
+{
+# Check if portnumber is added to commandline; if yes, use it.
+if [ -z $1 ]; then
+  port1=12500
+  port2=12501
+else
+  port1=$1
+  let port2=port1+1
+fi
+echo "Using port $port1 and $port2 for this server"
+
+export OTB_DIR=/opt/sas/otb/server
+export JAVA_HOME=/usr/java/jdk1.7.0_02
+
+echo
+echo --- Starting OTB Server ---
+
+jotdb3file=`ls $OTB_DIR/jOTDB3*.jar | grep -v javadoc | grep -v sources`
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OTB_DIR
+export OTB_APP=$OTB_DIR/`basename $jotdb3file`
+export CLASSPATH=$OTB_APP
+
+for JAR_DEPENDENCY in $OTB_DIR/lib/*.jar
+do
+        echo -- Adding dependency to CLASSPATH: `basename $JAR_DEPENDENCY`
+        export CLASSPATH=$CLASSPATH:$JAR_DEPENDENCY
+done
+
+echo Starting up ...
+
+curdate=`date +%Y%m%dT%H%M%S`
+logfile="/localhome/log/OTBServer_${port1}_${curdate}.log"
+echo "Logging serverlogs to file $logfile"
+serverpid=0
+ps -ef | grep -v grep | grep java | grep server | grep $port1 2>&1 1>/dev/null
+if [ $? -ne 0 ]; then
+    $JAVA_HOME/bin/java -cp $CLASSPATH nl.astron.lofar.sas.otb.jotdb3.jOTDBserver -s sas001 -d sasdb -p $port1 -o $port2 2>&1 1>&$logfile &
+    serverpid=$!
+    echo Started server with PID: $serverpid
+else
+    echo "Server for port $port1 already running!"
+fi
+}
+
+serverstop()
+{
+if [ -z $1 ]; then
+  port=12500
+else
+  port=$1
+fi
+
+echo "Finding server using port $port"
+
+user_port=`ps -eaf | grep server | grep java | grep $port | awk '{print $1,$2}'`
+
+if [ "$user_port" == "" ]; then
+  echo "No such server running"
+  exit
+else
+  user=`echo $user_port | awk '{print $1}'`
+  pid=`echo $user_port | awk '{print $2}'`
+  echo "Found server running by user $user with PID $pid; killing it now"
+  if [ "$user" == "lofarsys" -a ${USER} == "lofarsys" ]; then
+     kill $pid
+  elif [ "$user" == "tomcat" -a ${USER} == "tomcat" ]; then
+     kill $pid
+  elif [ "$user" == "lofarsys" ]; then 
+    sudo -u $user kill $pid
+  else
+    echo "Cannot stop running server (no permissions)"
+  fi
+fi
+
+
+}
+
+# ========== MAIN ===========
+
+if [ "${USER}" != "lofarsys" -a "${USER}" != "tomcat" ]; then
+  echo You must be user lofarsys or user tomcat to run this
+  exit
+fi 
+
+case $1 in
+    status)
+      status 
+      exit
+      ;;
+    start)
+      start $2
+      exit
+      ;;
+    stop)
+      stop $2
+      exit
+      ;;
+    serverstatus)
+      serverstatus
+      exit
+      ;;
+    serverstart)
+      serverstart $2
+      exit
+      ;;
+    serverstop)
+      serverstop $2
+      exit
+      ;;
+    *)
+      syntaxerror
+      ;;
+esac
+
