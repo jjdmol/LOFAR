@@ -37,7 +37,7 @@ namespace LOFAR
     void readFinalMetaData( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters );
 
     // Reads LTA feedback from the writers, and sends it over the control stream.
-    void writeFeedbackLTA( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters )
+    void writeFeedbackLTA( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters );
 
     // Receive and process a full observation, being rank 'myRank'. Will:
     //   * Receive a Parset over the controlStream
