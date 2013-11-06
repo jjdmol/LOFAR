@@ -37,6 +37,7 @@ if(USE_CUDA)
     #cuda/Kernels/DedispersionChirpKernel.cc
     #cuda/Kernels/DedispersionForwardFFTkernel.cc
     cuda/Kernels/DelayAndBandPassKernel.cc
+    cuda/Kernels/BandPassCorrectionKernel.cc
     cuda/Kernels/FFT_Kernel.cc
     cuda/Kernels/FFT_Plan.cc
     cuda/Kernels/Filter_FFT_Kernel.cc
