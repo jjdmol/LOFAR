@@ -30,22 +30,34 @@
  * Pre-processor input symbols (some are tied to the execution configuration)
  * Symbol                  | Valid Values            | Description
  * ----------------------- | ----------------------- | -----------
- * NR_SAMPLES_PER_CHANNEL  | multiple of 16 and > 0  | number of input samples per channel
- * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
- * NR_TABS                 | multiple of 16 and > 0  | number of Tied Array Beams to create
+ * NR_SAMPLES_PER_CHANNEL  | >= 1                    | number of input samples per channel
+ * NR_CHANNELS             | multiple of 16 and > 0  | number of frequency channels per subband
+ * NR_TABS                 | >= 1                    | number of Tied Array Beams to create, multiple 16 is optimal
  *
  * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *
  * Execution configuration:
  * - LocalWorkSize = 2 dimensional; (16, 16, 1) is in use.
  * - GlobalWorkSize = 3 dimensional:
- *   + inner dim (x): nr tabs (/ 16)
+ *   + inner dim (x): nr (( params.nrTABs + 16 - 1) / 16) * 16 
  *   + middle dim (y): nr samples ( /16)
  *   + outer dim (z): number of channels (/1)
  */
 #include "gpu_math.cuh"
 
-typedef fcomplex (*OutputDataType)[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL]; //last dims of this needs to be swapped
+#if !(NR_SAMPLES_PER_CHANNEL >= 1)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL >= 1
+#endif
+
+#if !(NR_TABS > 1)
+#error Precondition violated: NR_TABS >= 1
+#endif
+
+#if !(NR_CHANNELS >= 16)
+#error Precondition violated: NR_CHANNELS >= 16
+#endif
+
+typedef fcomplex (*OutputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
 
 typedef float4 fcomplex2;
 // Allows for better memory access
@@ -59,41 +71,31 @@ __global__ void coherentStokesTranspose(void *OutputDataPtr,
   OutputDataType outputData = (OutputDataType) OutputDataPtr;
   InputDataType inputData = (InputDataType) InputDataPtr;
   
-  // Reorder the grid block indexing: to prevent global memory access bank conflicts
-  // blockIdx.x starts at the diagonal
-  unsigned block_x;
-  unsigned block_y;
-  if ( NR_SAMPLES_PER_CHANNEL == NR_TABS)  // if workload is square
-  {
-     block_x= (blockIdx.y + blockIdx.x) % gridDim.x; 
-     block_y = blockIdx.x;
-  } 
-  else
-  {
-    unsigned bid = blockIdx.x + gridDim.x * blockIdx.y;
-    block_y = bid % gridDim.y;
-    block_x = ((bid % gridDim.y) + block_y) % gridDim.x;    
-  }
-
-  unsigned tab           = block_x * blockDim.x + threadIdx.x;
-  unsigned sample        = block_y * blockDim.y + threadIdx.y;
-  unsigned channel       = blockIdx.z * blockDim.z ;
+  unsigned tab      = blockIdx.x * blockDim.x + threadIdx.x;  
+  unsigned channel  =  blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned sample       = blockIdx.z * blockDim.z ;  
 
   // Use shared memory for the transpose
   __shared__ fcomplex2 tmp[16][16 + 1];  // plus one to prevent bank conflicts in shared memory
 
-  tmp[threadIdx.y][threadIdx.x] = (*inputData) [channel][sample][tab];
-  __syncthreads();  // assures all writes are done
+  // get the data if the current tab exists
+  if ( tab < NR_TABS) 
+    tmp[threadIdx.y][threadIdx.x] = (*inputData) [channel][sample][tab];
 
+  __syncthreads();  // ensures all writes are done
+  
   // Reassign the tab and sample to allow the threadIdx.x to write in the highest dimension
-  tab           = block_x * blockDim.x + threadIdx.y;
-  sample        = block_y * blockDim.y + threadIdx.x;
+  tab           = blockIdx.x* blockDim.x + threadIdx.y;
+  channel        = blockIdx.y * blockDim.y + threadIdx.x;
 
-  // Do the write to global mem
-  (*outputData)[tab][0][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].x,
-    tmp[threadIdx.x][threadIdx.y].y) ;
-  (*outputData)[tab][1][channel][sample] = make_float2(tmp[threadIdx.x][threadIdx.y].z,
-    tmp[threadIdx.x][threadIdx.y].w) ;
+  // Do the write to global mem if the current tab exists
+  if ( tab < NR_TABS) 
+  {
+    (*outputData)[tab][0][sample][channel] = make_float2(tmp[threadIdx.x][threadIdx.y].x,
+      tmp[threadIdx.x][threadIdx.y].y) ;
+    (*outputData)[tab][1][sample][channel] = make_float2(tmp[threadIdx.x][threadIdx.y].z,
+      tmp[threadIdx.x][threadIdx.y].w) ;
+  }
 
-  __syncthreads();  // assures all writes are done
+  __syncthreads();  // ensures all writes are done
 }

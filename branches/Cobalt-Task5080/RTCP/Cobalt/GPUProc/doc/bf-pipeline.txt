@@ -59,7 +59,7 @@ Complex Voltages/Coherent Stokes:
 BeamFormer {I/O: weights}
    |            [channel][samples][tab][pol]            [4096][48][tab][2]  = 3 MiB/TAB             A
    V
-Transpose  (*** kernel must be fixed: output format is wrong ***)
+Transpose  
    |            [tab][pol][samples][channel]            [tab][2][48][4096]  = 3 MiB/TAB             1ch: CS: C, CV: D
    |                                                                                                Nch: CS: D, CV: C
    V

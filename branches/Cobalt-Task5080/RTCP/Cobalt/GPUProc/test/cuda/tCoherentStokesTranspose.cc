@@ -42,8 +42,8 @@ using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
 unsigned NR_CHANNELS = 512;
-unsigned NR_SAMPLES_PER_CHANNEL = 256;
-unsigned NR_TABS = 32;
+unsigned NR_SAMPLES_PER_CHANNEL = 253;
+unsigned NR_TABS = 79;
 unsigned NR_POLARIZATIONS = 2;
 
 Exception::TerminateHandler t(Exception::terminate);
@@ -77,7 +77,7 @@ void runTest( Context &ctx, Stream &stream )
   // Clear the device memory
   dOutput.set(0);
   MultiDimArrayHostBuffer<fcomplex, 4> hOutput(
-          boost::extents[NR_TABS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL], ctx);
+          boost::extents[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS], ctx);
 
   // Create kernel
   CoherentStokesTransposeKernel::Buffers buffers(dInput, dOutput);
@@ -88,14 +88,14 @@ void runTest( Context &ctx, Stream &stream )
   kernel->enqueue(blockId);
   stream.readBuffer(hOutput, dOutput, true);
 
-  cout << hInput.origin() << " " << hOutput.origin() <<endl;
-  // Verify output
   for (size_t t = 0; t < NR_TABS; ++t)
     for (size_t p = 0; p < NR_POLARIZATIONS; ++p)
       for (size_t c = 0; c < NR_CHANNELS; ++c)
         for (size_t s = 0; s < NR_SAMPLES_PER_CHANNEL; ++s) {
-          //cout << hOutput[t][p][c][s] << " " <<  hInput[c][s][t][p] << endl;
-          //ASSERT(hOutput[t][p][c][s] == hInput[c][s][t][p]);
+          if (! (hOutput[t][p][s][c] == hInput[c][s][t][p]))
+          {
+            ASSERT(hOutput[t][p][s][c] == hInput[c][s][t][p]);
+          }
         }
 }
 
