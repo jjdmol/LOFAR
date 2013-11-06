@@ -30,11 +30,52 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
+// Fixture for testing correct translation of parset values
+struct ParsetFixture
+{
+  const size_t 
+    timeIntegrationFactor = sizeof(sine) / sizeof(float),
+    nrChannels = 37,
+    nrOutputSamples = 29,
+    nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
+    blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
+    nrStations = 43;
+
+  Parset parset;
+
+  ParsetFixture() {
+    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
+               "true");
+    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
+               lexical_cast<string>(timeIntegrationFactor));
+    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
+               lexical_cast<string>(nrChannels));
+    parset.add("OLAP.CNProc_IncoherentStokes.which",
+               "IQUV");
+    parset.add("Observation.VirtualInstrument.stationList",
+               str(format("[%d*RS000]") % nrStations));
+    parset.add("Cobalt.blockSize", 
+               lexical_cast<string>(blockSize)); 
+    parset.updateSettings();
+  }
+};
+
+
 struct TestFixture
 {
-  TestFixture() : ps("tCoherentStokesKernel.in_parset"), factory(ps) {}
+
+
+  TestFixture() 
+  : 
+    ps("tCoherentStokesKernel.in_parset"), 
+    factory(ps) 
+  {
+
+
+  }
   ~TestFixture() {}
   Parset ps;
+  CoherentStokesKernel::Parameters params;
   KernelFactory<CoherentStokesKernel> factory;
 };
 

@@ -396,6 +396,9 @@
     <ClInclude Include="..\..\GPUProc\src\opencl\Kernels\FFT_Kernel.h">
       <Filter>src\opencl\Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h">
+      <Filter>src\cuda\SubbandProcs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
@@ -678,6 +681,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\opencl\Kernels\FFT_Plan.cc">
       <Filter>src\opencl\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
+      <Filter>src\cuda\SubbandProcs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

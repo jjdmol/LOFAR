@@ -53,7 +53,8 @@ namespace LOFAR
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
-      timeParallelFactor = gpu::Platform().getMaxThreadsPerBlock() / (nrTABs * nrChannelsPerSubband);
+      // The number of samples should be a multiple of 16
+      timeParallelFactor = 16;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -75,11 +76,27 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      // TODO: params.nrTABs only works for one SAP
-      // TODO: this enqueues 1 block, which is very inefficient
-      setEnqueueWorkSizes( gpu::Grid (params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrTABs, params.timeParallelFactor, params.nrChannelsPerSubband) );
 
+
+
+      // TODO: params.nrTABs only works for one SAP
+      if (params.nrChannelsPerSubband == 1) {
+        // Increase the number of tabs in a threadblock to allow optimalization in this dimension
+        setEnqueueWorkSizes( gpu::Grid (1,  // only one channe;
+                                        params.timeIntegrationFactor,
+                                        params.nrTABs),
+                           gpu::Block(1,
+                                      params.timeIntegrationFactor,
+                                      16)); 
+      }
+      else {
+        setEnqueueWorkSizes( gpu::Grid (params.nrChannelsPerSubband,
+                                        params.timeIntegrationFactor,
+                                        params.nrTABs),
+                           gpu::Block(16,
+                                      params.timeIntegrationFactor,
+                                      1));
+      }
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
