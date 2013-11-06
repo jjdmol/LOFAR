@@ -142,9 +142,9 @@ SUITE(SubbandWriter)
 
     // add final meta data
     FinalMetaData finalMetaData;
-    const size_t nonBrokenAntenna    = 1;
-    const size_t brokenAntennaBefore = 2;
-    const size_t brokenAntennaDuring = 3;
+    const int nonBrokenAntenna    = 1;
+    const int brokenAntennaBefore = 2;
+    const int brokenAntennaDuring = 3;
 
     finalMetaData.brokenRCUsAtBegin.push_back( FinalMetaData::BrokenRCU("CS001", "LBA", brokenAntennaBefore, "2012-01-01 12:34") );
     finalMetaData.brokenRCUsDuring.push_back( FinalMetaData::BrokenRCU("CS001", "LBA", brokenAntennaDuring, "2013-01-01 00:30") );
@@ -184,6 +184,7 @@ SUITE(SubbandWriter)
       Table tab("tWriter.out_raw/LOFAR_ELEMENT_FAILURE");
       ROTableRow row(tab);
 
+
       // print failures
       cout << "nr element failure rows: " << tab.nrow() << endl;
       for (uint i=0; i<tab.nrow(); ++i) {
@@ -192,6 +193,10 @@ SUITE(SubbandWriter)
 
       // should have ONE antenna failure
       CHECK_EQUAL(1UL, tab.nrow());
+
+      // should be our antenna
+      CHECK_EQUAL(0,                   row.get(0).asInt("ANTENNA_FIELD_ID"));
+      CHECK_EQUAL(brokenAntennaDuring, row.get(0).asInt("ELEMENT_INDEX"));
     }
 
   }
