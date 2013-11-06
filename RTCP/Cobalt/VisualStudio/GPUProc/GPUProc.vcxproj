@@ -17,6 +17,7 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_incl.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\KernelFactory.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h" />
@@ -44,9 +45,9 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\Pool.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\UHEP_SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\FilterBank.h" />
@@ -55,6 +56,7 @@
     <ClInclude Include="..\..\GPUProc\src\gpu_utils.h" />
     <ClInclude Include="..\..\GPUProc\src\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\KernelFactory.h" />
+    <ClInclude Include="..\..\GPUProc\src\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\CoherentStokesKernel.h" />
@@ -134,6 +136,7 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_wrapper.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\KernelFactory.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.cc" />
@@ -160,6 +163,7 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.cc" />
@@ -204,6 +208,7 @@
     <ClCompile Include="..\..\GPUProc\src\Storage\SSH.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcesses.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tBeamFormer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokes.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc" />
@@ -218,6 +223,8 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tMultiDimArrayHostBuffer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tStreamReadBuffer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.cc" />
@@ -232,6 +239,7 @@
     <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu" />

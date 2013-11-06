@@ -132,9 +132,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\Pool.h">
-      <Filter>src\cuda\SubbandProcs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
