@@ -210,8 +210,10 @@ namespace LOFAR {
         itsAteamAmpl[i].resize (itsMix->nchanOut(), itsMix->nbl(),
                                 itsMix->ntimeOut());
       }
+      itsAteamAmplSel.resize (itsMix->nbl(), nsrc);
       itsTargetAmpl.resize (itsMix->nchanOut(), itsMix->nbl(),
                             itsMix->ntimeOut());
+      itsTmpAmpl.resize (itsTargetAmpl.size());
       itsObservedAmpl.resize (itsMix->nbl());
       itsSourceAmpl.resize   (itsMix->nbl());
       itsAmplTotal.resize (itsMix->nchanOutSubtr(), itsMix->nbl());
@@ -420,6 +422,7 @@ namespace LOFAR {
 
     void DemixWorker::addStokesI (Matrix<float>& ampl)
     {
+      ASSERT (ampl.contiguousStorage());
       // Calculate the StokesI ampl ((XX+YY)/2).
       Array<dcomplex>::const_contiter iterEnd = itsPredictVis.cend();
       float* amplp = ampl.data();
@@ -435,6 +438,7 @@ namespace LOFAR {
     void DemixWorker::predictAteam (const vector<Patch::ConstPtr>& patchList,
                                     uint ntime, double time, double timeStep)
     {
+      itsAteamAmplSel = false;
       for (uint i=0; i<patchList.size(); ++i) {
         itsAteamAmpl[i] = 0;
         MatrixIterator<float> miter(itsAteamAmpl[i]);
@@ -473,9 +477,10 @@ namespace LOFAR {
                 <<' '<<itsMix->getAnt2()[j]
                 <<" has max ampl " << max(miter.matrix())<<endl;
           }
-          if (max(miter.matrix()) > itsMix->ateamAmplThreshold()) {
+          if (max(miter.matrix()) >= itsMix->ateamAmplThreshold()) {
             antCount[itsMix->getAnt1()[j]]++;
             antCount[itsMix->getAnt2()[j]]++;
+            itsAteamAmplSel(j,i) = true;
           }
         }
         // Determine which stations have sufficient occurrence.
@@ -527,6 +532,27 @@ namespace LOFAR {
       itsAvgResultFull->clear();
     }
 
+    float DemixWorker::findMedian (const Cube<float>& ampl,
+                                   const bool* selbl)
+    {
+      // Take the median for only the baselines with sufficient amplitude.
+      // Therefore copy data of those baselines.
+      const IPosition& shp = ampl.shape();
+      float* tmp = &(itsTmpAmpl[0]);
+      uint nrtmp = 0;
+      for (uint bl=0; bl<shp[1]; ++bl) {
+        if (selbl[bl]) {
+          for (uint tm=0; tm<shp[2]; ++tm) {
+            for (uint ch=0; ch<shp[0]; ++ch) {
+              tmp[nrtmp++] = ampl(ch,bl,tm);
+            }
+          }
+        }
+      }
+      // Median is middle element.
+      return GenSort<float>::kthLargest (tmp, nrtmp, (nrtmp-1)/2);
+    }
+
     void DemixWorker::setupDemix (uint chunkNr)
     {
       // Decide if the target has to be included, ignored, or deprojected
@@ -537,23 +563,25 @@ namespace LOFAR {
       itsFirstSteps.resize (nsrc+1);
       // Add target.
       itsFirstSteps[nsrc] = itsOrigFirstSteps[itsOrigFirstSteps.size() - 1];
-      float minSumAmpl = 1e30;
-      float maxSumAmpl = 0;
+      float minMedAmpl = 1e30;
+      float maxMedAmpl = 0;
       // Add sources to be demixed.
       // Determine their minimum and maximum amplitude.
       for (uint i=0; i<nsrc; ++i) {
-        itsPhaseShifts[i] = itsOrigPhaseShifts[itsSrcSet[i]];
-        itsFirstSteps[i]  = itsOrigFirstSteps[itsSrcSet[i]];
-        itsDemixList[i]   = itsMix->ateamDemixList()[itsSrcSet[i]];
-        float sumAmpl = sum(itsAteamAmpl[i]);
-        if (sumAmpl < minSumAmpl) {
-          minSumAmpl = sumAmpl;
+        uint srcOrig = itsSrcSet[i];
+        itsPhaseShifts[i] = itsOrigPhaseShifts[srcOrig];
+        itsFirstSteps[i]  = itsOrigFirstSteps[srcOrig];
+        itsDemixList[i]   = itsMix->ateamDemixList()[srcOrig];
+        float medAmpl = findMedian (itsAteamAmpl[srcOrig],
+                                    &(itsAteamAmplSel(0,srcOrig)));
+        if (medAmpl < minMedAmpl) {
+          minMedAmpl = medAmpl;
         }
-        if (sumAmpl > maxSumAmpl) {
-          maxSumAmpl = sumAmpl;
+        if (medAmpl > maxMedAmpl) {
+          maxMedAmpl = medAmpl;
         }
       }
-      float targetSumAmpl = sum(itsTargetAmpl);
+      float targetMedAmpl = findMedian(itsTargetAmpl, itsMix->selTarget().data());
       float targetMaxAmpl = max(itsTargetAmpl);
       itsIncludeTarget = false;
       itsIgnoreTarget = false;
@@ -571,7 +599,7 @@ namespace LOFAR {
         itsIgnoreTarget = true;
         itsNrIgnoreTarget++;
       } else {
-        if (targetSumAmpl / maxSumAmpl > itsMix->ratio1()  ||
+        if (targetMedAmpl / maxMedAmpl > itsMix->ratio1()  ||
             targetMaxAmpl > itsMix->targetAmplThreshold()) {
           itsIncludeTarget = true;
           itsNrIncludeStrongTarget++;
@@ -583,7 +611,7 @@ namespace LOFAR {
             cout << "deproject target" << endl;
           }
           itsNrDeprojectTarget++;
-        } else if (targetSumAmpl / minSumAmpl > itsMix->ratio2()) {
+        } else if (targetMedAmpl / minMedAmpl > itsMix->ratio2()) {
           itsIncludeTarget = true;
           itsNrIncludeCloseTarget++;
           if (itsMix->verbose() > 10) {
@@ -597,10 +625,10 @@ namespace LOFAR {
           }
         }
         if (itsMix->verbose() > 10) {
-          cout << " targetMaxAmpl=" << targetMaxAmpl
-               << " targetSumAmpl=" << targetSumAmpl
-               << " maxAteamSumAmpl=" << maxSumAmpl
-               << " minAteamSumAmpl=" << minSumAmpl << endl;
+          cout << " targetMedAmpl=" << targetMedAmpl
+               << " targetMaxAmpl=" << targetMaxAmpl
+               << " maxAteamMedAmpl=" << maxMedAmpl
+               << " minAteamMedAmpl=" << minMedAmpl << endl;
         }
       }
       // Determine the unknowns to be solved.

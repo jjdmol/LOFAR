@@ -70,9 +70,9 @@ namespace LOFAR {
       // If no selection is made, all values in the matrix are true.
       casa::Matrix<bool> apply (const DPInfo& info) const;
 
-      // Form the selection vector giving the index of the selected baselines
-      // in the DPInfo object.
-      vector<uint> applyVec (const DPInfo& info) const;
+      // Form the selection vector telling if a baseline in the DPInfo object
+      // is selected.
+      casa::Vector<bool> applyVec (const DPInfo& info) const;
 
     private:
       // Convert the baseline selection string.

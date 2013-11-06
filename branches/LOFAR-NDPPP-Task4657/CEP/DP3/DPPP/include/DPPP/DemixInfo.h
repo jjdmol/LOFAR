@@ -104,7 +104,7 @@ namespace LOFAR {
       const vector<string>& sourceNames() const  {return itsSourceNames;}
       const Position& phaseRef() const           {return itsPhaseRef;}
       const vector<Baseline>& baselines() const  {return itsBaselines;}
-      const vector<uint> selEstimate() const     {return itsSelEstimate;}
+      const casa::Vector<bool> selTarget() const {return itsSelTarget;}
       const casa::Vector<double>& freqDemix() const      {return itsFreqDemix;}
       const casa::Vector<double>& freqSubtr() const      {return itsFreqSubtr;}
       const vector<Patch::ConstPtr>& ateamList() const   {return itsAteamList;}
@@ -150,7 +150,7 @@ namespace LOFAR {
       //# Data members.
       DPInfo                  itsInfoSel;
       BaselineSelection       itsSelBL;
-      BaselineSelection       itsSelBLEstimate;
+      BaselineSelection       itsSelBLTarget;
       vector<int>             itsUVWSplitIndex;
       string                  itsPredictModelName;
       string                  itsDemixModelName;
@@ -188,7 +188,7 @@ namespace LOFAR {
       double                  itsTimeIntervalAvg;
       Position                itsPhaseRef;           //# original phaseref
       vector<Baseline>        itsBaselines;
-      vector<uint>            itsSelEstimate;        //# baselines in estimate
+      casa::Vector<bool>      itsSelTarget;     //# baselines in target estimate
       casa::Vector<double>    itsFreqDemix;
       casa::Vector<double>    itsFreqSubtr;
       vector<Patch::ConstPtr> itsAteamList;

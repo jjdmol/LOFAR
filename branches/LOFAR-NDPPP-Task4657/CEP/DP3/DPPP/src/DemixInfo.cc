@@ -43,7 +43,7 @@ namespace LOFAR {
 
     DemixInfo::DemixInfo (const ParameterSet& parset, const string& prefix)
       : itsSelBL            (parset, prefix, false, "cross"),
-        itsSelBLEstimate    (parset, prefix+"estimate.", false, "cross", "CS*&"),
+        itsSelBLTarget      (parset, prefix+"target.", false, "cross", "CS*&"),
         itsPredictModelName (parset.getString(prefix+"estimate.skymodel", "")),
         itsDemixModelName   (parset.getString(prefix+"ateam.skymodel")),
         itsTargetModelName  (parset.getString(prefix+"target.skymodel")),
@@ -222,14 +222,14 @@ namespace LOFAR {
       }
 
       // Determine which baselines to use when estimating A-team and target.
-      ////itsSelEstimate = itsSelBLEstimate.applyVec (infoSel);
+      itsSelTarget = itsSelBLTarget.applyVec (infoSel);
 
       // Form the baselines.
       // the numbering due to unused stations.
       /// Why is that needed for predict/solve?
       for (uint i=0; i<itsNBl; ++i) {
         itsBaselines.push_back (Baseline(itsInfoSel.getAnt1()[i],
-                                        itsInfoSel.getAnt2()[i]));
+                                         itsInfoSel.getAnt2()[i]));
       }
 
       // Adapt averaging to available nr of channels and times.
@@ -320,7 +320,8 @@ namespace LOFAR {
       os << "  minnbaseline:       " << itsMinNBaseline << endl;
       os << "  minnstation:        " << itsMinNStation << endl;
       os << "  maxiter:            " << itsMaxIter << endl;
-      os << "  propagatesolutions: " << itsPropagateSolution << endl;
+      os << "  propagatesolutions: " << (itsPropagateSolution ? "True":"False")
+         << endl;
       os << "  freqstep:           " << itsNChanAvgSubtr << endl;
       os << "  timestep:           " << itsNTimeAvgSubtr << endl;
       os << "  demixfreqstep:      " << itsNChanAvg << endl;
@@ -328,7 +329,7 @@ namespace LOFAR {
       os << "  chunksize:          " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
       itsSelBL.show (os, "    ");
-      ///      itsSelBLEstimate.show (os);
+      itsSelBLTarget.show (os, "  target");
     }
 
     vector<Patch::ConstPtr>

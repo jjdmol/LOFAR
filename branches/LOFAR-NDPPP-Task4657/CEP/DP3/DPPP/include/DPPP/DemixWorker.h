@@ -28,7 +28,6 @@
 // @brief DPPP step class to average in time and/or freq
 
 #include <DPPP/DemixInfo.h>
-#include <DPPP/Baseline.h>
 #include <DPPP/DPInput.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/Patch.h>
@@ -138,6 +137,10 @@ namespace LOFAR {
       // It fills itsFirstSteps, etc. for the sources to be demixed.
       // It also determines how to handle the target (include,deproject,ignore).
       void setupDemix (uint chunkNr);
+
+      // Find the median ampltitude for the selected baselines.
+      // It uses itsTmpAmpl as temporary buffer.
+      float findMedian (const casa::Cube<float>& ampl, const bool* selbl);
 
       // Average the baseline UVWs in bufin and split them into UVW per station.
       // It returns the number of time averages.
@@ -261,11 +264,16 @@ namespace LOFAR {
       casa::Cube<double>                    itsStationUVW;  //# UVW per station
       casa::Matrix<double>                  itsAvgUVW;      //# temp buffer
       casa::Cube<dcomplex>                  itsPredictVis;  //# temp buffer
-      casa::Cube<dcomplex>                  itsSubtractVis; //# temp buffer
       //# #nfreq x #bl x #time StokesI amplitude per A-source.
       vector<casa::Cube<float> >            itsAteamAmpl;
+      //# #bl x #src telling if baseline has sufficient Ateam flux.
+      casa::Matrix<bool>                    itsAteamAmplSel;
       //# #nfreq x #bl x #time StokesI amplitude of target.
       casa::Cube<float>                     itsTargetAmpl;
+      //# #bl telling if target baseline contains core stations only.
+      casa::Vector<bool>                    itsTargetAmplSel;
+      //# Temporary buffer to determine medians.
+      vector<float>                         itsTmpAmpl;
       //# Per A-source and for target the min and max amplitude.
       vector<double>                        itsAteamMinAmpl;
       vector<double>                        itsAteamMaxAmpl;
