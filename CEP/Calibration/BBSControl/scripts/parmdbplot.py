@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 #
+# Authors:
+# Joris van Zwieten
+# Francesco de Gasperin
+# Tammo Jan Dijkema
+#
 # Copyright (C) 2007
 # ASTRON (Netherlands Institute for Radio Astronomy)
 # P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -28,6 +33,9 @@ from matplotlib.font_manager import FontProperties
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
+import os.path
+import string
 
 import lofar.parmdb as parmdb
 
@@ -779,11 +787,13 @@ class PlotWindow(QFrame):
 
 
 class MainWindow(QFrame):
-    def __init__(self, db):
+    def __init__(self, db, windowname):
         QFrame.__init__(self)
+        self.setWindowTitle(windowname)
         self.db = db
         self.figures = []
         self.parms = []
+        self.windowname=windowname
 
         layout = QVBoxLayout()
 
@@ -914,7 +924,7 @@ class MainWindow(QFrame):
         for calType in calTypes:
             this_selection = [idx for idx in selection if self.parms[idx]._calType == calType]
 
-            self.figures.append(PlotWindow(self.parms, this_selection, resolution, title="Figure %d" % (len(self.figures) + 1)))
+            self.figures.append(PlotWindow(self.parms, this_selection, resolution, title=self.windowname + ": Figure %d" % (len(self.figures) + 1)))
             
             self.figures[-1].show()
 
@@ -938,7 +948,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     app = QApplication(sys.argv)
-    window = MainWindow(db)
+
+    # show parmdbname in title (with msname if it is inside an MS)
+    splitpath = string.split(string.rstrip(sys.argv[1],"/"),"/")
+    if len(splitpath)>1 and splitpath[-2][-2:]=="MS":
+      parmdbname = "/".join(splitpath[-2:])
+    else:
+      parmdbname = splitpath[-1]
+
+    window = MainWindow(db, parmdbname)
     window.show()
 
 #    app.connect(app, SIGNAL('lastWindowClosed()'), app, SLOT('quit()'))
