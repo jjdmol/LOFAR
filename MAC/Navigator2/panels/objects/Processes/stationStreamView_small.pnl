@@ -31,7 +31,7 @@ PANEL,-1 -1 450 72 N "_3DFace" 2
   }	
 }
 
-void updateStreamDP(string dp1, bool s0,
+void updateStreamCB(string dp1, bool s0,
               string dp2, bool s1,
               string dp3, bool invalid) {
 
