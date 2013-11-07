@@ -12,9 +12,9 @@ PANEL,-1 -1 450 72 N "_3DFace" 2
   string streamDP = station+\":LOFAR_PIC_StationInfo\";  // check if the stream datapoint for this view are enabled and accessible
   // the streams determine if a certain part of this object is actually involved in a measurement
   if (dpExists(streamDP)) {
-    if (dpConnect(\"updateStreamCB\", baseDP +\".datastream0:_online.._value\",
-                                    baseDP +\".datastream1:_online.._value\",
-                                    baseDP +\".datastream0:_online.._invalid\") == -1) {
+    if (dpConnect(\"updateStreamCB\", streamDP +\".datastream0:_online.._value\",
+                                    streamDP +\".datastream1:_online.._value\",
+                                    streamDP +\".datastream0:_online.._invalid\") == -1) {
       LOG_ERROR(\"stationStreamView_small.pnl:main|Couldn't connect to: \"+streamDP+\" \"+getLastError());
       setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
       setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
@@ -23,7 +23,6 @@ PANEL,-1 -1 450 72 N "_3DFace" 2
 
     }
   } else {
-    LOG_ERROR(\"controller_small.pnl:main|Couldn't find DP to connect to: \"+streamDP);
     setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
     setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
