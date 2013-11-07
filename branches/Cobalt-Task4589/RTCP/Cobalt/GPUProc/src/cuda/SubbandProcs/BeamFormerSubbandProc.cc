@@ -304,6 +304,7 @@ namespace LOFAR
     incoherentFirFilterKernel(context),
     incoherentFinalFFT(context),
     incoherentStokes(context),
+    incoherentStokesTranspose(context),
     samples(context),
     visibilities(context),
     copyBuffers(context),
@@ -315,13 +316,13 @@ namespace LOFAR
     {     
 
       // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR("**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
         std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
         std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
         std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<        
-
 
         std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
         std::setw(20) << "(transpose)" << transpose.stats << endl <<
@@ -337,8 +338,8 @@ namespace LOFAR
         std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
         std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
         std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT.stats << endl <<
-        std::setw(20) << "(incoherentStokes)" <<  incoherentStokes.stats << endl );
-
+        std::setw(20) << "(incoherentStokes)" << incoherentStokes.stats << endl <<
+        std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
     }
 
     void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,

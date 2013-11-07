@@ -106,6 +106,7 @@ namespace LOFAR
         PerformanceCounter incoherentFirFilterKernel;
         PerformanceCounter incoherentFinalFFT;
         PerformanceCounter incoherentStokes;
+        PerformanceCounter incoherentStokesTranspose;
 
 
         // gpu transfer counters
