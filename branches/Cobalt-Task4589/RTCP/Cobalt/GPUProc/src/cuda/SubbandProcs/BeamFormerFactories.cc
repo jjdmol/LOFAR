@@ -38,7 +38,9 @@ namespace LOFAR
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
-        incoherentFirFilter(incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
+        incoherentStokesTranspose(incoherentStokesTransposeParams(ps)),
+        incoherentFirFilter(
+          incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
         bandPassCorrection(bandPassCorrectionParams(ps))
 
       {
@@ -165,8 +167,10 @@ namespace LOFAR
         params.nrChannelsPerSubband = std::max(16U,
           ps.settings.beamFormer.incoherentSettings.nrChannels);
 
-        // time integration has not taken place yet, so calculate the nrSamples manually
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+        // time integration has not taken place yet, so calculate the nrSamples
+        // manually
+        params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         params.nrSubbands = nrSubbandsPerSubbandProc;
 
@@ -179,11 +183,26 @@ namespace LOFAR
       {
         IncoherentStokesKernel::Parameters params(ps);
         //TODO: beamformer params
-        params.nrChannelsPerSubband = ps.settings.beamFormer.incoherentSettings.nrChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+        params.nrChannelsPerSubband = 
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
+        params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;
       }
 
+      IncoherentStokesTransposeKernel::Parameters 
+      BeamFormerFactories::
+      incoherentStokesTransposeParams(const Parset &ps) const 
+      {
+        IncoherentStokesTransposeKernel::Parameters params(ps);
+        //TODO: beamformer params
+        params.nrChannelsPerSubband =
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        return params;
+      }
   }
 }
