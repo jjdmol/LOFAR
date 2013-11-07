@@ -77,12 +77,14 @@ namespace LOFAR
       setArg(1, buffers.input);
 
       // TODO: params.nrTABs only works for one SAP
-       setEnqueueWorkSizes( gpu::Grid (params.nrChannelsPerSubband,
-                                        1,
-                                        params.nrTABs),
-                           gpu::Block(params.nrChannelsPerSubband,
-                                      1,
-                                      params.nrTABs));
+      unsigned block_size = 16;
+      unsigned time_parallel = module.getContext().getDevice().getMaxThreadsPerBlock() / (16 * 16);
+
+
+      setEnqueueWorkSizes( gpu::Grid ((params.nrChannelsPerSubband + block_size - 1) / block_size * block_size,
+                                        time_parallel,
+                                       (params.nrTABs + block_size - 1) / block_size * block_size),
+                           gpu::Block( block_size,time_parallel, block_size));
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);

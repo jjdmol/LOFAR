@@ -37,6 +37,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <iostream>
 #include <iomanip>
+#include <vector>
 
 using namespace std;
 using namespace boost;
@@ -53,7 +54,7 @@ float cosine[] = { 1,  0.86602540478,  0.5,  0, -0.5, -0.86602540478,
 
 
 // Fixture for testing correct translation of parset values
-struct ParsetFixture
+struct ParsetSUT
 {
   size_t 
     timeIntegrationFactor,
@@ -65,7 +66,7 @@ struct ParsetFixture
 
   Parset parset;
 
-  ParsetFixture(size_t inrChannels = 13,
+  ParsetSUT(size_t inrChannels = 13,
     size_t inrOutputSamples = 1024,
     size_t inrStations = 43,
     size_t inrTabs = 21,
@@ -102,7 +103,7 @@ struct ParsetFixture
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
 {
-   ParsetFixture sut;
+   ParsetSUT sut;
   const ObservationSettings::BeamFormer::StokesSettings &settings = 
     sut.parset.settings.beamFormer.coherentSettings;
   CHECK_EQUAL(sut.timeIntegrationFactor, settings.timeIntegrationFactor);
@@ -115,14 +116,14 @@ TEST(BufferSizes)
 // Test if we can succesfully create a KernelFactory
 TEST(KernelFactory)
 {
-  ParsetFixture sut;
+  ParsetSUT sut;
   KernelFactory<CoherentStokesKernel> kf(sut.parset);
 }
 
 
 // Fixture for testing the CoherentStokes kernel itself.
 
-struct KernelFixture :  ParsetFixture
+struct SUTWrapper:  ParsetSUT
 {
   gpu::Device device;
   gpu::Context context;
@@ -136,12 +137,12 @@ struct KernelFixture :  ParsetFixture
   CoherentStokesKernel::Buffers buffers;
   scoped_ptr<CoherentStokesKernel> kernel;
 
-  KernelFixture(size_t inrChannels = 13,
+  SUTWrapper(size_t inrChannels = 13,
                 size_t inrOutputSamples = 1024,
                 size_t inrStations = 43,
                 size_t inrTabs = 21,
                 size_t itimeIntegrationFactor = 1) :
-      ParsetFixture(inrChannels, inrOutputSamples, inrStations ,
+      ParsetSUT(inrChannels, inrOutputSamples, inrStations ,
                 inrTabs,itimeIntegrationFactor),
     device(gpu::Platform().devices()[0]),
     context(device),
@@ -206,13 +207,30 @@ struct KernelFixture :  ParsetFixture
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
-  KernelFixture sut;
-  // Host buffers are properly initialized for this test. Just run the kernel.
+  // start the test vector at the largest size
+  size_t tabs_sizes[] = {33,1,13};
+  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t) );
+  size_t channel_sizes[] = {41,1,13};
+  std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t) );
+  size_t sample_sizes[] = {1024,16,512};
+  std::vector<size_t> samples(sample_sizes, sample_sizes + sizeof(sample_sizes) / sizeof(size_t) );
   
+  //loop over the three input vectors
+  for (std::vector<size_t>::const_iterator itab = tabs.begin();itab != tabs.end(); ++itab)
+  for (std::vector<size_t>::const_iterator ichan = channels.begin();ichan != channels.end(); ++ichan)
+  for (std::vector<size_t>::const_iterator isamp = samples.begin();isamp != samples.end(); ++isamp)
+  {
+    cout << "*******testing tabs: " <<  *itab 
+                   << " channels: " <<  *ichan
+                   << " samples: "  <<  *isamp << endl;
+    SUTWrapper sut(*ichan, *isamp, 43, *itab);
+  // Host buffers are properly initialized for this test. Just run the kernel. 
   sut.runKernel();
   CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
                     sut.hOutput.data(),
                     sut.hOutput.num_elements());
+  }
+  
 }
 
 

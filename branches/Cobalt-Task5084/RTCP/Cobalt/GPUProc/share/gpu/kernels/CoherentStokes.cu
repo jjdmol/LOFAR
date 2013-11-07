@@ -126,11 +126,11 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
   unsigned time_idx = threadIdx.y;     
   unsigned tab_idx = blockIdx.z * blockDim.z + threadIdx.z;    
 
-  //if (channel_idx > NR_CHANNELS)  // To allow non power 2 dimensions we have to allow for useless threads
-  //  return;
-
-  //if (tab_idx > NR_TABS)  // To allow non power 2 dimensions we have to allow for useless threads
-  //  return;
+  // We support al sizes of channels and tabs: skip current thread of not needed
+  if ( channel_idx >= NR_CHANNELS)
+    return;
+  if ( tab_idx >= NR_TABS)
+    return;
 
   //# Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
   //# The time_idx determines which part of (or the whole of) the time range this
@@ -150,7 +150,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
     float halfStokesU = 0;
     float halfStokesV = 0;
 #   endif
-
+    
     //# Do the integration
     for (unsigned idx_step = 0; idx_step < INTEGRATION_SIZE; idx_step++) 
     {
@@ -167,6 +167,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
       halfStokesV += X.y * Y.x - X.x * Y.y;
 #     endif
     }
+
     //# We step in the data with INTEGRATION_SIZE
     unsigned write_idx = idx_stride / INTEGRATION_SIZE;
 
