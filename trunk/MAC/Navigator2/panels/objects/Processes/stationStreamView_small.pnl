@@ -9,7 +9,7 @@ PANEL,-1 -1 450 72 N "_3DFace" 2
   stream = \"stream\"+$streamNr;
   station=$station;
   
-  string streamDP = station+\"LOFAR_PIC_StationInfo\";  // check if the stream datapoint for this view are enabled and accessible
+  string streamDP = station+\":LOFAR_PIC_StationInfo\";  // check if the stream datapoint for this view are enabled and accessible
   // the streams determine if a certain part of this object is actually involved in a measurement
   if (dpExists(streamDP)) {
     if (dpConnect(\"updateStreamCB\", baseDP +\".datastream0:_online.._value\",
