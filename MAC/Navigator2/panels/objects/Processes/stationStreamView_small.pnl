@@ -9,7 +9,48 @@ PANEL,-1 -1 450 72 N "_3DFace" 2
   stream = \"stream\"+$streamNr;
   station=$station;
   
-  reload();
+  string streamDP = station+\"LOFAR_PIC_StationInfo\";  // check if the stream datapoint for this view are enabled and accessible
+  // the streams determine if a certain part of this object is actually involved in a measurement
+  if (dpExists(streamDP)) {
+    if (dpConnect(\"updateStreamCB\", baseDP +\".datastream0:_online.._value\",
+                                    baseDP +\".datastream1:_online.._value\",
+                                    baseDP +\".datastream0:_online.._invalid\") == -1) {
+      LOG_ERROR(\"stationStreamView_small.pnl:main|Couldn't connect to: \"+streamDP+\" \"+getLastError());
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+
+    }
+  } else {
+    LOG_ERROR(\"controller_small.pnl:main|Couldn't find DP to connect to: \"+streamDP);
+    setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+    setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
+  }	
+}
+
+void StreamDP(string dp1, bool s0,
+              string dp2, bool s1,
+              string dp3, bool invalid) {
+
+  // change all found DP's to contain all the elements that contain the stream.percBad
+  if (connected && dynlen(connectTo) > 0 ) {
+    dpDisconnect(\"monitorStreamsCB\",connectTo);
+    dynClear(connectTo);
+  }
+
+  if (!invalid) {
+    stream0=s0;
+    stream1=s1;
+    reload();
+  } else {
+    setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_invalid\");
+    setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_invalid\");  
+  }
 }
   
 private void reload() {
@@ -18,11 +59,6 @@ private void reload() {
   inputBuffers = navFunct_getInputBuffersForStation(station);
   
 
-  // change all found DP's to contain all the elements that contain the stream.percBad
-  if (connected) {
-    dpDisconnect(\"stationStreamCB\",connectTo);
-    dynClear(connectTo);
-  }
 
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     dynAppend(connectTo,inputBuffers[i]+\".\"+stream+\".percBad:_online.._value\");
@@ -30,7 +66,7 @@ private void reload() {
   
   // check if the required datapoint for this view are enabled and accessible
   if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
-    if (dpConnect(\"stationStreamCB\", connectTo) == -1) {
+    if (dpConnect(\"monitorStreamsCB\", connectTo) == -1) {
       setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
       setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
       setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
@@ -51,7 +87,7 @@ private void reload() {
   }
 }
 
-void stationStreamCB(dyn_string dps, dyn_float values)
+void monitorStreamsCB(dyn_string dps, dyn_float values)
 {
   
   string toolTipText = station+\"  \"+stream+\"<br>--------------<br>\";
