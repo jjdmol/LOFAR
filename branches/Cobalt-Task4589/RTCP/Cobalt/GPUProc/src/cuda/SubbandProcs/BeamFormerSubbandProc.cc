@@ -70,13 +70,13 @@ namespace LOFAR
       // FIR, which the beam former does in a later stage!
       devInput(
         std::max(
-                 factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
+          factories.intToFloat.bufferSize(IntToFloatKernel::INPUT_DATA),
           factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
         factories.delayCompensation.bufferSize(
           DelayAndBandPassKernel::DELAYS),
         factories.delayCompensation.bufferSize(
           DelayAndBandPassKernel::PHASE_OFFSETS),
-               context),
+        context),
       // coherent stokes buffers
       devA(devInput.inputSamples),
       devB(context, devA.size()),
@@ -172,38 +172,59 @@ namespace LOFAR
       devResult(ps.settings.beamFormer.coherentSettings.nrChannels > 1 ? devB : devA),
       //**************************************************************
       //incoherent stokes
-      // TODO: Add a transpose
-      // inverse FFT: C -> C
-      incoherentInverseFFT(queue, BEAM_FORMER_NR_CHANNELS,
-                 NR_POLARIZATIONS * 
-                 ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS, false, devC),
 
-      // FIR filter: C -> D
+      // Transpose: B -> A
+      incoherentTransposeBuffers(devB, devA),
+
+      incoherentTransposeKernel(
+        factories.incoherentStokesTranspose.create(
+          queue, incoherentTransposeBuffers)
+        ),
+
+      // TODO: Add a transpose
+      // inverse FFT: A -> A
+      incoherentInverseFFT(
+        queue, BEAM_FORMER_NR_CHANNELS,
+        NR_POLARIZATIONS * ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS,
+        false, devA),
+
+      // FIR filter: A -> B
       // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
-      devIncoherentFilterWeights(context,
-           factories.incoherentFirFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devIncoherentFilterHistoryData(context,
-           factories.incoherentFirFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
-      incoherentFirFilterBuffers(devC, devD,
-              devIncoherentFilterWeights, devIncoherentFilterHistoryData),
-      incoherentFirFilterKernel(
-          factories.incoherentFirFilter.create(
-                queue, incoherentFirFilterBuffers)),
+      devIncoherentFilterWeights(
+        context,
+        factories.incoherentFirFilter.bufferSize(
+          FIR_FilterKernel::FILTER_WEIGHTS)),
 
-      // final FFT: D -> D
-      incoherentFinalFFT(queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-                                NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
-                                ps.settings.beamFormer.incoherentSettings.nrChannels, true, devD),
+      devIncoherentFilterHistoryData(
+        context,
+        factories.incoherentFirFilter.bufferSize(
+          FIR_FilterKernel::HISTORY_DATA)),
+
+      incoherentFirFilterBuffers(
+        devA, devB, devIncoherentFilterWeights, devIncoherentFilterHistoryData),
+
+      incoherentFirFilterKernel(
+        factories.incoherentFirFilter.create(
+          queue, incoherentFirFilterBuffers)),
+
+      // final FFT: B -> B
+      incoherentFinalFFT(
+        queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
+        (NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
+         ps.settings.beamFormer.incoherentSettings.nrChannels),
+        true, devD),
 
       // incoherentstokes kernel
       incoherentStokesBuffers(
-          ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devD : devC,
-          ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devC : devD),
-      incoherentStokesKernel(
-          factories.incoherentStokes.create(queue, incoherentStokesBuffers)),
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devB : devA,
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devA : devB),
 
-      devIncoherentStokes(ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devC : devD)
+      incoherentStokesKernel(
+        factories.incoherentStokes.create(queue, incoherentStokesBuffers)),
+
+      devIncoherentStokes(
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1 ? devA : devB)
     {
       // initialize history data
       devFilterHistoryData.set(0);

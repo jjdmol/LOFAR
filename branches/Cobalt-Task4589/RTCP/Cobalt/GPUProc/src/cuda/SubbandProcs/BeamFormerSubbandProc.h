@@ -39,6 +39,7 @@
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
+#include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
@@ -129,10 +130,13 @@ namespace LOFAR
       // in the InputData class
       SubbandProcInputData::DeviceBuffers devInput;
 
+      // @{
+      // Device memory buffers. These buffers are used interleaved.
       gpu::DeviceMemory devA;
       gpu::DeviceMemory devB;
       gpu::DeviceMemory devC;
-      gpu::DeviceMemory devD;     
+      gpu::DeviceMemory devD;
+      // @}
 
       // NULL placeholder for unused DeviceMemory parameters
       gpu::DeviceMemory devNull;
@@ -141,21 +145,21 @@ namespace LOFAR
        * Kernels
        */
 
-      // int -> float
+      // Int -> Float conversion
       IntToFloatKernel::Buffers intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 
-      // first FFT
+      // First (64 points) FFT
       FFT_Kernel firstFFT;
 
-      // delay compensation
+      // Delay compensation
       DelayAndBandPassKernel::Buffers delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
 
-      // second FFT
+      // Second (64 points) FFT
       FFT_Kernel secondFFT;
 
-      // bandpass correction
+      // Bandpass correction and tranpose
       gpu::DeviceMemory devBandPassCorrectionWeights;
       DelayAndBandPassKernel::Buffers correctBandPassBuffers;
       std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
@@ -167,13 +171,14 @@ namespace LOFAR
       BeamFormerKernel::Buffers beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
+      // Transpose 
       BeamFormerTransposeKernel::Buffers transposeBuffers;
       std::auto_ptr<BeamFormerTransposeKernel> transposeKernel;
 
-      // inverse FFT
+      // inverse (4k points) FFT
       FFT_Kernel inverseFFT;
 
-      // PPF
+      // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devFilterWeights;
       gpu::DeviceMemory devFilterHistoryData;
       FIR_FilterKernel::Buffers firFilterBuffers;
@@ -185,31 +190,37 @@ namespace LOFAR
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
 
       // end result
-      gpu::DeviceMemory &devResult;
+      gpu::DeviceMemory devResult;
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
+
+      // Transpose 
+      IncoherentStokesTransposeKernel::Buffers incoherentTransposeBuffers;
+      std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTransposeKernel;
+
+      // Inverse (4k points) FFT
       FFT_Kernel incoherentInverseFFT;
 
-      //// PPF
+      // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devIncoherentFilterWeights;
       gpu::DeviceMemory devIncoherentFilterHistoryData;
       FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
       FFT_Kernel incoherentFinalFFT;
 
-      //// Incoherent Stokes
+      // Incoherent Stokes
       IncoherentStokesKernel::Buffers incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
 
-      //output for Incoherent stokes 
-      gpu::DeviceMemory &devIncoherentStokes;
+      // Output for Incoherent stokes 
+      gpu::DeviceMemory devIncoherentStokes;
 
       bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };
 
   }
-      }
+}
 
 #endif
 
