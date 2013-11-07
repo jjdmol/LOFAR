@@ -54,7 +54,7 @@ namespace LOFAR
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
 
       // The number of samples should be a multiple of 16
-      timeParallelFactor = 16;
+      timeParallelFactor = 1;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -70,33 +70,20 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      ASSERT(params.nrChannelsPerSubband == 1 || (params.nrChannelsPerSubband >= 16 && params.nrChannelsPerSubband % 16 == 0));
+      ASSERT(params.nrSamplesPerChannel % params.timeParallelFactor == 0);
       ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-
-
-
       // TODO: params.nrTABs only works for one SAP
-      if (params.nrChannelsPerSubband == 1) {
-        // Increase the number of tabs in a threadblock to allow optimalization in this dimension
-        setEnqueueWorkSizes( gpu::Grid (1,  // only one channe;
-                                        params.timeIntegrationFactor,
+       setEnqueueWorkSizes( gpu::Grid (params.nrChannelsPerSubband,
+                                        1,
                                         params.nrTABs),
-                           gpu::Block(1,
-                                      params.timeIntegrationFactor,
-                                      16)); 
-      }
-      else {
-        setEnqueueWorkSizes( gpu::Grid (params.nrChannelsPerSubband,
-                                        params.timeIntegrationFactor,
-                                        params.nrTABs),
-                           gpu::Block(16,
-                                      params.timeIntegrationFactor,
-                                      1));
-      }
+                           gpu::Block(params.nrChannelsPerSubband,
+                                      1,
+                                      params.nrTABs));
+
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
@@ -107,11 +94,13 @@ namespace LOFAR
     template<> size_t
     KernelFactory<CoherentStokesKernel>::bufferSize(BufferType bufferType) const
     {
+
       switch (bufferType) {
       case CoherentStokesKernel::INPUT_DATA:
         return
           (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
             NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+
       case CoherentStokesKernel::OUTPUT_DATA:
         return 
           (size_t) itsParameters.nrTABs * itsParameters.nrStokes * itsParameters.nrSamplesPerChannel /

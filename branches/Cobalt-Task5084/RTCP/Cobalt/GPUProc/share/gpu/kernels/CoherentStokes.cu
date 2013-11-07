@@ -120,16 +120,17 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
 extern "C" __global__ void coherentStokes(OutputDataType output,
                                           const InputDataType input) 
 {
+
   //# Define the indexes in the data depending on the block and thread idx
-  unsigned channel_idx = blockIdx.x * threadDim.x + threadIdx.x;  //# If we have channels do the read and write with 16 in parallel
+  unsigned channel_idx = blockIdx.x * blockDim.x + threadIdx.x;  //# If we have channels do the read and write with 16 in parallel
   unsigned time_idx = threadIdx.y;     
-  unsigned tab_idx = blockIdx.z * threadDim.z + threadIdx.z;    
+  unsigned tab_idx = blockIdx.z * blockDim.z + threadIdx.z;    
 
-  if (channel_idx > NR_CHANNELS)  // To allow non power 2 dimensions we have to allow for useless threads
-    return;
+  //if (channel_idx > NR_CHANNELS)  // To allow non power 2 dimensions we have to allow for useless threads
+  //  return;
 
-  if (tab_idx > NR_TABS)  // To allow non power 2 dimensions we have to allow for useless threads
-    return;
+  //if (tab_idx > NR_TABS)  // To allow non power 2 dimensions we have to allow for useless threads
+  //  return;
 
   //# Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
   //# The time_idx determines which part of (or the whole of) the time range this

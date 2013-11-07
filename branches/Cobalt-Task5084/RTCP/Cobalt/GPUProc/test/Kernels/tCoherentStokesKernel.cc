@@ -21,81 +21,200 @@
 
 #include <lofar_config.h>
 
+
+#include <lofar_config.h>
+
+#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
-
-#include <Common/lofar_iostream.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
+#include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
-#include <UnitTest++.h>
+#include <Common/LofarLogger.h>
 
-using namespace LOFAR;
+#include <UnitTest++.h>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <iostream>
+#include <iomanip>
+
+using namespace std;
+using namespace boost;
 using namespace LOFAR::Cobalt;
+
+typedef complex<float> fcomplex;
+
+// Sine and cosine tables for angles that are multiples of 30 degrees in the
+// range [0 .. 360> degrees.
+float sine[]   = { 0,  0.5,  0.86602540478,  1,  0.86602540478,  0.5,
+                   0, -0.5, -0.86602540478, -1, -0.86602540478, -0.5 };
+float cosine[] = { 1,  0.86602540478,  0.5,  0, -0.5, -0.86602540478,
+                  -1, -0.86602540478, -0.5,  0,  0.5,  0.86602540478 };
+
 
 // Fixture for testing correct translation of parset values
 struct ParsetFixture
 {
-  const size_t 
-    timeIntegrationFactor = sizeof(sine) / sizeof(float),
-    nrChannels = 37,
-    nrOutputSamples = 29,
-    nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
-    blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
-    nrStations = 43;
+  size_t 
+    timeIntegrationFactor,
+    nrChannels,
+    nrOutputSamples,
+    nrStations, 
+    nrInputSamples, 
+    blockSize;
 
   Parset parset;
 
-  ParsetFixture() {
+  ParsetFixture(size_t inrChannels = 13,
+    size_t inrOutputSamples = 1024,
+    size_t inrStations = 43,
+    size_t inrTabs = 21,
+    size_t itimeIntegrationFactor = 1) 
+  :
+    timeIntegrationFactor(itimeIntegrationFactor),
+    nrChannels(inrChannels),
+    nrOutputSamples(inrOutputSamples),
+    nrStations(inrStations),
+    nrInputSamples(nrOutputSamples * timeIntegrationFactor), 
+    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples)
+  {
+
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
-               "true");
-    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
-               lexical_cast<string>(timeIntegrationFactor));
-    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
-               lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_IncoherentStokes.which",
-               "IQUV");
+      "true");
+    parset.add("OLAP.CNProc_CoherentStokes.timeIntegrationFactor", 
+      lexical_cast<string>(timeIntegrationFactor));
+    parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
+      lexical_cast<string>(nrChannels));
+    parset.add("OLAP.CNProc_CoherentStokes.which",
+      "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
-               str(format("[%d*RS000]") % nrStations));
+      str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
-               lexical_cast<string>(blockSize)); 
+      lexical_cast<string>(blockSize)); 
+    parset.add("Observation.Beam[0].nrTiedArrayBeams",lexical_cast<string>(inrTabs));
+    parset.add("Observation.DataProducts.Output_Beamformed.filenames","[L76966_SAP000_B000_S0_P000_bf.raw,L76966_SAP000_B001_S0_P000_bf.raw]");
+    parset.add("Observation.DataProducts.Output_Beamformed.locations","[:.,:.]");
     parset.updateSettings();
   }
 };
 
 
-struct TestFixture
+// Test correctness of reported buffer sizes
+TEST(BufferSizes)
 {
+   ParsetFixture sut;
+  const ObservationSettings::BeamFormer::StokesSettings &settings = 
+    sut.parset.settings.beamFormer.coherentSettings;
+  CHECK_EQUAL(sut.timeIntegrationFactor, settings.timeIntegrationFactor);
+  CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
+  CHECK_EQUAL(4U, settings.nrStokes);
+  CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
+  CHECK_EQUAL(sut.nrInputSamples, settings.nrSamples(sut.blockSize));
+}
+
+// Test if we can succesfully create a KernelFactory
+TEST(KernelFactory)
+{
+  ParsetFixture sut;
+  KernelFactory<CoherentStokesKernel> kf(sut.parset);
+}
 
 
-  TestFixture() 
-  : 
-    ps("tCoherentStokesKernel.in_parset"), 
-    factory(ps) 
-  {
+// Fixture for testing the CoherentStokes kernel itself.
 
-
-  }
-  ~TestFixture() {}
-  Parset ps;
-  CoherentStokesKernel::Parameters params;
+struct KernelFixture :  ParsetFixture
+{
+  gpu::Device device;
+  gpu::Context context;
+  gpu::Stream stream;
+  size_t nrStokes;
+  size_t nrTabs;
   KernelFactory<CoherentStokesKernel> factory;
+  MultiDimArrayHostBuffer<fcomplex, 4> hInput;
+  MultiDimArrayHostBuffer<float, 4> hOutput;
+  MultiDimArrayHostBuffer<float, 4> hRefOutput;
+  CoherentStokesKernel::Buffers buffers;
+  scoped_ptr<CoherentStokesKernel> kernel;
+
+  KernelFixture(size_t inrChannels = 13,
+                size_t inrOutputSamples = 1024,
+                size_t inrStations = 43,
+                size_t inrTabs = 21,
+                size_t itimeIntegrationFactor = 1) :
+      ParsetFixture(inrChannels, inrOutputSamples, inrStations ,
+                inrTabs,itimeIntegrationFactor),
+    device(gpu::Platform().devices()[0]),
+    context(device),
+    stream(context),
+    nrStokes(parset.settings.beamFormer.coherentSettings.nrStokes),
+    nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
+    factory(parset),
+    hInput(
+      boost::extents[nrTabs][NR_POLARIZATIONS][nrInputSamples][nrChannels],
+      context),
+    hOutput(
+      boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
+      context),
+    hRefOutput(
+      boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
+      context),
+    buffers(
+      gpu::DeviceMemory(
+        context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
+      gpu::DeviceMemory(
+        context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA))),
+    kernel(factory.create(stream, buffers))
+  {
+    initializeHostBuffers();
+  }
+
+  // Initialize all the elements of the input host buffer to zero, and all
+  // elements of the output host buffer to NaN.
+  void initializeHostBuffers()
+  {
+    cout << "\nInitializing host buffers..."
+         // << "\n  timeIntegrationFactor = " << setw(7) << timeIntegrationFactor
+         // << "\n  nrChannels            = " << setw(7) << nrChannels
+         // << "\n  nrInputSamples        = " << setw(7) << nrInputSamples
+         // << "\n  nrOutputSamples       = " << setw(7) << nrOutputSamples
+         // << "\n  nrStations            = " << setw(7) << nrStations
+         // << "\n  blockSize             = " << setw(7) << blockSize
+         << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
+         << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
+         << endl;
+    CHECK_EQUAL(buffers.input.size(), hInput.size());
+    CHECK_EQUAL(buffers.output.size(), hOutput.size());
+    fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
+    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
+    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
+  }
+
+  void runKernel()
+  {
+    // Dummy BlockID
+    BlockID blockId;
+    // Copy input data from host- to device buffer synchronously
+    stream.writeBuffer(buffers.input, hInput, true);
+    // Launch the kernel
+    kernel->enqueue(blockId);
+    // Copy output data from device- to host buffer synchronously
+    stream.readBuffer(hOutput, buffers.output, true);
+  }
+
 };
 
-TEST_FIXTURE(TestFixture, InputData)
+// An input of all zeros should result in an output of all zeros.
+TEST(ZeroTest)
 {
-  CHECK_EQUAL(size_t(16 * (3072/16) * 2 * 2 * 8),
-              factory.bufferSize(CoherentStokesKernel::INPUT_DATA));
+  KernelFixture sut;
+  // Host buffers are properly initialized for this test. Just run the kernel.
+  
+  sut.runKernel();
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements());
 }
 
-TEST_FIXTURE(TestFixture, OutputData)
-{
-  CHECK_EQUAL(size_t(2 * 1 * (3072/16) / 16 * 16 * 4),
-              factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA));
-}
-
-TEST_FIXTURE(TestFixture, MustThrow)
-{
-  CHECK_THROW(factory.bufferSize(CoherentStokesKernel::BufferType(2)),
-              GPUProcException);
-}
 
 int main()
 {

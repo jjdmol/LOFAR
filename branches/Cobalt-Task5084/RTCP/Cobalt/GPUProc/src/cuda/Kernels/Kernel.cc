@@ -48,8 +48,6 @@ namespace LOFAR
     {
     }
 
-    Kernel::Parameters::Parameters() 
-    {}
 
     Kernel::~Kernel()
     {
