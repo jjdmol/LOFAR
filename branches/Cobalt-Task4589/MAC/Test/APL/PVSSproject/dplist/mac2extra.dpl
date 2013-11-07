@@ -1,0 +1,150 @@
+# ascii dump of database
+
+# DpType
+TypeName
+Beam.Beam	1#1
+	Azimuth	22#2
+	Elevation	22#3
+SwitchPort.SwitchPort	1#1
+	Link	20#2
+	RX_Bytes_Average	20#3
+SwitchMain.SwitchMain	1#1
+	Name	25#2
+	Type	25#3
+	Location	25#4
+	IP	25#6
+Simulation.Simulation	1#1
+	Arm1	21#2
+	Arm2	21#3
+	Arm3	21#4
+	Arm4	21#5
+	Arm5	21#6
+	CPU	21#7
+	DISK	21#8
+	DSP	21#9
+	STATIONS_AVAILABLE	21#10
+	STATIONS_NON_AVAILABLE	21#11
+	STATIIONS_DISCONNECTED	21#12
+	Arm6	20#13
+
+# Datapoint/DpId
+DpName	TypeName	ID
+Beam1	Beam	14887
+Beam2	Beam	14889
+Beam3	Beam	14890
+Beam4	Beam	14891
+Beam5	Beam	14892
+Beam6	Beam	14893
+Beam7	Beam	14894
+Beam8	Beam	14895
+Orientation	Beam	14922
+_mp_SwitchPort	SwitchPort	14923
+SW01_P01	SwitchPort	14927
+SW01_P02	SwitchPort	14928
+SW01_P03	SwitchPort	14929
+SW01_P04	SwitchPort	14930
+SW01_P05	SwitchPort	14931
+SW01_P06	SwitchPort	14932
+SW01_P07	SwitchPort	14933
+SW01_P08	SwitchPort	14934
+SW01_P09	SwitchPort	14935
+SW01_P10	SwitchPort	14936
+SW01_P11	SwitchPort	14937
+SW01_P12	SwitchPort	14938
+SW01_P13	SwitchPort	14939
+SW01_P14	SwitchPort	14940
+SW01_P15	SwitchPort	14941
+SW01_P16	SwitchPort	14942
+SW01_P17	SwitchPort	14943
+SW01_P18	SwitchPort	14944
+SW01_P19	SwitchPort	14945
+SW01_P20	SwitchPort	14946
+SW01_P21	SwitchPort	14947
+SW01_P22	SwitchPort	14948
+SW01_P23	SwitchPort	14949
+SW01_P24	SwitchPort	14950
+_mp_SwitchMain	SwitchMain	14951
+SW01	SwitchMain	14953
+Simulation	Simulation	15011
+
+# DpValue
+ElementName	TypeName	_original.._value	_original.._status	_original.._stime
+Beam1.Azimuth	Beam	355	0x101	18.08.2004 17:21:25.726
+Beam1.Elevation	Beam	45	0x101	18.08.2004 17:17:45.109
+Beam2.Azimuth	Beam	375	0x101	18.08.2004 17:21:25.726
+Beam2.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam3.Azimuth	Beam	395	0x101	18.08.2004 17:21:25.726
+Beam3.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam4.Azimuth	Beam	415	0x101	18.08.2004 17:21:25.726
+Beam4.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam5.Azimuth	Beam	435	0x101	18.08.2004 17:21:25.726
+Beam5.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam6.Azimuth	Beam	455	0x101	18.08.2004 17:21:25.726
+Beam6.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam7.Azimuth	Beam	475	0x101	18.08.2004 17:21:25.726
+Beam7.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Beam8.Azimuth	Beam	495	0x101	18.08.2004 17:21:25.726
+Beam8.Elevation	Beam	0	0x101	18.08.2004 17:16:26.426
+Orientation.Azimuth	Beam	90	0x101	18.08.2004 17:21:07.289
+Orientation.Elevation	Beam	0	0x101	12.08.2004 22:15:16.723
+_mp_SwitchPort.Link	SwitchPort	1	0x101	10.08.2004 15:08:38.664
+SW01_P01.Link	SwitchPort	1	0x101	10.08.2004 15:08:17.134
+SW01_P01.RX_Bytes_Average	SwitchPort	5589	0x101	18.08.2004 17:13:55.769
+SW01_P02.Link	SwitchPort	1	0x101	10.08.2004 15:08:50.311
+SW01_P02.RX_Bytes_Average	SwitchPort	3038	0x101	18.08.2004 17:13:55.769
+SW01_P03.Link	SwitchPort	2	0x101	10.08.2004 15:08:55.769
+SW01_P04.Link	SwitchPort	1	0x101	10.08.2004 15:11:38.793
+SW01_P04.RX_Bytes_Average	SwitchPort	4700	0x101	18.08.2004 17:13:55.769
+SW01_P05.Link	SwitchPort	1	0x101	10.08.2004 15:11:34.047
+SW01_P05.RX_Bytes_Average	SwitchPort	4018	0x101	18.08.2004 17:13:55.769
+SW01_P06.Link	SwitchPort	1	0x101	10.08.2004 15:11:29.080
+SW01_P06.RX_Bytes_Average	SwitchPort	1489	0x101	18.08.2004 17:13:55.769
+SW01_P07.Link	SwitchPort	1	0x101	10.08.2004 15:11:24.984
+SW01_P07.RX_Bytes_Average	SwitchPort	5248	0x101	18.08.2004 17:13:55.769
+SW01_P08.Link	SwitchPort	1	0x101	10.08.2004 15:11:19.766
+SW01_P08.RX_Bytes_Average	SwitchPort	4488	0x101	18.08.2004 17:13:55.769
+SW01_P09.Link	SwitchPort	1	0x101	10.08.2004 15:11:15.210
+SW01_P09.RX_Bytes_Average	SwitchPort	2540	0x101	18.08.2004 17:13:55.769
+SW01_P10.Link	SwitchPort	1	0x101	10.08.2004 15:11:10.563
+SW01_P10.RX_Bytes_Average	SwitchPort	4259	0x101	18.08.2004 17:13:55.769
+SW01_P11.Link	SwitchPort	1	0x101	10.08.2004 15:11:06.147
+SW01_P11.RX_Bytes_Average	SwitchPort	4790	0x101	18.08.2004 17:13:55.769
+SW01_P12.Link	SwitchPort	1	0x101	10.08.2004 15:11:01.500
+SW01_P12.RX_Bytes_Average	SwitchPort	7909	0x101	18.08.2004 17:13:55.769
+SW01_P13.Link	SwitchPort	1	0x101	10.08.2004 15:10:41.381
+SW01_P13.RX_Bytes_Average	SwitchPort	3107	0x101	18.08.2004 17:13:55.769
+SW01_P14.Link	SwitchPort	1	0x101	10.08.2004 15:10:36.484
+SW01_P14.RX_Bytes_Average	SwitchPort	2267	0x101	18.08.2004 17:13:55.769
+SW01_P15.Link	SwitchPort	1	0x101	10.08.2004 15:10:31.296
+SW01_P15.RX_Bytes_Average	SwitchPort	5889	0x101	18.08.2004 17:13:55.769
+SW01_P16.Link	SwitchPort	1	0x101	10.08.2004 15:10:25.638
+SW01_P16.RX_Bytes_Average	SwitchPort	6601	0x101	18.08.2004 17:13:55.769
+SW01_P17.Link	SwitchPort	1	0x101	10.08.2004 15:10:20.881
+SW01_P17.RX_Bytes_Average	SwitchPort	3803	0x101	18.08.2004 17:13:55.769
+SW01_P18.Link	SwitchPort	1	0x101	10.08.2004 15:10:16.165
+SW01_P18.RX_Bytes_Average	SwitchPort	4815	0x101	18.08.2004 17:13:55.769
+SW01_P19.Link	SwitchPort	1	0x101	10.08.2004 15:10:11.578
+SW01_P19.RX_Bytes_Average	SwitchPort	5526	0x101	18.08.2004 17:13:55.769
+SW01_P20.Link	SwitchPort	2	0x101	10.08.2004 15:10:06.290
+SW01_P21.Link	SwitchPort	1	0x101	10.08.2004 15:09:57.628
+SW01_P21.RX_Bytes_Average	SwitchPort	8874	0x101	18.08.2004 17:13:55.769
+SW01_P22.Link	SwitchPort	2	0x101	10.08.2004 15:09:28.136
+SW01_P23.Link	SwitchPort	1	0x101	10.08.2004 15:09:17.821
+SW01_P23.RX_Bytes_Average	SwitchPort	2282	0x101	18.08.2004 17:13:55.769
+SW01_P24.Link	SwitchPort	2	0x101	10.08.2004 15:09:05.002
+SW01.Name	SwitchMain	"3Com Switch 3300 XM"	0x101	10.08.2004 15:20:14.996
+SW01.Type	SwitchMain	"SuperStack III"	0x101	10.08.2004 15:43:03.323
+SW01.Location	SwitchMain	"Station 12 - Rack 7"	0x101	10.08.2004 15:42:46.649
+SW01.IP	SwitchMain	"192.173.3.79"	0x101	10.08.2004 15:21:40.288
+Simulation.Arm1	Simulation	58	0x101	18.08.2004 18:25:11.347
+Simulation.Arm2	Simulation	80	0x101	18.08.2004 18:25:11.347
+Simulation.Arm3	Simulation	32	0x101	18.08.2004 18:25:11.347
+Simulation.Arm4	Simulation	24	0x101	18.08.2004 18:25:11.347
+Simulation.Arm5	Simulation	59	0x101	18.08.2004 18:25:11.347
+Simulation.CPU	Simulation	20	0x101	18.08.2004 18:25:11.347
+Simulation.DISK	Simulation	91	0x101	18.08.2004 18:25:11.347
+Simulation.DSP	Simulation	58	0x101	18.08.2004 18:25:11.347
+Simulation.STATIONS_AVAILABLE	Simulation	1	0x101	11.08.2004 18:37:57.916
+Simulation.STATIONS_NON_AVAILABLE	Simulation	99	0x101	11.08.2004 18:37:52.358
+Simulation.STATIIONS_DISCONNECTED	Simulation	99	0x101	11.08.2004 18:37:46.539
+Simulation.Arm6	Simulation	71	0x101	18.08.2004 18:25:11.347
