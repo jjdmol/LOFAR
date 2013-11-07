@@ -15,10 +15,10 @@ for $rank (1..$numranks) {
 }
 
 while ($line = <$fh>) {
-  next unless $line =~ /PIC.Core.Station.([A-Z0-9]+).RSP.ports = \[udp:10.168.([0-9]+).([1234])/;
+  next unless $line =~ /PIC.Core.Station.([A-Z0-9]+).RSP.ports = \[udp:cbt([0-9]+)-10GB([0-4]+)/;
 
   $station = $1;
-  $hostnr = $2 - 95;
+  $hostnr = $2;
   $ifacenr = $3;
 
   if ($ifacenr == 1 or $ifacenr == 2) {
