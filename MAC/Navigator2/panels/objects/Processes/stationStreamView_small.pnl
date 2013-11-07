@@ -162,8 +162,8 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
     setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
     if (strpos(station,\"CS\") < 0) {
       rsppos=1;
-      hba0found=true;
-      hba1found=true;
+      rsp0found=true;
+      rsp1found=true;
       setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
       setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
     }
