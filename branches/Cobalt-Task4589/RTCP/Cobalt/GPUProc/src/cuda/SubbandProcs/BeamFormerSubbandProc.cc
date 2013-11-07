@@ -425,7 +425,7 @@ namespace LOFAR
         // ********************************************************************
         // incoherent stokes kernels
         incoherentTranspose->enqueue(
-          input.blockID, counters.incoherentStokes);
+          input.blockID, counters.incoherentStokesTranspose);
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
