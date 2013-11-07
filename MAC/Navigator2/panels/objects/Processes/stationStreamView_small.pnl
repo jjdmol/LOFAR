@@ -169,14 +169,14 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
     }
   }
   // check what HBA part was available
-  if (dynlen(values) == 1) {
-    if (!hba0found) {
+  if (dynlen(values) <= 1) {
+    if (!rsp0found) {
       setValue(\"stationStreamObject0\",\"backCol\",\"Lofar_off\");
       setValue(\"stationStreamObject0\",\"foreCol\",\"Lofar_off\");
     }
-    if (!hba0found) {
-      setValue(\"stationStreamObject0\",\"backCol\",\"Lofar_off\");
-      setValue(\"stationStreamObject0\",\"foreCol\",\"Lofar_off\");
+    if (!rsp1found) {
+      setValue(\"stationStreamObject1\",\"backCol\",\"Lofar_off\");
+      setValue(\"stationStreamObject1\",\"foreCol\",\"Lofar_off\");
     }
   }
   
