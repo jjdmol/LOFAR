@@ -176,10 +176,9 @@ namespace LOFAR
       // Transpose: B -> A
       incoherentTransposeBuffers(devB, devA),
 
-      incoherentTransposeKernel(
+      incoherentTranspose(
         factories.incoherentStokesTranspose.create(
-          queue, incoherentTransposeBuffers)
-        ),
+          queue, incoherentTransposeBuffers)),
 
       // TODO: Add a transpose
       // inverse FFT: A -> A
@@ -250,6 +249,10 @@ namespace LOFAR
         coherentBeamformer = true;
       else
         coherentBeamformer = false;
+
+      LOG_INFO_STR("Running "
+                   << (coherentBeamformer ? "a coherent" : "an incoherent")
+                   << " Stokes beamformer pipeline");
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
@@ -261,16 +264,17 @@ namespace LOFAR
           new BeamFormedData(
             (ps.settings.beamFormer.maxNrTABsPerSAP() *
              ps.settings.beamFormer.coherentSettings.nrStokes),
-                ps.settings.beamFormer.coherentSettings.nrChannels,
+            ps.settings.beamFormer.coherentSettings.nrChannels,
             ps.settings.beamFormer.coherentSettings.nrSamples(
               ps.nrSamplesPerSubband()),
-                context));
+            context));
         else
-          outputPool.free.append(new BeamFormedData(
-                    ps.settings.beamFormer.incoherentSettings.nrStokes,
-                ps.settings.beamFormer.incoherentSettings.nrChannels,
-                ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
-                context));
+          outputPool.free.append(
+            new BeamFormedData(
+              ps.settings.beamFormer.incoherentSettings.nrStokes,
+              ps.settings.beamFormer.incoherentSettings.nrChannels,
+              ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
+              context));
       }
 
       //// CPU timers are set by CorrelatorPipeline
@@ -420,26 +424,38 @@ namespace LOFAR
       {
         // ********************************************************************
         // incoherent stokes kernels
-        incoherentInverseFFT.enqueue(input.blockID, counters.incoherentInverseFFT);
+        incoherentTranspose->enqueue(
+          input.blockID, counters.incoherentStokes);
+
+        incoherentInverseFFT.enqueue(
+          input.blockID, counters.incoherentInverseFFT);
 
         if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) 
         {
-          incoherentFirFilterKernel->enqueue(input.blockID, counters.incoherentFirFilterKernel,
+          incoherentFirFilterKernel->enqueue(
+            input.blockID, counters.incoherentFirFilterKernel,
             input.blockID.subbandProcSubbandIdx);
-          incoherentFinalFFT.enqueue(input.blockID, counters.incoherentFinalFFT);
+
+          incoherentFinalFFT.enqueue(
+            input.blockID, counters.incoherentFinalFFT);
         }
 
-        incoherentStokesKernel->enqueue(input.blockID, counters.incoherentStokes);
+        incoherentStokesKernel->enqueue(
+          input.blockID, counters.incoherentStokes);
+
         // TODO: Propagate flags
       }
       queue.synchronize();
 
       if (coherentBeamformer)
-        queue.readBuffer(output, devResult, counters.visibilities, true);
+        queue.readBuffer(
+          output, devResult, counters.visibilities, true);
       else
-        queue.readBuffer(incoherentOutput, devIncoherentStokes, counters.incoherentOutput, true);
+        queue.readBuffer(
+          incoherentOutput, devIncoherentStokes, 
+          counters.incoherentOutput, true);
 
-            // ************************************************
+      // ************************************************
       // Perform performance statistics if needed
       if (gpuProfiling)
       {
@@ -470,6 +486,7 @@ namespace LOFAR
         }
         else
         {
+          counters.incoherentStokesTranspose.logTime();
           counters.incoherentInverseFFT.logTime();
           if (ps.settings.beamFormer.incoherentSettings.nrChannels > 1) 
           {

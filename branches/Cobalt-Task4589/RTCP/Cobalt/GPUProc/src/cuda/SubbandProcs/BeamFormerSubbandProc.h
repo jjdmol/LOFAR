@@ -198,7 +198,7 @@ namespace LOFAR
 
       // Transpose 
       IncoherentStokesTransposeKernel::Buffers incoherentTransposeBuffers;
-      std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTransposeKernel;
+      std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
 
       // Inverse (4k points) FFT
       FFT_Kernel incoherentInverseFFT;
