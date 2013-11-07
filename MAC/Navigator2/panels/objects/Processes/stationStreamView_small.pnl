@@ -132,6 +132,8 @@ E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
 string stream = \"\";
+bool stream0 = false;
+bool stream1 = false;
 string station = \"\";
 dyn_string connectTo;
 dyn_string inputBuffers;
