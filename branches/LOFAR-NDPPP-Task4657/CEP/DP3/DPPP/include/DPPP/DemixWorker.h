@@ -103,10 +103,6 @@ namespace LOFAR {
       // Get nr of times a station/source was demixed.
       const casa::Matrix<uint>& statSourceDemixed() const
         { return itsStatSourceDemixed; }
-      const casa::Matrix<float>& amplTotal() const
-        { return itsAmplTotal; }
-      const casa::Cube<float>& amplSubtr() const
-        { return itsAmplSubtr; }
       const casa::Matrix<double>& amplSubtrMean() const
         { return itsAmplSubtrMean; }
       const casa::Matrix<double>& amplSubtrM2() const
@@ -162,11 +158,13 @@ namespace LOFAR {
       void addStokesI (casa::Matrix<float>& ampl);
 
       // Calculate the beam for demix resolution and apply to itsPredictVis.
-      void applyBeam (double time, const Position& pos);
+      // If apply==False, nothing is done.
+      void applyBeam (double time, const Position& pos, bool apply);
 
-      // Calculate the beam for the given sky direction.
+      // Calculate the beam for the given sky direction and frequencies.
       // Apply it to the data.
-      void applyBeam (double time, const Position& pos,
+      // If apply==False, nothing is done.
+      void applyBeam (double time, const Position& pos, bool apply,
                       const casa::Vector<double>& chanFreqs,
                       dcomplex* data);
 
@@ -204,6 +202,9 @@ namespace LOFAR {
 
       // Solve gains and subtract sources.
       void demix (vector<double>* solutions, double time, double timeStep);
+
+      // Add amplitude subtracted to the arrays for mean and stddev.
+      void addMeanM2 (const vector<float>& sourceAmpl, uint src);
 
       // Merge the data of the selected baselines from the subtract buffer
       // into the full buffer.
@@ -293,6 +294,7 @@ namespace LOFAR {
       uint                                  itsTimeIndex;
       vector<float>                         itsObservedAmpl;
       vector<float>                         itsSourceAmpl;
+      vector<float>                         itsSumSourceAmpl;
       //# Statistics
       uint                                  itsNrSolves;
       uint                                  itsNrConverged;
@@ -308,10 +310,6 @@ namespace LOFAR {
       casa::Vector<uint>                    itsNrStationsDemixed;
       //# Nr of times a source/station is demixed.
       casa::Matrix<uint>                    itsStatSourceDemixed;
-      //# Total amplitude observed [nch,nbl]
-      casa::Matrix<float>                   itsAmplTotal;
-      //# Total amplitude subtracted [nch,nbl,nsrc]
-      casa::Cube<float>                     itsAmplSubtr;
       //# Average amplitude subtracted for middle channel [nbl,nsrc]
       casa::Matrix<double>                  itsAmplSubtrMean;
       //# M2n to calculate stddev online in stable way (see Wikipedia)

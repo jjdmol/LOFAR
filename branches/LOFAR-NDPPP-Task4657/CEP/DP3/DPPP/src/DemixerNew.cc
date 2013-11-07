@@ -117,13 +117,9 @@ namespace LOFAR {
       Vector<uint> nsources(ndir, 0);
       Vector<uint> nstation(itsDemixInfo.nstation(), 0);
       Matrix<uint> statsrcs(ndir, nstation.size(), 0);
-      Matrix<float> amplTotal (itsDemixInfo.nchanOutSubtr(),
-                               itsDemixInfo.nbl(), 0.);
-      Cube<float>   amplSubtr (itsDemixInfo.nchanOutSubtr(), itsDemixInfo.nbl(),
-                               ndir, 0.);
-      Matrix<double> amplSubtrMean (itsDemixInfo.nbl(), ndir, 0.);
-      Matrix<double> amplSubtrM2   (itsDemixInfo.nbl(), ndir, 0.);
-      Matrix<size_t> amplSubtrNr   (itsDemixInfo.nbl(), ndir, 0);
+      Matrix<double> amplSubtrMean (itsDemixInfo.nbl(), ndir+1, 0.);
+      Matrix<double> amplSubtrM2   (itsDemixInfo.nbl(), ndir+1, 0.);
+      Matrix<size_t> amplSubtrNr   (itsDemixInfo.nbl(), ndir+1, 0);
       double* amplmean = amplSubtrMean.data();
       double* amplm2   = amplSubtrM2.data();
       size_t* amplnr   = amplSubtrNr.data();
@@ -139,8 +135,6 @@ namespace LOFAR {
         nsources       += itsWorkers[i].nsourcesDemixed();
         nstation       += itsWorkers[i].nstationsDemixed();
         statsrcs       += itsWorkers[i].statSourceDemixed();
-        amplTotal      += itsWorkers[i].amplTotal();
-        amplSubtr      += itsWorkers[i].amplSubtr();
         const double* partmean = itsWorkers[i].amplSubtrMean().data();
         const double* partm2   = itsWorkers[i].amplSubtrM2().data();
         const size_t* partnr   = itsWorkers[i].amplSubtrNr().data();
@@ -210,39 +204,35 @@ namespace LOFAR {
           }
         }
         os << endl;
-        vector<double> totsump(ndir, 0.);
-        vector<double> totm2p (ndir, 0.);
-        vector<size_t> totnrp (ndir, 0);
+        vector<double> totsump(ndir+1, 0.);
+        vector<double> totm2p (ndir+1, 0.);
+        vector<size_t> totnrp (ndir+1, 0);
         for (int bl=0; bl<amplSubtrMean.shape()[0]; ++bl) {
-          os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
-             << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
-          double sumavg = 0;
-          double sumvar = 0;
-          for (uint dr=0; dr<ndir; ++dr) {
-            if (nsources[dr] > 0) {
-              showPerc1 (os, amplSubtrMean(bl,dr));
-              double variance = 0;
-              if (amplSubtrNr(bl,dr) > 1) {
-                variance = amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1);
+          // Do not show if nothing subtracted for this baseline.
+          // Last entry contains the sum over all directions!!
+          if (amplSubtrNr(bl,ndir)) {
+            os << setw(4) << itsDemixInfo.getAnt1()[bl] << '-'
+               << setw(2) << itsDemixInfo.getAnt2()[bl] << "  ";
+            for (uint dr=0; dr<ndir+1; ++dr) {
+              if (dr == ndir  ||  nsources[dr] > 0) {
+                showPerc1 (os, amplSubtrMean(bl,dr));
+                double variance = 0;
+                if (amplSubtrNr(bl,dr) > 1) {
+                  variance = amplSubtrM2(bl,dr) / (amplSubtrNr(bl,dr) - 1);
+                }
+                showPerc1 (os, sqrt(variance));
+                os << ' ';
+                addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
+                           amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
+                           amplSubtrNr(bl,dr));
               }
-              showPerc1 (os, sqrt(variance));
-              os << ' ';
-              addMeanM2 (totsump[dr], totm2p[dr], totnrp[dr],
-                         amplSubtrMean(bl,dr), amplSubtrM2(bl,dr),
-                         amplSubtrNr(bl,dr));
-              sumavg += amplSubtrMean(bl,dr);
-              sumvar += variance;
             }
-          }
-          showPerc1 (os, sumavg);
-          showPerc1 (os, sqrt(sumvar));
-          os << endl;
-        }
-        double sumavg = 0;
-        double sumvar = 0;
+            os << endl;
+          } // end if show
+        } // end for bl
         os << "  Total  ";
-        for (uint dr=0; dr<ndir; ++dr) {
-          if (nsources[dr] > 0) {
+        for (uint dr=0; dr<ndir+1; ++dr) {
+          if (dr == ndir  ||  nsources[dr] > 0) {
             double variance = 0;
             if (totnrp[dr] > 1) {
               variance = totm2p[dr] / (totnrp[dr] - 1);
@@ -250,12 +240,8 @@ namespace LOFAR {
             showPerc1 (os, totsump[dr]);
             showPerc1 (os, sqrt(variance));
             os << ' ';
-            sumavg += totsump[dr];
-            sumvar += variance;
           }
         }
-        showPerc1 (os, sumavg);
-        showPerc1 (os, sqrt(sumvar));
         os << endl;
       }
     }

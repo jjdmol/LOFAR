@@ -214,15 +214,12 @@ namespace LOFAR {
       itsTargetAmpl.resize (itsMix->nchanOut(), itsMix->nbl(),
                             itsMix->ntimeOut());
       itsTmpAmpl.resize (itsTargetAmpl.size());
-      itsObservedAmpl.resize (itsMix->nbl());
-      itsSourceAmpl.resize   (itsMix->nbl());
-      itsAmplTotal.resize (itsMix->nchanOutSubtr(), itsMix->nbl());
-      itsAmplSubtr.resize (itsMix->nchanOutSubtr(), itsMix->nbl(), nsrc);
-      itsAmplSubtrMean.resize (itsMix->nbl(), nsrc);
-      itsAmplSubtrM2.resize   (itsMix->nbl(), nsrc);
-      itsAmplSubtrNr.resize   (itsMix->nbl(), nsrc);
-      itsAmplTotal     = 0.;
-      itsAmplSubtr     = 0.;
+      itsObservedAmpl.resize  (itsMix->nbl());
+      itsSourceAmpl.resize    (itsMix->nbl());
+      itsSumSourceAmpl.resize (itsMix->nbl());
+      itsAmplSubtrMean.resize (itsMix->nbl(), nsrc+1);
+      itsAmplSubtrM2.resize   (itsMix->nbl(), nsrc+1);
+      itsAmplSubtrNr.resize   (itsMix->nbl(), nsrc+1);
       itsAmplSubtrMean = 0.;
       itsAmplSubtrM2   = 0.;
       itsAmplSubtrNr   = 0;
@@ -274,9 +271,9 @@ namespace LOFAR {
           std::fill (solutions[i].begin(), solutions[i].end(), 0.);
         }
         // Set statistics to 0.
-        itsAmplSubtrMean = 0.;
-        itsAmplSubtrM2   = 0.;
-        itsAmplSubtrNr   = 0;
+        ///        itsAmplSubtrMean = 0.;
+        ///        itsAmplSubtrM2   = 0.;
+        ///        itsAmplSubtrNr   = 0;
         itsTimerCoarse.stop();
         itsTimerPhaseShift.start();
         average (bufin, nbufin, bufout);
@@ -411,7 +408,7 @@ namespace LOFAR {
                     casa_const_cursor<double>(uvwiter.matrix()),
                     casa_cursor<dcomplex>(itsPredictVis));
           // Get and apply beam for target patch.
-          applyBeam (t, patchList[i]->position());
+          applyBeam (t, patchList[i]->position(), True);
           addStokesI (miter.matrix());
         }
         miter.next();
@@ -456,7 +453,7 @@ namespace LOFAR {
                     casa_const_cursor<double>(itsStationUVW),
                     casa_cursor<dcomplex>(itsPredictVis));
           // Get and apply beam.
-          applyBeam (t, patchList[i]->position());
+          applyBeam (t, patchList[i]->position(), True);
           // Keep the StokesI ampl ((XX+YY)/2).
           addStokesI (miter.matrix());
           miter.next();
@@ -693,19 +690,19 @@ namespace LOFAR {
     }
 
 
-    void DemixWorker::applyBeam (double time, const Position& pos)
+    void DemixWorker::applyBeam (double time, const Position& pos, bool apply)
     {
       // Get the beam for demix resolution and apply to itsPredictVis.
-      applyBeam (time, pos, itsMix->freqDemix(), itsPredictVis.data());
+      applyBeam (time, pos, apply, itsMix->freqDemix(), itsPredictVis.data());
     }
 
-    void DemixWorker::applyBeam (double time, const Position& pos,
+    void DemixWorker::applyBeam (double time, const Position& pos, bool apply,
                                  const Vector<double>& chanFreqs,
                                  dcomplex* data)
     {
       // For test purposes applying the beam can be defeated.
       // In this way an exact comparison with the old demixer is possible.
-      if (! itsMix->applyBeam()) {
+      if (! apply) {
         return;
       }
       // Convert the directions to ITRF for the given time.
@@ -1074,7 +1071,8 @@ namespace LOFAR {
                         itsMix->targetDemixList()[i],
                         nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw,
                         casa_cursor<dcomplex>(itsPredictVis));
-              applyBeam (time, itsMix->targetDemixList()[i]->position());
+              applyBeam (time, itsMix->targetDemixList()[i]->position(),
+                         itsMix->applyBeam());
               const dcomplex* pred = itsPredictVis.data(); 
               for (uint j=0; j<nSamples; ++j) {
                 model[j] += pred[j];
@@ -1085,7 +1083,7 @@ namespace LOFAR {
                       itsDemixList[dr],
                       nSt, nBl, nCh, cr_baseline, cr_freq, cr_uvw, cr_model);
             applyBeam (time, itsMix->ateamDemixList()[drOrig]->position(),
-                       itsMix->freqDemix(),
+                       itsMix->applyBeam(), itsMix->freqDemix(),
                        &(itsModelVis[dr * nSamples]));
           }
         } // end nModel
@@ -1150,18 +1148,13 @@ namespace LOFAR {
           for (size_t ts_subtr = multiplier * ts,
                  ts_subtr_end = min(ts_subtr + multiplier, nTimeSubtr);
                ts_subtr != ts_subtr_end; ++ts_subtr) {
-            // Get the observed amplitude per baseline summed over channel/time.
+            // Get the observed amplitude per baseline for the middle channel.
             const Complex* data =
-              itsAvgResultSubtr->get()[ts_subtr].getData().data();
+              itsAvgResultSubtr->get()[ts_subtr].getData().data() + nChSubtr/2*4;
             for (size_t bl=0; bl<nBl; ++bl) {
-              float ampl = 0;
-              for (size_t ch=0; ch<nChSubtr; ++ch) {
-                float tampl = 0.5 * (abs(data[0]) + abs(data[3]));
-                ampl += tampl;
-                itsAmplTotal(ch,bl) += tampl;
-                data += 4;
-              }
-              itsObservedAmpl[bl] = ampl;
+              itsSumSourceAmpl[bl] = 0;
+              itsObservedAmpl[bl]  = 0.5 * (abs(data[0]) + abs(data[3]));
+              data += 4*nChSubtr;
             }
             for (size_t dr=0; dr<itsNSubtr; ++dr) {
               uint drOrig = itsSrcSet[dr];
@@ -1194,6 +1187,7 @@ namespace LOFAR {
                          cr_model_subtr);
                 applyBeam (subtrTime,
                            itsMix->ateamDemixList()[drOrig]->position(),
+                           itsMix->applyBeam(),
                            itsMix->freqSubtr(),
                            &(itsModelVis[0]));
               }
@@ -1241,24 +1235,34 @@ namespace LOFAR {
               // Calculate the mean percentage amplitude subtracted per source.
               // This array is ordered [nbl,nsrc]
               for (size_t bl=0; bl<nBl; ++bl) {
-                if (itsObservedAmpl[bl] != 0) {
-                  // Calculate mean and stddev in a running way using a
-                  // numerically stable algorithm
-                  // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-                  itsAmplSubtrNr(bl,drOrig)++;
-                  double perc  = itsSourceAmpl[bl] / itsObservedAmpl[bl];
-                  double delta = perc - itsAmplSubtrMean(bl,drOrig);
-                  itsAmplSubtrMean(bl,drOrig) += delta/itsAmplSubtrNr(bl,drOrig);
-                  itsAmplSubtrM2(bl,drOrig)   += delta*(perc-itsAmplSubtrMean(bl,drOrig));
-                }
-              } // end nBl
+                itsSumSourceAmpl[bl] += itsSourceAmpl[bl];
+              }
+              addMeanM2 (itsSourceAmpl, drOrig);
             } // end itsNSubtr
+            // Calculate the totals per baseline.
+            addMeanM2 (itsSumSourceAmpl, itsAmplSubtrNr.shape()[1] - 1);
             subtrTime += subtrTimeStep;
           } // end ts_subtr
           itsTimerSubtract.stop();
         } // end doSubtract
         time += timeStep;
       }  // end nTime
+    }
+
+    void DemixWorker::addMeanM2 (const vector<float>& sourceAmpl, uint dr)
+    {
+      for (size_t bl=0; bl<sourceAmpl.size(); ++bl) {
+        if (itsObservedAmpl[bl] != 0  &&  sourceAmpl[bl] != 0) {
+          // Calculate mean and stddev in a running way using a
+          // numerically stable algorithm
+          // See en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+          itsAmplSubtrNr(bl,dr)++;
+          double perc  = sourceAmpl[bl] / itsObservedAmpl[bl];
+          double delta = perc - itsAmplSubtrMean(bl,dr);
+          itsAmplSubtrMean(bl,dr) += delta/itsAmplSubtrNr(bl,dr);
+          itsAmplSubtrM2(bl,dr)   += delta*(perc-itsAmplSubtrMean(bl,dr));
+        }
+      }
     }
 
 
