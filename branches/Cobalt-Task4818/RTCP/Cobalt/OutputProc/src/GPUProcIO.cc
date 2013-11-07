@@ -108,16 +108,34 @@ void process(Stream &controlStream, size_t myRank)
       }
     }
 
+    map<size_t, Pool<TABTranspose::Block> > outputPools;
+    TABTranspose::Receiver::CollectorMap collectors;
+
     // Process beam-formed data
     if (parset.settings.beamFormer.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
       {
-        if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
+        struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[fileIdx];
+
+        if (file.location.host != myHostName) 
           continue;
+
+        struct ObservationSettings::BeamFormer::StokesSettings &stokes =
+          file.coherent ? parset.settings.beamFormer.coherentSettings
+                        : parset.settings.beamFormer.incoherentSettings;
+
+        for (size_t i = 0; i < 5; ++i) {
+	  outputPools[fileIdx].free.append(new Block(
+            parset.settings.nrSubbands(file.sapNr),
+            stokes.nrSamples(parset.settings.blockSize),
+            stokes.nrChannels));
+
+        collectors[fileIdx] = new TABTranspose::BlockCollector(
+          outputPools[fileIdx], fileIdx, parset.realTime() ? 5 : 0);
 
         string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
-        Writer *writer = new TABWriter(parset, fileIdx, logPrefix);
+        Writer *writer = new TABWriter(parset, fileIdx, logPrefix, outputPools[fileIdx]);
         subbandWriters.push_back(writer);
       }
     }
@@ -126,10 +144,27 @@ void process(Stream &controlStream, size_t myRank)
      * PROCESS
      */
 
-#   pragma omp parallel for num_threads(subbandWriters.size())
-    for (int i = 0; i < (int)subbandWriters.size(); ++i)
+    Semaphore done;
+
+#   pragma omp parallel sections
     {
-      subbandWriters[i]->process();
+#     pragma omp section
+      {
+        MultiReceiver mr("2nd-transpose-", collectors);
+
+        done.down();
+      }
+
+#     pragma omp section
+      {
+#       pragma omp parallel for num_threads(subbandWriters.size())
+	for (int i = 0; i < (int)subbandWriters.size(); ++i)
+	{
+	  subbandWriters[i]->process();
+	}
+
+        done.up();
+      }
     }
 
     /*
