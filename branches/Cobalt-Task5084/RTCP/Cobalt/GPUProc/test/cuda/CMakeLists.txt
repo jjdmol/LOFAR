@@ -9,7 +9,6 @@ cuda_include_directories(${PACKAGE_SOURCE_DIR}/share/gpu/kernels)
 if(UNITTEST++_FOUND)
   # CUDA CPU side UnitTest++ tests
   lofar_add_test(tGPUWrapper tGPUWrapper.cc)
-  lofar_add_test(tCoherentStokes tCoherentStokes.cc)
   lofar_add_test(tIncoherentStokes tIncoherentStokes.cc)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
@@ -46,7 +45,6 @@ set_tests_properties(
 if(UNITTEST++_FOUND)
   set_tests_properties(
     tDelayAndBandPass
-    tCoherentStokes
     tIncoherentStokes
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
   )

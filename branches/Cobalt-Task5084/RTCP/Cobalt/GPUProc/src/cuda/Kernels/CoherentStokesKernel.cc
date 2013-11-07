@@ -75,12 +75,10 @@ namespace LOFAR
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-
-      // TODO: params.nrTABs only works for one SAP
+     
       unsigned block_size = 16;
       unsigned time_parallel = module.getContext().getDevice().getMaxThreadsPerBlock() / (16 * 16);
-
-
+      // Always a work dim up to 16 and start workloads of 16 * 16. Use the kernel to skip unneed work
       setEnqueueWorkSizes( gpu::Grid ((params.nrChannelsPerSubband + block_size - 1) / block_size * block_size,
                                         time_parallel,
                                        (params.nrTABs + block_size - 1) / block_size * block_size),

@@ -45,14 +45,6 @@ using namespace LOFAR::Cobalt;
 
 typedef complex<float> fcomplex;
 
-// Sine and cosine tables for angles that are multiples of 30 degrees in the
-// range [0 .. 360> degrees.
-float sine[]   = { 0,  0.5,  0.86602540478,  1,  0.86602540478,  0.5,
-                   0, -0.5, -0.86602540478, -1, -0.86602540478, -0.5 };
-float cosine[] = { 1,  0.86602540478,  0.5,  0, -0.5, -0.86602540478,
-                  -1, -0.86602540478, -0.5,  0,  0.5,  0.86602540478 };
-
-
 // Fixture for testing correct translation of parset values
 struct ParsetSUT
 {
@@ -70,7 +62,8 @@ struct ParsetSUT
     size_t inrOutputSamples = 1024,
     size_t inrStations = 43,
     size_t inrTabs = 21,
-    size_t itimeIntegrationFactor = 1) 
+    size_t itimeIntegrationFactor = 1,
+    string stokes = "IQUV") 
   :
     timeIntegrationFactor(itimeIntegrationFactor),
     nrChannels(inrChannels),
@@ -80,14 +73,12 @@ struct ParsetSUT
     blockSize(timeIntegrationFactor * nrChannels * nrInputSamples)
   {
 
-    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
-      "true");
+    parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
     parset.add("OLAP.CNProc_CoherentStokes.timeIntegrationFactor", 
-      lexical_cast<string>(timeIntegrationFactor));
+               lexical_cast<string>(timeIntegrationFactor));
     parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
       lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_CoherentStokes.which",
-      "IQUV");
+    parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
@@ -119,9 +110,6 @@ TEST(KernelFactory)
   ParsetSUT sut;
   KernelFactory<CoherentStokesKernel> kf(sut.parset);
 }
-
-
-// Fixture for testing the CoherentStokes kernel itself.
 
 struct SUTWrapper:  ParsetSUT
 {
@@ -174,12 +162,6 @@ struct SUTWrapper:  ParsetSUT
   void initializeHostBuffers()
   {
     cout << "\nInitializing host buffers..."
-         // << "\n  timeIntegrationFactor = " << setw(7) << timeIntegrationFactor
-         // << "\n  nrChannels            = " << setw(7) << nrChannels
-         // << "\n  nrInputSamples        = " << setw(7) << nrInputSamples
-         // << "\n  nrOutputSamples       = " << setw(7) << nrOutputSamples
-         // << "\n  nrStations            = " << setw(7) << nrStations
-         // << "\n  blockSize             = " << setw(7) << blockSize
          << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
          << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
          << endl;
@@ -231,6 +213,194 @@ TEST(ZeroTest)
                     sut.hOutput.num_elements());
   }
   
+}
+
+// ***********************************************************
+// tests if the stokes parameters are calculate correctly. For a single sample
+// I = X *  con(X) + Y * con(Y)
+// Q = X *  con(X) - Y * con(Y)
+// U = 2 * RE(X * con(Y))
+// V = 2 * IM(X * con(Y))
+//
+// This reduces to (validate on paper by Wouter and John):
+// PX = RE(X) * RE(X) + IM(X) * IM(X)
+// PY = RE(Y) * RE(Y) + IM(Y) * IM(Y)
+// I = PX + PY
+// Q = PX - PY
+// 
+// U = 2 * (RE(X) * RE(Y) + IM(X) * IM(Y))
+// V = 2 * (IM(X) * RE(Y) - RE(X) * IM(Y))
+TEST(CoherentNoComplex1SampleTest)
+{
+  SUTWrapper sut(1,  //channels
+                 1,  // inrOutputSamples
+                 1,  // inrStations
+                 1,  // inrTabs
+                 1); // itimeIntegrationFactor
+
+  // Test a single sample with specific input
+  sut.hInput.data()[0] = fcomplex(2.0f, 0.0f);
+  sut.hInput.data()[1] = fcomplex(1.0f, 0.0f);
+  sut.hInput.data()[2] = fcomplex(2.0f, 0.0f);
+  sut.hInput.data()[3] = fcomplex(1.0f, 0.0f);
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  // Expected output
+  sut.hRefOutput.data()[0] = 5.0f;
+  sut.hRefOutput.data()[1] = 3.0f;
+  sut.hRefOutput.data()[2] = 4.0f;
+  sut.hRefOutput.data()[3] = 0.0f;
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+}
+
+
+TEST(CoherentComplex1SampleTest)
+{
+  SUTWrapper sut(1,  //channels
+                 1,  // inrOutputSamples
+                 1,  // inrStations
+                 1,  // inrTabs
+                 1); // itimeIntegrationFactor
+
+  // Test a single sample with specific input
+  sut.hInput.data()[0] = fcomplex(0.0f, 2.0f);
+  sut.hInput.data()[1] = fcomplex(0.0f, 1.0f);
+  sut.hInput.data()[2] = fcomplex(0.0f, 2.0f);
+  sut.hInput.data()[3] = fcomplex(0.0f, 1.0f);
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  // Expected output
+  sut.hRefOutput.data()[0] = 5.0f;
+  sut.hRefOutput.data()[1] = 3.0f;
+  sut.hRefOutput.data()[2] = 4.0f;
+  sut.hRefOutput.data()[3] = 0.0f;
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+}
+
+
+TEST(Coherent4DifferentValuesSampleTest)
+{
+  SUTWrapper sut(1,  //channels
+                 1,  // inrOutputSamples
+                 1,  // inrStations
+                 1,  // inrTabs
+                 1); // itimeIntegrationFactor
+
+  // Test a single sample with specific input
+  sut.hInput.data()[0] = fcomplex(1.0f, 2.0f);
+  sut.hInput.data()[1] = fcomplex(3.0f, 4.0f);
+  // second polarization
+  sut.hInput.data()[2] = fcomplex(1.0f, 2.0f);
+  sut.hInput.data()[3] = fcomplex(3.0f, 4.0f);
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  // Expected output
+  sut.hRefOutput.data()[0] = 30.0f;
+  sut.hRefOutput.data()[1] = -20.0f;
+  sut.hRefOutput.data()[2] = 22.0f;
+  sut.hRefOutput.data()[3] = 4.0f;
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+}
+
+
+TEST(BasicIntegrationTest)
+{
+  // ***********************************************************
+  // Test if the integration works by inputting non complex ones 
+  // and integrating over the total number of samples
+  // This should result in 2 * num samples in both I and V
+  unsigned NR_SAMPLES_PER_CHANNEL = 16;
+
+  SUTWrapper sut(1,  //channels
+                 1,  // NR_SAMPLES_PER_CHANNEL
+                 1,  // inrStations
+                 1,  // inrTabs
+                 16); // itimeIntegrationFactor
+
+  // Set the input
+  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
+    sut.hInput.data()[idx] = fcomplex(1.0f, 0.0f);
+
+
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  // Expected output
+  for (size_t idx = 0; idx < sut.hRefOutput.size() / (size_t) 2; ++idx)
+  {
+    sut.hRefOutput.data()[idx * 2] = 2.0f * NR_SAMPLES_PER_CHANNEL;
+    sut.hRefOutput.data()[idx * 2 + 1 ] = 0.0f;
+  }
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+}
+
+
+TEST(Coherent2DifferentValuesAllDimTest)
+{
+  // ***********************************************************
+  // Full test performing all functionalities and runtime validate that the output
+  // is correct.
+  // 1. Insert both complex and non complex values. This should result specific values
+  // for all Stokes parameters
+  // 2. Do it time parallel
+  // 3. Integrate 
+  // 4. Use tabs and channels
+  size_t NR_CHANNELS = 1;
+  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 200;
+  size_t NR_TABS = 17;
+  size_t INTEGRATION_SIZE = 3;
+
+  SUTWrapper sut(NR_CHANNELS, 
+                 NR_SAMPLES_PER_OUTPUT_CHANNEL,  
+                 1,          
+                 NR_TABS,  
+                 INTEGRATION_SIZE); 
+  // Set the input
+  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
+    sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  // Expected output
+  size_t value_repeat = NR_SAMPLES_PER_OUTPUT_CHANNEL;
+  cout << "value_repeat: "  << value_repeat << endl;
+  // For stokes parameters
+  size_t size_tab = value_repeat * 4;
+  for (size_t idx_tab = 0; idx_tab < NR_TABS; ++idx_tab)
+  {
+    // I
+    for (size_t idx_value_repeat = 0 ; idx_value_repeat < value_repeat; ++idx_value_repeat)
+    {
+      sut.hRefOutput.data()[idx_tab * size_tab + idx_value_repeat]                    = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat + idx_value_repeat]     = 0.0f;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 2 + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 3 +idx_value_repeat]  = 0.0f;
+    }
+  }
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
 }
 
 
