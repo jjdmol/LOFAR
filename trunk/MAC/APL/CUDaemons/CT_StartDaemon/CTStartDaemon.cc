@@ -36,7 +36,7 @@
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
 #include "CTStartDaemon.h"
-#include <CUDaemons/Package__Version.h>
+#include <CT_StartDaemon/Package__Version.h>
 
 using namespace LOFAR::GCF::TM;
 
@@ -56,7 +56,7 @@ CTStartDaemon::CTStartDaemon(const string& name) :
 	itsTimerPort		(0)
 {
 	LOG_TRACE_FLOW(formatString("CTStartDaemon(%s)", getName().c_str()));
-	LOG_INFO(Version::getInfo<CUDaemonsVersion>("CTStartDaemon"));
+	LOG_INFO(Version::getInfo<CT_StartDaemonVersion>("CTStartDaemon"));
 
 	itsListener = new GCFTCPPort(*this, MAC_SVCMASK_STARTDAEMON, 
 								 GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL);
