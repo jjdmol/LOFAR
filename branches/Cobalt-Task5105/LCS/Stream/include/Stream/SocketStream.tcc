@@ -9,7 +9,7 @@
 
 namespace LOFAR {
 
-template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers )
+template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, bool oneIsEnough )
 {
   ASSERT(protocol == UDP);
   ASSERT(mode == Server);
@@ -37,7 +37,7 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers )
   }
 
   // receive data
-  int numRead = ::recvmmsg(fd, &msgs[0], n, MSG_WAITFORONE, 0);
+  int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, 0);
 
   if (numRead < 0)
     THROW_SYSCALL("recvmmsg");
@@ -53,12 +53,12 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers )
   iov.iov_len  = sizeof (T);
 
   struct msghdr msg;
-  msg.msg_hdr.msg_iov     = &iov;
-  msg.msg_hdr.msg_iovlen  = 1;
-  msg.msg_hdr.msg_name    = NULL; // we don't need to know who sent the data
-  msg.msg_hdr.msg_control = NULL; // we're not interested in OoB data
+  msg.msg_iov     = &iov;
+  msg.msg_iovlen  = 1;
+  msg.msg_name    = NULL; // we don't need to know who sent the data
+  msg.msg_control = NULL; // we're not interested in OoB data
 
-  if (recvmsg(fd, msg, 0) < 0)
+  if (recvmsg(fd, &msg, 0) < 0)
     THROW_SYSCALL("recvmsg");
 
   /* the recvmsg return value is the number of bytes received */
