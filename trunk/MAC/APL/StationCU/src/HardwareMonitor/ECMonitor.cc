@@ -26,18 +26,17 @@
 #include <Common/LofarConstants.h>
 #include <Common/StringUtil.h>
 #include <Common/hexdump.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
-#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <ApplCommon/StationConfig.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <EC_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <GCF/TM/GCF_RawPort.h>
-//#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 
 #include "ECMonitor.h"
