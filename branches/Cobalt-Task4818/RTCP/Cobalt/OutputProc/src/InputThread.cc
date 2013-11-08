@@ -80,50 +80,6 @@ namespace LOFAR
 
       itsReceiveQueue.append(0); // no more data
     }
-
-
-    InputBeamFormed::InputBeamFormed(const Parset &parset,
-                             unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue,
-                             Queue<SmartPtr<StreamableData> > &receiveQueue,
-                             const std::string &logPrefix)
-      :
-      itsLogPrefix(logPrefix + "[InputBeamFormed] "),
-      itsInputDescriptor(getStreamDescriptorBetweenIONandStorage(parset, BEAM_FORMED_DATA, streamNr)),
-      itsFreeQueue(freeQueue),
-      itsReceiveQueue(receiveQueue),
-      itsDeadline(parset.realTime() ? parset.stopTime() : 0)
-    {
-    }
-
-
-    void InputBeamFormed::process()
-    {
-      try {
-        LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << "..." );
-        SmartPtr<Stream> streamFromION(createStream(itsInputDescriptor, true, itsDeadline));
-        LOG_INFO_STR(itsLogPrefix << "Creating connection from " << itsInputDescriptor << ": done" );
-
-        for(;;) {
-          SmartPtr<StreamableData> data(itsFreeQueue.remove());
-
-          data->read(streamFromION, true, 1); // Cobalt writes with an alignment of 1
-
-          LOG_DEBUG_STR(itsLogPrefix << "Read block with seqno = " << data->sequenceNumber());
-
-          itsReceiveQueue.append(data.release());
-        }
-      } catch (SocketStream::TimeOutException &) {
-        LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " timed out");
-      } catch (Stream::EndOfStreamException &) {
-        LOG_INFO_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " closed");
-      } catch (SystemCallException &ex) {
-        LOG_WARN_STR(itsLogPrefix << "Connection from " << itsInputDescriptor << " failed: " << ex.text());
-      }
-
-      itsReceiveQueue.append(0); // no more data
-    }
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

@@ -61,26 +61,6 @@ namespace LOFAR
       Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
       const double itsDeadline;
     };
-
-
-    class InputBeamFormed: public InputThread
-    {
-    public:
-      InputBeamFormed(const Parset &parset,
-                  unsigned streamNr,
-                  Queue<SmartPtr<StreamableData> > &freeQueue,
-                  Queue<SmartPtr<StreamableData> > &receiveQueue,
-                  const std::string &logPrefix);
-
-      virtual void process();
-
-    private:
-      const std::string itsLogPrefix, itsInputDescriptor;
-      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
-      const double itsDeadline;
-    };
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

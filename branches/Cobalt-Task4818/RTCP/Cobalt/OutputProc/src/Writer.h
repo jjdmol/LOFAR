@@ -91,7 +91,6 @@ namespace LOFAR
 
       Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
-      InputBeamFormed itsInputThread;
       OutputThread    itsOutputThread;
     };
 

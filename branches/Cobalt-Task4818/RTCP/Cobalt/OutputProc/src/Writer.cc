@@ -74,7 +74,6 @@ namespace LOFAR
 
     TABWriter::TABWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
-      itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
       itsOutputThread(parset, BEAM_FORMED_DATA, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
@@ -84,18 +83,7 @@ namespace LOFAR
     
     void TABWriter::process()
     {
-#     pragma omp parallel sections num_threads(2)
-      {
-#       pragma omp section
-        {
-          itsInputThread.process();
-        }
-
-#       pragma omp section
-        {
-          itsOutputThread.process();
-        }
-      }
+      itsOutputThread.process();
     }
 
 
