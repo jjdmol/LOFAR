@@ -53,7 +53,7 @@ SyntaxError()
 	echo "-s: Show current level, exit (-S: only print number)"
 	echo "-p: Print last set level from logfile (-P: only print number)"
 	echo "-v: Show running LOFAR version, exit (-V: only print version)"
-        echo "-u: Show users owning running processes (-U: same)"
+	echo "-u: Show users owning running processes (-U: same)"
 	echo "-i: Load RSP firmware from image [x] (default image is 1)"
         echo "-l: Set to level as provided (optional)"
         echo "-q: Quit process with name processname"
@@ -184,10 +184,8 @@ start_prog()
 		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
 		       if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-			   sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
-		       else
-		           sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
-		       fi
+                       fi
+		       sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
 		    else
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
@@ -249,42 +247,43 @@ stop_prog()
 		usleep 500000
 	done
 
-	# when normal kill did not work, kill it with -9
+	# when normal kill did not work, kill is with -9
 	for pid in `/sbin/pidof ${prog}`
 	do 
 		echo "Hard killing ${prog}(${pid})"
 		$asroot kill -9 $pid 1>/dev/null 2>&1
 		usleep 500000
 	done
-
-	# if user0 or lofarsys, try normal kill as root
-	for pid in `/sbin/pidof ${prog}`
-	do
-	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
-		    sudo kill $pid 1>/dev/null 2>&1
-                    usleep 50000
-                fi
-        done
-
-	# if user0 or lofarsys, try hard kill as root
- 	for pid in `/sbin/pidof ${prog}`
-	do
-	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
-		    sudo kill -9 $pid 1>/dev/null 2>&1
-                    usleep 50000
-                fi
-        done
-    
-	# if still alive, write a message
- 	for pid in `/sbin/pidof ${prog}`
-	do
-	        echo -n "Could not kill ${prog}(${pid}); "
-	        if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 
-                  echo "tried it as root as well, giving up..."
-                else
-                  echo "probably run by another user, contact your system administrator"
-		fi
+        # if user0 or lofarsys, try normal kill as root 	 
+	
+	for pid in `/sbin/pidof ${prog}` 	 
+	do 	 
+	    if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
+	      sudo kill $pid 1>/dev/null 2>&1 	 
+	      usleep 50000 	 
+	    fi 	 
+	done 	 
+	  	 
+	# if user0 or lofarsys, try hard kill as root 	 
+	for pid in `/sbin/pidof ${prog}` 	 
+	do 	 
+	    if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
+		sudo kill -9 $pid 1>/dev/null 2>&1 	 
+		usleep 50000 	 
+	    fi 	 
+	done 	 
+	  	 
+	# if still alive, write a message 	 
+	for pid in `/sbin/pidof ${prog}` 	 
+	do 	 
+	  echo -n "Could not kill ${prog}(${pid}); " 	 
+	  if [ "$user" == "user0" -o "$user" == "lofarsys" ]; then 	 
+	      echo "tried it as root as well, giving up..." 	 
+	  else 	 
+	      echo "probably run by another user, contact your system administrator" 	 
+	  fi 	 
 	done
+
 }
 
 #
@@ -323,7 +322,7 @@ status_prog()
 
 		# find out the processID of the possibly (running) process
 		obsid=()
-                pid_user=()
+		pid_user=()
 		/sbin/pidof ${prog} 1>/dev/null 2>&1
 		if [ $? -eq 0 ]; then
 			pid=( `/sbin/pidof ${prog}` )
@@ -331,8 +330,8 @@ status_prog()
 			for apid in ${pid[@]}
 			do
 			  obsid[i]=`ps -p $apid --no-heading -o command | awk -F{ '{print $2}' | awk -F} '{print $1}'`
-			  if [ $show_users -eq 1 ]; then 
-  			    pid_user[i]=`ps -p $apid -o user=`
+                          if [ $show_users -eq 1 ]; then 	 
+			     pid_user[i]=`ps -p $apid -o user=` 	 
 			  fi
 			  i=$i+1
 			done
@@ -345,9 +344,9 @@ status_prog()
 		fi
 
 		if [ "$pid" != "DOWN" ] && [ ${#obsid[0]} != 0 ]; then 
-		   echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
-		elif [ "$pid" != "DOWN" ] && [ ${show_users} -eq 1 ]; then 
-                  echo ${levelnr}:${prog}:${pid[*]}:${pid_user[*]} | awk -F: '{ printf "%s : %-25s %s [%s]\n", $1, $2, $3, $4 }'
+    		  echo ${levelnr}:${prog}:${pid[*]}:${obsid[*]} | awk -F: '{ printf "%s : %-25s %s [ObsID: %s]\n", $1, $2, $3, $4 }'
+		elif [ "$pid" != "DOWN" ] && [ ${show_users} -eq 1 ]; then
+		    echo ${levelnr}:${prog}:${pid[*]}:${pid_user[*]} | awk -F: '{ printf "%s : %-25s %s [%s]\n", $1, $2, $3, $4 }'
 		else
                   echo ${levelnr}:${prog}:${pid[*]} | awk -F: '{ printf "%s : %-25s %s\n", $1, $2, $3}'
 		fi
@@ -436,26 +435,55 @@ goto_level()
 	# then power up to new level
 	for (( l=1 ; l<=newlevel ; l++ ))
 	do
-	  if [ $l == 3 -a -e $BINDIR/rspctl ]; then 
-	     # First make sure RSP images are properly loaded
-             # Introduce a timeout of 60 sec for images to initialize
-	     echo "Waiting for images to be initialized"
-	     timeout=59
-	     sleep 1
-             for (( s=0 ; s<timeout; s++ ))
-	     do 
-	       rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
-	       if [ $rsu_ready == 1 ]; then
-		   echo "Images are loaded"
-		   break
-	       fi
-               sleep 1
-             done
-             if [ $s == $timeout ]; then 
-               echo "Could not load RSP images in time; Reset RSP boards"
-               exit 1
-             fi 
-          fi
+	  if [ $l == 3 ]; then 
+	    if [ -e $BINDIR/rspctl ]; then 
+	      # First make sure RSP images are properly loaded
+              # Introduce a timeout of 60 sec for images to initialize
+	      echo "Waiting for RSP images to be initialized"
+	      timeout=59
+	      sleep 1
+              for (( s=0 ; s<timeout; s++ ))
+	      do 
+	        rsu_ready=`( rspctl --version | grep "0.0" ) >& /dev/null; echo $?`
+	        if [ $rsu_ready == 1 ]; then
+		    echo "RSP Images are loaded"
+		    break
+	        fi
+                sleep 1
+              done
+              if [ $s == $timeout ]; then 
+                echo "Could not load RSP images in time; Reset RSP boards"
+                exit 1
+              fi 
+            fi
+	    if [ -e $BINDIR/tbbctl ]; then
+	      # Now make sure TBB images are properly loaded
+              # Introduce a timeout of 60 sec for images to initialize
+	      echo "Waiting for TBB images to be initialized"
+	      timeout=59
+	      sleep 1
+              for (( s=0 ; s<timeout; s++ ))
+	      do 
+                tbb_respons=`tbbctl --version`
+		tbb_ready=`( echo $tbb_respons | grep "0\ V" ) >& /dev/null; echo $?`
+	        if [ $tbb_ready -eq 0 ]; then
+		    echo "TBB Images are loaded"
+		    break
+	        fi
+                tbb_down=`( echo $tbb_respons | grep "TBBDriver is NOT responding" )>& /dev/null; echo $?`
+                if [ $tbb_down -eq 0 ]; then
+                    echo "TBBDriver is not responding; cannot continue start of TBBs"
+		    # Trigger message furtheron in the code
+		    s=$timeout
+		    break
+		fi
+		sleep 1
+              done
+              if [ $s == $timeout ]; then 
+                echo "Could not load TBB images; Reset TBB boards"
+              fi 
+            fi
+	  fi  
 	  cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | grep "^${l}:" | grep ":u:" |  while read line
 		do
                         (
@@ -549,52 +577,52 @@ handle_args()
 
   # Handle arguments
   if [ ${#} -gt 1 ]; then
-      if [[ $1 != \-* ]]; then
-        echo "Warning: all arguments except level $1 will be ignored"
-      fi
+    if [[ $1 != \-* ]]; then
+      echo "Warning: all arguments except level $1 will be ignored"
+    fi
   fi
-  while getopts  "hSsPpVvi:l:q:r:uU" flag
+  while getopts  "hUuSsPpVvi:l:q:r:" flag
   do
     case "$flag" in
-    [uU])
-    show_users=1
-    show_level
-    ;;
+    [uU]) 	 
+      show_users=1 	 
+      show_level 	 
+      ;;
     [sS])
-    show_level $flag
-    ;;
+      show_level $flag
+      ;;
     [pP])
-    print_level $flag
-    ;;
+      print_level $flag
+      ;;
     [vV])
-    show_lofar_version $flag
-    ;;
+      show_lofar_version $flag
+      ;;
     i)
-    imageForced=1
-    image=$OPTARG
-    # This is needed to be able to retrieve the requested swlevel
-    # when it is not provided with option -l
-    shift $((OPTIND-1)); OPTIND=1
-    ;;
+      imageForced=1
+      image=$OPTARG
+      # This is needed to be able to retrieve the requested swlevel
+      # when it is not provided with option -l
+      shift $((OPTIND-1)); OPTIND=1
+      ;;
     q)
-    procesname=$OPTARG
-    stop_prog $procesname
-    exit
-    ;;
+      procesname=$OPTARG
+      stop_prog $procesname
+      exit
+      ;;
     r)
-    procesname=$OPTARG
-    start_prog $procesname
-    exit
-    ;;
+      procesname=$OPTARG
+      start_prog $procesname
+      exit
+      ;;
     l)
-    level=$OPTARG
-    ;;
+      level=$OPTARG
+      ;;
     h)
-    SyntaxError
-    ;;
+      SyntaxError
+      ;;
     *) 
-    exit 
-    ;;
+      exit 
+      ;;
     esac
   done
   if [ -z $level ]; then
