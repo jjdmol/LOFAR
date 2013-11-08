@@ -71,7 +71,7 @@ namespace LOFAR
       if (inputIsUDP) {
         SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
 
-        size_t numRead = sstream.recvmmsg( packets );
+        size_t numRead = sstream.recvmmsg( packets, false );
 
         nrReceived += numRead;
 
