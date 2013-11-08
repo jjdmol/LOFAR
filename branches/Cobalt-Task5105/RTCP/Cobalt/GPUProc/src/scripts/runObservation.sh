@@ -24,6 +24,9 @@ MPIRUN_PARAMS=""
 # Parameters to pass to rtcp
 RTCP_PARAMS=""
 
+# Avoid passing on "*" if it matches nothing
+shopt -s nullglob
+
 echo "Called as $@"
 
 if test "$LOFARROOT" == ""; then
@@ -80,9 +83,17 @@ function error {
 
 function getkey {
   KEY=$1
+  DEFAULT=$2
 
   # grab the last key matching "^$KEY=", ignoring spaces.
-  <$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1
+  VALUE=`<$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1`
+
+  if [ "$VALUE" == "" ]
+  then
+    echo "$DEFAULT"
+  else
+    echo "$VALUE"
+  fi
 }
 
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
@@ -98,8 +109,13 @@ if [ "$AUGMENT_PARSET" -eq "1" ]
 then
   AUGMENTED_PARSET=$LOFARROOT/var/run/rtcp-$OBSID.parset
 
-  # Add static keys ($PARSET is last, to allow any key to be overridden in tests)
-  cat $LOFARROOT/etc/parset-additions.d/*.parset $PARSET > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+  # Add static keys
+  cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
+      $HOME/.cobalt/default/*.parset \
+      $PARSET \
+      $LOFARROOT/etc/parset-additions.d/override/*.parset \
+      $HOME/.cobalt/override/*.parset \
+      > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
 
   # If we force localhost, we need to remove the node list, or the first one will be used
   if [ "$FORCE_LOCALHOST" -eq "1" ]
@@ -183,12 +199,14 @@ then
   ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
   ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
 
+  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+
   if [ $OBSRESULT -eq 0 ]
   then
     # ***** Observation ran successfully
 
     # 1. Copy LTA feedback file to ccu001
-    FEEDBACK_DEST=$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
+    FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
     echo "Copying feedback to $FEEDBACK_DEST"
     timeout 30s scp $LOFARROOT/var/run/Observation${OBSID}_feedback $FEEDBACK_DEST
 
