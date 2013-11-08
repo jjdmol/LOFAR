@@ -1502,7 +1502,7 @@ void navFunct_fillHardwareTree() {
       //add CobaltRacks
       if (dynlen(g_cobaltRackList) > 0) {
         for (int i = 1; i <= dynlen(g_cobaltRackList); i++) {
-          dp = station+":LOFAR_PIC_Cobalt"+g_cobaltRackList[i];
+          dp = station+":LOFAR_PIC_Cobalt";
           dynAppend(result,baseConnect+",Cobalt"+","+dp);
         }
         lvl="CobaltRack";
@@ -1639,7 +1639,6 @@ void navFunct_fillHardwareTree() {
       }
     }
   }
-  
   
   LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareTree|result: "+ result);     
   
@@ -2463,7 +2462,7 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
 // ***************************
 // 
 bool navFunct_stationInObservation(string station,string pool) {
-  for (int i = 1; i <= mappinglen(g_observations); i++ ) {
+  for (int i = 1; i <= dynlen(g_observations["SCHEDULE"]); i++ ) {
     if (g_observations["SCHEDULE"][i] == pool) {
       if (strpos(g_observations["STATIONLIST"][i],station) >= 0) {
         return true;

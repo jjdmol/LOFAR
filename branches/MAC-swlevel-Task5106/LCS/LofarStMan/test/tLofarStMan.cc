@@ -170,14 +170,14 @@ uInt nalign (uInt size, uInt alignment)
 void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
                  Double startTime, Double interval, const Complex& startValue,
                  uInt alignment, Bool bigEndian, uInt myStManVersion,
-		 uInt myNrBytesPerValidSamples=2)
+		 uInt myNrBytesPerValidSamples, bool useSeqFile)
 {
-  // Create the baseline vectors (no autocorrelations).
+  AlwaysAssertExit(myStManVersion <= 3);
+  // Create the baseline vectors.
   uInt nrbl = nant*nant;
   Block<Int> ant1(nrbl);
   Block<Int> ant2(nrbl);
   uInt inx=0;
-
   for (uInt i=0; i<nant; ++i) {
     for (uInt j=0; j<nant; ++j) {
       if (myStManVersion != 2) {
@@ -199,18 +199,26 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
       bigEndian = HostInfo::bigEndian();
     }
     double maxNSample = 32768;
-
-    AlwaysAssertExit(myStManVersion <= 3);
-
     AipsIO aio("tLofarStMan_tmp.data/table.f0meta", ByteIO::New);
     aio.putstart ("LofarStMan", myStManVersion);     // version 1, 2, or 3
     aio << ant1 << ant2 << startTime << interval << nchan
         << npol << maxNSample << alignment << bigEndian;
     if (myStManVersion > 1) {
       aio << myNrBytesPerValidSamples;
+    } else {
+      myNrBytesPerValidSamples = 2;    // version 1 requires 2 bytes
     }
     aio.close();
   }
+
+  cout << "createData:" << endl;
+  cout << "  nseq=" << nseq << "  nant=" << nant
+       << "  nchan=" << nchan << "  npol=" << npol << endl;
+  cout << "  alignment=" << alignment << "  bigEndian=" << bigEndian << endl;
+  cout << "  version=" << myStManVersion
+       << "  bytesPerSample=" << myNrBytesPerValidSamples
+       << "  useSeqFile=" << useSeqFile << endl;
+
   // Now create the data file.
   RegularFileIO file(RegularFile("tLofarStMan_tmp.data/table.f0data"),
                      ByteIO::New);
@@ -225,39 +233,36 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   // Create and initialize data and nsample.
   Array<Complex> data(IPosition(2,npol,nchan));
   indgen (data, startValue, Complex(0.01, 0.01));
-
   Array<uChar>  nsample1(IPosition(1, nchan));
   Array<uShort> nsample2(IPosition(1, nchan));
   Array<uInt>   nsample4(IPosition(1, nchan));
-
   indgen (nsample1);
   indgen (nsample2);
   indgen (nsample4);
-
 
   // Allocate space for possible block alignment.
   if (alignment < 1) {
     alignment = 1;
   }
-  Block<Char> align1(nalign(4, alignment), 0);
+  uInt seqSize = (myStManVersion==1 ? 4:8);
+  Block<Char> align1(nalign(seqSize, alignment), 0);
   Block<Char> align2(nalign(nrbl*8*data.size(), alignment), 0);
 
-  uInt nsamplesSize=0;
-  if (myStManVersion < 2) {
-    nsamplesSize = nrbl*2*nsample2.size();
-  } else {
-    nsamplesSize = nrbl*myNrBytesPerValidSamples*nsample2.size();
-  }
-
+  uInt nsamplesSize = nrbl*myNrBytesPerValidSamples*nsample2.size();
   Block<Char> align3(nalign(nsamplesSize, alignment), 0);
 
   // Write the data as nseq blocks.
   for (uInt i=0; i<nseq; ++i) {
+    if (myStManVersion > 1) {
+      // From version 2 on RTCP writes a magic value before the seqnr.
+      uInt magicVal = 0x0000da7a;
+      cfile->write (1, &magicVal);
+    }
     cfile->write (1, &i);
-
     if (align1.size() > 0) {
       cfile->write (align1.size(), align1.storage());
     }
+
     for (uInt j=0; j<nrbl; ++j) {
       // The RTCP wrote the conj of the data for version 1 and 2.
       if (myStManVersion < 3) {
@@ -278,7 +283,6 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
 	nsample2 += uShort(1);
       }
     } else {      
-
       for (uInt j=0; j<nrbl; ++j) {
 	switch (myNrBytesPerValidSamples) {
 	case 1:
@@ -306,7 +310,7 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
   }
   delete cfile;
 
-  if (myStManVersion > 1) {
+  if (useSeqFile  &&  myStManVersion > 1) {
     TypeIO* sfile = 0;
     // create seperate file for sequence numbers if version > 1
     RegularFileIO file(RegularFile("tLofarStMan_tmp.data/table.f0seqnr"),
@@ -321,6 +325,10 @@ void createData (uInt nseq, uInt nant, uInt nchan, uInt npol,
       sfile->write (1, &i);
     }
     delete sfile;
+  } else {
+    // Delete a possible existing seqfile.
+    RegularFile file("tLofarStMan_tmp.data/table.f0seqnr");
+    file.remove();
   }
 }
 
@@ -375,8 +383,11 @@ void checkUVW (uInt row, uInt nant, Vector<Double> uvw)
   }
 }
 
+// maxWeight tells maximum weight before it wraps
+// (because nbytesPerSample is small).
 void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
-                Double startTime, Double interval, const Complex& startValue)
+                Double startTime, Double interval, const Complex& startValue,
+                Float maxWeight)
 {
   uInt nbasel = nant*nant;
   // Open the table and check if #rows is as expected.
@@ -414,8 +425,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
   Array<Complex> dataExp(IPosition(2,npol,nchan));
   indgen (dataExp, startValue, Complex(0.01, 0.01));
   Array<Float> weightExp(IPosition(2,1,nchan));
-  
-  indgen (weightExp, Float(0),Float(1./32768));
+  indgen (weightExp);
   // Loop through all rows in the table and check the data.
   uInt row=0;
   for (uInt i=0; i<nseq; ++i) {
@@ -423,6 +433,12 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
     for (uInt j=0; j<nant; ++j) {
       for (uInt k=0; k<nant; ++k) {
 
+        // Wrap expected weight if needed.
+        for (uInt i=0; i<weightExp.size(); ++i) {
+          while (weightExp.data()[i] >= maxWeight) {
+            weightExp.data()[i] -= maxWeight;
+          }
+        }
         // Contents must be present except for FLAG_CATEGORY.
 	AlwaysAssertExit (dataCol.isDefined (row));
 	AlwaysAssertExit (weightCol.isDefined (row));
@@ -440,13 +456,14 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         AlwaysAssertExit (weights.shape() == IPosition(2,npol,nchan));
         for (uInt p=0; p<npol; ++p) {
 
-	  if (!allNear(weights(IPosition(2,p,0),IPosition(2,p,nchan-1)),weightExp, 1e-7)) {
+	  if (!allNear(weights(IPosition(2,p,0),IPosition(2,p,nchan-1)),
+                       weightExp/Float(32768), 1e-7)) {
 
 	    std::cout << "weights: " << std::endl;
 	    std::cout << weights(IPosition(2,p,0), IPosition(2,p,nchan-1)) << std::endl;
 	  
 	    std::cout << "weigthExp: " << std::endl;
-	    std::cout << weightExp << std:: endl;
+	    std::cout << weightExp/Float(32768) << std:: endl;
 
 	  }
         }
@@ -458,7 +475,7 @@ void readTable (uInt nseq, uInt nant, uInt nchan, uInt npol,
         AlwaysAssertExit (ant2Col(row) == int32(j));
 
         dataExp += Complex(0.01, 0.02);
-        weightExp += Float(1./32768);
+        weightExp += Float(1);
         ++row;
       }
     }
@@ -535,7 +552,7 @@ int main (int argc, char* argv[])
     // Get nseq, nant, nchan, npol from argv.
     uInt nseq=10;
     uInt nant=16;
-    uInt nchan=256;
+    uInt nchan=64;
     uInt npol=4;
     if (argc > 1) {
       istringstream istr(argv[1]);
@@ -561,6 +578,9 @@ int main (int argc, char* argv[])
         istringstream istr(argv[4]);
         istr >> npol;
       }
+      // Test all possible bytes per sample.
+      uInt nbytesPerSample[] = {0, 2,4,1};
+      uInt maxWeight[] = {0, 256*256, 256*256*256*127, 256};
       // Test the various versions.
       for (int v=1; v<4; ++v) {
         cout << "Test version " << v << endl;
@@ -572,22 +592,22 @@ int main (int argc, char* argv[])
         double interval= 30.;
         double startTime = 4472025740.0 - interval*0.5;
         createData (nseq, nant, nchan, npol, startTime, interval,
-                    Complex(0.1, 0.1), 512, True, v);
+                    Complex(0.1, 0.1), 512, True, v, nbytesPerSample[v], v%2==0);
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(0.1, 0.1));
+                   Complex(0.1, 0.1), maxWeight[v]);
         // Update the table and check again.
         updateTable (nchan, npol, Complex(-3.52, -20.3));
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(-3.52, -20.3));
+                   Complex(-3.52, -20.3), maxWeight[v]);
         // Write data in local format and check it. No alignment.
         createData (nseq, nant, nchan, npol, startTime, interval,
-                    Complex(3.1, -5.2), 0, False, v);
+                    Complex(3.1, -5.2), 0, False, v, nbytesPerSample[v], v%2!=0);
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(3.1, -5.2));
+                   Complex(3.1, -5.2), maxWeight[v]);
         // Update the table and check again.
         updateTable (nchan, npol, Complex(3.52, 20.3));
         readTable (nseq, nant, nchan, npol, startTime, interval,
-                   Complex(3.52, 20.3));
+                   Complex(3.52, 20.3), maxWeight[v]);
         copyTable();
       }
     }

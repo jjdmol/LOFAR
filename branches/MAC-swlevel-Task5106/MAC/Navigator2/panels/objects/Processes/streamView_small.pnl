@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 114 72 N "_3DFace" 2
+PANEL,-1 -1 414 134 N "_3DFace" 2
 "$observation"
 "$streamNr"
 "main()
@@ -13,16 +13,36 @@ PANEL,-1 -1 114 72 N "_3DFace" 2
   // The panel itself will sort out the list of inputbuffers belonging to it
   baseDP =CEPDBName+\"LOFAR_PermSW_PSIONode00_InputBuffer\";
 
+  obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
+
+  // find  starttime and endtime and current time and calculate %done
+  
+  string sStart;
+  time start;
+  dpGet(obsDP+\".startTime\",sStart);
+  if (!navFunct_lofarDate2PVSSDate(sStart,start)) {
+    LOG_ERROR(\"streamView_small.pnl:reload|illegal startTime: \"+sStart);
+    return;
+  }
+
+  int retry=0;
+  while (  getCurrentTime() < start) {  
+    delay(2);
+    retry++;
+    if (retry >= 90) {
+      break;
+    }
+  }  
   reload();
 }
   
 private void reload() {
   
   // get all the InputBuffers used by this observation
+  dynClear(inputBuffers);
   inputBuffers = navFunct_getInputBuffersForObservation(observation);
   
   if ($streamNr == 1) {
-    string obsDP = claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
     LOG_DEBUG(\"streamView_small.pnl:reload|obsDP: \"+obsDP+\" observation :\"+observation+\" InputBuffers: \"+inputBuffers);
   }
 
@@ -132,6 +152,7 @@ void streamCB(dyn_string dps, dyn_float values)
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
+string obsDP=\"\";
 string stream;
 string observation;
 dyn_string connectTo;
