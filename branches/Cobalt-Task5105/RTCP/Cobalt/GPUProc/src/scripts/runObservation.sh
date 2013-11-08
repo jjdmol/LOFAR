@@ -120,7 +120,7 @@ then
   # If we force localhost, we need to remove the node list, or the first one will be used
   if [ "$FORCE_LOCALHOST" -eq "1" ]
   then
-    echo "Cobalt.Hardware.nrNodes = 0" >> $AUGMENTED_PARSET
+    echo "Cobalt.Nodes = []" >> $AUGMENTED_PARSET
   fi
 
   # Use the new one from now on
