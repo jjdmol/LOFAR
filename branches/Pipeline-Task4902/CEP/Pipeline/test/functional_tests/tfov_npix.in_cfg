@@ -1,98 +1,25 @@
-[ndppp]
-recipe = dppp
-executable = %(lofarroot)s/bin/NDPPP
-dry_run = False
-mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/dppp.mapfile
-parset = %(runtime_directory)s/%(job_name)s/parsets/NDPPP.parset
-nproc = 1
-nthreads = 8
-clobber = False
+[DEFAULT]
+lofarroot = /home/klijn/build/4902/gnu_debug/installed
+casaroot = /opt/cep/LofIm/daily/casacore
+pyraproot = /opt/cep/LofIm/daily/pyrap
+hdf5root = /opt/cep/hdf5
+wcsroot = /opt/cep/wcslib
+pythonpath = /home/klijn/build/4902/gnu_debug/installed/lib/python2.6/dist-packages
+runtime_directory = %(lofarroot)s/var/run/pipeline
+recipe_directories = [%(pythonpath)s/lofarpipe/recipes]
+working_directory = /data/scratch/klijn
+task_files = [%(lofarroot)s/share/pipeline/tasks.cfg]
 
-[vdsreader]
-recipe = vdsreader
-gvds = %(runtime_directory)s/%(job_name)s/vds/%(job_name)s.gvds
+[layout]
+job_directory = %(runtime_directory)s/%(job_name)s
 
-[setupparmdb]
-recipe = setupparmdb
-executable = %(lofarroot)s/bin/parmdbm
-mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/parmdb.mapfile
+[cluster]
+clusterdesc = %(lofarroot)s/share/cep2.clusterdesc
 
-[setupsourcedb]
-recipe = setupsourcedb
-executable = %(lofarroot)s/bin/makesourcedb
-mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
+[deploy]
+engine_ppath = %(pythonpath)s:%(pyraproot)s/lib:/opt/cep/pythonlibs/lib/python/site-packages
+engine_lpath = %(lofarroot)s/lib:%(casaroot)s/lib:%(pyraproot)s/lib:%(hdf5root)s/lib:%(wcsroot)s/lib
 
-[vdsmaker]
-recipe = vdsmaker
-directory = %(runtime_directory)s/%(job_name)s/vds
-gvds = %(runtime_directory)s/%(job_name)s/vds/%(job_name)s.gvds
-makevds = %(lofarroot)s/bin/makevds
-combinevds = %(lofarroot)s/bin/combinevds
-
-[new_bbs]
-recipe = new_bbs
-control_exec = %(lofarroot)s/bin/GlobalControl
-kernel_exec = %(lofarroot)s/bin/KernelControl
-parset = %(runtime_directory)s/%(job_name)s/parsets/BBS.parset
-gvds = %(runtime_directory)s/%(job_name)s/vds/%(job_name)s.gvds
-db_key = %(job_name)s
-db_host = ldb001
-db_user = postgres
-db_name = klijn
-instrument_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
-sky_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
-data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
-
-[gainoutliercorrection]
-recipe = gainoutliercorrection
-executable = %(lofarroot)s/bin/parmexportcal
-mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
-
-[rficonsole]
-recipe = rficonsole
-executable = %(lofarroot)s/bin/rficonsole
-
-[get_metadata]
-recipe = get_metadata
-
-[imager_prepare]
-recipe = imager_prepare
-ndppp_exec = %(lofarroot)s/bin/NDPPP
-asciistat_executable = %(lofarroot)s/bin/asciistats.py
-statplot_executable = %(lofarroot)s/bin/statsplot.py
-msselect_executable = %(lofarroot)s/bin/msselect
-rficonsole_executable = %(lofarroot)s/bin/rficonsole
-
-[imager_awimager]
-recipe = imager_awimager
-executable = %(lofarroot)s/bin/awimager
-
-[imager_create_dbs]
-recipe = imager_create_dbs
-parmdb_executable = %(lofarroot)s/bin/parmdbm
-makesourcedb_path = %(lofarroot)s/bin/makesourcedb
-
-[imager_bbs]
-recipe = imager_bbs
-bbs_executable = %(lofarroot)s/bin/bbs-reducer
-  
-[imager_source_finding]
-recipe = imager_source_finding
-makesourcedb_path = %(lofarroot)s/bin/makesourcedb
-
-[imager_finalize]
-recipe = imager_finalize
-fillrootimagegroup_exec = %(lofarroot)s/bin/fillRootImageGroup
-
-[copier]
-recipe = copier
-mapfiles_dir = %(runtime_directory)s/%(job_name)s/mapfiles
-
-[bbs_reducer]
-recipe = bbs_reducer
-executable = %(lofarroot)s/bin/bbs-reducer
-parset = %(runtime_directory)s/%(job_name)s/parsets/bbs.parset
-instrument_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/instrument.mapfile
-sky_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/sky.mapfile
-data_mapfile = %(runtime_directory)s/%(job_name)s/mapfiles/bbs.mapfile
-
+[logging]
+log_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/pipeline.log
+xml_stat_file = %(runtime_directory)s/%(job_name)s/logs/%(start_time)s/statistics.xml

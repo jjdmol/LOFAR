@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./runctest.sh pipeline_test
+./runctest.sh tfov_npix

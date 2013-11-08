@@ -1,6 +1,8 @@
 #!/bin/sh
 
 
+python ../../../../installed/bin/msss_imager_pipeline.py tfov_npix.in_parset -c tfov_npix.in_cfg
+
 if [ $? -ne 0 ]; then
   exit 1
 else
