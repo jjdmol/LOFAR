@@ -360,12 +360,19 @@ namespace LOFAR
         struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name              = fieldNames[i].fullName();
+        station.inputStreams      = getStringVector(
+            renamedKey(str(format("PIC.Core.%s.RSP.ports") % station.name),
+                       str(format("PIC.Core.Station.%s.RSP.ports") % station.name)),
+            emptyVectorString, true);
+        station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
+
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
         station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
         station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
         station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
         station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -381,27 +388,21 @@ namespace LOFAR
       }
 
       // Resource information
-      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
-      settings.nodes.resize(nrNodes);
-      for (size_t i = 0; i < nrNodes; ++i) {
+      vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
+      settings.nodes.resize(nodes.size());
+
+      for (size_t i = 0; i < nodes.size(); ++i) {
         struct ObservationSettings::Node &node = settings.nodes[i];
 
-        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
-
         node.rank     = i;
+        node.name     = nodes[i];
+
+        string prefix = str(format("PIC.Core.Cobalt.%s.") % node.name);
+
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
-
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
-
-        for (size_t j = 0; j < stationNames.size(); ++j) {
-          ssize_t index = settings.stationIndex(stationNames[j]);
-
-          if (index >= 0)
-            node.stations.push_back(index);
-        }
       }
 
       /* ===============================
@@ -712,15 +713,15 @@ namespace LOFAR
 
     string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
     {
-      string key = string("PIC.Core.Station.") + stationName + ".RSP.ports";
+      size_t idx = settings.stationIndex(stationName);
 
-      if (!isDefined(key)) {
-        LOG_ERROR_STR("Key not found: " << key << ", falling back to reading from /dev/null");
+      if (settings.stations[idx].inputStreams.size() >= rspBoardNumber) {
+        LOG_ERROR_STR("Station " << stationName << " board " << rspBoardNumber << " not found, falling back to reading from /dev/null");
 
         return "file:/dev/null";
       }
 
-      return getStringVector(key, true)[rspBoardNumber];
+      return settings.stations[idx].inputStreams[rspBoardNumber];
     }
 
 

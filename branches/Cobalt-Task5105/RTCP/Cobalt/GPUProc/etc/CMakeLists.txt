@@ -2,7 +2,8 @@
 
 
 install(FILES
-  parset-additions.d/CobaltHardwareMap.parset
+  parset-additions.d/HardwareList.parset
+  parset-additions.d/HardwareUsed.parset
   parset-additions.d/FinalMetaDataGatherer.parset
   parset-additions.d/MAC-feedback.parset
   parset-additions.d/OutputProc.parset

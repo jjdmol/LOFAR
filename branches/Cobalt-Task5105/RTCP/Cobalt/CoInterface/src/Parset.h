@@ -161,6 +161,16 @@ namespace LOFAR
         // key: OLAP.storageStationNames[stationIdx]
         std::string name;
 
+        // The input streams descriptors
+        //
+        // key: PIC.Core.CS001LBA.RSP.ports
+        std::vector<std::string> inputStreams;
+
+        // The node name on which this station is received
+        //
+        // key: PIC.Core.CS001LBA.RSP.receiver
+        std::string receiver;
+
         // Correction on the station clock, in seconds
         //
         // key: PIC.Core.CS001LBA.clockCorrectionTime
@@ -214,13 +224,15 @@ namespace LOFAR
       /*
        * Resources information:
        *   - what hardware we use (cpus/gpus)
-       *   - which nodes receive which stations
        */ 
 
       struct Node {
         // MPI rank of this node, is the
         // same as the index in the `nodes' vector.
         int rank;
+
+        // (Symbolic) name
+        std::string name;
 
         // Host name
         std::string hostName;
@@ -235,9 +247,6 @@ namespace LOFAR
         //
         // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
-
-        // Station indices to forward data for
-        std::vector<size_t> stations;
       };
 
       std::vector<struct Node> nodes;
