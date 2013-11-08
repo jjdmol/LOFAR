@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Thread.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/SampleBuffer.h>
@@ -104,6 +105,8 @@ namespace LOFAR
     template<typename T>
     void PacketsToBuffer::process( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write )
     {
+      Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
       // Create input structures
       PacketReader reader(logPrefix, inputStream);
 
