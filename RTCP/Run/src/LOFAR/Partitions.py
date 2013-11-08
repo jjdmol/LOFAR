@@ -18,6 +18,8 @@ sys.path += [os.path.abspath(os.path.dirname(__file__)+"/..")]
 # R00-M0         = R00-M0-N00-256 + R00-M0-N08-256
 # R00            = R00-M0 + R00-M1
 
+# LOFARTEST      = R01-M0-N00-J00 + R01-M0-N08-J00
+
 PartitionPsets = {}
 for R in xrange(3):
   rack = "R%02d" % R
@@ -51,6 +53,7 @@ for R in xrange(3):
   PartitionPsets[rack] = PartitionPsets["%s-M0" % rack] + PartitionPsets["%s-M1" % rack]
 
 PartitionPsets["R00R01"] = PartitionPsets["R00"] + PartitionPsets["R01"]  
+PartitionPsets["LOFARTEST"] = PartitionPsets["R01-M0-N00-J00"] + PartitionPsets["R01-M0-N08-J00"]  
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
