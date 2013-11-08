@@ -14,6 +14,7 @@ set(_gpuproc_sources
   FilterBank.cc
   global_defines.cc
   RunningStatistics.cc
+  SysInfoLogger.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
   Storage/SSH.cc

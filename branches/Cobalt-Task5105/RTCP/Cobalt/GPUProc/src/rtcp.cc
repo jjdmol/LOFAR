@@ -64,6 +64,7 @@
 #include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
+#include <GPUProc/SysInfoLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -387,6 +388,9 @@ int main(int argc, char **argv)
   // Create the DirectInput instance
   DirectInput::instance(&ps);
 #endif
+
+  // Periodically log system information
+  SysInfoLogger siLogger;
 
   /*
    * RUN stage
