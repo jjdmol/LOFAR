@@ -473,7 +473,7 @@ goto_level()
                 tbb_down=`( echo $tbb_respons | grep "TBBDriver is NOT responding" )>& /dev/null; echo $?`
                 if [ $tbb_down -eq 0 ]; then
                     echo "TBBDriver is not responding; cannot continue start of TBBs"
-		    # Trigger swlevel to exit
+		    # Trigger message furtheron in the code
 		    s=$timeout
 		    break
 		fi
@@ -481,7 +481,6 @@ goto_level()
               done
               if [ $s == $timeout ]; then 
                 echo "Could not load TBB images; Reset TBB boards"
-                exit 1
               fi 
             fi
 	  fi  
