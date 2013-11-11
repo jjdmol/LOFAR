@@ -172,8 +172,8 @@ extern "C" {
   // Because we `undo' the delay, we need to rotate BACK.
   const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
 
-  const double2 deltaDelay = make_double2((delayAtBegin.x  - delayAtBegin.x ) / NR_SAMPLES_PER_CHANNEL,
-                                          (delayAfterEnd.y - delayAfterEnd.y) / NR_SAMPLES_PER_CHANNEL);   
+  const double2 deltaDelay = make_double2((delayAfterEnd.x - delayAtBegin.x) / NR_SAMPLES_PER_CHANNEL,
+                                          (delayAfterEnd.y - delayAtBegin.y) / NR_SAMPLES_PER_CHANNEL);   
 
   const double2 myPhiBegin = make_double2(
                               pi2 * (delayAtBegin.x + double(timeStart) * deltaDelay.x) * frequency
@@ -187,6 +187,7 @@ extern "C" {
                                pi2 * double(timeInc) * deltaDelay.y * frequency);
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
+
   sincos(myPhiBegin.x, &vX.y,  &vX.x);
   sincos(myPhiBegin.y, &vY.y,  &vY.x);
   sincos(myPhiDelta.x, &dvX.y, &dvX.x);
