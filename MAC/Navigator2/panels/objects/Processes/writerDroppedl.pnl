@@ -1,36 +1,13 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 430 81 N "_3DFace" 1
+PANEL,-1 -1 128 81 N "_3DFace" 1
 "$observation"
 "main()
 {
   observation = $observation;
-  
-  obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
-
-  if (navFunct_dpReachable(obsDP)){
-    if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
-                                obsDP+\".runState:_online.._invalid\")){
-      setValue(\"writerObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
-    }
-  } else {
-    setValue(\"writerObject\", \"backCol\", \"Lofar_dpOffline\");
-  }
-}
-
-private void obsRunning(string dp1,string running,
-                        string dp2,bool invalid) {
-
-  if (!invalid) {
-    if (strpos(running,\"Running\")>=0) {
-      reload();
-    } else {
-      setValue(\"writerObject\", \"backCol\", \"Lofar_off\");
-    }
-  } else {
-    setValue(\"writerObject\", \"backCol\", \"Lofar_dpOffline\");
-  }       
+  delay(5);
+  reload();
 }
   
 private void reload() {
@@ -105,7 +82,6 @@ void writerCB(dyn_string dps, dyn_int values)
 E "#uses \"navPanel.ctl\"
 
 string baseDP;
-string obsDP;
 string observation;
 dyn_string connectTo;
 dyn_string writers;

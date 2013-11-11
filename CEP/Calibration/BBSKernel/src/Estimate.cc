@@ -97,7 +97,7 @@ namespace
         casa::LSQFit    solver;
         vector<double>  coeff;
 
-        // RMS difference of model and data in this iteration.
+        // RMS of this iteration.
         double          rms;
         // No. of visibilities used this iteration.
         size_t          count;
@@ -127,6 +127,7 @@ namespace
         typedef Statistics  StatisticsType;
 
         CellProcessorReal(size_t nDerivative, flag_t mask, flag_t outlier);
+        ~CellProcessorReal();
 
         void process(CellType &cell,
             const Interval<size_t> &freqInterval,
@@ -144,8 +145,7 @@ namespace
             StatisticsType &statistics);
 
     private:
-        vector<double> itsReDerivative, itsImDerivative;
-        //double  *itsReDerivative, *itsImDerivative;
+        double  *itsReDerivative, *itsImDerivative;
         flag_t  itsMask, itsOutlierMask;
     };
 
@@ -160,6 +160,7 @@ namespace
         typedef Statistics  StatisticsType;
 
         CellProcessorComplex(size_t nDerivative, flag_t mask, flag_t outlier);
+        ~CellProcessorComplex();
 
         void process(CellType &cell,
             const Interval<size_t> &freqInterval,
@@ -177,7 +178,7 @@ namespace
             StatisticsType &statistics);
 
     private:
-        vector<double>  itsReDerivative, itsImDerivative;
+        double  *itsReDerivative, *itsImDerivative;
         flag_t  itsMask, itsOutlierMask;
     };
 
@@ -942,11 +943,21 @@ namespace
     CellProcessorReal<T_SAMPLE_MODIFIER,
         T_WEIGHT_MODIFIER>::CellProcessorReal(size_t nDerivative,
         flag_t mask, flag_t outlier)
-        :   itsReDerivative(nDerivative),
-            itsImDerivative(nDerivative),
+        :   itsReDerivative(0),
+            itsImDerivative(0),
             itsMask(mask),
             itsOutlierMask(outlier)
     {
+        itsReDerivative = new double[nDerivative];
+        itsImDerivative = new double[nDerivative];
+    }
+
+    template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>
+    CellProcessorReal<T_SAMPLE_MODIFIER,
+        T_WEIGHT_MODIFIER>::~CellProcessorReal()
+    {
+        delete[] itsReDerivative;
+        delete[] itsImDerivative;
     }
 
     template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>
@@ -1098,11 +1109,21 @@ namespace
     CellProcessorComplex<T_SAMPLE_MODIFIER,
         T_WEIGHT_MODIFIER>::CellProcessorComplex(size_t nDerivative,
         flag_t mask, flag_t outlier)
-        :   itsReDerivative(nDerivative),
-            itsImDerivative(nDerivative),
+        :   itsReDerivative(0),
+            itsImDerivative(0),
             itsMask(mask),
             itsOutlierMask(outlier)
     {
+        itsReDerivative = new double[nDerivative];
+        itsImDerivative = new double[nDerivative];
+    }
+
+    template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>
+    CellProcessorComplex<T_SAMPLE_MODIFIER,
+        T_WEIGHT_MODIFIER>::~CellProcessorComplex()
+    {
+        delete[] itsReDerivative;
+        delete[] itsImDerivative;
     }
 
     template <typename T_SAMPLE_MODIFIER, typename T_WEIGHT_MODIFIER>

@@ -27,7 +27,6 @@
 // Types used in this library.
 
 #include <Common/lofar_complex.h>
-#include <Common/StreamUtil.h>
 
 namespace LOFAR
 {
@@ -109,15 +108,6 @@ struct static_array
      */
     const_iterator end() const;
 };
-
-// Print the contents of a static array.
-template <typename T, size_t N>
-ostream& operator<< (ostream& os, const static_array<T,N>& arr)
-{
-  print (os, arr.begin(), arr.end());
-  return os;
-}
-
 
 /** Type used for real scalars. */
 typedef double                                      real_t;

@@ -3,7 +3,7 @@ V 11
 LANG:1 12 antennaField
 LANG:6 8 (NoName)
 LANG:30 8 (NoName)
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1013 750 N "_3DFace" 0
 "main()
 {     
   // Initialise the Panel
@@ -445,7 +445,7 @@ E E 0 1 1 0 1 E  0 100 1499 100
 2 26
 "PRIMITIVE_TEXT1"
 ""
-1 1002 4 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 796 5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 E E E
@@ -455,8 +455,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1002 4 1075 17
-0 2 2 "0s" 0 0 0 192 0 0  1002 4 1
+E E 0 1 1 2 1 E U  1 E 796 5 869 18
+0 2 2 "0s" 0 0 0 192 0 0  796 5 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -472,7 +472,7 @@ LANG:1 13 Select Array:
 19 53
 "arrayList"
 ""
-1 1095 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 889 1 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -483,7 +483,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1093 -2 1157 42
+0  887 -1 951 43
 2
 T 
 1
@@ -517,7 +517,7 @@ E "main(int button)
 13 80
 "zoomOut"
 ""
-1 1078 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 872 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -528,7 +528,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1076 37 1096 57
+0  870 38 890 58
 
 T 
 1
@@ -543,7 +543,7 @@ LANG:1 1 -
 13 107
 "zoomIn"
 ""
-1 1000 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 794 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -554,7 +554,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1108 37 1128 57
+0  902 38 922 58
 
 T 
 1
@@ -569,7 +569,7 @@ LANG:1 1 +
 2 108
 "PRIMITIVE_TEXT2"
 ""
-1 1137 39 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 931 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -579,8 +579,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1137 39 1168 52
-0 2 2 "0s" 0 0 0 192 0 0  1137 39 1
+E E 0 1 1 2 1 E U  1 E 931 40 962 53
+0 2 2 "0s" 0 0 0 192 0 0  931 40 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -588,7 +588,7 @@ LANG:1 4 Zoom
 13 136
 "shift_down"
 ""
-1 784 58 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 578 59 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 20 0 0 0 0 0
 E E E
@@ -599,7 +599,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 86 1112 106
+0  886 87 906 107
 
 P 
 4294967295
@@ -616,7 +616,7 @@ LANG:1 12 PUSH_BUTTON1
 13 137
 "shift_up"
 ""
-1 1094 56 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 57 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 22 0 0 0 0 0
 E E E
@@ -627,7 +627,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 54 1112 74
+0  886 55 906 75
 
 P 
 4294967295
@@ -644,7 +644,7 @@ LANG:1 12 PUSH_BUTTON1
 13 138
 "shift_left"
 ""
-1 1078 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 872 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 24 0 0 0 0 0
 E E E
@@ -655,7 +655,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1076 70 1096 90
+0  870 71 890 91
 
 P 
 4294967295
@@ -672,7 +672,7 @@ LANG:1 12 PUSH_BUTTON1
 13 139
 "shift_right"
 ""
-1 1110 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 904 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 26 0 0 0 0 0
 E E E
@@ -683,7 +683,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1108 70 1128 90
+0  902 71 922 91
 
 P 
 4294967295
@@ -700,7 +700,7 @@ LANG:1 12 PUSH_BUTTON1
 13 140
 "PUSH_BUTTON5"
 ""
-1 1094 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 73 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 28 0 0 0 0 0
 E E E
@@ -711,7 +711,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 70 1112 90
+0  886 71 906 91
 
 P 
 4294967295
@@ -729,7 +729,7 @@ LANG:1 12 PUSH_BUTTON1
 14 141
 "shift_value"
 ""
-1 1146 70 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 940 71 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
 E E E
@@ -751,7 +751,7 @@ LANG:1 31 Give the shift value to be used
 }"
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1144 68 1197 89
+0  938 69 991 90
 3 "0d" 0 0 0 1 0 -1  E "main()
 {
   setValue(\"\",\"text\",shiftValue);
@@ -760,7 +760,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 13 143
 "originalSize"
 ""
-1 1094 39 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 888 40 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -771,7 +771,7 @@ LANG:1 26 set zoomsize to 100% again
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  1092 37 1112 57
+0  886 38 906 58
 
 P 
 4294967295
@@ -788,7 +788,7 @@ LANG:1 12 PUSH_BUTTON1
 2 144
 "PRIMITIVE_TEXT4"
 ""
-1 1137 57 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 931 58 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -798,8 +798,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 1137 57 1199 70
-0 2 2 "0s" 0 0 0 192 0 0  1137 57 1
+E E 0 1 1 2 1 E U  1 E 931 58 993 71
+0 2 2 "0s" 0 0 0 192 0 0  931 58 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1

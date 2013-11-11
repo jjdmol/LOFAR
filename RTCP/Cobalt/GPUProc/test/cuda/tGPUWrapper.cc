@@ -28,7 +28,6 @@
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/cuda/PerformanceCounter.h>
 #include <UnitTest++.h>
 
 using namespace std;
@@ -166,49 +165,13 @@ SUITE(Memory) {
     vector<Device> devices(pf.devices());
 
     for (vector<Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
-      Context ctx(*i);     
-      Stream s(ctx);
-
-      PerformanceCounter counter(ctx);
-      // Allocate memory on host and device
-      const size_t size = 1024 * 1024;
-      HostMemory hm(ctx, size);
-      DeviceMemory dm(ctx, size);
-
-      // Fill the host memory
-      memset(hm.get<void>(), 42, size);
-
-      // Transfer to device
-      s.writeBuffer(dm, hm, counter, true);
-
-      // Clear host memory
-      memset(hm.get<void>(), 0, size);
-
-      // Transfer back
-      s.readBuffer(hm, dm, true);
-
-      // Check results
-      for (size_t i = 0; i < size; ++i) {
-        CHECK_EQUAL(42, hm.get<char>()[i]);
-      }
-    }
-  }
-
-  TEST(TransferDeviceDevice) {
-    Platform pf;
-    vector<Device> devices(pf.devices());
-
-
-    for (vector<Device>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
       Context ctx(*i);
       Stream s(ctx);
-      PerformanceCounter counter(ctx);
 
       // Allocate memory on host and device
       const size_t size = 1024 * 1024;
       HostMemory hm(ctx, size);
       DeviceMemory dm(ctx, size);
-      DeviceMemory dm_target(ctx, size);
 
       // Fill the host memory
       memset(hm.get<void>(), 42, size);
@@ -216,14 +179,11 @@ SUITE(Memory) {
       // Transfer to device
       s.writeBuffer(dm, hm, true);
 
-      //copy between buffers on the device
-      s.copyBuffer(dm_target, dm, counter, true);
-
       // Clear host memory
       memset(hm.get<void>(), 0, size);
 
       // Transfer back
-      s.readBuffer(hm, dm_target, true);
+      s.readBuffer(hm, dm, true);
 
       // Check results
       for (size_t i = 0; i < size; ++i) {

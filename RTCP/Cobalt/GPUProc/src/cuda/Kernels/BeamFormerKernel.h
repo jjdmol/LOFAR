@@ -73,13 +73,12 @@ namespace LOFAR
                              const Buffers &buffers,
                              const Parameters &param);
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+      void enqueue(PerformanceCounter &counter,
                    double subbandFrequency, unsigned SAP);
-
     };
 
-    //# --------  Template specializations for KernelFactory  -------- #//
-
+    // Specialization of the KernelFactory for
+    // BeamFormerKernel
     template<> size_t
     KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 

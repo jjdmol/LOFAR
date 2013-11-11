@@ -27,8 +27,8 @@
 // Local (kernel) process controller
 
 //# Includes
-#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CalSession.h>
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/SolveStep.h>
 #include <BBSControl/Types.h>

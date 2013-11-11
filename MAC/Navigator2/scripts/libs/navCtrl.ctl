@@ -123,7 +123,6 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleViewBoxEvent:ChangeTab wait HeadLines ChangeInfo");
       
     }
-    return;
   }
   
   // Panel needs to be changed
@@ -180,7 +179,6 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     dpSet(VIEWBOXACTIONDP,"Reload");
 
     navFunct_waitObjectReady(500,"handleViewBoxEvent:Reload wait ViewBox Reload");
-    return;
       
   }
   
@@ -265,24 +263,16 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_stationList: ",g_stationList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_processesList: ",g_processesList);
           LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|g_observationsList: ",g_observationsList);
-
-        LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|ACTIVE TAB: "+ACTIVE_TAB); 
    
         // if ACTIVE_TAB is hardware, we also want to look for all involved processes and observations
         if (ACTIVE_TAB == "Hardware") {
-          // if launched from mainscreen the TAB is hardware, but an Observation might have been clicked, 
-          // so evaluate this as being launched from Observation TAB
-          if (strpos(sel[j],"Observation") >=0 ) {
-            navCtrl_highlightAddHardwareFromObservation(sel[j]);
-            navCtrl_highlightAddProcessesFromObservation(sel[j]);
-          } else {
-            navCtrl_highlightAddObservationsFromHardware(sel[j]);
-            navCtrl_highlightAddProcessesFromHardware(sel[j]);
-          }
+          navCtrl_highlightAddObservationsFromHardware(sel[j]);
+          navCtrl_highlightAddProcessesFromHardware(sel[j]);
+  
         } else if (ACTIVE_TAB == "Observations") {
           // if selection == observation, add involved hardware
-          navCtrl_highlightAddHardwareFromObservation(sel[j]);
-          navCtrl_highlightAddProcessesFromObservation(sel[j]);
+           navCtrl_highlightAddHardwareFromObservation(sel[j]);
+           navCtrl_highlightAddProcessesFromObservation(sel[j]);
 
         } else if (ACTIVE_TAB == "Processes") {
           // The selected event was allready added to the selectionList above
@@ -441,7 +431,6 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleViewSelectionEvent:ChangePanel wait FastJumper ChangeSelection");
       
     }
-    return;
   }  
   
   // TabChanged: The Tab has changed, so a new panel needs to be initialized and put in place
@@ -482,9 +471,9 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
         navFunct_waitObjectReady(500,"handleViewSelectionEvent:TabChanged wait BottomDetailSelection Update");
       
     }
-    LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
     return;
   } 
+  LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewSelectionEvent| ACTIVE_TAB now        : " + ACTIVE_TAB);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -560,7 +549,6 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         typeSelector=sel[1];
         if (dynlen(sel) >= 2 ) observationType=sel[2];
         if (dynlen(sel) >= 3 ) selection=sel[3];
-
       } else {
         typeSelector=sel[1];
         observationType="";
@@ -579,7 +567,6 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangeSelectiond wait TopDetailSelection Update");
       
     }
-    return;
   }
   
   // Fill highlight string        
@@ -606,19 +593,10 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
               dynAppend(highlight,selection);
             }
           }
-      // if on one of the "main" groups we need to add all observations that are within this group    
-          if (selection == "planned" || selection == "active" || selection == "finished") {
-            dyn_string selections="";
-            dpGet("MCU001:LOFAR_PermSW_MACScheduler."+selection+"Observations",selections);
-            for (int o=1; o <=dynlen(selections) ; o++) {
-              navCtrl_highlightAddHardwareFromObservation(selections[o]);
-              navCtrl_highlightAddProcessesFromObservation(selection[o]);
-            }
-          } else { 
-            // if selection == observation, add involved hardware && software
-            navCtrl_highlightAddHardwareFromObservation(selection);
-            navCtrl_highlightAddProcessesFromObservation(selection);
-          }
+          
+          // if selection == observation, add involved hardware && software
+          navCtrl_highlightAddHardwareFromObservation(selection);
+          navCtrl_highlightAddProcessesFromObservation(selection);
         } else if (sel[1] == "Hardware") {  // Hardware
           typeSelector=sel[1];
           observationType="";
@@ -646,7 +624,6 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       dpSet(DPNAME_NAVIGATOR + g_navigatorID+".objectTrigger",true);
           
     }
-    return;
   }
   
   if (anEvent == "ChangePanel") {
@@ -697,8 +674,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
         navFunct_waitObjectReady(500,"handleDetailSelectionEvent:ChangePanel wait FastJumper ChangeSelection "+aSelection);
       
     }
-  }
-  return;  
+  }       
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -761,7 +737,6 @@ void navCtrl_handleLocatorEvent(string dp,string value){
         navFunct_waitObjectReady(500,"handleLocatorEvent:ChangePanel wait HeadLines ChangeInfo ");
       
     }
-    return;
   }  
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -904,7 +879,6 @@ void navCtrl_handleAlertsEvent(string dp,string value){
       navFunct_waitObjectReady(500,"handleAlertsEvent:ChangeTab wait HeadLines ChangeInfo " + aSelection);
       
     }
-    return;
   }
 
 }
@@ -965,7 +939,6 @@ void navCtrl_handleFastJumperEvent(string dp,string value){
       
 
     }
-    return;
   }
   
 }

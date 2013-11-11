@@ -53,17 +53,6 @@ string	stationRingName();									// Core, Remote, Europe
 string	PVSSDatabaseName(const string&	someName = "");		// hostname w/o CUtype
 string	realHostname(const string&	someName);				// adds 'C' when it is missing.
 
-// Get the ObservationNr from the controllername.
-uint32	getObservationNr (const string&	ObservationName);
-
-// Get the instanceNr from the controllername.
-uint16	getInstanceNr (const string&	ObservationName);
-
-// Construct PS name solving markers line @observation@, @ring@, etc.
-string	createPropertySetName(const string&		propSetMask,
-							  const string&		controllerName,
-							  const string&		realDPname = "REALDPNAME");
-
 string  PVSS2SASname(const string& PVSSname);				// convert PVSS DPname to SAS DPname
 string  SAS2PVSSname(const string& SASname);				// convert SAS DPname to PVSS DPname
 

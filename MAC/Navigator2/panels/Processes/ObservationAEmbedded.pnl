@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1012 743 N "_3DFace" 0
 "main()
 {
    // Initialise the Panel
@@ -67,7 +67,7 @@ LANG:1 0
 29 0
 "AdderModule"
 ""
-1 200 224.2340838334161 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 200 185.5405405405406 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 0 0 0 0 0 0
 E E E
@@ -78,7 +78,7 @@ LANG:1 0
 0
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
-0  0 50 1199 820
+0  0 50 1009 649
 15 Canvas.Canvas.1
 0
 "main(bool enter)

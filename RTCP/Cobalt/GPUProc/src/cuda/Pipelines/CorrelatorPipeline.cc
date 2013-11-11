@@ -51,7 +51,7 @@ namespace LOFAR
       {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new CorrelatorSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
+        workQueues[i] = new CorrelatorSubbandProc(ps, context, factories);
       }
     }
 

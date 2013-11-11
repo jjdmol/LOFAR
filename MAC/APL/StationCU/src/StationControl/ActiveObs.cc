@@ -32,10 +32,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <ApplCommon/StationConfig.h>
-#include <ApplCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <APL/APLCommon/ChildControl.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "PVSSDatapointDefs.h"

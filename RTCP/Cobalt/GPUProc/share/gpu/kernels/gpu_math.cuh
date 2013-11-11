@@ -22,7 +22,7 @@
 #ifndef LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
 #define LOFAR_GPUPROC_CUDA_GPU_MATH_CUH
 
-// \file
+// \file cuda/gpu_math.cuh
 // Functions and operators for CUDA-specific types.
 // This file contains functions and operators for CUDA-specific types, like
 // float4. Only a minimal set of operators is provided, the ones that are

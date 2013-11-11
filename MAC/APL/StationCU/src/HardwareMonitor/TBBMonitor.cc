@@ -23,14 +23,15 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarConstants.h>
 #include <Common/StringUtil.h>
-#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
+#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
+//#include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 
 #include "TBBMonitor.h"

@@ -508,7 +508,7 @@ uint64 strToUint64 (const string& aString) throw(Exception)
 string compactedArrayString(const string&	orgStr)
 {
 	string	baseString(orgStr);			// destroyable copy
-	ltrim(baseString, " 	[");		// strip off brackets
+	ltrim(baseString, " 	[");		// strip of brackets
 	rtrim(baseString, " 	]");
 
 	// and split into a vector
@@ -597,11 +597,11 @@ string compactedArrayString(const string&	orgStr)
 	return (result+"]");
 }
 
-string stripBrackets(const string& orgStr)
+string stripBraces(const string& orgStr)
 {
   string baseString(orgStr); // destroyable copy
-  ltrim(baseString, " \t["); // strip off brackets
-  rtrim(baseString, " \t]");
+  ltrim(baseString, " 	["); // strip of brackets
+  rtrim(baseString, " 	]");
   
   return baseString;
 }

@@ -29,7 +29,6 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -47,7 +46,7 @@ namespace LOFAR
       for (size_t i = 0; i < workQueues.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
-        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
+        workQueues[i] = new BeamFormerSubbandProc(ps, context, factories);
       }
     }
 
@@ -59,14 +58,12 @@ namespace LOFAR
         // to much about the subbandProc, codesmell.
         if(gpuProfiling)
         {
-        //shared bu coherent and incoherent
+        // gpu kernel counters
         RunningStatistics intToFloat;
         RunningStatistics firstFFT;
         RunningStatistics delayBp;
         RunningStatistics secondFFT;
         RunningStatistics correctBandpass;
-
-        // Coherent stokes
         RunningStatistics beamformer;
         RunningStatistics transpose;
         RunningStatistics inverseFFT;
@@ -74,17 +71,9 @@ namespace LOFAR
         RunningStatistics finalFFT;
         RunningStatistics coherentStokes;
 
-        //incoherent
-        RunningStatistics incoherentInverseFFT;
-        RunningStatistics incoherentFirFilterKernel;
-        RunningStatistics incoherentFinalFFT;
-        RunningStatistics incoherentStokes;
-
         // gpu transfer counters
         RunningStatistics samples;
         RunningStatistics visibilities;
-        RunningStatistics copyBuffers;
-        RunningStatistics incoherentOutput;
           for (size_t idx_queue = 0; idx_queue < workQueues.size(); ++idx_queue)
           {
             //We know we are in the correlator pipeline, this queue can only contain correlatorSubbandprocs
@@ -105,15 +94,9 @@ namespace LOFAR
             firFilterKernel += proc->counters.firFilterKernel.stats;
             finalFFT += proc->counters.finalFFT.stats;
             coherentStokes += proc->counters.coherentStokes.stats;
-            incoherentInverseFFT += proc->counters.incoherentInverseFFT.stats;
-            incoherentFirFilterKernel += proc->counters.incoherentFirFilterKernel.stats;
-            incoherentFinalFFT += proc->counters.incoherentFinalFFT.stats;
-            incoherentStokes += proc->counters.incoherentStokes.stats;
-          
+            
             samples += proc->counters.samples.stats;
             visibilities += proc->counters.visibilities.stats;
-            copyBuffers += proc->counters.copyBuffers.stats;
-            incoherentOutput += proc->counters.incoherentOutput.stats;
           }
 
           // Now print the aggregate statistics.
@@ -130,13 +113,7 @@ namespace LOFAR
                        std::setw(20) << "(firFilterKernel)" << firFilterKernel << endl <<
                        std::setw(20) << "(finalFFT)" << finalFFT << endl <<
                        std::setw(20) << "(coherentStokes)" << coherentStokes << endl <<
-                       std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT << endl <<
-                       std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel << endl <<
-                       std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT << endl <<
-                       std::setw(20) << "(incoherentStokes)" << incoherentStokes << endl <<
                        std::setw(20) << "(samples)" << samples << endl <<
-                       std::setw(20) << "(copyBuffers)" << copyBuffers << endl <<
-                       std::setw(20) << "(incoherentOutput)" << incoherentOutput << endl <<
                        std::setw(20) << "(visibilities)" << visibilities << endl);
         }
       }

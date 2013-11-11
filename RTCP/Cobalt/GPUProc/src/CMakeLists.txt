@@ -30,20 +30,17 @@ if(USE_CUDA)
     cuda/Kernels/Kernel.cc
     cuda/Kernels/BeamFormerKernel.cc
     cuda/Kernels/BeamFormerTransposeKernel.cc
-    cuda/Kernels/CoherentStokesTransposeKernel.cc
     cuda/Kernels/CoherentStokesKernel.cc
     cuda/Kernels/CorrelatorKernel.cc
     #cuda/Kernels/DedispersionBackwardFFTkernel.cc
     #cuda/Kernels/DedispersionChirpKernel.cc
     #cuda/Kernels/DedispersionForwardFFTkernel.cc
     cuda/Kernels/DelayAndBandPassKernel.cc
-    cuda/Kernels/BandPassCorrectionKernel.cc
     cuda/Kernels/FFT_Kernel.cc
     cuda/Kernels/FFT_Plan.cc
     cuda/Kernels/Filter_FFT_Kernel.cc
     cuda/Kernels/FIR_FilterKernel.cc
-    cuda/Kernels/IncoherentStokesKernel.cc
-    cuda/Kernels/IncoherentStokesTransposeKernel.cc
+    #cuda/Kernels/IncoherentStokesKernel.cc
     cuda/Kernels/IntToFloatKernel.cc
     #cuda/Kernels/UHEP_BeamFormerKernel.cc
     #cuda/Kernels/UHEP_InvFFT_Kernel.cc
@@ -56,7 +53,6 @@ if(USE_CUDA)
 #    cuda/Pipelines/UHEP_Pipeline.cc
     cuda/SubbandProcs/SubbandProc.cc
     cuda/SubbandProcs/BeamFormerSubbandProc.cc
-    cuda/SubbandProcs/BeamFormerFactories.cc
     cuda/SubbandProcs/CorrelatorSubbandProc.cc
 #    cuda/SubbandProcs/UHEP_SubbandProc.cc
   )
@@ -112,13 +108,11 @@ endif()
 
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 
-# install the scripts for MAC and for auto-updating casacore measures tables
+# install the scripts for MAC
 install(PROGRAMS
   scripts/runObservation.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
-  scripts/get_casacore_measures_data.sh
-  scripts/apply_casacore_measures_data.sh
   DESTINATION bin)
 
 # install the logprop file

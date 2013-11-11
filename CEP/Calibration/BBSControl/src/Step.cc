@@ -144,10 +144,6 @@ namespace LOFAR
         toString(itsModelConfig.useBandpass()));
       ps.add(prefix + "Model.Clock.Enable",
         toString(itsModelConfig.useClock()));
-      if (itsModelConfig.useClock()) {
-        const ClockConfig &config = itsModelConfig.getClockConfig();
-        ps.add(prefix + "Model.Clock.Split", toString(config.splitClock()));
-      }
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
       ps.add(prefix + "Model.TEC.Enable",
@@ -222,20 +218,8 @@ namespace LOFAR
       itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
 
-      if (ps.getBool("Model.Clock.Enable", itsModelConfig.useClock())) {
-        ClockConfig parentConfig = itsModelConfig.getClockConfig();
-
-        bool splitClock = false;
-        if(itsModelConfig.useClock()) {
-          splitClock = ps.getBool("Model.Clock.Split",
-              parentConfig.splitClock());
-        } else {
-          splitClock = ps.getBool("Model.Clock.Split",false);
-        }
-        itsModelConfig.setClockConfig(ClockConfig(splitClock));
-      } else {
-        itsModelConfig.clearClockConfig();
-      }
+      itsModelConfig.setClock(ps.getBool("Model.Clock.Enable",
+        itsModelConfig.useClock()));
 
       itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
         itsModelConfig.useGain()));

@@ -40,10 +40,10 @@ typedef float2     (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLE
  *   the define NR_BITS_PER_SAMPLE
  * - In 8 bit mode the converted samples with value -128 are clamped to -127.0f
  *
- * @param[out] convertedDataPtr    pointer to output data of ConvertedDataType,
+ * @param[out] correctedDataPtr    pointer to output data of ConvertedDataType,
  *                                 a 4D array [station][polarizations][n_samples_subband][complex]
  *                                 of floats (2 complex polarizations).
- * @param[in]  sampledDataPtr      pointer to input data; this can either be a
+ * @param[in]  SampledDataType     pointer to input data; this can either be a
  *                                 4D array [station][n_samples_subband][polarizations][complex]
  *                                 of shorts or chars, depending on NR_BITS_PER_SAMPLE.
  *

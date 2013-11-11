@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Script to start MPI. It tries to wrap (part of) the different scripts that
 # exist to start MPI (e.g., mpirun, mpiexec, etc.)
@@ -8,8 +8,6 @@ error()
   echo "ERROR: $@"
   exit 1
 }
-
-declare -A ENVVARS
 
 parse_options()
 {
@@ -27,16 +25,6 @@ parse_options()
         # comma-separated host list
         HOSTS="$2"
         shift 2 || error "argument for option $1 missing"
-        ;;
-      -x)
-        # environment variable to marshall,
-        # we only support the VAR=VALUE format
-        KEYVAL="$2"
-        shift 2 || error "argument for option $1 missing"
-
-        KEY=`echo "$KEYVAL" | cut -d= -f1`
-        VAL=`echo "$KEYVAL" | cut -d= -f2-`
-        ENVVARS["$KEY"]="$VAL"
         ;;
       -*)
         error "$1 is an unknown option"
@@ -56,13 +44,6 @@ set_nompi_options()
 {
   # Ignore all mpirun options
   :
-
-  for KEY in "${!ENVVARS[*]}"
-  do
-    VAL=${ENVVARS[$KEY]}
-
-    export $KEY="$VAL"
-  done
 }
 
 set_openmpi_options()
@@ -76,13 +57,6 @@ set_openmpi_options()
   then
     MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -H $HOSTS"
   fi
-
-  for KEY in "${!ENVVARS[*]}"
-  do
-    VAL=${ENVVARS[$KEY]}
-
-    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -x $KEY=$VAL"
-  done
 }
 
 set_mvapich2_options()
@@ -96,13 +70,6 @@ set_mvapich2_options()
   then
     MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $HOSTS"
   fi
-
-  for KEY in "${!ENVVARS[*]}"
-  do
-    VAL=${ENVVARS[$KEY]}
-
-    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -env $KEY $VAL"
-  done
 }
 
 if [ "@HAVE_MPI@" = "TRUE" ]

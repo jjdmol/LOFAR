@@ -1175,7 +1175,7 @@ def read_image_from_file(filename, img, indir, quiet=False):
             return None
 
     # Now that image has been read in successfully, get header (data is loaded
-    # later to take advantage of sectioning if trim_box is specified).
+    # later to take advantage of sectioning if trim_box is specified.
     if not quiet:
         mylogger.userinfo(mylog, "Opened '"+image_file+"'")
     if img.use_io == 'rap':
@@ -2157,17 +2157,13 @@ def bstat(indata, mask, kappa_npixbeam):
         c2 = converge_num * lastct
         iter += 1
 
+
     mean  = numpy.mean(skpix)
     median = numpy.median(skpix)
     sigma = numpy.std(skpix, ddof=1)
     mode = 2.5*median - 1.5*mean
 
-    if sigma > 0.0:
-        skew_par = abs(mean - median)/sigma
-    else:
-        raise RuntimeError("A region with an unphysical rms value has been found. "
-            "Please check the input image.")
-
+    skew_par = abs(mean - median)/sigma
     if skew_par <= 0.3:
         m = mode
     else:

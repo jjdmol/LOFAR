@@ -143,9 +143,6 @@ uint lskipws (const string& value, uint st, uint end);
 // It returns st if all whitespace.
 uint rskipws (const string& value, uint st, uint end);
 
-// Skip the leading and trailing whitespace and square brackets.
-string stripBrackets(const string& orgStr);
-
 // Skip past a quoted string.
 // The quote character is the first character (at position st).
 // Usually the quote character is ' or ", but it could be any other character.

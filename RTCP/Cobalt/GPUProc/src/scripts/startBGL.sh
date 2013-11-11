@@ -20,9 +20,6 @@ OBSID="$5"
 # The file to store the PID in
 PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
 
-# The file we will log the observation output to
-LOGFILE=$LOFARROOT/var/log/rtcp-$OBSID.log
-
 (
 # Always print a header, to match errors to observations
 echo "---------------"
@@ -32,7 +29,6 @@ echo "pwd:       $PWD"
 echo "LOFARROOT: $LOFARROOT"
 echo "obs id:    $OBSID"
 echo "parset:    $PARSET"
-echo "log file:  $LOGFILE"
 echo "---------------"
 
 function error {
@@ -44,7 +40,7 @@ function error {
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
 # Start observation in the background
-runObservation.sh "$PARSET" > $LOGFILE 2>&1 </dev/null &
+runObservation.sh "$PARSET" > $LOFARROOT/var/log/rtcp-$OBSID.log 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
 

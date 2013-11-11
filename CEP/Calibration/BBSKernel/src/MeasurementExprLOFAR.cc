@@ -300,8 +300,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         if(config.useClock())
         {
             exprDIE[i] = compose(exprDIE[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                    config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -420,8 +419,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         if(config.useClock())
         {
             stationExpr[i] = compose(stationExpr[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                  config.getClockConfig()));
+                makeClockExpr(itsScope, instrument->station(i)));
         }
 
         // Bandpass.
@@ -806,7 +804,6 @@ void MeasurementExprLOFAR::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
-// i is baseline index, index in baselineseq
 const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
 {
     JonesMatrix result;

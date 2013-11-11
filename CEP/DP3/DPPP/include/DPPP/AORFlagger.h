@@ -32,8 +32,7 @@
 #include <DPPP/FlagCounter.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
-#include <AOFlagger/msio/image2d.h>
-#include <AOFlagger/msio/mask2d.h>
+#include <AOFlagger/strategy/actions/strategyaction.h>
 #include <AOFlagger/util/progresslistener.h>
 #include <AOFlagger/quality/statisticscollection.h>
 

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1000 750 N "_3DFace" 0
 "main()
 {
   
@@ -154,7 +154,7 @@ LANG:1 12 Observations
 2 212
 "PRIMITIVE_TEXT14"
 ""
-1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 5 3 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 42 0 0 0 0 0
 E E E
@@ -164,8 +164,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 12 30 140 43
-0 2 2 "0s" 0 0 0 194 0 0  140 30 1
+E E 0 1 1 2 1 E U  1 E 7 29 135 42
+0 2 2 "0s" 0 0 0 194 0 0  135 29 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -173,7 +173,7 @@ LANG:1 21 Planned Observations:
 2 213
 "PRIMITIVE_TEXT15"
 ""
-1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -5 -14 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 44 0 0 0 0 0
 E E E
@@ -183,8 +183,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 12 290 130 303
-0 2 2 "0s" 0 0 0 194 0 0  130 290 1
+E E 0 1 1 2 1 E U  1 E 7 250 125 263
+0 2 2 "0s" 0 0 0 194 0 0  125 250 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -192,7 +192,7 @@ LANG:1 20 Active Observations:
 2 214
 "PRIMITIVE_TEXT16"
 ""
-1 5 534 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 5 454 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 46 0 0 0 0 0
 E E E
@@ -202,8 +202,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 6 560 135 573
-0 2 2 "0s" 0 0 0 194 0 0  135 560 1
+E E 0 1 1 2 1 E U  1 E 6 480 135 493
+0 2 2 "0s" 0 0 0 194 0 0  135 480 1
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
 0 1
@@ -245,11 +245,11 @@ LANG:1 0
 1
 "$name""plannedObservations"
 3 5 "activeObservationsTable" -1
-"objects\\Observations\\Observation_small.pnl" 0 280 T 40 1 0 1 0 30
+"objects\\Observations\\Observation_small.pnl" 0 280 T 40 1 0 1 2 -10
 1
 "$name""activeObservations"
 3 6 "finishedObservationsTable" -1
-"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 50.00000000000011
+"objects\\Observations\\Observation_small.pnl" 0 530 T 41 1 0 0.9999999999999998 0 -29.99999999999989
 1
 "$name""finishedObservations"
 0

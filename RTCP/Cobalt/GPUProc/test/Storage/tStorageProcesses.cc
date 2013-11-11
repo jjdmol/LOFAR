@@ -26,8 +26,6 @@
 #include <unistd.h>
 #include <string>
 
-#include <boost/format.hpp>
-
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
@@ -49,11 +47,11 @@ void test_simple()
   const char *USER = getenv("USER");
   Parset p;
 
-  p.add("Observation.ObsID",               "12345");
-  p.add("Cobalt.OutputProc.userName",      USER);
-  p.add("Cobalt.OutputProc.sshPublicKey",  pubkey);
-  p.add("Cobalt.OutputProc.sshPrivateKey", privkey);
-  p.add("Cobalt.OutputProc.executable",    "/bin/echo");
+  p.add("Observation.ObsID",          "12345");
+  p.add("OLAP.Storage.userName",      USER);
+  p.add("OLAP.Storage.sshPublicKey",  pubkey);
+  p.add("OLAP.Storage.sshPrivateKey", privkey);
+  p.add("OLAP.Storage.msWriter",      "/bin/echo");
 
   p.add("Observation.nrBeams",             "1");
   p.add("Observation.Beam[0].subbandList", "[0]");
@@ -78,20 +76,15 @@ void test_protocol()
   const char *USER = getenv("USER");
   Parset p;
 
-  char cwd[1024];
-
-  if (getcwd(cwd, sizeof cwd) == 0)
-    THROW_SYSCALL("getcwd");
-
-  p.add("Observation.ObsID",                 "12345");
-  p.add("Cobalt.OutputProc.userName",        USER);
-  p.add("Cobalt.OutputProc.sshPublicKey",    pubkey);
-  p.add("Cobalt.OutputProc.sshPrivateKey",   privkey);
-  p.add("Cobalt.OutputProc.executable",      str(boost::format("%s/DummyStorage") % cwd));
-  p.add("Cobalt.FinalMetaDataGatherer.host",          "localhost");
-  p.add("Cobalt.FinalMetaDataGatherer.userName",      USER);
-  p.add("Cobalt.FinalMetaDataGatherer.sshPublicKey",  pubkey);
-  p.add("Cobalt.FinalMetaDataGatherer.sshPrivateKey", privkey);
+  p.add("Observation.ObsID",            "12345");
+  p.add("OLAP.Storage.userName",        USER);
+  p.add("OLAP.Storage.sshPublicKey",    pubkey);
+  p.add("OLAP.Storage.sshPrivateKey",   privkey);
+  p.add("OLAP.Storage.msWriter",        "./DummyStorage");
+  p.add("OLAP.FinalMetaDataGatherer.host",          "localhost");
+  p.add("OLAP.FinalMetaDataGatherer.userName",      USER);
+  p.add("OLAP.FinalMetaDataGatherer.sshPublicKey",  pubkey);
+  p.add("OLAP.FinalMetaDataGatherer.sshPrivateKey", privkey);
 
   p.add("Observation.nrBeams",             "1");
   p.add("Observation.Beam[0].subbandList", "[0]");
@@ -101,7 +94,7 @@ void test_protocol()
 
   // DummyStorage already emulates the FinalMetaDataGatherer, so use a dummy
   // instead.
-  p.add("Cobalt.FinalMetaDataGatherer.executable",      "/bin/echo");
+  p.add("OLAP.FinalMetaDataGatherer.executable",      "/bin/echo");
   p.updateSettings();
 
   {

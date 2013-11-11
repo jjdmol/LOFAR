@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: PortBroker.h 20465 2012-03-16 15:53:48Z mol $
 
 #ifndef LOFAR_LCS_STREAM_PORTBROKER_H
 #define LOFAR_LCS_STREAM_PORTBROKER_H
@@ -47,33 +47,17 @@ class PortBroker: protected SocketStream {
     virtual ~PortBroker();
 
     static void createInstance( uint16 port );
-    static void destroyInstance();
-
     static PortBroker &instance();
     
     void start();
 
     size_t nrOutstandingRequests() const;
 
-    /*
-     * ServerStream waits for a client to connect asking for a specific
-     * resource (prefix=false), or a class of resources (prefix=true).
-     */
     class ServerStream: public FileDescriptorBasedStream {
       public:
-        // Listen for a client offering resource `resource'. If prefix = true,
-        // the resource only has to start with the given string.
-        ServerStream( const std::string &resource, bool prefix = false, time_t deadline = 0 );
-
-        // The resource that was requested (useful if prefix == true)
-        std::string getResource() const;
-      private:
-        std::string resource;
+        ServerStream( const std::string &resource );
     };
 
-    /*
-     * ClientStream connects to a ServerStream to obtain a specific resource.
-     */
     class ClientStream: public SocketStream {
       public:
         ClientStream( const std::string &hostname, uint16 port, const std::string &resource, time_t deadline = 0 );
@@ -81,17 +65,7 @@ class PortBroker: protected SocketStream {
 
   protected:
     static void requestResource( Stream &stream, const std::string &resource );
-
-    // Information about a connected client
-    struct ConnectedClient {
-      // The data stream
-      FileDescriptorBasedStream *stream;
-
-      // The name of the requested resource
-      std::string resource;
-    };
-
-    ConnectedClient waitForClient( const std::string &resource, bool prefix, time_t deadline );
+    FileDescriptorBasedStream *waitForClient( const std::string &resource, time_t deadline = 0 );
 
   private:
     PortBroker( uint16 port );
@@ -112,8 +86,8 @@ class PortBroker: protected SocketStream {
     mutable Mutex itsMutex;
     Condition itsCondition;
 
-    typedef std::map<std::string, FileDescriptorBasedStream*> RequestMapType;
-    RequestMapType itsRequestMap;
+    typedef std::map<string, FileDescriptorBasedStream*> requestMapType;
+    requestMapType itsRequestMap;
 
     static bool serverStarted();
     void serverLoop();

@@ -69,7 +69,6 @@ main()
       string ip         = linesplitted[4];
       string mac        = linesplitted[5];
       string macForeign = "";
-      string rspForeign = "";
       // the station/mac/ip places are for the cases were rsp1 can be the 2nd ear or a foreign station
       // if a foreign station is used they will be in the list as R(00-01)_BG(1-3)_(DE,FR,SE,UK)(601-608)
       // and the real ionode can be found based on the shared ipnr
@@ -88,9 +87,7 @@ main()
             if (showDebug) DebugN(" found match for ip in: " + dynStr_RSPfile[idx]);
             dyn_string  sp = strsplit(dynStr_RSPfile[idx]," \t"); 
             ionode= sp[3];
-            macForeign = mac;
-	    //foreign stations always connected to HBA1 (= RSP1)  allthough the foreign station will say RSP0
-            rspForeign = "RSP"+1;
+            macForeign= mac;
             break;
           }
         }
@@ -108,7 +105,8 @@ main()
                 
                
       dyn_string rsp = strsplit(rspstr,"_");
-      if (showDebug) DebugN( "node: "+ionode+ "  ioname: "+ioname+"  rspfull: " + rspstr+ "  rsp[2]" + rsp[2]
+      int nr = rsp[2];
+      if (showDebug) DebugN( "node: "+ionode+ "  rspfull: " + rspstr+ "  rsp[2]" + rsp[2]+ " nr: "+nr
                              + " ip: "+ip+ " mac: "+mac);
       if (dpExists(ioname)) {
         dpSet(ioname+".IP"+stationPlace,ip);
@@ -119,12 +117,6 @@ main()
           dpSet(ioname+".MAC"+stationPlace,mac);
           dpSet(ioname+".station0",station);
         }
-        if (rspForeign != "") {
-          dpSet(ioname+".RSPForeign",rspForeign);       
-          dpSet(ioname+".RSP1","RSP"+rsp[2]);          
-	      } else {
-          dpSet(ioname+".RSP"+stationPlace,"RSP"+rsp[2]);          
-	      }
       } else {
           DebugN(ionode+" gives wrong dp: " , ioname);
       }

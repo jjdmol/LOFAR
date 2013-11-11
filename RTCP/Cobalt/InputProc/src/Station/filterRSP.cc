@@ -50,8 +50,6 @@ void usage()
   puts("-s nrbeamlets Reduce or expand the number of beamlets per packet");
   puts("-b bitmode    Discard packets with bitmode other than `bitmode' (16, 8, or 4)");
   puts("-c clock      Discard packets with a clock other than `clock' (200 or 160)");
-  puts("-i streamdesc Stream descriptor for input (default = file:/dev/stdin)");
-  puts("-o streamdesc Stream descriptor for output (default = file:/dev/stdout)");
   puts("");
   puts("Note: invalid packets are always discarded.");
 }
@@ -68,11 +66,8 @@ int main(int argc, char **argv)
   unsigned bitmode = 0;
   unsigned clock = 0;
 
-  string inputStreamDesc  = "file:/dev/stdin";
-  string outputStreamDesc = "file:/dev/stdout";
-
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "f:t:s:b:c:i:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "f:t:s:b:c:")) != -1) {
     switch (opt) {
     case 'f':
       from = parseTime(optarg);
@@ -94,14 +89,6 @@ int main(int argc, char **argv)
       clock = atoi(optarg);
       break;
 
-    case 'i':
-      inputStreamDesc = optarg;
-      break;
-
-    case 'o':
-      outputStreamDesc = optarg;
-      break;
-
     default: /* '?' */
       usage();
       exit(1);
@@ -114,8 +101,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  SmartPtr<Stream> inputStream = createStream(inputStreamDesc, true);
-  SmartPtr<Stream> outputStream = createStream(outputStreamDesc, false);
+  SmartPtr<Stream> inputStream = createStream("file:/dev/stdin", true);
   PacketReader reader("", *inputStream);
   struct RSP packet;
 
@@ -148,7 +134,7 @@ int main(int argc, char **argv)
         }
 
         // Write packet
-        outputStream->write(&packet, packet.packetSize());
+        fwrite(&packet, packet.packetSize(), 1, stdout);
       }
     }
   } catch(Stream::EndOfStreamException&) {

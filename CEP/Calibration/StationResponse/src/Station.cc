@@ -31,8 +31,7 @@ namespace StationResponse
 
 Station::Station(const string &name, const vector3r_t &position)
     :   itsName(name),
-        itsPosition(position),
-        itsPhaseReference(position)
+        itsPosition(position)
 {
 }
 
@@ -56,7 +55,7 @@ const vector3r_t &Station::phaseReference() const
     return itsPhaseReference;
 }
 
-void Station::addAntennaField(const AntennaField::ConstPtr &field)
+void Station::addAntennaField(const AntennaField::Ptr &field)
 {
     itsFields.push_back(field);
 }

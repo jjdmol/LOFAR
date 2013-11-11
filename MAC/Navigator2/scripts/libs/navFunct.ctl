@@ -54,7 +54,6 @@
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
 // navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
-// navFunct_getInputBuffersForStation         : returns all the InputBuffers that are connected to a station
 // navFunct_getLBABitmap                      : get the LBABitmap from a given observation on a given station
 // navFunct_getLocusNodesForObservation       : returns all the LocusNOdes that are in use for an observation
 // navFunct_getLogColor                       : returns the color that belongs to a log level
@@ -84,7 +83,6 @@
 // navFunct_RSP2Subrack                       : Returns the SubrackNr for a given RSP
 // navFunct_splitAction                       : Splits an actionstring into a dyn_string action + params
 // navFunct_splitEvent                        : Splits an event string into the essentials
-// navFunct_stationInObservation              : Look if a given station is used in an observation from a given pool (planned,active, finished)
 // navFunct_stationNameToIONode               : returns the IONode belonging to a station
 // navFunct_subrack2Cabinet                   : Returns the CabinetNr for a given Subrack
 // navFunct_TBB2Cabinet                       : Returns the CabinetNr for a given TBB
@@ -680,8 +678,6 @@ int navFunct_subrack2Cabinet(int subrackNr) {
 int navFunct_BGPMidplane2BGPRack(int midplaneNr) {
   return floor(midplaneNr/2);
 }
-
-
 
 // ****************************************
 // Name : navFunct_dpStripLastElement
@@ -1483,7 +1479,7 @@ void navFunct_fillHardwareTree() {
         }
         lvl="BGPMidplane";
       }
-
+      
       //add Ionodes
       if (dynlen(g_IONodeList) > 0) {
         for (int i = 1; i <= dynlen(g_IONodeList); i++) {
@@ -1497,27 +1493,6 @@ void navFunct_fillHardwareTree() {
           dp = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr+"_IONode"+g_IONodeList[i];
           dynAppend(result,connectTo+",IONode"+g_IONodeList[i]+","+dp);
         }
-      }
-
-      //add CobaltRacks
-      if (dynlen(g_cobaltRackList) > 0) {
-        for (int i = 1; i <= dynlen(g_cobaltRackList); i++) {
-          dp = station+":LOFAR_PIC_Cobalt";
-          dynAppend(result,baseConnect+",Cobalt"+","+dp);
-        }
-        lvl="CobaltRack";
-      }
-      
-      //add CobaltNodes
-      if (dynlen(g_cobaltNodeList) > 0) {
-        for (int i = 1; i <= dynlen(g_cobaltNodeList); i++) {
-          if (lvl == "CobaltRack") {
-            connectTo = station+":LOFAR_PIC_Cobalt";
-          }
-          dp = station+":LOFAR_PIC_Cobalt_CBT"+navFunct_formatInt(g_cobaltNodeList[i],999);
-          dynAppend(result,connectTo+",CBT"+navFunct_formatInt(g_cobaltNodeList[i],999)+","+dp);
-        }
-        lvl="CobaltNode";
       }
 
       // add OSRacks
@@ -1640,6 +1615,7 @@ void navFunct_fillHardwareTree() {
     }
   }
   
+  
   LOG_DEBUG("navFunct.ctl:navFunct_fillHardwareTree|result: "+ result);     
   
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList",result);
@@ -1717,9 +1693,6 @@ void navFunct_clearGlobalLists() {
   dynClear(g_IONodeList);
   dynClear(g_OSRackList);
   dynClear(g_locusNodeList);
-  dynClear(g_cobaltRackList);
-  dynClear(g_cobaltNodeList);
-  dynClear(g_cobaltNICList);
 
   dynClear(g_observationsList);
   dynClear(g_processesList);
@@ -2354,26 +2327,6 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   return inputBuffers;
 }
 
-// ***************************
-// navFunct_getInputBuffersForStation
-// ***************************
-// station : the station in question
-//
-// Returns a dyn_string containing all InputBuffers used by this station
-// ***************************
-// 
-dyn_string navFunct_getInputBuffersForStation(string station) {
-  dyn_string inputBuffers;
-  dyn_dyn_anytype tab;
-  string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.stationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+station+"\"";
-  dpQuery(query,tab);
-  for(int z=2;z<=dynlen(tab);z++) {
-    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
-    dynAppend(inputBuffers,dp);
-  }
-  dynSort(inputBuffers);
-  return inputBuffers;
-}
 
 // ***************************
 // navFunct_getAddersForObservation
@@ -2450,24 +2403,4 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
     dynAppend(writers,dpSubStr(tab[z][1],DPSUB_SYS_DP));
   }
   return writers;
-}
-
-// ***************************
-// navFunct_stationInObservation
-// ***************************
-// station : the station in question
-// pool    : the pool to search into
-//
-// Returns true if a station is used in an observation defined in the pool
-// ***************************
-// 
-bool navFunct_stationInObservation(string station,string pool) {
-  for (int i = 1; i <= dynlen(g_observations["SCHEDULE"]); i++ ) {
-    if (g_observations["SCHEDULE"][i] == pool) {
-      if (strpos(g_observations["STATIONLIST"][i],station) >= 0) {
-        return true;
-      }
-    }
-  }
-  return false;
 }

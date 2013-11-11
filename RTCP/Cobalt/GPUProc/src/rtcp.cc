@@ -61,7 +61,6 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 
@@ -72,11 +71,7 @@ using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
-  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
-  cerr << "beam-forming for the Pulsar mode." << endl;
-  cerr << endl;
-  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
@@ -172,6 +167,10 @@ int main(int argc, char **argv)
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
+
+  // Tie to local X server (TODO: does CUDA really need this?)
+  if (setenv("DISPLAY", ":0", 1) < 0)
+    THROW_SYSCALL("setenv(DISPLAY)");
 
   // Restrict access to (tmp build) files we create to owner
   // JD: Don't do that! We want to be able to clean up each other's
@@ -310,6 +309,14 @@ int main(int argc, char **argv)
   // Allow OpenMP thread registration
   OMPThread::init();
 
+  // Only ONE host should start the Storage processes
+  SmartPtr<StorageProcesses> storageProcesses;
+
+  if (rank == 0) {
+    LOG_INFO("----- Starting OutputProc");
+    storageProcesses = new StorageProcesses(ps, "");
+  }
+
   LOG_INFO("----- Initialising Pipeline");
 
   // Distribute the subbands over the MPI ranks
@@ -334,11 +341,7 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) {
-    // no operation -- don't even create a pipeline!
-    pipeline = NULL;
-    outputType = CORRELATED_DATA;
-  } else if (correlatorEnabled) {
+  if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
     outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
@@ -349,16 +352,6 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  // Only ONE host should start the Storage processes
-  SmartPtr<StorageProcesses> storageProcesses;
-
-  LOG_INFO("----- Initialising SSH library");
-  SSH_Init();
-
-  if (rank == 0) {
-    LOG_INFO("----- Starting OutputProc");
-    storageProcesses = new StorageProcesses(ps, "");
-  }
 
 #ifdef HAVE_MPI
   /*
@@ -460,8 +453,6 @@ int main(int argc, char **argv)
     }
   }
   LOG_INFO("===== SUCCESS =====");
-
-  SSH_Finalize();
 
 #ifdef HAVE_MPI
   MPI_Finalize();

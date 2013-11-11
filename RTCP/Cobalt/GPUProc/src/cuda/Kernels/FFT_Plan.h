@@ -38,7 +38,7 @@ namespace LOFAR
       ~FFT_Plan();
 
       // Tie the plan to a specific stream
-      void setStream(const gpu::Stream &stream) const;
+      void setStream(gpu::Stream &stream);
 
       cufftHandle plan;
 

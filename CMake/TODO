@@ -3,9 +3,6 @@
 =                       TODO - List of things to do                          =
 ==============================================================================
 
-* Detection of whether we should use lib or lib64 is currently not done
-  correctly. Maybe just copy/paste what's in GNUInstallDirs.cmake?
-
 * Some Find modules use variables that they set in their own macros, e.g.
   FindCUDA.cmake. Since lofar_find_package() is a function, these variables
   are lost at the moment that you leave this function. A possible improvement

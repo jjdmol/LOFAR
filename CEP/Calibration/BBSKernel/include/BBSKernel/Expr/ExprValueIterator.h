@@ -62,6 +62,7 @@ private:
     Element::const_iterator itsIterator;
 };
 
+template <>
 template <unsigned int LENGTH>
 class ExprValueIterator<Vector<LENGTH> >
 {

@@ -104,10 +104,10 @@ namespace LOFAR
     void StorageProcess::controlThread()
     {
       // Start Storage
-      std::string userName = itsParset.getString("Cobalt.OutputProc.userName", "");
-      std::string pubKey = itsParset.getString("Cobalt.OutputProc.sshPublicKey", "");
-      std::string privKey = itsParset.getString("Cobalt.OutputProc.sshPrivateKey", "");
-      std::string executable = itsParset.getString("Cobalt.OutputProc.executable", "outputProc");
+      std::string userName = itsParset.getString("OLAP.Storage.userName", "");
+      std::string pubKey = itsParset.getString("OLAP.Storage.sshPublicKey", "");
+      std::string privKey = itsParset.getString("OLAP.Storage.sshPrivateKey", "");
+      std::string executable = itsParset.getString("OLAP.Storage.msWriter", "outputProc");
 
       if (userName == "") {
         // No username given -- use $USER
@@ -130,7 +130,13 @@ namespace LOFAR
         }
       }
 
-      std::string commandLine = str(boost::format("%s%s %u %d %u")
+      char cwd[1024];
+
+      if (getcwd(cwd, sizeof cwd) == 0)
+        THROW_SYSCALL("getcwd");
+
+      std::string commandLine = str(boost::format("cd %s && %s%s %u %d %u")
+                                    % cwd
 #if defined USE_VALGRIND
                                     % "valgrind --leak-check=full "
 #else

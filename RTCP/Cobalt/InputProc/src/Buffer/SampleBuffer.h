@@ -93,6 +93,7 @@ namespace LOFAR
 
       size_t offset( const TimeStamp &timestamp ) const { return (int64)timestamp % nrSamples; }
 
+
       // Signal that there will be no reads before the given epoch
       void noReadBefore( size_t beamlet, const TimeStamp &epoch );
 
@@ -118,9 +119,6 @@ namespace LOFAR
 
         // Change the mode of this board
         void changeMode( const struct BoardMode &mode );
-
-        // Report the percentage of missing data in the requested range
-        double flagPercentage( const TimeStamp &from, const TimeStamp &to ) const;
 
         // Signal start of write intent for data in [begin, end). The flags will be updated
         // for any data that will be overwritten, but not set for any data that is

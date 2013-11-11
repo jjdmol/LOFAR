@@ -22,8 +22,6 @@
 
 #include "Pipeline.h"
 
-#include <boost/format.hpp>
-
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
@@ -138,7 +136,7 @@ namespace LOFAR
         if (block > 2) receiveTimer.stop();
         LOG_INFO_STR("[block " << block << "] Input received");
 
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+        size_t nrFlaggedSamples = 0;
 
         // Process and forward the received input to the processing threads
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
@@ -151,27 +149,13 @@ namespace LOFAR
 
             data->metaData[stat] = metaData;
 
-            nrFlaggedSamples[stat] += metaData.flags.count();
+            nrFlaggedSamples += metaData.flags.count();
           }
 
           queue.inputPool.filled.append(data);
         }
 
-        // Report flags per station
-        stringstream flagStr;  // stations with >0% flags
-        stringstream cleanStr; // stations with  0% flags
-
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / inputDatas.size() / blockSize;
-
-          if (flagPerc == 0.0)
-            cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
-          else
-            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
-        }
-
-        LOG_INFO_STR("[block " << block << "] No flagging: " << cleanStr.str());
-        LOG_INFO_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        LOG_INFO_STR("[block " << block << "] Flags: " << (100 * nrFlaggedSamples / inputDatas.size() / ps.nrStations() / blockSize) << "%");
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
       }

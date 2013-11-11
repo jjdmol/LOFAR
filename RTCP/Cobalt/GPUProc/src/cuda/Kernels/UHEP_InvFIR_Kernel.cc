@@ -38,15 +38,15 @@ namespace LOFAR
       setArg(1, devFFTedData);
       setArg(2, devInvFIRfilterWeights);
 
-      unsigned maxNrThreads, nrThreads;
+      size_t maxNrThreads, nrThreads;
       //getWorkGroupInfo(queue.getInfo<CL_QUEUE_DEVICE>(), CL_KERNEL_WORK_GROUP_SIZE, &maxNrThreads);
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       // round down to nearest power of two
       for (nrThreads = 1024; nrThreads > maxNrThreads; nrThreads /= 2)
         ;
 
-      setEnqueueWorkSizes( gpu::Grid(1024, NR_POLARIZATIONS, ps.nrTABs(0)),
-                           gpu::Block(nrThreads, 1, 1) );
+      globalWorkSize = gpu::Grid(1024, NR_POLARIZATIONS, ps.nrTABs(0));
+      localWorkSize = gpu::Block(nrThreads, 1, 1);
 
       size_t count = ps.nrTABs(0) * NR_POLARIZATIONS * 1024;
       nrOperations = count * ps.nrSamplesPerChannel() * NR_STATION_FILTER_TAPS * 2;

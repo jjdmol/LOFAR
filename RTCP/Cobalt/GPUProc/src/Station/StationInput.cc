@@ -200,10 +200,6 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           int rank = targetRanks.at(i);
           const vector<size_t> &targetSubbands(subbandDistribution.at(rank));
 
-          // Do not set up a send engine to nodes that do not process data
-          if (targetSubbands.empty())
-            continue;
-
           /*
            * Set up the MPI send engine for this rank.
            */

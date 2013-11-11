@@ -83,7 +83,7 @@ int main() {
           in.inputSamples[st][i][pol][0] = 1; // real
           in.inputSamples[st][i][pol][1] = 1; // imag
         } else {
-          cerr << "Error: number of bits per sample must be 8, or 16" << endl;
+          cerr << "Error: number of bits per sample must be 4, 8, or 16" << endl;
           exit(1);
         }
       }
@@ -93,7 +93,6 @@ int main() {
   in.blockID.globalSubbandIdx = 0; // Subband index in the observation: [0, ps.nrSubbands())
   in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline: [0, subbandIndices.size())
   in.blockID.subbandProcSubbandIdx = 0; // Subband index for this subbandProc: [0, nrSubbandsPerSubbandProc)
-  in.blockID.subbandProcSubbandIdx = 0; // Subband index for this SubbandProc
 
   // Initialize delays. We skip delay compensation, but init anyway,
   // so we won't copy uninitialized data to the device.

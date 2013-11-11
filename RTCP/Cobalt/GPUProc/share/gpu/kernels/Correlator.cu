@@ -136,13 +136,13 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
    *        = floor(sqrt(8b + 1) - 1) / 2)
    */
 
-  uint stat_A = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
+  uint stat_0 = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
 
   /*
    * And, of course
    *  x = b - y * (y + 1)/2
    */
-  uint stat_0 = baseline - stat_A * (stat_A + 1) / 2;
+  uint stat_A = baseline - stat_0 * (stat_0 + 1) / 2;
 
   // visR and visI will contain the real and imaginary parts, respectively, of
   // the four visibilities (i.e., the four correlation products between the two

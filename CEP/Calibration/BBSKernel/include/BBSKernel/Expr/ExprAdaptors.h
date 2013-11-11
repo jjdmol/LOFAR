@@ -40,6 +40,7 @@ template <typename T_EXPR_VALUE>
 class AsExpr;
 
 // Adaptor class to bundle multiple Expr<Scalar> into a single Expr<Vector<N> >.
+template <>
 template <unsigned int LENGTH>
 class AsExpr<Vector<LENGTH> >: public Expr<Vector<LENGTH> >
 {

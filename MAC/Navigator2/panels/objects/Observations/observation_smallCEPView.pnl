@@ -24,19 +24,7 @@ PANEL,-1 -1 1213 54 N "_3DFace" 1
 }
 
 " 0
- E "main(int x, int y)
-{
-  click(\"Observation\"+observationName);
-}" 0
- "main()
-{
-  rClick(\"Observation\"+observationName);
-}" 0
- "main(int x, int y)
-{
-  dblClick(\"Observation\"+observationName);
-}" 0
- 1 -1 -1 0  0 0
+ E E E E 1 -1 -1 0  0 0
 ""0  1
 E "#uses \"navPanel.ctl\"
 string station = \"\";
@@ -99,7 +87,7 @@ LANG:1 0
 {
   rClick(observationName);
 }" 0
- "main(int x, int y)
+ "main()
 {
   dblClick(observationName);
 }" 0
@@ -131,7 +119,7 @@ void smallCEPView_observationCallback(string dp1, bool aTrig) {
 }
 
 " 0
- "main(int x, int y)
+ "main()
 {
   click(observationName);
 }" 0
@@ -139,7 +127,7 @@ void smallCEPView_observationCallback(string dp1, bool aTrig) {
 2 1
 "observation_text"
 ""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 5 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick(observationName);
@@ -161,8 +149,8 @@ E "main(int x, int y)
 {
   click(observationName);
 }" 0
- 0 1 1 2 1 E U  0 E 10 10 111 23
-0 2 2 "0s" 0 0 0 192 0 0  10 10 1
+ 0 1 1 2 1 E U  0 E 5 10 106 23
+0 2 2 "0s" 0 0 0 192 0 0  5 10 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
 0 1

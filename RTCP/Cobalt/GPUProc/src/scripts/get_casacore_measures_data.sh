@@ -1,88 +1,53 @@
 #!/bin/sh
+
 # get_casacore_measures_tables.sh
-# Retrieve new casacore measures tables under $working_dir and extract. Written for jenkins@fs5 (DAS-4).
-# If it works out, remove very old download dirs starting with $dir_prefix.
-#
+# Retrieve new casacore measures tables and install it atomically.
+
 # $Id$
 
-# Keep these vars in sync with apply_casacore_measures_tables.sh
-working_dir=$HOME/root/share/casacore
-dir_prefix=IERS-
-
-
-update_id=$dir_prefix`date +%FT%T.%N`  # e.g. measures_data-2013-09-26T01:58:30.098006623
-if [ $? -ne 0 ]; then exit 1; fi
 measures_ftp_path=ftp://ftp.atnf.csiro.au/pub/software/measures_data
 measures_data_filename=measures_data.tar.bz2
 measures_md5sum_filename=$measures_data_filename.md5sum
+measures_md5sum_filename2=$measures_md5sum_filename.1  # wget does this if exists
+update_id=`date +%FT%T.%N`  # e.g. 2013-09-26T01:58:30.098006623
 
 
-# Get the data from CSIRO's (slow from NL) FTP server. About 8 MB may take 30 seconds.
+cd $HOME/root/share
+mkdir -p aips++
+cd aips++
+
+# Generate date timestamp for a directory to store the table update.
+# Mangle in nanosecs to survive concurrent update (don't do it!)
+mkdir $update_id
+cd $update_id
+
+# Get the data from CSIRO's (slow from NL) FTP server. About 1 MB may take a minute.
+# Get the md5sum twice, so we safe ourselves another download of the archive when they update the files in between.
 # By default, when wget downloads a file, the timestamp is set to match the timestamp from the remote file.
-download()
-{
-  wget -N --tries=4 \
-    $measures_ftp_path/$measures_data_filename \
-    $measures_ftp_path/$measures_md5sum_filename
-}
+wget --tries=4 \
+  $measures_ftp_path/$measures_md5sum_filename \
+  $measures_ftp_path/$measures_data_filename \
+  $measures_ftp_path/$measures_md5sum_filename
 
 # Verify that md5 hash is equal to hash in $measures_md5sum_filename
 # No need to compare the filename. (And note that the .md5sum from CSIRO contains a CSIRO path.)
-check_md5()
-{
-  local md5sum=`cut -f 1 -d ' ' $measures_md5sum_filename`
-  if [ $? -ne 0 ]; then return 1; fi
-  local data_md5=`md5sum $measures_data_filename | cut -f 1 -d ' '`
-  if [ -z "$data_md5" ]; then return 1; fi
-
-  if [ "$md5sum" != "$data_md5" ]; then
-    echo "Computed and downloaded MD5 sums do not match."
-    return 1
-  fi
-
-  return 0
-}
-
-
-# Use a tmp_ name until it is ready to avoid racing with apply script.
-if ! cd "$working_dir" || ! mkdir "tmp_$update_id" || ! cd "tmp_$update_id"; then exit 1; fi
-if ! download || ! check_md5; then
-  echo "Download or MD5 checksums check failed. Retrying once."
-  rm -f $measures_data_filename $measures_md5sum_filename
-  sleep 2
-  if ! download || ! check_md5; then
-    echo "Download or MD5 checksum check failed again."
-    rm -f $measures_data_filename $measures_md5sum_filename
-    cd .. && rmdir "tmp_$update_id"
-    exit 1
-  fi
+md5sum_pre=`cut -f 1 -d ' ' $measures_md5sum_filename`
+data_md5=`md5sum $measures_data_filename | cut -f 1 -d ' '`
+md5sum_post=`cut -f 1 -d ' ' $measures_md5sum_filename2`
+if [md5sum_pre -ne data_md5 && md5sum_post -ne data_md5]; then
+  echo "MD5 checksums failed to match. Deleting downloaded files. Retrying retrieval once."
+  
+  retrieve()
+  #check/loop
 fi
+echo "MD5 checksum matches the archive."
 
-if ! tar jxf $measures_data_filename; then
-  cd .. && rm -rf "tmp_$update_id"
-  exit 1
-fi
+# Unpack. This will create data/ephemeris/ and data/geodetic/
+tar jxf measures_data.tar.bz2
 
-if ! cd ..; then exit 1; fi  # back to the $working_dir we had
-
-# Remove earlier downloaded entries beyond the 3(+1 new tmp_) latest. ('ls' also sorts.)
-old_update_ids=`ls -d $dir_prefix* 2> /dev/null | head -n -3`
-if [ ! -z "$old_update_ids" ]; then
-  rm -r $old_update_ids
-  if [ $? -ne 0 ]; then
-    echo "Failed to remove old measure table dir(s)."  # not fatal
-  else
-    echo "Removed old measure table dir(s):"
-    echo "$old_update_ids"  # each on a new line
-  fi
-fi
-
-# Make it available to the apply script to install/move it at an opportune moment.
-if ! mv "tmp_$update_id" "$update_id"; then
-  # leave the tmp_ dir in place for manual inspection
-  echo "Error: failed to prepare measures table update 'tmp_$update_id'. Manual intervention likely required."
-  exit 1
-fi
-
-echo "All Cool. Measures table update '$update_id' ready to apply."
+# Everything cool. Switch data/ symlink to the new data/ _atomically_ with a rename.
+# No race with a reader possible. (As long as we don't delete the old data files too early.)
+cd ..   # out of $update_id/
+ln -s $update_id/data data_tmp && mv -Tf data_tmp data
+sync
 

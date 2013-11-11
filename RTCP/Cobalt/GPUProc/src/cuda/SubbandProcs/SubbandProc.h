@@ -26,13 +26,14 @@
 
 #include <Common/Timer.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SubbandMetaData.h>
 #include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
+
+#include "Pool.h"
 
 namespace LOFAR
 {
@@ -168,7 +169,7 @@ namespace LOFAR
      */
     class SubbandProc {
     public:
-      SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc = 1);
+      SubbandProc(const Parset &ps, gpu::Context &context);
       virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected
@@ -205,15 +206,10 @@ namespace LOFAR
 
     protected:
       const Parset &ps;
-      const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
 
       void addTimer(const std::string &name);
-
-      // Returns the number of output elements to create to get a smooth
-      // running pipeline.
-      size_t nrOutputElements() const;
     };
   }
 }

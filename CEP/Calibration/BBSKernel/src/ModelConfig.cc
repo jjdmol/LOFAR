@@ -32,27 +32,11 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-// -------------------------------------------------------------------------- //
-// - ClockConfig implementation                                             - //
-// -------------------------------------------------------------------------- //
-ClockConfig::ClockConfig()
-    : itsSplitClock(false)
-{
-}
-
-ClockConfig::ClockConfig(bool splitClock)
-    :   itsSplitClock(splitClock)
-{
-}
-
-bool ClockConfig::splitClock() const
-{
-  return itsSplitClock;
-}
 
 // -------------------------------------------------------------------------- //
 // - ElevationCutConfig implementation                                      - //
 // -------------------------------------------------------------------------- //
+
 ElevationCutConfig::ElevationCutConfig()
     :   itsThreshold(0.0)
 {
@@ -71,6 +55,7 @@ double ElevationCutConfig::threshold() const
 // -------------------------------------------------------------------------- //
 // - BeamConfig implementation                                              - //
 // -------------------------------------------------------------------------- //
+
 bool BeamConfig::isDefined(Mode in)
 {
     return in != N_Mode;
@@ -137,6 +122,7 @@ bool BeamConfig::conjugateAF() const
 // -------------------------------------------------------------------------- //
 // - IonosphereConfig implementation                                        - //
 // -------------------------------------------------------------------------- //
+
 bool IonosphereConfig::isDefined(ModelType in)
 {
     return in != N_ModelType;
@@ -195,6 +181,7 @@ unsigned int IonosphereConfig::degree() const
 // -------------------------------------------------------------------------- //
 // - FlaggerConfig implementation                                           - //
 // -------------------------------------------------------------------------- //
+
 FlaggerConfig::FlaggerConfig()
     :   itsThreshold(1.0)
 {
@@ -213,6 +200,7 @@ double FlaggerConfig::threshold() const
 // -------------------------------------------------------------------------- //
 // - ModelConfig implementation                                             - //
 // -------------------------------------------------------------------------- //
+
 ModelConfig::ModelConfig()
 {
     fill(itsModelOptions, itsModelOptions + N_ModelOptions, false);
@@ -231,11 +219,6 @@ bool ModelConfig::useBandpass() const
 bool ModelConfig::useClock() const
 {
     return itsModelOptions[CLOCK];
-}
-
-const ClockConfig &ModelConfig::getClockConfig() const
-{
-    return itsConfigClock;
 }
 
 bool ModelConfig::useGain() const
@@ -338,16 +321,9 @@ void ModelConfig::setBandpass(bool value)
     itsModelOptions[BANDPASS] = value;
 }
 
-void ModelConfig::setClockConfig(const ClockConfig &config)
+void ModelConfig::setClock(bool value)
 {
-    itsModelOptions[CLOCK] = true;
-    itsConfigClock = config;
-}
-
-void ModelConfig::clearClockConfig()
-{
-    itsConfigClock = ClockConfig();
-    itsModelOptions[CLOCK] = false;
+    itsModelOptions[CLOCK] = value;
 }
 
 void ModelConfig::setGain(bool value)
@@ -461,26 +437,10 @@ const vector<string> &ModelConfig::sources() const
 // -------------------------------------------------------------------------- //
 // - Non-member functions                                                   - //
 // -------------------------------------------------------------------------- //
-ostream &operator<<(ostream &out, const ClockConfig &obj)
-{
-    out << indent << "Split clock: " << boolalpha << obj.splitClock()
-        << noboolalpha;
-    return out;
-}
 
-ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
+ostream &operator<<(ostream &out, const FlaggerConfig &obj)
 {
-    out << indent << "Threshold: " << obj.threshold() << " (deg)";
-    return out;
-}
-
-ostream &operator<<(ostream &out, const BeamConfig &obj)
-{
-    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
-        << endl << indent << "Use channel frequency: " << boolalpha
-        << obj.useChannelFreq() << noboolalpha
-        << endl << indent << "Conjugate array factor: " << boolalpha
-        << obj.conjugateAF() << noboolalpha;
+    out << indent << "Threshold: " << obj.threshold();
     return out;
 }
 
@@ -497,9 +457,19 @@ ostream &operator<<(ostream &out, const IonosphereConfig &obj)
     return out;
 }
 
-ostream &operator<<(ostream &out, const FlaggerConfig &obj)
+ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Threshold: " << obj.threshold();
+    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+        << endl << indent << "Use channel frequency: " << boolalpha
+        << obj.useChannelFreq() << noboolalpha
+        << endl << indent << "Conjugate array factor: " << boolalpha
+        << obj.conjugateAF() << noboolalpha;
+    return out;
+}
+
+ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
+{
+    out << indent << "Threshold: " << obj.threshold() << " (deg)";
     return out;
 }
 
@@ -514,11 +484,6 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
         << obj.useBandpass() << noboolalpha;
     out << endl << indent << "Clock enabled: " << boolalpha
         << obj.useClock() << noboolalpha;
-    if (obj.useClock()) {
-      Indent id;
-      out << endl << obj.getClockConfig();
-    }
-
     out << endl << indent << "Gain enabled: " << boolalpha
         << obj.useGain() << noboolalpha;
     out << endl << indent << "TEC enabled: " << boolalpha

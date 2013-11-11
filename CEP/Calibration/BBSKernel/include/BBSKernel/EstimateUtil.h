@@ -83,7 +83,7 @@ struct WeightModifierL2;
 //
 // \pre The evaluation grid of \p model should be set to exactly cover all the
 // cells in the range [\p start, \p end] at the same resolution as \p buffer
-// (such that evaluation of \p model yields a model value for each observation
+// (such that evalution of \p model yields a model value for each observation
 // in \p buffer).
 // \pre The range starting at \p cells should contain exactly one instance of
 // T_CELL_PROCESSOR::CellType for each cell in the range [\p start, \p end].
@@ -271,7 +271,6 @@ void equate(const Location &start, const Location &end,
                 continue;
             }
 
-            // Take a slice of current baseline, corr for all freq, time
             typedef boost::multi_array<flag_t, 4>::index_range FRange;
             boost::multi_array<flag_t, 4>::array_view<2>::type flagObs =
                 buffer->flags[boost::indices[blIt->first][FRange()][FRange()]

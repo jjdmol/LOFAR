@@ -390,7 +390,7 @@ def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,st
         stepdTEC=0.005
     else:
         stepdTEC=0.001  # faster wrapping for LBA 
-        stepDelay=3
+
  
     succes=False
     initprevsol=False
@@ -421,10 +421,10 @@ def getClockTECBaselineFit(ph,amp,freqs,SBselect,polIdx,stIdx,useOffset=False,st
                     iD1=-4
                     iD2=4
                  else:
-                    iTEC1=-1.5
-                    iTEC2=1.5
-                    iD1=-50
-                    iD2=300
+                    iTEC1=-1
+                    iTEC2=1
+                    iD1=-200
+                    iD2=200
                 print "First",iTEC1,iTEC2,iD1,iD2
                     
 
@@ -485,7 +485,7 @@ def add_to_h5_func(h5file,data,name='test'):
 
     
 
-def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='BA',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=30000.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all',CStec0=False,ignore_stations=["NOTHING_TO_IGNORE",]):
+def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,stationSelect='',label='fit',SBselect='all',allBaselines=True,useOffset=False,initFromPrevious=False,flagBadChannels=False,flagcut=1.5,chi2cut=300.,removePhaseWraps=False,combine_pol=False,fixedClockforCS=False,timerange='all',CStec0=False):
     global tecarray
     global clockarray
     global offsetarray
@@ -507,19 +507,18 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
     if flagBadChannels:
         rms=lambda x,y: np.sqrt(np.mean(np.square(x-np.mean(x,axis=y)),axis=y))
         ph=ionmodel.phases[timerange[0]:timerange[1],:,1,0,0]-ionmodel.phases[timerange[0]:timerange[1],:,0,0,0]
-        #myrms1=rms(ph[:,SBselect],0)
-        myrms1=rms(ph[:],0)
-        freqselect=myrms1[SBselect]<flagcut*np.average(myrms1[SBselect])
+        myrms1=rms(ph[:,SBselect],0)
+        freqselect=myrms1<flagcut*np.average(myrms1)
         cutlevel=flagcut*np.average(rms(ph[:,SBselect][:,freqselect],0))
+        myrms1=rms(ph[:,SBselect],0)
         SBselect=np.logical_and(SBselect,myrms1<cutlevel)
         print "flagging",np.sum(np.logical_not(SBselect)),"channels"
     freqs=freqs[SBselect]
+        
     if isinstance(stationSelect,str): 
-        stations=[st for st in list(ionmodel.stations[:]) if stationSelect]   
+        stations=[st for st in list(ionmodel.stations[:]) if stationSelect in st]   
     else:
         stations=list(ionmodel.stations[:][stationSelect])
-    for ignore in ignore_stations:
-        stations=[st for st in stations if not ignore in st]
     print "stations",stations
     if doClockTEC:
         clockarray=np.zeros(ionmodel.times[:].shape+ionmodel.stations[:].shape+(2,))
@@ -538,13 +537,8 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
         print 'selected CS',CSstations
         for pol in range(2):
             if combine_pol:
-                #phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
-                ampdata=np.logical_or(amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]==1,amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]==1)
-
-                cdata1=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices])
-                cdata2=1.*np.exp(1j*ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices])
-                phdata=np.angle((cdata1+cdata2)/2.)
-                
+                phdata=ph[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+ph[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
+                ampdata=amp[timerange[0]:timerange[1],:,:,0,(polshape-1)][:,SBselect][:,:,stationIndices]+amp[timerange[0]:timerange[1],:,:,0,0][:,SBselect][:,:,stationIndices]
                 #return phdata
             else:
                 phdata=ph[timerange[0]:timerange[1],:,:,0,pol*(polshape-1)][:,SBselect][:,:,stationIndices]
@@ -580,37 +574,30 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #halfwraps=np.remainder(np.round(np.absolute(wraps[stationIndices]*2)),2)==1
                 #print "found halfwraps for",np.array(stations)[halfwraps]
                 if CStec0:
-                    pos=ionmodel.station_positions[:]
-                    lats=np.degrees(np.arctan2(pos[:,2],np.sqrt(pos[:,0]*pos[:,0]+pos[:,1]*pos[:,1])))
-                    lats-=lats[0]
-                    lats=lats[stationIndices]
-                    TEC=tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol]+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
-                    slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
-                    chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
-                    chi2select=chi2<np.average(chi2)
-                    chi2select=chi2<np.average(chi2[chi2select])
-                    #return chi2,slope,TEC,lats
-                    print "wraps",wraps
-                    print "slope",slope[chi2select][0]                    
-                    offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
+
+                    #get slope of average TECvs lattitude
+                    lats=np.average(ionmodel.piercepoints.cols.positions[:][timerange[0]:timerange[1],0,:,1],axis=0)
+                    stat_select=ionmodel.stat_select[:]
+                    lats=lats[stationIndices[stat_select]]
+                    lats-=lats[0]  #relative -> no offset
+
+                    avgtec=np.average(tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol],axis=0)+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
+                    
+
+                    slope=  np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,avgtec.T)).flatten()
+                    print "slope",slope
+                    
+                    
+
+                    offsets=-1* (avgtec-slope*lats)*2.*np.pi/steps[0]
+                    print "average TEC",avgtec
                     print "step",steps[0]
                     print offsets
+                    remainingwraps=np.zeros(np.sum(stationIndices),dtype=np.float)
+                    #remainingwraps[CSstations]=np.round(offsets[CSstations]/(2*np.pi))-np.round(wraps[stationIndices][CSstations])
                     remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
                     print remainingwraps
                     wraps[stationIndices]+=remainingwraps
-
-                    #one more iteration
-                    if np.sum(np.absolute(remainingwraps))>0:
-                       TEC=tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol]+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
-                       slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
-                       chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
-                       chi2select=chi2<np.average(chi2)
-                       chi2select=chi2<np.average(chi2[chi2select])
-                       offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
-                       print "offsets itereation2:",offsets
-                       remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
-                       print "remaining wraps iteration 2",remainingwraps
-                       wraps[stationIndices]+=remainingwraps
                     #phdata[:,:,:]+=offsets
                     phdata[:,:,CSstations]+=offsets[CSstations]
                     offsetarray[:,stationIndices,pol]+=offsets
@@ -618,14 +605,14 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 #!!!!!!!!!!!!!!!!TESTESTESTSETTE!!!
                 #phdata[:,:,np.arange(1,46,2)]+=0.01*np.arange(1,46,2)
                 initSol=np.zeros((len(stations),2),dtype=np.float)
-                #if combine_pol:
-                #    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
-                #    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
-                #else:
-                initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
-                initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
+                if combine_pol:
+                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*2*np.round(wraps[stationIndices])
+                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*2*np.round(wraps[stationIndices])
+                else:
+                    initSol[:,0]=tecarray[timerange[0],stationIndices,pol]+steps[0]*np.round(wraps[stationIndices])
+                    initSol[:,1]=clockarray[timerange[0],stationIndices,pol]+steps[1]*np.round(wraps[stationIndices])
                 #initSol[:,1]=np.average(clockarray[:,stationIndices,pol]-clockarray[:,[0],pol],axis=0)+steps[1]*np.round(wraps[stationIndices])
-                print "final wraps",np.round(wraps[stationIndices])
+                print "wraps",np.round(wraps[stationIndices])
                 print "prev solutions", clockarray[timerange[0],stationIndices,pol]
                 print "init Clock with", initSol[:,1]
                 print "prev solutions TEC", tecarray[timerange[0],stationIndices,pol]
@@ -647,8 +634,8 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                         'fixedClockforCS':fixedClockforCS}
                 getClockTECBaselineFit(**kwargs)
             if combine_pol:
-                #tecarray/=2.
-                #clockarray/=2.
+                tecarray/=2.
+                clockarray/=2.
                 break;
             
     else:            

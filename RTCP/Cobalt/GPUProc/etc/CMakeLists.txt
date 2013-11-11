@@ -3,9 +3,7 @@
 
 install(FILES
   parset-additions.d/CobaltHardwareMap.parset
-  parset-additions.d/FinalMetaDataGatherer.parset
   parset-additions.d/MAC-feedback.parset
-  parset-additions.d/OutputProc.parset
   parset-additions.d/StationCalibration.parset
   parset-additions.d/StationStreams.parset
   DESTINATION etc/parset-additions.d)

@@ -106,6 +106,12 @@ string	getExecutable (uint16		cntlrType);
 // return 'shared' bit of controllertype
 bool	isSharedController(uint16		cntrlType) ;
 
+// Get the ObservationNr from the controllername.
+uint32	getObservationNr (const string&	ObservationName);
+
+// Get the instanceNr from the controllername.
+uint16	getInstanceNr (const string&	ObservationName);
+
 // Get the controllerType from the controllername.
 int32	getControllerType	(const string&	ObservationName);
 
@@ -114,6 +120,11 @@ string 	observationName(int	obsID);
 
 // Get the name of the parset of the observation.
 string 	observationParset(int	obsID);
+
+// Construct PS name solving markers line @observation@, @ring@, etc.
+string	createPropertySetName(const string&		propSetMask,
+							  const string&		controllerName,
+							  const string&		realDPname = "REALDPNAME");
 
 // Construct a message the matches the given CTState and send it on the port.
 bool sendControlResult(GCF::TM::GCFPortInterface&	port,

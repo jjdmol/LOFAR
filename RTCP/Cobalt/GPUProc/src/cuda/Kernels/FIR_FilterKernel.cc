@@ -22,18 +22,12 @@
 
 #include "FIR_FilterKernel.h"
 #include <GPUProc/global_defines.h>
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
 #include <complex>
-#include <fstream>
 
 using namespace std;
 using boost::lexical_cast;
-using boost::format;
 
 namespace LOFAR
 {
@@ -46,65 +40,53 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrSTABs(nrStations), // default to filter station data
+      nrHistorySamples(ps.nrHistorySamples()),
+      nrPPFTaps(ps.nrPPFTaps()),
       nrSubbands(1)
     {
-      dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);
-      dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_FIR_FilterKernel.dat") % 
-            ps.settings.observationID);
-
-    }
-
-    const unsigned FIR_FilterKernel::Parameters::nrTaps;
-
-    unsigned FIR_FilterKernel::Parameters::nrHistorySamples() const
-    {
-      return (nrTaps - 1) * nrChannelsPerSubband;
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      Kernel(stream, gpu::Function(module, theirFunction)),
       params(params),
-      historyFlags(boost::extents[params.nrSubbands][params.nrSTABs])
+      historyFlags(boost::extents[params.nrSubbands][params.nrStations])
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.filterWeights);
       setArg(3, buffers.historySamples);
 
-      unsigned maxNrThreads = 
+      size_t maxNrThreads = 
         getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
       unsigned totalNrThreads = 
         params.nrChannelsPerSubband * params.nrPolarizations * 2;
       unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
 
-      setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
-                           gpu::Block(totalNrThreads / nrPasses, 1) );
+      globalWorkSize = gpu::Grid(totalNrThreads, params.nrStations);
+      localWorkSize = gpu::Block(totalNrThreads / nrPasses, 1);
 
-      unsigned nrSamples = 
-        params.nrSTABs * params.nrChannelsPerSubband * 
+      size_t nrSamples = 
+        params.nrStations * params.nrChannelsPerSubband * 
         params.nrPolarizations;
 
       nrOperations = 
-        (size_t) nrSamples * params.nrSamplesPerChannel * params.nrTaps * 2 * 2;
+        nrSamples * params.nrSamplesPerChannel * params.nrPPFTaps * 2 * 2;
 
       nrBytesRead = 
-        (size_t) nrSamples * (params.nrTaps - 1 + params.nrSamplesPerChannel) * 
-          params.nrBytesPerComplexSample;
+        nrSamples * (params.nrPPFTaps - 1 + params.nrSamplesPerChannel) * 
+        params.nrBytesPerComplexSample;
 
       nrBytesWritten = 
-        (size_t) nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
+        nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
 
       // Note that these constant weights are now (unnecessarily) stored on the
       // device for every workqueue. A single copy per device could be used, but
       // first verify that the device platform still allows workqueue overlap.
-      FilterBank filterBank(true, params.nrTaps, 
+      FilterBank filterBank(true, params.nrPPFTaps, 
                             params.nrChannelsPerSubband, KAISER);
       filterBank.negateWeights();
 
@@ -115,21 +97,19 @@ namespace LOFAR
 
       // start with all history samples flagged
       for (size_t n = 0; n < historyFlags.num_elements(); ++n)
-        historyFlags.origin()[n].include(0, params.nrHistorySamples());
+        historyFlags.origin()[n].include(0, params.nrHistorySamples);
     }
 
-    void FIR_FilterKernel::enqueue(const BlockID &blockId,
-                                   PerformanceCounter &counter,
-                                   unsigned subbandIdx)
+    void FIR_FilterKernel::enqueue(PerformanceCounter &counter, size_t subbandIdx)
     {
       setArg(4, subbandIdx);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(counter);
     }
 
-    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx) {
-      for (unsigned stationIdx = 0; stationIdx < params.nrSTABs; ++stationIdx) {
+    void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx) {
+      for (size_t stationIdx = 0; stationIdx < params.nrStations; ++stationIdx) {
         // shift sample flags to the right to make room for the history flags
-        inputFlags[stationIdx] += params.nrHistorySamples();
+        inputFlags[stationIdx] += params.nrHistorySamples;
 
         // add the history flags.
         inputFlags[stationIdx] |= historyFlags[subbandIdx][stationIdx];
@@ -139,7 +119,7 @@ namespace LOFAR
         // WITHOUT history samples, but we've also just shifted everything
         // by nrHistorySamples.
         historyFlags[subbandIdx][stationIdx] =
-          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples());
+          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples);
 
         // Shift the flags to index 0
         historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
@@ -154,22 +134,22 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrSamplesPerSubband *
-            itsParameters.nrSTABs * itsParameters.nrPolarizations * 
-            itsParameters.nrBytesPerComplexSample;
+          itsParameters.nrSamplesPerSubband *
+          itsParameters.nrStations * itsParameters.nrPolarizations * 
+          itsParameters.nrBytesPerComplexSample;
       case FIR_FilterKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * sizeof(std::complex<float>);
+          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+          itsParameters.nrPolarizations * sizeof(std::complex<float>);
       case FIR_FilterKernel::FILTER_WEIGHTS:
         return 
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrTaps *
-            sizeof(float);
+          itsParameters.nrChannelsPerSubband * itsParameters.nrPPFTaps *
+          sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
         return
-          (size_t) itsParameters.nrSubbands *
-            itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
+          itsParameters.nrSubbands *
+          itsParameters.nrHistorySamples * itsParameters.nrStations * 
+          itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -184,9 +164,11 @@ namespace LOFAR
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
       defs["NR_TAPS"] = 
-        lexical_cast<string>(itsParameters.nrTaps);
+        lexical_cast<string>(itsParameters.nrPPFTaps);
+      // NR_STABS is a contraction of NR_STATIONS (correlator) and NR_TABS
+      // (beamformer). The kernel deals with either quantity in the same way.
       defs["NR_STABS"] = 
-        lexical_cast<string>(itsParameters.nrSTABs);
+        lexical_cast<string>(itsParameters.nrStations); // TODO: or use nrTABs
       defs["NR_SUBBANDS"] = 
         lexical_cast<string>(itsParameters.nrSubbands);
 

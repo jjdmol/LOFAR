@@ -34,7 +34,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <iosfwd>
 
 #include <boost/shared_ptr.hpp>
 #include "gpu_incl.h" // ideally, this goes into the .cc, but too much leakage
@@ -72,7 +71,6 @@ namespace LOFAR
         unsigned int x;
         unsigned int y;
         unsigned int z;
-        friend std::ostream& operator<<(std::ostream& os, const Block& block);
       };
 
 
@@ -84,7 +82,6 @@ namespace LOFAR
         unsigned int x;
         unsigned int y;
         unsigned int z;
-        friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
       };
 
       // Forward declaration needed by Platform::devices.
@@ -117,7 +114,7 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        unsigned getMaxThreadsPerBlock() const;
+        size_t getMaxThreadsPerBlock() const;
       };
 
       // Wrap a CUDA Device.
@@ -158,20 +155,7 @@ namespace LOFAR
         // Hardware dependent.
         // - Returns at least 512 (except for ancient hardware)
         // - Returns 1024 for K10 (= Cobalt hardware)
-        unsigned getMaxThreadsPerBlock() const;
-
-        // Return the maximum dimensions of a block of threads.
-        struct Block getMaxBlockDims() const;
-
-        // Return the maximum dimensions of a grid of blocks.
-        struct Grid getMaxGridDims() const;
-
-        // Return the number of multi-processors.
-        unsigned getMultiProcessorCount() const;
-
-        // Return the maximum number of threads that can be
-        // resident on a multi-processor.
-        unsigned getMaxThreadsPerMultiProcessor() const;
+        size_t getMaxThreadsPerBlock() const;
 
         // Return information on a specific \a attribute.
         // \param attribute CUDA device attribute
@@ -240,7 +224,6 @@ namespace LOFAR
       {
       public:
         // Allocate \a size bytes of host memory.
-        // \param context CUDA context associated with this HostMemory object.
         // \param size number of bytes to allocate
         // \param flags affect allocation
         // \note To create pinned memory, we need to set
@@ -290,11 +273,11 @@ namespace LOFAR
         void *get() const;
 
         // Fill the first \a n bytes of memory with the constant byte \a uc.
-        // \param uc Constant byte value to put into memory
-        // \param n  Number of bytes to set. Defaults to the complete block.
-        //           If \a n is larger than the current memory block size, then
-        //           the complete block will be set to \a uc.
-        void set(unsigned char uc, size_t n = (size_t)-1);
+        // \param c Constant byte value to put into memory
+        // \param n Number of bytes to set. Defaults to the complete block.
+        //          If \a n is larger than the current memory block size, then
+        //          the complete block will be set to \a uc.
+        void set(unsigned char uc, size_t n = -1);
 
         // Return the size of this memory block.
         size_t size() const;
@@ -324,7 +307,6 @@ namespace LOFAR
 
         // Load the module in the file \a fname into the given \a context. The
         // file should be a \e cubin file or a \e ptx file as output by \c nvcc.
-        // \param context CUDA context associated with this Module object.
         // \param fname name of a module file
         // \note For details, please refer to the documentation of \c
         // cuModuleLoad in the CUDA Driver API.
@@ -333,7 +315,6 @@ namespace LOFAR
         // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
-        // \param context CUDA context associated with this Module object.
         // \param image pointer to a module image in memory
         // \note For details, please refer to the documentation of \c
         // cuModuleLoadData in the CUDA Driver API.
@@ -342,7 +323,6 @@ namespace LOFAR
         // Load the module pointed to by \a image into the given \a context. The
         // pointer may point to a null-terminated string containing \e cubin or
         // \e ptx code.
-        // \param context CUDA context associated with this Module object.
         // \param image pointer to a module image in memory
         // \param options map of \c CUjit_option items, with their associated
         // values.
@@ -478,7 +458,6 @@ namespace LOFAR
       public:
         // Create a stream.
         // \param flags must be 0 for CUDA < 5.0
-        // \param context CUDA context associated with this Stream object.
         // \note For details on valid values for \a flags, please refer to the
         // documentation of \c cuStreamCreate in the CUDA Driver API.
         explicit Stream(const Context &context, unsigned int flags = 0);  // named CU_STREAM_DEFAULT (0) since CUDA 5.0
@@ -519,26 +498,6 @@ namespace LOFAR
         // \param synchronous Indicates whether the transfer must be done
         //        synchronously or asynchronously. Default == false
         void readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        const PerformanceCounter &counter, bool synchronous = false) const;
-
-        // Transfer data from device memory \a devSource to device memory \a devTarget.
-        // \param devTarget Device memory that will be copied to.
-        // \param devSource Device memory that will be copied from.
-        // \param synchronous Indicates whether the transfer must be done
-        //        synchronously or asynchronously.
-        void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
-                        bool synchronous = false) const;
-
-        // Transfer data from device memory \a devSource to device memory \a devTarget.
-        // When gpuProfiling is enabled this transfer is synchronous
-        // \param devTarget Device memory that will be copied to.
-        // \param devSource Device memory that will be copied from.
-        // \param counter PerformanceCounter that will receive transfer duration
-        //        if gpuProfiling is enabled
-        // \param synchronous Indicates whether the transfer must be done
-        //        synchronously or asynchronously. Defaults to \c false
-        //        (asynchronously).
-        void copyBuffer(const DeviceMemory &devTarget, const DeviceMemory &devSource,
                         const PerformanceCounter &counter, bool synchronous = false) const;
 
         // Launch a CUDA function.

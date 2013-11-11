@@ -23,7 +23,6 @@
 #include "PacketReader.h"
 
 #include <typeinfo>
-#include <sys/time.h>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -47,8 +46,7 @@ namespace LOFAR
       nrBadTime(0),
       nrBadData(0),
       nrBadOther(0),
-      hadSizeError(false),
-      lastLogTime(0)
+      hadSizeError(false)
     {
       // Partial reads are not supported on UDP streams, because each read()
       // will consume a full packet.
@@ -120,17 +118,8 @@ namespace LOFAR
 
     void PacketReader::logStatistics()
     {
-      // Determine time since last log
-      struct timeval tv;
-      gettimeofday(&tv, NULL);
-      const double now = (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+      LOG_INFO_STR( logPrefix << "Received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
 
-      const double interval = now - lastLogTime;
-
-      // Emit log line
-      LOG_INFO_STR( logPrefix << (nrReceived/interval) << " pps: received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
-
-      // Reset counters
       nrReceived = 0;
       nrBadTime = 0;
       nrBadSize = 0;

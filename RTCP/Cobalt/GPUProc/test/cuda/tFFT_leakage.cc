@@ -34,7 +34,7 @@
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 
-#include <CoInterface/Parset.h>
+#include "Interface/Parset.h"
 #include <GPUProc/FilterBank.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/cuda/Pipelines/Pipeline.h>

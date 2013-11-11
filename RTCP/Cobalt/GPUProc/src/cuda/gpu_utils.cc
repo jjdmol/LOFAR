@@ -25,7 +25,6 @@
 
 #include <cstdlib>    // for getenv()
 #include <cstdio>     // for popen(), pclose(), fgets()
-#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
@@ -407,15 +406,6 @@ namespace LOFAR
              << " ms):" << endl << &errorLog[0] );
         throw;
       }
-    }
-
-    void dumpBuffer(const gpu::DeviceMemory &deviceMemory, 
-                    const std::string &dumpFile)
-    {
-      LOG_INFO_STR("Dumping device memory to file: " << dumpFile);
-      gpu::HostMemory hostMemory(deviceMemory.fetch());
-      std::ofstream ofs(dumpFile.c_str(), std::ios::binary);
-      ofs.write(hostMemory.get<char>(), hostMemory.size());
     }
 
   } // namespace Cobalt

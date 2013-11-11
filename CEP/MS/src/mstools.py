@@ -183,7 +183,6 @@ def getSBmap (names, nsubbands):
     """
     patt1 = re.compile ('.*_SB')
     patt2 = re.compile ('[^0-9].*')
-    patt3 = re.compile ('_SB[0-9].*')
     sbnrs = np.array([int(patt2.sub ('', patt1.sub('',x))) for x in names])
     firstSB = 0
     if len(sbnrs) == 0:
@@ -191,7 +190,7 @@ def getSBmap (names, nsubbands):
     else:
         firstSB = sbnrs[0] / nsubbands * nsubbands
         if len(sbnrs) != nsubbands:
-            print 'subbands are missing for', patt3.sub('',names[0])
+            print 'subbands are missing for', names[0]
     sbs = [-1 for i in range(nsubbands)]
     for i in range(len(sbnrs)):
         sbs[sbnrs[i] % nsubbands] = i

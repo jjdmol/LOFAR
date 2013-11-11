@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: LofarBitModeInfo.h 21167 2012-06-08 13:36:34Z mol $
 
 #ifndef LOFAR_COMMON_BITMODEINFO_H_
 #define LOFAR_COMMON_BITMODEINFO_H_

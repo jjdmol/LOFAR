@@ -25,8 +25,6 @@
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
-#include <CoInterface/BlockID.h>
-
 #include "FFT_Kernel.h"
 
 namespace LOFAR
@@ -48,15 +46,14 @@ namespace LOFAR
     {
     }
 
-    void FFT_Kernel::enqueue(const BlockID &blockId, 
-                             PerformanceCounter &counter) const
+    void FFT_Kernel::enqueue(PerformanceCounter &counter)
     {
       itsStream.recordEvent(counter.start); 
-      enqueue(blockId);
+      enqueue();
       itsStream.recordEvent(counter.stop); 
     }
 
-    void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
+    void FFT_Kernel::enqueue()
     {
       gpu::ScopedCurrentContext scc(context);
 
@@ -93,8 +90,8 @@ namespace LOFAR
       case INPUT_DATA: 
       case OUTPUT_DATA:
         return
-          (size_t) ps.nrStations() * NR_POLARIZATIONS * 
-            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+          ps.nrStations() * NR_POLARIZATIONS * 
+          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

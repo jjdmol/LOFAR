@@ -98,7 +98,7 @@ namespace LOFAR
 
       WallClockTime waiter;
 
-      friend struct LockedBlock;
+      friend class LockedBlock;
     };
 
   }

@@ -157,22 +157,6 @@ bool testSkipws()
   return true;
 }
 
-bool testStripBrackets()
-{
-  string r1(" 	 	 a String with leading and trailing whitespace	 ");
-  string r2("a String without leading and trailing whitespace");
-  string r3("	   [a string with [ and ] inside and surrounding the text.	]  ");
-  string r4("[	   [ a string with multiple [ and ] inside and surrounding the text.	] 	] ");
-
-  cout << "Bracket-stripped C++ strings:" << endl;
-  cout << ">" << stripBrackets(r1) << "<" << endl;
-  cout << ">" << stripBrackets(r2) << "<" << endl;
-  cout << ">" << stripBrackets(r3) << "<" << endl;
-  cout << ">" << stripBrackets(r4) << "<" << endl;
-
-  return true;
-}
-
 
 bool testCase()
 {
@@ -392,7 +376,6 @@ int main()
     testCompare(false) &&
     testCompare(true)  &&
     testTrim()         &&
-    testStripBrackets()&&
     testSkipws()       &&
     testCase()         &&
     testToString()     &&

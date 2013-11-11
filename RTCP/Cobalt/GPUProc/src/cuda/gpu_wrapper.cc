@@ -24,7 +24,6 @@
 #include "gpu_wrapper.h"
 
 #include <string>
-#include <iostream>
 #include <algorithm>  // for std::min and std::max
 
 #include <boost/noncopyable.hpp>
@@ -210,22 +209,12 @@ namespace LOFAR
       {
       }
 
-      std::ostream& operator<<(std::ostream& os, const Block& block)
-      {
-        os << "[" << block.x << ", " << block.y << ", " << block.z << "]";
-        return os;
-      }
 
       Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
       }
 
-      std::ostream& operator<<(std::ostream& os, const Grid& grid)
-      {
-        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
-        return os;
-      }
 
       Platform::Platform(unsigned int flags)
       {
@@ -273,14 +262,14 @@ namespace LOFAR
         return "NVIDIA CUDA";
       }
 
-      unsigned Platform::getMaxThreadsPerBlock() const
+      size_t Platform::getMaxThreadsPerBlock() const
       {
         const std::vector<Device> _devices = devices();
 
-        unsigned lowest = 0;
+        size_t lowest = 0;
 
         for (std::vector<Device>::const_iterator i = _devices.begin(); i != _devices.end(); ++i) {
-          const unsigned maxThreadsPerBlock = i->getMaxThreadsPerBlock();
+          const size_t maxThreadsPerBlock = i->getMaxThreadsPerBlock();
 
           if (i == _devices.begin() || maxThreadsPerBlock < lowest)
             lowest = maxThreadsPerBlock;
@@ -364,37 +353,9 @@ namespace LOFAR
         return str(format("%04x:%04x") % bus % device);
       }
 
-      unsigned Device::getMaxThreadsPerBlock() const
+      size_t Device::getMaxThreadsPerBlock() const
       {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      }
-
-      struct Block Device::getMaxBlockDims() const
-      {
-        Block block;
-        block.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X);
-        block.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y);
-        block.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z);
-        return block;
-      }
-
-      struct Grid Device::getMaxGridDims() const
-      {
-        Grid grid;
-        grid.x = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X);
-        grid.y = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y);
-        grid.z = (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z);
-        return grid;
-      }
-
-      unsigned Device::getMultiProcessorCount() const
-      {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT);
-      }
-
-      unsigned Device::getMaxThreadsPerMultiProcessor() const
-      {
-        return (unsigned)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
+        return (size_t)getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
       }
 
       int Device::getAttribute(CUdevice_attribute attribute) const
@@ -868,14 +829,6 @@ namespace LOFAR
           checkCuCall(cuMemcpyDtoHAsync(hostPtr, devPtr, size, _stream));
         }
 
-        void memcpyDtoDAsync(CUdeviceptr targetPtr, CUdeviceptr sourcePtr, 
-                             size_t size)
-        {
-          ScopedCurrentContext scc(_context);
-
-          checkCuCall(cuMemcpyDtoDAsync(targetPtr, sourcePtr, size, _stream));
-        }
-
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
                           unsigned blockZ, unsigned sharedMemBytes,
@@ -982,45 +935,6 @@ namespace LOFAR
         else
         {
           writeBuffer(devMem, hostMem, synchronous);
-        }
-      }
-
-      void Stream::copyBuffer(const DeviceMemory &devTarget, 
-                              const DeviceMemory &devSource,
-                              bool synchronous) const
-      {
-        // tmp check: avoid async writeBuffer request that will fail later.
-        // TODO: This interface may still change at which point a cleaner solution can be used.
-        if (devSource.size() > devTarget.size())
-        {
-          THROW(CUDAException, "copyBuffer(): device source buffer too large for device target buffer: " <<
-                "source buffer is " << devSource.size() << " bytes, " << 
-                "device buffer is " << devTarget.size() << " bytes");
-        }
-
-        _impl->memcpyDtoDAsync((CUdeviceptr)devTarget.get(), 
-                               (CUdeviceptr)devSource.get(),
-                               devSource.size());
-        if (synchronous || force_synchronous) 
-        {
-          synchronize();
-        }
-      }
-
-      void Stream::copyBuffer(const DeviceMemory &devTarget, 
-                              const DeviceMemory &devSource,
-                              const PerformanceCounter &counter,
-                              bool synchronous) const
-      {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          copyBuffer(devTarget, devSource, synchronous); 
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          copyBuffer(devTarget, devSource, synchronous);
         }
       }
 
