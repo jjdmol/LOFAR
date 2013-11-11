@@ -465,8 +465,9 @@ goto_level()
               for (( s=0 ; s<timeout; s++ ))
 	      do 
                 tbb_respons=`tbbctl --version`
-		tbb_ready=`( echo $tbb_respons | grep "0\ V" ) >& /dev/null; echo $?`
+		tbb_ready=`( echo $tbb_respons | grep "\ V\ " ) >& /dev/null; echo $?`
 	        if [ $tbb_ready -eq 0 ]; then
+                    sleep 10
 		    echo "TBB Images are loaded"
 		    break
 	        fi
