@@ -44,9 +44,9 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrBitsPerSample;
-        size_t nrBytesPerComplexSample;
-        size_t nrSAPs;
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample;
+        unsigned nrSAPs;
         bool delayCompensation;
         bool correctBandPass;
         bool transpose;
@@ -87,13 +87,13 @@ namespace LOFAR
                              const Parameters &param);
 
 
-      void enqueue(gpu::Stream &queue,
-                    PerformanceCounter &counter,
-                   float subbandFrequency, size_t SAP);
+      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+                   double subbandFrequency, unsigned SAP);
+
     };
 
-    // Specialization of the KernelFactory for
-    // DelayAndBandPassKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
 

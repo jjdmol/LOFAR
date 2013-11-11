@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1013 750 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -198,24 +198,22 @@ LANG:1 0
 0
 1 129 0 "" 12
 0
-1 130 0 "" 13
+1 130 0 "" 15
 0
-1 131 0 "" 15
+1 131 0 "" 16
 0
-1 132 0 "" 16
+1 132 0 "" 17
 0
-1 133 0 "" 17
+1 133 0 "" 18
 0
-1 134 0 "" 18
+1 134 0 "" 19
 0
-1 135 0 "" 19
-0
-1 136 0 "" 20
+1 135 0 "" 20
 0
 2 50
 "PRIMITIVE_TEXT8"
 ""
-1 30 320 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 142 602 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -225,12 +223,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 320 95 334
-0 2 2 "0s" 0 0 0 192 0 0  30 320 1
+E E 0 1 1 2 1 E U  1 E 142 602 207 615
+0 2 2 "0s" 0 0 0 192 0 0  142 602 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 Connected:
 6 51
 "connectedText"
@@ -245,11 +242,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E 1 0 1 -45 -20 1 E 160 340 175 355
+E E 0 1 1 2 1 E 1 0 1 67 262 1 E 160 340 175 355
 2 65
 "PRIMITIVE_TEXT9"
 ""
-1 32 404 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 634 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -259,17 +256,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 404 67 418
-0 2 2 "0s" 0 0 0 192 0 0  32 404 1
+E E 0 1 1 2 1 E U  1 E 42 634 77 647
+0 2 2 "0s" 0 0 0 192 0 0  42 634 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 rcuNr:
 14 66
 "rcuNrText"
 ""
-1 112 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 117 632 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 31 0 0 0 0 0
 E E E
@@ -279,14 +275,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 398 334 419
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  120 630 339 651
 2 "0s" 0 0 0 0 0 -1  E E E
 2 84
 "PRIMITIVE_TEXT11"
 ""
-1 32 425 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 654 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 41 0 0 0 0 0
 E E E
@@ -296,17 +291,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 425 104 439
-0 2 2 "0s" 0 0 0 192 0 0  32 425 1
+E E 0 1 1 2 1 E U  1 E 42 654 114 667
+0 2 2 "0s" 0 0 0 192 0 0  42 654 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 11 sequenceNr:
 14 85
 "sequenceNrText"
 ""
-1 107 401 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 112 632 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 43 0 0 0 0 0
 E E E
@@ -316,14 +310,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 419 334 440
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  120 650 339 671
 2 "0s" 0 0 0 0 0 -1  E E E
 2 86
 "PRIMITIVE_TEXT12"
 ""
-1 32 446 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 674 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 45 0 0 0 0 0
 E E E
@@ -333,17 +326,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 446 59 460
-0 2 2 "0s" 0 0 0 192 0 0  32 446 1
+E E 0 1 1 2 1 E U  1 E 42 674 69 687
+0 2 2 "0s" 0 0 0 192 0 0  42 674 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 5 time:
 14 87
 "timeText"
 ""
-1 115.771428571429 442 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 120.771428571429 674 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 47 0 0 0 0 0
 E E E
@@ -353,14 +345,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 440 334 461
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  120 672 339 693
 2 "0s" 0 0 0 0 0 -1  E E E
 2 88
 "PRIMITIVE_TEXT13"
 ""
-1 32 467 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 694 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 49 0 0 0 0 0
 E E E
@@ -370,17 +361,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 467 88 481
-0 2 2 "0s" 0 0 0 192 0 0  32 467 1
+E E 0 1 1 2 1 E U  1 E 42 694 98 707
+0 2 2 "0s" 0 0 0 192 0 0  42 694 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 9 sampleNr:
 14 89
 "sampleNrText"
 ""
-1 112 400 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 117 632 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 51 0 0 0 0 0
 E E E
@@ -390,14 +380,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 461 334 482
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  120 693 339 714
 2 "0s" 0 0 0 0 0 -1  E E E
 2 90
 "PRIMITIVE_TEXT14"
 ""
-1 32 488 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 714 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 53 0 0 0 0 0
 E E E
@@ -407,17 +396,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 488 58 502
-0 2 2 "0s" 0 0 0 192 0 0  32 488 1
+E E 0 1 1 2 1 E U  1 E 42 714 68 727
+0 2 2 "0s" 0 0 0 192 0 0  42 714 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 4 sum:
 14 91
 "sumText"
 ""
-1 110 394 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 115 625 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 55 0 0 0 0 0
 E E E
@@ -427,14 +415,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 482 334 503
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  120 713 339 734
 2 "0s" 0 0 0 0 0 -1  E E E
 2 92
 "PRIMITIVE_TEXT15"
 ""
-1 32 509 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 602 634 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 57 0 0 0 0 0
 E E E
@@ -444,17 +431,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 509 94 523
-0 2 2 "0s" 0 0 0 192 0 0  32 509 1
+E E 0 1 1 2 1 E U  1 E 602 634 664 647
+0 2 2 "0s" 0 0 0 192 0 0  602 634 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 nrSamples:
 14 93
 "nrSamplesText"
 ""
-1 110 385 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 685 512 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 59 0 0 0 0 0
 E E E
@@ -464,14 +450,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 503 334 524
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  690 630 909 651
 2 "0s" 0 0 0 0 0 -1  E E E
 2 94
 "PRIMITIVE_TEXT16"
 ""
-1 32 530 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 604 654 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 61 0 0 0 0 0
 E E E
@@ -481,17 +466,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 530 96 544
-0 2 2 "0s" 0 0 0 192 0 0  32 530 1
+E E 0 1 1 2 1 E U  1 E 604 654 668 667
+0 2 2 "0s" 0 0 0 192 0 0  604 654 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 10 peakValue:
 14 95
 "peakValueText"
 ""
-1 110 376 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 685 502 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 63 0 0 0 0 0
 E E E
@@ -501,14 +485,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 524 334 545
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  690 650 909 671
 2 "0s" 0 0 0 0 0 -1  E E E
 2 96
 "PRIMITIVE_TEXT17"
 ""
-1 32 551 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 604 674 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 65 0 0 0 0 0
 E E E
@@ -518,17 +501,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 551 63 565
-0 2 2 "0s" 0 0 0 192 0 0  32 551 1
+E E 0 1 1 2 1 E U  1 E 604 674 635 687
+0 2 2 "0s" 0 0 0 192 0 0  604 674 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 flags:
 14 97
 "flagsText"
 ""
-1 110 367 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 685 494 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 67 0 0 0 0 0
 E E E
@@ -538,14 +520,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 545 334 566
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  690 672 909 693
 2 "0s" 0 0 0 0 0 -1  E E E
 2 98
 "PRIMITIVE_TEXT18"
 ""
-1 32 572 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 606 694 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 69 0 0 0 0 0
 E E E
@@ -555,17 +536,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 572 64 586
-0 2 2 "0s" 0 0 0 192 0 0  32 572 1
+E E 0 1 1 2 1 E U  1 E 606 694 638 707
+0 2 2 "0s" 0 0 0 192 0 0  606 694 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 6 table:
 14 99
 "tableText"
 ""
-1 110 358 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 685 484 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 71 0 0 0 0 0
 E E E
@@ -575,14 +555,13 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 566 334 587
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  690 692 909 713
 2 "0s" 0 0 0 0 0 -1  E E E
 2 100
 "PRIMITIVE_TEXT19"
 ""
-1 30 370 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 42 602 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E
@@ -592,17 +571,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 30 370 74 384
-0 2 2 "0s" 0 0 0 192 0 0  30 370 1
+E E 0 1 1 2 1 E U  1 E 42 602 86 615
+0 2 2 "0s" 0 0 0 192 0 0  42 602 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 8 Trigger:
 2 118
 "PRIMITIVE_TEXT20"
 ""
-1 32 593 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 606 714 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 74 0 0 0 0 0
 E E E
@@ -612,17 +590,16 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 32 593 74 607
-0 2 2 "0s" 0 0 0 192 0 0  32 593 1
+E E 0 1 1 2 1 E U  1 E 606 714 648 727
+0 2 2 "0s" 0 0 0 192 0 0  606 714 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
+LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+0 1
 LANG:1 7 missed:
 14 119
 "missedText"
 ""
-1 110 379 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 685 505 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 76 0 0 0 0 0
 E E E
@@ -632,9 +609,8 @@ LANG:1 0
 
 0
 1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
- 115 587 334 608
+LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
+0  690 713 909 734
 2 "0s" 0 0 0 0 0 -1  E E E
 0
 LAYER, 1 
@@ -665,8 +641,8 @@ LAYER, 7
 1
 LANG:1 0 
 0
-3 0 "PANEL_REF1"
-"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
+3 0 "PANEL_REF1" -1
+"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 0 -40
 1
 "$ctrlName""TBBControl"
 0

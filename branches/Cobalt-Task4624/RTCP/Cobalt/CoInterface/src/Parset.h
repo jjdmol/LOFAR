@@ -141,9 +141,6 @@ namespace LOFAR
       
       struct DelayCompensation delayCompensation;
 
-      // Number of PPF taps. Set to 16.
-      unsigned nrPPFTaps;
-
       /*
        * Station information
        */
@@ -457,6 +454,16 @@ namespace LOFAR
           //
           // size: Observation.Beam[sap].nrTiedArrayBeams
           std::vector<struct TAB> TABs;
+
+          // Return the number of coherentstokes tabs, 
+          size_t nrCoherentTAB() const;
+
+          // Return the number of incoherentstokes tabs
+          size_t nrIncoherentTAB() const;
+
+          // calculated at construction time
+          size_t nrCoherent;
+          size_t nrIncoherent;
         };
 
         // All SAPs, with information about the TABs to form.
@@ -538,6 +545,9 @@ namespace LOFAR
       // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
       // ("CS001","CS002") and the antenna set.
       static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+
+      // List of host names to start outputProc on
+      std::vector<std::string> outputProcHosts;
     };
 
 
@@ -598,8 +608,6 @@ namespace LOFAR
       double                      IONintegrationTime() const;
       unsigned                    nrSamplesPerChannel() const;
       unsigned                    nrSamplesPerSubband() const;
-      unsigned                    nrHistorySamples() const;
-      unsigned                    nrPPFTaps() const;
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;
@@ -688,6 +696,7 @@ namespace LOFAR
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;
 
+      std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
       struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;

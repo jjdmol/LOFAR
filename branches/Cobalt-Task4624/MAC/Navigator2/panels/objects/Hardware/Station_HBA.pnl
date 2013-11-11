@@ -48,10 +48,12 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
   tbboard  = navFunct_receiver2TBB(curXRCU);
   rspboard = navFunct_receiver2RSP(curXRCU); 
   
-  
+  string logMsg;
+  dpGet(antennaDP+\".status.message\",logMsg);
   string strColor   = \"yellow\";
-  
+    
   string strToolTip=\"Antenna: \"+curHBA;
+  strToolTip += \"<br> last status msg:\" + logMsg;
   strToolTip += \"<br> located on: Cabinet:\" + cabinet;
   strToolTip += \"<br> ->Subrack\" + subrack;
   strToolTip += \"<br> -> TBB\" + tbboard;
@@ -81,7 +83,7 @@ PANEL,-1 -1 241 145 N "_3DFace" 4
                                  baseDPY+ \".status.state\",
                                  antennaDP  + \".status.state:_online.._invalid\");
     if (!navFunct_dpReachable(antennaDP)) {
-      updateHBAAntenna(\"\",0,\"\",false,\"\",false,\"\",0,\"\",0,\"\",true);
+      updateHBAAntenna(\"\",0,\"\",0,\"\",false,\"\",false,\"\",0,\"\",0,\"\",true);
     }
   } else {
     setValue(\"HBA\", \"backCol\", \"Lofar_dpdoesnotexist\");

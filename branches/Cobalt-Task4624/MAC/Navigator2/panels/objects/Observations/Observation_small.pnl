@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 999 293 N "_3DFace" 1
+PANEL,-1 -1 1200 242 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -183,7 +183,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,13,5,50,0,0,0,0,0
-0  -2 -2 991 202
+0  -2 -2 1202 242
 "main()
 {
   myTable.tableMode(TABLE_SELECT_BROWSE);
@@ -217,7 +217,7 @@ E
 1
 LANG:1 0 
 
-125 "State" 1 1 0 "s" 1
+150 "State" 1 1 0 "s" 1
 LANG:1 1 S
 E
 1

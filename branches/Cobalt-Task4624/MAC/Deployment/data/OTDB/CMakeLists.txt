@@ -9,6 +9,8 @@ install(PROGRAMS
   loadPICtree
 DESTINATION sbin)
 
+install(PROGRAMS Component_diff.sh DESTINATION sbin RENAME Component_diff)
+
 file(GLOB otdb_comps
   *.comp
   *.list

@@ -76,13 +76,13 @@ OnlineControl			OLC		C	N	LOFAR_ObsSW_@observation@_OnlineControl
 PythonControl			-		C	N	LOFAR_ObsSW_@observation@_PythonControl
 BGPAppl				BGPA		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
-CobaltRack			-		C	N	LOFAR_PIC_@cobalt@
-CobaltNode			-		C	N	LOFAR_PIC_@cobalt@_@cobaltnode@
-CobaltNIC			-		C	Y	LOFAR_PIC_@cobalt@_@cobaltnode@_@cobaltnic@
+CobaltRack			-		C	N	LOFAR_PIC_Cobalt
+CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
+CobaltNIC			-		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
 PSCobaltNode			-		C	N	LOFAR_PermSW_@pscobaltnode@
 CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@pscobaltnode@_CobaltStationInput
 CobaltGPUProc			CGP		C	Y	LOFAR_ObsSW_@observation@_@oscobaltnode@_@cobaltgpuproc@
-CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_@cobaltoutputproc@
+CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
 #
 StnLOFAR			-		S	N	LOFAR
 StnPIC				-		S	N	LOFAR_PIC

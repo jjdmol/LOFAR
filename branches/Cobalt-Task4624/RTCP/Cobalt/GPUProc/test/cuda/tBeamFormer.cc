@@ -42,23 +42,23 @@ using namespace std;
 using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
-using LOFAR::Exception;
 
-// The tests succeeds for different values of stations, channels, samples and tabs.
+// The tests succeed for different values of stations, channels, samples and TABs.
 unsigned NR_STATIONS = 4;  
 unsigned NR_CHANNELS = 4;
 unsigned NR_SAMPLES_PER_CHANNEL = 4;
 unsigned NR_SAPS = 2;
 unsigned NR_TABS = 4;
 unsigned NR_POLARIZATIONS = 2;
-unsigned COMPLEX = 2;
 
 
-// Create the data arrays
-size_t lengthDelaysData = NR_SAPS * NR_STATIONS * NR_TABS;
-size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX;
-size_t lengthComplexVoltagesData = NR_CHANNELS* NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS * COMPLEX;
+// Length in elements of the data arrays
+size_t lengthDelaysData = NR_SAPS * NR_STATIONS * NR_TABS; // double
+size_t lengthBandPassCorrectedData = NR_STATIONS * NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS; // complex<float>
+size_t lengthComplexVoltagesData = NR_CHANNELS * NR_SAMPLES_PER_CHANNEL * NR_TABS * NR_POLARIZATIONS; // complex<float>
 
+
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 
 void exit_with_print(const complex<float> *outputOnHostPtr)
@@ -92,10 +92,10 @@ void exit_with_print(const complex<float> *outputOnHostPtr)
 
 HostMemory runTest(Context ctx,
                    Stream cuStream,
-                   float * delaysData,
-                   float * bandPassCorrectedData,
-                   float * complexVoltagesData,
-                   float subbandFrequency,
+                   double * delaysData,
+                   complex<float> * bandPassCorrectedData,
+                   complex<float> * complexVoltagesData,
+                   double subbandFrequency,
                    unsigned sap,
                    string function,
                    float weightCorrection,
@@ -119,9 +119,8 @@ HostMemory runTest(Context ctx,
   definitions["NR_SAPS"] = lexical_cast<string>(NR_SAPS);
   definitions["NR_TABS"] = lexical_cast<string>(NR_TABS);
   definitions["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
-  definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
   definitions["WEIGHT_CORRECTION"] = str(boost::format("%.7ff") % weightCorrection);
-  definitions["SUBBAND_BANDWIDTH"] = str(boost::format("%.7ff") % subbandBandwidth);
+  definitions["SUBBAND_BANDWIDTH"] = str(boost::format("%.7f") % subbandBandwidth);
 
   vector<Device> devices(1, ctx.getDevice());
   string ptx = createPTX(kernelFile, definitions, flags, devices);
@@ -130,26 +129,26 @@ HostMemory runTest(Context ctx,
 
   // *************************************************************
   // Create the data arrays
-  size_t sizeDelaysData = lengthDelaysData * sizeof(float);
+  size_t sizeDelaysData = lengthDelaysData * sizeof(double);
   DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
   HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
-  float *rawDelaysPtr = rawDelaysData.get<float>();
+  double *rawDelaysPtr = rawDelaysData.get<double>();
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
     rawDelaysPtr[idx] = delaysData[idx];
   cuStream.writeBuffer(devDelaysMemory, rawDelaysData);
 
-  size_t sizeBandPassCorrectedData = lengthBandPassCorrectedData * sizeof(float);
+  size_t sizeBandPassCorrectedData = lengthBandPassCorrectedData * sizeof(complex<float>);
   DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
   HostMemory rawBandPassCorrectedData = getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
-  float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
+  complex<float> *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<complex<float> >();
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
     rawBandPassCorrectedPtr[idx] = bandPassCorrectedData[idx];
   cuStream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
 
-  size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(float);
+  size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(complex<float>);
   DeviceMemory devComplexVoltagesMemory(ctx, sizeComplexVoltagesData);
   HostMemory rawComplexVoltagesData = getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
-  float *rawComplexVoltagesPtr = rawComplexVoltagesData.get<float>();
+  complex<float> *rawComplexVoltagesPtr = rawComplexVoltagesData.get<complex<float> >();
   for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
     rawComplexVoltagesPtr[idx] = complexVoltagesData[idx];
   // Write output content.
@@ -176,13 +175,11 @@ HostMemory runTest(Context ctx,
   return rawComplexVoltagesData; 
 }
 
-Exception::TerminateHandler t(Exception::terminate);
-
-
 int main()
 {
   INIT_LOGGER("tBeamFormer");
   const char function[] = "beamFormer";
+
   try 
   {
     Platform pf;
@@ -201,37 +198,41 @@ int main()
 
   // Define the input and output arrays
   // ************************************************************* 
-  float * complexVoltagesData = new float[lengthComplexVoltagesData];
-  float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
-  float * delaysData= new float[lengthDelaysData];
+  complex<float>* complexVoltagesData = new complex<float>[lengthComplexVoltagesData];
+  complex<float>* bandPassCorrectedData = new complex<float>[lengthBandPassCorrectedData];
+  double * delaysData= new double[lengthDelaysData];
   complex<float>* outputOnHostPtr;
 
-  float subbandFrequency = 1.5e8f; // Hz
+  complex<float> refVal;
+
+  double subbandFrequency = 1.5e8; // Hz
   unsigned sap = 0;
 
   float weightCorrection = 1.0f;
   double subbandBandwidth = 200e3; // Hz
 
+  const float POISONF = 42.0f; // to init output data for easy recognition if not written to by the kernel
+
   // ***********************************************************
-  // Baseline test: If all delays data is zero and input (1, 1) (and weightCorrection=1),
+  // Baseline test 1: If all delays data is zero and input (1, 1) (and weightCorrection=1),
   // then the output must be all (NR_STATIONS, NR_STATIONS). (See below and/or kernel why.)
   // The output array is initialized with 42s
   cout << "test 1" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
+    complexVoltagesData[idx].real(POISONF);
+    complexVoltagesData[idx].imag(POISONF);
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
   {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+    bandPassCorrectedData[idx].real(1.0f);
+    bandPassCorrectedData[idx].imag(1.0f);
   }
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 0.0f;
+    delaysData[idx] = 0.0;
   }
 
   HostMemory outputOnHost1 = runTest(ctx, cuStream, delaysData,
@@ -242,46 +243,46 @@ int main()
                                      weightCorrection, subbandBandwidth);
 
   /*
-   * Test 1 Reference output calculation:
+   * Reference output calculation:
    * The kernel calculates the beamformer weights per station from the delays (and the weightCorrection).
    * Since delays is 0, phi will be -M_PI * delay * channel_frequency = 0.
    * The complex weight is then (cos(phi), sin(phi)) * weightCorrection = (1, 0) * 1.
    * The samples (all (1, 1)) are then complex multiplied with the weights and summed for all (participating) stations.
    * The complex mul gives (1, 1). Summing NR_STATIONS of samples gives (NR_STATIONS, NR_STATIONS) for all samples.
    */
-  const complex<float> refval(NR_STATIONS, NR_STATIONS);
+  refVal.real((float)NR_STATIONS);
+  refVal.imag((float)NR_STATIONS);
 
   // Validate the returned data array
   outputOnHostPtr = outputOnHost1.get<complex<float> >();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
-    if (!fpEquals(outputOnHostPtr[idx], refval))
+    if (!fpEquals(outputOnHostPtr[idx], refVal))
     {
       cerr << "The data returned by the kernel should be all (NR_STATIONS, NR_STATIONS): All input is (1, 1) and all delays are zero.";
       exit_with_print(outputOnHostPtr);
     }
   }
 
-#if 0
   // ***********************************************************
   // Baseline test 2: If all input data is zero the output should be zero while the delays are non zero
   // The output array is initialized with 42s
   cout << "test 2" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
+    complexVoltagesData[idx].real(POISONF);
+    complexVoltagesData[idx].imag(POISONF);
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
   {
-    bandPassCorrectedData[idx * 2] = 0.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 0.0f;
+    bandPassCorrectedData[idx].real(0.0f);
+    bandPassCorrectedData[idx].imag(0.0f);
   }
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = 1.0;
   }
 
   HostMemory outputOnHost2 = runTest(ctx, cuStream, delaysData,
@@ -291,38 +292,56 @@ int main()
                                      function,
                                      weightCorrection, subbandBandwidth);
 
+  refVal.real(0.0f);
+  refVal.imag(0.0f);
 
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost2.get<float>();
+  outputOnHostPtr = outputOnHost2.get<complex<float> >();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    if (outputOnHostPtr[idx] != 0.0f)
+    if (!fpEquals(outputOnHostPtr[idx], refVal))
     {
       cerr << "The data returned by the kernel should be all zero: All inputs are zero";
       exit_with_print(outputOnHostPtr);
     }
-    
+
 
   // ***********************************************************
-  // Test 3: all inputs 1 (including imag)
-  // with only the real delay set to 1.
-  // all outputs should be 4
+  // Test 3: Test all, but cause reasonably "simple" reference output.
+  // Set an unrealistic sb freq and bw, such that the ref output becomes a simple, non-zero nr and the same for all channels.
+  // Make sure the mult of (any channelFrequency, delay) ends up at an -(integer+(1/12)). The phi will then be a 2N+pi/6,
+  // whose cos and sin are then "simple", non-zero. The phase shift to (complex) mult the samples with is ( cos(phi), sin(phi) ),
+  // possibly times some weight correction. Then sum over all stations, i.e. all equal, so * NR_STATIONS.
+
   cout << "test 3" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
+  for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
   {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
+    complexVoltagesData[idx].real(POISONF);
+    complexVoltagesData[idx].imag(POISONF);
   }
 
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
+  const complex<float> inputVal((float)sqrt(3.0), 2.0f); // to square a sqrt(3) later
+  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
   {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+    bandPassCorrectedData[idx].real(inputVal.real());
+    bandPassCorrectedData[idx].imag(inputVal.imag());
   }
 
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
   {
-    delaysData[idx] = 1.0f;
+    delaysData[idx] = -0.5; // to get rid of the -2 in the *-2*pi, to get a nice phi
   }
+
+  subbandFrequency = 200 + 1.0/6.0; // to get a nice phi of N+pi/6 with N some 
+  subbandBandwidth = 4.0 * NR_CHANNELS; // on NR_CHANNELS=4 gives chnl freqs {192+1/6, 196+1/6, 200+1/6, 204+1/6}
+  weightCorrection = 2.0f;
+
+  complex<double> cosSinPhi(
+                    cos(M_PI / 6.0),  // 0.5*sqrt(3.0) (~ 0.86602540378443864676)
+                    sin(M_PI / 6.0)); // 0.5
+
+  // refVal.real() is a nice 3*NR_STATIONS; imag() ends up at the just acceptable ref output nr of 3*sqrt(3)*NR_STATIONS
+  refVal = cosSinPhi * (double)weightCorrection * complex<double>(inputVal.real(), inputVal.imag()) * (double)NR_STATIONS;
+  cout << "Expected ref output for test 3: " << refVal << endl;
 
   HostMemory outputOnHost3 = runTest(ctx, cuStream, delaysData,
                                      bandPassCorrectedData,
@@ -332,99 +351,14 @@ int main()
                                      weightCorrection, subbandBandwidth);
 
   // Validate the returned data array
-  outputOnHostPtr = outputOnHost3.get<float>();
+  outputOnHostPtr = outputOnHost3.get<complex<float> >();
   for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    if (outputOnHostPtr[idx] != NR_STATIONS * 1.0f)
+    if (!fpEquals(outputOnHostPtr[idx], refVal))
     {
-      cerr << "all the data returned by the kernel should be (" << NR_STATIONS << ", " << NR_STATIONS << ")" ;
+      cerr << "all the data returned by the kernel should be " << refVal << endl;
       exit_with_print(outputOnHostPtr);
     }
     
-  // ***********************************************************
-  // Test 4: all inputs 1 (including imag)
-  // with only the real delay set to 1 and imag also 1
-  // all outputs should be (0,8) 
-  // (1 , i) * (1, i) == 1 * 1 + i * i + 1 * i + 1 * i= 1 -1 +2i = 2i
-  // times 4 stations is (0,8)
-  cout << "test 4" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
-  {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
-  {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
-  {
-    delaysData[idx] = 1.0f;
-  }
-
-  HostMemory outputOnHost4 = runTest(ctx, cuStream, delaysData,
-                                     bandPassCorrectedData,
-                                     complexVoltagesData,
-                                     subbandFrequency, sap,
-                                     function,
-                                     weightCorrection, subbandBandwidth);
-
-  // Validate the returned data array
-  outputOnHostPtr = outputOnHost4.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData/2; ++idx)
-  {
-    if (outputOnHostPtr[idx  * 2] != 0.0f)
-    {
-      cerr << "The REAL data returned by the kernel should be all zero: both input and delays are (1, i)";
-      exit_with_print(outputOnHostPtr);
-    }
-    if (outputOnHostPtr[idx * 2 + 1] != NR_STATIONS * 2 * 1.0f)
-    {
-      cerr << "The imag data should be all " << NR_STATIONS * 2 * 1.0f;
-      exit_with_print(outputOnHostPtr);
-    } 
-  }
-    // ***********************************************************
-  // Test 5: all inputs 1 (including imag)
-  // with only the real delay set to 1.
-  // The global delay correction is set to 2.01 so
-  // all outputs should be 4 * 2.01 = 8.04
-  cout << "test 5" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
-  {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
-  {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
-  {
-    delaysData[idx] = 1.0f;
-  }
-
-  HostMemory outputOnHost5 = runTest(ctx, cuStream, delaysData,
-                                     bandPassCorrectedData,
-                                     complexVoltagesData,
-                                     subbandFrequency, sap,
-                                     function,
-                                     2.01f, subbandBandwidth);
-
-  // Validate the returned data array
-  outputOnHostPtr = outputOnHost5.get<float>();
-  for (size_t idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    if (outputOnHostPtr[idx] != NR_STATIONS * 1.0f * 2.01f)
-    {
-      cerr << "all the data returned by the kernel should be (" << NR_STATIONS << ", " << NR_STATIONS << ")" ;
-      exit_with_print(outputOnHostPtr);
-    }
-#endif    
 
   delete [] complexVoltagesData;
   delete [] bandPassCorrectedData;

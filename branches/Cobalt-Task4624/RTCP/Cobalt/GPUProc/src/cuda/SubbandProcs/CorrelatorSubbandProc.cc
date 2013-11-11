@@ -53,9 +53,9 @@ namespace LOFAR
      * and provide the input in devFilteredData.
      */
     CorrelatorSubbandProc::CorrelatorSubbandProc(const Parset &parset,
-      gpu::Context &context, CorrelatorFactories &factories)
+      gpu::Context &context, CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc)
     :
-      SubbandProc( parset, context ),       
+      SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
       counters(context),
       prevBlock(-1),
       prevSAP(-1),
@@ -75,7 +75,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT
-      fftKernel(ps, context, devFilteredData),
+      fftKernel(ps, queue, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(context, factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
@@ -96,7 +96,7 @@ namespace LOFAR
       devFilterHistoryData.set(0);
 
       // put enough objects in the outputPool to operate
-      for (size_t i = 0; i < std::max(3UL, ps.nrSubbands()); ++i) {
+      for (size_t i = 0; i < nrOutputElements(); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
                 ps.nrStations(),
                 ps.nrChannelsPerSubband(),
@@ -275,7 +275,7 @@ namespace LOFAR
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input, StreamableData &_output)
     {
-      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatedDataHostBuffer &output = dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
       // Get the id of the block we are processing
       size_t block = input.blockID.block;
@@ -312,17 +312,17 @@ namespace LOFAR
       // Otherwise, a kernel arg may not be set...
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(counters.fir, input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(queue, counters.fft);
+        firFilterKernel->enqueue(input.blockID, counters.fir, input.blockID.subbandProcSubbandIdx);
+        fftKernel.enqueue(input.blockID, counters.fft);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare),
       // run that kernel, as it also reorders the data for the correlator kernel.
-      delayAndBandPassKernel->enqueue(queue, counters.delayBp, 
+      delayAndBandPassKernel->enqueue(input.blockID, counters.delayBp, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(queue, counters.correlator);
+      correlatorKernel->enqueue(input.blockID, counters.correlator);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -366,7 +366,7 @@ namespace LOFAR
 
     void CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
     {
-      CorrelatedDataHostBuffer &output = static_cast<CorrelatedDataHostBuffer&>(_output);
+      CorrelatedDataHostBuffer &output = dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities

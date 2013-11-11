@@ -218,7 +218,7 @@ void checkSubSample16(float s, int& expectedVal)
 // Also, everything is scaled to the amplitude of 16 bit mode (taking the effect of correlation into account).
 void checkSubSample8(float s, int& expectedVal)
 {
-  const int scale = 256;
+  const int scale = 16;
   if (expectedVal == numeric_limits<int8_t>::min()) {
     CHECK_CLOSE((float)(scale * (expectedVal+1)), s, 0.00000001); // check clamping
   } else {
@@ -293,7 +293,7 @@ TEST(CornerCaseMinus128)
   // Test the corner case for 8 bit input, -128 should be clamped to scaled -127
   vector<complex<float> > results(runTest<i8complex>(-128));
 
-  const float scale = 256.0f;
+  const float scale = 16.0f;
   CHECK_CLOSE(scale * -127.0, results[0].real(), 0.00000001);
   CHECK_CLOSE(scale * -127.0, results[0].imag(), 0.00000001);
   CHECK_CLOSE(scale * -127.0, results[1].real(), 0.00000001);
@@ -316,7 +316,7 @@ TEST(CornerCaseMinus127)
   // Minus 127 should stay -127
   vector<complex<float> > results(runTest<i8complex>(-127));
 
-  const float scale = 256.0f;
+  const float scale = 16.0f;
   CHECK_CLOSE(scale * -127.0, results[0].real(), 0.00000001);
   CHECK_CLOSE(scale * -127.0, results[0].imag(), 0.00000001);
   CHECK_CLOSE(scale * -127.0, results[1].real(), 0.00000001);
@@ -328,7 +328,7 @@ TEST(IntToFloatSimple)
   // Test if 10 is converted
   vector<complex<float> > results(runTest<i8complex>(10));
 
-  const float scale = 256.0f;
+  const float scale = 16.0f;
   CHECK_CLOSE(scale * 10.0, results[0].real(), 0.00000001);
   CHECK_CLOSE(scale * 10.0, results[0].imag(), 0.00000001);
   CHECK_CLOSE(scale * 10.0, results[1].real(), 0.00000001);

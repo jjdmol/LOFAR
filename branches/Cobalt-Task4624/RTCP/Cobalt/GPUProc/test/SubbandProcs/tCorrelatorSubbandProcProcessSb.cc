@@ -83,7 +83,7 @@ int main() {
           in.inputSamples[st][i][pol][0] = 1; // real
           in.inputSamples[st][i][pol][1] = 1; // imag
         } else {
-          cerr << "Error: number of bits per sample must be 4, 8, or 16" << endl;
+          cerr << "Error: number of bits per sample must be 8, or 16" << endl;
           exit(1);
         }
       }
@@ -93,6 +93,7 @@ int main() {
   in.blockID.globalSubbandIdx = 0; // Subband index in the observation: [0, ps.nrSubbands())
   in.blockID.localSubbandIdx = 0;  // Subband index for this pipeline: [0, subbandIndices.size())
   in.blockID.subbandProcSubbandIdx = 0; // Subband index for this subbandProc: [0, nrSubbandsPerSubbandProc)
+  in.blockID.subbandProcSubbandIdx = 0; // Subband index for this SubbandProc
 
   // Initialize delays. We skip delay compensation, but init anyway,
   // so we won't copy uninitialized data to the device.
@@ -122,10 +123,10 @@ int main() {
   // The int2float conversion scales its output to the same amplitude as in 16 bit mode.
   // For 8 bit mode, that is a factor 256.
   // Since we inserted all (1, 1) vals, for 8 bit mode this means that the correlator
-  // outputs 256*256. It then sums over nrSamplesPerSb values.
+  // outputs 16*16. It then sums over nrSamplesPerSb values.
   unsigned scale = 1*1;
   if (ps.nrBitsPerSample() == 8)
-    scale = 256*256;
+    scale = 16*16;
   bool unexpValueFound = false;
   for (size_t b = 0; b < nbaselines; b++)
     for (size_t c = 0; c < ps.nrChannelsPerSubband(); c++)

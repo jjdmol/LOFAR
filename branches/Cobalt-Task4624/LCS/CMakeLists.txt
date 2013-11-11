@@ -12,3 +12,4 @@ lofar_add_package(Stream)         # Low-level support for streaming data
 lofar_add_package(Tools)          # Useful tools
 lofar_add_package(Transport)      # Low-level transport library
 lofar_add_package(MSLofar)        # LOFAR MeasurementSet definition
+lofar_add_package(LofarStMan)   # Storage Manager for the main table of a LOFAR MS

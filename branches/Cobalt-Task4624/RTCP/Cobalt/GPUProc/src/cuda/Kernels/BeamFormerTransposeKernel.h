@@ -42,7 +42,7 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrTABs;
+        unsigned nrTABs;
       };
 
       enum BufferType
@@ -55,10 +55,11 @@ namespace LOFAR
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
+
     };
 
-    // Specialization of the KernelFactory for
-    // BeamFormerTransposeKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const;
 

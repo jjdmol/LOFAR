@@ -110,7 +110,7 @@ function parse_logs
     # Taking 32*..., we still get a few dozen miscomparisons, so resort to 64.0
     #
     # Try bigger epsilons as well to see how big the error actually is.
-    for eps_factor in 1024.0 512.0 256.0 128.0
+    for eps_factor in 1024.0 512.0 256.0 128.0 64.0 32.0 16.0 8.0
     do
       EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
 
@@ -127,7 +127,7 @@ function parse_logs
   # check logs
   parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
-  # toss output if everything is ok
-  rm -rf $testdir/$OUTDIR # Comment this line for output
+  # toss output if everything is ok, but do not fail test if removal fails
+  rm -rf $testdir/$OUTDIR || true # Comment this line for output
 ) || exit 1
 

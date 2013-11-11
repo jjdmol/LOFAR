@@ -197,7 +197,7 @@ SUITE(corrections) {
   }
 
   TEST(dedisperse) {
-    TESTKEYS("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
+    TESTKEYS("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
       TESTBOOL {
         MAKEPS(keystr, valstr);
 
@@ -877,6 +877,6 @@ int main(void)
 {
   INIT_LOGGER("tParset");
 
-  return UnitTest::RunAllTests();
+  return UnitTest::RunAllTests() > 0;
 }
 

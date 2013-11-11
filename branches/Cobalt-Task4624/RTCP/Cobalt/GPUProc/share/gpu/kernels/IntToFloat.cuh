@@ -22,13 +22,13 @@
 #ifndef LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 #define LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 
-// \file cuda/IntToFloat.cuh
-// Device function to convert integer types to float
-// This file contains a helper function for converting integer types to floats
-// The actual function used depends on the define NR_BITS_PER_SAMPLE
+// \file
+// Device function to convert integer types to float.
+// This file contains a helper function for converting integer types to floats.
+// The actual function used depends on the define \c NR_BITS_PER_SAMPLE
 // If this is 8 the input char get convert with instances of -128 clamped
 // to -127.
-// If NR_BITS_PER_SAMPLE == 16 a simple conversion to float is performed.
+// If <tt>NR_BITS_PER_SAMPLE == 16</tt> a simple conversion to float is performed.
 //
 // Output values are scaled in terms of 16 bit mode.
 
@@ -44,7 +44,9 @@ inline __device__ float convertIntToFloat(signed char x)
   int i = x == -128 ? -127 : x;
 
   // Keep output scale the same as 16 bit mode.
-  return 256 * i;
+  // Gains (input and complex voltages) end up x16,
+  // power (visibilities and Stokes) end up x16^2.
+  return 16 * i;
 }
 #else
 #error unsupported NR_BITS_PER_SAMPLE

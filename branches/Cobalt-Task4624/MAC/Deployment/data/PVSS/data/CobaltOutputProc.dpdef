@@ -1,21 +1,21 @@
 # locusnode number
-locusNode	int
+locusNode	intArr
 
 # Data type: Correlated/Beamformed
-dataProductType	string
+dataProductType	stringArr
 
 # Filename
-fileName	string
+fileName	stringArr
 
 # Directory
-directory string
+directory stringArr
 
 # Dropping output?
-dropping  bool
+dropping  boolArr
 
 # Data written (seconds)
-written		float
+written		floatArr
 
 # Data dropped (seconds)
-dropped		float
+dropped		floatArr
 

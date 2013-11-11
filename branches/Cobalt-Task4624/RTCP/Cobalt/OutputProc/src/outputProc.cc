@@ -42,8 +42,8 @@
 #include <Common/Thread/Thread.h>
 #include <ApplCommon/Observation.h>
 #include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 #include <Stream/PortBroker.h>
-#include <APL/APLCommon/ControllerDefines.h>  // for createPropertySetName()
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
@@ -57,7 +57,6 @@ LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
-using namespace LOFAR::APLCommon;
 using namespace std;
 using boost::format;
 
@@ -69,15 +68,7 @@ char stdoutbuf[1024], stderrbuf[1024];
 int main(int argc, char *argv[])
 {
 #if defined HAVE_LOG4CPLUS
-  char *dirc = strdup(argv[0]);
-
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/outputProc.log_prop");
-
-  free(dirc);
-#elif defined HAVE_LOG4CXX
-  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
-  Context::initialize();
-  setLevel("Global",8);
+  INIT_LOGGER("outputProc");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(boost::format("OutputProc@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
 #endif
@@ -120,7 +111,7 @@ int main(int argc, char *argv[])
 
     Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
-    vector<string> hostnames = parset.getStringVector("OLAP.Storage.hosts", true);
+    const vector<string> &hostnames = parset.settings.outputProcHosts;
     ASSERT(myRank < hostnames.size());
     string myHostName = hostnames[myRank];
 
@@ -134,19 +125,7 @@ int main(int argc, char *argv[])
       for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
         for (unsigned streamNr = 0; streamNr < parset.nrStreams(outputType); streamNr++) {
           if (parset.getHostName(outputType, streamNr) == myHostName) {
-            unsigned writerNr = 0;
-
-            // lookup PVSS writer number for this file
-            for (unsigned i = 0; i < obs.streamsToStorage.size(); i++) {
-              Observation::StreamToStorage &s = obs.streamsToStorage[i];
-
-              if (s.dataProductNr == static_cast<unsigned>(outputType) && s.streamNr == streamNr) {
-                writerNr = s.writerNr;
-                break;
-              }
-            }
-
-            string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u writer %3u] ") % parset.observationID() % outputType % streamNr % writerNr);
+            string sbLogPrefix = str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr);
 
             try {
               subbandWriters.push_back(new SubbandWriter(parset, outputType, streamNr, isBigEndian, sbLogPrefix));

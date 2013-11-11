@@ -44,14 +44,22 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrBitsPerSample;
-        size_t nrBytesPerComplexSample;
-        size_t nrHistorySamples;
-        size_t nrPPFTaps;
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample;
+
+        // The number of stations or TABs to filter. The FIR filter will
+        // deal with either in the same way.
+        unsigned nrSTABs;
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
-        size_t nrSubbands;
+        unsigned nrSubbands;
+
+        // The number of PPF filter taps.
+        static const unsigned nrTaps = 16;
+
+        // The number of history samples used for each block
+        unsigned nrHistorySamples() const;
       };
 
       enum BufferType
@@ -81,13 +89,14 @@ namespace LOFAR
                        const Buffers& buffers,
                        const Parameters& param);
 
-      void enqueue(PerformanceCounter &counter,
-                   size_t subbandIdx);
+      void enqueue(const BlockID &blockId,
+                   PerformanceCounter &counter,
+                   unsigned subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,
       // and update historyFlags[subbandIdx] with the flags of the last samples
       // in inputFlags.
-      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, size_t subbandIdx);
+      void prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx);
 
     private:
       // The Kernel parameters as given to the constructor
@@ -99,8 +108,8 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2> historyFlags;
     };
 
-    // Specialization of the KernelFactory for
-    // FIR_FilterKernel
+    //# --------  Template specializations for KernelFactory  -------- #//
+
     template<> size_t
     KernelFactory<FIR_FilterKernel>::bufferSize(BufferType bufferType) const;
 

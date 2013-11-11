@@ -192,6 +192,11 @@ namespace LOFAR
           if (lofarroot) {
             configLocator.addPathAtFront(lofarroot);
           }
+          // Add static meta data path from parset at the front for regression testing.
+          string staticMetaDataDir = itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
+          if (!staticMetaDataDir.empty()) {
+            configLocator.addPathAtFront(staticMetaDataDir);
+          }
           LOG_DEBUG_STR("Config locator search path: " << 
                         configLocator.getPath());
           // Fill the tables containing the beam info.
@@ -426,13 +431,13 @@ namespace LOFAR
       corrSchedule = "corrSchedule";
 
       vector<string> targets(itsPS.getStringVector
-                               ("Observation.Beam[" + String::toString(subarray) + "].target"));
+                               ("Observation.Beam[" + String::toString(subarray) + "].target", vector<string>(), true));
       casa::Vector<String> ctargets(targets.size());
 
       for (uint i = 0; i < targets.size(); ++i)
         ctargets[i] = targets[i];
 
-      vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I"));
+      vector<string> cois(itsPS.getStringVector("Observation.Campaign.CO_I", vector<string>(), true));
       casa::Vector<String> ccois(cois.size());
 
       for (uint i = 0; i < cois.size(); ++i)
@@ -450,13 +455,13 @@ namespace LOFAR
       msobsCol.observer().put(0, "unknown");
       msobsCol.scheduleType().put(0, "LOFAR");
       msobsCol.schedule().put(0, corrSchedule);
-      msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name"));
+      msobsCol.project().put(0, itsPS.getString("Observation.Campaign.name", ""));
       msobsCol.releaseDate().put(0, releaseDate);
       msobsCol.flagRow().put(0, False);
-      msobsCol.projectTitle().put(0, itsPS.getString("Observation.Campaign.title"));
-      msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI"));
+      msobsCol.projectTitle().put(0, itsPS.getString("Observation.Campaign.title", ""));
+      msobsCol.projectPI().put(0,  itsPS.getString("Observation.Campaign.PI", ""));
       msobsCol.projectCoI().put(0, ccois);
-      msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact"));
+      msobsCol.projectContact().put(0, itsPS.getString("Observation.Campaign.contact", ""));
       msobsCol.observationId().put(0, String::toString(itsPS.observationID()));
       msobsCol.observationStart().put(0, timeRange[0]);
       msobsCol.observationEnd().put(0, timeRange[1]);

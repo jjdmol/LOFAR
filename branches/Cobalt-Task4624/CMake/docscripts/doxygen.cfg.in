@@ -2,13 +2,14 @@ ALWAYS_DETAILED_SEC     = YES
 CASE_SENSE_NAMES        = YES
 JAVADOC_AUTOBRIEF       = YES
 DETAILS_AT_TOP          = YES
+DISTRIBUTE_GROUP_DOC    = YES
 ALIASES                 = "template=\par Template requirements:\n"
 EXTRACT_ALL             = YES
 EXTRACT_PRIVATE         = YES
 EXTRACT_STATIC          = YES
 MAX_INITIALIZER_LINES   = 0
 WARNINGS                = YES
-FILE_PATTERNS           = *.dox *.cl *.h *.idl
+FILE_PATTERNS           = *.dox *.cl *.cu *.cuh *.h *.idl
 RECURSIVE               = YES
 EXCLUDE_SYMLINKS        = YES
 EXCLUDE_PATTERNS        = */build/* */demo/* */test/* */installed/* */.svn/*

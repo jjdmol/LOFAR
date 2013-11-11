@@ -25,6 +25,8 @@
 
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
+#include <CoInterface/BlockID.h>
+
 #include "FFT_Kernel.h"
 
 namespace LOFAR
@@ -32,32 +34,36 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    FFT_Kernel::FFT_Kernel(gpu::Context &context, unsigned fftSize, unsigned nrFFTs, bool forward, gpu::DeviceMemory &buffer)
+    FFT_Kernel::FFT_Kernel(const gpu::Stream &stream, unsigned fftSize,
+                           unsigned nrFFTs, bool forward, 
+                           const gpu::DeviceMemory &buffer)
       :
-      context(context),
+      context(stream.getContext()),
       nrFFTs(nrFFTs),
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
       plan(context, fftSize, nrFFTs),
-      buffer(buffer)
+      buffer(buffer),
+      itsStream(stream)
     {
     }
 
-    void FFT_Kernel::enqueue(gpu::Stream &stream, PerformanceCounter &counter)
+    void FFT_Kernel::enqueue(const BlockID &blockId, 
+                             PerformanceCounter &counter) const
     {
-      stream.recordEvent(counter.start); 
-      enqueue(stream);
-      stream.recordEvent(counter.stop); 
+      itsStream.recordEvent(counter.start); 
+      enqueue(blockId);
+      itsStream.recordEvent(counter.stop); 
     }
 
-    void FFT_Kernel::enqueue(gpu::Stream &stream)
+    void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
       gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
 
       // Tie our plan to the specified stream
-      plan.setStream(stream);
+      plan.setStream(itsStream);
 
       LOG_DEBUG("Launching cuFFT");
         
@@ -70,8 +76,8 @@ namespace LOFAR
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
 
-      if (stream.isSynchronous()) {
-        stream.synchronize();
+      if (itsStream.isSynchronous()) {
+        itsStream.synchronize();
       }
 
 /*
@@ -87,8 +93,8 @@ namespace LOFAR
       case INPUT_DATA: 
       case OUTPUT_DATA:
         return
-          ps.nrStations() * NR_POLARIZATIONS * 
-          ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
+          (size_t) ps.nrStations() * NR_POLARIZATIONS * 
+            ps.nrSamplesPerSubband() * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

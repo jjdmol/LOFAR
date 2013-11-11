@@ -57,7 +57,7 @@
 #include <InputProc/Buffer/StationID.h>
 
 #include <ApplCommon/PVSSDatapointDefs.h>
-#include <APL/APLCommon/ControllerDefines.h>  // for createPropertySetName()
+#include <ApplCommon/StationInfo.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -66,18 +66,22 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
+#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
-using namespace LOFAR::APLCommon;
 using namespace std;
 using boost::format;
 
 void usage(char **argv)
 {
-  cerr << "usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
+  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
+  cerr << "beam-forming for the Pulsar mode." << endl;
+  cerr << endl;
+  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
@@ -174,20 +178,24 @@ int main(int argc, char **argv)
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
 
-  // Tie to local X server (TODO: does CUDA really need this?)
-  if (setenv("DISPLAY", ":0", 1) < 0)
-    THROW_SYSCALL("setenv(DISPLAY)");
-
   // Restrict access to (tmp build) files we create to owner
   // JD: Don't do that! We want to be able to clean up each other's
   // mess.
   // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
+  // Create a parameters set object based on the inputs
+  LOG_INFO("----- Reading Parset");
+  Parset ps(argv[optind]);
+
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
-
   if (setrlimit(RLIMIT_MEMLOCK, &unlimited) < 0)
-    THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  {
+    if (ps.settings.realTime)
+      THROW_SYSCALL("setrlimit(RLIMIT_MEMLOCK, unlimited)");
+    else
+      LOG_WARN("Cannot setrlimit(RLIMIT_MEMLOCK, unlimited)");
+  }
 
   /*
    * Initialise OpenMP
@@ -204,11 +212,6 @@ int main(int argc, char **argv)
   /*
    * INIT stage
    */
-
-  LOG_INFO("----- Reading Parset");
-
-  // Create a parameters set object based on the inputs
-  Parset ps(argv[optind]);
 
   // Send identification string to the MAC Log Processor
   LOG_INFO_STR("MACProcessScope: " << 
@@ -269,10 +272,10 @@ int main(int argc, char **argv)
 
       LOG_DEBUG_STR("Bound to memory on nodes " << nodestrs);
     } else {
-      LOG_WARN_STR("Cannot bind memory (libnuma says there is no numa available)");
+      LOG_WARN("Cannot bind memory (libnuma says there is no numa available)");
     }
 #else
-    LOG_WARN_STR("Cannot bind memory (no libnuma support)");
+    LOG_WARN("Cannot bind memory (no libnuma support)");
 #endif
 
     // derive the set of gpus we're allowed to use
@@ -305,23 +308,20 @@ int main(int argc, char **argv)
 
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
-    THROW_SYSCALL("mlockall");
-
-  LOG_DEBUG("All memory is now pinned.");
+  {
+    if (ps.settings.realTime)
+      THROW_SYSCALL("mlockall");
+    else
+      LOG_WARN("Cannot mlockall(MCL_CURRENT | MCL_FUTURE)");
+  } else {
+    LOG_DEBUG("All memory is now pinned.");
+  }
 
   // Allow usage of nested omp calls
   omp_set_nested(true);
 
   // Allow OpenMP thread registration
   OMPThread::init();
-
-  // Only ONE host should start the Storage processes
-  SmartPtr<StorageProcesses> storageProcesses;
-
-  if (rank == 0) {
-    LOG_INFO("----- Starting OutputProc");
-    storageProcesses = new StorageProcesses(ps, "");
-  }
 
   LOG_INFO("----- Initialising Pipeline");
 
@@ -347,7 +347,11 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (correlatorEnabled) {
+  if (subbandDistribution[rank].empty()) {
+    // no operation -- don't even create a pipeline!
+    pipeline = NULL;
+    outputType = CORRELATED_DATA;
+  } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
     outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
@@ -358,6 +362,16 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  // Only ONE host should start the Storage processes
+  SmartPtr<StorageProcesses> storageProcesses;
+
+  LOG_INFO("----- Initialising SSH library");
+  SSH_Init();
+
+  if (rank == 0) {
+    LOG_INFO("----- Starting OutputProc");
+    storageProcesses = new StorageProcesses(ps, "");
+  }
 
 #ifdef HAVE_MPI
   /*
@@ -459,6 +473,8 @@ int main(int argc, char **argv)
     }
   }
   LOG_INFO("===== SUCCESS =====");
+
+  SSH_Finalize();
 
 #ifdef HAVE_MPI
   MPI_Finalize();

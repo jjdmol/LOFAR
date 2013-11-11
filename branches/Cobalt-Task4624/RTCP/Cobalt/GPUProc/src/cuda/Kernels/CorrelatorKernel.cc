@@ -22,21 +22,22 @@
 
 #include "CorrelatorKernel.h"
 
-#include <vector>
-#include <algorithm>
-
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <CoInterface/Align.h>
-#include <CoInterface/Exceptions.h>
 
-#include <GPUProc/global_defines.h>
+#include <boost/format.hpp>
+
+#include <fstream>
+
+using boost::format;
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
-//
-// TODO: 2x2 kernel produces different output than the 1x1 kernel!
-//#define USE_2X2
+
+#define USE_2X2
 
 namespace LOFAR
 {
@@ -53,16 +54,26 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 # endif
 
+    CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters(ps)
+    {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
+            ps.settings.observationID);
+    }
+
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      size_t preferredMultiple;
+      unsigned preferredMultiple;
 
       gpu::Platform pf;
       if (pf.getName() == "AMD Accelerated Parallel Processing") {
@@ -91,9 +102,9 @@ namespace LOFAR
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1UL);
-      globalWorkSize = gpu::Grid(nrPasses * nrThreads, nrUsableChannels);
-      localWorkSize = gpu::Block(nrThreads, 1);
+      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1U);
+      setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
+                           gpu::Block(nrThreads, 1) );
 
       nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
       nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -105,17 +116,17 @@ namespace LOFAR
     template<> size_t 
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {
-      size_t nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
+      unsigned nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
 
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
-          itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
-          NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          nrBaselines * itsParameters.nrChannelsPerSubband * 
-          NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+          (size_t) nrBaselines * itsParameters.nrChannelsPerSubband * 
+            NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

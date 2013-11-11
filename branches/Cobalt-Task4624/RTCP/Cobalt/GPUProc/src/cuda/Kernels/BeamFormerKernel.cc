@@ -28,8 +28,13 @@
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 #include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <CoInterface/BlockID.h>
+
+#include <fstream>
 
 using boost::lexical_cast;
+using boost::format;
 
 namespace LOFAR
 {
@@ -42,34 +47,49 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f),  // TODO: Add a key to the parset to specify this
+      weightCorrection(1.0f), // TODO: pass FFT size
       subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      nrChannelsPerSubband = 
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      nrSamplesPerChannel =
+        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      dumpBuffers = 
+        ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_BeamFormerKernel.dat") % 
+            ps.settings.observationID);
     }
 
     BeamFormerKernel::BeamFormerKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      size_t maxChannelParallisation = std::min(params.nrChannelsPerSubband, maxThreadsPerBlock / NR_POLARIZATIONS / params.nrTABs);
+      // Try #chnl/blk where 256 <= block size <= maxThreadsPerBlock && blockDim.z <= maxBlockDimZ.
+      // Violations for small input are fine. This should be auto-tuned for large inputs.
+      unsigned nrThreadsXY = params.nrPolarizations * params.nrTABs;
+      unsigned prefBlockSize = 256;
+      unsigned prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
+      prefBlockSize = prefNrThreadsZ * nrThreadsXY;
+      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z; // low, so check
+      unsigned maxNrThreadsPerBlock = std::min(std::min(maxThreadsPerBlock,
+                                                        maxBlockDimZ * nrThreadsXY),
+                                               params.nrChannelsPerSubband * nrThreadsXY);
+      if (prefBlockSize > maxNrThreadsPerBlock) {
+        prefBlockSize = maxNrThreadsPerBlock;
+        prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
+      }
+      unsigned nrChannelsPerBlock = prefNrThreadsZ;
 
-      ASSERT(params.nrChannelsPerSubband % maxChannelParallisation == 0);
-
-      globalWorkSize = gpu::Grid(NR_POLARIZATIONS, 
-                                 params.nrTABs, 
-                                 params.nrChannelsPerSubband);
-      localWorkSize = gpu::Block(NR_POLARIZATIONS, 
-                                 params.nrTABs, 
-                                 maxChannelParallisation);
+      setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
+                           gpu::Block(params.nrPolarizations, params.nrTABs, nrChannelsPerBlock) );
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
@@ -77,7 +97,7 @@ namespace LOFAR
       size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
 
       size_t count = 
-        params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+        params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrPolarizations;
       unsigned nrPasses = std::max((params.nrStations + 6) / 16, 1U);
 
       nrOperations = count * params.nrStations * params.nrTABs * 8;
@@ -88,12 +108,13 @@ namespace LOFAR
 #endif
     }
 
-    void BeamFormerKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter,
-                                   float subbandFrequency, unsigned SAP)
+    void BeamFormerKernel::enqueue(const BlockID &blockId,
+                                   PerformanceCounter &counter,
+                                   double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(queue, counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -104,16 +125,16 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          NR_POLARIZATIONS * itsParameters.nrStations * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+            itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-          NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
+            itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-          sizeof(float);
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
+            sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -131,9 +152,9 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["WEIGHT_CORRECTION"] =
-        str(boost::format("%.7ff") % itsParameters.weightCorrection);
+        str(format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
-        str(boost::format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
 
       return defs;
     }

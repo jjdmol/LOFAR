@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: FixedBufferStream.cc 17976 2011-05-10 09:54:45Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 

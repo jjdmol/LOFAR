@@ -20,16 +20,19 @@
 
 #include <lofar_config.h>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
-
 #include "DelayAndBandPassKernel.h"
 
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/BandPass.h>
+#include <CoInterface/BlockID.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/BandPass.h>
+#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <fstream>
 
 using boost::lexical_cast;
 using boost::format;
@@ -51,13 +54,21 @@ namespace LOFAR
       transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
+      dumpBuffers = 
+        ps.getBool("Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput", false);
+      dumpFilePattern = 
+        str(format("L%d_SB%%03d_BL%%03d_DelayAndBandPassKernel_%c%c%c.dat") % 
+            ps.settings.observationID %
+            (correctBandPass ? "B" : "b") %
+            (delayCompensation ? "D" : "d") %
+            (transpose ? "T" : "t"));
     }
 
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction))
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
@@ -69,10 +80,10 @@ namespace LOFAR
       setArg(6, buffers.phaseOffsets);
       setArg(7, buffers.bandPassCorrectionWeights);
 
-      globalWorkSize = gpu::Grid(256, params.nrChannelsPerSubband == 1 ? 1 : params.nrChannelsPerSubband / 16, params.nrStations);
-      localWorkSize = gpu::Block(256, 1, 1);
+      setEnqueueWorkSizes( gpu::Grid(256, params.nrChannelsPerSubband == 1 ? 1 : params.nrChannelsPerSubband / 16, params.nrStations),
+                           gpu::Block(256, 1, 1) );
 
-      size_t nrSamples = params.nrStations * params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+      size_t nrSamples = (size_t)params.nrStations * params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
@@ -86,11 +97,13 @@ namespace LOFAR
     }
 
 
-    void DelayAndBandPassKernel::enqueue(gpu::Stream &queue, PerformanceCounter &counter, float subbandFrequency, size_t SAP)
+    void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
+                                         PerformanceCounter &counter,
+                                         double subbandFrequency, unsigned SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(queue, counter);
+      Kernel::enqueue(blockId, counter);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -102,27 +115,27 @@ namespace LOFAR
       case DelayAndBandPassKernel::INPUT_DATA: 
         if (itsParameters.nrChannelsPerSubband == 1)
           return 
-            itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband *
-            itsParameters.nrBytesPerComplexSample;
+            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+              itsParameters.nrSamplesPerSubband *
+              itsParameters.nrBytesPerComplexSample;
         else
           return 
-            itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+              itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::OUTPUT_DATA:
         return
-          itsParameters.nrStations * NR_POLARIZATIONS * 
-          itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::DELAYS:
         return 
-          itsParameters.nrSAPs * itsParameters.nrStations * 
-          NR_POLARIZATIONS * sizeof(double);
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * 
+            NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::PHASE_OFFSETS:
         return
-          itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
-          itsParameters.nrChannelsPerSubband * sizeof(float);
+          (size_t) itsParameters.nrChannelsPerSubband * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

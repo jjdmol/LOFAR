@@ -26,6 +26,7 @@
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <CoInterface/BlockID.h>
 #include "../TestUtil.h"
 
 #include <boost/lexical_cast.hpp>
@@ -127,13 +128,14 @@ int main() {
 
   BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devDelaysMemory);
 
-  auto_ptr<BeamFormerKernel> kernel(factory.create(ctx, buffers));
+  auto_ptr<BeamFormerKernel> kernel(factory.create(stream, buffers));
 
   float subbandFreq = 60e6f;
   unsigned sap = 0;
 
   PerformanceCounter counter(ctx);
-  kernel->enqueue(stream, counter, subbandFreq, sap);
+  BlockID blockId;
+  kernel->enqueue(blockId, counter, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

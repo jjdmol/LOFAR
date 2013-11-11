@@ -62,37 +62,10 @@ namespace LOFAR
       return itsFeedbackLTA;
     }
 
-    vector<string> StorageProcesses::hosts() const
-    {
-      set<string> hostNames;
-
-      // Add all hosts on which Correlated Data is stored
-      if (itsParset.settings.correlator.enabled) {
-        for (size_t i = 0; i < itsParset.settings.correlator.files.size(); ++i) {
-          hostNames.insert(itsParset.settings.correlator.files[i].location.host);
-        }
-      }
-
-      // Add all hosts on which Beamformed Data is stored
-      if (itsParset.settings.beamFormer.enabled) {
-        for (size_t i = 0; i < itsParset.settings.beamFormer.files.size(); ++i) {
-          hostNames.insert(itsParset.settings.beamFormer.files[i].location.host);
-        }
-      }
-
-      // Erase the empty host, we don't want to connect to it
-      hostNames.erase("");
-
-      // Copy the result to a vector
-      vector<string> result(hostNames.size());
-      copy(hostNames.begin(), hostNames.end(), result.begin());
-
-      return result;
-    }
 
     void StorageProcesses::start()
     {
-      vector<string> hostnames = hosts();
+      const vector<string> &hostnames = itsParset.settings.outputProcHosts;
 
       itsStorageProcesses.resize(hostnames.size());
 
@@ -142,19 +115,34 @@ namespace LOFAR
 
     void StorageProcesses::finalMetaDataThread()
     {
-      std::string hostName = itsParset.getString("OLAP.FinalMetaDataGatherer.host");
-      std::string userName = itsParset.getString("OLAP.FinalMetaDataGatherer.userName");
-      std::string pubKey = itsParset.getString("OLAP.FinalMetaDataGatherer.sshPublicKey");
-      std::string privKey = itsParset.getString("OLAP.FinalMetaDataGatherer.sshPrivateKey");
-      std::string executable = itsParset.getString("OLAP.FinalMetaDataGatherer.executable");
+      std::string hostName = itsParset.getString("Cobalt.FinalMetaDataGatherer.host", "localhost");
+      std::string userName = itsParset.getString("Cobalt.FinalMetaDataGatherer.userName", "");
+      std::string pubKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPublicKey", "");
+      std::string privKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPrivateKey", "");
+      std::string executable = itsParset.getString("Cobalt.FinalMetaDataGatherer.executable", "FinalMetaDataGatherer");
 
-      char cwd[1024];
+      if (userName == "") {
+        // No username given -- use $USER
+        const char *USER = getenv("USER");
 
-      if (getcwd(cwd, sizeof cwd) == 0)
-        THROW_SYSCALL("getcwd");
+        ASSERTSTR(USER, "$USER not set.");
 
-      std::string commandLine = str(boost::format("cd %s && %s %d 2>&1")
-                                    % cwd
+        userName = USER;
+      }
+
+      if (pubKey == "" && privKey == "") {
+        // No SSH keys given -- try to discover them
+
+        char discover_pubkey[1024];
+        char discover_privkey[1024];
+
+        if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
+          pubKey = discover_pubkey;
+          privKey = discover_privkey;
+        }
+      }
+
+      std::string commandLine = str(boost::format("%s %d")
                                     % executable
                                     % itsParset.observationID()
                                     );

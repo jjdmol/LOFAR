@@ -189,7 +189,20 @@ namespace LOFAR
           // Observation.VirtualInstrument.stationList can contain full
           // antennafield names such as CS001LBA.
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
-          result.push_back(AntennaFieldName(station.substr(0,5), station.substr(5)));
+
+          // Do not assume the standard station name format (sily "S9").
+          string stName;
+          string antFieldName;
+          if (station.length() <= 1)
+            stName = station; // if stName or antFieldName is empty, writing an MS table will fail
+          else if (station.length() <= 5) {
+            stName = station.substr(0, station.length()-1);
+            antFieldName = station.substr(station.length()-1);
+          } else {
+            stName = station.substr(0, 5);
+            antFieldName = station.substr(5);
+          }
+          result.push_back(AntennaFieldName(stName, antFieldName));
           continue;
         }
 
@@ -257,6 +270,10 @@ namespace LOFAR
     {
       struct ObservationSettings settings;
 
+      // the set of hosts on which outputProc has to run, which will
+      // be constructed during the parsing of the parset
+      set<string> outputProcHosts;
+
       // NOTE: Make sure that all keys have defaults, to make test parsets
       // a lot shorter.
 
@@ -277,12 +294,10 @@ namespace LOFAR
 
       settings.corrections.bandPass   = getBool(renamedKey("Cobalt.correctBandPass", "OLAP.correctBandPass"), true);
       settings.corrections.clock      = getBool(renamedKey("Cobalt.correctClocks", "OLAP.correctClocks"), true);
-      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.Beamformer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
+      settings.corrections.dedisperse = getBool(renamedKey("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
-
-      settings.nrPPFTaps = 16;
 
       // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA");
@@ -438,6 +453,8 @@ namespace LOFAR
           settings.correlator.files.resize(settings.subbands.size());
           for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
             settings.correlator.files[i].location = getFileLocation("Correlated", i);
+
+            outputProcHosts.insert(settings.correlator.files[i].location.host);
           }
         }
       }
@@ -451,8 +468,7 @@ namespace LOFAR
       size_t bfStreamNr = 0;
 
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
-      if (settings.beamFormer.enabled || true) { // for now, the values below are also used even if no beam forming is performed
-
+      if (settings.beamFormer.enabled) {
         // Parse global settings
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -483,11 +499,7 @@ namespace LOFAR
           // Obtain settings of selected stokes
           set->type = stokesType(getString(prefix + ".which", "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 0);
-          if (set->nrChannels == 0) {
-            // apply default
-            set->nrChannels = settings.correlator.nrChannels;
-          }
+          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
           set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
           set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
           if (set->nrSubbandsPerFile == 0) {
@@ -515,7 +527,8 @@ namespace LOFAR
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
           sap.TABs.resize(nrTABs);
-          for (unsigned j = 0; j < nrTABs; ++j) {
+          for (unsigned j = 0; j < nrTABs; ++j) 
+          {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
             const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
@@ -525,6 +538,10 @@ namespace LOFAR
             tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
 
             tab.coherent          = getBool(prefix + ".coherent", true);
+            if (tab.coherent)
+              sap.nrCoherent++;
+            else
+              sap.nrIncoherent++;
             tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
@@ -545,11 +562,23 @@ namespace LOFAR
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
+
+              outputProcHosts.insert(file.location.host);
             }
-          }
+          }         
         }
 
-        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.Beamformer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
+        settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
+      }
+
+      // set output hosts
+      settings.outputProcHosts.clear();
+      for (set<string>::const_iterator i = outputProcHosts.begin(); i != outputProcHosts.end(); ++i) {
+        // skip empty host names
+        if (*i == "")
+          continue;
+
+        settings.outputProcHosts.push_back(*i);
       }
 
       return settings;
@@ -775,7 +804,7 @@ namespace LOFAR
       vector<string> stationList = StringUtil::split(stations, '+');
       for (unsigned i = 0; i < stationList.size(); i++)
       {
-        pos = getDoubleVector("PIC.Core." + stationList[i] + ".position");
+        pos = position(stationList[i]);
         posList.insert(posList.end(), pos.begin(), pos.end());
       }
 
@@ -794,6 +823,18 @@ namespace LOFAR
     }
 
 
+    vector<double> Parset::position( const std::string &name ) const
+    {
+      const string positionKey    = "PIC.Core." + name + ".position";
+      const string phaseCenterKey = "PIC.Core." + name + ".phaseCenter";
+
+      if (isDefined(positionKey))
+        return getDoubleVector(positionKey, true);
+      else
+        return getDoubleVector(phaseCenterKey, true);
+    }
+
+
     MultiDimArray<double,2> Parset::positions() const
     {
       const vector<ObservationSettings::Correlator::Station> &stations = settings.correlator.stations;
@@ -807,7 +848,7 @@ namespace LOFAR
         if (name.find("+") != string::npos)
           pos = centroidPos(name); // super station
         else
-          pos = getDoubleVector("PIC.Core." + name + ".position", true);
+          pos = position(name);
 
         ASSERT(pos.size() == 3);
 
@@ -1159,22 +1200,12 @@ namespace LOFAR
 
     unsigned Parset::nrSamplesPerChannel() const
     {
-      return settings.correlator.nrSamplesPerChannel;
-    }
-
-    unsigned Parset::nrHistorySamples() const
-    {
-      return nrChannelsPerSubband() > 1 ? (nrPPFTaps() - 1) * nrChannelsPerSubband() : 0;
-    }
-
-    unsigned Parset::nrPPFTaps() const
-    {
-      return settings.nrPPFTaps;
+      return settings.correlator.enabled ? settings.correlator.nrSamplesPerChannel : 0;
     }
 
     unsigned Parset::nrChannelsPerSubband() const
     {
-      return settings.correlator.nrChannels;
+      return settings.correlator.enabled ? settings.correlator.nrChannels : 0;
     }
 
     size_t Parset::nrSubbands() const
@@ -1273,6 +1304,15 @@ namespace LOFAR
     {
       return getString("_DPname","");
     }
+
+    size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
+    {
+      return nrCoherent;
+    }
+
+    size_t ObservationSettings::BeamFormer::SAP::nrIncoherentTAB() const
+    {
+      return nrIncoherent;
+    }
   } // namespace Cobalt
 } // namespace LOFAR
-

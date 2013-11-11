@@ -336,7 +336,14 @@ if [ $load_otdb_comps -eq 1 ]; then
   loadComponents_problem=`grep -E 'FATAL|ERROR' $loadComponents_outlog 2>&1 1>/dev/null; echo $?`
 
   if [[ $loadComponents_exit -ne 0 || $loadComponents_problem -eq 0 ]]; then
-     echo "loadComponents failed or has an error; see $loadComponents_outlog and $loadComponents_runlog for more information"
+     echo "loadComponents failed or has an error"
+     if [ $loadComponents_exit -ne 0 ]; then 
+       echo " See $loadComponents_outlog and $loadComponents_runlog for more information"
+     else
+       echo "List of errors from logfile $loadComponents_outlog:"
+       echo "--------------------"
+       grep -C 5 -E 'FATAL|ERROR' $loadComponents_outlog
+     fi
      exit
   fi
 fi

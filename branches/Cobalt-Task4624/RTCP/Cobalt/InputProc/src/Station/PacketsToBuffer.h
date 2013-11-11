@@ -22,7 +22,10 @@
 #define LOFAR_INPUT_PROC_PACKETS_TO_BUFFER_H
 
 #include <string>
+#include <sstream>
 #include <ios>
+#include <sys/time.h>
+#include <boost/format.hpp>
 
 #include <Stream/Stream.h>
 #include <CoInterface/SmartPtr.h>
@@ -30,6 +33,7 @@
 
 #include <InputProc/RSPBoards.h>
 #include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/SampleBuffer.h>
 
 #include "RSP.h"
 #include "PacketReader.h"
@@ -87,7 +91,7 @@ namespace LOFAR
       void process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
 
       // Triggers statistics logging every LOG_INTERVAL seconds
-      void logStatistics( PacketReader &reader, const struct RSP &packet );
+      virtual void logStatistics( PacketReader &reader, const struct RSP &packet );
     };
 
     /*
@@ -97,35 +101,27 @@ namespace LOFAR
     class MultiPacketsToBuffer : public RSPBoards
     {
     public:
-      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
-        :
-        RSPBoards("", inputStreams_.size()),
-        settings(settings),
-        inputStreams(inputStreams_.size())
-      {
-        // Don't take over ownership!
-        for (size_t i = 0; i < inputStreams.size(); ++i) {
-          inputStreams[i] = inputStreams_[i];
-        }
-      }
+      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ );
+
+      virtual ~MultiPacketsToBuffer();
 
     protected:
-      virtual void processBoard( size_t boardNr )
-      {
-        PacketsToBuffer board(*inputStreams[boardNr], settings, boardNr);
-
-        board.process();
-      }
-
-
-      virtual void logStatistics()
-      {
-        // PacketsToBuffer already logs
-      }
+      virtual void processBoard( size_t boardNr );
+      virtual void logStatistics();
 
     private:
       const BufferSettings settings;
+      const GenericSampleBuffer buffer;
+
       std::vector<Stream *> inputStreams;
+
+      // log statistics
+      double lastlog_time;           // last time we logged
+      std::vector<double> sum_flags; // sum of flags/second
+      double num_flags;              // number of seconds measured
+
+      // seconds since 1970, with microsecond accuracy
+      double now() const;
     };
   }
 }

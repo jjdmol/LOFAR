@@ -9,7 +9,7 @@ use2ndStation	bool
 usedStation	string
 usedIP		string
 usedMAC		string
-
+usedRSP		string
 
 #
 # Next points are needed for dataparameterization Do not alter them unless you know what you are doing. tabs are essential in these

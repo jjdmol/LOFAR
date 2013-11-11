@@ -76,7 +76,7 @@ CREATE SEQUENCE	VICnodedefID;
 CREATE TABLE VICnodedef (
     --  $Id$
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICnodedefID'),
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(150)	NOT NULL,
 	version		INT4			NOT NULL DEFAULT 010000,
 	classif		INT2			NOT NULL REFERENCES classification(ID),
 	constraints	TEXT,			-- interpreted by OTDB
@@ -103,7 +103,7 @@ CREATE TABLE VICparamdef (
     --  $Id$
 	paramID		INT4			NOT NULL DEFAULT nextval('VICparamdefID'),
 	nodeID		INT4			NOT NULL REFERENCES VICnodedef(nodeID),
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(150)	NOT NULL,
 	par_type	INT2			REFERENCES param_type(ID),
 	unit		INT2			REFERENCES unit(ID),
 	pruning		INT2			DEFAULT 10,
@@ -139,7 +139,7 @@ CREATE TABLE VICtemplate (
 	nodeID		INT4			NOT NULL DEFAULT nextval('VICtemplateID'),
 	parentID	INT4			NOT NULL,  -- REFERENCES VICtemplate(nodeID),
 	originID	INT4			NOT NULL DEFAULT 0, -- REF VICnode or VICparam
-	name		VARCHAR(40)		NOT NULL,
+	name		VARCHAR(150)	NOT NULL,
 	index		INT2			NOT NULL DEFAULT -1,
 	leaf		BOOLEAN			DEFAULT TRUE,
 	instances	INT2			NOT NULL DEFAULT 1,

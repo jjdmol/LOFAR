@@ -160,13 +160,14 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
 
     // Compute (differential) total electron content (TEC) at the piercepoint
     // (see memo by Bas van der Tol).
+    ASSERT(!r0.value().isArray());
     Matrix r0sqr = r0.value() * r0.value();
+    ASSERT(!beta.value().isArray());
     Matrix beta_2 = beta.value() * 0.5;
 //    LOG_DEBUG_STR("r0sqr: " << r0sqr);
 //    LOG_DEBUG_STR("beta: " << beta_2);
 
-    Matrix tecX(0.0, 1, nTime);
-    Matrix tecY(0.0, 1, nTime);
+    Matrix tec(0.0, nFreq, nTime);
     for(size_t i = 0; i < calPiercePoint.size(); ++i)
     {
         Matrix dx = calPiercePoint[i].value(0) - piercePoint.value(0);
@@ -174,43 +175,34 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
         Matrix dz = calPiercePoint[i].value(2) - piercePoint.value(2);
         Matrix weight = pow((dx * dx + dy * dy + dz * dz) / r0sqr, beta_2);
 
-//        LOG_DEBUG_STR("dx: " << dx);
-//        LOG_DEBUG_STR("dy: " << dy);
-//        LOG_DEBUG_STR("dz: " << dz);
+//         LOG_DEBUG_STR("dx: " << dx.getDouble());
+//         LOG_DEBUG_STR("dy: " << dy.getDouble());
+//         LOG_DEBUG_STR("dz: " << dz.getDouble());
 //        LOG_DEBUG_STR("weight: " << weight);
 
-        tecX += weight * tecWhite[i].value(0);
-        tecY += weight * tecWhite[i].value(1);
+        tec += weight * tecWhite[i].value(0);
     }
-    tecX *= -0.5;
-    tecY *= -0.5;
+    tec *= -0.5;
 
     // Correct TEC value for the slant (angle of the line of sight w.r.t. the
     // normal to the ionospheric thin layer at the pierce point position). A
     // large slant implies a longer path through the ionosphere, and thus a
     // higher TEC value.
-    tecX /= cos(piercePoint.value(3));
-    tecY /= cos(piercePoint.value(3));
-
+    tec *= piercePoint.value(3);
+    
     // Convert from slanted TEC to phase shift.
     //
     // TODO: Because MeqMatrix cannot handle the elementwise product of an N x 1
     // times a 1 x M array, we have to write it out ourselves. Maybe this could
     // be made possible in MeqMatrix instead?
-    Matrix shiftX, shiftY;
-    shiftX.setDCMat(nFreq, nTime);
-    shiftY.setDCMat(nFreq, nTime);
-    double *shiftX_re, *shiftX_im;
-    double *shiftY_re, *shiftY_im;
-    shiftX.dcomplexStorage(shiftX_re, shiftX_im);
-    shiftY.dcomplexStorage(shiftY_re, shiftY_im);
+    Matrix shift;
+    shift.setDCMat(nFreq, nTime);
+    double *shift_re, *shift_im;
+    shift.dcomplexStorage(shift_re, shift_im);
 
-    ASSERT(!tecX.isComplex() && tecX.isArray()
-        && static_cast<size_t>(tecX.nelements()) == nTime);
-    const double *tecItX = tecX.doubleStorage();
-    ASSERT(!tecY.isComplex() && tecY.isArray()
-        && static_cast<size_t>(tecY.nelements()) == nTime);
-    const double *tecItY = tecY.doubleStorage();
+    ASSERT(!tec.isComplex() && tec.isArray()
+        && static_cast<size_t>(tec.nelements()) == nFreq*nTime);
+    const double *tecIt = tec.doubleStorage();
 
     for(size_t t = 0; t < nTime; ++t)
     {
@@ -230,30 +222,25 @@ const JonesMatrix IonPhaseShift::evaluateExpr(const Request &request,
 
             double k_nu = 8.44797245e9 / reqGrid[FREQ]->center(f);
 
-            double phaseX = k_nu * (*tecItX);
-            double phaseY = k_nu * (*tecItY);
+            double phase = k_nu * (*tecIt);
 
-            *shiftX_re++ = std::cos(phaseX);
-            *shiftX_im++ = std::sin(phaseX);
-            *shiftY_re++ = std::cos(phaseY);
-            *shiftY_im++ = std::sin(phaseY);
+            *shift_re++ = std::cos(phase);
+            *shift_im++ = std::sin(phase);
+            
+            ++tecIt;
         }
 
-        ++tecItX;
-        ++tecItY;
     }
 
-//    LOG_DEBUG_STR("TEC X: " << tecX);
-//    LOG_DEBUG_STR("TEC Y: " << tecY);
-//    LOG_DEBUG_STR("SHIFT X: " << shiftX);
-//    LOG_DEBUG_STR("SHIFT Y: " << shiftY);
+//    LOG_DEBUG_STR("TEC: " << tec);
+//    LOG_DEBUG_STR("SHIFT: " << shift);
 
     JonesMatrix result;
     result.setFlags(mergeFlags(flags.begin(), flags.end()));
-    result.assign(0, 0, shiftX);
+    result.assign(0, 0, shift);
     result.assign(0, 1, Matrix(makedcomplex(0.0, 0.0)));
     result.assign(1, 0, Matrix(makedcomplex(0.0, 0.0)));
-    result.assign(1, 1, shiftY);
+    result.assign(1, 1, shift);
 
     EXPR_TIMER_STOP();
 
