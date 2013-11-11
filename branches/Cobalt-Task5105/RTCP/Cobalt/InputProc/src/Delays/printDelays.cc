@@ -79,7 +79,7 @@ int main( int argc, char **argv )
   cout << "# BlockSize:        " << blockSize << " samples" << endl;
   cout << "#" << endl;
   cout << "# Applied delay := delay + clockCorrection" << endl;
-  cout << "# block timestamp dir.x dir.y dir.z delay clockCorrection" << endl;
+  cout << "# block timestamp dir.x dir.y dir.z delay" << endl;
   cout.flush();
 
   /* Start delay compensation thread */
