@@ -116,7 +116,7 @@ class Parset(util.Parset.Parset):
         if partition:
           self.setPartition( partition )
 
-        if self.partition and self.partition != "R00R01":  
+        if self.partition and self.partition != "R00R01" and self.partition != "LOFARTEST":  
           overrideRack( Stations, int(self.partition[2]) )
 
         # storage nodes
