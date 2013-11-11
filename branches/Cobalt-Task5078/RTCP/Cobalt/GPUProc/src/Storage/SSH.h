@@ -69,7 +69,7 @@ namespace LOFAR
       bool isDone();
 
       // Returns whether the SSH session is (or was) connected succesfully to the
-      // remote SSH daemon.
+      // remote SSH daemon (incl an opened session and an opened channel to send commands).
       bool connected() const;
 
       // If stdout is captured, return the captured output

@@ -139,6 +139,9 @@ namespace LOFAR
         if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
           pubKey = discover_pubkey;
           privKey = discover_privkey;
+        } else {
+          LOG_ERROR(itsLogPrefix + "[FinalMetaData] no SSH keys given and discovery failed: failed to obtain final meta data");
+          return;
         }
       }
 
@@ -148,6 +151,9 @@ namespace LOFAR
                                     );
 
       // Start the remote process
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
+                    userName << '@' << hostName << " using key pair filenames " <<
+                    pubKey << ", " << privKey << " to execute command '" << commandLine << '\'');
       SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
       sshconn.start();
 

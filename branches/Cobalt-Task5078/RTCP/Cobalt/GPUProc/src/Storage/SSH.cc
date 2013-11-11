@@ -384,13 +384,12 @@ namespace LOFAR
         waitsocket(session, sock);
       }
 #endif
-
-      /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
-
       if (rc) {
         LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
         return NULL;
       }
+
+      /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
 
       /* Authenticate by public and/or private key */
       while ((rc = libssh2_userauth_publickey_fromfile(session,
@@ -404,7 +403,7 @@ namespace LOFAR
       }
 
       if (rc) {
-        LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
+        LOG_INFO_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")"); // don't make this >=WARN as we will be spammed through discover_ssh_keys() (also true for previous LOG_ERROR_STR(), but this one triggers all the time; we should throw, not log in this func)
         return NULL;
       }
 
@@ -532,7 +531,7 @@ namespace LOFAR
         // keep trying to connect
         sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
 
-        LOG_DEBUG_STR( itsLogPrefix << "Connected" );
+        LOG_DEBUG_STR( itsLogPrefix << "Connected; opening session" );
 
         /* Prevent cancellation in functions dealing with libssh2 internals, but
          * NOT during sleep() */
@@ -557,10 +556,10 @@ namespace LOFAR
             session = 0;
           }
 
-          sleep(RETRY_DELAY);
+          //sleep(RETRY_DELAY); // we'll later need to reconnect until obs end + a bit for FinalMetaDataGatherer, but currently broken, so don't wait 60s(!)
         }
 
-        break;
+        return;
       }
 
       itsConnected = true;
@@ -804,34 +803,27 @@ namespace LOFAR
 
       ASSERTSTR(HOME, "$HOME not set");
 
-      // try several common keys
-      for(unsigned attempt = 0;; attempt++) {
-        switch (attempt) {
-        case 0:
-          pubkey[0] = 0;
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
-          break;
+      // try several common keys. Code below assumes 0 or one %s to be replaced with $HOME.
+      const char *keyPairNames[][2] = {
+        {NULL                , "%s/.ssh/id_dsa"}, 
+        {"%s/.ssh/id_dsa.pub", "%s/.ssh/id_dsa"},
+        {NULL                , "%s/.ssh/id_rsa"},
+        {"%s/.ssh/id_rsa.pub", "%s/.ssh/id_rsa"}
+      };
 
-        case 1:
-          snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_dsa.pub", HOME);
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
-          break;
+      for (unsigned attempt = 0;
+           attempt < sizeof(keyPairNames) / sizeof(keyPairNames[0]); attempt++) {
+        // public key filename
+        if (keyPairNames[attempt][0] == 0)
+          pubkey[0] = '\0';
+        else
+          snprintf(pubkey,   pubkey_buflen,   keyPairNames[attempt][0], HOME);
 
-        case 2:
-          pubkey[0] = 0;
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
-          break;
-
-        case 3:
-          snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_rsa.pub", HOME);
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
-          break;
-
-        default:
-          // ran out of attempts
-          LOG_ERROR("Cannot find a working public/private key for SSH to localhost");
-          return false;
-        }
+        // private key filename
+        if (keyPairNames[attempt][1] == 0)
+          privkey[0] = '\0';
+        else
+          snprintf(privkey,  privkey_buflen,  keyPairNames[attempt][1], HOME);
 
         // try key pair
         if (ssh_works(pubkey, privkey)) {
@@ -839,6 +831,9 @@ namespace LOFAR
           return true;
         }
       }
+
+      LOG_ERROR("Cannot find a working public/private key pair for SSH to localhost");
+      return false;
     }
 
   } // namespace Cobalt
