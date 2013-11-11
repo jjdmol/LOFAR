@@ -97,12 +97,18 @@ namespace LOFAR
       struct Delay {
         double  direction[3];
         double  delay;
+        double  clockCorrection;
+
+        double  totalDelay() const {
+          return delay + clockCorrection;
+        }
 
         bool operator==(const Delay &other) const {
           return direction[0] == other.direction[0] &&
                  direction[1] == other.direction[1] &&
                  direction[2] == other.direction[2] &&
-                 delay == other.delay;
+                 delay == other.delay &&
+                 clockCorrection == other.clockCorrection;
         }
       };
 
@@ -186,8 +192,8 @@ namespace LOFAR
       // in `result'.
       void calcDelays( const TimeStamp &timestamp, AllDelays &result );
 
-      // Returns the non-geometric delay to add for this station
-      double baseDelay() const;
+      // Returns the clock correction delay to add for this station
+      double clockCorrection() const;
 
 #ifdef HAVE_CASACORE
       casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;
