@@ -134,79 +134,70 @@ extern "C" {
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
   InputDataType inputData   = (InputDataType)  filteredDataPtr;
+
+  /* The x dimension is 256 wide. */
+  const unsigned major   = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
+  const unsigned minor   = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
+
+  /* The y dimension is NR_CHANNELS/16 wide (or 1 if NR_CHANNELS == 1). 
+   *
+   * Note: `channel' is invalid if NR_CHANNELS == 1 */
+  const unsigned channel = (blockIdx.y * blockDim.y + threadIdx.y) * 16 + minor;
+
+  /* The z dimension is NR_STATIONS wide. */
+  const unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
+
+  const unsigned timeStart = NR_CHANNELS == 1 ? threadIdx.x : major;
+  const unsigned timeInc   = NR_CHANNELS == 1 ? blockDim.x  : 16;
+
+#if defined BANDPASS_CORRECTION
+  BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
+
+  float weight((*bandPassFactors)[channel]);
+#endif
+
 #if defined DELAY_COMPENSATION
   DelaysType delaysAtBegin  = (DelaysType) delaysAtBeginPtr;
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
-#endif
 
-#if defined BANDPASS_CORRECTION
-  BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
-#endif
+  double frequency = NR_CHANNELS == 1
+    ? subbandFrequency
+    : subbandFrequency - 0.5 * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 
-#if NR_CHANNELS > 1
-  unsigned major       = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
-  unsigned minor       = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
-  unsigned channelBase = (blockIdx.y * blockDim.y + threadIdx.y) * 16;
-
-  unsigned channel = channelBase + minor;
-#endif
-  unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
-
-#if defined DELAY_COMPENSATION
-#if NR_CHANNELS == 1
-  double frequency = subbandFrequency;
-#else
-  double frequency = subbandFrequency - 0.5 * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
-#endif
-  double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
-  double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
-
+  const double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
+  const double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
 
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
   const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
-  double2 phiBegin = make_double2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
-  double2 phiEnd   = make_double2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
+  const double2 phiBegin = make_double2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
+  const double2 phiEnd   = make_double2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
-  double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
-                                  (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
+  const double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
+                                        (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
+
+  const double2 myPhiBegin = make_double2(
+                              (phiBegin.x + double(timeStart) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
+                              (phiBegin.y + double(timeStart) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
   
-#if NR_CHANNELS == 1
-  double2 myPhiBegin = make_double2(
-                        (phiBegin.x + double(threadIdx.x) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
-                        (phiBegin.y + double(threadIdx.x) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
-  double2 myPhiDelta = make_double2(
-                         double(blockDim.x) * deltaPhi.x * frequency,
-                         double(blockDim.x) * deltaPhi.y * frequency);
-#else
-  double2 myPhiBegin = make_double2(
-                          (phiBegin.x + double(major) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
-                          (phiBegin.y + double(major) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
-  // Magic constant 16 is the time step we take in the samples
-  double2 myPhiDelta = make_double2(16.0 * deltaPhi.x * frequency,
-                                    16.0 * deltaPhi.y * frequency);
-#endif
+  const double2 myPhiDelta = make_double2(
+                               double(timeInc) * deltaPhi.x * frequency,
+                               double(timeInc) * deltaPhi.y * frequency);
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
   sincos(myPhiBegin.x, &vX.y,  &vX.x);
   sincos(myPhiBegin.y, &vY.y,  &vY.x);
   sincos(myPhiDelta.x, &dvX.y, &dvX.x);
   sincos(myPhiDelta.y, &dvY.y, &dvY.x);
-#endif
 
 #if defined BANDPASS_CORRECTION
-  float weight((*bandPassFactors)[channel]);
-#endif
-
-#if defined DELAY_COMPENSATION && defined BANDPASS_CORRECTION
   vX.x *= weight;
   vX.y *= weight;
   vY.x *= weight;
   vY.y *= weight;
 #endif
 
-#if defined DELAY_COMPENSATION
   fcomplex fvX, fvY, fdvX, fdvY;
   fvX = make_float2(vX.x, vX.y);
   fvY = make_float2(vY.x, vY.y);
@@ -214,20 +205,16 @@ extern "C" {
   fdvY = make_float2(dvY.x, dvY.y);
 #endif
 
-#if NR_CHANNELS == 1
-  for (unsigned time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
+  for (unsigned time = timeStart; time < NR_SAMPLES_PER_CHANNEL; time += timeInc)
   {
-    rawSampleType sampleXraw = (*inputData)[station][time][0];
+#if NR_CHANNELS == 1
+    const rawSampleType sampleXraw = (*inputData)[station][time][0];
     fcomplex sampleX = make_float2(convertIntToFloat(sampleXraw.x),
                                    convertIntToFloat(sampleXraw.y));
-    rawSampleType sampleYraw = (*inputData)[station][time][1];
+    const rawSampleType sampleYraw = (*inputData)[station][time][1];
     fcomplex sampleY = make_float2(convertIntToFloat(sampleYraw.x),
                                    convertIntToFloat(sampleYraw.y));
 #else
-  for (unsigned timeBase = 0; timeBase < NR_SAMPLES_PER_CHANNEL; timeBase += 16)
-  {
-    unsigned time = timeBase + major;
-
     fcomplex sampleX = (*inputData)[station][0][time][channel];
     fcomplex sampleY = (*inputData)[station][1][time][channel];
 #endif
@@ -253,8 +240,8 @@ extern "C" {
     tmp[major][minor][0] = sampleX;
     tmp[major][minor][1] = sampleY;
     __syncthreads();
-    (*outputData)[station][channelBase + major][timeBase + minor][0] = tmp[minor][major][0];
-    (*outputData)[station][channelBase + major][timeBase + minor][1] = tmp[minor][major][1];
+    (*outputData)[station][channel - minor + major][time - major + minor][0] = tmp[minor][major][0];
+    (*outputData)[station][channel - minor + major][time - major + minor][1] = tmp[minor][major][1];
     __syncthreads();
 #elif NR_CHANNELS == 1 && defined DO_TRANSPOSE
     (*outputData)[station][0][time][0] = sampleX;
