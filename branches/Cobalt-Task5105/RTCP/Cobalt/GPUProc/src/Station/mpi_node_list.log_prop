@@ -14,11 +14,11 @@ log4cplus.additivity.LCS.MSLofar=false
 # Define the appenders
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
 log4cplus.appender.STDOUT.layout=log4cplus::PatternLayout
-log4cplus.appender.STDOUT.layout.ConversionPattern=rtcp:${MPIRANK}@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
+log4cplus.appender.STDOUT.layout.ConversionPattern=mpi_node_list@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
 
 log4cplus.appender.STDERR=log4cplus::ConsoleAppender
 log4cplus.appender.STDERR.layout=log4cplus::PatternLayout
-log4cplus.appender.STDERR.layout.ConversionPattern=rtcp:${MPIRANK}@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
+log4cplus.appender.STDERR.layout.ConversionPattern=mpi_node_list@%h %D{%d-%m-%y %H:%M:%S.%q} %-5p %c{3} - %m [%b:%L]%n
 log4cplus.appender.STDERR.logToStdErr=true
 
 #log4cplus.appender.FILE=log4cplus::RollingFileAppender
