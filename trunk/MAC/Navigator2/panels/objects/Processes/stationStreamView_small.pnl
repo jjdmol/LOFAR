@@ -58,7 +58,10 @@ private void reload() {
   // get all the InputBuffers used by this station
   inputBuffers = navFunct_getInputBuffersForStation(station);
   
-
+  if (dynlen(connectToSave) > 0) {
+    dpDisconnect(\"monitorStreamsCB\", connectToSave);
+    dynClear(connectToSave);
+  }
 
   for (int i=1; i<= dynlen(inputBuffers); i++) {
     // We need to know if this station is involved in an active observation to see if the inputbuffers are showing real values.
@@ -71,31 +74,32 @@ private void reload() {
       setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
       setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
     }
-  
-    // check if the required datapoint for this view are enabled and accessible
-    if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
-      // if connect fails we turn the object off
-      if (dpConnect(\"monitorStreamsCB\", connectTo) == -1) {
-        setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
-      }
+  }
+  // check if the required datapoint for this view are enabled and accessible
+  if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo)>0 ){
+    // if connect fails we turn the object off
+    if (dpConnect(\"monitorStreamsCB\", connectTo) == -1) {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
+    }
+  } else {
+    // make a difference between an unreachable database or an empty connect list
+    if (dynlen(connectTo) <= 0) {
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
     } else {
-      // make a difference between an unreachable database or an empty connect list
-      if (dynlen(connectTo) <= 0) {
-        setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_off\");
-      } else {
-        setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpOffline\");
-        setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpOffline\");
-        setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpOffline\");
-        setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpOffline\");
-      }
+      setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_dpOffline\");
+      setValue(\"stationStreamObject1\", \"foreCol\", \"Lofar_dpOffline\");
     }
   }
+  connectToSave=connectTo;
+  dynClear(connectTo);
 }
 
 
@@ -212,6 +216,7 @@ bool stream0 = false;
 bool stream1 = false;
 string station = \"\";
 dyn_string connectTo;
+dyn_string connectToSave;
 dyn_string inputBuffers;
 bool connected = false;
 bool bDoubleClicked  = false;
