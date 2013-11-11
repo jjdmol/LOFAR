@@ -19,6 +19,7 @@ PANEL,-1 -1 414 134 N "_3DFace" 2
     if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
                                 obsDP+\".runState:_online.._invalid\")== -1) {
       setValue(\"streamObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      LOG_DEBUG(\"streamView_small.pnl:main|Couldnt connect to \"+obsDP+\".runState:_online.._value\");
     }
   } else {
     setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
