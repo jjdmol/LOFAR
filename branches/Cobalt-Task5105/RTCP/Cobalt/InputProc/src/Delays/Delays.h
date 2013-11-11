@@ -110,9 +110,6 @@ namespace LOFAR
         struct Delay              SAP;
         std::vector<struct Delay> TABs;
 
-        void read( Stream *str );
-        void write( Stream *str ) const;
-
         bool operator==(const BeamDelays &other) const {
           return SAP == other.SAP && TABs == other.TABs;
         }
@@ -124,9 +121,6 @@ namespace LOFAR
 
         // All delays for all SAPs (and their TABs)
         std::vector<struct BeamDelays> SAPs;
-
-        void read( Stream *str );
-        void write( Stream *str ) const;
 
         bool operator==(const AllDelays &other) const {
           return SAPs == other.SAPs;
