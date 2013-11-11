@@ -70,10 +70,10 @@ private void observationChanged(string dp1, dyn_string observations,
                                 string dp2, bool invalid) {
 
   if (updateConnected) {
-    if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
-                                           baseDP +\".status.state:_online.._invalid\") == -1) { 
+//    if (dpDisconnect(\"updateSWController\", baseDP +\".status.state:_online.._value\",
+//                                           baseDP +\".status.state:_online.._invalid\") == -1) { 
       updateConnected = false;
-    }
+//    }
   }
 
   firstObservation = \"\";
