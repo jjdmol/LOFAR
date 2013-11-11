@@ -168,30 +168,16 @@ extern "C" {
   const double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
   const double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
 
-  // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
-  // Because we `undo' the delay, we need to rotate BACK.
-  const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
-
   const double2 deltaDelay = make_double2((delayAfterEnd.x - delayAtBegin.x) / NR_SAMPLES_PER_CHANNEL,
                                           (delayAfterEnd.y - delayAtBegin.y) / NR_SAMPLES_PER_CHANNEL);   
 
-  const double2 myPhiBegin = make_double2(
-                              pi2 * (delayAtBegin.x + double(timeStart) * deltaDelay.x) * frequency
-                              + (*phaseOffsets)[station][0],
+  // Rotate all samples by vX, vY.
+  dcomplex vX = dphaseShift(frequency, delayAtBegin.x + timeStart * deltaDelay.x) * cossin((*phaseOffsets)[station][0]);
+  dcomplex vY = dphaseShift(frequency, delayAtBegin.y + timeStart * deltaDelay.y) * cossin((*phaseOffsets)[station][1]);
 
-                              pi2 * (delayAtBegin.y + double(timeStart) * deltaDelay.y) * frequency
-                              + (*phaseOffsets)[station][1]);
-  
-  const double2 myPhiDelta = make_double2(
-                               pi2 * double(timeInc) * deltaDelay.x * frequency,
-                               pi2 * double(timeInc) * deltaDelay.y * frequency);
-
-  dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
-
-  sincos(myPhiBegin.x, &vX.y,  &vX.x);
-  sincos(myPhiBegin.y, &vY.y,  &vY.x);
-  sincos(myPhiDelta.x, &dvX.y, &dvX.x);
-  sincos(myPhiDelta.y, &dvY.y, &dvY.x);
+  // Increment rotation by dvX, dvY per sample.
+  dcomplex dvX = dphaseShift(frequency, timeInc * deltaDelay.x);
+  dcomplex dvY = dphaseShift(frequency, timeInc * deltaDelay.y);
 
 #if defined BANDPASS_CORRECTION
   vX.x *= weight;
