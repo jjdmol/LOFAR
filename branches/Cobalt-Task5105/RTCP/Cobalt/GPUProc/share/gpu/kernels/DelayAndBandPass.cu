@@ -171,19 +171,20 @@ extern "C" {
   // Convert the fraction of sample duration (delayAtBegin/delayAfterEnd) to fractions of a circle.
   // Because we `undo' the delay, we need to rotate BACK.
   const double pi2 = -6.28318530717958647688; // -2.0 * M_PI
-  const double2 phiBegin = make_double2(pi2 * delayAtBegin.x,  pi2 * delayAtBegin.y);
-  const double2 phiEnd   = make_double2(pi2 * delayAfterEnd.x, pi2 * delayAfterEnd.y);
 
-  const double2 deltaPhi = make_double2((phiEnd.x - phiBegin.x) / NR_SAMPLES_PER_CHANNEL,
-                                        (phiEnd.y - phiBegin.y) / NR_SAMPLES_PER_CHANNEL);   
+  const double2 deltaDelay = make_double2((delayAtBegin.x  - delayAtBegin.x ) / NR_SAMPLES_PER_CHANNEL,
+                                          (delayAfterEnd.y - delayAfterEnd.y) / NR_SAMPLES_PER_CHANNEL);   
 
   const double2 myPhiBegin = make_double2(
-                              (phiBegin.x + double(timeStart) * deltaPhi.x) * frequency + (*phaseOffsets)[station][0],
-                              (phiBegin.y + double(timeStart) * deltaPhi.y) * frequency + (*phaseOffsets)[station][1]);
+                              pi2 * (delayAtBegin.x + double(timeStart) * deltaDelay.x) * frequency
+                              + (*phaseOffsets)[station][0],
+
+                              pi2 * (delayAtBegin.y + double(timeStart) * deltaDelay.y) * frequency
+                              + (*phaseOffsets)[station][1]);
   
   const double2 myPhiDelta = make_double2(
-                               double(timeInc) * deltaPhi.x * frequency,
-                               double(timeInc) * deltaPhi.y * frequency);
+                               pi2 * double(timeInc) * deltaDelay.x * frequency,
+                               pi2 * double(timeInc) * deltaDelay.y * frequency);
 
   dcomplex vX, vY, dvX, dvY; // store (cos(), sin())
   sincos(myPhiBegin.x, &vX.y,  &vX.x);
