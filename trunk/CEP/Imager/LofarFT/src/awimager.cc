@@ -519,8 +519,11 @@ int main (Int argc, char** argv)
 		   "If set to true, then find the optimal number of W-planes, given spheroid support, wmax and field of view.",
 		   "bool");
     inputs.create ("ChanBlockSize", "0",
-		   "Channel block size. Use if you want to use a different CF per block of channels.",
-		   "int");
+                   "Channel block size. Use if you want to use a different CF per block of channels.",
+                   "int");
+    inputs.create ("antenna", "",
+                   "Baseline selection string.",
+                   "string");
     
     // inputs.create ("FillFactor", "1",
     // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
@@ -618,6 +621,7 @@ int main (Int argc, char** argv)
     Bool SingleGridMode    = inputs.getBool("SingleGridMode");
     Bool FindNWplanes    = inputs.getBool("FindNWplanes");
     Int ChanBlockSize   = inputs.getInt("ChanBlockSize");
+    String antenna   = inputs.getString("antenna");
     
     //Double FillFactor= 1.;//inputs.getDouble("FillFactor");
 
@@ -786,7 +790,7 @@ int main (Int argc, char** argv)
                     String(),                       // timerng
                     String(),                       // fieldnames
                     Vector<Int>(),                  // antIndex
-                    String(),                       // antnames
+                    antenna,                        // antnames
                     String(),                       // spwstring
                     uvdist,                       // uvdist
                     String(),                       // scan
