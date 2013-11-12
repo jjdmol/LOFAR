@@ -165,21 +165,21 @@ The Hardware Node list
 
 The list
 
-  Cobalt.Hardware.nrNodes = x
-  Cobalt.Hardware.Node[y]
+  Cobalt.Nodes = [cbt001_0, cbt001_1, XXXXX, ...]
   
 should be added to a parset, which bind MPI rank x to hardware (including
 stations that send to that rank). MPI ranks not mentioned in the list use the
-default configuration. Each node contains:
+default configuration. Nodes are described in separate keys (see 
+$LOFARROOT/etc/parset-additions.d/default/HardwareList.parset):
 
-  Cobalt.Hardware.Node[rank].host
+  PIC.Core.Cobalt.XXXXX.host
     Type:    string
     Default: (none)
-    Typical: cbm001..cbm009
+    Typical: cbt001..cbt009, localhost
 
     Host name to run on.
 
-  Cobalt.Hardware.Node[rank].cpu
+  PIC.Core.Cobalt.XXXXX.cpu
     Type:    integer
     Default: 0
     Typical: 0, 1
@@ -187,7 +187,7 @@ default configuration. Each node contains:
     Socket/NUMA node number to bind to. To print the list of available sockets:
         lscpu -p=socket | sort | grep -v ^# | uniq
 
-  Cobalt.Hardware.Node[rank].gpus
+  PIC.Core.Cobalt.XXXXX.gpus
     Type:    list of integers
     Default: [0]
     Typical: [0,1] or [2,3]
@@ -196,7 +196,7 @@ default configuration. Each node contains:
     To print the list of available GPUs:
         lspci | grep NVIDIA | nl -v 0
 
-  Cobalt.Hardware.Node[rank].nic
+  PIC.Core.Cobalt.XXXXX.nic
     Type:    string
     Default: ""
     Typical: mlx4_0, mlx4_1
@@ -204,21 +204,6 @@ default configuration. Each node contains:
     Network Interface to bind to. "" = bind to all.
     To print the list of InfiniBand devices:
         ibstatus
-
-  Cobalt.Hardware.Node[rank].stations
-    Type:    list of strings
-    Default: []
-    Typical: ["CS001LBA", "CS001HBA0", "CS001HBA"]
-    
-    Antenna fields that are received on this rank. This list is allowed to
-    contain fields that are not part of the observation.
-
-    Antenna fields not mentioned in the hardware list are distributed
-    round-robin over the MPI ranks.
-
-    Note that this key needs to be compatible with the
-    PIC.Core.Station.xxxxx.RSP.ports keys below, which specify from which
-    streams data should be read for the individual boards.
 
 Antenna field configuration
 ===========================
@@ -232,12 +217,13 @@ data over 1 to 4 RSP boards.
 Each antenna field needs several keys. We'll use CS001LBA as an example. First,
 the input:
 
-  PIC.Core.Station.CS001LBA.RSP.ports = [udp:0.0.0.0:10000, udp:0.0.0.0:10001,
-                                         udp:0.0.0.0:10002, udp:0.0.0.0:10003]
+  PIC.Core.CS001LBA.RSP.ports = [udp:0.0.0.0:10000, udp:0.0.0.0:10001,
+                                 udp:0.0.0.0:10002, udp:0.0.0.0:10003]
+  PIC.Core.CS001LBA.RSP.receiver = cbt001_0
 
 configures the CS001LBA antenna field to receive beamlets from 4 RSP boards on
-the given ports.  The host on which the antenna field is received is configured
-in the Cobalt.Hardware.Node list.
+the given ports. The host on which the antenna field is received is configured
+in the .receiver key.
 
 Beamlet <-> Subband mapping
 -------------------------------
