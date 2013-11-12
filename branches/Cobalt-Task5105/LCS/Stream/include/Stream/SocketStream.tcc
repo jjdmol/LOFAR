@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#ifdef __linux__
+#if defined __linux__ && __GLIBC_PREREQ(2,12)
 // Actually, recvmmsg is supported by Linux 2.6.32+ using glibc 2.12+
 #define HAVE_RECVMMSG
 #endif
