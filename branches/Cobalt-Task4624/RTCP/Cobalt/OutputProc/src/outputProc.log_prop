@@ -1,6 +1,9 @@
 
 # Configure the loggers
-log4cplus.rootLogger=INFO, STDOUT, MACCLP
+# TODO: outputProc currently crashes randomly with a segmentation fault when
+# logging to the MACCLP socket appender.
+#log4cplus.rootLogger=INFO, STDOUT, MACCLP
+log4cplus.rootLogger=INFO, STDOUT
 log4cplus.logger.TRC=INFO
 
 # prevent debug messages: accept >=WARN only, and don't forward messages to the rootLogger
