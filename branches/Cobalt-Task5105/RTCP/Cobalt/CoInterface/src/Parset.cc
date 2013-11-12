@@ -25,6 +25,7 @@
 
 #include <cstdio>
 #include <set>
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -265,6 +266,41 @@ namespace LOFAR
       return newname;
     }
 
+    /*
+     * operator<() for station names.
+     *
+     * Sorts in the following order:
+     *   1. Core stations (CSxxx)
+     *   2. Remote stations (RSxxx)
+     *   3. International stations (others)
+     *
+     * Within each group, the stations are
+     * sorted lexicographically.
+     */
+    bool compareStationNames( const string &a, const string &b ) {
+      // return a < b
+
+      unsigned major_order_a, major_order_b;
+
+      if (a.find("CS") == 0)
+        major_order_a = 0;
+      else if (a.find("RS") == 0)
+        major_order_a = 1;
+      else
+        major_order_a = 2;
+
+      if (b.find("CS") == 0)
+        major_order_b = 0;
+      else if (b.find("RS") == 0)
+        major_order_b = 1;
+      else
+        major_order_b = 2;
+
+      if (major_order_a == major_order_b)
+        return a < b;
+      else
+        return major_order_a < major_order_b;
+    }
 
     struct ObservationSettings Parset::observationSettings() const
     {
@@ -350,6 +386,10 @@ namespace LOFAR
 
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+
+      // Sort stations (CS, RS, intl)
+
+      std::sort(stations.begin(), stations.end(), compareStationNames);
 
       vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
