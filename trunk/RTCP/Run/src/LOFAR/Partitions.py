@@ -53,7 +53,7 @@ for R in xrange(3):
   PartitionPsets[rack] = PartitionPsets["%s-M0" % rack] + PartitionPsets["%s-M1" % rack]
 
 PartitionPsets["R00R01"] = PartitionPsets["R00"] + PartitionPsets["R01"]  
-PartitionPsets["LOFARTEST"] = PartitionPsets["R01-M0-N00-J00"] + PartitionPsets["R01-M0-N08-J00"]  
+PartitionPsets["LOFARTEST"] = PartitionPsets["R01-M0-N00-J00-16"] + PartitionPsets["R01-M0-N08-J00-16"]  
 
 if __name__ == "__main__":
   from optparse import OptionParser,OptionGroup
