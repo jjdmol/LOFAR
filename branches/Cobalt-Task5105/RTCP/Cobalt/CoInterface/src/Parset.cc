@@ -387,8 +387,8 @@ namespace LOFAR
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
-      // Sort stations (CS, RS, intl)
-
+      // Sort stations (CS, RS, intl), to get a consistent and predictable
+      // order in the MeasurementSets.
       std::sort(stations.begin(), stations.end(), compareStationNames);
 
       vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
