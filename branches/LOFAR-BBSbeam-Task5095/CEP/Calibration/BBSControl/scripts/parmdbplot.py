@@ -542,7 +542,9 @@ class PlotWindow(QFrame):
         hbox2.addWidget(self.referenceLabel)
         hbox2.addWidget(self.referenceSelector)
         # For now, phase sum only works when only one parameter is shown
-        if len(self.selected_parms)==1:
+        if len(self.selected_parms)==1 and \
+           (self.calType!="CommonRotationAngle" and 
+            self.calType!="RotationAngle"):
             hbox2.addWidget(self.sumLabel)
             hbox2.addWidget(self.sumSelector)
         hbox2.addStretch(1)
@@ -556,8 +558,7 @@ class PlotWindow(QFrame):
         layout.addLayout(hbox)
         
         # RotationAngles do not have phase sum 
-        if self.calType!="CommonRotationAngle" and self.calType!="RotationAngle":
-            layout.addLayout(hbox2)
+        layout.addLayout(hbox2)
         layout.addLayout(hbox3)
         layout.addWidget(self.toolbar)
         self.setLayout(layout)
