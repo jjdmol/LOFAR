@@ -365,7 +365,7 @@ namespace LOFAR
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(floor(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth() + 0.5));
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
         coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
       }
 
