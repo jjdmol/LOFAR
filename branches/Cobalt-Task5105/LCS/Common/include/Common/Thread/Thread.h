@@ -127,8 +127,10 @@ class Thread
           case SCHED_BATCH:
             return "SCHED_BATCH (cpu intensive)";
 
+#ifdef SCHED_IDLE
           case SCHED_IDLE:
             return "SCHED_IDLE (idle)";
+#endif
 
           case SCHED_FIFO:
             return "SCHED_FIFO (real time)";
