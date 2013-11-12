@@ -36,8 +36,8 @@ void updateStreamCB(string dp1, bool s0,
 
   // change all found DP's to contain all the elements that contain the stream.percBad
   if (connected && dynlen(connectTo) > 0 ) {
-    dpDisconnect(\"monitorStreamsCB\",connectTo);
-    dynClear(connectTo);
+    dpDisconnect(\"monitorStreamsCB\",connectToSave);
+    dynClear(connectToSave);
     connected = false;
   }
 
@@ -139,8 +139,8 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
       rsp1found = true;
       rsppos = 1;
     } else {
-      rsp1found = true;
-      rsppos = 1;
+      rsp0found = true;
+      rsppos = 0;
     }
     
     if (val == 0.0) {
@@ -162,16 +162,24 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
     }
     
     
-    setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
-    setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
     if (strpos(station,\"CS\") < 0) {
-      rsppos=1;
       rsp0found=true;
       rsp1found=true;
-      setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
-      setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
+      setValue(\"stationStreamObject0\", \"backCol\", color);
+      setValue(\"stationStreamObject0\", \"foreCol\", color);
+      setValue(\"stationStreamObject1\", \"backCol\", color);
+      setValue(\"stationStreamObject1\", \"foreCol\", color);
+    } else {
+      if ((rsppos == 0 && stream0)  || (rsppos ==1 && stream1)) {
+        setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
+        setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
+      } else {
+        setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
+        setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+      }
     }
   }
+  
   // check what HBA part was available
   if (dynlen(values) <= 1) {
     if (!rsp0found) {
@@ -192,7 +200,6 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
 
   setValue(\"stationStreamObject0\",\"toolTipText\",toolTipText);
   setValue(\"stationStreamObject1\",\"toolTipText\",toolTipText);
-
 }" 0
  E "main(int x, int y)
 {
