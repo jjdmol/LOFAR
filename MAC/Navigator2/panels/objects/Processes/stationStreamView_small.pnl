@@ -170,12 +170,14 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
       setValue(\"stationStreamObject1\", \"backCol\", color);
       setValue(\"stationStreamObject1\", \"foreCol\", color);
     } else {
+      rsp0found=true;
+      rsp1found=false;
       if ((rsppos == 0 && stream0)  || (rsppos ==1 && stream1)) {
         setValue(\"stationStreamObject\"+rsppos, \"backCol\", color);
         setValue(\"stationStreamObject\"+rsppos, \"foreCol\", color);
       } else {
-        setValue(\"stationStreamObject0\", \"backCol\", \"Lofar_off\");
-        setValue(\"stationStreamObject0\", \"foreCol\", \"Lofar_off\");
+        setValue(\"stationStreamObject\"+rsppos, \"backCol\", \"Lofar_off\");
+        setValue(\"stationStreamObject\"+rsppos, \"foreCol\", \"Lofar_off\");
       }
     }
   }
