@@ -420,6 +420,8 @@ int main(int argc, char **argv)
     }
   }
 
+  pipeline = 0;
+
   /*
    * COMPLETING stage
    */
@@ -437,7 +439,7 @@ int main(int argc, char **argv)
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 10);
+    storageProcesses->stop(completing_start + 60);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -462,6 +464,9 @@ int main(int argc, char **argv)
     } else {
       LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
     }
+
+    // final cleanup
+    storageProcesses = 0;
   }
   LOG_INFO("===== SUCCESS =====");
 
