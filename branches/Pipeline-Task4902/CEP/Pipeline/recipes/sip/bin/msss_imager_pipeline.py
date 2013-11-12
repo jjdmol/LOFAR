@@ -459,8 +459,10 @@ class msss_imager_pipeline(control):
                           mask_patch_size = mask_patch_size,
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
-                          autogenerate_parameters = True)  # always calculate all
-                                                # imaging specs for MSSS
+                          autogenerate_parameters = self.parset.getBool(
+                                    "Imaging.autogenerate_parameters"),
+                          specify_fov = self.parset.getBool(
+                                    "Imaging.specify_fov"))
 
         return output_mapfile, max_baseline
 

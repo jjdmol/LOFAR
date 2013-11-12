@@ -65,12 +65,18 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "Turns on the autogeneration of: cellsize, image-size, fov."
             " MSSS 'type' functionality"
         ),
+        'specify_fov': ingredient.FloatField(
+            '--specify-fov',
+            default = False,
+            help = "calculated Image parameters are relative to fov, parameter"
+            " is active when autogenerate_parameters is False"
+        ),
         'fov': ingredient.FloatField(
             '--fov',
             default = 0.0,
-            help = "calculated Image parameters are  relative to this"
+            help = "calculated Image parameters are relative to this"
             " Field Of View in arcSec. This parameter is obligatory when"
-            " autogenerate_parameters is False"
+            " specify_fov is True"
         )
     }
 
@@ -132,6 +138,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          sourcedb_path,
                          self.inputs['mask_patch_size'],
                          self.inputs['autogenerate_parameters'],
+                         self.inputs['specify_fov'],
                          self.inputs['fov'],
                          ]
 
