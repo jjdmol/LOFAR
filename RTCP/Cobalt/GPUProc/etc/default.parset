@@ -187,3 +187,6 @@ Observation.DataProducts.Output_Beamformed.locations=[localhost:.] # host:direct
 
 # Number of channels used for the coherent dedispersion kernel
 Cobalt.Beamformer.dedispersionFFTsize=2048
+
+# Dummy identification name for MAC Log Processor
+_DPname=LOFAR_ObsSW_TempObs0000
