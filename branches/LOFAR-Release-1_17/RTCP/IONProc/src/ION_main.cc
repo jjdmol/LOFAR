@@ -358,8 +358,8 @@ int main(int argc, char **argv)
   ipAddresses.resize(boost::extents[nrPsets][16]);
 
 #if defined HAVE_BGP_ION
-#if 0
   ParameterSet personality("/proc/personality.sh");
+#if 0
   unsigned realPsetNumber = personality.getUint32("BG_PSETNUM");
 
   if (myPsetNumber != realPsetNumber) {
