@@ -447,7 +447,9 @@ class msss_imager_pipeline(control):
                                     "output map for awimager recipe")
 
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
-
+        autogenerate_parameters = self.parset.getBool(
+                                    "Imaging.autogenerate_parameters")
+        specify_fov = self.parset.getBool("Imaging.specify_fov")
         if skip:
             pass
         else:
@@ -459,10 +461,8 @@ class msss_imager_pipeline(control):
                           mask_patch_size = mask_patch_size,
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
-                          autogenerate_parameters = self.parset.getBool(
-                                    "Imaging.autogenerate_parameters"),
-                          specify_fov = self.parset.getBool(
-                                    "Imaging.specify_fov"))
+                          autogenerate_parameters = autogenerate_parameters,
+                          specify_fov = specify_fov)
 
         return output_mapfile, max_baseline
 

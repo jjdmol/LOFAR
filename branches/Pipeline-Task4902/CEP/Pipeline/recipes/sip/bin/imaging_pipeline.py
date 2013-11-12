@@ -445,7 +445,7 @@ class imaging_pipeline(control):
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
         auto_imaging_specs = self.parset.getBool("Imaging.auto_imaging_specs")
         fov = self.parset.getFloat("Imaging.fov")
-
+        specify_fov = self.parset.getBool("Imaging.specify_fov")
         if skip:
             pass
         else:
@@ -458,6 +458,7 @@ class imaging_pipeline(control):
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = auto_imaging_specs,
+                          specify_fov = specify_fov,
                           fov = fov)
 
         return output_mapfile, max_baseline
