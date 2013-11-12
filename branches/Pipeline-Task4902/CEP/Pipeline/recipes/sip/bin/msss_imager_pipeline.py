@@ -448,8 +448,9 @@ class msss_imager_pipeline(control):
 
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
         autogenerate_parameters = self.parset.getBool(
-                                    "Imaging.autogenerate_parameters")
-        specify_fov = self.parset.getBool("Imaging.specify_fov")
+                                    "Imaging.auto_imaging_specs")
+        specify_fov = self.parset.getBool(
+                                    "Imaging.specify_fov")
         if skip:
             pass
         else:
