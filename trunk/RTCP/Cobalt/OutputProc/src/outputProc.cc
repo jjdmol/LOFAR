@@ -34,10 +34,6 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
-#if defined HAVE_MPI
-#include <mpi.h>
-#endif
-
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/StringUtil.h>
@@ -45,6 +41,8 @@
 #include <Common/NewHandler.h>
 #include <Common/Thread/Thread.h>
 #include <ApplCommon/Observation.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
@@ -60,6 +58,7 @@ LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
@@ -102,6 +101,15 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
+
+    // Send identification string to the MAC Log Processor
+    LOG_INFO_STR("MACProcessScope: " << 
+                 str(format(createPropertySetName(
+                              PSN_COBALT_OUTPUT_PROC, "", 
+                              parset.getString("_DPname")))
+                     % myRank));
+
+    Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
     const vector<string> &hostnames = parset.settings.outputProcHosts;
     ASSERT(myRank < hostnames.size());

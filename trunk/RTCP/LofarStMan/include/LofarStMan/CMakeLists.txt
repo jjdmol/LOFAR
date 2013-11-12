@@ -1,16 +1,5 @@
-# $Id$
-
 # List of header files that will be installed.
-set(inst_HEADERS
-  AntField.h
-  AntennaSets.h
-  LofarDirs.h
-  Observation.h
-  PosixTime.h
-  PVSSDatapointDefs.h
-  StationConfig.h
-  StationDatatypes.h
-  StationInfo.h)
+set(inst_HEADERS)
 
 # Create symbolic link to include directory.
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
