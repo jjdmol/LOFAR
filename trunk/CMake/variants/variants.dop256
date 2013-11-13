@@ -7,6 +7,12 @@ set(GNU_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
 
 # /opt/lofar/external is searched by default
 
+# Refer to symlink that go may through ccache.
+set(GNU_C         /home/amesfoort/gcc )
+set(GNU_CXX       /home/amesfoort/g++ )
+set(GNU_Fortran   /usr/bin/gfortran )
+set(GNU_ASM       /home/amesfoort/gcc )
+
 # CUDA 5.0 headers refuse to try gcc 4.7. Force 4.6 for the moment.
 # This is only needed if configuring/compiling a .cu file with nvcc (not anymore).
 #set(GNU_C         /usr/bin/gcc-4.6 )
