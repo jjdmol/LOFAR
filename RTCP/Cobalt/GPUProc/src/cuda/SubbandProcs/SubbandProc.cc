@@ -139,11 +139,9 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
-    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline())
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),nextPowerOfTwo())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
-      // Assure that the nrChannels is more then zero: never ending loop 
-      ASSERT(n != 0);
       ASSERT(powerOfTwo(n));
 
       unsigned log;
