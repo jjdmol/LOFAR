@@ -35,7 +35,7 @@ namespace LOFAR
     template <typename T>
     inline static bool powerOfTwo(T n)
     {
-      return (n | (n - 1)) == 2 * n - 1;
+      return n > 0 && (n & -n) == n;
     }
 
 
