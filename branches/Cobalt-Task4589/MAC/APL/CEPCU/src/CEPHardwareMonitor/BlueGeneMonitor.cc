@@ -25,14 +25,13 @@
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
+#include <ApplCommon/StationInfo.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <MACIO/MACServiceInfo.h>
-#include <APL/APLCommon/ControllerDefines.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-//#include <APL/APLCommon/StationInfo.h>
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>	// usleep
@@ -45,7 +44,6 @@
 #define MAX2(a,b)	((a) > (b)) ? (a) : (b)
 
 namespace LOFAR {
-	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
 	using namespace GCF::TM;
 	using namespace GCF::PVSS;
