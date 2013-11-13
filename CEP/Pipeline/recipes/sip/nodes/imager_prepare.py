@@ -19,7 +19,7 @@ from lofarpipe.support.utilities import create_directory
 from lofarpipe.support.data_map import DataMap
 from lofarpipe.support.subprocessgroup import SubProcessGroup
 
-import lofar.pyrap.tables as pt
+import pyrap.tables as pt
 
 # Some constant settings for the recipe
 _time_slice_dir_name = "time_slices"
