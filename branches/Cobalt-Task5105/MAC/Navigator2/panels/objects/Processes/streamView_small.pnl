@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 114 72 N "_3DFace" 2
+PANEL,-1 -1 414 134 N "_3DFace" 2
 "$observation"
 "$streamNr"
 "main()
@@ -13,16 +13,40 @@ PANEL,-1 -1 114 72 N "_3DFace" 2
   // The panel itself will sort out the list of inputbuffers belonging to it
   baseDP =CEPDBName+\"LOFAR_PermSW_PSIONode00_InputBuffer\";
 
-  reload();
+  obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
+
+  if (navFunct_dpReachable(obsDP)){
+    if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
+                                obsDP+\".runState:_online.._invalid\")== -1) {
+      setValue(\"streamObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      LOG_DEBUG(\"streamView_small.pnl:main|Couldnt connect to \"+obsDP+\".runState:_online.._value\");
+    }
+  } else {
+    setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
+  }
 }
-  
+
+private void obsRunning(string dp1,string running,
+                        string dp2,bool invalid) {
+
+  if (!invalid) {
+    if (strpos(running,\"Running\")>=0) {
+      reload();
+    } else {
+      setValue(\"streamObject\", \"backCol\", \"Lofar_off\");
+    }
+  } else {
+    setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
+  }       
+}
+
 private void reload() {
   
   // get all the InputBuffers used by this observation
+  dynClear(inputBuffers);
   inputBuffers = navFunct_getInputBuffersForObservation(observation);
   
   if ($streamNr == 1) {
-    string obsDP = claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
     LOG_DEBUG(\"streamView_small.pnl:reload|obsDP: \"+obsDP+\" observation :\"+observation+\" InputBuffers: \"+inputBuffers);
   }
 
@@ -132,6 +156,7 @@ void streamCB(dyn_string dps, dyn_float values)
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
+string obsDP=\"\";
 string stream;
 string observation;
 dyn_string connectTo;

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 11 station_RCU
-PANEL,-1 -1 1047 803 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel

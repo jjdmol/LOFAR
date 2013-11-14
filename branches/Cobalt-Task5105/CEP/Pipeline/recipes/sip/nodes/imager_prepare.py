@@ -69,7 +69,7 @@ class imager_prepare(LOFARnodeTCP):
             self.logger.debug("and assured it is empty")
 
             #******************************************************************
-            # 1. Copy the input files 
+            # 1. Copy the input files
             copied_ms_map = self._copy_input_files(
                             processed_ms_dir, input_map)
 
@@ -107,9 +107,9 @@ class imager_prepare(LOFARnodeTCP):
             time_slice_filtered_path_list = self._filter_bad_stations(
                 time_slices_path_list, asciistat_executable,
                 statplot_executable, msselect_executable)
-				
+
             #*****************************************************************
-            # Add measurmenttables 
+            # Add measurmenttables
             if add_beam_tables:
                 self.add_beam_tables(time_slice_filtered_path_list)
 
@@ -128,16 +128,16 @@ class imager_prepare(LOFARnodeTCP):
     def add_beam_tables(self, time_slices_path_list):
         beamtable_proc_group = SubProcessGroup(self.logger)
         for ms_path in time_slices_path_list:
-            self.logger.debug( "makebeamtables start")
+            self.logger.debug("makebeamtables start")
             cmd_string = "makebeamtables ms={0} overwrite=true".format(ms_path)
             self.logger.debug(cmd_string)
             beamtable_proc_group.run(cmd_string)
 
         if beamtable_proc_group.wait_for_finish() != None:
             raise Exception("an makebeamtables run failed!")
-            
+
         self.logger.debug("makebeamtables finished")
-        
+
     def _copy_input_files(self, processed_ms_dir, input_map):
         """
         Collect all the measurement sets in a single directory:
@@ -146,7 +146,7 @@ class imager_prepare(LOFARnodeTCP):
         processed_ms_dir Return value is a set of missing files
         """
         copied_ms_map = copy.deepcopy(input_map)
-        #loop all measurement sets
+        # loop all measurement sets
         for input_item, copied_item in zip(input_map, copied_ms_map):
             # fill the copied item with the correct data
             copied_item.host = self.host
@@ -155,7 +155,7 @@ class imager_prepare(LOFARnodeTCP):
 
             # If we have to skip this ms
             if input_item.skip == True:
-                exit_status = 1 # 
+                exit_status = 1  #
 
             # construct copy command
             command = ["rsync", "-r", "{0}:{1}".format(
@@ -169,9 +169,9 @@ class imager_prepare(LOFARnodeTCP):
             # saturate the cluster.
             copy_process = subprocess.Popen(
                         command,
-                        stdin=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+                        stdin = subprocess.PIPE,
+                        stdout = subprocess.PIPE,
+                        stderr = subprocess.PIPE)
 
             # Wait for finish of copy inside the loop: enforce single tread
             # copy
@@ -179,7 +179,7 @@ class imager_prepare(LOFARnodeTCP):
 
             exit_status = copy_process.returncode
 
-            #if copy failed log the missing file and update the skip fields 
+            # if copy failed log the missing file and update the skip fields
             if  exit_status != 0:
                 input_item.skip = True
                 copied_item.skip = True
@@ -201,7 +201,7 @@ class imager_prepare(LOFARnodeTCP):
              "." + os.path.basename("imager_prepare_ndppp"),
                   os.path.basename(ndppp)) as logger:
             catch_segfaults(cmd, working_dir, environment,
-                                  logger, cleanup=None)
+                                  logger, cleanup = None)
 
     def _run_dppp(self, working_dir, time_slice_dir_path, slices_per_image,
                   copied_ms_map, subbands_per_image, collected_ms_dir_name, parset,
@@ -234,7 +234,7 @@ class imager_prepare(LOFARnodeTCP):
             # Join into a single list of paths.
             msin = "['{0}']".format("', '".join(ndppp_input_ms))
             # Update the parset with computed parameters
-            patch_dictionary = {'uselogger': 'True', # enables log4cplus
+            patch_dictionary = {'uselogger': 'True',  # enables log4cplus
                                'msin': msin,
                                'msout': time_slice_path}
             nddd_parset_path = time_slice_path + ".ndppp.par"
@@ -261,13 +261,13 @@ class imager_prepare(LOFARnodeTCP):
             finally:
                 os.unlink(temp_parset_filename)
 
-            #run ndppp
+            # run ndppp
             cmd = [ndppp, nddd_parset_path]
 
             try:
                 # Actual dppp call to externals (allows mucking)
                 self._dppp_call(working_dir, ndppp, cmd, self.environment)
-                # append the created timeslice on succesfull run 
+                # append the created timeslice on succesfull run
                 time_slice_path_list.append(time_slice_path)
 
             # On error the current timeslice should be skipped
@@ -288,7 +288,7 @@ class imager_prepare(LOFARnodeTCP):
         It is a virtual ms, a ms with symbolic links to actual data is created!
         """
         pt.msconcat(group_measurements_collected,
-                               output_file_path, concatTime=True)
+                               output_file_path, concatTime = True)
         self.logger.debug("Concatenated the files: {0} into the single measure"
             "mentset: {1}".format(
                 ", ".join(group_measurements_collected), output_file_path))
@@ -301,7 +301,7 @@ class imager_prepare(LOFARnodeTCP):
 
         """
 
-        #loop all measurement sets
+        # loop all measurement sets
         rfi_temp_dir = os.path.join(time_slice_dir, "rfi_temp_dir")
         create_directory(rfi_temp_dir)
 
@@ -321,7 +321,7 @@ class imager_prepare(LOFARnodeTCP):
                             " ".join(command)))
 
                 # Add the command to the process group
-                rfi_console_proc_group.run(command, cwd=temp_slice_path)
+                rfi_console_proc_group.run(command, cwd = temp_slice_path)
 
             # wait for all to finish
             if rfi_console_proc_group.wait_for_finish() != None:
@@ -377,24 +377,24 @@ class imager_prepare(LOFARnodeTCP):
         if asciiplot_proc_group.wait_for_finish() != None:
             raise Exception("an ASCIIplot run failed!")
 
-        #remove the bad stations
+        # remove the bad stations
         self.logger.debug("Use ms select to remove bad stations")
         msselect_output = {}
         msselect_proc_group = SubProcessGroup(self.logger)
         for ms, ms_stats  in asciiplot_output:
-            #parse the .tab file containing the bad stations
+            # parse the .tab file containing the bad stations
             station_to_filter = []
             file_pointer = open(ms_stats + ".tab")
 
             for line in file_pointer.readlines():
-                #skip headed line
+                # skip headed line
                 if line[0] == "#":
                     continue
 
                 entries = line.split()
-                #if the current station is bad (the last entry on the line)
+                # if the current station is bad (the last entry on the line)
                 if entries[-1] == "True":
-                    #add the name of station
+                    # add the name of station
                     station_to_filter.append(entries[1])
 
             # if this measurement does not contain baselines to skip do not
@@ -406,7 +406,7 @@ class imager_prepare(LOFARnodeTCP):
             ms_output_path = ms + ".filtered"
             msselect_output[ms] = ms_output_path
 
-            #use msselect to remove the stations from the ms
+            # use msselect to remove the stations from the ms
             msselect_baseline = "!{0}".format(",".join(station_to_filter))
             cmd_string = "{0} in={1} out={2} baseline={3} deep={4}".format(
                             msselect_executable, ms, ms_output_path,

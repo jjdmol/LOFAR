@@ -11,4 +11,8 @@ lofar_add_library(log_client Package__Version.cc)
 lofar_add_bin_program(versionlog_client versionlog_client.cc)
 
 lofar_add_bin_program(LogClient LogClientMain.cc LogClient.cc)
-install(FILES LogClient.conf DESTINATION etc)
+install(FILES
+  LogClient.conf
+  LogClient.log_prop
+  DESTINATION etc)
+

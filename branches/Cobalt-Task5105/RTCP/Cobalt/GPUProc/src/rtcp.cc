@@ -47,12 +47,17 @@
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
+
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -208,6 +213,14 @@ int main(int argc, char **argv)
   /*
    * INIT stage
    */
+
+  // Send identification string to the MAC Log Processor
+  LOG_INFO_STR("MACProcessScope: " << 
+               str(format(createPropertySetName(
+                            PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
+                   % toUpper(myHostname(false))
+                   % (ps.settings.nodes.size() > size_t(rank) ? 
+                      ps.settings.nodes[rank].cpu : 0)));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
