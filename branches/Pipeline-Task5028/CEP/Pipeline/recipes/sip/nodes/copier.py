@@ -50,7 +50,11 @@ class copier(LOFARnodeTCP):
 
 
         # construct copy command: Copy to the dir
-        command = ["rsync", "-r", 
+        # if process runs on local host use a simple copy command.
+        if source_node=="localhost":
+            command = ["cp", "-r","{0}".format(source_path),"{0}".format(target_path)]
+        else:
+            command = ["rsync", "-r", 
                    "{0}:{1}/".format(source_node, source_path),
                    "{0}".format(target_path)]
 
