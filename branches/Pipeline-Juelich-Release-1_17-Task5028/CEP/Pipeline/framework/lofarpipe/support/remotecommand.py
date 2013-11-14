@@ -61,7 +61,7 @@ class ParamikoWrapper(object):
     def kill(self):
         self.chan.close()
 
-def run_remote_command(config, logger, host, command, env, arguments=None):
+def run_remote_command(config, logger, host, command, env, arguments = None):
     """
     Run command on host, passing it arguments from the arguments list and
     exporting key/value pairs from env(a dictionary).
@@ -90,6 +90,8 @@ def run_remote_command(config, logger, host, command, env, arguments=None):
         return run_via_local(logger, command, arguments)
     elif method == "juropa_mpi":
         return run_via_mpiexec(logger, command, arguments, host)
+    elif method == "cep_mpi":
+        return run_via_mpiexec_cep(logger, command, arguments, host)
     else:
         return run_via_ssh(logger, host, command, env, arguments)
 
@@ -105,11 +107,11 @@ def run_via_mpirun(logger, host, command, environment, arguments):
     for key in environment.keys():
         mpi_cmd.extend(["-x", key])
     mpi_cmd.append("--")
-    mpi_cmd.extend(command.split()) # command is split into (python, script)
+    mpi_cmd.extend(command.split())  # command is split into (python, script)
     mpi_cmd.extend(str(arg) for arg in arguments)
     env = os.environ
     env.update(environment)
-    process = spawn_process(mpi_cmd, logger, env=env)
+    process = spawn_process(mpi_cmd, logger, env = env)
     # mpirun should be killed with a SIGTERM to enable it to shut down the
     # remote command.
     process.kill = lambda : os.kill(process.pid, signal.SIGTERM)
@@ -119,13 +121,25 @@ def run_via_mpirun(logger, host, command, environment, arguments):
 def run_via_mpiexec(logger, command, arguments, host):
     for arg in arguments:
         command = command + " " + str(arg)
-    commandstring = ["mpiexec","-x","-np=1","/bin/sh", "-c", "hostname && "+command]
+    commandstring = ["mpiexec", "-x", "-np=1", "/bin/sh", "-c", "hostname && " + command]
     process = spawn_process(commandstring, logger)
     process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
     return process
 
+# start mpi run on cep
+# TODO: rsync fails on missing ssh key??
+def run_via_mpiexec_cep(logger, command, arguments, host):
+    for arg in arguments:
+        command = command + " " + str(arg)
+    host_string = str(host)
+    commandstring = ["mpiexec", "-x", "PYTHONPATH", "-x", "LD_LIBRARY_PATH", "-x", "PATH", "-H", host, "/bin/sh", "-c", "hostname ; " + command]
+    process = spawn_process(commandstring, logger)
+    process.kill = lambda : os.kill(process.pid, signal.SIGKILL)
+    return process
+
+
 def run_via_local(logger, command, arguments):
-    commandstring = ["/bin/sh","-c"]
+    commandstring = ["/bin/sh", "-c"]
     for arg in arguments:
         command = command + " " + str(arg)
     commandstring.append(command)
@@ -161,7 +175,7 @@ def run_via_paramiko(logger, host, command, environment, arguments, key_filename
     import paramiko
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(host, key_filename=key_filename)
+    client.connect(host, key_filename = key_filename)
     commandstring = ["%s=%s" % (key, value) for key, value in environment.items()]
     commandstring.append(command)
     commandstring.extend(re.escape(str(arg)) for arg in arguments)
@@ -178,7 +192,7 @@ class ProcessLimiter(defaultdict):
     :param nproc: Bound value for semaphore (ie, maximum number of jobs)
     :type nproc: integer or none
     """
-    def __init__(self, nproc=None):
+    def __init__(self, nproc = None):
         if nproc:
             super(ProcessLimiter, self).__init__(
                 lambda: BoundedSemaphore(int(nproc))
@@ -203,12 +217,12 @@ class ComputeJob(object):
     :param command: Full path to command to be run on target host
     :param arguments: List of arguments which will be passed to command
     """
-    def __init__(self, host, command, arguments=[]):
+    def __init__(self, host, command, arguments = []):
         self.host = host
         self.command = command
         self.arguments = arguments
         self.results = {}
-        self.results['returncode'] = 123456 # Default to obscure code to allow
+        self.results['returncode'] = 123456  # Default to obscure code to allow
         # test of failing ssh connections
 
     def dispatch(self, logger, config, limiter, id, jobhost, jobport,
@@ -240,7 +254,7 @@ class ComputeJob(object):
                     "PYTHONPATH": os.environ.get('PYTHONPATH'),
                     "LD_LIBRARY_PATH": os.environ.get('LD_LIBRARY_PATH')
                 },
-                arguments=[id, jobhost, jobport]
+                arguments = [id, jobhost, jobport]
             )
             # Wait for process to finish. In the meantime, if the killswitch
             # is set (by an exception in the main thread), forcibly kill our
@@ -319,7 +333,7 @@ class RemoteCommandRecipeMixIn(object):
     """
     Mix-in for recipes to dispatch jobs using the remote command mechanism.
     """
-    def _schedule_jobs(self, jobs, max_per_node=None):
+    def _schedule_jobs(self, jobs, max_per_node = None):
         """
         Schedule a series of compute jobs. Blocks until completion.
 
@@ -330,8 +344,8 @@ class RemoteCommandRecipeMixIn(object):
         """
         threadpool = []
         jobpool = {}
-        if not max_per_node and self.config.has_option('remote','max_per_node'):
-            max_per_node = self.config.getint('remote','max_per_node')
+        if not max_per_node and self.config.has_option('remote', 'max_per_node'):
+            max_per_node = self.config.getint('remote', 'max_per_node')
         limiter = ProcessLimiter(max_per_node)
         killswitch = threading.Event()
 
@@ -344,8 +358,8 @@ class RemoteCommandRecipeMixIn(object):
                 jobpool[job_id] = job
                 threadpool.append(
                     threading.Thread(
-                        target=job.dispatch,
-                        args=(
+                        target = job.dispatch,
+                        args = (
                             self.logger, self.config, limiter, job_id,
                             jobhost, jobport, self.error, killswitch
                         )
@@ -380,7 +394,7 @@ class RemoteCommandRecipeMixIn(object):
         # this allows backward compatible logging: If not read an additional
         # output does not matter
         self.outputs._fields["return_xml"] = ingredient.StringField(
-                                                help="XML return data.")
-        self.outputs["return_xml"] = node_durations.toxml(encoding="ascii")
+                                                help = "XML return data.")
+        self.outputs["return_xml"] = node_durations.toxml(encoding = "ascii")
 
         return jobpool
