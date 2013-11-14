@@ -97,6 +97,11 @@ inline __device__ fcomplex operator+(fcomplex a, fcomplex b)
   return make_float2(a.x + b.x, a.y + b.y);
 }
 
+inline __device__ dcomplex operator+(dcomplex a, dcomplex b)
+{
+  return make_double2(a.x + b.x, a.y + b.y);
+}
+
 inline __device__ fcomplex operator*(fcomplex a, fcomplex b)
 {
   return make_float2(a.x * b.x - a.y * b.y,
@@ -114,19 +119,20 @@ inline __device__ fcomplex operator*(fcomplex a, float b)
   return make_float2(a.x * b, a.y * b);
 }
 
+inline __device__ dcomplex operator*(dcomplex a, double b)
+{
+  return make_double2(a.x * b, a.y * b);
+}
+
 inline __device__ fcomplex operator*(float a, fcomplex b)
 {
   return make_float2(a * b.x, a * b.y);
 }
 
-
-inline __device__ dcomplex cossin(double phi)
+inline __device__ dcomplex operator*(double a, dcomplex b)
 {
-  dcomplex rv;
-  sincos(phi, &rv.y, &rv.x); // store (cos(), sin())
-  return rv;
+  return make_double2(a * b.x, a * b.y);
 }
-
 
 inline __device__ dcomplex dphaseShift(double frequency, double delay)
 {

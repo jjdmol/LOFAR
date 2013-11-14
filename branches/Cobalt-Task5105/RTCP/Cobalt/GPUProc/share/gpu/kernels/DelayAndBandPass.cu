@@ -52,6 +52,8 @@
 
 #include "IntToFloat.cuh"
 
+#include <stdio.h>
+
 
 #if NR_CHANNELS == 1
    //# #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
@@ -82,9 +84,24 @@ typedef  char_complex  (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR
 typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
 typedef  const double (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
-typedef  const double (* PhaseOffsetsType)[NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in radians
+typedef  const double2 (* PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
+inline __device__ fcomplex sincos_f2f(float phi)
+{
+  float2 r;
+
+  sincosf(phi, &r.y, &r.x);
+  return r;
+}
+
+inline __device__ fcomplex sincos_d2f(double phi)
+{
+  double s, c;
+
+  sincos(phi, &s, &c);
+  return make_float2(c, s);
+}
 
 /**
  * This kernel performs (up to) three operations on the input data:
@@ -139,10 +156,8 @@ extern "C" {
   const unsigned major   = (blockIdx.x * blockDim.x + threadIdx.x) / 16;
   const unsigned minor   = (blockIdx.x * blockDim.x + threadIdx.x) % 16;
 
-  /* The y dimension is NR_CHANNELS/16 wide (or 1 if NR_CHANNELS == 1). 
-   *
-   * Note: `channel' is invalid if NR_CHANNELS == 1 */
-  const unsigned channel = (blockIdx.y * blockDim.y + threadIdx.y) * 16 + minor;
+  /* The y dimension is NR_CHANNELS/16 wide (or 1 if NR_CHANNELS == 1) */
+  const unsigned channel = NR_CHANNELS == 1 ? 0 : (blockIdx.y * blockDim.y + threadIdx.y) * 16 + minor;
 
   /* The z dimension is NR_STATIONS wide. */
   const unsigned station =  blockIdx.z * blockDim.z + threadIdx.z;
@@ -161,36 +176,47 @@ extern "C" {
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
   PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
 
-  double frequency = NR_CHANNELS == 1
+  /*
+   * Delay compensation means rotating the phase of each sample BACK.
+   *
+   * n     = channel number (f.e. 0 .. 255)
+   * f_n   = channel frequency of channel n
+   * f_ref = base frequency of subband (f.e. 200 MHz)
+   * df    = delta frequency of 1 channel (f.e. 768 Hz)
+   *
+   * f_n := f_ref + n * df
+   *
+   * m      = sample number (f.e. 0 .. 3071)
+   * tau_m  = delay at sample m
+   * tau_0  = delayAtBegin (f.e. -2.56us .. +2.56us)
+   * dtau   = delta delay for 1 sample (f.e. <= 1.6ns)
+   *
+   * tau_m := tau_0 + m * dtau
+   *
+   * Then, the required phase shift is:
+   *
+   *   phi_mn = -2 * pi * f_n * tau_m
+   *          = -2 * pi * (f_ref + n * df) * (tau_0 + m * dtau)
+   *          = -2 * pi * (f_ref * tau_0 + f_ref * m * dtau + tau_0 * n * df + m * n * df * dtau)
+   *                       -------------   ----------------   --------------   -----------------
+   *                           O(100)           O(0.1)            O(0.01)          O(0.001)
+   *
+   * Finally, we also want to correct for fixed phase offsets per station,
+   * as given by the phaseOffsets array.
+   */
+
+  const double frequency = NR_CHANNELS == 1
     ? subbandFrequency
     : subbandFrequency - 0.5 * SUBBAND_BANDWIDTH + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS);
 
   const double2 delayAtBegin  = make_double2((*delaysAtBegin) [beam][station][0], (*delaysAtBegin) [beam][station][1]);
   const double2 delayAfterEnd = make_double2((*delaysAfterEnd)[beam][station][0], (*delaysAfterEnd)[beam][station][1]);
 
-  const double2 deltaDelay = make_double2((delayAfterEnd.x - delayAtBegin.x) / NR_SAMPLES_PER_CHANNEL,
-                                          (delayAfterEnd.y - delayAtBegin.y) / NR_SAMPLES_PER_CHANNEL);   
-
-  // Rotate all samples by vX, vY.
-  dcomplex vX = dphaseShift(frequency, delayAtBegin.x + timeStart * deltaDelay.x) * cossin((*phaseOffsets)[station][0]);
-  dcomplex vY = dphaseShift(frequency, delayAtBegin.y + timeStart * deltaDelay.y) * cossin((*phaseOffsets)[station][1]);
-
-  // Increment rotation by dvX, dvY per sample.
-  dcomplex dvX = dphaseShift(frequency, timeInc * deltaDelay.x);
-  dcomplex dvY = dphaseShift(frequency, timeInc * deltaDelay.y);
-
-#if defined BANDPASS_CORRECTION
-  vX.x *= weight;
-  vX.y *= weight;
-  vY.x *= weight;
-  vY.y *= weight;
-#endif
-
-  fcomplex fvX, fvY, fdvX, fdvY;
-  fvX = make_float2(vX.x, vX.y);
-  fvY = make_float2(vY.x, vY.y);
-  fdvX = make_float2(dvX.x, dvX.y);
-  fdvY = make_float2(dvY.x, dvY.y);
+  // Calculate the angles to rotate for for the first and (beyond the) last sample.
+  //
+  // We need to undo the delay, so we rotate BACK, resulting in a negative constant factor.
+  const double2 phiAtBegin  = -2.0 * M_PI * frequency * delayAtBegin  + (*phaseOffsets)[station];
+  const double2 phiAfterEnd = -2.0 * M_PI * frequency * delayAfterEnd + (*phaseOffsets)[station];
 #endif
 
   for (unsigned time = timeStart; time < NR_SAMPLES_PER_CHANNEL; time += timeInc)
@@ -208,12 +234,31 @@ extern "C" {
 #endif
 
 #if defined DELAY_COMPENSATION    
-    sampleX = sampleX * fvX;
-    sampleY = sampleY * fvY;
-    // The calculations are with exponentional complex for: multiplication for correct phase shift
-    fvX = fvX * fdvX;
-    fvY = fvY * fdvY;
-#elif defined BANDPASS_CORRECTION
+    // Offset of this sample between begin and end.
+    const double timeOffset = double(time) / NR_SAMPLES_PER_CHANNEL;
+
+#if 1
+    // Interpolate the required phase rotation for this sample
+    const double2 phi  = make_double2( phiAtBegin.x  * (1.0 - timeOffset)
+                                     + phiAfterEnd.x *        timeOffset,
+                                       phiAtBegin.y  * (1.0 - timeOffset)
+                                     + phiAfterEnd.y *        timeOffset );
+
+    sampleX = sampleX * sincos_d2f(phi.x);
+    sampleY = sampleY * sincos_d2f(phi.y);
+#else
+    // Interpolate the required phase rotation for this sample
+    const float2 phi  = make_float2( phiAtBegin.x  * (1.0 - timeOffset)
+                                   + phiAfterEnd.x *        timeOffset,
+                                     phiAtBegin.y  * (1.0 - timeOffset)
+                                   + phiAfterEnd.y *        timeOffset );
+
+    sampleX = sampleX * sincos_f2f(phi.x);
+    sampleY = sampleY * sincos_f2f(phi.y);
+#endif
+#endif
+
+#if defined BANDPASS_CORRECTION
     sampleX.x *= weight;
     sampleX.y *= weight;
     sampleY.x *= weight;
