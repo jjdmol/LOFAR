@@ -13,6 +13,9 @@ ONLINECONTROL_FEEDBACK=1
 # Augment the parset with etc/parset-additions.d/* ?
 AUGMENT_PARSET=1
 
+# File to write PID to
+PIDFILE=""
+
 # Force running on localhost instead of the hosts specified
 # in the parset?
 FORCE_LOCALHOST=0
@@ -36,11 +39,13 @@ fi
 echo "LOFARROOT is set to $LOFARROOT"
 
 # Parse command-line options
-while getopts ":AFl:p" opt; do
+while getopts ":AFP:l:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
           ;;
       F)  ONLINECONTROL_FEEDBACK=0
+          ;;
+      P)  PIDFILE="$OPTARG"
           ;;
       l)  FORCE_LOCALHOST=1
           MPIRUN_PARAMS="$MPIRUN_PARAMS -np $OPTARG"
@@ -65,12 +70,13 @@ PARSET="$1"
 # Show usage if no parset was provided
 if [ -z "$PARSET" ]
 then
-  echo "Usage: $0 [-A] [-F] [-l nprocs] [-p] PARSET"
+  echo "Usage: $0 [-A] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"
   echo " "
   echo "Runs the observation specified by PARSET"
   echo " "
   echo "-A: do NOT augment parset"
   echo "-F: do NOT send feedback to OnlineControl"
+  echo "-P: create PID file"
   echo "-l: run on localhost using 'nprocs' processes"
   echo "-p: enable profiling"
   exit 1
@@ -96,6 +102,21 @@ function getkey {
   fi
 }
 
+# ******************************
+# Preprocess: initialise
+# ******************************
+
+# Write PID if requested
+if [ "$PIDFILE" != "" ]
+then
+  echo $$ > "$PIDFILE"
+
+  # We created the PIDFILE, so we
+  # clean it up.
+  trap "rm -f $PIDFILE" EXIT
+fi
+
+# Read parset
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
 OBSID=`getkey Observation.ObsID`
