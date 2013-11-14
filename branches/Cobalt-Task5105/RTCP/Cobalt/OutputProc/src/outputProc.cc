@@ -103,11 +103,13 @@ int main(int argc, char *argv[])
     Parset parset(&controlStream);
 
     // Send identification string to the MAC Log Processor
+    /*
     LOG_INFO_STR("MACProcessScope: " << 
                  str(format(createPropertySetName(
                               PSN_COBALT_OUTPUT_PROC, "", 
                               parset.getString("_DPname")))
                      % myRank));
+    */
 
     Observation obs(&parset, false, 64); // FIXME: assume 64 psets, because Observation still deals with BG/P
 
