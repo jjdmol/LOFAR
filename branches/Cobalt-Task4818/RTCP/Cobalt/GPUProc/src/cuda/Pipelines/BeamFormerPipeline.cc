@@ -49,6 +49,34 @@ namespace LOFAR
 
         workQueues[i] = new BeamFormerSubbandProc(ps, context, factories, nrSubbandsPerSubbandProc);
       }
+
+      // Set up send engine for 2nd transpose of beam-formed data
+      MultiSender::HostMap hostMap;
+
+      if (ps.settings.beamFormer.enabled) {
+        // The requested service is an unique identifier for this observation,
+        // and for our process.
+        const string service = str(format("2nd-transpose-obs-%u-fromrank-%u")
+                               % ps.settings.observationID
+                               % MPI_Rank());
+
+        // The PortBroker listen port is the same for all outputProc nodes.
+        const uint16_t brokerPort = storageBrokerPort(ps.settings.observationID);
+
+        // Create the list of all outputProcs we send data to.
+        for (size_t fileIdx = 0; fileIdx < ps.settings.beamFormer.files.size(); ++fileIdx) {
+          const struct ObservationSettings::BeamFormer::File &file = ps.settings.beamFormer.files[fileIdx];
+          struct Host host;
+
+          host.hostName = file.location.host;
+          host.brokerPort = brokerPort;
+          host.service = service;
+
+          hostMap[fileIdx] = host;
+        }
+      }
+
+      MultiSender sender(hostMap, 3, ps.realTime());
     }
 
     BeamFormerPipeline::~BeamFormerPipeline()
@@ -143,6 +171,49 @@ namespace LOFAR
       catch(...) // Log all errors at this stage. DO NOT THROW IN DESTRUCTOR
       {
         LOG_ERROR_STR("Received an Exception desctructing BeamFormerPipline, while print performance");
+      }
+    }
+
+
+    void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
+    {
+      SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
+
+      SmartPtr<StreamableData> outputData;
+
+      // Process pool elements until end-of-output
+      while ((outputData = output.bequeue->remove()) != NULL) {
+        const struct BlockID id = outputData->blockID;
+        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
+
+        // Cast it to our output, which we know will succeed because BeamFormerSubbandProc
+        // only ingests BeamFormedData into the pipeline.
+        BeamFormedData *beamFormedData = dynamic_cast<BeamFormedData*>(outputData.get());
+
+        // beamFormedData dimensions are [nrStokes][nrSamples][nrChannels]
+        for (size_t stokesIdx = 0; stokesIdx < beamFormedData.shape()[0]; ++stokesIdx) {
+        }
+
+        LOG_DEBUG_STR("[" << id << "] Writing start");
+
+        // Forward block to MultiSender
+        try {
+          outputData->write(outputStream.get(), true);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Dropping rest of subband " << id.globalSubbandIdx << ": " << ex);
+
+          outputStream = new NullStream;
+        }
+
+        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
+        workQueue.outputPool.free.append(outputData);
+
+        ASSERT(!outputData);
+
+        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
+          LOG_INFO_STR("[" << id << "] Done"); 
+        else
+          LOG_DEBUG_STR("[" << id << "] Done"); 
       }
     }
   }

@@ -38,6 +38,9 @@ namespace LOFAR
 
       // When gpuProfiling isenabled will print the kernel statistics
       ~BeamFormerPipeline();
+
+      // Send subbands to outputProc
+      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
     };
   }
 }

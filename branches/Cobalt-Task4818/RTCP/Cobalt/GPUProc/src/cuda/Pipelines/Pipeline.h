@@ -110,12 +110,7 @@ namespace LOFAR
       void postprocessSubbands(SubbandProc &workQueue);
 
       // Send subbands to Storage
-      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
-                        SmartPtr<Stream> outputStream);
-
-      // Create Stream to Storage
-      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
-                                       OutputType outputType) const;
+      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };
