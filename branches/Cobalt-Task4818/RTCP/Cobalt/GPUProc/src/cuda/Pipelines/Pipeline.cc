@@ -203,7 +203,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processObservation(OutputType outputType)
+    void Pipeline::processObservation()
     {
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.

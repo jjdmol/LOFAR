@@ -28,7 +28,11 @@
 #include <iomanip>
 
 #include <Common/LofarLogger.h>
+#include <Stream/Stream.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
 
+#include <CoInterface/Stream.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
