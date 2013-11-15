@@ -68,8 +68,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         'specify_fov': ingredient.FloatField(
             '--specify-fov',
             default = False,
-            help = "calculated Image parameters are relative to fov, parameter"
-            " is active when autogenerate_parameters is False"
+            help = "calculated Image parameters are relative to provided fov"
         ),
         'fov': ingredient.FloatField(
             '--fov',
