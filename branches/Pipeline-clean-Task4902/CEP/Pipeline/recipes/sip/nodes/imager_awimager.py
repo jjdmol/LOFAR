@@ -259,7 +259,7 @@ class imager_awimager(LOFARnodeTCP):
         # keep the wmax and w_proj_planes
         if (not autogenerate_parameters and not specify_fov):
             npix = parset_object.getString('npix')
-            cell_size = parset_object.getString('cellsize')
+            cell_size_formatted = parset_object.getString('cellsize')
         else:
             cell_size_formatted = str(
                         int(round(cell_size))) + 'arcsec'
