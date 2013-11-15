@@ -49,6 +49,8 @@ namespace LOFAR
 
     virtual void setSkyEquation();
 
+    virtual void makeVisSet(MeasurementSet& ms, Bool compress, Bool mosaicOrder);
+    
     // Get the average primary beam.
     const Matrix<Float>& getAveragePB() const
     { return itsMachine ? itsMachine->getAveragePB() : itsMachineOld->getAveragePB(); }

@@ -491,8 +491,8 @@ int main (Int argc, char** argv)
     inputs.create ("UVmax", "1000",
 		   "Maximum UV distance (klambda)",
 		   "Double");
-    inputs.create ("RowBlock", "0",
-		   "In certain obscure circounstances (taql, selection using uvdist), the RowBlocking used by the imager calculated from the timewindow value is not correct. This parameter can be used to specify the RowBlocking.",
+    inputs.create ("RowBlock", "100000",
+		   "Maximum number of rows to process together. The actual time span will never exceed TWElement",
 		   "int");
     inputs.create ("MakeDirtyCorr", "false",
 		   "Image plane correction.",
@@ -500,8 +500,8 @@ int main (Int argc, char** argv)
     inputs.create ("UseWSplit", "true",
 		   "W split.",
 		   "bool");
-    inputs.create ("TWElement", "20.",
-		   "Timewindow for applying the element beam in hours. ChunkSize otherwise.",
+    inputs.create ("TWElement", "1200.",
+		   "Timewindow for applying the element beam in seconds. The actual number of rows will never exceed RowBlock",
 		   "Double");
     inputs.create ("SpheSupport", "15",
 		   "Spheroidal/Aterm Support.",

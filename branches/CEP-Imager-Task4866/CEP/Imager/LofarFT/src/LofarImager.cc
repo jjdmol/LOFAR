@@ -109,24 +109,10 @@ namespace LOFAR
 
     cft_p = new SimpleComponentFTMachine();
 
-    //setClarkCleanImageSkyModel();
-
-    // Determine nr of baselines and time interval.
-    TableIterator iter(*ms_p, "TIME", TableIterator::Ascending,
-                       TableIterator::NoSort);
-    uInt nrowPerTime = iter.table().nrow();
-    double interval  = ROScalarColumn<double>(iter.table(),"INTERVAL")(0);
-    //Int ntime = itsParameters.asDouble("timewindow") / interval;
-    Int ntime = itsParameters.asDouble("TWElement")*3600. / interval;
-    Int nrowBlock = nrowPerTime * max(1,ntime);
-    // Set row blocking in VisIter.
-    rvi_p->setRowBlocking (nrowBlock);
+    rvi_p->setRowBlocking (1000000);
     if(itsParameters.asInt("RowBlock")>0){
       rvi_p->setRowBlocking (itsParameters.asInt("RowBlock"));
     };
-/*    os << LogIO::NORMAL
-       << "vi.setRowBlocking(" << nrowBlock << ")"
-       << LogIO::POST;*/
     
     return True;
   }
@@ -138,13 +124,55 @@ namespace LOFAR
 
     return;
   }
+  
+void LofarImager::makeVisSet(MeasurementSet& ms, 
+                        Bool compress, Bool mosaicOrder){
 
-//   void LofarImager::setSkyEquation()
-//   {
-//     vs_p = new VisSet(*rvi_p);
-//     se_p = new SkyEquation(*sm_p, *vs_p, *ft_p, *cft_p, !useModelCol_p);
-//     return;
-//   }
+  if(rvi_p) {
+    delete rvi_p;
+    rvi_p=0;
+    wvi_p=0;
+  }
+
+  Block<Int> sort(0);
+  if(mosaicOrder){
+    sort.resize(4);
+    sort[0] = MS::FIELD_ID;
+    sort[1] = MS::ARRAY_ID;
+    sort[2] = MS::DATA_DESC_ID;
+    sort[3] = MS::TIME;
+ 
+  }
+  //else use default sort order
+  else{
+    sort.resize(4);
+    sort[0] = MS::ARRAY_ID;
+    sort[1] = MS::FIELD_ID;
+    sort[2] = MS::DATA_DESC_ID;
+    sort[3] = MS::TIME;
+  }
+  Matrix<Int> noselection;
+  Double timeInterval = itsParameters.asDouble("TWElement");
+
+  //if you want to use scratch col...make sure they are there
+  if(useModelCol_p)
+    VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
+  
+  if(imwgt_p.getType()=="none"){
+      imwgt_p=VisImagingWeight("natural");
+  }
+
+  if(!useModelCol_p){
+    rvi_p=new ROVisibilityIterator(ms, sort, timeInterval);
+  }
+  else{
+    wvi_p=new VisibilityIterator(ms, sort, timeInterval);
+    rvi_p=wvi_p;    
+  }
+  rvi_p->useImagingWeight(imwgt_p);
+
+}
+  
 
   // Show the relative timings of the various steps.
   void LofarImager::showTimings (std::ostream&, double duration) const
