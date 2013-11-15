@@ -32,7 +32,6 @@ namespace LOFAR
                                              size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
-        correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
@@ -42,7 +41,6 @@ namespace LOFAR
         incoherentFirFilter(
           incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
         bandPassCorrection(bandPassCorrectionParams(ps))
-
       {
       }
 
@@ -72,21 +70,6 @@ namespace LOFAR
           BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
         params.correctBandPass = false;
         params.transpose = false;
-
-        return params;
-      }
-
-      DelayAndBandPassKernel::Parameters
-      BeamFormerFactories::correctBandPassParams(const Parset &ps) const
-      {
-        DelayAndBandPassKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() /
-          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
-        params.delayCompensation = false;
-        params.transpose = true;
 
         return params;
       }
@@ -182,7 +165,6 @@ namespace LOFAR
       incoherentStokesParams(const Parset &ps) const 
       {
         IncoherentStokesKernel::Parameters params(ps);
-        //TODO: beamformer params
         params.nrChannelsPerSubband = 
           ps.settings.beamFormer.incoherentSettings.nrChannels;
         params.nrSamplesPerChannel = 
@@ -196,11 +178,11 @@ namespace LOFAR
       incoherentStokesTransposeParams(const Parset &ps) const 
       {
         IncoherentStokesTransposeKernel::Parameters params(ps);
-        //TODO: beamformer params
         params.nrChannelsPerSubband =
-          ps.settings.beamFormer.incoherentSettings.nrChannels;
+          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
         params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+          ps.nrSamplesPerSubband() /
+          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
 
         return params;
       }

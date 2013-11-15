@@ -23,6 +23,7 @@
 #define LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
 
 #include <GPUProc/KernelFactory.h>
+#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
@@ -31,7 +32,6 @@
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 
 namespace LOFAR
 {
@@ -47,7 +47,6 @@ namespace LOFAR
 
       KernelFactory<IntToFloatKernel> intToFloat;
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
-      KernelFactory<DelayAndBandPassKernel> correctBandPass;
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
@@ -68,9 +67,6 @@ namespace LOFAR
 
       CoherentStokesKernel::Parameters
       coherentStokesParams(const Parset &ps) const;
-
-      DelayAndBandPassKernel::Parameters
-      correctBandPassParams(const Parset &ps) const;
 
       DelayAndBandPassKernel::Parameters
       delayCompensationParams(const Parset &ps) const;

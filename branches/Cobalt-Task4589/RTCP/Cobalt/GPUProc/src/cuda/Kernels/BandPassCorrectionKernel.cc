@@ -77,7 +77,7 @@ namespace LOFAR
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
       gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
-      BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannelsPerSubband);
+      BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannels1 * params.nrChannels2);
       stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
      
     }

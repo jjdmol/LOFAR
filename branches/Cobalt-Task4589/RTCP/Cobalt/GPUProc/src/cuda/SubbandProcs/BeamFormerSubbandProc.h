@@ -35,6 +35,7 @@
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
@@ -112,7 +113,6 @@ namespace LOFAR
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
-        PerformanceCounter copyBuffers;
         PerformanceCounter incoherentOutput;
         // Print the mean and std of each performance counter on the logger
         void printStats();
@@ -137,6 +137,7 @@ namespace LOFAR
       gpu::DeviceMemory devB;
       gpu::DeviceMemory devC;
       gpu::DeviceMemory devD;
+      gpu::DeviceMemory devE;
       // @}
 
       // NULL placeholder for unused DeviceMemory parameters
@@ -162,12 +163,16 @@ namespace LOFAR
 
       // Bandpass correction and tranpose
       gpu::DeviceMemory devBandPassCorrectionWeights;
-      DelayAndBandPassKernel::Buffers correctBandPassBuffers;
-      std::auto_ptr<DelayAndBandPassKernel> correctBandPassKernel;
+      BandPassCorrectionKernel::Buffers bandPassCorrectionBuffers;
+      std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
 
       // *****************************************************************
       //  Objects needed to produce Coherent stokes output
       // beam former
+
+      const bool outputComplexVoltages;
+      const bool coherentStokesPPF;
+
       gpu::DeviceMemory devBeamFormerDelays;
       BeamFormerKernel::Buffers beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
@@ -190,11 +195,10 @@ namespace LOFAR
       CoherentStokesKernel::Buffers coherentStokesBuffers;
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
 
-      // end result
-      gpu::DeviceMemory devResult;
-
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
+
+      const bool incoherentStokesPPF;
 
       // Transpose 
       IncoherentStokesTransposeKernel::Buffers incoherentTransposeBuffers;
@@ -213,9 +217,6 @@ namespace LOFAR
       // Incoherent Stokes
       IncoherentStokesKernel::Buffers incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
-
-      // Output for Incoherent stokes 
-      gpu::DeviceMemory devIncoherentStokes;
 
       bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };

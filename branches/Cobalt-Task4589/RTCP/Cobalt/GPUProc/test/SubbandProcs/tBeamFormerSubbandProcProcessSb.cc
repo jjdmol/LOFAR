@@ -35,8 +35,10 @@ using namespace LOFAR::TYPES;
 
 template<typename T> T inputSignal(size_t t)
 {
-  double freq = 1.0 / 2.0; // in samples
-  double amp = 255.0;
+  size_t nrBits = sizeof(T) / 2 * 8;
+  // double freq = 1.0 / 2.0; // in samples
+  double freq = 1.0 / 4.0; // in samples
+  double amp = (1 << (nrBits - 1)) - 10;
 
   double angle = (double)t * 2.0 * M_PI * freq;
 
@@ -70,6 +72,15 @@ int main() {
 
   BeamFormerFactories factories(ps);
   BeamFormerSubbandProc bwq(ps, ctx, factories);
+
+  LOG_INFO_STR(
+    "Input data:" <<
+    "\n  nrBeams = " << ps.nrBeams() <<
+    "\n  nrStations = " << ps.nrStations() <<
+    "\n  nrPolarisations = " << ps.settings.nrPolarisations <<
+    "\n  maxNrTABsPerSAP = " << ps.settings.beamFormer.maxNrTABsPerSAP() <<
+    "\n  nrSamplesPerSubband = " << ps.nrSamplesPerSubband() <<
+    "\n  nrBytesPerComplexSample = " << ps.nrBytesPerComplexSample());
 
   SubbandProcInputData in(ps.nrBeams(), ps.nrStations(), ps.settings.nrPolarisations,
                           ps.settings.beamFormer.maxNrTABsPerSAP(), 
@@ -107,9 +118,17 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes,
-                     ps.settings.beamFormer.coherentSettings.nrChannels,
-                     ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.nrSamplesPerSubband()),
+  LOG_INFO_STR(
+    "BeamFormedData:" <<
+    "\n  maxNrTABsPerSAP = " << ps.settings.beamFormer.maxNrTABsPerSAP() <<
+    "\n  nrStokes = " << ps.settings.beamFormer.incoherentSettings.nrStokes <<
+    "\n  nrChannels = " << ps.settings.beamFormer.incoherentSettings.nrChannels <<
+    "\n  nrSamples = " << ps.settings.beamFormer.incoherentSettings.nrSamples(
+      ps.settings.nrSamplesPerSubband()));
+
+  BeamFormedData out(ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.incoherentSettings.nrStokes,
+                     ps.settings.beamFormer.incoherentSettings.nrChannels,
+                     ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.nrSamplesPerSubband()),
                      ctx);
 
   for (size_t i = 0; i < out.num_elements(); i++)
@@ -134,13 +153,13 @@ int main() {
     scale = 256*256;
 #endif
   bool unexpValueFound = false;
-  for (size_t b = 0; b < ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.coherentSettings.nrStokes; b++)
-    for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.nrSamplesPerSubband()); t++)
-      for (size_t c = 0; c < ps.settings.beamFormer.coherentSettings.nrChannels; c++)
+  for (size_t b = 0; b < ps.settings.beamFormer.maxNrTABsPerSAP() * ps.settings.beamFormer.incoherentSettings.nrStokes; b++)
+    for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.nrSamplesPerSubband()); t++)
+      for (size_t c = 0; c < ps.settings.beamFormer.incoherentSettings.nrChannels; c++)
         {
           float v = out[b][t][c];
 // disable output validation until we've verified the beamformer pipeline!
-#if 0
+#if 1
           if (v != 4.0f)
           {
             unexpValueFound = true;
