@@ -37,8 +37,8 @@ template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
   // double freq = 1.0 / 2.0; // in samples
-  double freq = 1.0 / 4.0; // in samples
-  double amp = (1 << (nrBits - 1)) - 10;
+  double freq = 1.0 / 32.0; // in samples
+  double amp = (1 << (nrBits - 1)) - 1;
 
   double angle = (double)t * 2.0 * M_PI * freq;
 

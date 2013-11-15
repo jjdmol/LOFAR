@@ -18,7 +18,7 @@ OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
 OLAP.CNProc_CoherentStokes.channelsPerSubband = 1
 OLAP.CNProc_IncoherentStokes.which	 = I # IQUV
 OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
+OLAP.CNProc_IncoherentStokes.channelsPerSubband = 16
 Observation.rspBoardList                 = [0]
 Observation.rspSlotList                  = [0]
 

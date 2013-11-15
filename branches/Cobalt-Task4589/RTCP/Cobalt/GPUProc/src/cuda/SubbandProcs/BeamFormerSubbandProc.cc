@@ -230,7 +230,7 @@ namespace LOFAR
       // final FFT: B -> B
       incoherentFinalFFT(
         queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-        (NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
          ps.settings.beamFormer.incoherentSettings.nrChannels),
         true, devB),
 

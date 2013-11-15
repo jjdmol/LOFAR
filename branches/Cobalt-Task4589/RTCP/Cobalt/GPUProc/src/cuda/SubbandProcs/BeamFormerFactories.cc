@@ -143,12 +143,10 @@ namespace LOFAR
       {
         FIR_FilterKernel::Parameters params(ps);
 
-        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
+        params.nrSTABs = ps.nrStations();
 
-        // define at least 16 channels to get the FIR_Filter.cu to compile, even
-        // if we won't use it.
-        params.nrChannelsPerSubband = std::max(16U,
-          ps.settings.beamFormer.incoherentSettings.nrChannels);
+        params.nrChannelsPerSubband = 
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
 
         // time integration has not taken place yet, so calculate the nrSamples
         // manually
