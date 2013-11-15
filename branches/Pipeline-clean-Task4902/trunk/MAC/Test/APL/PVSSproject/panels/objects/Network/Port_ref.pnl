@@ -1,0 +1,155 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,191 168 128 128 N "_3DFace" 1
+"$SW_Port"
+EEE E E 1 -1 -1 0  40 50
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border5"
+""
+1 60 50 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 11 Link active
+1
+"dashclr"N "_Transparent"
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_setBackColor();
+}
+
+EP_setBackColor()
+{
+dyn_errClass err;
+
+  if( !dpExists( \"System1:\"+$SW_Port+\".Link:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_setBackColorCB\", 
+            \"System1:\"+$SW_Port+\".Link:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+EP_setBackColorCB(string dpSource, int iNewValue)
+{
+  if (iNewValue == 1)
+    setValue(\"\", \"backCol\", \"Green\");
+  else if (iNewValue == 2)
+    setValue(\"\", \"backCol\", \"Grau\");
+  else
+    setValue(\"\", \"backCol\", \"{255,153,0}\");
+}
+
+// SimpleCtrlScript {EP_setBackColor}
+// DP {System1:Switch3300XM.Ports.2.Link}
+// DPConfig {:_online.._value}
+// DPType {int}
+// AlertHdl {FALSE}
+// DPEInvalid {}
+// DPEConfigInvalid {}
+// Operator1 {equal}
+// Operant1 {1}
+// Color1 {Green}
+// Operator2 {equal}
+// Operant2 {2}
+// Color2 {Grau}
+// Operator3 {else}
+// Operant3 {}
+// Color3 {\\{255,153,0\\}}
+// SimpleCtrlScriptEnd {EP_setBackColor}
+" 0
+ E 0 1 1 0 1 E U  1 E 60 40 70 50
+6 1
+"Border6"
+""
+1 50 50 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 50 40 60 50
+6 2
+"Border7"
+""
+1 40 50 E E E 1 E 1 E N "_WindowText" E N {153,153,153} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 16 GR=100Mb/OR=10Mb
+1
+"dashclr"N "_Transparent"
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+}
+
+" 0
+ E 0 1 1 0 1 E U  1 E 40 40 50 50
+6 4
+"Border1"
+""
+1 40 70 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 40 50 70 70
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
