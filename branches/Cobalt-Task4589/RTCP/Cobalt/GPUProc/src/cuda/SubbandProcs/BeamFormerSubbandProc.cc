@@ -84,7 +84,8 @@ namespace LOFAR
       // Buffers for incoherent stokes
       devC(context, devA.size()),
       devD(context, devA.size()),
-      devE(context, factories.incoherentStokes.bufferSize(IncoherentStokesKernel::OUTPUT_DATA)),
+      devE(context, factories.incoherentStokes.bufferSize(
+             IncoherentStokesKernel::OUTPUT_DATA)),
       devNull(context, 1),
 
       // intToFloat: input -> B
@@ -124,7 +125,8 @@ namespace LOFAR
 
       //**************************************************************
       //coherent stokes
-      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
+      outputComplexVoltages(
+        ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
       coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1),
 
       // beamForm: B -> A
@@ -140,7 +142,8 @@ namespace LOFAR
       // Output buffer: 
       // 1ch: CS: C, CV: D
       // PPF: CS: D, CV: C
-      transposeBuffers(devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC),
+      transposeBuffers(
+        devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC),
       transposeKernel(factories.transpose.create(queue, transposeBuffers)),
 
       // inverse FFT: C/D -> C/D (in-place) = transposeBuffers.output
@@ -166,7 +169,9 @@ namespace LOFAR
       devFilterHistoryData(
         context,
         factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
-      firFilterBuffers(transposeBuffers.output, transposeBuffers.input, devFilterWeights, devFilterHistoryData),
+      firFilterBuffers(
+        transposeBuffers.output, transposeBuffers.input, 
+        devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // final FFT: C/D -> C/D (in-place) = firFilterBuffers.output
@@ -190,7 +195,8 @@ namespace LOFAR
 
       //**************************************************************
       //incoherent stokes
-      incoherentStokesPPF(ps.settings.beamFormer.incoherentSettings.nrChannels > 1),
+      incoherentStokesPPF(
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1),
 
       // Transpose: B -> A
       incoherentTransposeBuffers(devB, devA),
@@ -245,14 +251,17 @@ namespace LOFAR
       incoherentStokesKernel(
         factories.incoherentStokes.create(queue, incoherentStokesBuffers))
     {
-      // initialize history data
+      // initialize history data for both coherent and incoherent stokes.
       devFilterHistoryData.set(0);
+      devIncoherentFilterHistoryData.set(0);
 
       // TODO For now we only allow pure coherent and incoherent runs
       // count the number of coherent and incoherent saps
       size_t nrCoherent = 0;
       size_t nrIncoherent = 0;
-      for (size_t idx_sap = 0; idx_sap < ps.settings.beamFormer.SAPs.size(); ++idx_sap)
+      for (size_t idx_sap = 0; 
+           idx_sap < ps.settings.beamFormer.SAPs.size();
+           ++idx_sap)
       {
         if (ps.settings.beamFormer.SAPs[idx_sap].nrIncoherent != 0)
           nrIncoherent++;
@@ -263,7 +272,8 @@ namespace LOFAR
       // raise exception if the parset contained an incorrect configuration
       if (nrCoherent != 0 && nrIncoherent != 0)
         THROW(GPUProcException, 
-           "Parset contained both incoherent and coherent stokes SAPS. This is not supported");
+              "Parset contained both incoherent and coherent stokes SAPS. "
+              "This is not supported");
 
       if (nrCoherent)
         coherentBeamformer = true;
@@ -293,7 +303,8 @@ namespace LOFAR
             new BeamFormedData(
               ps.settings.beamFormer.incoherentSettings.nrStokes,
               ps.settings.beamFormer.incoherentSettings.nrChannels,
-              ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
+              ps.settings.beamFormer.incoherentSettings.nrSamples(
+                ps.nrSamplesPerSubband()),
               context));
       }
 
@@ -337,7 +348,6 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::Counters::printStats()
     {     
-
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
@@ -345,8 +355,7 @@ namespace LOFAR
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
         std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
-        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<        
-
+        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<
         std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
         std::setw(20) << "(transpose)" << transpose.stats << endl <<
         std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
@@ -355,7 +364,6 @@ namespace LOFAR
         std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
         std::setw(20) << "(samples)" << samples.stats << endl <<       
         std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
-
         std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl <<
         std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
         std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
@@ -408,14 +416,16 @@ namespace LOFAR
         input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
-      dumpBuffer(delayCompensationBuffers.output, "delayCompensation.output.dat");
+      dumpBuffer(delayCompensationBuffers.output, 
+                 "delayCompensation.output.dat");
 
       secondFFT.enqueue(input.blockID, counters.secondFFT);
       dumpBuffer(devA, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
-      dumpBuffer(bandPassCorrectionBuffers.output, "bandPassCorrection.output.dat");
+      dumpBuffer(bandPassCorrectionBuffers.output,
+                 "bandPassCorrection.output.dat");
 
       // ********************************************************************
       // coherent stokes kernels
@@ -461,6 +471,7 @@ namespace LOFAR
 
           incoherentFinalFFT.enqueue(
             input.blockID, counters.incoherentFinalFFT);
+          dumpBuffer(devB, "finalFFT.output.dat");
         }
 
         incoherentStokesKernel->enqueue(
