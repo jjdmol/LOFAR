@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 #endif
 
   // Periodically log system information
-  SysInfoLogger siLogger;
+  SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
 
   /*
    * RUN stage

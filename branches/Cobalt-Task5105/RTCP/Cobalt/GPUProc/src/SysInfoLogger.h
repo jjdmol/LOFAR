@@ -39,10 +39,15 @@ namespace LOFAR
      */
     class SysInfoLogger {
     public:
-      SysInfoLogger();
+      // Start logging in the background, in the
+      // interval [from, to). Both timestamps are
+      // in seconds since 1970.]
+      SysInfoLogger(double from = 0, double to = 0);
       ~SysInfoLogger();
 
     private:
+      const double from;
+      const double to;
       Thread thread;
 
       void mainLoop();

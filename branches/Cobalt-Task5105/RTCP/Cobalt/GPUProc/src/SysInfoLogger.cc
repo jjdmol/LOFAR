@@ -24,6 +24,7 @@
 #include <fstream>
 #include <cstdio>
 #include <unistd.h>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -32,8 +33,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    SysInfoLogger::SysInfoLogger()
+    SysInfoLogger::SysInfoLogger(double from, double to)
     :
+      from(from),
+      to(to),
       thread(this, &SysInfoLogger::mainLoop)
     {
     }
@@ -63,6 +66,19 @@ namespace LOFAR
       bool first = true;
 
       for(;;) {
+        time_t now = time(0);
+
+        if (from && now < from) {
+          // wait for `from'
+          sleep(from - now);
+          continue;
+        }
+
+        if (to && now > to) {
+          // we're done
+          break;
+        }
+
         // Default to previous statistics
         struct stats new_stats = old_stats;
 
