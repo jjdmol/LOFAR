@@ -47,6 +47,7 @@ void usage()
   puts("");
   puts("-f from       Discard packets before `from' (format: '2012-01-01 11:12:00')");
   puts("-t to         Discard packets at or after `to' (format: '2012-01-01 11:12:00')");
+  puts("-q            Quit if packets are received after `to'");
   puts("-s nrbeamlets Reduce or expand the number of beamlets per packet");
   puts("-b bitmode    Discard packets with bitmode other than `bitmode' (16, 8, or 4)");
   puts("-c clock      Discard packets with a clock other than `clock' (200 or 160)");
@@ -67,12 +68,13 @@ int main(int argc, char **argv)
   unsigned nrbeamlets = 0;
   unsigned bitmode = 0;
   unsigned clock = 0;
+  bool quit_after_to = false;
 
   string inputStreamDesc  = "file:/dev/stdin";
   string outputStreamDesc = "file:/dev/stdout";
 
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "f:t:s:b:c:i:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "f:t:s:b:c:i:o:q")) != -1) {
     switch (opt) {
     case 'f':
       from = parseTime(optarg);
@@ -102,6 +104,10 @@ int main(int argc, char **argv)
       outputStreamDesc = optarg;
       break;
 
+    case 'q':
+      quit_after_to = true;
+      break;
+
     default: /* '?' */
       usage();
       exit(1);
@@ -117,18 +123,30 @@ int main(int argc, char **argv)
   SmartPtr<Stream> inputStream = createStream(inputStreamDesc, true);
   SmartPtr<Stream> outputStream = createStream(outputStreamDesc, false);
   PacketReader reader("", *inputStream);
-  struct RSP packet;
+  vector<struct RSP> packets(16);
+  vector<bool>       valid(packets.size(), false);
 
   try {
-    for(;; ) {
-      if( reader.readPacket(packet) ) {
+    for(;;) {
+      reader.readPackets(packets, valid);
+
+      for( size_t i = 0; i < packets.size(); ++i) {
+        if (!valid[i])
+          continue;
+
+        struct RSP &packet = packets[i];
+
         // **** Apply FROM filter ****
         if (from > 0 && packet.header.timestamp < from)
           continue;
 
         // **** Apply TO filter ****
-        if (to > 0 && packet.header.timestamp >= to)
+        if (to > 0 && packet.header.timestamp >= to) {
+          if (quit_after_to)
+            return 0;
+
           continue;
+        }
 
         // **** Apply BITMODE filter ****
         if (bitmode > 0 && packet.bitMode() != bitmode)
