@@ -65,10 +65,17 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help="Turns on the autogeneration of: cellsize, image-size. MSSS like"
             "functionality"
         ),
+        'cellsize_mapfile': ingredient.StringField(
+            '--cellsize-mapfile',
+            default=True,
+            help="location of the output mapfile containing the cellsize of"
+              "PRoduced images"
+        ), # TODO: remove this ugly hack 5201
     }
 
     outputs = {
-        'mapfile': ingredient.StringField()
+        'mapfile': ingredient.StringField(),
+        'cellsize_mapfile': ingredient.StringField() # TODO: remove this ugly hack 5201
     }
 
     def go(self):
@@ -98,11 +105,15 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
 
-        output_map = copy.deepcopy(input_map)
+        output_map = copy.deepcopy(input_map)        
         for w, x, y in zip(input_map, output_map, sourcedb_map):
             w.skip = x.skip = y.skip = (
                 w.skip or x.skip or y.skip
             )
+        
+        # create a copy of the output map to store cellsizes
+        cellsize_map = copy.deepcopy(output_map)
+
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
 
@@ -133,15 +144,26 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         # *********************************************************************
         # 3. Check output of the node scripts
 
-        for job, output_item in  zip(jobs, output_map):
+        for job, output_item, cellsize_item in zip(jobs, output_map, 
+                                                   cellsize_map): # TODO: remove this ugly hack 5201
             # job ==  None on skipped job
             if not "image" in job.results:
                 output_item.file = "failed"
                 output_item.skip = True
+                # Reuse the mapfile structure to return structured information
+                # This is temporary code: It should be send within the casa/
+                # hd5f image.
+                cellsize_item.file = "failed"
+                cellsize_item.skip = True
 
             else:
                 output_item.file = job.results["image"]
                 output_item.skip = False
+                # Reuse the mapfile structure to return structured information
+                # This is temporary code: It should be send within the casa/
+                # hd5f image.
+                cellsize_item.file = job.results["cellsize"]
+                cellsize_item.skip = False
 
         # Check if there are finished runs
         succesfull_runs = None
@@ -162,10 +184,15 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             self.logger.error("Failed awimager node run detected. continue with"
                               "successful tasks.")
 
+        # store the datamapfile to file # TODO: remove this ugly hack 5201
         self._store_data_map(self.inputs['mapfile'], output_map,
                              "mapfile containing produces awimages")
+        self._store_data_map(self.inputs['cellsize_mapfile'], cellsize_map,
+                         "mapfile containing cellsize of produces awimages")
 
         self.outputs["mapfile"] = self.inputs['mapfile']
+        # TODO: remove this ugly hack 5201
+        self.outputs["cellsize_mapfile"] = self.inputs['cellsize_mapfile']
         return 0
 
 

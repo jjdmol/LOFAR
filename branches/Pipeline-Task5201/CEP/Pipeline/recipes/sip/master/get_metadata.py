@@ -44,6 +44,11 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             '--parset-prefix',
             help="Prefix for each key in the output parset file",
             default=''
+        ),
+        'cellsize_mapfile': ingredient.StringField( # TODO: remove this ugly hack 5201
+            '--cellsize_mapfile',
+            help="optional mapfile with cellsizes of produced skyimages",
+            default=''
         )
     }
 
@@ -92,10 +97,18 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
                 )
             )
         self._schedule_jobs(jobs)
-        for job, inp in zip(jobs, data):
+        
+        # # TODO: remove this ugly hack 5201
+        if (product_type is "SkyImage"):
+            cellsize_map = DataMap.load(self.inputs["cellsize_mapfile"])
+            cellsize_map.iterator = DataMap.SkipIterator
+
+        for job, inp, cellsize in zip(jobs, data, cellsize_map):
             if job.results['returncode'] != 0:
                 inp.skip = True
-
+            elif(product_type is "SkyImage"):  # TODO: remove this ugly hack 5201
+                job.results["cellsize"] = str(cellsize).split(":")[1]
+              
         # ********************************************************************
         # 4. validate performance
         # 4. Check job results, and create output data map file
@@ -125,6 +138,7 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         try:
             create_directory(os.path.dirname(self.inputs['parset_file']))
             parset.writeFile(self.inputs['parset_file'])
+            self.logger.info("Wrote meta data to: " + self.inputs['parset_file'])
         except RuntimeError, err:
             self.logger.error("Failed to write meta-data: %s" % str(err))
             return 1
