@@ -462,6 +462,15 @@ namespace LOFAR
     }
 
 
+    // Used for normalization of FFTW/CUFFT fwd(+bwd).
+    void FilterBank::scaleWeights(float scale)
+    {
+      for (size_t i = 0; i < weights.num_elements(); i++) {
+        weights.origin()[i] *= scale;
+      }
+    }
+
+
     // Used for debugging.
     void FilterBank::reverseTaps()
     {
