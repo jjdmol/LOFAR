@@ -535,16 +535,21 @@ namespace LOFAR
         std::string station;
         std::string antennaField;
 
-        AntennaFieldName(const std::string &station, const std::string &antennaField): station(station), antennaField(antennaField) {}
+        AntennaFieldName(const std::string &station, const std::string &antennaField)
+        : station(station),
+          antennaField(antennaField)
+        { }
 
         std::string fullName() const {
           return station + antennaField;
         }
       };
 
-      // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
-      // ("CS001","CS002") and the antenna set.
-      static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+      // Constructs the antenna fields ("CS001", "HBA0") etc from a set of stations
+      // ("CS001", "CS002") and the antenna set.
+      static std::vector<struct AntennaFieldName>
+      antennaFields(const std::vector<std::string> &stations,
+                    const std::string &antennaSet);
 
       // List of host names to start outputProc on
       std::vector<std::string> outputProcHosts;
