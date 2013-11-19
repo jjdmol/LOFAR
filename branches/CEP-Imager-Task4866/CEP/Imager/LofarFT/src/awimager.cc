@@ -491,8 +491,8 @@ int main (Int argc, char** argv)
     inputs.create ("UVmax", "1000",
 		   "Maximum UV distance (klambda)",
 		   "Double");
-    inputs.create ("RowBlock", "100000",
-		   "Maximum number of rows to process together. The actual time span will never exceed TWElement",
+    inputs.create ("RowBlock", "1000000",
+		   "Maximum number of rows to process together. If ApplyBeam=1 then the actual time span will not exceed TWElement",
 		   "int");
     inputs.create ("MakeDirtyCorr", "false",
 		   "Image plane correction.",
@@ -500,7 +500,7 @@ int main (Int argc, char** argv)
     inputs.create ("UseWSplit", "true",
 		   "W split.",
 		   "bool");
-    inputs.create ("TWElement", "1200.",
+    inputs.create ("TWElement", "3600.",
 		   "Timewindow for applying the element beam in seconds. The actual number of rows will never exceed RowBlock",
 		   "Double");
     inputs.create ("SpheSupport", "15",

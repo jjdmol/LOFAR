@@ -152,7 +152,11 @@ void LofarImager::makeVisSet(MeasurementSet& ms,
     sort[3] = MS::TIME;
   }
   Matrix<Int> noselection;
-  Double timeInterval = itsParameters.asDouble("TWElement");
+  Double timeInterval = 0;
+  if (itsParameters.asInt("StepApplyElement"))
+  {
+      timeInterval = itsParameters.asDouble("TWElement");
+  }
 
   //if you want to use scratch col...make sure they are there
   if(useModelCol_p)
