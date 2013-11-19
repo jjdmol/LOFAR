@@ -47,6 +47,7 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
   return numRead;
 #else
   // recvmmsg not available: use recvmsg fall-back
+  (void)oneIsEnough;
 
   struct iovec iov;
   iov.iov_base = &buffers[0];
