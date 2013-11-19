@@ -115,6 +115,8 @@ namespace LOFAR
 
     void StorageProcesses::finalMetaDataThread()
     {
+      // Note that some parset keys are overriden as test case's .run files append keys.
+      // And runObservation.sh adds defaults by prepending keys to the parset.
       std::string hostName = itsParset.getString("Cobalt.FinalMetaDataGatherer.host", "localhost");
       std::string userName = itsParset.getString("Cobalt.FinalMetaDataGatherer.userName", "");
       std::string pubKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPublicKey", "");

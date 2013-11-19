@@ -149,7 +149,7 @@ namespace LOFAR
 #endif
                                     );
 
-      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
+      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey);
       sshconn.start();
 
       // Connect control stream
