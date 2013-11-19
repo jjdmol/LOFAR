@@ -48,7 +48,10 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrSAPs(ps.settings.SAPs.size())
+      nrSAPs(ps.settings.SAPs.size()),
+      nrChannels1(64),  // TODO: Must be read from parset?
+      nrChannels2(64),  // TODO: Must be read from parset?
+      correctBandPass(ps.settings.corrections.bandPass)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput", false);
@@ -125,6 +128,8 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrChannels1);
       defs["NR_CHANNELS_2"] =
         lexical_cast<string>(itsParameters.nrChannels2);
+      if (itsParameters.correctBandPass)
+        defs["DO_BANDPASS_CORRECTION"] = "1";
       return defs;
     }
   }

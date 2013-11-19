@@ -92,9 +92,11 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
   OutputDataType outputData = (OutputDataType) outputDataPtr;
   InputDataType inputData   = (InputDataType)  inputDataPtr;
 
+#if defined DO_BANDPASS_CORRECTION
   // Band pass to apply to the channels  
   BandPassFactorsType bandPassFactors = (BandPassFactorsType) bandPassFactorsPtr;
-  
+#endif
+
   // fasted dims
   unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
@@ -109,17 +111,18 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 
   for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
   {
-    // idx_channel1 steps with NR_CHANNELS_2 tru the channel weights 
-    float weight((*bandPassFactors)[idx_channel1 * NR_CHANNELS_2 + chan2]);
-
     // Read from global memory in the quickest dimension (optimal)
     fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
     fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
-    
+
+#if defined DO_BANDPASS_CORRECTION
+    // idx_channel1 steps with NR_CHANNELS_2 tru the channel weights 
+    float weight((*bandPassFactors)[idx_channel1 * NR_CHANNELS_2 + chan2]);
     sampleX.x *= weight;
     sampleX.y *= weight;
     sampleY.x *= weight;
     sampleY.y *= weight;
+#endif
 
     // Write the data to shared memory
     tmp[threadIdx.y][threadIdx.x][0] = sampleX;
