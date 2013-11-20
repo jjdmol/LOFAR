@@ -51,11 +51,9 @@ public:
         const Expr<Vector<3> >::ConstPtr &tile0,
         const StationResponse::Station::ConstPtr &station);
 
-    StationBeam(const Expr<Vector<3> >::ConstPtr &direction,
-        const Expr<Vector<3> >::ConstPtr &station0,
-        const Expr<Vector<3> >::ConstPtr &tile0,
-        const StationResponse::Station::ConstPtr &station,
-        double refFreq);
+    void setReferenceFreq(double freq);
+    void setEnableElementResponse(bool enabled);
+    void setEnableArrayFactor(bool enabled);
 
 protected:
     const JonesMatrix::View evaluateImpl(const Grid &grid,
@@ -63,9 +61,22 @@ protected:
         const Vector<3>::View &tile0) const;
 
 private:
+    const JonesMatrix::View evaluateImplResponse(const Grid &grid,
+        const Vector<3>::View &direction, const Vector<3>::View &station0,
+        const Vector<3>::View &tile0) const;
+
+    const JonesMatrix::View evaluateImplArrayFactor(const Grid &grid,
+        const Vector<3>::View &direction, const Vector<3>::View &station0,
+        const Vector<3>::View &tile0) const;
+
+    const JonesMatrix::View evaluateImplElementResponse(const Grid &grid,
+        const Vector<3>::View &direction) const;
+
     StationResponse::Station::ConstPtr  itsStation;
+    bool                                itsEnableArrayFactor;
+    bool                                itsEnableElementResponse;
     bool                                itsUseChannelFreq;
-    double                              itsRefFreq;
+    double                              itsReferenceFreq;
 };
 
 // @}

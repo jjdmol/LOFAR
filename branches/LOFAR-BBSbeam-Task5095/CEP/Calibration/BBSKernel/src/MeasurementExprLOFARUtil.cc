@@ -277,10 +277,10 @@ makeBeamExpr(const Station::ConstPtr &station,
     const Expr<Vector<3> >::Ptr &exprRefTileITRF,
     const BeamConfig &config)
 {
-    StationLOFAR::ConstPtr stationLOFAR = dynamic_pointer_cast<const StationLOFAR>(station);
+    StationLOFAR::ConstPtr stationLOFAR =
+        dynamic_pointer_cast<const StationLOFAR>(station);
 
     // Check if the beam model can be computed for this station.
-//    if(!station->isPhasedArray())
     if(!stationLOFAR)
     {
         THROW(BBSKernelException, "Station " << station->name() << " is not a"
@@ -288,84 +288,25 @@ makeBeamExpr(const Station::ConstPtr &station,
             " station beam is missing.");
     }
 
-    /*
-    // Build expressions for the dual-dipole or tile beam of each antenna field.
-    vector<Expr<JonesMatrix>::Ptr> exprElementBeam(station->nField());
-    for(size_t i = 0; i < station->nField(); ++i)
+    StationBeam::Ptr beam(new StationBeam(exprITRF, exprRefDelayITRF,
+            exprRefTileITRF, stationLOFAR->station()));
+
+    if(!config.useChannelFreq())
     {
-        AntennaField::ConstPtr field = station->field(i);
+        beam->setReferenceFreq(refFreq);
+    }
 
-        // Element (dual-dipole) beam expression.
-        if(config.mode() != BeamConfig::ARRAY_FACTOR)
-        {
-            Expr<Vector<2> >::Ptr exprThetaPhi =
-                Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprITRF,
-                field));
-
-            if(field->isHBA())
-            {
-                exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
-            }
-            else
-            {
-                exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
-            }
-
-            Expr<JonesMatrix>::Ptr exprRotation =
-                Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprITRF,
-                field));
-
-            exprElementBeam[i] =
-                Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[i],
-                exprRotation));
-        }
-        else
-        {
-            Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-            Expr<JonesMatrix>::Ptr exprIdentity(new AsDiagonalMatrix(exprOne,
-                exprOne));
-            exprElementBeam[i] = exprIdentity;
-        }
-
-        // Tile array factor.
-        if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
-        {
-            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRF,
-                exprRefTileITRF, field, config.conjugateAF()));
-            exprElementBeam[i] =
-                Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
-                exprElementBeam[i]));
-        }
+    if(config.mode() == BeamConfig::ARRAY_FACTOR)
+    {
+        beam->setEnableElementResponse(false);
     }
 
     if(config.mode() == BeamConfig::ELEMENT)
     {
-        // If the station consists of multiple antenna fields, but beam forming
-        // is disabled, then we have to decide which antenna field to use. By
-        // default the first antenna field will be used. The differences between
-        // the dipole beam response of the antenna fields of a station should
-        // only vary as a result of differences in the field coordinate systems
-        // (because all dipoles are oriented the same way).
-
-        return exprElementBeam[0];
+        beam->setEnableArrayFactor(false);
     }
 
-    if(config.useChannelFreq())
-    {
-        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-            exprRefDelayITRF, station, exprElementBeam.begin(),
-            exprElementBeam.end(), config.conjugateAF()));
-    }
-
-    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-        exprRefDelayITRF, station, exprElementBeam.begin(),
-        exprElementBeam.end(), refFreq, config.conjugateAF()));
-    */
-
-    return Expr<JonesMatrix>::Ptr(new StationBeam(exprITRF, exprRefDelayITRF,
-            exprRefTileITRF, stationLOFAR->station(), refFreq));
+    return beam;
 }
 
 Expr<JonesMatrix>::Ptr
