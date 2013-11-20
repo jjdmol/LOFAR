@@ -69,7 +69,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--cellsize-mapfile',
             default=True,
             help="location of the output mapfile containing the cellsize of"
-              "PRoduced images"
+              "produced images"
         ), # TODO: remove this ugly hack 5201
     }
 
