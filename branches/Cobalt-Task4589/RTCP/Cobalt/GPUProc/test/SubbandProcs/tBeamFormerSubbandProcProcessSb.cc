@@ -30,6 +30,8 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
+#include "../fpequals.h"
+
 using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
@@ -214,7 +216,7 @@ int main() {
   for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
       for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(out[s][t][c] == outVal, 
+        ASSERTSTR(fpEquals(out[s][t][c], outVal), 
                   "out[" << s << "][" << t << "][" << c << "] = " << 
                   out[s][t][c] << "; outVal = " << outVal);
   
