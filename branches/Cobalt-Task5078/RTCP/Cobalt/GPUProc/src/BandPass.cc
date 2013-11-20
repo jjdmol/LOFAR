@@ -2092,7 +2092,7 @@ namespace LOFAR
   };
 
 
-  void computeCorrectionFactors(float *factors, unsigned nrChannels)
+  void computeCorrectionFactors(float *factors, unsigned nrChannels, float scale)
   {
     // The following matlab functions are used:
 
@@ -2131,6 +2131,8 @@ namespace LOFAR
       const std::complex<float> r = out[i + nrChannels / 2];
 
       factors[i] = std::pow(2, 25) / std::sqrt(std::abs(m * m + l * l + r * r));
+
+      factors[i] *= scale;
     }
   }
 

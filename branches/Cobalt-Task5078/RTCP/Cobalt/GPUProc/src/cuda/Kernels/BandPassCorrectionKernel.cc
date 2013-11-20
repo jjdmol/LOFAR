@@ -48,7 +48,9 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrSAPs(ps.settings.SAPs.size())
+      nrSAPs(ps.settings.SAPs.size()),
+      nrDelayCompensationChannels(ps.settings.beamFormer.nrDelayCompensationChannels),
+      nrHighResolutionChannels(ps.settings.beamFormer.nrHighResolutionChannels)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput", false);
@@ -67,17 +69,21 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.bandPassCorrectionWeights);
       
-      setEnqueueWorkSizes( gpu::Grid(params.nrChannels2,
-                                 params.nrSamplesPerChannel,
-                                 params.nrStations),
+      setEnqueueWorkSizes( gpu::Grid(params.nrHighResolutionChannels /
+                                       params.nrDelayCompensationChannels,
+                                     params.nrSamplesPerChannel,
+                                     params.nrStations),
                            gpu::Block(16, 16, 1) ); // The cu kernel uses a shared memory blocksize of 16 by 16 'samples'
 
-      size_t nrSamples = params.nrStations * params.nrSamplesPerChannel * params.nrChannels2 * params.nrChannels1 * NR_POLARIZATIONS;
+      size_t nrSamples = params.nrStations * params.nrSamplesPerChannel *
+                         params.nrHighResolutionChannels * NR_POLARIZATIONS;
       nrOperations = nrSamples ;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
       gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
-      BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannelsPerSubband);
+      BandPass::computeCorrectionFactors(bpWeights.get<float>(),
+                                         params.nrChannelsPerSubband,
+                                         1.0 / params.nrHighResolutionChannels);
       stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
      
     }
@@ -93,22 +99,17 @@ namespace LOFAR
         return 
             (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerChannel *
-            itsParameters.nrChannels1 *
-            itsParameters.nrChannels2 *
+            itsParameters.nrHighResolutionChannels *
             sizeof(std::complex<float>);
-
       case BandPassCorrectionKernel::OUTPUT_DATA:
         return
-            (size_t)  itsParameters.nrStations * NR_POLARIZATIONS * 
+            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerChannel *
-            itsParameters.nrChannels1 *
-            itsParameters.nrChannels2 *
+            itsParameters.nrHighResolutionChannels *
             sizeof(std::complex<float>);
       case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
-            (size_t)  itsParameters.nrChannels1 *
-            itsParameters.nrChannels2 *
-            sizeof(float);
+            (size_t) itsParameters.nrHighResolutionChannels * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -122,9 +123,10 @@ namespace LOFAR
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
       defs["NR_CHANNELS_1"] =
-        lexical_cast<string>(itsParameters.nrChannels1);
+        lexical_cast<string>(itsParameters.nrDelayCompensationChannels);
       defs["NR_CHANNELS_2"] =
-        lexical_cast<string>(itsParameters.nrChannels2);
+        lexical_cast<string>(itsParameters.nrHighResolutionChannels /
+                             itsParameters.nrDelayCompensationChannels);
       return defs;
     }
   }
