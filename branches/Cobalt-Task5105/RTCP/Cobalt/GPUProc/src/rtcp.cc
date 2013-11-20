@@ -449,13 +449,12 @@ int main(int argc, char **argv)
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
-    storageProcesses->forwardFinalMetaData(completing_start + 2);
+    storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 60);
+    storageProcesses->stop(completing_start + 600);
 
     LOG_INFO("Writing LTA feedback to disk");
 
