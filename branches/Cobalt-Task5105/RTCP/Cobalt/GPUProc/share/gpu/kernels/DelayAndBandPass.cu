@@ -237,17 +237,11 @@ extern "C" {
     // Offset of this sample between begin and end.
     const double timeOffset = double(time) / NR_SAMPLES_PER_CHANNEL;
 
-#if 1
-    // Interpolate the required phase rotation for this sample
-    const double2 phi  = make_double2( phiAtBegin.x  * (1.0 - timeOffset)
-                                     + phiAfterEnd.x *        timeOffset,
-                                       phiAtBegin.y  * (1.0 - timeOffset)
-                                     + phiAfterEnd.y *        timeOffset );
-
-    sampleX = sampleX * sincos_d2f(phi.x);
-    sampleY = sampleY * sincos_d2f(phi.y);
-#else
-    // Interpolate the required phase rotation for this sample
+    // Interpolate the required phase rotation for this sample.
+    //
+    // Single precision angle + sincos is measured to be good enough (2013-11-20).
+    // Note that we do the interpolation in double precision still.
+    // We can afford to if we keep this kernel memory bound.
     const float2 phi  = make_float2( phiAtBegin.x  * (1.0 - timeOffset)
                                    + phiAfterEnd.x *        timeOffset,
                                      phiAtBegin.y  * (1.0 - timeOffset)
@@ -255,7 +249,6 @@ extern "C" {
 
     sampleX = sampleX * sincos_f2f(phi.x);
     sampleY = sampleY * sincos_f2f(phi.y);
-#endif
 #endif
 
 #if defined BANDPASS_CORRECTION
