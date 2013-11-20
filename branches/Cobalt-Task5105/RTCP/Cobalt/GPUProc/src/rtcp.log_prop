@@ -21,10 +21,13 @@ log4cplus.appender.STDOUT.layout.ConversionPattern=rtcp:${MPIRANK}@%h %D{%d-%m-%
 # HERE BE DRAGONS: Do NOT set the logging threshold for the MACCLP appender
 # above INFO in the log_prop file, or identification with the MAC Log Processor
 # will fail!
-log4cplus.appender.MACCLP=log4cplus::SocketAppender
-log4cplus.appender.MACCLP.port=23999
-log4cplus.appender.MACCLP.host=ccu001
-log4cplus.appender.MACCLP.Threshold=INFO
+#
+# JD: Disabled for now, as log4cplus uses extra threads for this, which in turn
+# cause crashes in OpenMPI.
+#log4cplus.appender.MACCLP=log4cplus::SocketAppender
+#log4cplus.appender.MACCLP.port=23999
+#log4cplus.appender.MACCLP.host=ccu001
+#log4cplus.appender.MACCLP.Threshold=INFO
 
 #log4cplus.appender.STDERR=log4cplus::ConsoleAppender
 #log4cplus.appender.STDERR.layout=log4cplus::PatternLayout
