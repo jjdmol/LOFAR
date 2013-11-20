@@ -19,6 +19,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <GPUProc/Package__Version.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -170,6 +171,8 @@ int main(int argc, char **argv)
 #else
   LOG_WARN("Running without MPI!");
 #endif
+
+  LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
   /*
    * Initialise the system environment
