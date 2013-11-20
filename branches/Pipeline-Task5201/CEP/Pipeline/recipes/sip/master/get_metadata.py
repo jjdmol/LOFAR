@@ -107,8 +107,8 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
             if job.results['returncode'] != 0:
                 inp.skip = True
             elif(product_type is "SkyImage"):  # TODO: remove this ugly hack 5201
-                job.results["cellsize"] = str(cellsize).split(":")[1]
-              
+                job.results["cellsize"] = cellsize.file
+
         # ********************************************************************
         # 4. validate performance
         # 4. Check job results, and create output data map file
