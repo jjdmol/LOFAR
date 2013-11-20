@@ -453,6 +453,7 @@ namespace LOFAR
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
       if (settings.correlator.enabled) {
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
+        //settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
@@ -748,20 +749,6 @@ namespace LOFAR
     bool Parset::correctClocks() const
     {
       return settings.corrections.clock;
-    }
-
-
-    string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
-    {
-      size_t idx = settings.stationIndex(stationName);
-
-      if (settings.stations[idx].inputStreams.size() >= rspBoardNumber) {
-        LOG_ERROR_STR("Station " << stationName << " board " << rspBoardNumber << " not found, falling back to reading from /dev/null");
-
-        return "file:/dev/null";
-      }
-
-      return settings.stations[idx].inputStreams[rspBoardNumber];
     }
 
 

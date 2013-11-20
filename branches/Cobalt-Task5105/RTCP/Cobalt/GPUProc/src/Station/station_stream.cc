@@ -131,8 +131,14 @@ int main(int argc, char **argv)
   }
 
   if (print_stream) {
+    if (board >= ps.settings.stations[stationIdx].inputStreams.size()) {
+      LOG_ERROR_STR("Input for board " << board << " not found for station " << station);
+      cout << "file:/dev/null" << endl;
+      return 1;
+    }
+
     // Print the input stream for the given station and board
-    cout << ps.getInputStreamName(station, board) << endl;
+    cout << ps.settings.stations[stationIdx].inputStreams[board] << endl;
   } else if (print_host || print_cpu) {
     // Print the hostName of the given station, or localhost if
     // unknown.

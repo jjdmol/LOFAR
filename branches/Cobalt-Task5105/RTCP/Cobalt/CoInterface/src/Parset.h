@@ -686,8 +686,6 @@ namespace LOFAR
       std::vector<double>         getAnaBeamDirection() const;
       std::string                 getAnaBeamDirectionType() const;
 
-      std::string                 getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
-
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
