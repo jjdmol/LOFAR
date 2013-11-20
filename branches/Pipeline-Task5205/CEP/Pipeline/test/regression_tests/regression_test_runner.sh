@@ -1,3 +1,1 @@
-#!/bin/bash
-
-echo "$USER"
+#!/bin/bash -l
