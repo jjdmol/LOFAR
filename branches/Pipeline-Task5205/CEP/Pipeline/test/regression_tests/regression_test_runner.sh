@@ -73,11 +73,11 @@ ssh lce071 $"mkdir $WORKING_DIR -p"
 ssh lce072 $"mkdir $WORKING_DIR -p" 
 
 # now remove all files in these dirs
-#ssh lce068 $"rm $WORKING_DIR/* -rf" 
-#ssh lce069 $"rm $WORKING_DIR/* -rf" 
-#ssh lce070 $"rm $WORKING_DIR/* -rf" 
-#ssh lce071 $"rm $WORKING_DIR/* -rf" 
-#ssh lce072 $"rm $WORKING_DIR/* -rf" 
+ssh lce068 $"rm $WORKING_DIR/* -rf" 
+ssh lce069 $"rm $WORKING_DIR/* -rf" 
+ssh lce070 $"rm $WORKING_DIR/* -rf" 
+ssh lce071 $"rm $WORKING_DIR/* -rf" 
+ssh lce072 $"rm $WORKING_DIR/* -rf" 
 
 # ******************************************************
 # 4) prepare the config and parset to run in a pipeline type depending but static location 
@@ -117,7 +117,7 @@ sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/
 
 # *********************************************************************
 # 5) Run the pipeline
-# python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
+python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
 
 # ***********************************************************************
 # 6) validate output
@@ -141,8 +141,8 @@ REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
-python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host1/* $DELTA
-python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/* $DELTA
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host2" ; exit 1; }
 
 
 
