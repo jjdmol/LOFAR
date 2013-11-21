@@ -187,21 +187,23 @@ namespace LOFAR
 
     MultiPacketsToBuffer::~MultiPacketsToBuffer()
     {
-      // collect the log line
-      std::stringstream logstr;
+      if (!settings.sync) {
+        // collect the log line
+        std::stringstream logstr;
 
-      // compute average loss per board
-      for (size_t b = 0; b < buffer.nrBoards; ++b) {
-        const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
+        // compute average loss per board
+        for (size_t b = 0; b < buffer.nrBoards; ++b) {
+          const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
 
-        if (b > 0)
-          logstr << ", ";
+          if (b > 0)
+            logstr << ", ";
 
-        logstr << avgloss << "%";
+          logstr << avgloss << "%";
+        }
+
+        // report average loss
+        LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
       }
-
-      // report average loss
-      LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
     }
 
 
