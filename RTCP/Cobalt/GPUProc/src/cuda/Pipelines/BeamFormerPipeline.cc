@@ -112,7 +112,6 @@ namespace LOFAR
           
             samples += proc->counters.samples.stats;
             visibilities += proc->counters.visibilities.stats;
-            copyBuffers += proc->counters.copyBuffers.stats;
             incoherentOutput += proc->counters.incoherentOutput.stats;
           }
 

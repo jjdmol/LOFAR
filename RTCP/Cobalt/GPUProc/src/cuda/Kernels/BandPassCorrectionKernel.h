@@ -48,6 +48,7 @@ namespace LOFAR
         size_t nrSAPs;
         size_t nrChannels1;
         size_t nrChannels2;
+        bool correctBandPass;
       };
 
       enum BufferType

@@ -127,6 +127,7 @@ CompileDefinitions getDefaultCompileDefinitions()
     boost::lexical_cast<string>(NR_POLARIZATIONS);
   defs["NR_BITS_PER_SAMPLE"] =
     boost::lexical_cast<string>(NR_BITS_PER_SAMPLE);
+  defs["DO_BANDPASS_CORRECTION"] = "1";
 
   return defs;
 }
