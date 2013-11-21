@@ -33,6 +33,7 @@
 #include <CoInterface/MultiDimArray.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/gpu_utils.h>
 
 #include "../TestUtil.h"
 
@@ -53,7 +54,8 @@ unsigned NR_BASELINES = (NR_STATIONS * (NR_STATIONS + 1) / 2);
 HostMemory runTest(gpu::Context ctx,
                    Stream cuStream,
                    float * inputData,
-                   string function)
+                   string function,
+                   unsigned nrStationsPerFunction)
 {
   string kernelFile = "Correlator.cu";
 
@@ -101,8 +103,9 @@ HostMemory runTest(gpu::Context ctx,
   hKernel.setArg(0, devVisibilitiesMemory);
   hKernel.setArg(1, devCorrectedMemory);
 
-  // Calculate the number of threads in total and per blovk
-  unsigned nrBlocks = NR_BASELINES;
+  // Calculate the number of threads in total and per block
+  unsigned nrFuncStations = (NR_STATIONS + nrStationsPerFunction - 1)/nrStationsPerFunction;
+  unsigned nrBlocks = nrFuncStations * (nrFuncStations + 1) / 2;
   unsigned nrPasses = (nrBlocks + 1024 - 1) / 1024;
   unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
   unsigned nrUsableChannels = 15;
@@ -148,6 +151,10 @@ int main()
   const char * kernel_functions[] = {
     "correlate", "correlate_2x2", "correlate_3x3", "correlate_4x4"
   };
+  unsigned kernel_nrstations[] = {
+    1, 2, 3, 4
+  };
+
   unsigned nr_kernel_functions =
     sizeof(kernel_functions) / sizeof(kernel_functions[0]);
 
@@ -162,7 +169,7 @@ int main()
     for (unsigned idx = 0; idx < inputData.num_elements(); ++idx)
       inputData.origin()[idx] = 0;
 
-    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
+    HostMemory outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -241,7 +248,7 @@ int main()
     }
 
     // Run the kernel
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -291,16 +298,28 @@ int main()
 
     // insert some values at specific locations in the input matrix
     unsigned timestep = NR_POLARIZATIONS*COMPLEX;
+    // station 0, channel 5:
+    //   X = 2+3i
     // [0][5][7][0][0] = 2
     // [0][5][7][0][1] = 3
     inputData[0][5][timestep * 7] = 2;
     inputData[0][5][timestep * 7 + 1] = 3;
+    // station 1, channel 5:
+    //   Y = 4+5i
     // [1][5][7][1][0] = 4
     // [1][5][7][1][1] = 5
     inputData[1][5][timestep * 7 + NR_POLARIZATIONS] = 4;
     inputData[1][5][timestep * 7 + NR_POLARIZATIONS + 1] = 5;
 
-    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function);
+    // base line order is:
+    //
+    // 0-0, 1-0, 1-1, 2-0, 2-1, 2-2, ...
+
+    const unsigned baseline00 = 0;
+    const unsigned baseline10 = 1;
+    const unsigned baseline11 = 2;
+
+    outputOnHost = runTest(ctx, cuStream, inputData.origin(), function, kernel_nrstations[func_idx]);
 
     // Copy the output data to a local array
     outputOnHostPtr = outputOnHost.get<float>();
@@ -325,22 +344,21 @@ int main()
 
           // We need to find 4 specific indexes with values:
           // THe output location of the values does not change with differing input size
-          if (idx_baseline == 0 &&  idx_channels == 5 && idx == 0)
-            expected = 13.0f;
+          if (idx_baseline == baseline00 &&  idx_channels == 5 && idx == 0)
+            expected = 13.0f; // XX, real((2+3i)(2-3i))
           
-          if (idx_baseline == 1 &&  idx_channels == 5 && idx == 2)
-            expected = 23.0f;
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 4)
+            expected = 23.0f; // YX, real((4+5i)(2-3i))
 
-          if (idx_baseline == 1 &&  idx_channels == 5 && idx == 3)
-            expected = 2.0f;
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 5)
+            expected = -2.0f; // YX, imag((4+5i)(2-3i))
           
-          if (idx_baseline == 2 &&  idx_channels == 5 && idx == 6)
-            expected = 41.0f;
+          if (idx_baseline == baseline11 &&  idx_channels == 5 && idx == 6)
+            expected = 41.0f; // YY, real((4+5i)(4-5i))
 
           if (sample != expected)
           {
             cerr << "Unexpected number encountered: got " << sample << " but expected " << expected << endl;
-            return 1;
           }
         }
         cerr << endl;
