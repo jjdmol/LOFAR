@@ -21,6 +21,8 @@
 
 #include <Common/LofarLogger.h>
 
+#include <algorithm>
+
 namespace LOFAR {
 
   namespace Cobalt {
@@ -98,7 +100,13 @@ namespace LOFAR {
     template<typename T>
     BlockReader<T>::LockedBlock::LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     :
-      reader(reader)
+      reader(reader),
+
+      // We only need minFrom/maxTo in non-real-time mode, to lock the proper
+      // part of the circular buffer. However, a block is read only once
+      // a second or so so the overhead is negligable even in real-time mode.
+      minFrom(from + *std::min_element(beamletOffsets.begin(), beamletOffsets.end())),
+      maxTo(to + *std::max_element(beamletOffsets.begin(), beamletOffsets.end()))
     {
       this->from = from;
       this->to   = to;
@@ -113,12 +121,12 @@ namespace LOFAR {
 
       // clear path for writer
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
-        reader.buffer.noReadBefore(*b, this->from);
+        reader.buffer.noReadBefore(*b, minFrom);
       }
 
       // signal read intent on all buffers
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
-        reader.buffer.startRead(*b, this->from, this->to);
+        reader.buffer.startRead(*b, minFrom, maxTo);
       }
 
       //LOG_DEBUG_STR("Locked block " << this->from << " to " << this->to);
@@ -187,7 +195,17 @@ namespace LOFAR {
       // Signal end of read intent on all buffers
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
         // Unlock data
-        reader.buffer.stopRead(*b, this->to);
+        //
+        // Note that we should not unlock data that might be needed by the next
+        // block. A complicating factor is that the next block might start
+        // earlier than our `minTo', because delay compensation might cross
+        // a sample boundary, requiring one sample more.
+        //
+        // We stay very conservative, and merely assume that the next block
+        // won't start before this one. Given that the buffer is large enough
+        // to contain several blocks, freeing up to `minFrom' should provide
+        // enough space and progress.
+        reader.buffer.stopRead(*b, minFrom);
       }
     }
 
