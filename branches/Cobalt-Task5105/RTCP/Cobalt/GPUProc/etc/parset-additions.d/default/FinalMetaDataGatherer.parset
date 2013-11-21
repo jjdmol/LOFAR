@@ -16,5 +16,5 @@ Cobalt.FinalMetaDataGatherer.executable = FinalMetaDataGatherer
 # The database to connect to:
 #   Development: sasdbtest
 #   Production:  sasdb
-OLAP.FinalMetaDataGatherer.database.host = sasdb
+OLAP.FinalMetaDataGatherer.database.host = 
 

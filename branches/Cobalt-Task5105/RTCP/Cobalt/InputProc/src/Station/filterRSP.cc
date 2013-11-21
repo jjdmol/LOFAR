@@ -24,11 +24,8 @@
 #include <cstdio>
 #include <ctime>
 #include <unistd.h>
-#include <omp.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <Common/Thread/Queue.h>
-#include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
 #include <CoInterface/Stream.h>
@@ -59,11 +56,6 @@ void usage()
   puts("");
   puts("Note: invalid packets are always discarded.");
 }
-
-struct packetSet {
-  vector<struct RSP> packets;
-  vector<bool>       valid;
-};
 
 int main(int argc, char **argv)
 {
@@ -131,90 +123,53 @@ int main(int argc, char **argv)
   SmartPtr<Stream> inputStream = createStream(inputStreamDesc, true);
   SmartPtr<Stream> outputStream = createStream(outputStreamDesc, false);
   PacketReader reader("", *inputStream);
+  vector<struct RSP> packets(16);
+  vector<bool>       valid(packets.size(), false);
 
-  Queue< SmartPtr<packetSet> > readQueue;
-  Queue< SmartPtr<packetSet> > writeQueue;
+  try {
+    for(;;) {
+      reader.readPackets(packets, valid);
 
-  for (size_t i = 0; i < 256; ++i) {
-    SmartPtr<packetSet> p = new packetSet;
-    p->packets.resize(256);
-    p->valid.resize(p->packets.size());
+      for( size_t i = 0; i < packets.size(); ++i) {
+        if (!valid[i])
+          continue;
 
-    readQueue.append(p);
-  }
+        struct RSP &packet = packets[i];
 
-  volatile bool done = false;
+        // **** Apply FROM filter ****
+        if (from > 0 && packet.header.timestamp < from)
+          continue;
 
-# pragma omp parallel sections num_threads(2)
-  {
-#   pragma omp section
-    {
-      try {
-        Thread::ScopedPriority sp(SCHED_FIFO, 10);
+        // **** Apply TO filter ****
+        if (to > 0 && packet.header.timestamp >= to) {
+          if (quit_after_to)
+            return 0;
 
-        SmartPtr<packetSet> p;
-
-        while (!done && (p = readQueue.remove()) != NULL) {
-          reader.readPackets(p->packets, p->valid);
-          writeQueue.append(p);
-        }
-      } catch(Stream::EndOfStreamException&) {
-      }
-
-      writeQueue.append(NULL);
-    }
-
-#   pragma omp section
-    {
-      SmartPtr<packetSet> p;
-      while ((p = writeQueue.remove()) != NULL) {
-        for (size_t i = 0; i < p->packets.size() && !done; ++i) {
-          if (!p->valid[i])
-            continue;
-
-          struct RSP &packet = p->packets[i];
-
-          // **** Apply FROM filter ****
-          if (from > 0 && packet.header.timestamp < from)
-            continue;
-
-          // **** Apply TO filter ****
-          if (to > 0 && packet.header.timestamp >= to) {
-            if (quit_after_to)
-              done = true;
-
-            continue;
-          }
-
-          // **** Apply BITMODE filter ****
-          if (bitmode > 0 && packet.bitMode() != bitmode)
-            continue;
-
-          // **** Apply CLOCK filter ****
-          if (clock > 0 && packet.clockMHz() != clock)
-            continue;
-
-          // **** Apply NRBEAMLETS filter ****
-          if (nrbeamlets > 0) {
-            // the new number of beamlets has to be valid
-            ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
-
-            // convert
-            packet.header.nrBeamlets = nrbeamlets;
-          }
-
-          // Write packet
-          outputStream->write(&packet, packet.packetSize());
+          continue;
         }
 
-        readQueue.append(p);
+        // **** Apply BITMODE filter ****
+        if (bitmode > 0 && packet.bitMode() != bitmode)
+          continue;
 
-        if (done) {
-          readQueue.append(NULL);
-          break;
+        // **** Apply CLOCK filter ****
+        if (clock > 0 && packet.clockMHz() != clock)
+          continue;
+
+        // **** Apply NRBEAMLETS filter ****
+        if (nrbeamlets > 0) {
+          // the new number of beamlets has to be valid
+          ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
+
+          // convert
+          packet.header.nrBeamlets = nrbeamlets;
         }
+
+        // Write packet
+        outputStream->write(&packet, packet.packetSize());
       }
     }
+  } catch(Stream::EndOfStreamException&) {
   }
 }
 

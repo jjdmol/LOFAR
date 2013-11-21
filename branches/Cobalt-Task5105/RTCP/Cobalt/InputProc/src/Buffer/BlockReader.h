@@ -79,9 +79,6 @@ namespace LOFAR
 
         struct Block<T>::Beamlet getBeamlet( size_t beamletIdx, ssize_t offset );
 
-        const TimeStamp minFrom; // the earliest timestamp that we read, when adjusted for beamletOffsets
-        const TimeStamp maxTo;   // the latest timestamp that we read, when adjusted for beamletOffsets
-
         friend class BlockReader<T>;
       };
 

@@ -21,8 +21,6 @@
 
 #include <Common/LofarLogger.h>
 
-#include <algorithm>
-
 namespace LOFAR {
 
   namespace Cobalt {
@@ -100,13 +98,7 @@ namespace LOFAR {
     template<typename T>
     BlockReader<T>::LockedBlock::LockedBlock( BlockReader<T> &reader, const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     :
-      reader(reader),
-
-      // We only need minFrom/maxTo in non-real-time mode, to lock the proper
-      // part of the circular buffer. However, a block is read only once
-      // a second or so so the overhead is negligable even in real-time mode.
-      minFrom(from + *std::min_element(beamletOffsets.begin(), beamletOffsets.end())),
-      maxTo(to + *std::max_element(beamletOffsets.begin(), beamletOffsets.end()))
+      reader(reader)
     {
       this->from = from;
       this->to   = to;
@@ -121,12 +113,12 @@ namespace LOFAR {
 
       // clear path for writer
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
-        reader.buffer.noReadBefore(*b, minFrom);
+        reader.buffer.noReadBefore(*b, this->from);
       }
 
       // signal read intent on all buffers
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
-        reader.buffer.startRead(*b, minFrom, maxTo);
+        reader.buffer.startRead(*b, this->from, this->to);
       }
 
       //LOG_DEBUG_STR("Locked block " << this->from << " to " << this->to);
@@ -195,15 +187,7 @@ namespace LOFAR {
       // Signal end of read intent on all buffers
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
         // Unlock data
-        //
-        // TODO: The next block might start earlier than 'maxTo' because the
-        // coarse delay compensation might shift the beamletOffsets back by one
-        // more.
-        //
-        // stopRead(*b, minFrom) would be the conservative choice, but freezes
-        // the application for a yet unknown reason. One'd expect to be able
-        // to use minFrom if the buffer can contain at least 3 blocks?
-        reader.buffer.stopRead(*b, maxTo);
+        reader.buffer.stopRead(*b, this->to);
       }
     }
 
