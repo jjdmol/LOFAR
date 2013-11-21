@@ -182,7 +182,7 @@ int main(int argc, char **argv)
 
       // Keep reading until NULL
       while ((p = writeQueue.remove()) != NULL) {
-        for (size_t i = 0; i < p->packets.size() && !done; ++i) {
+        for (size_t i = 0; i < p->packets.size(); ++i) {
           if (!p->valid[i])
             continue;
 
@@ -194,8 +194,10 @@ int main(int argc, char **argv)
 
           // **** Apply TO filter ****
           if (to > 0 && packet.header.timestamp >= to) {
-            if (quit_after_to)
+            if (quit_after_to) {
               writerDone = true;
+              break;
+            }
 
             continue;
           }
