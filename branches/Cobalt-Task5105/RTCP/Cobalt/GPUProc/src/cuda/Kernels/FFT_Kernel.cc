@@ -46,6 +46,10 @@ namespace LOFAR
       buffer(buffer),
       itsStream(stream)
     {
+      LOG_DEBUG_STR("FFT_Kernel: " <<
+                    "fftSize=" << fftSize << 
+                    ", direction=" << (forward ? "forward" : "inverse") <<
+                    ", nrFFTs=" << nrFFTs);
     }
 
     void FFT_Kernel::enqueue(const BlockID &blockId, 

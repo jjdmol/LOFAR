@@ -600,7 +600,7 @@ namespace LOFAR
               file.coherent = tab.coherent;
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
-              file.location = getFileLocation("Beamformed", tab.files[s].streamNr);
+              file.location = getFileLocation("Beamformed", file.streamNr);
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);

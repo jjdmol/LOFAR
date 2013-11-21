@@ -41,7 +41,9 @@ namespace LOFAR
     {
     public:
       // Parameters that must be passed to the constructor of this Kernel class.
-      // TODO: more at constructor passed immediates can be turned into defines (blockDim/gridDim too if enforced fixed (consider conditional define) or drop opt)
+      // TODO: more at constructor passed immediates can be turned into defines
+      // (blockDim/gridDim too if enforced fixed (consider conditional define)
+      // or drop opt)
       struct Parameters
       {
         Parameters(const Parset& ps);
@@ -85,7 +87,8 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
 
-      void setEnqueueWorkSizes(gpu::Grid globalWorkSize, gpu::Block localWorkSize);
+      void setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                               gpu::Block localWorkSize);
       
 
       const unsigned maxThreadsPerBlock;
