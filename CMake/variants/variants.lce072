@@ -1,6 +1,6 @@
 set(CASACORE_ROOT_DIR /opt/cep/LofIm/daily/casacore)
 set(CASAREST_ROOT_DIR /opt/cep/LofIm/daily/casarest)
-set(LDA_ROOT_DIR /opt/cep/lda)
+set(DAL_ROOT_DIR /opt/cep/dal/testing)
 set(ENV{HDF5_ROOT} /opt/cep/hdf5)
 
 set(PYRAP_ROOT_DIR /opt/cep/LofIm/daily/pyrap)
