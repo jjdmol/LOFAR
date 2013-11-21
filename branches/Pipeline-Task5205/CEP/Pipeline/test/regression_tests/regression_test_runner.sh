@@ -1,17 +1,26 @@
 #!/bin/bash -l
 HELP=$" This programs runs LOFAR regressions test in a standalone fashion. 
-Usage: regression_test_runner.sh pipeline_type 
+Usage: regression_test_runner.sh pipeline_type [host1 host2]
+Run the regressions test for pipeline_type. Perform the work on host1 and host2
+Test should be started from the base installation directory eg: ~/build/gnu_debug
 
 pipeline_types: 
-  msss_imager_pipeline 
-  msss_calibration_pipeline 
-Default node worker directory: /data/scratch/$USER/regression_test_runner_<pipeline_type> 
-                *** Warning: Directories will be cleared at start of the run (lce069-lce072)*** 
-                    Should not be shared between worker nodes
-[shared_dir]  : The root dir where source"
+  msss_calibratior_pipeline -or- 1
+  msss_target_pipeline      -or- 2 
+  msss_imager_pipeline      -or- 3
+default hosts: 
+  lce068 and lce069
 
+All input, output and temporary files are stored in the following directory:
+    /data/scratch/$USER/regression_test_runner/<pipeline_type> 
+    
+*** Warning: Directory will be cleared at start of the run (lce069-lce072)*** 
+               Should not be shared between worker nodes"
+
+# ******************************************************
+# 1) validate input and print help if needed
 # Print usage
-if [[ $# = 0 || $1 = "--help" ]]; then
+if [[ $# < 3 || $1 = "--help" ]]; then
   echo "$HELP"
   exit 1
 fi
@@ -29,8 +38,8 @@ else
 fi
 
 # *******************************************************
-# 1) Check/set environment and set global variables
-
+# 2) Set environment and set global variables
+echo "Settings up invironment"
 # Make sure aliases are expanded, which is not the default for non-interactive
 # shells. Used for the use commands
 shopt -s expand_aliases
@@ -51,8 +60,9 @@ use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"
 
 # *****************************************************
-# 1) Clear old data:
+# 3) Clear old data:
 # Clear var run directory: remove state, map and logfiles
+echo "Clearing working directories"
 rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf
 
 # Assure working directory exists
@@ -63,21 +73,16 @@ ssh lce071 $"mkdir $WORKING_DIR -p"
 ssh lce072 $"mkdir $WORKING_DIR -p" 
 
 # now remove all files in these dirs
-ssh lce068 $"rm $WORKING_DIR/* -rf" 
-ssh lce069 $"rm $WORKING_DIR/* -rf" 
-ssh lce070 $"rm $WORKING_DIR/* -rf" 
-ssh lce071 $"rm $WORKING_DIR/* -rf" 
-ssh lce072 $"rm $WORKING_DIR/* -rf" 
+#ssh lce068 $"rm $WORKING_DIR/* -rf" 
+#ssh lce069 $"rm $WORKING_DIR/* -rf" 
+#ssh lce070 $"rm $WORKING_DIR/* -rf" 
+#ssh lce071 $"rm $WORKING_DIR/* -rf" 
+#ssh lce072 $"rm $WORKING_DIR/* -rf" 
 
 # ******************************************************
-# 2) prepare the config and parset to run in a pipeline type depending but static location 
+# 4) prepare the config and parset to run in a pipeline type depending but static location 
 # copy config file to working dir:
-cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
-
-# insert the cluserdesc for test cluster (default install is for cep2)
-sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
-# specify the new working directory
-sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
+echo "copy input data to working directory at correct nodes"
 
 # copy input data from data storage to the target host
 # copy full input data batch to the target hosts
@@ -85,6 +90,15 @@ ssh $HOST1 $"mkdir $WORKING_DIR/input_data"
 ssh $HOST2 $"mkdir $WORKING_DIR/input_data"
 scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST1:$"$WORKING_DIR/input_data"
 scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST2:$"$WORKING_DIR/input_data"
+
+echo "Updating configuration and parset file to reflect correct host and data locations"
+cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
+
+# insert the cluserdesc for test cluster (default install is for cep2)
+sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
+# specify the new working directory
+sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
+
 
 # copy parset to working dir (to allow output of meta information):
 cp /data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset $"$WORKING_DIR/$PIPELINE.parset"
@@ -101,10 +115,34 @@ sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$P
 sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
 
+# *********************************************************************
+# 5) Run the pipeline
+# python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
 
+# ***********************************************************************
+# 6) validate output
+echo "validating output"
 
-python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
+# copy the output data to the local node
+mkdir $WORKING_DIR/output_data/host1 -p
+mkdir $WORKING_DIR/output_data/host2 -p
+scp -r $HOST1:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host1
+scp -r $HOST2:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host2
 
+# get the source dir method allows for symlinks and other fancy methods of scripting
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# run the regression test for the pipeline: provide all the files in the directory
+DELTA=0.0001
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host1/* $DELTA
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/* $DELTA
 
 
 
