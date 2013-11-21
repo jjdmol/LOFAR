@@ -213,7 +213,6 @@ namespace LOFAR
         false, devA),
 
       // FIR filter: A -> B
-      // TODO: do a FIR for each individual TAB!!
       devIncoherentFilterWeights(
         context,
         factories.incoherentFirFilter.bufferSize(
