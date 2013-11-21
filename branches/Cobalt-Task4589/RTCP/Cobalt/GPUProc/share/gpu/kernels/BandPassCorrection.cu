@@ -34,6 +34,7 @@
  * - @c NR_CHANNELS_2: a multiple of 16
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
  * - @c NR_BITS_PER_SAMPLE: 8 or 16
+ * - @c DO_BANDPASS_CORRECTION: if defined, perform bandpass correction
  */
 
 #include "gpu_math.cuh"
@@ -69,7 +70,8 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
 
 /**
  * This kernel performs on the input data:
- * - Apply a bandpass correction to compensate for the errors introduced by the
+ * - If the preprocessor variable \c DO_BANDPASS_CORRECTION is defined, apply a
+ *   bandpass correction to compensate for the errors introduced by the
  *   polyphase filter that produced the subbands. This error is deterministic,
  *   hence it can be fully compensated for.
  * - Transpose the data so that the samples for each channel are placed

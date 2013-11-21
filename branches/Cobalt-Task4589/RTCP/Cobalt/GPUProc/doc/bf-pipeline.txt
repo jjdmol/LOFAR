@@ -100,7 +100,7 @@ FFT-16 {inplace} (if >1ch)
    |            [station][pol][samples][channel]        [48][2][12288][16]  = 144 MiB               B
    |
    V
-Incoherent Stokes (*: no transpose) (*** kernel must be fixed: wrong input format ***)
+Incoherent Stokes (*: no transpose)
    |            [stokes][samples][channel]              [4][12288][16]      = 3 MiB                 E
    V                                                    (float)
 (output)

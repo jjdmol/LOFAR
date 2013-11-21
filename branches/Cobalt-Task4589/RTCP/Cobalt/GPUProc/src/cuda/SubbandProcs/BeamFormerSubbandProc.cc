@@ -205,7 +205,6 @@ namespace LOFAR
         factories.incoherentStokesTranspose.create(
           queue, incoherentTransposeBuffers)),
 
-      // TODO: Add a transpose
       // inverse FFT: A -> A
       incoherentInverseFFT(
         queue, BEAM_FORMER_NR_CHANNELS,
@@ -214,7 +213,6 @@ namespace LOFAR
         false, devA),
 
       // FIR filter: A -> B
-      // TODO: provide history samples separately
       // TODO: do a FIR for each individual TAB!!
       devIncoherentFilterWeights(
         context,
