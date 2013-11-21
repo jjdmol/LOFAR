@@ -39,6 +39,8 @@ shopt -s expand_aliases
 PIPELINE=$1                                                             # First command line argument
 WORKING_DIR=$"/data/scratch/$USER/regression_test_runner/$PIPELINE"     # Default working space
 WORKSPACE=$PWD                                                          # Directory script is started from
+HOST1=$2
+HOST2=$3
 
 # create the var run directory
 mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
@@ -68,7 +70,7 @@ ssh lce071 $"rm $WORKING_DIR/* -rf"
 ssh lce072 $"rm $WORKING_DIR/* -rf" 
 
 # ******************************************************
-# 2) prepare the config file to run in a pipeline type depending but static location 
+# 2) prepare the config and parset to run in a pipeline type depending but static location 
 # copy config file to working dir:
 cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
 
@@ -77,11 +79,31 @@ sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 # specify the new working directory
 sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
 
+# copy input data from data storage to the target host
+# copy full input data batch to the target hosts
+ssh $HOST1 $"mkdir $WORKING_DIR/input_data"
+ssh $HOST2 $"mkdir $WORKING_DIR/input_data"
+scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST1:$"$WORKING_DIR/input_data"
+scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST2:$"$WORKING_DIR/input_data"
 
 # copy parset to working dir (to allow output of meta information):
-cp /data/lofar/testdata/regression_test_runner/msss_calibrator_pipeline/msss_calibrator_pipeline.parset $"$WORKING_DIR/msss_calibrator_pipeline.parset"
+cp /data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset $"$WORKING_DIR/$PIPELINE.parset"
 
-#python $"$WORKSPACE/installed/bin/msss_calibrator_pipeline.py" $"$WORKING_DIR/msss_calibrator_pipeline.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
+# update the parset to reflect to correct input data set location
+# Add the hosts to run the pipeline on
+# The hosts ( will find both the input and the output hosts
+sed -i  $"s|host1_placeholder|$HOST1|g" $"$WORKING_DIR/$PIPELINE.parset"
+sed -i  $"s|host2_placeholder|$HOST2|g" $"$WORKING_DIR/$PIPELINE.parset"
+# input data path
+sed -i  $"s|input_path1_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$PIPELINE.parset"
+sed -i  $"s|input_path2_placeholder|$WORKING_DIR/input_data|g" $"$WORKING_DIR/$PIPELINE.parset"
+# output data paths will find all output paths
+sed -i  $"s|output_path1_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
+sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/$PIPELINE.parset"
+
+
+
+python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
 
 
 
