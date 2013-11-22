@@ -70,7 +70,9 @@ SUITE(SubbandWriter)
     }
 
     ~OneBeam() {
-      system("rm -rf tWriter.out_raw");
+      int dummy = system("rm -rf tWriter.out_raw");
+
+      (void)dummy; // satisfy compiler
     }
   };
 
