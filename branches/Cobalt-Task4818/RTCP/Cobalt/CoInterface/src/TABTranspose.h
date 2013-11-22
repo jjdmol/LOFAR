@@ -34,6 +34,7 @@
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
 #include "Pool.h"
+#include "StreamableData.h"
 
 namespace LOFAR
 {
@@ -71,9 +72,8 @@ namespace LOFAR
        * of subbands per block, but other fields are left to the
        * caller to fill.
        */
-      class Block {
+      class Block: public SampleData<float, 3> {
       public:
-        MultiDimArray<float, 3> data; // [subband][samples][channels]
         std::vector<bool> subbandWritten;
 
         size_t fileIdx;
