@@ -36,7 +36,7 @@ namespace LOFAR
     SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
       itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
-      itsOutputThread(parset, CORRELATED_DATA, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
+      itsOutputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
         itsFreeQueue.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
@@ -72,12 +72,10 @@ namespace LOFAR
     }
 
 
-    TABWriter::TABWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
+    TABWriter::TABWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix, Pool<TABTranspose::Block> &pool)
     :
-      itsOutputThread(parset, BEAM_FORMED_DATA, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
+      itsOutputThread(parset, streamNr, pool, logPrefix)
     {
-      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsFreeQueue.append(newStreamableData(parset, BEAM_FORMED_DATA, streamNr));
     }
 
     

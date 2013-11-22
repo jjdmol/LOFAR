@@ -69,7 +69,7 @@ namespace LOFAR
       Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
 
       InputCorrelated itsInputThread;
-      OutputThread    itsOutputThread;
+      SubbandOutputThread itsOutputThread;
     };
     
 
@@ -78,7 +78,8 @@ namespace LOFAR
     public:
       TABWriter(const Parset &,
                     unsigned streamNr,
-                    const std::string &logPrefix);
+                    const std::string &logPrefix,
+                    Pool<TABTranspose::Block> &pool);
 
       virtual void process();
 
@@ -89,9 +90,7 @@ namespace LOFAR
     private:
       static const unsigned maxReceiveQueueSize = 3;
 
-      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
-
-      OutputThread    itsOutputThread;
+      TABOutputThread    itsOutputThread;
     };
 
 

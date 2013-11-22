@@ -108,7 +108,7 @@ void process(Stream &controlStream, size_t myRank)
       }
     }
 
-    map<size_t, Pool<TABTranspose::Block> > outputPools;
+    map<size_t, SmartPtr<Pool<TABTranspose::Block> > > outputPools;
     TABTranspose::Receiver::CollectorMap collectors;
 
     // Process beam-formed data
@@ -124,18 +124,23 @@ void process(Stream &controlStream, size_t myRank)
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        for (size_t i = 0; i < 5; ++i) {
-	  outputPools[fileIdx].free.append(new Block(
-            parset.settings.nrSubbands(file.sapNr),
-            stokes.nrSamples(parset.settings.blockSize),
-            stokes.nrChannels));
+        outputPools[fileIdx] = new Pool<TABTranspose::Block>;
 
+        // Create and fill an outputPool for this fileIdx
+        for (size_t i = 0; i < 5; ++i) {
+	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
+             parset.settings.nrSubbands(file.sapNr),
+             stokes.nrSamples(parset.settings.blockSize),
+             stokes.nrChannels));
+        }
+
+        // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          outputPools[fileIdx], fileIdx, parset.realTime() ? 5 : 0);
+          *outputPools[fileIdx], fileIdx, parset.realTime() ? 5 : 0);
 
         string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
-        Writer *writer = new TABWriter(parset, fileIdx, logPrefix, outputPools[fileIdx]);
+        Writer *writer = new TABWriter(parset, fileIdx, logPrefix, *outputPools[fileIdx]);
         subbandWriters.push_back(writer);
       }
     }
@@ -150,7 +155,7 @@ void process(Stream &controlStream, size_t myRank)
     {
 #     pragma omp section
       {
-        MultiReceiver mr("2nd-transpose-", collectors);
+        TABTranspose::MultiReceiver mr("2nd-transpose-", collectors);
 
         done.down();
       }
@@ -158,10 +163,10 @@ void process(Stream &controlStream, size_t myRank)
 #     pragma omp section
       {
 #       pragma omp parallel for num_threads(subbandWriters.size())
-	for (int i = 0; i < (int)subbandWriters.size(); ++i)
-	{
-	  subbandWriters[i]->process();
-	}
+        for (int i = 0; i < (int)subbandWriters.size(); ++i)
+        {
+          subbandWriters[i]->process();
+        }
 
         done.up();
       }

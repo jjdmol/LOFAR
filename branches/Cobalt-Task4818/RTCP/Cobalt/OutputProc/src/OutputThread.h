@@ -31,6 +31,7 @@
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
+#include <CoInterface/TABTranspose.h>
 #include <CoInterface/FinalMetaData.h>
 #include "MSWriter.h"
 
@@ -38,12 +39,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-
-    class OutputThread
+    class SubbandOutputThread
     {
     public:
-      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory = "");
+      SubbandOutputThread(const Parset &, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory = "");
 
       void           process();
 
@@ -60,12 +59,44 @@ namespace LOFAR
       void                             doWork();
 
       const Parset                     &itsParset;
-      const OutputType itsOutputType;
       const unsigned itsStreamNr;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
 
       Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+
+      unsigned itsBlocksWritten, itsBlocksDropped;
+      unsigned itsNrExpectedBlocks;
+      unsigned itsNextSequenceNumber;
+      SmartPtr<MSWriter>               itsWriter;
+    };
+
+
+    class TABOutputThread
+    {
+    public:
+      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+
+      void           process();
+
+      // needed in createHeaders.cc
+      void           createMS();
+      void           cleanUp() const;
+
+      void           augment(const FinalMetaData &finalMetaData);
+
+      ParameterSet feedbackLTA() const;
+
+    private:
+      void                             checkForDroppedData(StreamableData *);
+      void                             doWork();
+
+      const Parset                     &itsParset;
+      const unsigned itsStreamNr;
+      const std::string itsLogPrefix;
+      const std::string itsTargetDirectory;
+
+      Pool<TABTranspose::Block> &itsOutputPool;
 
       unsigned itsBlocksWritten, itsBlocksDropped;
       unsigned itsNrExpectedBlocks;

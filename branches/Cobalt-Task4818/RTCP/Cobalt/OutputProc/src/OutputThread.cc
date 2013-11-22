@@ -98,12 +98,11 @@ namespace LOFAR
     }
 
 
-    OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory)
+    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory)
       :
       itsParset(parset),
-      itsOutputType(outputType),
       itsStreamNr(streamNr),
-      itsLogPrefix(logPrefix + "[OutputThread] "),
+      itsLogPrefix(logPrefix + "[SubbandOutputThread] "),
       itsTargetDirectory(targetDirectory),
       itsFreeQueue(freeQueue),
       itsReceiveQueue(receiveQueue),
@@ -115,36 +114,20 @@ namespace LOFAR
     }
 
 
-    void OutputThread::createMS()
+    void SubbandOutputThread::createMS()
     {
-      // even the HDF5 writer accesses casacore, to perform conversions
       ScopedLock sl(casacoreMutex);
       ScopedDelayCancellation dc; // don't cancel casacore calls
 
-      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(itsOutputType, itsStreamNr) : itsTargetDirectory;
-      std::string fileName = itsParset.getFileName(itsOutputType, itsStreamNr);
+      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(CORRELATED_DATA, itsStreamNr) : itsTargetDirectory;
+      std::string fileName = itsParset.getFileName(CORRELATED_DATA, itsStreamNr);
       std::string path = directoryName + "/" + fileName;
 
       recursiveMakeDir(directoryName, itsLogPrefix);
       LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
       try {
-        // HDF5 writer requested
-        switch (itsOutputType) {
-        case CORRELATED_DATA:
-          itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
-          break;
-
-#ifdef HAVE_DAL
-        case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr);
-          break;
-#endif
-
-        default:
-          itsWriter = new MSWriterFile(path);
-          break;
-        }
+        itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
       } catch (Exception &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
         itsWriter = new MSWriterNull;
@@ -155,32 +138,11 @@ namespace LOFAR
 #endif
       }
 
-      // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
-      switch (itsOutputType) {
-      case CORRELATED_DATA:
-        itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
-
-        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-                                  << "SAP " << itsParset.settings.subbands[itsStreamNr].SAP
-                                  << ", subband " << itsParset.settings.subbands[itsStreamNr].stationIdx
-                                  << ", centralfreq " << setprecision(8) << itsParset.settings.subbands[itsStreamNr].centralFrequency / 1e6 << " MHz"
-                                  << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-                                  << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
-                                  << ", channels " << itsParset.nrChannelsPerSubband()
-                                  << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
-                     );
-        break;
-      case BEAM_FORMED_DATA:
-        itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
-        break;
-
-      default:
-        break;
-      }
+      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
     }
 
 
-    void OutputThread::checkForDroppedData(StreamableData *data)
+    void SubbandOutputThread::checkForDroppedData(StreamableData *data)
     {
       // TODO: check for dropped data at end of observation
 
@@ -189,7 +151,7 @@ namespace LOFAR
       if (droppedBlocks > 0) {
         itsBlocksDropped += droppedBlocks;
 
-        LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+        LOG_WARN_STR(itsLogPrefix << "SubbandOutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
@@ -197,7 +159,7 @@ namespace LOFAR
     }
 
 
-    void OutputThread::doWork()
+    void SubbandOutputThread::doWork()
     {
       time_t prevlog = 0;
 
@@ -206,7 +168,7 @@ namespace LOFAR
           itsWriter->write(data);
           checkForDroppedData(data);
         } catch (SystemCallException &ex) {
-          LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
+          LOG_WARN_STR(itsLogPrefix << "SubbandOutputThread caught non-fatal exception: " << ex.what());
         }
 
         time_t now = time(0L);
@@ -224,7 +186,7 @@ namespace LOFAR
     }
 
 
-    void OutputThread::cleanUp() const
+   void SubbandOutputThread::cleanUp() const
     {
       float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
@@ -232,23 +194,9 @@ namespace LOFAR
     }
 
 
-    ParameterSet OutputThread::feedbackLTA() const
+    ParameterSet SubbandOutputThread::feedbackLTA() const
     {
-      string prefix;
-
-      switch (itsOutputType) {
-      case CORRELATED_DATA:
-        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
-        break;
-
-      case BEAM_FORMED_DATA:
-        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
-        break;
-
-      default:
-        prefix = "UNKNOWN.";
-        break;
-      }
+      const string prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
 
       ParameterSet result;
       result.adoptCollection(itsWriter->configuration(), prefix);
@@ -257,7 +205,7 @@ namespace LOFAR
     }
 
 
-    void OutputThread::augment( const FinalMetaData &finalMetaData )
+    void SubbandOutputThread::augment( const FinalMetaData &finalMetaData )
     {
       // augment the data product
       ASSERT(itsWriter.get());
@@ -266,9 +214,139 @@ namespace LOFAR
     }
 
 
-    void OutputThread::process()
+    void SubbandOutputThread::process()
     {
-      LOG_DEBUG_STR(itsLogPrefix << "OutputThread::process() entered");
+      LOG_DEBUG_STR(itsLogPrefix << "SubbandOutputThread::process() entered");
+
+      createMS();
+      doWork();
+      cleanUp();
+    }
+
+
+    TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+      :
+      itsParset(parset),
+      itsStreamNr(streamNr),
+      itsLogPrefix(logPrefix + "[TABOutputThread] "),
+      itsTargetDirectory(targetDirectory),
+      itsOutputPool(outputPool),
+      itsBlocksWritten(0),
+      itsBlocksDropped(0),
+      itsNrExpectedBlocks(0),
+      itsNextSequenceNumber(0)
+    {
+    }
+
+
+    void TABOutputThread::createMS()
+    {
+      // even the HDF5 writer accesses casacore, to perform conversions
+      ScopedLock sl(casacoreMutex);
+      ScopedDelayCancellation dc; // don't cancel casacore calls
+
+      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(BEAM_FORMED_DATA, itsStreamNr) : itsTargetDirectory;
+      std::string fileName = itsParset.getFileName(BEAM_FORMED_DATA, itsStreamNr);
+      std::string path = directoryName + "/" + fileName;
+
+      recursiveMakeDir(directoryName, itsLogPrefix);
+      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
+
+      try {
+#ifdef HAVE_DAL
+        itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr);
+#else
+        itsWriter = new MSWriterFile(path);
+#endif
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
+        itsWriter = new MSWriterNull;
+#if defined HAVE_AIPSPP
+      } catch (casa::AipsError &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
+        cleanUp();
+#endif
+      }
+
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+    }
+
+
+    void TABOutputThread::checkForDroppedData(StreamableData *data)
+    {
+      // TODO: check for dropped data at end of observation
+
+      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
+
+      if (droppedBlocks > 0) {
+        itsBlocksDropped += droppedBlocks;
+
+        LOG_WARN_STR(itsLogPrefix << "TABOutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+      }
+
+      itsNextSequenceNumber = data->sequenceNumber() + 1;
+      itsBlocksWritten++;
+    }
+
+
+    void TABOutputThread::doWork()
+    {
+      time_t prevlog = 0;
+
+      for (SmartPtr<TABTranspose::Block> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
+        try {
+          itsWriter->write(data);
+          checkForDroppedData(data);
+        } catch (SystemCallException &ex) {
+          LOG_WARN_STR(itsLogPrefix << "TABOutputThread caught non-fatal exception: " << ex.what());
+        }
+
+        time_t now = time(0L);
+
+        if (now > prevlog + 5) {
+          // print info every 5 seconds
+          LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
+
+          prevlog = now;
+        } else {
+          // print debug info for the other blocks
+          LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
+        }
+      }
+    }
+
+
+    void TABOutputThread::cleanUp() const
+    {
+      float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
+
+      LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+    }
+
+
+    ParameterSet TABOutputThread::feedbackLTA() const
+    {
+      const string prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
+
+      ParameterSet result;
+      result.adoptCollection(itsWriter->configuration(), prefix);
+
+      return result;
+    }
+
+
+    void TABOutputThread::augment( const FinalMetaData &finalMetaData )
+    {
+      // augment the data product
+      ASSERT(itsWriter.get());
+
+      itsWriter->augment(finalMetaData);
+    }
+
+
+    void TABOutputThread::process()
+    {
+      LOG_DEBUG_STR(itsLogPrefix << "TABOutputThread::process() entered");
 
       createMS();
       doWork();
