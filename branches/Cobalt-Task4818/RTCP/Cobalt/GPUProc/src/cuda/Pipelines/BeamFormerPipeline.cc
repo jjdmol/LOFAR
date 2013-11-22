@@ -249,8 +249,8 @@ namespace LOFAR
         size_t coherentIdx = 0;
         size_t incoherentIdx = 0;
 
-        const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
-        const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
+        //const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
+        //const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
 
         for (size_t fileIdx = 0; fileIdx < ps.settings.beamFormer.files.size(); ++fileIdx) {
           const struct ObservationSettings::BeamFormer::File &file = ps.settings.beamFormer.files[fileIdx];
@@ -271,7 +271,7 @@ namespace LOFAR
             :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize);
 
           // Object to write to outputProc
-          SmartPtr<struct TABTranspose::Subband> subband = new TABTranspose::Subband(nrChannels, nrSamples);
+          SmartPtr<struct TABTranspose::Subband> subband = new TABTranspose::Subband(nrSamples, nrChannels);
 
           subband->id.fileIdx = file.streamNr;
           subband->id.subband = globalSubbandIdx;
@@ -280,10 +280,10 @@ namespace LOFAR
           // Create a copy to be able to release outputData
           if (file.coherent) {
             // Copy coherent beam
-            ASSERT(beamFormedData.shape()[0] < coherentIdx);
-            ASSERT(beamFormedData.shape()[1] == nrChannels);
-            ASSERT(beamFormedData.shape()[2] == nrSamples);
-            memcpy(subband->data.origin(), beamFormedData[coherentIdx].origin(), subband->data.num_elements() * sizeof subband->data.origin());
+            ASSERTSTR(beamFormedData.shape()[0] > coherentIdx, "No room for coherent beam " << coherentIdx);
+            ASSERTSTR(beamFormedData.shape()[1] == nrSamples, "nrSamples is " << beamFormedData.shape()[2] << " but expected " << nrSamples);
+            ASSERTSTR(beamFormedData.shape()[2] == nrChannels, "nrChannels is " << beamFormedData.shape()[1] << " but expected " << nrChannels);
+            memcpy(subband->data.origin(), beamFormedData[coherentIdx].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
 
             coherentIdx++;
           } else {
@@ -291,10 +291,10 @@ namespace LOFAR
             //
             // TODO: For now, we assume we store coherent OR incoherent beams
             // in the same struct beamFormedData.
-            ASSERT(beamFormedData.shape()[0] < incoherentIdx);
-            ASSERT(beamFormedData.shape()[1] == nrChannels);
-            ASSERT(beamFormedData.shape()[2] == nrSamples);
-            memcpy(subband->data.origin(), beamFormedData[incoherentIdx].origin(), subband->data.num_elements() * sizeof subband->data.origin());
+            ASSERTSTR(beamFormedData.shape()[0] > incoherentIdx, "No room for incoherent beam " << incoherentIdx);
+            ASSERTSTR(beamFormedData.shape()[1] == nrSamples, "nrSamples is " << beamFormedData.shape()[2] << " but expected " << nrSamples);
+            ASSERTSTR(beamFormedData.shape()[2] == nrChannels, "nrChannels is " << beamFormedData.shape()[1] << " but expected " << nrChannels);
+            memcpy(subband->data.origin(), beamFormedData[incoherentIdx].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
 
             incoherentIdx++;
           }
