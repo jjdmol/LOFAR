@@ -345,31 +345,63 @@ SUITE(DelayCompensation)
                                0.0,    // phase offsets
                                1.0f)); // bandpass factor
 
+    // For verification: for the following vals, the kernel computes for
+    // channel 0:
+    //
+    // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+    //             = 1.0              - 0.5 * 1.0              + 0        * (1.0 / 16)
+    //             = 0.5
+    // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+    //             = -2.0 * 3.1415926536 * 0.5       * 1.0          + 0.0
+    //             = -M_PI
+    // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+    //             = -2.0 * 3.1415926536 * 0.5       * 1.0           + 0.0
+    //             = -M_PI
+    //
+    // For all time steps t = [0..1):
+    //   phi = phiAtBegin * (1.0 - t) + phiAfterEnd * t
+    //        = -M_PI
+    //    
+    //   cos(phi) = -1.0
+    //   sin(phi) = -0.0
+    //
+    // In:
+    //   sampleX = sampleY = 1.0 + 1.0i
+    // Out:
+    //   sampleX *= cos(phi) + i*sin(phi)
+    //            = -1.0 + -1.0i
+
     CHECK_CLOSE(-1.0, results[0].real(), 0.000001);
     CHECK_CLOSE(-1.0, results[0].imag(), 0.000001);
 
-    // For verification: for the following vals, the kernel computes:
-    // major: offset within block of 16 samples
-    // frequency = 1.0 - 0.5*1.0 + (0 + 15) * (1.0 / 16) = 0.5 + 15/16 = 1.4375
-    // phiBegin = -2.0 * 3.141593 * delayAtBegin = -6.283185 * 1.0 = -6.283185
-    // deltaPhi = (phiEnd - phiBegin) / 64 = 0
-    // myPhiBegin = (-6.283185 + major * deltaPhi) * frequency + phaseOffset
-    //            = (-6.283185 + 0.0) * 1.4375 + 0.0 = -9.032079
-    // myPhiDelta = 16 (= time step) * deltaPhi * frequency = 0
-    // vX = ( cos(myPhiBegin.x), sin(myPhiBegin.x) ) = (-0.923880, -0.382683)
-    // vY = idem (as delays begin == delays end)
-    // dvX = ( cos(myPhiDelta.x), sin(myPhiDelta.x) ) = (1, 0)
-    // dvY = idem
-    // (vX, vY) *= weight (*1.0)
-    // sampleX = sampleY = (1.0, 1.0)
-    // After 64/16 rounds, (vX, vY) have been updated 64/16 times with
-    // (dvX, dvY).
-    // In this case, (dvX, dvY) stays (1, 0), so for the last sample, we get:
-    // sampleY = cmul(sampleY, vY) = -0.923880 - -0.382683 = -0.541196 (real)
-    //                             = -0.923880 + -0.382683 = -1.306563 (imag)
+    // For verification: for the following vals, the kernel computes for
+    // channel 15:
+    //
+    // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+    //             = 1.0              - 0.5 * 1.0              + (0 + 15) * (1.0 / 16)
+    //             = 0.5 + 15/16 = 1.4375
+    // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+    //             = -2.0 * 3.1415926536 * 1.4375    * 1.0          + 0.0
+    //             = -9.0320788791
+    // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+    //             = -2.0 * 3.1415926536 * 1.4375    * 1.0           + 0.0
+    //             = -9.0320788791
+    //
+    // For all time steps t = [0..1):
+    //   phi = phiAtBegin * (1.0 - t) + phiAfterEnd * t
+    //        = -9.0320788791
+    //    
+    //   cos(phi) = -0.9238795325
+    //   sin(phi) = -0.3826834324
+    //
+    // In:
+    //   sampleX = sampleY = 1.0 + 1.0i
+    // Out:
+    //   sampleY *= cos(phi) + i*sin(phi)
+    //            = -0.5411961001 + -1.3065629649i
 
-    CHECK_CLOSE(-0.541196, results[1].real(), 0.000001);
-    CHECK_CLOSE(-1.306563, results[1].imag(), 0.000001);
+    CHECK_CLOSE(-0.5411961001, results[1].real(), 0.000001);
+    CHECK_CLOSE(-1.3065629649, results[1].imag(), 0.000001);
   }
 
   TEST(SlopedDelay)
@@ -378,28 +410,6 @@ SUITE(DelayCompensation)
     // delays: begin 1, end 0; no phase offset; frequency 1; subband width 1;
     // all (complex) input samples are set to (1.0, 1.0) in runTest().
     //
-    // timeStep  = 16 (hard-coded)
-    // channel   = 0
-    // frequency = subbandFrequency - .5 * SUBBAND_BANDWIDTH
-    //             + channel * (SUBBAND_BANDWIDTH / NR_CHANNELS)
-    // phiBegin  = -2.0 * PI * delayAtBegin  = -6.283185 * 1.0 = -6.283185
-    // phiEnd    = -2.0 * PI * delayAfterEnd = -6.283185 * 0.0 =  0.0
-    // deltaPhi  = (phiEnd - phiBegin) / (NR_SAMPLES_PER_CHANNEL)
-    //           = (0.0 - -6.283135) / 64 = 0.0981748
-    //
-    // For result[0]:
-    // major = 0
-    // frequency  = 1.0 - 0.5 * 1.0 + (0 + 0) * (1.0 / 16) = 1 - 0.5 + 0 = 0.5
-    // myPhiBegin = (phiBegin + major * deltaPhi) * frequency + phaseOffset
-    //            = (-6.283185 + 0.0 * 0.0981748) * 0.5 + 0.0 = -3.141593
-    // myPhiDelta = timeStep * deltaPhi * frequency
-    //            = 16 * 0.0981748 * 0.5 = 0.785398
-    // vX =  vY   = (cos(myPhiBegin) + sin(myPhiBegin)j)
-    //            = (cos(-3.141593) + sin(-3.141593)j) = (-1 + 0j)
-    // dvX = dvY  = (cos(myPhiDelta) + sin(myPhiDelta)j)
-    //            = (cos(0.785398) + sin(0.785398)j) = (0.707107 + 0.707107j)
-    // sample     = sample * (cos(myPhiBegin) + sin(myPhiBegin)j)
-    //            = (1 + j) * (-1, 0j) = (-1, -j)
     //
     // For result[1]:
     // major = 15
@@ -432,10 +442,65 @@ SUITE(DelayCompensation)
                                0.0,    // phase offsets
                                1.0f)); // bandpass factor
 
+    // For verification: for the following vals, the kernel computes for
+    // channel 0:
+    //
+    // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+    //             = 1.0              - 0.5 * 1.0              + 0        * (1.0 / 16)
+    //             = 0.5
+    // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+    //             = -2.0 * 3.1415926536 * 0.5       * 1.0          + 0.0
+    //             = -M_PI
+    // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+    //             = -2.0 * 3.1415926536 * 0.5       * 0.0           + 0.0
+    //             = 0.0
+    //
+    // For time step t = 0:
+    //   phi = phiAtBegin * (1.0 - t) + phiAfterEnd * t
+    //        = -M_PI
+    //    
+    //   cos(phi) = -1.0
+    //   sin(phi) = -0.0
+    //
+    // In:
+    //   sampleX = sampleY = 1.0 + 1.0i
+    // Out:
+    //   sampleX *= cos(phi) + i*sin(phi)
+    //            = -1.0 + -1.0i
+
     CHECK_CLOSE(-1.0,     results[0].real(), 0.000001);
     CHECK_CLOSE(-1.0,     results[0].imag(), 0.000001);
-    CHECK_CLOSE(1.130716, results[1].real(), 0.000001);
-    CHECK_CLOSE(0.849400, results[1].imag(), 0.000001);
+
+    // For verification: for the following vals, the kernel computes for
+    // channel 15:
+    //
+    // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+    //             = 1.0              - 0.5 * 1.0              + (0 + 15) * (1.0 / 16)
+    //             = 0.5 + 15/16 = 1.4375
+    // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+    //             = -2.0 * 3.1415926536 * 1.4375    * 1.0          + 0.0
+    //             = -9.0320788791
+    // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+    //             = -2.0 * 3.1415926536 * 1.4375    * 0.0           + 0.0
+    //             = 0.0
+    //
+    // For time step t = (NR_SAMPLES_PER_CHANNEL-1) / NR_SAMPLES_PER_CHANNEL
+    //                 = 63/64
+    //   phi = phiAtBegin * (1.0 - t) + phiAfterEnd * t
+    //       = -9.0320788791 * 1/64   + 0.0
+    //       = -0.1411262325
+    //
+    //   cos(phi) = -0.9900582103
+    //   sin(phi) = -0.1406582393
+    //
+    // In:
+    //   sampleX = sampleY = 1.0 + 1.0i
+    // Out:
+    //   sampleY *= cos(phi) + i*sin(phi)
+    //            = 1.1307164496 + 0.8493999709i
+
+    CHECK_CLOSE(1.1307164496, results[1].real(), 0.000001);
+    CHECK_CLOSE(0.8493999709, results[1].imag(), 0.000001);
   }
 }
 
@@ -499,10 +564,69 @@ TEST(AllAtOnce)
                              1.0,    // phase offsets (1 rad)
                              2.0f)); // bandpass factor (weights == 2)
 
-  CHECK_CLOSE( 0.602337, results[0].real(), 0.000001);
-  CHECK_CLOSE(-2.763547, results[0].imag(), 0.000001);
-  CHECK_CLOSE(-0.207633, results[1].real(), 0.000001);
-  CHECK_CLOSE( 2.820796, results[1].imag(), 0.000001);
+  // For verification: for the following vals, the kernel computes for
+  // channel 0:
+  //
+  // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+  //             = 1.0              - 0.5 * 1.0              + 0        * (1.0 / 16)
+  //             = 0.5
+  // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+  //             = -2.0 * 3.1415926536 * 0.5       * 1.0          + 1.0
+  //             = -2.1415926536
+  // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+  //             = -2.0 * 3.1415926536 * 0.5       * 0.0           + 1.0
+  //             = 1.0
+  //
+  // For time step t = 0:
+  //   phi = phiAtBegin * (1.0 - t) + phiAfterEnd * t
+  //        = -2.1415926536
+  //    
+  //   cos(phi) = -0.5403023059
+  //   sin(phi) = -0.8414709845
+  //
+  //   weight = 2.0
+  //
+  // In:
+  //   sampleX = sampleY = 1.0 + 1.0i
+  // Out:
+  //   sampleX *= weight * (cos(phi) + i*sin(phi))
+  //           = 0.60233735788 + -2.7635465814i
+
+  CHECK_CLOSE(0.60233735788, results[0].real(), 0.000001);
+  CHECK_CLOSE(-2.7635465814, results[0].imag(), 0.000001);
+
+  // For verification: for the following vals, the kernel computes for
+  // channel 15:
+  //
+  // frequency   = subbandFrequency - 0.5 * subbandBandwidth + channel  * channelBandwidth
+  //             = 1.0              - 0.5 * 1.0              + (0 + 15) * (1.0 / 16)
+  //             = 0.5 + 15/16 = 1.4375
+  // phiAtBegin  = -2.0 * M_PI         * frequency * delayAtBegin + phaseOffset
+  //             = -2.0 * 3.1415926536 * 1.4375    * 1.0          + 1.0
+  //             = -8.0320788791
+  // phiAfterEnd = -2.0 * M_PI         * frequency * delayAfterEnd + phaseOffset
+  //             = -2.0 * 3.1415926536 * 1.4375    * 0.0           + 1.0
+  //             = 1.0
+  //
+  // For time step t = (NR_SAMPLES_PER_CHANNEL-1) / NR_SAMPLES_PER_CHANNEL
+  //                 = 63/64
+  //   phi = phiAtBegin    * (1.0 - t) + phiAfterEnd * t
+  //       = -8.0320788791 * 1/64      + 1.0         * 63/64
+  //       = 0.8588737675
+  //
+  //   cos(phi) = 0.6532905611
+  //   sin(phi) = 0.7571072862
+  //
+  //   weight = 2.0
+  //
+  // In:
+  //   sampleX = sampleY = 1.0 + 1.0i
+  // Out:
+  //   sampleX *= weight * (cos(phi) + i*sin(phi))
+  //            = -0.2076334501 + 2.8207956946i
+
+  CHECK_CLOSE(-0.2076334501, results[1].real(), 0.000001);
+  CHECK_CLOSE(2.8207956946 , results[1].imag(), 0.000001);
 }
 
 
@@ -533,7 +657,6 @@ int main()
   gpu::Stream strm(initDevice());
   stream = &strm;
 
-  int exitStatus = UnitTest::RunAllTests();
-  return exitStatus > 0 ? 1 : 0;
+  return UnitTest::RunAllTests() > 0;
 }
 
