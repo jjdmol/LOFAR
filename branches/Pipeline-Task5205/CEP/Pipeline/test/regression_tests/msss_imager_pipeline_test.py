@@ -5,7 +5,10 @@ def validate_image_equality(image_1_path, image_2_path, max_delta):
     import pyrap.images as pim
 
     # get the difference between the two images
-    im = pim.image("{0} - {1}".format(image_1_path, image_2_path))
+    print "comparing images from paths:"
+    print image_1_path
+    print image_2_path
+    im = pim.image('"{0}" - "{1}"'.format(image_1_path, image_2_path))
     im.saveas("difference.IM2")
     # get the stats of the image
     stats_dict = im.statistics()
@@ -335,15 +338,16 @@ image_data = {'rms': [ 0.52093363], 'medabsdevmed': [ 0.27387491], 'minpos': [[1
 
 
 if __name__ == "__main__":
-    source_list_1, source_list_2, image_1, image_2, max_delta = None, None, None, None, None
+    source_list_1, image_1, source_list_2, image_2, max_delta = None, None, None, None, None
     # Parse parameters from command line
     error = False
+    print sys.argv[1:5]
     try:
-        source_list_1, source_list_2, image_1, image_2 = sys.argv[1:5]
+        image_1, source_list_1, fist_1, image_2, source_list_2, fits_2 = sys.argv[1:7]
     except:
         print "Sourcelist comparison has been disabled! Arguments must still be provided"
         print "usage: python {0} source_list_1_path "\
-            " source_list_2_path image_1_path image_2_path (max_delta type=float)".format(sys.argv[0])
+            " image_1_path source_list_2_path image_2_path (max_delta type=float)".format(sys.argv[0])
         sys.exit(1)
 
     max_delta = None
