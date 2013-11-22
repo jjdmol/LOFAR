@@ -88,8 +88,8 @@ echo "copy input data to working directory at correct nodes"
 # copy full input data batch to the target hosts
 ssh $HOST1 $"mkdir $WORKING_DIR/input_data"
 ssh $HOST2 $"mkdir $WORKING_DIR/input_data"
-scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST1:$"$WORKING_DIR/input_data"
-scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/"* $HOST2:$"$WORKING_DIR/input_data"
+scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host1/"* $HOST1:$"$WORKING_DIR/input_data"
+scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host2/"* $HOST2:$"$WORKING_DIR/input_data"
 
 echo "Updating configuration and parset file to reflect correct host and data locations"
 cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
@@ -129,6 +129,12 @@ mkdir $WORKING_DIR/output_data/host2 -p
 scp -r $HOST1:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host1
 scp -r $HOST2:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host2
 
+# copy the target data to a writable location
+mkdir $WORKING_DIR/target_data/host1 -p
+mkdir $WORKING_DIR/target_data/host2 -p
+cp -r /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host1/*  $WORKING_DIR/target_data/host1
+cp -r /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/*  $WORKING_DIR/target_data/host2
+
 # get the source dir method allows for symlinks and other fancy methods of scripting
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SOURCE="${BASH_SOURCE[0]}"
@@ -141,8 +147,8 @@ REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
-python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
-python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host2" ; exit 1; }
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* $WORKING_DIR/target_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* $WORKING_DIR/target_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host2" ; exit 1; }
 
 
 
