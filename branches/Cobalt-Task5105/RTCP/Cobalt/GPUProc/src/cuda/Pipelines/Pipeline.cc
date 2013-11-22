@@ -56,6 +56,7 @@ namespace LOFAR
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
+      processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
       workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
@@ -132,11 +133,16 @@ namespace LOFAR
         }
 
         // Receive all subbands from all stations
-        LOG_INFO_STR("[block " << block << "] Receive input");
+        LOG_DEBUG_STR("[block " << block << "] Receive input");
+
         if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(blocks);
         if (block > 2) receiveTimer.stop();
-        LOG_DEBUG_STR("[block " << block << "] Input received");
+
+        if (processingSubband0)
+          LOG_INFO_STR("[block " << block << "] Input received");
+        else
+          LOG_DEBUG_STR("[block " << block << "] Input received");
 
         vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
 
@@ -428,7 +434,8 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
 
-        if (time(0) != lastLogTime) {
+        // Log every 5 seconds
+        if (time(0) > lastLogTime + 5) {
           lastLogTime = time(0);
 
           LOG_INFO_STR("Forwarded " << nrBlocksForwarded << " blocks, dropped " << nrBlocksDropped << " blocks");
