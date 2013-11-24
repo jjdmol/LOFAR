@@ -54,8 +54,6 @@ class imager_awimager(LOFARnodeTCP):
         :param autogenerate_parameters: Turns on the autogeneration of: 
            cellsize, npix, wprojplanes, wmax
         :rtype: self.outputs["image"] The path to the output image
-        :rtype: self.outputs["cellsize"] The cellsize (supplied or calculated)
-          of the produced image # TODO: remove this ugly hack 5201
         """
         self.logger.info("Start imager_awimager node run:")
         log4_cplus_name = "imager_awimager"
@@ -155,7 +153,6 @@ class imager_awimager(LOFARnodeTCP):
         # The actual output image has this extention always, default of 
         # awimager
         self.outputs["image"] = output_image + ".restored"
-        self.outputs["cellsize"] = cell_size # TODO: remove this ugly hack 5201
         return 0
 
     def _calc_par_from_measurement(self, measurement_set, parset):

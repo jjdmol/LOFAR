@@ -213,11 +213,8 @@ class msss_imager_pipeline(control):
 
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
-            # TODO: remove this ugly hack 5201
-            aw_image_mapfile, maxbaseline, cellsize_mapfile = self._aw_imager(
-                        concat_ms_map_path,
-                        idx_loop,
-                        sourcedb_map_path,
+            aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
+                        idx_loop, sourcedb_map_path,
                         skip=False)
 
             # *****************************************************************
@@ -245,8 +242,7 @@ class msss_imager_pipeline(control):
                 full_parset.getString('prefix') +
                 full_parset.fullModuleName('DataProducts')
             ),
-            product_type="SkyImage",
-            cellsize_mapfile=cellsize_mapfile) # TODO: remove this ugly hack 5201
+            product_type="SkyImage")
 
         return 0
 
@@ -449,8 +445,6 @@ class msss_imager_pipeline(control):
 
         output_mapfile = self._write_datamap_to_file(None, "awimager",
                                     "output map for awimager recipe")
-        cellsize_mapfile = self._write_datamap_to_file(None, "cellsize",
-                           "output map for cellsizes of produced images")
 
         mask_patch_size = self.parset.getInt("Imaging.mask_patch_size")
         auto_imaging_specs = self.parset.getBool("Imaging.auto_imaging_specs")
@@ -466,10 +460,9 @@ class msss_imager_pipeline(control):
                           mask_patch_size=mask_patch_size,
                           sourcedb_path=sky_path,
                           working_directory=self.scratch_directory,
-                          autogenerate_parameters=auto_imaging_specs,
-                          cellsize_mapfile=cellsize_mapfile)
+                          autogenerate_parameters=auto_imaging_specs)
 
-        return output_mapfile, max_baseline, cellsize_mapfile
+        return output_mapfile, max_baseline
 
     @xml_node
     def _prepare_phase(self, input_ms_map_path, target_mapfile,
@@ -598,10 +591,10 @@ class msss_imager_pipeline(control):
 
     def _write_datamap_to_file(self, datamap, mapfile_name, message=""):
         """
-        Write the suplied map to the mapfile directory in the jobs dir with
-        the filename suplied in mapfile_name.
-        Return the full path of the created file.
-        If suplied data is None then the file is touched if not existing and
+        Write the suplied the suplied map to the mapfile.
+        directory in the jobs dir with the filename suplied in mapfile_name.
+        Return the full path to the created file.
+        If suplied data is None then the file is touched if not existing, but
         existing files are kept as is
         """
 
