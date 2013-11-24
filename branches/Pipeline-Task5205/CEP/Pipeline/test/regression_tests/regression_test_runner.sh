@@ -35,10 +35,8 @@ HOST2=$3
 
 # test if we started in the correct directory
 # we need to be able to grab and change installed files for full functionality
-if [ -f lofarinit.sh ]
+if [ ! -f lofarinit.sh ]
 then
-   :
-else
     echo "*** Error ***"
     echo $"Could not find lofarinit at current working directory: $WORKSPACE"
     echo "script should be started from the base dir, eg: ~/build/gnu_debug "
@@ -49,12 +47,12 @@ fi
 if [ -f $"$WORKSPACE/installed/bin/$PIPELINE.py" ]
 then
   # Test if the testdata dir is present (do not test the full tree just the parset)
-  if [ -f $"/data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset" ]
+  if [ -f /data/lofar/testdata/regression_test_runner/${PIPELINE}/${PIPELINE}.parset ]
   then
     :
   else
     echo "*** Error ***"
-    echo $"The selected pipeline does not exist as intry in the test data dir:"
+    echo $"The selected pipeline does not exist as entry in the test data dir:"
     echo $"/data/lofar/testdata/regression_test_runner/$PIPELINE"
     exit 1
   fi
@@ -65,16 +63,17 @@ else
     exit 1
 fi
 
+# todo increase commentingmof this step
 SECONDHOST=false
 if [ -d $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host2" ]; 
 then
   echo "Validating performance of work performed on second node"
-  $SECONDHOST = true
+  SECONDHOST=true
 fi
 
 # *******************************************************
 # 2) Set environment and set global variables
-echo "Settings up invironment"
+echo "Settings up environment"
 # Make sure aliases are expanded, which is not the default for non-interactive
 # shells. Used for the use commands
 shopt -s expand_aliases
@@ -94,6 +93,7 @@ echo "Clearing working directories"
 rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf
 
 # Assure working directory exists
+#todo onlu clear target host
 ssh lce068 $"mkdir $WORKING_DIR -p" 
 ssh lce069 $"mkdir $WORKING_DIR -p" 
 ssh lce070 $"mkdir $WORKING_DIR -p" 
