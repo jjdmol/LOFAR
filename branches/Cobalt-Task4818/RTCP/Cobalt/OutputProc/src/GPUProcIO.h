@@ -34,12 +34,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Reads FinalMetaData from the controlStream, and sends it to all writers.
-    void writeFinalMetaData( FinalMetaData &finalMetaData, std::vector< SmartPtr<Writer> > &subbandWriters );
-
-    // Reads LTA feedback from the writers, and sends it over the control stream.
-    void writeFeedbackLTA( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters );
-
     // Receive and process a full observation, being rank 'myRank'. Will:
     //   * Receive a Parset over the controlStream
     //   * Fulfill roles for parset.settings.outputProcHosts[myRank]:

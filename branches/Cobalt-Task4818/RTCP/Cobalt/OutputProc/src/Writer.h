@@ -36,32 +36,18 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    class Writer
-    {
-    public:
-      virtual ~Writer();
-
-      virtual void process() = 0;
-
-      virtual void augment(const FinalMetaData &finalMetaData) = 0;
-
-      virtual ParameterSet feedbackLTA() const = 0;
-    };
-    
-
-    class SubbandWriter: public Writer
+    class SubbandWriter
     {
     public:
       SubbandWriter(const Parset &,
                     unsigned streamNr,
                     const std::string &logPrefix);
 
-      virtual void process();
+      void process();
 
-      virtual void augment(const FinalMetaData &finalMetaData);
+      void augment(const FinalMetaData &finalMetaData);
 
-      virtual ParameterSet feedbackLTA() const;
+      ParameterSet feedbackLTA() const;
 
     private:
       static const unsigned maxReceiveQueueSize = 3;
@@ -71,30 +57,6 @@ namespace LOFAR
       InputCorrelated itsInputThread;
       SubbandOutputThread itsOutputThread;
     };
-    
-
-    class TABWriter: public Writer
-    {
-    public:
-      TABWriter(const Parset &,
-                    unsigned streamNr,
-                    const std::string &logPrefix,
-                    Pool<TABTranspose::Block> &pool);
-
-      virtual void process();
-
-      virtual void augment(const FinalMetaData &finalMetaData);
-
-      virtual ParameterSet feedbackLTA() const;
-
-    private:
-      static const unsigned maxReceiveQueueSize = 3;
-
-      TABOutputThread    itsOutputThread;
-    };
-
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

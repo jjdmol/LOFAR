@@ -28,11 +28,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Writer::~Writer()
-    {
-    }
-
-
     SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
       itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
@@ -70,33 +65,6 @@ namespace LOFAR
     {
       return itsOutputThread.feedbackLTA();
     }
-
-
-    TABWriter::TABWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix, Pool<TABTranspose::Block> &pool)
-    :
-      itsOutputThread(parset, streamNr, pool, logPrefix)
-    {
-    }
-
-    
-    void TABWriter::process()
-    {
-      itsOutputThread.process();
-    }
-
-
-    void TABWriter::augment( const FinalMetaData &finalMetaData )
-    {
-      itsOutputThread.augment(finalMetaData);
-    }
-
-
-    ParameterSet TABWriter::feedbackLTA() const
-    {
-      return itsOutputThread.feedbackLTA();
-    }
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 
