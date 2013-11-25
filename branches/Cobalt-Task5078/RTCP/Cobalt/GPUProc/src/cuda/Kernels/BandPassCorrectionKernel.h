@@ -48,6 +48,7 @@ namespace LOFAR
         unsigned nrSAPs;
         unsigned nrDelayCompensationChannels;
         unsigned nrHighResolutionChannels;
+        bool correctBandPass;
       };
 
       enum BufferType

@@ -32,15 +32,15 @@ namespace LOFAR
                                              size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
-        correctBandPass(correctBandPassParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
-        incoherentFirFilter(incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
+        incoherentStokesTranspose(incoherentStokesTransposeParams(ps)),
+        incoherentFirFilter(
+          incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
         bandPassCorrection(bandPassCorrectionParams(ps))
-
       {
       }
 
@@ -64,21 +64,6 @@ namespace LOFAR
           BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
         params.correctBandPass = false;
         params.transpose = false;
-
-        return params;
-      }
-
-      DelayAndBandPassKernel::Parameters
-      BeamFormerFactories::correctBandPassParams(const Parset &ps) const
-      {
-        DelayAndBandPassKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() /
-          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
-        params.delayCompensation = false;
-        params.transpose = true;
 
         return params;
       }
@@ -152,15 +137,15 @@ namespace LOFAR
       {
         FIR_FilterKernel::Parameters params(ps);
 
-        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
+        params.nrSTABs = ps.nrStations();
 
-        // define at least 16 channels to get the FIR_Filter.cu to compile, even
-        // if we won't use it.
-        params.nrChannelsPerSubband = std::max(16U,
-          ps.settings.beamFormer.incoherentSettings.nrChannels);
+        params.nrChannelsPerSubband = 
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
 
-        // time integration has not taken place yet, so calculate the nrSamples manually
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+        // time integration has not taken place yet, so calculate the nrSamples
+        // manually
+        params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         params.nrSubbands = nrSubbandsPerSubbandProc;
 
@@ -172,12 +157,26 @@ namespace LOFAR
       incoherentStokesParams(const Parset &ps) const 
       {
         IncoherentStokesKernel::Parameters params(ps);
-        //TODO: beamformer params
-        params.nrChannelsPerSubband = ps.settings.beamFormer.incoherentSettings.nrChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+        params.nrChannelsPerSubband = 
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
+        params.nrSamplesPerChannel = 
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;
       }
 
+      IncoherentStokesTransposeKernel::Parameters 
+      BeamFormerFactories::
+      incoherentStokesTransposeParams(const Parset &ps) const 
+      {
+        IncoherentStokesTransposeKernel::Parameters params(ps);
+        params.nrChannelsPerSubband =
+          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() /
+          BeamFormerSubbandProc::BEAM_FORMER_NR_CHANNELS;
+
+        return params;
+      }
   }
 }

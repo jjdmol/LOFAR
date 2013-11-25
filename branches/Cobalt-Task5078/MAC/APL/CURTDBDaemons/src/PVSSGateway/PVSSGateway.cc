@@ -21,11 +21,11 @@
 //#  $Id: PVSSGateway.cc 23417 2012-12-20 14:06:29Z loose $
 
 #include <lofar_config.h>
-#include <ApplCommon/PosixTime.h>
 #include <Common/LofarLogger.h>
 #include <Common/Version.h>
 #include <Common/ParameterSet.h>
-#include <APL/APLCommon/ControllerDefines.h>
+#include <ApplCommon/PosixTime.h>
+#include <ApplCommon/StationInfo.h>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/KVT_Protocol.ph>
@@ -40,7 +40,6 @@
 
 namespace LOFAR {
   using namespace MACIO;
-  using namespace APLCommon;
   namespace GCF {
     using namespace TM;
     using namespace PVSS;

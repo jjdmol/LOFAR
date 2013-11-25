@@ -15,27 +15,31 @@ PANEL,-1 -1 414 134 N "_3DFace" 2
 
   obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
 
-  // find  starttime and endtime and current time and calculate %done
-  
-  string sStart;
-  time start;
-  dpGet(obsDP+\".startTime\",sStart);
-  if (!navFunct_lofarDate2PVSSDate(sStart,start)) {
-    LOG_ERROR(\"streamView_small.pnl:reload|illegal startTime: \"+sStart);
-    return;
-  }
-
-  int retry=0;
-  while (  getCurrentTime() < start) {  
-    delay(2);
-    retry++;
-    if (retry >= 90) {
-      break;
+  if (navFunct_dpReachable(obsDP)){
+    if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
+                                obsDP+\".runState:_online.._invalid\")== -1) {
+      setValue(\"streamObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+      LOG_DEBUG(\"streamView_small.pnl:main|Couldnt connect to \"+obsDP+\".runState:_online.._value\");
     }
-  }  
-  reload();
+  } else {
+    setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
+  }
 }
-  
+
+private void obsRunning(string dp1,string running,
+                        string dp2,bool invalid) {
+
+  if (!invalid) {
+    if (strpos(running,\"Running\")>=0) {
+      reload();
+    } else {
+      setValue(\"streamObject\", \"backCol\", \"Lofar_off\");
+    }
+  } else {
+    setValue(\"streamObject\", \"backCol\", \"Lofar_dpOffline\");
+  }       
+}
+
 private void reload() {
   
   // get all the InputBuffers used by this observation

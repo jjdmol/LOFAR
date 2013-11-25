@@ -73,12 +73,14 @@ private:
 
 	// client adminsitration
 	struct	LogProc {
+		// Max. number of message that will be searched for identification string
+  		static const int32	maxInitMsgCount = 20;
 		string		DPname;
 		int32		msgCnt;
 		int32		errCnt;
 		bool		valid;
-		LogProc() : msgCnt(-10),errCnt(0),valid(false) {};
-		explicit LogProc(const string& name) : DPname(name),msgCnt(-10),errCnt(0),valid(false) {};
+		LogProc() : msgCnt(-maxInitMsgCount),errCnt(0),valid(false) {};
+		explicit LogProc(const string& name) : DPname(name),msgCnt(-maxInitMsgCount),errCnt(0),valid(false) {};
 	};
 	typedef map<GCFPortInterface*, LogProc> 	LogProcMap;
 	LogProcMap 	 		itsClients;

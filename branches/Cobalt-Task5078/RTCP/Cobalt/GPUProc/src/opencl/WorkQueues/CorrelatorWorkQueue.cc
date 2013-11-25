@@ -189,7 +189,6 @@ namespace LOFAR
     // Get the log2 of the supplied number
     unsigned CorrelatorSubbandProc::flagFunctions::get2LogOfNrChannels(unsigned nrChannels)
     {
-      // Assure that the nrChannels is more then zero: never ending loop 
       ASSERT(powerOfTwo(nrChannels));
 
       unsigned logNrChannels;

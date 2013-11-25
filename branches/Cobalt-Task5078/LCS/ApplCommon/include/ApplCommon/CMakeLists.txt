@@ -7,6 +7,7 @@ set(inst_HEADERS
   LofarDirs.h
   Observation.h
   PosixTime.h
+  PVSSDatapointDefs.h
   StationConfig.h
   StationDatatypes.h
   StationInfo.h)

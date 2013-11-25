@@ -50,7 +50,8 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrSAPs(ps.settings.SAPs.size()),
       nrDelayCompensationChannels(ps.settings.beamFormer.nrDelayCompensationChannels),
-      nrHighResolutionChannels(ps.settings.beamFormer.nrHighResolutionChannels)
+      nrHighResolutionChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      correctBandPass(ps.settings.corrections.bandPass)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput", false);
@@ -127,6 +128,8 @@ namespace LOFAR
       defs["NR_CHANNELS_2"] =
         lexical_cast<string>(itsParameters.nrHighResolutionChannels /
                              itsParameters.nrDelayCompensationChannels);
+      if (itsParameters.correctBandPass)
+        defs["DO_BANDPASS_CORRECTION"] = "1";
       return defs;
     }
   }
