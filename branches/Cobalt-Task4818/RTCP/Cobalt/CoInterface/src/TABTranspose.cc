@@ -107,10 +107,11 @@ bool Block::complete() const {
 }
 
 
-BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight )
+BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks, size_t maxBlocksInFlight )
 :
   outputPool(outputPool),
   fileIdx(fileIdx),
+  nrBlocks(nrBlocks),
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1)
@@ -122,6 +123,8 @@ void BlockCollector::addSubband( const Subband &subband ) {
   ScopedLock sl(mutex);
 
   const size_t &blockIdx = subband.id.block;
+
+  ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
 
   if (!have(blockIdx)) {
     if (canDrop) {
@@ -149,6 +152,15 @@ void BlockCollector::addSubband( const Subband &subband ) {
     // data from earlier blocks, because all subbands
     // are sent in-order.
     emitUpTo(blockIdx);
+
+    if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {
+      // Received last block -- wrap up
+
+      ASSERT(blocks.empty());
+
+      // Signal end-of-stream
+      outputPool.filled.append(NULL);
+    }
   }
 }
 

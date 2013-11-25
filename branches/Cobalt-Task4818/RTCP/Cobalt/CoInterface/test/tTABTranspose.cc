@@ -110,7 +110,7 @@ struct Fixture_Loss: public Fixture {
 
   Fixture_Loss()
   :
-    ctr_loss(outputPool, 0, maxInFlight)
+    ctr_loss(outputPool, 0, 0, maxInFlight)
   {
     // add some subbands for both blocks
     for (size_t blockIdx = 0; blockIdx < maxInFlight; ++blockIdx) {
@@ -467,7 +467,7 @@ SUITE(MultiReceiver) {
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
             }
-            collectors[t] = new BlockCollector(*outputPools[t], t);
+            collectors[t] = new BlockCollector(*outputPools[t], t, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -479,12 +479,10 @@ SUITE(MultiReceiver) {
           LOG_DEBUG_STR("Receiver " << r << ": Shutting down");
           mr.kill(nrSenders);
 
-          // Wrap up any incomplete blocks
+          // Check output -- everything should have arrived
           for (int t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
-
-            collectors[t]->finish();
 
             // Check if all blocks arrived, plus NULL marker.
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());

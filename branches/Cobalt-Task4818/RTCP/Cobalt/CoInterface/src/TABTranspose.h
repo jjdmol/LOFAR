@@ -127,7 +127,7 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
-        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight = 0 );
+        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
 	/*
          * Add a subband of any block.
@@ -144,6 +144,7 @@ namespace LOFAR
         std::map<size_t, SmartPtr<Block> > blocks;
         Pool<Block> &outputPool;
         const size_t fileIdx;
+        const size_t nrBlocks;
         Mutex mutex;
 
         // upper limit for blocks.size(), or 0 if unlimited
