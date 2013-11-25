@@ -34,7 +34,6 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/FinalMetaData.h>
 #include "Writer.h"
 
 using namespace LOFAR;
@@ -44,14 +43,10 @@ using namespace std;
 namespace LOFAR {
 namespace Cobalt {
 
-void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
+void writeFinalMetaData( FinalMetaData &finalMetaData, vector< SmartPtr<Writer> > &subbandWriters )
 {
   // Add final meta data (broken tile information, etc)
   // that is obtained after the end of an observation.
-  LOG_INFO_STR("Waiting for final meta data");
-  FinalMetaData finalMetaData;
-  finalMetaData.read(controlStream);
-
   LOG_INFO_STR("Processing final meta data");
   for (size_t i = 0; i < subbandWriters.size(); ++i)
     try {
@@ -136,7 +131,7 @@ void process(Stream &controlStream, size_t myRank)
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, parset.realTime() ? 5 : 0);
+          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
 
         string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
@@ -149,17 +144,38 @@ void process(Stream &controlStream, size_t myRank)
      * PROCESS
      */
 
-    Semaphore done;
+    FinalMetaData finalMetaData;
 
-#   pragma omp parallel sections
+    // Set up receiver engine for 2nd transpose
+    TABTranspose::MultiReceiver mr("2nd-transpose-", collectors);
+
+
+#   pragma omp parallel sections num_threads(2)
     {
+      // Done signal from controller, by sending the final meta data
 #     pragma omp section
       {
-        TABTranspose::MultiReceiver mr("2nd-transpose-", collectors);
+        // Add final meta data (broken tile information, etc)
+        // that is obtained after the end of an observation.
+        LOG_INFO_STR("Waiting for final meta data");
 
-        done.down();
+        finalMetaData.read(controlStream);
+
+        if (parset.realTime()) {
+          // Real-time observations: stop now. MultiReceiver::kill
+          // will stop the TABWriters.
+          mr.kill(0);
+        } else {
+          // Non-real-time observations: wait until all data has been
+          // processed. The TABWriters will stop once they received
+          // the last block.
+        }
+
+        // SubbandWriters finish on their own once their InputThread
+        // gets disconnected.
       }
 
+      // Writers
 #     pragma omp section
       {
 #       pragma omp parallel for num_threads(subbandWriters.size())
@@ -167,15 +183,13 @@ void process(Stream &controlStream, size_t myRank)
         {
           subbandWriters[i]->process();
         }
-
-        done.up();
       }
     }
 
     /*
      * FINAL META DATA
      */
-    readFinalMetaData(controlStream, subbandWriters);
+    writeFinalMetaData(finalMetaData, subbandWriters);
 
     /*
      * LTA FEEDBACK

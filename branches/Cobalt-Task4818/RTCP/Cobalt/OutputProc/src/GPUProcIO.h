@@ -28,13 +28,14 @@
 
 #include <Stream/Stream.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/FinalMetaData.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
     // Reads FinalMetaData from the controlStream, and sends it to all writers.
-    void readFinalMetaData( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters );
+    void writeFinalMetaData( FinalMetaData &finalMetaData, std::vector< SmartPtr<Writer> > &subbandWriters );
 
     // Reads LTA feedback from the writers, and sends it over the control stream.
     void writeFeedbackLTA( Stream &controlStream, std::vector< SmartPtr<Writer> > &subbandWriters );
