@@ -278,6 +278,8 @@ namespace LOFAR
 
       unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
+      ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
+
       if (droppedBlocks > 0) {
         itsBlocksDropped += droppedBlocks;
 
