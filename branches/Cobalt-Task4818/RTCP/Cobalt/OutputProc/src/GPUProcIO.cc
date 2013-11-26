@@ -34,7 +34,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include "Writer.h"
+#include "SubbandWriter.h"
 #include "OutputThread.h"
 
 using namespace LOFAR;

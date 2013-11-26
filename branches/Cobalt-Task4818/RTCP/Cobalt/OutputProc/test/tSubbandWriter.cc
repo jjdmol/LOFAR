@@ -30,7 +30,7 @@
 #include <CoInterface/DataFactory.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
-#include <OutputProc/Writer.h>
+#include <OutputProc/SubbandWriter.h>
 #include <Stream/PortBroker.h>
 
 #include <MSLofar/FailedTileInfo.h>

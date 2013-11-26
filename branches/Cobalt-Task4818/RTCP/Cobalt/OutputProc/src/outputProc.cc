@@ -25,7 +25,6 @@
 #include <omp.h>
 
 #include <string>
-#include <vector>
 #include <stdexcept>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -38,7 +37,6 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include "Writer.h"
 #include "GPUProcIO.h"
 #include "IOPriority.h"
 

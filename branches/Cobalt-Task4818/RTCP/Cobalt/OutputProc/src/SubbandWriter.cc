@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "Writer.h"
+#include "SubbandWriter.h"
 
 #include <CoInterface/DataFactory.h>
 

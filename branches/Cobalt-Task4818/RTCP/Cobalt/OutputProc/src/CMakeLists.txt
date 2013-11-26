@@ -12,14 +12,14 @@ lofar_add_library(outputproc
   FastFileStream.cc
   GPUProcIO.cc
   InputThread.cc
-  OutputThread.cc
-  Writer.cc
   MSWriter.cc
   MSWriterCorrelated.cc
   MSWriterDAL.cc
   MSWriterNull.cc
   MSWriterFile.cc
   MeasurementSetFormat.cc
+  OutputThread.cc
+  SubbandWriter.cc
   TBB_StaticMapping.cc
 #  TBB_Writer.cc
 )
