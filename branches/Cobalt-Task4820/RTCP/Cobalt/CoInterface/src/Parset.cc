@@ -300,7 +300,7 @@ namespace LOFAR
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
       // Station information (required by pointing information)
-      settings.antennaSet     = getString("Observation.antennaSet", "LBA");
+      settings.antennaSet     = getString("Observation.antennaSet", "LBA_INNER");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
 
       // Pointing information
@@ -377,7 +377,7 @@ namespace LOFAR
         if (!isDefined(key)) key = "Observation.rspSlotList";
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".rspSlotList" );
+        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".DataslotList" );
       }
 
       // Resource information
