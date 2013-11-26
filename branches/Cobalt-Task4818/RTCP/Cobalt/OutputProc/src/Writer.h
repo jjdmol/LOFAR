@@ -26,6 +26,7 @@
 #include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/FinalMetaData.h>
@@ -52,9 +53,9 @@ namespace LOFAR
     private:
       static const unsigned maxReceiveQueueSize = 3;
 
-      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
+      Pool<StreamableData> itsOutputPool;
 
-      InputCorrelated itsInputThread;
+      InputThread itsInputThread;
       SubbandOutputThread itsOutputThread;
     };
   } // namespace Cobalt

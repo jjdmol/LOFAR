@@ -30,11 +30,11 @@ namespace LOFAR
   {
     SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
-      itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
-      itsOutputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
+      itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
+      itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsFreeQueue.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
+        itsOutputPool.free.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
     }
 
     
@@ -43,14 +43,10 @@ namespace LOFAR
 #     pragma omp parallel sections num_threads(2)
       {
 #       pragma omp section
-        {
-          itsInputThread.process();
-        }
+        itsInputThread.process();
 
 #       pragma omp section
-        {
-          itsOutputThread.process();
-        }
+        itsOutputThread.process();
       }
     }
 

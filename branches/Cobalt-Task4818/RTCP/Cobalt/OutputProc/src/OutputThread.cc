@@ -35,8 +35,9 @@
 #include <Common/StringUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/Thread/Mutex.h>
-#include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Cancellation.h>
+
+#include <CoInterface/OutputTypes.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -98,18 +99,117 @@ namespace LOFAR
     }
 
 
-    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory)
+    template<typename T> OutputThread<T>::OutputThread(const Parset &parset, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix)
       :
       itsParset(parset),
       itsStreamNr(streamNr),
-      itsLogPrefix(logPrefix + "[SubbandOutputThread] "),
+      itsLogPrefix(logPrefix),
       itsTargetDirectory(targetDirectory),
-      itsFreeQueue(freeQueue),
-      itsReceiveQueue(receiveQueue),
+      itsLTAfeedbackPrefix(LTAfeedbackPrefix),
       itsBlocksWritten(0),
       itsBlocksDropped(0),
       itsNrExpectedBlocks(0),
-      itsNextSequenceNumber(0)
+      itsNextSequenceNumber(0),
+      itsOutputPool(outputPool)
+    {
+    }
+
+
+    template<typename T> void OutputThread<T>::checkForDroppedData(StreamableData *data)
+    {
+      // TODO: check for dropped data at end of observation
+
+      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
+
+      ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
+
+      if (droppedBlocks > 0) {
+        itsBlocksDropped += droppedBlocks;
+
+        LOG_WARN_STR(itsLogPrefix << "Dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+      }
+
+      itsNextSequenceNumber = data->sequenceNumber() + 1;
+      itsBlocksWritten++;
+    }
+
+
+    template<typename T> void OutputThread<T>::doWork()
+    {
+      time_t prevlog = 0;
+
+      for (SmartPtr<T> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
+        try {
+          itsWriter->write(data);
+          checkForDroppedData(data);
+        } catch (SystemCallException &ex) {
+          LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
+        }
+
+        const time_t now = time(0L);
+
+        if (now > prevlog + 5) {
+          // print info every 5 seconds
+          LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
+
+          prevlog = now;
+        } else {
+          // print debug info for the other blocks
+          LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
+        }
+      }
+    }
+
+
+    template<typename T> void OutputThread<T>::cleanUp() const
+    {
+      float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
+
+      LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
+    }
+
+
+    template<typename T> void OutputThread<T>::augment( const FinalMetaData &finalMetaData )
+    {
+      // augment the data product
+      ASSERT(itsWriter.get());
+
+      itsWriter->augment(finalMetaData);
+    }
+
+
+    template<typename T> ParameterSet OutputThread<T>::feedbackLTA() const
+    {
+      ParameterSet result;
+      result.adoptCollection(itsWriter->configuration(), itsLTAfeedbackPrefix);
+
+      return result;
+    }
+
+
+    template<typename T> void OutputThread<T>::process()
+    {
+      LOG_DEBUG_STR(itsLogPrefix << "process() entered");
+
+      createMS();
+      doWork();
+      cleanUp();
+    }
+
+    // Make required instantiations
+    template class OutputThread<StreamableData>;
+    template class OutputThread<TABTranspose::Block>;
+
+
+    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+      :
+      OutputThread<StreamableData>(
+          parset,
+          streamNr,
+          outputPool,
+          logPrefix + "[SubbandOutputThread] ",
+          targetDirectory,
+          formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr))
     {
     }
 
@@ -119,9 +219,13 @@ namespace LOFAR
       ScopedLock sl(casacoreMutex);
       ScopedDelayCancellation dc; // don't cancel casacore calls
 
-      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(CORRELATED_DATA, itsStreamNr) : itsTargetDirectory;
-      std::string fileName = itsParset.getFileName(CORRELATED_DATA, itsStreamNr);
-      std::string path = directoryName + "/" + fileName;
+      const std::string directoryName =
+        itsTargetDirectory == ""
+        ? itsParset.getDirectoryName(CORRELATED_DATA, itsStreamNr)
+        : itsTargetDirectory;
+      const std::string fileName = itsParset.getFileName(CORRELATED_DATA, itsStreamNr);
+
+      const std::string path = directoryName + "/" + fileName;
 
       recursiveMakeDir(directoryName, itsLogPrefix);
       LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
@@ -142,99 +246,16 @@ namespace LOFAR
     }
 
 
-    void SubbandOutputThread::checkForDroppedData(StreamableData *data)
-    {
-      // TODO: check for dropped data at end of observation
-
-      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
-
-      if (droppedBlocks > 0) {
-        itsBlocksDropped += droppedBlocks;
-
-        LOG_WARN_STR(itsLogPrefix << "SubbandOutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
-      }
-
-      itsNextSequenceNumber = data->sequenceNumber() + 1;
-      itsBlocksWritten++;
-    }
-
-
-    void SubbandOutputThread::doWork()
-    {
-      time_t prevlog = 0;
-
-      for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
-        try {
-          itsWriter->write(data);
-          checkForDroppedData(data);
-        } catch (SystemCallException &ex) {
-          LOG_WARN_STR(itsLogPrefix << "SubbandOutputThread caught non-fatal exception: " << ex.what());
-        }
-
-        time_t now = time(0L);
-
-        if (now > prevlog + 5) {
-          // print info every 5 seconds
-          LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-
-          prevlog = now;
-        } else {
-          // print debug info for the other blocks
-          LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-        }
-      }
-    }
-
-
-   void SubbandOutputThread::cleanUp() const
-    {
-      float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-
-      LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
-    }
-
-
-    ParameterSet SubbandOutputThread::feedbackLTA() const
-    {
-      const string prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
-
-      ParameterSet result;
-      result.adoptCollection(itsWriter->configuration(), prefix);
-
-      return result;
-    }
-
-
-    void SubbandOutputThread::augment( const FinalMetaData &finalMetaData )
-    {
-      // augment the data product
-      ASSERT(itsWriter.get());
-
-      itsWriter->augment(finalMetaData);
-    }
-
-
-    void SubbandOutputThread::process()
-    {
-      LOG_DEBUG_STR(itsLogPrefix << "SubbandOutputThread::process() entered");
-
-      createMS();
-      doWork();
-      cleanUp();
-    }
-
-
     TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
       :
-      itsParset(parset),
-      itsStreamNr(streamNr),
-      itsLogPrefix(logPrefix + "[TABOutputThread] "),
-      itsTargetDirectory(targetDirectory),
-      itsOutputPool(outputPool),
-      itsBlocksWritten(0),
-      itsBlocksDropped(0),
-      itsNrExpectedBlocks(0),
-      itsNextSequenceNumber(0)
+      OutputThread<TABTranspose::Block>(
+          parset,
+          streamNr,
+          outputPool,
+          logPrefix + "[TABOutputThread] ",
+          targetDirectory,
+          formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr)
+          )
     {
     }
 
@@ -245,9 +266,13 @@ namespace LOFAR
       ScopedLock sl(casacoreMutex);
       ScopedDelayCancellation dc; // don't cancel casacore calls
 
-      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(BEAM_FORMED_DATA, itsStreamNr) : itsTargetDirectory;
-      std::string fileName = itsParset.getFileName(BEAM_FORMED_DATA, itsStreamNr);
-      std::string path = directoryName + "/" + fileName;
+      const std::string directoryName =
+        itsTargetDirectory == ""
+        ? itsParset.getDirectoryName(BEAM_FORMED_DATA, itsStreamNr)
+        : itsTargetDirectory;
+      const std::string fileName = itsParset.getFileName(BEAM_FORMED_DATA, itsStreamNr);
+
+      const std::string path = directoryName + "/" + fileName;
 
       recursiveMakeDir(directoryName, itsLogPrefix);
       LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
@@ -270,91 +295,6 @@ namespace LOFAR
 
       itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
     }
-
-
-    void TABOutputThread::checkForDroppedData(StreamableData *data)
-    {
-      // TODO: check for dropped data at end of observation
-
-      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
-
-      ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
-
-      if (droppedBlocks > 0) {
-        itsBlocksDropped += droppedBlocks;
-
-        LOG_WARN_STR(itsLogPrefix << "TABOutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
-      }
-
-      itsNextSequenceNumber = data->sequenceNumber() + 1;
-      itsBlocksWritten++;
-    }
-
-
-    void TABOutputThread::doWork()
-    {
-      time_t prevlog = 0;
-
-      for (SmartPtr<TABTranspose::Block> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
-        try {
-          itsWriter->write(data);
-          checkForDroppedData(data);
-        } catch (SystemCallException &ex) {
-          LOG_WARN_STR(itsLogPrefix << "TABOutputThread caught non-fatal exception: " << ex.what());
-        }
-
-        time_t now = time(0L);
-
-        if (now > prevlog + 5) {
-          // print info every 5 seconds
-          LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-
-          prevlog = now;
-        } else {
-          // print debug info for the other blocks
-          LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-        }
-      }
-    }
-
-
-    void TABOutputThread::cleanUp() const
-    {
-      float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
-
-      LOG_INFO_STR(itsLogPrefix << "Finished writing: " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped: " << std::setprecision(3) << dropPercent << "% lost" );
-    }
-
-
-    ParameterSet TABOutputThread::feedbackLTA() const
-    {
-      const string prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
-
-      ParameterSet result;
-      result.adoptCollection(itsWriter->configuration(), prefix);
-
-      return result;
-    }
-
-
-    void TABOutputThread::augment( const FinalMetaData &finalMetaData )
-    {
-      // augment the data product
-      ASSERT(itsWriter.get());
-
-      itsWriter->augment(finalMetaData);
-    }
-
-
-    void TABOutputThread::process()
-    {
-      LOG_DEBUG_STR(itsLogPrefix << "TABOutputThread::process() entered");
-
-      createMS();
-      doWork();
-      cleanUp();
-    }
-
   } // namespace Cobalt
 } // namespace LOFAR
 
