@@ -50,21 +50,21 @@ void Subband::write(Stream &stream) const {
   stream.write(&dim1, sizeof dim1);
   stream.write(&dim2, sizeof dim2);
   stream.write(data.origin(), data.num_elements() * sizeof *data.origin());
-  LOG_DEBUG_STR("Written block");
+  //LOG_DEBUG_STR("Written block");
 }
 
 
 void Subband::read(Stream &stream) {
-  LOG_DEBUG_STR("Reading block id");
+  //LOG_DEBUG_STR("Reading block id");
   stream.read(&id, sizeof id);
-  LOG_DEBUG_STR("Read block id");
+  //LOG_DEBUG_STR("Read block id");
 
   size_t dim1, dim2;
   stream.read(&dim1, sizeof dim1);
   stream.read(&dim2, sizeof dim2);
   data.resize(boost::extents[dim1][dim2]);
   stream.read(data.origin(), data.num_elements() * sizeof *data.origin());
-  LOG_DEBUG_STR("Read block");
+  //LOG_DEBUG_STR("Read block");
 }
 
 
@@ -129,13 +129,14 @@ void BlockCollector::addSubband( const Subband &subband ) {
   if (!have(blockIdx)) {
     if (canDrop) {
       if ((ssize_t)blockIdx <= lastEmitted) {
-	// too late -- discard packet
-	return;
+	      // too late -- discard packet
+        LOG_DEBUG_STR("TABTranspose::BlockCollector: Dropped subband " << subband.id.subband  << " of file " << subband.id.fileIdx);
+	      return;
       }
     } else {
       // if we can't drop, we shouldn't have written
       // this block yet.
-      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for TAB " << subband.id.fileIdx << " subband " << subband.id.subband);
+      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband.id.fileIdx << " subband " << subband.id.subband);
     }
 
     fetch(blockIdx);
@@ -155,6 +156,7 @@ void BlockCollector::addSubband( const Subband &subband ) {
 
     if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {
       // Received last block -- wrap up
+      LOG_INFO_STR("TABTranspose::BlockCollector: Received last block of file " << fileIdx);
 
       ASSERT(blocks.empty());
 
@@ -237,6 +239,7 @@ void BlockCollector::fetch(size_t block) {
   // Annotate
   blocks[block]->fileIdx = fileIdx;
   blocks[block]->block = block;
+  blocks[block]->setSequenceNumber(block);
 }
 
 
@@ -279,9 +282,9 @@ void Receiver::receiveLoop()
 
       const size_t fileIdx = subband.id.fileIdx;
 
-      ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of TAB " << fileIdx << ", which is unknown to me");
+      ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of file " << fileIdx << ", which is unknown to me");
 
-      LOG_DEBUG_STR("TAB " << fileIdx << ": Adding subband " << subband.id.subband);
+      //LOG_DEBUG_STR("File " << fileIdx << ": Adding subband " << subband.id.subband);
 
       collectors.at(fileIdx)->addSubband(subband);
     }
