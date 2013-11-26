@@ -39,7 +39,7 @@ namespace LOFAR
     public:
       InputThread(const Parset &parset,
                   unsigned streamNr,
-                  Pool<Streamabledata> &outputPool,
+                  Pool<StreamableData> &outputPool,
                   const std::string &logPrefix);
 
       virtual void process();
