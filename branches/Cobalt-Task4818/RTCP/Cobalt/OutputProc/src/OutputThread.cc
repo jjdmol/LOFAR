@@ -171,17 +171,26 @@ namespace LOFAR
 
     template<typename T> void OutputThread<T>::augment( const FinalMetaData &finalMetaData )
     {
-      // augment the data product
-      ASSERT(itsWriter.get());
+      try {
+        // augment the data product
+        ASSERT(itsWriter.get());
 
-      itsWriter->augment(finalMetaData);
+        itsWriter->augment(finalMetaData);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data: " << ex);
+      }
     }
 
 
     template<typename T> ParameterSet OutputThread<T>::feedbackLTA() const
     {
       ParameterSet result;
-      result.adoptCollection(itsWriter->configuration(), itsLTAfeedbackPrefix);
+
+      try {
+        result.adoptCollection(itsWriter->configuration(), itsLTAfeedbackPrefix);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not obtain feedback for LTA: " << ex);
+      }
 
       return result;
     }

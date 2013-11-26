@@ -175,18 +175,9 @@ void process(Stream &controlStream, size_t myRank)
     LOG_INFO_STR("Processing final meta data");
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
-      try {
-        subbandWriters[i]->augment(finalMetaData);
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Could not add final meta data: " << ex);
-      }
-
+      subbandWriters[i]->augment(finalMetaData);
     for (size_t i = 0; i < tabWriters.size(); ++i)
-      try {
-        tabWriters[i]->augment(finalMetaData);
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Could not add final meta data: " << ex);
-      }
+      tabWriters[i]->augment(finalMetaData);
 
     /*
      * LTA FEEDBACK
@@ -196,17 +187,9 @@ void process(Stream &controlStream, size_t myRank)
     Parset feedbackLTA;
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
-      try {
-        feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Could not obtain feedback for LTA: " << ex);
-      }
+      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
     for (size_t i = 0; i < tabWriters.size(); ++i)
-      try {
-        feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Could not obtain feedback for LTA: " << ex);
-      }
+      feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
 
     LOG_INFO_STR("Forwarding LTA feedback");
     feedbackLTA.write(&controlStream);
