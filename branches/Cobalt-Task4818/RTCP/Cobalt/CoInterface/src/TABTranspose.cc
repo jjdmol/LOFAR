@@ -174,6 +174,11 @@ void BlockCollector::finish() {
     emitUpTo(maxBlock());
   }
 
+  if (!canDrop) {
+    // Should have received everything
+    ASSERT((ssize_t)nrBlocks == lastEmitted + 1);
+  }
+
   // Signal end-of-stream
   outputPool.filled.append(NULL);
 }

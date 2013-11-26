@@ -127,6 +127,13 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
+        /*
+         * outputPool: the pool to pull/push complete blocks from/to.
+         * fileIdx:    the file index for which we collect blocks.
+         * nrBlocks:   the number of blocks we expect (or 0 if unknown).
+         * maxBlocksInFlight: the maximum number of blocks to process in
+         *                    parallel (or 0 for no limit).
+         */
         BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
 	/*
