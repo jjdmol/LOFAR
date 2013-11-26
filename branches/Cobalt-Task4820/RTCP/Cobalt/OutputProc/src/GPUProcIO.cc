@@ -34,8 +34,8 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/FinalMetaData.h>
-#include "Writer.h"
+#include "SubbandWriter.h"
+#include "OutputThread.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -43,38 +43,6 @@ using namespace std;
 
 namespace LOFAR {
 namespace Cobalt {
-
-void readFinalMetaData( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
-{
-  // Add final meta data (broken tile information, etc)
-  // that is obtained after the end of an observation.
-  LOG_INFO_STR("Waiting for final meta data");
-  FinalMetaData finalMetaData;
-  finalMetaData.read(controlStream);
-
-  LOG_INFO_STR("Processing final meta data");
-  for (size_t i = 0; i < subbandWriters.size(); ++i)
-    try {
-      subbandWriters[i]->augment(finalMetaData);
-    } catch (Exception &ex) {
-      LOG_WARN_STR("Could not add final meta data: " << ex);
-    }
-}
-
-void writeFeedbackLTA( Stream &controlStream, vector< SmartPtr<Writer> > &subbandWriters )
-{
-  LOG_INFO_STR("Retrieving LTA feedback");
-  Parset feedbackLTA;
-  for (size_t i = 0; i < subbandWriters.size(); ++i)
-    try {
-      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
-    } catch (Exception &ex) {
-      LOG_WARN_STR("Could not obtain feedback for LTA: " << ex);
-    }
-
-  LOG_INFO_STR("Forwarding LTA feedback");
-  feedbackLTA.write(&controlStream);
-}
 
 
 void process(Stream &controlStream, size_t myRank)
@@ -88,7 +56,8 @@ void process(Stream &controlStream, size_t myRank)
   {
     // make sure "parset" stays in scope for the lifetime of the SubbandWriters
 
-    vector<SmartPtr<Writer> > subbandWriters;
+    vector<SmartPtr<SubbandWriter> > subbandWriters;
+    vector<SmartPtr<TABOutputThread> > tabWriters;
 
     /*
      * Construct writers
@@ -103,22 +72,45 @@ void process(Stream &controlStream, size_t myRank)
 
         string logPrefix = str(boost::format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
 
-        Writer *writer = new SubbandWriter(parset, fileIdx, logPrefix);
+        SubbandWriter *writer = new SubbandWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
       }
     }
+
+    map<size_t, SmartPtr<Pool<TABTranspose::Block> > > outputPools;
+    TABTranspose::Receiver::CollectorMap collectors;
 
     // Process beam-formed data
     if (parset.settings.beamFormer.enabled) {
       for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
       {
-        if (parset.settings.beamFormer.files[fileIdx].location.host != myHostName) 
+        struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[fileIdx];
+
+        if (file.location.host != myHostName) 
           continue;
+
+        struct ObservationSettings::BeamFormer::StokesSettings &stokes =
+          file.coherent ? parset.settings.beamFormer.coherentSettings
+                        : parset.settings.beamFormer.incoherentSettings;
+
+        outputPools[fileIdx] = new Pool<TABTranspose::Block>;
+
+        // Create and fill an outputPool for this fileIdx
+        for (size_t i = 0; i < 5; ++i) {
+	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
+             parset.settings.nrSubbands(file.sapNr),
+             stokes.nrSamples(parset.settings.blockSize),
+             stokes.nrChannels));
+        }
+
+        // Create a collector for this fileIdx
+        collectors[fileIdx] = new TABTranspose::BlockCollector(
+          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
 
         string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
-        Writer *writer = new TABWriter(parset, fileIdx, logPrefix);
-        subbandWriters.push_back(writer);
+        TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], logPrefix);
+        tabWriters.push_back(writer);
       }
     }
 
@@ -126,21 +118,81 @@ void process(Stream &controlStream, size_t myRank)
      * PROCESS
      */
 
-#   pragma omp parallel for num_threads(subbandWriters.size())
-    for (int i = 0; i < (int)subbandWriters.size(); ++i)
+    FinalMetaData finalMetaData;
+
+    // Set up receiver engine for 2nd transpose
+    TABTranspose::MultiReceiver mr("2nd-transpose-", collectors);
+
+
+#   pragma omp parallel sections num_threads(2)
     {
-      subbandWriters[i]->process();
+      // Done signal from controller, by sending the final meta data
+#     pragma omp section
+      {
+        // Add final meta data (broken tile information, etc)
+        // that is obtained after the end of an observation.
+        LOG_INFO_STR("Waiting for final meta data");
+
+        finalMetaData.read(controlStream);
+
+        if (parset.realTime()) {
+          // Real-time observations: stop now. MultiReceiver::kill
+          // will stop the TABWriters.
+          mr.kill(0);
+        } else {
+          // Non-real-time observations: wait until all data has been
+          // processed. The TABWriters will stop once they received
+          // the last block.
+        }
+
+        // SubbandWriters finish on their own once their InputThread
+        // gets disconnected.
+      }
+
+      // SubbandWriters
+#     pragma omp section
+      {
+#       pragma omp parallel for num_threads(subbandWriters.size())
+        for (int i = 0; i < (int)subbandWriters.size(); ++i)
+          subbandWriters[i]->process();
+      }
+
+      // TABWriters
+#     pragma omp section
+      {
+#       pragma omp parallel for num_threads(subbandWriters.size())
+        for (int i = 0; i < (int)tabWriters.size(); ++i)
+          tabWriters[i]->process();
+      }
     }
 
     /*
      * FINAL META DATA
      */
-    readFinalMetaData(controlStream, subbandWriters);
+
+    // Add final meta data (broken tile information, etc)
+    // that is obtained after the end of an observation.
+    LOG_INFO_STR("Processing final meta data");
+
+    for (size_t i = 0; i < subbandWriters.size(); ++i)
+      subbandWriters[i]->augment(finalMetaData);
+    for (size_t i = 0; i < tabWriters.size(); ++i)
+      tabWriters[i]->augment(finalMetaData);
 
     /*
      * LTA FEEDBACK
      */
-    writeFeedbackLTA(controlStream, subbandWriters);
+
+    LOG_INFO_STR("Retrieving LTA feedback");
+    Parset feedbackLTA;
+
+    for (size_t i = 0; i < subbandWriters.size(); ++i)
+      feedbackLTA.adoptCollection(subbandWriters[i]->feedbackLTA());
+    for (size_t i = 0; i < tabWriters.size(); ++i)
+      feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
+
+    LOG_INFO_STR("Forwarding LTA feedback");
+    feedbackLTA.write(&controlStream);
   }
 }
 

@@ -26,6 +26,7 @@
 #include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/FinalMetaData.h>
@@ -36,67 +37,27 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    class Writer
-    {
-    public:
-      virtual ~Writer();
-
-      virtual void process() = 0;
-
-      virtual void augment(const FinalMetaData &finalMetaData) = 0;
-
-      virtual ParameterSet feedbackLTA() const = 0;
-    };
-    
-
-    class SubbandWriter: public Writer
+    class SubbandWriter
     {
     public:
       SubbandWriter(const Parset &,
                     unsigned streamNr,
                     const std::string &logPrefix);
 
-      virtual void process();
+      void process();
 
-      virtual void augment(const FinalMetaData &finalMetaData);
+      void augment(const FinalMetaData &finalMetaData);
 
-      virtual ParameterSet feedbackLTA() const;
-
-    private:
-      static const unsigned maxReceiveQueueSize = 3;
-
-      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
-
-      InputCorrelated itsInputThread;
-      OutputThread    itsOutputThread;
-    };
-    
-
-    class TABWriter: public Writer
-    {
-    public:
-      TABWriter(const Parset &,
-                    unsigned streamNr,
-                    const std::string &logPrefix);
-
-      virtual void process();
-
-      virtual void augment(const FinalMetaData &finalMetaData);
-
-      virtual ParameterSet feedbackLTA() const;
+      ParameterSet feedbackLTA() const;
 
     private:
       static const unsigned maxReceiveQueueSize = 3;
 
-      Queue<SmartPtr<StreamableData> > itsFreeQueue, itsReceiveQueue;
+      Pool<StreamableData> itsOutputPool;
 
-      InputBeamFormed itsInputThread;
-      OutputThread    itsOutputThread;
+      InputThread itsInputThread;
+      SubbandOutputThread itsOutputThread;
     };
-
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

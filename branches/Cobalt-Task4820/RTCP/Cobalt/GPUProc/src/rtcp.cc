@@ -330,20 +330,16 @@ int main(int argc, char **argv)
   }
 
   SmartPtr<Pipeline> pipeline;
-  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-    outputType = CORRELATED_DATA;
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-    outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
     pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
-    outputType = BEAM_FORMED_DATA;
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
@@ -411,7 +407,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation(outputType);
+        pipeline->processObservation();
       }
     }
   }

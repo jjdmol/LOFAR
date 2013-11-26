@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "Writer.h"
+#include "SubbandWriter.h"
 
 #include <CoInterface/DataFactory.h>
 
@@ -28,18 +28,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Writer::~Writer()
-    {
-    }
-
-
     SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
-      itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
-      itsOutputThread(parset, CORRELATED_DATA, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
+      itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
+      itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsFreeQueue.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
+        itsOutputPool.free.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
     }
 
     
@@ -48,14 +43,10 @@ namespace LOFAR
 #     pragma omp parallel sections num_threads(2)
       {
 #       pragma omp section
-        {
-          itsInputThread.process();
-        }
+        itsInputThread.process();
 
 #       pragma omp section
-        {
-          itsOutputThread.process();
-        }
+        itsOutputThread.process();
       }
     }
 
@@ -70,47 +61,6 @@ namespace LOFAR
     {
       return itsOutputThread.feedbackLTA();
     }
-
-
-    TABWriter::TABWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
-    :
-      itsInputThread(parset, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix),
-      itsOutputThread(parset, BEAM_FORMED_DATA, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix)
-    {
-      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsFreeQueue.append(newStreamableData(parset, BEAM_FORMED_DATA, streamNr));
-    }
-
-    
-    void TABWriter::process()
-    {
-#     pragma omp parallel sections num_threads(2)
-      {
-#       pragma omp section
-        {
-          itsInputThread.process();
-        }
-
-#       pragma omp section
-        {
-          itsOutputThread.process();
-        }
-      }
-    }
-
-
-    void TABWriter::augment( const FinalMetaData &finalMetaData )
-    {
-      itsOutputThread.augment(finalMetaData);
-    }
-
-
-    ParameterSet TABWriter::feedbackLTA() const
-    {
-      return itsOutputThread.feedbackLTA();
-    }
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

@@ -26,11 +26,10 @@
 #include <string>
 #include <vector>
 
-#include <Common/Thread/Queue.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
+#include <CoInterface/TABTranspose.h>
 #include <CoInterface/FinalMetaData.h>
 #include "MSWriter.h"
 
@@ -38,39 +37,56 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-
-    class OutputThread
+    template<typename T> class OutputThread
     {
     public:
-      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, const std::string &targetDirectory = "");
+      OutputThread(const Parset &, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix);
 
       void           process();
 
       // needed in createHeaders.cc
-      void           createMS();
+      virtual void   createMS() = 0;
       void           cleanUp() const;
 
       void           augment(const FinalMetaData &finalMetaData);
 
       ParameterSet feedbackLTA() const;
 
-    private:
-      void                             checkForDroppedData(StreamableData *);
-      void                             doWork();
+    protected:
+      void checkForDroppedData(StreamableData *);
+      void doWork();
 
-      const Parset                     &itsParset;
-      const OutputType itsOutputType;
+      const Parset &itsParset;
       const unsigned itsStreamNr;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
+      const std::string itsLTAfeedbackPrefix;
 
-      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+      size_t itsBlocksWritten, itsBlocksDropped;
+      size_t itsNrExpectedBlocks;
+      size_t itsNextSequenceNumber;
 
-      unsigned itsBlocksWritten, itsBlocksDropped;
-      unsigned itsNrExpectedBlocks;
-      unsigned itsNextSequenceNumber;
-      SmartPtr<MSWriter>               itsWriter;
+      Pool<T> &itsOutputPool;
+
+      SmartPtr<MSWriter> itsWriter;
+    };
+
+
+    class SubbandOutputThread: public OutputThread<StreamableData>
+    {
+    public:
+      SubbandOutputThread(const Parset &, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+
+      void           createMS();
+    };
+
+
+    class TABOutputThread: public OutputThread<TABTranspose::Block>
+    {
+    public:
+      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+
+      void           createMS();
     };
 
 

@@ -3,7 +3,7 @@
 include(LofarCTest)
 
 if(UNITTEST++_FOUND)
-  lofar_add_test(tWriter tWriter.cc)
+  lofar_add_test(tSubbandWriter tSubbandWriter.cc)
 endif()
 
 lofar_add_test(tMeasurementSetFormat tMeasurementSetFormat.cc)
