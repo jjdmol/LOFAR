@@ -616,7 +616,7 @@ namespace LOFAR
     double Parset::maxDelayDistance() const {
       // Available in each parset through included StationCalibration.parset.
       const vector<double> refPhaseCenter =
-          getDoubleVector("Observation.referencePhaseCenter", true);
+          settings.delayCompensation.referencePhaseCenter;
 
       double maxDelayDistance = 0.0;
 

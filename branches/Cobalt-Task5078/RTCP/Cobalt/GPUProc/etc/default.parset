@@ -29,7 +29,7 @@ Observation.antennaSet=HBA_DUAL
 # sensitivity spectrum of station [LBA_10_70, LBA_30_70, LBA_10_90, LBA_30_90, HBA_110_190, HBA_170_230, HBA_210_250]
 Observation.bandFilter=HBA_110_190
 
-# Retrieved from station_configuration.parset
+# Retrieved from StationCalibration.parset
 #PIC.Core.CS001.clockCorrectionTime=0.0
 #PIC.Core.CS001.phaseCenter=[0.0, 0.0, 0.0]
 #PIC.Core.CS001.LBA_INNER.LBA_30_90.phaseCorrection.X=0.0
@@ -64,7 +64,7 @@ Cobalt.correctClocks=true
 Cobalt.delayCompensation=true
 
 # geometric center of LOFAR
-#Observation.referencePhaseCenter=[0.0, 0.0, 0.0] # Read from station_configuration.parset ze
+#Observation.referencePhaseCenter=[0.0, 0.0, 0.0] # Read from StationCalibration.parset
 
 # ===============================
 # Cobalt hardware configuration

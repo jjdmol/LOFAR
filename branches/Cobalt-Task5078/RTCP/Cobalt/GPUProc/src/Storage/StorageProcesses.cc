@@ -109,6 +109,7 @@ namespace LOFAR
 
       Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
+      LOG_DEBUG("forwardFinalMetaData(): cancelling FinalMetaDataThread");
       thread.cancel(deadline_ts);
     }
 
@@ -127,13 +128,16 @@ namespace LOFAR
         // No username given -- use $USER
         const char *USER = getenv("USER");
 
-        ASSERTSTR(USER, "$USER not set.");
-
-        userName = USER;
+        if (USER)
+          userName = USER;
+        else {
+          LOG_WARN("[FinalMetaData] no userName given in parset and $USER not set. Using 'lofarsys'.");
+          userName = "lofarsys";
+        }
       }
 
       if (pubKey == "" && privKey == "") {
-        // No SSH keys given -- try to discover them
+        LOG_DEBUG(itsLogPrefix + "[FinalMetaData] no SSH keys given. Try to discover them...");
 
         char discover_pubkey[1024];
         char discover_privkey[1024];

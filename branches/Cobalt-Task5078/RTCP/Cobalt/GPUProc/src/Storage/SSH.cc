@@ -535,8 +535,11 @@ namespace LOFAR
         try {
           sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
         } catch (LOFAR::Exception& lfe) { // SystemCallException (or TimeoutException, but deadline=0)
-          LOG_INFO_STR( itsLogPrefix << "Connection failed; waiting " << RETRY_USECS << " usec to retry");
+          LOG_INFO_STR( itsLogPrefix << "Connection failed. Waiting " <<
+                        RETRY_USECS << " usec to retry. Error message: " <<
+                        lfe.what() );
           ::usleep(RETRY_USECS);
+          continue;
         }
         LOG_DEBUG_STR( itsLogPrefix << "Connected; opening session" );
 
