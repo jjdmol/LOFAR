@@ -426,6 +426,15 @@ namespace LOFAR
         // per part/stokes.
         std::vector<struct File> files;
 
+        // Number of channels per subband for delay compensation.
+        // Equal to the size of the first FFT. Power of two.
+        unsigned nrDelayCompensationChannels;
+
+        // Number of channels per subband for bandpass correction, narrow band
+        // flagging, beamforming, and coherent dedispersion.
+        // Power of two and at least nrDelayCompensationChannels.
+        unsigned nrHighResolutionChannels;
+
         struct TAB {
           // The direction in wich the TAB points, relative
           // to the SAP's coordinates
@@ -553,7 +562,7 @@ namespace LOFAR
 
       // List of host names to start outputProc on
       std::vector<std::string> outputProcHosts;
-    };
+    }; // struct ObservationSettings
 
 
     // The Parset class is a public struct that can be used as base-class
@@ -705,6 +714,12 @@ namespace LOFAR
       std::vector<double>         centroidPos(const string &stations) const;
 
       struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
+
+      double                      distanceVec3(const std::vector<double>& pos,
+                                      const std::vector<double>& ref) const;
+      double                      maxDelayDistance() const;
+      double                      maxObservationFrequency() const;
+      unsigned                    nrDelayCompensationChannels() const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.
