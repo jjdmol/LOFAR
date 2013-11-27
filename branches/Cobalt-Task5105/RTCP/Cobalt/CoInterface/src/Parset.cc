@@ -408,10 +408,10 @@ namespace LOFAR
 
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
-        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
 
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));

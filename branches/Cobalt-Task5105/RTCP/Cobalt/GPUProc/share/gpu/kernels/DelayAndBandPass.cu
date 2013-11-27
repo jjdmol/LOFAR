@@ -84,7 +84,7 @@ typedef  char_complex  (* InputDataType)[NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR
 typedef  fcomplex (* InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS];
 #endif
 typedef  const double (* DelaysType)[NR_SAPS][NR_STATIONS][NR_POLARIZATIONS]; // 2 Polarizations; in seconds
-typedef  const double2 (* PhaseOffsetsType)[NR_STATIONS]; // 2 Polarizations; in radians
+typedef  const double2 (* Phase0sType)[NR_STATIONS]; // 2 Polarizations; in radians
 typedef  const float (* BandPassFactorsType)[NR_CHANNELS];
 
 inline __device__ fcomplex sincos_f2f(float phi)
@@ -130,8 +130,8 @@ inline __device__ fcomplex sincos_d2f(double phi)
  *                                 a 2D array [beam][station] of float2 (real:
  *                                 2 polarizations), containing delays in
  *                                 seconds after end of integration period
- * @param[in]  phaseOffsetsPtr     pointer to phase offset data of
- *                                 ::PhaseOffsetsType, a 1D array [station] of
+ * @param[in]  phase0sPt     r     pointer to phase offset data of
+ *                                 ::Phase0sType, a 1D array [station] of
  *                                 float2 (real: 2 polarizations), containing
  *                                 phase offsets in radians
  * @param[in]  bandPassFactorsPtr  pointer to bandpass correction data of
@@ -146,7 +146,7 @@ extern "C" {
                                                 unsigned beam,
                                                 const double * delaysAtBeginPtr,
                                                 const double * delaysAfterEndPtr,
-                                                const double * phaseOffsetsPtr,
+                                                const double * phase0sPtr,
                                                 const float * bandPassFactorsPtr)
 {
   OutputDataType outputData = (OutputDataType) correctedDataPtr;
@@ -174,7 +174,7 @@ extern "C" {
 #if defined DELAY_COMPENSATION
   DelaysType delaysAtBegin  = (DelaysType) delaysAtBeginPtr;
   DelaysType delaysAfterEnd = (DelaysType) delaysAfterEndPtr;
-  PhaseOffsetsType phaseOffsets = (PhaseOffsetsType) phaseOffsetsPtr;
+  Phase0sType phase0s = (Phase0sType) phase0sPtr;
 
   /*
    * Delay compensation means rotating the phase of each sample BACK.
@@ -202,7 +202,7 @@ extern "C" {
    *                           O(100)           O(0.1)            O(0.01)          O(0.001)
    *
    * Finally, we also want to correct for fixed phase offsets per station,
-   * as given by the phaseOffsets array.
+   * as given by the phase0 array.
    */
 
   const double frequency = NR_CHANNELS == 1
@@ -215,8 +215,8 @@ extern "C" {
   // Calculate the angles to rotate for for the first and (beyond the) last sample.
   //
   // We need to undo the delay, so we rotate BACK, resulting in a negative constant factor.
-  const double2 phiAtBegin  = -2.0 * M_PI * frequency * delayAtBegin  + (*phaseOffsets)[station];
-  const double2 phiAfterEnd = -2.0 * M_PI * frequency * delayAfterEnd + (*phaseOffsets)[station];
+  const double2 phiAtBegin  = -2.0 * M_PI * frequency * delayAtBegin  - (*phase0s)[station];
+  const double2 phiAfterEnd = -2.0 * M_PI * frequency * delayAfterEnd - (*phase0s)[station];
 #endif
 
   for (unsigned time = timeStart; time < NR_SAMPLES_PER_CHANNEL; time += timeInc)

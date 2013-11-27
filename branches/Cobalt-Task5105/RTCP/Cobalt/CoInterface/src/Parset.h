@@ -184,21 +184,21 @@ namespace LOFAR
 
         // The phase correction for this station, in radians.
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.Y
         struct {
           double x;
           double y;
-        } phaseCorrection;
+        } phase0;
 
         // The delay correction for this station, in seconds
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.Y
         struct {
           double x;
           double y;
-        } delayCorrection;
+        } delay;
 
 
         // The RSP board to which each subband is mapped

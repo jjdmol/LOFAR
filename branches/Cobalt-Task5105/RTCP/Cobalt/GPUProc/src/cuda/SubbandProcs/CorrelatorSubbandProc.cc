@@ -62,7 +62,7 @@ namespace LOFAR
       devInput(std::max(ps.nrChannelsPerSubband() == 1 ? 0UL : factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
                         factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
                factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::DELAYS),
-               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS),
+               factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS),
                context),
       devFilteredData(context,
                       std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
@@ -82,7 +82,7 @@ namespace LOFAR
       delayAndBandPassBuffers(devFilteredData,
                               devInput.inputSamples,
                               devInput.delaysAtBegin, devInput.delaysAfterEnd,
-                              devInput.phaseOffsets,
+                              devInput.phase0s,
                               devBandPassCorrectionWeights),
       delayAndBandPassKernel(factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
 
@@ -299,7 +299,7 @@ namespace LOFAR
         {
           queue.writeBuffer(devInput.delaysAtBegin,  input.delaysAtBegin,  false);
           queue.writeBuffer(devInput.delaysAfterEnd, input.delaysAfterEnd, false);
-          queue.writeBuffer(devInput.phaseOffsets,   input.phaseOffsets,   false);
+          queue.writeBuffer(devInput.phase0s,        input.phase0s,   false);
 
           prevSAP = SAP;
           prevBlock = block;
