@@ -364,7 +364,7 @@ namespace LOFAR
     }
 
 
-    void CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
+    bool CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
     {
       CorrelatedDataHostBuffer &output = dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
@@ -383,6 +383,7 @@ namespace LOFAR
           Flagger::applyWeights<uint8_t>(ps, output);  
           break;
       }
+      return true;
     }
 
   }

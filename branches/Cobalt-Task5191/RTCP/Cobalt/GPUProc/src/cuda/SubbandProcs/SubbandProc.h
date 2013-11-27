@@ -200,8 +200,11 @@ namespace LOFAR
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
 
-      // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output) = 0;
+      // Do post processing on the CPU.
+      // \return Whether output must be sent to the output processor or
+      // not. This feature is needed to do long-time integration (longer than
+      // the maximum block size that can be processed on a GPU).
+      virtual bool postprocessSubband(StreamableData &output) = 0;
 
     protected:
       const Parset &ps;

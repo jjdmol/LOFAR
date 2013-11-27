@@ -97,7 +97,7 @@ namespace LOFAR
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(StreamableData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.

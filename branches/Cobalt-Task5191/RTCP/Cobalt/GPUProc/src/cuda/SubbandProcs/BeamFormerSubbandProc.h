@@ -76,7 +76,7 @@ namespace LOFAR
                                   StreamableData &output);
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(StreamableData &output);
 
       // first FFT
       static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
