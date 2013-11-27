@@ -59,5 +59,3 @@ endif()
 if(USE_OPENCL)
   add_subdirectory(opencl)
 endif()
-
-lofar_add_test(t_Parset t_Parset)
