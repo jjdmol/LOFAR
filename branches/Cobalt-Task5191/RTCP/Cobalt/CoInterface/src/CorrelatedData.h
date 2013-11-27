@@ -37,13 +37,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class CorrelatedData : public StreamableData, public IntegratableData
+    class CorrelatedData : public StreamableData
     {
     public:
       CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, Allocator & = heapAllocator, unsigned alignment = 1);
       CorrelatedData(unsigned nrStations, unsigned nrChannels, unsigned maxNrValidSamples, std::complex<float> *visibilities, size_t nrVisibilities, Allocator & = heapAllocator, unsigned alignment = 1);
 
-      virtual IntegratableData &operator += (const IntegratableData &);
+      CorrelatedData &operator += (const CorrelatedData &);
 
       // Fast access to weights; T = uint32_t, uint16_t, or uint8_t,
       // based on itsNrBytesPerNrValidSamples.
@@ -231,10 +231,8 @@ namespace LOFAR
     }
 
 
-    inline IntegratableData &CorrelatedData::operator += (const IntegratableData &other_)
+    inline CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
     {
-      const CorrelatedData &other = static_cast<const CorrelatedData &>(other_);
-
       // add visibilities
       {
         fcomplex       *dst = visibilities.origin();
