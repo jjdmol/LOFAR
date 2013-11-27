@@ -1,9 +1,8 @@
 [license]
-#hw         = "RS508C 01374926509"
-code        = "RS508C 10132204766"
-version     = 30800002
-sn          = "471_3031_2_Astron_Gen_II_1_38/49"
-date        = 2011.07.27;15:22:14,000 
+code        = "RS508C 40176354581"
+version     = 31100002
+sn          = "471_3031_2_Astron_Gen_II_2_311/11"
+date        = 2013.11.01;11:04:00,000 
 comment     = "Remote Station RS508"
 expire      = 0000.00.00;00:00:00,000 
 redundancy  = 0
@@ -26,5 +25,5 @@ uifix       = 0
 parafix     = 0
 pararemote  = 0
 ctrlext     = 1
-update      = 1
+update      = 0
 

@@ -98,11 +98,17 @@ mpirun.sh
 The Cobalt software is started by calling the `rtcp' executable with the parset.
 If MPI is to be used:
 
-   mpirun.sh -H `mpi_node_list -n $PARSET` rtcp $PARSET
+   mpirun.sh -x LOFARROOT=$LOFARROOT -H `mpi_node_list -n $PARSET` \
+             `which rtcp` $PARSET
 
-The mpi_node_list utility extracts the list of hosts that rtcp should run
-on. More specifically, it extracts the Cobalt.Hardware.Node[x].host keys and
-joins them with commas.
+Note that:
+
+  * The mpi_node_list utility extracts the list of hosts that rtcp should run
+    on. More specifically, it extracts the Cobalt.Hardware.Node[x].host keys and
+    joins them with commas.
+  * LOFARROOT is propagated, to make sure that rtcp can find the installation.
+  * `which rtcp` expands "rtcp" into its full path, preventing the $PATH in the
+    login shell from redirecting to a different executable.
 
 If MPI is not to be used:
 

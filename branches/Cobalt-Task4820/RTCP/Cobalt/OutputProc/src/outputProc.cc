@@ -46,6 +46,7 @@ LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
 
   process(controlStream, myRank);
 
-  LOG_INFO_STR("Program end");
+  LOG_INFO("Program end");
 
   return 0;
 }

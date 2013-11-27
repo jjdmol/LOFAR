@@ -27,6 +27,8 @@
 #include <vector>
 #include <boost/format.hpp>
 
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
@@ -40,14 +42,21 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
 
 namespace LOFAR {
 namespace Cobalt {
 
-
 void process(Stream &controlStream, size_t myRank)
 {
   Parset parset(&controlStream);
+
+  // Send identification string to the MAC Log Processor
+  LOG_INFO_STR("MACProcessScope: " << 
+               str(format(createPropertySetName(
+                            PSN_COBALT_OUTPUT_PROC, "", 
+                            parset.getString("_DPname")))
+                   % myRank));
 
   const vector<string> &hostnames = parset.settings.outputProcHosts;
   ASSERT(myRank < hostnames.size());
@@ -70,7 +79,7 @@ void process(Stream &controlStream, size_t myRank)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        string logPrefix = str(boost::format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
+        string logPrefix = str(format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
@@ -107,7 +116,7 @@ void process(Stream &controlStream, size_t myRank)
         collectors[fileIdx] = new TABTranspose::BlockCollector(
           *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
 
-        string logPrefix = str(boost::format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
+        string logPrefix = str(format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], logPrefix);
         tabWriters.push_back(writer);

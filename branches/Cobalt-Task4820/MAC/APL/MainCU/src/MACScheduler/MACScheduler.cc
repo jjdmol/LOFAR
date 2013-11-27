@@ -476,7 +476,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_QUITED: {
 		// The observationController is going down.
 		CONTROLQuitedEvent quitedEvent(event);
-		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
+		LOG_INFO_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
 
 		// update SAS database.
 		CMiter	theObs(itsControllerMap.find(quitedEvent.cntlrName));
@@ -495,7 +495,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 
 		// update our administration
-		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
+		LOG_INFO_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
 		itsControllerMap.erase(quitedEvent.cntlrName);
 		break;
 	}

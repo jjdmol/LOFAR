@@ -102,6 +102,28 @@ fi
 
 
 function set_psetinfo() {
+  if [ "$PARTITION" == "LOFARTEST" ]
+  then
+    PSETS="10.170.1.1,10.170.1.33"
+    FIRSTPSET="10.170.1.1"
+
+    return
+  fi
+  if [ "$PARTITION" == "R01-M0-N00-J00-16" ]
+  then
+    PSETS="10.170.1.1"
+    FIRSTPSET="10.170.1.1"
+
+    return
+  fi
+  if [ "$PARTITION" == "R01-M0-N00-32" ]
+  then
+    PSETS="10.170.1.1,10.170.1.2"
+    FIRSTPSET="10.170.1.1"
+
+    return
+  fi
+
   # list both the partition directly (small partitions) and recursively (large partitions) to get all -32 subpartitions
   # bghierarchy needs a valid stdin for some reason and will read from it, so provide a fake one
   if [ "$PARTITION" == "R00R01" ]

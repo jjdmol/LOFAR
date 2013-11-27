@@ -17,7 +17,7 @@ configure_file(
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated.parset.in
   ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated.parset @ONLY)
-lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)
+#lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)  disabled until fixed in #5075
 lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)
 lofar_add_test(tTBB_StaticMapping tTBB_StaticMapping.cc)

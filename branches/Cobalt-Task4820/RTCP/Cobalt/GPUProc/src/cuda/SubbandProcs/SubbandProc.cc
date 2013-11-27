@@ -33,6 +33,7 @@ namespace LOFAR
     SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
       ps(ps),
+      nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
       queue(gpu::Stream(context))
     {
       // put enough objects in the inputPool to operate
@@ -58,6 +59,20 @@ namespace LOFAR
     void SubbandProc::addTimer(const std::string &name)
     {
       timers[name] = new NSTimer(name, false, false);
+    }
+
+
+    size_t SubbandProc::nrOutputElements() const
+    {
+      /*
+       * Output elements can get stuck in:
+       *   Best-effort queue:       3 elements
+       *   In flight to outputProc: 1 element
+       *
+       * which means we'll need at least 5 elements
+       * in the pool to get a smooth operation.
+       */
+      return 5 * nrSubbandsPerSubbandProc;
     }
 
 
@@ -124,11 +139,9 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
-    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline())
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),nextPowerOfTwo())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
-      // Assure that the nrChannels is more then zero: never ending loop 
-      ASSERT(n != 0);
       ASSERT(powerOfTwo(n));
 
       unsigned log;

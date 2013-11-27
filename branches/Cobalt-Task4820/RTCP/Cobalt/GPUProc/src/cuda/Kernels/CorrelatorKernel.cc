@@ -85,7 +85,7 @@ namespace LOFAR
       unsigned nrBaselines = params.nrStations * (params.nrStations + 1) / 2;
 
 # if defined USE_4X4
-      unsigned quartStations = (params.nrStations + 2) / 4;
+      unsigned quartStations = (params.nrStations + 3) / 4;
       unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
 # elif defined USE_3X3
       unsigned thirdStations = (params.nrStations + 2) / 3;

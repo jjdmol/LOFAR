@@ -232,6 +232,7 @@ void LofarStMan::openFiles (bool writable)
   if (int64(itsBuffer.size()) < itsBLDataSize) {
     itsBuffer.resize (itsBLDataSize);
   }
+  itsSpec.define ("useSeqnrFile", itsSeqFile!=0);
 }
 
 void LofarStMan::mapSeqFile()
@@ -245,7 +246,9 @@ void LofarStMan::mapSeqFile()
     itsSeqFile = 0;
   }
   // Check the size of the sequencenumber file, close file if it doesn't match.
-  if (itsSeqFile && (itsSeqFile->getFileSize() / sizeof(uInt) == itsNrRows)) {
+  // It should contain the nr of time slots.
+  if (itsSeqFile && (itsSeqFile->getFileSize() !=
+		     Int64(itsNrRows / itsAnt1.size() * sizeof(uInt)))) {
     delete itsSeqFile;
     itsSeqFile = 0;
   }
@@ -316,59 +319,34 @@ void LofarStMan::init()
   // Set start time to middle of first time slot.
   itsStartTime += itsTimeIntv*0.5;
   AlwaysAssert (itsAnt1.size() == itsAnt2.size(), AipsError);
-  uInt nrant = itsAnt1.size();
+  uInt nrbl = itsAnt1.size();
   itsDoSwap  = (asBigEndian != HostInfo::bigEndian());
-  // A block contains an Int seqnr, Complex data per baseline,chan,pol and
-  // uShort nsample per baseline,chan. Align it as needed.
+  // A block contains a possibly uInt magic value, uInt seqnr, Complex data per
+  // baseline,chan,pol and nsample per baseline,chan. Align it as needed.
   itsBLDataSize = itsNChan * itsNPol * 8;    // #bytes/baseline
   if (alignment <= 1) {
-    itsDataStart = 4;
-    itsSampStart = itsDataStart + nrant*itsBLDataSize;
-    switch (itsVersion) {
-    case 1:
-    case 2:
-    case 3:
-      itsBlockSize = itsSampStart + nrant*itsNChan*2;
-      break;
-    default:
-      throw DataManError("LofarStMan can only handle up to version 3");
-    }
+    itsDataStart = itsVersion==1 ? 4:8;
+    itsSampStart = itsDataStart + nrbl*itsBLDataSize;
+    itsBlockSize = itsSampStart + nrbl*itsNChan*itsNrBytesPerNrValidSamples;
   } else {
     itsDataStart = alignment;
-    itsSampStart = itsDataStart + (nrant*itsBLDataSize + alignment-1)
+    itsSampStart = itsDataStart + (nrbl*itsBLDataSize + alignment-1)
       / alignment * alignment;
-    switch (itsVersion) {
-    case 1:
-    case 2:
-    case 3:
-      itsBlockSize = itsSampStart + (nrant*itsNChan*2 + alignment-1)
-	/ alignment * alignment;
-      break;
-    default:
-      throw DataManError("LofarStMan can only handle up to version 3");
-    }
+    itsBlockSize = itsSampStart + (nrbl*itsNChan*itsNrBytesPerNrValidSamples +
+                                   alignment-1) / alignment * alignment;
   }
   if (itsDoSwap) {
-    switch (itsVersion) {
+    switch (itsNrBytesPerNrValidSamples) {
     case 1:
-      itsNSampleBuf2.resize(itsNChan * 2);
       break;
     case 2:
-    case 3:
-    {
-      switch (itsNrBytesPerNrValidSamples) {
-      case 1:
-	break;
-      case 2:
-	itsNSampleBuf2.resize (itsNChan * 2);
-	break;
-      case 4:
-	itsNSampleBuf4.resize (itsNChan * 2);
-	break;
-      }
-    } break;
+      itsNSampleBuf2.resize (itsNChan * 2);
+      break;
+    case 4:
+      itsNSampleBuf4.resize (itsNChan * 2);
+      break;
     default:
-      throw;
+      throw DataManError ("LofarStMan invalid nrbytesPerNrValidSamples");
     }
   }
   // Fill the specification record (only used for reporting purposes).
@@ -377,6 +355,9 @@ void LofarStMan::init()
   itsSpec.define ("bigEndian", asBigEndian);
   itsSpec.define ("maxNrSample", itsMaxNrSample);
   itsSpec.define ("nrBytesPerNrValidSamples", itsNrBytesPerNrValidSamples);
+  itsSpec.define ("startTime", itsStartTime);
+  itsSpec.define ("timeInterval", itsTimeIntv);
+  itsSpec.define ("nbaseline", Int(itsAnt1.size()));
 }
 
 Double LofarStMan::time (uInt blocknr)
@@ -386,7 +367,21 @@ Double LofarStMan::time (uInt blocknr)
   if (itsSeqFile) {
     ptr = itsSeqFile->getReadPointer(blocknr * sizeof(uInt));
   } else {
-    ptr = getReadPointer (blocknr, 0, sizeof(Int));
+    ptr = getReadPointer (blocknr, 0, sizeof(uInt));
+    // Version 2 and later have a magic value before the seqnr.
+    if (itsVersion >= 2) {
+      if (itsDoSwap) {
+	CanonicalConversion::reverse4 (&seqnr, ptr);
+      } else {
+	seqnr = *static_cast<const uInt*>(ptr);
+      }
+      if (seqnr != 0x00000da7a) {
+	throw DataManError ("Magic number mismatch in block " +
+			    String::toString(blocknr) +
+			    " of LofarStMan data file " + itsRegFile->fileName());
+      }
+      ptr = getReadPointer (blocknr, sizeof(uInt), sizeof(uInt));
+    }
   }
   if (itsDoSwap) {
     CanonicalConversion::reverse4 (&seqnr, ptr);

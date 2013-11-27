@@ -76,7 +76,7 @@ static char stderrbuf[STDLOG_BUFFER_SIZE];
 
 LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
 
-static bool sigint_seen;
+static volatile bool sigint_seen;
 
 static void termSigsHandler(int sig_nr)
 {

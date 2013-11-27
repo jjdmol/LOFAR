@@ -89,7 +89,6 @@ public:
     CalSession(const string &key, const string &db, const string &user,
         const string &password = "", const string &host = "localhost",
         const string &port = "");
-    ~CalSession();
 
     ProcessId getProcessId() const;
 
@@ -294,6 +293,7 @@ private:
     mutable vector<size_t>          itsSlotCount;
     mutable map<ProcessId, size_t>  itsRegisterMap;
     mutable vector<Worker>          itsRegister;
+    mutable bool                    itsRegisterDirty;
 
     // Triggers that have been registered with the database.
     // \note Triggers cannot be copied, so we must use a shared pointer.

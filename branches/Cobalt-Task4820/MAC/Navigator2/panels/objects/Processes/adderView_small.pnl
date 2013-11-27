@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 156 103 N "_3DFace" 1
+PANEL,-1 -1 382 103 N "_3DFace" 1
 "$observation"
 "main()
 {
@@ -9,8 +9,30 @@ PANEL,-1 -1 156 103 N "_3DFace" 1
     // we just need to make clear the type of this baseDP to get the right panel.
   // The panel itself will sort out the list of adders belonging to it
   baseDP =CEPDBName+\"LOFAR_ObsSW_OSIONode00_Adder0\";
-  delay(5);
-  reload();
+  obsDP=MainDBName+claimManager_nameToRealName(\"LOFAR_ObsSW_\"+observation);
+
+  if (navFunct_dpReachable(obsDP)){
+    if (dpConnect(\"obsRunning\", obsDP+\".runState:_online.._value\",
+                                obsDP+\".runState:_online.._invalid\")) {
+      setValue(\"adderObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+    }
+  } else {
+    setValue(\"adderObject\", \"backCol\", \"Lofar_dpOffline\");
+  }
+}
+
+private void obsRunning(string dp1,string running,
+                        string dp2,bool invalid) {
+
+  if (!invalid) {
+    if (strpos(running,\"Running\")>=0) {
+      reload();
+    } else {
+      setValue(\"adderObject\", \"backCol\", \"Lofar_off\");
+    }
+  } else {
+    setValue(\"adderObject\", \"backCol\", \"Lofar_dpOffline\");
+  }       
 }
   
 private void reload() {
@@ -86,6 +108,7 @@ void adderCB(dyn_string dps, dyn_bool values)
 ""0  1
 E "#uses \"navPanel.ctl\"
 string baseDP= \"\";
+string obsDP;
 string observation;
 dyn_string connectTo;
 dyn_string adders;

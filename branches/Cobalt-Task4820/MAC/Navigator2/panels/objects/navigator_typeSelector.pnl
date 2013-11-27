@@ -1,7 +1,7 @@
-V 10
+V 11
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 260 496 N "_3DFace" 2
+PANEL,-1 -1 352 496 N "_3DFace" 2
 "$name"
 "$selection"
 "main()
@@ -394,15 +394,11 @@ LANG:1 8 hardware
 2
 "allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
- 10 30 212 378
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  10 30 289 429
 10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
+3
 0 "clicked" "(string id, int column)"
 "  click(typeSelector.text+\"|\"+hardwareTree.getText(hardwareTree.selectedItem(),0));"
 0 "doubleClicked" "(string id, int column)"
@@ -421,8 +417,6 @@ LANG:1 8 hardware
   dblClick(typeSelector.text+\"|\"+hardwareTree.selectedItem());"
 0 "rightClicked" "(string id, int column)"
 "  rClick(typeSelector.text+\"|\"+hardwareTree.getText(hardwareTree.selectedItem(),0));"
-0 "itemRenamed" "(string id, int column, string text)"
-""
 "main()
 {
   hardwareTree.addColumn(\"Hardware\");
@@ -442,27 +436,50 @@ LANG:1 9 processes
 
 1
 "allColumnsShowFocus" "bool FALSE"
- 10 30 212 378
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  10 30 289 429
 10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
+3
 0 "clicked" "(string id, int column)"
 "  click(typeSelector.text+\"|\"+processesTree.getText(processesTree.selectedItem(),0));"
 0 "doubleClicked" "(string id, int column)"
 "  dblClick(typeSelector.text+\"|\"+processesTree.selectedItem());"
 0 "rightClicked" "(string id, int column)"
 "  rClick(typeSelector.text+\"|\"+processesTree.getText(processesTree.selectedItem(),0));"
-0 "itemRenamed" "(string id, int column, string text)"
-""
 "main()
 {
   processesTree.addColumn(\"Processes\");
   processesTree.setColumnWidth(0,201);
+}" 0
+29 11
+"observationsTree"
+""
+1 23.93034825870647 87.63688760806916 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 9 processes
+
+1
+"allColumnsShowFocus" "bool FALSE"
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0  10 30 289 429
+10 TreeWidget
+3
+0 "clicked" "(string id, int column)"
+"  click(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.getText(observationsTree.selectedItem(),0));"
+0 "doubleClicked" "(string id, int column)"
+"  dblClick(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.selectedItem(),0);"
+0 "rightClicked" "(string id, int column)"
+"  rClick(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.getText(observationsTree.selectedItem(),0));"
+"main()
+{
+  observationsTree.addColumn(\"Observations\");
+  observationsTree.setColumnWidth(0,201);
 }" 0
 22 5
 "typeSelector"
@@ -477,9 +494,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-0 ""
- 8 5 156 32
+LANG:1 26 Arial,-1,13,5,40,0,0,0,0,0
+0  8 5 156 32
 3
 1
 LANG:1 12 Observations
@@ -505,41 +521,6 @@ E
 
 E
  0 0
-29 11
-"observationsTree"
-""
-1 20 80 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-16 0 0 0 0 0
-E E E
-0
-1
-LANG:1 9 processes
-
-1
-"allColumnsShowFocus" "bool FALSE"
- 10 30 212 378
-10 TreeWidget
-7
-0 "expanded" "(string id)"
-""
-0 "collapsed" "(string id)"
-""
-0 "selectionChanged" "(string id)"
-""
-0 "clicked" "(string id, int column)"
-"  click(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.getText(observationsTree.selectedItem(),0));"
-0 "doubleClicked" "(string id, int column)"
-"  dblClick(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.selectedItem(),0);"
-0 "rightClicked" "(string id, int column)"
-"  rClick(typeSelector.text+\"|\"+observationsTree.parent(observationsTree.selectedItem())+\"|\"+observationsTree.getText(observationsTree.selectedItem(),0));"
-0 "itemRenamed" "(string id, int column, string text)"
-""
-"main()
-{
-  observationsTree.addColumn(\"Observations\");
-  observationsTree.setColumnWidth(0,201);
-}" 0
 0
 LAYER, 1 
 1

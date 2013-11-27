@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
-versiondate = 'September 2013'
-check_version = '0913'
+check_version = '1013f'
 
 import sys
 import os
@@ -48,7 +47,7 @@ def printHelp():
     print "-n(rcumode)[=120] : noise check for rcumode (1|3|5), optional data time in seconds"
     print "                    default data time = 300 sec for hba and 180 sec for lba"
     print "-ehba[=120]       : do all HBA element tests, optional data time in seconds"
-    print "                    default data time = 30 sec"
+    print "                    default data time = 10 sec"
     print "-m                : HBA modem check, automatic selected if other hba check are selected"
     print "-sn               : HBA summator noise check"
     print
@@ -333,14 +332,45 @@ def main():
 
     # setup intern database with station layout
     db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA)
+
     
+                    
+    # set manualy marked bad antennas
+    log_dir = conf.getStr('log-dir-global')
+    host = getHostName()
+    if os.path.exists(log_dir):
+        logger.info("add bad_antenna_list data to db")
+        f = open(os.path.join(log_dir, "bad_antenna_list.txt"), 'r')
+        data = f.readlines()
+        for line in data:
+            if line[0] == '#':
+                continue
+            ant_list = line.strip().split(' ')
+            if ant_list[0].strip().upper() == host.upper():
+                if len(ant_list) > 1:
+                    for ant in ant_list[1:]:
+                        ant_type = ant[:3].strip().upper()
+                        if ant_type == 'LBA':
+                            ant_nr = int(ant[3:].strip())
+                            #print "ant type=%s nr=%d" %(ant_type, ant_nr)
+                            if ant_nr < nLBH:
+                                db.lbh.ant[ant_nr].on_bad_list = 1
+                            else:
+                                db.lbl.ant[ant_nr-nLBH].on_bad_list = 1
+                        elif ant_type == 'HBA':
+                            ant_nr = int(ant[3:].strip())
+                            #print "ant type=%s nr=%d" %(ant_type, ant_nr)
+                            db.hba.tile[ant_nr].on_bad_list = 1
+                break
+    
+    #
     db.script_versions = 'CHECK=%s,DB=%s,TEST=%s,SEARCH=%s,LOFAR=%s,GENERAL=%s' %\
                          (check_version, db_version, test_version, search_version, lofar_version, general_version)
     db.check_start_time = time.gmtime()
     
-    writeMessage('!!!  This station will be in use for a test! Please do not use the station!  (script version %s)  !!!' %(versiondate))
-    start_level = swlevel()
-    sw_level = swlevel(2)
+    writeMessage('!!!  This station will be in use for a test! Please do not use the station!  (script version %s)  !!!' %(check_version))
+    start_level, board_errors = swlevel()
+    sw_level, board_errors = swlevel(2)
     if start_level == 1:
         logger.info("Wait 30 seconds while startup RSPDriver")
         time.sleep(30.0)
@@ -354,8 +384,28 @@ def main():
             if checkActiveRSPDriver() == False:
                 logger.warn("RSPDriver not running")
             else:
-                # wait for RSP boards ready
-                if waitRSPready():
+                # wait for RSP boards ready, and reset 48V if needed, max 2x if no board errors after 48V reset
+                rsp_ready = False
+                restarts = 2
+                while (not rsp_ready) and (restarts > 0):
+                    if waitRSPready() == False:
+                        logger.warn("Not all RSP boards ready, reset 48V to recover")
+                        swlevel(1)
+                        reset48V()
+                        restarts -= 1
+                        time.sleep(30.0)
+                        level, board_errors = swlevel(2)
+                        if len(board_errors) > 0:
+                            db.board_errors = board_errors
+                            restarts = 0
+                        else:
+                            time.sleep(30.0)
+                    else:
+                        rsp_ready = True
+                restarts = 2
+                
+                # if all rsp boards ready do all tests        
+                if rsp_ready:
                     if args.has_key('RV'):
                         rsp.checkVersions(conf.getStr('bp-version'), conf.getStr('ap-version'))
     
@@ -370,147 +420,168 @@ def main():
     
                     runtime = 0
                     db.tests = ''
-                    while (repeat_cnt <= repeats) \
-                       or ((stop_time > -1) and ((time.time() + runtime) < stop_time)):
-    
-                        runstart = time.time()
-                        if stop_time > -1:
-                            logger.info("\n=== Start testrun %d ===\n" %(repeat_cnt))
-                        else:
-                            logger.info("\n=== Start testrun %d of %d ===\n" %(repeat_cnt, repeats))
+                    while (repeat_cnt <= repeats) or ((stop_time > -1) and ((time.time() + runtime) < stop_time)):
                         
-                        # do all rcumode 1 tests if available
-                        if StID in CoreStations or StID in RemoteStations:
-                            if args.has_key('O1'):
-                                lbl.checkOscillation(mode=1)
+                        try:
+                            runstart = time.time()
+                            if stop_time > -1:
+                                logger.info("\n=== Start testrun %d ===\n" %(repeat_cnt))
+                            else:
+                                logger.info("\n=== Start testrun %d of %d ===\n" %(repeat_cnt, repeats))
+                            
+                            # do all rcumode 1 tests if available
+                            if StID in CoreStations or StID in RemoteStations:
+                                if args.has_key('O1'):
+                                    lbl.checkOscillation(mode=1)
+            
+                                if args.has_key('SP1'):
+                                    lbl.checkSpurious(mode=1)
+            
+                                if args.has_key('N1'):
+                                    if args.get('N1') == '-':
+                                        recordtime = 180
+                                    else:
+                                        recordtime = int(args.get('N1'))
+                                    lbl.checkNoise(mode=1,
+                                                   record_time=recordtime,
+                                                   low_deviation=conf.getFloat('lba-noise-min-deviation', -3.0),
+                                                   high_deviation=conf.getFloat('lba-noise-max-deviation', 2.5),
+                                                   max_diff=conf.getFloat('lba-noise-max-difference', 2.0))
+            
+                                if repeat_cnt == 1 and args.has_key('S1'):
+                                   lbl.checkSignal(mode=1,
+                                                   subband=conf.getInt('lbl-test-sb',301),
+                                                   min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
+                                                   low_deviation=conf.getFloat('lba-rf-min-deviation', -2.0),
+                                                   high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))                        
+                            
+                            # do all rcumode 3 tests        
+                            if args.has_key('O3'):
+                                lbh.checkOscillation(mode=3)
         
-                            if args.has_key('SP1'):
-                                lbl.checkSpurious(mode=1)
+                            if args.has_key('SP3'):
+                                lbh.checkSpurious(mode=3)
         
-                            if args.has_key('N1'):
-                                if args.get('N1') == '-':
+                            if args.has_key('N3'):
+                                if args.get('N3') == '-':
                                     recordtime = 180
                                 else:
-                                    recordtime = int(args.get('N1'))
-                                lbl.checkNoise(mode=1,
+                                    recordtime = int(args.get('N3'))
+                                lbh.checkNoise(mode=3,
                                                record_time=recordtime,
                                                low_deviation=conf.getFloat('lba-noise-min-deviation', -3.0),
                                                high_deviation=conf.getFloat('lba-noise-max-deviation', 2.5),
-                                               max_diff=conf.getFloat('lba-noise-max-difference', 2.0))
+                                               max_diff=conf.getFloat('lba-noise-max-difference', 1.5))
+                          
+                            if repeat_cnt == 1 and args.has_key('S3'):
+                                lbh.checkSignal(mode=3, 
+                                                subband=conf.getInt('lbh-test-sb',301),
+                                                min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
+                                                low_deviation=conf.getFloat('lba-rf-min-deviation', -2.0),
+                                                high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))
         
-                            if repeat_cnt == 1 and args.has_key('S1'):
-                               lbl.checkSignal(mode=1,
-                                               subband=conf.getInt('lbl-test-sb',301),
-                                               min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
-                                               low_deviation=conf.getFloat('lba-rf-min-deviation', -2.0),
-                                               high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))                        
-                        
-                        # do all rcumode 3 tests        
-                        if args.has_key('O3'):
-                            lbh.checkOscillation(mode=3)
-    
-                        if args.has_key('SP3'):
-                            lbh.checkSpurious(mode=3)
-    
-                        if args.has_key('N3'):
-                            if args.get('N3') == '-':
-                                recordtime = 180
-                            else:
-                                recordtime = int(args.get('N3'))
-                            lbh.checkNoise(mode=3,
-                                           record_time=recordtime,
-                                           low_deviation=conf.getFloat('lba-noise-min-deviation', -3.0),
-                                           high_deviation=conf.getFloat('lba-noise-max-deviation', 2.5),
-                                           max_diff=conf.getFloat('lba-noise-max-difference', 1.5))
-                      
-                        if repeat_cnt == 1 and args.has_key('S3'):
-                            lbh.checkSignal(mode=3, 
-                                            subband=conf.getInt('lbh-test-sb',301),
-                                            min_signal=conf.getFloat('lba-rf-min-signal', 75.0),
-                                            low_deviation=conf.getFloat('lba-rf-min-deviation', -2.0),
-                                            high_deviation=conf.getFloat('lba-rf-max-deviation', 2.0))
-    
-                        # do all rcumode 5 tests    
-                        # do always a modem check if an other hba check is requested
-                        if rcu_m5_check:
-                            hba.checkModem(mode=5)
-                            hba.turnOffBadTiles()
-    
-                        if args.has_key('O5'):
-                            hba.checkOscillation(mode=5)
-    
-                        if args.has_key('SN'):
-                            hba.checkSummatorNoise(mode=5)
-    
-                        if args.has_key('SP5'):
-                            hba.checkSpurious(mode=5)
-    
-                        if args.has_key('N5'):
-                            if args.get('N5') == '-':
-                                recordtime = 300
-                            else:
-                                recordtime = int(args.get('N5'))
-                            hba.checkNoise(mode=5,
-                                           record_time=recordtime,
-                                           low_deviation=conf.getFloat('hba-noise-min-deviation', -3.0),
-                                           high_deviation=conf.getFloat('hba-noise-max-deviation', 2.5),
-                                           max_diff=conf.getFloat('hba-noise-max-difference', 2.0))
-    
-    
-                        if repeat_cnt == 1 and args.has_key('S5'):
-                            hba.checkSignal(mode=5, subband=conf.getInt('hba-test-sb',155),
-                                                    min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
-                                                    low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
-                                                    high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
-                        
-    
-                        
-                        # All element test
-                        if args.has_key('EHBA'):
-                            if args.get('EHBA') == '-':
-                                recordtime = 15
-                            else:
-                                recordtime = int(args.get('EHBA'))
+                            # do all rcumode 5 tests    
+                            # do always a modem check if an other hba check is requested
+                            if rcu_m5_check:
+                                hba.checkModem(mode=5)
+                                hba.turnOffBadTiles()
+        
+                            if args.has_key('O5'):
+                                hba.checkOscillation(mode=5)
+        
+                            if args.has_key('SN'):
+                                hba.checkSummatorNoise(mode=5)
+        
+                            if args.has_key('SP5'):
+                                hba.checkSpurious(mode=5)
+        
+                            if args.has_key('N5'):
+                                if args.get('N5') == '-':
+                                    recordtime = 300
+                                else:
+                                    recordtime = int(args.get('N5'))
+                                hba.checkNoise(mode=5,
+                                               record_time=recordtime,
+                                               low_deviation=conf.getFloat('hba-noise-min-deviation', -3.0),
+                                               high_deviation=conf.getFloat('hba-noise-max-deviation', 2.5),
+                                               max_diff=conf.getFloat('hba-noise-max-difference', 2.0))
+        
+        
+                            if repeat_cnt == 1 and args.has_key('S5'):
+                                hba.checkSignal(mode=5, subband=conf.getInt('hba-test-sb',155),
+                                                        min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
+                                                        low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
+                                                        high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
                             
-                            hba.checkElements(  mode=5, 
-                                                record_time=recordtime,
-                                                subband=conf.getInt('hba-test-sb',155),
-                                                noise_low_deviation=conf.getFloat('ehba-noise-min-deviation', -3.0),
-                                                noise_high_deviation=conf.getFloat('ehba-noise-max-deviation', 2.5),
-                                                noise_max_diff=conf.getFloat('ehba-noise-max-difference', 1.5),
-                                                rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
-                                                rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
-                                                rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0),
-                                                skip_signal_test=args.has_key('ES7'))
-                        
-                        # Element test in mode 7 for UK station
-                        if args.has_key('ES7'):
-                            hba.checkElementsSignal(  mode=7, 
-                                                      subband=conf.getInt('hba-test-sb',155),
-                                                      rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
-                                                      rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
-                                                      rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0))
-                        
-                        # one run done
-                        repeat_cnt += 1
-                        runtime = time.time() - runstart
-                        
-                
+        
+                            
+                            # All element test
+                            if args.has_key('EHBA'):
+                                if args.get('EHBA') == '-':
+                                    recordtime = 10
+                                else:
+                                    recordtime = int(args.get('EHBA'))
+                                
+                                hba.checkElements(  mode=5, 
+                                                    record_time=recordtime,
+                                                    subband=conf.getInt('hba-test-sb',155),
+                                                    noise_low_deviation=conf.getFloat('ehba-noise-min-deviation', -3.0),
+                                                    noise_high_deviation=conf.getFloat('ehba-noise-max-deviation', 2.5),
+                                                    noise_max_diff=conf.getFloat('ehba-noise-max-difference', 1.5),
+                                                    rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
+                                                    rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
+                                                    rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0),
+                                                    skip_signal_test=args.has_key('ES7'))
+                            
+                            # Element test in mode 7 for UK station
+                            if args.has_key('ES7'):
+                                hba.checkElementsSignal(  mode=7, 
+                                                          subband=conf.getInt('hba-test-sb',155),
+                                                          rf_min_signal=conf.getFloat('ehba-rf-min-signal', 70.0),
+                                                          rf_low_deviation=conf.getFloat('ehba-rf-min-deviation', -24.0),
+                                                          rf_high_deviation=conf.getFloat('ehba-rf-max-deviation', 12.0))
+                            
+                            # stop test if driver stopped
+                            db.rsp_driver_down = not checkActiveRSPDriver()
+                            if db.rsp_driver_down and (restarts > 0):
+                                restarts -= 1
+                                reset48V()
+                                time.sleep(30.0)
+                                level, board_errors = swlevel(2)
+                                if len(board_errors) > 0:
+                                    db.board_errors = board_errors
+                                    break
+                                else:
+                                    time.sleep(30.0)
+                                
+                            # one run done
+                            repeat_cnt += 1
+                            runtime = max((time.time() - runstart), 45.0)
+
+                        except:
+                            logger.warn("Program fault, RSP test")
+                            #raise
+                            break
+                            
+                db.rsp_driver_down = not checkActiveRSPDriver()    
+                if not db.rsp_driver_down:
                     resetRSPsettings()
-                    #turnoffRCUs()
         
         # do TBB tests if requested
-        if tbb_check == True:
+        db.tbb_driver_down = not checkActiveTBBDriver()
+        if (not db.tbb_driver_down) and (tbb_check == True):
             # wait for TBB boards ready
             if waitTBBready(nTBB) == 1:
-                if args.has_key('TV'):
-                    db.addTestDone('TV')
-                    tbb.checkVersions(conf.getStr('tbbdriver-version'), conf.getStr('tbbctl-version'),
-                                      conf.getStr('tp-version'), conf.getStr('mp-version'))
-                if args.has_key('TM'):
-                    db.addTestDone('TM')
-                    tbb.checkMemory()
-    
+                try:
+                    if args.has_key('TV'):
+                        db.addTestDone('TV')
+                        tbb.checkVersions(conf.getStr('tbbdriver-version'), conf.getStr('tbbctl-version'),
+                                          conf.getStr('tp-version'), conf.getStr('mp-version'))
+                    if args.has_key('TM'):
+                        db.addTestDone('TM')
+                        tbb.checkMemory()
+                except:
+                    logger.warn("Program fault, TBB test")
     db.check_stop_time = time.gmtime()
 
     # do db test and write result files to log directory
@@ -520,8 +591,9 @@ def main():
         db.test(log_dir)
     else:
         logger.warn("not a valid log directory")
-
-    swlevel(start_level)
+    if not db.rsp_driver_down:
+        swlevel(6)
+    logger.info("Test ready.")
     writeMessage('!!!     The test is ready and the station can be used again!               !!!')
 
     # delete files from data directory

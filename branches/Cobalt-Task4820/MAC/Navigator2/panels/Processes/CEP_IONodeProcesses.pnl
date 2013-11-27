@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 10 CEP_IONode
-PANEL,-1 -1 1073 754 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -260,7 +260,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 2 1 E 1.061061061061061 0 1 0 0 1 E 0 0 999 709
+E E 0 3 1 2 1 E U  1 E 0 0 1199 822
 2 917
 "ionodeLabel"
 ""

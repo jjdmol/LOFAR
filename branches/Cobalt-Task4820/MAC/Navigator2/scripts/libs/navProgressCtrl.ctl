@@ -91,7 +91,7 @@ void navProgressCtrl_handleObservation(string selection){
   
   LOG_DEBUG("navProgressCtrl.ctl:navProgressCtrl_handleObservation| finished: "+finished);  
   
-  if (percent >= 0 && percent <= 100) {
+  if (percent >0 && percent <= 100) {
     percentDone = finished/percent;
   }
   if (percentDone > 100) {
