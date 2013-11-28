@@ -8,12 +8,12 @@ lofar_add_test(tMSWriterDAL tMSWriterDAL.cc)
 # For production, LOFARROOT is used, but build/source dir structure differs
 # from installed dir. For regression tests, have cmake provide paths.
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated.run.in
-  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated.run @ONLY)
+  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated_.run.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated_.run @ONLY)
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated.parset.in
-  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated.parset @ONLY)
-#lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)  disabled until fixed in #5075
+  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated_.parset.in
+  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated_.parset @ONLY)
+lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)
 lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)
 #lofar_add_test(tAH_TestStorage tAH_TestStorage.cc)

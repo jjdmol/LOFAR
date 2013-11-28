@@ -41,7 +41,7 @@ int main()
 {
   INIT_LOGGER("tMSWriterCorrelated");
 
-  Parset parset("tMSWriterCorrelated.parset");
+  Parset parset("tMSWriterCorrelated_.parset");
 
   {
     // Create MeasurementSet
