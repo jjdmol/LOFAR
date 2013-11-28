@@ -594,7 +594,7 @@ class msss_imager_pipeline(control):
         Write the suplied the suplied map to the mapfile.
         directory in the jobs dir with the filename suplied in mapfile_name.
         Return the full path to the created file.
-        Id supllied data is None then the file is touched if not existing, but
+        If suplied data is None then the file is touched if not existing, but
         existing files are kept as is
         """
 

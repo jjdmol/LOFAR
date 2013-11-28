@@ -54,7 +54,6 @@ class imager_awimager(LOFARnodeTCP):
         :param autogenerate_parameters: Turns on the autogeneration of: 
            cellsize, npix, wprojplanes, wmax
         :rtype: self.outputs["image"] The path to the output image
-        
         """
         self.logger.info("Start imager_awimager node run:")
         log4_cplus_name = "imager_awimager"
