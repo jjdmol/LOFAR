@@ -473,7 +473,7 @@ void showNames (const string& pattern, PTCommand type, ostream& ostr)
       names.push_back (iter->first);
     }
   }
-  ostr << "names: " << names << endl;
+//   ostr << "names: " << names << endl;
 }
 
 void showParm (const string& parmName, const ParmValue& parm, const Box& domain,

@@ -92,7 +92,7 @@ class TimeFrequencyImager {
 		static void setObservationTimes(MeasurementSet &set, std::map<double,size_t> &observationTimes);
 		void readUVWData();
 
-		casa::ROArrayColumn<casa::Complex> *CreateDataColumn(DataKind kind, class casa::Table &table);
+		casa::ArrayColumn<casa::Complex> *CreateDataColumn(DataKind kind, class casa::Table &table);
 		void ReadTimeData(size_t xOffset, int frequencyCount, const casa::Array<casa::Complex> data, const casa::Array<casa::Complex> *model);
 		void ReadTimeFlags(size_t xOffset, int frequencyCount, const casa::Array<bool> flag);
 		void ReadWeights(size_t xOffset, int frequencyCount, const casa::Array<float> weight);

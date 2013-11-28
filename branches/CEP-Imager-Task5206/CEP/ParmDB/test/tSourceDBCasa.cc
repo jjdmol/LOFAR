@@ -29,8 +29,10 @@
 
 using namespace LOFAR;
 using namespace LOFAR::BBS;
-using namespace casa;
 using namespace std;
+
+using casa::Table;
+using casa::String;
 
 void testCreate()
 {

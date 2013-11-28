@@ -34,7 +34,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 
 using namespace casa;
 

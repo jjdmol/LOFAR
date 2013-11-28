@@ -7,9 +7,11 @@ lofar_find_package(Boost REQUIRED)
 lofar_find_package(Casacore REQUIRED COMPONENTS 
   ms casa coordinates tables images measures)
 
-lofar_find_package(Casarest REQUIRED COMPONENTS
-  synthesis)
-
+if (USE_CASA42)
+  lofar_find_package(Casa REQUIRED COMPONENTS synthesis)
+else()
+  lofar_find_package(Casarest REQUIRED COMPONENTS synthesis)
+endif()
 
 # Uncomment to check for unsafe conversions (gcc), for example conversion of
 # size_t to unsigned int (truncation).

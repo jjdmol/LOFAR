@@ -26,8 +26,8 @@
 #include <LofarFT/LofarImager.h>
 #include <LofarFT/LofarVisResampler.h>
 #include <casa/Utilities/CountedPtr.h>
-#include <synthesis/MeasurementComponents/SimpleComponentFTMachine.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <LofarFT/LofarCubeSkyEquation.h>
 
 #include <tables/Tables/TableIter.h>

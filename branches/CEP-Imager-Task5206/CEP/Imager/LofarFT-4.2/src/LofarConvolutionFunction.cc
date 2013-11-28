@@ -64,6 +64,9 @@
 #include <casa/sstream.h>
 #include <iomanip>
 
+#include <synthesis/TransformMachines/SynthesisError.h>
+
+
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 

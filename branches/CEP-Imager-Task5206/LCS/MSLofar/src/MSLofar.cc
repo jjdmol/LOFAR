@@ -27,6 +27,7 @@
 #include <MSLofar/MSLofarField.h>
 #include <MSLofar/MSLofarObservation.h>
 #include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/TableRecord.h>
 
 using namespace casa;
 

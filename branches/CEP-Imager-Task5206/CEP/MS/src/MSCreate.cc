@@ -851,17 +851,20 @@ void MSCreate::addImagerColumns (MeasurementSet& ms)
     ArrayColumn<Complex> mcd(ms, colName);
     mcd.rwKeywordSet().define ("CHANNEL_SELECTION",selection);
   }
-  colName = MS::columnName(MS::IMAGING_WEIGHT);
-  if (! ms.tableDesc().isColumn(colName)) {
-    TableDesc td;
-    if (shape.empty()) {
-      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
-    } else {
-      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
-                                           IPosition(1, shape[1]),
-                                           ColumnDesc::FixedShape));
-    }
-    TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
-    ms.addColumn (td, stMan);
-  }
+//  MS::IMAGING_WEIGHT is no longer defined in casacore from casapy 4.1
+// Probably because use of IMAGING_WEIGHT column is deprecated
+// 
+//   colName = MS::columnName(MS::IMAGING_WEIGHT);
+//   if (! ms.tableDesc().isColumn(colName)) {
+//     TableDesc td;
+//     if (shape.empty()) {
+//       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
+//     } else {
+//       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
+//                                            IPosition(1, shape[1]),
+//                                            ColumnDesc::FixedShape));
+//     }
+//     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
+//     ms.addColumn (td, stMan);
+//   }
 }

@@ -77,6 +77,10 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
     set(HAVE_BACKTRACE OFF)
   endif(USE_BACKTRACE)
 
+  if(USE_CASA42)
+    add_definitions(-DUSE_CASA42)
+  endif(NOT USE_CASA42)
+
   if(USE_LOG4CPLUS)
     lofar_find_package(Log4Cplus REQUIRED)
   else(USE_LOG4CPLUS)

@@ -65,8 +65,8 @@ TimeFrequencyData BaselineMatrixLoader::LoadSummed(size_t timeIndex)
 	}
 
 	casa::Table table = _tableIter->table();
-	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
-	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
+	casa::ScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
+	casa::ScalarColumn<int> antenna2Column(table, "ANTENNA2");
 
 	ScalarColumnIterator<int> antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
 	ScalarColumnIterator<int> antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
@@ -93,18 +93,18 @@ TimeFrequencyData BaselineMatrixLoader::LoadSummed(size_t timeIndex)
 		delete _metaData;
 	_metaData = new SpatialMatrixMetaData(nrAntenna);
 
-	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
-	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
-	casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+	casa::ArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ArrayColumn<casa::Complex> dataColumn(table, "DATA");
+	casa::ArrayColumn<double> uvwColumn(table, "UVW");
 
 	antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
 	antenna2Iter = ScalarColumnIterator<int>::First(antenna2Column);
-	ROArrayColumnIterator<casa::Complex> dataIter =
-		ROArrayColumnIterator<casa::Complex>::First(dataColumn);
-	ROArrayColumnIterator<bool> flagIter =
-		ROArrayColumnIterator<bool>::First(flagColumn);
-	ROArrayColumnIterator<double> uvwIter =
-		ROArrayColumnIterator<double>::First(uvwColumn);
+	ArrayColumnIterator<casa::Complex> dataIter =
+		ArrayColumnIterator<casa::Complex>::First(dataColumn);
+	ArrayColumnIterator<bool> flagIter =
+		ArrayColumnIterator<bool>::First(flagColumn);
+	ArrayColumnIterator<double> uvwIter =
+		ArrayColumnIterator<double>::First(uvwColumn);
 
 	Image2DPtr
 		xxRImage = Image2D::CreateZeroImagePtr(nrAntenna, nrAntenna),
@@ -232,7 +232,7 @@ TimeFrequencyData BaselineMatrixLoader::LoadSummed(size_t timeIndex)
 		++uvwIter;
 		++flagIter;
 	}
-	casa::ROScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
+	casa::ScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
 	BandInfo band = _measurementSet.GetBandInfo(bandColumn(0));
 	_metaData->SetFrequency(band.CenterFrequencyHz());
 
@@ -263,8 +263,8 @@ void BaselineMatrixLoader::LoadPerChannel(size_t timeIndex, std::vector<TimeFreq
 	}
 
 	casa::Table table = _tableIter->table();
-	casa::ROScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
-	casa::ROScalarColumn<int> antenna2Column(table, "ANTENNA2");
+	casa::ScalarColumn<int> antenna1Column(table, "ANTENNA1"); 
+	casa::ScalarColumn<int> antenna2Column(table, "ANTENNA2");
 
 	// Find highest antenna index
 	int nrAntenna = 0;
@@ -285,9 +285,9 @@ void BaselineMatrixLoader::LoadPerChannel(size_t timeIndex, std::vector<TimeFreq
 		delete _metaData;
 	_metaData = new SpatialMatrixMetaData(nrAntenna);
 
-	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
-	casa::ROArrayColumn<casa::Complex> dataColumn(table, "DATA");
-	casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+	casa::ArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ArrayColumn<casa::Complex> dataColumn(table, "DATA");
+	casa::ArrayColumn<double> uvwColumn(table, "UVW");
 
         std::vector<Image2DPtr>
 		xxRImage(_frequencyCount), xxIImage(_frequencyCount), xyRImage(_frequencyCount), xyIImage(_frequencyCount), yxRImage(_frequencyCount), yxIImage(_frequencyCount), yyRImage(_frequencyCount), yyIImage(_frequencyCount);
@@ -396,7 +396,7 @@ void BaselineMatrixLoader::LoadPerChannel(size_t timeIndex, std::vector<TimeFreq
 			_metaData->SetUVW(a2, a1, uvw);
 		}
 	}
-	casa::ROScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
+	casa::ScalarColumn<int> bandColumn(table, "DATA_DESC_ID");
 	BandInfo band = _measurementSet.GetBandInfo(bandColumn(0));
 	_metaData->SetFrequency(band.CenterFrequencyHz());
 

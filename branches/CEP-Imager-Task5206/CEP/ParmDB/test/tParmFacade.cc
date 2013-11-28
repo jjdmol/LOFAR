@@ -30,8 +30,13 @@
 
 using namespace LOFAR;
 using namespace BBS;
-using namespace casa;
 using namespace std;
+
+using casa::Record;
+using casa::String;
+using casa::Matrix;
+using casa::Double;
+using casa::Vector;
 
 // tParmFacade.run creates the pdb with parmdb.
 // So it must match the output expected here.

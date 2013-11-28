@@ -62,10 +62,6 @@ class ScalarColumnIterator {
 		{
 			return ScalarColumnIterator<T>(column, 0);
 		}
-		static ScalarColumnIterator First(casa::ROScalarColumn<T> &column)
-		{
-			return ScalarColumnIterator<T>(column, 0);
-		}
 	private:
 		casa::ROScalarColumn<T> *_column;
 		unsigned _row;

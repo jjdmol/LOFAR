@@ -35,7 +35,6 @@
 //# Forward Declarations
 namespace casa {
   template<typename T> class ArrayColumn;
-  template<typename T> class ROArrayColumn;
 }
 
 
@@ -169,7 +168,7 @@ namespace BBS {
 
     // Form an axis from the interval array in the given row.
     // If no interval array, return a regular axis made from (st,end,n).
-    Axis::ShPtr getInterval (casa::ROArrayColumn<double>& col, uint rownr,
+    Axis::ShPtr getInterval (casa::ArrayColumn<double>& col, uint rownr,
                              double st, double end, uint n);
 
     // Find the table subset containing the parameter values for the

@@ -1,18 +1,26 @@
-set(CASACORE_ROOT_DIR /opt/cep/casacore)
-set(CASAREST_ROOT_DIR /opt/cep/casarest)
-set(LDA_ROOT_DIR /opt/cep/lda)
-set(ENV{HDF5_ROOT} /opt/cep/storage/hdf5)
+option(USE_THREADS "Use threads" ON)
+option(USE_OPENMP "Use OpenMP" ON)
 
-set(PYRAP_ROOT_DIR /opt/cep/pyrap)
+set(ENV{HDF5_ROOT} /opt/storage/hdf5)
 
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
+set(ENV{HDF5_ROOT} /opt/hdf5)
+set(CMAKE_Fortran_COMPILER gfortran)
+
+if (USE_CASA42)
+  set(PYRAP_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(CASACORE_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(CASA_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(BOOST_ROOT /home/vdtol/lofar-casapy-4.2/install)
+else ()
+  set(CASACORE_ROOT_DIR /opt/cep/casacore)
+  set(CASAREST_ROOT_DIR /opt/cep/casarest)
+  set(PYRAP_ROOT_DIR /opt/cep/pyrap)
+endif ()
 
 set(LOG4CXX_ROOT_DIR /opt/cep/LofIm/external/log4cxx)
 set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
 
-#set(ENV{JAVA_HOME} /usr/lib/jvm/java-1.5.0-sun)
+set(CMAKE_INSTALL_PREFIX /home/vdtol/lofar-casapy-4.2/install)
 
-set(CTEST_CUSTOM_WARNING_EXCEPTION
-  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
-  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
-)
+set(BUILD_PACKAGES "Offline")

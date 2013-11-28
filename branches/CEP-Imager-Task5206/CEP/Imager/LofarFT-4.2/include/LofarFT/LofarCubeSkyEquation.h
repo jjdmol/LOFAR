@@ -1,4 +1,4 @@
-//# CubeSkyEquation.h: CubeSkyEquation definition
+//# LofarCubeSkyEquation.h: LofarCubeSkyEquation definition
 //# Copyright (C) 2007
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#ifndef LOFARFT_CUBESKYEQUATION_H
-#define LOFARFT_CUBESKYEQUATION_H
+#ifndef LOFARCUBESKYEQUATION_H
+#define LOFARCUBESKYEQUATION_H
 
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 //#include <synthesis/Utilities/ThreadTimers.h>
@@ -46,80 +46,82 @@ class LofarCubeSkyEquation : public SkyEquation {
 
  public:
   LofarCubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
-
+ 
   //Read only iterator...hence no scratch col
   LofarCubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
 
   virtual ~LofarCubeSkyEquation();
   virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
-  using SkyEquation::gradientsChiSquared;
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
-
-//  virtual Matrix<Float> GiveAvgPB (Int taylor_order)
-//  {
-//    Matrix< Float > a((ftm_p[taylor_order]->getAveragePB()).copy());
-//    return a;
-//  };
-
-  /* virtual const Matrix<Float>& GiveAvgPB(Int taylor_order) { */
-  /*   Matrix< Float> a(IPosition(2,2,2),0.); */
-  /*   return a; */
-  /* }; */
-
-  virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
-  virtual void putSlice(VisBuffer& vb, Bool dopsf,
-			FTMachine::Type col,Int cubeSlice=0,
+  
+  virtual void initializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void newInitializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void oldInitializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void putSlice(VisBuffer& vb, Bool dopsf, 
+			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
-  virtual void finalizePutSlice(const VisBuffer& vb,
+  virtual void finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 				Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+				   Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+				   Int cubeSlice=0, Int nCubeSlice=1);
   void initializeGetSlice(const VisBuffer& vb, Int row,
-			  Bool incremental, Int cubeSlice=0,
-			  Int nCubeSlice=1);
-  virtual VisBuffer& getSlice(VisBuffer& vb,
+			  Bool incremental, Int cubeSlice=0, 
+			  Int nCubeSlice=1);   
+  void newInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
+  void oldInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
+  virtual VisBuffer& getSlice(VisBuffer& vb, 
 			      Bool incremental, Int cubeSlice=0,
-			      Int nCubeSlice=1);
+			      Int nCubeSlice=1); 
   void finalizeGetSlice();
   void isLargeCube(ImageInterface<Complex>& theIm, Int& nCubeSlice);
   //void makeApproxPSF(Int model, ImageInterface<Float>& psf);
-  //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf);
-  using SkyEquation::makeApproxPSF;
-  virtual void makeApproxPSF(PtrBlock<TempImage<Float> * >& psfs);
+  //virtual void makeApproxPSF(Int model, ImageInterface<Float>& psf); 
+  void makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs);
 
   //Get the flux scale that the ftmachines have if they have
   virtual void getCoverageImage(Int model, ImageInterface<Float>& im);
 
+  //get the weight image from the ftmachines
+  virtual void getWeightImage(const Int model, ImageInterface<Float>& weightim);
+  void tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit);
 
+  Bool isNewFTM();
 
  protected:
 
-
+  void configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi);
 
   //Different versions of psf making
-  void makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs);
-  void makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs);
+  void makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs);
+  void makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs);
   virtual void fixImageScale();
   Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
   Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;
   Block<Matrix<Float> >weightSlice_p;
   Slicer sl_p;
   Int nchanPerSlice_p;
-  // Type of copy
+  // Type of copy 
   // 0 => a independent image just with coordinates gotten from cImage
   // 1 => a subImage referencing cImage ...no image copy
-  void sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, Int nCubeSlice, Int typeOfCopy=0);
+  void sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, Int nCubeSlice, Int typeOfCopy=0); 
   void sliceCube(SubImage<Float>*& slice,ImageInterface<Float>& image, Int cubeSlice, Int nCubeSlice);
   //frequency range from image
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,
 		  Int slice, Int nslice);
 
-
+  Bool isNewFTM(FTMachine *);
  private:
   // if skyjones changed in get or put we need to tell put or get respectively
   // about it
   void init(FTMachine& ft);
 
   Bool destroyVisibilityIterator_p;
-
 
   Bool internalChangesPut_p;
   Bool internalChangesGet_p;
@@ -133,6 +135,7 @@ class LofarCubeSkyEquation : public SkyEquation {
   Block<CountedPtr<FTMachine> > iftm_p;
 
   // DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
+
 
 };
 

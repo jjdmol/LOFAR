@@ -24,7 +24,7 @@
 // #include <Common/OpenMP.h>
 // #include <omp.h>
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
@@ -39,15 +39,15 @@
 #include <LofarFT/LofarFTMachine.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarConvolutionFunction.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <LofarFT/LofarVisResampler.h>
-#include <synthesis/MeasurementComponents/CFStore.h>
+#include <synthesis/TransformMachines/CFStore.h>
 #include <LofarFT/LofarVBStore.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
-#include <synthesis/MeasurementEquations/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -2489,11 +2489,16 @@ void LofarFTMachine::makeImage(FTMachine::Type type,
   // Initialize put (i.e. transform to Sky) for this model
   vi.origin();
 
+  
+// Temporarily disable because of
+// /home/vdtol/lofar-casapy-4.1/src/LOFAR/CEP/Imager/LofarFT/src/LofarFTMachine.cc:2493: error: incomplete type ‘casa::SkyModel’ used in nested name specifier
+// /home/vdtol/lofar-casapy-4.1/src/LOFAR/CEP/Imager/LofarFT/src/LofarFTMachine.cc:2496: error: incomplete type ‘casa::SkyModel’ used in nested name specifier
+  
   if(vb.polFrame()==MSIter::Linear) {
-    StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+//     StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);  
   }
   else {
-    StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+//     StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
   }
 
   initializeToSky(theImage,weight,vb);

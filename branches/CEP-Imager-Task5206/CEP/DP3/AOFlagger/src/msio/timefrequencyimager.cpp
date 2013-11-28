@@ -130,9 +130,9 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	while(!iter.pastEnd())
 	{
 		casa::Table table = iter.table();
-		casa::ROScalarColumn<int> antenna1(table, "ANTENNA1"); 
-		casa::ROScalarColumn<int> antenna2(table, "ANTENNA2");
-		casa::ROScalarColumn<int> windowColumn(table, "DATA_DESC_ID");
+		casa::ScalarColumn<int> antenna1(table, "ANTENNA1"); 
+		casa::ScalarColumn<int> antenna2(table, "ANTENNA2");
+		casa::ScalarColumn<int> windowColumn(table, "DATA_DESC_ID");
 		if(table.nrow() > 0 && windowColumn(0) == (int) spectralWindowSelect && antenna1(0) == (int) antenna1Select && antenna2(0) == (int) antenna2Select)
 		{
 			break;
@@ -207,37 +207,37 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 	}
 	_uvw.resize(width);
 
-	casa::ROScalarColumn<int> antenna1(table, "ANTENNA1"); 
-	casa::ROScalarColumn<int> antenna2(table, "ANTENNA2");
-	casa::ROScalarColumn<int> windowColumn(table, "DATA_DESC_ID");
-	casa::ROScalarColumn<double> timeColumn(table, "TIME");
-	casa::ROArrayColumn<float> weightColumn(table, "WEIGHT");
-	casa::ROArrayColumn<double> uvwColumn(table, "UVW");
+	casa::ScalarColumn<int> antenna1(table, "ANTENNA1"); 
+	casa::ScalarColumn<int> antenna2(table, "ANTENNA2");
+	casa::ScalarColumn<int> windowColumn(table, "DATA_DESC_ID");
+	casa::ScalarColumn<double> timeColumn(table, "TIME");
+	casa::ArrayColumn<float> weightColumn(table, "WEIGHT");
+	casa::ArrayColumn<double> uvwColumn(table, "UVW");
 
-	casa::ROArrayColumn<casa::Complex> *dataColumn = 0;
+	casa::ArrayColumn<casa::Complex> *dataColumn = 0;
 	if(_readData)
 		dataColumn = CreateDataColumn(_dataKind, table);
 
-	ROArrayColumnIterator<casa::Complex> *modelIter;
+	ArrayColumnIterator<casa::Complex> *modelIter;
 	if(_dataKind == ResidualData) {
-		casa::ROArrayColumn<casa::Complex> *modelColumn;
-		modelColumn = new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
-		modelIter = new ROArrayColumnIterator<casa::Complex>(ROArrayColumnIterator<casa::Complex>::First(*modelColumn));
+		casa::ArrayColumn<casa::Complex> *modelColumn;
+		modelColumn = new casa::ArrayColumn<casa::Complex>(table, "MODEL_DATA");
+		modelIter = new ArrayColumnIterator<casa::Complex>(ArrayColumnIterator<casa::Complex>::First(*modelColumn));
 	} else {
 		modelIter = 0;
 	}
-	casa::ROArrayColumn<bool> flagColumn(table, "FLAG");
+	casa::ArrayColumn<bool> flagColumn(table, "FLAG");
 
 	ScalarColumnIterator<int> antenna1Iter = ScalarColumnIterator<int>::First(antenna1);
 	ScalarColumnIterator<int> antenna2Iter = ScalarColumnIterator<int>::First(antenna2);
 	ScalarColumnIterator<int> windowIter = ScalarColumnIterator<int>::First(windowColumn);
 	ScalarColumnIterator<double> timeIter = ScalarColumnIterator<double>::First(timeColumn);
-	ROArrayColumnIterator<double> uvwIter = ROArrayColumnIterator<double>::First(uvwColumn);
-	ROArrayColumnIterator<float> weightIter = ROArrayColumnIterator<float>::First(weightColumn);
-	ROArrayColumnIterator<casa::Complex> dataIter = 
-		ROArrayColumnIterator<casa::Complex>::First(*dataColumn);
-	ROArrayColumnIterator<bool> flagIter = 
-		ROArrayColumnIterator<bool>::First(flagColumn);
+	ArrayColumnIterator<double> uvwIter = ArrayColumnIterator<double>::First(uvwColumn);
+	ArrayColumnIterator<float> weightIter = ArrayColumnIterator<float>::First(weightColumn);
+	ArrayColumnIterator<casa::Complex> dataIter = 
+		ArrayColumnIterator<casa::Complex>::First(*dataColumn);
+	ArrayColumnIterator<bool> flagIter = 
+		ArrayColumnIterator<bool>::First(flagColumn);
 
 	for(size_t i=0;i<table.nrow();++i) {
 		double time = *timeIter;
@@ -289,17 +289,17 @@ void TimeFrequencyImager::image(size_t antenna1Select, size_t antenna2Select, si
 		delete dataColumn;
 }
 
-casa::ROArrayColumn<casa::Complex> *TimeFrequencyImager::CreateDataColumn(DataKind kind, casa::Table &table)
+casa::ArrayColumn<casa::Complex> *TimeFrequencyImager::CreateDataColumn(DataKind kind, casa::Table &table)
 {
 	switch(kind) {
 		case ObservedData:
 		default:
-		return new casa::ROArrayColumn<casa::Complex>(table, "DATA");
+		return new casa::ArrayColumn<casa::Complex>(table, "DATA");
 		case CorrectedData:
 		case ResidualData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
+		return new casa::ArrayColumn<casa::Complex>(table, "CORRECTED_DATA");
 		case ModelData:
-		return new casa::ROArrayColumn<casa::Complex>(table, "MODEL_DATA");
+		return new casa::ArrayColumn<casa::Complex>(table, "MODEL_DATA");
 	}
 }
 
@@ -324,10 +324,10 @@ void TimeFrequencyImager::WriteNewFlagsPart(Mask2DCPtr newXX, Mask2DCPtr newXY, 
 	setObservationTimes(*_measurementSet, observationTimes);
 
 	casa::Table *table = _measurementSet->OpenTable(true);
-	casa::ROScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
-	casa::ROScalarColumn<int> antenna2Column(*table, "ANTENNA2");
-	casa::ROScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
-	casa::ROScalarColumn<double> timeColumn(*table, "TIME");
+	casa::ScalarColumn<int> antenna1Column(*table, "ANTENNA1"); 
+	casa::ScalarColumn<int> antenna2Column(*table, "ANTENNA2");
+	casa::ScalarColumn<int> windowColumn(*table, "DATA_DESC_ID");
+	casa::ScalarColumn<double> timeColumn(*table, "TIME");
 	casa::ArrayColumn<bool> flagColumn(*table, "FLAG");
 
 	ScalarColumnIterator<int> antenna1Iter = ScalarColumnIterator<int>::First(antenna1Column);
@@ -637,7 +637,7 @@ void TimeFrequencyImager::initializePolarizations()
 {
 	casa::MeasurementSet ms(_measurementSet->Location());
 	casa::Table polTable = ms.polarization();
-	casa::ROArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
+	casa::ArrayColumn<int> corTypeColumn(polTable, "CORR_TYPE"); 
 	casa::Array<int> corType = corTypeColumn(0);
 	casa::Array<int>::iterator iterend(corType.end());
 	_xxIndex = -1, _xyIndex = -1, _yxIndex = -1, _yyIndex = -1; _stokesIIndex = -1;

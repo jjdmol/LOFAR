@@ -27,7 +27,7 @@
 //# $Id$
 #ifndef LOFARFT_LOFARVBSTORE_H
 #define LOFARFT_LOFARVBSTORE_H
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   class LofarVBStore

@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <LofarFT/LofarVisResampler.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <cassert>

@@ -36,8 +36,22 @@
 
 using namespace LOFAR;
 using namespace LOFAR::DPPP;
-using namespace casa;
 using namespace std;
+
+using casa::Int;
+using casa::Float;
+using casa::Double;
+using casa::Complex;
+using casa::String;
+using casa::Vector;
+using casa::Matrix;
+using casa::Cube;
+using casa::MPosition;
+using casa::Quantum;
+using casa::IPosition;
+using casa::near;
+
+
 
 // Simple class to generate input arrays.
 // It can only set all flags to true or all to false.

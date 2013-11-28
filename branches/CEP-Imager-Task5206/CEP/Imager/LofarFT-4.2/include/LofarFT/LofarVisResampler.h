@@ -28,7 +28,7 @@
 #ifndef LOFARFT_LOFARVISRESAMPLER_H
 #define LOFARFT_LOFARVISRESAMPLER_H
 
-#include <synthesis/MeasurementComponents/AWVisResampler.h>
+#include <synthesis/TransformMachines/AWVisResampler.h>
 #include <LofarFT/LofarCFStore.h>
 #include <LofarFT/LofarVBStore.h>
 //added

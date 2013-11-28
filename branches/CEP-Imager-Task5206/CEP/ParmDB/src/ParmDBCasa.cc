@@ -252,10 +252,10 @@ namespace BBS {
     if (table.nrow() == 0) {
       return Box();
     }
-    double sx = min (ROScalarColumn<double> (table,"STARTX").getColumn());
-    double ex = max (ROScalarColumn<double> (table,"ENDX").getColumn());
-    double sy = min (ROScalarColumn<double> (table,"STARTY").getColumn());
-    double ey = max (ROScalarColumn<double> (table,"ENDY").getColumn());
+    double sx = min (ScalarColumn<double> (table,"STARTX").getColumn());
+    double ex = max (ScalarColumn<double> (table,"ENDX").getColumn());
+    double sy = min (ScalarColumn<double> (table,"STARTY").getColumn());
+    double ey = max (ScalarColumn<double> (table,"ENDY").getColumn());
     return Box (Point(sx,sy), Point(ex,ey));
   }
 
@@ -273,12 +273,12 @@ namespace BBS {
   pair<string,ParmValueSet> ParmDBCasa::extractDefValue (const Table& tab,
                                                          int row)
   {
-    ROScalarColumn<String> nameCol (tab, "NAME");
-    ROScalarColumn<int>    typeCol (tab, "FUNKLETTYPE");
-    ROArrayColumn<bool>    maskCol (tab, "SOLVABLE");
-    ROArrayColumn<double>  valCol  (tab, "VALUES");
-    ROScalarColumn<double> pertCol (tab, "PERTURBATION");
-    ROScalarColumn<bool>   prelCol (tab, "PERT_REL");
+    ScalarColumn<String> nameCol (tab, "NAME");
+    ScalarColumn<int>    typeCol (tab, "FUNKLETTYPE");
+    ArrayColumn<bool>    maskCol (tab, "SOLVABLE");
+    ArrayColumn<double>  valCol  (tab, "VALUES");
+    ScalarColumn<double> pertCol (tab, "PERTURBATION");
+    ScalarColumn<bool>   prelCol (tab, "PERT_REL");
     ParmValue pval;
     Array<double> val = valCol(row);
     ParmValue::FunkletType type = ParmValue::FunkletType(typeCol(row));
@@ -313,19 +313,19 @@ namespace BBS {
     }
     Vector<uInt> origRownrs = table.rowNumbers();
     // Create the table accessor objects.
-    ROScalarColumn<String> nameCol(nmtab, "NAME");
-    ROScalarColumn<int>    typeCol(nmtab, "FUNKLETTYPE");
-    ROScalarColumn<double> pertCol(nmtab, "PERTURBATION");
-    ROScalarColumn<bool>   prelCol(nmtab, "PERT_REL");
-    ROArrayColumn<bool>    maskCol(nmtab, "SOLVABLE");
-    ROScalarColumn<double> sxCol (table, "STARTX");
-    ROScalarColumn<double> exCol (table, "ENDX");
-    ROScalarColumn<double> syCol (table, "STARTY");
-    ROScalarColumn<double> eyCol (table, "ENDY");
-    ROArrayColumn<double>  ivxCol(table, "INTERVALSX");
-    ROArrayColumn<double>  ivyCol(table, "INTERVALSY");
-    ROArrayColumn<double>  valCol(table, "VALUES");
-    ROArrayColumn<double>  errCol(table, "ERRORS");
+    ScalarColumn<String> nameCol(nmtab, "NAME");
+    ScalarColumn<int>    typeCol(nmtab, "FUNKLETTYPE");
+    ScalarColumn<double> pertCol(nmtab, "PERTURBATION");
+    ScalarColumn<bool>   prelCol(nmtab, "PERT_REL");
+    ArrayColumn<bool>    maskCol(nmtab, "SOLVABLE");
+    ScalarColumn<double> sxCol (table, "STARTX");
+    ScalarColumn<double> exCol (table, "ENDX");
+    ScalarColumn<double> syCol (table, "STARTY");
+    ScalarColumn<double> eyCol (table, "ENDY");
+    ArrayColumn<double>  ivxCol(table, "INTERVALSX");
+    ArrayColumn<double>  ivyCol(table, "INTERVALSY");
+    ArrayColumn<double>  valCol(table, "VALUES");
+    ArrayColumn<double>  errCol(table, "ERRORS");
     // Form an index for the nameids.
     ColumnsIndex colInx(table, "NAMEID");
     // Create an accessor for the key in the index,
@@ -392,7 +392,7 @@ namespace BBS {
     Table& table = itsTables[2];
     Regex regex(Regex::fromPattern(parmNamePattern));
     Table sel = table(table.col("NAME") == regex);
-    ROScalarColumn<String> nameCol(sel, "NAME");
+    ScalarColumn<String> nameCol(sel, "NAME");
     for (uint row=0; row<sel.nrow(); ++row) {
       pair<string,ParmValueSet> pset (extractDefValue(sel, row));
       result.define (pset.first, pset.second);
@@ -526,7 +526,7 @@ namespace BBS {
     col.put (rownr, arr);
   }
 
-  Axis::ShPtr ParmDBCasa::getInterval (ROArrayColumn<double>& col, uint rownr,
+  Axis::ShPtr ParmDBCasa::getInterval (ArrayColumn<double>& col, uint rownr,
                                        double st, double end, uint n)
   {
     if (! col.isDefined(rownr)) {
@@ -656,7 +656,7 @@ namespace BBS {
   {
     Box domain;
     if (tab.tableDesc().isColumn("SCALE_DOMAIN")) {
-      ROArrayColumn<double> domCol (tab, "SCALE_DOMAIN");
+      ArrayColumn<double> domCol (tab, "SCALE_DOMAIN");
       if (domCol.isDefined (rownr)) {
         Vector<double> vec = domCol(rownr);
         ASSERT (vec.size() == 4);
@@ -718,7 +718,7 @@ namespace BBS {
       Regex regex(Regex::fromPattern(parmNamePattern));
       table = table(table.col("NAME") == regex);
     }
-    Vector<String> names = ROScalarColumn<String>(table,"NAME").getColumn();
+    Vector<String> names = ScalarColumn<String>(table,"NAME").getColumn();
     LOG_TRACE_STAT_STR("Finished retrieving "<<names.size()<<" names");
     return vector<string> (names.cbegin(), names.cend());
   }

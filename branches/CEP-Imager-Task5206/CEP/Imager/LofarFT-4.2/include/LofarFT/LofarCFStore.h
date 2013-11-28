@@ -29,14 +29,14 @@
 #define LOFARFT_CFSTORE_H
 
 #include <LofarFT/LofarCFDefs.h>
-#include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/TransformMachines/SynthesisError.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <images/Images/ImageInterface.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Matrix.h>
 
 namespace LOFAR {

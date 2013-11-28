@@ -29,7 +29,7 @@
 #ifndef LOFARFT_LOFARFTMACHINEOLD_H
 #define LOFARFT_LOFARFTMACHINEOLD_H
 
-#include <synthesis/MeasurementComponents/FTMachine.h>
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <casa/OS/File.h>
 #include <casa/OS/PrecTimer.h>
 #include <LofarFT/LofarVisResamplerOld.h>
@@ -37,7 +37,7 @@
 #include <LofarFT/LofarCFStore.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -172,6 +172,8 @@ public:
 
 
   ~LofarFTMachineOld();
+  
+  virtual String name() const { return "LofarFTMachineOld";};
 
   // Show the relative timings of the various steps.
   void showTimings (std::ostream&, double duration) const;

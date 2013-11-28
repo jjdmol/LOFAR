@@ -445,7 +445,11 @@ void getImageOptions( const string &patchName,
     THROW(Exception, "Image " << patchName << " has no Direction coordinate.");  
   }
   // Stokes
+#ifdef USE_CASA42
+  if(coordsys.hasPolarizationCoordinate())     // get Stokes array from image
+#else      
   if(coordsys.hasPolarizationAxis())     // get Stokes array from image
+#endif      
   {
     npol=shape[coordsys.polarizationAxisNumber()];  // No. of polarizations
 
@@ -682,23 +686,26 @@ void addImagerColumns (MeasurementSet& ms)
     ms.addColumn (td, stMan);
   }
   ////  addModelColumn (ms, "TiledModelData");
-  colName = MS::columnName(MS::IMAGING_WEIGHT);
-  if (! ms.tableDesc().isColumn(colName)) 
-  {
-    TableDesc td;
-    if (shape.empty())
-    {
-      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
-    }
-    else
-    {
-      td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
-                                           IPosition(1, shape[1]),
-                                           ColumnDesc::FixedShape));
-    }
-    TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
-    ms.addColumn (td, stMan);
-  }
+//  MS::IMAGING_WEIGHT is no longer defined in casacore from casapy 4.1
+// Probably because use of IMAGING_WEIGHT column is deprecated
+// 
+//   colName = MS::columnName(MS::IMAGING_WEIGHT);
+//   if (! ms.tableDesc().isColumn(colName)) 
+//   {
+//     TableDesc td;
+//     if (shape.empty())
+//     {
+//       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight"));
+//     }
+//     else
+//     {
+//       td.addColumn (ArrayColumnDesc<Float>(colName, "imaging weight",
+//                                            IPosition(1, shape[1]),
+//                                            ColumnDesc::FixedShape));
+//     }
+//     TiledColumnStMan stMan("TiledImagingWeight", dataTileShape.getLast(2));
+//     ms.addColumn (td, stMan);
+//   }
 }
 
 void addModelColumn (MeasurementSet& ms, const String& dataManName)

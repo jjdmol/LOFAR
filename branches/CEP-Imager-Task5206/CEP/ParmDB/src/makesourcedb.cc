@@ -1030,11 +1030,11 @@ void make (const string& in, const string& out, const string& outType,
        << pdb.getParmDBMeta().getTableName() << endl;
   vector<string> dp(pdb.findDuplicatePatches());
   if (dp.size() > 0) {
-    cerr << "Duplicate patches: " << dp << endl;
+//     cerr << "Duplicate patches: " << dp << endl;
   }
   vector<string> ds(pdb.findDuplicateSources());
   if (ds.size() > 0) {
-    cerr << "Duplicate sources: " << ds << endl;
+//     cerr << "Duplicate sources: " << ds << endl;
   }
 }
 
