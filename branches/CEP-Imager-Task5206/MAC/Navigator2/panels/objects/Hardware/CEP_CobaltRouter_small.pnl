@@ -1,0 +1,108 @@
+V 11
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 114 108 N "_3DFace" 1
+"$router"
+"main()
+{
+
+  setValue(\"txt_router\" , \"text\"    , $router );
+
+}
+" 0
+ E E E E 1 -1 -1 0  10 70
+""0  1
+E "#uses \"navPanel.ctl\"
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 12
+"RECTANGLE2"
+""
+1 170 120 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+10 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+2
+"dashclr"N "_Transparent"
+"rotatefill" "r"
+E E 0 1 1 2 1 E 0.9899443651693499 -0.9899443651693501 0.9735589679142752 0.9723837204724493 -285.1176182285025 101.1017138805631 1 E 170 120 220 170
+2 13
+"PRIMITIVE_TEXT1"
+""
+1 18 35.29650827851772 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 18 35.29650827851772 69 48
+0 2 2 "0s" 0 0 0 192 0 0  18 35.29650827851772 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 10     Router
+2 14
+"txt_router"
+""
+1 30 55.29650827851772 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+12 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 30 55.29650827851772 70 68
+0 2 2 "0s" 0 0 0 192 0 0  30 55.29650827851772 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 CBT-01
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
