@@ -55,9 +55,12 @@ namespace LOFAR
       // based on itsNrBytesPerNrValidSamples.
       template<typename T> T &nrValidSamples(unsigned bl, unsigned ch);
 
-      // Slow short-cut functions. Use for testing only!
+      // @{
+      // Slow short-cut functions. 
+      // \warning Use for testing only!
       unsigned getNrValidSamples(unsigned bl, unsigned ch);
       void setNrValidSamples(unsigned bl, unsigned ch, unsigned value);
+      // @}
 
       const unsigned itsAlignment;
       const unsigned itsNrBaselines;
@@ -71,8 +74,8 @@ namespace LOFAR
       const unsigned itsNrBytesPerNrValidSamples;     // 1, 2, or 4
 
     protected:
-      virtual void                readData(Stream *, unsigned);
-      virtual void                writeData(Stream *, unsigned);
+      virtual void readData(Stream *, unsigned);
+      virtual void writeData(Stream *, unsigned);
 
     private:
       void init(unsigned nrChannels, Allocator &allocator);
