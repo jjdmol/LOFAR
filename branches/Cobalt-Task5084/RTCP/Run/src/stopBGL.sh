@@ -23,8 +23,9 @@ then
   # Reroute to Cobalt
   echo "Rerouting to Cobalt"
 
-  # Start the observation on Cobalt
-  ssh mol@10.168.96.1 stopBGL.sh 1 $OBSID
+  # Stop the observation on Cobalt
+  # (TODO: disabled because MAC calls stopBGL before we're finished)
+  #ssh mol@10.168.96.1 stopBGL.sh 1 $OBSID
 
   # And.. done!
   exit 0

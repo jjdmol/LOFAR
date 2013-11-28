@@ -132,9 +132,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\Pool.h">
-      <Filter>src\cuda\SubbandProcs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClInclude>
@@ -396,8 +393,11 @@
     <ClInclude Include="..\..\GPUProc\src\opencl\Kernels\FFT_Kernel.h">
       <Filter>src\opencl\Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h">
-      <Filter>src\cuda\SubbandProcs</Filter>
+    <ClInclude Include="..\..\GPUProc\src\Kernels\CoherentStokesTransposeKernel.h">
+      <Filter>src\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -682,8 +682,11 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\Kernels\FFT_Plan.cc">
       <Filter>src\opencl\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
-      <Filter>src\cuda\SubbandProcs</Filter>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc">
+      <Filter>test\cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -904,5 +907,11 @@
     <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokesTranspose.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.sh">
+      <Filter>test\cuda</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -359,12 +359,14 @@ int main(int argc, char **argv)
 
 #if defined HAVE_BGP_ION
   ParameterSet personality("/proc/personality.sh");
+#if 0
   unsigned realPsetNumber = personality.getUint32("BG_PSETNUM");
 
   if (myPsetNumber != realPsetNumber) {
     std::cerr << "myPsetNumber (" << myPsetNumber << ") != realPsetNumber (" << realPsetNumber << ')' << std::endl;
     exit(1);
   }
+#endif
 
   std::string myIPaddress = personality.getString("BG_IP");
   strcpy(ipAddresses[myPsetNumber].origin(), myIPaddress.c_str());

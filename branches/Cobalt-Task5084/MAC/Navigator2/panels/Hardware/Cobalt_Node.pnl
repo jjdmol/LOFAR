@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 10 CEP_IONode
-PANEL,-1 -1 1011 745 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -219,7 +219,7 @@ E "main()
 LANG:1 33 MS Shell Dlg,14,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 12 Node: cbt001
-1 954 1 "" 1
+1 918 1 "" 1
 0
 0
 LAYER, 1 

@@ -12,6 +12,7 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tIncoherentStokes tIncoherentStokes.cc)
   # GPU kernel UnitTest++ tests
   lofar_add_test(tDelayAndBandPass tDelayAndBandPass.cc)
+  lofar_add_test(tBandPassCorrection tBandPassCorrection.cc)
 endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
@@ -28,7 +29,8 @@ lofar_add_test(tCorrelator tCorrelator.cc)
 lofar_add_test(tBeamFormer tBeamFormer.cc)
 lofar_add_test(tTranspose tTranspose.cc)
 lofar_add_test(tTranspose2 tTranspose2.cc)
-
+lofar_add_test(tCoherentStokesTranspose tCoherentStokesTranspose.cc)
+lofar_add_test(tIncoherentStokesTranspose tIncoherentStokesTranspose.cc)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
@@ -39,12 +41,16 @@ set_tests_properties(
   tBeamFormer
   tTranspose
   tTranspose2
+  tIncoherentStokesTranspose
+  tCoherentStokesTranspose
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 
 if(UNITTEST++_FOUND)
   set_tests_properties(
     tDelayAndBandPass
+    tBandPassCorrection
+    tCoherentStokes
     tIncoherentStokes
     PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
   )

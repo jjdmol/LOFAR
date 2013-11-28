@@ -46,7 +46,7 @@ Delay compensation (*: no transpose) {I/O: delays}
 FFT-64 {inplace}
    |            [station][pol][chan1][samples][chan2]   [48][2][64][48][64] = 144 MiB               A
    V
-BandPass + Transpose {I/O: weights}  (*** input format currently incorrect ***)
+BandPass + Transpose {I/O: weights}
    |            [station][chan1][chan2][samples][pol]   [48][64][64][48][2] = 144 MiB               B
    V          = [stations][channel][samples][pol]
    X
@@ -59,7 +59,7 @@ Complex Voltages/Coherent Stokes:
 BeamFormer {I/O: weights}
    |            [channel][samples][tab][pol]            [4096][48][tab][2]  = 3 MiB/TAB             A
    V
-Transpose  (*** kernel must be fixed: output format is wrong ***)
+Transpose  
    |            [tab][pol][samples][channel]            [tab][2][48][4096]  = 3 MiB/TAB             1ch: CS: C, CV: D
    |                                                                                                Nch: CS: D, CV: C
    V
@@ -86,7 +86,7 @@ Incoherent Stokes:
    X            [station][channel][samples][pol]        [48][4096][48][2]   = 144 MiB               B
    |
    V
-Transpose + Copy  (*** requires new kernel: different input/output format ***)
+Transpose + Copy
    |            [station][pol][samples][channel]        [48][2][48][4096]   = 144 MiB               A
    V
 iFFT-4k {inplace}
@@ -100,7 +100,7 @@ FFT-16 {inplace} (if >1ch)
    |            [station][pol][samples][channel]        [48][2][12288][16]  = 144 MiB               B
    |
    V
-Incoherent Stokes (*: no transpose) (*** kernel must be fixed: wrong input format ***)
+Incoherent Stokes (*: no transpose)
    |            [stokes][samples][channel]              [4][12288][16]      = 3 MiB                 E
    V                                                    (float)
 (output)

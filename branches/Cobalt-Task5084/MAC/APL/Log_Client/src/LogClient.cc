@@ -422,13 +422,15 @@ string LogClient::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 		return ("");	// [2][4]
 	}
 
-	// DPname is not filled in yet, tried to find it if we are still
-	// within the first 10 messages. Note: msgCnt is initialized with -10.
+	// DPname is not filled in yet, tried to find it if we are still within the
+	// first maxInitMsgCount messages. 
+	// Note: msgCnt is initialized with -maxInitMsgCount.
 	if (++(iter->second.msgCnt) > 0) {
-		// when msgCnt reached 0 we could report that we tried it 10 times
-		// but we don't know the name of the log-stream, so just return
+		// when msgCnt reached 0 we will report that we tried it maxInitMsgCount
+		// times but we don't know the name of the log-stream, so just return
 		if (itsInTestMode && iter->second.msgCnt == 1) {
-			LOG_ERROR("*** *** No 'MACProcessScope:' found in the first 10 message! *** ***");
+			LOG_ERROR_STR("*** *** No 'MACProcessScope:' found in the first "
+				<< LogProc::maxInitMsgCount << " messages! *** ***");
 		}
 		return ("");
 	}

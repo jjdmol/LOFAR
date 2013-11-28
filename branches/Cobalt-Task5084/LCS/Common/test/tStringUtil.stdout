@@ -30,6 +30,11 @@ Trimmed C strings:
 >a String with leading and trailing whitespace< , len=45
 >a String without leading and trailing whitespace< , len=48
 >String with(out) itemnr and arrayindex< , len=38
+Bracket-stripped C++ strings:
+>a String with leading and trailing whitespace<
+>a String without leading and trailing whitespace<
+>a string with [ and ] inside and surrounding the text.<
+>a string with multiple [ and ] inside and surrounding the text.<
 Lowercase and uppercase a string:
 orginal: The zip code of Hondelage in Germany is 38108
 lowered: the zip code of hondelage in germany is 38108
@@ -132,6 +137,6 @@ toString(double(M_PI*1e12),"%+08.12g") = +3.14159265359e+12
  [(1,2,3)] ==>  [(1,2,3)]
   Performance test of expandArrayString
 >>>
-timer: avg = 46163, total = 46163 cycles, count =         1
+timer: avg = 28.6 us, total = 28.6 us, count =         1
 <<<
 [abc001,abc002,abc003,abc004,abc005,abc006,abc007,abc008,abc009,abc010,abc45,abc46,abc47,abc48,abc49,abc50]

@@ -23,6 +23,7 @@
 #define LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
 
 #include <GPUProc/KernelFactory.h>
+#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
@@ -30,6 +31,7 @@
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
+#include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 
 namespace LOFAR
 {
@@ -45,13 +47,17 @@ namespace LOFAR
 
       KernelFactory<IntToFloatKernel> intToFloat;
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
-      KernelFactory<DelayAndBandPassKernel> correctBandPass;
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
       KernelFactory<IncoherentStokesKernel> incoherentStokes;
+      KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
       KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+
+      BandPassCorrectionKernel::Parameters
+      bandPassCorrectionParams(const Parset &ps) const;
 
       BeamFormerKernel::Parameters
       beamFormerParams(const Parset &ps) const;
@@ -61,9 +67,6 @@ namespace LOFAR
 
       CoherentStokesKernel::Parameters
       coherentStokesParams(const Parset &ps) const;
-
-      DelayAndBandPassKernel::Parameters
-      correctBandPassParams(const Parset &ps) const;
 
       DelayAndBandPassKernel::Parameters
       delayCompensationParams(const Parset &ps) const;
@@ -77,6 +80,11 @@ namespace LOFAR
 
       IncoherentStokesKernel::Parameters 
       incoherentStokesParams(const Parset &ps) const;
+
+      IncoherentStokesTransposeKernel::Parameters 
+      incoherentStokesTransposeParams(const Parset &ps) const;
+
+
     };
 
   }
