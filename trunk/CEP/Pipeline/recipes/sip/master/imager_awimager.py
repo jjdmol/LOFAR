@@ -68,7 +68,7 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
     }
 
     outputs = {
-        'mapfile': ingredient.StringField()
+        'mapfile': ingredient.StringField(),
     }
 
     def go(self):
@@ -98,11 +98,12 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
         node_command = "python %s" % (self.__file__.replace("master", "nodes"))
         jobs = []
 
-        output_map = copy.deepcopy(input_map)
+        output_map = copy.deepcopy(input_map)        
         for w, x, y in zip(input_map, output_map, sourcedb_map):
             w.skip = x.skip = y.skip = (
                 w.skip or x.skip or y.skip
             )
+
         sourcedb_map.iterator = input_map.iterator = output_map.iterator = \
             DataMap.SkipIterator
 
