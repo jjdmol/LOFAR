@@ -97,21 +97,24 @@ namespace LOFAR
       struct Delay {
         double  direction[3];
         double  delay;
+        double  clockCorrection;
+
+        double  totalDelay() const {
+          return delay + clockCorrection;
+        }
 
         bool operator==(const Delay &other) const {
           return direction[0] == other.direction[0] &&
                  direction[1] == other.direction[1] &&
                  direction[2] == other.direction[2] &&
-                 delay == other.delay;
+                 delay == other.delay &&
+                 clockCorrection == other.clockCorrection;
         }
       };
 
       struct BeamDelays {
         struct Delay              SAP;
         std::vector<struct Delay> TABs;
-
-        void read( Stream *str );
-        void write( Stream *str ) const;
 
         bool operator==(const BeamDelays &other) const {
           return SAP == other.SAP && TABs == other.TABs;
@@ -124,9 +127,6 @@ namespace LOFAR
 
         // All delays for all SAPs (and their TABs)
         std::vector<struct BeamDelays> SAPs;
-
-        void read( Stream *str );
-        void write( Stream *str ) const;
 
         bool operator==(const AllDelays &other) const {
           return SAPs == other.SAPs;
@@ -192,8 +192,8 @@ namespace LOFAR
       // in `result'.
       void calcDelays( const TimeStamp &timestamp, AllDelays &result );
 
-      // Returns the non-geometric delay to add for this station
-      double baseDelay() const;
+      // Returns the clock correction delay to add for this station
+      double clockCorrection() const;
 
 #ifdef HAVE_CASACORE
       casa::MVEpoch                       toUTC( const TimeStamp &timestamp ) const;

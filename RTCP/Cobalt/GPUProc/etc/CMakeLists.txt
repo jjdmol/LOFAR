@@ -2,11 +2,13 @@
 
 
 install(FILES
-  parset-additions.d/CobaltHardwareMap.parset
-  parset-additions.d/FinalMetaDataGatherer.parset
-  parset-additions.d/MAC-feedback.parset
-  parset-additions.d/OutputProc.parset
-  parset-additions.d/StationCalibration.parset
-  parset-additions.d/StationStreams.parset
-  DESTINATION etc/parset-additions.d)
+  parset-additions.d/default/HardwareList.parset
+  parset-additions.d/default/HardwareUsed.parset
+  parset-additions.d/default/FinalMetaDataGatherer.parset
+  parset-additions.d/default/MAC-feedback.parset
+  parset-additions.d/default/OutputProc.parset
+  parset-additions.d/default/StationCalibration.parset
+  parset-additions.d/default/StationStreams.parset
+  DESTINATION etc/parset-additions.d/default)
 
+INSTALL(CODE "FILE(MAKE_DIRECTORY \${ENV}\${CMAKE_INSTALL_PREFIX}etc/parset-additions.d/override)")

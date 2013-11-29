@@ -23,7 +23,6 @@
 #include <Interface/Stream.h>
 #include <Interface/FinalMetaData.h>
 #include <Stream/PortBroker.h>
-#include <Storage/ExitOnClosedStdin.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
@@ -181,19 +180,7 @@ char stdoutbuf[1024], stderrbuf[1024];
 
 int main(int argc, char *argv[])
 {
-#if defined HAVE_LOG4CPLUS
-  char *dirc = strdup(argv[0]);
-
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : dirname(dirc)) + "/../etc/FinalMetaDataGatherer.log_prop");
-
-  free(dirc);
-#elif defined HAVE_LOG4CXX
-  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
-  Context::initialize();
-  setLevel("Global",8);
-#else
-  INIT_LOGGER_WITH_SYSINFO(str(boost::format("FinalMetaDataGatherer@%02d") % (argc > 2 ? atoi(argv[2]) : -1)));
-#endif
+  INIT_LOGGER("FinalMetaDataGatherer");
 
   CasaLogSink::attach();
 
@@ -201,7 +188,6 @@ int main(int argc, char *argv[])
     if (argc != 2)
       throw StorageException(str(boost::format("usage: %s obsid") % argv[0]), THROW_ARGS);
 
-    ExitOnClosedStdin			  stdinWatcher;
     setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
     setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 

@@ -161,6 +161,16 @@ namespace LOFAR
         // key: OLAP.storageStationNames[stationIdx]
         std::string name;
 
+        // The input streams descriptors
+        //
+        // key: PIC.Core.CS001LBA.RSP.ports
+        std::vector<std::string> inputStreams;
+
+        // The node name on which this station is received
+        //
+        // key: PIC.Core.CS001LBA.RSP.receiver
+        std::string receiver;
+
         // Correction on the station clock, in seconds
         //
         // key: PIC.Core.CS001LBA.clockCorrectionTime
@@ -174,21 +184,21 @@ namespace LOFAR
 
         // The phase correction for this station, in radians.
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.Y
         struct {
           double x;
           double y;
-        } phaseCorrection;
+        } phase0;
 
         // The delay correction for this station, in seconds
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.Y
         struct {
           double x;
           double y;
-        } delayCorrection;
+        } delay;
 
 
         // The RSP board to which each subband is mapped
@@ -214,13 +224,15 @@ namespace LOFAR
       /*
        * Resources information:
        *   - what hardware we use (cpus/gpus)
-       *   - which nodes receive which stations
        */ 
 
       struct Node {
         // MPI rank of this node, is the
         // same as the index in the `nodes' vector.
         int rank;
+
+        // (Symbolic) name
+        std::string name;
 
         // Host name
         std::string hostName;
@@ -235,9 +247,6 @@ namespace LOFAR
         //
         // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
-
-        // Station indices to forward data for
-        std::vector<size_t> stations;
       };
 
       std::vector<struct Node> nodes;
@@ -676,8 +685,6 @@ namespace LOFAR
       bool                        haveAnaBeam() const;
       std::vector<double>         getAnaBeamDirection() const;
       std::string                 getAnaBeamDirectionType() const;
-
-      std::string                 getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
 
       std::vector<double>         itsStPositions;
 

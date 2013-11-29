@@ -24,7 +24,9 @@
 #include <CoInterface/Parset.h>
 
 #include <cstdio>
+#include <cstring>
 #include <set>
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -265,6 +267,29 @@ namespace LOFAR
       return newname;
     }
 
+    /*
+     * operator<() for station names.
+     *
+     * Sorts in the following order:
+     *   1. Core stations (CSxxx)
+     *   2. Remote stations (RSxxx)
+     *   3. International stations (others)
+     *
+     * Within each group, the stations are
+     * sorted lexicographically. For group 3
+     * we skip the first 2 chars when sorting.
+     */
+    bool compareStationNames( const string &a, const string &b ) {
+      if (a.size() >= 5 && b.size() >= 5) { // common case
+        if ( (a[0] == 'C' || a[0] == 'R') && a[1] == 'S' &&
+             (b[0] == 'C' || b[0] == 'R') && b[1] == 'S' ) {
+          return a < b; // both CS/RS stations; 'C'<'R'
+        } else { // at least 1 non-CS/RS name; cmp (presumed) nrs
+          return std::strcmp(&a.c_str()[2], &b.c_str()[2]) < 0;
+        }
+      }
+      return a < b; // at least 1 short name
+    }
 
     struct ObservationSettings Parset::observationSettings() const
     {
@@ -351,6 +376,10 @@ namespace LOFAR
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
+      // Sort stations (CS, RS, intl), to get a consistent and predictable
+      // order in the MeasurementSets.
+      std::sort(stations.begin(), stations.end(), compareStationNames);
+
       vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
       size_t nrStations = fieldNames.size();
@@ -360,12 +389,19 @@ namespace LOFAR
         struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name              = fieldNames[i].fullName();
+        station.inputStreams      = getStringVector(
+            renamedKey(str(format("PIC.Core.%s.RSP.ports") % station.name),
+                       str(format("PIC.Core.Station.%s.RSP.ports") % station.name)),
+            emptyVectorString, true);
+        station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
+
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
-        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -381,27 +417,21 @@ namespace LOFAR
       }
 
       // Resource information
-      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
-      settings.nodes.resize(nrNodes);
-      for (size_t i = 0; i < nrNodes; ++i) {
+      vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
+      settings.nodes.resize(nodes.size());
+
+      for (size_t i = 0; i < nodes.size(); ++i) {
         struct ObservationSettings::Node &node = settings.nodes[i];
 
-        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
-
         node.rank     = i;
+        node.name     = nodes[i];
+
+        string prefix = str(format("PIC.Core.Cobalt.%s.") % node.name);
+
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
-
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
-
-        for (size_t j = 0; j < stationNames.size(); ++j) {
-          ssize_t index = settings.stationIndex(stationNames[j]);
-
-          if (index >= 0)
-            node.stations.push_back(index);
-        }
       }
 
       /* ===============================
@@ -412,6 +442,7 @@ namespace LOFAR
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
       if (settings.correlator.enabled) {
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
+        //settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
@@ -707,20 +738,6 @@ namespace LOFAR
     bool Parset::correctClocks() const
     {
       return settings.corrections.clock;
-    }
-
-
-    string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
-    {
-      string key = string("PIC.Core.Station.") + stationName + ".RSP.ports";
-
-      if (!isDefined(key)) {
-        LOG_ERROR_STR("Key not found: " << key << ", falling back to reading from /dev/null");
-
-        return "file:/dev/null";
-      }
-
-      return getStringVector(key, true)[rspBoardNumber];
     }
 
 

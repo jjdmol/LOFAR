@@ -165,8 +165,8 @@ int main() {
     in.delaysAtBegin.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.delaysAfterEnd.num_elements(); i++)
     in.delaysAfterEnd.get<float>()[i] = 0.0f;
-  for (size_t i = 0; i < in.phaseOffsets.num_elements(); i++)
-    in.phaseOffsets.get<float>()[i] = 0.0f;
+  for (size_t i = 0; i < in.phase0s.num_elements(); i++)
+    in.phase0s.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
@@ -196,21 +196,9 @@ int main() {
   // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
   // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 1082398867456
 
-  float outVal;
-  switch(nrBitsPerSample) {
-  case 8:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  case 16:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  default:
-    break;
-  }
+  float outVal = 
+    nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
+    nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
   cout << "outVal = " << outVal << endl;
 
   for (size_t s = 0; s < nrStokes; s++)

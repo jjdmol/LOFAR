@@ -54,6 +54,16 @@ typedef float4 fcomplex2;
 typedef fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef fcomplex (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
+/*
+ * Return baseline major-minor.
+ *
+ * Note that major >= minor >= 0 must hold.
+ */
+inline __device__ int baseline(int major, int minor)
+{
+  return major * (major + 1) / 2 + minor;
+}
+
 extern "C" {
 
 /*!
@@ -101,7 +111,7 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 
   __shared__ float samples[4][BLOCK_SIZE][NR_STATIONS | 1]; // avoid power-of-2
 
-  uint baseline = blockIdx.x * blockDim.x + threadIdx.x;
+  int baseline = blockIdx.x * blockDim.x + threadIdx.x;
 
 #if NR_CHANNELS == 1
   uint channel = blockIdx.y;
@@ -110,39 +120,46 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 #endif
 
   /*
+   * Baselines are ordered like:
+   *   0-0, 1-0, 1-1, 2-0, 2-1, 2-2, ...
+   *
    * if 
    *   b = baseline
    *   x = stat1
    *   y = stat2
-   *   x <= y
+   *   x >= y
    * then
-   *   b_xy = y * (y + 1) / 2 + x
+   *   b_xy = x * (x + 1) / 2 + y
    * let
-   *   u := b_0y
+   *   u := b_x0
    * then
-   *     u            = y * (y + 1) / 2
-   *     8u           = 4y^2 + 4y
-   *     8u + 1       = 4y^2 + 4y + 1 = (2y + 1)^2
-   *     sqrt(8u + 1) = 2y + 1
-   *                y = (sqrt(8u + 1) - 1) / 2
+   *     u            = x * (x + 1) / 2
+   *     8u           = 4x^2 + 4x
+   *     8u + 1       = 4x^2 + 4x + 1 = (2x + 1)^2
+   *     sqrt(8u + 1) = 2x + 1
+   *                x = (sqrt(8u + 1) - 1) / 2
    *
    * Let us define
-   *   y'(b) = (sqrt(8b + 1) - 1) / 2
+   *   x'(b) = (sqrt(8b + 1) - 1) / 2
    * which increases monotonically and is a continuation of y(b).
    *
    * Because y simply increases by 1 when b increases enough, we
    * can just take the floor function to obtain the discrete y(b):
-   *   y(b) = floor(y'(b))
+   *   x(b) = floor(x'(b))
    *        = floor(sqrt(8b + 1) - 1) / 2)
    */
 
-  uint stat_A = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
+  int x = __float2uint_rz(sqrtf(float(8 * baseline + 1)) - 0.99999f) / 2;
 
   /*
    * And, of course
-   *  x = b - y * (y + 1)/2
+   *  y = b - x * (x + 1)/2
    */
-  uint stat_0 = baseline - stat_A * (stat_A + 1) / 2;
+  int y = baseline - x * (x + 1) / 2;
+
+  // NOTE: stat0 >= statA holds
+  int stat_0 = x;
+  int stat_A = y;
 
   // visR and visI will contain the real and imaginary parts, respectively, of
   // the four visibilities (i.e., the four correlation products between the two
@@ -173,11 +190,12 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
     // compute correlations
     if (baseline < NR_BASELINES) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
-        fcomplex2 sample_1, sample_A;
-        sample_1.x = samples[0][time][stat_0]; // sample1_X_r
-        sample_1.y = samples[1][time][stat_0]; // sample1_X_i
-        sample_1.z = samples[2][time][stat_0]; // sample1_Y_r
-        sample_1.w = samples[3][time][stat_0]; // sample1_Y_i
+        fcomplex2 sample_0, sample_A;
+
+        sample_0.x = samples[0][time][stat_0]; // sample0_X_r
+        sample_0.y = samples[1][time][stat_0]; // sample0_X_i
+        sample_0.z = samples[2][time][stat_0]; // sample0_Y_r
+        sample_0.w = samples[3][time][stat_0]; // sample0_Y_i
         sample_A.x = samples[0][time][stat_A]; // sampleA_X_r
         sample_A.y = samples[1][time][stat_A]; // sampleA_X_i
         sample_A.z = samples[2][time][stat_A]; // sampleA_Y_r
@@ -185,10 +203,10 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 
         // Interleave calculation of the two parts of the real and imaginary
         // visibilities to improve performance.
-        visR += SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z); 
-        visI += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
-        visR += SWIZZLE(sample_1,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
-        visI -= SWIZZLE(sample_1,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
+        visR += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z); 
+        visI += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
+        visR += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
+        visI -= SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,y,w,y,w);
       }
     }
 
@@ -229,12 +247,14 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 #endif
 
   /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
-  uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
-  uint y = block - x * (x + 1) / 2;
+  int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
+  int y = block - x * (x + 1) / 2;
 
-  uint stat_A = 2 * x;
+  // NOTE: stat_0 >= stat_A holds
+  int stat_0 = 2 * x;
+  int stat_A = 2 * y;
 
-  bool compute_correlations = stat_A < NR_STATIONS;
+  bool compute_correlations = stat_0 < NR_STATIONS;
 
   /* float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0; */
   /* float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0; */
@@ -307,16 +327,15 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   // write visibilities
-  uint stat_0 = 2 * y;
-  uint stat_1 = stat_0 + 1;
-  uint stat_B = stat_A + 1;
-  bool do_baseline_0A = stat_A < NR_STATIONS;
-  bool do_baseline_0B = stat_B < NR_STATIONS;
-  bool do_baseline_1A = do_baseline_0A && stat_1 <= stat_A;
-  bool do_baseline_1B = do_baseline_0B;
+  int stat_1 = stat_0 + 1;
+  int stat_B = stat_A + 1;
+  bool do_baseline_0A = stat_0 < NR_STATIONS;// stat_0 >= stat_A holds
+  bool do_baseline_0B = stat_0 < NR_STATIONS && stat_0 >= stat_B;
+  bool do_baseline_1A = stat_1 < NR_STATIONS;// stat_1 > stat_0 >= stat_A holds
+  bool do_baseline_1B = stat_1 < NR_STATIONS;// stat_1 = stat_0 + 1 >= stat_A + 1 = stat_B holds
 
   if (do_baseline_0A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.y, vis_0A_i.y);
@@ -325,7 +344,7 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.y, vis_0B_i.y);
@@ -334,7 +353,7 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.y, vis_1A_i.y);
@@ -343,7 +362,7 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.y, vis_1B_i.y);
@@ -379,9 +398,11 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
   uint y = block - x * (x + 1) / 2;
 
-  uint stat_A = 3 * x;
+  // NOTE: stat_0 >= stat_A holds
+  int stat_0 = 3 * x;
+  int stat_A = 3 * y;
 
-  bool compute_correlations = stat_A < NR_STATIONS;
+  bool compute_correlations = stat_0 < NR_STATIONS;
 
   float4 vis_0A_r = {0, 0, 0, 0}, vis_0A_i = {0, 0, 0, 0};
   float4 vis_0B_r = {0, 0, 0, 0}, vis_0B_i = {0, 0, 0, 0};
@@ -497,24 +518,23 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   // write visibilities
-  uint stat_0 = 3 * y;
-  uint stat_1 = stat_0 + 1;
-  uint stat_2 = stat_0 + 2;
-  uint stat_B = stat_A + 1;
-  uint stat_C = stat_A + 2;
+  int stat_1 = stat_0 + 1;
+  int stat_2 = stat_0 + 2;
+  int stat_B = stat_A + 1;
+  int stat_C = stat_A + 2;
 
-  bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS && stat_0 <= stat_A;
-  bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 <= stat_B;
-  bool do_baseline_0C = stat_0 < NR_STATIONS && stat_C < NR_STATIONS && stat_0 <= stat_C;
-  bool do_baseline_1A = stat_1 < NR_STATIONS && stat_A < NR_STATIONS && stat_1 <= stat_A;
-  bool do_baseline_1B = stat_1 < NR_STATIONS && stat_B < NR_STATIONS && stat_1 <= stat_B;
-  bool do_baseline_1C = stat_1 < NR_STATIONS && stat_C < NR_STATIONS && stat_1 <= stat_C;
-  bool do_baseline_2A = stat_2 < NR_STATIONS && stat_A < NR_STATIONS && stat_2 <= stat_A;
-  bool do_baseline_2B = stat_2 < NR_STATIONS && stat_B < NR_STATIONS && stat_2 <= stat_B;
-  bool do_baseline_2C = stat_2 < NR_STATIONS && stat_C < NR_STATIONS && stat_2 <= stat_C;
+  bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS;// stat_0 >= stat_A holds
+  bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 >= stat_B;
+  bool do_baseline_0C = stat_0 < NR_STATIONS && stat_C < NR_STATIONS && stat_0 >= stat_C;
+  bool do_baseline_1A = stat_1 < NR_STATIONS && stat_A < NR_STATIONS;// stat_1 >= stat_A holds
+  bool do_baseline_1B = stat_1 < NR_STATIONS && stat_B < NR_STATIONS;// stat_1 >= stat_B holds
+  bool do_baseline_1C = stat_1 < NR_STATIONS && stat_C < NR_STATIONS && stat_1 >= stat_C;
+  bool do_baseline_2A = stat_2 < NR_STATIONS && stat_A < NR_STATIONS;// stat_2 >= stat_A holds
+  bool do_baseline_2B = stat_2 < NR_STATIONS && stat_B < NR_STATIONS;// stat_2 >= stat_B holds
+  bool do_baseline_2C = stat_2 < NR_STATIONS && stat_C < NR_STATIONS;// stat_2 >= stat_C holds
 
   if (do_baseline_0A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.y, vis_0A_i.y);
@@ -523,7 +543,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.y, vis_0B_i.y);
@@ -532,7 +552,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0C_r.x, vis_0C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0C_r.y, vis_0C_i.y);
@@ -541,7 +561,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.y, vis_1A_i.y);
@@ -550,7 +570,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.y, vis_1B_i.y);
@@ -559,7 +579,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1C_r.x, vis_1C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1C_r.y, vis_1C_i.y);
@@ -568,7 +588,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2A_r.x, vis_2A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2A_r.y, vis_2A_i.y);
@@ -577,7 +597,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2B_r.x, vis_2B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2B_r.y, vis_2B_i.y);
@@ -586,7 +606,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2C_r.x, vis_2C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2C_r.y, vis_2C_i.y);
@@ -619,12 +639,14 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 #endif
 
   /* uint x = convert_uint_rtz(sqrt(convert_float(8 * block + 1)) - 0.99999f) / 2; */
-  uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
-  uint y = block - x * (x + 1) / 2;
+  int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
+  int y = block - x * (x + 1) / 2;
 
-  uint stat_A = 4 * x;
+  // NOTE: stat_0 >= stat_A holds
+  int stat_0 = 4 * y;
+  int stat_A = 4 * x;
 
-  bool compute_correlations = stat_A < NR_STATIONS;
+  bool compute_correlations = stat_0 < NR_STATIONS;
 
   /* float4 vis_0A_r = (float4) 0, vis_0A_i = (float4) 0; */
   /* float4 vis_0B_r = (float4) 0, vis_0B_i = (float4) 0; */
@@ -821,33 +843,32 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   // write visibilities
-  uint stat_0 = 4 * y;
-  uint stat_1 = stat_0 + 1;
-  uint stat_2 = stat_0 + 2;
-  uint stat_3 = stat_0 + 3;
-  uint stat_B = stat_A + 1;
-  uint stat_C = stat_A + 2;
-  uint stat_D = stat_A + 3;
+  int stat_1 = stat_0 + 1;
+  int stat_2 = stat_0 + 2;
+  int stat_3 = stat_0 + 3;
+  int stat_B = stat_A + 1;
+  int stat_C = stat_A + 2;
+  int stat_D = stat_A + 3;
 
-  bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS && stat_0 <= stat_A;
-  bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 <= stat_B;
-  bool do_baseline_0C = stat_0 < NR_STATIONS && stat_C < NR_STATIONS && stat_0 <= stat_C;
-  bool do_baseline_0D = stat_0 < NR_STATIONS && stat_D < NR_STATIONS && stat_0 <= stat_D;
-  bool do_baseline_1A = stat_1 < NR_STATIONS && stat_A < NR_STATIONS && stat_1 <= stat_A;
-  bool do_baseline_1B = stat_1 < NR_STATIONS && stat_B < NR_STATIONS && stat_1 <= stat_B;
-  bool do_baseline_1C = stat_1 < NR_STATIONS && stat_C < NR_STATIONS && stat_1 <= stat_C;
-  bool do_baseline_1D = stat_1 < NR_STATIONS && stat_D < NR_STATIONS && stat_1 <= stat_D;
-  bool do_baseline_2A = stat_2 < NR_STATIONS && stat_A < NR_STATIONS && stat_2 <= stat_A;
-  bool do_baseline_2B = stat_2 < NR_STATIONS && stat_B < NR_STATIONS && stat_2 <= stat_B;
-  bool do_baseline_2C = stat_2 < NR_STATIONS && stat_C < NR_STATIONS && stat_2 <= stat_C;
-  bool do_baseline_2D = stat_2 < NR_STATIONS && stat_D < NR_STATIONS && stat_2 <= stat_D;
-  bool do_baseline_3A = stat_3 < NR_STATIONS && stat_A < NR_STATIONS && stat_3 <= stat_A;
-  bool do_baseline_3B = stat_3 < NR_STATIONS && stat_B < NR_STATIONS && stat_3 <= stat_B;
-  bool do_baseline_3C = stat_3 < NR_STATIONS && stat_C < NR_STATIONS && stat_3 <= stat_C;
-  bool do_baseline_3D = stat_3 < NR_STATIONS && stat_D < NR_STATIONS && stat_3 <= stat_D;
+  bool do_baseline_0A = stat_0 < NR_STATIONS && stat_A < NR_STATIONS;// stat_0 >= stat_A holds
+  bool do_baseline_0B = stat_0 < NR_STATIONS && stat_B < NR_STATIONS && stat_0 >= stat_B;
+  bool do_baseline_0C = stat_0 < NR_STATIONS && stat_C < NR_STATIONS && stat_0 >= stat_C;
+  bool do_baseline_0D = stat_0 < NR_STATIONS && stat_D < NR_STATIONS && stat_0 >= stat_D;
+  bool do_baseline_1A = stat_1 < NR_STATIONS && stat_A < NR_STATIONS;// stat_1 >= stat_A holds
+  bool do_baseline_1B = stat_1 < NR_STATIONS && stat_B < NR_STATIONS;// stat_1 >= stat_B holds
+  bool do_baseline_1C = stat_1 < NR_STATIONS && stat_C < NR_STATIONS && stat_1 >= stat_C;
+  bool do_baseline_1D = stat_1 < NR_STATIONS && stat_D < NR_STATIONS && stat_1 >= stat_D;
+  bool do_baseline_2A = stat_2 < NR_STATIONS && stat_A < NR_STATIONS;// stat_2 >= stat_A holds
+  bool do_baseline_2B = stat_2 < NR_STATIONS && stat_B < NR_STATIONS;// stat_2 >= stat_B holds
+  bool do_baseline_2C = stat_2 < NR_STATIONS && stat_C < NR_STATIONS;// stat_2 >= stat_C holds
+  bool do_baseline_2D = stat_2 < NR_STATIONS && stat_D < NR_STATIONS && stat_2 >= stat_D;
+  bool do_baseline_3A = stat_3 < NR_STATIONS && stat_A < NR_STATIONS;// stat_3 >= stat_A holds
+  bool do_baseline_3B = stat_3 < NR_STATIONS && stat_B < NR_STATIONS;// stat_3 >= stat_B holds
+  bool do_baseline_3C = stat_3 < NR_STATIONS && stat_C < NR_STATIONS;// stat_3 >= stat_C holds
+  bool do_baseline_3D = stat_3 < NR_STATIONS && stat_D < NR_STATIONS;// stat_3 >= stat_D holds
 
   if (do_baseline_0A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0A_r.x, vis_0A_i.x, vis_0A_r.y, vis_0A_i.y, vis_0A_r.z, vis_0A_i.z, vis_0A_r.w, vis_0A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0A_r.x, vis_0A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0A_r.y, vis_0A_i.y);
@@ -856,7 +877,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0B_r.x, vis_0B_i.x, vis_0B_r.y, vis_0B_i.y, vis_0B_r.z, vis_0B_i.z, vis_0B_r.w, vis_0B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0B_r.x, vis_0B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0B_r.y, vis_0B_i.y);
@@ -865,7 +886,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0C_r.x, vis_0C_i.x, vis_0C_r.y, vis_0C_i.y, vis_0C_r.z, vis_0C_i.z, vis_0C_r.w, vis_0C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0C_r.x, vis_0C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0C_r.y, vis_0C_i.y);
@@ -874,7 +895,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_0D) {
-    uint baseline = (stat_D * (stat_D + 1) / 2) + stat_0;
+    int baseline = ::baseline(stat_0, stat_D);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_0D_r.x, vis_0D_i.x, vis_0D_r.y, vis_0D_i.y, vis_0D_r.z, vis_0D_i.z, vis_0D_r.w, vis_0D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_0D_r.x, vis_0D_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_0D_r.y, vis_0D_i.y);
@@ -883,7 +904,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1A_r.x, vis_1A_i.x, vis_1A_r.y, vis_1A_i.y, vis_1A_r.z, vis_1A_i.z, vis_1A_r.w, vis_1A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1A_r.x, vis_1A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1A_r.y, vis_1A_i.y);
@@ -892,7 +913,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1B_r.x, vis_1B_i.x, vis_1B_r.y, vis_1B_i.y, vis_1B_r.z, vis_1B_i.z, vis_1B_r.w, vis_1B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1B_r.x, vis_1B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1B_r.y, vis_1B_i.y);
@@ -901,7 +922,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1C_r.x, vis_1C_i.x, vis_1C_r.y, vis_1C_i.y, vis_1C_r.z, vis_1C_i.z, vis_1C_r.w, vis_1C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1C_r.x, vis_1C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1C_r.y, vis_1C_i.y);
@@ -910,7 +931,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_1D) {
-    uint baseline = (stat_D * (stat_D + 1) / 2) + stat_1;
+    int baseline = ::baseline(stat_1, stat_D);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_1D_r.x, vis_1D_i.x, vis_1D_r.y, vis_1D_i.y, vis_1D_r.z, vis_1D_i.z, vis_1D_r.w, vis_1D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_1D_r.x, vis_1D_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_1D_r.y, vis_1D_i.y);
@@ -919,7 +940,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2A_r.x, vis_2A_i.x, vis_2A_r.y, vis_2A_i.y, vis_2A_r.z, vis_2A_i.z, vis_2A_r.w, vis_2A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2A_r.x, vis_2A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2A_r.y, vis_2A_i.y);
@@ -928,7 +949,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2B_r.x, vis_2B_i.x, vis_2B_r.y, vis_2B_i.y, vis_2B_r.z, vis_2B_i.z, vis_2B_r.w, vis_2B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2B_r.x, vis_2B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2B_r.y, vis_2B_i.y);
@@ -937,7 +958,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2C_r.x, vis_2C_i.x, vis_2C_r.y, vis_2C_i.y, vis_2C_r.z, vis_2C_i.z, vis_2C_r.w, vis_2C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2C_r.x, vis_2C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2C_r.y, vis_2C_i.y);
@@ -946,7 +967,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_2D) {
-    uint baseline = (stat_D * (stat_D + 1) / 2) + stat_2;
+    int baseline = ::baseline(stat_2, stat_D);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_2D_r.x, vis_2D_i.x, vis_2D_r.y, vis_2D_i.y, vis_2D_r.z, vis_2D_i.z, vis_2D_r.w, vis_2D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_2D_r.x, vis_2D_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_2D_r.y, vis_2D_i.y);
@@ -955,7 +976,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_3A) {
-    uint baseline = (stat_A * (stat_A + 1) / 2) + stat_3;
+    int baseline = ::baseline(stat_3, stat_A);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3A_r.x, vis_3A_i.x, vis_3A_r.y, vis_3A_i.y, vis_3A_r.z, vis_3A_i.z, vis_3A_r.w, vis_3A_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3A_r.x, vis_3A_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3A_r.y, vis_3A_i.y);
@@ -964,7 +985,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_3B) {
-    uint baseline = (stat_B * (stat_B + 1) / 2) + stat_3;
+    int baseline = ::baseline(stat_3, stat_B);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3B_r.x, vis_3B_i.x, vis_3B_r.y, vis_3B_i.y, vis_3B_r.z, vis_3B_i.z, vis_3B_r.w, vis_3B_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3B_r.x, vis_3B_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3B_r.y, vis_3B_i.y);
@@ -973,7 +994,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_3C) {
-    uint baseline = (stat_C * (stat_C + 1) / 2) + stat_3;
+    int baseline = ::baseline(stat_3, stat_C);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3C_r.x, vis_3C_i.x, vis_3C_r.y, vis_3C_i.y, vis_3C_r.z, vis_3C_i.z, vis_3C_r.w, vis_3C_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3C_r.x, vis_3C_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3C_r.y, vis_3C_i.y);
@@ -982,7 +1003,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 
   if (do_baseline_3D) {
-    uint baseline = (stat_D * (stat_D + 1) / 2) + stat_3;
+    int baseline = ::baseline(stat_3, stat_D);
     /* (*visibilities)[baseline][channel] = (fcomplex4) { vis_3D_r.x, vis_3D_i.x, vis_3D_r.y, vis_3D_i.y, vis_3D_r.z, vis_3D_i.z, vis_3D_r.w, vis_3D_i.w }; */
     (*visibilities)[baseline][channel][0][0] = make_float2(vis_3D_r.x, vis_3D_i.x);
     (*visibilities)[baseline][channel][0][1] = make_float2(vis_3D_r.y, vis_3D_i.y);
