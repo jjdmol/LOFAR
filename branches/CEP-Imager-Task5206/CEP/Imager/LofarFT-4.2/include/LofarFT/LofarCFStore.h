@@ -50,17 +50,17 @@ namespace LOFAR {
 	      maxXSupport(-1), maxYSupport(-1),
 		   pa(), mosPointingPos(0) {};
 
-    LofarCFStore(const CountedPtr<CFType>& dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
-	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-	    Quantity PA, Int mosPointing):
+    LofarCFStore(const casa::CountedPtr<CFType>& dataPtr, casa::CoordinateSystem& cs, casa::Vector<casa::Float>& samp,
+	    casa::Vector<casa::Int>& xsup, casa::Vector<casa::Int>& ysup, casa::Int maxXSup, casa::Int maxYSup,
+	    casa::Quantity PA, casa::Int mosPointing):
       data(dataPtr),rdata(),vdata(), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
     {}
 
-    LofarCFStore(const CountedPtr<CFTypeVec>& dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
-	    Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-		 Quantity PA, Int mosPointing, const Matrix<bool>&):
+    LofarCFStore(const casa::CountedPtr<CFTypeVec>& dataPtr, casa::CoordinateSystem& cs, casa::Vector<casa::Float>& samp,
+	    casa::Vector<casa::Int>& xsup, casa::Vector<casa::Int>& ysup, casa::Int maxXSup, casa::Int maxYSup,
+		 casa::Quantity PA, casa::Int mosPointing, const casa::Matrix<bool>&):
       data(),rdata(),vdata(dataPtr), coordSys(cs), sampling(samp),
       xSupport(xsup), ySupport(ysup), maxXSupport(maxXSup),
       maxYSupport(maxYSup), pa(PA), mosPointingPos(mosPointing)
@@ -69,8 +69,8 @@ namespace LOFAR {
     ~LofarCFStore() {};
 
     LofarCFStore& operator=(const LofarCFStore& other);
-    void show(const char *Mesg=NULL,ostream &os=cerr);
-    Bool null() {return data.null();};
+    void show(const char *Mesg=NULL, casa::ostream &os=casa::cerr);
+    casa::Bool null() {return data.null();};
     void set(const LofarCFStore& other)
     {
       coordSys = other.coordSys; sampling.assign(other.sampling); 
@@ -79,9 +79,9 @@ namespace LOFAR {
       mosPointingPos = other.mosPointingPos;
     }
 
-    void set(CFType *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
-	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-	     Quantity PA, const Int mosPointing=0)
+    void set(CFType *dataPtr, casa::CoordinateSystem& cs, casa::Vector<casa::Float>& samp,
+	     casa::Vector<casa::Int>& xsup, casa::Vector<casa::Int>& ysup, casa::Int maxXSup, casa::Int maxYSup,
+	     casa::Quantity PA, const casa::Int mosPointing=0)
     {
       data=dataPtr; coordSys=cs; sampling.assign(samp); 
       xSupport.assign(xsup); ySupport.assign(ysup);
@@ -90,9 +90,9 @@ namespace LOFAR {
       mosPointingPos = mosPointing;
     }
 
-    void set(CFTypeVec *dataPtr, CoordinateSystem& cs, Vector<Float>& samp,
-	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
-	     Quantity PA, const Int mosPointing=0)
+    void set(CFTypeVec *dataPtr, casa::CoordinateSystem& cs, casa::Vector<casa::Float>& samp,
+	     casa::Vector<casa::Int>& xsup, casa::Vector<casa::Int>& ysup, casa::Int maxXSup, casa::Int maxYSup,
+	     casa::Quantity PA, const casa::Int mosPointing=0)
     {
       vdata=dataPtr; coordSys=cs; sampling.assign(samp); 
       xSupport.assign(xsup); ySupport.assign(ysup);
@@ -101,21 +101,21 @@ namespace LOFAR {
       mosPointingPos = mosPointing;
     }
 
-    void resize(Int nw, Bool retainValues=False);
-    void resize(IPosition imShape, Bool retainValues=False);
+    void resize(casa::Int nw, casa::Bool retainValues=casa::False);
+    void resize(casa::IPosition imShape, casa::Bool retainValues=casa::False);
 
 
-    CountedPtr<CFType> data;
-    CountedPtr<CFTypeReal> rdata;
-    CountedPtr<CFTypeVec> vdata;
-    CoordinateSystem coordSys;
-    Vector<Float> sampling;
-    Vector<Int> xSupport,ySupport;
-    Int maxXSupport, maxYSupport;
-    Quantity pa;
-    Int mosPointingPos;
+    casa::CountedPtr<CFType> data;
+    casa::CountedPtr<CFTypeReal> rdata;
+    casa::CountedPtr<CFTypeVec> vdata;
+    casa::CoordinateSystem coordSys;
+    casa::Vector<casa::Float> sampling;
+    casa::Vector<casa::Int> xSupport,ySupport;
+    casa::Int maxXSupport, maxYSupport;
+    casa::Quantity pa;
+    casa::Int mosPointingPos;
   };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE LOFAR - END
 
 #endif

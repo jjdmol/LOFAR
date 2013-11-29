@@ -29,26 +29,26 @@
 #define LOFARFT_LOFARVBSTORE_H
 #include <synthesis/TransformMachines/Utils.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace LOFAR { //# NAMESPACE LOFAR - BEGIN
   class LofarVBStore
   {
   public:
-    LofarVBStore():dopsf_p(False) {};
+    LofarVBStore():dopsf_p(casa::False) {};
     ~LofarVBStore() {};
-    inline Int nRow()              {return nRow_p;};
-    inline Int beginRow()          {return beginRow_p;}
-    inline Int endRow()            {return endRow_p;}
-    inline Bool dopsf()            {return dopsf_p;}
-    inline Bool useCorrected()     {return useCorrected_p;};
-    Vector<uInt>& selection()      {return selection_p;};
-    Matrix<Double>& uvw()          {return uvw_p;};
-    Vector<Bool>& rowFlag()        {return rowFlag_p;};
-    Cube<Bool>& flagCube()         {return flagCube_p;};
-    Matrix<Float>& imagingWeight() {return imagingWeight_p;};
-    Cube<Complex>& visCube()       {return visCube_p;};
-    Vector<Double>& freq()         {return freq_p;};
-    Cube<Complex>& modelCube()     {return modelCube_p;};
-    Cube<Complex>& correctedCube() {return correctedCube_p;};
+    inline casa::Int nRow()              {return nRow_p;};
+    inline casa::Int beginRow()          {return beginRow_p;}
+    inline casa::Int endRow()            {return endRow_p;}
+    inline casa::Bool dopsf()            {return dopsf_p;}
+    inline casa::Bool useCorrected()     {return useCorrected_p;};
+    casa::Vector<casa::uInt>& selection()      {return selection_p;};
+    casa::Matrix<casa::Double>& uvw()          {return uvw_p;};
+    casa::Vector<casa::Bool>& rowFlag()        {return rowFlag_p;};
+    casa::Cube<casa::Bool>& flagCube()         {return flagCube_p;};
+    casa::Matrix<casa::Float>& imagingWeight() {return imagingWeight_p;};
+    casa::Cube<casa::Complex>& visCube()       {return visCube_p;};
+    casa::Vector<casa::Double>& freq()         {return freq_p;};
+    casa::Cube<casa::Complex>& modelCube()     {return modelCube_p;};
+    casa::Cube<casa::Complex>& correctedCube() {return correctedCube_p;};
 
     void reference(const LofarVBStore& other)
     {
@@ -84,16 +84,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // correctedCube_p.assign(other.correctedCube_p);
     }
 
-    Int nRow_p, beginRow_p, endRow_p;
-    Matrix<Double> uvw_p;
-    Vector<uInt> selection_p;
-    Vector<Bool> rowFlag_p;
-    Cube<Bool> flagCube_p;
-    Matrix<Float> imagingWeight_p;
-    Cube<Complex> visCube_p, modelCube_p, correctedCube_p;
-    Vector<Double> freq_p;
-    Bool dopsf_p,useCorrected_p;
+    casa::Int nRow_p, beginRow_p, endRow_p;
+    casa::Matrix<casa::Double> uvw_p;
+    casa::Vector<casa::uInt> selection_p;
+    casa::Vector<casa::Bool> rowFlag_p;
+    casa::Cube<casa::Bool> flagCube_p;
+    casa::Matrix<casa::Float> imagingWeight_p;
+    casa::Cube<casa::Complex> visCube_p, modelCube_p, correctedCube_p;
+    casa::Vector<casa::Double> freq_p;
+    casa::Bool dopsf_p,useCorrected_p;
   };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE LOFAR - END
 #endif

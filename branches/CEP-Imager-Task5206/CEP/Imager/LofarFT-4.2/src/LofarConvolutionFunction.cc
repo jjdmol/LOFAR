@@ -70,6 +70,8 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
+using namespace casa;
+
 namespace LOFAR
 {
 

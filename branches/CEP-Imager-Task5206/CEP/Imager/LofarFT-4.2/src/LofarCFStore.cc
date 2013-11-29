@@ -27,6 +27,9 @@
 //# $Id$
 #include <lofar_config.h>
 #include <LofarFT/LofarCFStore.h>
+
+using namespace casa;
+
 namespace LOFAR{
 
   LofarCFStore& LofarCFStore::operator=(const LofarCFStore& other)

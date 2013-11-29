@@ -794,9 +794,9 @@ int main (Int argc, char** argv)
                     String(),                       // spwstring
                     uvdist,                       // uvdist
                     String(),                       // scan
+                    String(),                      // intent
                     String(),                       // obs
-                    True,                          // useModelCol
-                    False);                        // readonly
+                    True);                         // useModelCol
 
     imager.setmfcontrol(cyclefactor,          //Float cyclefactor,
   			cyclespeedup,         //Float cyclespeedup,

@@ -79,11 +79,9 @@
 
 //=========
 
-using namespace casa;
+namespace LOFAR { //# NAMESPACE LOFAR - BEGIN
 
-namespace LOFAR { //# NAMESPACE CASA - BEGIN
-
-  class LofarVisResampler: public AWVisResampler
+  class LofarVisResampler: public casa::AWVisResampler
   {
   public:
     LofarVisResampler(): AWVisResampler()  {}
@@ -96,80 +94,80 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     {AWVisResampler::copy(other); }
 
     // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
-    void lofarDataToGrid (Array<Complex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
+    void lofarDataToGrid (casa::Array<casa::Complex>& griddedData, LofarVBStore& vbs,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+                          casa::Matrix<casa::Double>& sumwt,
+                          const casa::Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-    void lofarDataToGrid (Array<DComplex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
+    void lofarDataToGrid (casa::Array<casa::DComplex>& griddedData, LofarVBStore& vbs,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+                          casa::Matrix<casa::Double>& sumwt,
+                          const casa::Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
     //Linear interpolation tries
-    void lofarDataToGrid_linear (Array<Complex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
+    void lofarDataToGrid_linear (casa::Array<casa::Complex>& griddedData, LofarVBStore& vbs,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+                          casa::Matrix<casa::Double>& sumwt,
+                          const casa::Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
-    void lofarDataToGrid_linear (Array<DComplex>& griddedData, LofarVBStore& vbs,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-                          Matrix<Double>& sumwt,
-                          const Bool& dopsf, LofarCFStore& cfs)
+    void lofarDataToGrid_linear (casa::Array<casa::DComplex>& griddedData, LofarVBStore& vbs,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+                          casa::Matrix<casa::Double>& sumwt,
+                          const casa::Bool& dopsf, LofarCFStore& cfs)
     {DataToGridImpl_linear_p(griddedData, vbs, rows, rbeg, rend, sumwt,dopsf,cfs);}
 
     //End Linear interpolation tries
 
 
     void lofarGridToData(LofarVBStore& vbs,
-                         const Array<Complex>& grid,
-                         const Vector<uInt>& rows,
-                         Int rbeg, Int rend,
+                         const casa::Array<casa::Complex>& grid,
+                         const casa::Vector<casa::uInt>& rows,
+                         casa::Int rbeg, casa::Int rend,
                          LofarCFStore& cfs);
 
     template <class T>
-    void lofarDataToGrid_interp(Array<T>& grid,  LofarVBStore& vbs,
-				const Vector<uInt>& rows,
-				Matrix<Double>& sumwt,
-				const Bool& dopsf,
+    void lofarDataToGrid_interp(casa::Array<T>& grid,  LofarVBStore& vbs,
+				const casa::Vector<casa::uInt>& rows,
+				casa::Matrix<casa::Double>& sumwt,
+				const casa::Bool& dopsf,
 				LofarCFStore& cfs);//,
 				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
 
     void lofarGridToData_interp(LofarVBStore& vbs,
-                         const Array<Complex>& grid,
-                         const Vector<uInt>& rows,
+                         const casa::Array<casa::Complex>& grid,
+                         const casa::Vector<casa::uInt>& rows,
                          //Int rbeg, Int rend,
 				LofarCFStore& cfs);//,
 				//vector<Float> wvec, Float wStep, Float wcf, vector<Complex> vecCorr);
 
     void lofarGridToData_linear(LofarVBStore& vbs,
-                         const Array<Complex>& grid,
-                         const Vector<uInt>& rows,
-                         Int rbeg, Int rend,
+                         const casa::Array<casa::Complex>& grid,
+                         const casa::Vector<casa::uInt>& rows,
+                         casa::Int rbeg, casa::Int rend,
                          LofarCFStore& cfs0,
                          LofarCFStore& cfs1);
 
-    Vector<uInt> ChanCFMap;
-    void setChanCFMaps(Vector<uInt> ChanMap)
+    casa::Vector<casa::uInt> ChanCFMap;
+    void setChanCFMaps(casa::Vector<casa::uInt> ChanMap)
     {ChanCFMap=ChanMap.copy();}
 
-    virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
+    virtual void setCFMaps(const casa::Vector<casa::Int>& cfMap, const casa::Vector<casa::Int>& conjCFMap)
     {cfMap_p.assign(cfMap); conjCFMap_p.assign(conjCFMap);}
 
     void lofarComputeResiduals(LofarVBStore& vbs);
 
-  void sgrid(Vector<Double>& pos, Vector<Int>& loc,
-			     Vector<Int>& off, Complex& phasor,
-			     const Int& irow, const Matrix<Double>& uvw,
-			     const Double& dphase, const Double& freq,
-			     const Vector<Double>& scale,
-			     const Vector<Double>& offset,
-                                const Vector<Float>& sampling);
+  void sgrid(casa::Vector<casa::Double>& pos, casa::Vector<casa::Int>& loc,
+			     casa::Vector<casa::Int>& off, casa::Complex& phasor,
+			     const casa::Int& irow, const casa::Matrix<casa::Double>& uvw,
+			     const casa::Double& dphase, const casa::Double& freq,
+			     const casa::Vector<casa::Double>& scale,
+			     const casa::Vector<casa::Double>& offset,
+                                const casa::Vector<casa::Float>& sampling);
 
     /*
   template <class T>
@@ -201,21 +199,21 @@ namespace LOFAR { //# NAMESPACE CASA - BEGIN
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
     //
     template <class T>
-    void DataToGridImpl_p(Array<T>& griddedData, LofarVBStore& vb,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-			  Matrix<Double>& sumwt,const Bool& dopsf,
+    void DataToGridImpl_p(casa::Array<T>& griddedData, LofarVBStore& vb,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+			  casa::Matrix<casa::Double>& sumwt,const casa::Bool& dopsf,
                           LofarCFStore& cfs);
 
     template <class T>
-    void DataToGridImpl_linear_p(Array<T>& griddedData, LofarVBStore& vb,
-                          const Vector<uInt>& rows,
-                          Int rbeg, Int rend,
-			  Matrix<Double>& sumwt,const Bool& dopsf,
+    void DataToGridImpl_linear_p(casa::Array<T>& griddedData, LofarVBStore& vb,
+                          const casa::Vector<casa::uInt>& rows,
+                          casa::Int rbeg, casa::Int rend,
+			  casa::Matrix<casa::Double>& sumwt,const casa::Bool& dopsf,
                           LofarCFStore& cfs);
 
 
-    Vector<Int> cfMap_p, conjCFMap_p;
+    casa::Vector<casa::Int> cfMap_p, conjCFMap_p;
   };
 
 } //# NAMESPACE CASA - END

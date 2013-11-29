@@ -60,8 +60,6 @@
 
 #include <Common/OpenMP.h>
 
-using namespace casa;
-
 namespace LOFAR {
 
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
@@ -149,40 +147,47 @@ public:
   // mTangent is specified then the uvw rotation is done for
   // that location iso the image center.
   // <group>
-//  LofarFTMachine(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
-//	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler, String convType, const MeasurementSet& ms,
-                 Int nwPlanes,
-                 MPosition mLocation, Float padding, Bool usezero,
-                 Bool useDoublePrec, double wmax,
-                 Int verbose,
-                 Int maxsupport,
-                 Int oversample,
-                 const String& imageName,
-                 const Matrix<Bool>& gridMuellerMask,
-                 const Matrix<Bool>& degridMuellerMask,
-		 Double RefFreq,
-		 Bool Use_Linear_Interp_Gridder,
-		 Bool Use_EJones,
+//  LofarFTMachine(casa::Long cachesize, casa::Int tilesize, casa::CountedPtr<VisibilityResamplerBase>& visResampler,
+//	  casa::String convType="SF", casa::Float padding=1.0, casa::Bool usezero=casa::True, casa::Bool useDoublePrec=casa::False);
+  LofarFTMachine(casa::Long cachesize, 
+                 casa::Int tilesize,  
+                 casa::CountedPtr<casa::VisibilityResamplerBase>& visResampler, 
+                 casa::String convType, 
+                 const casa::MeasurementSet& ms,
+                 casa::Int nwPlanes,
+                 casa::MPosition mLocation, 
+                 casa::Float padding, 
+                 casa::Bool usezero,
+                 casa::Bool useDoublePrec, 
+                 double wmax,
+                 casa::Int verbose,
+                 casa::Int maxsupport,
+                 casa::Int oversample,
+                 const casa::String& imageName,
+                 const casa::Matrix<casa::Bool>& gridMuellerMask,
+                 const casa::Matrix<casa::Bool>& degridMuellerMask,
+		 casa::Double RefFreq,
+		 casa::Bool Use_Linear_Interp_Gridder,
+		 casa::Bool Use_EJones,
 		 int StepApplyElement,
 		 int ApplyBeamCode,
-		 Double PBCut,
-		 Bool PredictFT,
-		 String PsfOnDisk,
-		 Bool UseMasksDegrid,
-		 Bool ReallyDoPSF,
-		 Double UVmin,
-		 Double UVmax,
-		 Bool MakeDirtyCorr,
+		 casa::Double PBCut,
+		 casa::Bool PredictFT,
+		 casa::String PsfOnDisk,
+		 casa::Bool UseMasksDegrid,
+		 casa::Bool ReallyDoPSF,
+		 casa::Double UVmin,
+		 casa::Double UVmax,
+		 casa::Bool MakeDirtyCorr,
                  const casa::Record& parameters
                 );//,
-		 //Double FillFactor);
-//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-//	 MDirection mTangent, Float padding=1.0, Bool usezero=True,
-//	 Bool useDoublePrec=False);
-//  LofarFTMachine(Long cachesize, Int tilesize,  CountedPtr<VisibilityResamplerBase>& visResampler,String convType,
-//	 MPosition mLocation, MDirection mTangent, Float passing=1.0,
-//	 Bool usezero=True, Bool useDoublePrec=False);
+		 //casa::Double FillFactor);
+//  LofarFTMachine(casa::Long cachesize, casa::Int tilesize,  casa::CountedPtr<VisibilityResamplerBase>& visResampler,casa::String convType,
+//	 MDirection mTangent, casa::Float padding=1.0, casa::Bool usezero=casa::True,
+//	 casa::Bool useDoublePrec=casa::False);
+//  LofarFTMachine(casa::Long cachesize, casa::Int tilesize,  casa::CountedPtr<VisibilityResamplerBase>& visResampler,casa::String convType,
+//	 MPosition mLocation, MDirection mTangent, casa::Float passing=1.0,
+//	 casa::Bool usezero=casa::True, casa::Bool useDoublePrec=casa::False);
   // </group>
 
   // Construct from a Record containing the LofarFTMachine state
@@ -200,158 +205,160 @@ public:
 
   ~LofarFTMachine();
   
-  virtual String name() const { return "LofarFTMachine";};
+  virtual casa::String name() const { return "LofarFTMachine";};
 
   // Show the relative timings of the various steps.
   void showTimings (std::ostream&, double duration) const;
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  void initializeToVis(ImageInterface<Complex>& image,
-		       const VisBuffer& vb);
+  void initializeToVis(casa::ImageInterface<casa::Complex>& image,
+		       const casa::VisBuffer& vb);
 
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
-  void getSplitWplanes(VisBuffer& vb, Int row);
-  void getTraditional(VisBuffer& vb, Int row);
+  void getSplitWplanes(casa::VisBuffer& vb, casa::Int row);
+  void getTraditional(casa::VisBuffer& vb, casa::Int row);
   
-  void putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool dopsf,
+  void putSplitWplanesOverlap(const casa::VisBuffer& vb, casa::Int row, casa::Bool dopsf,
 			      FTMachine::Type type);
-  void putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
+  void putSplitWplanes(const casa::VisBuffer& vb, casa::Int row, casa::Bool dopsf,
                          FTMachine::Type type);
-  void putTraditional(const VisBuffer& vb, Int row, Bool dopsf,
+  void putTraditional(const casa::VisBuffer& vb, casa::Int row, casa::Bool dopsf,
                          FTMachine::Type type);
   
   // Initialize transform to Sky plane: initializes the image
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
-		       const VisBuffer& vb);
+  void initializeToSky(casa::ImageInterface<casa::Complex>& image,  casa::Matrix<casa::Float>& weight,
+		       const casa::VisBuffer& vb);
 
 
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
-  using casa::FTMachine::finalizeToSky;
   void finalizeToSky();
 
 
   // Get actual coherence from grid by degridding
-  void get(VisBuffer& vb, Int row=-1);
+  void get(casa::VisBuffer& vb, casa::Int row=-1);
 
 
   // Put coherence to grid by gridding.
-  using casa::FTMachine::put;
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-           FTMachine::Type type=FTMachine::OBSERVED);
+  void put(const casa::VisBuffer& vb, casa::Int row=-1, casa::Bool dopsf=casa::False,
+           casa::FTMachine::Type type=casa::FTMachine::OBSERVED);
 
-  mutable Matrix<Float> itsAvgPB;
-  Bool its_Use_Linear_Interp_Gridder;
-  Bool its_UseWSplit;
+  mutable casa::Matrix<casa::Float> itsAvgPB;
+  casa::Bool its_Use_Linear_Interp_Gridder;
+  casa::Bool its_UseWSplit;
 
   // Make the entire image
-  using casa::FTMachine::makeImage;
-  void makeImage(FTMachine::Type type,
-		 VisSet& vs,
-		 ImageInterface<Complex>& image,
-		 Matrix<Float>& weight);
+  void makeImage(casa::FTMachine::Type type,
+		 casa::VisSet& vs,
+		 casa::ImageInterface<casa::Complex>& image,
+		 casa::Matrix<casa::Float>& weight);
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
+  casa::ImageInterface<casa::Complex>& getImage(casa::Matrix<casa::Float>&, casa::Bool normalize=casa::True);
 
   // Get the average primary beam.
-  virtual const Matrix<Float>& getAveragePB() const;
+  virtual const casa::Matrix<casa::Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
-  const Matrix<Float>& getSpheroidCut() const
+  const casa::Matrix<casa::Float>& getSpheroidCut() const
     { return itsConvFunc->getSpheroidCut(); }
 
 
-  ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
-  ///			      const Matrix<Double>& sumOfWts,
-  ///			      Lattice<Float>& sensitivityImage,
-  ///			      Bool fftNorm)
+  ///  virtual void normalizeImage(Lattice<casa::Complex>& skyImage,
+  ///			      const casa::Matrix<casa::Double>& sumOfWts,
+  ///			      Lattice<casa::Float>& sensitivityImage,
+  ///			      casa::Bool fftNorm)
   ///    {throw(AipsError("LofarFTMachine::normalizeImage() called"));}
 
   void normalizeAvgPB();
-  void normalizeAvgPB(ImageInterface<Complex>& inImage,
-                      ImageInterface<Float>& outImage);
+  void normalizeAvgPB(casa::ImageInterface<casa::Complex>& inImage,
+                      casa::ImageInterface<casa::Float>& outImage);
     //
     // Make a sensitivity image (sensitivityImage), given the gridded
     // weights (wtImage).  These are related to each other by a
     // Fourier transform and normalization by the sum-of-weights
     // (sumWt) and normalization by the product of the 2D FFT size
-    // along each axis.  If doFFTNorm=False, normalization by the FFT
+    // along each axis.  If doFFTNorm=casa::False, normalization by the FFT
     // size is not done.  If sumWt is not provided, normalization by
     // the sum of weights is also not done.
     //
 
 
 
-    virtual void makeSensitivityImage(Lattice<Complex>&,
-				      ImageInterface<Float>&,
-				      const Matrix<Float>& =Matrix<Float>(),
-				      const Bool& =True) {}
-    virtual void makeSensitivityImage(const VisBuffer& vb, const ImageInterface<Complex>& imageTemplate,
-				      ImageInterface<Float>& sensitivityImage);
+    virtual void makeSensitivityImage(casa::Lattice<casa::Complex>&,
+				      casa::ImageInterface<casa::Float>&,
+				      const casa::Matrix<casa::Float>& =casa::Matrix<casa::Float>(),
+				      const casa::Bool& =casa::True) {}
+				      
+    virtual void makeSensitivityImage(const casa::VisBuffer& vb, const casa::ImageInterface<casa::Complex>& imageTemplate,
+				      casa::ImageInterface<casa::Float>& sensitivityImage);
 
-    inline virtual Float pbFunc(const Float& a, const Float& limit)
+    inline virtual casa::Float pbFunc(const casa::Float& a, const casa::Float& limit)
     {if (abs(a) >= limit) return (a);else return 1.0;};
-    inline virtual Complex pbFunc(const Complex& a, const Float& limit)
-    {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
+    
+    inline virtual casa::Complex pbFunc(const casa::Complex& a, const casa::Float& limit)
+    {if (abs(a)>=limit) return (a); else return casa::Complex(1.0,0.0);};
+    
     //
     // Given the sky image (Fourier transform of the visibilities),
     // sum of weights and the sensitivity image, this method replaces
     // the skyImage with the normalized image of the sky.
     //
-    virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Double>& sumOfWts,
-				Lattice<Float>& sensitivityImage,
-				Bool fftNorm=True);
-    virtual void normalizeImage(Lattice<Complex>& skyImage,
-				const Matrix<Double>& sumOfWts,
-				Lattice<Float>& sensitivityImage,
-				Lattice<Complex>& sensitivitySqImage,
-				Bool fftNorm=True);
+    virtual void normalizeImage(casa::Lattice<casa::Complex>& skyImage,
+				const casa::Matrix<casa::Double>& sumOfWts,
+				casa::Lattice<casa::Float>& sensitivityImage,
+				casa::Bool fftNorm=casa::True);
+    
+    virtual void normalizeImage(casa::Lattice<casa::Complex>& skyImage,
+				const casa::Matrix<casa::Double>& sumOfWts,
+				casa::Lattice<casa::Float>& sensitivityImage,
+				casa::Lattice<casa::Complex>& sensitivitySqImage,
+				casa::Bool fftNorm=casa::True);
 
-    virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
-    virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
-    virtual Matrix<Double>& getSumOfCFWeights() {return sumCFWeight;};
+    virtual casa::ImageInterface<casa::Float>& getSensitivityImage() {return *avgPB_p;}
+    virtual casa::Matrix<casa::Double>& getSumOfWeights() {return sumWeight;};
+    virtual casa::Matrix<casa::Double>& getSumOfCFWeights() {return sumCFWeight;};
 
   // Get the final weights image
-  void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
+  void getWeightImage(casa::ImageInterface<casa::Float>&, casa::Matrix<casa::Float>&);
 
   // Save and restore the LofarFTMachine to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec,
-			Bool withImage=False);
-  virtual Bool fromRecord(String& error, const RecordInterface& inRec);
+  virtual casa::Bool toRecord(casa::String& error, casa::RecordInterface& outRec,
+			casa::Bool withImage=casa::False);
+  
+  virtual casa::Bool fromRecord(casa::String& error, const casa::RecordInterface& inRec);
 
   // Can this FTMachine be represented by Fourier convolutions?
-  virtual Bool isFourier() {return True;}
+  virtual casa::Bool isFourier() {return casa::True;}
 
-  virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
+  virtual void setNoPadding(casa::Bool nopad){noPadding_p=nopad;};
 
-  virtual String name();
-  //virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual casa::String name();
+  //virtual void setMiscInfo(const casa::Int qualifier){(void)qualifier;};
 
   //Cyr: The FTMachine has got to know the order of the Taylor term
-  virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
+  virtual void setMiscInfo(const casa::Int qualifier){thisterm_p=qualifier;};
+  virtual void ComputeResiduals(casa::VisBuffer&vb, casa::Bool useCorrected);
 
 
-  void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
-  //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
-  void makeCFPolMap(const VisBuffer& vb, const Vector<Int>& cfstokes, Vector<Int>& polM);
+  void makeConjPolMap(const casa::VisBuffer& vb, const casa::Vector<casa::Int> cfPolMap, casa::Vector<casa::Int>& conjPolMap);
+  //    casa::Vector<casa::Int> makeConjPolMap(const VisBuffer& vb);
+  void makeCFPolMap(const casa::VisBuffer& vb, const casa::Vector<casa::Int>& cfstokes, casa::Vector<casa::Int>& polM);
 
-  String itsNamePsfOnDisk;
-  vector< vector< vector < Matrix<Complex> > > > itsStackMuellerNew; 
+  casa::String itsNamePsfOnDisk;
+  vector< vector< vector < casa::Matrix<casa::Complex> > > > itsStackMuellerNew; 
 
-  void setPsfOnDisk(String NamePsf){itsNamePsfOnDisk=NamePsf;}
-  virtual String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
+  void setPsfOnDisk(casa::String NamePsf){itsNamePsfOnDisk=NamePsf;}
+  virtual casa::String GiveNamePsfOnDisk(){return itsNamePsfOnDisk;}
   
     // Arrays for non-tiled gridding (one per thread).
   
-  void initGridThreads(vector< Array<Complex> >&  otherGriddedData, vector< Array<DComplex> >&  otherGriddedData2)
+  void initGridThreads(vector< casa::Array<casa::Complex> >&  otherGriddedData, vector< casa::Array<casa::DComplex> >&  otherGriddedData2)
   {
     
     itsGriddedData=&otherGriddedData;
@@ -365,45 +372,45 @@ public:
     }
 
     /* itsGriddedData.resize(otherGriddedData.size()); */
-    /* for(uInt i=0; i<itsGriddedData.size()){ */
+    /* for(casa::uInt i=0; i<itsGriddedData.size()){ */
     /*   itsGriddedData[i].reference(otherGriddedData[i]); */
     /* } */
   }
 
 
-  Matrix<Bool> itsMaskGridCS;
-  Matrix<Bool> GiveMaskGrid(){
+  casa::Matrix<casa::Bool> itsMaskGridCS;
+  casa::Matrix<casa::Bool> GiveMaskGrid(){
     return itsMaskGridCS;
   }
 
 protected:
-  vector< Array<Complex> >*  itsGriddedData;
-  vector< Array<DComplex> >*  itsGriddedData2;
+  vector< casa::Array<casa::Complex> >*  itsGriddedData;
+  vector< casa::Array<casa::DComplex> >*  itsGriddedData2;
   // Padding in FFT
-  Float padding_p;
-  Int thisterm_p;
-  Double itsRefFreq;
-  Bool itsPredictFT;
+  casa::Float padding_p;
+  casa::Int thisterm_p;
+  casa::Double itsRefFreq;
+  casa::Bool itsPredictFT;
   double its_tot_time_grid;
   double its_tot_time_cf;
   double its_tot_time_w;
   double its_tot_time_el;
   double its_tot_time_tot;
 
-  Int itsTotalStepsGrid;
-  Int itsTotalStepsDeGrid;
-  Bool itsMasksGridAllDone;
-  Bool itsMasksAllDone;
-  Bool itsAllAtermsDone;
-  Bool its_UseMasksDegrid;
-  Bool its_SingleGridMode;
-  Bool its_makeDirtyCorr;
-  uInt its_NGrids;
+  casa::Int itsTotalStepsGrid;
+  casa::Int itsTotalStepsDeGrid;
+  casa::Bool itsMasksGridAllDone;
+  casa::Bool itsMasksAllDone;
+  casa::Bool itsAllAtermsDone;
+  casa::Bool its_UseMasksDegrid;
+  casa::Bool its_SingleGridMode;
+  casa::Bool its_makeDirtyCorr;
+  casa::uInt its_NGrids;
 
-  Timer itsSeconds;
-  //Float its_FillFactor;
+  casa::Timer itsSeconds;
+  //casa::Float its_FillFactor;
   // Get the appropriate data pointer
-  Array<Complex>* getDataPointer(const IPosition&, Bool);
+  casa::Array<casa::Complex>* getDataPointer(const casa::IPosition&, casa::Bool);
 
   void ok();
 
@@ -411,21 +418,21 @@ protected:
 
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
-  Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+  casa::Bool recordOnGrid(const casa::VisBuffer& vb, casa::Int rownr) const;
 
   // Image cache
-  LatticeCache<Complex> * imageCache;
+  casa::LatticeCache<casa::Complex> * imageCache;
 
   // Sizes
-  Long cachesize;
-  Int  tilesize;
+  casa::Long cachesize;
+  casa::Int  tilesize;
 
   // Gridder
-  ConvolveGridder<Double, Complex>* gridder;
+  casa::ConvolveGridder<casa::Double, casa::Complex>* gridder;
 
   //Sum Grids
   template <class T>
-  void SumGridsOMP(Array<T>& grid, const Array<T>& GridToAdd){
+  void SumGridsOMP(casa::Array<T>& grid, const casa::Array<T>& GridToAdd){
     int y,ch,pol;
     int GridSize(grid.shape()[0]);
     int NPol(grid.shape()[2]);
@@ -451,10 +458,10 @@ protected:
   }
 
   template <class T>
-  void SumGridsOMP(Array<T>& grid, const vector< Array<T> >& GridToAdd0 ){
+  void SumGridsOMP(casa::Array<T>& grid, const vector< casa::Array<T> >& GridToAdd0 ){
 
-    for(uInt vv=0; vv<GridToAdd0.size();vv++){
-      Array<T> GridToAdd(GridToAdd0[vv]);
+    for(casa::uInt vv=0; vv<GridToAdd0.size();vv++){
+      casa::Array<T> GridToAdd(GridToAdd0[vv]);
       int y,ch,pol;
       int GridSize(grid.shape()[0]);
       int NPol(grid.shape()[2]);
@@ -485,138 +492,138 @@ protected:
 
 
   // Is this tiled?
-  Bool isTiled;
+  casa::Bool isTiled;
 
   // Array lattice
-  CountedPtr<Lattice<Complex> > arrayLattice;
+  casa::CountedPtr<casa::Lattice<casa::Complex> > arrayLattice;
 
   // Lattice. For non-tiled gridding, this will point to arrayLattice,
   //  whereas for tiled gridding, this points to the image
-  CountedPtr<Lattice<Complex> > lattice;
+  casa::CountedPtr<casa::Lattice<casa::Complex> > lattice;
 
-  String convType;
+  casa::String convType;
 
-  Float maxAbsData;
+  casa::Float maxAbsData;
 
   // Useful IPositions
-  IPosition centerLoc, offsetLoc;
+  casa::IPosition centerLoc, offsetLoc;
 
   // Image Scaling and offset
-  Vector<Double> uvScale, uvOffset;
+  casa::Vector<casa::Double> uvScale, uvOffset;
 
   
-  Array<Complex> its_stacked_GriddedData;
-  Array<DComplex> its_stacked_GriddedData2;
-  uInt itsNumCycle;
+  casa::Array<casa::Complex> its_stacked_GriddedData;
+  casa::Array<casa::DComplex> its_stacked_GriddedData2;
+  casa::uInt itsNumCycle;
   
 
-  //vector< Array<DComplex> > itsGriddedData2;
-  vector< Matrix<Complex> > itsSumPB;
-  vector< Matrix<Double> >  itsSumWeight;
+  //vector< casa::Array<casa::DComplex> > itsGriddedData2;
+  vector< casa::Matrix<casa::Complex> > itsSumPB;
+  vector< casa::Matrix<casa::Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
 
 
-  ///Array<Complex>  griddedData;
-  ///Array<DComplex> griddedData2;
-  ///Matrix<Complex> itsSumPB;
+  ///casa::Array<casa::Complex>  griddedData;
+  ///casa::Array<casa::DComplex> griddedData2;
+  ///casa::Matrix<casa::Complex> itsSumPB;
   ///double itsSumWeight;
 
-  Int priorCacheSize;
+  casa::Int priorCacheSize;
 
   // Grid/degrid zero spacing points?
 
-  Bool usezero_p;
+  casa::Bool usezero_p;
 
   //force no padding
-  Bool noPadding_p;
+  casa::Bool noPadding_p;
 
   //Check if using put that avoids non-necessary reads
-  Bool usePut2_p;
+  casa::Bool usePut2_p;
 
   //machine name
-  String machineName_p;
+  casa::String machineName_p;
 
   // Shape of the padded image
-  IPosition padded_shape;
+  casa::IPosition padded_shape;
 
-  Int convSampling;
-    Float pbLimit_p;
-    Int sensitivityPatternQualifier_p;
-    String sensitivityPatternQualifierStr_p;
-    Vector<Float> pbPeaks;
-    Bool pbNormalized_p;
+  casa::Int convSampling;
+    casa::Float pbLimit_p;
+    casa::Int sensitivityPatternQualifier_p;
+    casa::String sensitivityPatternQualifierStr_p;
+    casa::Vector<casa::Float> pbPeaks;
+    casa::Bool pbNormalized_p;
     // The average PB for sky image normalization
     //
-    CountedPtr<ImageInterface<Float> > avgPB_p;
-    CountedPtr<ImageInterface<Complex> > avgPBSq_p;
+    casa::CountedPtr<casa::ImageInterface<casa::Float> > avgPB_p;
+    casa::CountedPtr<casa::ImageInterface<casa::Complex> > avgPBSq_p;
 
   LofarVisResampler visResamplers_p;
 
   casa::Record       itsParameters;
   casa::MeasurementSet itsMS;
-  Int itsNWPlanes;
+  casa::Int itsNWPlanes;
   double itsWMax;
-  Double its_PBCut;
+  casa::Double its_PBCut;
   int itsNThread;
-  Bool its_Use_EJones;
-  Double its_TimeWindow;
+  casa::Bool its_Use_EJones;
+  casa::Double its_TimeWindow;
   //ofstream outFile;
-  Bool its_Apply_Element;
+  casa::Bool its_Apply_Element;
   int its_ApplyBeamCode;
-  Bool its_Already_Initialized;
-  Bool                its_reallyDoPSF;
-  Bool itsDonePB;
-  Double itsUVmin;
-  Double itsUVmax;
-  CountedPtr<LofarConvolutionFunction> itsConvFunc;
-  Vector<Int> ConjCFMap_p, CFMap_p;
+  casa::Bool its_Already_Initialized;
+  casa::Bool                its_reallyDoPSF;
+  casa::Bool itsDonePB;
+  casa::Double itsUVmin;
+  casa::Double itsUVmax;
+  casa::CountedPtr<LofarConvolutionFunction> itsConvFunc;
+  casa::Vector<casa::Int> ConjCFMap_p, CFMap_p;
   int itsVerbose;
   int itsMaxSupport;
-  Int itsOversample;
-  Vector< Double >    itsListFreq;
-  String itsImgName;
-  Matrix<Bool> itsGridMuellerMask;
-  Matrix<Bool> itsDegridMuellerMask;
+  casa::Int itsOversample;
+  casa::Vector< casa::Double >    itsListFreq;
+  casa::String itsImgName;
+  casa::Matrix<casa::Bool> itsGridMuellerMask;
+  casa::Matrix<casa::Bool> itsDegridMuellerMask;
   double itsGriddingTime;
   double itsDegriddingTime;
   double itsCFTime;
-  PrecTimer itsTotalTimer;
-  PrecTimer itsCyrilTimer;
+  casa::PrecTimer itsTotalTimer;
+  casa::PrecTimer itsCyrilTimer;
 
   double itsNextApplyTime;
   int itsCounterTimes;
   int itsStepApplyElement;
   double itsTStartObs;
   double itsDeltaTime;
-  Array<Complex> itsTmpStackedGriddedData;
-  Array<Complex> itsGridToDegrid;
+  casa::Array<casa::Complex> itsTmpStackedGriddedData;
+  casa::Array<casa::Complex> itsGridToDegrid;
 
-  Vector<uInt> blIndex;
+  casa::Vector<casa::uInt> blIndex;
   vector<int> blStart, blEnd;
-  Vector<Int> ant1;
-  Vector<Int> ant2;
+  casa::Vector<casa::Int> ant1;
+  casa::Vector<casa::Int> ant2;
 
-  void make_mapping(const VisBuffer& vb)
+  void make_mapping(const casa::VisBuffer& vb)
   {
   ant1 = vb.antenna1();
   ant2 = vb.antenna2();
     // Determine the baselines in the VisBuffer.
   int nrant = 1 + max(max(ant1), max(ant2));
   // Sort on baseline (use a baseline nr which is faster to sort).
-  Vector<Int> blnr(nrant*ant1);
+  casa::Vector<casa::Int> blnr(nrant*ant1);
   blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
-  GenSortIndirect<Int>::sort (blIndex, blnr);
+  casa::GenSortIndirect<casa::Int>::sort (blIndex, blnr);
   // Now determine nr of unique baselines and their start index.
   blStart.reserve (nrant*(nrant+1)/2);
   blEnd.reserve   (nrant*(nrant+1)/2);
-  Int  lastbl     = -1;
-  Int  lastIndex  = 0;
+  casa::Int  lastbl     = -1;
+  casa::Int  lastIndex  = 0;
   bool usebl      = false;
   bool allFlagged = true;
-  const Vector<Bool>& flagRow = vb.flagRow();
+  const casa::Vector<casa::Bool>& flagRow = vb.flagRow();
   for (uint i=0; i<blnr.size(); ++i) {
-    Int inx = blIndex[i];
-    Int bl = blnr[inx];
+    casa::Int inx = blIndex[i];
+    casa::Int bl = blnr[inx];
     if (bl != lastbl) {
       // New baseline. Write the previous end index if applicable.
 
@@ -669,36 +676,36 @@ protected:
 
   }
 
-  vector<vector<uInt> > make_mapping_time(const VisBuffer& vb, uInt spw)
+  vector<vector<casa::uInt> > make_mapping_time(const casa::VisBuffer& vb, casa::uInt spw)
   {
     // Determine the baselines in the VisBuffer.
   ant1.assign(vb.antenna1());
   ant2.assign(vb.antenna2());
-  const Vector<Double>& times = vb.timeCentroid();
+  const casa::Vector<casa::Double>& times = vb.timeCentroid();
 
   int nrant = 1 + max(max(ant1), max(ant2));
   // Sort on baseline (use a baseline nr which is faster to sort).
-  Vector<Int> blnr(nrant*ant1);
+  casa::Vector<casa::Int> blnr(nrant*ant1);
   blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
-  GenSortIndirect<Int>::sort (blIndex, blnr);
+  casa::GenSortIndirect<casa::Int>::sort (blIndex, blnr);
   // Now determine nr of unique baselines and their start index.
 
-  Float dtime(its_TimeWindow);
-  vector<uInt> MapChunck;
-  vector<vector<uInt> > Map;
-  Double time0(times[0]);
-  Int bl_now(blnr[blIndex[0]]);
-  for(uInt RowNum=0; RowNum<blIndex.size();++RowNum){
-    uInt irow=blIndex[RowNum];
+  casa::Float dtime(its_TimeWindow);
+  vector<casa::uInt> MapChunck;
+  vector<vector<casa::uInt> > Map;
+  casa::Double time0(times[0]);
+  casa::Int bl_now(blnr[blIndex[0]]);
+  for(casa::uInt RowNum=0; RowNum<blIndex.size();++RowNum){
+    casa::uInt irow=blIndex[RowNum];
 
-    Double timeRow(times[irow]);
+    casa::Double timeRow(times[irow]);
 
     double u=vb.uvw()[irow](0);
     double v=vb.uvw()[irow](1);
     double w=vb.uvw()[irow](2);
     double uvdistance=(0.001)*sqrt(u*u+v*v)/(2.99e8/itsListFreq[spw]);
-    Bool cond0((uvdistance>itsUVmin)&(uvdistance<itsUVmax));
-    Bool cond1(abs(w)<itsWMax);
+    casa::Bool cond0((uvdistance>itsUVmin)&(uvdistance<itsUVmax));
+    casa::Bool cond1(abs(w)<itsWMax);
     if(!(cond0&cond1)){continue;}
 
     if(((timeRow-time0)>dtime)|(blnr[irow]!=bl_now))
@@ -713,11 +720,11 @@ protected:
   Map.push_back(MapChunck);
 
   /* cout.precision(20); */
-  /* for(uInt i=0; i<Map.size();++i) */
+  /* for(casa::uInt i=0; i<Map.size();++i) */
   /*   { */
-  /*     for(uInt j=0; j<Map[i].size();++j) */
+  /*     for(casa::uInt j=0; j<Map[i].size();++j) */
   /* 	{ */
-  /* 	  uInt irow=Map[i][j]; */
+  /* 	  casa::uInt irow=Map[i][j]; */
   /* 	  cout<<i<<" "<<j<<" A="<<ant1[irow]<<","<<ant2[irow]<<" w="<<vb.uvw()[irow](2)<<" t="<<times[irow]<<endl; */
   /* 	} */
   /*   } */
@@ -726,63 +733,63 @@ protected:
      
   }
 
-  vector<Int> WIndexMap;
-  vector<uInt> TimesMap;
-  //uInt itsSelAnt0;
-  //uInt itsSelAnt1;
-  Double its_t0;
-  Double its_tSel0;
-  Double its_tSel1;
+  vector<casa::Int> WIndexMap;
+  vector<casa::uInt> TimesMap;
+  //casa::uInt itsSelAnt0;
+  //casa::uInt itsSelAnt1;
+  casa::Double its_t0;
+  casa::Double its_tSel0;
+  casa::Double its_tSel1;
 
-  vector<vector<vector<uInt> > > make_mapping_time_W(const VisBuffer& vb, uInt spw)
+  vector<vector<vector<casa::uInt> > > make_mapping_time_W(const casa::VisBuffer& vb, casa::uInt spw)
   {
     // Determine the baselines in the VisBuffer.
   ant1.assign(vb.antenna1());
   ant2.assign(vb.antenna2());
-  const Vector<Double>& times = vb.timeCentroid();
+  const casa::Vector<casa::Double>& times = vb.timeCentroid();
   if(its_t0<0.){its_t0=times[0];}
   WIndexMap.resize(0);
 
   int nrant = 1 + max(max(ant1), max(ant2));
-  Vector<Int> WPCoord;
+  casa::Vector<casa::Int> WPCoord;
   WPCoord.resize(ant1.size());
-  for(uInt irow=0;irow<WPCoord.size();++irow){
+  for(casa::uInt irow=0;irow<WPCoord.size();++irow){
     WPCoord[irow]=itsConvFunc->GiveWindexIncludeNegative(vb.uvw()[irow](2),spw);
   }
   // Sort on baseline (use a baseline nr which is faster to sort).
-  Vector<Int> blnr(ant2+nrant*ant1+nrant*nrant*(WPCoord+itsNWPlanes));
+  casa::Vector<casa::Int> blnr(ant2+nrant*ant1+nrant*nrant*(WPCoord+itsNWPlanes));
   //blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
-  GenSortIndirect<Int>::sort (blIndex, blnr);
+  casa::GenSortIndirect<casa::Int>::sort (blIndex, blnr);
   // Now determine nr of unique baselines and their start index.
 
-  Float dtime(its_TimeWindow);
-  vector<uInt> MapChunck;
-  vector<vector<uInt> > MapW;
-  vector<vector<vector<uInt> > > Map;
-  Double time0(-1.);//times[blIndex[0]]);
-  Int bl_now;//blnr[blIndex[0]]);
-  Int iwcoord;//=WPCoord[blIndex[0]]-itsNWPlanes;
+  casa::Float dtime(its_TimeWindow);
+  vector<casa::uInt> MapChunck;
+  vector<vector<casa::uInt> > MapW;
+  vector<vector<vector<casa::uInt> > > Map;
+  casa::Double time0(-1.);//times[blIndex[0]]);
+  casa::Int bl_now;//blnr[blIndex[0]]);
+  casa::Int iwcoord;//=WPCoord[blIndex[0]]-itsNWPlanes;
 
-  for(uInt RowNum=0; RowNum<blIndex.size();++RowNum){
-    uInt irow=blIndex[RowNum];
+  for(casa::uInt RowNum=0; RowNum<blIndex.size();++RowNum){
+    casa::uInt irow=blIndex[RowNum];
     //cout<<ant1[irow]<<" "<<ant2[irow]<<" "<<times[irow]<<" "<<WPCoord[irow]<<endl;
     
     double u=vb.uvw()[irow](0);
     double v=vb.uvw()[irow](1);
     double w=vb.uvw()[irow](2);
     double uvdistance=(0.001)*sqrt(u*u+v*v)/(2.99e8/itsListFreq[spw]);
-    Bool cond0(((uvdistance>itsUVmin)&(uvdistance<itsUVmax)));
-    Bool cond1(abs(w)<itsWMax);
-    //Bool cond2(((ant1[irow]==8)&(ant2[irow]==0)));
+    casa::Bool cond0(((uvdistance>itsUVmin)&(uvdistance<itsUVmax)));
+    casa::Bool cond1(abs(w)<itsWMax);
+    //casa::Bool cond2(((ant1[irow]==8)&(ant2[irow]==0)));
     //if 
-    //Bool cond2(((ant1[irow]==7)&(ant2[irow]==1)));
-    Bool cond2(((ant1[irow]==5)&(ant2[irow]==40)));
-    //Bool cond2((ant1[irow]==7));
-    //Bool cond2((ant2[irow]==0));
-    Double timeRow(times[irow]);
-    Bool cond3((timeRow-its_t0)/60.>its_tSel0);
-    Bool cond4((timeRow-its_t0)/60.<its_tSel1);
-    Bool cond34(cond3&cond4);
+    //casa::Bool cond2(((ant1[irow]==7)&(ant2[irow]==1)));
+    casa::Bool cond2(((ant1[irow]==5)&(ant2[irow]==40)));
+    //casa::Bool cond2((ant1[irow]==7));
+    //casa::Bool cond2((ant2[irow]==0));
+    casa::Double timeRow(times[irow]);
+    casa::Bool cond3((timeRow-its_t0)/60.>its_tSel0);
+    casa::Bool cond4((timeRow-its_t0)/60.<its_tSel1);
+    casa::Bool cond34(cond3&cond4);
     if(its_tSel0==-1.){cond34=true;}
     //if(!(cond0&cond1&cond2&cond34)){continue;}
     if(!(cond0&cond1&cond34)){continue;}
@@ -815,19 +822,19 @@ protected:
   Map.push_back(MapW);
 
 
-  /* for(uInt i=0; i<Map.size();++i) */
+  /* for(casa::uInt i=0; i<Map.size();++i) */
   /*   { */
-  /*     for(uInt j=0; j<Map[i].size();++j) */
+  /*     for(casa::uInt j=0; j<Map[i].size();++j) */
   /* 	{ */
-  /* 	  for(uInt k=0; k<Map[i][j].size();++k) */
+  /* 	  for(casa::uInt k=0; k<Map[i][j].size();++k) */
   /* 	    { */
-  /* 	      uInt irow=Map[i][j][k]; */
+  /* 	      casa::uInt irow=Map[i][j][k]; */
   /* 	      cout<<i<<" "<<j<<" "<<k<<" A="<<ant1[irow]<<","<<ant2[irow]<<" w="<<vb.uvw()[irow](2)<<" windex="<<WIndexMap[i]<<" t="<<times[irow]<<endl; */
   /* 	    } */
   /* 	} */
   /*   } */
 
-  /* for(uInt i=0; i<WIndexMap.size();++i) */
+  /* for(casa::uInt i=0; i<WIndexMap.size();++i) */
   /*   { */
   /*     cout<<" windex="<<WIndexMap[i]<<endl; */
   /*   } */
@@ -838,27 +845,27 @@ protected:
 
      /* } */
      /*  else { */
-     /* 	Float dtime(its_TimeWindow); */
-     /* 	Double time0(times[blIndex[blStart[i]]]); */
+     /* 	casa::Float dtime(its_TimeWindow); */
+     /* 	casa::Double time0(times[blIndex[blStart[i]]]); */
 
-     /* 	vector<uInt> RowChunckStart; */
-     /* 	vector<uInt> RowChunckEnd; */
-     /* 	vector<vector< Float > > WsChunck; */
-     /* 	vector< Float >          WChunck; */
-     /* 	vector<Float> WCFforChunck; */
-     /* 	Float wmin(1.e6); */
-     /* 	Float wmax(-1.e6); */
-     /* 	uInt NRow(blEnd[i]-blStart[i]+1); */
-     /* 	Int NpixMax=0; */
-     /* 	uInt WindexLast=itsConvFunc->GiveWindex(vbs.uvw()(2,blIndex[blStart[i]]),spw); */
-     /* 	uInt Windex; */
+     /* 	vector<casa::uInt> RowChunckStart; */
+     /* 	vector<casa::uInt> RowChunckEnd; */
+     /* 	vector<vector< casa::Float > > WsChunck; */
+     /* 	vector< casa::Float >          WChunck; */
+     /* 	vector<casa::Float> WCFforChunck; */
+     /* 	casa::Float wmin(1.e6); */
+     /* 	casa::Float wmax(-1.e6); */
+     /* 	casa::uInt NRow(blEnd[i]-blStart[i]+1); */
+     /* 	casa::Int NpixMax=0; */
+     /* 	casa::uInt WindexLast=itsConvFunc->GiveWindex(vbs.uvw()(2,blIndex[blStart[i]]),spw); */
+     /* 	casa::uInt Windex; */
      /* 	RowChunckStart.push_back(blStart[i]); */
-     /* 	for(uInt Row=0; Row<NRow; ++Row){ */
-     /* 	  uInt irow(blIndex[blStart[i]+Row]); */
-     /* 	  Double timeRow(times[irow]); */
-     /* 	  Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
+     /* 	for(casa::uInt Row=0; Row<NRow; ++Row){ */
+     /* 	  casa::uInt irow(blIndex[blStart[i]+Row]); */
+     /* 	  casa::Double timeRow(times[irow]); */
+     /* 	  casa::Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
      /* 	  NpixMax=std::max(NpixMax,Npix1); */
-     /* 	  Float w(vbs.uvw()(2,irow)); */
+     /* 	  casa::Float w(vbs.uvw()(2,irow)); */
      /* 	  Windex=itsConvFunc->GiveWindex(vbs.uvw()(2,irow),spw); */
 
      /* 	  //if(WindexLast!=Windex) */
@@ -883,15 +890,15 @@ protected:
      /* 	WsChunck.push_back(WChunck); */
      /* 	RowChunckEnd.push_back(blEnd[i]); */
      /* 	WCFforChunck.push_back((itsConvFunc->wScale()).center(Windex)); */
-     /* 	uInt irow(blIndex[blEnd[i]]); */
-     /* 	Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
+     /* 	casa::uInt irow(blIndex[blEnd[i]]); */
+     /* 	casa::Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
      /* 	NpixMax=std::max(NpixMax,Npix1); */
-     /* 	// for(uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
+     /* 	// for(casa::uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
      /* 	//   cout<<NRow<<" bl: "<<i<<" || Start("<<RowChunckStart.size()<<"): "<<RowChunckStart[chunk]<<" , End("<<RowChunckEnd.size()<<"): "<<RowChunckEnd[chunk] */
      /* 	//       <<" w="<< 0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]])) */
      /* 	//       <<" size="<< WsChunck[chunk].size()<<" wCF="<< WCFforChunck[chunk]<<endl; */
 	  
-     /* 	//   // for(uInt iii=0; iii< WsChunck[chunk].size();++iii){ */
+     /* 	//   // for(casa::uInt iii=0; iii< WsChunck[chunk].size();++iii){ */
      /* 	//   //   cout<<WsChunck[chunk][iii]<<" "<<vbs.uvw()(2,blIndex[RowChunckEnd[chunk]]<<endl; */
      /* 	//   // } */
 
@@ -899,8 +906,8 @@ protected:
 
 	
 
-     /* 	for(uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
-     /* 	  Float WmeanChunk(0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]]))); */
+     /* 	for(casa::uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
+     /* 	  casa::Float WmeanChunk(0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]]))); */
      /* 	  cout<<times[blIndex[RowChunckEnd[chunk]]]-times[blIndex[RowChunckStart[chunk]]]<<" "<<WmeanChunk<<endl; */
      /* 	  cfStore=  itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], timeChunk,//MaxTime, */
      /* 							  WmeanChunk, */
@@ -926,67 +933,67 @@ protected:
 
   double  itsSupport_Speroidal;
 
-  vector<vector<vector<vector<uInt> > > > make_mapping_time_W_grid(const VisBuffer& vb, uInt spw)
+  vector<vector<vector<vector<casa::uInt> > > > make_mapping_time_W_grid(const casa::VisBuffer& vb, casa::uInt spw)
   {
     // Determine the baselines in the VisBuffer.
   ant1.assign(vb.antenna1());
   ant2.assign(vb.antenna2());
-  const Vector<Double>& times = vb.timeCentroid();
+  const casa::Vector<casa::Double>& times = vb.timeCentroid();
   if(its_t0<0.){its_t0=times[0];}
   WIndexMap.resize(0);
-  Double recipWvl = itsListFreq[spw] / 2.99e8;
+  casa::Double recipWvl = itsListFreq[spw] / 2.99e8;
 
   int nrant = 1 + max(max(ant1), max(ant2));
-  Vector<Int> WPCoord;
+  casa::Vector<casa::Int> WPCoord;
   WPCoord.resize(ant1.size());
-  for(uInt irow=0;irow<WPCoord.size();++irow){
+  for(casa::uInt irow=0;irow<WPCoord.size();++irow){
     WPCoord[irow]=itsConvFunc->GiveWindexIncludeNegative(vb.uvw()[irow](2),spw);
   }
   // Sort on baseline (use a baseline nr which is faster to sort).
-  Vector<Int> blnr(ant2+nrant*ant1+nrant*nrant*(WPCoord+itsNWPlanes));
+  casa::Vector<casa::Int> blnr(ant2+nrant*ant1+nrant*nrant*(WPCoord+itsNWPlanes));
   //blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
-  GenSortIndirect<Int>::sort (blIndex, blnr);
+  casa::GenSortIndirect<casa::Int>::sort (blIndex, blnr);
   // Now determine nr of unique baselines and their start index.
 
-  Float dtime(its_TimeWindow);
-  vector<uInt> MapChunck;
-  vector<vector<uInt> > MapW;
-  vector<vector<vector<uInt> > > Map;
+  casa::Float dtime(its_TimeWindow);
+  vector<casa::uInt> MapChunck;
+  vector<vector<casa::uInt> > MapW;
+  vector<vector<vector<casa::uInt> > > Map;
 
-  vector<Int > xminBL;
-  vector<vector<Int> > xminW;
-  vector<Int > xmaxBL;
-  vector<vector<Int> > xmaxW;
-  vector<Int > yminBL;
-  vector<vector<Int> > yminW;
-  vector<Int > ymaxBL;
-  vector<vector<Int> > ymaxW;
+  vector<casa::Int > xminBL;
+  vector<vector<casa::Int> > xminW;
+  vector<casa::Int > xmaxBL;
+  vector<vector<casa::Int> > xmaxW;
+  vector<casa::Int > yminBL;
+  vector<vector<casa::Int> > yminW;
+  vector<casa::Int > ymaxBL;
+  vector<vector<casa::Int> > ymaxW;
 
-  Double time0(-1.);//times[blIndex[0]]);
-  Int bl_now;//blnr[blIndex[0]]);
-  Int iwcoord;//=WPCoord[blIndex[0]]-itsNWPlanes;
+  casa::Double time0(-1.);//times[blIndex[0]]);
+  casa::Int bl_now;//blnr[blIndex[0]]);
+  casa::Int iwcoord;//=WPCoord[blIndex[0]]-itsNWPlanes;
 
   float scaling(2.);
   float support((itsSupport_Speroidal-1)/2+1);
-  Int xmin=2147483647;
-  Int xmax=-2147483647;
-  Int ymin=2147483647;
-  Int ymax=-2147483647;
+  casa::Int xmin=2147483647;
+  casa::Int xmax=-2147483647;
+  casa::Int ymin=2147483647;
+  casa::Int ymax=-2147483647;
 
-  for(uInt RowNum=0; RowNum<blIndex.size();++RowNum){
-    uInt irow=blIndex[RowNum];
+  for(casa::uInt RowNum=0; RowNum<blIndex.size();++RowNum){
+    casa::uInt irow=blIndex[RowNum];
       
     double u=vb.uvw()[irow](0);
     double v=vb.uvw()[irow](1);
     double w=vb.uvw()[irow](2);
     double uvdistance=(0.001)*sqrt(u*u+v*v)/(2.99e8/itsListFreq[spw]);
-    Bool cond0(((uvdistance>itsUVmin)&(uvdistance<itsUVmax)));
-    Bool cond1(abs(w)<itsWMax);
-    Bool cond2(((ant1[irow]==5)&(ant2[irow]==40)));
-    Double timeRow(times[irow]);
-    Bool cond3((timeRow-its_t0)/60.>its_tSel0);
-    Bool cond4((timeRow-its_t0)/60.<its_tSel1);
-    Bool cond34(cond3&cond4);
+    casa::Bool cond0(((uvdistance>itsUVmin)&(uvdistance<itsUVmax)));
+    casa::Bool cond1(abs(w)<itsWMax);
+    casa::Bool cond2(((ant1[irow]==5)&(ant2[irow]==40)));
+    casa::Double timeRow(times[irow]);
+    casa::Bool cond3((timeRow-its_t0)/60.>its_tSel0);
+    casa::Bool cond4((timeRow-its_t0)/60.<its_tSel1);
+    casa::Bool cond34(cond3&cond4);
     if(its_tSel0==-1.){cond34=true;}
     if(!(cond0&cond1&cond34)){continue;}
     //if(!(cond0&cond1&cond34&cond2)){continue;}
@@ -1034,8 +1041,8 @@ protected:
       
     MapChunck.push_back(irow);
     
-    Int xrow = int(u * uvScale(0) * recipWvl + uvOffset(0));
-    Int yrow = int(v * uvScale(1) * recipWvl + uvOffset(1));
+    casa::Int xrow = int(u * uvScale(0) * recipWvl + uvOffset(0));
+    casa::Int yrow = int(v * uvScale(1) * recipWvl + uvOffset(1));
     if(xrow-support<xmin){xmin=xrow-support;};
     if(xrow+support>xmax){xmax=xrow+support;};
     if(yrow-support<ymin){ymin=yrow-support;};
@@ -1055,19 +1062,19 @@ protected:
 
   WIndexMap.push_back(iwcoord);
 
-  /* for(uInt i=0; i<Map.size();++i) */
+  /* for(casa::uInt i=0; i<Map.size();++i) */
   /*   { */
-  /*     for(uInt j=0; j<Map[i].size();++j) */
+  /*     for(casa::uInt j=0; j<Map[i].size();++j) */
   /* 	{ */
 	  
-  /* 	  for(uInt k=0; k<Map[i][j].size();++k) */
+  /* 	  for(casa::uInt k=0; k<Map[i][j].size();++k) */
   /* 	    { */
-  /* 	      uInt irow=Map[i][j][k]; */
+  /* 	      casa::uInt irow=Map[i][j][k]; */
   /* 	      cout<<"iw="<<i<<" ibl="<<j<<" imap="<<k<<" A="<<ant1[irow]<<","<<ant2[irow]<<" w="<<vb.uvw()[irow](2)<<" windex="<<WIndexMap[i]<<" t="<<times[irow]<<endl; */
   /* 	      double u=vb.uvw()[irow](0); */
   /* 	      double v=vb.uvw()[irow](1); */
-  /* 	      Int xrow=int(float(u)*scaling); */
-  /* 	      Int yrow=int(float(v)*scaling); */
+  /* 	      casa::Int xrow=int(float(u)*scaling); */
+  /* 	      casa::Int yrow=int(float(v)*scaling); */
   /* 	      cout<<"   "<<xminW[i][j]<<" ("<<xrow-support<<")"<<endl; */
   /* 	      cout<<"   "<<xmaxW[i][j]<<" ("<<xrow+support<<")"<<endl; */
   /* 	      cout<<"   "<<yminW[i][j]<<" ("<<yrow-support<<")"<<endl; */
@@ -1079,27 +1086,27 @@ protected:
 
   //  ofstream outFile("output_grids.txt");
 
-  vector<uInt> MapChunckOut;
-  vector<vector<uInt> > MapWGridOut;
-  vector<vector<vector<uInt> > > MapWOut;
-  vector<vector<vector<vector<uInt> > > > MapOut;
+  vector<casa::uInt> MapChunckOut;
+  vector<vector<casa::uInt> > MapWGridOut;
+  vector<vector<vector<casa::uInt> > > MapWOut;
+  vector<vector<vector<vector<casa::uInt> > > > MapOut;
 
-  vector<IPosition > posBlock;
+  casa::vector<casa::IPosition > posBlock;
 
-  for(uInt i=0; i<Map.size();++i)
+  for(casa::uInt i=0; i<Map.size();++i)
     {
       MapWGridOut.resize(0);
       MapWOut.resize(0);
-      Vector<Bool> done;
+      casa::Vector<casa::Bool> done;
       done.resize(Map[i].size());
       done=false;
-      Bool alldone(false);
-      Bool cond_xmin,cond_xmax,cond_ymin,cond_ymax;
-      uInt iblock(0);
+      casa::Bool alldone(false);
+      casa::Bool cond_xmin,cond_xmax,cond_ymin,cond_ymax;
+      casa::uInt iblock(0);
       //MapWGridOut.push_back(Map[i][0]);
 
       posBlock.resize(0);
-      IPosition pos(2,1,1);
+      casa::IPosition pos(2,1,1);
       //pos(0)=i;
       //pos(1)=0;
       //posBlock.push_back(pos);
@@ -1108,18 +1115,18 @@ protected:
 
       while(!alldone){
 	
-	for(uInt j=0; j<Map[i].size();++j)
+	for(casa::uInt j=0; j<Map[i].size();++j)
 	  {
 	    // Find if baseline j has overlap with the current grid
 	    if(done[j]==true){continue;}
-	    Bool NoOverlap(true);
-	    for(uInt jj=0; jj<MapWGridOut.size();++jj)
+	    casa::Bool NoOverlap(true);
+	    for(casa::uInt jj=0; jj<MapWGridOut.size();++jj)
 	      {
 		cond_xmin=xminW[i][j]<=xmaxW[posBlock[jj](0)][posBlock[jj](1)];
 		cond_xmax=xmaxW[i][j]>=xminW[posBlock[jj](0)][posBlock[jj](1)];
 		cond_ymin=yminW[i][j]<=ymaxW[posBlock[jj](0)][posBlock[jj](1)]; 
 		cond_ymax=ymaxW[i][j]>=yminW[posBlock[jj](0)][posBlock[jj](1)];
-		Bool condIsOverlap(cond_xmin&&cond_xmax&&cond_ymin&&cond_ymax);
+		casa::Bool condIsOverlap(cond_xmin&&cond_xmax&&cond_ymin&&cond_ymax);
 		if(condIsOverlap){
 		  NoOverlap=false;
 		  break;
@@ -1135,14 +1142,14 @@ protected:
 	  }
 	
 	alldone=true;
-	for(uInt j=0; j<done.size();++j)
+	for(casa::uInt j=0; j<done.size();++j)
 	  {
 	    if(done[j]==false){alldone=false;break;}
 	  }
 
-	/* for(uInt iii=0; iii<MapWGridOut.size();++iii){ */
-	/*   uInt icoord(posBlock[iii](0)); */
-	/*   uInt jcoord(posBlock[iii](1)); */
+	/* for(casa::uInt iii=0; iii<MapWGridOut.size();++iii){ */
+	/*   casa::uInt icoord(posBlock[iii](0)); */
+	/*   casa::uInt jcoord(posBlock[iii](1)); */
 	/*   outFile<<"   "<<i<<" "<<iblock<<" "<<xminW[icoord][jcoord]<<" "<<xmaxW[icoord][jcoord]<<" "<<yminW[icoord][jcoord]<<" "<<ymaxW[icoord][jcoord]<<endl; */
 	/* } */
 
@@ -1158,10 +1165,10 @@ protected:
 
     }
 
-  /* for(uInt i=0; i<MapOut.size();++i){ */
-  /*   for(uInt j=0; j<MapOut[i].size();++j){ */
-  /*     uInt icoord(posBlock[iii](0)); */
-  /*     uInt jcoord(posBlock[iii](1)); */
+  /* for(casa::uInt i=0; i<MapOut.size();++i){ */
+  /*   for(casa::uInt j=0; j<MapOut[i].size();++j){ */
+  /*     casa::uInt icoord(posBlock[iii](0)); */
+  /*     casa::uInt jcoord(posBlock[iii](1)); */
   /*     outFile<<"   "<<i<<" "<<iblock<<" "<<xminW[icoord][jcoord]<<" "<<xmaxW[icoord][jcoord]<<" "<<yminW[icoord][jcoord]<<" "<<ymaxW[icoord][jcoord]<<endl; */
   /*   } */
   /* } */
@@ -1175,7 +1182,7 @@ protected:
 
   FFTCMatrix  FFTMachine;
 
-  void dofft(Matrix<Complex>& arr, bool direction)
+  void dofft(casa::Matrix<casa::Complex>& arr, bool direction)
 {
   int sz(arr.nrow());
   int nthreads(OpenMP::maxThreads());
@@ -1194,7 +1201,7 @@ protected:
 
   ///////////////////////////////////////
   vector<FFTCMatrix>  VecFFTMachine;
-  void dofftVec(Matrix<Complex>& arr, bool direction, int nth=0, int pol=0)
+  void dofftVec(casa::Matrix<casa::Complex>& arr, bool direction, int nth=0, int pol=0)
 {
   int sz(arr.nrow());
   int nthreads(OpenMP::maxThreads());
@@ -1218,86 +1225,86 @@ protected:
   ////////////////////////////////////////
 
   template <class T>
-  void store (const DirectionCoordinate &dir, const Matrix<T> &data,
+  void store (const casa::DirectionCoordinate &dir, const casa::Matrix<T> &data,
               const string &name)
   {
     //cout<<"Saving... "<<name<<endl;
-    Vector<Int> stokes(1);
-    stokes(0) = Stokes::I;
-    CoordinateSystem csys;
+    casa::Vector<casa::Int> stokes(1);
+    stokes(0) = casa::Stokes::I;
+    casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
-    csys.addCoordinate(StokesCoordinate(stokes));
-    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-    PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
-    im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    csys.addCoordinate(casa::StokesCoordinate(stokes));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    casa::PagedImage<T> im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
+    im.putSlice(data, casa::IPosition(4, 0, 0, 0, 0));
   }
 
   template <class T>
-  void store(const Matrix<T> &data, const string &name)
+  void store(const casa::Matrix<T> &data, const string &name)
   {
-    Matrix<Double> xform(2, 2);
+    casa::Matrix<casa::Double> xform(2, 2);
     xform = 0.0;
     xform.diagonal() = 1.0;
-    Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-    Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-    Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-    DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+    casa::Quantum<casa::Double> incLon((8.0 / data.shape()(0)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> incLat((8.0 / data.shape()(1)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> refLatLon(45.0 * casa::C::pi / 180.0, "rad");
+    casa::DirectionCoordinate dir(casa::MDirection::J2000, casa::Projection(casa::Projection::SIN),
                             refLatLon, refLatLon, incLon, incLat,
                             xform, data.shape()(0) / 2, data.shape()(1) / 2);
     store(dir, data, name);
   }
 
   template <class T>
-  void store(const Cube<T> &data, const string &name)
+  void store(const casa::Cube<T> &data, const string &name)
   {
-    Matrix<Double> xform(2, 2);
+    casa::Matrix<casa::Double> xform(2, 2);
     xform = 0.0;
     xform.diagonal() = 1.0;
-    Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-    Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-    Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-    DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+    casa::Quantum<casa::Double> incLon((8.0 / data.shape()(0)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> incLat((8.0 / data.shape()(1)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> refLatLon(45.0 * casa::C::pi / 180.0, "rad");
+    casa::DirectionCoordinate dir(casa::MDirection::J2000, casa::Projection(casa::Projection::SIN),
                             refLatLon, refLatLon, incLon, incLat,
                             xform, data.shape()(0) / 2, data.shape()(1) / 2);
     store(dir, data, name);
   }
 
   template <class T>
-  void store(const DirectionCoordinate &dir, const Cube<T> &data,
+  void store(const casa::DirectionCoordinate &dir, const casa::Cube<T> &data,
              const string &name)
   {
-    AlwaysAssert(data.shape()(2) == 4, SynthesisError);
+//     AlwaysAssert(data.shape()(2) == 4, SynthesisError);
     //cout<<"Saving... "<<name<<endl;
-    Vector<Int> stokes(4);
-    stokes(0) = Stokes::XX;
-    stokes(1) = Stokes::XY;
-    stokes(2) = Stokes::YX;
-    stokes(3) = Stokes::YY;
-    CoordinateSystem csys;
+    casa::Vector<casa::Int> stokes(4);
+    stokes(0) = casa::Stokes::XX;
+    stokes(1) = casa::Stokes::XY;
+    stokes(2) = casa::Stokes::YX;
+    stokes(3) = casa::Stokes::YY;
+    casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
-    csys.addCoordinate(StokesCoordinate(stokes));
-    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-    PagedImage<T>
-      im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)),
+    csys.addCoordinate(casa::StokesCoordinate(stokes));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    casa::PagedImage<T>
+      im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 4, 1)),
          csys, name);
-    im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    im.putSlice(data, casa::IPosition(4, 0, 0, 0, 0));
   }
       /* template <class T> */
       /*   void store(const Cube<T> &data, const string &name) */
       /*   { */
 
       /*     CoordinateSystem csys; */
-      /*     Matrix<Double> xform(2, 2); */
+      /*     casa::Matrix<casa::Double> xform(2, 2); */
       /*     xform = 0.0; */
       /*     xform.diagonal() = 1.0; */
-      /*     Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad"); */
-      /*     Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad"); */
-      /*     Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad"); */
+      /*     Quantum<casa::Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad"); */
+      /*     Quantum<casa::Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad"); */
+      /*     Quantum<casa::Double> refLatLon(45.0 * C::pi / 180.0, "rad"); */
       /*     csys.addCoordinate(DirectionCoordinate(MDirection::J2000, Projection(Projection::SIN), */
       /*                        refLatLon, refLatLon, incLon, incLat, */
       /*                        xform, data.shape()(0) / 2, data.shape()(1) / 2)); */
 
-      /*     Vector<Int> stokes(4); */
+      /*     casa::Vector<casa::Int> stokes(4); */
       /*     stokes(0) = Stokes::XX; */
       /*     stokes(1) = Stokes::XY; */
       /*     stokes(2) = Stokes::YX; */

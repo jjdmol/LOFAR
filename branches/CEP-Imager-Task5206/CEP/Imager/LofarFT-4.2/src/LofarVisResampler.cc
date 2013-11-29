@@ -28,6 +28,8 @@
 #include <cassert>
 #include <Common/OpenMP.h>
 
+using namespace casa;
+
 namespace LOFAR {
 
     // Instantiate both templates.

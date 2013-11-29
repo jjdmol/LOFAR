@@ -48,48 +48,42 @@
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
-
-
-
-
-
-using namespace casa;
-
 namespace LOFAR
 {
 
   // Functions to store a 2D or 3D array in an PagedImage file.
   template <class T>
-  void store(const DirectionCoordinate &dir, const Matrix<T> &data, const string &name);
+  void store(const casa::DirectionCoordinate &dir, const casa::Matrix<T> &data, const string &name);
 
   template <class T>
-  void store(const DirectionCoordinate &dir, const Cube<T> &data, const string &name);
+  void store(const casa::DirectionCoordinate &dir, const casa::Cube<T> &data, const string &name);
 
   template <class T>
-  void store(const Matrix<T> &data, const string &name);
+  void store(const casa::Matrix<T> &data, const string &name);
 
   template <class T>
-  void store(const Cube<T> &data, const string &name);
+  void store(const casa::Cube<T> &data, const string &name);
 
 
   class LofarConvolutionFunction
   {
 
   public:
-    LofarConvolutionFunction(const IPosition& shape,    //# padded shape
-                             const IPosition& imageShape,
-                             const DirectionCoordinate& coordinates,
-                             const MeasurementSet& ms,
-                             uInt nW, double Wmax,
-                             uInt oversample,
-                             Int verbose,
-                             Int maxsupport,
-                             const String& imgName,
-			     Bool Use_EJones,
-			     Bool Apply_Element,
+    LofarConvolutionFunction(const casa::IPosition& shape,    //# padded shape
+                             const casa::IPosition& imageShape,
+                             const casa::DirectionCoordinate& coordinates,
+                             const casa::MeasurementSet& ms,
+                             casa::uInt nW, 
+                             double Wmax,
+                             casa::uInt oversample,
+                             casa::Int verbose,
+                             casa::Int maxsupport,
+                             const casa::String& imgName,
+			     casa::Bool Use_EJones,
+			     casa::Bool Apply_Element,
 			     int ApplyBeamCode,
                              const casa::Record& parameters,
-			     vector< vector< vector < Matrix<Complex> > > > & StackMuellerNew
+			     vector< vector< vector < casa::Matrix<casa::Complex> > > > & StackMuellerNew
                             );
     //,
     //			     Int TaylorTerm,
@@ -110,25 +104,25 @@ namespace LOFAR
     void store_all_W_images();
 
     // Get the spheroidal cut.
-    const Matrix<Float>& getSpheroidCut();
-    Matrix<Float> getSpheroid(uInt npix);
+    const casa::Matrix<casa::Float>& getSpheroidCut();
+    casa::Matrix<casa::Float> getSpheroid(casa::uInt npix);
 
     // Get the spheroidal cut from the file.
-    static Matrix<Float> getSpheroidCut (const String& imgName);
+    static casa::Matrix<casa::Float> getSpheroidCut (const casa::String& imgName);
 
     // Get the average PB from the file.
-    static Matrix<Float> getAveragePB (const String& imgName);
+    static casa::Matrix<casa::Float> getAveragePB (const casa::String& imgName);
 
 
     // Compute the fft of the beam at the minimal resolution for all antennas,
     // and append it to a map object with a (double time) key.
-    void computeAterm(Double time);
-    vector<Double> VecTimesAterm;
-    void computeVecAterm(Double t0, Double t1, Double dt)
+    void computeAterm(casa::Double time);
+    vector<casa::Double> VecTimesAterm;
+    void computeVecAterm(casa::Double t0, casa::Double t1, casa::Double dt)
     {
 
-      Double tmax(0.);
-      for(uInt i=0; i<VecTimesAterm.size(); ++i){
+      casa::Double tmax(0.);
+      for(casa::uInt i=0; i<VecTimesAterm.size(); ++i){
 	if(VecTimesAterm[i]>tmax){
 	  tmax=VecTimesAterm[i];
 	}
@@ -136,7 +130,7 @@ namespace LOFAR
 
       if(t0>tmax){
 	double d = std::min(dt, t1-t0);
-	for(Double tat=t0+d/2.;tat<t1; tat+=d)
+	for(casa::Double tat=t0+d/2.;tat<t1; tat+=d)
 	  {
 	    computeAterm(tat);
 	    VecTimesAterm.push_back(tat);
@@ -145,12 +139,12 @@ namespace LOFAR
 
     }
 
-    Double GiveClosestTimeAterm(Double tat)
+    casa::Double GiveClosestTimeAterm(casa::Double tat)
     {
-      Double dtmin(1e30);
-      Double tmin(0.);
-      Double dt;
-      for(uInt ind=0; ind <VecTimesAterm.size(); ++ind)
+      casa::Double dtmin(1e30);
+      casa::Double tmin(0.);
+      casa::Double dt;
+      for(casa::uInt ind=0; ind <VecTimesAterm.size(); ++ind)
 	{
 	  dt=abs(tat-VecTimesAterm[ind]);
 	  if(dt<dtmin){
@@ -168,72 +162,72 @@ namespace LOFAR
     // implemented, by specifying the beam correcting to the given baseline
     // and timeslot.
     // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
-    LofarCFStore makeConvolutionFunction(uInt stationA, uInt stationB,
-                                         Double time, Double w,
-                                         const Matrix<bool>& Mask_Mueller,
+    LofarCFStore makeConvolutionFunction(casa::uInt stationA, casa::uInt stationB,
+                                         casa::Double time, casa::Double w,
+                                         const casa::Matrix<bool>& Mask_Mueller,
                                          bool degridding_step,
                                          double Append_average_PB_CF,
-                                         Matrix<Complex>& Stack_PB_CF,
+                                         casa::Matrix<casa::Complex>& Stack_PB_CF,
                                          double& sum_weight_square,
-					 Vector<uInt> ChanBlock, Int TaylorTerm, double RefFreq,
-					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
-					 Int ImposeSupport, Bool UseWTerm);
+					 casa::Vector<casa::uInt> ChanBlock, casa::Int TaylorTerm, double RefFreq,
+					 vector< vector < casa::Matrix<casa::Complex> > > & StackMuellerNew,
+					 casa::Int ImposeSupport, casa::Bool UseWTerm);
 
-    LofarCFStore makeConvolutionFunctionAterm(uInt stationA, uInt stationB,
-                                         Double time, Double w,
-                                         const Matrix<bool>& Mask_Mueller,
+    LofarCFStore makeConvolutionFunctionAterm(casa::uInt stationA, casa::uInt stationB,
+                                         casa::Double time, casa::Double w,
+                                         const casa::Matrix<bool>& Mask_Mueller,
                                          bool degridding_step,
                                          double Append_average_PB_CF,
-                                         Matrix<Complex>& Stack_PB_CF,
+                                         casa::Matrix<casa::Complex>& Stack_PB_CF,
                                          double& sum_weight_square,
-					 uInt spw, Int TaylorTerm, double RefFreq,
-					 vector< vector < Matrix<Complex> > > & StackMuellerNew,
-					 Int ImposeSupport);
+					 casa::uInt spw, casa::Int TaylorTerm, double RefFreq,
+					 vector< vector < casa::Matrix<casa::Complex> > > & StackMuellerNew,
+					 casa::Int ImposeSupport);
 
-    Int GiveWSupport(Double w,uInt spw);
-    uInt GiveWindex(Double w,uInt spw);
-    Int GiveWindexIncludeNegative(Double w,uInt spw);
+    casa::Int GiveWSupport(casa::Double w, casa::uInt spw);
+    casa::uInt GiveWindex(casa::Double w, casa::uInt spw);
+    casa::Int GiveWindexIncludeNegative(casa::Double w, casa::uInt spw);
     void initMeanWStepsGridder();
-    Int FindNWplanes();
+    casa::Int FindNWplanes();
 
-    Array<Complex>  ApplyElementBeam(Array<Complex> input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step);
-    Array<Complex> ApplyElementBeam_Image(Array<Complex>& input_grid, Double timeIn, uInt spw, const Matrix<bool>& Mask_Mueller_in2, bool degridding_step);
-    Array<Complex>  ApplyElementBeam2(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, Int UsedMask=-1);
-    Array<Complex>  ApplyElementBeam3(Array<Complex>& input_grid, Double time, uInt spw, const Matrix<bool>& Mask_Mueller_in, bool degridding_step, vector< Array<Complex> >& gridsparalel, Int UsedMask);
-    Array<Complex>  ApplyWterm(Array<Complex>& input_grid, uInt spw, bool degridding_step, Int w_index, vector< Array<Complex> >& gridsparalel, Int TnumMask, Int WnumMask);
-    void ApplyWterm_Image(Array<Complex>& input_grid, Array<Complex>& output_grid, uInt spw, bool degridding_step, Int w_index);
-    void ConvolveArrayArrayParallel( const Array<Complex>& gridin, Array<Complex>& gridout,
-				     const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
-    void ConvolveArrayArrayParallel2( const Array<Complex>& gridin, Array<Complex>& gridout,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
-    void ConvolveArrayArrayParallel2( const Array<Complex>& gridin, Array<Complex>& gridout,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<Bool> MaskIn);
-    void ConvolveArrayArrayParallel3( const Array<Complex>& gridin, Array<Complex>& gridout,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel);
-    void ConvolveArrayArrayParallel3( const Array<Complex>& gridin, Array<Complex>& gridout,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<Bool> MaskIn);
-    void ConvolveArrayArrayParallel4( const Array<Complex>& gridin, Array<Complex>& gridout,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<uShort> MaskIn);
-    void ConvolveArrayArrayParallel4( const Array<Complex>& gridin, Array<Complex>& gridout, uInt polNum,
-				      const Matrix<Complex>& ConvFunc, vector< Array<Complex> >&  GridsParallel, Matrix<uShort> MaskIn);
-    void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 );
-    void SumGridsOMP(Array<Complex>& grid, const vector< Array<Complex> >& GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
-    void SumGridsOMP(Array<Complex>& grid, const Array<Complex> & GridToAdd0 , uInt PolNumIn, uInt PolNumOut);
+    casa::Array<casa::Complex>  ApplyElementBeam(casa::Array<casa::Complex> input_grid, casa::Double time, casa::uInt spw, const casa::Matrix<bool>& Mask_Mueller_in, bool degridding_step);
+    casa::Array<casa::Complex> ApplyElementBeam_Image(casa::Array<casa::Complex>& input_grid, casa::Double timeIn, casa::uInt spw, const casa::Matrix<bool>& Mask_Mueller_in2, bool degridding_step);
+    casa::Array<casa::Complex>  ApplyElementBeam2(casa::Array<casa::Complex>& input_grid, casa::Double time, casa::uInt spw, const casa::Matrix<bool>& Mask_Mueller_in, bool degridding_step, casa::Int UsedMask=-1);
+    casa::Array<casa::Complex>  ApplyElementBeam3(casa::Array<casa::Complex>& input_grid, casa::Double time, casa::uInt spw, const casa::Matrix<bool>& Mask_Mueller_in, bool degridding_step, vector< casa::Array<casa::Complex> >& gridsparalel, casa::Int UsedMask);
+    casa::Array<casa::Complex>  ApplyWterm(casa::Array<casa::Complex>& input_grid, casa::uInt spw, bool degridding_step, casa::Int w_index, vector< casa::Array<casa::Complex> >& gridsparalel, casa::Int TnumMask, casa::Int WnumMask);
+    void ApplyWterm_Image(casa::Array<casa::Complex>& input_grid, casa::Array<casa::Complex>& output_grid, casa::uInt spw, bool degridding_step, casa::Int w_index);
+    void ConvolveArrayArrayParallel( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				     const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel2( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel2( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel, casa::Matrix<casa::Bool> MaskIn);
+    void ConvolveArrayArrayParallel3( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel);
+    void ConvolveArrayArrayParallel3( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel, casa::Matrix<casa::Bool> MaskIn);
+    void ConvolveArrayArrayParallel4( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel, casa::Matrix<casa::uShort> MaskIn);
+    void ConvolveArrayArrayParallel4( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout, casa::uInt polNum,
+				      const casa::Matrix<casa::Complex>& ConvFunc, vector< casa::Array<casa::Complex> >&  GridsParallel, casa::Matrix<casa::uShort> MaskIn);
+    void SumGridsOMP(casa::Array<casa::Complex>& grid, const vector< casa::Array<casa::Complex> >& GridToAdd0 );
+    void SumGridsOMP(casa::Array<casa::Complex>& grid, const vector< casa::Array<casa::Complex> >& GridToAdd0 , casa::uInt PolNumIn, casa::uInt PolNumOut);
+    void SumGridsOMP(casa::Array<casa::Complex>& grid, const casa::Array<casa::Complex> & GridToAdd0 , casa::uInt PolNumIn, casa::uInt PolNumOut);
 
     
     // Returns the average Primary Beam from the disk
-    Matrix<float> Give_avg_pb();
+    casa::Matrix<float> Give_avg_pb();
 
     // Compute the average Primary Beam from the Stack of convolution functions
-    Matrix<Float> Compute_avg_pb(Matrix<Complex> &Sum_Stack_PB_CF,
+    casa::Matrix<casa::Float> Compute_avg_pb(casa::Matrix<casa::Complex> &Sum_Stack_PB_CF,
                                  double sum_weight_square);
 
     // Zero padding of a Cube
-    Cube<Complex> zero_padding(const Cube<Complex>& Image, int Npixel_Out);
+    casa::Cube<casa::Complex> zero_padding(const casa::Cube<casa::Complex>& Image, int Npixel_Out);
 
     // Zero padding of a Matrix
-    Matrix<Complex> zero_padding(const Matrix<Complex>& Image, int Npixel_Out);
-    Matrix<Complex> zero_padding(const Matrix<Complex>& Image, Matrix<Complex>& Image_Enlarged, bool tozero);
+    casa::Matrix<casa::Complex> zero_padding(const casa::Matrix<casa::Complex>& Image, int Npixel_Out);
+    casa::Matrix<casa::Complex> zero_padding(const casa::Matrix<casa::Complex>& Image, casa::Matrix<casa::Complex>& Image_Enlarged, bool tozero);
 
     
 
@@ -241,58 +235,60 @@ namespace LOFAR
     const WScale& wScale() const
       { return m_wScale; }
 
-    Float wStep()
+    casa::Float wStep()
       { return its_wStep; }
-    vector<Complex> wCorrGridder()
+    vector<casa::Complex> wCorrGridder()
       { return its_wCorrGridder; }
 
-    vector<Complex> its_wCorrGridder;
-    vector<Matrix< Complex > > its_wCorrGridderMatrix;
-    Float its_wStep;
-    Bool its_UseWSplit;
+    vector<casa::Complex> its_wCorrGridder;
+    vector<casa::Matrix< casa::Complex > > its_wCorrGridderMatrix;
+    casa::Float its_wStep;
+    casa::Bool its_UseWSplit;
 
-    vector< Matrix< Bool > > itsVectorMasksDegridElement;
-    vector< vector< Matrix< Bool > > > itsVecMasks;
-    vector< vector< Matrix< uShort > > > itsVecMasksNew;
-    vector< vector< Matrix< uShort > > > itsVecMasksNewW;
-    vector< Matrix< uShort > > itsVecMasksNewElement;
-    uInt NBigChunks;
+    vector< casa::Matrix< casa::Bool > > itsVectorMasksDegridElement;
+    vector< vector< casa::Matrix< casa::Bool > > > itsVecMasks;
+    vector< vector< casa::Matrix< casa::uShort > > > itsVecMasksNew;
+    vector< vector< casa::Matrix< casa::uShort > > > itsVecMasksNewW;
+    vector< casa::Matrix< casa::uShort > > itsVecMasksNewElement;
+    casa::uInt NBigChunks;
+    
     void initStoreMasks()
     {
       NBigChunks=20;
-      Int sizeVec(2*m_nWPlanes);
+      casa::Int sizeVec(2*m_nWPlanes);
       itsVecMasks.resize(NBigChunks);
-      for(uInt i=0; i<NBigChunks; ++i)
+      for(casa::uInt i=0; i<NBigChunks; ++i)
 	{
 	  itsVecMasks[i].resize(sizeVec);
 	}
     }
+    
     void initStoreMasksNew()
     {
       NBigChunks=20;
-      Int sizeVec(2*m_nWPlanes);
+      casa::Int sizeVec(2*m_nWPlanes);
       itsVecMasksNew.resize(NBigChunks);
       itsVecMasksNewW.resize(NBigChunks);
       itsVecMasksNewElement.resize(0);
-      for(uInt i=0; i<NBigChunks; ++i)
+      for(casa::uInt i=0; i<NBigChunks; ++i)
 	{
 	  itsVecMasksNew[i].resize(sizeVec);
 	  itsVecMasksNewW[i].resize(sizeVec);
 	}
     }
 
-    void MakeMaskDegrid( const Array<Complex>& gridin, Int NumMask)
+    void MakeMaskDegrid( const casa::Array<casa::Complex>& gridin, casa::Int NumMask)
     {
 
-      String MaskName("JAWS_products/Mask"+String::toString(NumMask)+".boolim");
-      File MaskFile(MaskName);
+      casa::String MaskName("JAWS_products/Mask" + casa::String::toString(NumMask) + ".boolim");
+      casa::File MaskFile(MaskName);
       if(!MaskFile.exists()){
 	//cout<<"... Making Masks ..."<<endl;
-	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	casa::Matrix<casa::Bool> Mask(casa::IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	casa::Matrix<casa::Int> IntMask(casa::IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
 	int GridSize(gridin.shape()[0]);
-	const Complex* inPtr = gridin.data();
-	Bool* outPtr = Mask.data();
+	const casa::Complex* inPtr = gridin.data();
+	casa::Bool* outPtr = Mask.data();
 	for (int i=0; i<GridSize; ++i) {
 	  for (int j=0; j<GridSize; ++j) {
 	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
@@ -310,19 +306,19 @@ namespace LOFAR
     }
 
     
-    void MakeVectorMaskWplanes( const Array<Complex>& gridin, Int NumTime, Int NumWplane)
+    void MakeVectorMaskWplanes( const casa::Array<casa::Complex>& gridin, casa::Int NumTime, casa::Int NumWplane)
     {
-      String MaskName("JAWS_products/Mask.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim");
-      File MaskFile(MaskName);
+      casa::String MaskName("JAWS_products/Mask.T" + casa::String::toString(NumTime) + ".W" + casa::String::toString(NumWplane) + ".boolim");
+      casa::File MaskFile(MaskName);
 
 
       if(!MaskFile.exists()){
 	//cout<<"... Making Masks ..."<<endl;
-	Matrix<Bool> Mask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
-	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	casa::Matrix<casa::Bool> Mask(casa::IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+	casa::Matrix<casa::Int> IntMask(casa::IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
 	int GridSize(gridin.shape()[0]);
-	const Complex* inPtr = gridin.data();
-	Bool* outPtr = Mask.data();
+	const casa::Complex* inPtr = gridin.data();
+	casa::Bool* outPtr = Mask.data();
 	for (int i=0; i<GridSize; ++i) {
 	  for (int j=0; j<GridSize; ++j) {
 	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
@@ -338,32 +334,32 @@ namespace LOFAR
       }
     }
 
-    void MakeVectorMaskWplanesNew( const Array<Complex>& gridin, Int NumTime, Int NumWplane, Bool /*grid*/, Bool /*Element*/, Int MaskType)
+    void MakeVectorMaskWplanesNew( const casa::Array<casa::Complex>& gridin, casa::Int NumTime, casa::Int NumWplane, casa::Bool /*grid*/, casa::Bool /*Element*/, casa::Int MaskType)
     {
       //cout<<"make mask "<<grid<<endl;
-      String MaskName;
-      File MaskFile;
+      casa::String MaskName;
+      casa::File MaskFile;
       if(MaskType==0){
-	MaskName="JAWS_products/MaskGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
-	File MaskFilein(MaskName);
+	MaskName="JAWS_products/MaskGrid.T"+casa::String::toString(NumTime)+".W"+casa::String::toString(NumWplane)+".boolim";
+	casa::File MaskFilein(MaskName);
 	MaskFile=MaskFilein;
 	} 
       if(MaskType==1){
-	MaskName="JAWS_products/MaskDeGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim";
-	File MaskFilein(MaskName);
+	MaskName="JAWS_products/MaskDeGrid.T"+casa::String::toString(NumTime)+".W"+casa::String::toString(NumWplane)+".boolim";
+	casa::File MaskFilein(MaskName);
 	MaskFile=MaskFilein;
       }
       if(MaskType==2){
-	MaskName="JAWS_products/MaskGrid.Element.T"+String::toString(NumTime)+".boolim";
-	File MaskFilein(MaskName);
+	MaskName="JAWS_products/MaskGrid.Element.T"+casa::String::toString(NumTime)+".boolim";
+	casa::File MaskFilein(MaskName);
 	MaskFile=MaskFilein;
       }
 
       if(!MaskFile.exists()){
-    	Matrix<Int> IntMask(IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
+    	casa::Matrix<casa::Int> IntMask(casa::IPosition(2,gridin.shape()[0],gridin.shape()[0]),false);
     	int GridSize(gridin.shape()[0]);
-    	const Complex* inPtr = gridin.data();
-    	uInt Nnonzero(0);
+    	const casa::Complex* inPtr = gridin.data();
+    	casa::uInt Nnonzero(0);
     	for (int i=0; i<GridSize; ++i) {
     	  for (int j=0; j<GridSize; ++j) {
     	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
@@ -374,9 +370,9 @@ namespace LOFAR
 	}
     	inPtr = gridin.data();
 	Nnonzero=std::max(1,int(Nnonzero));
-    	Matrix<uShort> Mask(IPosition(2,Nnonzero,2));
+    	casa::Matrix<casa::uShort> Mask(casa::IPosition(2,Nnonzero,2));
 	Mask=0;
-	uInt indec(0);
+	casa::uInt indec(0);
     	for (int i=0; i<GridSize; ++i) {
     	  for (int j=0; j<GridSize; ++j) {
     	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
@@ -404,25 +400,25 @@ namespace LOFAR
     }
 
 
-    void Make_MuellerAvgPB(vector< vector< vector < Matrix<Complex> > > > & StackMueller, double sum_weight_square);
+    void Make_MuellerAvgPB(vector< vector< vector < casa::Matrix<casa::Complex> > > > & StackMueller, double sum_weight_square);
 
-    Array< Complex > Correct_CC(Array< Complex > & ModelImage);
+    casa::Array< casa::Complex > Correct_CC(casa::Array< casa::Complex > & ModelImage);
 
 
-    Bool itsFilledVectorMasks;
+    casa::Bool itsFilledVectorMasks;
       //vector< Matrix< Bool > > itsVectorMasksDegridElement;
     void ReadMaskDegrid()
     {
-      Int NumMask(0);
+      casa::Int NumMask(0);
       while(true){
-	String MaskName("JAWS_products/Mask"+String::toString(NumMask)+".boolim");
-	File MaskFile(MaskName);
+	casa::String MaskName("JAWS_products/Mask"+casa::String::toString(NumMask)+".boolim");
+	casa::File MaskFile(MaskName);
 	if(MaskFile.exists())
 	  {
 	    //cout<<"Reading:"<<MaskName<<endl;
-	    PagedImage<Bool> pim(MaskName);
-	    Array<Bool> arr = pim.get();
-	    Matrix<Bool> Mask;
+	    casa::PagedImage<casa::Bool> pim(MaskName);
+	    casa::Array<casa::Bool> arr = pim.get();
+	    casa::Matrix<casa::Bool> Mask;
 	    Mask.reference (arr.nonDegenerate(2));
 	    itsVectorMasksDegridElement.push_back(Mask);
 	    NumMask+=1;
@@ -438,17 +434,17 @@ namespace LOFAR
     void ReadMaskDegridW()
     {
       initStoreMasks();
-      Int Wc(0);
-      for(uInt Tnum=0;Tnum<NBigChunks;++Tnum){
-	for(uInt Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
+      casa::Int Wc(0);
+      for(casa::uInt Tnum=0;Tnum<NBigChunks;++Tnum){
+	for(casa::uInt Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
 	
-	  Int Wsearch(Wnum-m_nWPlanes);
-	  String MaskName("JAWS_products/Mask.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
-	  File MaskFile(MaskName);
+	  casa::Int Wsearch(Wnum-m_nWPlanes);
+	  casa::String MaskName("JAWS_products/Mask.T"+casa::String::toString(Tnum)+".W"+casa::String::toString(Wsearch)+".boolim");
+	  casa::File MaskFile(MaskName);
 	  if(MaskFile.exists())
 	    {
-	      PagedImage<Bool> pim(MaskName);
-	      Array<Bool> arr = pim.get();
+	      casa::PagedImage<casa::Bool> pim(MaskName);
+	      casa::Array<casa::Bool> arr = pim.get();
 	      itsVecMasks[Tnum][Wnum].reference (arr.nonDegenerate(2));
 	      //cout<<"  ... read t="<<Tnum<<" w="<<Wsearch<<" put at:"<<Wnum<<endl;
 	      Wc+=1;
@@ -462,7 +458,7 @@ namespace LOFAR
     void ReadMaskDegridWNew()
     {
       //cout<<"...reading masks degrid"<<endl;
-      Int Wc(0);
+      casa::Int Wc(0);
       initStoreMasksNew();
 
       /* MaskName="JAWS_products/MaskGrid.T"+String::toString(NumTime)+".W"+String::toString(NumWplane)+".boolim"; */
@@ -472,39 +468,39 @@ namespace LOFAR
       /* vector< vector< Matrix< uInt > > > itsVecMasksNewW; */
       /* vector< Matrix< uInt > > itsVecMasksNewElement; */
 
-      for(uInt Tnum=0;Tnum<NBigChunks;++Tnum){
-	for(uInt Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
+      for(casa::uInt Tnum=0;Tnum<NBigChunks;++Tnum){
+	for(casa::uInt Wnum=0;Wnum<2*m_nWPlanes;++Wnum){
 	
-	  Int Wsearch(Wnum-m_nWPlanes);
-	  String MaskName("JAWS_products/MaskGrid.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
-	  File MaskFile(MaskName);
+	  casa::Int Wsearch(Wnum-m_nWPlanes);
+	  casa::String MaskName("JAWS_products/MaskGrid.T"+casa::String::toString(Tnum)+".W"+casa::String::toString(Wsearch)+".boolim");
+	  casa::File MaskFile(MaskName);
 	  if(MaskFile.exists())
 	    {
 	      //cout<<".. reading "<<MaskName<<endl;
-	      PagedImage<uShort> pim(MaskName);
-	      Array<uShort> arr = pim.get();
+	      casa::PagedImage<casa::uShort> pim(MaskName);
+	      casa::Array<casa::uShort> arr = pim.get();
 	      itsVecMasksNew[Tnum][Wnum].reference (arr.nonDegenerate(2));
 	      Wc+=1;
 	    }
-	  String MaskName2("JAWS_products/MaskDeGrid.T"+String::toString(Tnum)+".W"+String::toString(Wsearch)+".boolim");
-	  File MaskFile2(MaskName);
+	  casa::String MaskName2("JAWS_products/MaskDeGrid.T"+casa::String::toString(Tnum)+".W"+casa::String::toString(Wsearch)+".boolim");
+	  casa::File MaskFile2(MaskName);
 	  if(MaskFile2.exists())
 	    {
 	      //cout<<".. reading "<<MaskName2<<endl;
-	      PagedImage<uShort> pim(MaskName2);
-	      Array<uShort> arr = pim.get();
+	      casa::PagedImage<casa::uShort> pim(MaskName2);
+	      casa::Array<casa::uShort> arr = pim.get();
 	      itsVecMasksNewW[Tnum][Wnum].reference (arr.nonDegenerate(2));
 	      Wc+=1;
 	    }
 	}
-	String MaskName("JAWS_products/MaskGrid.Element.T"+String::toString(Tnum)+".boolim");
-	File MaskFile(MaskName);
+	casa::String MaskName("JAWS_products/MaskGrid.Element.T"+casa::String::toString(Tnum)+".boolim");
+	casa::File MaskFile(MaskName);
 	if(MaskFile.exists())
 	  {
 	    //cout<<".. reading "<<MaskName<<endl;
-	    PagedImage<uShort> pim(MaskName);
-	    Array<uShort> arr = pim.get();
-	    Matrix<uShort> Mask;
+	    casa::PagedImage<casa::uShort> pim(MaskName);
+	    casa::Array<casa::uShort> arr = pim.get();
+	    casa::Matrix<casa::uShort> Mask;
 	    Mask.reference(arr.nonDegenerate(2));
 	    itsVecMasksNewElement.push_back(Mask);
 	  }
@@ -515,113 +511,116 @@ namespace LOFAR
       
     }
       
-      Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
-    void normalized_fft (Matrix<Complex>&, bool toFreq=true);
-    void normalized_fft_parallel(Matrix<Complex> &im, bool toFreq=true);
-    void normalized_fft (PrecTimer& timer, Matrix<Complex>&, bool toFreq=true);
+    casa::Bool VectorMaskIsFilled(){return itsFilledVectorMasks;}
+    
+    void normalized_fft (casa::Matrix<casa::Complex>&, bool toFreq=true);
+    void normalized_fft_parallel(casa::Matrix<casa::Complex> &im, bool toFreq=true);
+    void normalized_fft (casa::PrecTimer& timer, casa::Matrix<casa::Complex>&, bool toFreq=true);
 
-    Vector< Double >    list_freq_spw;
-    Vector< Double >    list_freq_chanBlock;
-    Vector< uInt >      map_chan_chanBlock;
-    Vector< uInt >      map_chanBlock_spw;
-    vector<Vector< uInt > >     map_spw_chanBlock;
-    Vector< uInt > map_chan_Block_buffer;
-    uInt                m_nWPlanes;
+    casa::Vector< casa::Double >    list_freq_spw;
+    casa::Vector< casa::Double >    list_freq_chanBlock;
+    casa::Vector< casa::uInt >      map_chan_chanBlock;
+    casa::Vector< casa::uInt >      map_chanBlock_spw;
+    vector<casa::Vector< casa::uInt > >     map_spw_chanBlock;
+    casa::Vector< casa::uInt > map_chan_Block_buffer;
+    casa::uInt                m_nWPlanes;
 
 
   private:
 
-    Matrix<Complex> give_normalized_fft_lapack(const Matrix<Complex> &im, bool toFreq=true)
+    casa::Matrix<casa::Complex> give_normalized_fft_lapack(const casa::Matrix<casa::Complex> &im, bool toFreq=true)
       {
-        Matrix<Complex> result(im.copy());
-        ArrayLattice<Complex> lattice(result);
-        LatticeFFT::cfft2d(lattice, toFreq);
+        casa::Matrix<casa::Complex> result(im.copy());
+        casa::ArrayLattice<casa::Complex> lattice(result);
+        casa::LatticeFFT::cfft2d(lattice, toFreq);
         if(toFreq){
-          result/=static_cast<Float>(result.shape()(0)*result.shape()(1));
+          result/=static_cast<casa::Float>(result.shape()(0)*result.shape()(1));
         }
         else{
-          result*=static_cast<Float>(result.shape()(0)*result.shape()(1));
+          result*=static_cast<casa::Float>(result.shape()(0)*result.shape()(1));
         };
         return result;
       }
 
-    MEpoch observationStartTime (const MeasurementSet &ms,
-                                 uInt idObservation) const;
+    casa::MEpoch observationStartTime (const casa::MeasurementSet &ms,
+                                 casa::uInt idObservation) const;
 
     // Estime spheroidal convolution function from the support of the fft
     // of the spheroidal in the image plane
-    Double makeSpheroidCut();
+    casa::Double makeSpheroidCut();
 
     // Return the angular resolution required for making the image of the
     // angular size determined by coordinates and shape.
     // The resolution is assumed to be the same on both direction axes.
-    Double estimateWResolution(const IPosition &shape,
-                               Double pixelSize,
-                               Double w) const;
+    casa::Double estimateWResolution(const casa::IPosition &shape,
+                               casa::Double pixelSize,
+                               casa::Double w) const;
 
 
     // Return the angular resolution required for making the image of the
     // angular size determined by coordinates and shape.
     // The resolution is assumed to be the same on both direction axes.
-    Double estimateAResolution(const IPosition &shape,
-                               const DirectionCoordinate &coordinates, double station_diam = 70.) const;
+    casa::Double estimateAResolution(const casa::IPosition &shape,
+                               const casa::DirectionCoordinate &coordinates, double station_diam = 70.) const;
 
     // Apply a spheroidal taper to the input function.
     template <typename T>
-    void taper (Matrix<T> &function) const
+    void taper (casa::Matrix<T> &function) const
     {
-      AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
-      uInt size = function.shape()[0];
-      Double halfSize = (size-1) / 2.0;
-      Vector<Double> x(size);
-      for (uInt i=0; i<size; ++i) {
+//       AlwaysAssert(function.shape()[0] == function.shape()[1], casa::SynthesisError);
+      casa::uInt size = function.shape()[0];
+      casa::Double halfSize = (size-1) / 2.0;
+      casa::Vector<casa::Double> x(size);
+      for (casa::uInt i=0; i<size; ++i) {
         x[i] = spheroidal(abs(i - halfSize) / halfSize);
       }
-      for (uInt i=0; i<size; ++i) {
-        for (uInt j=0; j<size; ++j) {
+      for (casa::uInt i=0; i<size; ++i) {
+        for (casa::uInt j=0; j<size; ++j) {
           function(j, i) *= x[i] * x[j];
         }
       }
     }
 
     template <typename T>
-    void taper_parallel (Matrix<T> &function) const
+    void taper_parallel (casa::Matrix<T> &function) const
     {
-      AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
-      uInt size = function.shape()[0];
-      Double halfSize = (size-1) / 2.0;
-      Vector<Double> x(size);
-      for (uInt i=0; i<size; ++i) {
+//       AlwaysAssert(function.shape()[0] == function.shape()[1], SynthesisError);
+      casa::uInt size = function.shape()[0];
+      casa::Double halfSize = (size-1) / 2.0;
+      casa::Vector<casa::Double> x(size);
+      for (casa::uInt i=0; i<size; ++i) {
         x[i] = spheroidal(abs(i - halfSize) / halfSize);
       }
-      uInt j;
+      casa::uInt j;
 #pragma omp parallel
-    {
+      {
 #pragma omp for private(j) schedule(dynamic)
-      for (uInt i=0; i<size; ++i) {
-        for (j=0; j<size; ++j) {
-          function(j, i) *= x[i] * x[j];
+        for (casa::uInt i=0; i<size; ++i) 
+        {
+          for (j=0; j<size; ++j) 
+          {
+            function(j, i) *= x[i] * x[j];
+          }
         }
       }
-    }
     }
 
 
     // Linear interpolation
     template <typename T>
-    Matrix< T > LinearInterpol(Matrix<T> ImageIn, Int  NpixOut)
+    casa::Matrix< T > LinearInterpol(casa::Matrix<T> ImageIn, casa::Int  NpixOut)
       {
-	Matrix<T> ImageOut(IPosition(2,NpixOut,NpixOut),0.);
+	casa::Matrix<T> ImageOut(casa::IPosition(2,NpixOut,NpixOut),0.);
 	float d0(1./(NpixOut-1.));
 	float d1(1./(ImageIn.shape()[0]-1.));
 	float dd(d0/d1);
 	float dx,dy,dxd,dyd,xin,yin;
 	float onef(1.);
-	for(Int i=0;i<(NpixOut);++i){
+	for(casa::Int i=0;i<(NpixOut);++i){
 	  dxd=i*dd;
 	  xin=floor(dxd);
 	  dx=dxd-xin;
-	  for(Int j=0;j<(NpixOut);++j){
+	  for(casa::Int j=0;j<(NpixOut);++j){
 	    dyd=j*dd;
 	    yin=floor(dyd);
 	    dy=dyd-yin;
@@ -631,16 +630,16 @@ namespace LOFAR
 	return ImageOut;
       }
 
-    void Convolve(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
-      uInt Support(ConvFunc.shape()[0]);
-      uInt GridSize(gridin.shape()[0]);
-      uInt off(Support/2);
-      for(uInt i=Support/2;i<GridSize-Support/2;++i){
-	for(uInt j=Support/2;j<GridSize-Support/2;++j){
-	  if((gridin(i,j))!=Complex(0.,0.)){
-	    Complex val(gridin(i,j));
-	    for(uInt ii=0;ii<Support;++ii){
-	      for(uInt jj=0;jj<Support;++jj){
+    void Convolve(casa::Matrix<casa::Complex> gridin, casa::Matrix<casa::Complex> gridout, casa::Matrix<casa::Complex> ConvFunc){
+      casa::uInt Support(ConvFunc.shape()[0]);
+      casa::uInt GridSize(gridin.shape()[0]);
+      casa::uInt off(Support/2);
+      for(casa::uInt i=Support/2;i<GridSize-Support/2;++i){
+	for(casa::uInt j=Support/2;j<GridSize-Support/2;++j){
+	  if((gridin(i,j))!=casa::Complex(0.,0.)){
+	    casa::Complex val(gridin(i,j));
+	    for(casa::uInt ii=0;ii<Support;++ii){
+	      for(casa::uInt jj=0;jj<Support;++jj){
 		gridout(i-off+ii,j-off+jj)+=ConvFunc(ii,jj)*val;
 	      }
 	    }
@@ -649,22 +648,22 @@ namespace LOFAR
       }
     }
 
-    void ConvolveOpt(Matrix<Complex> gridin, Matrix<Complex> gridout, Matrix<Complex> ConvFunc){
-      uInt Support(ConvFunc.shape()[0]);
-      uInt GridSize(gridin.shape()[0]);
-      uInt off(Support/2);
+    void ConvolveOpt(casa::Matrix<casa::Complex> gridin, casa::Matrix<casa::Complex> gridout, casa::Matrix<casa::Complex> ConvFunc){
+      casa::uInt Support(ConvFunc.shape()[0]);
+      casa::uInt GridSize(gridin.shape()[0]);
+      casa::uInt off(Support/2);
 
-      Complex* __restrict__ gridInPtr = gridin.data();
-      Complex* __restrict__ gridOutPtr = gridout.data();
-      Complex* __restrict__ ConvFuncPtr = ConvFunc.data();
+      casa::Complex* __restrict__ gridInPtr = gridin.data();
+      casa::Complex* __restrict__ gridOutPtr = gridout.data();
+      casa::Complex* __restrict__ ConvFuncPtr = ConvFunc.data();
 
-      for(uInt i=Support/2;i<GridSize-Support/2;++i){
-	for(uInt j=Support/2;j<GridSize-Support/2;++j){
+      for(casa::uInt i=Support/2;i<GridSize-Support/2;++i){
+	for(casa::uInt j=Support/2;j<GridSize-Support/2;++j){
 	  gridInPtr=gridin.data()+GridSize*i+j;
 	  if (gridInPtr->real() != 0  ||  gridInPtr->imag() != 0) {//if((*gridInPtr)!=Complex(0.,0.)){
 	    ConvFuncPtr = ConvFunc.data();
-	    for(uInt jj=0;jj<Support;++jj){
-	      for(uInt ii=0;ii<Support;++ii){
+	    for(casa::uInt jj=0;jj<Support;++jj){
+	      for(casa::uInt ii=0;ii<Support;++ii){
 		gridOutPtr = gridout.data()+(j-off+jj)*GridSize+i-off+ii;
 		(*gridOutPtr) += (*ConvFuncPtr)*(*gridInPtr);
 		ConvFuncPtr++;//=ConvFunc.data()+Support*ii+jj;
@@ -677,20 +676,20 @@ namespace LOFAR
       
     }
 
-    void ConvolveGer( const Matrix<Complex>& gridin, Matrix<Complex>& gridout,
-		      const Matrix<Complex>& ConvFunc)
+    void ConvolveGer( const casa::Matrix<casa::Complex>& gridin, casa::Matrix<casa::Complex>& gridout,
+		      const casa::Matrix<casa::Complex>& ConvFunc)
     {
-      uInt Support(ConvFunc.shape()[0]);
-      uInt GridSize(gridin.shape()[0]);
-      uInt off(Support/2);
-      const Complex* inPtr = gridin.data() + off*GridSize + off;
-      for (uInt i=0; i<GridSize-Support; ++i) {
-	for (uInt j=0; j<GridSize-Support; ++j) {
+      casa::uInt Support(ConvFunc.shape()[0]);
+      casa::uInt GridSize(gridin.shape()[0]);
+      casa::uInt off(Support/2);
+      const casa::Complex* inPtr = gridin.data() + off*GridSize + off;
+      for (casa::uInt i=0; i<GridSize-Support; ++i) {
+	for (casa::uInt j=0; j<GridSize-Support; ++j) {
 	  if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
-	    const Complex* cfPtr = ConvFunc.data();
-	    for (uInt ii=0; ii<Support; ++ii) {
-	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
-	      for (uInt jj=0; jj<Support; ++jj) {
+	    const casa::Complex* cfPtr = ConvFunc.data();
+	    for (casa::uInt ii=0; ii<Support; ++ii) {
+	      casa::Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (casa::uInt jj=0; jj<Support; ++jj) {
 		outPtr[jj] += *cfPtr++ * *inPtr;
 	      }
 	    }
@@ -701,21 +700,21 @@ namespace LOFAR
       }
     }
 
-    void ConvolveGerArray( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
-			   const Matrix<Complex>& ConvFunc)
+    void ConvolveGerArray( const casa::Array<casa::Complex>& gridin, casa::Int ConvPol, casa::Matrix<casa::Complex>& gridout,
+			   const casa::Matrix<casa::Complex>& ConvFunc)
     {
-      uInt Support(ConvFunc.shape()[0]);
-      uInt GridSize(gridin.shape()[0]);
-      uInt off(Support/2);
+      casa::uInt Support(ConvFunc.shape()[0]);
+      casa::uInt GridSize(gridin.shape()[0]);
+      casa::uInt off(Support/2);
 
-      const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
-      for (uInt i=0; i<GridSize-Support; ++i) {
-	for (uInt j=0; j<GridSize-Support; ++j) {
+      const casa::Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+      for (casa::uInt i=0; i<GridSize-Support; ++i) {
+	for (casa::uInt j=0; j<GridSize-Support; ++j) {
 	  if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
-	    const Complex* cfPtr = ConvFunc.data();
-	    for (uInt ii=0; ii<Support; ++ii) {
-	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
-	      for (uInt jj=0; jj<Support; ++jj) {
+	    const casa::Complex* cfPtr = ConvFunc.data();
+	    for (casa::uInt ii=0; ii<Support; ++ii) {
+	      casa::Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (casa::uInt jj=0; jj<Support; ++jj) {
 		outPtr[jj] += *cfPtr++ * *inPtr;
 	      }
 	    }
@@ -726,8 +725,8 @@ namespace LOFAR
       }
     }
     
-    void ConvolveArrayArray( const Array<Complex>& gridin, Array<Complex>& gridout,
-			   const Matrix<Complex>& ConvFunc)
+    void ConvolveArrayArray( const casa::Array<casa::Complex>& gridin, casa::Array<casa::Complex>& gridout,
+			   const casa::Matrix<casa::Complex>& ConvFunc)
     {
       int Support(ConvFunc.shape()[0]);
       int GridSize(gridin.shape()[0]);
@@ -735,17 +734,17 @@ namespace LOFAR
 
 
 
-      for(uInt ConvPol=0; ConvPol<gridin.shape()[2];++ConvPol){
+      for(casa::uInt ConvPol=0; ConvPol<gridin.shape()[2];++ConvPol){
 
-	Int offPol(ConvPol*GridSize*GridSize);
-	const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
-	for (Int i=0; i<GridSize-Support; ++i) {
-	  for (Int j=0; j<GridSize-Support; ++j) {
+	casa::Int offPol(ConvPol*GridSize*GridSize);
+	const casa::Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+	for (casa::Int i=0; i<GridSize-Support; ++i) {
+	  for (casa::Int j=0; j<GridSize-Support; ++j) {
 	    if (inPtr->real() != 0  ||  inPtr->imag() != 0) {
-	      const Complex* cfPtr = ConvFunc.data();
-	      for (Int ii=0; ii<Support; ++ii) {
-		Complex* outPtr = gridout.data() + (i+ii)*GridSize + j +offPol;
-		for (Int jj=0; jj<Support; ++jj) {
+	      const casa::Complex* cfPtr = ConvFunc.data();
+	      for (casa::Int ii=0; ii<Support; ++ii) {
+		casa::Complex* outPtr = gridout.data() + (i+ii)*GridSize + j +offPol;
+		for (casa::Int jj=0; jj<Support; ++jj) {
 		  outPtr[jj] += *cfPtr++ * *inPtr;
 		}
 	      }
@@ -760,22 +759,22 @@ namespace LOFAR
     
 
 
-    void ConvolveGerArrayMask( const Array<Complex>& gridin, Int ConvPol, Matrix<Complex>& gridout,
-			       const Matrix<Complex>& ConvFunc, Int UsedMask)
+    void ConvolveGerArrayMask( const casa::Array<casa::Complex>& gridin, casa::Int ConvPol, casa::Matrix<casa::Complex>& gridout,
+			       const casa::Matrix<casa::Complex>& ConvFunc, casa::Int UsedMask)
     {
-      uInt Support(ConvFunc.shape()[0]);
-      uInt GridSize(gridin.shape()[0]);
-      uInt off(Support/2);
+      casa::uInt Support(ConvFunc.shape()[0]);
+      casa::uInt GridSize(gridin.shape()[0]);
+      casa::uInt off(Support/2);
 
-      const Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
-      const Bool* MaskPtr = itsVectorMasksDegridElement[UsedMask].data() + off*GridSize + off;
-      for (uInt i=0; i<GridSize-Support; ++i) {
-	for (uInt j=0; j<GridSize-Support; ++j) {
+      const casa::Complex* inPtr = gridin.data() + ConvPol*GridSize*GridSize + off*GridSize + off;
+      const casa::Bool* MaskPtr = itsVectorMasksDegridElement[UsedMask].data() + off*GridSize + off;
+      for (casa::uInt i=0; i<GridSize-Support; ++i) {
+	for (casa::uInt j=0; j<GridSize-Support; ++j) {
 	  if ((*MaskPtr)==true) {
-	    const Complex* cfPtr = ConvFunc.data();
-	    for (uInt ii=0; ii<Support; ++ii) {
-	      Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
-	      for (uInt jj=0; jj<Support; ++jj) {
+	    const casa::Complex* cfPtr = ConvFunc.data();
+	    for (casa::uInt ii=0; ii<Support; ++ii) {
+	      casa::Complex* outPtr = gridout.data() + (i+ii)*GridSize + j;
+	      for (casa::uInt jj=0; jj<Support; ++jj) {
 		outPtr[jj] += *cfPtr++ * *inPtr;
 	      }
 	    }
@@ -792,20 +791,20 @@ namespace LOFAR
     
     // Linear interpolation
     template <typename T>
-    Matrix< T > LinearInterpol2(Matrix<T> ImageIn, Int  NpixOut)
+    casa::Matrix< T > LinearInterpol2(casa::Matrix<T> ImageIn, casa::Int  NpixOut)
       {
-	Matrix<T> ImageOut(IPosition(2,NpixOut,NpixOut),1e-7);
+	casa::Matrix<T> ImageOut(casa::IPosition(2,NpixOut,NpixOut),1e-7);
 	int nd(ImageIn.shape()[0]);
 	int ni(NpixOut);
 	float off(-.5);//-(((1.+1./(nd-1.))-1.)/2.)*(nd-1));
 	float a(nd/(ni-1.));//((1.+1./(nd-1.))/(ni-1.))*(nd-1));
 	float dx,dy,dxd,dyd,xin,yin;
 	float onef(1.);
-	for(Int i=0;i<(NpixOut);++i){
+	for(casa::Int i=0;i<(NpixOut);++i){
 	  dxd=i*a+off;
 	  xin=floor(dxd);
 	  dx=dxd-xin;
-	  for(Int j=0;j<(NpixOut);++j){
+	  for(casa::Int j=0;j<(NpixOut);++j){
 	    dyd=j*a+off;
 	    yin=floor(dyd);
 	    dy=dyd-yin;
@@ -820,14 +819,14 @@ namespace LOFAR
 	return ImageOut;
       }
 
-    void EstimateCoordShape(IPosition shape, DirectionCoordinate coordinate, double station_diameter=70.){
+    void EstimateCoordShape(casa::IPosition shape, casa::DirectionCoordinate coordinate, double station_diameter=70.){
       coordinate = m_coordinates;
-      Double aPixelAngSize = min(m_pixelSizeSpheroidal,
+      casa::Double aPixelAngSize = min(m_pixelSizeSpheroidal,
 				 estimateAResolution(m_shape, m_coordinates, station_diameter));
       
-      Double pixelSize = abs(m_coordinates.increment()[0]);
-      Double imageDiameter = pixelSize * m_shape(0);
-      Int nPixelsConv = imageDiameter / aPixelAngSize;
+      casa::Double pixelSize = abs(m_coordinates.increment()[0]);
+      casa::Double imageDiameter = pixelSize * m_shape(0);
+      casa::Int nPixelsConv = imageDiameter / aPixelAngSize;
       if (nPixelsConv > itsMaxSupport) {
           nPixelsConv = itsMaxSupport;
       }
@@ -835,20 +834,20 @@ namespace LOFAR
       nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
       aPixelAngSize = imageDiameter / nPixelsConv;
 
-      shape=IPosition(2, nPixelsConv, nPixelsConv);
-      Vector<Double> increment_old(coordinate.increment());
-      Vector<Double> increment(2);
-      increment[0] = aPixelAngSize*sign(increment_old[0]);
-      increment[1] = aPixelAngSize*sign(increment_old[1]);
+      shape=casa::IPosition(2, nPixelsConv, nPixelsConv);
+      casa::Vector<casa::Double> increment_old(coordinate.increment());
+      casa::Vector<casa::Double> increment(2);
+      increment[0] = aPixelAngSize*casa::sign(increment_old[0]);
+      increment[1] = aPixelAngSize*casa::sign(increment_old[1]);
       coordinate.setIncrement(increment);
-      Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
+      casa::Vector<casa::Double> refpix(2, 0.5*(nPixelsConv-1));
       coordinate.setReferencePixel(refpix);
     }
 
 
 
 
-    Double spheroidal(Double nu) const;
+    casa::Double spheroidal(casa::Double nu) const;
 
 
 
@@ -856,13 +855,13 @@ namespace LOFAR
 
 
     template <typename T>
-    uInt findSupport(Matrix<T> &function, Double threshold) const
+    casa::uInt findSupport(casa::Matrix<T> &function, casa::Double threshold) const
     {
       ///      Double peak = abs(max(abs(function)));
-      Double peak = max(amplitude(function));
+      casa::Double peak = max(amplitude(function));
       threshold *= peak;
-      uInt halfSize = function.shape()[0] / 2;
-      uInt x = 0;
+      casa::uInt halfSize = function.shape()[0] / 2;
+      casa::uInt x = 0;
       while (x < halfSize && abs(function(x, halfSize)) < threshold) {
         ++x;
       }
@@ -872,65 +871,65 @@ namespace LOFAR
 
     //# Data members.
     casa::Record       itsParameters;
-    Array<Complex> its_output_grid_element;
-    Matrix<Complex> its_ArrMatrix_out_element;
-    IPosition           m_shape;
-    DirectionCoordinate m_coordinates;
+    casa::Array<casa::Complex> its_output_grid_element;
+    casa::Matrix<casa::Complex> its_ArrMatrix_out_element;
+    casa::IPosition           m_shape;
+    casa::DirectionCoordinate m_coordinates;
     WScale              m_wScale;
     LofarWTerm          m_wTerm;
     LofarATerm          m_aTerm;
-    Double              m_maxW;
-    Double              m_pixelSizeSpheroidal;
-    uInt                m_nStations;
-    uInt                m_oversampling;
-    uInt                m_nChannelBlocks;
-    uInt                m_NPixATerm;
-    Double              m_refFrequency;
-    uInt                m_maxCFSupport;
-    vector<Double>      its_VectorThreadsSumWeights;
+    casa::Double              m_maxW;
+    casa::Double              m_pixelSizeSpheroidal;
+    casa::uInt                m_nStations;
+    casa::uInt                m_oversampling;
+    casa::uInt                m_nChannelBlocks;
+    casa::uInt                m_NPixATerm;
+    casa::Double              m_refFrequency;
+    casa::uInt                m_maxCFSupport;
+    vector<casa::Double>      its_VectorThreadsSumWeights;
 
     //# Stack of the convolution functions for the average PB calculation
-    Matrix<Complex>     Spheroid_cut;
+    casa::Matrix<casa::Complex>     Spheroid_cut;
     //# Stack of the convolution functions for the average PB calculation
-    Matrix<Float>       Spheroid_cut_im;
-    Matrix<Float>       Spheroid_cut_im_element;
+    casa::Matrix<casa::Float>       Spheroid_cut_im;
+    casa::Matrix<casa::Float>       Spheroid_cut_im_element;
     //# List of the ferquencies the CF have to be caluclated for
-    vector< Matrix<Complex> > m_WplanesStore;
+    vector< casa::Matrix<casa::Complex> > m_WplanesStore;
     //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
-    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore;
-    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_element;
-    map<Double, vector< vector< Cube<Complex> > > > m_AtermStore_station;
+    map<casa::Double, vector< vector< casa::Cube<casa::Complex> > > > m_AtermStore;
+    map<casa::Double, vector< vector< casa::Cube<casa::Complex> > > > m_AtermStore_element;
+    map<casa::Double, vector< vector< casa::Cube<casa::Complex> > > > m_AtermStore_station;
     //# Average primary beam
-    Matrix<Float>       Im_Stack_PB_CF0;
-    Int                 itsVerbose;
-    Int                 itsMaxSupport;
+    casa::Matrix<casa::Float>       Im_Stack_PB_CF0;
+    casa::Int                 itsVerbose;
+    casa::Int                 itsMaxSupport;
     //    Int                 itsTaylorTerm;
     //Double              itsRefFreq;
-    String              itsImgName;
+    casa::String              itsImgName;
     vector<FFTCMatrix>  itsFFTMachines;
-    Double              itsTimeW;
-    Double              itsTimeWpar;
-    Double              itsTimeWfft;
+    casa::Double              itsTimeW;
+    casa::Double              itsTimeWpar;
+    casa::Double              itsTimeWfft;
     unsigned long long  itsTimeWcnt;
-    Double              itsTimeA;
-    Double              itsTimeApar;
-    Double              itsTimeAfft;
+    casa::Double              itsTimeA;
+    casa::Double              itsTimeApar;
+    casa::Double              itsTimeAfft;
     unsigned long long  itsTimeAcnt;
-    Double              itsTimeCF;
-    Double              itsTimeCFpar;
-    Double              itsTimeCFfft;
+    casa::Double              itsTimeCF;
+    casa::Double              itsTimeCFpar;
+    casa::Double              itsTimeCFfft;
     unsigned long long  itsTimeCFcnt;
-    Bool                its_Use_EJones;
-    Bool                its_Apply_Element;
-    Bool                its_NotApplyElement;
-    Bool                its_NotApplyArray;
-    uInt                its_MaxWSupport;
-    uInt                its_count_time;
-    mutable LogIO       m_logIO;
-    Int                 its_ChanBlockSize;
-    Matrix<Complex>     spheroid_cut_element_fft;
-    vector< vector< Matrix< Complex > > > GridsMueller;
-    LogIO &logIO() const
+    casa::Bool                its_Use_EJones;
+    casa::Bool                its_Apply_Element;
+    casa::Bool                its_NotApplyElement;
+    casa::Bool                its_NotApplyArray;
+    casa::uInt                its_MaxWSupport;
+    casa::uInt                its_count_time;
+    mutable casa::LogIO       m_logIO;
+    casa::Int                 its_ChanBlockSize;
+    casa::Matrix<casa::Complex>     spheroid_cut_element_fft;
+    vector< vector< casa::Matrix< casa::Complex > > > GridsMueller;
+    casa::LogIO &logIO() const
       {
         return m_logIO;
       }
@@ -940,71 +939,71 @@ namespace LOFAR
 
   //# =================================================
   template <class T>
-  void store(const Matrix<T> &data, const string &name)
+  void store(const casa::Matrix<T> &data, const string &name)
   {
-    Matrix<Double> xform(2, 2);
+    casa::Matrix<casa::Double> xform(2, 2);
     xform = 0.0;
     xform.diagonal() = 1.0;
-    Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-    Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-    Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-    DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+    casa::Quantum<casa::Double> incLon((8.0 / data.shape()(0)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> incLat((8.0 / data.shape()(1)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> refLatLon(45.0 * casa::C::pi / 180.0, "rad");
+    casa::DirectionCoordinate dir(casa::MDirection::J2000, casa::Projection(casa::Projection::SIN),
                             refLatLon, refLatLon, incLon, incLat,
                             xform, data.shape()(0) / 2, data.shape()(1) / 2);
     store(dir, data, name);
   }
 
   template <class T>
-  void store (const DirectionCoordinate &dir, const Matrix<T> &data,
+  void store (const casa::DirectionCoordinate &dir, const casa::Matrix<T> &data,
               const string &name)
   {
     //cout<<"Saving... "<<name<<endl;
-    Vector<Int> stokes(1);
-    stokes(0) = Stokes::I;
-    CoordinateSystem csys;
+    casa::Vector<casa::Int> stokes(1);
+    stokes(0) = casa::Stokes::I;
+    casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
-    csys.addCoordinate(StokesCoordinate(stokes));
-    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-    PagedImage<T> im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
-    im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    csys.addCoordinate(casa::StokesCoordinate(stokes));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    casa::PagedImage<T> im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 1, 1)), csys, name);
+    im.putSlice(data, casa::IPosition(4, 0, 0, 0, 0));
   }
 
   template <class T>
-  void store(const Cube<T> &data, const string &name)
+  void store(const casa::Cube<T> &data, const string &name)
   {
-    Matrix<Double> xform(2, 2);
+    casa::Matrix<casa::Double> xform(2, 2);
     xform = 0.0;
     xform.diagonal() = 1.0;
-    Quantum<Double> incLon((8.0 / data.shape()(0)) * C::pi / 180.0, "rad");
-    Quantum<Double> incLat((8.0 / data.shape()(1)) * C::pi / 180.0, "rad");
-    Quantum<Double> refLatLon(45.0 * C::pi / 180.0, "rad");
-    DirectionCoordinate dir(MDirection::J2000, Projection(Projection::SIN),
+    casa::Quantum<casa::Double> incLon((8.0 / data.shape()(0)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> incLat((8.0 / data.shape()(1)) * casa::C::pi / 180.0, "rad");
+    casa::Quantum<casa::Double> refLatLon(45.0 * casa::C::pi / 180.0, "rad");
+    casa::DirectionCoordinate dir(casa::MDirection::J2000, casa::Projection(casa::Projection::SIN),
                             refLatLon, refLatLon, incLon, incLat,
                             xform, data.shape()(0) / 2, data.shape()(1) / 2);
     store(dir, data, name);
   }
 
   template <class T>
-  void store(const DirectionCoordinate &dir, const Cube<T> &data,
+  void store(const casa::DirectionCoordinate &dir, const casa::Cube<T> &data,
              const string &name)
   {
-    AlwaysAssert(data.shape()(2) == 4, SynthesisError);
+//     AlwaysAssert(data.shape()(2) == 4, SynthesisError);
     //cout<<"Saving... "<<name<<endl;
-    Vector<Int> stokes(4);
-    stokes(0) = Stokes::XX;
-    stokes(1) = Stokes::XY;
-    stokes(2) = Stokes::YX;
-    stokes(3) = Stokes::YY;
-    CoordinateSystem csys;
+    casa::Vector<casa::Int> stokes(4);
+    stokes(0) = casa::Stokes::XX;
+    stokes(1) = casa::Stokes::XY;
+    stokes(2) = casa::Stokes::YX;
+    stokes(3) = casa::Stokes::YY;
+    casa::CoordinateSystem csys;
     csys.addCoordinate(dir);
-    csys.addCoordinate(StokesCoordinate(stokes));
-    csys.addCoordinate(SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
-    PagedImage<T>
-      im(TiledShape(IPosition(4, data.shape()(0), data.shape()(1), 4, 1)),
+    csys.addCoordinate(casa::StokesCoordinate(stokes));
+    csys.addCoordinate(casa::SpectralCoordinate(casa::MFrequency::TOPO, 60e6, 0.0, 0.0, 60e6));
+    casa::PagedImage<T>
+      im(casa::TiledShape(casa::IPosition(4, data.shape()(0), data.shape()(1), 4, 1)),
          csys, name);
-    im.putSlice(data, IPosition(4, 0, 0, 0, 0));
+    im.putSlice(data, casa::IPosition(4, 0, 0, 0, 0));
   }
 
-} //# end namespace casa
+} //# end namespace LOFAR
 
 #endif

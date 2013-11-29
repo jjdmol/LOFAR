@@ -35,14 +35,13 @@
 
 namespace LOFAR
 {
-  namespace LofarCFDefs { //# NAMESPACE CASA - BEGIN
-    using namespace casa;
+  namespace LofarCFDefs { //# NAMESPACE LofarCFDefs - BEGIN
     // freq, mueller_x, mueller_y
-    typedef vector< vector< vector < Matrix<Complex> > > > CFTypeVec ;
-    typedef Array<Complex> CFType ;
-    typedef Array<Double> CFTypeReal ;
+    typedef vector< vector< vector < casa::Matrix<casa::Complex> > > > CFTypeVec ;
+    typedef casa::Array<casa::Complex> CFType ;
+    typedef casa::Array<casa::Double> CFTypeReal ;
     enum CACHETYPE {NOTCACHED=0,DISKCACHE, MEMCACHE};
     enum CFARRAYSHAPE {NXPOS=0,NYPOS,NWPOS,NPOLPOS,NBASEPOS,CFNDIM};
-  } //# NAMESPACE CASA - END
+  } //# NAMESPACE LofarCFDefs - END
 }
 #endif

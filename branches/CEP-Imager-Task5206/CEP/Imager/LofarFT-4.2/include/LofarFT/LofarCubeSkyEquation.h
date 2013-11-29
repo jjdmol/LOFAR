@@ -30,7 +30,6 @@
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 //#include <synthesis/Utilities/ThreadTimers.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //Forward
@@ -45,10 +44,10 @@ class ROVisibilityIterator;
 class LofarCubeSkyEquation : public SkyEquation {
 
  public:
-  LofarCubeSkyEquation(SkyModel& sm, VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
+  LofarCubeSkyEquation(SkyModel& sm, casa::VisSet& vs, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
  
   //Read only iterator...hence no scratch col
-  LofarCubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
+  LofarCubeSkyEquation(SkyModel& sm, casa::ROVisibilityIterator& vi, FTMachine& ft, ComponentFTMachine& cft, Bool noModelCol=False);
 
   virtual ~LofarCubeSkyEquation();
   virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
@@ -101,9 +100,9 @@ class LofarCubeSkyEquation : public SkyEquation {
   void makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs);
   void makeMosaicPSF(PtrBlock<ImageInterface<Float> * >& psfs);
   virtual void fixImageScale();
-  Block<CountedPtr<ImageInterface<Complex> > >imGetSlice_p;
-  Block<CountedPtr<ImageInterface<Complex> > >imPutSlice_p;
-  Block<Matrix<Float> >weightSlice_p;
+  casa::Block<casa::CountedPtr<casa::ImageInterface<casa::Complex> > >imGetSlice_p;
+  casa::Block<casa::CountedPtr<casa::ImageInterface<casa::Complex> > >imPutSlice_p;
+  casa::Block<Matrix<Float> >weightSlice_p;
   Slicer sl_p;
   Int nchanPerSlice_p;
   // Type of copy 
@@ -128,11 +127,11 @@ class LofarCubeSkyEquation : public SkyEquation {
   Bool firstOneChangesPut_p;
   Bool firstOneChangesGet_p;
 
-  Block< Vector<Int> >blockNumChanGroup_p, blockChanStart_p;
-  Block< Vector<Int> > blockChanWidth_p, blockChanInc_p;
-  Block<Vector<Int> > blockSpw_p;
-  Block<CountedPtr<FTMachine> > ftm_p;
-  Block<CountedPtr<FTMachine> > iftm_p;
+  casa::Block< Vector<Int> >blockNumChanGroup_p, blockChanStart_p;
+  casa::Block< Vector<Int> > blockChanWidth_p, blockChanInc_p;
+  casa::Block<Vector<Int> > blockSpw_p;
+  casa::Block<CountedPtr<FTMachine> > ftm_p;
+  casa::Block<CountedPtr<FTMachine> > iftm_p;
 
   // DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
 
