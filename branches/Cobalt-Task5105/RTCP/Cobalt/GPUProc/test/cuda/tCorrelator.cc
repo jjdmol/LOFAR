@@ -33,7 +33,6 @@
 #include <CoInterface/MultiDimArray.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/gpu_utils.h>
 
 #include "../TestUtil.h"
 

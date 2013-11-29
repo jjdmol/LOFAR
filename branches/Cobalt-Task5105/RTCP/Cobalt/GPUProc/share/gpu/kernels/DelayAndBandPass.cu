@@ -52,8 +52,6 @@
 
 #include "IntToFloat.cuh"
 
-#include <stdio.h>
-
 
 #if NR_CHANNELS == 1
    //# #chnl==1 && BANDPASS_CORRECTION is rejected on the CPU early, (TODO)
