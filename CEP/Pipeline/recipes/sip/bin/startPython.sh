@@ -44,12 +44,18 @@ parsetFile="${2}"
 controlHost="${3}"
 
 echo "**** $(date) ****" >> ${logFile}
-# Try to run a script that resets the invironment based on a parset
-# value
-if [ -r $(dirname $0)/startPythonVersion.sh ]; then
-  . $(dirname $0)/startPythonVersion.sh >> ${logFile}
+# Try to reset the environment based on a parset software version value
+
+versionString="$(getparsetvalue $parsetFile "ObsSW.Observation.ObservationControl.PythonControl.softwareVersion" -d "notFound")"
+if [ "$versionString" != "notFound" ]; then
+  # construct the path from the red value
+    versionPath=/opt/cep/lofar/lofar_versions/$versionString/lofar_build/
+    echo "Using parset supplied software version: $versionString" >> ${logFile}
+ 
+  # Provide Lofar with the requested lofarversion: correctness is validated there
+    use Lofar $versionString 
 else
-  echo "startPythonVersion.sh not found, parset software version ignored"
+    echo "Failed setting software version, using default version" >> ${logFile}
 fi
 
 programOptions=" \
