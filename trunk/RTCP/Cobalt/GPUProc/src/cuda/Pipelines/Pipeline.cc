@@ -56,6 +56,7 @@ namespace LOFAR
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
+      processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
       workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
@@ -101,7 +102,7 @@ namespace LOFAR
         // Receive the samples of all subbands from the stations for this
         // block.
 
-        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
+        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
 
         // The set of InputData objects we're using for this block.
         vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
@@ -132,11 +133,16 @@ namespace LOFAR
         }
 
         // Receive all subbands from all stations
-        LOG_INFO_STR("[block " << block << "] Receive input");
+        LOG_DEBUG_STR("[block " << block << "] Receive input");
+
         if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(blocks);
         if (block > 2) receiveTimer.stop();
-        LOG_INFO_STR("[block " << block << "] Input received");
+
+        if (processingSubband0)
+          LOG_INFO_STR("[block " << block << "] Input received");
+        else
+          LOG_DEBUG_STR("[block " << block << "] Input received");
 
         vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
 
@@ -170,8 +176,11 @@ namespace LOFAR
             flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
         }
 
-        LOG_INFO_STR("[block " << block << "] No flagging: " << cleanStr.str());
-        LOG_INFO_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
+
+        if (!flagStr.str().empty()) {
+          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        }
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
       }
@@ -425,7 +434,8 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
 
-        if (time(0) != lastLogTime) {
+        // Log every 5 seconds
+        if (time(0) > lastLogTime + 5) {
           lastLogTime = time(0);
 
           LOG_INFO_STR("Forwarded " << nrBlocksForwarded << " blocks, dropped " << nrBlocksDropped << " blocks");
@@ -459,10 +469,7 @@ namespace LOFAR
 
         ASSERT(!outputData);
 
-        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
-          LOG_INFO_STR("[" << id << "] Done"); 
-        else
-          LOG_DEBUG_STR("[" << id << "] Done"); 
+        LOG_DEBUG_STR("[" << id << "] Done"); 
       }
     }
 

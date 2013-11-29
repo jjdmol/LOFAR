@@ -110,6 +110,10 @@ namespace LOFAR
       Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
       thread.cancel(deadline_ts);
+      thread.wait();
+
+      // Notify clients
+      itsFinalMetaDataAvailable.trigger();
     }
 
 
@@ -164,9 +168,6 @@ namespace LOFAR
       // Receive final meta data
       itsFinalMetaData.read(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
-
-      // Notify clients
-      itsFinalMetaDataAvailable.trigger();
 
       // Wait for or end the remote process
       sshconn.wait();

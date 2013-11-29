@@ -57,7 +57,7 @@ namespace LOFAR
 #   pragma omp section
         {
           // start all boards
-          LOG_INFO_STR( logPrefix << "Starting all boards" );
+          LOG_DEBUG_STR( logPrefix << "Starting all boards" );
 #     pragma omp parallel for num_threads(nrBoards)
           for (size_t i = 0; i < nrBoards; ++i) {
             OMPThread::ScopedRun sr(threads[i]);
@@ -102,7 +102,7 @@ namespace LOFAR
           waiter.waitForever();
 
           // kill all boards
-          LOG_INFO_STR( logPrefix << "Stopping all boards" );
+          LOG_DEBUG_STR( logPrefix << "Stopping all boards" );
 #     pragma omp parallel for num_threads(threads.size())
           for (size_t i = 0; i < threads.size(); ++i)
             try {

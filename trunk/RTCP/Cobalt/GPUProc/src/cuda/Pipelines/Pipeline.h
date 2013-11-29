@@ -58,6 +58,11 @@ namespace LOFAR
       const std::vector<gpu::Device> devices;
 
       const std::vector<size_t> subbandIndices; // [localSubbandIdx]
+
+      // Whether we're the pipeline that processes the first subband.
+      // If true, we log our progress at INFO. Otherwise, at DEBUG.
+      const bool processingSubband0;
+
       std::vector< SmartPtr<SubbandProc> > workQueues;
 
       const size_t nrSubbandsPerSubbandProc;

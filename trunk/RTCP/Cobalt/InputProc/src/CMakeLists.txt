@@ -40,6 +40,12 @@ lofar_add_bin_program(printRSP Station/printRSP.cc)
 lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(capture Station/capture.cc)
+lofar_add_bin_program(printDelays Delays/printDelays.cc)
+
+# install the logprop file
+install(FILES
+  Delays/printDelays.log_prop
+  DESTINATION etc)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mpirun.sh.in

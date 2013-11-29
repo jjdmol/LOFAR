@@ -76,12 +76,12 @@ namespace LOFAR
 
       if (create) {
         // register settings
-        LOG_INFO_STR( logPrefix << "Registering " << localSettings.station );
+        LOG_DEBUG_STR( logPrefix << "Registering " << localSettings.station );
         *sharedSettings = localSettings;
       } else {
         // verify settings
         ASSERT( *sharedSettings == localSettings );
-        LOG_INFO_STR( logPrefix << "Connected to " << localSettings.station );
+        LOG_DEBUG_STR( logPrefix << "Connected to " << localSettings.station );
       }
 
       return sharedSettings;

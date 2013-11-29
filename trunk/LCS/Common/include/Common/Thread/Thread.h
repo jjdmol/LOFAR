@@ -29,6 +29,7 @@
 
 #include <pthread.h>
 #include <signal.h>
+#include <sched.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemCallException.h>
@@ -78,6 +79,70 @@ class Thread
     // Returns whether the thread threw an exception. This function will wait for the thread
     // to finish.
     bool      caughtException();
+
+    class ScopedPriority
+    {
+    public:
+      /* see man pthread_setschedparam */
+      ScopedPriority(int policy, int priority)
+      {
+        int retval;
+
+        if ((retval = pthread_getschedparam(pthread_self(), &origPolicy, &origParam)) != 0)
+          throw SystemCallException("pthread_getschedparam", retval, THROW_ARGS);
+
+        struct sched_param newParam;
+        newParam.sched_priority = priority;
+
+        if ((retval = pthread_setschedparam(pthread_self(), policy, &newParam)) != 0)
+          try {
+            throw SystemCallException("pthread_setschedparam", retval, THROW_ARGS);
+          } catch (Exception &ex) {
+            LOG_WARN_STR("Could not change thread priority to policy " << policyName(policy) << " priority " << priority << ": " << ex.what());
+          }
+      }
+
+      ~ScopedPriority()
+      {
+        int retval;
+
+        if ((retval = pthread_setschedparam(pthread_self(), origPolicy, &origParam)) != 0)
+          try {
+            throw SystemCallException("pthread_setschedparam", retval, THROW_ARGS);
+          } catch (Exception &ex) {
+            LOG_FATAL_STR("Exception in destructor: " << ex);
+          }
+      }
+
+    private:
+      int origPolicy;
+      struct sched_param origParam;
+
+      std::string policyName(int policy) const
+      {
+        switch(policy) {
+          case SCHED_OTHER:
+            return "SCHED_OTHER (normal)";
+
+          case SCHED_BATCH:
+            return "SCHED_BATCH (cpu intensive)";
+
+#ifdef SCHED_IDLE
+          case SCHED_IDLE:
+            return "SCHED_IDLE (idle)";
+#endif
+
+          case SCHED_FIFO:
+            return "SCHED_FIFO (real time)";
+
+          case SCHED_RR:
+            return "SCHED_RR (real time)";
+
+          default:
+            return "(unknown)";
+        };
+      }
+    };
 
   private:
     Thread(const Thread&);
