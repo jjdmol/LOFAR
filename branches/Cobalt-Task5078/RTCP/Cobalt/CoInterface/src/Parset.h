@@ -719,7 +719,7 @@ namespace LOFAR
                                       const std::vector<double>& ref) const;
       double                      maxDelayDistance() const;
       double                      maxObservationFrequency() const;
-      unsigned                    nrDelayCompensationChannels() const;
+      unsigned                    calcNrDelayCompensationChannels() const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.

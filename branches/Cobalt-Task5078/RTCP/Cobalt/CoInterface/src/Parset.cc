@@ -476,18 +476,19 @@ namespace LOFAR
         // 4096 channels is enough, but allow parset override.
         const unsigned maxNrHighResolutionChannels = 4096;
         settings.beamFormer.nrHighResolutionChannels =
-            getUint32("Observation.nrHighResolutionChannels", maxNrHighResolutionChannels);
+            getUint32("Cobalt.nrHighResolutionChannels", maxNrHighResolutionChannels);
         ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
             settings.beamFormer.nrHighResolutionChannels < 65536,
             "Parset: nr high reso channels must be a power of 2 and < 64k");
 
-        unsigned nrDelayCompCh = nrDelayCompensationChannels();
+        unsigned nrDelayCompCh = calcNrDelayCompensationChannels();
+        nrDelayCompCh = getUint32("Cobalt.nrDelayCompensationChannels", nrDelayCompCh);
         if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels)
           nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
         LOG_INFO_STR("Parset: internal #channels: delay compensation: " <<
                      settings.beamFormer.nrDelayCompensationChannels <<
-                     " thereafter: " << settings.beamFormer.nrHighResolutionChannels);
+                     " high reso: " << settings.beamFormer.nrHighResolutionChannels);
 
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -644,7 +645,7 @@ namespace LOFAR
     // Determine the nr of channels per subband for delay compensation.
     // We aim for the visibility samples to be good to about 1 part in 1000.
     // See the Cobalt beamformer design doc for more info on how and why.
-    unsigned Parset::nrDelayCompensationChannels() const {
+    unsigned Parset::calcNrDelayCompensationChannels() const {
       double d = maxDelayDistance(); // in meters
       double v = maxObservationFrequency(); // in Hz
 
@@ -660,13 +661,17 @@ namespace LOFAR
       double max_n_FFT = t_u * v_clk / 1024.0;
       unsigned max_n_FFT_pow2 = nextPowerOfTwo((unsigned)max_n_FFT / 2); // round down to pow2
 
+      // Little benefit beyond 256; more work and lower GPU FFT efficiency.
+      if (max_n_FFT_pow2 > 256)
+        max_n_FFT_pow2 = 256;
+
       // This lower bound comes from the derivation in the design doc.
       // It is pi*cbrt(2.0/(9.0*1e-3)) (also after Taylor approx).
       const double min_n_ch = 19.02884235042726617904; // design doc states n_ch >= 19
       const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
 
       if (settings.correlator.enabled && max_n_FFT < min_n_ch) {
-        LOG_ERROR_STR("Parset: nrDelayCompensationChannels(): upper bound " <<
+        LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
                       max_n_FFT << " ends up below lower bound " << min_n_ch <<
                       ". This clashes. Returning " << min_n_ch_pow2 << ". Very"
                       " long baselines may not be correlated properly.");
