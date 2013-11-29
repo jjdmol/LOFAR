@@ -1,0 +1,56 @@
+#################################################################################################################################
+# options  testcase 5.42 Write and readback HBA client registers (RCU)
+# client_rcu  x or y
+# client_acces r or w or wr
+# client_reg request, response, led, vref, version, speed
+# data ..
+#################################################################################################################################
+
+# HBA LED RCU modem on (client) 
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_client.py --client_acces w --client_reg led --data 01
+
+# HBA LED RCU modem off (client)
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_client.py --client_acces w --client_reg led --data 00
+
+# HBA read LED response register (client)
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_client.py --client_acces r --client_reg led 
+response [0,1,0,0] led on
+response [0,0,0,0] led off
+
+# HBA read LED response register (client)
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_client.py --client_acces r --client_reg version
+response  [0,1,0,0] (5V version modem) RCU 65,67,69,71,73
+response  [0,2,0,0] (5V version modem) RCU 75,81,89
+response  [0,10,0,0] (3.3V version modem) RCU 6,7 testrack Dwingeloo
+
+#################################################################################################################################
+# options  testcase 5.43 Write and readback HBA server registers (HBA FE) 
+# client_rcu   x or y
+# server       first,last
+# server_acces bc, uc
+# server_func  gb,gw,sb,sw (get byte,word or set byte,word)
+# server_reg   delay_x,delay_y,version,address
+# data         ....
+# count        use counter data for data
+# rand         use random data for data
+#################################################################################################################################
+
+# HBA read version number HBA FE (server)
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --server 2 --server_acces uc --server_reg version
+response [0,0,0,0,130,2,3,0,0]   (128 + server = 128+2=130)  version=3
+response [0,0,0,0,130,2,10,0,0]  (128 + server = 128+2=130)  version=10
+
+# HBA read delay x y from HBA FE element 2(server)
+# rspctl --hbadelays=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 --sel=64,65
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --server 2 --server_acces uc --server_function gw
+response [0,0,0,0,address+2,3,X-delay,Y-delay,0,0]
+response [0,0,0,0,130,3,2,2,0,0]   (128 + server = 128+2=130)  X-delay=2 Y-delay=2
+
+# HBA write delay x y in HBA FE element 2(server)
+# the value 55 and 56 on element 2 (RCU 64,65)
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --server 2 --server_acces uc --server_function sw --data 55,56
+verify rspctl --realdelays --sel=64,65 (wrong result!!!)
+or above read function server
+
+# HBA change default FE address 127 into #
+python verify.py --brd rsp8 --fp blp0 --rep 1 -v 21 --te tc/hba_server.py --server 127 --server_acces uc --server_function sb --server_reg address --data #
