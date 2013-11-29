@@ -24,6 +24,7 @@
 #include <CoInterface/Parset.h>
 
 #include <cstdio>
+#include <cstring>
 #include <set>
 #include <algorithm>
 #include <boost/format.hpp>
@@ -275,31 +276,19 @@ namespace LOFAR
      *   3. International stations (others)
      *
      * Within each group, the stations are
-     * sorted lexicographically.
+     * sorted lexicographically. For group 3
+     * we skip the first 2 chars when sorting.
      */
     bool compareStationNames( const string &a, const string &b ) {
-      // return a < b
-
-      unsigned major_order_a, major_order_b;
-
-      if (a.find("CS") == 0)
-        major_order_a = 0;
-      else if (a.find("RS") == 0)
-        major_order_a = 1;
-      else
-        major_order_a = 2;
-
-      if (b.find("CS") == 0)
-        major_order_b = 0;
-      else if (b.find("RS") == 0)
-        major_order_b = 1;
-      else
-        major_order_b = 2;
-
-      if (major_order_a == major_order_b)
-        return a < b;
-      else
-        return major_order_a < major_order_b;
+      if (a.size() >= 5 && b.size() >= 5) { // common case
+        if ( (a[0] == 'C' || a[0] == 'R') && a[1] == 'S' &&
+             (b[0] == 'C' || b[0] == 'R') && b[1] == 'S' ) {
+          return a < b; // both CS/RS stations; 'C'<'R'
+        } else { // at least 1 non-CS/RS name; cmp (presumed) nrs
+          return std::strcmp(&a.c_str()[2], &b.c_str()[2]) < 0;
+        }
+      }
+      return a < b; // at least 1 short name
     }
 
     struct ObservationSettings Parset::observationSettings() const
