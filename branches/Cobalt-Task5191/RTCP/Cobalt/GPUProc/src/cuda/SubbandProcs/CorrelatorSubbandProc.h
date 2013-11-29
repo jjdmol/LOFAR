@@ -23,6 +23,7 @@
 
 // @file
 #include <complex>
+#include <utility>
 #include <memory>
 
 #include <Common/Thread/Queue.h>
@@ -57,6 +58,8 @@ namespace LOFAR
                                unsigned nrChannels,
                                unsigned maxNrValidSamples,
                                gpu::Context &context);
+      // Reset the MultiDimArrayHostBuffer and the CorrelatedData
+      void reset();
     };
 
     struct CorrelatorFactories
@@ -185,6 +188,12 @@ namespace LOFAR
       CorrelatorKernel::Buffers correlatorBuffers;
       std::auto_ptr<CorrelatorKernel> correlatorKernel;
 
+      // Buffers for long-time integration; one buffer for each subband that
+      // will be processed by this class instance. Each element of the vector
+      // contains a counter that tracks the number of additions made to the data
+      // buffer and the data buffer itself.
+      vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
+      integratedData;
     };
 
   }

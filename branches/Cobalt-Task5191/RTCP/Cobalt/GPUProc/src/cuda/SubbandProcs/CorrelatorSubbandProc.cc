@@ -69,6 +69,12 @@ namespace LOFAR
     {
     }
 
+
+    void CorrelatedDataHostBuffer::reset()
+    {
+      CorrelatedData::reset();
+    }
+
     CorrelatorSubbandProc::CorrelatorSubbandProc(
       const Parset &parset, gpu::Context &context, 
       CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc)
@@ -124,7 +130,10 @@ namespace LOFAR
       // Correlator
       //correlatorBuffers(devInput.inputSamples, devFilteredData),
       correlatorBuffers(devInput.inputSamples, devFilteredData),
-      correlatorKernel(factories.correlator.create(queue, correlatorBuffers))
+      correlatorKernel(factories.correlator.create(queue, correlatorBuffers)),
+
+      // Buffers for long-time integration
+      integratedData(nrSubbandsPerSubbandProc)
 
       //## --------  Start of constructor body  -------- ##//
     {
@@ -134,10 +143,19 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
-                ps.nrStations(),
-                ps.nrChannelsPerSubband(),
-                ps.integrationSteps(),
-                context));
+                                 ps.nrStations(),
+                                 ps.nrChannelsPerSubband(),
+                                 ps.integrationSteps(),
+                                 context));
+      }
+
+      // Initialize the output buffers for the long-time integration
+      for (size_t i = 0; i < integratedData.size(); i++) {
+        integratedData[i] = 
+          make_pair(0, new CorrelatedDataHostBuffer(ps.nrStations(), 
+                                                    ps.nrChannelsPerSubband(),
+                                                    ps.integrationSteps(),
+                                                    context));
       }
 
       //// CPU timers are set by CorrelatorPipeline
@@ -427,7 +445,7 @@ namespace LOFAR
 
     bool CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
     {
-      CorrelatedDataHostBuffer &output =
+      CorrelatedDataHostBuffer &output = 
         dynamic_cast<CorrelatedDataHostBuffer&>(_output);
 
       // The flags are already copied to the correct location
@@ -445,7 +463,30 @@ namespace LOFAR
           Flagger::applyWeights<uint8_t>(ps, output);  
           break;
       }
-      return true;
+
+      const size_t idx = output.blockID.subbandProcSubbandIdx;
+      const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
+      LOG_DEBUG_STR("nrBlocksPerIntegration = " << nblock);
+      
+      // We don't want to copy the data if we don't need to integrate.
+      if (nblock == 1) {
+        output.setSequenceNumber(output.blockID.block);
+        return true;
+      }
+
+      integratedData[idx].first++;
+
+      if (integratedData[idx].first < nblock) {
+        *integratedData[idx].second += output;
+        return false;
+      }
+      else {
+        output += *integratedData[idx].second;
+        output.setSequenceNumber(output.blockID.block / nblock);
+        integratedData[idx].first = 0;
+        integratedData[idx].second->reset();
+        return true;
+      }
     }
 
   }
