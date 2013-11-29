@@ -225,6 +225,22 @@ namespace LOFAR
       }
     }
 
+    void CorrelatedData::reset()
+    {
+      visibilities.reset();
+      switch (itsNrBytesPerNrValidSamples) {
+      case 4:
+        itsNrValidSamples4.reset();
+        break;
+      case 2: 
+        itsNrValidSamples2.reset();
+        break;
+      case 1: 
+        itsNrValidSamples1.reset();
+        break;
+      }
+    }
+
 
     CorrelatedData &CorrelatedData::operator += (const CorrelatedData &other)
     {

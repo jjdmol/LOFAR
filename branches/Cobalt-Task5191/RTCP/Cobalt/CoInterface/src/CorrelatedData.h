@@ -77,6 +77,9 @@ namespace LOFAR
       virtual void readData(Stream *, unsigned);
       virtual void writeData(Stream *, unsigned);
 
+      // Reset the contents of the valid samples
+      void reset();
+
     private:
       void init(unsigned nrChannels, Allocator &allocator);
 
