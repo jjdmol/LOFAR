@@ -183,10 +183,10 @@ REGRESSION_TEST_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 # run the regression test for the pipeline: provide all the files in the directory
 DELTA=0.0001
-python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host1/* $WORKING_DIR/target_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
+python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host1/* $WORKING_DIR/output_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
 if [ $SECONDHOST == true ]
 then
-  python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/output_data/host2/* $WORKING_DIR/target_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
+  python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host2/* $WORKING_DIR/output_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
 fi
 
 
