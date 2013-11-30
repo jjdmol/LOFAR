@@ -82,7 +82,7 @@ shopt -s expand_aliases
 mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
-use Lofar
+use LofIm
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"
 
