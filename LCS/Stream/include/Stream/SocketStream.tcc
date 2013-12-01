@@ -1,4 +1,5 @@
 #include "SocketStream.h"
+#include <Common/LofarLogger.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
