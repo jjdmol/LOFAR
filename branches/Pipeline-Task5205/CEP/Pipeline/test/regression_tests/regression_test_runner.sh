@@ -75,13 +75,14 @@ fi
 # 2) Set environment and set global variables
 echo "Settings up environment"
 # Make sure aliases are expanded, which is not the default for non-interactive
-# shells. Used for the use commands
+# shells. Used for the use commands. TODO is this still needed 
 shopt -s expand_aliases
 
 # create the var run directory
 mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
+. /opt/cep/login/bashrc # source the login of use commands
 use LofIm
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"
