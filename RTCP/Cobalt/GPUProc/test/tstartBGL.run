@@ -61,10 +61,24 @@ echo "***************************"
 echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
+
+# Extend start time to a few seconds into the future to ensure that rtcp will run long
+# enough for our checks to pass.
+NOW=`date +%s`
+START=`date --date="@$(($NOW + 10))" +"%F %T"`
+STOP=`date --date="@$(($NOW + 20))" +"%F %T"`
+echo "
+Observation.startTime = $START
+Observation.stopTime = $STOP
+" >> $testdir/tstartBGL.in_parset
+
 startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
-# PID file must be gone
-[ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
+# Give rtcp time to start
+sleep 1
+
+# PID file must be present
+[ -r $LOFARROOT/var/run/rtcp-1000.pid ] || error "Cannot read $LOFARROOT/var/run/rtcp-1000.pid"
 
 # Log file must be present
 [ -r $LOFARROOT/var/log/rtcp-1000.log ] || error "Cannot read $LOFARROOT/var/log/rtcp-1000.log"
@@ -72,12 +86,10 @@ startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed
 # We expect rtcp to still run, because it takes several
 # seconds to initialise. If rtcp is already done, stopBGL.sh
 # will give an error!
-#
-# If this is problematic, a possible fix is to put the
-# observation start time in tstartBGL.in_parset to far into
-# the future, and enable real-time mode. That way, rtcp
-# will surely be running. However, in that case:
-#   - if rtcp crashes, stopBGL.sh will error
-#   - if stopBGL.sh malfunctions, rtcp will linger
 stopBGL.sh 1 1000 || error "stopBGL.sh failed"
 
+# Give rtcp time to clean up
+sleep 1
+
+# PID file must be gone
+[ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
