@@ -6,7 +6,7 @@
 # $Id$
 
 # Keep these vars in sync with apply_casacore_measures_tables.sh
-working_dir=$HOME/root/share/casacore
+working_dir=$HOME/casacore
 dir_prefix=IERS-
 
 
