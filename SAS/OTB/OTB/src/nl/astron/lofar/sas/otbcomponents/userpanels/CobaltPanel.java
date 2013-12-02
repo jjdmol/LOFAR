@@ -1,5 +1,5 @@
 /*
- * OlapPanel.java
+ * CobaltPanel.java
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
  *  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -43,21 +43,21 @@ import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
 /**
- * Panel for OLAP specific configuration
+ * Panel for Cobalt specific configuration
  *
  * @author  Coolen
  *
- * Created on 19 april 2007, 20:54
+ * Created on 18 november 20013, 20:54
  *
- * @version $Id$
+ * @version $Id: CobaltPanel.java 25528 2013-07-02 09:23:01Z loose $
  */
-public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
+public class CobaltPanel extends javax.swing.JPanel implements IViewPanel {
 
-    static Logger logger = Logger.getLogger(OlapPanel.class);
-    static String name = "OlapPanel";
+    static Logger logger = Logger.getLogger(CobaltPanel.class);
+    static String name = "CobaltPanel";
 
-    /** Creates new form OlapPanel */
-    public OlapPanel(MainFrame aMainFrame, jOTDBnode aNode) {
+    /** Creates new form CobaltPanel */
+    public CobaltPanel(MainFrame aMainFrame, jOTDBnode aNode) {
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode = aNode;
@@ -66,7 +66,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     }
 
     /** Creates new form BeanForm */
-    public OlapPanel() {
+    public CobaltPanel() {
         initComponents();
         initialize();
     }
@@ -109,15 +109,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
 
 
                     //we need to get all the childs from the following nodes as well.
-                } else if (LofarUtils.keyName(aNode.name).equals("IONProc")) {
-                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("Correlator")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("PencilInfo")) {
+                } else if (LofarUtils.keyName(aNode.name).equals("BeamFormer")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("CNProc_CoherentStokes")) {
+                } else if (LofarUtils.keyName(aNode.name).equals("CoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("CNProc_IncoherentStokes")) {
+                } else if (LofarUtils.keyName(aNode.name).equals("IncoherentStokes")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
@@ -164,7 +162,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
 
     @Override
     public JPanel getInstance() {
-        return new OlapPanel();
+        return new CobaltPanel();
     }
 
     @Override
@@ -370,7 +368,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         String parentName = LofarUtils.keyName(String.valueOf(parent.name));
         /* Set's the different fields in the GUI */
 
-        // Generic OLAP
+        // Generic Cobalt
         if (aParam == null) {
             return;
         }
@@ -387,38 +385,39 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         }
         switch (parentName) {
             case "Correlator":
-                // OLAP Correlator params
-                if (aKeyName.equals("integrationTime")) {
-                    inputIntegrationTime.setToolTipText(aParam.description);
-                    itsIntegrationTime = aNode;
-                    if (isRef && aParam != null) {
-                        inputIntegrationTime.setText(aNode.limits + " : " + aParam.limits);
-                    } else {
-                        inputIntegrationTime.setText(aNode.limits);
-                    }
+                // Cobalt Correlator params
+                switch (aKeyName) {
+                    case "integrationTime":
+                        inputIntegrationTime.setToolTipText(aParam.description);
+                        itsIntegrationTime = aNode;
+                        if (isRef && aParam != null) {
+                            inputIntegrationTime.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputIntegrationTime.setText(aNode.limits);
+                        }
+                        break;
+                    case "nrChannelsPerSubband":
+                        inputChannelsPerSubbandCorrelator.setToolTipText(aParam.description);
+                        itsChannelsPerSubbandCorrelator = aNode;
+                        if (isRef && aParam != null) {
+                            inputChannelsPerSubbandCorrelator.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputChannelsPerSubbandCorrelator.setText(aNode.limits);
+                        }
+                        break;
+                    case "nrBlocksPerIntegration":
+                        inputBlocksPerIntegration.setToolTipText(aParam.description);
+                        itsBlocksPerIntegration = aNode;
+                        if (isRef && aParam != null) {
+                            inputBlocksPerIntegration.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputBlocksPerIntegration.setText(aNode.limits);
+                        }
+                        break;
                 }
                 break;
-            case "PencilInfo":
-                // OLAP PencilInfo params
-                if (aKeyName.equals("flysEye")) {
-                    inputFlysEye.setToolTipText(aParam.description);
-                    itsFlysEye = aNode;
-                    boolean aSelection = false;
-                    if (isRef && aParam != null) {
-                        if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
-                            aSelection = true;
-                        }
-                    } else {
-                        if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
-                            aSelection = true;
-                        }
-                    }
-                    inputFlysEye.setSelected(aSelection);
-                    checkSettings();
-                }
-                break;
-            case "CNProc_CoherentStokes":
-                // OLAP PencilInfo params
+            case "CoherentStokes":
+                // Cobalt coherent stokes params
                 switch (aKeyName) {
                     case "which":
                         inputWhichCoherent.setToolTipText(aParam.description);
@@ -446,10 +445,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                             inputTimeIntegrationFactorCoherent.setText(aNode.limits);
                         }
                         break;
+                    case "subbandsPerFile":
+                        inputSubbandsPerFileCoherent.setToolTipText(aParam.description);
+                        itsSubbandsPerFileCoherent = aNode;
+                        if (isRef && aParam != null) {
+                            inputSubbandsPerFileCoherent.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputSubbandsPerFileCoherent.setText(aNode.limits);
+                        }
+                        break;
                 }
                 break;
-            case "CNProc_IncoherentStokes":
-                // OLAP PencilInfo params
+            case "IncoherentStokes":
+                // Cobalt IncoherentStokes params
+                
                 switch (aKeyName) {
                     case "which":
                         inputWhichIncoherent.setToolTipText(aParam.description);
@@ -477,10 +486,40 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                             inputTimeIntegrationFactorIncoherent.setText(aNode.limits);
                         }
                         break;
+                    case "subbandsPerFile":
+                        inputSubbandsPerFileIncoherent.setToolTipText(aParam.description);
+                        itsSubbandsPerFileIncoherent = aNode;
+                        if (isRef && aParam != null) {
+                            inputSubbandsPerFileIncoherent.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputSubbandsPerFileIncoherent.setText(aNode.limits);
+                        }
+                        break;
                 }
                 break;
-            case "OLAP":
-                // Olap Specific parameters
+            case "BeamFormer":
+                // BeamFormer Specific parameters
+                switch (aKeyName) {
+                    case "coherentDedisperseChannels": {
+                        inputCoherentDedisperseChannels.setToolTipText(aParam.description);
+                        itsCoherentDedisperseChannels = aNode;
+                        boolean aSelection = false;
+                        if (isRef && aParam != null) {
+                            if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        } else {
+                            if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        }
+                        inputCoherentDedisperseChannels.setSelected(aSelection);
+                        break;
+                    }
+                }
+                break;
+            case "Cobalt":
+                // Cobalt Specific parameters
                 switch (aKeyName) {
                     case "delayCompensation": {
                         inputDelayCompensation.setToolTipText(aParam.description);
@@ -514,6 +553,47 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                         inputCorrectBandPass.setSelected(aSelection);
                         break;
                     }
+                    case "correctClocks": {
+                        inputCorrectClocks.setToolTipText(aParam.description);
+                        itsCorrectClocks = aNode;
+                        boolean aSelection = false;
+                        if (isRef && aParam != null) {
+                            if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        } else {
+                            if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        }
+                        inputCorrectClocks.setSelected(aSelection);
+                        break;
+                    }
+                    case "realTime": {
+                        inputRealTime.setToolTipText(aParam.description);
+                        itsRealTime = aNode;
+                        boolean aSelection = false;
+                        if (isRef && aParam != null) {
+                            if (aParam.limits.equals("true") || aParam.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        } else {
+                            if (aNode.limits.equals("true") || aNode.limits.equals("TRUE")) {
+                                aSelection = true;
+                            }
+                        }
+                        inputRealTime.setSelected(aSelection);
+                        break;
+                    }
+                    case "blockSize":
+                        inputBlockSize.setToolTipText(aParam.description);
+                        itsBlockSize = aNode;
+                        if (isRef && aParam != null) {
+                            inputBlockSize.setText(aNode.limits + " : " + aParam.limits);
+                        } else {
+                            inputBlockSize.setText(aNode.limits);
+                        }
+                        break;
                 }
                 break;
             case "Output_Beamformed":
@@ -614,8 +694,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     private void checkSettings() {
         if (inputOutputCorrelatedData.isSelected()) {
             inputIntegrationTime.setEnabled(true);
+            inputChannelsPerSubbandCorrelator.setEnabled(true);
+            inputBlocksPerIntegration.setEnabled(true);
         } else {
             inputIntegrationTime.setEnabled(false);
+            inputChannelsPerSubbandCorrelator.setEnabled(false);
+            inputBlocksPerIntegration.setEnabled(false);
         }
 
 
@@ -627,29 +711,29 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                 inputOutputBeamFormedData.setSelected(false);
                 inputOutputBeamFormedData.setEnabled(false);
             }
-            inputFlysEye.setEnabled(true);
-
-        } else {
-            inputFlysEye.setEnabled(false);
         }
 
         if (inputOutputCoherentStokes.isSelected()) {
             inputWhichCoherent.setEnabled(true);
             inputChannelsPerSubbandCoherent.setEnabled(true);
             inputTimeIntegrationFactorCoherent.setEnabled(true);
+            inputSubbandsPerFileCoherent.setEnabled(true);
         } else {
             inputWhichCoherent.setEnabled(false);
             inputChannelsPerSubbandCoherent.setEnabled(false);
             inputTimeIntegrationFactorCoherent.setEnabled(false);
+            inputSubbandsPerFileCoherent.setEnabled(false);
         }
         if (inputOutputIncoherentStokes.isSelected()) {
             inputWhichIncoherent.setEnabled(true);
             inputChannelsPerSubbandIncoherent.setEnabled(true);
             inputTimeIntegrationFactorIncoherent.setEnabled(true);
+            inputSubbandsPerFileIncoherent.setEnabled(true);
         } else {
             inputWhichIncoherent.setEnabled(false);
             inputChannelsPerSubbandIncoherent.setEnabled(false);
             inputTimeIntegrationFactorIncoherent.setEnabled(false);
+            inputSubbandsPerFileIncoherent.setEnabled(false);
         }
 
     }
@@ -657,7 +741,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     private void restore() {
         boolean aB = false;
 
-        // Olap Specific parameters
+        // Cobalt Specific parameters
+        if (itsRealTime != null) {
+            aB = false;
+            if (itsRealTime.limits.equals("true") || itsRealTime.limits.equals("TRUE")) {
+                aB = true;
+            }
+            inputRealTime.setSelected(aB);
+        }
         if (itsDelayCompensation != null) {
             aB = false;
             if (itsDelayCompensation.limits.equals("true") || itsDelayCompensation.limits.equals("TRUE")) {
@@ -672,6 +763,25 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             }
             inputCorrectBandPass.setSelected(aB);
         }
+        if (itsCorrectClocks != null) {
+            aB = false;
+            if (itsCorrectClocks.limits.equals("true") || itsCorrectClocks.limits.equals("TRUE")) {
+                aB = true;
+            }
+            inputCorrectClocks.setSelected(aB);
+        }
+        if (itsCoherentDedisperseChannels != null) {
+            aB = false;
+            if (itsCoherentDedisperseChannels.limits.equals("true") || itsCoherentDedisperseChannels.limits.equals("TRUE")) {
+                aB = true;
+            }
+            inputCoherentDedisperseChannels.setSelected(aB);
+        }
+        
+        if (itsBlockSize != null) {
+            inputBlockSize.setText(itsBlockSize.limits);
+        }
+        
         if (itsOutputCorrelatedData != null) {
             aB = false;
             if (itsOutputCorrelatedData.limits.equals("true") || itsOutputCorrelatedData.limits.equals("TRUE")) {
@@ -713,18 +823,15 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         if (itsIntegrationTime != null) {
             inputIntegrationTime.setText(itsIntegrationTime.limits);
         }
-
-        // PencilInfo
-        if (itsFlysEye != null) {
-            aB = false;
-            if (itsFlysEye.limits.equals("true") || itsFlysEye.limits.equals("TRUE")) {
-                aB = true;
-            }
-            inputFlysEye.setSelected(aB);
+        if (itsChannelsPerSubbandCorrelator != null) {
+            inputChannelsPerSubbandCorrelator.setText(itsChannelsPerSubbandCorrelator.limits);
+        }
+        if (itsBlocksPerIntegration != null) {
+            inputBlocksPerIntegration.setText(itsBlocksPerIntegration.limits);
         }
 
 
-        // CNProc_CoherentStokes
+        // CoherentStokes
         if (itsWhichCoherent != null) {
             inputWhichCoherent.setSelectedItem(itsWhichCoherent.limits);
         }
@@ -733,6 +840,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         }
         if (itsTimeIntegrationFactorCoherent != null) {
             inputTimeIntegrationFactorCoherent.setText(itsTimeIntegrationFactorCoherent.limits);
+        }
+        if (itsSubbandsPerFileCoherent != null) {
+            inputSubbandsPerFileCoherent.setText(itsSubbandsPerFileCoherent.limits);
         }
 
         // CNProc_IncoherentStokes
@@ -744,6 +854,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         }
         if (itsTimeIntegrationFactorIncoherent != null) {
             inputTimeIntegrationFactorIncoherent.setText(itsTimeIntegrationFactorIncoherent.limits);
+        }
+        if (itsSubbandsPerFileIncoherent != null) {
+            inputSubbandsPerFileIncoherent.setText(itsSubbandsPerFileIncoherent.limits);
         }
 
 
@@ -781,7 +894,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                 jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(), false);
                 itsTreeType = OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                String aS = "OlapPanel: Error getting treeInfo/treetype" + ex;
+                String aS = "CobaltPanel: Error getting treeInfo/treetype" + ex;
                 logger.error(aS);
                 LofarUtils.showErrorPanel(this, aS, new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otb/icons/16_warn.gif")));
                 itsTreeType = "";
@@ -841,7 +954,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     private boolean saveInput() {
         boolean hasChanged = false;
 
-        // Generic OLAP       
+        // Generic Cobalt       
         if ((!inputDelayCompensation.isSelected()
                 & (itsDelayCompensation.limits.equals("TRUE") || itsDelayCompensation.limits.equals("true")))
                 || (inputDelayCompensation.isSelected()
@@ -864,7 +977,33 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             itsCorrectBandPass.limits = bp;
             saveNode(itsCorrectBandPass);
         }
+        if ((!inputCorrectClocks.isSelected()
+                & (itsCorrectClocks.limits.equals("TRUE") || itsCorrectClocks.limits.equals("true")))
+                || (inputCorrectClocks.isSelected()
+                & (itsCorrectClocks.limits.equals("FALSE") || itsCorrectClocks.limits.equals("false")))) {
+            String cc = "true";
+            if (!inputCorrectClocks.isSelected()) {
+                cc = "false";
+            }
+            itsCorrectClocks.limits = cc;
+            saveNode(itsCorrectClocks);
+        }
+        if ((!inputRealTime.isSelected()
+                & (itsRealTime.limits.equals("TRUE") || itsRealTime.limits.equals("true")))
+                || (inputRealTime.isSelected()
+                & (itsRealTime.limits.equals("FALSE") || itsRealTime.limits.equals("false")))) {
+            String rt = "true";
+            if (!inputRealTime.isSelected()) {
+                rt = "false";
+            }
+            itsRealTime.limits = rt;
+            saveNode(itsRealTime);
+        }
 
+        if (itsBlockSize != null && !inputBlockSize.getText().equals(itsBlockSize.limits)) {
+            itsBlockSize.limits = inputBlockSize.getText();
+            saveNode(itsBlockSize);
+        }
         if ((!inputOutputCorrelatedData.isSelected()
                 & (itsOutputCorrelatedData.limits.equals("TRUE") || itsOutputCorrelatedData.limits.equals("true")))
                 || (inputOutputCorrelatedData.isSelected()
@@ -929,21 +1068,30 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             itsIntegrationTime.limits = inputIntegrationTime.getText();
             saveNode(itsIntegrationTime);
         }
-
-        // PencilInfo
-        if ((!inputFlysEye.isSelected()
-                & (itsFlysEye.limits.equals("TRUE") || itsFlysEye.limits.equals("true")))
-                || (inputFlysEye.isSelected()
-                & (itsFlysEye.limits.equals("FALSE") || itsFlysEye.limits.equals("false")))) {
-            String rt = "true";
-            if (!inputFlysEye.isSelected()) {
-                rt = "false";
-            }
-            itsFlysEye.limits = rt;
-            saveNode(itsFlysEye);
+        if (itsChannelsPerSubbandCorrelator != null && !inputChannelsPerSubbandCorrelator.getText().equals(itsChannelsPerSubbandCorrelator.limits)) {
+            itsChannelsPerSubbandCorrelator.limits = inputChannelsPerSubbandCorrelator.getText();
+            saveNode(itsChannelsPerSubbandCorrelator);
+        }
+        if (itsBlocksPerIntegration != null && !inputBlocksPerIntegration.getText().equals(itsBlocksPerIntegration.limits)) {
+            itsBlocksPerIntegration.limits = inputBlocksPerIntegration.getText();
+            saveNode(itsBlocksPerIntegration);
         }
 
-        // CNProc_CoherentStokes
+
+        // BeamFormer
+        if ((!inputCoherentDedisperseChannels.isSelected()
+                & (itsCoherentDedisperseChannels.limits.equals("TRUE") || itsCoherentDedisperseChannels.limits.equals("true")))
+                || (inputOutputIncoherentStokes.isSelected()
+                & (itsCoherentDedisperseChannels.limits.equals("FALSE") || itsCoherentDedisperseChannels.limits.equals("false")))) {
+            String bp = "true";
+            if (!inputCoherentDedisperseChannels.isSelected()) {
+                bp = "false";
+            }
+            itsCoherentDedisperseChannels.limits = bp;
+            saveNode(itsCoherentDedisperseChannels);
+        }
+        
+        // CoherentStokes
         if (itsWhichCoherent != null && !inputWhichCoherent.getSelectedItem().toString().equals(itsWhichCoherent.limits)) {
             itsWhichCoherent.limits = inputWhichCoherent.getSelectedItem().toString();
             saveNode(itsWhichCoherent);
@@ -957,8 +1105,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             itsChannelsPerSubbandCoherent.limits = inputChannelsPerSubbandCoherent.getText();
             saveNode(itsChannelsPerSubbandCoherent);
         }
+        if (itsSubbandsPerFileCoherent != null && inputSubbandsPerFileCoherent.getText().equals(itsSubbandsPerFileCoherent.limits)) {
+            itsSubbandsPerFileCoherent.limits = inputSubbandsPerFileCoherent.getText();
+            saveNode(itsSubbandsPerFileCoherent);
+        }
 
-        // CNProc_IncoherentStokes
+        // IncoherentStokes
         if (itsWhichIncoherent != null && !inputWhichIncoherent.getSelectedItem().toString().equals(itsWhichIncoherent.limits)) {
             itsWhichIncoherent.limits = inputWhichIncoherent.getSelectedItem().toString();
             saveNode(itsWhichIncoherent);
@@ -971,6 +1123,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         if (itsChannelsPerSubbandIncoherent != null && inputChannelsPerSubbandIncoherent.getText().equals(itsChannelsPerSubbandIncoherent.limits)) {
             itsChannelsPerSubbandIncoherent.limits = inputChannelsPerSubbandIncoherent.getText();
             saveNode(itsChannelsPerSubbandIncoherent);
+        }
+        if (itsSubbandsPerFileIncoherent != null && inputSubbandsPerFileIncoherent.getText().equals(itsSubbandsPerFileIncoherent.limits)) {
+            itsSubbandsPerFileIncoherent.limits = inputSubbandsPerFileIncoherent.getText();
+            saveNode(itsSubbandsPerFileIncoherent);
         }
 
         return true;
@@ -993,6 +1149,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel8 = new javax.swing.JPanel();
         inputDelayCompensation = new javax.swing.JCheckBox();
         inputCorrectBandPass = new javax.swing.JCheckBox();
+        inputCorrectClocks = new javax.swing.JCheckBox();
+        inputRealTime = new javax.swing.JCheckBox();
+        labelBlockSize = new javax.swing.JLabel();
+        inputBlockSize = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         inputOutputCorrelatedData = new javax.swing.JCheckBox();
         inputOutputFilteredData = new javax.swing.JCheckBox();
@@ -1007,6 +1167,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         inputTimeIntegrationFactorCoherent = new javax.swing.JTextField();
         labelChannelsPerSubbandCoherent = new javax.swing.JLabel();
         inputChannelsPerSubbandCoherent = new javax.swing.JTextField();
+        labelSubbandsPerFileCoherent = new javax.swing.JLabel();
+        inputSubbandsPerFileCoherent = new javax.swing.JTextField();
         IncoherentStokesPanel = new javax.swing.JPanel();
         labelWhichIncoherent = new javax.swing.JLabel();
         inputWhichIncoherent = new javax.swing.JComboBox();
@@ -1014,12 +1176,17 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         inputTimeIntegrationFactorIncoherent = new javax.swing.JTextField();
         labelChannelsPerSubbandIncoherent = new javax.swing.JLabel();
         inputChannelsPerSubbandIncoherent = new javax.swing.JTextField();
+        labelSubbandsPerFileIncoherent = new javax.swing.JLabel();
+        inputSubbandsPerFileIncoherent = new javax.swing.JTextField();
+        inputCoherentDedisperseChannels = new javax.swing.JCheckBox();
         CorrelatorPanel = new javax.swing.JPanel();
         labelIntegrationTime = new javax.swing.JLabel();
         inputIntegrationTime = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        PencilInfoPanel = new javax.swing.JPanel();
-        inputFlysEye = new javax.swing.JCheckBox();
+        inputChannelsPerSubbandCorrelator = new javax.swing.JTextField();
+        inputBlocksPerIntegration = new javax.swing.JTextField();
+        labelChannelsPerSubbandCorrelator = new javax.swing.JLabel();
+        labelBlocksPerIntegration = new javax.swing.JLabel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
@@ -1040,9 +1207,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel1.setPreferredSize(new java.awt.Dimension(100, 25));
         jPanel1.setLayout(new java.awt.BorderLayout());
 
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("OLAP Details");
+        jLabel1.setText("Cobalt Details");
         jPanel1.add(jLabel1, java.awt.BorderLayout.CENTER);
 
         add(jPanel1, java.awt.BorderLayout.NORTH);
@@ -1050,7 +1217,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
         jPanel2.setPreferredSize(new java.awt.Dimension(5240, 3000));
 
-        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Cobalt", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
 
         inputDelayCompensation.setText("Delay Compensation");
         inputDelayCompensation.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -1059,6 +1226,18 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         inputCorrectBandPass.setText("Correct BandPass");
         inputCorrectBandPass.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         inputCorrectBandPass.setMargin(new java.awt.Insets(0, 0, 0, 0));
+
+        inputCorrectClocks.setText("Correct Clocks");
+        inputCorrectClocks.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        inputCorrectClocks.setMargin(new java.awt.Insets(0, 0, 0, 0));
+
+        inputRealTime.setText("realTime");
+        inputRealTime.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        inputRealTime.setMargin(new java.awt.Insets(0, 0, 0, 0));
+
+        labelBlockSize.setText("blockSize");
+
+        inputBlockSize.setEnabled(false);
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel3.setText("Output:");
@@ -1097,11 +1276,26 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                .addContainerGap()
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGap(21, 21, 21)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputDelayCompensation, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
-                    .addComponent(inputCorrectBandPass))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addComponent(labelBlockSize)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(inputBlockSize, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(145, 145, 145))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addComponent(inputRealTime, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(238, 238, 238))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(inputDelayCompensation, javax.swing.GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
+                                .addComponent(inputCorrectBandPass))
+                            .addGroup(jPanel8Layout.createSequentialGroup()
+                                .addComponent(inputCorrectClocks)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 135, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(63, 63, 63)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(inputOutputIncoherentStokes)
@@ -1110,33 +1304,42 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                     .addComponent(jLabel3)
                     .addComponent(inputOutputCorrelatedData)
                     .addComponent(inputOutputFilteredData))
-                .addGap(301, 301, 301))
+                .addGap(241, 241, 241))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(labelBlockSize)
+                            .addComponent(inputBlockSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(inputRealTime, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(inputDelayCompensation, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(inputCorrectBandPass, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(inputCorrectClocks, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addContainerGap()
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(inputOutputCorrelatedData)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(inputOutputFilteredData))
-                    .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(inputDelayCompensation, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(inputCorrectBandPass, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(4, 4, 4)
-                .addComponent(inputOutputBeamFormedData)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(inputOutputCoherentStokes)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inputOutputIncoherentStokes)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(inputOutputFilteredData)
+                        .addGap(4, 4, 4)
+                        .addComponent(inputOutputBeamFormedData)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(inputOutputCoherentStokes)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(inputOutputIncoherentStokes)))
+                .addContainerGap(21, Short.MAX_VALUE))
         );
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "CN Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "BeamFormer", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
         jPanel7.setToolTipText("BGLProc");
 
         CoherentStokesPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Coherent Stokes", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1155,20 +1358,26 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
 
         inputChannelsPerSubbandCoherent.setEnabled(false);
 
+        labelSubbandsPerFileCoherent.setText("# subbands per file");
+
+        inputSubbandsPerFileCoherent.setEnabled(false);
+
         javax.swing.GroupLayout CoherentStokesPanelLayout = new javax.swing.GroupLayout(CoherentStokesPanel);
         CoherentStokesPanel.setLayout(CoherentStokesPanelLayout);
         CoherentStokesPanelLayout.setHorizontalGroup(
             CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(CoherentStokesPanelLayout.createSequentialGroup()
                 .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelSubbandsPerFileCoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
                     .addComponent(labelChannelsPerSubbandCoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
                     .addComponent(timeIntegrationFactorCoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 183, Short.MAX_VALUE)
                     .addComponent(labelWhichCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(inputSubbandsPerFileCoherent)
                     .addComponent(inputChannelsPerSubbandCoherent)
                     .addComponent(inputTimeIntegrationFactorCoherent, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputWhichCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, 151, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(inputWhichCoherent, 0, 151, Short.MAX_VALUE))
                 .addContainerGap())
         );
         CoherentStokesPanelLayout.setVerticalGroup(
@@ -1185,6 +1394,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                 .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(inputChannelsPerSubbandCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(labelChannelsPerSubbandCoherent))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(CoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(inputSubbandsPerFileCoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelSubbandsPerFileCoherent))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -1204,6 +1417,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
 
         inputChannelsPerSubbandIncoherent.setEnabled(false);
 
+        labelSubbandsPerFileIncoherent.setText("# subbands per file");
+
+        inputSubbandsPerFileIncoherent.setEnabled(false);
+
         javax.swing.GroupLayout IncoherentStokesPanelLayout = new javax.swing.GroupLayout(IncoherentStokesPanel);
         IncoherentStokesPanel.setLayout(IncoherentStokesPanelLayout);
         IncoherentStokesPanelLayout.setHorizontalGroup(
@@ -1211,14 +1428,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(IncoherentStokesPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelWhichIncoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 174, Short.MAX_VALUE)
+                    .addComponent(labelSubbandsPerFileIncoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                    .addComponent(labelWhichIncoherent, javax.swing.GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
                     .addComponent(labelTimeIntegrationfactorCoherent)
                     .addComponent(labelChannelsPerSubbandIncoherent))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(inputSubbandsPerFileIncoherent)
                     .addComponent(inputChannelsPerSubbandIncoherent)
                     .addComponent(inputTimeIntegrationFactorIncoherent, javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputWhichIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(inputWhichIncoherent, 0, 150, Short.MAX_VALUE))
                 .addContainerGap())
         );
         IncoherentStokesPanelLayout.setVerticalGroup(
@@ -1235,8 +1454,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                 .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(inputChannelsPerSubbandIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(labelChannelsPerSubbandIncoherent))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(IncoherentStokesPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(inputSubbandsPerFileIncoherent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelSubbandsPerFileIncoherent))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
+        inputCoherentDedisperseChannels.setText("CoherentDedisperseChannels");
 
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
@@ -1245,16 +1470,18 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(CoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(inputCoherentDedisperseChannels))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addComponent(CoherentStokesPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(IncoherentStokesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(inputCoherentDedisperseChannels))
         );
 
         CorrelatorPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Correlator", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
@@ -1266,54 +1493,48 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
 
         jLabel2.setText("sec");
 
+        inputChannelsPerSubbandCorrelator.setEnabled(false);
+
+        inputBlocksPerIntegration.setEnabled(false);
+
+        labelChannelsPerSubbandCorrelator.setText("# channels per subband");
+
+        labelBlocksPerIntegration.setText("# blocks per integration");
+
         javax.swing.GroupLayout CorrelatorPanelLayout = new javax.swing.GroupLayout(CorrelatorPanel);
         CorrelatorPanel.setLayout(CorrelatorPanelLayout);
         CorrelatorPanelLayout.setHorizontalGroup(
             CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(CorrelatorPanelLayout.createSequentialGroup()
-                .addComponent(labelIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(labelIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, 143, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelBlocksPerIntegration)
+                    .addComponent(labelChannelsPerSubbandCorrelator, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(8, 8, 8)
+                .addGroup(CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputBlocksPerIntegration, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE)
+                    .addComponent(inputChannelsPerSubbandCorrelator, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE)
+                    .addComponent(inputIntegrationTime, javax.swing.GroupLayout.DEFAULT_SIZE, 54, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel2))
+                .addComponent(jLabel2)
+                .addGap(30, 30, 30))
         );
         CorrelatorPanelLayout.setVerticalGroup(
             CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(CorrelatorPanelLayout.createSequentialGroup()
                 .addGroup(CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelIntegrationTime)
-                    .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
-                .addContainerGap(49, Short.MAX_VALUE))
-        );
-
-        PencilInfoPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "PencilInfo", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11))); // NOI18N
-        PencilInfoPanel.setToolTipText("PencilInfo");
-
-        inputFlysEye.setText("Flyseye");
-        inputFlysEye.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        inputFlysEye.setEnabled(false);
-        inputFlysEye.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        inputFlysEye.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                inputFlysEyeActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout PencilInfoPanelLayout = new javax.swing.GroupLayout(PencilInfoPanel);
-        PencilInfoPanel.setLayout(PencilInfoPanelLayout);
-        PencilInfoPanelLayout.setHorizontalGroup(
-            PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(PencilInfoPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(inputFlysEye)
-                .addContainerGap(65, Short.MAX_VALUE))
-        );
-        PencilInfoPanelLayout.setVerticalGroup(
-            PencilInfoPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(PencilInfoPanelLayout.createSequentialGroup()
-                .addComponent(inputFlysEye, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(19, Short.MAX_VALUE))
+                    .addComponent(jLabel2)
+                    .addComponent(inputIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(16, 16, 16)
+                .addGroup(CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelChannelsPerSubbandCorrelator)
+                    .addComponent(inputChannelsPerSubbandCorrelator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(CorrelatorPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(inputBlocksPerIntegration, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelBlocksPerIntegration))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -1321,31 +1542,27 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(30, 30, 30)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(CorrelatorPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(PencilInfoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(32, Short.MAX_VALUE))
-            .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(CorrelatorPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(CorrelatorPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(PencilInfoPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(CorrelatorPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
+
+        jPanel7.getAccessibleContext().setAccessibleDescription("");
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -1354,13 +1571,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(4533, Short.MAX_VALUE))
+                .addContainerGap(4471, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2528, Short.MAX_VALUE))
+                .addContainerGap(2442, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -1387,35 +1604,30 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
     private void inputOutputCorrelatedDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputCorrelatedDataActionPerformed
-        checkSettings();
-    }//GEN-LAST:event_inputOutputCorrelatedDataActionPerformed
+
+        checkSettings();     }//GEN-LAST:event_inputOutputCorrelatedDataActionPerformed
 
     private void inputOutputBeamFormedDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputBeamFormedDataActionPerformed
-        inputOutputCoherentStokes.setEnabled(!inputOutputBeamFormedData.isSelected());
-        inputOutputCoherentStokes.setSelected(false);
-        checkSettings();
-    }//GEN-LAST:event_inputOutputBeamFormedDataActionPerformed
+
+        inputOutputCoherentStokes.setEnabled(!inputOutputBeamFormedData.isSelected());         inputOutputCoherentStokes.setSelected(false);         checkSettings();     }//GEN-LAST:event_inputOutputBeamFormedDataActionPerformed
 
     private void inputOutputCoherentStokesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputCoherentStokesActionPerformed
-        inputOutputBeamFormedData.setEnabled(!inputOutputCoherentStokes.isSelected());
-        inputOutputBeamFormedData.setSelected(false);
-        checkSettings();
-    }//GEN-LAST:event_inputOutputCoherentStokesActionPerformed
+
+        inputOutputBeamFormedData.setEnabled(!inputOutputCoherentStokes.isSelected());         inputOutputBeamFormedData.setSelected(false);         checkSettings();     }//GEN-LAST:event_inputOutputCoherentStokesActionPerformed
 
     private void inputOutputIncoherentStokesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputOutputIncoherentStokesActionPerformed
-        checkSettings();
-    }//GEN-LAST:event_inputOutputIncoherentStokesActionPerformed
 
-    private void inputFlysEyeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputFlysEyeActionPerformed
-        checkSettings();
-    }//GEN-LAST:event_inputFlysEyeActionPerformed
+        checkSettings();     }//GEN-LAST:event_inputOutputIncoherentStokesActionPerformed
     private jOTDBnode itsNode = null;
     private MainFrame itsMainFrame = null;
     private String itsTreeType = "";
     private JFileChooser fc = null;
-    //Olap specific parameters
+    //Cobalt specific parameters
     private jOTDBnode itsDelayCompensation = null;
     private jOTDBnode itsCorrectBandPass = null;
+    private jOTDBnode itsRealTime = null;
+    private jOTDBnode itsBlockSize = null;
+    private jOTDBnode itsCorrectClocks = null;
     // _Output params
     private jOTDBnode itsOutputCorrelatedData = null;
     private jOTDBnode itsOutputFilteredData = null;
@@ -1424,33 +1636,44 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     private jOTDBnode itsOutputIncoherentStokes = null;
     //Correlator
     private jOTDBnode itsIntegrationTime = null;
-    // CNProc_Coherentstokes
+    private jOTDBnode itsChannelsPerSubbandCorrelator = null;
+    private jOTDBnode itsBlocksPerIntegration = null;
+    // BeamFormer
+    private jOTDBnode itsCoherentDedisperseChannels = null;
+    // Coherentstokes
     private jOTDBnode itsWhichCoherent = null;
     private jOTDBnode itsChannelsPerSubbandCoherent = null;
     private jOTDBnode itsTimeIntegrationFactorCoherent = null;
-    // CNProc_Incoherentstokes
+    private jOTDBnode itsSubbandsPerFileCoherent = null;
+    // Incoherentstokes
     private jOTDBnode itsWhichIncoherent = null;
     private jOTDBnode itsChannelsPerSubbandIncoherent = null;
     private jOTDBnode itsTimeIntegrationFactorIncoherent = null;
-    // PencilInfo
-    private jOTDBnode itsFlysEye = null;
+    private jOTDBnode itsSubbandsPerFileIncoherent = null;
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel CoherentStokesPanel;
     private javax.swing.JPanel CorrelatorPanel;
     private javax.swing.JPanel IncoherentStokesPanel;
-    private javax.swing.JPanel PencilInfoPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private javax.swing.JTextField inputBlockSize;
+    private javax.swing.JTextField inputBlocksPerIntegration;
     private javax.swing.JTextField inputChannelsPerSubbandCoherent;
+    private javax.swing.JTextField inputChannelsPerSubbandCorrelator;
     private javax.swing.JTextField inputChannelsPerSubbandIncoherent;
+    private javax.swing.JCheckBox inputCoherentDedisperseChannels;
     private javax.swing.JCheckBox inputCorrectBandPass;
+    private javax.swing.JCheckBox inputCorrectClocks;
     private javax.swing.JCheckBox inputDelayCompensation;
-    private javax.swing.JCheckBox inputFlysEye;
     private javax.swing.JTextField inputIntegrationTime;
     private javax.swing.JCheckBox inputOutputBeamFormedData;
     private javax.swing.JCheckBox inputOutputCoherentStokes;
     private javax.swing.JCheckBox inputOutputCorrelatedData;
     private javax.swing.JCheckBox inputOutputFilteredData;
     private javax.swing.JCheckBox inputOutputIncoherentStokes;
+    private javax.swing.JCheckBox inputRealTime;
+    private javax.swing.JTextField inputSubbandsPerFileCoherent;
+    private javax.swing.JTextField inputSubbandsPerFileIncoherent;
     private javax.swing.JTextField inputTimeIntegrationFactorCoherent;
     private javax.swing.JTextField inputTimeIntegrationFactorIncoherent;
     private javax.swing.JComboBox inputWhichCoherent;
@@ -1465,9 +1688,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel labelBlockSize;
+    private javax.swing.JLabel labelBlocksPerIntegration;
     private javax.swing.JLabel labelChannelsPerSubbandCoherent;
+    private javax.swing.JLabel labelChannelsPerSubbandCorrelator;
     private javax.swing.JLabel labelChannelsPerSubbandIncoherent;
     private javax.swing.JLabel labelIntegrationTime;
+    private javax.swing.JLabel labelSubbandsPerFileCoherent;
+    private javax.swing.JLabel labelSubbandsPerFileIncoherent;
     private javax.swing.JLabel labelTimeIntegrationfactorCoherent;
     private javax.swing.JLabel labelWhichCoherent;
     private javax.swing.JLabel labelWhichIncoherent;
