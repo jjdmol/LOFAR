@@ -89,6 +89,12 @@ public class ConfigPanelHelper {
         itsPanelMap.put("OLAP",itsArrayList);
         addParSetPanel();
 
+        //Cobalt
+        itsArrayList = new ArrayList<>();
+        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.CobaltPanel");
+        itsPanelMap.put("Cobalt",itsArrayList);        
+        addParSetPanel();
+        
         // Observation
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
@@ -102,10 +108,10 @@ public class ConfigPanelHelper {
         addParSetPanel();
 
         //Imager
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-        itsPanelMap.put("Imager",itsArrayList);
-        addParSetPanel();
+//        itsArrayList = new ArrayList<>();
+//        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+//        itsPanelMap.put("Imager",itsArrayList);
+//        addParSetPanel();
     }
 
 
