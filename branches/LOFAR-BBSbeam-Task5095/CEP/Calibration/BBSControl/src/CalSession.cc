@@ -42,22 +42,22 @@
 #if defined(CATCH_PQXX_AND_RETHROW)
 # error CATCH_PQXX_AND_RETHROW is already defined and should not be redefined
 #else
-# define CATCH_PQXX_AND_RETHROW					\
-  catch (pqxx::broken_connection& e) {				\
-    THROW (DatabaseException, "pqxx::broken_connection:\n"	\
-	   << e.what());					\
-  }								\
-  catch (pqxx::sql_error& e) {					\
-    THROW (DatabaseException, "pqxx::sql_error:\n"		\
-	   << "Query: " << e.query() << endl << e.what());	\
-  }								\
-  catch (pqxx::in_doubt_error& e) {				\
-    THROW (DatabaseException, "pqxx::in_doubt_error:\n"		\
-	   << e.what());					\
-  }								\
-  catch (pqxx::internal_error& e) {				\
-    THROW (DatabaseException, "pqxx::internal_error:\n"		\
-	   << e.what());					\
+# define CATCH_PQXX_AND_RETHROW                 \
+  catch (pqxx::broken_connection& e) {              \
+    THROW (DatabaseException, "pqxx::broken_connection:\n"  \
+       << e.what());                    \
+  }                             \
+  catch (pqxx::sql_error& e) {                  \
+    THROW (DatabaseException, "pqxx::sql_error:\n"      \
+       << "Query: " << e.query() << endl << e.what());  \
+  }                             \
+  catch (pqxx::in_doubt_error& e) {             \
+    THROW (DatabaseException, "pqxx::in_doubt_error:\n"     \
+       << e.what());                    \
+  }                             \
+  catch (pqxx::internal_error& e) {             \
+    THROW (DatabaseException, "pqxx::internal_error:\n"     \
+       << e.what());                    \
   }
 #endif
 

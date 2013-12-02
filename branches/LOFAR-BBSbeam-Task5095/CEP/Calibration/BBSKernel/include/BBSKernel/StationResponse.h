@@ -32,12 +32,10 @@
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
-
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_vector.h>
-
-#include <ms/MeasurementSets/MeasurementSet.h>
 #include <measures/Measures/MDirection.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 
 namespace LOFAR
 {
@@ -99,7 +97,7 @@ public:
 
     StationResponse(const casa::MeasurementSet &ms, bool inverse = false,
         bool useElementBeam = true, bool useArrayFactor = true,
-        bool useChannelFreq = false, bool conjugateAF = false);
+        bool useChannelFreq = false);
 
     // Set the delay reference direction (used by the station beamformer).
     void setRefDelay(const casa::MDirection &reference);

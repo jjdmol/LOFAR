@@ -27,7 +27,7 @@ class stationresponse(StationResponse):
     """
 
     def __init__ (self, msname, inverse = False, useElementBeam = True,
-        useArrayFactor = True, useChannelFreq = False, conjugateAF = False):
+        useArrayFactor = True, useChannelFreq = False):
         """Create a stationresponse object that can be used to evaluate the
         LOFAR beam for the given Measurement Set.
 
@@ -50,8 +50,6 @@ class stationresponse(StationResponse):
           should be enabled for Measurement Sets that contain multiple subbands
           compressed to single channels inside a single spectral window
           (default: False).
-        `conjugateAF`
-          Conjugate the station and tile array factors (default False).
 
         For example::
 
@@ -67,7 +65,7 @@ class stationresponse(StationResponse):
             print time, response.evaluateChannel(time, 0, 0)
         """
         StationResponse.__init__ (self, msname, inverse, useElementBeam,
-          useArrayFactor, useChannelFreq, conjugateAF)
+          useArrayFactor, useChannelFreq)
 
     def version (self, type='other'):
         """Show the software version."""

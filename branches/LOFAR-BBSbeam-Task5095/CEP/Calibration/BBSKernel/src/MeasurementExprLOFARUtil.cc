@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Exceptions.h>
-//#include <BBSKernel/Expr/AntennaElementLBA.h>
-//#include <BBSKernel/Expr/AntennaElementHBA.h>
-//#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/ElevationCut.h>
@@ -40,15 +37,12 @@
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
-//#include <BBSKernel/Expr/ParallacticRotation.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
-#include <BBSKernel/Expr/StationBeam.h>
-//#include <BBSKernel/Expr/StationBeamFormer.h>
+#include <BBSKernel/Expr/StationResponse.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Expr/TECU2Phase.h>
-//#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 
@@ -288,22 +282,19 @@ makeBeamExpr(const Station::ConstPtr &station,
             " station beam is missing.");
     }
 
-    StationBeam::Ptr beam(new StationBeam(exprITRF, exprRefDelayITRF,
-            exprRefTileITRF, stationLOFAR->station()));
+    StationResponse::Ptr beam(new StationResponse(exprITRF, exprRefDelayITRF,
+        exprRefTileITRF, stationLOFAR->station()));
 
-    if(!config.useChannelFreq())
+    beam->useArrayFactor(config.mode() != BeamConfig::ELEMENT);
+    beam->useElementResponse(config.mode() != BeamConfig::ARRAY_FACTOR);
+
+    if(config.useChannelFreq())
     {
-        beam->setReferenceFreq(refFreq);
+        beam->useChannelFreq();
     }
-
-    if(config.mode() == BeamConfig::ARRAY_FACTOR)
+    else
     {
-        beam->setEnableElementResponse(false);
-    }
-
-    if(config.mode() == BeamConfig::ELEMENT)
-    {
-        beam->setEnableArrayFactor(false);
+        beam->useReferenceFreq(refFreq);
     }
 
     return beam;

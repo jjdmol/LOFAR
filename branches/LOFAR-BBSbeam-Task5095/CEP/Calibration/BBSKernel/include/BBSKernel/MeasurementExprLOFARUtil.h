@@ -28,16 +28,16 @@
 // Utility functions to construct sub-expressions for the LOFAR measurement
 // expression.
 
-#include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
+#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
-#include <BBSKernel/Instrument.h>
-#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-#include <measures/Measures/MPosition.h>
+#include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {

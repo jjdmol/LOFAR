@@ -1,7 +1,6 @@
-//# AntennaElementHBA.h: Model of an idealized LOFAR HBA dual dipole antenna
-//# element.
+//# StationLOFAR.cc: Description of a LOFAR station.
 //#
-//# Copyright (C) 2011
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,38 +20,25 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTHBA_H
-#define LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTHBA_H
-
-// \file
-// Model of an idealized LOFAR HBA dual dipole antenna element.
-
-#include <BBSKernel/Expr/BasicExpr.h>
+#include <lofar_config.h>
+#include <BBSKernel/StationLOFAR.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \addtogroup Expr
-// @{
-
-class AntennaElementHBA: public BasicUnaryExpr<Vector<2>, JonesMatrix>
+StationLOFAR::StationLOFAR(const string &name, const casa::MPosition &position,
+    const StationResponse::Station::ConstPtr &station)
+    :   Station(name, position),
+        itsStation(station)
 {
-public:
-    typedef shared_ptr<AntennaElementHBA>       Ptr;
-    typedef shared_ptr<const AntennaElementHBA> ConstPtr;
+}
 
-    AntennaElementHBA(const Expr<Vector<2> >::ConstPtr &target);
-
-protected:
-    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &target) const;
-};
-
-// @}
+StationResponse::Station::ConstPtr StationLOFAR::station() const
+{
+    return itsStation;
+}
 
 } //# namespace BBS
 } //# namespace LOFAR
-
-#endif

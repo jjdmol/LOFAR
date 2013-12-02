@@ -42,8 +42,7 @@ namespace BBS
 {
 
 StationResponse::StationResponse(const casa::MeasurementSet &ms,
-    bool inverse, bool useElementBeam, bool useArrayFactor, bool useChannelFreq,
-    bool conjugateAF)
+    bool inverse, bool useElementBeam, bool useArrayFactor, bool useChannelFreq)
     :   itsRefDelay(new Dummy<Vector<2> >()),
         itsRefTile(new Dummy<Vector<2> >()),
         itsDirection(new Dummy<Vector<2> >())
@@ -77,25 +76,13 @@ StationResponse::StationResponse(const casa::MeasurementSet &ms,
     {
         BeamConfig::Mode mode = (!useElementBeam ? BeamConfig::ARRAY_FACTOR
           : (!useArrayFactor ? BeamConfig::ELEMENT : BeamConfig::DEFAULT));
-        BeamConfig beamConfig(mode, useChannelFreq, conjugateAF);
+        BeamConfig beamConfig(mode, useChannelFreq);
 
         for(size_t i = 0; i < instrument->nStations(); ++i)
         {
             Station::ConstPtr station = instrument->station(i);
-
-            try
-            {
-                itsExpr[i] = makeBeamExpr(station, refFreq, exprDirITRF,
-                        exprRefDelayITRF, exprRefTileITRF, beamConfig);
-            }
-            catch(BBSKernelException &e)
-            {
-                LOG_WARN_STR("Station " << station->name() << " is not a LOFAR"
-                    " station or the additional information needed to compute"
-                    " the station beam is missing. The station beam model will"
-                    " NOT be applied.");
-                continue;
-            }
+            itsExpr[i] = makeBeamExpr(station, refFreq, exprDirITRF,
+                exprRefDelayITRF, exprRefTileITRF, beamConfig);
 
             if(inverse)
             {

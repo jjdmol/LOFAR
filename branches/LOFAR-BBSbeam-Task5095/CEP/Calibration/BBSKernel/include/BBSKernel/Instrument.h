@@ -26,18 +26,12 @@
 // \file
 // Description of the telescope.
 
-#include <BBSKernel/Types.h>
-
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <StationResponse/Station.h>
-
-#include <casa/Arrays.h>
-#include <casa/OS/Path.h>
 #include <measures/Measures/MPosition.h>
 
 namespace LOFAR
@@ -48,55 +42,6 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-/*
-class AntennaField
-{
-public:
-    typedef shared_ptr<AntennaField>        Ptr;
-    typedef shared_ptr<const AntennaField>  ConstPtr;
-
-    enum Axis
-    {
-        P,
-        Q,
-        R,
-        N_Axis
-    };
-
-    struct Element
-    {
-        Vector3 offset;
-        bool    flag[2];
-    };
-
-    AntennaField(const string &name, const Vector3 &position, const Vector3 &p,
-        const Vector3 &q, const Vector3 &r);
-
-    const string &name() const;
-    const Vector3 &position() const;
-    const Vector3 &axis(Axis axis) const;
-
-    bool isHBA() const;
-
-    void appendTileElement(const Vector3 &offset);
-    inline size_t nTileElement() const;
-    inline const Vector3 &tileElement(size_t i) const;
-
-    void appendElement(const Element &element);
-    inline size_t nElement() const;
-    inline size_t nActiveElement() const;
-    inline const Element &element(size_t i) const;
-
-private:
-    string                  itsName;
-    Vector3                 itsPosition;
-    size_t                  itsActiveElementCount;
-    Vector3                 itsAxes[N_Axis];
-    vector<Vector3>         itsTileElements;
-    vector<Element>         itsElements;
-};
-*/
-
 class Station
 {
 public:
@@ -104,9 +49,7 @@ public:
     typedef shared_ptr<const Station> ConstPtr;
 
     Station(const string &name, const casa::MPosition &position);
-    virtual ~Station()
-    {
-    }
+    virtual ~Station();
 
     const string &name() const;
     const casa::MPosition &position() const;
@@ -114,28 +57,6 @@ public:
 private:
     string                      itsName;
     casa::MPosition             itsPosition;
-};
-
-class StationLOFAR: public Station
-{
-public:
-    typedef shared_ptr<StationLOFAR>        Ptr;
-    typedef shared_ptr<const StationLOFAR>  ConstPtr;
-
-    StationLOFAR(const string &name, const casa::MPosition &position,
-            const StationResponse::Station::ConstPtr &station)
-        :   Station(name, position),
-            itsStation(station)
-    {
-    }
-
-    StationResponse::Station::ConstPtr station() const
-    {
-        return itsStation;
-    }
-
-private:
-    StationResponse::Station::ConstPtr  itsStation;
 };
 
 class Instrument
@@ -168,49 +89,6 @@ private:
 
 // @}
 
-/*
-// -------------------------------------------------------------------------- //
-// - Implementation: AntennaField                                           - //
-// -------------------------------------------------------------------------- //
-
-inline size_t AntennaField::nTileElement() const
-{
-    return itsTileElements.size();
-}
-
-const Vector3 &AntennaField::tileElement(size_t i) const
-{
-    return itsTileElements[i];
-}
-
-inline size_t AntennaField::nElement() const
-{
-    return itsElements.size();
-}
-
-inline size_t AntennaField::nActiveElement() const
-{
-    return itsActiveElementCount;
-}
-
-inline const AntennaField::Element &AntennaField::element(size_t i) const
-{
-    return itsElements[i];
-}
-
-// -------------------------------------------------------------------------- //
-// - Implementation: Station                                                - //
-// -------------------------------------------------------------------------- //
-
-template <typename T>
-Station::Station(const string &name, const casa::MPosition &position, T first,
-    T last)
-    :   itsName(name),
-        itsPosition(position),
-        itsFields(first, last)
-{
-}
-*/
 // -------------------------------------------------------------------------- //
 // - Implementation: Instrument                                             - //
 // -------------------------------------------------------------------------- //

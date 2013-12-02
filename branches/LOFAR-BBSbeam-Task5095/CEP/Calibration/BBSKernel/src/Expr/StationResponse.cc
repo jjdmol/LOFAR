@@ -1,7 +1,6 @@
-//# StationBeamFormer.cc: Beam forming the signals from individual dipoles
-//# or tiles into a single station beam.
+//# StationResponse.cc: Voltage response of a LOFAR phased array station.
 //#
-//# Copyright (C) 2011
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,49 +21,50 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/Expr/StationBeam.h>
-#include <BBSKernel/Exceptions.h>
-//#include <Common/lofar_algorithm.h>
-
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MPosition.h>
+#include <BBSKernel/Expr/StationResponse.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-StationBeam::StationBeam(const Expr<Vector<3> >::ConstPtr &direction,
+StationResponse::StationResponse(const Expr<Vector<3> >::ConstPtr &direction,
     const Expr<Vector<3> >::ConstPtr &station0,
     const Expr<Vector<3> >::ConstPtr &tile0,
-    const StationResponse::Station::ConstPtr &station)
+    const LOFAR::StationResponse::Station::ConstPtr &station)
     :   BasicTernaryExpr<Vector<3>, Vector<3>, Vector<3>,
             JonesMatrix>(direction, station0, tile0),
         itsStation(station),
-        itsEnableArrayFactor(true),
-        itsEnableElementResponse(true),
         itsUseChannelFreq(true),
+        itsUseArrayFactor(true),
+        itsUseElementResponse(true),
         itsReferenceFreq(0.0)
 {
 }
 
-void StationBeam::setReferenceFreq(double freq)
+void StationResponse::useReferenceFreq(double freq)
 {
     itsReferenceFreq = freq;
     itsUseChannelFreq = false;
 }
 
-void StationBeam::setEnableElementResponse(bool enabled)
+void StationResponse::useChannelFreq()
 {
-    itsEnableElementResponse = enabled;
+    itsReferenceFreq = 0.0;
+    itsUseChannelFreq = true;
 }
 
-void StationBeam::setEnableArrayFactor(bool enabled)
+void StationResponse::useArrayFactor(bool use)
 {
-    itsEnableArrayFactor = enabled;
+    itsUseArrayFactor = use;
 }
 
-const JonesMatrix::View StationBeam::evaluateImpl(const Grid &grid,
+void StationResponse::useElementResponse(bool use)
+{
+    itsUseElementResponse = use;
+}
+
+const JonesMatrix::View StationResponse::evaluateImpl(const Grid &grid,
     const Vector<3>::View &direction, const Vector<3>::View &station0,
     const Vector<3>::View &tile0) const
 {
@@ -92,26 +92,28 @@ const JonesMatrix::View StationBeam::evaluateImpl(const Grid &grid,
     ASSERT(!tile0(2).isComplex() && tile0(2).nx() == 1
         && static_cast<size_t>(tile0(2).ny()) == nTime);
 
-    if(itsEnableArrayFactor && itsEnableElementResponse)
+    if(itsUseArrayFactor && itsUseElementResponse)
     {
         return evaluateImplResponse(grid, direction, station0, tile0);
     }
-    else if(!itsEnableElementResponse)
+    else if(!itsUseElementResponse)
     {
         return evaluateImplArrayFactor(grid, direction, station0, tile0);
     }
-    else if(!itsEnableArrayFactor)
+    else if(!itsUseArrayFactor)
     {
         return evaluateImplElementResponse(grid, direction);
     }
     else
     {
+        // Return the identity, i.e. the response of a single isotropic element.
         Matrix zero(dcomplex(0.0, 0.0));
-        return JonesMatrix::View(zero, zero, zero, zero);
+        Matrix one(dcomplex(1.0, 0.0));
+        return JonesMatrix::View(one, zero, zero, one);
     }
 }
 
-const JonesMatrix::View StationBeam::evaluateImplResponse(const Grid &grid,
+const JonesMatrix::View StationResponse::evaluateImplResponse(const Grid &grid,
     const Vector<3>::View &direction, const Vector<3>::View &station0,
     const Vector<3>::View &tile0) const
 {
@@ -148,20 +150,21 @@ const JonesMatrix::View StationBeam::evaluateImplResponse(const Grid &grid,
     {
         double time = grid[TIME]->center(i);
 
-        StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
+        LOFAR::StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
             *p_direction[1]++, *p_direction[2]++}};
-        StationResponse::vector3r_t v_station0 = {{*p_station0[0]++,
+        LOFAR::StationResponse::vector3r_t v_station0 = {{*p_station0[0]++,
             *p_station0[1]++, *p_station0[2]++}};
-        StationResponse::vector3r_t v_tile0 = {{*p_tile0[0]++, *p_tile0[1]++,
-            *p_tile0[2]++}};
+        LOFAR::StationResponse::vector3r_t v_tile0 = {{*p_tile0[0]++,
+            *p_tile0[1]++, *p_tile0[2]++}};
 
         for(size_t j = 0; j < nFreq; ++j)
         {
             double freq = grid[FREQ]->center(j);
             double referenceFreq = itsUseChannelFreq ? freq : itsReferenceFreq;
 
-            StationResponse::matrix22c_t response = itsStation->response(time,
-                freq, v_direction, referenceFreq, v_station0, v_tile0);
+            LOFAR::StationResponse::matrix22c_t response =
+                itsStation->response(time, freq, v_direction, referenceFreq,
+                v_station0, v_tile0);
 
             *E00_re++ = real(response[0][0]);
             *E00_im++ = imag(response[0][0]);
@@ -177,7 +180,8 @@ const JonesMatrix::View StationBeam::evaluateImplResponse(const Grid &grid,
     return JonesMatrix::View(E00, E01, E10, E11);
 }
 
-const JonesMatrix::View StationBeam::evaluateImplArrayFactor(const Grid &grid,
+const JonesMatrix::View
+StationResponse::evaluateImplArrayFactor(const Grid &grid,
     const Vector<3>::View &direction, const Vector<3>::View &station0,
     const Vector<3>::View &tile0) const
 {
@@ -206,20 +210,20 @@ const JonesMatrix::View StationBeam::evaluateImplArrayFactor(const Grid &grid,
     {
         double time = grid[TIME]->center(i);
 
-        StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
+        LOFAR::StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
             *p_direction[1]++, *p_direction[2]++}};
-        StationResponse::vector3r_t v_station0 = {{*p_station0[0]++,
+        LOFAR::StationResponse::vector3r_t v_station0 = {{*p_station0[0]++,
             *p_station0[1]++, *p_station0[2]++}};
-        StationResponse::vector3r_t v_tile0 = {{*p_tile0[0]++, *p_tile0[1]++,
-            *p_tile0[2]++}};
+        LOFAR::StationResponse::vector3r_t v_tile0 = {{*p_tile0[0]++,
+            *p_tile0[1]++, *p_tile0[2]++}};
 
         for(size_t j = 0; j < nFreq; ++j)
         {
             double freq = grid[FREQ]->center(j);
             double referenceFreq = itsUseChannelFreq ? freq : itsReferenceFreq;
 
-            StationResponse::diag22c_t af = itsStation->arrayFactor(time, freq,
-                v_direction, referenceFreq, v_station0, v_tile0);
+            LOFAR::StationResponse::diag22c_t af = itsStation->arrayFactor(time,
+                freq, v_direction, referenceFreq, v_station0, v_tile0);
 
             *E00_re++ = real(af[0]);
             *E00_im++ = imag(af[0]);
@@ -232,7 +236,7 @@ const JonesMatrix::View StationBeam::evaluateImplArrayFactor(const Grid &grid,
 }
 
 const JonesMatrix::View
-StationBeam::evaluateImplElementResponse(const Grid &grid,
+StationResponse::evaluateImplElementResponse(const Grid &grid,
     const Vector<3>::View &direction) const
 {
     const size_t nFreq = grid[FREQ]->size();
@@ -259,22 +263,22 @@ StationBeam::evaluateImplElementResponse(const Grid &grid,
     E11.setDCMat(nFreq, nTime);
     E11.dcomplexStorage(E11_re, E11_im);
 
+    // For a station with multiple antenna fields, need to select for which
+    // field the element response will be evaluated. Here the first field of the
+    // station is always selected.
+    LOFAR::StationResponse::AntennaField::ConstPtr field =
+        *itsStation->beginFields();
+
     // Evaluate element response.
     for(size_t i = 0; i < nTime; ++i)
     {
         double time = grid[TIME]->center(i);
-
-        StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
+        LOFAR::StationResponse::vector3r_t v_direction = {{*p_direction[0]++,
             *p_direction[1]++, *p_direction[2]++}};
 
         for(size_t j = 0; j < nFreq; ++j)
         {
-            // For a station with multiple antenna fields, need to select
-            // for which field the element response will be evaluated. Here
-            // the first field of the station is always selected.
-            StationResponse::AntennaField::ConstPtr field =
-                *itsStation->beginFields();
-            StationResponse::matrix22c_t response =
+            LOFAR::StationResponse::matrix22c_t response =
                 field->singleElementResponse(time, grid[FREQ]->center(j),
                 v_direction);
 

@@ -73,11 +73,11 @@ namespace LOFAR
       // \a name is a MultiStep, otherwise it is a SingleStep.
       if (parset.isDefined("Step." + name + ".Steps")) {
         LOG_TRACE_COND_STR(name << " is a MultiStep");
-      	step.reset(new MultiStep(name, parset, parent));
+        step.reset(new MultiStep(name, parset, parent));
       } else {
-      	LOG_TRACE_COND_STR(name << " is a SingleStep");
-      	// We'll have to figure out what kind of SingleStep we must
-      	// create. The key "Operation" contains this information.
+        LOG_TRACE_COND_STR(name << " is a SingleStep");
+        // We'll have to figure out what kind of SingleStep we must
+        // create. The key "Operation" contains this information.
         try {
           string oper =
             toUpper(parset.getString("Step." + name + ".Operation"));
@@ -165,8 +165,6 @@ namespace LOFAR
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.UseChannelFreq",
           toString(config.useChannelFreq()));
-        ps.add(prefix + "Model.Beam.ConjugateAF",
-          toString(config.conjugateAF()));
       }
 
       ps.add(prefix + "Model.DirectionalTEC.Enable",
@@ -273,11 +271,14 @@ namespace LOFAR
 
         bool useChannelFreq = ps.getBool("Model.Beam.UseChannelFreq",
           parentConfig.useChannelFreq());
-        bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
-          parentConfig.conjugateAF());
+        bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF", false);
+        if(conjugateAF)
+        {
+          THROW(BBSControlException, "The key Step.*.Model.Beam.ConjugateAF has"
+            " been deprecated and should not be used.");
+        }
 
-        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq,
-          conjugateAF));
+        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq));
       } else {
         itsModelConfig.clearBeamConfig();
       }
