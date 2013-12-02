@@ -75,7 +75,7 @@ Observation.stopTime = $STOP
 startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
 # Give rtcp time to start
-sleep 1
+sleep 3
 
 # PID file must be present
 [ -r $LOFARROOT/var/run/rtcp-1000.pid ] || error "Cannot read $LOFARROOT/var/run/rtcp-1000.pid"
@@ -89,7 +89,7 @@ sleep 1
 stopBGL.sh 1 1000 || error "stopBGL.sh failed"
 
 # Give rtcp time to clean up
-sleep 1
+sleep 2
 
 # PID file must be gone
 [ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
