@@ -481,14 +481,14 @@ namespace LOFAR
             settings.beamFormer.nrHighResolutionChannels < 65536,
             "Parset: nr high reso channels must be a power of 2 and < 64k");
 
-        unsigned nrDelayCompCh = calcNrDelayCompensationChannels();
+        unsigned nrDelayCompCh = calcNrDelayCompensationChannels(settings);
         nrDelayCompCh = getUint32("Cobalt.nrDelayCompensationChannels", nrDelayCompCh);
         if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels)
           nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
         LOG_INFO_STR("Parset: internal #channels: delay compensation: " <<
                      settings.beamFormer.nrDelayCompensationChannels <<
-                     " high reso: " << settings.beamFormer.nrHighResolutionChannels);
+                     "; high reso: " << settings.beamFormer.nrHighResolutionChannels);
 
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -610,11 +610,11 @@ namespace LOFAR
       double dx = pos[0] - ref[0];
       double dy = pos[1] - ref[1];
       double dz = pos[2] - ref[2];
-      return cbrt(dx * dx + dy * dy + dz * dz);
+      return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     // max delay distance in meters; static per obs, i.e. unprojected (some upper bound)
-    double Parset::maxDelayDistance() const {
+    double Parset::maxDelayDistance(const struct ObservationSettings& settings) const {
       // Available in each parset through included StationCalibration.parset.
       const vector<double> refPhaseCenter =
           settings.delayCompensation.referencePhaseCenter;
@@ -632,22 +632,26 @@ namespace LOFAR
     }
 
     // Top frequency of highest subband observed in Hz.
-    double Parset::maxObservationFrequency() const {
+    double Parset::maxObservationFrequency(const struct ObservationSettings& settings,
+                                           double subbandWidth) const {
       double maxCentralFrequency = 0.0;
 
-      for (unsigned sb = 0; sb < settings.subbands.size(); sb++)
+      for (unsigned sb = 0; sb < settings.subbands.size(); sb++) {
         if (settings.subbands[sb].centralFrequency > maxCentralFrequency)
           maxCentralFrequency = settings.subbands[sb].centralFrequency;
+      }
 
-      return maxCentralFrequency + 0.5 * subbandBandwidth();
+      return maxCentralFrequency + 0.5 * subbandWidth;
     }
 
     // Determine the nr of channels per subband for delay compensation.
     // We aim for the visibility samples to be good to about 1 part in 1000.
     // See the Cobalt beamformer design doc for more info on how and why.
-    unsigned Parset::calcNrDelayCompensationChannels() const {
-      double d = maxDelayDistance(); // in meters
-      double v = maxObservationFrequency(); // in Hz
+    unsigned Parset::calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const {
+      double d = maxDelayDistance(settings); // in meters
+      double v_clk = settings.clockMHz * 1e6; // in Hz
+      double subbandWidth = v_clk / 1024.0;
+      double v = maxObservationFrequency(settings, subbandWidth); // in Hz
 
       // deltaPhi is the phase change over t_u in rad: ~= sqrt(24.0*1e-3) (Taylor approx)
       // Design doc states deltaPhi must be <= 0.155
@@ -657,8 +661,7 @@ namespace LOFAR
       double phi = 2.0 * M_PI * v * omegaE / speedOfLight * d /* * cos(delta) (=1) */;
       // Fringe stopping of the residual delay is done at an interval t_u.
       double t_u = deltaPhi / phi;
-      double v_clk = settings.clockMHz * 1e6; // in Hz
-      double max_n_FFT = t_u * v_clk / 1024.0;
+      double max_n_FFT = t_u * subbandWidth;
       unsigned max_n_FFT_pow2 = nextPowerOfTwo((unsigned)max_n_FFT / 2); // round down to pow2
 
       // Little benefit beyond 256; more work and lower GPU FFT efficiency.
@@ -670,7 +673,7 @@ namespace LOFAR
       const double min_n_ch = 19.02884235042726617904; // design doc states n_ch >= 19
       const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
 
-      if (settings.correlator.enabled && max_n_FFT < min_n_ch) {
+      if (settings.correlator.enabled && max_n_FFT_pow2 < min_n_ch_pow2) {
         LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
                       max_n_FFT << " ends up below lower bound " << min_n_ch <<
                       ". This clashes. Returning " << min_n_ch_pow2 << ". Very"

@@ -717,9 +717,10 @@ namespace LOFAR
 
       double                      distanceVec3(const std::vector<double>& pos,
                                       const std::vector<double>& ref) const;
-      double                      maxDelayDistance() const;
-      double                      maxObservationFrequency() const;
-      unsigned                    calcNrDelayCompensationChannels() const;
+      double                      maxDelayDistance(const struct ObservationSettings& settings) const;
+      double                      maxObservationFrequency(const struct ObservationSettings& settings,
+                                                          double subbandWidth) const;
+      unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.
