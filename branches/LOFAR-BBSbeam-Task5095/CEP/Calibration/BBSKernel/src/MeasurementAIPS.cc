@@ -1277,6 +1277,112 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,
     return dims;
 }
 
+Instrument::Ptr readInstrument(const MeasurementSet &ms,
+  unsigned int idObservation)
+{
+    ROMSObservationColumns observation(ms.observation());
+    ASSERT(observation.nrow() > idObservation);
+    ASSERT(!observation.flagRow()(idObservation));
+
+    // Get station names and positions in ITRF coordinates.
+    ROMSAntennaColumns antenna(ms.antenna());
+
+    // Get station positions.
+    MVPosition centroid;
+    vector<Station::Ptr> stations(antenna.nrow());
+    for(unsigned int i = 0; i < stations.size(); ++i)
+    {
+        // Get station name and ITRF position.
+        MPosition position = MPosition::Convert(antenna.positionMeas()(i),
+            MPosition::ITRF)();
+
+        // Store station information.
+        stations[i] = readStation(ms, i, antenna.name()(i), position);
+
+        // Update ITRF centroid.
+        centroid += position.getValue();
+    }
+
+    // Get the instrument position in ITRF coordinates, or use the centroid
+    // of the station positions if the instrument position is unknown.
+    MPosition position;
+
+    // Read observatory name and try to look-up its position.
+    const string observatory = observation.telescopeName()(idObservation);
+    if(MeasTable::Observatory(position, observatory))
+    {
+        position = MPosition::Convert(position, MPosition::ITRF)();
+    }
+    else
+    {
+        LOG_WARN("Instrument position unknown; will use centroid of stations.");
+        ASSERT(antenna.nrow() != 0);
+        centroid *= 1.0 / static_cast<double>(antenna.nrow());
+        position = MPosition(centroid, MPosition::ITRF);
+    }
+
+    return Instrument::Ptr(new Instrument(observatory, position,
+      stations.begin(), stations.end()));
+}
+
+MDirection readPhaseReference(const MeasurementSet &ms, unsigned int idField)
+{
+    ROMSFieldColumns field(ms.field());
+    ASSERT(field.nrow() > idField);
+    ASSERT(!field.flagRow()(idField));
+
+    return field.phaseDirMeas(idField);
+}
+
+MDirection readDelayReference(const MeasurementSet &ms, unsigned int idField)
+{
+    ROMSFieldColumns field(ms.field());
+    ASSERT(field.nrow() > idField);
+    ASSERT(!field.flagRow()(idField));
+
+    return field.delayDirMeas(idField);
+}
+
+MDirection readTileReference(const MeasurementSet &ms, unsigned int idField)
+{
+    // The MeasurementSet class does not support LOFAR specific columns, so we
+    // use ROArrayMeasColumn to read the tile beam reference direction.
+    Table tab_field = getSubTable(ms, "FIELD");
+
+    static const String columnName = "LOFAR_TILE_BEAM_DIR";
+    if(hasColumn(tab_field, columnName))
+    {
+        ROArrayMeasColumn<MDirection> c_direction(tab_field, columnName);
+        if(c_direction.isDefined(idField))
+        {
+            return c_direction(idField)(IPosition(1, 0));
+        }
+    }
+
+    // By default, the tile beam reference direction is assumed to be equal
+    // to the station beam reference direction (for backward compatibility,
+    // and for non-HBA measurements).
+    return readDelayReference(ms, idField);
+}
+
+double readFreqReference(const MeasurementSet &ms,
+    unsigned int idDataDescription)
+{
+    // Read spectral window id.
+    ROMSDataDescColumns desc(ms.dataDescription());
+    ASSERT(desc.nrow() > idDataDescription);
+    ASSERT(!desc.flagRow()(idDataDescription));
+
+    const unsigned int idWindow = desc.spectralWindowId()(idDataDescription);
+
+    // Read reference frequency.
+    ROMSSpWindowColumns window(ms.spectralWindow());
+    ASSERT(window.nrow() > idWindow);
+    ASSERT(!window.flagRow()(idWindow));
+
+    return window.refFrequency()(idWindow);
+}
+
 namespace
 {
 
