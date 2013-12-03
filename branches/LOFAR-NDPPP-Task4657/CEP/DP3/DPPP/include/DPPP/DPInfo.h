@@ -118,6 +118,8 @@ namespace LOFAR {
         { return itsNCorr; }
       uint nchan() const
         { return itsNChan; }
+      uint startchan() const
+        { return itsStartChan; }
       uint origNChan() const
         { return itsOrigNChan; }
       uint nchanAvg() const
@@ -209,6 +211,7 @@ namespace LOFAR {
       string itsMSName;
       string itsAntennaSet;
       uint   itsNCorr;
+      uint   itsStartChan;
       uint   itsOrigNChan;
       uint   itsNChan;
       uint   itsChanAvg;
