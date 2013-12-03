@@ -285,6 +285,8 @@ int main(int argc, char **argv)
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
     for (size_t i = 0; i < gpuIds.size(); ++i) {
+      ASSERTSTR(gpuIds[i] < allDevices.size(), "Request to use GPU #" << gpuIds[i] << ", but found only " << allDevices.size() << " GPUs");
+
       gpu::Device &d = allDevices[gpuIds[i]];
 
       devices.push_back(d);
