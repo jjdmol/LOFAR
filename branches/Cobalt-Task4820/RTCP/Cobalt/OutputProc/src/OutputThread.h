@@ -31,6 +31,8 @@
 #include <CoInterface/StreamableData.h>
 #include <CoInterface/TABTranspose.h>
 #include <CoInterface/FinalMetaData.h>
+#include <CoInterface/Pool.h>
+
 #include "MSWriter.h"
 
 namespace LOFAR

@@ -1,4 +1,4 @@
-//# Writer.h: Write visibilites and beam-formed data
+//# SubbandWriter.h: Write visibilites and beam-formed data
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
