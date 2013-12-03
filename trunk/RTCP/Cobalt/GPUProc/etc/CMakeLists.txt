@@ -11,4 +11,4 @@ install(FILES
   parset-additions.d/default/StationStreams.parset
   DESTINATION etc/parset-additions.d/default)
 
-INSTALL(CODE "FILE(MAKE_DIRECTORY \${ENV}\${CMAKE_INSTALL_PREFIX}etc/parset-additions.d/override)")
+INSTALL(CODE "FILE(MAKE_DIRECTORY \${ENV}\${CMAKE_INSTALL_PREFIX}/etc/parset-additions.d/override)")
