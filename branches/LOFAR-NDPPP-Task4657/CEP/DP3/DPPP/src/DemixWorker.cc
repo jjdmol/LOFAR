@@ -28,7 +28,6 @@
 #include <DPPP/CursorUtilCasa.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
-#include <DPPP/EstimateMixed.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Simulate.h>
 #include <DPPP/SubtractNew.h>
@@ -436,6 +435,7 @@ namespace LOFAR {
                                     uint ntime, double time, double timeStep)
     {
       itsAteamAmplSel = false;
+      itsSolveStation = false;
       for (uint i=0; i<patchList.size(); ++i) {
         itsAteamAmpl[i] = 0;
         MatrixIterator<float> miter(itsAteamAmpl[i]);
@@ -485,8 +485,6 @@ namespace LOFAR {
         for (uint j=0; j<antCount.size(); ++j) {
           if (antCount[j] >= itsMix->minNBaseline()) {
             itsStationsToUse[i].push_back (j);
-            itsStatSourceDemixed(i,j)++;
-            itsSolveStation[j] = true;
           } else {
             if (itsMix->verbose() > 10) {
               cout << "ignore station " << j << " for source "
@@ -496,14 +494,20 @@ namespace LOFAR {
           }
         }
         // Use this A-team source if more than N stations have matched.
+        // If used, count the stations for it.
         // For fewer stations there are insufficient baselines.
         if (itsStationsToUse[i].size() >= itsMix->minNStation()) {
           itsSrcSet.push_back (i);
           itsNrSourcesDemixed[i]++;
+          for (uint j=0; j<itsStationsToUse[i].size(); ++j) {
+            uint st = itsStationsToUse[i][j];
+            itsStatSourceDemixed(i,st)++;
+            itsSolveStation[st] = true;
+          }
         } else {
           if (itsMix->verbose() > 10) {
             cout << "ignore source " << patchList[i]->name()
-                 << " (" << itsStationsToUse.size() << " stations)" << endl;
+                 << " (" << itsStationsToUse[i].size() << " stations)" << endl;
           }
         }
       }
@@ -533,7 +537,7 @@ namespace LOFAR {
                                    const bool* selbl)
     {
       // Take the median for only the baselines with sufficient amplitude.
-      // Therefore copy data of those baselines.
+      // Copy the amplitudes of those baselines to make them contiguous.
       const IPosition& shp = ampl.shape();
       float* tmp = &(itsTmpAmpl[0]);
       uint nrtmp = 0;
@@ -876,7 +880,11 @@ namespace LOFAR {
                 DBGASSERT (ph1 < bufOut.data()+bufOut.size());
                 DBGASSERT (ph2 < bufOut.data()+bufOut.size());
                 DBGASSERT (weightPtr < weightSums.data() + weightSums.size());
-                *ph1 = sum[j] / double(*weightPtr++);
+                if (*weightPtr == 0) {
+                  *ph1 = 0;
+                } else {
+                  *ph1 = sum[j] / double(*weightPtr++);
+                }
                 *ph2 = conj(*ph1);
                 ph1 += itsNDir*itsNDir;
                 ph2 += itsNDir*itsNDir;
@@ -1169,8 +1177,8 @@ namespace LOFAR {
                 // direction of source to subtract. This is required because at
                 // the resolution of the residual the UVW coordinates for
                 // directions other than the target are unavailable (unless the
-                // resolution of the residual is equal to the resolution at which
-                // the Jones matrices were estimated, of course).
+                // resolution of the residual is equal to the resolution at
+                // which the Jones matrices were estimated, of course).
                 cursor<double> cr_uvw_split = casa_cursor(itsUVW);
                 rotateUVW (itsMix->phaseRef(),
                            itsMix->ateamList()[drOrig]->position(), nSt,

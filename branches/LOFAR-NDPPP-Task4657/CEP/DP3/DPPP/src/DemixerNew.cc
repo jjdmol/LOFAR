@@ -147,14 +147,14 @@ namespace LOFAR {
       uint ntimes = (nnodemix + nignore + ndeproject +
                      nincludeStrong + nincludeClose);
       // Show statistics.
-      showStat (os, nconverged,     nsolves, "Converged solves:      ", "cells");
+      showStat (os, nconverged,    nsolves, "Converged solves:      ", "cells");
       os << "  Average nr of iterations in converged solves: "
          << uint(double(niter)/nconverged + 0.5) << endl;
-      showStat (os, nnodemix,       ntimes,  "No demixing:           ", "times");
-      showStat (os, nignore,        ntimes,  "Target ignored:        ", "times");
-      showStat (os, ndeproject,     ntimes,  "Target deprojected:    ", "times");
-      showStat (os, nincludeStrong, ntimes,  "Strong target included:", "times");
-      showStat (os, nincludeClose,  ntimes,  "Close target included: ", "times");
+      showStat (os, nnodemix,       ntimes, "No demixing:           ", "times");
+      showStat (os, nignore,        ntimes, "Target ignored:        ", "times");
+      showStat (os, ndeproject,     ntimes, "Target deprojected:    ", "times");
+      showStat (os, nincludeStrong, ntimes, "Strong target included:", "times");
+      showStat (os, nincludeClose,  ntimes, "Close target included: ", "times");
       // Show how often a source/station is demixed.
       os << endl << "Percentage of times a station/source is demixed:" << endl;
       os << setw(15) << " ";
@@ -198,12 +198,12 @@ namespace LOFAR {
         }
         os << setw(13) << "Total" << endl;
         os << " baseline";
-        for (size_t dr=0; dr<ndir+1; ++dr) {
+        for (size_t dr=0; dr<ndir; ++dr) {
           if (nsources[dr] > 0) {
             os << "  mean stddev";
           }
         }
-        os << endl;
+        os << "  mean stddev" << endl;
         vector<double> totsump(ndir+1, 0.);
         vector<double> totm2p (ndir+1, 0.);
         vector<size_t> totnrp (ndir+1, 0);

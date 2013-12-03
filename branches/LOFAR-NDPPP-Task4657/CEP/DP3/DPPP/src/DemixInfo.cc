@@ -330,10 +330,10 @@ namespace LOFAR {
       os << "  demixtimestep:      " << itsNTimeAvg << endl;
       os << "  chunksize:          " << itsChunkSize << endl;
       os << "  ntimechunk:         " << itsNTimeChunk << endl;
-      os << "  demix";
-      itsSelBL.show (os, "    ");
       os << "  target estimate";
       itsSelBLTarget.show (os, "    ");
+      os << "  demix";
+      itsSelBL.show (os, "    ");
     }
 
     vector<Patch::ConstPtr>
