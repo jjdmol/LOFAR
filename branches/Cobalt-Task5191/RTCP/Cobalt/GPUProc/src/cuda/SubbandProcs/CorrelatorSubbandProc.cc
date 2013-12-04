@@ -466,7 +466,6 @@ namespace LOFAR
 
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
-      LOG_DEBUG_STR("nrBlocksPerIntegration = " << nblock);
       
       // We don't want to copy the data if we don't need to integrate.
       if (nblock == 1) {
