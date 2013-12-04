@@ -1,4 +1,4 @@
-//# IntToFloat.cu: Convert integer input to float; transpose time and pol dims
+//# FFTShift.cu: multyply odd samples with -1 for correct fft functionality
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,20 +18,10 @@
 //#
 //# $Id$
 
-#include "IntToFloat.cuh"
+#include "gpu_math.cuh"
 
-//#if NR_BITS_PER_SAMPLE   ==  4
-//typedef char1  SampleType
-#if NR_BITS_PER_SAMPLE ==  8
-typedef char2  SampleType;
-#elif NR_BITS_PER_SAMPLE == 16
-typedef short2 SampleType;
-#else
-#error unsupported NR_BITS_PER_SAMPLE: must be 4, 8, or 16
-#endif
-
-typedef SampleType (*SampledDataType)  [NR_STATIONS][NR_SAMPLES_PER_SUBBAND][NR_POLARIZATIONS];
-typedef float2     (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLES_PER_SUBBAND];
+typedef float2 (*OuputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_SUBBAND];
+typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_SUBBAND];
 
 /**
  * This kernel performs a conversion of the integer valued input to floats and
@@ -58,26 +48,23 @@ typedef float2     (*ConvertedDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_SAMPLE
  */
 
 extern "C" {
-__global__ void intToFloat(void *convertedDataPtr,
-                           const void *sampledDataPtr)
+__global__ void intToFloat(void *outputDataPtr,
+                           const void *inputDataPtr)
 {
-  ConvertedDataType convertedData = (ConvertedDataType)convertedDataPtr;
-  SampledDataType   sampledData   = (SampledDataType)  sampledDataPtr;
+  InputDataType input = (InputDataType)convertedDataPtr;
+  OuputDataType output   = (OuputDataType)  sampledDataPtr;
 
-  uint station = blockIdx.y;
+  // fasted dims
+  unsigned sample        = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned station       = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned channel      = blockIdx.z * blockDim.z + threadIdx.z;
 
-  for (uint time = threadIdx.x; time < NR_SAMPLES_PER_SUBBAND; time += blockDim.x)
+  if (sample % 2 != 0) // if an odd sample
   {
-    float4 sample;
-    sample = make_float4(convertIntToFloat((*sampledData)[station][time][0].x),
-                         convertIntToFloat((*sampledData)[station][time][0].y),
-                         convertIntToFloat((*sampledData)[station][time][1].x), 
-                         convertIntToFloat((*sampledData)[station][time][1].y));
-
-    float2 sampleX = make_float2(sample.x, sample.y);
-    (*convertedData)[station][0][time] = sampleX;
-    float2 sampleY = make_float2(sample.z, sample.w);
-    (*convertedData)[station][1][time] = sampleY;
+    float2 pol0 = (*input)[station][0][channel][sample];
+    float2 pol1 = (*input)[station][1][channel][sample];
+    (*output)[station][0][channel][sample] = pol0 * -1.0f;  
+    (*output)[station][1][channel][sample] = pol1 * -1.0f;
   }
 
 }
