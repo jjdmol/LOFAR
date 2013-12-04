@@ -129,17 +129,8 @@ namespace BBS {
         itsPatchId (patchId)
     {}
 
-    // Acd a source direction to determine the average patch direction.
-    void add (double ra, double dec, double flux)
-    {
-      // Add the position in xyz coordinates.
-      // Use the flux as the weight.
-      double cosDec = cos(dec);
-      itsSumX += cos(ra) * cosDec * flux;
-      itsSumY += sin(ra) * cosDec * flux;
-      itsSumZ += sin(dec) * flux;
-      itsSumFlux += flux;
-    }
+    // Add a source direction to determine the average patch direction.
+    void add (double ra, double dec, double flux);
 
     // Get the total flux of the patch.
     double getFlux() const
@@ -147,9 +138,9 @@ namespace BBS {
 
     // Get the patch direction (flux-weighted average direction of its sources).
     double getRa() const
-      { return atan2(itsSumY/itsSumFlux, itsSumX/itsSumFlux); }
+      { return std::atan2(itsSumY/itsSumFlux, itsSumX/itsSumFlux); }
     double getDec() const
-      { return asin(itsSumZ/itsSumFlux); }
+      { return std::asin(itsSumZ/itsSumFlux); }
 
     // Get the patchId.
     uint getPatchId() const

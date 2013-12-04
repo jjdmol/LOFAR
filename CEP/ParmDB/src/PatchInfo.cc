@@ -35,6 +35,17 @@
 namespace LOFAR {
 namespace BBS {
 
+  void PatchSumInfo::add (double ra, double dec, double flux)
+  {
+    // Add the position in xyz coordinates.
+    // Use the flux as the weight.
+    double cosDec = cos(dec);
+    itsSumX += cos(ra) * cosDec * flux;
+    itsSumY += sin(ra) * cosDec * flux;
+    itsSumZ += sin(dec) * flux;
+    itsSumFlux += flux;
+  }
+
   std::ostream& operator<< (std::ostream& os, const PatchInfo& info)
   {
     os << "patch=" << info.getName() << " cat=" << info.getCategory()
