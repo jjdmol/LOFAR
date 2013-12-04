@@ -50,17 +50,17 @@ namespace LOFAR { namespace BBS  {
   Record (ParmFacade::*fgetvalues0)(const string&,
                                     double, double,
                                     double, double,
-                                    bool) = &ParmFacade::getValues;
+                                    bool, bool) = &ParmFacade::getValues;
   Record (ParmFacade::*fgetvalues1)(const string&,
                                     double, double, double,
                                     double, double, double,
-                                    bool) = &ParmFacade::getValues;
+                                    bool, bool) = &ParmFacade::getValues;
   Record (ParmFacade::*fgetvalues2)(const string&,
                                     const vector<double>&,
                                     const vector<double>&,
                                     const vector<double>&,
                                     const vector<double>&,
-                                    bool) = &ParmFacade::getValues;
+                                    bool, bool) = &ParmFacade::getValues;
 
   void pyparmdb()
   {
@@ -83,7 +83,8 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("efreq")= 1e30,
 	     boost::python::arg("stime")=-1e30,
 	     boost::python::arg("etime")= 1e30,
-	     boost::python::arg("asStartEnd")=true))
+	     boost::python::arg("asStartEnd")=true,
+	     boost::python::arg("includeDefaults")=false))
       .def ("_getValues", fgetvalues1,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
@@ -92,14 +93,16 @@ namespace LOFAR { namespace BBS  {
 	     boost::python::arg("stime"),
 	     boost::python::arg("etime"),
 	     boost::python::arg("timestep"),
-	     boost::python::arg("asStartEnd")=true))
+	     boost::python::arg("asStartEnd")=true,
+	     boost::python::arg("includeDefaults")=false))
       .def ("_getValuesVec", fgetvalues2,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq"),
 	     boost::python::arg("efreq"),
 	     boost::python::arg("stime"),
 	     boost::python::arg("etime"),
-	     boost::python::arg("asStartEnd")=true))
+	     boost::python::arg("asStartEnd")=true,
+	     boost::python::arg("includeDefaults")=false))
       .def ("_getValuesGrid", &ParmFacade::getValuesGrid,
  	    (boost::python::arg("parmnamepattern"),
 	     boost::python::arg("sfreq")=-1e30,
