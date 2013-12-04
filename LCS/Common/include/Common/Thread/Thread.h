@@ -124,8 +124,10 @@ class Thread
           case SCHED_OTHER:
             return "SCHED_OTHER (normal)";
 
+#ifdef SCHED_BATCH
           case SCHED_BATCH:
             return "SCHED_BATCH (cpu intensive)";
+#endif
 
 #ifdef SCHED_IDLE
           case SCHED_IDLE:
