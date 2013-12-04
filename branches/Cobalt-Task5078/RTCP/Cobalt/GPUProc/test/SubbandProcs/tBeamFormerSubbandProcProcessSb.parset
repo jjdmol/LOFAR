@@ -3,6 +3,7 @@ Cobalt.delayCompensation		 = F
 Observation.sampleClock			 = 200
 Observation.nrBitsPerSample  = 16
 Cobalt.blockSize             = 65536
+Cobalt.nrDelayCompensationChannels       = 64
 
 Observation.VirtualInstrument.stationList = [CS002]
 Observation.antennaSet = HBA_DUAL

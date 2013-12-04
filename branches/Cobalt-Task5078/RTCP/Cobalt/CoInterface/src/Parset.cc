@@ -474,21 +474,29 @@ namespace LOFAR
         // Parse global settings
 
         // 4096 channels is enough, but allow parset override.
-        const unsigned maxNrHighResolutionChannels = 4096;
-        settings.beamFormer.nrHighResolutionChannels =
-            getUint32("Cobalt.nrHighResolutionChannels", maxNrHighResolutionChannels);
-        ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
-            settings.beamFormer.nrHighResolutionChannels < 65536,
-            "Parset: nr high reso channels must be a power of 2 and < 64k");
+        if (!isDefined("Cobalt.nrHighResolutionChannels")) {
+          settings.beamFormer.nrHighResolutionChannels = 4096;
+        } else {
+          settings.beamFormer.nrHighResolutionChannels =
+              getUint32("Cobalt.nrHighResolutionChannels");
+          ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
+              settings.beamFormer.nrHighResolutionChannels < 65536,
+              "Parset: Cobalt.nrHighResolutionChannels must be a power of 2 and < 64k");
+        }
 
-        unsigned nrDelayCompCh = calcNrDelayCompensationChannels(settings);
-        nrDelayCompCh = getUint32("Cobalt.nrDelayCompensationChannels", nrDelayCompCh);
-        if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels)
+        unsigned nrDelayCompCh;
+        if (!isDefined("Cobalt.nrDelayCompensationChannels")) {
+          nrDelayCompCh = calcNrDelayCompensationChannels(settings);
+        } else {
+          nrDelayCompCh = getUint32("Cobalt.nrDelayCompensationChannels");
+        }
+        if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels) {
           nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
+        }
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
         LOG_INFO_STR("Parset: internal #channels: delay compensation: " <<
-                     settings.beamFormer.nrDelayCompensationChannels <<
-                     "; high reso: " << settings.beamFormer.nrHighResolutionChannels);
+            settings.beamFormer.nrDelayCompensationChannels <<
+            "; high reso: " << settings.beamFormer.nrHighResolutionChannels);
 
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -607,9 +615,9 @@ namespace LOFAR
     // pos and ref must each have at least size 3.
     double Parset::distanceVec3(const vector<double>& pos,
                                 const vector<double>& ref) const {
-      double dx = pos[0] - ref[0];
-      double dy = pos[1] - ref[1];
-      double dz = pos[2] - ref[2];
+      double dx = pos.at(0) - ref.at(0);
+      double dy = pos.at(1) - ref.at(1);
+      double dz = pos.at(2) - ref.at(2);
       return std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
