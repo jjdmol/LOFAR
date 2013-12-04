@@ -19,15 +19,15 @@
 #
 # $Id$
 
-from _stationresponse import StationResponse
+import _stationresponse
 
-class stationresponse(StationResponse):
+class stationresponse(object):
     """
     The Python interface to the LOFAR station beam model.
     """
 
-    def __init__ (self, msname, inverse = False, useElementBeam = True,
-        useArrayFactor = True, useChannelFreq = False):
+    def __init__ (self, msname, inverse = False, useElementResponse = True,
+        useArrayFactor = True, useChanFreq = False):
         """Create a stationresponse object that can be used to evaluate the
         LOFAR beam for the given Measurement Set.
 
@@ -39,12 +39,12 @@ class stationresponse(StationResponse):
           Name of the Measurement Set.
         `inverse`
           Compute the inverse of the LOFAR beam (default False).
-        `useElementBeam`
+        `useElementResponse`
           Include the effect of the dual dipole (element) beam (default True).
         `useArrayFactor`
           Include the effect of the station and tile array factor (default
           True).
-        `useChannelFreq`
+        `useChanFreq`
           Compute the phase shift for the station beamformer using the channel
           frequency instead of the subband reference frequency. This option
           should be enabled for Measurement Sets that contain multiple subbands
@@ -64,12 +64,12 @@ class stationresponse(StationResponse):
             time = subtable.getcell("TIME", 0)
             print time, response.evaluateChannel(time, 0, 0)
         """
-        StationResponse.__init__ (self, msname, inverse, useElementBeam,
-          useArrayFactor, useChannelFreq)
+        self._response = _stationresponse.StationResponse(msname, inverse,
+          useElementResponse, useArrayFactor, useChanFreq)
 
     def version (self, type='other'):
         """Show the software version."""
-        return self._version (type)
+        return self._response.version (type)
 
     def setRefDelay (self, ra, dec):
         """Set the reference direction used by the station beamformer. By
@@ -80,7 +80,7 @@ class stationresponse(StationResponse):
         `dec`
           Declination (in radians, J2000)
         """
-        self._setRefDelay(ra, dec)
+        self._response.setRefDelay(ra, dec)
 
     def setRefTile (self, ra, dec):
         """Set the reference direction used by the analog tile beamformer
@@ -93,7 +93,7 @@ class stationresponse(StationResponse):
         `dec`
           Declination (in radians, J2000)
         """
-        self._setRefTile(ra, dec)
+        self._response.setRefTile(ra, dec)
 
     def setDirection (self, ra, dec):
         """Set the direction of interest (can be and often will be different
@@ -104,7 +104,7 @@ class stationresponse(StationResponse):
         `dec`
           Declination (in radians, J2000)
         """
-        self._setDirection(ra, dec)
+        self._response.setDirection(ra, dec)
 
     def evaluate (self, time):
         """Compute the beam Jones matrix for all stations and channels at the
@@ -114,7 +114,7 @@ class stationresponse(StationResponse):
         `time`
           Time (MJD in seconds)
         """
-        return self._evaluate0 (time)
+        return self._response.evaluate0(time)
 
     def evaluateStation (self, time, station):
         """Compute the beam Jones matrix for all channels at the given time for
@@ -126,7 +126,7 @@ class stationresponse(StationResponse):
         `station`
           Station number (as in the ANTENNA table of the Measurement Set).
         """
-        return self._evaluate1 (time, station)
+        return self._response.evaluate1(time, station)
 
     def evaluateChannel (self, time, station, channel):
         """Compute the beam Jones matrix for the given time, station, and
@@ -142,4 +142,4 @@ class stationresponse(StationResponse):
           Channel number (as in the SPECTRAL_WINDOW table of the Measurement
           Set).
         """
-        return self._evaluate2 (time, station, channel)
+        return self._response.evaluate2(time, station, channel)

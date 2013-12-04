@@ -24,7 +24,6 @@ lofar_add_library(bbskernel
   SolverInterfaceTypes.cc
   StationExprLOFAR.cc
   StationLOFAR.cc
-  StationResponse.cc
   UVWFlagger.cc
   VisBuffer.cc
   VisDimensions.cc

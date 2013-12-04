@@ -92,15 +92,18 @@ const JonesMatrix::View StationResponse::evaluateImpl(const Grid &grid,
     ASSERT(!tile0(2).isComplex() && tile0(2).nx() == 1
         && static_cast<size_t>(tile0(2).ny()) == nTime);
 
-    if(itsUseArrayFactor && itsUseElementResponse)
+    if(itsUseArrayFactor)
     {
-        return evaluateImplResponse(grid, direction, station0, tile0);
+        if(itsUseElementResponse)
+        {
+            return evaluateImplResponse(grid, direction, station0, tile0);
+        }
+        else
+        {
+            return evaluateImplArrayFactor(grid, direction, station0, tile0);
+        }
     }
-    else if(!itsUseElementResponse)
-    {
-        return evaluateImplArrayFactor(grid, direction, station0, tile0);
-    }
-    else if(!itsUseArrayFactor)
+    else if(itsUseElementResponse)
     {
         return evaluateImplElementResponse(grid, direction);
     }
