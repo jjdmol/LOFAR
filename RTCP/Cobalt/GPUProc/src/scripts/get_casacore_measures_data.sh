@@ -10,7 +10,7 @@ working_dir=$HOME/casacore
 dir_prefix=IERS-
 
 
-update_id=$dir_prefix`date +%FT%T.%N`  # e.g. measures_data-2013-09-26T01:58:30.098006623
+update_id=$dir_prefix`date --utc +%FT%T.%N`  # e.g. measures_data-2013-09-26T01:58:30.098006623
 if [ $? -ne 0 ]; then exit 1; fi
 measures_ftp_path=ftp://ftp.atnf.csiro.au/pub/software/measures_data
 measures_data_filename=measures_data.tar.bz2
