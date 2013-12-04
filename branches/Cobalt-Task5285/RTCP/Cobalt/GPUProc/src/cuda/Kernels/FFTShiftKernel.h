@@ -1,4 +1,4 @@
-//# IntToFloatKernel.h
+//# FFTShiftKernel.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_INT_TO_FLOAT_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_INT_TO_FLOAT_KERNEL_H
+#ifndef LOFAR_GPUPROC_CUDA_FFT_SHIFT_KERNEL_H
+#define LOFAR_GPUPROC_CUDA_FFT_SHIFT_KERNEL_H
 
 #include <CoInterface/Parset.h>
 
