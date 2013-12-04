@@ -28,6 +28,7 @@
 #include <ParmDB/SourceDB.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
+#include <set>
 
 namespace LOFAR
 {

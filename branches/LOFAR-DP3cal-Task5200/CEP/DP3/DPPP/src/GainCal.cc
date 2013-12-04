@@ -33,6 +33,7 @@
 #include <Common/ParameterSet.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/OpenMP.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/File.h>
 #include <iostream>
