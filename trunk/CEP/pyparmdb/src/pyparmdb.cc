@@ -72,7 +72,8 @@ namespace LOFAR { namespace BBS  {
       .def ("_getRange", &ParmFacade::getRange,
  	    (boost::python::arg("parmnamepattern")=""))
       .def ("_getNames", &ParmFacade::getNames,
- 	    (boost::python::arg("parmnamepattern")=""))
+ 	    (boost::python::arg("parmnamepattern")="",
+	     boost::python::arg("includeDefaults")=false))
       .def ("_getDefNames", &ParmFacade::getDefNames,
  	    (boost::python::arg("parmnamepattern")=""))
       .def ("_getDefValues", &ParmFacade::getDefValues,

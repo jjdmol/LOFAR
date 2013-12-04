@@ -64,11 +64,15 @@ class parmdb(ParmDB):
         """
         return self._getRange (parmnamepattern)
 
-    def getNames (self, parmnamepattern=''):
+    def getNames (self, parmnamepattern='', includeDefaults=False):
 	"""Return the list of matching parameter names with actual values.
 
-        The pattern must be given as a shell-like filename pattern.
-        An empty pattern (the default) means '*' (thus all names).
+        parmnamepattern
+          Parameter name pattern given as a shell-like filename pattern.
+          An empty pattern (the default) means '*' (thus all names).
+        includeDefaults
+          True  = include names of  parameters only having a default value
+          False = only use parameters having true values
 
         """
         return self._getNames (parmnamepattern)
