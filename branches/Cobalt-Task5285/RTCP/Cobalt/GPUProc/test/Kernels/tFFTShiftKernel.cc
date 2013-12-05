@@ -49,45 +49,44 @@ typedef complex<float> fcomplex;
 struct ParsetSUT
 {
   size_t
-  timeIntegrationFactor,
   nrChannels,
-  nrOutputSamples,
   nrStations,
+  nrSamplesSubband,
   nrInputSamples,
-  blockSize;
+  nrOutputSamples,
+  nrBlockSize;
 
   Parset parset;
 
-  ParsetSUT(size_t inrChannels = 21,
-    size_t inrOutputSamples = 1024,
-    size_t inrStations = 15,
-    size_t inrTabs = 16,
-    size_t itimeIntegrationFactor = 1,
-    string stokes = "IQUV")
+  ParsetSUT(size_t inrChannels,
+    size_t inrStations,
+    size_t inrTabs,
+    size_t inrSamplesSubband ,
+    string stokes )
     :
-    timeIntegrationFactor(itimeIntegrationFactor),
     nrChannels(inrChannels),
-    nrOutputSamples(inrOutputSamples),
     nrStations(inrStations),
-    nrInputSamples(nrOutputSamples * timeIntegrationFactor),
-    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples)
+    nrSamplesSubband(inrSamplesSubband),
+    nrInputSamples(nrSamplesSubband),
+    nrOutputSamples(nrInputSamples),
+    nrBlockSize(nrInputSamples)
   {
+    cout << ">>>>>>>>>>>>>>>>>nr nrStations:" << inrStations << endl;
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
-    parset.add("OLAP.CNProc_CoherentStokes.timeIntegrationFactor",
-      lexical_cast<string>(timeIntegrationFactor));
     parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
       lexical_cast<string>(nrChannels));
     parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize",
-      lexical_cast<string>(blockSize));
+      lexical_cast<string>(nrBlockSize));
     parset.add("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(inrTabs));
     parset.add("Observation.DataProducts.Output_Beamformed.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
     parset.add("Observation.DataProducts.Output_Beamformed.locations", str(format("[%d*:.]") % nr_files));
     parset.updateSettings();
+
   }
 };
 
@@ -95,126 +94,135 @@ struct ParsetSUT
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
 {
-  ParsetSUT sut;
+  ParsetSUT sut(1, 2, 2, 1024, "IQUV");
   const ObservationSettings::BeamFormer::StokesSettings &settings =
     sut.parset.settings.beamFormer.coherentSettings;
-  CHECK_EQUAL(sut.timeIntegrationFactor, settings.timeIntegrationFactor);
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
+
   CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
-  CHECK_EQUAL(sut.nrInputSamples, settings.nrSamples(sut.blockSize));
+
 }
-//
-//// Test if we can succesfully create a KernelFactory
-//TEST(KernelFactory)
-//{
-//  ParsetSUT sut;
-//  KernelFactory<CoherentStokesKernel> kf(sut.parset);
-//}
-//
-//struct SUTWrapper : ParsetSUT
-//{
-//  gpu::Device device;
-//  gpu::Context context;
-//  gpu::Stream stream;
-//  size_t nrStokes;
-//  size_t nrTabs;
-//  KernelFactory<CoherentStokesKernel> factory;
-//  MultiDimArrayHostBuffer<fcomplex, 4> hInput;
-//  MultiDimArrayHostBuffer<float, 4> hOutput;
-//  MultiDimArrayHostBuffer<float, 4> hRefOutput;
-//  CoherentStokesKernel::Buffers buffers;
-//  scoped_ptr<CoherentStokesKernel> kernel;
-//
-//  SUTWrapper(size_t inrChannels = 13,
-//    size_t inrOutputSamples = 1024,
-//    size_t inrStations = 43,
-//    size_t inrTabs = 21,
-//    size_t itimeIntegrationFactor = 1) :
-//    ParsetSUT(inrChannels, inrOutputSamples, inrStations,
-//    inrTabs, itimeIntegrationFactor),
-//    device(gpu::Platform().devices()[0]),
-//    context(device),
-//    stream(context),
-//    nrStokes(parset.settings.beamFormer.coherentSettings.nrStokes),
-//    nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
-//    factory(parset),
-//    hInput(
-//    boost::extents[nrTabs][NR_POLARIZATIONS][nrInputSamples][nrChannels],
-//    context),
-//    hOutput(
-//    boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
-//    context),
-//    hRefOutput(
-//    boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
-//    context),
-//    buffers(
-//    gpu::DeviceMemory(
-//    context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
-//    gpu::DeviceMemory(
-//    context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA))),
-//    kernel(factory.create(stream, buffers))
-//  {
-//    initializeHostBuffers();
-//  }
-//
-//  // Initialize all the elements of the input host buffer to zero, and all
-//  // elements of the output host buffer to NaN.
-//  void initializeHostBuffers()
-//  {
-//    cout << "\nInitializing host buffers..."
-//      << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
-//      << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
-//      << endl;
-//    CHECK_EQUAL(buffers.input.size(), hInput.size());
-//    CHECK_EQUAL(buffers.output.size(), hOutput.size());
-//    fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
-//    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
-//    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
-//  }
-//
-//  void runKernel()
-//  {
-//    // Dummy BlockID
-//    BlockID blockId;
-//    // Copy input data from host- to device buffer synchronously
-//    stream.writeBuffer(buffers.input, hInput, true);
-//    // Launch the kernel
-//    kernel->enqueue(blockId);
-//    // Copy output data from device- to host buffer synchronously
-//    stream.readBuffer(hOutput, buffers.output, true);
-//  }
-//
-//};
-//
-//// An input of all zeros should result in an output of all zeros.
-//TEST(ZeroTest)
-//{
-//  // start the test vector at the largest size
-//  size_t tabs_sizes[] = { 33, 1, 13 };
-//  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-//  size_t channel_sizes[] = { 41, 1, 13 };
-//  std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
-//  size_t sample_sizes[] = { 1024, 16, 512 };
-//  std::vector<size_t> samples(sample_sizes, sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
-//
-//  //loop over the three input vectors
-//  for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
-//  for (std::vector<size_t>::const_iterator ichan = channels.begin(); ichan != channels.end(); ++ichan)
-//  for (std::vector<size_t>::const_iterator isamp = samples.begin(); isamp != samples.end(); ++isamp)
-//  {
-//    cout << "*******testing tabs: " << *itab
-//      << " channels: " << *ichan
-//      << " samples: " << *isamp << endl;
-//    SUTWrapper sut(*ichan, *isamp, 43, *itab);
-//    // Host buffers are properly initialized for this test. Just run the kernel. 
-//    sut.runKernel();
-//    CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//      sut.hOutput.data(),
-//      sut.hOutput.num_elements());
-//  }
-//
-//}
+
+// Test if we can succesfully create a KernelFactory
+TEST(KernelFactory)
+{
+  ParsetSUT sut(1, 2, 2, 1024,"IQUV");
+  KernelFactory<FFTShiftKernel> kf(sut.parset);
+
+}
+
+
+struct SUTWrapper : ParsetSUT
+{
+  gpu::Device device;
+  gpu::Context context;
+  gpu::Stream stream;
+  size_t nrStokes;
+  size_t nrTabs;
+  KernelFactory<FFTShiftKernel> factory;
+  MultiDimArrayHostBuffer<fcomplex, 4> hInput;
+  MultiDimArrayHostBuffer<float, 4> hOutput;
+  MultiDimArrayHostBuffer<float, 4> hRefOutput;
+  FFTShiftKernel::Buffers buffers;
+  scoped_ptr<FFTShiftKernel> kernel;
+
+  SUTWrapper(size_t inrChannels , size_t inrStations,
+    size_t inrTabs, size_t inrOutputinSamplesPerSuband) :
+    ParsetSUT(inrChannels,  inrStations,
+              inrTabs, inrOutputinSamplesPerSuband, "IQUV"),
+    device(gpu::Platform().devices()[0]),
+    context(device),
+    stream(context),
+    nrStokes(parset.settings.beamFormer.coherentSettings.nrStokes),
+    nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
+    factory(parset),
+    hInput(
+    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+    context),
+    hOutput(
+    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+    context),
+    hRefOutput(
+    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+    context),
+    buffers(
+    gpu::DeviceMemory(
+    context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
+    gpu::DeviceMemory(
+    context, factory.bufferSize(FFTShiftKernel::OUTPUT_DATA))),
+    kernel(factory.create(stream, buffers))
+  {
+    initializeHostBuffers();
+  }
+
+  // Initialize all the elements of the input host buffer to zero, and all
+  // elements of the output host buffer to NaN.
+  void initializeHostBuffers()
+  {
+    cout << "Kernel buffersize set to: " << factory.bufferSize(FFTShiftKernel::INPUT_DATA) << endl;
+    cout << "\nInitializing host buffers..."
+      << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
+      << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
+      << endl;
+    CHECK_EQUAL(buffers.input.size(), hInput.size());
+    CHECK_EQUAL(buffers.output.size(), hOutput.size());
+    fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
+    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
+    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
+  }
+
+  void runKernel()
+  {
+    // Dummy BlockID
+    BlockID blockId;
+    // Copy input data from host- to device buffer synchronously
+    stream.writeBuffer(buffers.input, hInput, true);
+    // Launch the kernel
+    kernel->enqueue(blockId);
+    // Copy output data from device- to host buffer synchronously
+    stream.readBuffer(hOutput, buffers.output, true);
+  }
+
+};
+
+// An input of all zeros should result in an output of all zeros.
+TEST(ZeroTest)
+{
+  // number of stations
+  size_t nrStations = 2;
+  // start the test vector at the largest size
+  size_t tabs_sizes[] = { 1 }; // 13, 33};
+
+  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
+  size_t channel_sizes[] = { 1 }; // , 13, 41 };
+
+  std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
+  size_t sample_sizes[] = { 256 }; //, 16, 512 };
+  std::vector<size_t> samples(sample_sizes, sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
+
+  //loop over the three input vectors
+  for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
+  for (std::vector<size_t>::const_iterator ichan = channels.begin(); ichan != channels.end(); ++ichan)
+  for (std::vector<size_t>::const_iterator isamp = samples.begin(); isamp != samples.end(); ++isamp)
+  {
+    cout << "*******testing tabs: " << *itab
+      << " channels: " << *ichan
+      << " samples: " << *isamp << endl;
+    SUTWrapper sut(*ichan, nrStations, *itab, *isamp);
+    // Host buffers are properly initialized for this test. Just run the kernel. 
+    CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+      sut.hOutput.data(),
+      sut.hOutput.num_elements());
+    cout << "Running test" << endl;
+    sut.runKernel();
+    CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+      sut.hOutput.data(),
+      sut.hOutput.num_elements());
+  }
+}
+
+// (size_t inrChannels , size_t inrStations, size_t inrTabs, size_t inrOutputinSamplesPerSuband)
 //
 //// ***********************************************************
 //// tests if the stokes parameters are calculate correctly. For a single sample

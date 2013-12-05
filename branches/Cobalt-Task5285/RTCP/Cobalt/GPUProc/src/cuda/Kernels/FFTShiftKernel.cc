@@ -42,16 +42,19 @@ namespace LOFAR
     string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
     string FFTShiftKernel::theirFunction = "FFTShift";
 
-    FFTShiftKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
-      nrBitsPerSample(ps.settings.nrBitsPerSample),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps,
+      unsigned channels):
+      Kernel::Parameters(ps)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FFTShiftKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_FFTShiftKernel.dat") % 
             ps.settings.observationID);
+      nrChannels = channels;
+
+
+      cout << "$#######nr nrStations:" << nrStations << endl;
     }
 
     FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
@@ -65,8 +68,12 @@ namespace LOFAR
 
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      setEnqueueWorkSizes( gpu::Grid(maxNrThreads, params.nrStations),
-                           gpu::Block(maxNrThreads, 1) );
+
+      cout << "************************ params.nrSamplesPerSubband:" << params.nrSamplesPerSubband << endl;
+      setEnqueueWorkSizes( gpu::Grid(params.nrSamplesPerSubband ,
+                           params.nrStations,
+                           params.nrChannels),
+                           gpu::Block(256, 1, 1) );
 
       unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
       nrOperations = (size_t) nrSamples * 2;
@@ -81,13 +88,25 @@ namespace LOFAR
     {
       switch (bufferType) {
       case FFTShiftKernel::INPUT_DATA:
-        return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+
+        cout << "**************************************" << endl
+          << (size_t)itsParameters.nrStations << endl
+          << NR_POLARIZATIONS << endl
+          << itsParameters.nrChannels << endl
+          << itsParameters.nrSamplesPerSubband << endl;
+        cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl;
+
+        return (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
+          itsParameters.nrChannels *
+            itsParameters.nrSamplesPerSubband *
+            sizeof(std::complex<float>);
+          
       case FFTShiftKernel::OUTPUT_DATA:
-        return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+        return  (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
+          itsParameters.nrChannels *
+          itsParameters.nrSamplesPerSubband *
+          sizeof(std::complex<float>);
+          
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -98,11 +117,9 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-      defs["NR_BITS_PER_SAMPLE"] =
-        lexical_cast<string>(itsParameters.nrBitsPerSample);
+
       return defs;
     }
 
   }
 }
-
