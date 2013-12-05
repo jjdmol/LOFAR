@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class IntToFloatKernel : public Kernel
+    class FFTShiftKernel : public Kernel
     {
     public:
       static std::string theirSourceFile;
@@ -52,7 +52,7 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
-      IntToFloatKernel(const gpu::Stream &stream,
+      FFTShiftKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
@@ -62,10 +62,10 @@ namespace LOFAR
     //# --------  Template specializations for KernelFactory  -------- #//
 
     template<> size_t
-    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const;
+      KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
-    KernelFactory<IntToFloatKernel>::compileDefinitions() const;
+      KernelFactory<FFTShiftKernel>::compileDefinitions() const;
   }
 
 }

@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "IntToFloatKernel.h"
+#include "FFTShiftKernel.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
@@ -39,22 +39,22 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    string IntToFloatKernel::theirSourceFile = "IntToFloat.cu";
-    string IntToFloatKernel::theirFunction = "intToFloat";
+    string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
+    string FFTShiftKernel::theirFunction = "FFTShift";
 
-    IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
     {
       dumpBuffers = 
-        ps.getBool("Cobalt.Kernels.IntToFloatKernel.dumpOutput", false);
+        ps.getBool("Cobalt.Kernels.FFTShiftKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%03d_IntToFloatKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_FFTShiftKernel.dat") % 
             ps.settings.observationID);
     }
 
-    IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
+    FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
@@ -77,14 +77,14 @@ namespace LOFAR
     //--------  Template specializations for KernelFactory  --------//
 
     template<> size_t 
-    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const
+      KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
-      case IntToFloatKernel::INPUT_DATA:
+      case FFTShiftKernel::INPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
-      case IntToFloatKernel::OUTPUT_DATA:
+      case FFTShiftKernel::OUTPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
             itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
@@ -94,7 +94,7 @@ namespace LOFAR
     }
 
     template<> CompileDefinitions
-    KernelFactory<IntToFloatKernel>::compileDefinitions() const
+      KernelFactory<FFTShiftKernel>::compileDefinitions() const
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);

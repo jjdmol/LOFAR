@@ -48,7 +48,7 @@ typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_S
  */
 
 extern "C" {
-__global__ void intToFloat(void *outputDataPtr,
+__global__ void FFTShift(void *outputDataPtr,
                            const void *inputDataPtr)
 {
   InputDataType input = (InputDataType)convertedDataPtr;

@@ -1,3 +1,3 @@
 #!/bin/bash
-./runctest.sh tCoherentStokesKernel
+./runctest.sh tFFTShiftKernel
 
