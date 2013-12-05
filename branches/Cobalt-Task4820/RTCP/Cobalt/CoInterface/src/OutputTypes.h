@@ -25,7 +25,10 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
+    /*
+     * Enumerating the basic types of data
+     * that Cobalt can output.
+     */
     enum OutputType
     {
       CORRELATED_DATA = 1,

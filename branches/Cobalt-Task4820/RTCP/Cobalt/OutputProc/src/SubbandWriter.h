@@ -37,6 +37,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * SubbandWriter is responsible for completely handling the reception
+     * and writing of one subband of correlated visibilities.
+     *
+     * It maintains an InputThread and SubbandOutputThread, connected by
+     * an internal Pool<> of data blocks.
+     */
     class SubbandWriter
     {
     public:

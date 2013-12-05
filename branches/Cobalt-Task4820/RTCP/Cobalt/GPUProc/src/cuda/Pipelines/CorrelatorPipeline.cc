@@ -128,7 +128,7 @@ namespace LOFAR
         try {
           outputData->write(outputStream.get(), true);
         } catch (Exception &ex) {
-          LOG_ERROR_STR("Dropping rest of subband " << id.globalSubbandIdx << ": " << ex);
+          LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
 
           outputStream = new NullStream;
         }

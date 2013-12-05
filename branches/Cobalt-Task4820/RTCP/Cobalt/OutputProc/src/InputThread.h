@@ -34,6 +34,16 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * InputThread receives data blocks from a Stream,
+     * and inserts them into a Pool<>, to be sent to
+     * an OutputThread.
+     *
+     * The Stream is created from the parset through using
+     * getStreamDescriptorBetweenIONandStorage.
+     *
+     * This class is designed to handle visibilities only.
+     */
     class InputThread
     {
     public:

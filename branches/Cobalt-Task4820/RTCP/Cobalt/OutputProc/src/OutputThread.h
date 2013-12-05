@@ -39,19 +39,33 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    /*
+     * OutputThread<T> manages the writing of data blocks to disk. It is
+     * responsible for:
+     *   1. Creating the data container (MS, HDF5, etc), including the
+     *      required meta data.
+     *   2. Processing data blocks from a Pool<T> pool, writing them to disk.
+     *   3. Producing LTA feedback.
+     *   4. Augmenting the data container with the FinalMetaData.
+     */
     template<typename T> class OutputThread
     {
     public:
       OutputThread(const Parset &, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix);
 
+      // Create the data container, and process blocks from outputPool.
       void           process();
 
-      // needed in createHeaders.cc
+      // Creates the data container. Needed in createHeaders.cc
       virtual void   createMS() = 0;
+
+      // Wrap-up the writing.
       void           cleanUp() const;
 
+      // Add FinalMetaData to the data container.
       void           augment(const FinalMetaData &finalMetaData);
 
+      // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;
 
     protected:
@@ -74,6 +88,9 @@ namespace LOFAR
     };
 
 
+    /*
+     * SubbandOutputThread specialises in creating LOFAR MeasurementSets (MS).
+     */
     class SubbandOutputThread: public OutputThread<StreamableData>
     {
     public:
@@ -83,6 +100,11 @@ namespace LOFAR
     };
 
 
+
+    /*
+     * TABOutputThread specialises in creating LOFAR HDF5 files corresponding
+     * to ICD003.
+     */
     class TABOutputThread: public OutputThread<TABTranspose::Block>
     {
     public:
