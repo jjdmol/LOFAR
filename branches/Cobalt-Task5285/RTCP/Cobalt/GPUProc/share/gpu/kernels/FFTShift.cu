@@ -20,7 +20,6 @@
 
 #include "gpu_math.cuh"
 
-typedef float2 (*OuputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_SUBBAND];
 typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_SUBBAND];
 
 /**
@@ -48,28 +47,23 @@ typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_S
  */
 
 extern "C" {
-__global__ void FFTShift(void *outputDataPtr,
-                           const void *inputDataPtr)
+__global__ void FFTShift(void *inputDataPtr)
 {
   InputDataType input = (InputDataType)inputDataPtr;
-  OuputDataType output = (OuputDataType)outputDataPtr;
 
   // fasted dims
   unsigned sample        = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned station       = blockIdx.y * blockDim.y + threadIdx.y;
   unsigned channel      = blockIdx.z * blockDim.z + threadIdx.z;
 
-  //if (false)
-  //if (sample % 2 != 0) // if an odd sample
-  //{
-  //  float2 pol0 = (*input)[station][0][channel][sample];
-  //  float2 pol1 = (*input)[station][1][channel][sample];
-  //  (*output)[station][0][channel][sample] = make_float2(0,0); // *-1.0f;
-  //  (*output)[station][1][channel][sample] = make_float2(0, 0); // *-1.0f;
-  //}
-
-
-
+  if (sample % 2 != 0) // if an odd sample
+  {
+    float2 pol0 = (*input)[station][0][channel][sample];
+    float2 pol1 = (*input)[station][1][channel][sample];
+    (*input)[station][0][channel][sample] = pol0 *-1.0f;
+    (*input)[station][1][channel][sample] = pol1 *-1.0f;
+  }
+  
 }
 
 }

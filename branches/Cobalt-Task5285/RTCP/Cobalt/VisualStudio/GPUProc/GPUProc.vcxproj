@@ -17,7 +17,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_incl.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\KernelFactory.h" />
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h" />
@@ -27,6 +26,7 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.h" />
@@ -56,7 +56,6 @@
     <ClInclude Include="..\..\GPUProc\src\gpu_utils.h" />
     <ClInclude Include="..\..\GPUProc\src\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\KernelFactory.h" />
-    <ClInclude Include="..\..\GPUProc\src\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\CoherentStokesKernel.h" />
@@ -66,6 +65,7 @@
     <ClInclude Include="..\..\GPUProc\src\Kernels\DedispersionChirpKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\DedispersionForwardFFTkernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\DelayAndBandPassKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\Filter_FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\FIR_FilterKernel.h" />
@@ -124,10 +124,6 @@
     <ClInclude Include="..\..\GPUProc\src\Storage\SSH.h" />
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcess.h" />
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcesses.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\BeamFormerSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\CorrelatorSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\UHEP_SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h" />
   </ItemGroup>
   <ItemGroup>
@@ -136,7 +132,6 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_wrapper.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\KernelFactory.cc" />
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.cc" />
@@ -146,6 +141,7 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.cc" />
@@ -208,7 +204,6 @@
     <ClCompile Include="..\..\GPUProc\src\Storage\SSH.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcesses.cc" />
-    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tBeamFormer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokes.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc" />
@@ -230,22 +225,24 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tKernelFunctions.cc" />
     <ClCompile Include="..\..\GPUProc\test\tBestEffortQueue.cc" />
     <ClCompile Include="..\..\GPUProc\test\tSSH.cc" />
     <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokesTranspose.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\FFTShift.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh" />
     <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cu" />
@@ -288,7 +285,10 @@
     <None Include="..\..\GPUProc\test\cuda\t_cuda_complex.cu" />
     <None Include="..\..\GPUProc\test\cuda\t_cuda_complex.sh" />
     <None Include="..\..\GPUProc\test\cuda\Vizualize_leakage.py" />
-    <None Include="..\..\GPUProc\test\Kernels\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.in_parset" />
@@ -299,11 +299,14 @@
     <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tKernelFunctions.sh" />
     <None Include="..\..\GPUProc\test\runrtcp.sh.in" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run" />
@@ -325,6 +328,9 @@
     <None Include="..\..\GPUProc\test\t_cpu_utils.in_parset" />
     <None Include="..\..\GPUProc\test\t_cpu_utils.run" />
     <None Include="..\..\GPUProc\test\t_cpu_utils.sh" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\GPUProc\test\Kernels\CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{93C5C054-7BF7-478E-A8B5-E0829597AEEA}</ProjectGuid>

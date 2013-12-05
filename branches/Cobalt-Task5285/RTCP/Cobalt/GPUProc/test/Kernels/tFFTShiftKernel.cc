@@ -122,8 +122,8 @@ struct SUTWrapper : ParsetSUT
   size_t nrTabs;
   KernelFactory<FFTShiftKernel> factory;
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
-  MultiDimArrayHostBuffer<float, 4> hOutput;
-  MultiDimArrayHostBuffer<float, 4> hRefOutput;
+  MultiDimArrayHostBuffer<fcomplex, 4> hOutput;
+  MultiDimArrayHostBuffer<fcomplex, 4> hRefOutput;
   FFTShiftKernel::Buffers buffers;
   scoped_ptr<FFTShiftKernel> kernel;
 
@@ -138,19 +138,19 @@ struct SUTWrapper : ParsetSUT
     nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
     factory(parset),
     hInput(
-    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
-    context),
+      boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+      context),
     hOutput(
-    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
-    context),
+      boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+      context),
     hRefOutput(
-    boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
-    context),
+      boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
+      context),
     buffers(
-    gpu::DeviceMemory(
-    context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
-    gpu::DeviceMemory(
-    context, factory.bufferSize(FFTShiftKernel::OUTPUT_DATA))),
+      gpu::DeviceMemory(
+        context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
+      gpu::DeviceMemory(
+      context, factory.bufferSize(FFTShiftKernel::OUTPUT_DATA))),
     kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
@@ -167,8 +167,8 @@ struct SUTWrapper : ParsetSUT
       << endl;
     CHECK_EQUAL(buffers.input.size(), hInput.size());
     CHECK_EQUAL(buffers.output.size(), hOutput.size());
-    fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
-    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
+    fill(hInput.data(), hInput.data() + hInput.num_elements(), fcomplex(0.0f, 0.0f));
+    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), fcomplex(4.0f, 2.0f));
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
   }
 
@@ -178,10 +178,11 @@ struct SUTWrapper : ParsetSUT
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
     stream.writeBuffer(buffers.input, hInput, true);
+    stream.writeBuffer(buffers.output, hOutput, true); // copy salte output to device
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, buffers.output, true);
+    stream.readBuffer(hOutput, buffers.input, true);
   }
 
 };
@@ -190,7 +191,7 @@ struct SUTWrapper : ParsetSUT
 TEST(ZeroTest)
 {
   // number of stations
-  size_t nrStations = 2;
+  size_t nrStations = 1;
   // start the test vector at the largest size
   size_t tabs_sizes[] = { 1 }; // 13, 33};
 
@@ -211,10 +212,8 @@ TEST(ZeroTest)
       << " samples: " << *isamp << endl;
     SUTWrapper sut(*ichan, nrStations, *itab, *isamp);
     // Host buffers are properly initialized for this test. Just run the kernel. 
-    CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-      sut.hOutput.data(),
-      sut.hOutput.num_elements());
-    cout << "Running test" << endl;
+
+
     sut.runKernel();
     CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
       sut.hOutput.data(),

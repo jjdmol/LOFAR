@@ -63,8 +63,7 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
+      setArg(0, buffers.input);
 
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
@@ -88,13 +87,6 @@ namespace LOFAR
     {
       switch (bufferType) {
       case FFTShiftKernel::INPUT_DATA:
-
-        cout << "**************************************" << endl
-          << (size_t)itsParameters.nrStations << endl
-          << NR_POLARIZATIONS << endl
-          << itsParameters.nrChannels << endl
-          << itsParameters.nrSamplesPerSubband << endl;
-        cout << "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" << endl;
 
         return (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
           itsParameters.nrChannels *
