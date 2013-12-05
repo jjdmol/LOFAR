@@ -1,4 +1,4 @@
-//# Format.h: Virtual baseclass
+//# GPUProcIO.h
 //# Copyright (C) 2009-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -16,25 +16,34 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: OutputThread.h 27094 2013-10-24 09:45:19Z mol $
 
-#ifndef LOFAR_STORAGE_FORMAT_H
-#define LOFAR_STORAGE_FORMAT_H
+#ifndef LOFAR_RTCP_STORAGE_GPUPROCIO_H
+#define LOFAR_RTCP_STORAGE_GPUPROCIO_H
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <string>
+#include <vector>
+
+#include <Stream/Stream.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/FinalMetaData.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-    class Format
-    {
-    public:
-      virtual ~Format();
-
-      virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian) = 0;
-    };
+    // Receive and process a full observation, being rank 'myRank'. Will:
+    //   * Receive a Parset over the controlStream
+    //   * Fulfill roles for parset.settings.outputProcHosts[myRank]:
+    //       - Start SubbandWriters/TABWriters
+    //       - Receive input and write output for all of them
+    //   * Call readFinalMetaData to obtain the final metadata from GPUProc,
+    //     and send it to all writers.
+    //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
+    //     and write it to GPUProc.
+    void process(Stream &controlStream, size_t myRank);
 
   } // namespace Cobalt
 } // namespace LOFAR
