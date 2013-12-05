@@ -50,7 +50,11 @@ echo "Working directory is `pwd`"
 haveGPU || exit 3
 
 # Check for input files
-if [ ! -e /var/scratch/mol/test_sets ]
+if [[ "`hostname -f`" =~ cb[mt][[:digit:]]{3}.control.lofar ]] && [ -d /globalhome/lofarbuild/var/scratch/mol/test_sets/3sec ]
+then
+  CBT_LOFARBUILD=/globalhome/lofarbuild
+fi
+if [ ! -e $CBT_LOFARBUILD/var/scratch/mol/test_sets ]
 then
   echo "No input files found -- aborting test." >&2
   exit 3
