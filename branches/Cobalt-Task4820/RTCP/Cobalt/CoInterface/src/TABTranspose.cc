@@ -176,7 +176,7 @@ void BlockCollector::finish() {
 
   if (!canDrop) {
     // Should have received everything
-    ASSERT((ssize_t)nrBlocks == lastEmitted + 1);
+    ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
   }
 
   // Signal end-of-stream
