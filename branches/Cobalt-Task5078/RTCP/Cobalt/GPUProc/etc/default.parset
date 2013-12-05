@@ -185,6 +185,11 @@ Observation.Beam[0].TiedArrayBeam[0].coherent=true
 Observation.DataProducts.Output_Beamformed.filenames=[BEAM000.h5]  # filename 
 Observation.DataProducts.Output_Beamformed.locations=[localhost:.] # host:directory
 
+# Number of channels used in the 1st FFT for delay compensation.
+# This value is auto-detected if the parset contains station
+# phase centers (ITRF coords), as in StationCalibration.parset
+Cobalt.nrDelayCompensationChannels=64
+
 # Number of channels used for the coherent dedispersion kernel
 Cobalt.Beamformer.dedispersionFFTsize=2048
 
