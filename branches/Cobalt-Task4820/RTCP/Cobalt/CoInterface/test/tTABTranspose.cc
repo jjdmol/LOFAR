@@ -446,7 +446,7 @@ SUITE(MultiReceiver) {
 #     pragma omp section
       {
 #       pragma omp parallel for num_threads(nrReceivers)
-        for (size_t r = 0; r < nrReceivers; ++r) {
+        for (int r = 0; r < nrReceivers; ++r) {
           LOG_DEBUG_STR("Receiver thread " << r);
 
           // Set up pool where all data ends up
@@ -505,7 +505,7 @@ SUITE(MultiReceiver) {
       {
 
 #       pragma omp parallel for num_threads(nrSenders)
-        for (size_t s = 0; s < nrSenders; ++s) {
+        for (int s = 0; s < nrSenders; ++s) {
           LOG_DEBUG_STR("Sender thread " << s);
 
           MultiSender::HostMap hostMap;
