@@ -281,13 +281,13 @@ class cLBA:
             
             # result is a sorted list on maxvalue
             result = search_oscillation(self.rcudata.getAll(), delta=4.0, start_sb=120, stop_sb=400)
-            if len(result) > 0:    
+            if len(result) > 1:    
                 clean = False
-                # get strongest signal, its on array position 0
-                peaks_sum, n_peaks, rcu  = result[0]
+                rcu, peaks_sum, n_peaks, rcu_low  = sorted(result[1:], reverse=True)[0] #result[1]
                 ant = rcu / 2
                 ant_polarity = rcu % 2
-                logger.info("RCU %d LBA %d Oscillation sum=%3.1f peaks=%d" %(rcu, self.lba.ant[ant].nr_pvss, peaks_sum, n_peaks))
+                logger.info("RCU %d LBA %d Oscillation sum=%3.1f peaks=%d low=%3.1fdB" %\
+                           (rcu, self.lba.ant[ant].nr_pvss, peaks_sum, n_peaks, rcu_low))
                 self.turnOffAnt(ant)
                 if ant_polarity == 0:
                     self.lba.ant[ant].x.osc = 1
@@ -634,21 +634,21 @@ class cHBA:
             
         delay_str = ('253,'* 16)[:-1]
         rsp_hba_delay(delay=delay_str, rcus=self.hba.selectList())    
-        self.rcudata.record(rec_time=1)
+        self.rcudata.record(rec_time=15)
         
         logger.debug("- test X -")
-        sum_noise = search_summator_noise(self.rcudata.getAllX(), start_sb=45, stop_sb=350)
+        sum_noise = search_summator_noise(self.rcudata.getAllX())
         for n in sum_noise:
-            tile, val, n_peaks = n
-            logger.info("RCU %d Tile %d Summator-Noise val=%3.1f peaks=%3.1f" %(self.hba.tile[tile].x.rcu, tile, val, n_peaks))
+            tile, cnt, n_peaks = n
+            logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].x.rcu, tile, cnt, n_peaks))
             self.hba.tile[tile].x.summator_noise = 1
             self.turnOffTile(tile)
         
         logger.debug("- test Y -")
-        sum_noise = search_summator_noise(self.rcudata.getAllY(), start_sb=45, stop_sb=350)
+        sum_noise = search_summator_noise(self.rcudata.getAllY())
         for n in sum_noise:
-            tile, val, n_peaks = n
-            logger.info("RCU %d Tile %d Summator-Noise val=%3.1f peaks=%3.1f" %(self.hba.tile[tile].y.rcu, tile, val, n_peaks))
+            tile, cnt, n_peaks = n
+            logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].y.rcu, tile, cnt, n_peaks))
             self.hba.tile[tile].y.summator_noise = 1
             self.turnOffTile(tile)
 
@@ -684,13 +684,14 @@ class cHBA:
             self.rcudata.record(rec_time=8)
             
             # result is a sorted list on maxvalue
-            result = search_oscillation(self.rcudata.getAll(), delta=9.0, start_sb=0, stop_sb=511) # start_sb=45, stop_sb=350
-            if len(result) > 0:    
+            result = search_oscillation(self.rcudata.getAll(), delta=6.0, start_sb=0, stop_sb=511) # start_sb=45, stop_sb=350
+            if len(result) > 1:    
                 clean = False
-                max_sum, n_peaks, rcu = result[0]
+                rcu, max_sum, n_peaks, rcu_low = sorted(result[1:], reverse=True)[0] #result[1]
                 tile = rcu / 2
                 tile_polarity  = rcu % 2
-                logger.info("RCU %d Tile %d Oscillation sum=%3.1f peaks=%d" %(rcu, tile, max_sum, n_peaks))
+                logger.info("RCU %d Tile %d Oscillation sum=%3.1f peaks=%d low=%3.1f" %\
+                           (rcu, tile, max_sum, n_peaks, rcu_low))
                 self.turnOffTile(tile)
                 if tile_polarity == 0:
                     self.hba.tile[tile].x.osc = 1
@@ -1078,15 +1079,15 @@ class cHBA:
         n_rcus_off = 0
         # result is a sorted list on maxvalue
         result = search_oscillation(self.rcudata.getAll(), delta=3.0, start_sb=0, stop_sb=511)
-        if len(result) > 0:
+        if len(result) > 1:
             clean = False
-            strongest_rcu = result[0][2]
-            tile = strongest_rcu / 2
+            rcu, peaks_sum, n_peaks, rcu_low  = sorted(result[1:], reverse=True)[0] #result[1]
+            tile = rcu / 2
             if self.hba.tile[tile].element[elem].no_modem or self.hba.tile[tile].element[elem].modem_error:
                 return(True, 0)
-            tile_polarity  = strongest_rcu % 2
-            logger.info("RCU %d Tile %d Element %d Oscillation sum=%3.1f peaks=%d" %\
-                       (strongest_rcu, tile, elem+1, result[0][0], result[0][1]))
+            tile_polarity  = rcu % 2
+            logger.info("RCU %d Tile %d Element %d Oscillation sum=%3.1f peaks=%d, low=%3.1f" %\
+                       (rcu, tile, elem+1, peaks_sum, n_peaks, rcu_low))
             self.turnOffTile(tile)
             n_rcus_off += 1
             if tile_polarity == 0:

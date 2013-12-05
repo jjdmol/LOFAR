@@ -65,6 +65,8 @@ namespace LOFAR {
 
 void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &bufferReady, Semaphore &stopSignal)
 {
+  const std::string logPrefix = str(format("[station %s] ") % stationID.name());
+
   // settings for the circular buffer
   struct BufferSettings settings(stationID, false);
   settings.nrSamples_16bit = 5 * ps.nrSamplesPerSubband(); // Align with our block increment
@@ -90,7 +92,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
   GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
 
   // Set up the data transports
-  MultiPacketsToBuffer station(settings, inputStreams);
+  MultiPacketsToBuffer station(settings, inputStreams, ps.settings.startTime, ps.settings.stopTime);
 
   // Signal the creation of the SHM buffer
   bufferReady.up();
@@ -100,7 +102,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
     // Start a circular buffer
     #pragma omp section
     {
-      LOG_INFO_STR("Starting circular buffer");
+      LOG_DEBUG_STR(logPrefix << "Starting circular buffer and reading input streams");
       station.process();
     }
 
@@ -129,6 +131,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
   const string fieldName   = fullFieldName.substr(5);   // HBA0
 
   const struct StationID stationID(stationName, fieldName);
+  const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   StationNodeAllocation allocation(stationID, ps);
 
@@ -137,7 +140,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     return;
   }
 
-  LOG_INFO_STR("Processing data from station " << stationID);
+  LOG_INFO_STR(logPrefix << "Processing station data");
 
   const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
   const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
@@ -174,7 +177,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
         const struct BufferSettings settings(stationID, true);
         const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
-        LOG_INFO_STR("Detected " << settings);
+        LOG_DEBUG_STR(logPrefix << "Detected " << settings);
 
         const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
         const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
@@ -264,7 +267,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           size_t blockSize = ps.nrSamplesPerSubband();
 
           for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
-            LOG_DEBUG_STR(str(format("[rank %i block %d] Sending data from %s") % rank % block % stationID));
+            LOG_DEBUG_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
 
             // Fetch end delays (start delays are set by the previous block, or
             // before the loop).

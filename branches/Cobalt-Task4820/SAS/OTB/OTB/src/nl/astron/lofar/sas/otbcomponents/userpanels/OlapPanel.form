@@ -100,7 +100,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jPanel4" min="-2" max="-2" attributes="2"/>
-                      <EmptySpace pref="4533" max="32767" attributes="0"/>
+                      <EmptySpace pref="4483" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -108,7 +108,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <Component id="jPanel4" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace pref="2528" max="32767" attributes="0"/>
+                      <EmptySpace pref="2525" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -127,7 +127,7 @@
                               <Component id="CorrelatorPanel" min="-2" max="-2" attributes="1"/>
                               <Component id="PencilInfoPanel" min="-2" max="-2" attributes="1"/>
                           </Group>
-                          <EmptySpace pref="32" max="32767" attributes="0"/>
+                          <EmptySpace pref="48" max="32767" attributes="0"/>
                       </Group>
                       <Component id="jPanel8" alignment="0" max="32767" attributes="1"/>
                   </Group>
@@ -344,8 +344,8 @@
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="labelChannelsPerSubbandCoherent" alignment="0" pref="183" max="32767" attributes="1"/>
-                                      <Component id="timeIntegrationFactorCoherent" pref="183" max="32767" attributes="1"/>
+                                      <Component id="labelChannelsPerSubbandCoherent" alignment="0" pref="185" max="32767" attributes="1"/>
+                                      <Component id="timeIntegrationFactorCoherent" pref="185" max="32767" attributes="1"/>
                                       <Component id="labelWhichCoherent" min="-2" pref="103" max="-2" attributes="1"/>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>

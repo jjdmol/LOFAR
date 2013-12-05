@@ -57,10 +57,10 @@ int main() {
     filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
     delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
     delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    phaseOffsets(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_OFFSETS)),
+    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS)),
     bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
 
-  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phaseOffsets, bandPassCorrectionWeights);
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s, bandPassCorrectionWeights);
 
   auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
 

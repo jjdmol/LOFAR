@@ -29,6 +29,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ApplCommon/LofarDirs.h>
+#include <Common/LofarTypes.h>
 
 //# Avoid 'using namespace' in headerfiles
 

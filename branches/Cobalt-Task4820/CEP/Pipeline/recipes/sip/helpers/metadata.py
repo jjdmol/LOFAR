@@ -244,6 +244,10 @@ class SkyImage(DataProduct):
             image = pyrap.images.image(filename)
             coord = image.coordinates()
             beaminfo = image.imageinfo()['restoringbeam']
+            npix = image.shape()[2]         # Assume square dimensions
+            dircrd = image.coordinates()["direction"]
+            radec_cellsz_rad = dircrd.get_increment()[0]  # [ra, dec] (ind. for lofar)
+
             self._data.update({
                 'numberOfAxes' : image.ndim(),
                 'coordinateTypes' : coord._names,
@@ -255,7 +259,9 @@ class SkyImage(DataProduct):
                 'rmsNoiseValue' : image.attrgetrow(
                     'LOFAR_QUALITY', 'QUALITY_MEASURE', 'RMS_NOISE_I'
                 )['VALUE'],
-                'rmsNoiseUnit' : image.unit()
+                'rmsNoiseUnit' : image.unit(),
+                'npix' : npix,
+                'cellsize' : str(radec_cellsz_rad) + "rad"
             })
             if 'direction' in coord._names:
                 direction = coord.get_coordinate('direction')

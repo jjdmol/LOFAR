@@ -58,11 +58,11 @@ TEST_FIXTURE(TestFixture, Delays)
                 DelayAndBandPassKernel::DELAYS));
 }
 
-TEST_FIXTURE(TestFixture, PhaseOffsets)
+TEST_FIXTURE(TestFixture, Phase0s)
 {
   CHECK_EQUAL(size_t(16),
               factory.bufferSize(
-                DelayAndBandPassKernel::PHASE_OFFSETS));
+                DelayAndBandPassKernel::PHASE_ZEROS));
 }
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)
