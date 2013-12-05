@@ -43,13 +43,14 @@ namespace LOFAR
 
 
     /*
-     * Returns the first power of two greater than n.
+     * Returns the first power of two greater or equal than n.
      * T must be an integral type.
-     * n must be less than the largest representable power of two.
+     * n must be less or equal to the largest representable power of two.
      */
     template <typename T>
-    inline static T nextPowerOfTwo(T n)
+    inline static T roundUpToPowerOfTwo(T n)
     {
+      n -= 1;
       n |= n >> 1;
       n |= n >> 2;
       n |= n >> 4;

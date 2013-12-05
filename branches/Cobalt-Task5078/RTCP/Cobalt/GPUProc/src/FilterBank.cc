@@ -196,7 +196,7 @@ namespace LOFAR
         // make sure grid is big enough for the window
         // the grid must be at least (n+1)/2
         // for all filters where the order is a power of two minus 1, grid_n = n+1;
-        unsigned grid_n = nextPowerOfTwo(n + 1);
+        unsigned grid_n = roundUpToPowerOfTwo(n + 1);
 
         unsigned ramp_n = 2; // grid_n/20;
 

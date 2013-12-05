@@ -29,7 +29,7 @@ using std::cerr;
 using std::endl;
 
 using LOFAR::Cobalt::powerOfTwo;
-using LOFAR::Cobalt::nextPowerOfTwo;
+using LOFAR::Cobalt::roundUpToPowerOfTwo;
 using LOFAR::uint64;
 
 static unsigned int npow2;
@@ -71,13 +71,13 @@ static int main_pow2() {
 
 
 template <typename T>
-static bool test_nextPowerOfTwo(T val, T lastPow2) {
+static bool test_roundUpToPowerOfTwo(T val, T lastPow2) {
   bool ok = true;
 
-  for (T nextPow2 = 1; nextPow2 < lastPow2; nextPow2 *= 2) {
-    while (val < nextPow2) {
-      if (nextPowerOfTwo(val) != nextPow2) {
-        cerr << "Error: next power of two of " << val << " is not " << nextPowerOfTwo(val) << endl;
+  for (T nextPow2 = 1; nextPow2 <= lastPow2; nextPow2 *= 2) {
+    while (val <= nextPow2) {
+      if (roundUpToPowerOfTwo(val) != nextPow2) {
+        cerr << "Error: rounded up power of two of " << val << " is not " << roundUpToPowerOfTwo(val) << endl;
         ok = false;
       }
       val++;
@@ -87,27 +87,33 @@ static bool test_nextPowerOfTwo(T val, T lastPow2) {
   return ok;
 }
 
-static int main_nextpow2() {
+static int main_rounduppow2() {
   bool ok = true;
 
   cout << "Test type int" << endl;
-  ok &= test_nextPowerOfTwo<int>(-17, 512);
+  ok &= test_roundUpToPowerOfTwo<int>(-17, 512);
   cout << "Test type unsigned int" << endl;
-  ok &= test_nextPowerOfTwo<unsigned int>(0, 512);
+  ok &= test_roundUpToPowerOfTwo<unsigned int>(0, 512);
 
   cout << "Test signed char" << endl;
-  signed char c  = 0x10;
+  signed char c  = 0x11;
   signed char c2 = 0x20;
-  if (nextPowerOfTwo(c) != c2) {
-    cerr << "Error: next power of two of " << c << " is not " << nextPowerOfTwo(c) << endl;
+  if (roundUpToPowerOfTwo(c) != c2) {
+    cerr << "Error: rounded up power of two of " << (int)c << " is not " << (int)roundUpToPowerOfTwo(c) << endl;
     ok = false;
   }
 
   cout << "Test large uint64_t" << endl;
-  uint64 v  = 0x2000000000000000ULL;
+  uint64 v  = 0x2000000000000001ULL;
   uint64 v2 = 0x4000000000000000ULL;
-  if (nextPowerOfTwo(v) != v2) {
-    cerr << "Error: next power of two of " << v << " is not " << nextPowerOfTwo(v) << endl;
+  if (roundUpToPowerOfTwo(v) != v2) {
+    cerr << "Error: next power of two of " << v << " is not " << roundUpToPowerOfTwo(v) << endl;
+    ok = false;
+  }
+
+  v = 0x4000000000000000ULL;
+  if (roundUpToPowerOfTwo(v) != v) {
+    cerr << "Error: next power of two of " << v << " is not " << roundUpToPowerOfTwo(v) << endl;
     ok = false;
   }
 
@@ -117,6 +123,6 @@ static int main_nextpow2() {
 
 int main() {
   return main_pow2() == 0 &&
-         main_nextpow2() == 0 ? 0 : 1;
+         main_rounduppow2() == 0 ? 0 : 1;
 }
 
