@@ -53,8 +53,6 @@ namespace LOFAR
             ps.settings.observationID);
       nrChannels = channels;
 
-
-      cout << "$#######nr nrStations:" << nrStations << endl;
     }
 
     FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
@@ -68,7 +66,6 @@ namespace LOFAR
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
-      cout << "************************ params.nrSamplesPerSubband:" << params.nrSamplesPerSubband << endl;
       setEnqueueWorkSizes( gpu::Grid(params.nrSamplesPerSubband ,
                            params.nrStations,
                            params.nrChannels),

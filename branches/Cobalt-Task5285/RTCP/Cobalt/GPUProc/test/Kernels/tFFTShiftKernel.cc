@@ -71,7 +71,7 @@ struct ParsetSUT
     nrOutputSamples(nrInputSamples),
     nrBlockSize(nrInputSamples)
   {
-    cout << ">>>>>>>>>>>>>>>>>nr nrStations:" << inrStations << endl;
+
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
     parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
@@ -94,6 +94,7 @@ struct ParsetSUT
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
 {
+  cout << "running test: BufferSizes" << endl;
   ParsetSUT sut(1, 2, 2, 1024, "IQUV");
   const ObservationSettings::BeamFormer::StokesSettings &settings =
     sut.parset.settings.beamFormer.coherentSettings;
@@ -107,6 +108,7 @@ TEST(BufferSizes)
 // Test if we can succesfully create a KernelFactory
 TEST(KernelFactory)
 {
+  cout << "running test: KernelFactory" << endl;
   ParsetSUT sut(1, 2, 2, 1024,"IQUV");
   KernelFactory<FFTShiftKernel> kf(sut.parset);
 
@@ -122,7 +124,7 @@ struct SUTWrapper : ParsetSUT
   size_t nrTabs;
   KernelFactory<FFTShiftKernel> factory;
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
-  MultiDimArrayHostBuffer<fcomplex, 4> hOutput;
+  MultiDimArrayHostBuffer<fcomplex, 1> hOutput;
   MultiDimArrayHostBuffer<fcomplex, 4> hRefOutput;
   FFTShiftKernel::Buffers buffers;
   scoped_ptr<FFTShiftKernel> kernel;
@@ -140,9 +142,7 @@ struct SUTWrapper : ParsetSUT
     hInput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
-    hOutput(
-      boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
-      context),
+    hOutput( boost::extents[0], context), // Inplace operation so no outputbuffer
     hRefOutput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
@@ -150,7 +150,7 @@ struct SUTWrapper : ParsetSUT
       gpu::DeviceMemory(
         context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
       gpu::DeviceMemory(
-      context, factory.bufferSize(FFTShiftKernel::OUTPUT_DATA))),
+      context, hOutput.size())),
     kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
@@ -161,14 +161,14 @@ struct SUTWrapper : ParsetSUT
   void initializeHostBuffers()
   {
     cout << "Kernel buffersize set to: " << factory.bufferSize(FFTShiftKernel::INPUT_DATA) << endl;
-    cout << "\nInitializing host buffers..."
-      << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
-      << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
+    cout << "\nInitializing host buffers..." << endl
+      << " buffers.input.size()  = " << setw(7) << buffers.input.size() << endl
+      << " hInput.size()  = " << setw(7) << hInput.size() << endl
+      << " buffers.output.size() = " << setw(7) << buffers.output.size() 
       << endl;
     CHECK_EQUAL(buffers.input.size(), hInput.size());
     CHECK_EQUAL(buffers.output.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(), fcomplex(0.0f, 0.0f));
-    fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), fcomplex(4.0f, 2.0f));
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
   }
 
@@ -190,17 +190,20 @@ struct SUTWrapper : ParsetSUT
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
+  cout << "running test: ZeroTest" << endl;
   // number of stations
   size_t nrStations = 1;
   // start the test vector at the largest size
   size_t tabs_sizes[] = { 1 }; // 13, 33};
 
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = { 1 }; // , 13, 41 };
+  size_t channel_sizes[] = {  1 }; // Only valid channel size is 1 atm.
 
-  std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
-  size_t sample_sizes[] = { 256 }; //, 16, 512 };
-  std::vector<size_t> samples(sample_sizes, sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
+  std::vector<size_t> channels(channel_sizes,
+        channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
+  size_t sample_sizes[] = { 256 , 1024, 512 };
+  std::vector<size_t> samples(sample_sizes,
+    sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
   //loop over the three input vectors
   for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
@@ -212,7 +215,51 @@ TEST(ZeroTest)
       << " samples: " << *isamp << endl;
     SUTWrapper sut(*ichan, nrStations, *itab, *isamp);
     // Host buffers are properly initialized for this test. Just run the kernel. 
+    
+    sut.runKernel();
+    CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+      sut.hOutput.data(),
+      sut.hOutput.num_elements());
+  }
+}
 
+// Test if the input is correctly flipped at each odd entry
+TEST(FlipValues)
+{
+  cout << "running test: FlipValues"  << endl;
+  // number of stations
+  size_t nrStations = 1;
+  // start the test vector at the largest size
+  size_t tabs_sizes[] = { 1 }; // 13, 33};
+
+  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
+  size_t channel_sizes[] = { 1 }; // Only valid channel size is 1 atm.
+
+  std::vector<size_t> channels(channel_sizes,
+    channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
+  size_t sample_sizes[] = { 256 };
+  std::vector<size_t> samples(sample_sizes,
+    sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
+
+  //loop over the three input vectors
+  for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
+  for (std::vector<size_t>::const_iterator ichan = channels.begin(); ichan != channels.end(); ++ichan)
+  for (std::vector<size_t>::const_iterator isamp = samples.begin(); isamp != samples.end(); ++isamp)
+  {
+    cout << "*******testing tabs: " << *itab
+      << " channels: " << *ichan
+      << " samples: " << *isamp << endl;
+    SUTWrapper sut(*ichan, nrStations, *itab, *isamp);
+
+     // Test full input create the input
+    for (unsigned idx = 0; idx < sut.hInput.num_elements(); ++idx)
+      sut.hInput.data()[idx] = fcomplex(1.0f, 1.0f);
+
+    for (unsigned idx = 0; idx < (sut.hRefOutput.num_elements() / 2); idx += 2)
+    {
+      sut.hRefOutput.data()[idx * 2] = fcomplex(1.0f, 1.0f);
+      sut.hRefOutput.data()[idx * 2 + 1] = fcomplex(-1.0f, -1.0f);
+    }
 
     sut.runKernel();
     CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
@@ -220,6 +267,7 @@ TEST(ZeroTest)
       sut.hOutput.num_elements());
   }
 }
+
 
 // (size_t inrChannels , size_t inrStations, size_t inrTabs, size_t inrOutputinSamplesPerSuband)
 //
