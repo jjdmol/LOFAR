@@ -670,7 +670,7 @@ namespace LOFAR
       // Fringe stopping of the residual delay is done at an interval t_u.
       double t_u = deltaPhi / phi;
       double max_n_FFT = t_u * subbandWidth;
-      unsigned max_n_FFT_pow2 = roundUpToPowerOfTwo((unsigned)max_n_FFT + 1 / 2); // round down to pow2
+      unsigned max_n_FFT_pow2 = roundUpToPowerOfTwo(((unsigned)max_n_FFT + 1) / 2); // round down to pow2
 
       // Little benefit beyond 256; more work and lower GPU FFT efficiency.
       if (max_n_FFT_pow2 > 256)
