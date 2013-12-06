@@ -23,7 +23,7 @@ function getkey {
 OBSID=`getkey Observation.ObsID`
 RESULT_PORT=$((21000 + $OBSID % 1000))
 
-STATUSSTR=`timeout 30s nc -l $RESULT_PORT`
+STATUSSTR=`timeout 120s nc -l $RESULT_PORT`
 
 # 3. Read string: ABORT or FINISHED
 if [ "$STATUSSTR" == "FINISHED" ]
