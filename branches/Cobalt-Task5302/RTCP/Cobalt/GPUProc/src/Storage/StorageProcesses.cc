@@ -29,6 +29,7 @@
 #include <boost/format.hpp>
 
 #include <Stream/PortBroker.h>
+#include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
 
 #include "SSH.h"
@@ -157,16 +158,30 @@ namespace LOFAR
 
       // Connect
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connecting...");
-      std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
-      PortBroker::ClientStream stream(hostName, storageBrokerPort(itsParset.observationID()), resource, 0);
+
+      const std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
+      SmartPtr<Stream> stream;
+
+      // Keep trying to connect to the FinalMetaDataGatherer, but only
+      // while the SSH connection is alive. If not, there's no point in waiting
+      // for a connection that can never be established.
+      while(!stream) {
+        if (sshconn.isDone())
+          return;
+
+        try {
+          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 1);
+        } catch (SocketStream::TimeOutException &) {
+        }
+      }
 
       // Send parset
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
-      itsParset.write(&stream);
+      itsParset.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
 
       // Receive final meta data
-      itsFinalMetaData.read(stream);
+      itsFinalMetaData.read(*stream);
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
 
       // Wait for or end the remote process
