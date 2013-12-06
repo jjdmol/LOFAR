@@ -41,7 +41,7 @@ namespace LOFAR
       // IntToFloatKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps, unsigned channels = 1);
+        Parameters(const Parset& ps);
         unsigned nrBitsPerSample;
         unsigned nrChannels;
         unsigned nrBytesPerComplexSample;

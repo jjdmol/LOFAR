@@ -74,7 +74,7 @@ namespace LOFAR
       delayCompensationParams(const Parset &ps) const;
 
       FFTShiftKernel::Parameters
-        FFTShiftKernelParams(const Parset &ps, unsigned Channels) const;
+        FFTShiftKernelParams(const Parset &ps) const;
 
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;

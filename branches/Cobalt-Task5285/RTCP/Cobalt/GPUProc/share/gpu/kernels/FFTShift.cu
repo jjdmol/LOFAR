@@ -20,7 +20,7 @@
 
 #include "gpu_math.cuh"
 
-typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_SUBBAND];
+typedef float2(*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 
 /**
  * This kernel performs a conversion of the integer valued input to floats and
@@ -28,10 +28,6 @@ typedef float2 (*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_S
  * - It supports 8 and 16 bit (char and short) input, which is selectable using
  *   the define NR_BITS_PER_SAMPLE
  * - In 8 bit mode the converted samples with value -128 are clamped to -127.0f
- *
- * @param[out] convertedDataPtr    pointer to output data of ConvertedDataType,
- *                                 a 4D array [station][polarizations][n_samples_subband][complex]
- *                                 of floats (2 complex polarizations).
  * @param[in]  sampledDataPtr      pointer to input data; this can either be a
  *                                 4D array [station][n_samples_subband][polarizations][complex]
  *                                 of shorts or chars, depending on NR_BITS_PER_SAMPLE.
@@ -67,4 +63,3 @@ __global__ void FFTShift(void *inputDataPtr)
 }
 
 }
-

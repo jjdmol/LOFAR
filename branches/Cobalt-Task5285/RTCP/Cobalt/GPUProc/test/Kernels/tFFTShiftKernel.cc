@@ -61,12 +61,12 @@ struct ParsetSUT
   ParsetSUT(size_t inrChannels,
     size_t inrStations,
     size_t inrTabs,
-    size_t inrSamplesSubband ,
+    size_t inrSamplesChannel ,
     string stokes )
     :
     nrChannels(inrChannels),
     nrStations(inrStations),
-    nrSamplesSubband(inrSamplesSubband),
+    nrSamplesSubband(inrSamplesChannel * inrChannels),
     nrInputSamples(nrSamplesSubband),
     nrOutputSamples(nrInputSamples),
     nrBlockSize(nrInputSamples)
@@ -74,8 +74,8 @@ struct ParsetSUT
 
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
-    parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
-      lexical_cast<string>(nrChannels));
+    //parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
+    //  lexical_cast<string>(nrChannels));
     parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
@@ -138,7 +138,7 @@ struct SUTWrapper : ParsetSUT
     stream(context),
     nrStokes(parset.settings.beamFormer.coherentSettings.nrStokes),
     nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
-    factory(parset),
+    factory(FFTShiftParams(parset, inrChannels)),
     hInput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
@@ -155,6 +155,22 @@ struct SUTWrapper : ParsetSUT
   {
     initializeHostBuffers();
   }
+
+  // Needed to adapt the number of channels in the parameterset
+  FFTShiftKernel::Parameters FFTShiftParams(Parset parset, unsigned nrChannels)
+  {
+    FFTShiftKernel::Parameters params(parset);
+
+    // time integration has not taken place yet, so calculate the nrSamples
+    // manually
+    params.nrChannelsPerSubband = nrChannels;
+
+    params.nrSamplesPerChannel =
+      parset.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+    return params;
+  }
+
 
   // Initialize all the elements of the input host buffer to zero, and all
   // elements of the output host buffer to NaN.
@@ -197,7 +213,7 @@ TEST(ZeroTest)
   size_t tabs_sizes[] = { 1 }; // 13, 33};
 
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = {  1 }; // Only valid channel size is 1 atm.
+  size_t channel_sizes[] = {  1 , 16, 64}; // Only valid channel size is 1 atm.
 
   std::vector<size_t> channels(channel_sizes,
         channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
@@ -233,7 +249,7 @@ TEST(FlipValues)
   size_t tabs_sizes[] = { 1 }; // 13, 33};
 
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = { 1 }; // Only valid channel size is 1 atm.
+  size_t channel_sizes[] = { 1 , 16, 64}; // Only valid channel size is 1 atm.
 
   std::vector<size_t> channels(channel_sizes,
     channel_sizes + sizeof(channel_sizes) / sizeof(size_t));

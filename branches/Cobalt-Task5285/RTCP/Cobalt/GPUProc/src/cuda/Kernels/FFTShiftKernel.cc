@@ -42,8 +42,7 @@ namespace LOFAR
     string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
     string FFTShiftKernel::theirFunction = "FFTShift";
 
-    FFTShiftKernel::Parameters::Parameters(const Parset& ps,
-      unsigned channels):
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps):
       Kernel::Parameters(ps)
     {
       dumpBuffers = 
@@ -51,8 +50,6 @@ namespace LOFAR
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_FFTShiftKernel.dat") % 
             ps.settings.observationID);
-      nrChannels = channels;
-
     }
 
     FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
@@ -66,12 +63,20 @@ namespace LOFAR
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
-      setEnqueueWorkSizes( gpu::Grid(params.nrSamplesPerSubband ,
+      // Assure that the worksize does not get larger then using
+      // attribute. settings the number of channel block size allows for 
+      // 128 maximum channel ( global.z / local.z) 
+      setEnqueueWorkSizes(gpu::Grid(params.nrSamplesPerChannel,
                            params.nrStations,
-                           params.nrChannels),
-                           gpu::Block(256, 1, 1) );
+                           params.nrChannelsPerSubband),
+                           gpu::Block((params.nrChannelsPerSubband > 1) ? 
+                                      256/ 2 : 256,
+                                      1,
+                                      (params.nrChannelsPerSubband > 1 ) ?
+                                        2 : params.nrChannelsPerSubband)
+                                      );
 
-      unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
+      unsigned nrSamples = params.nrStations * params.nrSamplesPerChannel * NR_POLARIZATIONS;
       nrOperations = (size_t) nrSamples * 2;
       nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
@@ -86,14 +91,14 @@ namespace LOFAR
       case FFTShiftKernel::INPUT_DATA:
 
         return (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
-          itsParameters.nrChannels *
-            itsParameters.nrSamplesPerSubband *
+          itsParameters.nrChannelsPerSubband *
+          itsParameters.nrSamplesPerChannel *
             sizeof(std::complex<float>);
           
       case FFTShiftKernel::OUTPUT_DATA:
         return  (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
-          itsParameters.nrChannels *
-          itsParameters.nrSamplesPerSubband *
+          itsParameters.nrChannelsPerSubband *
+          itsParameters.nrSamplesPerChannel *
           sizeof(std::complex<float>);
           
       default:
@@ -106,6 +111,8 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      //nrChannelsPerSubband
 
       return defs;
     }
