@@ -479,14 +479,17 @@ namespace LOFAR
           }
         }
 
-        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
-          // Files to output
-          settings.correlator.files.resize(settings.subbands.size());
-          for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
-            settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        // Files to output
+        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Correlated");
 
-            outputProcHosts.insert(settings.correlator.files[i].location.host);
-          }
+        settings.correlator.files.resize(settings.subbands.size());
+        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
+          if (i >= locations.size())
+            THROW(CoInterfaceException, "No correlator filename or location specified for subband " << i);
+
+          settings.correlator.files[i].location = locations[i];
+
+          outputProcHosts.insert(settings.correlator.files[i].location.host);
         }
       }
 
@@ -541,6 +544,8 @@ namespace LOFAR
           ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
 
+        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Beamformed");
+
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
 
@@ -589,7 +594,11 @@ namespace LOFAR
               file.coherent = tab.coherent;
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
-              file.location = getFileLocation("Beamformed", file.streamNr);
+
+              if (file.streamNr >= locations.size())
+                THROW(CoInterfaceException, "No beam former filename or location specified for file " << file.streamNr);
+
+              file.location = locations[file.streamNr];
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
@@ -635,7 +644,7 @@ namespace LOFAR
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
 
-    struct ObservationSettings::FileLocation Parset::getFileLocation(const std::string outputType, unsigned idx) const {
+    std::vector<struct ObservationSettings::FileLocation> Parset::getFileLocations(const std::string outputType) const {
       //
       const string prefix = "Observation.DataProducts.Output_" + outputType;
 
@@ -643,26 +652,24 @@ namespace LOFAR
       vector<string> filenames = getStringVector(prefix + ".filenames", empty, true);
       vector<string> locations = getStringVector(prefix + ".locations", empty, true);
 
-      if (idx >= filenames.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".filenames: " << idx);
+      size_t numValidEntries = std::min(filenames.size(), locations.size());
+
+      vector<struct ObservationSettings::FileLocation> result(numValidEntries);
+
+      for (size_t i = 0; i < numValidEntries; ++i) {
+        ObservationSettings::FileLocation &location = result[i];
+        const vector<string> host_dir = StringUtil::split(locations[i], ':');
+
+        if (host_dir.size() != 2) {
+          THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[i]);
+        }
+
+        location.filename  = filenames[i];
+        location.host      = host_dir[0];
+        location.directory = host_dir[1];
       }
 
-      if (idx >= locations.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".locations: " << idx);
-      }
-
-      vector<string> host_dir = StringUtil::split(locations[idx], ':');
-
-      if (host_dir.size() != 2) {
-        THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[idx]);
-      }
-
-      ObservationSettings::FileLocation location;
-      location.filename  = filenames[idx];
-      location.host      = host_dir[0];
-      location.directory = host_dir[1];
-
-      return location;
+      return result;
     }
 
     size_t ObservationSettings::nrSubbands(size_t SAP) const
