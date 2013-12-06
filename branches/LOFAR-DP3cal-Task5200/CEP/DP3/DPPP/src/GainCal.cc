@@ -176,12 +176,6 @@ namespace LOFAR {
           nBl, nCh, cr_baseline, cr_freq, cr_uvw_split, cr_model);
       }
 
-
-      for(vector<dcomplex>::iterator i=storage.model.begin();
-              i!=storage.model.end();++i) {
-          //std::cout<<"model="<<(*i)<<std::endl;
-      }
-
       //copy result of model to data
       copy(storage.model.begin(),storage.model.begin()+nSamples,data);
 
