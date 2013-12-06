@@ -10,9 +10,6 @@ lofar_add_test(tMSWriterDAL tMSWriterDAL.cc)
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated_.run.in
   ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated_.run @ONLY)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/tMSWriterCorrelated_.parset.in
-  ${CMAKE_CURRENT_BINARY_DIR}/tMSWriterCorrelated_.parset @ONLY)
 lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)
 lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)

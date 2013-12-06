@@ -1,3 +1,4 @@
+OLAP.Storage.StaticMetaDataDirectory = ./tMSWriterCorrelated.in_1
 Observation.Beam[0].angle1 = 5.2336866848083394
 Observation.Beam[0].angle2 = 0.71094251447010637
 Observation.Beam[0].directionType = J2000
@@ -14,7 +15,7 @@ Observation.ObsID = 1000000
 Observation.VirtualInstrument.stationList = [CS013]
 Observation.antennaSet =  LBA_INNER
 Observation.bandFilter = LBA_30_90
-Observation.channelsPerSubband = 64
+Cobalt.Correlator.nrChannelsPerSubband = 64
 Observation.nrBeams = 1
 Observation.nrPolarisations = 2
 Observation.nrSlotsInFrame = 61
