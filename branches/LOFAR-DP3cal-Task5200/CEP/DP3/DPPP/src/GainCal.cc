@@ -55,6 +55,7 @@ namespace LOFAR {
         itsSourceDBName (parset.getString (prefix + "sourcedb")),
         itsParmDBName  (parset.getString (prefix + "parmdb")),
         itsBaselines   (),
+        itsThreadStorage (),
         itsPatchList   ()
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
@@ -92,6 +93,18 @@ namespace LOFAR {
 /*
       itsParmDB.reset(new BBS::ParmFacade(itsParmDBName));
 */
+
+      const size_t nDr = itsPatchList.size();
+      const size_t nSt = info().antennaNames().size();
+      const size_t nCh = info().nchan();
+      // initialize storage
+      const size_t nThread=OpenMP::maxThreads();
+      itsThreadStorage.resize(nThread);
+      for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
+        end = itsThreadStorage.end(); it != end; ++it)
+      {
+        initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
+      }
     }
 
     void GainCal::show (std::ostream& os) const
@@ -137,22 +150,14 @@ namespace LOFAR {
       const_cursor<double> cr_freq = casa_const_cursor(info().chanFreqs());
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
 
-      // initialize storage
-      const size_t nThread=OpenMP::maxThreads();
       const size_t thread = OpenMP::threadNum();
-      vector<ThreadPrivateStorage> threadStorage(nThread);
-      for(vector<ThreadPrivateStorage>::iterator it = threadStorage.begin(),
-        end = threadStorage.end(); it != end; ++it)
-      {
-        initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
-      }
 
       // Simulate.
       //
       // Model visibilities for each direction of interest will be computed
       // and stored.
 
-      ThreadPrivateStorage &storage = threadStorage[thread];
+      ThreadPrivateStorage &storage = itsThreadStorage[thread];
       size_t stride_uvw[2] = {1, 3};
       cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
 

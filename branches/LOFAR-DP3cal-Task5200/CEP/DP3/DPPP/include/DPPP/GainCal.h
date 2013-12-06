@@ -40,26 +40,8 @@
 namespace LOFAR {
 
 namespace {
-  struct ThreadPrivateStorage
-  {
-    vector<double>    unknowns;
-    vector<double>    uvw;
-    vector<dcomplex>  model;
-    vector<dcomplex>  model_subtr;
-    size_t            count_converged;
-  };
 
-  void initThreadPrivateStorage(ThreadPrivateStorage &storage,
-    size_t nDirection, size_t nStation, size_t nBaseline, size_t nChannel,
-    size_t nChannelSubtr)
-  {
-    storage.unknowns.resize(nDirection * nStation * 8);
-    storage.uvw.resize(nStation * 3);
-    storage.model.resize(nBaseline * nChannel * 4);
-    storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
-    storage.count_converged = 0;
-  }
-} //# end unnamed namespace
+}
 
   class ParameterSet;
 
@@ -74,6 +56,27 @@ namespace {
     class GainCal: public DPStep
     {
     public:
+      struct ThreadPrivateStorage
+      {
+        vector<double>    unknowns;
+        vector<double>    uvw;
+        vector<dcomplex>  model;
+        vector<dcomplex>  model_subtr;
+        size_t            count_converged;
+      };
+
+      static void initThreadPrivateStorage(ThreadPrivateStorage &storage,
+                                    size_t nDirection, size_t nStation,
+                                    size_t nBaseline, size_t nChannel,
+                                    size_t nChannelSubtr)
+      {
+        storage.unknowns.resize(nDirection * nStation * 8);
+        storage.uvw.resize(nStation * 3);
+        storage.model.resize(nBaseline * nChannel * 4);
+        storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
+        storage.count_converged = 0;
+      }
+
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
       GainCal (DPInput*, const ParameterSet&, const string& prefix);
@@ -110,6 +113,8 @@ namespace {
       boost::shared_ptr<BBS::ParmFacade> itsParmDB;
       vector<Baseline> itsBaselines;
       Position         itsPhaseRef;
+
+      vector<ThreadPrivateStorage> itsThreadStorage;
 
       PatchList        itsPatchList;
 
