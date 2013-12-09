@@ -32,16 +32,16 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
+#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
+#include <GPUProc/Kernels/IntToFloatKernel.h>
 
 #include "SubbandProc.h"
 
@@ -76,7 +76,7 @@ namespace LOFAR
                                   StreamableData &output);
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(StreamableData &output);
 
       // Beamformer specific collection of PerformanceCounters
       class Counters

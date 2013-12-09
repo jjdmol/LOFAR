@@ -50,6 +50,9 @@ namespace LOFAR
       const StationID stationID;
       const Parset &parset;
 
+      // Index of the station in parset.settings.stations
+      const ssize_t stationIdx;
+
       // Returns the rank of the MPI node that should receive this station
       int receiverRank() const;
     };

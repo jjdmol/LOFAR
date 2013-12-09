@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Thread/Thread.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/SampleBuffer.h>
@@ -51,17 +52,14 @@ namespace LOFAR
 
     void PacketsToBuffer::process()
     {
-      // Holder for packet
-      struct RSP packet;
-
       // Create the buffer, regardless of mode
       GenericSampleBuffer buffer(settings, SharedMemoryArena::CREATE);
 
       // Keep track of the desired mode
       struct BoardMode mode;
 
-      // Whether packet has been read already
-      bool packetValid = false;
+      std::vector<struct RSP> packets(16);
+      std::vector<bool>       write(packets.size(), false);
 
       // Keep reading if mode changes
       for(;; ) {
@@ -69,15 +67,15 @@ namespace LOFAR
           // Process packets based on (expected) bit mode
           switch(mode.bitMode) {
           case 16:
-            process< SampleType<i16complex> >(packet, mode, packetValid);
+            process< SampleType<i16complex> >(mode, packets, write);
             break;
 
           case 8:
-            process< SampleType<i8complex> >(packet, mode, packetValid);
+            process< SampleType<i8complex> >(mode, packets, write);
             break;
 
           case 4:
-            process< SampleType<i4complex> >(packet, mode, packetValid);
+            process< SampleType<i4complex> >(mode, packets, write);
             break;
           }
 
@@ -85,14 +83,10 @@ namespace LOFAR
           break;
         } catch (BadModeException &ex) {
           // Mode switch detected
-          LOG_INFO_STR(logPrefix << "Mode switch detected to " << packet.clockMHz() << " MHz, " << packet.bitMode() << " bit");
+          LOG_INFO_STR(logPrefix << "Mode switch detected to " << ex.mode.clockMHz << " MHz, " << ex.mode.bitMode << " bit");
 
           // change mode
-          mode.bitMode = packet.bitMode();
-          mode.clockMHz = packet.clockMHz();
-
-          // Process packet again
-          packetValid = true;
+          mode = ex.mode;
         }
       }
     }
@@ -109,8 +103,10 @@ namespace LOFAR
 
 
     template<typename T>
-    void PacketsToBuffer::process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket )
+    void PacketsToBuffer::process( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write )
     {
+      Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
       // Create input structures
       PacketReader reader(logPrefix, inputStream);
 
@@ -121,18 +117,21 @@ namespace LOFAR
       LOG_DEBUG_STR( logPrefix << "Processing packets" );
 
       try {
-        // Process lingering packet from previous run, if any
-        if (writeGivenPacket) {
-          writer.writePacket(packet);
-          logStatistics(reader, packet);
-        }
-
         // Transport packets from reader to writer
-        for(;; ) {
-          if (reader.readPacket(packet)) {
-            writer.writePacket(packet);
-            logStatistics(reader, packet);
+        for(;;) {
+          // Write first, in case we're given packets to write
+          for (size_t i = 0; i < packets.size(); ++i) {
+            if (!write[i])
+              continue;
+
+            writer.writePacket(packets[i]);
+            logStatistics(reader, packets[i]);
+
+            // mark packet as written
+            write[i] = false;
           }
+
+          reader.readPackets(packets, write);
         }
 
       } catch (BadModeException &ex) {
@@ -144,7 +143,7 @@ namespace LOFAR
         LOG_INFO_STR( logPrefix << "End of stream");
 
       } catch (SystemCallException &ex) {
-        if (ex.error == EINTR)
+        if (ex.error == EINTR || ex.error == 512 /* ERESTARTSYS, should not be propagated to user space?! */)
           LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
         else
           LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
@@ -160,12 +159,12 @@ namespace LOFAR
 
 
     // Explcitly create the instances we use
-    template void PacketsToBuffer::process< SampleType<i16complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
-    template void PacketsToBuffer::process< SampleType<i8complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
-    template void PacketsToBuffer::process< SampleType<i4complex> >( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
+    template void PacketsToBuffer::process< SampleType<i16complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
+    template void PacketsToBuffer::process< SampleType<i8complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
+    template void PacketsToBuffer::process< SampleType<i4complex> >( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
 
 
-    MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ )
+    MultiPacketsToBuffer::MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_, double logFrom, double logTo )
     :
       RSPBoards("", inputStreams_.size()),
 
@@ -174,6 +173,8 @@ namespace LOFAR
       inputStreams(inputStreams_.size()),
 
       lastlog_time(now()),
+      logFrom(logFrom),
+      logTo(logTo),
       sum_flags(buffer.nrBoards, 0.0),
       num_flags(0.0)
     {
@@ -186,21 +187,23 @@ namespace LOFAR
 
     MultiPacketsToBuffer::~MultiPacketsToBuffer()
     {
-      // collect the log line
-      std::stringstream logstr;
+      if (!settings.sync) {
+        // collect the log line
+        std::stringstream logstr;
 
-      // compute average loss per board
-      for (size_t b = 0; b < buffer.nrBoards; ++b) {
-        const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
+        // compute average loss per board
+        for (size_t b = 0; b < buffer.nrBoards; ++b) {
+          const double avgloss = num_flags == 0.0 ? 0.0 : sum_flags[b] / num_flags;
 
-        if (b > 0)
-          logstr << ", ";
+          if (b > 0)
+            logstr << ", ";
 
-        logstr << avgloss << "%";
+          logstr << avgloss << "%";
+        }
+
+        // report average loss
+        LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
       }
-
-      // report average loss
-      LOG_INFO_STR(str(boost::format("[station %s] ") % settings.station.name()) << "Average data loss per board: " << logstr.str());
     }
 
 
@@ -219,8 +222,14 @@ namespace LOFAR
       if (settings.sync)
         return;
 
-      const double from_ts  = lastlog_time;
-      const double to_ts    = now();
+      // Constrain time frame to specified logging period
+      const double from_ts  = std::max(lastlog_time, logFrom);
+      const double to_ts    = std::min(now(), logTo);
+
+      // Don't do anything if there is nothing to log
+      if (from_ts >= to_ts)
+        return;
+
       const double maxdelay = 0.5; // wait this many seconds for data to arrive
 
       std::vector<double> flags(buffer.nrBoards);
@@ -233,10 +242,9 @@ namespace LOFAR
         const struct BoardMode mode = *(buffer.boards[b].mode);
         const size_t Hz = mode.clockHz();
 
-        // timestamp = (seconds since 1970) * clock / 1024
         flags[b] = buffer.boards[b].flagPercentage(
-          TimeStamp((from_ts - maxdelay) * Hz / 1024, Hz),
-          TimeStamp((to_ts   - maxdelay) * Hz / 1024, Hz));
+          TimeStamp::convert(from_ts - maxdelay, Hz),
+          TimeStamp::convert(to_ts   - maxdelay, Hz));
 
         do_log = do_log || flags[b] > 0.0;
 

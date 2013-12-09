@@ -23,9 +23,10 @@
 
 #include <CoInterface/Parset.h>
 
-#include <cstdio>
+#include <cstring>
 #include <cmath>
 #include <set>
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -266,6 +267,29 @@ namespace LOFAR
       return newname;
     }
 
+    /*
+     * operator<() for station names.
+     *
+     * Sorts in the following order:
+     *   1. Core stations (CSxxx)
+     *   2. Remote stations (RSxxx)
+     *   3. International stations (others)
+     *
+     * Within each group, the stations are
+     * sorted lexicographically. For group 3
+     * we skip the first 2 chars when sorting.
+     */
+    bool compareStationNames( const string &a, const string &b ) {
+      if (a.size() >= 5 && b.size() >= 5) { // common case
+        if ( (a[0] == 'C' || a[0] == 'R') && a[1] == 'S' &&
+             (b[0] == 'C' || b[0] == 'R') && b[1] == 'S' ) {
+          return a < b; // both CS/RS stations; 'C'<'R'
+        } else { // at least 1 non-CS/RS name; cmp (presumed) nrs
+          return std::strcmp(&a.c_str()[2], &b.c_str()[2]) < 0;
+        }
+      }
+      return a < b; // at least 1 short name
+    }
 
 
     struct ObservationSettings Parset::observationSettings() const
@@ -302,7 +326,7 @@ namespace LOFAR
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
 
       // Station information (required by pointing information)
-      settings.antennaSet     = getString("Observation.antennaSet", "LBA");
+      settings.antennaSet     = getString("Observation.antennaSet", "LBA_INNER");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
 
       // Pointing information
@@ -353,6 +377,10 @@ namespace LOFAR
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
+      // Sort stations (CS, RS, intl), to get a consistent and predictable
+      // order in the MeasurementSets.
+      std::sort(stations.begin(), stations.end(), compareStationNames);
+
       vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
       size_t nrStations = fieldNames.size();
@@ -362,12 +390,19 @@ namespace LOFAR
         struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name              = fieldNames[i].fullName();
+        station.inputStreams      = getStringVector(
+            renamedKey(str(format("PIC.Core.%s.RSP.ports") % station.name),
+                       str(format("PIC.Core.Station.%s.RSP.ports") % station.name)),
+            emptyVectorString, true);
+        station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
+
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
-        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -379,31 +414,25 @@ namespace LOFAR
         if (!isDefined(key)) key = "Observation.rspSlotList";
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".rspSlotList" );
+        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".DataslotList" );
       }
 
       // Resource information
-      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
-      settings.nodes.resize(nrNodes);
-      for (size_t i = 0; i < nrNodes; ++i) {
+      vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
+      settings.nodes.resize(nodes.size());
+
+      for (size_t i = 0; i < nodes.size(); ++i) {
         struct ObservationSettings::Node &node = settings.nodes[i];
 
-        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
-
         node.rank     = i;
+        node.name     = nodes[i];
+
+        string prefix = str(format("PIC.Core.Cobalt.%s.") % node.name);
+
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
-
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
-
-        for (size_t j = 0; j < stationNames.size(); ++j) {
-          ssize_t index = settings.stationIndex(stationNames[j]);
-
-          if (index >= 0)
-            node.stations.push_back(index);
-        }
       }
 
       /* ===============================
@@ -414,6 +443,7 @@ namespace LOFAR
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
       if (settings.correlator.enabled) {
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
+        //settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
@@ -450,14 +480,17 @@ namespace LOFAR
           }
         }
 
-        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
-          // Files to output
-          settings.correlator.files.resize(settings.subbands.size());
-          for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
-            settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        // Files to output
+        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Correlated");
 
-            outputProcHosts.insert(settings.correlator.files[i].location.host);
-          }
+        settings.correlator.files.resize(settings.subbands.size());
+        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
+          if (i >= locations.size())
+            THROW(CoInterfaceException, "No correlator filename or location specified for subband " << i);
+
+          settings.correlator.files[i].location = locations[i];
+
+          outputProcHosts.insert(settings.correlator.files[i].location.host);
         }
       }
 
@@ -535,6 +568,8 @@ namespace LOFAR
           ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
 
+        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Beamformed");
+
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
 
@@ -583,7 +618,11 @@ namespace LOFAR
               file.coherent = tab.coherent;
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
-              file.location = getFileLocation("Beamformed", file.streamNr);
+
+              if (file.streamNr >= locations.size())
+                THROW(CoInterfaceException, "No beam former filename or location specified for file " << file.streamNr);
+
+              file.location = locations[file.streamNr];
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
@@ -715,7 +754,7 @@ namespace LOFAR
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
 
-    struct ObservationSettings::FileLocation Parset::getFileLocation(const std::string outputType, unsigned idx) const {
+    std::vector<struct ObservationSettings::FileLocation> Parset::getFileLocations(const std::string outputType) const {
       //
       const string prefix = "Observation.DataProducts.Output_" + outputType;
 
@@ -723,26 +762,24 @@ namespace LOFAR
       vector<string> filenames = getStringVector(prefix + ".filenames", empty, true);
       vector<string> locations = getStringVector(prefix + ".locations", empty, true);
 
-      if (idx >= filenames.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".filenames: " << idx);
+      size_t numValidEntries = std::min(filenames.size(), locations.size());
+
+      vector<struct ObservationSettings::FileLocation> result(numValidEntries);
+
+      for (size_t i = 0; i < numValidEntries; ++i) {
+        ObservationSettings::FileLocation &location = result[i];
+        const vector<string> host_dir = StringUtil::split(locations[i], ':');
+
+        if (host_dir.size() != 2) {
+          THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[i]);
+        }
+
+        location.filename  = filenames[i];
+        location.host      = host_dir[0];
+        location.directory = host_dir[1];
       }
 
-      if (idx >= locations.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".locations: " << idx);
-      }
-
-      vector<string> host_dir = StringUtil::split(locations[idx], ':');
-
-      if (host_dir.size() != 2) {
-        THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[idx]);
-      }
-
-      ObservationSettings::FileLocation location;
-      location.filename  = filenames[idx];
-      location.host      = host_dir[0];
-      location.directory = host_dir[1];
-
-      return location;
+      return result;
     }
 
     size_t ObservationSettings::nrSubbands(size_t SAP) const
@@ -794,24 +831,6 @@ namespace LOFAR
 
     void Parset::check() const
     {
-      checkInputConsistency();
-      checkVectorLength("Observation.beamList", nrSubbands());
-
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++)
-        if (outputThisType(outputType)) {
-          std::string prefix = keyPrefix(outputType);
-          unsigned expected = nrStreams(outputType);
-
-          checkVectorLength(prefix + ".locations", expected);
-          checkVectorLength(prefix + ".filenames", expected);
-        }
-
-      if (CNintegrationSteps() % dedispersionFFTsize() != 0)
-        THROW(CoInterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
-
-      if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
-        // second transpose is performed
-      }
     }
 
 
@@ -821,26 +840,11 @@ namespace LOFAR
     }
 
 
-    string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
-    {
-      string key = string("PIC.Core.Station.") + stationName + ".RSP.ports";
-
-      if (!isDefined(key)) {
-        LOG_ERROR_STR("Key not found: " << key << ", falling back to reading from /dev/null");
-
-        return "file:/dev/null";
-      }
-
-      return getStringVector(key, true)[rspBoardNumber];
-    }
-
-
     std::string Parset::keyPrefix(OutputType outputType)
     {
       switch (outputType) {
       case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
       case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
-      case TRIGGER_DATA:      return "Observation.DataProducts.Output_Trigger";
       default:                THROW(CoInterfaceException, "Unknown output type");
       }
     }
@@ -849,9 +853,12 @@ namespace LOFAR
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
-        return settings.correlator.files[streamNr].location.host; // TODO: add to check() to reject parset or obsconfig early to avoid segfault here if streamNr >= settings.correlator.files.size()
+        return settings.correlator.files[streamNr].location.host;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.host;
+
+      return "unknown";
     }
 
 
@@ -860,16 +867,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.filename;
 
-      const std::string keyname = keyPrefix(outputType) + ".filenames";
-      if (!isDefined(keyname))
-        THROW(CoInterfaceException, "Could not find filename key: " << keyname);
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.filename;
 
-      const std::vector<std::string> filenames = getStringVector(keyname, true);
-
-      if (streamNr >= filenames.size())
-        THROW(CoInterfaceException, "Filename index out of bounds for key " << keyname << ": " << streamNr << " >= " << filenames.size());
-
-      return filenames[streamNr];
+      return "unknown";
     }
 
 
@@ -878,7 +879,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.directory;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.directory;
+
+      return "unknown";
     }
 
 
@@ -888,9 +892,8 @@ namespace LOFAR
         return 0;
 
       switch (outputType) {
-      case CORRELATED_DATA:   return settings.correlator.files.size();
-      case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      return settings.beamFormer.files.size();
+      case CORRELATED_DATA:    return settings.correlator.files.size();
+      case BEAM_FORMED_DATA:   return settings.beamFormer.files.size();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
     }

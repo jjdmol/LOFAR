@@ -133,7 +133,7 @@ namespace LOFAR
         }
       }
 
-      std::string commandLine = str(boost::format("%s%s %u %d %u")
+      std::string commandLine = str(boost::format("%s%s %u %d")
 #if defined USE_VALGRIND
                                     % "valgrind --leak-check=full "
 #else
@@ -142,11 +142,6 @@ namespace LOFAR
                                     % executable
                                     % itsParset.observationID()
                                     % itsRank
-#if defined WORDS_BIGENDIAN
-                                    % 1
-#else
-                                    % 0
-#endif
                                     );
 
       SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey);

@@ -37,6 +37,13 @@
 #include <CoInterface/Align.h>
 #include <CoInterface/Exceptions.h>
 
+// Don't enable yet, because it's untested
+#undef HAVE_ALGLIB
+
+#ifdef HAVE_ALGLIB
+#include <bessel.h>
+#endif
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -114,6 +121,9 @@ namespace LOFAR
     // It was released under the GNU LESSER GENERAL PUBLIC LICENSE Version 2.1
     double FilterBank::besselI0(double x)
     {
+#ifdef HAVE_ALGLIB
+      return ::besseli0(x);
+#else
       // Parameters of the polynomial approximation
       const double p1 = 1.0, p2 = 3.5156229, p3 = 3.0899424, p4 = 1.2067492, p5 = 0.2659732, p6 = 3.60768e-2, p7 = 4.5813e-3;
 
@@ -135,6 +145,7 @@ namespace LOFAR
       }
 
       return result;
+#endif
     }
 
 
@@ -374,7 +385,18 @@ namespace LOFAR
         // Use a n-point Kaiser window.
         // The beta parameter is found in matlab / octave with
         // [n,Wn,bta,filtype]=kaiserord([fsin/channels 1.4*fsin/channels],[1 0],[10^(0.5/20) 10^(-91/20)],fsin);
-        // where fsin is the sample freq
+        // where fsin is the sample freq, and channels the number of channels.
+        //
+        // The beta is independent of fsin and channels, and in our case is
+        // equal to
+        //   alpha = 91 dB (= -20*log10(10^(-91/20)))
+        //
+        //   beta = 0.1102 * (alpha - 8.7)
+        // as derived emperically by Kaiser.
+        //
+        // see also
+        //   http://octave.sourceforge.net/signal/function/kaiserord.html
+        //   http://www.mathworks.nl/help/signal/ref/kaiser.html
         double beta = 9.0695;
         if (itsVerbose) {
           logStr << "Kaiser window with beta = " << beta;

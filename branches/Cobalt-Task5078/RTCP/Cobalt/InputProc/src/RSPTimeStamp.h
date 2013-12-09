@@ -75,6 +75,14 @@ namespace LOFAR
       operator uint64 () const;
       operator struct timespec () const;
 
+      // Give the current time, for the given clock speed.
+      static TimeStamp now(unsigned clockSpeed);
+
+      // Convert from seconds since 1970. This is a separate static
+      // function to avoid confusion with the TimeStamp(uint64, unsigned)
+      // constructor.
+      static TimeStamp convert(double seconds, unsigned clockSpeed);
+
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
     protected:

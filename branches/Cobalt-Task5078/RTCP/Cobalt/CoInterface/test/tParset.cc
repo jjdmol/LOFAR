@@ -746,11 +746,51 @@ SUITE(correlator) {
   }
 }
 
-SUITE(beamformer) {
+
 /*
  * TODO: Test other beam former pipeline settings too.
  */
 
+SUITE(beamformer) {
+  SUITE(files) {
+    TEST(location) {
+      Parset ps;
+
+      // set
+      ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].nrTiedArrayBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
+      ps.add("Observation.DataProducts.Output_Beamformed.filenames", "[tab1.hdf5]");
+      ps.add("Observation.DataProducts.Output_Beamformed.locations", "[host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL("tab1.hdf5", ps.settings.beamFormer.files[0].location.filename);
+      CHECK_EQUAL("host",      ps.settings.beamFormer.files[0].location.host);
+      CHECK_EQUAL("/dir",      ps.settings.beamFormer.files[0].location.directory);
+    }
+
+    TEST(manyLocations) {
+      Parset ps;
+
+      // set
+      ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].nrTiedArrayBeams", "500");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
+      ps.add("Observation.DataProducts.Output_Beamformed.filenames", "[tab1..tab500]");
+      ps.add("Observation.DataProducts.Output_Beamformed.locations", "[500*host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      for(size_t i = 0; i < 500; ++i) {
+        CHECK_EQUAL(str(format("tab%u") % (i+1)), ps.settings.beamFormer.files[i].location.filename);
+        CHECK_EQUAL("host",      ps.settings.beamFormer.files[i].location.host);
+        CHECK_EQUAL("/dir",      ps.settings.beamFormer.files[i].location.directory);
+      }
+    }
+  }
 
   TEST(calcInternalNrChannels) {
     // Validate that we compute the (max) nr of channels for delay compensation
@@ -805,6 +845,7 @@ SUITE(beamformer) {
     CHECK_EQUAL(64u, nDelayCh); // doc states 73, pow2 gives 64
   }
 }
+
 
 /*
  * ===============================================

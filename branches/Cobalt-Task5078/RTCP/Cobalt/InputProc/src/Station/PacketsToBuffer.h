@@ -23,7 +23,9 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 #include <ios>
+#include <cfloat> // for DBL_MAX
 #include <sys/time.h>
 #include <boost/format.hpp>
 
@@ -80,15 +82,15 @@ namespace LOFAR
       static const uint32 LOG_INTERVAL = 10;
 
       // Process data for this board until interrupted or end of data.
-      // `packet' is the receive buffer for packets. If a new mode is detected,
-      // `packet' is filled with the last read packet, and a PacketWriter::BadModeException
+      // `packets' is the receive buffer for packets. If a new mode is detected,
+      // `packets' is filled with the last read packets, and a PacketWriter::BadModeException
       // is thrown.
       //
       // `mode' indicates the expected mode.
       //
-      // If `writeGivenPacket' is true, the provided `packet' is written as well.
+      // If `write[i]' is true, the provided `packets[i]' is written as well.
       template<typename T>
-      void process( struct RSP &packet, const struct BoardMode &mode, bool writeGivenPacket );
+      void process( const struct BoardMode &mode, std::vector<struct RSP> &packets, std::vector<bool> &write );
 
       // Triggers statistics logging every LOG_INTERVAL seconds
       virtual void logStatistics( PacketReader &reader, const struct RSP &packet );
@@ -101,7 +103,8 @@ namespace LOFAR
     class MultiPacketsToBuffer : public RSPBoards
     {
     public:
-      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_ );
+      MultiPacketsToBuffer( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &inputStreams_,
+                            double logFrom = DBL_MAX, double logTo = 0.0);
 
       virtual ~MultiPacketsToBuffer();
 
@@ -117,6 +120,8 @@ namespace LOFAR
 
       // log statistics
       double lastlog_time;           // last time we logged
+      const double logFrom;          // start logging at this time
+      const double logTo;            // stop logging at this time
       std::vector<double> sum_flags; // sum of flags/second
       double num_flags;              // number of seconds measured
 
