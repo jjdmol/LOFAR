@@ -86,7 +86,6 @@ namespace LOFAR
                                          params.nrChannelsPerSubband,
                                          1.0 / params.nrHighResolutionChannels);
       stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
-     
     }
 
 

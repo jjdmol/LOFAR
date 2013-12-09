@@ -27,7 +27,7 @@ namespace LOFAR
   {
     namespace BandPass
     {
-      void computeCorrectionFactors(float *factors, unsigned nrChannels, float scale = 1.0f);
+      void computeCorrectionFactors(float *factors_out, unsigned nrChannels, double scale = 1.0);
     }
   }
 }
