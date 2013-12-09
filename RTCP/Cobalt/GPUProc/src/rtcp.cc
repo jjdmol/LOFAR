@@ -440,11 +440,10 @@ int main(int argc, char **argv)
   LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
-    time_t completing_start = time(0);
-
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
+    time_t completing_start = time(0);
     storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");

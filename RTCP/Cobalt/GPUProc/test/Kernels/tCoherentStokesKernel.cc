@@ -54,10 +54,11 @@ struct ParsetSUT
     nrOutputSamples,
     nrStations, 
     nrInputSamples, 
-    blockSize;
+    blockSize,
+    nrDelayCompensationChannels;
 
   Parset parset;
-  // TODO: The test sizes are set to a minimum due to a parset bug. All original values are left as comment
+
   ParsetSUT(size_t inrChannels =  13,
     size_t inrOutputSamples = 1024,
     size_t inrStations =  43,
@@ -70,7 +71,8 @@ struct ParsetSUT
     nrOutputSamples(inrOutputSamples),
     nrStations(inrStations),
     nrInputSamples(nrOutputSamples * timeIntegrationFactor), 
-    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples)
+    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples),
+    nrDelayCompensationChannels(64)
   {
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
@@ -87,6 +89,8 @@ struct ParsetSUT
     parset.add("Observation.DataProducts.Output_Beamformed.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
     parset.add("Observation.DataProducts.Output_Beamformed.locations", str(format("[%d*:.]") % nr_files));
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
+               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };

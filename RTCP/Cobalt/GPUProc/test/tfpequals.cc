@@ -56,7 +56,7 @@ void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, T eps
   ASSERT(fpEquals(-large+largeDiff, -large-largeDiff, eps));
 
   // NaN, Inf
-  // A NaN is inequal to any value, even NaN.
+  // A NaN is unequal to any value, even NaN.
   ASSERT(!fpEquals(nan, nan, eps));
   ASSERT(fpEquals(posInf, posInf, eps));
   ASSERT(fpEquals(negInf, negInf, eps));

@@ -746,8 +746,9 @@ SUITE(correlator) {
   }
 }
 
+
 /*
- * TODO: Test beam former pipeline settings.
+ * TODO: Test other beam former pipeline settings too.
  */
 
 SUITE(beamformer) {
@@ -790,7 +791,61 @@ SUITE(beamformer) {
       }
     }
   }
+
+  TEST(calcInternalNrChannels) {
+    // Validate that we compute the (max) nr of channels for delay compensation
+    // correctly.
+    Parset ps;
+
+    ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.add("Observation.sampleClock", "200");
+    ps.add("Observation.antennaSet", "HBA_JOINED");
+
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000_uv.MS, SB001_uv.MS, SB002_uv.MS]");
+    ps.add("Observation.DataProducts.Output_Correlated.locations", "[3*:.]");
+
+    ps.add("Observation.Dataslots.CS001HBA.RSPBoardList", "[0, 0, 1]");
+    ps.add("Observation.Dataslots.CS002HBA.RSPBoardList", "[0, 0, 1]");
+    ps.add("Observation.Dataslots.CS001HBA.DataslotList", "[0, 1, 2]");
+    ps.add("Observation.Dataslots.CS002HBA.DataslotList", "[0, 1, 2]");
+
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001, CS002]");
+    ps.add("Observation.referencePhaseCenter", "[0.0, 0.0, 0.0]");
+
+    // Check what it calculated. Compare the max for delay comp with the numbers
+    // in the bf pipeline design doc, but note that:
+    // - we also enforce a power of 2 FFT size
+    // - we have maxed it at 256 channels/sb
+    const unsigned maxNrDelayCh = 256;
+    unsigned nDelayCh;
+
+    // Fake the coords and ref of CS001 and CS002 to test with numbers that
+    // correspond to the Cobalt design document. Idem for the subbands.
+
+    // HBA_110_190 top of sb 409 is almost 180 MHz
+    ps.add("Observation.bandFilter", "HBA_110_190");
+    ps.add("Observation.Beam[0].subbandList", "[407, 408, 409]");
+
+    // 3 km max (unprojected) delay distance
+    ps.add("PIC.Core.CS001HBA.phaseCenter", "[-3000.0, 0.0, 0.0]");
+    ps.add("PIC.Core.CS002HBA.phaseCenter", "[1000.0, 0.0, 0.0]");
+    ps.updateSettings();
+
+    nDelayCh = ps.settings.beamFormer.nrDelayCompensationChannels;
+    CHECK_EQUAL(maxNrDelayCh, nDelayCh); // doc states 36718, pow2 and maxed gives 256
+
+
+    // 1500 km max (unprojected) delay distance
+    ps.replace("PIC.Core.CS001HBA.phaseCenter", "[0.0, 1500000.0, 0.0]");
+    ps.updateSettings();
+
+    nDelayCh = ps.settings.beamFormer.nrDelayCompensationChannels;
+    CHECK_EQUAL(64u, nDelayCh); // doc states 73, pow2 gives 64
+  }
 }
+
 
 /*
  * ===============================================

@@ -25,6 +25,7 @@
 #include <vector>
 #include <complex>
 #include <cmath>
+#include <stdexcept>
 
 #include <fftw3.h>
 
@@ -2092,7 +2093,7 @@ namespace LOFAR
   };
 
 
-  void computeCorrectionFactors(float *factors, unsigned nrChannels)
+  void computeCorrectionFactors(float *factors_out, unsigned nrChannels, double scale)
   {
     // The following matlab functions are used:
 
@@ -2108,29 +2109,63 @@ namespace LOFAR
     if (fftSize < STATION_FILTER_LENGTH)
       fftSize = STATION_FILTER_LENGTH;
 
+    // The advantage of computing in double precision is negligible,
+    // but as an init operation, the disadvantage is also negligible.
+
     // it is not worth to use the more complex R2C FFTW method
-    std::vector<std::complex<float> > in(fftSize), out(fftSize);
 
-    fftwf_plan plan;
+    struct FFTW_Buffer {
+      fftw_complex* buf;
+
+      FFTW_Buffer(size_t nr_el)
+      : buf((fftw_complex *)fftw_malloc(nr_el * sizeof(std::complex<double>)))
+      {
+        if (buf == NULL)
+          // bad_alloc does not take an arg, so throw runtime_error
+          throw std::runtime_error("fftw_malloc() returned NULL");
+      }
+
+      ~FFTW_Buffer()
+      {
+        fftw_free(buf);
+      }
+    };
+    FFTW_Buffer in(fftSize);
+    FFTW_Buffer out(fftSize);
+
+    fftw_plan plan;
 #pragma omp critical (FFTW)
-    plan = fftwf_plan_dft_1d(fftSize, reinterpret_cast<fftwf_complex *>(&in[0]), reinterpret_cast<fftwf_complex *>(&out[0]), FFTW_FORWARD, FFTW_ESTIMATE);
+    plan = fftw_plan_dft_1d(fftSize, in.buf, out.buf,
+                            FFTW_FORWARD, FFTW_ESTIMATE);
 
-    for (unsigned i = 0; i < STATION_FILTER_LENGTH; i++)
-      in[i] = stationFilterConstants[i];
+    unsigned i;
+    for (i = 0; i < STATION_FILTER_LENGTH; i++)
+    {
+      in.buf[i][0] = (double)stationFilterConstants[i]; // real
+      in.buf[i][1] = 0.0; // imag
+    }
+    for ( ; i < fftSize; i++)
+    {
+      in.buf[i][0] = in.buf[i][1] = 0.0;
+    }
 
-    for (unsigned i = STATION_FILTER_LENGTH; i < fftSize; i++)
-      in[i] = 0;
-
-    fftwf_execute(plan);
+    fftw_execute(plan);
 #pragma omp critical (FFTW)
-    fftwf_destroy_plan(plan);
+    fftw_destroy_plan(plan);
 
     for (unsigned i = 0; i < nrChannels; i++) {
-      const std::complex<float> m = out[(i - nrChannels / 2) % fftSize];
-      const std::complex<float> l = out[(i - 3 * nrChannels / 2) % fftSize];
-      const std::complex<float> r = out[i + nrChannels / 2];
+      const std::complex<double> m(
+        out.buf[(i - nrChannels / 2) % fftSize][0],
+        out.buf[(i - nrChannels / 2) % fftSize][1]);
+      const std::complex<double> l(
+        out.buf[(i - 3 * nrChannels / 2) % fftSize][0],
+        out.buf[(i - 3 * nrChannels / 2) % fftSize][1]);
+      const std::complex<double> r(
+        out.buf[i + nrChannels / 2][0],
+        out.buf[i + nrChannels / 2][1]);
 
-      factors[i] = std::pow(2, 25) / std::sqrt(std::abs(m * m + l * l + r * r));
+      factors_out[i] = (float)(std::pow(2.0, 25.0) /
+                               std::sqrt(std::abs(m * m + l * l + r * r)) * scale);
     }
   }
 
