@@ -28,25 +28,14 @@
 #include <set>
 #include <algorithm>
 #include <boost/format.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/PosixTime.h>
-#include <CoInterface/OutputTypes.h>
-#include <CoInterface/Config.h>
-#include <CoInterface/Exceptions.h>
-#include <CoInterface/PrintVector.h>
-#include <CoInterface/SetOperations.h>
 
 using namespace std;
 using boost::format;
-
 
 namespace LOFAR
 {
@@ -82,6 +71,25 @@ namespace LOFAR
         case INVALID_STOKES:
         default:
           return 0;
+      }
+    }
+
+
+    static string stokesType( StokesType type )
+    {
+      switch(type) {
+      case STOKES_I: 
+        return "I";
+
+      case STOKES_IQUV: 
+        return "IQUV";
+
+      case STOKES_XXYY:
+        return "XXYY";
+
+      case INVALID_STOKES:
+      default:
+        return "";
       }
     }
 
@@ -1300,6 +1308,58 @@ namespace LOFAR
     string Parset::PVSS_TempObsName() const
     {
       return getString("_DPname","");
+    }
+
+    Parset Parset::getGlobalLTAFeedbackParameters() const
+    {
+      Parset ps;
+      if (settings.correlator.enabled) {
+        ps.add("Observation.Correlator.integrationInterval",
+               str(format("%.16g") % settings.correlator.integrationTime()));
+      }
+      if (settings.beamFormer.enabled) {
+        const ObservationSettings::BeamFormer::StokesSettings&
+          coherentStokes = settings.beamFormer.coherentSettings;
+        const ObservationSettings::BeamFormer::StokesSettings&
+          incoherentStokes = settings.beamFormer.incoherentSettings;
+        ps.add("Observation.CoherentStokes.rawSamplingTime",    // in msec
+               str(format("%.16g") % (1000 * sampleDuration())));
+        ps.add("Observation.IncoherentStokes.rawSamplingTime",  // in msec
+               str(format("%.16g") % (1000 * sampleDuration())));
+        ps.add("Observation.CoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels * 
+                    coherentStokes.timeIntegrationFactor)));
+        ps.add("Observation.IncoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels * 
+                    incoherentStokes.timeIntegrationFactor)));
+        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
+        ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
+        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % coherentStokes.nrChannels));
+        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % incoherentStokes.nrChannels));
+        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor",
+               "1");
+        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor",
+               "1");
+        ps.add("Observation.CoherentStokes.stokes",
+               stokesType(coherentStokes.type));
+        ps.add("Observation.IncoherentStokes.stokes",
+               stokesType(incoherentStokes.type));
+        ps.add("Observation.CoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.IncoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.CoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+        ps.add("Observation.IncoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+      }
+      return ps;
     }
 
     size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
