@@ -129,8 +129,6 @@ inline __device__ fcomplex operator*(fcomplex a, float b)
   return make_float2(a.x * b, a.y * b);
 }
 
-
-
 inline __device__ dcomplex operator*(dcomplex a, double b)
 {
   return make_double2(a.x * b, a.y * b);

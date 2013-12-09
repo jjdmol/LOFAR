@@ -151,7 +151,7 @@ namespace LOFAR
         return params;
       }
 
-S      FIR_FilterKernel::Parameters 
+      FIR_FilterKernel::Parameters 
       BeamFormerFactories::
       incoherentFirFilterParams(const Parset &ps,
             size_t nrSubbandsPerSubbandProc) const 
