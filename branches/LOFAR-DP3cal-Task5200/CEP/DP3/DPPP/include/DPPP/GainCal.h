@@ -33,6 +33,7 @@
 #include <ParmDB/ParmFacade.h>
 #include <ParmDB/ParmSet.h>
 #include <DPPP/SourceDBUtil.h>
+#include <StationResponse/Station.h>
 #include <ParmDB/Parm.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -60,22 +61,12 @@ namespace {
       {
         vector<double>    unknowns;
         vector<double>    uvw;
+        vector<dcomplex>  model_patch; // Contains the model for only one patch
         vector<dcomplex>  model;
         vector<dcomplex>  model_subtr;
+        vector<StationResponse::matrix22c_t> beamvalues; // [nst,nch]
         size_t            count_converged;
       };
-
-      static void initThreadPrivateStorage(ThreadPrivateStorage &storage,
-                                    size_t nDirection, size_t nStation,
-                                    size_t nBaseline, size_t nChannel,
-                                    size_t nChannelSubtr)
-      {
-        storage.unknowns.resize(nDirection * nStation * 8);
-        storage.uvw.resize(nStation * 3);
-        storage.model.resize(nBaseline * nChannel * 4);
-        storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
-        storage.count_converged = 0;
-      }
 
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
@@ -102,6 +93,30 @@ namespace {
 
 
     private:
+      static void initThreadPrivateStorage(ThreadPrivateStorage &storage,
+                                    size_t nDirection, size_t nStation,
+                                    size_t nBaseline, size_t nChannel,
+                                    size_t nChannelSubtr)
+      {
+        storage.unknowns.resize(nDirection * nStation * 8);
+        storage.uvw.resize(nStation * 3);
+        storage.model.resize(nBaseline * nChannel * 4);
+        storage.model_patch.resize(nBaseline * nChannel * 4);
+        storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
+        storage.beamvalues.resize(nStation * nChannel);
+        storage.count_converged = 0;
+      }
+
+      // Calculate the beam for the given sky direction and frequencies.
+      // Apply it to the data.
+      // If apply==False, nothing is done.
+      void applyBeam (double time, const Position& pos, bool apply,
+                      const casa::Vector<double>& chanFreqs,
+                      dcomplex* data, StationResponse::matrix22c_t* beamvalues);
+
+      // Convert a direction to ITRF.
+      StationResponse::vector3r_t dir2Itrf (const casa::MDirection&);
+
       // Do the actual calibration (called by process and finish)
       void handleCal();
 
@@ -110,11 +125,22 @@ namespace {
       string           itsName;
       string           itsSourceDBName;
       string           itsParmDBName;
+      bool             itsApplyBeam;
       boost::shared_ptr<BBS::ParmFacade> itsParmDB;
       vector<Baseline> itsBaselines;
       Position         itsPhaseRef;
 
+      uint             itsCellSizeTime;
+      uint             itsCellSizeFreq;
+
       vector<ThreadPrivateStorage> itsThreadStorage;
+
+      //# Variables for conversion of directions to ITRF.
+      casa::MeasFrame                       itsMeasFrame;
+      casa::MDirection::Convert             itsMeasConverter;
+
+      //# The info needed to calculate the station beams.
+      vector<StationResponse::Station::Ptr> itsAntBeamInfo;
 
       PatchList        itsPatchList;
 
