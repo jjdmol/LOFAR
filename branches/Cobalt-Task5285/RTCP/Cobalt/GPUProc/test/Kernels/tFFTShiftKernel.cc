@@ -1,4 +1,4 @@
-//# tFFTShiftKernel.cc: test CoherentStokesKernel class
+//# tFFTShiftKernel.cc: test FFTShiftKernel class
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -91,6 +91,8 @@ TEST(BufferSizes)
   CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
 }
 
+
+
 struct SUTWrapper : ParsetSUT
 {
   gpu::Device device;
@@ -100,8 +102,9 @@ struct SUTWrapper : ParsetSUT
   size_t nrTabs;
   KernelFactory<FFTShiftKernel> factory;
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
-  MultiDimArrayHostBuffer<fcomplex, 1> hOutput;
+  MultiDimArrayHostBuffer<fcomplex, 4> hOutput;
   MultiDimArrayHostBuffer<fcomplex, 4> hRefOutput;
+  gpu::DeviceMemory deviceMemory;
   FFTShiftKernel::Buffers buffers;
   scoped_ptr<FFTShiftKernel> kernel;
 
@@ -118,22 +121,20 @@ struct SUTWrapper : ParsetSUT
     hInput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
-    hOutput( boost::extents[0], context), // Inplace operation so no outputbuffer
+    hOutput(boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband], 
+        context), 
     hRefOutput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
-    buffers(
-      gpu::DeviceMemory(
-        context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
-      gpu::DeviceMemory(
-      context, hOutput.size())),
+    deviceMemory(context, factory.bufferSize(FFTShiftKernel::INPUT_DATA)),
+    buffers(deviceMemory, deviceMemory),
     kernel(factory.create(stream, buffers))
   {
     initializeHostBuffers();
   }
 
   // Needed to adapt the number of channels in the parameterset
-  // This code can also b found in the factory a
+  // This code can also be found in the factory a
   FFTShiftKernel::Parameters FFTShiftParams(Parset parset, unsigned nrChannels)
   {
     FFTShiftKernel::Parameters params(parset);
@@ -162,7 +163,7 @@ struct SUTWrapper : ParsetSUT
     CHECK_EQUAL(buffers.input.size(), hInput.size());
     CHECK_EQUAL(buffers.output.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(), fcomplex(0.0f, 0.0f));
-    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
+    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), fcomplex(0.0f, 0.0f));
   }
 
   void runKernel()
@@ -171,11 +172,11 @@ struct SUTWrapper : ParsetSUT
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
     stream.writeBuffer(buffers.input, hInput, true);
-    stream.writeBuffer(buffers.output, hOutput, true); // copy salte output to device
+    //stream.writeBuffer(buffers.output, hOutput, true); // copy salte output to device
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, buffers.input, true);
+    stream.readBuffer(hOutput, buffers.output, true);
   }
 
 };
@@ -239,7 +240,7 @@ TEST(FlipValues)
 
   std::vector<size_t> channels(channel_sizes,
     channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
-  size_t sample_sizes[] = { 4096 };
+  size_t sample_sizes[] = { 2048, 4096 };
   std::vector<size_t> samples(sample_sizes,
     sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
@@ -257,13 +258,15 @@ TEST(FlipValues)
     for (unsigned idx = 0; idx < sut.hInput.num_elements(); ++idx)
       sut.hInput.data()[idx] = fcomplex(1.0f, 1.0f);
 
-    for (unsigned idx = 0; idx < (sut.hRefOutput.num_elements() / 2); idx += 2)
+    // The output
+    for (unsigned idx = 0; idx < (sut.hRefOutput.num_elements() / 2); ++idx)
     {
       sut.hRefOutput.data()[idx * 2] = fcomplex(1.0f, 1.0f);
       sut.hRefOutput.data()[idx * 2 + 1] = fcomplex(-1.0f, -1.0f);
     }
 
     sut.runKernel();
+
     CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
       sut.hOutput.data(),
       sut.hOutput.num_elements());

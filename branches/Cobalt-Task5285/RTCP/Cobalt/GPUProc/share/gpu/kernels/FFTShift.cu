@@ -75,5 +75,4 @@ __global__ void FFTShift(void *inputDataPtr)
   (*input)[station][1][channel][sample] = (*input)[station][1][channel][sample] * factor;
 
 }
-
 }

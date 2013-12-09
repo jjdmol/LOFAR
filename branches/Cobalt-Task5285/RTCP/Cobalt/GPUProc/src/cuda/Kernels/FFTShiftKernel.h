@@ -57,7 +57,6 @@ namespace LOFAR
                              const gpu::Module &module,
                              const Buffers &buffers,
                              const Parameters &param);
-
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
