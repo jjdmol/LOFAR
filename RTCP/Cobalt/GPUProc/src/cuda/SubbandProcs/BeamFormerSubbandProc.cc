@@ -536,9 +536,10 @@ namespace LOFAR
       }
     }
 
-    void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
+    bool BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
     {
       (void)_output;
+      return true;
     }
 
   }
