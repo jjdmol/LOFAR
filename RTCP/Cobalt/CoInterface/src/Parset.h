@@ -706,7 +706,7 @@ namespace LOFAR
       std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
-      struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
+      std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.
