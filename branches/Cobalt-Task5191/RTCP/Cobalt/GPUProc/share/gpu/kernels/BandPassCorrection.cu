@@ -47,8 +47,8 @@
 #error Precondition violated: NR_STATIONS > 0
 #endif
 
-#if !(NR_CHANNELS_1 > 1)
-#error Precondition violated: NR_CHANNELS_1 > 1
+#if !(NR_CHANNELS_1 > 0)
+#error Precondition violated: NR_CHANNELS_1 > 0
 #endif
 
 #if !(NR_CHANNELS_2 % 16 == 0)

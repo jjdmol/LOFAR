@@ -13,7 +13,7 @@ function error {
 
 function getkey {
   KEY=$1
-  <$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1";'
+  <$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1";' | tail -n 1
 }
 
 [ -n "$PARSET" ] || error "No parset specified"

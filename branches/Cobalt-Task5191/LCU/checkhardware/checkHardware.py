@@ -294,10 +294,7 @@ def main():
                 logger.info(" %s, time = %s" %(testInfo.get(i), args.get(i)))
     logger.info("-"*40)
     
-    if os.access(dataDir(), os.F_OK):
-        removeAllDataFiles()
-    else:
-        os.mkdir(dataDir())
+    removeAllDataFiles()
 
     # use format YYYYMMDD_HH:MM:SS
     stop_time = -1

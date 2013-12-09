@@ -2,6 +2,10 @@
 
 include(LofarCTest)
 
+if(UNITTEST++_FOUND)
+  lofar_add_test(tSubbandWriter tSubbandWriter.cc)
+endif()
+
 lofar_add_test(tMeasurementSetFormat tMeasurementSetFormat.cc)
 lofar_add_test(tMSWriterDAL tMSWriterDAL.cc)
 # The MS Writer needs the LOFAR Storage manager and static meta data files.
@@ -16,7 +20,6 @@ configure_file(
 #lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)  disabled until fixed in #5075
 lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)
-#lofar_add_test(tAH_TestStorage tAH_TestStorage.cc)
 lofar_add_test(tTBB_StaticMapping tTBB_StaticMapping.cc)
 #lofar_add_test(tTBB_Writer)
 

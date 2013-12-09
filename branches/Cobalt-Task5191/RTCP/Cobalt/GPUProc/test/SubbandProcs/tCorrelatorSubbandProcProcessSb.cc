@@ -149,8 +149,8 @@ int main() {
     in.delaysAtBegin.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.delaysAfterEnd.size(); i++)
     in.delaysAfterEnd.get<float>()[i] = 0.0f;
-  for (size_t i = 0; i < in.phaseOffsets.size(); i++)
-    in.phaseOffsets.get<float>()[i] = 0.0f;
+  for (size_t i = 0; i < in.phase0s.size(); i++)
+    in.phase0s.get<float>()[i] = 0.0f;
 
   bool integrationDone(false);
   size_t block(0);

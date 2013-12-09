@@ -274,7 +274,6 @@ namespace LOFAR
 
       // For now, keep optimisations the same to detect changes in
       // output with reference.
-      flags.insert("-use_fast_math");
       flags.insert("--restrict");
       flags.insert("-O3");
 

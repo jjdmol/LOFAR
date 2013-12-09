@@ -19,6 +19,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <GPUProc/Package__Version.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -69,6 +70,7 @@
 #include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
+#include <GPUProc/SysInfoLogger.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -169,6 +171,8 @@ int main(int argc, char **argv)
 #else
   LOG_WARN("Running without MPI!");
 #endif
+
+  LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
   /*
    * Initialise the system environment
@@ -343,20 +347,16 @@ int main(int argc, char **argv)
   }
 
   SmartPtr<Pipeline> pipeline;
-  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-    outputType = CORRELATED_DATA;
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-    outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
     pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
-    outputType = BEAM_FORMED_DATA;
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
@@ -401,6 +401,9 @@ int main(int argc, char **argv)
   DirectInput::instance(&ps);
 #endif
 
+  // Periodically log system information
+  SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
+
   /*
    * RUN stage
    */
@@ -424,10 +427,12 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation(outputType);
+        pipeline->processObservation();
       }
     }
   }
+
+  pipeline = 0;
 
   /*
    * COMPLETING stage
@@ -440,13 +445,12 @@ int main(int argc, char **argv)
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
-    storageProcesses->forwardFinalMetaData(completing_start + 2);
+    storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 10);
+    storageProcesses->stop(completing_start + 600);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -455,6 +459,7 @@ int main(int argc, char **argv)
     feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
+    feedbackLTA.add("_isCobalt", "T"); // for MoM, to discriminate between Cobalt and BG/P observations
     feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
     feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
 
@@ -471,6 +476,9 @@ int main(int argc, char **argv)
     } else {
       LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
     }
+
+    // final cleanup
+    storageProcesses = 0;
   }
   LOG_INFO("===== SUCCESS =====");
 

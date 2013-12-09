@@ -78,32 +78,6 @@ namespace LOFAR
     }
 
 
-    void Delays::BeamDelays::read( Stream *str ) {
-      size_t nrTABs;
-
-      str->read(&SAP, sizeof SAP);
-
-      str->read(&nrTABs, sizeof nrTABs);
-      ASSERT(nrTABs == TABs.size());
-
-      if (nrTABs > 0) {
-        str->read(&TABs[0], TABs.size() * sizeof TABs[0]);
-      }
-    }
-
-
-    void Delays::BeamDelays::write( Stream *str ) const {
-      size_t nrTABs = TABs.size();
-
-      str->write(&SAP, sizeof SAP);
-
-      str->write(&nrTABs, sizeof nrTABs);
-      if (nrTABs > 0) {
-        str->write(&TABs[0], TABs.size() * sizeof TABs[0]);
-      }
-    }
-
-
     Delays::AllDelays::AllDelays( const Parset &parset ) {
         SAPs.resize(parset.settings.SAPs.size());
 
@@ -114,29 +88,6 @@ namespace LOFAR
             SAPs[sap].TABs.resize(bfSap.TABs.size());
           }
         }
-    }
-
-
-    void Delays::AllDelays::read( Stream *str ) {
-      size_t nrSAPs;
-
-      str->read(&nrSAPs, sizeof nrSAPs);
-      ASSERT(nrSAPs == SAPs.size());
-
-      for (size_t n = 0; n < SAPs.size(); ++n) {
-        SAPs[n].read(str);
-      }
-    }
-
-
-    void Delays::AllDelays::write( Stream *str ) const {
-      size_t nrSAPs = SAPs.size();
-
-      str->write(&nrSAPs, sizeof nrSAPs);
-
-      for (size_t n = 0; n < SAPs.size(); ++n) {
-        SAPs[n].write(str);
-      }
     }
 
 
@@ -248,8 +199,7 @@ namespace LOFAR
         d.direction[2] = 0.0;
       }
 
-      // Add non-geometric delays
-      d.delay += baseDelay();
+      d.clockCorrection = clockCorrection();
 
       return d;
     }
@@ -300,11 +250,13 @@ namespace LOFAR
       (void)timestamp;
 
       for (size_t sap = 0; sap < result.SAPs.size(); ++sap) {
-        result.SAPs[sap].SAP.delay = baseDelay();
+        result.SAPs[sap].SAP.delay = 0.0;
+        result.SAPs[sap].SAP.clockCorrection = clockCorrection();
 
         if (parset.settings.beamFormer.enabled) {
           for (size_t tab = 0; tab < result.SAPs[sap].TABs.size(); tab++) {
-            result.SAPs[sap].TABs[tab].delay = baseDelay();
+            result.SAPs[sap].TABs[tab].delay = 0.0;
+            result.SAPs[sap].TABs[tab].clockCorrection = clockCorrection();
           }
         }
       }
@@ -312,11 +264,11 @@ namespace LOFAR
 #endif
 
 
-    double Delays::baseDelay() const
+    double Delays::clockCorrection() const
     {
-      double clockCorrection = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
+      double corr = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
 
-      return clockCorrection;
+      return corr;
     }
 
 
@@ -408,12 +360,12 @@ namespace LOFAR
       vector<ssize_t> coarseDelaysSamples(parset.settings.SAPs.size()); // [sap], in samples
       vector<double>  coarseDelaysSeconds(parset.settings.SAPs.size()); // [sap], in seconds
       for (size_t sap = 0; sap < parset.nrBeams(); ++sap) {
-        double delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay;
-        double delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay;
+        double delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay();
+        double delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay();
 
         // The coarse delay compensation is based on the average delay
         // between begin and end.
-        coarseDelaysSamples[sap] = static_cast<ssize_t>(floor(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth() + 0.5));
+        coarseDelaysSamples[sap] = static_cast<ssize_t>(round(0.5 * (delayAtBegin + delayAfterEnd) * parset.subbandBandwidth()));
         coarseDelaysSeconds[sap] = coarseDelaysSamples[sap] / parset.subbandBandwidth();
       }
 
@@ -434,12 +386,12 @@ namespace LOFAR
         unsigned sap = parset.settings.subbands[subband].SAP;
         double coarseDelay = coarseDelaysSeconds[sap];
 
-        metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.delay - coarseDelay;
-        metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.delay - coarseDelay;
+        metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay() - coarseDelay;
+        metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay() - coarseDelay;
 
         for (size_t tab = 0; tab < metaDatas[i].TABs.size(); ++tab) {
-          metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].delay - coarseDelay;
-          metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].delay - coarseDelay;
+          metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
+          metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
         }
       }
     }

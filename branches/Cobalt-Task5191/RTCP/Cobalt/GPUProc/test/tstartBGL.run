@@ -63,8 +63,8 @@ echo "        (expects success)"
 echo "***************************"
 startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
-# PID file must be present
-[ -r $LOFARROOT/var/run/rtcp-1000.pid ] || error "Cannot read $LOFARROOT/var/run/rtcp-1000.pid"
+# PID file must be gone
+[ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
 
 # Log file must be present
 [ -r $LOFARROOT/var/log/rtcp-1000.log ] || error "Cannot read $LOFARROOT/var/log/rtcp-1000.log"

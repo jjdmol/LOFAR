@@ -91,7 +91,7 @@ namespace LOFAR
         factories.delayAndBandPass.bufferSize(
           DelayAndBandPassKernel::DELAYS),
         factories.delayAndBandPass.bufferSize(
-          DelayAndBandPassKernel::PHASE_OFFSETS),
+          DelayAndBandPassKernel::PHASE_ZEROS),
         context),
       devFilteredData(
         context,
@@ -99,7 +99,6 @@ namespace LOFAR
                    DelayAndBandPassKernel::INPUT_DATA),
                  factories.correlator.bufferSize(
                    CorrelatorKernel::OUTPUT_DATA))),
-      
       // FIR filter
       devFilterWeights(
         context,
@@ -123,7 +122,7 @@ namespace LOFAR
       delayAndBandPassBuffers(
         devFilteredData, devInput.inputSamples,
         devInput.delaysAtBegin, devInput.delaysAfterEnd,
-        devInput.phaseOffsets, devBandPassCorrectionWeights),
+        devInput.phase0s, devBandPassCorrectionWeights),
       delayAndBandPassKernel(
         factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
 
@@ -374,7 +373,7 @@ namespace LOFAR
           queue.writeBuffer(
             devInput.delaysAfterEnd, input.delaysAfterEnd, false);
           queue.writeBuffer(
-            devInput.phaseOffsets, input.phaseOffsets, false);
+            devInput.phase0s, input.phase0s, false);
 
           prevSAP = SAP;
           prevBlock = block;

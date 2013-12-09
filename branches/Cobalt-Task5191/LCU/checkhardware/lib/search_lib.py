@@ -60,10 +60,11 @@ class cSearchPeak:
                             
             if lookformax:
                 if now < (maxval - delta):
-                    for j in range(maxpos,0,-1):
-                        if self.data[j] < (maxval - delta):
-                            self.max_peaks.append((x[i] + x[j]) / 2)
-                            break
+                    #for j in range(maxpos,0,-1):
+                    #    if self.data[j] < (maxval - delta):
+                    #        self.max_peaks.append((x[i] + x[j]) / 2)
+                    #        break
+                    self.max_peaks.append(maxpos)
                     minval = now
                     minpos = x[i]
                     lookformax = False
@@ -226,17 +227,19 @@ def search_oscillation(data, delta, start_sb, stop_sb):
     info = list()
     
     _data = data[:,:,start_sb:stop_sb]
-    mean_spectra = ma.mean(ma.mean(_data,axis=1),axis=0)
-    peaks = cSearchPeak(mean_spectra)
+    median_spectra = ma.median(ma.mean(_data,axis=1),axis=0)
+    peaks = cSearchPeak(median_spectra)
     if not peaks.valid_data:
         return (info)
     peaks.search(delta=delta)
-    mean_n_peaks   = peaks.nMaxPeaks()
-    mean_sum_peaks = peaks.getSumPeaks()
-    mean_low = _data.min(axis=1).mean()
+    median_max_peak  = peaks.getMaxPeak()[0]
+    median_n_peaks   = peaks.nMaxPeaks()
+    median_sum_peaks = peaks.getSumPeaks()
+    median_low       = _data.min(axis=1).mean()
+    info.append((-1, median_sum_peaks, median_n_peaks, median_low))
     
-    logger.debug("ref.data: used-delta=%3.1f dB, n_peaks=%d, sum_all_peaks=%5.3f, mean_low_value=%3.1f dB" %\
-                (delta, mean_n_peaks, mean_sum_peaks, mean_low)) 
+    logger.debug("ref.data: used-delta=%3.1f dB, max_peak=%3.1fdB, n_peaks=%d, sum_all_peaks=%5.3f, median_low_value=%3.1fdB" %\
+                (delta, median_max_peak, median_n_peaks, median_sum_peaks, median_low)) 
     
     for rcu in range(_data.shape[0]):
         max_peak_val  = 0
@@ -250,47 +253,52 @@ def search_oscillation(data, delta, start_sb, stop_sb):
                 max_n_peaks   = max(max_n_peaks, peaks.nMaxPeaks())
                 max_sum_peaks = max(max_sum_peaks, peaks.getSumPeaks())
             
-        if max_n_peaks > (mean_n_peaks + 5):
+        #if max_n_peaks > (median_n_peaks + 5):
+        if max_sum_peaks > (median_sum_peaks * 2.0):
             rcu_low = _data[rcu,:,:].min(axis=0).mean()
-            logger.debug("RCU=%d: sb=%d..%d number-of-peaks=%d  max_value=%3.1f  peaks_sum=%5.3f low_value=%3.1f" %\
-                        (rcu, start_sb, stop_sb, max_n_peaks, max_peak_val, max_sum_peaks, rcu_low))        
-            if rcu_low > (mean_low + 1.5): #peaks.getSumPeaks() > (mean_sum_peaks * 2.0):
-                info.append((max_sum_peaks, max_n_peaks, rcu))
+            logger.debug("RCU=%d: number-of-peaks=%d  max_value=%3.1f  peaks_sum=%5.3f low_value=%3.1f" %\
+                        (rcu, max_n_peaks, max_peak_val, max_sum_peaks, rcu_low))        
+            if rcu_low > (median_low + 1.5): #peaks.getSumPeaks() > (median_sum_peaks * 2.0):
+                info.append((rcu, max_sum_peaks, max_n_peaks, rcu_low))
         
         if max_peak_val > 150.0: # only one high peek
-            info.append((max_sum_peaks, max_n_peaks, rcu))
+            info.append((rcu, max_sum_peaks, max_n_peaks, rcu_low))
             
-    return (sorted(info,reverse=True))
-
+    return (info) #(sorted(info,reverse=True))
 
 # find summator noise
-def search_summator_noise(data, start_sb, stop_sb):
+def search_summator_noise(data):
     global logger
-    info = list()
-    if data.ndim > 2:
-        _data = data.max(axis=1)
+    sn_info = list() # summator noise
+    cr_info = list() # cable reflection
+    _data = data[:,:,50:100].copy() 
     
-    peaks = cSearchPeak(_data.mean(axis=0)[start_sb:stop_sb])
-    if not peaks.valid_data:
-        return (info)
-
-    peaks.search(delta=1.5)
-    ref_peaks = peaks.nMaxPeaks() + 5
-    
+    secs = _data.shape[1]
     for rcu in range(_data.shape[0]):
-        psd, psd_freq = PSD(_data[rcu,start_sb:stop_sb], ((1.0/200e6)*1024))
-        peaks = cSearchPeak(_data[rcu,start_sb:stop_sb])
-        if peaks.valid_data:
-            peaks.search(delta=1.5)
-            n_peaks = peaks.nMaxPeaks()
-            logger.debug("RCU=%d: sb=%d..%d number-of-peaks=%d (delta=1.5dB) maxvalue=%3.1f" %(rcu, start_sb, stop_sb, n_peaks, peaks.getMaxPeak()[0]))
-            if n_peaks > ref_peaks:
-                if peaks.getMaxPeak()[0] < 120:
-                    meanval = psd[10:].mean()
-                    maxval = psd[85:100].max()
-                    if maxval > (meanval+1.5):
-                        info.append((rcu, maxval, len(peaks.max_peaks)))                                
+        max_valid = 0
+        max_peaks = 0            
+        for sec in range(secs):
+            peaks = cSearchPeak(_data[rcu,sec,:])
+            
+            if peaks.valid_data:
+                peaks.search(delta=0.7)
+                n_peaks = peaks.nMaxPeaks()
+    
+                n_valid = 0
+                last_p = 0
+                for p in peaks.max_peaks:
+                    p_diff = p - last_p
+                    if p_diff in (3,4):
+                        n_valid += 1
+                    last_p = p
+                max_valid = max_valid + n_valid
+                max_peaks = max(max_peaks, n_peaks)
+
+        if max_valid > (secs * 3.0):
+            max_valid = max_valid / secs             
+            info.append((rcu, max_valid, max_peaks))
     return (info)
+
     
 # find noise
 # noise looks like the noise floor is going up and down
@@ -312,7 +320,7 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
     limit = ref_value + min(max((ref_std * 3.0),0.75), high_deviation)
     
     n_secs = data.shape[1]
-    logger.info("median-signal=%5.3fdB, median-fluctuation=%5.3fdB, std=%5.3f, high-limit=%5.3fdB" %(ref_value, ref_diff, ref_std, limit))
+    logger.debug("median-signal=%5.3fdB, median-fluctuation=%5.3fdB, std=%5.3f, high-limit=%5.3fdB" %(ref_value, ref_diff, ref_std, limit))
     for rcu in range(data.shape[0]):
         peaks = cSearchPeak(data[rcu,0,:])
         if not peaks.valid_data:
@@ -326,15 +334,6 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
             n_bad_jitter_secs  = 0
             
             rcu_max_diff = spec_max[rcu] - spec_min[rcu]
-            if rcu_max_diff > (ref_diff + max_diff):
-                check_high_value = ref_value + (ref_diff / 2.0)
-                check_low_value  = ref_value - (ref_diff / 2.0)
-                for val in spec_median[rcu,:]:
-                    if val > check_high_value or val < check_low_value:
-                        n_bad_jitter_secs += 1
-                jitter_info.append((rcu, rcu_max_diff, ref_diff, n_bad_jitter_secs))
-                logger.debug("RCU=%d: max spectrum fluctuation %5.3f dB" %(rcu, rcu_max_diff)) 
-            
             
             for val in spec_median[rcu,:]:
                 #logger.debug("RCU=%d: high-noise value=%5.3fdB  max-ref-value=%5.3fdB" %(rcu, val, ref_val)) 
@@ -351,7 +350,17 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
             if n_bad_low_secs > 0:    
                 low_info.append((rcu, spec_min[rcu], n_bad_low_secs , (ref_value+low_deviation), rcu_max_diff)) 
                 logger.debug("RCU=%d: min-noise=%5.3f %d of %d seconds bad" %(rcu, spec_min[rcu], n_bad_low_secs, n_secs)) 
-
+            
+            if (n_bad_high_secs == 0) and (n_bad_low_secs == 0):
+                if rcu_max_diff > (ref_diff + max_diff):
+                    check_high_value = ref_value + (ref_diff / 2.0)
+                    check_low_value  = ref_value - (ref_diff / 2.0)
+                    for val in spec_median[rcu,:]:
+                        if val > check_high_value or val < check_low_value:
+                            n_bad_jitter_secs += 1
+                    jitter_info.append((rcu, rcu_max_diff, ref_diff, n_bad_jitter_secs))
+                    logger.debug("RCU=%d: max spectrum fluctuation %5.3f dB" %(rcu, rcu_max_diff)) 
+                
     return (low_info, high_info, jitter_info)
 
 

@@ -47,7 +47,13 @@ namespace LOFAR
       CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
 
       // Destructor, when profiling is enabled prints the gpu performance counters
-      ~CorrelatorPipeline();
+      virtual ~CorrelatorPipeline();
+
+      // Send subbands to outputProc
+      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
+
+      // Create Stream to outputProc
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx) const;
     };
   }
 }

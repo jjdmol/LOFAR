@@ -58,6 +58,7 @@ namespace LOFAR
       ps(ps),
       devices(devices),
       subbandIndices(subbandIndices),
+      processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
       workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
@@ -103,7 +104,7 @@ namespace LOFAR
         // Receive the samples of all subbands from the stations for this
         // block.
 
-        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
+        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
 
         // The set of InputData objects we're using for this block.
         vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
@@ -134,11 +135,16 @@ namespace LOFAR
         }
 
         // Receive all subbands from all stations
-        LOG_INFO_STR("[block " << block << "] Receive input");
+        LOG_DEBUG_STR("[block " << block << "] Receive input");
+
         if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(blocks);
         if (block > 2) receiveTimer.stop();
-        LOG_INFO_STR("[block " << block << "] Input received");
+
+        if (processingSubband0)
+          LOG_INFO_STR("[block " << block << "] Input received");
+        else
+          LOG_DEBUG_STR("[block " << block << "] Input received");
 
         vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
 
@@ -172,8 +178,11 @@ namespace LOFAR
             flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
         }
 
-        LOG_INFO_STR("[block " << block << "] No flagging: " << cleanStr.str());
-        LOG_INFO_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
+
+        if (!flagStr.str().empty()) {
+          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        }
 
         LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
       }
@@ -205,7 +214,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processObservation(OutputType outputType)
+    void Pipeline::processObservation()
     {
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
@@ -302,10 +311,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
-            SmartPtr<Stream> outputStream = connectToOutput(subbandIndices[i], outputType);
-
-            // write subband to Storage
-            writeSubband(subbandIndices[i], writePool[i], outputStream);
+            writeOutput(subbandIndices[i], writePool[i]);
           }
         }
       }
@@ -438,70 +444,13 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
 
-        // Log at most once per second (note: time() returns time in sec.)
-        if (time(0) != lastLogTime) {
+        // Log every 5 seconds (note: time() returns time in sec.)
+        if (time(0) > lastLogTime + 5) {
           lastLogTime = time(0);
           LOG_INFO_STR("Forwarded " << nrBlocksForwarded << 
                        " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
-    }
-
-
-    void Pipeline::writeSubband( unsigned globalSubbandIdx, struct Output &output, SmartPtr<Stream> outputStream )
-    {
-      SmartPtr<StreamableData> outputData;
-
-      // Process pool elements until end-of-output
-      while ((outputData = output.bequeue->remove()) != NULL) {
-        const struct BlockID id = outputData->blockID;
-        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
-
-        LOG_DEBUG_STR("[" << id << "] Writing start");
-
-        // Write block to disk 
-        try {
-          outputData->write(outputStream.get(), true);
-        } catch (Exception &ex) {
-          LOG_ERROR_STR("Dropping rest of subband " << id.globalSubbandIdx << ": " << ex);
-
-          outputStream = new NullStream;
-        }
-
-        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
-        workQueue.outputPool.free.append(outputData);
-
-        ASSERT(!outputData);
-
-        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
-          LOG_INFO_STR("[" << id << "] Done"); 
-        else
-          LOG_DEBUG_STR("[" << id << "] Done"); 
-      }
-    }
-
-
-    SmartPtr<Stream> Pipeline::connectToOutput(unsigned globalSubbandIdx, OutputType outputType) const
-    {
-      SmartPtr<Stream> outputStream;
-
-      try {
-        if (ps.getHostName(outputType, globalSubbandIdx) == "") {
-          // an empty host name means 'write to disk directly', to
-          // make debugging easier for now
-          outputStream = new FileStream(ps.getFileName(outputType, globalSubbandIdx), 0666);
-        } else {
-          // connect to the output process for this output
-          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, outputType, globalSubbandIdx);
-          outputStream = createStream(desc, false, 0);
-        }
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
-
-        outputStream = new NullStream;
-      }
-
-      return outputStream;
     }
 
 

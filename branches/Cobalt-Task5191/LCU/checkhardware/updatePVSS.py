@@ -186,7 +186,7 @@ def resetPVSS(state=0):
                 f.write("LOFAR_PIC_HBA%02d.element%02d.Y %d\n" %(tile, elem, state))
     f.close()
     if not args.has_key('TEST'):
-        sendCmd("setObjectState", "stationtes:reset %s" %(full_filename))
+        sendCmd("setObjectState", "stationtest:reset %s" %(full_filename))
         sleep(5.0)
     
 

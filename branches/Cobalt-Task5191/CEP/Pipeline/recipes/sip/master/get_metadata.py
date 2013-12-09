@@ -125,6 +125,8 @@ class get_metadata(BaseRecipe, RemoteCommandRecipeMixIn):
         try:
             create_directory(os.path.dirname(self.inputs['parset_file']))
             parset.writeFile(self.inputs['parset_file'])
+            self.logger.info("Wrote meta data to: " + 
+                             self.inputs['parset_file'])
         except RuntimeError, err:
             self.logger.error("Failed to write meta-data: %s" % str(err))
             return 1
