@@ -60,17 +60,16 @@ namespace LOFAR
     {
       setArg(0, buffers.input);
 
+      ASSERT(params.nrSamplesPerChannel > 1024);
+
       unsigned maxNrThreads;
       maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
 
-      // Assure that the worksize does not get larger then using
-      // attribute. settings the number of channel block size allows for 
-      // 128 maximum channel ( global.z / local.z) 
       setEnqueueWorkSizes(gpu::Grid(params.nrSamplesPerChannel,
                            params.nrStations,
                            params.nrChannelsPerSubband),
                            gpu::Block((params.nrChannelsPerSubband > 1) ? 
-                                      256/ 2 : 256,
+                           maxNrThreads / 2 : maxNrThreads,
                                       1,
                                       (params.nrChannelsPerSubband > 1 ) ?
                                         2 : params.nrChannelsPerSubband)
@@ -88,18 +87,12 @@ namespace LOFAR
       KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const
     {
       switch (bufferType) {
-      case FFTShiftKernel::INPUT_DATA:
-
+      case FFTShiftKernel::INPUT_DATA:  // fall tru
+      case FFTShiftKernel::OUTPUT_DATA:
         return (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
           itsParameters.nrChannelsPerSubband *
           itsParameters.nrSamplesPerChannel *
             sizeof(std::complex<float>);
-          
-      case FFTShiftKernel::OUTPUT_DATA:
-        return  (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
-          itsParameters.nrChannelsPerSubband *
-          itsParameters.nrSamplesPerChannel *
-          sizeof(std::complex<float>);
           
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");

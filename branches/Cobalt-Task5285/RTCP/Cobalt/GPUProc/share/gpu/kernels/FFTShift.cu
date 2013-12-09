@@ -20,46 +20,60 @@
 
 #include "gpu_math.cuh"
 
+
+#if !(NR_SAMPLES_PER_CHANNEL >= 1)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL >= 1
+#endif
+
+#if !(NR_STATIONS >= 1)
+#error Precondition violated: NR_STATIONS >= 1
+#endif
+
+#if !(NR_POLARIZATIONS == 2)
+#error Precondition violated: NR_POLARIZATIONS == 2
+#endif
+
+#if !(NR_CHANNELS >= 1)
+#error Precondition violated: NR_CHANNELS >= 1
+#endif
+
 typedef float2(*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 
 /**
- * This kernel performs a conversion of the integer valued input to floats and
- * transposes the data to get per station: first all samples with polX, then polY.
- * - It supports 8 and 16 bit (char and short) input, which is selectable using
- *   the define NR_BITS_PER_SAMPLE
- * - In 8 bit mode the converted samples with value -128 are clamped to -127.0f
- * @param[in]  sampledDataPtr      pointer to input data; this can either be a
- *                                 4D array [station][n_samples_subband][polarizations][complex]
- *                                 of shorts or chars, depending on NR_BITS_PER_SAMPLE.
+ * This kernel prepares the sampled data in the channels for a FFT step
+ * or corrects after een iFFT step.
+ * By multiplying all odd samples with -1 you place the negative frequencies 
+ * in front. For More information look at signal analysis bookd (or ask Marcel) 
+ * @param[in]  inputDataPtr      pointer to input data; this can either be a
+ *                               5D array [station][polarizations][nr_channels][n_samples_channel][complex]
+ *                               of floats.
  *
  * Required preprocessor symbols:
  * - NR_SAMPLES_PER_CHANNEL: > 0
- * - NR_BITS_PER_SAMPLE: 8 or 16
+ * - NR_STATIONS           : > 0
+ * - NR_POLARIZATIONS      : ==2
+ * - NR_CHANNELS           : > 0
  *
  * Execution configuration:
- * - Use a 1D thread block. No restrictions.
- * - Use a 2D grid dim, where the x dim has 1 block and the y dim represents the
- *   number of stations (i.e. antenna fields).
- */
+ * - Use a 3D thread block. (sample, station, channel) size < 1024.
+ * - Use a 3D grid dim. (sample, station, channel) channel < 64
+  */
 
 extern "C" {
 __global__ void FFTShift(void *inputDataPtr)
 {
   InputDataType input = (InputDataType)inputDataPtr;
 
-  // fasted dims
-  unsigned sample        = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned station       = blockIdx.y * blockDim.y + threadIdx.y;
-  unsigned channel      = blockIdx.z * blockDim.z + threadIdx.z;
+  unsigned sample  = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned station = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned channel = blockIdx.z * blockDim.z + threadIdx.z;
 
-  if (sample % 2 != 0) // if an odd sample
-  {
-    float2 pol0 = (*input)[station][0][channel][sample];
-    float2 pol1 = (*input)[station][1][channel][sample];
-    (*input)[station][0][channel][sample] = pol0 *-1.0f;
-    (*input)[station][1][channel][sample] = pol1 *-1.0f;
-  }
-  
+  // Set the odd samples 
+  signed factor = 1 - 2 * (sample % 2);  // multiplication that results in -1 or
+              // odd samples (faster then an if statement
+  (*input)[station][0][channel][sample] = (*input)[station][0][channel][sample] * factor;
+  (*input)[station][1][channel][sample] = (*input)[station][1][channel][sample] * factor;
+
 }
 
 }

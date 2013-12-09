@@ -48,22 +48,14 @@ typedef complex<float> fcomplex;
 // Fixture for testing correct translation of parset values
 struct ParsetSUT
 {
-  size_t
-  nrChannels,
-  nrStations,
-  nrSamplesSubband,
-  nrInputSamples,
-  nrOutputSamples,
-  nrBlockSize;
+  size_t  nrChannels, nrStations, nrSamplesSubband, nrInputSamples, nrOutputSamples,
+          nrBlockSize;
 
   Parset parset;
 
-  ParsetSUT(size_t inrChannels,
-    size_t inrStations,
-    size_t inrTabs,
-    size_t inrSamplesChannel ,
-    string stokes )
-    :
+  ParsetSUT(size_t inrChannels, size_t inrStations, size_t inrTabs,
+            size_t inrSamplesChannel, string stokes)
+  :
     nrChannels(inrChannels),
     nrStations(inrStations),
     nrSamplesSubband(inrSamplesChannel * inrChannels),
@@ -71,11 +63,8 @@ struct ParsetSUT
     nrOutputSamples(nrInputSamples),
     nrBlockSize(nrInputSamples)
   {
-
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
-    //parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
-    //  lexical_cast<string>(nrChannels));
     parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
@@ -90,7 +79,6 @@ struct ParsetSUT
   }
 };
 
-
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
 {
@@ -100,20 +88,8 @@ TEST(BufferSizes)
     sut.parset.settings.beamFormer.coherentSettings;
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
-
   CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
-
 }
-
-// Test if we can succesfully create a KernelFactory
-TEST(KernelFactory)
-{
-  cout << "running test: KernelFactory" << endl;
-  ParsetSUT sut(1, 2, 2, 1024,"IQUV");
-  KernelFactory<FFTShiftKernel> kf(sut.parset);
-
-}
-
 
 struct SUTWrapper : ParsetSUT
 {
@@ -157,6 +133,7 @@ struct SUTWrapper : ParsetSUT
   }
 
   // Needed to adapt the number of channels in the parameterset
+  // This code can also b found in the factory a
   FFTShiftKernel::Parameters FFTShiftParams(Parset parset, unsigned nrChannels)
   {
     FFTShiftKernel::Parameters params(parset);
@@ -203,6 +180,15 @@ struct SUTWrapper : ParsetSUT
 
 };
 
+// Test if we can succesfully create a KernelFactory
+TEST(KernelFactory)
+{
+  cout << "running test: KernelFactory" << endl;
+  SUTWrapper sut(1, 2, 2, 4096);
+  sut.runKernel();
+
+}
+
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
@@ -217,7 +203,7 @@ TEST(ZeroTest)
 
   std::vector<size_t> channels(channel_sizes,
         channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
-  size_t sample_sizes[] = { 256 , 1024, 512 };
+  size_t sample_sizes[] = { 64 * 1024, 64 *  2048, };
   std::vector<size_t> samples(sample_sizes,
     sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
@@ -249,11 +235,11 @@ TEST(FlipValues)
   size_t tabs_sizes[] = { 1 }; // 13, 33};
 
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = { 1 , 16, 64}; // Only valid channel size is 1 atm.
+  size_t channel_sizes[] = { 1, 16, 64}; // Only valid channel size is 1 atm. 1 , 16,
 
   std::vector<size_t> channels(channel_sizes,
     channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
-  size_t sample_sizes[] = { 256 };
+  size_t sample_sizes[] = { 4096 };
   std::vector<size_t> samples(sample_sizes,
     sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
@@ -283,197 +269,6 @@ TEST(FlipValues)
       sut.hOutput.num_elements());
   }
 }
-
-
-// (size_t inrChannels , size_t inrStations, size_t inrTabs, size_t inrOutputinSamplesPerSuband)
-//
-//// ***********************************************************
-//// tests if the stokes parameters are calculate correctly. For a single sample
-//// I = X *  con(X) + Y * con(Y)
-//// Q = X *  con(X) - Y * con(Y)
-//// U = 2 * RE(X * con(Y))
-//// V = 2 * IM(X * con(Y))
-////
-//// This reduces to (validate on paper by Wouter and John):
-//// PX = RE(X) * RE(X) + IM(X) * IM(X)
-//// PY = RE(Y) * RE(Y) + IM(Y) * IM(Y)
-//// I = PX + PY
-//// Q = PX - PY
-//// 
-//// U = 2 * (RE(X) * RE(Y) + IM(X) * IM(Y))
-//// V = 2 * (IM(X) * RE(Y) - RE(X) * IM(Y))
-//TEST(CoherentNoComplex1SampleTest)
-//{
-//  SUTWrapper sut(1,  //channels
-//    1,  // inrOutputSamples
-//    1,  // inrStations
-//    1,  // inrTabs
-//    1); // itimeIntegrationFactor
-//
-//  // Test a single sample with specific input
-//  sut.hInput.data()[0] = fcomplex(2.0f, 0.0f);
-//  sut.hInput.data()[1] = fcomplex(1.0f, 0.0f);
-//  sut.hInput.data()[2] = fcomplex(2.0f, 0.0f);
-//  sut.hInput.data()[3] = fcomplex(1.0f, 0.0f);
-//
-//  // Host buffers are properly initialized for this test. Just run the kernel. 
-//  sut.runKernel();
-//
-//  // Expected output
-//  sut.hRefOutput.data()[0] = 5.0f;
-//  sut.hRefOutput.data()[1] = 3.0f;
-//  sut.hRefOutput.data()[2] = 4.0f;
-//  sut.hRefOutput.data()[3] = 0.0f;
-//
-//  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//    sut.hOutput.data(),
-//    sut.hOutput.num_elements());
-//}
-//
-//
-//TEST(CoherentComplex1SampleTest)
-//{
-//  SUTWrapper sut(1,  //channels
-//    1,  // inrOutputSamples
-//    1,  // inrStations
-//    1,  // inrTabs
-//    1); // itimeIntegrationFactor
-//
-//  // Test a single sample with specific input
-//  sut.hInput.data()[0] = fcomplex(0.0f, 2.0f);
-//  sut.hInput.data()[1] = fcomplex(0.0f, 1.0f);
-//  sut.hInput.data()[2] = fcomplex(0.0f, 2.0f);
-//  sut.hInput.data()[3] = fcomplex(0.0f, 1.0f);
-//
-//  // Host buffers are properly initialized for this test. Just run the kernel. 
-//  sut.runKernel();
-//
-//  // Expected output
-//  sut.hRefOutput.data()[0] = 5.0f;
-//  sut.hRefOutput.data()[1] = 3.0f;
-//  sut.hRefOutput.data()[2] = 4.0f;
-//  sut.hRefOutput.data()[3] = 0.0f;
-//
-//  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//    sut.hOutput.data(),
-//    sut.hOutput.num_elements());
-//}
-//
-//
-//TEST(Coherent4DifferentValuesSampleTest)
-//{
-//  SUTWrapper sut(1,  //channels
-//    1,  // inrOutputSamples
-//    1,  // inrStations
-//    1,  // inrTabs
-//    1); // itimeIntegrationFactor
-//
-//  // Test a single sample with specific input
-//  sut.hInput.data()[0] = fcomplex(1.0f, 2.0f);
-//  sut.hInput.data()[1] = fcomplex(3.0f, 4.0f);
-//  // second polarization
-//  sut.hInput.data()[2] = fcomplex(1.0f, 2.0f);
-//  sut.hInput.data()[3] = fcomplex(3.0f, 4.0f);
-//
-//  // Host buffers are properly initialized for this test. Just run the kernel. 
-//  sut.runKernel();
-//
-//  // Expected output
-//  sut.hRefOutput.data()[0] = 30.0f;
-//  sut.hRefOutput.data()[1] = -20.0f;
-//  sut.hRefOutput.data()[2] = 22.0f;
-//  sut.hRefOutput.data()[3] = 4.0f;
-//
-//  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//    sut.hOutput.data(),
-//    sut.hOutput.num_elements());
-//}
-//
-//
-//TEST(BasicIntegrationTest)
-//{
-//  // ***********************************************************
-//  // Test if the integration works by inputting non complex ones 
-//  // and integrating over the total number of samples
-//  // This should result in 2 * num samples in both I and V
-//  unsigned NR_SAMPLES_PER_CHANNEL = 16;
-//
-//  SUTWrapper sut(1,  //channels
-//    1,  // NR_SAMPLES_PER_CHANNEL
-//    1,  // inrStations
-//    1,  // inrTabs
-//    16); // itimeIntegrationFactor
-//
-//  // Set the input
-//  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
-//    sut.hInput.data()[idx] = fcomplex(1.0f, 0.0f);
-//
-//
-//
-//  // Host buffers are properly initialized for this test. Just run the kernel. 
-//  sut.runKernel();
-//
-//  // Expected output
-//  for (size_t idx = 0; idx < sut.hRefOutput.size() / (size_t)2; ++idx)
-//  {
-//    sut.hRefOutput.data()[idx * 2] = 2.0f * NR_SAMPLES_PER_CHANNEL;
-//    sut.hRefOutput.data()[idx * 2 + 1] = 0.0f;
-//  }
-//
-//  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//    sut.hOutput.data(),
-//    sut.hOutput.num_elements());
-//}
-//
-//
-//TEST(Coherent2DifferentValuesAllDimTest)
-//{
-//  // ***********************************************************
-//  // Full test performing all functionalities and runtime validate that the output
-//  // is correct.
-//  // 1. Insert both complex and non complex values. This should result specific values
-//  // for all Stokes parameters
-//  // 2. Do it time parallel
-//  // 3. Integrate 
-//  // 4. Use tabs and channels
-//  size_t NR_CHANNELS = 1;
-//  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 200;
-//  size_t NR_TABS = 17;
-//  size_t INTEGRATION_SIZE = 3;
-//
-//  SUTWrapper sut(NR_CHANNELS,
-//    NR_SAMPLES_PER_OUTPUT_CHANNEL,
-//    1,
-//    NR_TABS,
-//    INTEGRATION_SIZE);
-//  // Set the input
-//  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
-//    sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
-//
-//  // Host buffers are properly initialized for this test. Just run the kernel. 
-//  sut.runKernel();
-//
-//  // Expected output
-//  size_t value_repeat = NR_SAMPLES_PER_OUTPUT_CHANNEL;
-//  cout << "value_repeat: " << value_repeat << endl;
-//  // For stokes parameters
-//  size_t size_tab = value_repeat * 4;
-//  for (size_t idx_tab = 0; idx_tab < NR_TABS; ++idx_tab)
-//  {
-//    // I
-//    for (size_t idx_value_repeat = 0; idx_value_repeat < value_repeat; ++idx_value_repeat)
-//    {
-//      sut.hRefOutput.data()[idx_tab * size_tab + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
-//      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat + idx_value_repeat] = 0.0f;
-//      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 2 + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
-//      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 3 + idx_value_repeat] = 0.0f;
-//    }
-//  }
-//
-//  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
-//    sut.hOutput.data(),
-//    sut.hOutput.num_elements());
-//}
 
 
 int main()
