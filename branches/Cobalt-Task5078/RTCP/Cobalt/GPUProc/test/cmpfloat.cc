@@ -38,12 +38,12 @@ int main(int argc, char *argv[])
 {
   cerr.precision(8); // print full float precision (7 + the 0.).
 
-  // Default epsilon. For fp cmp, you want to override this for sure.
-  double epsilon = std::numeric_limits<double>::epsilon();
+  // Default epsilon.
+  double epsilon = std::numeric_limits<float>::epsilon();
 
   if (argc < 3 || argc > 4)
   {
-    cerr << "Usage: " << argv[0] << "[1.0e-12] <file1> <file2>" << endl;
+    cerr << "Usage: " << argv[0] << " [" << epsilon << "] <file1> <file2>" << endl;
     cerr << "  where the optional floating point argument overrides the comparison epsilon" << endl;
     return 1;
   }
@@ -91,6 +91,9 @@ int main(int argc, char *argv[])
   int status = 0;
   size_t total = 0;
 
+  float maxFactorOff = 0.0f;
+  float minFactorOff = 0.0f;
+
   while (ifs1.good() && ifs2.good()) {
     size_t len = bufLen;
     size_t nbytes1, nbytes2;
@@ -117,11 +120,36 @@ int main(int argc, char *argv[])
       if (!fpEquals(buf1[i], buf2[i], eps))
       {
         cerr << "Error: value diff beyond eps at pos " << total + i << ": " << buf1[i] << " " << buf2[i] << endl;
-        status = 1;
+        status = 2;
+
+        // Try to detect a max and min factor to print at the end.
+        // If near, then the diff is probably scale only. Conj if -1 every odd...
+        float factor = buf1[i] / buf2[i];
+        if (maxFactorOff == 0.0f) {
+          // init
+          maxFactorOff = factor;
+          minFactorOff = factor;
+        } else if (factor > maxFactorOff) {
+          maxFactorOff = factor;
+        } else if (factor < minFactorOff) {
+          minFactorOff = factor;
+        }
       }
     }
 
     total += len;
+  }
+
+  // If cmp error, see if we can easily detect a scale-only error.
+  if (status == 2)
+  {
+    const float facEps = 1e-1; // needs to be very loose as value pairs can be of any magnitude
+    if (std::abs(maxFactorOff - minFactorOff) < facEps)
+      cerr << "All errors of vals for this pair of files are within " <<
+              facEps << " to a factor " << 0.5f * (maxFactorOff + minFactorOff) << endl;
+    else
+      cerr << "No clear common factor among all errors: maxFactor=" <<
+              maxFactorOff << " minFactor=" << minFactorOff << endl;
   }
 
   if (!ifs1.eof())
