@@ -50,7 +50,11 @@ echo "Working directory is `pwd`"
 haveGPU || exit 3
 
 # Check for input files
-if [ ! -e /var/scratch/mol/test_sets ]
+if [[ "`hostname -f`" =~ cb[mt][[:digit:]]{3}.control.lofar ]] && [ -d /globalhome/lofarbuild/var/scratch/mol/test_sets/3sec ]
+then
+  CBT_LOFARBUILD=/globalhome/lofarbuild
+fi
+if [ ! -e $CBT_LOFARBUILD/var/scratch/mol/test_sets ]
 then
   echo "No input files found -- aborting test." >&2
   exit 3
@@ -122,10 +126,12 @@ function parse_logs
   fi
 
   # run correlator -- with profiling
-  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
+#disabled, as we do not use it atm and the ops nrs are out-of-date, but it is time-consuming)
+#  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
 
   # check logs
-  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
+#  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
+  parse_logs performance_normal.txt || error "Could not parse log files"
 
   # toss output if everything is ok, but do not fail test if removal fails
   rm -rf $testdir/$OUTDIR || true # Comment this line for output

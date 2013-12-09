@@ -23,8 +23,8 @@
 
 #include <CoInterface/Parset.h>
 
-#include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <set>
 #include <algorithm>
 #include <boost/format.hpp>
@@ -291,6 +291,7 @@ namespace LOFAR
       return a < b; // at least 1 short name
     }
 
+
     struct ObservationSettings Parset::observationSettings() const
     {
       struct ObservationSettings settings;
@@ -504,6 +505,29 @@ namespace LOFAR
       settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
       if (settings.beamFormer.enabled) {
         // Parse global settings
+
+        // 4096 channels is enough, but allow parset override.
+        if (!isDefined("Cobalt.BeamFormer.nrHighResolutionChannels")) {
+          settings.beamFormer.nrHighResolutionChannels = 4096;
+        } else {
+          settings.beamFormer.nrHighResolutionChannels =
+              getUint32("Cobalt.BeamFormer.nrHighResolutionChannels");
+          ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
+              settings.beamFormer.nrHighResolutionChannels < 65536,
+              "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
+        }
+
+        unsigned nrDelayCompCh;
+        if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
+          nrDelayCompCh = calcNrDelayCompensationChannels(settings);
+        } else {
+          nrDelayCompCh = getUint32("Cobalt.BeamFormer.nrDelayCompensationChannels");
+        }
+        if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels) {
+          nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
+        }
+        settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
+
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
@@ -623,6 +647,92 @@ namespace LOFAR
 
       return settings;
     }
+
+    // pos and ref must each have at least size 3.
+    double Parset::distanceVec3(const vector<double>& pos,
+                                const vector<double>& ref) const {
+      double dx = pos.at(0) - ref.at(0);
+      double dy = pos.at(1) - ref.at(1);
+      double dz = pos.at(2) - ref.at(2);
+      return std::sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    // max delay distance in meters; static per obs, i.e. unprojected (some upper bound)
+    double Parset::maxDelayDistance(const struct ObservationSettings& settings) const {
+      // Available in each parset through included StationCalibration.parset.
+      const vector<double> refPhaseCenter =
+          settings.delayCompensation.referencePhaseCenter;
+
+      double maxDelayDistance = 0.0;
+
+      for (unsigned st = 0; st < settings.stations.size(); st++) {
+        vector<double> phaseCenter = settings.stations[st].phaseCenter;
+        double delayDist = distanceVec3(phaseCenter, refPhaseCenter);
+        if (delayDist > maxDelayDistance)
+          maxDelayDistance = delayDist;
+      }
+
+      return maxDelayDistance;
+    }
+
+    // Top frequency of highest subband observed in Hz.
+    double Parset::maxObservationFrequency(const struct ObservationSettings& settings,
+                                           double subbandWidth) const {
+      double maxCentralFrequency = 0.0;
+
+      for (unsigned sb = 0; sb < settings.subbands.size(); sb++) {
+        if (settings.subbands[sb].centralFrequency > maxCentralFrequency)
+          maxCentralFrequency = settings.subbands[sb].centralFrequency;
+      }
+
+      return maxCentralFrequency + 0.5 * subbandWidth;
+    }
+
+    // Determine the nr of channels per subband for delay compensation.
+    // We aim for the visibility samples to be good to about 1 part in 1000.
+    // See the Cobalt beamformer design doc for more info on how and why.
+    unsigned Parset::calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const {
+      double d = maxDelayDistance(settings); // in meters
+      if (d < 400.0)
+        d = 400.0; // for e.g. CS002LBA only; CS001LBA-CS002LBA is ~441 m
+      double nu_clk = settings.clockMHz * 1e6; // in Hz
+      double subbandWidth = nu_clk / 1024.0;
+      double nu = maxObservationFrequency(settings, subbandWidth); // in Hz
+      if (nu < 10e6)
+        nu = 10e6;
+
+      // deltaPhi is the phase change over t_u in rad: ~= sqrt(24.0*1e-3) (Taylor approx)
+      // Design doc states deltaPhi must be <= 0.155
+      double deltaPhi = 0.15491933384829667540;
+      const double omegaE = 7.29211585e-5; // sidereal angular velocity of Earth in rad/s
+      const double speedOfLight = 299792458.0; // in vacuum in m/s
+      double phi = 2.0 * M_PI * nu * omegaE / speedOfLight * d /* * cos(delta) (=1) */;
+
+      // Fringe stopping of the residual delay is done at an interval t_u.
+      double t_u = deltaPhi / phi;
+      double max_n_FFT = t_u * subbandWidth;
+      unsigned max_n_FFT_pow2 = roundUpToPowerOfTwo(((unsigned)max_n_FFT + 1) / 2); // round down to pow2
+
+      // Little benefit beyond 256; more work and lower GPU FFT efficiency.
+      if (max_n_FFT_pow2 > 256)
+        max_n_FFT_pow2 = 256;
+
+      // This lower bound comes from the derivation in the design doc.
+      // It is pi*cbrt(2.0/(9.0*1e-3)) (also after Taylor approx).
+      const double min_n_ch = 19.02884235042726617904; // design doc states n_ch >= 19
+      const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
+
+      if (max_n_FFT_pow2 < min_n_ch_pow2) {
+        LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
+                      max_n_FFT << " ends up below lower bound " << min_n_ch <<
+                      ". Returning " << min_n_ch_pow2 << ". Stations far from"
+                      " the core may not be delay compensated optimally.");
+        max_n_FFT_pow2 = min_n_ch_pow2;
+      }
+
+      return max_n_FFT_pow2;
+    }
+
 
     double ObservationSettings::subbandWidth() const {
       return 1.0 * clockMHz * 1000000 / 1024;

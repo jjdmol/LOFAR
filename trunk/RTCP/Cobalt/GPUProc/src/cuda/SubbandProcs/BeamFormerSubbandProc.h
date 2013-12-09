@@ -78,12 +78,6 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(StreamableData &output);
 
-      // first FFT
-      static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
-
-      // second FFT
-      static const size_t BEAM_FORMER_NR_CHANNELS = 4096;
-
       // Beamformer specific collection of PerformanceCounters
       class Counters
       {

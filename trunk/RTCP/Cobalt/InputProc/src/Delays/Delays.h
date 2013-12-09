@@ -56,7 +56,7 @@ namespace LOFAR
   {
 
     // Speed of light in vacuum, in m/s.
-    const double speedOfLight = 299792458;
+    const double speedOfLight = 299792458.0;
 
     // Workholder for calculating the delay compensation that must be applied
     // per beam per station. We start by calculating the path length
