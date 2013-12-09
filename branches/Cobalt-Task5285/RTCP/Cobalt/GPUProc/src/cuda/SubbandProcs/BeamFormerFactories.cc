@@ -138,23 +138,20 @@ namespace LOFAR
       }
 
       FFTShiftKernel::Parameters
-        BeamFormerFactories::
-        FFTShiftKernelParams(const Parset &ps) const
+      BeamFormerFactories::FFTShiftKernelParams(const Parset &ps) const
       {
-          FFTShiftKernel::Parameters params(ps);
+        FFTShiftKernel::Parameters params(ps);
+        // Currently a static in the subband proc
+        params.nrChannelsPerSubband =
+          BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
 
-          // time integration has not taken place yet, so calculate the nrSamples
-          // manually
-          params.nrChannelsPerSubband =
-            BeamFormerSubbandProc::DELAY_COMPENSATION_NR_CHANNELS;
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
-          params.nrSamplesPerChannel =
-            ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+        return params;
+      }
 
-          return params;
-        }
-
-      FIR_FilterKernel::Parameters 
+S      FIR_FilterKernel::Parameters 
       BeamFormerFactories::
       incoherentFirFilterParams(const Parset &ps,
             size_t nrSubbandsPerSubbandProc) const 

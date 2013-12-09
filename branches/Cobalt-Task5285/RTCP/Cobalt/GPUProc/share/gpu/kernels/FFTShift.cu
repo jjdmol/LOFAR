@@ -69,10 +69,12 @@ __global__ void FFTShift(void *inputDataPtr)
   unsigned channel = blockIdx.z * blockDim.z + threadIdx.z;
 
   // Set the odd samples 
-  signed factor = 1 - 2 * (sample % 2);  // multiplication that results in -1 or
+  signed factor = 1 - 2 * (sample % 2);  //multiplication that results in -1 or
               // odd samples (faster then an if statement
-  (*input)[station][0][channel][sample] = (*input)[station][0][channel][sample] * factor;
-  (*input)[station][1][channel][sample] = (*input)[station][1][channel][sample] * factor;
+  (*input)[station][0][channel][sample] = 
+                            (*input)[station][0][channel][sample] * factor;
+  (*input)[station][1][channel][sample] = 
+                            (*input)[station][1][channel][sample] * factor;
 
 }
 }
