@@ -75,7 +75,7 @@ struct ParsetFixture
                str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
-    parset.add("Cobalt.nrDelayCompensationChannels",
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
                lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }

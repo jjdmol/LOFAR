@@ -188,7 +188,7 @@ Observation.DataProducts.Output_Beamformed.locations=[localhost:.] # host:direct
 # Number of channels used in the 1st FFT for delay compensation.
 # This value is auto-detected if the parset contains station
 # phase centers (ITRF coords), as in StationCalibration.parset
-Cobalt.nrDelayCompensationChannels=64
+Cobalt.BeamFormer.nrDelayCompensationChannels=64
 
 # Number of channels used for the coherent dedispersion kernel
 Cobalt.Beamformer.dedispersionFFTsize=2048

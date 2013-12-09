@@ -474,29 +474,26 @@ namespace LOFAR
         // Parse global settings
 
         // 4096 channels is enough, but allow parset override.
-        if (!isDefined("Cobalt.nrHighResolutionChannels")) {
+        if (!isDefined("Cobalt.BeamFormer.nrHighResolutionChannels")) {
           settings.beamFormer.nrHighResolutionChannels = 4096;
         } else {
           settings.beamFormer.nrHighResolutionChannels =
-              getUint32("Cobalt.nrHighResolutionChannels");
+              getUint32("Cobalt.BeamFormer.nrHighResolutionChannels");
           ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
               settings.beamFormer.nrHighResolutionChannels < 65536,
-              "Parset: Cobalt.nrHighResolutionChannels must be a power of 2 and < 64k");
+              "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
         }
 
         unsigned nrDelayCompCh;
-        if (!isDefined("Cobalt.nrDelayCompensationChannels")) {
+        if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
           nrDelayCompCh = calcNrDelayCompensationChannels(settings);
         } else {
-          nrDelayCompCh = getUint32("Cobalt.nrDelayCompensationChannels");
+          nrDelayCompCh = getUint32("Cobalt.BeamFormer.nrDelayCompensationChannels");
         }
         if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels) {
           nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
         }
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
-        LOG_INFO_STR("Parset: internal #channels: delay compensation: " <<
-            settings.beamFormer.nrDelayCompensationChannels <<
-            "; high reso: " << settings.beamFormer.nrHighResolutionChannels);
 
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
@@ -657,16 +654,21 @@ namespace LOFAR
     // See the Cobalt beamformer design doc for more info on how and why.
     unsigned Parset::calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const {
       double d = maxDelayDistance(settings); // in meters
-      double v_clk = settings.clockMHz * 1e6; // in Hz
-      double subbandWidth = v_clk / 1024.0;
-      double v = maxObservationFrequency(settings, subbandWidth); // in Hz
+      if (d < 400.0)
+        d = 400.0; // for e.g. CS002LBA only; CS001LBA-CS002LBA is ~441 m
+      double nu_clk = settings.clockMHz * 1e6; // in Hz
+      double subbandWidth = nu_clk / 1024.0;
+      double nu = maxObservationFrequency(settings, subbandWidth); // in Hz
+      if (nu < 10e6)
+        nu = 10e6;
 
       // deltaPhi is the phase change over t_u in rad: ~= sqrt(24.0*1e-3) (Taylor approx)
       // Design doc states deltaPhi must be <= 0.155
       double deltaPhi = 0.15491933384829667540;
       const double omegaE = 7.29211585e-5; // sidereal angular velocity of Earth in rad/s
       const double speedOfLight = 299792458.0; // in vacuum in m/s
-      double phi = 2.0 * M_PI * v * omegaE / speedOfLight * d /* * cos(delta) (=1) */;
+      double phi = 2.0 * M_PI * nu * omegaE / speedOfLight * d /* * cos(delta) (=1) */;
+
       // Fringe stopping of the residual delay is done at an interval t_u.
       double t_u = deltaPhi / phi;
       double max_n_FFT = t_u * subbandWidth;
@@ -681,11 +683,11 @@ namespace LOFAR
       const double min_n_ch = 19.02884235042726617904; // design doc states n_ch >= 19
       const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
 
-      if (settings.correlator.enabled && max_n_FFT_pow2 < min_n_ch_pow2) {
+      if (max_n_FFT_pow2 < min_n_ch_pow2) {
         LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
                       max_n_FFT << " ends up below lower bound " << min_n_ch <<
-                      ". This clashes. Returning " << min_n_ch_pow2 << ". Very"
-                      " long baselines may not be correlated properly.");
+                      ". Returning " << min_n_ch_pow2 << ". Stations far from"
+                      " the core may not be delay compensated optimally.");
         max_n_FFT_pow2 = min_n_ch_pow2;
       }
 
