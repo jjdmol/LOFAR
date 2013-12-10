@@ -502,7 +502,9 @@ namespace LOFAR
       // SAP/TAB-crossing counter for the files we generate
       size_t bfStreamNr = 0;
 
-      settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
+      settings.beamFormer.enabled =
+           getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false)
+        || getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
       if (settings.beamFormer.enabled) {
         // Parse global settings
 
@@ -568,7 +570,13 @@ namespace LOFAR
           ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
 
-        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Beamformed");
+        const vector<ObservationSettings::FileLocation> coherent_locations =
+          getFileLocations("CoherentStokes");
+        const vector<ObservationSettings::FileLocation> incoherent_locations =
+          getFileLocations("IncoherentStokes");
+
+        size_t coherent_idx = 0;
+        size_t incoherent_idx = 0;
 
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
@@ -619,10 +627,15 @@ namespace LOFAR
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
 
-              if (file.streamNr >= locations.size())
-                THROW(CoInterfaceException, "No beam former filename or location specified for file " << file.streamNr);
-
-              file.location = locations[file.streamNr];
+              if (file.coherent) {
+                if (coherent_idx >= coherent_locations.size())
+                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = coherent_locations[coherent_idx++];
+              } else {
+                if (incoherent_idx >= incoherent_locations.size())
+                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = incoherent_locations[incoherent_idx++];
+              }
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
@@ -837,16 +850,6 @@ namespace LOFAR
     bool Parset::correctClocks() const
     {
       return settings.corrections.clock;
-    }
-
-
-    std::string Parset::keyPrefix(OutputType outputType)
-    {
-      switch (outputType) {
-      case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
-      case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
-      default:                THROW(CoInterfaceException, "Unknown output type");
-      }
     }
 
 
@@ -1224,24 +1227,13 @@ namespace LOFAR
       return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
-    bool Parset::outputCorrelatedData() const
-    {
-      return settings.correlator.enabled;
-    }
-
-    bool Parset::outputBeamFormedData() const
-    {
-      return settings.beamFormer.enabled;
-    }
-
-    bool Parset::outputTrigger() const
-    {
-      return getBool("Observation.DataProducts.Output_Trigger.enabled", false);
-    }
-
     bool Parset::outputThisType(OutputType outputType) const
     {
-      return getBool(keyPrefix(outputType) + ".enabled", false);
+      switch (outputType) {
+      case CORRELATED_DATA:   return settings.correlator.enabled;
+      case BEAM_FORMED_DATA:  return settings.beamFormer.enabled;
+      default:                THROW(CoInterfaceException, "Unknown output type");
+      }
     }
 
 #if 0
