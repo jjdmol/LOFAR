@@ -40,7 +40,7 @@ node  Output_CoherentStokes	4.0.0  development  	'node constraint'  "CoherentSto
 par  rawSamplingTime 	        O    dbl    seconds      10    0    0      	- 	''
 par  samplingTime               O    dbl    seconds      10    0    0      -       ''
 par  timeDownsamplingFactor     O    uint   -            10    0    0      	-       ''
-par  nrOfColapsedChannels       O    uint   -            10    0    0      	-       ''
+par  nrOfCollapsedChannels      O    uint   -            10    0    0      	-       ''
 par  stokes				        O    vtext  -            10    0    'I;IQUV;XXYY'      	-       ''
 #par  stations?                   O   vtext -            10     0    ''   -  ''
 #par start time?
