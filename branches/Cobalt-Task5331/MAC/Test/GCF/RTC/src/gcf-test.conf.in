@@ -1,0 +1,4 @@
+mac.ns.RTECHO1.server.type=TCP
+mac.ns.RTECHO2.server.type=TCP
+mac.top.RTPING1.client.remoteservice=RTECHO1:server
+mac.top.RTPING2.client.remoteservice=RTECHO2:server
