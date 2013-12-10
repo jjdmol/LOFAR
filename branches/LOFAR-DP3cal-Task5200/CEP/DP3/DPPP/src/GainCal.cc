@@ -60,11 +60,11 @@ namespace LOFAR {
         itsSourceDBName (parset.getString (prefix + "sourcedb")),
         itsParmDBName  (parset.getString (prefix + "parmdb")),
         itsApplyBeam   (parset.getBool (prefix + "model.beam")),
+        itsCellSizeTime (parset.getInt (prefix + "cellsize.time", 1)),
+        itsCellSizeFreq (parset.getInt (prefix + "cellsize.freq", 0)),
         itsBaselines   (),
         itsThreadStorage (),
-        itsPatchList   (),
-        itsCellSizeTime (parset.getInt (prefix + "cellsize.time", 1)),
-        itsCellSizeFreq (parset.getInt (prefix + "cellsize.freq", 0))
+        itsPatchList   ()
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -103,7 +103,7 @@ namespace LOFAR {
 */
 
       const size_t nDr = itsPatchList.size();
-      const size_t nSt = info().antennaNames().size();
+      const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
       // initialize storage
       const size_t nThread=OpenMP::maxThreads();
@@ -126,7 +126,12 @@ namespace LOFAR {
 
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
-      itsInput->fillBeamInfo (itsAntBeamInfo, info().antennaNames());
+      casa::Vector<casa::String> antennaUsedNames(info().antennaUsed().size());
+      casa::Vector<int> antsUsed = info().antennaUsed();
+      for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
+        antennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
+      }
+      itsInput->fillBeamInfo (itsAntBeamInfo, antennaUsedNames);
     }
 
     StationResponse::vector3r_t GainCal::dir2Itrf (const MDirection& dir)
@@ -171,7 +176,7 @@ namespace LOFAR {
 
       // Determine the various sizes.
       const size_t nDr = itsPatchList.size();
-      const size_t nSt = info().nantenna();
+      const size_t nSt = info().antennaUsed().size();
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
@@ -245,7 +250,8 @@ namespace LOFAR {
       StationResponse::vector3r_t srcdir = dir2Itrf(dir);
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
-      for (size_t st=0; st<info().nantenna(); ++st) {
+      uint nSt   = info().antennaUsed().size();
+      for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
                                       &(beamvalues[nchan*st]));

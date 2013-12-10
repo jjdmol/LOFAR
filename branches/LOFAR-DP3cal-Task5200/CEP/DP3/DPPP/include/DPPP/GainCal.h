@@ -130,12 +130,12 @@ namespace {
       string           itsParmDBName;
       bool             itsApplyBeam;
       boost::shared_ptr<BBS::ParmFacade> itsParmDB;
-      vector<Baseline> itsBaselines;
       Position         itsPhaseRef;
 
       uint             itsCellSizeTime;
       uint             itsCellSizeFreq;
 
+      vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
 
       //# Variables for conversion of directions to ITRF.
