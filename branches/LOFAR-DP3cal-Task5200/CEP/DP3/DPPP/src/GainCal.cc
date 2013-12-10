@@ -202,6 +202,11 @@ namespace LOFAR {
       splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
       cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
 
+      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenter());
+      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDir());
+      // Convert the directions to ITRF for the given time.
+      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+
       for(size_t dr = 0; dr < nDr; ++dr)
       {
         fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
@@ -210,7 +215,7 @@ namespace LOFAR {
                  cr_freq, cr_uvw_split, cr_model);
         applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
                   info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                  &(itsThreadStorage[thread].beamvalues[0]));
+                  refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]));
 
         for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
           itsThreadStorage[thread].model[i]+=
@@ -228,25 +233,21 @@ namespace LOFAR {
 
     void GainCal::applyBeam (double time, const Position& pos, bool apply,
                              const Vector<double>& chanFreqs, dcomplex* data,
+                             StationResponse::vector3r_t& refdir,
+                             StationResponse::vector3r_t& tiledir,
                              StationResponse::matrix22c_t* beamvalues)
     {
-      // For test purposes applying the beam can be defeated.
-      // In this way an exact comparison with the old demixer is possible.
       if (! apply) {
         return;
       }
-      // Convert the directions to ITRF for the given time.
-      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
-      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenter());
-      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDir());
+
       MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
       StationResponse::vector3r_t srcdir = dir2Itrf(dir);
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
       for (size_t st=0; st<info().nantenna(); ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
-                                      srcdir, info().refFreq(),
-                                      refdir, tiledir,
+                                      srcdir, info().refFreq(), refdir, tiledir,
                                       &(beamvalues[nchan*st]));
       }
       // Apply the beam values of both stations to the predicted data.

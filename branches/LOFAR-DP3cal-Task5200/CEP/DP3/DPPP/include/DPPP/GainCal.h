@@ -34,6 +34,7 @@
 #include <ParmDB/ParmSet.h>
 #include <DPPP/SourceDBUtil.h>
 #include <StationResponse/Station.h>
+#include <StationResponse/Types.h>
 #include <ParmDB/Parm.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -111,8 +112,10 @@ namespace {
       // Apply it to the data.
       // If apply==False, nothing is done.
       void applyBeam (double time, const Position& pos, bool apply,
-                      const casa::Vector<double>& chanFreqs,
-                      dcomplex* data, StationResponse::matrix22c_t* beamvalues);
+                      const casa::Vector<double>& chanFreqs, dcomplex* data,
+                      StationResponse::vector3r_t& refdir,
+                      StationResponse::vector3r_t& tiledir,
+                      StationResponse::matrix22c_t* beamvalues);
 
       // Convert a direction to ITRF.
       StationResponse::vector3r_t dir2Itrf (const casa::MDirection&);
