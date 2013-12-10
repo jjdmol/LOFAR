@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -177,6 +178,10 @@ int main(int argc, char **argv)
   /*
    * Initialise the system environment
    */
+
+  // Ignore SIGPIPE, as we handle disconnects ourselves
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    THROW_SYSCALL("signal(SIGPIPE)");
 
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
