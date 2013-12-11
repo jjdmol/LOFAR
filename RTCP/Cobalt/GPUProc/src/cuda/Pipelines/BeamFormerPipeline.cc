@@ -37,6 +37,10 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
+#ifdef HAVE_MPI
+#include <InputProc/Transpose/MPIUtil.h>
+#endif
+
 using boost::format;
 using namespace std;
 
@@ -44,9 +48,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
+    static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices)
     {
       TABTranspose::MultiSender::HostMap hostMap;
+
+#ifdef HAVE_MPI
+      int hostID = MPI_Rank();
+#else
+      int hostID = 0;
+#endif
 
       // The requested service is an unique identifier for this observation,
       // and for our process.
@@ -92,7 +102,7 @@ namespace LOFAR
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
       Pipeline(ps, subbandIndices, devices),
-      multiSender(hostMap(ps, subbandIndices, 0 /* TODO */), 3, ps.realTime())
+      multiSender(hostMap(ps, subbandIndices), 3, ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
 
@@ -226,7 +236,6 @@ namespace LOFAR
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
     {
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
-      const struct ObservationSettings::BeamFormer::SAP &sapInfo = ps.settings.beamFormer.SAPs[SAP];
 
       SmartPtr<StreamableData> outputData;
 
