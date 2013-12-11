@@ -361,7 +361,7 @@ int main(int argc, char **argv)
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
   } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
