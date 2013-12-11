@@ -62,6 +62,7 @@ namespace LOFAR
       return name;
     }
 
+
     shared_ptr<Step> Step::create(const string& name,
                                         const ParameterSet& parset,
                                         const Step* parent)
@@ -73,11 +74,11 @@ namespace LOFAR
       // \a name is a MultiStep, otherwise it is a SingleStep.
       if (parset.isDefined("Step." + name + ".Steps")) {
         LOG_TRACE_COND_STR(name << " is a MultiStep");
-      	step.reset(new MultiStep(name, parset, parent));
+        step.reset(new MultiStep(name, parset, parent));
       } else {
-      	LOG_TRACE_COND_STR(name << " is a SingleStep");
-      	// We'll have to figure out what kind of SingleStep we must
-      	// create. The key "Operation" contains this information.
+        LOG_TRACE_COND_STR(name << " is a SingleStep");
+        // We'll have to figure out what kind of SingleStep we must
+        // create. The key "Operation" contains this information.
         try {
           string oper =
             toUpper(parset.getString("Step." + name + ".Operation"));
@@ -138,8 +139,6 @@ namespace LOFAR
       // for this Step.
       ps.subtractSubset(prefix + "Model.");
 
-      ps.add(prefix + "Model.Phasors.Enable",
-        toString(itsModelConfig.usePhasors()));
       ps.add(prefix + "Model.Bandpass.Enable",
         toString(itsModelConfig.useBandpass()));
       ps.add(prefix + "Model.Clock.Enable",
@@ -148,16 +147,27 @@ namespace LOFAR
         const ClockConfig &config = itsModelConfig.getClockConfig();
         ps.add(prefix + "Model.Clock.Split", toString(config.splitClock()));
       }
+
       ps.add(prefix + "Model.Gain.Enable",
         toString(itsModelConfig.useGain()));
+      if(itsModelConfig.useGain()) {
+        ps.add(prefix + "Model.Gain.Phasors",
+          toString(itsModelConfig.getGainConfig().phasors()));
+      }
+
       ps.add(prefix + "Model.TEC.Enable",
         toString(itsModelConfig.useTEC()));
       ps.add(prefix + "Model.CommonRotation.Enable",
         toString(itsModelConfig.useCommonRotation()));
       ps.add(prefix + "Model.CommonScalarPhase.Enable",
         toString(itsModelConfig.useCommonScalarPhase()));
+
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
+      if(itsModelConfig.useDirectionalGain()) {
+        ps.add(prefix + "Model.DirectionalGain.Phasors",
+          toString(itsModelConfig.getDirectionalGainConfig().phasors()));
+      }
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
@@ -216,8 +226,7 @@ namespace LOFAR
       itsCorrelations = ps.getStringVector("Correlations", itsCorrelations);
 
       // Read model configuration.
-      itsModelConfig.setPhasors(ps.getBool("Model.Phasors.Enable",
-        itsModelConfig.usePhasors()));
+      bool usePhasors = ps.getBool("Model.Phasors.Enable", false);
 
       itsModelConfig.setBandpass(ps.getBool("Model.Bandpass.Enable",
         itsModelConfig.useBandpass()));
@@ -230,15 +239,22 @@ namespace LOFAR
           splitClock = ps.getBool("Model.Clock.Split",
               parentConfig.splitClock());
         } else {
-          splitClock = ps.getBool("Model.Clock.Split",false);
+          splitClock = ps.getBool("Model.Clock.Split", false);
         }
         itsModelConfig.setClockConfig(ClockConfig(splitClock));
       } else {
         itsModelConfig.clearClockConfig();
       }
 
-      itsModelConfig.setGain(ps.getBool("Model.Gain.Enable",
-        itsModelConfig.useGain()));
+      if(ps.getBool("Model.Gain.Enable", itsModelConfig.useGain())) {
+        const GainConfig &parentConfig = itsModelConfig.getGainConfig();
+        bool phasors = ps.getBool("Model.Gain.Phasors",
+            itsModelConfig.useGain() ? parentConfig.phasors() : usePhasors);
+        itsModelConfig.setGainConfig(GainConfig(phasors));
+      }
+      else {
+        itsModelConfig.clearGainConfig();
+      }
 
       itsModelConfig.setTEC(ps.getBool("Model.TEC.Enable",
         itsModelConfig.useTEC()));
@@ -250,31 +266,36 @@ namespace LOFAR
         (ps.getBool("Model.CommonScalarPhase.Enable",
           itsModelConfig.useCommonScalarPhase()));
 
-      itsModelConfig.setDirectionalGain
-        (ps.getBool("Model.DirectionalGain.Enable",
-          itsModelConfig.useDirectionalGain()));
+      if(ps.getBool("Model.DirectionalGain.Enable",
+        itsModelConfig.useDirectionalGain())) {
+
+        const DirectionalGainConfig &parentConfig =
+          itsModelConfig.getDirectionalGainConfig();
+        bool phasors = ps.getBool("Model.DirectionalGain.Phasors",
+          itsModelConfig.useDirectionalGain() ? parentConfig.phasors()
+          : usePhasors);
+
+        itsModelConfig.setDirectionalGainConfig(DirectionalGainConfig(phasors));
+      }
+      else {
+        itsModelConfig.clearDirectionalGainConfig();
+      }
 
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
-        BeamConfig parentConfig = itsModelConfig.getBeamConfig();
+        const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
 
-        string modeString;
-        if(itsModelConfig.useBeam()) {
-          modeString = ps.getString("Model.Beam.Mode",
-            BeamConfig::asString(parentConfig.mode()));
-        } else {
-          modeString = ps.getString("Model.Beam.Mode",
-            BeamConfig::asString(BeamConfig::DEFAULT));
-        }
-
+        string modeString = ps.getString("Model.Beam.Mode",
+          itsModelConfig.useBeam() ? BeamConfig::asString(parentConfig.mode())
+            : BeamConfig::asString(BeamConfig::DEFAULT));
         BeamConfig::Mode mode = BeamConfig::asMode(modeString);
         if(!BeamConfig::isDefined(mode)) {
           THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
         }
 
         bool useChannelFreq = ps.getBool("Model.Beam.UseChannelFreq",
-          parentConfig.useChannelFreq());
+          itsModelConfig.useBeam() ? parentConfig.useChannelFreq() : false);
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
-          parentConfig.conjugateAF());
+          itsModelConfig.useBeam() ? parentConfig.conjugateAF() : false);
 
         itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq,
           conjugateAF));
@@ -297,7 +318,8 @@ namespace LOFAR
 
       if(ps.getBool("Model.Ionosphere.Enable", itsModelConfig.useIonosphere()))
       {
-        IonosphereConfig parentConfig = itsModelConfig.getIonosphereConfig();
+        const IonosphereConfig &parentConfig =
+            itsModelConfig.getIonosphereConfig();
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
