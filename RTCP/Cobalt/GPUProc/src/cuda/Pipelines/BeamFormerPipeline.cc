@@ -37,10 +37,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 
-#ifdef HAVE_MPI
-#include <InputProc/Transpose/MPIUtil.h>
-#endif
-
 using boost::format;
 using namespace std;
 
@@ -48,15 +44,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices)
+    static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
     {
       TABTranspose::MultiSender::HostMap hostMap;
-
-#ifdef HAVE_MPI
-      int hostID = MPI_Rank();
-#else
-      int hostID = 0;
-#endif
 
       // The requested service is an unique identifier for this observation,
       // and for our process.
@@ -99,10 +89,10 @@ namespace LOFAR
       return hostMap;
     }
 
-    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
       :
       Pipeline(ps, subbandIndices, devices),
-      multiSender(hostMap(ps, subbandIndices), 3, ps.realTime())
+      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
 
