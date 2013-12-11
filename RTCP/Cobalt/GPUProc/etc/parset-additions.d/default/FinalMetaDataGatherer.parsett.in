@@ -1,5 +1,5 @@
 # The host on which to run the FinalMetaDataGatherer
-Cobalt.FinalMetaDataGatherer.host = lhn001.cep2.lofar
+Cobalt.FinalMetaDataGatherer.host = localhost
 
 # The user with which to log in. If empty, is set to $USER.
 Cobalt.FinalMetaDataGatherer.userName = 
@@ -11,7 +11,7 @@ Cobalt.FinalMetaDataGatherer.sshPrivateKey =
 
 # The executable of the process to start. If no absolute path is given,
 # it needs to be found in $PATH after login.
-Cobalt.FinalMetaDataGatherer.executable = FinalMetaDataGatherer
+Cobalt.FinalMetaDataGatherer.executable = @CMAKE_INSTALL_PREFIX@/bin/FinalMetaDataGatherer
 
 # The database to connect to:
 #   Development: sasdbtest
