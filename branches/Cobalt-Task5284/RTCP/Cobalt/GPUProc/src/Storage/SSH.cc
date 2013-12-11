@@ -278,7 +278,10 @@ namespace LOFAR
      * Note that waitsocket() is a forced cancellation point.
      */
 
-    SSHconnection::SSHconnection(const string &logPrefix, const string &hostname, const string &commandline, const string &username, const string &pubkey, const string &privkey, bool captureStdout, ostream &_cout, ostream &_cerr)
+    SSHconnection::SSHconnection(const string &logPrefix, const string &hostname,
+                                 const string &commandline, const string &username,
+                                 const string &pubkey, const string &privkey,
+                                 bool captureStdout, ostream &_cout, ostream &_cerr)
       :
       itsLogPrefix(logPrefix),
       itsHostName(hostname),
@@ -286,10 +289,10 @@ namespace LOFAR
       itsUserName(username),
       itsPublicKey(pubkey),
       itsPrivateKey(privkey),
-      itsConnected(false),
       itsCaptureStdout(captureStdout),
       itsCout(_cout),
-      itsCerr(_cerr)
+      itsCerr(_cerr),
+      itsConnected(false)
     {
     }
 
@@ -354,7 +357,7 @@ namespace LOFAR
       return itsStdoutBuffer.str();
     }
 
-    LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock )
+    LIBSSH2_SESSION *SSHconnection::open_session( FileDescriptorBasedStream &sock, bool& authError )
     {
       ScopedDelayCancellation dc;
 
@@ -364,7 +367,7 @@ namespace LOFAR
       session_t session = libssh2_session_init();
       if (!session.get()) {
         LOG_ERROR_STR( itsLogPrefix << "Cannot create SSH session object" );
-        return 0;
+        return NULL;
       }
 
       /* tell libssh2 we want it all done non-blocking */
@@ -384,13 +387,12 @@ namespace LOFAR
         waitsocket(session, sock);
       }
 #endif
-
-      /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
-
       if (rc) {
         LOG_ERROR_STR( itsLogPrefix << "Failure establishing SSH session: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
         return NULL;
       }
+
+      /* NOTE: libssh2 now holds a copy of sock.fd, so don't invalidate it! */
 
       /* Authenticate by public and/or private key */
       while ((rc = libssh2_userauth_publickey_fromfile(session,
@@ -404,7 +406,8 @@ namespace LOFAR
       }
 
       if (rc) {
-        LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
+        LOG_DEBUG_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")"); // don't make this >=WARN as we will be spammed through discover_ssh_keys() (also true for previous LOG_ERROR_STR(), but this one triggers all the time; we should throw, not log in this func)
+        authError = true;
         return NULL;
       }
 
@@ -523,47 +526,47 @@ namespace LOFAR
 
       // Declaring sock before session will cause ~sock to be called after
       // ~session.
-
       SmartPtr<SocketStream> sock;
       session_t session;
       channel_t channel;
 
-      for(;; ) {
-        // keep trying to connect
-        sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
+      // Keep trying to connect if the socket stream fails. Will be cancelled around obs end.
+      for (;;) {
+        try {
+          sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
+        } catch (LOFAR::Exception& lfe) { // SystemCallException (or TimeoutException, but deadline=0)
+          LOG_INFO_STR( itsLogPrefix << "Connection failed. Waiting " <<
+                        RETRY_USECS << " usec to retry. Error message: " <<
+                        lfe.what() );
+          ::usleep(RETRY_USECS);
+          continue;
+        }
+        LOG_DEBUG_STR( itsLogPrefix << "Connected; opening session" );
 
-        LOG_DEBUG_STR( itsLogPrefix << "Connected" );
-
-        /* Prevent cancellation in functions dealing with libssh2 internals, but
-         * NOT during sleep() */
-        {
-          {
-            ScopedDelayCancellation dc;
-
-            session = open_session(*sock);
+        bool authError = false;
+        session = open_session(*sock, authError);
+        if (session == NULL) {
+          if (authError) {
+            // Treat auth failure as fatal. It could theoretically also be a conn error,
+            // but we just got a conn and with the auth retries in ssh_works(), avoid silly nested retries.
+            return;
+          } else { // non-auth session creation error; retry conn
+            ::usleep(10000);
+            continue;
           }
-
-          if (session.get()) {
-            ScopedDelayCancellation dc;
-
-            channel = open_channel(session, *sock);
-
-            if (channel.get())
-              // success!
-              break;
-
-            close_session(session, *sock);
-
-            session = 0;
-          }
-
-          sleep(RETRY_DELAY);
         }
 
+        channel = open_channel(session, *sock);
+        if (channel == NULL) {
+          close_session(session, *sock);
+          ::usleep(10000);
+          continue; // retry conn
+        }
+
+        // SSH connection incl session and channel opened.
+        itsConnected = true;
         break;
       }
-
-      itsConnected = true;
 
       LOG_DEBUG_STR( itsLogPrefix << "Starting remote command: " << itsCommandLine);
 
@@ -576,6 +579,8 @@ namespace LOFAR
       if (rc)
       {
         LOG_ERROR_STR( itsLogPrefix << "Failure starting remote command: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
+        close_channel(session, channel, *sock);
+        close_session(session, *sock);
         return;
       }
 
@@ -790,7 +795,7 @@ namespace LOFAR
       struct timespec deadline = { time(0) + 5, 0 };
       sshconn.wait(deadline);
 
-      // return whether connection succeeded
+      // return whether connection (incl session and channel) had succeeded
       return sshconn.connected();
     }
 
@@ -804,34 +809,27 @@ namespace LOFAR
 
       ASSERTSTR(HOME, "$HOME not set");
 
-      // try several common keys
-      for(unsigned attempt = 0;; attempt++) {
-        switch (attempt) {
-        case 0:
-          pubkey[0] = 0;
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
-          break;
+      // try several common keys. Code below assumes 0 or one %s to be replaced with $HOME.
+      const char *keyPairNames[][2] = {
+        {NULL                , "%s/.ssh/id_dsa"}, 
+        {"%s/.ssh/id_dsa.pub", "%s/.ssh/id_dsa"},
+        {NULL                , "%s/.ssh/id_rsa"},
+        {"%s/.ssh/id_rsa.pub", "%s/.ssh/id_rsa"}
+      };
 
-        case 1:
-          snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_dsa.pub", HOME);
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_dsa",     HOME);
-          break;
+      for (unsigned attempt = 0;
+           attempt < sizeof(keyPairNames) / sizeof(keyPairNames[0]); attempt++) {
+        // public key filename
+        if (keyPairNames[attempt][0] == 0)
+          pubkey[0] = '\0';
+        else
+          snprintf(pubkey,   pubkey_buflen,   keyPairNames[attempt][0], HOME);
 
-        case 2:
-          pubkey[0] = 0;
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
-          break;
-
-        case 3:
-          snprintf(pubkey,  pubkey_buflen,  "%s/.ssh/id_rsa.pub", HOME);
-          snprintf(privkey, privkey_buflen, "%s/.ssh/id_rsa",     HOME);
-          break;
-
-        default:
-          // ran out of attempts
-          LOG_ERROR("Cannot find a working public/private key for SSH to localhost");
-          return false;
-        }
+        // private key filename
+        if (keyPairNames[attempt][1] == 0)
+          privkey[0] = '\0';
+        else
+          snprintf(privkey,  privkey_buflen,  keyPairNames[attempt][1], HOME);
 
         // try key pair
         if (ssh_works(pubkey, privkey)) {
@@ -839,6 +837,9 @@ namespace LOFAR
           return true;
         }
       }
+
+      LOG_ERROR("Cannot find a working public/private key pair for SSH to localhost");
+      return false;
     }
 
   } // namespace Cobalt

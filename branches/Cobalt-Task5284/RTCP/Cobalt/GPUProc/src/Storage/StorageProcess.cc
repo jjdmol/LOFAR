@@ -127,6 +127,9 @@ namespace LOFAR
         if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
           pubKey = discover_pubkey;
           privKey = discover_privkey;
+        } else {
+          LOG_ERROR(itsLogPrefix + "[ControlThread] no SSH keys given and discovery failed: failed to send final meta data and read LTA feedback");
+          return;
         }
       }
 
@@ -141,7 +144,7 @@ namespace LOFAR
                                     % itsRank
                                     );
 
-      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
+      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey);
       sshconn.start();
 
       // Connect control stream

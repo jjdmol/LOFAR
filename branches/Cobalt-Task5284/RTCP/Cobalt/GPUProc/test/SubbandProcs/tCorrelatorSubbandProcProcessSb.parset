@@ -1,4 +1,5 @@
 OLAP.CNProc.integrationSteps		 = 256
+OLAP.IONProc.integrationSteps		 = 4
 OLAP.correctBandPass			 = F
 Observation.nrBitsPerSample              = 8
 OLAP.CNProc.nrPPFTaps			 = 16

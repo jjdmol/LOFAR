@@ -434,6 +434,15 @@ namespace LOFAR
         // per part/stokes.
         std::vector<struct File> files;
 
+        // Number of channels per subband for delay compensation.
+        // Equal to the size of the first FFT. Power of two.
+        unsigned nrDelayCompensationChannels;
+
+        // Number of channels per subband for bandpass correction, narrow band
+        // flagging, beamforming, and coherent dedispersion.
+        // Power of two and at least nrDelayCompensationChannels.
+        unsigned nrHighResolutionChannels;
+
         struct TAB {
           // The direction in wich the TAB points, relative
           // to the SAP's coordinates
@@ -543,20 +552,25 @@ namespace LOFAR
         std::string station;
         std::string antennaField;
 
-        AntennaFieldName(const std::string &station, const std::string &antennaField): station(station), antennaField(antennaField) {}
+        AntennaFieldName(const std::string &station, const std::string &antennaField)
+        : station(station),
+          antennaField(antennaField)
+        { }
 
         std::string fullName() const {
           return station + antennaField;
         }
       };
 
-      // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
-      // ("CS001","CS002") and the antenna set.
-      static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+      // Constructs the antenna fields ("CS001", "HBA0") etc from a set of stations
+      // ("CS001", "CS002") and the antenna set.
+      static std::vector<struct AntennaFieldName>
+      antennaFields(const std::vector<std::string> &stations,
+                    const std::string &antennaSet);
 
       // List of host names to start outputProc on
       std::vector<std::string> outputProcHosts;
-    };
+    }; // struct ObservationSettings
 
 
     // The Parset class is a public struct that can be used as base-class
@@ -708,7 +722,14 @@ namespace LOFAR
       std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
-      struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
+      std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;
+
+      double                      distanceVec3(const std::vector<double>& pos,
+                                      const std::vector<double>& ref) const;
+      double                      maxDelayDistance(const struct ObservationSettings& settings) const;
+      double                      maxObservationFrequency(const struct ObservationSettings& settings,
+                                                          double subbandWidth) const;
+      unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.

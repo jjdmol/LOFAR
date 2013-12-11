@@ -57,7 +57,8 @@ struct ParsetFixture
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
     blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
-    nrStations = 43;
+    nrStations = 43,
+    nrDelayCompensationChannels = 64;
 
   Parset parset;
 
@@ -74,6 +75,8 @@ struct ParsetFixture
                str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
+               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };
@@ -84,7 +87,8 @@ const size_t
   ParsetFixture::nrOutputSamples,
   ParsetFixture::nrInputSamples,
   ParsetFixture::blockSize,
-  ParsetFixture::nrStations;
+  ParsetFixture::nrStations,
+  ParsetFixture::nrDelayCompensationChannels;
 
 
 // Test correctness of reported buffer sizes

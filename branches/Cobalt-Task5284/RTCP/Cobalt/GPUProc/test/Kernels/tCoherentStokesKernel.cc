@@ -54,14 +54,15 @@ struct ParsetSUT
     nrOutputSamples,
     nrStations, 
     nrInputSamples, 
-    blockSize;
+    blockSize,
+    nrDelayCompensationChannels;
 
   Parset parset;
-  // TODO: The test sizes are set to a minimum due to a parset bug. All original values are left as comment
-  ParsetSUT(size_t inrChannels = 1, // 13,
-  size_t inrOutputSamples = 1024,
-    size_t inrStations = 1, //  43,
-    size_t inrTabs = 1, //21,
+
+  ParsetSUT(size_t inrChannels =  13,
+    size_t inrOutputSamples = 1024,
+    size_t inrStations =  43,
+    size_t inrTabs = 21,
     size_t itimeIntegrationFactor = 1,
     string stokes = "IQUV") 
   :
@@ -70,7 +71,8 @@ struct ParsetSUT
     nrOutputSamples(inrOutputSamples),
     nrStations(inrStations),
     nrInputSamples(nrOutputSamples * timeIntegrationFactor), 
-    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples)
+    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples),
+    nrDelayCompensationChannels(64)
   {
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
@@ -87,6 +89,8 @@ struct ParsetSUT
     parset.add("Observation.DataProducts.Output_Beamformed.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
     parset.add("Observation.DataProducts.Output_Beamformed.locations", str(format("[%d*:.]") % nr_files));
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
+               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };
@@ -126,10 +130,10 @@ struct SUTWrapper:  ParsetSUT
   CoherentStokesKernel::Buffers buffers;
   scoped_ptr<CoherentStokesKernel> kernel;
 
-  SUTWrapper(size_t inrChannels = 1, //13,
+  SUTWrapper(size_t inrChannels = 13,
                 size_t inrOutputSamples = 1024,
-                size_t inrStations = 1, //43,
-                size_t inrTabs = 1, //21,
+                size_t inrStations = 43,
+                size_t inrTabs = 21,
                 size_t itimeIntegrationFactor = 1) :
       ParsetSUT(inrChannels, inrOutputSamples, inrStations ,
                 inrTabs,itimeIntegrationFactor),
@@ -190,7 +194,6 @@ struct SUTWrapper:  ParsetSUT
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
-  return ;
   // start the test vector at the largest size
   size_t tabs_sizes[] = {33,1,13};
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t) );
@@ -368,7 +371,7 @@ TEST(Coherent2DifferentValuesAllDimTest)
   // 4. Use tabs and channels
   size_t NR_CHANNELS = 1;
   size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 200;
-  size_t NR_TABS = 1; // 17;
+  size_t NR_TABS =  17;
   size_t INTEGRATION_SIZE = 3;
 
   SUTWrapper sut(NR_CHANNELS, 
