@@ -534,19 +534,22 @@ namespace LOFAR
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
 
-          string prefix = "";
+          string oldprefix = "";
+          string newprefix = "";
           struct ObservationSettings::BeamFormer::StokesSettings *set = 0;
           
           // Select coherent or incoherent for this iteration
           switch(i) {
             case 0:
-              prefix = "OLAP.CNProc_CoherentStokes";
+              oldprefix = "OLAP.CNProc_CoherentStokes";
+              newprefix = "Cobalt.BeamFormer.CoherentStokes";
               set = &settings.beamFormer.coherentSettings;
               set->coherent = true;
               break;
 
             case 1:
-              prefix = "OLAP.CNProc_IncoherentStokes";
+              oldprefix = "OLAP.CNProc_IncoherentStokes";
+              newprefix = "Cobalt.BeamFormer.IncoherentStokes";
               set = &settings.beamFormer.incoherentSettings;
               set->coherent = false;
               break;
@@ -557,11 +560,20 @@ namespace LOFAR
           }
 
           // Obtain settings of selected stokes
-          set->type = stokesType(getString(prefix + ".which", "I"));
+          set->type = stokesType(getString(
+                renamedKey(newprefix + "which", oldprefix + ".which"),
+                "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
-          set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
-          set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
+          set->nrChannels = getUint32(
+                renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
+                1);
+          set->timeIntegrationFactor = getUint32(
+                renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
+                1);
+          set->nrSubbandsPerFile = getUint32(
+                renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
+                0);
+
           if (set->nrSubbandsPerFile == 0) {
             // apply default
             set->nrSubbandsPerFile = settings.subbands.size();
