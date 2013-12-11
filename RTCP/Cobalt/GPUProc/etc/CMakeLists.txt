@@ -15,9 +15,9 @@ configure_file(
 install(FILES
   parset-additions.d/default/HardwareList.parset
   parset-additions.d/default/HardwareUsed.parset
-  parset-additions.d/default/FinalMetaDataGatherer.parset
+  ${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/FinalMetaDataGatherer.parset
   parset-additions.d/default/MAC-feedback.parset
-  parset-additions.d/default/OutputProc.parset
+  ${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/OutputProc.parset
   parset-additions.d/default/StationCalibration.parset
   parset-additions.d/default/StationStreams.parset
   DESTINATION etc/parset-additions.d/default)
