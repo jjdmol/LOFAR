@@ -51,7 +51,7 @@ Exception::TerminateHandler t(Exception::terminate);
 void runTest( Context &ctx, Stream &stream )
 {
   Parset ps;
-  ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
   ps.updateSettings();
 
   CoherentStokesTransposeKernel::Parameters params(ps);

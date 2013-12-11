@@ -63,7 +63,7 @@ struct ParsetFixture
   Parset parset;
 
   ParsetFixture() {
-    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
+    parset.add("Observation.DataProducts.Output_IncoherentStokes.enabled", 
                "true");
     parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
