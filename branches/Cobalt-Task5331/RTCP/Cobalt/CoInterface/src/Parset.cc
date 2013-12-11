@@ -561,7 +561,7 @@ namespace LOFAR
 
           // Obtain settings of selected stokes
           set->type = stokesType(getString(
-                renamedKey(newprefix + "which", oldprefix + ".which"),
+                renamedKey(newprefix + ".which", oldprefix + ".which"),
                 "I"));
           set->nrStokes = nrStokes(set->type);
           set->nrChannels = getUint32(
