@@ -331,7 +331,7 @@ namespace LOFAR
       settings.corrections.dedisperse = getBool(renamedKey("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
-      settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
+      settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", vector<double>(3), true);
 
       // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA_INNER");
@@ -405,7 +405,7 @@ namespace LOFAR
         station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
 
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
+        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3), true);
         station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
         station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
         station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
@@ -1427,22 +1427,50 @@ namespace LOFAR
       return getString("_DPname","");
     }
 
+    // The following documentation was take from the XSD that describes the
+    // Submission Information Package (sip) for the LTA.
+    //
+    // The CoherentStokes and IncoherentStokes do further processing on the data
+    // after the polyphase filter on the BlueGene. The numberOfCollapsedChannels
+    // is what is actually written to disk, the frequencyDownsamplingFactor is
+    // thus Observation:channelsPerSubband divided by the
+    // numberOfcollapsedChannels. There is also downsampling in time from the
+    // rawSamplingTime coming out of the polyphasefilter, usually in
+    // nanoseconds, using the timeDownsamplingFactor to get to the
+    // samplingTime. The timeDownsamplingFactor can be quite large, with the
+    // resulting samplingtime in the milliseconds. Also note that within the
+    // same Observation, these settings can be different for CoherentStokes and
+    // IncoherentStokes. if both types are being generated.
+    //
+    // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
     Parset Parset::getGlobalLTAFeedbackParameters() const
     {
       Parset ps;
+
+      // for MoM, to discriminate between Cobalt and BG/P observations
+      ps.add("_isCobalt", "T");
+
+      ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
+             str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+      ps.add("Observation.DataProducts.nrOfOutput_Correlated_", 
+             str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+
       if (settings.correlator.enabled) {
         ps.add("Observation.Correlator.integrationInterval",
                str(format("%.16g") % settings.correlator.integrationTime()));
       }
+
       if (settings.beamFormer.enabled) {
         const ObservationSettings::BeamFormer::StokesSettings&
           coherentStokes = settings.beamFormer.coherentSettings;
         const ObservationSettings::BeamFormer::StokesSettings&
           incoherentStokes = settings.beamFormer.incoherentSettings;
-        ps.add("Observation.CoherentStokes.rawSamplingTime",    // in msec
-               str(format("%.16g") % (1000 * sampleDuration())));
-        ps.add("Observation.IncoherentStokes.rawSamplingTime",  // in msec
-               str(format("%.16g") % (1000 * sampleDuration())));
+        ps.add("Observation.CoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels)));
+        ps.add("Observation.IncoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels)));
         ps.add("Observation.CoherentStokes.samplingTime",
                str(format("%.16g") % 
                    (sampleDuration() * coherentStokes.nrChannels * 
@@ -1460,9 +1488,9 @@ namespace LOFAR
         ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
                str(format("%u") % incoherentStokes.nrChannels));
         ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor",
-               "1");
+               "1");  // For Cobalt, we do not collapse channels.
         ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor",
-               "1");
+               "1");  // For Cobalt, we do not collapse channels.
         ps.add("Observation.CoherentStokes.stokes",
                stokesType(coherentStokes.type));
         ps.add("Observation.IncoherentStokes.stokes",
