@@ -26,6 +26,7 @@ ClaimManager.ClaimManager	1#
 		newObjectNames	9#
 		DPNames	9#
 		claimDates	10#
+		freeDates	10#
 
 TypeName
 LofarSpeedTest.LofarSpeedTest	1#
