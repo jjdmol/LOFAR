@@ -61,10 +61,11 @@ namespace LOFAR {
       ASSERT (system(command.c_str()) == 0);
       // Accept a connection from the clients and check if they are
       // initialized correctly.
+      // Note that the order in which connections are accepted does not
+      // need to be the same as the order of the parts in the VDS.
+      // Chances determine the connection order.
       itsConn.addConnections (nparts);
       itsPartNames.reserve (nparts);
-      itsStartFreqs.reserve (nparts);
-      itsEndFreqs.reserve (nparts);
       BlobString buf;
       string fname;
       for (int i=0; i<itsConn.size(); ++i) {
@@ -88,8 +89,6 @@ namespace LOFAR {
           }
         }
         bbi.finish();
-        itsStartFreqs.push_back (vds.getParts()[i].getStartFreqs()[0]);
-        itsEndFreqs.push_back   (vds.getParts()[i].getEndFreqs().back());
       }
     }
 
@@ -289,37 +288,22 @@ namespace LOFAR {
         timev1 -= width/2;
         timev2 = timev1 + width;
       }
-      // Only send command to a part if within the frequency range.
-      vector<bool> used(itsConn.size(), false);
-      for (int i=0; i<itsConn.size(); ++i) {
-        if (freqv1 <= itsEndFreqs[i]  &&  freqv2 >= itsStartFreqs[i]) {
-          BlobString buf;
-          MWBlobOut bbo(buf, GetValues, 0);
-          bbo.blobStream() << parmNamePattern
-                           << std::max(freqv1, itsStartFreqs[i])
-                           << std::min(freqv2, itsEndFreqs[i])
-                           << freqStep
-                           << timev1 << timev2 << timeStep
-                           << includeDefaults;
-          bbo.finish();
-          itsConn.write (i, buf);
-          used[i] = true;
-        }
-      }
-      // Read the replies.
-      vector<Record> recs;
-      recs.reserve (itsConn.size());
       BlobString buf;
+      MWBlobOut bbo(buf, GetValues, 0);
+      bbo.blobStream() << parmNamePattern
+                       << freqv1 << freqv2 << freqStep
+                       << timev1 << timev2 << timeStep
+                       << includeDefaults;
+      bbo.finish();
+      itsConn.writeAll (buf);
+      // Read the replies.
+      vector<Record> recs(itsConn.size());
       for (int i=0; i<itsConn.size(); ++i) {
-        if (used[i]) {
-          Record rec;
-          itsConn.read (i, buf);
-          MWBlobIn bbi(buf);
-          if (checkStatus (bbi, i)) {
-            getRecord (bbi.blobStream(), rec);
-            bbi.finish();
-            recs.push_back (rec);
-          }
+        itsConn.read (i, buf);
+        MWBlobIn bbi(buf);
+        if (checkStatus (bbi, i)) {
+          getRecord (bbi.blobStream(), recs[i]);
+          bbi.finish();
         }
       }
       return combineRemote (recs);
