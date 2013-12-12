@@ -52,16 +52,12 @@ void process(Stream &controlStream, size_t myRank)
   Parset parset(&controlStream);
 
   // Send identification string to the MAC Log Processor
-#if 0
-  // TODO: Disabled, because it crashes due to an unexpected pattern (not
-  // matching '% myRank').
   LOG_INFO_STR("MACProcessScope: " << 
                str(format(createPropertySetName(
                             PSN_COBALT_OUTPUT_PROC, "", 
                             parset.getString("_DPname")))
                    % myRank));
-#endif
-  
+
   const vector<string> &hostnames = parset.settings.outputProcHosts;
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];

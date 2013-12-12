@@ -50,7 +50,7 @@ echo "Working directory is `pwd`"
 haveGPU || exit 3
 
 # Check for input files
-if [[ "`hostname -f`" =~ cb[mt][[:digit:]]{3}\.control\.lofar ]] && [ -d /globalhome/lofarbuild/var/scratch/mol/test_sets/3sec ]
+if [[ "`hostname -f`" =~ cb[mt][[:digit:]]{3}.control.lofar ]] && [ -d /globalhome/lofarbuild/var/scratch/mol/test_sets/3sec ]
 then
   CBT_LOFARBUILD=/globalhome/lofarbuild
 fi

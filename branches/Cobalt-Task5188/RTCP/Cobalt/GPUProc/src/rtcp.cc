@@ -28,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -178,10 +177,6 @@ int main(int argc, char **argv)
   /*
    * Initialise the system environment
    */
-
-  // Ignore SIGPIPE, as we handle disconnects ourselves
-  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-    THROW_SYSCALL("signal(SIGPIPE)");
 
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
@@ -361,7 +356,7 @@ int main(int argc, char **argv)
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
   } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);

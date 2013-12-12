@@ -8,5 +8,5 @@ Cobalt.OutputProc.sshPrivateKey =
 
 # The executable of the process to start.
 # which thus needs to be found in $PATH after login.
-Cobalt.OutputProc.executable = @CMAKE_INSTALL_PREFIX@/bin/outputProc
+Cobalt.OutputProc.executable = outputProc
 

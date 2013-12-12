@@ -89,10 +89,10 @@ namespace LOFAR
       return hostMap;
     }
 
-    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
       Pipeline(ps, subbandIndices, devices),
-      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime())
+      multiSender(hostMap(ps, subbandIndices, 0 /* TODO */), 3, ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
 
@@ -226,6 +226,7 @@ namespace LOFAR
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
     {
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
+      const struct ObservationSettings::BeamFormer::SAP &sapInfo = ps.settings.beamFormer.SAPs[SAP];
 
       SmartPtr<StreamableData> outputData;
 

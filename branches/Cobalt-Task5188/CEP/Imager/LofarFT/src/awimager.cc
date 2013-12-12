@@ -29,7 +29,6 @@
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
 #include <Common/InputParSet.h>
-#include <Common/Exception.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -48,9 +47,6 @@
 #include <casa/sstream.h>
 
 using namespace casa;
-
-// Use a terminate handler that can produce a backtrace.
-LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {

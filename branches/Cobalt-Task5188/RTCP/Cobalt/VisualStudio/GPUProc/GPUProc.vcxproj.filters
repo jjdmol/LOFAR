@@ -52,12 +52,6 @@
     <Filter Include="src\opencl\Kernels">
       <UniqueIdentifier>{773522c4-e9e7-4c46-be83-2ba0cf75ac54}</UniqueIdentifier>
     </Filter>
-    <Filter Include="test\SubbandProcs">
-      <UniqueIdentifier>{7a1e1a7a-0ef7-4387-95d2-3546574a6fa9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="test\Kernels">
-      <UniqueIdentifier>{7cddb556-c6e1-4310-8114-45260d887ed7}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.h">
@@ -713,57 +707,6 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tKernelFunctions.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc">
-      <Filter>test\cuda</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1006,87 +949,6 @@
     <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu">
       <Filter>share</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tKernelFunctions.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\cuda\tTranspose2.sh">
-      <Filter>test\cuda</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\GPUProc\test\CMakeLists.txt">
@@ -1097,9 +959,6 @@
     </Text>
     <Text Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt">
       <Filter>share</Filter>
-    </Text>
-    <Text Include="..\..\GPUProc\test\Kernels\CMakeLists.txt">
-      <Filter>test\Kernels</Filter>
     </Text>
   </ItemGroup>
 </Project>

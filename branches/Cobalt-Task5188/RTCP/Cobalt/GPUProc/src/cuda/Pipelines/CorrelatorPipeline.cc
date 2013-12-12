@@ -158,7 +158,7 @@ namespace LOFAR
         } else {
           // connect to the output process for this output
           const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
-          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+          outputStream = createStream(desc, false, 0);
         }
       } catch (Exception &ex) {
         LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
