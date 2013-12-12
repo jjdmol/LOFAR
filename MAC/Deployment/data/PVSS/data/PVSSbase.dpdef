@@ -5,6 +5,7 @@
 TypeName
 Claim.Claim	1#
 	claimDate	26#
+	freeDate	26#
 	name	25#
 
 TypeName
