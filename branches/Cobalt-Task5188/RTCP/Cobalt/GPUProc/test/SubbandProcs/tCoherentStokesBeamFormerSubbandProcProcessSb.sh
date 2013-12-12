@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tBeamFormerSubbandProcProcessSb
+./runctest.sh tCoherentStokesBeamFormerSubbandProcProcessSb

@@ -71,24 +71,9 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      // Try #chnl/blk where 256 <= block size <= maxThreadsPerBlock && blockDim.z <= maxBlockDimZ.
-      // Violations for small input are fine. This should be auto-tuned for large inputs.
-      unsigned nrThreadsXY = params.nrPolarizations * params.nrTABs;
-      unsigned prefBlockSize = 256;
-      unsigned prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
-      prefBlockSize = prefNrThreadsZ * nrThreadsXY;
-      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z; // low, so check
-      unsigned maxNrThreadsPerBlock = std::min(std::min(maxThreadsPerBlock,
-                                                        maxBlockDimZ * nrThreadsXY),
-                                               params.nrChannelsPerSubband * nrThreadsXY);
-      if (prefBlockSize > maxNrThreadsPerBlock) {
-        prefBlockSize = maxNrThreadsPerBlock;
-        prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
-      }
-      unsigned nrChannelsPerBlock = prefNrThreadsZ;
-
+      // Beamformer assumes 1 channel in the thread.x dimension
       setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrPolarizations, params.nrTABs, nrChannelsPerBlock) );
+                           gpu::Block(params.nrPolarizations, params.nrTABs, 1) );
 
 #if 0
       size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);

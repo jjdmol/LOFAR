@@ -34,7 +34,7 @@
 
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
+#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
@@ -172,8 +172,8 @@ namespace LOFAR
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
       // Transpose 
-      BeamFormerTransposeKernel::Buffers transposeBuffers;
-      std::auto_ptr<BeamFormerTransposeKernel> transposeKernel;
+      CoherentStokesTransposeKernel::Buffers coherentTransposeBuffers;
+      std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
 
       // inverse (4k points) FFT
       FFT_Kernel inverseFFT;

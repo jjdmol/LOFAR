@@ -12,7 +12,7 @@ Observation.Beam[0].subbandList	         = [300]
 Observation.Beam[0].nrTiedArrayBeams     = 1
 Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
-Observation.Beam[0].TiedArrayBeam[0].coherent = F
+Observation.Beam[0].TiedArrayBeam[0].coherent = T
 
 OLAP.CNProc_CoherentStokes.which	 = I # IQUV
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
@@ -28,7 +28,8 @@ Observation.DataProducts.Output_Beamformed.filenames=[tab0.raw]
 Observation.DataProducts.Output_Beamformed.locations=[1*:.]
 
 Cobalt.Kernels.BeamFormerKernel.dumpOutput = true
-Cobalt.Kernels.BeamFormerTransposeKernel.dumpOutput = true
+Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput = true
+Cobalt.Kernels.CoherentStokesTransposeKernel.dumpOutput = true
 Cobalt.Kernels.CoherentStokesKernel.dumpOutput = true
 Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput = true
 Cobalt.Kernels.FFT_Kernel.dumpOutput = true
