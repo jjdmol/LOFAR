@@ -194,7 +194,7 @@ namespace LOFAR
           }
           // Add static meta data path from parset at the front for regression testing.
           string staticMetaDataDir =
-            itsPS.isDefined("Cobalt.OutputProc.StaticMetaDirectory")
+            itsPS.isDefined("Cobalt.OutputProc.StaticMetaDataDirectory")
             ? itsPS.getString("Cobalt.OutputProc.StaticMetaDataDirectory", "")
             : itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
           if (!staticMetaDataDir.empty()) {
