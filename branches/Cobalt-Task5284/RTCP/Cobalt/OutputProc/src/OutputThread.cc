@@ -218,7 +218,7 @@ namespace LOFAR
           outputPool,
           logPrefix + "[SubbandOutputThread] ",
           targetDirectory,
-          formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr))
+          formatString("Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr))
     {
     }
 
@@ -263,7 +263,7 @@ namespace LOFAR
           outputPool,
           logPrefix + "[TABOutputThread] ",
           targetDirectory,
-          formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr)
+          formatString("Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr)
           )
     {
     }
