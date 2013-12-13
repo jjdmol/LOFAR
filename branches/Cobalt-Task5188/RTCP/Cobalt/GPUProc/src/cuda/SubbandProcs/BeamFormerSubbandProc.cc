@@ -39,9 +39,16 @@ namespace LOFAR
   {
 
     BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-                                   size_t nrSamples, gpu::Context &context) :
-      MultiDimArrayHostBuffer<float, 3>(
-        boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
+      size_t nrSamples, gpu::Context &context) :
+    MultiDimArrayHostBuffer<float, 4>(
+      boost::extents[1][nrStokes][nrSamples][nrChannels], context, 0)
+    {
+    }
+
+    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
+      size_t nrSamples, unsigned nrTabs, gpu::Context &context) :
+      MultiDimArrayHostBuffer<float, 4>(
+      boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
@@ -148,7 +155,7 @@ namespace LOFAR
       // PPF: CS: D, CV: C
       coherentTransposeBuffers(
         devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC),
-        coherentTransposeKernel(
+      coherentTransposeKernel(
           factories.coherentTranspose.create(
              queue, coherentTransposeBuffers)),
 
@@ -429,12 +436,14 @@ namespace LOFAR
       // coherent stokes kernels
       if (coherentBeamformer)
       {
+        dumpBuffer(beamFormerBuffers.input, "beamFormerBuffers.input.dat");
         beamFormerKernel->enqueue(input.blockID, counters.beamformer,
           ps.settings.subbands[subband].centralFrequency,
           ps.settings.subbands[subband].SAP);
+        dumpBuffer(beamFormerBuffers.output, "beamFormerBuffers.output.dat");
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
-
+        dumpBuffer(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
         if (coherentStokesPPF) 
@@ -448,6 +457,7 @@ namespace LOFAR
         if (!outputComplexVoltages)
         {
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
+          dumpBuffer(coherentStokesBuffers.output, "coherentStokesBuffers.output.dat");
         }
       }
       else

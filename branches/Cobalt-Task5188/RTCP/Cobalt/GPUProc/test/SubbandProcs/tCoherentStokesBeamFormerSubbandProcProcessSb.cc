@@ -23,6 +23,7 @@
 
 #include <complex>
 #include <cmath>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -180,7 +181,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(maxNrTABsPerSAP * nrStokes, nrChannels, nrSamples, ctx);
+  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
 
   for (size_t i = 0; i < out.num_elements(); i++)
     out.get<float>()[i] = 42.0f;
@@ -213,14 +214,14 @@ int main() {
       << "nrSamples:  " << nrSamples << endl
       << "nrChannels:  " << nrChannels << endl;
 
-
-  for (size_t s = 0; s < nrStokes; s++)
+  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+    for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
     {
-      ASSERTSTR(fpEquals(out[s][t][c], outVal),
-        "out[" << s << "][" << t << "][" << c << "] = " <<
-        out[s][t][c] << "; outVal = " << outVal);
+      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1.0e-7f), // is this large??
+        "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
+        out[tab][s][t][c] << "; outVal = " << outVal);
     }
   return 0;
 }

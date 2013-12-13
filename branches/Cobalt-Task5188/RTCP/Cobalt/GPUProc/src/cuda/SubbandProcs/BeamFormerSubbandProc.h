@@ -53,12 +53,16 @@ namespace LOFAR
     struct BeamFormerFactories;
 
     // Our output data type
-    class BeamFormedData : public MultiDimArrayHostBuffer<float, 3>,
+    class BeamFormedData : public MultiDimArrayHostBuffer<float, 4>,
                            public StreamableData
     {
     public:
+     
       BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-                     size_t nrSamples, gpu::Context &context);
+        size_t nrSamples, gpu::Context &context);
+
+      BeamFormedData(unsigned nrStokes, unsigned nrChannels,
+        size_t nrSamples, unsigned nrTabs, gpu::Context &context);
     private:
       virtual void readData(Stream *str, unsigned);
       virtual void writeData(Stream *str, unsigned);

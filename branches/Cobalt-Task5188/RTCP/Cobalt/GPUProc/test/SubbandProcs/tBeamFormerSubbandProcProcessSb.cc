@@ -206,9 +206,9 @@ int main() {
   for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
       for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(fpEquals(out[s][t][c], outVal), 
+        ASSERTSTR(fpEquals(out[0][s][t][c], outVal), 
                   "out[" << s << "][" << t << "][" << c << "] = " << 
-                  out[s][t][c] << "; outVal = " << outVal);
+                  out[0][s][t][c] << "; outVal = " << outVal);
   
   return 0;
 }
