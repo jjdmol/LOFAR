@@ -11,5 +11,5 @@ Cobalt.OutputProc.sshPrivateKey =
 Cobalt.OutputProc.executable = @CMAKE_INSTALL_PREFIX@/bin/outputProc
 
 # The directory where OutputProc can find the StaticMetaData
-Cobalt.OutputProc.StaticMetaDataDirectory = @CMAKE_INSTALL_PREFIX@/etc/StaticMetaData
+Cobalt.OutputProc.StaticMetaDataDirectory = @CMAKE_INSTALL_PREFIX@/etc
 
