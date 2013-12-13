@@ -753,16 +753,17 @@ SUITE(correlator) {
 
 SUITE(beamformer) {
   SUITE(files) {
-    TEST(location) {
+    TEST(coherentLocation) {
       Parset ps;
 
       // set
-      ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
       ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].tiedArrayBeam[0].coherent", "true");
       ps.add("Observation.Beam[0].nrTiedArrayBeams", "1");
       ps.add("Observation.Beam[0].subbandList", "[0]");
-      ps.add("Observation.DataProducts.Output_Beamformed.filenames", "[tab1.hdf5]");
-      ps.add("Observation.DataProducts.Output_Beamformed.locations", "[host:/dir]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[tab1.hdf5]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[host:/dir]");
       ps.updateSettings();
 
       // verify settings
@@ -775,12 +776,12 @@ SUITE(beamformer) {
       Parset ps;
 
       // set
-      ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
       ps.add("Observation.nrBeams", "1");
       ps.add("Observation.Beam[0].nrTiedArrayBeams", "500");
       ps.add("Observation.Beam[0].subbandList", "[0]");
-      ps.add("Observation.DataProducts.Output_Beamformed.filenames", "[tab1..tab500]");
-      ps.add("Observation.DataProducts.Output_Beamformed.locations", "[500*host:/dir]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[tab1..tab500]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[500*host:/dir]");
       ps.updateSettings();
 
       // verify settings
@@ -797,7 +798,7 @@ SUITE(beamformer) {
     // correctly.
     Parset ps;
 
-    ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+    ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
     ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
     ps.add("Observation.sampleClock", "200");
     ps.add("Observation.antennaSet", "HBA_JOINED");
@@ -931,8 +932,8 @@ SUITE(integration) {
     CHECK_EQUAL(true,       ps.settings.correlator.enabled);
     CHECK_EQUAL(64U,        ps.settings.correlator.nrChannels);
     CHECK_CLOSE(3051.76,    ps.settings.correlator.channelWidth, 0.01);
-    CHECK_EQUAL(720U,       ps.settings.correlator.nrSamplesPerChannel);
-    CHECK_EQUAL(4U,         ps.settings.correlator.nrBlocksPerIntegration);
+    CHECK_EQUAL(768U,       ps.settings.correlator.nrSamplesPerChannel);
+    CHECK_EQUAL(30U,         ps.settings.correlator.nrBlocksPerIntegration);
     CHECK_EQUAL(nrStations, ps.settings.correlator.stations.size());
     for (unsigned st = 0; st < nrStations; ++st) {
       CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.correlator.stations[st].name);

@@ -640,26 +640,9 @@ namespace LOFAR
       std::string                 stationName(int index) const;
       std::vector<std::string>    allStationNames() const;
 
-      bool                        outputCorrelatedData() const;
-      bool                        outputBeamFormedData() const;
-      bool                        outputTrigger() const;
       bool outputThisType(OutputType) const;
 
-#if 0
-      bool                        onlineFlagging() const;
-      bool                        onlinePreCorrelationFlagging() const;
-      bool                        onlinePreCorrelationNoChannelsFlagging() const;
-      bool                        onlinePostCorrelationFlagging() const;
-      bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
-      unsigned                    onlinePreCorrelationFlaggingIntegration() const;
-      std::string                 onlinePreCorrelationFlaggingType(std::string defaultVal) const;
-      std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
-      std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
-      std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
-#endif
-
       unsigned nrStreams(OutputType, bool force = false) const;
-      static std::string keyPrefix(OutputType);
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;

@@ -371,6 +371,7 @@ namespace LOFAR
       if (isDefined("Cobalt.blockSize")) {
         settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
       } else {
+        // Old, fall-back configuration
         settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
       }
 
@@ -450,6 +451,10 @@ namespace LOFAR
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
         // super-station beam former
+        //
+        // TODO: Super-station beam former is unused, so will likely be
+        // implemented differently. The code below is only there to show how
+        // the OLAP.* keys used to be interpreted.
 
         // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
@@ -502,7 +507,9 @@ namespace LOFAR
       // SAP/TAB-crossing counter for the files we generate
       size_t bfStreamNr = 0;
 
-      settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
+      settings.beamFormer.enabled =
+           getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false)
+        || getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
       if (settings.beamFormer.enabled) {
         // Parse global settings
 
@@ -532,19 +539,22 @@ namespace LOFAR
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
 
-          string prefix = "";
+          string oldprefix = "";
+          string newprefix = "";
           struct ObservationSettings::BeamFormer::StokesSettings *set = 0;
           
           // Select coherent or incoherent for this iteration
           switch(i) {
             case 0:
-              prefix = "OLAP.CNProc_CoherentStokes";
+              oldprefix = "OLAP.CNProc_CoherentStokes";
+              newprefix = "Cobalt.BeamFormer.CoherentStokes";
               set = &settings.beamFormer.coherentSettings;
               set->coherent = true;
               break;
 
             case 1:
-              prefix = "OLAP.CNProc_IncoherentStokes";
+              oldprefix = "OLAP.CNProc_IncoherentStokes";
+              newprefix = "Cobalt.BeamFormer.IncoherentStokes";
               set = &settings.beamFormer.incoherentSettings;
               set->coherent = false;
               break;
@@ -555,11 +565,20 @@ namespace LOFAR
           }
 
           // Obtain settings of selected stokes
-          set->type = stokesType(getString(prefix + ".which", "I"));
+          set->type = stokesType(getString(
+                renamedKey(newprefix + ".which", oldprefix + ".which"),
+                "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
-          set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
-          set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
+          set->nrChannels = getUint32(
+                renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
+                1);
+          set->timeIntegrationFactor = getUint32(
+                renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
+                1);
+          set->nrSubbandsPerFile = getUint32(
+                renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
+                0);
+
           if (set->nrSubbandsPerFile == 0) {
             // apply default
             set->nrSubbandsPerFile = settings.subbands.size();
@@ -568,7 +587,13 @@ namespace LOFAR
           ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
 
-        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Beamformed");
+        const vector<ObservationSettings::FileLocation> coherent_locations =
+          getFileLocations("CoherentStokes");
+        const vector<ObservationSettings::FileLocation> incoherent_locations =
+          getFileLocations("IncoherentStokes");
+
+        size_t coherent_idx = 0;
+        size_t incoherent_idx = 0;
 
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
@@ -619,10 +644,15 @@ namespace LOFAR
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
 
-              if (file.streamNr >= locations.size())
-                THROW(CoInterfaceException, "No beam former filename or location specified for file " << file.streamNr);
-
-              file.location = locations[file.streamNr];
+              if (file.coherent) {
+                if (coherent_idx >= coherent_locations.size())
+                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = coherent_locations[coherent_idx++];
+              } else {
+                if (incoherent_idx >= incoherent_locations.size())
+                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = incoherent_locations[incoherent_idx++];
+              }
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
@@ -837,16 +867,6 @@ namespace LOFAR
     bool Parset::correctClocks() const
     {
       return settings.corrections.clock;
-    }
-
-
-    std::string Parset::keyPrefix(OutputType outputType)
-    {
-      switch (outputType) {
-      case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
-      case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
-      default:                THROW(CoInterfaceException, "Unknown output type");
-      }
     }
 
 
@@ -1224,78 +1244,14 @@ namespace LOFAR
       return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
-    bool Parset::outputCorrelatedData() const
-    {
-      return settings.correlator.enabled;
-    }
-
-    bool Parset::outputBeamFormedData() const
-    {
-      return settings.beamFormer.enabled;
-    }
-
-    bool Parset::outputTrigger() const
-    {
-      return getBool("Observation.DataProducts.Output_Trigger.enabled", false);
-    }
-
     bool Parset::outputThisType(OutputType outputType) const
     {
-      return getBool(keyPrefix(outputType) + ".enabled", false);
+      switch (outputType) {
+      case CORRELATED_DATA:   return settings.correlator.enabled;
+      case BEAM_FORMED_DATA:  return settings.beamFormer.enabled;
+      default:                THROW(CoInterfaceException, "Unknown output type");
+      }
     }
-
-#if 0
-    bool Parset::onlineFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlineFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationNoChannelsFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
-    }
-
-    bool Parset::onlinePostCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
-    }
-
-    unsigned Parset::onlinePreCorrelationFlaggingIntegration() const
-    {
-      return getUint32("OLAP.CNProc.onlinePostCorrelationFlaggingIntegration", 0);
-    }
-
-
-    string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    bool Parset::onlinePostCorrelationFlaggingDetectBrokenStations() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
-    }
-#endif
 
     double Parset::CNintegrationTime() const
     {
