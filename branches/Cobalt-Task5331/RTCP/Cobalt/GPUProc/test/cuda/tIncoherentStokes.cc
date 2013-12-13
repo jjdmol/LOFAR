@@ -65,11 +65,11 @@ struct ParsetFixture
   ParsetFixture() {
     parset.add("Observation.DataProducts.Output_IncoherentStokes.enabled", 
                "true");
-    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
-    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband",
                lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_IncoherentStokes.which",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.which",
                "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
                str(format("[%d*RS000]") % nrStations));

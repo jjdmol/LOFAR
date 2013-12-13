@@ -371,6 +371,7 @@ namespace LOFAR
       if (isDefined("Cobalt.blockSize")) {
         settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
       } else {
+        // Old, fall-back configuration
         settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
       }
 
@@ -450,6 +451,10 @@ namespace LOFAR
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
         // super-station beam former
+        //
+        // TODO: Super-station beam former is unused, so will likely be
+        // implemented differently. The code below is only there to show how
+        // the OLAP.* keys used to be interpreted.
 
         // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
@@ -1247,59 +1252,6 @@ namespace LOFAR
       default:                THROW(CoInterfaceException, "Unknown output type");
       }
     }
-
-#if 0
-    bool Parset::onlineFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlineFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationNoChannelsFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
-    }
-
-    bool Parset::onlinePostCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
-    }
-
-    unsigned Parset::onlinePreCorrelationFlaggingIntegration() const
-    {
-      return getUint32("OLAP.CNProc.onlinePostCorrelationFlaggingIntegration", 0);
-    }
-
-
-    string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    bool Parset::onlinePostCorrelationFlaggingDetectBrokenStations() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
-    }
-#endif
 
     double Parset::CNintegrationTime() const
     {
