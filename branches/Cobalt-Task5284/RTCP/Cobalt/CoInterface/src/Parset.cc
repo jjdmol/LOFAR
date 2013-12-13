@@ -1427,22 +1427,6 @@ namespace LOFAR
       return getString("_DPname","");
     }
 
-    // The following documentation was take from the XSD that describes the
-    // Submission Information Package (sip) for the LTA.
-    //
-    // The CoherentStokes and IncoherentStokes do further processing on the data
-    // after the polyphase filter on the BlueGene. The numberOfCollapsedChannels
-    // is what is actually written to disk, the frequencyDownsamplingFactor is
-    // thus Observation:channelsPerSubband divided by the
-    // numberOfcollapsedChannels. There is also downsampling in time from the
-    // rawSamplingTime coming out of the polyphasefilter, usually in
-    // nanoseconds, using the timeDownsamplingFactor to get to the
-    // samplingTime. The timeDownsamplingFactor can be quite large, with the
-    // resulting samplingtime in the milliseconds. Also note that within the
-    // same Observation, these settings can be different for CoherentStokes and
-    // IncoherentStokes. if both types are being generated.
-    //
-    // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
     Parset Parset::getGlobalLTAFeedbackParameters() const
     {
       Parset ps;
@@ -1461,6 +1445,13 @@ namespace LOFAR
       }
 
       if (settings.beamFormer.enabled) {
+        // For Cobalt, we do not collapse channels. There's no need to do so,
+        // because we can do the final PPF/FFT on the desired number of output
+        // channels. The BlueGene, on the other hand, uses a fixed PPF/FFT size,
+        // so that the number of channels has to be reduced in the final step.
+        // As a result, `rawSamplingTime` is identical to `samplingTime`,
+        // `nrOfCollapsedChannels` is equal to the number of output channels per
+        // subband, and `frequencyDownsamplingFactor` is always 1.
         const ObservationSettings::BeamFormer::StokesSettings&
           coherentStokes = settings.beamFormer.coherentSettings;
         const ObservationSettings::BeamFormer::StokesSettings&
@@ -1473,12 +1464,10 @@ namespace LOFAR
                    (sampleDuration() * incoherentStokes.nrChannels)));
         ps.add("Observation.CoherentStokes.samplingTime",
                str(format("%.16g") % 
-                   (sampleDuration() * coherentStokes.nrChannels * 
-                    coherentStokes.timeIntegrationFactor)));
+                   (sampleDuration() * coherentStokes.nrChannels)));
         ps.add("Observation.IncoherentStokes.samplingTime",
                str(format("%.16g") % 
-                   (sampleDuration() * incoherentStokes.nrChannels * 
-                    incoherentStokes.timeIntegrationFactor)));
+                   (sampleDuration() * incoherentStokes.nrChannels)));
         ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % coherentStokes.timeIntegrationFactor));
         ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
@@ -1487,10 +1476,8 @@ namespace LOFAR
                str(format("%u") % coherentStokes.nrChannels));
         ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
                str(format("%u") % incoherentStokes.nrChannels));
-        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor",
-               "1");  // For Cobalt, we do not collapse channels.
-        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor",
-               "1");  // For Cobalt, we do not collapse channels.
+        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
         ps.add("Observation.CoherentStokes.stokes",
                stokesType(coherentStokes.type));
         ps.add("Observation.IncoherentStokes.stokes",

@@ -703,7 +703,11 @@ namespace LOFAR
 
       std::string                 PVSS_TempObsName() const;
 
-      // Return the non file specific LTA feedback parameters.
+      // Return the global, non file specific, LTA feedback parameters.
+      // \note Details about the meaning of the different meta-data parameters
+      // can be found in the XSD that describes the Submission Information
+      // Package (sip) for the LTA.
+      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
       Parset                      getGlobalLTAFeedbackParameters() const;
 
     private:
