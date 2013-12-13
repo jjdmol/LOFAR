@@ -37,16 +37,21 @@
 #error Precondition violated: NR_CHANNELS >= 1
 #endif
 
-typedef float2(*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
+typedef float2(*DataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 
 /**
- * This kernel prepares the sampled data in the channels for a FFT step
- * or corrects after een iFFT step.
- * By multiplying all odd samples with -1 you place the negative frequencies 
- * in front. For More information look at signal analysis bookd (or ask Marcel) 
- * @param[in]  inputDataPtr      pointer to input data; this can either be a
- *                               5D array [station][polarizations][nr_channels][n_samples_channel][complex]
- *                               of floats.
+ * Shift the zero-frequency component to the center of the spectrum.
+ * This kernel swaps the half-spaces of the channel dimension by 
+ * 
+ * This kernel prepares the sampled data in the channels for a FFT step or
+ * corrects after een iFFT step, so that the negative frequencies are placed to
+ * the left of the positive frequencies. We do this by modulating the samples
+ * with exp(-j*pi), which results in a shift over pi in the frequency
+ * domain. More information can be found in any decent book on digital signal
+ * processing.
+ * @param[data] a 4-D array
+ *              [station][polarizations][nr_channels][n_samples_channel]
+ *              of complex floats.
  *
  * Required preprocessor symbols:
  * - NR_SAMPLES_PER_CHANNEL: > 0
@@ -57,13 +62,11 @@ typedef float2(*InputDataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SA
  * Execution configuration:
  * - Use a 3D thread block. (sample, station, channel) size < 1024.
  * - Use a 3D grid dim. (sample, station, channel) channel < 64
-  */
+ */
 
 extern "C" {
-__global__ void FFTShift(void *inputDataPtr)
+__global__ void FFTShift(DataType data)
 {
-  InputDataType input = (InputDataType)inputDataPtr;
-
   unsigned sample  = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned station = blockIdx.y * blockDim.y + threadIdx.y;
   unsigned channel = blockIdx.z * blockDim.z + threadIdx.z;
@@ -71,10 +74,10 @@ __global__ void FFTShift(void *inputDataPtr)
   // Set the odd samples 
   signed factor = 1 - 2 * (sample % 2);  //multiplication that results in -1 or
               // odd samples (faster then an if statement
-  (*input)[station][0][channel][sample] = 
-                            (*input)[station][0][channel][sample] * factor;
-  (*input)[station][1][channel][sample] = 
-                            (*input)[station][1][channel][sample] * factor;
+  (*data)[station][0][channel][sample] = 
+                            (*data)[station][0][channel][sample] * factor;
+  (*data)[station][1][channel][sample] = 
+                            (*data)[station][1][channel][sample] * factor;
 
 }
 }

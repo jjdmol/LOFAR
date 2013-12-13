@@ -1,4 +1,4 @@
-//# IntToFloatKernel.cc
+//# FFTShiftKernel.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -53,31 +53,34 @@ namespace LOFAR
     }
 
     FFTShiftKernel::FFTShiftKernel(const gpu::Stream& stream,
-                                       const gpu::Module& module,
-                                       const Buffers& buffers,
-                                       const Parameters& params) :
+                                   const gpu::Module& module,
+                                   const Buffers& buffers,
+                                   const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.input);
 
       ASSERT(params.nrSamplesPerChannel > 1024);
 
-      unsigned maxNrThreads;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-
       setEnqueueWorkSizes(
-        gpu::Grid(params.nrSamplesPerChannel, params.nrStations,
+        gpu::Grid(
+          params.nrSamplesPerChannel, 
+          params.nrStations,
           params.nrChannelsPerSubband),
         gpu::Block(
-          (params.nrChannelsPerSubband > 1) ? maxNrThreads / 2 : maxNrThreads,
-             1,(params.nrChannelsPerSubband > 1 ) ? 2 : 1)
+          (params.nrChannelsPerSubband > 1) ? 
+          maxThreadsPerBlock / 2 : 
+          maxThreadsPerBlock,
+          1,
+          (params.nrChannelsPerSubband > 1 ) ? 2 : 1)
         );
 
-      unsigned nrSamples = params.nrStations * params.nrSamplesPerChannel * 
-                           NR_POLARIZATIONS;
-      nrOperations = (size_t) nrSamples * 2;
-      nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
-      nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
+      // unsigned nrSamples =
+      //   params.nrStations * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+
+      // nrOperations = (size_t) nrSamples * 2;
+      // nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
+      // nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -103,8 +106,6 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-
-      //nrChannelsPerSubband
 
       return defs;
     }
