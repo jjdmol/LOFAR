@@ -447,7 +447,7 @@ namespace LOFAR
              libssh2_session_last_error(session,NULL,NULL,0) ==
              LIBSSH2_ERROR_EAGAIN )
       {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 
