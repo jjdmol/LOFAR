@@ -94,7 +94,7 @@ namespace LOFAR
       SmartPtr<Thread> itsThread;
 
 
-      bool waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
+      void waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
 
       LIBSSH2_SESSION *open_session( FileDescriptorBasedStream &sock, bool& authError );
       void close_session( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );

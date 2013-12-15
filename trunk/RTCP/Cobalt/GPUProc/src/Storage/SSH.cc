@@ -472,21 +472,17 @@ namespace LOFAR
       }
     }
 
-    bool SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
+    void SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
     {
       // we manually control the cancellation points, so make sure
       // cancellation is actually disabled.
       ScopedDelayCancellation dc;
 
-      struct timeval timeout;
       int rc;
       fd_set fd;
       fd_set *writefd = NULL;
       fd_set *readfd = NULL;
       int dir;
-
-      timeout.tv_sec = 1;
-      timeout.tv_usec = 0;
 
       FD_ZERO(&fd);
 
@@ -501,16 +497,19 @@ namespace LOFAR
       if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
         writefd = &fd;
 
-      {
-        Cancellation::enable();
+      Cancellation::enable();
+
+      do {
+        struct timeval timeout;
+
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
 
         // select() is a cancellation point
         rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
+      } while (rc == 0);
 
-        Cancellation::disable();
-      }
-
-      return rc > 0;
+      Cancellation::disable();
     }
 
     void SSHconnection::commThread()
