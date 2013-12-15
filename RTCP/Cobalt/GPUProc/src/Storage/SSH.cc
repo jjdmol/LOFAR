@@ -379,12 +379,14 @@ namespace LOFAR
 #if LIBSSH2_VERSION_NUM >= 0x010208
       while ((rc = libssh2_session_handshake(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 #else
       while ((rc = libssh2_session_startup(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 #endif
       if (rc) {
@@ -402,7 +404,8 @@ namespace LOFAR
                                                        NULL // password
                                                        )) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (rc) {
@@ -422,7 +425,8 @@ namespace LOFAR
 
       while ((rc = libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing")) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -443,7 +447,8 @@ namespace LOFAR
              libssh2_session_last_error(session,NULL,NULL,0) ==
              LIBSSH2_ERROR_EAGAIN )
       {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (!channel.get())
@@ -462,7 +467,8 @@ namespace LOFAR
       int rc;
 
       while( (rc = libssh2_channel_close(channel)) == LIBSSH2_ERROR_EAGAIN ) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -472,7 +478,7 @@ namespace LOFAR
       }
     }
 
-    void SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
+    int SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
     {
       // we manually control the cancellation points, so make sure
       // cancellation is actually disabled.
@@ -510,6 +516,8 @@ namespace LOFAR
       } while (rc == 0);
 
       Cancellation::disable();
+
+      return rc;
     }
 
     void SSHconnection::commThread()
@@ -572,7 +580,8 @@ namespace LOFAR
       while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
              LIBSSH2_ERROR_EAGAIN )
       {
-        waitsocket(session, *sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -681,7 +690,8 @@ namespace LOFAR
         }
 
         if (nrOpenStreams > 0)
-          waitsocket(session, *sock);
+          if ((rc = waitsocket(session, *sock)) < 0)
+            break;
       }
 
       LOG_DEBUG_STR( itsLogPrefix << "Disconnecting" );
