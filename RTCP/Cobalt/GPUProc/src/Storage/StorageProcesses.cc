@@ -178,12 +178,18 @@ namespace LOFAR
       // PortBroker connection. We need this because SSH.cc/libssh2 sometimes
       // keeps connections open even though FinalMetaDataGatherer cannot even
       // be started.
+      //
+      // TODO: For now, we also need a deadline for non-real-time observations,
+      // because FinalMetaDataGather is not necessarily present.
       const time_t deadline = time(0) + 5;
 
       // Keep trying to connect to the FinalMetaDataGatherer, but only
       // while the SSH connection is alive. If not, there's no point in waiting
       // for a connection that can never be established.
-      while(!stream && time(0) < deadline) {
+      while(!stream) {
+        if (deadline > 0 && time(0) < deadline)
+          return;
+
         if (sshconn.isDone())
           return;
 
