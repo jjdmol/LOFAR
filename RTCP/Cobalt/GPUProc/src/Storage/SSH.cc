@@ -441,6 +441,7 @@ namespace LOFAR
       ScopedDelayCancellation dc;
 
       channel_t channel;
+      int rc;
 
       /* Exec non-blocking on the remote host */
       while( (channel = libssh2_channel_open_session(session)) == NULL &&
