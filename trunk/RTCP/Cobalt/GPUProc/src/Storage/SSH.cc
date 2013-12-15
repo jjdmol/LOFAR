@@ -379,13 +379,13 @@ namespace LOFAR
 #if LIBSSH2_VERSION_NUM >= 0x010208
       while ((rc = libssh2_session_handshake(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 #else
       while ((rc = libssh2_session_startup(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 #endif
@@ -404,7 +404,7 @@ namespace LOFAR
                                                        NULL // password
                                                        )) ==
              LIBSSH2_ERROR_EAGAIN) {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 
@@ -425,7 +425,7 @@ namespace LOFAR
 
       while ((rc = libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing")) ==
              LIBSSH2_ERROR_EAGAIN) {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 
@@ -467,7 +467,7 @@ namespace LOFAR
       int rc;
 
       while( (rc = libssh2_channel_close(channel)) == LIBSSH2_ERROR_EAGAIN ) {
-        if ((rc = waitsocket(session, *sock)) < 0)
+        if ((rc = waitsocket(session, sock)) < 0)
           break;
       }
 
