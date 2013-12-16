@@ -94,10 +94,10 @@ namespace LOFAR
 
       // FFT: B -> B
       firstFFT(queue,
-               DELAY_COMPENSATION_NR_CHANNELS,
-               (ps.nrStations() * NR_POLARIZATIONS *
-                ps.nrSamplesPerSubband() / DELAY_COMPENSATION_NR_CHANNELS),
-               true, devB),
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+         ps.settings.beamFormer.nrDelayCompensationChannels),
+        true, devB),
 
       // delayComp: B -> A
       delayCompensationBuffers(devB, devA, devInput.delaysAtBegin,
@@ -108,10 +108,12 @@ namespace LOFAR
 
       // FFT: A -> A
       secondFFT(queue,
-                BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS,
-                (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-                 (BEAM_FORMER_NR_CHANNELS / DELAY_COMPENSATION_NR_CHANNELS)),
-                true, devA),
+        ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+         (ps.settings.beamFormer.nrHighResolutionChannels /
+          ps.settings.beamFormer.nrDelayCompensationChannels)),
+        true, devA),
 
       // bandPass: A -> B
       devBandPassCorrectionWeights(
@@ -149,9 +151,10 @@ namespace LOFAR
       // inverse FFT: C/D -> C/D (in-place) = transposeBuffers.output
       inverseFFT(
         queue,
-        BEAM_FORMER_NR_CHANNELS,
+        ps.settings.beamFormer.nrHighResolutionChannels,
         (ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS *
-         ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS),
+         ps.nrSamplesPerSubband() /
+         ps.settings.beamFormer.nrHighResolutionChannels),
         false, transposeBuffers.output),
 
       // FIR filter: D/C -> C/D
@@ -207,9 +210,9 @@ namespace LOFAR
 
       // inverse FFT: A -> A
       incoherentInverseFFT(
-        queue, BEAM_FORMER_NR_CHANNELS,
-        (ps.nrStations() * NR_POLARIZATIONS * 
-         ps.nrSamplesPerSubband() / BEAM_FORMER_NR_CHANNELS),
+        queue, ps.settings.beamFormer.nrHighResolutionChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+         ps.settings.beamFormer.nrHighResolutionChannels),
         false, devA),
 
       // FIR filter: A -> B
@@ -233,7 +236,7 @@ namespace LOFAR
       // final FFT: B -> B
       incoherentFinalFFT(
         queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() / 
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
          ps.settings.beamFormer.incoherentSettings.nrChannels),
         true, devB),
 
@@ -536,9 +539,10 @@ namespace LOFAR
       }
     }
 
-    void BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
+    bool BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
     {
       (void)_output;
+      return true;
     }
 
   }

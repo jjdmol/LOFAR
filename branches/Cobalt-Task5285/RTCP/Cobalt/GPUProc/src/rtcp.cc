@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -177,6 +178,10 @@ int main(int argc, char **argv)
   /*
    * Initialise the system environment
    */
+
+  // Ignore SIGPIPE, as we handle disconnects ourselves
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    THROW_SYSCALL("signal(SIGPIPE)");
 
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
@@ -347,20 +352,16 @@ int main(int argc, char **argv)
   }
 
   SmartPtr<Pipeline> pipeline;
-  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-    outputType = CORRELATED_DATA;
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-    outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
-    outputType = BEAM_FORMED_DATA;
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
@@ -431,7 +432,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation(outputType);
+        pipeline->processObservation();
       }
     }
   }
@@ -444,11 +445,10 @@ int main(int argc, char **argv)
   LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
-    time_t completing_start = time(0);
-
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
+    time_t completing_start = time(0);
     storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");

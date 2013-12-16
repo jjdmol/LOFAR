@@ -110,7 +110,7 @@ struct Fixture_Loss: public Fixture {
 
   Fixture_Loss()
   :
-    ctr_loss(outputPool, 0, maxInFlight)
+    ctr_loss(outputPool, 0, 0, maxInFlight)
   {
     // add some subbands for both blocks
     for (size_t blockIdx = 0; blockIdx < maxInFlight; ++blockIdx) {
@@ -349,7 +349,7 @@ SUITE(SendReceive) {
         for (size_t s = 0; s < nrSamples; ++s) {
           for (size_t c = 0; c < nrChannels; ++c) {
             size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
-            size_t actual = static_cast<size_t>(block->data[sb][s][c]);
+            size_t actual = static_cast<size_t>(block->samples[sb][s][c]);
 
             if (expected != actual)
               LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
@@ -424,16 +424,16 @@ SUITE(MultiReceiver) {
   TEST(Transpose) {
     LOG_DEBUG_STR("Transpose test started");
 
-    const size_t nrSubbands = 4;
+    const int nrSubbands = 4;
     const size_t nrBlocks = 2;
-    const size_t nrTABs = 2;
+    const int nrTABs = 2;
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
 
     // Give both senders and receivers multiple tasks,
     // but not all the same amount.
-    const size_t nrSenders = 4;
-    const size_t nrReceivers = 2;
+    const int nrSenders = 4;
+    const int nrReceivers = 2;
 
     Semaphore sendersDone;
 
@@ -446,7 +446,7 @@ SUITE(MultiReceiver) {
 #     pragma omp section
       {
 #       pragma omp parallel for num_threads(nrReceivers)
-        for (size_t r = 0; r < nrReceivers; ++r) {
+        for (int r = 0; r < nrReceivers; ++r) {
           LOG_DEBUG_STR("Receiver thread " << r);
 
           // Set up pool where all data ends up
@@ -458,7 +458,7 @@ SUITE(MultiReceiver) {
           std::map<size_t, SmartPtr< Pool<Block> > > outputPools;
           Receiver::CollectorMap collectors;
 
-          for (size_t t = 0; t < nrTABs; ++t) {
+          for (int t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
 
@@ -467,7 +467,7 @@ SUITE(MultiReceiver) {
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
             }
-            collectors[t] = new BlockCollector(*outputPools[t], t);
+            collectors[t] = new BlockCollector(*outputPools[t], t, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -479,12 +479,10 @@ SUITE(MultiReceiver) {
           LOG_DEBUG_STR("Receiver " << r << ": Shutting down");
           mr.kill(nrSenders);
 
-          // Wrap up any incomplete blocks
-          for (size_t t = 0; t < nrTABs; ++t) {
+          // Check output -- everything should have arrived
+          for (int t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
-
-            collectors[t]->finish();
 
             // Check if all blocks arrived, plus NULL marker.
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
@@ -507,12 +505,12 @@ SUITE(MultiReceiver) {
       {
 
 #       pragma omp parallel for num_threads(nrSenders)
-        for (size_t s = 0; s < nrSenders; ++s) {
+        for (int s = 0; s < nrSenders; ++s) {
           LOG_DEBUG_STR("Sender thread " << s);
 
           MultiSender::HostMap hostMap;
 
-          for (size_t t = 0; t < nrTABs; ++t) {
+          for (int t = 0; t < nrTABs; ++t) {
             size_t r = t % nrReceivers;
 
             struct MultiSender::Host host;
@@ -538,12 +536,12 @@ SUITE(MultiReceiver) {
               // Send blocks
               for (size_t b = 0; b < nrBlocks; ++b) {
                 // Send our subbands
-                for (size_t sb = 0; sb < nrSubbands; ++sb) {
+                for (int sb = 0; sb < nrSubbands; ++sb) {
                   if (sb % nrSenders != s)
                     continue;
 
                   // Send all TABs
-                  for (size_t t = 0; t < nrTABs; ++t) {
+                  for (int t = 0; t < nrTABs; ++t) {
                     SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
                     subband->id.fileIdx = t;
                     subband->id.block = b;

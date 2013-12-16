@@ -52,7 +52,7 @@ lofar_find_package(Boost REQUIRED)
 lofar_find_package(MPI)
 #lofar_find_package(ALGLIB)
 lofar_find_package(LibNuma)
-lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)  # 'double threads' for FFT unit test refs
+lofar_find_package(FFTW3 COMPONENTS single double threads REQUIRED)
 lofar_find_package(UnitTest++)
 
 # LibSSH2 can be linked against either OpenSSL or GCrypt. We need to

@@ -44,7 +44,6 @@ namespace LOFAR
         Parameters(const Parset& ps);
         unsigned nrSAPs;
         unsigned nrTABs;
-        float weightCorrection; // constant weight applied to all weights
         double subbandBandwidth;
       };
 

@@ -47,7 +47,6 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f), // TODO: pass FFT size
       subbandBandwidth(ps.settings.subbandWidth())
     {
       // override the correlator settings with beamformer specifics
@@ -151,8 +150,6 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
-      defs["WEIGHT_CORRECTION"] =
-        str(format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
         str(format("%.7f") % itsParameters.subbandBandwidth);
 

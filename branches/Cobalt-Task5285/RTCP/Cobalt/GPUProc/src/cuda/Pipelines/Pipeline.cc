@@ -36,6 +36,8 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
+// TODO: Following include is only needed for dynamic_cast. Code smell!
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h> 
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
@@ -212,7 +214,7 @@ namespace LOFAR
     }
 
 
-    void Pipeline::processObservation(OutputType outputType)
+    void Pipeline::processObservation()
     {
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
@@ -309,10 +311,7 @@ namespace LOFAR
         {
 #         pragma omp parallel for num_threads(writePool.size())
           for (size_t i = 0; i < writePool.size(); ++i) {
-            SmartPtr<Stream> outputStream = connectToOutput(subbandIndices[i], outputType);
-
-            // write subband to Storage
-            writeSubband(subbandIndices[i], writePool[i], outputStream);
+            writeOutput(subbandIndices[i], writePool[i]);
           }
         }
       }
@@ -369,14 +368,16 @@ namespace LOFAR
 
         // Also fetch an output object to store results
         SmartPtr<StreamableData> output = workQueue.outputPool.free.remove();
-        ASSERT(output != NULL); // Only we signal end-of-data, so we should never receive it
+
+        // Only _we_ signal end-of-data, so we should _never_ receive it
+        ASSERT(output != NULL); 
 
         output->blockID = id;
 
         // Perform calculations
-      //  workQueue.timers["CPU - process"]->start();
+        // workQueue.timers["CPU - process"]->start();
         workQueue.processSubband(*input, *output);
-//workQueue.timers["CPU - process"]->stop();
+        // workQueue.timers["CPU - process"]->stop();
 
         if (id.block < 0) {
           // Ignore block; only used to initialize FIR history samples
@@ -410,91 +411,46 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
-        //  workQueue.timers["CPU - postprocess"]->start();
-        workQueue.postprocessSubband(*output);
+        // workQueue.timers["CPU - postprocess"]->start();
+        bool handOffOutput = workQueue.postprocessSubband(*output);
         // workQueue.timers["CPU - postprocess"]->stop();
+
+        if (!handOffOutput) {
+          workQueue.outputPool.free.append(output);
+          ASSERT(!output);
+          continue;
+        }
 
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
 
-        // We do the ordering, so we set the sequence numbers
-        output->setSequenceNumber(id.block);
-
-        if (!pool.bequeue->append(output)) {
-          nrBlocksDropped++;
-          //LOG_WARN_STR("[block " << block << "] Dropped for subband " << globalSubbandIdx);
-
-          // Give back to queue
-          workQueue.outputPool.free.append(output);
-        } else {
-          nrBlocksForwarded++;
+        // Set the sequence number if we're NOT a CorrelatorSubbandProc
+        // TODO: Get rid of dynamic_cast
+        if (!dynamic_cast<CorrelatorSubbandProc*>(&workQueue)) {
+          // We do the ordering, so we set the sequence numbers
+          output->setSequenceNumber(id.block);
         }
 
+        if (pool.bequeue->append(output)) {
+          nrBlocksForwarded++;
+        } else {
+          nrBlocksDropped++;
+          // LOG_WARN_STR("[block " << block << "] Dropped for subband " <<
+          //              globalSubbandIdx);
+          // Give back to queue
+          workQueue.outputPool.free.append(output);
+        }
         ASSERT(!output);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
 
-        // Log every 5 seconds
+        // Log every 5 seconds (note: time() returns time in sec.)
         if (time(0) > lastLogTime + 5) {
           lastLogTime = time(0);
-
-          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << " blocks, dropped " << nrBlocksDropped << " blocks");
+          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << 
+                       " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
-    }
-
-
-    void Pipeline::writeSubband( unsigned globalSubbandIdx, struct Output &output, SmartPtr<Stream> outputStream )
-    {
-      SmartPtr<StreamableData> outputData;
-
-      // Process pool elements until end-of-output
-      while ((outputData = output.bequeue->remove()) != NULL) {
-        const struct BlockID id = outputData->blockID;
-        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
-
-        LOG_DEBUG_STR("[" << id << "] Writing start");
-
-        // Write block to disk 
-        try {
-          outputData->write(outputStream.get(), true);
-        } catch (Exception &ex) {
-          LOG_ERROR_STR("Dropping rest of subband " << id.globalSubbandIdx << ": " << ex);
-
-          outputStream = new NullStream;
-        }
-
-        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
-        workQueue.outputPool.free.append(outputData);
-
-        ASSERT(!outputData);
-
-        LOG_DEBUG_STR("[" << id << "] Done"); 
-      }
-    }
-
-
-    SmartPtr<Stream> Pipeline::connectToOutput(unsigned globalSubbandIdx, OutputType outputType) const
-    {
-      SmartPtr<Stream> outputStream;
-
-      try {
-        if (ps.getHostName(outputType, globalSubbandIdx) == "") {
-          // an empty host name means 'write to disk directly', to
-          // make debugging easier for now
-          outputStream = new FileStream(ps.getFileName(outputType, globalSubbandIdx), 0666);
-        } else {
-          // connect to the output process for this output
-          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, outputType, globalSubbandIdx);
-          outputStream = createStream(desc, false, 0);
-        }
-      } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
-
-        outputStream = new NullStream;
-      }
-
-      return outputStream;
     }
 
 

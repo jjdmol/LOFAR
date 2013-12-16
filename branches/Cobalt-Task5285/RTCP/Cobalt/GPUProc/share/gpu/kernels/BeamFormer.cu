@@ -55,7 +55,6 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * NR_CHANNELS             | >= 1                    | number of frequency channels per subband
  * NR_SAPS                 | >= 1 && > sap           | number of Sub-Array Pointings
  * NR_TABS                 | >= 1                    | number of Tied Array Beams (old name: pencil beams) to create
- * WEIGHT_CORRECTION       | float                   | weighting applied to all weights derived from the delays, primarily used for correcting FFT and iFFT chain multiplication correction
  * SUBBAND_BANDWIDTH       | double, multiple of NR_CHANNELS | Bandwidth of a subband in Hz
  * NR_STATIONS_PER_PASS    | 1 >= && <= 32           | Set to overide default: Parallelization parameter, controls the number stations to beamform in a single pass over the input data. 
  *
@@ -101,7 +100,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                             // We then do multiple passes to span all stations
       double delay = (*delays)[sap][first_station + 0][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_00 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_00 = make_float2(weight.x, weight.y);
     }
 #endif
     // Loop unrolling allows usage of registers for weights
@@ -110,7 +109,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 1 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 1][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_01 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_01 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -119,7 +118,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 2 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 2][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_02 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_02 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -128,7 +127,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 3 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 3][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_03 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_03 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -137,7 +136,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 4 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 4][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_04 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_04 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -146,7 +145,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 5 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 5][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_05 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_05 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -155,7 +154,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 6 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 6][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_06 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_06 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -164,7 +163,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 7 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 7][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_07 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_07 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -173,7 +172,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 8 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 8][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_08 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_08 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -182,7 +181,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 9 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 9][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_09 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_09 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -191,7 +190,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 10 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 10][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_10 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_10 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -200,7 +199,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 11 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 11][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_11 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_11 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -209,7 +208,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 12 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 12][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_12 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_12 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -218,7 +217,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 13 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 13][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_13 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_13 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -227,7 +226,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 14 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 14][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_14 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_14 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -236,7 +235,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 15 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 15][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_15 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_15 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -245,7 +244,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 16 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 16][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_16 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_16 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -254,7 +253,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 17 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 17][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_17 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_17 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -263,7 +262,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 18 < NR_STATIONS)
       double delay = (*delays)[sap][first_station + 18][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_18 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_18 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -272,7 +271,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 19 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 19][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_19 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_19 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -281,7 +280,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 20 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 20][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_20 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_20 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -290,7 +289,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 21 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 21][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_21 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_21 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -299,7 +298,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 22 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 22][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_22 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_22 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -308,7 +307,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 23 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 23][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_23 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_23 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -317,7 +316,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 24 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 24][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_24 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_24 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -326,7 +325,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 25 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 25][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_25 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_25 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -335,7 +334,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 26 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 26][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_26 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_26 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -344,7 +343,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 27 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 27][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_27 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_27 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -353,7 +352,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 28 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 28][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_28 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_28 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -362,7 +361,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 29 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 29][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_29 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_29 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -371,7 +370,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 30 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 30][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_30 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_30 = make_float2(weight.x, weight.y);
     }
 #endif
 
@@ -380,7 +379,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
     if (first_station + 31 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 31][tab];
       dcomplex weight = dphaseShift(frequency, delay);
-      weight_31 = make_float2(weight.x, weight.y) * WEIGHT_CORRECTION;
+      weight_31 = make_float2(weight.x, weight.y);
     }
 #endif
 

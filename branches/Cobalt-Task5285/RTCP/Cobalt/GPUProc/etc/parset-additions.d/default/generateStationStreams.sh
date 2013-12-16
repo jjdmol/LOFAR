@@ -5,8 +5,9 @@
 # Requires:
 #   RSPConnections_Cobalt.dat
 #   MAC+IP.dat
+#   RSP+IP.dat
 #
-# The RSPConnections_Cobalt.dat and MAC+IP.dat files can be found in
+# These files can be found in
 #   MAC/Deployment/data/StaticMetaData
 #
 
@@ -27,7 +28,9 @@ $host =~ /^cbt/ || next;
 if (not $cached) {
   %lookup = {};
   %rlookup = {};
+  %ilookup = {};
 
+  # MAC+IP.dat resolves hostnames to IPs and MACs
   open $fh, "MAC+IP.dat"
     or die "Cannot open MAC+IP.dat";
 
@@ -41,6 +44,19 @@ if (not $cached) {
 
   close $fh;
 
+  # RSP+IP.dat lists the international station IP addresses
+  open $fh, "RSP+IP.dat"
+    or die "Cannot open RSP+IP.dat";
+
+  while($line = <$fh>) {
+    next if $line =~ /^#/;
+    ($name, $ip) = split(/\s+/, $line);
+
+    $ilookup{$name} = $ip;
+  }
+
+  close $fh;
+
   $cached = 1;
 }
 
@@ -48,11 +64,24 @@ $dest = $lookup{$host};
 $iface = $rlookup{$dest};
 $baseport = 10000 + $nr * 10;
 
+$ips = {};
+
+foreach $rspNr (0 .. 3) {
+  $brdname = sprintf "%s_%02d", $station, $rspNr;
+
+  if (exists $ilookup{$brdname}) {
+    # international station: IP = src IP, ending in .50
+    $ips{$rspNr} = $ilookup{$brdname} =~ s/\.[0-9]+$/.50/r;
+  } else {
+    $ips{$rspNr} = $iface;
+  }
+}
+
 $portstr = sprintf "[udp:%s:%d, udp:%s:%d, udp:%s:%d, udp:%s:%d]",
-  $iface, $baseport + ($board * 6) + 0,
-  $iface, $baseport + ($board * 6) + 1,
-  $iface, $baseport + ($board * 6) + 2,
-  $iface, $baseport + ($board * 6) + 3;
+  $ips{0}, $baseport + ($board * 6) + 0,
+  $ips{1}, $baseport + ($board * 6) + 1,
+  $ips{2}, $baseport + ($board * 6) + 2,
+  $ips{3}, $baseport + ($board * 6) + 3;
 
 $iface =~ /(cbt[0-9]+)-10GB0([1234])/;
 $host = $1;

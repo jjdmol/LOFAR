@@ -77,9 +77,9 @@ TEST(Tracking) {
 TEST(TiedArrayBeam) {
   Parset ps;
 
-  ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.locations", "[localhost:.]" );
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
   ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
@@ -99,6 +99,7 @@ TEST(TiedArrayBeam) {
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].coherent", "true" );
   ps.updateSettings();
 
   // blockSize is ~1s
