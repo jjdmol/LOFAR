@@ -61,7 +61,7 @@ typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_T
  * Note that this kernel assumes  NR_POLARIZATIONS == 2
  *
  * Execution configuration:
- * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0
+ * - LocalWorkSize = (NR_POLARIZATIONS, NR_TABS, NR_CHANNELS) Note that for full utilization NR_TABS * NR_CHANNELS % 16 = 0. Also note that NR_CHANNELS should be set to 1 per block (i.e. a 2D block). To process N channels, launch N blocks.
  */
 extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
                                        const void *samplesPtr,
@@ -75,7 +75,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
-  unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks
+  unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks only, not extra threads per block
 
   // This union is in shared memory because it is used by all threads in the block
   __shared__ union { // Union: Maps two variables to the same adress space

@@ -195,8 +195,8 @@ int main() {
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
-  // - for 16-bit input: (2 * 32767 * 1 * 64 * 4096)^2 = 295129891055721250816
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 4096)^2 = 1134977474841542656
+  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
   float outVal = 
     nrStations * amplitude * scaleFactor * fft1Size * fft2Size *

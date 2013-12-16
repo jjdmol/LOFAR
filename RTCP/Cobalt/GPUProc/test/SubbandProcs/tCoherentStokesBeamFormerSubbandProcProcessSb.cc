@@ -205,7 +205,7 @@ int main() {
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
   // - for 16-bit input: 2 * (2 * 32767 * 1 * 64 * 64) ^2 = 144106392117051392
-  // - for 8-bit input: 2 *(2 * 127 * 16 * 64 * 4096)^2 = 4539909899366170624
+  // - for 8-bit input: 2 *(2 * 127 * 16 * 64 * 64)^2 = 554188220137472
 
   float outVal = (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
     (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) * nrStations;
@@ -219,7 +219,7 @@ int main() {
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
     {
-      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1.0e-7f), // is this large??
+      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal),
         "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
         out[tab][s][t][c] << "; outVal = " << outVal);
     }

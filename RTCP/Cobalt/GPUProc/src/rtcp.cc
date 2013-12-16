@@ -223,9 +223,12 @@ int main(int argc, char **argv)
    */
 
   // Send identification string to the MAC Log Processor
-  LOG_INFO_STR("MACProcessScope: " << 
-               str(format(createPropertySetName(
-                            PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
+  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "",
+                                      ps.getString("_DPname")));
+  format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  LOG_INFO_STR("MACProcessScope: " << str(prFmt
                    % toUpper(myHostname(false))
                    % (ps.settings.nodes.size() > size_t(rank) ? 
                       ps.settings.nodes[rank].cpu : 0)));
