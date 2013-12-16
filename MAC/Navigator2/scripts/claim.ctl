@@ -801,7 +801,7 @@ string  FindFreeClaim(
       }
     }
 
-    // we didn't find a free element, so we need to find the oldest claimDate and reuse that
+    // we didn't find a freed element, so we need to find the oldest claimDate and reuse that
     if( iIndex == -1 ) {
       time old = getCurrentTime();      
  

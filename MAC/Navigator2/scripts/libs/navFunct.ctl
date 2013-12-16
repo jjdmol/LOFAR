@@ -1747,7 +1747,6 @@ void navFunct_fillProcessesTree() {
     if (!dynContains(result,","+db+","+db+":LOFAR_"+lvl)) { 
       dynAppend(result,","+db+","+db+":LOFAR_"+lvl);
     }
-    DebugN(pathList);
     string fullProcessPath=connectTo;
     for (int j=1; j <= dynlen(pathList); j++) {
       fullProcessPath+="_"+pathList[j];
@@ -1759,7 +1758,6 @@ void navFunct_fillProcessesTree() {
   }
   
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result);  
-  DebugN(result);
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);  
 }
 
