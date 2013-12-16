@@ -38,7 +38,6 @@
 #include <Stream/Stream.h>
 #include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
-#include <CoInterface/SmartPtr.h>
 #include <CoInterface/MultiDimArray.h>
 
 
@@ -686,6 +685,13 @@ namespace LOFAR
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
+
+      // Return the global, non file specific, LTA feedback parameters.
+      // \note Details about the meaning of the different meta-data parameters
+      // can be found in the XSD that describes the Submission Information
+      // Package (sip) for the LTA.
+      // \see http://proposal.astron.nl/schemas/LTA-SIP.xsd
+      Parset                      getGlobalLTAFeedbackParameters() const;
 
     private:
       const std::string itsName;

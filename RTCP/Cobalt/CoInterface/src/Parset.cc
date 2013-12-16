@@ -86,6 +86,25 @@ namespace LOFAR
     }
 
 
+    static string stokesType( StokesType type )
+    {
+      switch(type) {
+      case STOKES_I: 
+        return "I";
+
+      case STOKES_IQUV: 
+        return "IQUV";
+
+      case STOKES_XXYY:
+        return "XXYY";
+
+      case INVALID_STOKES:
+      default:
+        return "";
+      }
+    }
+
+
     unsigned ObservationSettings::nyquistZone() const
     {
       if (bandFilter == "LBA_10_70" ||
@@ -1374,6 +1393,75 @@ namespace LOFAR
     {
       return getString("_DPname","");
     }
+
+
+    Parset Parset::getGlobalLTAFeedbackParameters() const
+    {
+      Parset ps;
+
+      // for MoM, to discriminate between Cobalt and BG/P observations
+      ps.add("_isCobalt", "T");
+
+      ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
+             str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+      ps.add("Observation.DataProducts.nrOfOutput_Correlated_", 
+             str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+
+      if (settings.correlator.enabled) {
+        ps.add("Observation.Correlator.integrationInterval",
+               str(format("%.16g") % settings.correlator.integrationTime()));
+      }
+
+      if (settings.beamFormer.enabled) {
+        // For Cobalt, we do not collapse channels. There's no need to do so,
+        // because we can do the final PPF/FFT on the desired number of output
+        // channels. The BlueGene, on the other hand, uses a fixed PPF/FFT size,
+        // so that the number of channels has to be reduced in the final step.
+        // As a result, `rawSamplingTime` is identical to `samplingTime`,
+        // `nrOfCollapsedChannels` is equal to the number of output channels per
+        // subband, and `frequencyDownsamplingFactor` is always 1.
+        const ObservationSettings::BeamFormer::StokesSettings&
+          coherentStokes = settings.beamFormer.coherentSettings;
+        const ObservationSettings::BeamFormer::StokesSettings&
+          incoherentStokes = settings.beamFormer.incoherentSettings;
+        ps.add("Observation.CoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels)));
+        ps.add("Observation.IncoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels)));
+        ps.add("Observation.CoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels)));
+        ps.add("Observation.IncoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels)));
+        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
+        ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
+        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % coherentStokes.nrChannels));
+        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % incoherentStokes.nrChannels));
+        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.CoherentStokes.stokes",
+               stokesType(coherentStokes.type));
+        ps.add("Observation.IncoherentStokes.stokes",
+               stokesType(incoherentStokes.type));
+        ps.add("Observation.CoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.IncoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.CoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+        ps.add("Observation.IncoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+      }
+      return ps;
+    }
+
 
     size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
     {
