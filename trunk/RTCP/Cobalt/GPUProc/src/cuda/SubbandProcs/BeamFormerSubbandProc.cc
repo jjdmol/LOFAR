@@ -25,7 +25,6 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/gpu_utils.h>   // for dumpBuffer()
 
 #include <CoInterface/Parset.h>
 #include <ApplCommon/PosixTime.h>
@@ -436,14 +435,11 @@ namespace LOFAR
       // coherent stokes kernels
       if (coherentBeamformer)
       {
-        dumpBuffer(beamFormerBuffers.input, "beamFormerBuffers.input.dat");
         beamFormerKernel->enqueue(input.blockID, counters.beamformer,
           ps.settings.subbands[subband].centralFrequency,
           ps.settings.subbands[subband].SAP);
-        dumpBuffer(beamFormerBuffers.output, "beamFormerBuffers.output.dat");
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
-        dumpBuffer(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
         if (coherentStokesPPF) 
@@ -457,7 +453,6 @@ namespace LOFAR
         if (!outputComplexVoltages)
         {
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
-          dumpBuffer(coherentStokesBuffers.output, "coherentStokesBuffers.output.dat");
         }
       }
       else
@@ -469,7 +464,6 @@ namespace LOFAR
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
-        dumpBuffer(devA, "inverseFFT.output.dat");
 
         if (incoherentStokesPPF) 
         {
@@ -479,7 +473,6 @@ namespace LOFAR
 
           incoherentFinalFFT.enqueue(
             input.blockID, counters.incoherentFinalFFT);
-          dumpBuffer(devB, "finalFFT.output.dat");
         }
 
         incoherentStokesKernel->enqueue(
