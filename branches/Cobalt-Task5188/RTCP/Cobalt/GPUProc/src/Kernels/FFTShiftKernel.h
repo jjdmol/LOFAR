@@ -1,7 +1,7 @@
-//# Register.h: Register the DataManager create functiuons.
-//# Copyright (C) 2009
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
+//# FFTShiftKernel.h
+//#
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
 //# The LOFAR software suite is free software: you can redistribute it and/or
@@ -19,11 +19,23 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_LOFARSTMAN_REGISTER_H
-#define LOFAR_LOFARSTMAN_REGISTER_H
+// \file
+// Include the right GPU API include with our options.
 
-extern "C" {
-  void register_lofarstman();
-}
+#ifndef LOFAR_GPUPROC_FFT_SHIFT_KERNEL_H
+#define LOFAR_GPUPROC_FFT_SHIFT_KERNEL_H
+
+#if defined (USE_CUDA) && defined (USE_OPENCL)
+# error "Either CUDA or OpenCL must be enabled, not both"
+#endif
+
+#if defined (USE_CUDA)
+# include <GPUProc/cuda/Kernels/FFTShiftKernel.h>
+#elif defined (USE_OPENCL)
+# include <GPUProc/opencl/Kernels/FFTShiftKernel.h>
+#else
+# error "Either CUDA or OpenCL must be enabled, not neither"
+#endif
 
 #endif
+

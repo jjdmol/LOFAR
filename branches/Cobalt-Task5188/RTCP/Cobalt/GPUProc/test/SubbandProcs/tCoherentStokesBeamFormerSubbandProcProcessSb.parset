@@ -26,9 +26,9 @@ OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
 Observation.rspBoardList                 = [0]
 Observation.rspSlotList                  = [0]
 
-Observation.DataProducts.Output_Beamformed.enabled=true
-Observation.DataProducts.Output_Beamformed.filenames=[2*tab0.raw]
-Observation.DataProducts.Output_Beamformed.locations=[2*:.]
+Observation.DataProducts.Output_CoherentStokes.enabled=true
+Observation.DataProducts.Output_CoherentStokes.filenames=[2*tab0.raw]
+Observation.DataProducts.Output_CoherentStokes.locations=[2*:.]
 
 Cobalt.Kernels.BeamFormerKernel.dumpOutput = true
 Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput = true

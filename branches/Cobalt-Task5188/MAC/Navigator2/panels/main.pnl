@@ -1057,7 +1057,7 @@ E E 0 1 1 2 1 E 1 0 1 15 0 1 E 970 160 980 200
 E E E
 0
 1
-LANG:1 22 33% >=  bad data < 66%
+LANG:1 13 33% > 66% bad
 
 1
 "dashclr"N "_Transparent"
@@ -1071,7 +1071,7 @@ E E 0 1 1 2 1 E 1 0 1 15 20 1 E 970 220 980 260
 E E E
 0
 1
-LANG:1 22 66% >= bad data < 100%
+LANG:1 14 66% > 100% bad
 
 1
 "dashclr"N "_Transparent"
@@ -1099,7 +1099,7 @@ E E 0 1 1 2 1 E 1 0 1 15 40 1 E 970 280 980 320
 E E E
 0
 1
-LANG:1 19 0% > bad data < 33%
+LANG:1 12 0% > 33% bad
 
 1
 "dashclr"N "_Transparent"

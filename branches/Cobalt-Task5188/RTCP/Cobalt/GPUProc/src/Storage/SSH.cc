@@ -379,12 +379,14 @@ namespace LOFAR
 #if LIBSSH2_VERSION_NUM >= 0x010208
       while ((rc = libssh2_session_handshake(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 #else
       while ((rc = libssh2_session_startup(session, sock.fd)) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 #endif
       if (rc) {
@@ -402,7 +404,8 @@ namespace LOFAR
                                                        NULL // password
                                                        )) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 
       if (rc) {
@@ -422,7 +425,8 @@ namespace LOFAR
 
       while ((rc = libssh2_session_disconnect(session, "Normal Shutdown, Thank you for playing")) ==
              LIBSSH2_ERROR_EAGAIN) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -437,13 +441,15 @@ namespace LOFAR
       ScopedDelayCancellation dc;
 
       channel_t channel;
+      int rc;
 
       /* Exec non-blocking on the remote host */
       while( (channel = libssh2_channel_open_session(session)) == NULL &&
              libssh2_session_last_error(session,NULL,NULL,0) ==
              LIBSSH2_ERROR_EAGAIN )
       {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 
       if (!channel.get())
@@ -462,7 +468,8 @@ namespace LOFAR
       int rc;
 
       while( (rc = libssh2_channel_close(channel)) == LIBSSH2_ERROR_EAGAIN ) {
-        waitsocket(session, sock);
+        if ((rc = waitsocket(session, sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -472,21 +479,17 @@ namespace LOFAR
       }
     }
 
-    bool SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
+    int SSHconnection::waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock )
     {
       // we manually control the cancellation points, so make sure
       // cancellation is actually disabled.
       ScopedDelayCancellation dc;
 
-      struct timeval timeout;
       int rc;
       fd_set fd;
       fd_set *writefd = NULL;
       fd_set *readfd = NULL;
       int dir;
-
-      timeout.tv_sec = 1;
-      timeout.tv_usec = 0;
 
       FD_ZERO(&fd);
 
@@ -501,16 +504,21 @@ namespace LOFAR
       if(dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
         writefd = &fd;
 
-      {
-        Cancellation::enable();
+      Cancellation::enable();
+
+      do {
+        struct timeval timeout;
+
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
 
         // select() is a cancellation point
         rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
+      } while (rc == 0);
 
-        Cancellation::disable();
-      }
+      Cancellation::disable();
 
-      return rc > 0;
+      return rc;
     }
 
     void SSHconnection::commThread()
@@ -573,7 +581,8 @@ namespace LOFAR
       while( (rc = libssh2_channel_exec(channel, itsCommandLine.c_str())) ==
              LIBSSH2_ERROR_EAGAIN )
       {
-        waitsocket(session, *sock);
+        if ((rc = waitsocket(session, *sock)) < 0)
+          break;
       }
 
       if (rc)
@@ -682,7 +691,8 @@ namespace LOFAR
         }
 
         if (nrOpenStreams > 0)
-          waitsocket(session, *sock);
+          if ((rc = waitsocket(session, *sock)) < 0)
+            break;
       }
 
       LOG_DEBUG_STR( itsLogPrefix << "Disconnecting" );

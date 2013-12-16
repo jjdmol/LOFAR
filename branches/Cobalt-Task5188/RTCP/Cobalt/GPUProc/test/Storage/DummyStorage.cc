@@ -23,6 +23,7 @@
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <unistd.h>
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
@@ -111,6 +112,10 @@ int main(int argc, char **argv)
     cerr << "no data is actually received or written to disk." << endl;
     exit(1);
   }
+
+  // Make sure DummyStorage always dies, even if the test
+  // malfunctions.
+  alarm(60);
 
   observationID = boost::lexical_cast<int>(argv[1]);
   rank = boost::lexical_cast<unsigned>(argv[2]);

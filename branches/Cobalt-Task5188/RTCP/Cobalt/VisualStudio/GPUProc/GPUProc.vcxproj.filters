@@ -52,11 +52,8 @@
     <Filter Include="src\opencl\Kernels">
       <UniqueIdentifier>{773522c4-e9e7-4c46-be83-2ba0cf75ac54}</UniqueIdentifier>
     </Filter>
-    <Filter Include="test\SubbandProcs">
-      <UniqueIdentifier>{7a1e1a7a-0ef7-4387-95d2-3546574a6fa9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="test\Kernels">
-      <UniqueIdentifier>{7cddb556-c6e1-4310-8114-45260d887ed7}</UniqueIdentifier>
+      <UniqueIdentifier>{d12b2f89-11b7-4abe-b8d3-b244619f1bc9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -182,18 +179,6 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcess.h">
       <Filter>src\Storage</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\UHEP_SubbandProc.h">
-      <Filter>src\SubbandProcs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\BeamFormerSubbandProc.h">
-      <Filter>src\SubbandProcs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\CorrelatorSubbandProc.h">
-      <Filter>src\SubbandProcs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h">
-      <Filter>src\SubbandProcs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h">
       <Filter>test\cuda</Filter>
@@ -713,20 +698,11 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc">
-      <Filter>test\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc">
+      <Filter>test\Kernels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc">
       <Filter>test\Kernels</Filter>
@@ -746,6 +722,9 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.cc">
+      <Filter>test\Kernels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
@@ -758,11 +737,8 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc">
-      <Filter>test\cuda</Filter>
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
+      <Filter>src\cuda\SubbandProcs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

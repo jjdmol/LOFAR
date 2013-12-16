@@ -75,20 +75,20 @@ struct ParsetSUT
     nrDelayCompensationChannels(64)
   {
     size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
-    parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
-    parset.add("OLAP.CNProc_CoherentStokes.timeIntegrationFactor", 
+    parset.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+    parset.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
-    parset.add("OLAP.CNProc_CoherentStokes.channelsPerSubband",
+    parset.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband",
       lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
+    parset.add("Cobalt.BeamFormer.CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
       lexical_cast<string>(blockSize)); 
     parset.add("Observation.Beam[0].nrTiedArrayBeams",lexical_cast<string>(inrTabs));
-    parset.add("Observation.DataProducts.Output_Beamformed.filenames",
+    parset.add("Observation.DataProducts.Output_CoherentStokes.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
-    parset.add("Observation.DataProducts.Output_Beamformed.locations", str(format("[%d*:.]") % nr_files));
+    parset.add("Observation.DataProducts.Output_CoherentStokes.locations", str(format("[%d*:.]") % nr_files));
     parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
                lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();

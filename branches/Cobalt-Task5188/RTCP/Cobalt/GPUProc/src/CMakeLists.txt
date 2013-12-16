@@ -47,6 +47,7 @@ if(USE_CUDA)
     cuda/Kernels/IncoherentStokesKernel.cc
     cuda/Kernels/IncoherentStokesTransposeKernel.cc
     cuda/Kernels/IntToFloatKernel.cc
+    cuda/Kernels/FFTShiftKernel.cc
     #cuda/Kernels/UHEP_BeamFormerKernel.cc
     #cuda/Kernels/UHEP_InvFFT_Kernel.cc
     #cuda/Kernels/UHEP_InvFIR_Kernel.cc
