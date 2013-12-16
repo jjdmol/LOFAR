@@ -60,27 +60,25 @@ namespace LOFAR
     {
       setArg(0, buffers.input);
 
-      ASSERT(params.nrSamplesPerChannel > 1024);
+      ASSERT(params.nrSamplesPerChannel > 0 &&
+             params.nrSamplesPerChannel % maxThreadsPerBlock == 0);
+
+      //Assert correct dimensions for kernel infocation
+      unsigned threadz = (params.nrChannelsPerSubband > 1) ? 2 : 1;
+      unsigned threadx = params.nrChannelsPerSubband > 1 ?
+        maxThreadsPerBlock / 2 : maxThreadsPerBlock;
+      ASSERT((threadz * threadx ) <= 1024);  // maxthread block size
+      ASSERT(params.nrChannelsPerSubband % 2 == 0);  
+      ASSERT((params.nrChannelsPerSubband / threadx < 64); //Max z dim for grid 
 
       setEnqueueWorkSizes(
         gpu::Grid(
           params.nrSamplesPerChannel, 
           params.nrStations,
           params.nrChannelsPerSubband),
-        gpu::Block(
-          (params.nrChannelsPerSubband > 1) ? 
-          maxThreadsPerBlock / 2 : 
-          maxThreadsPerBlock,
-          1,
-          (params.nrChannelsPerSubband > 1 ) ? 2 : 1)
+          gpu::Block(threadx, 1, threadx)
         );
 
-      // unsigned nrSamples =
-      //   params.nrStations * params.nrSamplesPerChannel * NR_POLARIZATIONS;
-
-      // nrOperations = (size_t) nrSamples * 2;
-      // nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
-      // nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//

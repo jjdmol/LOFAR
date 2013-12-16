@@ -48,8 +48,8 @@ typedef complex<float> fcomplex;
 // Fixture for testing correct translation of parset values
 struct ParsetSUT
 {
-  size_t  nrChannels, nrStations, nrSamplesSubband, nrInputSamples, nrOutputSamples,
-          nrBlockSize;
+  size_t  nrChannels, nrStations, nrSamplesSubband, nrInputSamples,
+          nrOutputSamples, nrBlockSize;
 
   Parset parset;
 
@@ -63,17 +63,20 @@ struct ParsetSUT
     nrOutputSamples(nrInputSamples),
     nrBlockSize(nrInputSamples)
   {
-    size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
+    // 4 for number of stokes
+    size_t nr_files = inrStations * inrChannels * inrTabs * 4; 
     parset.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
     parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize",
       lexical_cast<string>(nrBlockSize));
-    parset.add("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(inrTabs));
+    parset.add("Observation.Beam[0].nrTiedArrayBeams", 
+               lexical_cast<string>(inrTabs));
     parset.add("Observation.DataProducts.Output_Beamformed.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
-    parset.add("Observation.DataProducts.Output_Beamformed.locations", str(format("[%d*:.]") % nr_files));
+    parset.add("Observation.DataProducts.Output_Beamformed.locations", 
+               str(format("[%d*:.]") % nr_files));
     parset.updateSettings();
 
   }
@@ -134,7 +137,7 @@ struct SUTWrapper : ParsetSUT
   }
 
   // Needed to adapt the number of channels in the parameterset
-  // This code can also be found in the factory a
+  // These values are normaly added in the SubbandProc (compile time default).
   FFTShiftKernel::Parameters FFTShiftParams(Parset parset, unsigned nrChannels)
   {
     FFTShiftKernel::Parameters params(parset);
@@ -154,7 +157,8 @@ struct SUTWrapper : ParsetSUT
   // elements of the output host buffer to NaN.
   void initializeHostBuffers()
   {
-    cout << "Kernel buffersize set to: " << factory.bufferSize(FFTShiftKernel::INPUT_DATA) << endl;
+    cout << "Kernel buffersize set to: " << factory.bufferSize(
+              FFTShiftKernel::INPUT_DATA) << endl;
     cout << "\nInitializing host buffers..." << endl
       << " buffers.input.size()  = " << setw(7) << buffers.input.size() << endl
       << " hInput.size()  = " << setw(7) << hInput.size() << endl
@@ -162,8 +166,10 @@ struct SUTWrapper : ParsetSUT
       << endl;
     CHECK_EQUAL(buffers.input.size(), hInput.size());
     CHECK_EQUAL(buffers.output.size(), hOutput.size());
-    fill(hInput.data(), hInput.data() + hInput.num_elements(), fcomplex(0.0f, 0.0f));
-    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), fcomplex(0.0f, 0.0f));
+    fill(hInput.data(), hInput.data() + hInput.num_elements(),
+             fcomplex(0.0f, 0.0f));
+    fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(),
+             fcomplex(0.0f, 0.0f));
   }
 
   void runKernel()
@@ -172,7 +178,6 @@ struct SUTWrapper : ParsetSUT
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
     stream.writeBuffer(buffers.input, hInput, true);
-    //stream.writeBuffer(buffers.output, hOutput, true); // copy salte output to device
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
@@ -197,10 +202,11 @@ TEST(ZeroTest)
   // number of stations
   size_t nrStations = 1;
   // start the test vector at the largest size
-  size_t tabs_sizes[] = { 1 }; // 13, 33};
+  size_t tabs_sizes[] = { 1, 13, 33};
 
-  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = {  1 , 16, 64}; // Only valid channel size is 1 atm.
+  std::vector<size_t> tabs(
+          tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
+  size_t channel_sizes[] = {  1 , 16, 64}; 
 
   std::vector<size_t> channels(channel_sizes,
         channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
@@ -209,9 +215,12 @@ TEST(ZeroTest)
     sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
   //loop over the three input vectors
-  for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
-  for (std::vector<size_t>::const_iterator ichan = channels.begin(); ichan != channels.end(); ++ichan)
-  for (std::vector<size_t>::const_iterator isamp = samples.begin(); isamp != samples.end(); ++isamp)
+  for (std::vector<size_t>::const_iterator itab = tabs.begin();
+              itab != tabs.end(); ++itab)
+  for (std::vector<size_t>::const_iterator ichan = channels.begin(); 
+              ichan != channels.end(); ++ichan)
+  for (std::vector<size_t>::const_iterator isamp = samples.begin(); 
+              isamp != samples.end(); ++isamp)
   {
     cout << "*******testing tabs: " << *itab
       << " channels: " << *ichan
@@ -233,10 +242,11 @@ TEST(FlipValues)
   // number of stations
   size_t nrStations = 1;
   // start the test vector at the largest size
-  size_t tabs_sizes[] = { 1 }; // 13, 33};
+  size_t tabs_sizes[] = { 1 , 13, 33};
 
-  std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
-  size_t channel_sizes[] = { 1, 16, 64}; // Only valid channel size is 1 atm. 1 , 16,
+  std::vector<size_t> tabs(
+        tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t));
+  size_t channel_sizes[] = { 1, 16, 64}; 
 
   std::vector<size_t> channels(channel_sizes,
     channel_sizes + sizeof(channel_sizes) / sizeof(size_t));
@@ -245,9 +255,12 @@ TEST(FlipValues)
     sample_sizes + sizeof(sample_sizes) / sizeof(size_t));
 
   //loop over the three input vectors
-  for (std::vector<size_t>::const_iterator itab = tabs.begin(); itab != tabs.end(); ++itab)
-  for (std::vector<size_t>::const_iterator ichan = channels.begin(); ichan != channels.end(); ++ichan)
-  for (std::vector<size_t>::const_iterator isamp = samples.begin(); isamp != samples.end(); ++isamp)
+  for (std::vector<size_t>::const_iterator itab = tabs.begin();
+           itab != tabs.end(); ++itab)
+  for (std::vector<size_t>::const_iterator ichan = channels.begin();
+           ichan != channels.end(); ++ichan)
+  for (std::vector<size_t>::const_iterator isamp = samples.begin(); 
+            isamp != samples.end(); ++isamp)
   {
     cout << "*******testing tabs: " << *itab
       << " channels: " << *ichan
@@ -285,7 +298,7 @@ int main()
     cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
-  return UnitTest::RunAllTests() == 0 ? 0 : 1;  //TODO Always fail for now
+  return UnitTest::RunAllTests() == 0 ? 0 : 1;  
 
 }
 

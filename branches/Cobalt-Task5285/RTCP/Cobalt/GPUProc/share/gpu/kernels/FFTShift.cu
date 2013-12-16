@@ -41,14 +41,12 @@ typedef float2(*DataType)[NR_STATIONS][NR_POLARIZATIONS][NR_CHANNELS][NR_SAMPLES
 
 /**
  * Shift the zero-frequency component to the center of the spectrum.
- * This kernel swaps the half-spaces of the channel dimension by 
- * 
- * This kernel prepares the sampled data in the channels for a FFT step or
- * corrects after een iFFT step, so that the negative frequencies are placed to
+ * This kernel swaps the half-spaces of the channel dimension 
+ * so that the negative frequencies are placed to
  * the left of the positive frequencies. We do this by modulating the samples
  * with exp(-j*pi), which results in a shift over pi in the frequency
  * domain. More information can be found in any decent book on digital signal
- * processing.
+ * processing. 
  * @param[data] a 4-D array
  *              [station][polarizations][nr_channels][n_samples_channel]
  *              of complex floats.
@@ -73,7 +71,7 @@ __global__ void FFTShift(DataType data)
 
   // Set the odd samples 
   signed factor = 1 - 2 * (sample % 2);  //multiplication that results in -1 or
-              // odd samples (faster then an if statement
+              // odd samples (faster then an if statement)
   (*data)[station][0][channel][sample] = 
                             (*data)[station][0][channel][sample] * factor;
   (*data)[station][1][channel][sample] = 
