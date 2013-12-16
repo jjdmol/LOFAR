@@ -33,7 +33,7 @@ namespace LOFAR
         intToFloat(ps),
         delayCompensation(delayCompensationParams(ps)),
         beamFormer(beamFormerParams(ps)),
-        transpose(transposeParams(ps)),
+        coherentTranspose(coherentTransposeParams(ps)),
         fftShiftKernel(FFTShiftKernelParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
@@ -80,10 +80,10 @@ namespace LOFAR
         return params;
       }
 
-      BeamFormerTransposeKernel::Parameters
-      BeamFormerFactories::transposeParams(const Parset &ps) const
+      CoherentStokesTransposeKernel::Parameters
+      BeamFormerFactories::coherentTransposeParams(const Parset &ps) const
       {
-        BeamFormerTransposeKernel::Parameters params(ps);
+        CoherentStokesTransposeKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
           ps.settings.beamFormer.nrHighResolutionChannels;
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /

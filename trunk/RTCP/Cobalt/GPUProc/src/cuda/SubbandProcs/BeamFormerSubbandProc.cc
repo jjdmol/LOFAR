@@ -39,9 +39,16 @@ namespace LOFAR
   {
 
     BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-                                   size_t nrSamples, gpu::Context &context) :
-      MultiDimArrayHostBuffer<float, 3>(
-        boost::extents[nrStokes][nrSamples][nrChannels], context, 0)
+      size_t nrSamples, gpu::Context &context) :
+    MultiDimArrayHostBuffer<float, 4>(
+      boost::extents[1][nrStokes][nrSamples][nrChannels], context, 0)
+    {
+    }
+
+    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
+      size_t nrSamples, unsigned nrTabs, gpu::Context &context) :
+      MultiDimArrayHostBuffer<float, 4>(
+      boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
@@ -127,9 +134,11 @@ namespace LOFAR
 
       //**************************************************************
       //coherent stokes
-      outputComplexVoltages(
+      //bool:
+      outputComplexVoltages(  
         ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
-      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1),
+      //bool: 
+      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1), 
 
       // beamForm: B -> A
       // TODO: support >1 SAP
@@ -144,9 +153,11 @@ namespace LOFAR
       // Output buffer: 
       // 1ch: CS: C, CV: D
       // PPF: CS: D, CV: C
-      transposeBuffers(
+      coherentTransposeBuffers(
         devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC),
-      transposeKernel(factories.transpose.create(queue, transposeBuffers)),
+      coherentTransposeKernel(
+          factories.coherentTranspose.create(
+             queue, coherentTransposeBuffers)),
 
       // inverse FFT: C/D -> C/D (in-place) = transposeBuffers.output
       inverseFFT(
@@ -155,7 +166,7 @@ namespace LOFAR
         (ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS *
          ps.nrSamplesPerSubband() /
          ps.settings.beamFormer.nrHighResolutionChannels),
-        false, transposeBuffers.output),
+         false, coherentTransposeBuffers.output),
 
       // FIR filter: D/C -> C/D
       //
@@ -173,7 +184,7 @@ namespace LOFAR
         context,
         factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(
-        transposeBuffers.output, transposeBuffers.input, 
+        coherentTransposeBuffers.output, coherentTransposeBuffers.input,
         devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
@@ -410,33 +421,29 @@ namespace LOFAR
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFT.enqueue(input.blockID, counters.firstFFT);
-      dumpBuffer(devB, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
         input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
-      dumpBuffer(delayCompensationBuffers.output, 
-                 "delayCompensation.output.dat");
 
       secondFFT.enqueue(input.blockID, counters.secondFFT);
-      dumpBuffer(devA, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
-      dumpBuffer(bandPassCorrectionBuffers.output,
-                 "bandPassCorrection.output.dat");
 
       // ********************************************************************
       // coherent stokes kernels
       if (coherentBeamformer)
       {
+        dumpBuffer(beamFormerBuffers.input, "beamFormerBuffers.input.dat");
         beamFormerKernel->enqueue(input.blockID, counters.beamformer,
           ps.settings.subbands[subband].centralFrequency,
           ps.settings.subbands[subband].SAP);
+        dumpBuffer(beamFormerBuffers.output, "beamFormerBuffers.output.dat");
 
-        transposeKernel->enqueue(input.blockID, counters.transpose);
-
+        coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
+        dumpBuffer(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
 
         if (coherentStokesPPF) 
@@ -450,6 +457,7 @@ namespace LOFAR
         if (!outputComplexVoltages)
         {
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
+          dumpBuffer(coherentStokesBuffers.output, "coherentStokesBuffers.output.dat");
         }
       }
       else

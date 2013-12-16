@@ -69,6 +69,7 @@ namespace LOFAR
       ASSERT(params.nrSamplesPerChannel > 0);
       ASSERT(params.nrTABs >  0);
       ASSERT(params.nrChannelsPerSubband  % 16 == 0);
+
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setEnqueueWorkSizes( gpu::Grid((( params.nrTABs + 16 - 1) / 16) * 16 ,  // Get multiple of 16  in the grid size

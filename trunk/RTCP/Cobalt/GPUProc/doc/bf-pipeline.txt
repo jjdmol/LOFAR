@@ -25,9 +25,8 @@ For max size, we assume:
  - 1 second blocks (195312.5 samples) rounded to next multiple of 4096
 
 Note:
-  MB = 1e6 bytes
+  MiB = 2^20 bytes (1048576)
   (*) = requires change from current implementation
-  (**) = is a new kernel (wrt what we already ported)
 
 Flow:           Data dimensions:                        Max size (fcomplex):                        Buffer:
 ===================================================================================================================
