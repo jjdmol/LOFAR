@@ -41,7 +41,7 @@ using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
-unsigned NR_CHANNELS = 512;
+unsigned NR_CHANNELS = 256;
 unsigned NR_SAMPLES_PER_CHANNEL = 253;
 unsigned NR_TABS = 79;
 unsigned NR_POLARIZATIONS = 2;

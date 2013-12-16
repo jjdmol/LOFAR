@@ -71,7 +71,7 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      // Beamformer assumes 1 channel in the thread.x dimension
+      // Beamformer kernel prefers 1 channel in the blockDim.z dimension
       setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
                            gpu::Block(params.nrPolarizations, params.nrTABs, 1) );
 
