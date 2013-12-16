@@ -68,7 +68,7 @@ namespace LOFAR
       unsigned threadx = params.nrChannelsPerSubband > 1 ?
         maxThreadsPerBlock / 2 : maxThreadsPerBlock;
       ASSERT((threadz * threadx ) <= 1024);  // maxthread block size
-      ASSERT(params.nrChannelsPerSubband % 2 == 0);  
+      ASSERT(params.nrChannelsPerSubband  == 1 || params.nrChannelsPerSubband % 2 == 0);
       ASSERT((params.nrChannelsPerSubband / threadx) < 64); //Max z dim for grid 
 
       setEnqueueWorkSizes(
