@@ -34,6 +34,7 @@ namespace LOFAR
         delayCompensation(delayCompensationParams(ps)),
         beamFormer(beamFormerParams(ps)),
         transpose(transposeParams(ps)),
+        fftShiftKernel(FFTShiftKernelParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
@@ -121,6 +122,20 @@ namespace LOFAR
         CoherentStokesKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
           ps.settings.beamFormer.coherentSettings.nrChannels;
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        return params;
+      }
+
+      FFTShiftKernel::Parameters
+      BeamFormerFactories::FFTShiftKernelParams(const Parset &ps) const
+      {
+        FFTShiftKernel::Parameters params(ps);
+        // Currently a static in the subband proc
+        params.nrChannelsPerSubband =
+          ps.settings.beamFormer.nrDelayCompensationChannels;
+
         params.nrSamplesPerChannel =
           ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 

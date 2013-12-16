@@ -16,7 +16,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_incl.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\gpu_wrapper.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\KernelFactory.h" />
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h" />
@@ -26,6 +25,7 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.h" />
@@ -65,6 +65,7 @@
     <ClInclude Include="..\..\GPUProc\src\Kernels\DedispersionChirpKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\DedispersionForwardFFTkernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\DelayAndBandPassKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\Filter_FFT_Kernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\FIR_FilterKernel.h" />
@@ -123,10 +124,6 @@
     <ClInclude Include="..\..\GPUProc\src\Storage\SSH.h" />
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcess.h" />
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcesses.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\BeamFormerSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\CorrelatorSubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h" />
-    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\UHEP_SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h" />
     <ClInclude Include="..\..\GPUProc\test\fpequals.h" />
     <ClInclude Include="..\..\GPUProc\test\TestUtil.h" />
@@ -137,7 +134,6 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_utils.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\gpu_wrapper.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\KernelFactory.cc" />
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.cc" />
@@ -147,6 +143,7 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.cc" />
@@ -232,12 +229,12 @@
     <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokesTranspose.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu" />
+    <None Include="..\..\GPUProc\share\gpu\kernels\FFTShift.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu" />
     <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh" />
     <None Include="..\..\GPUProc\share\gpu\kernels\IncoherentStokes.cu" />
