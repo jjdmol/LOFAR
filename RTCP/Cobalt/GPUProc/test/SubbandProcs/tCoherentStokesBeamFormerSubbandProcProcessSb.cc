@@ -17,12 +17,13 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 
 #include <complex>
 #include <cmath>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -52,7 +53,7 @@ template<typename T> T inputSignal(size_t t)
 }
 
 int main() {
-  INIT_LOGGER("tBeamFormerSubbandProcProcessSb");
+  INIT_LOGGER("tCoherentStokesBeamFormerSubbandProcProcessSb");
 
   try {
     gpu::Platform pf;
@@ -66,7 +67,7 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  Parset ps("tBeamFormerSubbandProcProcessSb.parset");
+  Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
 
   // Input array sizes
   const size_t nrBeams = ps.nrBeams();
@@ -127,24 +128,32 @@ int main() {
     nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP, 
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
+  //// Initialize with a single pulse on t=0
+  //// both stations
+  //reinterpret_cast<i16complex&>(in.inputSamples[0][0][0][0]) =
+  //            i16complex(1,1);
+
+  //reinterpret_cast<i16complex&>(in.inputSamples[1][0][0][0]) =
+  //  i16complex(1, 1);
+
   // Initialize synthetic input to input signal
   for (size_t st = 0; st < nrStations; st++)
-    for (size_t i = 0; i < nrSamplesPerSubband; i++)
-      for (size_t pol = 0; pol < nrPolarisations; pol++)
-      {
-        switch(nrBitsPerSample) {
-        case 8:
-          reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
-            inputSignal<i8complex>(i);
-          break;
-        case 16:
-          reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) = 
-            inputSignal<i16complex>(i);
-          break;
-        default:
-          break;
-        }
-      }
+  for (size_t i = 0; i < nrSamplesPerSubband; i++)
+  for (size_t pol = 0; pol < nrPolarisations; pol++)
+  {
+    switch (nrBitsPerSample) {
+    case 8:
+      reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
+        inputSignal<i8complex>(i);
+      break;
+    case 16:
+      reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) =
+        inputSignal<i16complex>(i);
+      break;
+    default:
+      break;
+    }
+  }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
   // do the 1st block of whatever.
@@ -172,7 +181,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(maxNrTABsPerSAP * nrStokes, nrChannels, nrSamples, ctx);
+  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
 
   for (size_t i = 0; i < out.num_elements(); i++)
     out.get<float>()[i] = 42.0f;
@@ -195,21 +204,25 @@ int main() {
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
-  // - for 16-bit input: (2 * 32767 * 1 * 64 * 4096)^2 = 295129891055721250816
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 4096)^2 = 1134977474841542656
+  // - for 16-bit input: 2 * (2 * 32767 * 1 * 64 * 64) ^2 = 144106392117051392
+  // - for 8-bit input: 2 *(2 * 127 * 16 * 64 * 4096)^2 = 4539909899366170624
 
-  float outVal = 
-    nrStations * amplitude * scaleFactor * fft1Size * fft2Size *
-    nrStations * amplitude * scaleFactor * fft1Size * fft2Size; 
+  float outVal = (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
+    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) * nrStations;
   cout << "outVal = " << outVal << endl;
+  cout << "nrStokes:  " << nrStokes << endl
+      << "nrSamples:  " << nrSamples << endl
+      << "nrChannels:  " << nrChannels << endl;
 
-  for (size_t s = 0; s < nrStokes; s++)
+  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+    for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
-      for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(fpEquals(out[0][s][t][c], outVal), 
-                  "out[" << s << "][" << t << "][" << c << "] = " << 
-                  out[0][s][t][c] << "; outVal = " << outVal);
-  
+    for (size_t c = 0; c < nrChannels; c++)
+    {
+      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1.0e-7f), // is this large??
+        "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
+        out[tab][s][t][c] << "; outVal = " << outVal);
+    }
   return 0;
 }
 
