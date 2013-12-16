@@ -161,6 +161,16 @@ namespace LOFAR
         // key: OLAP.storageStationNames[stationIdx]
         std::string name;
 
+        // The input streams descriptors
+        //
+        // key: PIC.Core.CS001LBA.RSP.ports
+        std::vector<std::string> inputStreams;
+
+        // The node name on which this station is received
+        //
+        // key: PIC.Core.CS001LBA.RSP.receiver
+        std::string receiver;
+
         // Correction on the station clock, in seconds
         //
         // key: PIC.Core.CS001LBA.clockCorrectionTime
@@ -174,21 +184,21 @@ namespace LOFAR
 
         // The phase correction for this station, in radians.
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phaseCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.phase0.Y
         struct {
           double x;
           double y;
-        } phaseCorrection;
+        } phase0;
 
         // The delay correction for this station, in seconds
         //
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.X
-        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delayCorrection.Y
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.X
+        // key: PIC.Core.CS001.LBA_INNER.LBA_30_70.delay.Y
         struct {
           double x;
           double y;
-        } delayCorrection;
+        } delay;
 
 
         // The RSP board to which each subband is mapped
@@ -214,13 +224,15 @@ namespace LOFAR
       /*
        * Resources information:
        *   - what hardware we use (cpus/gpus)
-       *   - which nodes receive which stations
        */ 
 
       struct Node {
         // MPI rank of this node, is the
         // same as the index in the `nodes' vector.
         int rank;
+
+        // (Symbolic) name
+        std::string name;
 
         // Host name
         std::string hostName;
@@ -235,9 +247,6 @@ namespace LOFAR
         //
         // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
-
-        // Station indices to forward data for
-        std::vector<size_t> stations;
       };
 
       std::vector<struct Node> nodes;
@@ -426,6 +435,15 @@ namespace LOFAR
         // per part/stokes.
         std::vector<struct File> files;
 
+        // Number of channels per subband for delay compensation.
+        // Equal to the size of the first FFT. Power of two.
+        unsigned nrDelayCompensationChannels;
+
+        // Number of channels per subband for bandpass correction, narrow band
+        // flagging, beamforming, and coherent dedispersion.
+        // Power of two and at least nrDelayCompensationChannels.
+        unsigned nrHighResolutionChannels;
+
         struct TAB {
           // The direction in wich the TAB points, relative
           // to the SAP's coordinates
@@ -535,20 +553,25 @@ namespace LOFAR
         std::string station;
         std::string antennaField;
 
-        AntennaFieldName(const std::string &station, const std::string &antennaField): station(station), antennaField(antennaField) {}
+        AntennaFieldName(const std::string &station, const std::string &antennaField)
+        : station(station),
+          antennaField(antennaField)
+        { }
 
         std::string fullName() const {
           return station + antennaField;
         }
       };
 
-      // Constructs the antenna fields ("CS001",HBA0") etc from a set of stations
-      // ("CS001","CS002") and the antenna set.
-      static std::vector<struct AntennaFieldName> antennaFields(const std::vector<std::string> &stations, const std::string &antennaSet);
+      // Constructs the antenna fields ("CS001", "HBA0") etc from a set of stations
+      // ("CS001", "CS002") and the antenna set.
+      static std::vector<struct AntennaFieldName>
+      antennaFields(const std::vector<std::string> &stations,
+                    const std::string &antennaSet);
 
       // List of host names to start outputProc on
       std::vector<std::string> outputProcHosts;
-    };
+    }; // struct ObservationSettings
 
 
     // The Parset class is a public struct that can be used as base-class
@@ -617,26 +640,9 @@ namespace LOFAR
       std::string                 stationName(int index) const;
       std::vector<std::string>    allStationNames() const;
 
-      bool                        outputCorrelatedData() const;
-      bool                        outputBeamFormedData() const;
-      bool                        outputTrigger() const;
       bool outputThisType(OutputType) const;
 
-#if 0
-      bool                        onlineFlagging() const;
-      bool                        onlinePreCorrelationFlagging() const;
-      bool                        onlinePreCorrelationNoChannelsFlagging() const;
-      bool                        onlinePostCorrelationFlagging() const;
-      bool                        onlinePostCorrelationFlaggingDetectBrokenStations() const;
-      unsigned                    onlinePreCorrelationFlaggingIntegration() const;
-      std::string                 onlinePreCorrelationFlaggingType(std::string defaultVal) const;
-      std::string                 onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const;
-      std::string                 onlinePostCorrelationFlaggingType(std::string defaultVal) const;
-      std::string                 onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const;
-#endif
-
       unsigned nrStreams(OutputType, bool force = false) const;
-      static std::string keyPrefix(OutputType);
       std::string getHostName(OutputType, unsigned streamNr) const;
       std::string getFileName(OutputType, unsigned streamNr) const;
       std::string getDirectoryName(OutputType, unsigned streamNr) const;
@@ -677,8 +683,6 @@ namespace LOFAR
       std::vector<double>         getAnaBeamDirection() const;
       std::string                 getAnaBeamDirectionType() const;
 
-      std::string                 getInputStreamName(const string &stationName, unsigned rspBoardNumber) const;
-
       std::vector<double>         itsStPositions;
 
       std::string                 PVSS_TempObsName() const;
@@ -699,7 +703,14 @@ namespace LOFAR
       std::vector<double>         position(const string &name) const;
       std::vector<double>         centroidPos(const string &stations) const;
 
-      struct ObservationSettings::FileLocation         getFileLocation(const std::string outputType, unsigned idx) const;
+      std::vector<struct ObservationSettings::FileLocation> getFileLocations(const std::string outputType) const;
+
+      double                      distanceVec3(const std::vector<double>& pos,
+                                      const std::vector<double>& ref) const;
+      double                      maxDelayDistance(const struct ObservationSettings& settings) const;
+      double                      maxObservationFrequency(const struct ObservationSettings& settings,
+                                                          double subbandWidth) const;
+      unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
 
       // If a parset key is renamed, this function allows the old
       // name to be used as a fall-back.

@@ -37,10 +37,10 @@ struct TestFixture
     factory()
     {
       // Default parameters parsed from parset are not correct
-      params.nrChannels1 = 64;
-      params.nrChannels2 = 64;
+      params.nrDelayCompensationChannels = 64; // unused
+      params.nrHighResolutionChannels = 4096;
       params.nrSamplesPerChannel = 
-          ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
+        ps.nrSamplesPerSubband() / params.nrHighResolutionChannels;
 
      factory = new KernelFactory<BandPassCorrectionKernel>(params);
     }
@@ -54,7 +54,7 @@ struct TestFixture
 
 TEST_FIXTURE(TestFixture, InputData)
 {
-  CHECK_EQUAL(size_t(1 * 2 * 64 *48 * 64 * 8),  // 1 station, 2 pol, 64 channels, 48 samples/channel, 64 2nd channel , n bytes in complex float
+  CHECK_EQUAL(size_t(1 * 2 * 4096 * 48 * 8),  // 1 station, 2 pol, 4096 channels, 48 samples/channel, n bytes in complex float
               factory->bufferSize(
                 BandPassCorrectionKernel::INPUT_DATA));
 }
@@ -69,7 +69,7 @@ TEST_FIXTURE(TestFixture, OutputData)
 
 TEST_FIXTURE(TestFixture, BandPassCorrectionWeights)
 {
-  CHECK_EQUAL(size_t(64 * 64 * 4),
+  CHECK_EQUAL(size_t(4096 * 4),
               factory->bufferSize(
                 BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
 }

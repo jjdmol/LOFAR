@@ -71,10 +71,11 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       LOG_DEBUG_STR("DelayAndBandPassKernel: " <<
-                    "correctBandPass=" << 
-                    (params.correctBandPass ? "true" : "false") <<
                     ", delayCompensation=" <<
                     (params.delayCompensation ? "true" : "false") <<
+                    ", #channels/sb=" << params.nrChannelsPerSubband <<
+                    "correctBandPass=" << 
+                    (params.correctBandPass ? "true" : "false") <<
                     ", transpose=" << (params.transpose ? "true" : "false"));
 
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
@@ -84,7 +85,7 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(4, buffers.delaysAtBegin);
       setArg(5, buffers.delaysAfterEnd);
-      setArg(6, buffers.phaseOffsets);
+      setArg(6, buffers.phase0s);
       setArg(7, buffers.bandPassCorrectionWeights);
 
       setEnqueueWorkSizes( gpu::Grid(256, params.nrChannelsPerSubband == 1 ? 1 : params.nrChannelsPerSubband / 16, params.nrStations),
@@ -137,7 +138,7 @@ namespace LOFAR
         return 
           (size_t) itsParameters.nrSAPs * itsParameters.nrStations * 
             NR_POLARIZATIONS * sizeof(double);
-      case DelayAndBandPassKernel::PHASE_OFFSETS:
+      case DelayAndBandPassKernel::PHASE_ZEROS:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:

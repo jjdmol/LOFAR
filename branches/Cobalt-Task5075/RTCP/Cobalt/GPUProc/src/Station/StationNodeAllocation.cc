@@ -25,8 +25,10 @@ namespace LOFAR
 StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const Parset &parset )
 :
   stationID(stationID),
-  parset(parset)
+  parset(parset),
+  stationIdx(parset.settings.stationIndex(stationID.name()))
 {
+  ASSERTSTR(stationIdx >= 0, "Station not found in observation: " << stationID.name());
 }
 
 bool StationNodeAllocation::receivedHere() const
@@ -63,15 +65,10 @@ int StationNodeAllocation::receiverRank() const
    * by the specified MPI rank.
    */
 
-  ssize_t stationIdx = parset.settings.stationIndex(stationID.name());
+  const string receiver = parset.settings.stations[stationIdx].receiver;
 
-  if (stationIdx < 0)
-    return -1;
-
-  for (unsigned rank = 0; rank < parset.settings.nodes.size(); ++rank) {
-    const vector<size_t> &stations = parset.settings.nodes[rank].stations;
-
-    if (find(stations.begin(), stations.end(), stationIdx) != stations.end())
+  for (size_t rank = 0; rank < parset.settings.nodes.size(); ++rank) {
+    if (parset.settings.nodes[rank].name == receiver)
       return rank;
   }
 
@@ -80,12 +77,7 @@ int StationNodeAllocation::receiverRank() const
 
 std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 {
-  const string key = str(format("PIC.Core.Station.%s.RSP.ports") % stationID.name());
-
-  // default to one board, reading from /dev/null (so no data will ever arive).
-  vector<string> inputStreamDescs = parset.isDefined(key)
-                                    ? parset.getStringVector(key, true)
-                                    : vector<string>(1, "file:/dev/null");
+  vector<string> inputStreamDescs = parset.settings.stations[stationIdx].inputStreams;
 
   vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
 

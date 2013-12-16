@@ -25,12 +25,29 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>
 
+#include <sys/time.h>
 #include <time.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+
+    TimeStamp TimeStamp::now( unsigned clockSpeed )
+    {
+      struct timeval tv;
+
+      gettimeofday(&tv, NULL);
+
+      unsigned long usec = tv.tv_sec * 1000000 + tv.tv_usec;
+      return TimeStamp(usec * clockSpeed / 1024 / 1000000, clockSpeed);
+    }
+
+
+    TimeStamp TimeStamp::convert( double seconds, unsigned clockSpeed )
+    {
+      return TimeStamp(seconds * clockSpeed / 1024, clockSpeed);
+    }
 
     ostream &operator << (ostream &os, const TimeStamp &ts)
     {

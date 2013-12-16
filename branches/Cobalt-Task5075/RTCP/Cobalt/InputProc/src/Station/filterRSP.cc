@@ -24,8 +24,11 @@
 #include <cstdio>
 #include <ctime>
 #include <unistd.h>
+#include <omp.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <Common/Thread/Queue.h>
+#include <Common/Thread/Thread.h>
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
 #include <CoInterface/Stream.h>
@@ -47,6 +50,7 @@ void usage()
   puts("");
   puts("-f from       Discard packets before `from' (format: '2012-01-01 11:12:00')");
   puts("-t to         Discard packets at or after `to' (format: '2012-01-01 11:12:00')");
+  puts("-q            Quit if packets are received after `to'");
   puts("-s nrbeamlets Reduce or expand the number of beamlets per packet");
   puts("-b bitmode    Discard packets with bitmode other than `bitmode' (16, 8, or 4)");
   puts("-c clock      Discard packets with a clock other than `clock' (200 or 160)");
@@ -55,6 +59,11 @@ void usage()
   puts("");
   puts("Note: invalid packets are always discarded.");
 }
+
+struct packetSet {
+  vector<struct RSP> packets;
+  vector<bool>       valid;
+};
 
 int main(int argc, char **argv)
 {
@@ -67,12 +76,13 @@ int main(int argc, char **argv)
   unsigned nrbeamlets = 0;
   unsigned bitmode = 0;
   unsigned clock = 0;
+  bool quit_after_to = false;
 
   string inputStreamDesc  = "file:/dev/stdin";
   string outputStreamDesc = "file:/dev/stdout";
 
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "f:t:s:b:c:i:o:")) != -1) {
+  while ((opt = getopt(argc, argv, "f:t:s:b:c:i:o:q")) != -1) {
     switch (opt) {
     case 'f':
       from = parseTime(optarg);
@@ -102,6 +112,10 @@ int main(int argc, char **argv)
       outputStreamDesc = optarg;
       break;
 
+    case 'q':
+      quit_after_to = true;
+      break;
+
     default: /* '?' */
       usage();
       exit(1);
@@ -114,44 +128,112 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  // create in- and output streams
   SmartPtr<Stream> inputStream = createStream(inputStreamDesc, true);
   SmartPtr<Stream> outputStream = createStream(outputStreamDesc, false);
   PacketReader reader("", *inputStream);
-  struct RSP packet;
 
-  try {
-    for(;; ) {
-      if( reader.readPacket(packet) ) {
-        // **** Apply FROM filter ****
-        if (from > 0 && packet.header.timestamp < from)
-          continue;
+  // create packet queues between reader and writer
+  Queue< SmartPtr<packetSet> > readQueue;
+  Queue< SmartPtr<packetSet> > writeQueue;
 
-        // **** Apply TO filter ****
-        if (to > 0 && packet.header.timestamp >= to)
-          continue;
+  for (size_t i = 0; i < 256; ++i) {
+    SmartPtr<packetSet> p = new packetSet;
+    p->packets.resize(256);
+    p->valid.resize(p->packets.size());
 
-        // **** Apply BITMODE filter ****
-        if (bitmode > 0 && packet.bitMode() != bitmode)
-          continue;
+    readQueue.append(p);
+  }
 
-        // **** Apply CLOCK filter ****
-        if (clock > 0 && packet.clockMHz() != clock)
-          continue;
+  /*
+   * We need to read and write in separate threads
+   * for the best performance.
+   *
+   * A dedicated read thread allows us to always
+   * listen to the input, which is especially
+   * important if we're listening to UDP.
+   */
 
-        // **** Apply NRBEAMLETS filter ****
-        if (nrbeamlets > 0) {
-          // the new number of beamlets has to be valid
-          ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
+  volatile bool writerDone = false;
 
-          // convert
-          packet.header.nrBeamlets = nrbeamlets;
+# pragma omp parallel sections num_threads(2)
+  {
+#   pragma omp section
+    {
+      try {
+        Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
+        SmartPtr<packetSet> p;
+
+        while (!writerDone && (p = readQueue.remove()) != NULL) {
+          // Read packets and queue them
+          reader.readPackets(p->packets, p->valid);
+          writeQueue.append(p);
+        }
+      } catch(Stream::EndOfStreamException&) {
+      }
+
+      writeQueue.append(NULL);
+    }
+
+#   pragma omp section
+    {
+      SmartPtr<packetSet> p;
+
+      // Keep reading until NULL
+      while ((p = writeQueue.remove()) != NULL) {
+        for (size_t i = 0; i < p->packets.size(); ++i) {
+          if (!p->valid[i])
+            continue;
+
+          struct RSP &packet = p->packets[i];
+
+          // **** Apply FROM filter ****
+          if (from > 0 && packet.header.timestamp < from)
+            continue;
+
+          // **** Apply TO filter ****
+          if (to > 0 && packet.header.timestamp >= to) {
+            if (quit_after_to) {
+              writerDone = true;
+              break;
+            }
+
+            continue;
+          }
+
+          // **** Apply BITMODE filter ****
+          if (bitmode > 0 && packet.bitMode() != bitmode)
+            continue;
+
+          // **** Apply CLOCK filter ****
+          if (clock > 0 && packet.clockMHz() != clock)
+            continue;
+
+          // **** Apply NRBEAMLETS filter ****
+          if (nrbeamlets > 0) {
+            // the new number of beamlets has to be valid
+            ASSERT(nrbeamlets <= 62 * (16 / packet.bitMode()));
+
+            // convert
+            packet.header.nrBeamlets = nrbeamlets;
+          }
+
+          // Write packet
+          outputStream->write(&packet, packet.packetSize());
         }
 
-        // Write packet
-        outputStream->write(&packet, packet.packetSize());
+        // Give back packets holder
+        readQueue.append(p);
+
+        // Add a NULL if we're done to free up
+        // readQueue.remove(), to prevent race conditions.
+        if (writerDone) {
+          readQueue.append(NULL);
+          break;
+        }
       }
     }
-  } catch(Stream::EndOfStreamException&) {
   }
 }
 

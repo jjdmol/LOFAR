@@ -56,25 +56,51 @@ namespace LOFAR
         SocketStream &asSocket = dynamic_cast<SocketStream &>(inputStream);
         const bool isUDP = asSocket.protocol == SocketStream::UDP;
 
-        supportPartialReads = !isUDP;
+        inputIsUDP = isUDP;
       } catch (std::bad_cast&) {
         // inputStream is not a SocketStream
-        supportPartialReads = true;
+        inputIsUDP = false;
+      }
+    }
+
+
+    void PacketReader::readPackets( std::vector<struct RSP> &packets, std::vector<bool> &valid )
+    {
+      ASSERT(valid.size() == packets.size());
+
+      if (inputIsUDP) {
+        SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
+
+        size_t numRead = sstream.recvmmsg( packets, false );
+
+        nrReceived += numRead;
+
+        // validate received packets
+        for (size_t i = 0; i < numRead; ++i) {
+          valid[i] = validatePacket(packets[i]);
+        }
+
+        // mark not-received packets as invalid
+        for (size_t i = numRead; i < packets.size(); ++i) {
+          valid[i] = false;
+        }
+      } else {
+        // fall-back for non-UDP streams, emit packets
+        // one at a time to avoid data loss on EndOfStream.
+        valid[0] = readPacket(packets[0]);
+
+        nrReceived++;
+
+        for (size_t i = 1; i < packets.size(); ++i) {
+          valid[i] = false;
+        }
       }
     }
 
 
     bool PacketReader::readPacket( struct RSP &packet )
     {
-      if (supportPartialReads) {
-        // read header first
-        inputStream.read(&packet.header, sizeof packet.header);
-
-        // read rest of packet
-        inputStream.read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
-
-        ++nrReceived;
-      } else {
+      if (inputIsUDP) {
         // read full packet at once -- numbytes will tell us how much we've actually read
         size_t numbytes = inputStream.tryRead(&packet, sizeof packet);
 
@@ -91,8 +117,21 @@ namespace LOFAR
           ++nrBadSize;
           return false;
         }
+      } else {
+        // read header first
+        inputStream.read(&packet.header, sizeof packet.header);
+
+        // read rest of packet
+        inputStream.read(&packet.payload.data, packet.packetSize() - sizeof packet.header);
+
+        ++nrReceived;
       }
 
+      return validatePacket(packet);
+    }
+
+    bool PacketReader::validatePacket( const struct RSP &packet )
+    {
       // illegal version means illegal packet
       if (packet.header.version < 2) {
         // This mainly catches packets that are all zero (f.e. /dev/zero or
@@ -110,7 +149,8 @@ namespace LOFAR
       // discard packets with errors
       if (packet.payloadError()) {
         ++nrBadData;
-        return false;
+        // only count for now, emulate BGP and let the packets through
+        //return false;
       }
 
       // everything is ok
@@ -138,6 +178,8 @@ namespace LOFAR
       nrBadOther = 0;
 
       hadSizeError = false;
+
+      lastLogTime = now;
     }
 
 

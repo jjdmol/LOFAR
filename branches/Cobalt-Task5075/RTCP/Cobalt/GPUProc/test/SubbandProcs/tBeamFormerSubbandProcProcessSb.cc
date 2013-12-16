@@ -36,9 +36,6 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 
-const unsigned nrChannel1 = 64;
-const unsigned nrChannel2 = 64;
-
 template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
@@ -80,6 +77,9 @@ int main() {
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
 
+  const unsigned fft1Size = ps.settings.beamFormer.nrDelayCompensationChannels;
+  const unsigned fft2Size = ps.settings.beamFormer.nrHighResolutionChannels / fft1Size;
+
   // We only support 8-bit or 16-bit input samples
   ASSERT(nrBitsPerSample == 8 || nrBitsPerSample == 16);
 
@@ -95,7 +95,9 @@ int main() {
     "\n  maxNrTABsPerSAP = " << maxNrTABsPerSAP <<
     "\n  nrSamplesPerSubband = " << nrSamplesPerSubband <<
     "\n  nrBitsPerSample = " << nrBitsPerSample <<
-    "\n  nrBytesPerComplexSample = " << nrBytesPerComplexSample);
+    "\n  nrBytesPerComplexSample = " << nrBytesPerComplexSample <<
+    "\n  fft1Size = " << fft1Size <<
+    "\n  fft2Size = " << fft2Size);
 
   // Output array sizes
   const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
@@ -165,8 +167,8 @@ int main() {
     in.delaysAtBegin.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.delaysAfterEnd.num_elements(); i++)
     in.delaysAfterEnd.get<float>()[i] = 0.0f;
-  for (size_t i = 0; i < in.phaseOffsets.num_elements(); i++)
-    in.phaseOffsets.get<float>()[i] = 0.0f;
+  for (size_t i = 0; i < in.phase0s.num_elements(); i++)
+    in.phase0s.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
@@ -187,30 +189,18 @@ int main() {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: (nrStation * amp * scaleFactor * nrChannel1 * nrChannel2)^2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
-  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 1082398867456
+  // - for 16-bit input: (2 * 32767 * 1 * 64 * 4096)^2 = 295129891055721250816
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 4096)^2 = 1134977474841542656
 
-  float outVal;
-  switch(nrBitsPerSample) {
-  case 8:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  case 16:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  default:
-    break;
-  }
+  float outVal = 
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size *
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size; 
   cout << "outVal = " << outVal << endl;
 
   for (size_t s = 0; s < nrStokes; s++)

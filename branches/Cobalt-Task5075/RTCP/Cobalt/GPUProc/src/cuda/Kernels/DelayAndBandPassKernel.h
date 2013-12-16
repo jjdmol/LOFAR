@@ -58,7 +58,7 @@ namespace LOFAR
         INPUT_DATA,
         OUTPUT_DATA,
         DELAYS,
-        PHASE_OFFSETS,
+        PHASE_ZEROS,
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
@@ -70,14 +70,14 @@ namespace LOFAR
                 const gpu::DeviceMemory& out,
                 const gpu::DeviceMemory& delaysAtBegin,
                 const gpu::DeviceMemory& delaysAfterEnd,
-                const gpu::DeviceMemory& phaseOffsets,
+                const gpu::DeviceMemory& phase0s,
                 const gpu::DeviceMemory& bandPassCorrectionWeights) :
-          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phaseOffsets(phaseOffsets), bandPassCorrectionWeights(bandPassCorrectionWeights)
+          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phase0s(phase0s), bandPassCorrectionWeights(bandPassCorrectionWeights)
         {}
 
         gpu::DeviceMemory delaysAtBegin;
         gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory phase0s;
         gpu::DeviceMemory bandPassCorrectionWeights;
       };
 

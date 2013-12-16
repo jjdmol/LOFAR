@@ -77,9 +77,9 @@ TEST(Tracking) {
 TEST(TiedArrayBeam) {
   Parset ps;
 
-  ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.filenames", "[beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.locations", "[localhost:.]" );
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
   ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
@@ -99,6 +99,7 @@ TEST(TiedArrayBeam) {
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].coherent", "true" );
   ps.updateSettings();
 
   // blockSize is ~1s
@@ -118,44 +119,6 @@ TEST(TiedArrayBeam) {
     // check values
     CHECK_CLOSE(delaySet.SAPs[0].SAP.delay, delaySet.SAPs[1].TABs[0].delay, 0.00001);
   }
-}
-
-
-TEST(AllDelayIO) {
-  Parset ps;
-
-  ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
-  ps.add( "Observation.nrBeams", "2" );
-  ps.add( "Observation.Beam[0].directionType", "J2000" );
-  ps.add( "Observation.Beam[0].angle1", "1" );
-  ps.add( "Observation.Beam[0].angle2", "1" );
-  ps.add( "Observation.Beam[0].nrTiedArrayBeams", "0" );
-  ps.add( "Observation.Beam[1].directionType", "J2000" );
-  ps.add( "Observation.Beam[1].angle1", "1" );
-  ps.add( "Observation.Beam[1].angle2", "0" );
-  ps.add( "Observation.Beam[1].nrTiedArrayBeams", "1" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
-  ps.updateSettings();
-
-  Delays::AllDelays delaySet_in(ps), delaySet_out(ps);
-
-  delaySet_in.SAPs[0].SAP.delay = 1.0;
-  delaySet_in.SAPs[1].SAP.delay = 0.5;
-  delaySet_in.SAPs[1].TABs[0].delay = 1.0;
-
-  vector<char> buffer(1024);
-
-  FixedBufferStream str_in(&buffer[0], buffer.size());
-  FixedBufferStream str_out(&buffer[0], buffer.size());
- 
-  delaySet_in.write(&str_in);
-  delaySet_out.read(&str_out);
-
-  CHECK( delaySet_in == delaySet_out );
 }
 
 

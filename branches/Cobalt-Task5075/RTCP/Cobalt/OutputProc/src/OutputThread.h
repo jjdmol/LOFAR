@@ -26,55 +26,91 @@
 #include <string>
 #include <vector>
 
-#include <Common/Thread/Queue.h>
-#include <Common/Thread/Thread.h>
 #include <Stream/FileStream.h>
-#include <CoInterface/OutputTypes.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
+#include <CoInterface/TABTranspose.h>
 #include <CoInterface/FinalMetaData.h>
+#include <CoInterface/Pool.h>
+
 #include "MSWriter.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-
-    class OutputThread
+    /*
+     * OutputThread<T> manages the writing of data blocks to disk. It is
+     * responsible for:
+     *   1. Creating the data container (MS, HDF5, etc), including the
+     *      required meta data.
+     *   2. Processing data blocks from a Pool<T> pool, writing them to disk.
+     *   3. Producing LTA feedback.
+     *   4. Augmenting the data container with the FinalMetaData.
+     */
+    template<typename T> class OutputThread
     {
     public:
-      OutputThread(const Parset &, OutputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory = "");
+      OutputThread(const Parset &, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix);
 
-      void                             start();
+      // Create the data container, and process blocks from outputPool.
+      void           process();
 
-      // needed in createHeaders.cc
-      void           createMS();
+      // Creates the data container. Needed in createHeaders.cc
+      virtual void   createMS() = 0;
+
+      // Wrap-up the writing.
       void           cleanUp() const;
 
+      // Add FinalMetaData to the data container.
       void           augment(const FinalMetaData &finalMetaData);
 
+      // Return the LTA feedback produced by this writer.
       ParameterSet feedbackLTA() const;
 
-    private:
-      void                             checkForDroppedData(StreamableData *);
-      void                             doWork();
-      void                             mainLoop();
+    protected:
+      void checkForDroppedData(StreamableData *);
+      void doWork();
 
-      const Parset                     &itsParset;
-      const OutputType itsOutputType;
+      const Parset &itsParset;
       const unsigned itsStreamNr;
-      const bool itsIsBigEndian;
       const std::string itsLogPrefix;
       const std::string itsTargetDirectory;
+      const std::string itsLTAfeedbackPrefix;
 
-      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+      size_t itsBlocksWritten, itsBlocksDropped;
+      size_t itsNrExpectedBlocks;
+      size_t itsNextSequenceNumber;
 
-      unsigned itsBlocksWritten, itsBlocksDropped;
-      unsigned itsNrExpectedBlocks;
-      unsigned itsNextSequenceNumber;
-      SmartPtr<MSWriter>               itsWriter;
-      SmartPtr<Thread>                 itsThread;
+      Pool<T> &itsOutputPool;
+
+      SmartPtr<MSWriter> itsWriter;
+    };
+
+
+    /*
+     * SubbandOutputThread specialises in creating LOFAR MeasurementSets (MS).
+     */
+    class SubbandOutputThread: public OutputThread<StreamableData>
+    {
+    public:
+      SubbandOutputThread(const Parset &, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+
+      void           createMS();
+    };
+
+
+
+    /*
+     * TABOutputThread specialises in creating LOFAR HDF5 files corresponding
+     * to ICD003.
+     */
+    class TABOutputThread: public OutputThread<TABTranspose::Block>
+    {
+    public:
+      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+
+      void           createMS();
     };
 
 

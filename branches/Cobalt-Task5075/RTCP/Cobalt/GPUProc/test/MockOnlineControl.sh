@@ -13,7 +13,7 @@ function error {
 
 function getkey {
   KEY=$1
-  <$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1";'
+  <$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1";' | tail -n 1
 }
 
 [ -n "$PARSET" ] || error "No parset specified"
@@ -23,7 +23,7 @@ function getkey {
 OBSID=`getkey Observation.ObsID`
 RESULT_PORT=$((21000 + $OBSID % 1000))
 
-STATUSSTR=`timeout 30s nc -l $RESULT_PORT`
+STATUSSTR=`timeout 120s nc -l $RESULT_PORT`
 
 # 3. Read string: ABORT or FINISHED
 if [ "$STATUSSTR" == "FINISHED" ]

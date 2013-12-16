@@ -746,9 +746,107 @@ SUITE(correlator) {
   }
 }
 
+
 /*
- * TODO: Test beam former pipeline settings.
+ * TODO: Test other beam former pipeline settings too.
  */
+
+SUITE(beamformer) {
+  SUITE(files) {
+    TEST(coherentLocation) {
+      Parset ps;
+
+      // set
+      ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].tiedArrayBeam[0].coherent", "true");
+      ps.add("Observation.Beam[0].nrTiedArrayBeams", "1");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[tab1.hdf5]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      CHECK_EQUAL("tab1.hdf5", ps.settings.beamFormer.files[0].location.filename);
+      CHECK_EQUAL("host",      ps.settings.beamFormer.files[0].location.host);
+      CHECK_EQUAL("/dir",      ps.settings.beamFormer.files[0].location.directory);
+    }
+
+    TEST(manyLocations) {
+      Parset ps;
+
+      // set
+      ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+      ps.add("Observation.nrBeams", "1");
+      ps.add("Observation.Beam[0].nrTiedArrayBeams", "500");
+      ps.add("Observation.Beam[0].subbandList", "[0]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[tab1..tab500]");
+      ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[500*host:/dir]");
+      ps.updateSettings();
+
+      // verify settings
+      for(size_t i = 0; i < 500; ++i) {
+        CHECK_EQUAL(str(format("tab%u") % (i+1)), ps.settings.beamFormer.files[i].location.filename);
+        CHECK_EQUAL("host",      ps.settings.beamFormer.files[i].location.host);
+        CHECK_EQUAL("/dir",      ps.settings.beamFormer.files[i].location.directory);
+      }
+    }
+  }
+
+  TEST(calcInternalNrChannels) {
+    // Validate that we compute the (max) nr of channels for delay compensation
+    // correctly.
+    Parset ps;
+
+    ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+    ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.add("Observation.sampleClock", "200");
+    ps.add("Observation.antennaSet", "HBA_JOINED");
+
+    ps.add("Observation.nrBeams", "1");
+    ps.add("Observation.DataProducts.Output_Correlated.filenames", "[SB000_uv.MS, SB001_uv.MS, SB002_uv.MS]");
+    ps.add("Observation.DataProducts.Output_Correlated.locations", "[3*:.]");
+
+    ps.add("Observation.Dataslots.CS001HBA.RSPBoardList", "[0, 0, 1]");
+    ps.add("Observation.Dataslots.CS002HBA.RSPBoardList", "[0, 0, 1]");
+    ps.add("Observation.Dataslots.CS001HBA.DataslotList", "[0, 1, 2]");
+    ps.add("Observation.Dataslots.CS002HBA.DataslotList", "[0, 1, 2]");
+
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001, CS002]");
+    ps.add("Observation.referencePhaseCenter", "[0.0, 0.0, 0.0]");
+
+    // Check what it calculated. Compare the max for delay comp with the numbers
+    // in the bf pipeline design doc, but note that:
+    // - we also enforce a power of 2 FFT size
+    // - we have maxed it at 256 channels/sb
+    const unsigned maxNrDelayCh = 256;
+    unsigned nDelayCh;
+
+    // Fake the coords and ref of CS001 and CS002 to test with numbers that
+    // correspond to the Cobalt design document. Idem for the subbands.
+
+    // HBA_110_190 top of sb 409 is almost 180 MHz
+    ps.add("Observation.bandFilter", "HBA_110_190");
+    ps.add("Observation.Beam[0].subbandList", "[407, 408, 409]");
+
+    // 3 km max (unprojected) delay distance
+    ps.add("PIC.Core.CS001HBA.phaseCenter", "[-3000.0, 0.0, 0.0]");
+    ps.add("PIC.Core.CS002HBA.phaseCenter", "[1000.0, 0.0, 0.0]");
+    ps.updateSettings();
+
+    nDelayCh = ps.settings.beamFormer.nrDelayCompensationChannels;
+    CHECK_EQUAL(maxNrDelayCh, nDelayCh); // doc states 36718, pow2 and maxed gives 256
+
+
+    // 1500 km max (unprojected) delay distance
+    ps.replace("PIC.Core.CS001HBA.phaseCenter", "[0.0, 1500000.0, 0.0]");
+    ps.updateSettings();
+
+    nDelayCh = ps.settings.beamFormer.nrDelayCompensationChannels;
+    CHECK_EQUAL(64u, nDelayCh); // doc states 73, pow2 gives 64
+  }
+}
+
 
 /*
  * ===============================================
@@ -834,8 +932,8 @@ SUITE(integration) {
     CHECK_EQUAL(true,       ps.settings.correlator.enabled);
     CHECK_EQUAL(64U,        ps.settings.correlator.nrChannels);
     CHECK_CLOSE(3051.76,    ps.settings.correlator.channelWidth, 0.01);
-    CHECK_EQUAL(720U,       ps.settings.correlator.nrSamplesPerChannel);
-    CHECK_EQUAL(4U,         ps.settings.correlator.nrBlocksPerIntegration);
+    CHECK_EQUAL(768U,       ps.settings.correlator.nrSamplesPerChannel);
+    CHECK_EQUAL(30U,         ps.settings.correlator.nrBlocksPerIntegration);
     CHECK_EQUAL(nrStations, ps.settings.correlator.stations.size());
     for (unsigned st = 0; st < nrStations; ++st) {
       CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.correlator.stations[st].name);

@@ -44,13 +44,10 @@ function error {
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
 # Start observation in the background
-runObservation.sh "$PARSET" > $LOGFILE 2>&1 </dev/null &
+echo "Starting runObservation.sh -P $PIDFILE $PARSET"
+runObservation.sh -P "$PIDFILE" "$PARSET" > $LOGFILE 2>&1 </dev/null &
 PID=$!
 echo "PID: $PID"
-
-# Keep track of PID for stop script
-echo "PID file: $PIDFILE"
-echo $PID > $PIDFILE || error "Could not write PID file: $PIDFILE"
 
 # Done
 echo "Done"

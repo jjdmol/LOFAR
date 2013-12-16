@@ -88,14 +88,14 @@ namespace LOFAR
       // extract and assign the delays for the station beams
 
       // X polarisation
-      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delayCorrection.x + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delayCorrection.x + metaData.stationBeam.delayAfterEnd;
-      phaseOffsets[station][0]        = ps.settings.stations[station].phaseCorrection.x;
+      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][0]             = ps.settings.stations[station].phase0.x;
 
       // Y polarisation
-      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delayCorrection.y + metaData.stationBeam.delayAfterEnd;
-      phaseOffsets[station][1]        = ps.settings.stations[station].phaseCorrection.y;
+      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][1]             = ps.settings.stations[station].phase0.y;
 
 
       if (ps.settings.beamFormer.enabled)
@@ -139,7 +139,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
-    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),nextPowerOfTwo())
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),roundUpToPowerOfTwo())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       ASSERT(powerOfTwo(n));
