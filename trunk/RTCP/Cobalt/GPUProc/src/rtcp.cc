@@ -463,9 +463,7 @@ int main(int argc, char **argv)
     feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
-    feedbackLTA.add("_isCobalt", "T"); // for MoM, to discriminate between Cobalt and BG/P observations
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+    feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
