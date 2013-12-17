@@ -70,13 +70,13 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      LOG_DEBUG_STR("DelayAndBandPassKernel: " <<
-                    ", delayCompensation=" <<
+      LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
+                    " delayCompensation=" <<
                     (params.delayCompensation ? "true" : "false") <<
-                    ", #channels/sb=" << params.nrChannelsPerSubband <<
-                    "correctBandPass=" << 
+                    " #channels/sb=" << params.nrChannelsPerSubband <<
+                    " correctBandPass=" << 
                     (params.correctBandPass ? "true" : "false") <<
-                    ", transpose=" << (params.transpose ? "true" : "false"));
+                    " transpose=" << (params.transpose ? "true" : "false"));
 
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
