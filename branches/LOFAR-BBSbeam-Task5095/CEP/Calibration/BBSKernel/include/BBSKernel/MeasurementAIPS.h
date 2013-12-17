@@ -116,17 +116,6 @@ private:
     unsigned int            itsIdDataDescription;
 };
 
-Instrument::Ptr readInstrument(const casa::MeasurementSet &ms,
-    unsigned int idObservation = 0);
-casa::MDirection readPhaseReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readDelayReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readTileReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-double readFreqReference(const casa::MeasurementSet &ms,
-    unsigned int idDataDescription = 0);
-
 // @}
 
 } //# namespace BBS

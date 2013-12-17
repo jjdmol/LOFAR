@@ -60,30 +60,96 @@ namespace BBS
 {
   namespace
   {
+    /*!
+     *  \brief Convert an ITRF position given as a StationResponse::vector3r_t
+     *  instance to a casa::MPosition.
+     */
+    MPosition toMPositionITRF(const vector3r_t &position);
+
+    /*!
+     *  \brief Convert a casa::MPosition instance to a
+     #  StationResponse::vector3r_t instance.
+     */
+    vector3r_t fromMPosition(const MPosition &position);
+
+    /*!
+     *  \brief Convert a casa::MDirection instance to a
+     *  StationResponse::vector3r_t instance.
+     */
+    vector3r_t fromMDirection(const MDirection &direction);
+
+    /*!
+    *  \brief Check if the specified column exists as a column of the specified
+    *  table.
+    *
+    *  \param table The Table instance to check.
+    *  \param column The name of the column.
+    */
     bool hasColumn(const Table &table, const string &column);
 
+    /*!
+    *  \brief Check if the specified sub-table exists as a sub-table of the
+    *  specified table.
+    *
+    *  \param table The Table instance to check.
+    *  \param name The name of the sub-table.
+    */
     bool hasSubTable(const Table &table, const string &name);
 
+    /*!
+    *  \brief Provide access to a sub-table by name.
+    *
+    *  \param table The Table instance to which the sub-table is associated.
+    *  \param name The name of the sub-table.
+    */
     Table getSubTable(const Table &table, const string &name);
 
+    /*!
+    *  \brief Attempt to read the position of the observatory. If the
+    *  observatory position is unknown, the specified default position is
+    *  returned.
+    *
+    *  \param ms MeasurementSet to read the observatory position from.
+    *  \param idObservation Identifier that determines of which observation the
+    *  observatory position should be read.
+    *  \param defaultPosition The position that will be returned if the
+    *  observatory position is unknown.
+    */
     MPosition readObservatoryPosition(const MeasurementSet &ms,
       unsigned int idObservation, const MPosition &defaultPosition);
 
+    /*!
+     *  \brief Read the phase reference direction.
+     *
+     *  \param ms MeasurementSet to read the phase reference direction from.
+     *  \param idField Identifier of the field of which the phase reference
+     *  direction should be read.
+     */
     MDirection readPhaseReference(const MeasurementSet &ms,
       unsigned int idField);
 
+    /*!
+    *  \brief Read the station beam former reference direction.
+    *
+    *  \param ms MeasurementSet to read the station beam former reference
+    *  direction from.
+    *  \param idField Identifier of the field of which the station beam former
+    *  reference direction should be read.
+    */
     MDirection readDelayReference(const MeasurementSet &ms,
       unsigned int idField);
 
+    /*!
+    *  \brief Read the station beam former reference direction.
+    *
+    *  \param ms MeasurementSet to read the tile beam former reference direction
+    *  from.
+    *  \param idField Identifier of the field of which the tile beam former
+    *  reference direction should be read.
+    */
     MDirection readTileReference(const MeasurementSet &ms,
       unsigned int idField);
-
-    MPosition toMPositionITRF(const vector3r_t &position);
-
-    vector3r_t fromMPosition(const MPosition &position);
-
-    vector3r_t fromMDirection(const MDirection &direction);
-  }
+  } //# unnamed namespace
 
   class PyStationResponse
   {
@@ -476,6 +542,26 @@ namespace BBS
 
   namespace
   {
+    MPosition toMPositionITRF(const vector3r_t &position)
+    {
+      MVPosition mvITRF(position[0], position[1], position[2]);
+      return MPosition(mvITRF, MPosition::ITRF);
+    }
+
+    vector3r_t fromMPosition(const MPosition &position)
+    {
+      MVPosition mvPosition = position.getValue();
+      vector3r_t result = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
+      return result;
+    }
+
+    vector3r_t fromMDirection(const MDirection &direction)
+    {
+      MVDirection mvDirection = direction.getValue();
+      vector3r_t result = {{mvDirection(0), mvDirection(1), mvDirection(2)}};
+      return result;
+    }
+
     bool hasColumn(const Table &table, const string &column)
     {
       return table.tableDesc().isColumn(column);
@@ -503,13 +589,10 @@ namespace BBS
       // Read observatory name and try to look-up its position.
       const string observatory = observation.telescopeName()(idObservation);
 
-      MPosition position;
-      if(MeasTable::Observatory(position, observatory))
-      {
-          return MPosition::Convert(position, MPosition::ITRF)();
-      }
-
-      return defaultPosition;
+      // Look-up observatory position, default to specified default position.
+      MPosition position(defaultPosition);
+      MeasTable::Observatory(position, observatory);
+      return position;
     }
 
     MDirection readPhaseReference(const MeasurementSet &ms,
@@ -532,7 +615,8 @@ namespace BBS
       return field.delayDirMeas(idField);
     }
 
-    MDirection readTileReference(const MeasurementSet &ms, unsigned int idField)
+    MDirection readTileReference(const MeasurementSet &ms,
+      unsigned int idField)
     {
       // The MeasurementSet class does not support LOFAR specific columns, so we
       // use ROArrayMeasColumn to read the tile beam reference direction.
@@ -553,27 +637,7 @@ namespace BBS
       // and for non-HBA measurements).
       return readDelayReference(ms, idField);
     }
-
-    MPosition toMPositionITRF(const vector3r_t &position)
-    {
-        MVPosition mvITRF(position[0], position[1], position[2]);
-        return MPosition(mvITRF, MPosition::ITRF);
-    }
-
-    vector3r_t fromMPosition(const MPosition &position)
-    {
-      MVPosition mvPosition = position.getValue();
-      vector3r_t result = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
-      return result;
-    }
-
-    vector3r_t fromMDirection(const MDirection &direction)
-    {
-      MVDirection mvDirection = direction.getValue();
-      vector3r_t result = {{mvDirection(0), mvDirection(1), mvDirection(2)}};
-      return result;
-    }
-  } //# anonymous namespace
+  } //# unnamed namespace
 
 } //# namespace BBS
 } //# namespace LOFAR
