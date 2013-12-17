@@ -1284,7 +1284,7 @@ VisDimensions MeasurementAIPS::getDimensionsImpl(const Table &tab_selection,
 }
 
 Instrument::Ptr readInstrument(const MeasurementSet &ms,
-  unsigned int idObservation)
+    unsigned int idObservation)
 {
     ROMSObservationColumns observation(ms.observation());
     ASSERT(observation.nrow() > idObservation);
