@@ -343,6 +343,8 @@ namespace LOFAR
 
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
       settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", vector<double>(3,0), true);
+      if (settings.delayCompensation.referencePhaseCenter == emptyVectorDouble)
+        LOG_WARN("Parset: Observation.referencePhaseCenter is missing (or (0.0, 0.0, 0.0)).");
 
       // Station information (required by pointing information)
       settings.antennaSet     = getString("Observation.antennaSet", "LBA_INNER");
@@ -418,6 +420,8 @@ namespace LOFAR
 
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3, 0), true);
+        if (station.phaseCenter == emptyVectorDouble)
+          LOG_WARN_STR("Parset: PIC.Core." << station.name << ".phaseCenter is missing (or (0.0, 0.0, 0.0)).");
         station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
         station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
         station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
