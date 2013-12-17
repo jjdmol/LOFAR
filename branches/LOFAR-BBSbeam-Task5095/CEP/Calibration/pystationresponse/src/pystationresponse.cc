@@ -176,8 +176,10 @@ namespace BBS
     // Read observatory position. If unknown, default to the position of the
     // first station.
     unsigned int idObservation = 0;
-    itsRefPosition = fromMPosition(readObservatoryPosition(ms, idObservation,
-      toMPositionITRF(itsStations(0)->position())));
+    MPosition refPosition = readObservatoryPosition(ms, idObservation,
+      toMPositionITRF(itsStations(0)->position()));
+    itsRefPosition = fromMPosition(MPosition::Convert(refPosition,
+      MPosition::ITRF)());
 
     // Read the reference directions.
     unsigned int idField = 0;
