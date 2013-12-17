@@ -626,7 +626,7 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
             dpGet("MCU001:LOFAR_PermSW_MACScheduler."+selection+"Observations",selections);
             for (int o=1; o <=dynlen(selections) ; o++) {
               navCtrl_highlightAddHardwareFromObservation(selections[o]);
-              navCtrl_highlightAddProcessesFromObservation(selection[o]);
+              navCtrl_highlightAddProcessesFromObservation(selections[o]);
             }
           } else { 
             // if selection == observation, add involved hardware && software
