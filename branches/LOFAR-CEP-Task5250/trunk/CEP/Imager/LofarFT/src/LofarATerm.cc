@@ -623,15 +623,15 @@ namespace LOFAR
   {
     MPosition toMPositionITRF(const vector3r_t &position)
     {
-        MVPosition mvITRF(position[0], position[1], position[2]);
-        return MPosition(mvITRF, MPosition::ITRF);
+      MVPosition mvITRF(position[0], position[1], position[2]);
+      return MPosition(mvITRF, MPosition::ITRF);
     }
 
     vector3r_t fromMPosition(const MPosition &position)
     {
-        MVPosition mvPosition = position.getValue();
-        vector3r_t result = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
-        return result;
+      MVPosition mvPosition = position.getValue();
+      vector3r_t result = {{mvPosition(0), mvPosition(1), mvPosition(2)}};
+      return result;
     }
 
     vector3r_t fromMDirection(const MDirection &direction)
