@@ -1433,10 +1433,7 @@ void navFunct_fillProcessesList() {
   dynClear(highlight);
   
 
-  // check if observationList is filled
-  if (dynlen(g_observationsList) > 0) {      
-  // to do
-  } else if (dynlen(g_stationList) > 0) {                      // else hardware based processes
+  if (dynlen(g_stationList) > 0) {                      // else hardware based processes
     dyn_string stationList;
     dyn_string aTemp;
 

@@ -191,25 +191,39 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     // so if g_observationsList is filled, fill hardware and processes based on this
     // if g_processesList is filled, fill hardware and observations list based on this
     // and if g_harwareList is filled, fill observation and processes List based on this
+    // We can assume that when we are in hardware tab that the hardware is filled and we have to determine the rest of the lists from this
+    // if we are in the observations tab then the observation list is fileld and we can determine the other lists from this
+    // and if we are in the processes tab the processes are filled.
     
-    if (dynlen(g_observationsList) > 0) {
-      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
-      
-      navFunct_fillObservationsTree();
-      navFunct_fillHardwareLists();
-      navFunct_fillProcessesList();
-    } else if (dynlen(g_processesList) > 0) {
-      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
-      navFunct_fillProcessesTree();
-      navFunct_fillHardwareLists();
-      navFunct_fillObservationsList();
-    } else if (dynlen(g_stationList) > 0) {
-      LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
-      navFunct_fillHardwareTree();
-      navFunct_fillProcessesList();
-      navFunct_fillObservationsList();
-    }
     
+    if (ACTIVE_TAB == "Hardware") {
+      if (dynlen(g_stationList) > 0) {
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_stationList entry");
+        navFunct_fillHardwareTree();
+        navFunct_fillObservationsList();
+        navFunct_fillProcessesList();
+      } else {    
+        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| in hardware but g_stationList is empy ????");
+      }
+    } else if (ACTIVE_TAB == "Observations") {
+      if (dynlen(g_observationsList) > 0) {
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_observations entry");
+        navFunct_fillObservationsTree();
+        navFunct_fillHardwareLists();
+        navFunct_fillProcessesList();
+      } else {
+        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| in observations but g_observationsList is empy ????");
+      }
+    } else if (ACTIVE_TAB == "Processes") {
+      if (dynlen(g_processesList) > 0) {
+        LOG_ERROR("navCtrl.ctl:navCtrl_handleViewBoxEvent| g_processes entry");
+        navFunct_fillProcessesTree();
+        navFunct_fillHardwareLists();
+        navFunct_fillObservationsList();
+      } else {
+        LOG_INFO("navCtrl.ctl:navCtrl_handleViewBoxEvent| in processes but g_processesList is empy ????");
+      }
+    }    
 
     dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
     navFunct_waitObjectReady(1500,"handleViewBoxEvent:Update wait TopDetail");
