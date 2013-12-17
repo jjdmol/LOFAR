@@ -36,10 +36,16 @@ Flow:           Data dimensions:                        Max size (fcomplex):    
 IntToFloat + Transpose
    |            [station][pol][samples]                 [48][2][196608]     = 144 MiB               B
    V
+FFT-shift {inplace}
+   |            [station][pol][samples]                 [48][2][196608]     = 144 MiB               B
+   V
 FFT-64 {inplace}
    |            [station][pol][samples][channel]        [48][2][3072][64]   = 144 MiB               B
    V
 Delay compensation (*: no transpose) {I/O: delays}
+   |            [station][pol][channel][samples]        [48][2][64][3072]   = 144 MiB               A
+   V
+FFT-shift {inplace}
    |            [station][pol][channel][samples]        [48][2][64][3072]   = 144 MiB               A
    V
 FFT-64 {inplace}
@@ -63,6 +69,10 @@ Transpose
    |                                                                                                Nch: CS: D, CV: C
    V
 iFFT-4k {inplace}
+   |            [tab][pol][samples]                     [tab][2][196608]    = 3 MiB/TAB             1ch: CS: C, CV: D
+   |                                                                                                Nch: CS: D, CV: C
+   V
+FFT-shift {inplace}
    |            [tab][pol][samples]                     [tab][2][196608]    = 3 MiB/TAB             1ch: CS: C, CV: D
    |                                                                                                Nch: CS: D, CV: C
    V
