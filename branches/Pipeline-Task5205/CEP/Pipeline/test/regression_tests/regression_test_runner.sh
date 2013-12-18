@@ -1,5 +1,5 @@
 #!/bin/bash -l
-HELP=$" This programs runs LOFAR regressions test in a standalone fashion. 
+HELP=$" This programs runs LOFAR regressions tests in a standalone fashion. 
 Usage: regression_test_runner.sh pipeline_type host1 host2
 Run the regressions test for pipeline_type. Perform the work on host1 and host2
 Test should be started from the base installation directory eg: ~/build/gnu_debug
@@ -12,9 +12,8 @@ pipeline_type select any one of:
 All input, output and temporary files are stored in the following directory:
     /data/scratch/$USER/regression_test_runner/<pipeline_type> 
     
-*** Warning: Directory of target noder will be cleared at start of the run (lce069-lce072)*** 
-               Should not be shared between worker nodes"
-# ******************************************************
+*** Warning: Directory of target node will be cleared at start of the run *** 
+"
 
 # 1) validate input and print help if needed
 # Print usage
@@ -99,13 +98,13 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh HOST1 $"mkdir $WORKING_DIR -p" 
-ssh HOST1 $"rm $WORKING_DIR/* -rf" 
+ssh $HOST1 $"mkdir $WORKING_DIR -p" 
+ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
 
 if [ $SECONDHOST ]
 then
-  ssh HOST2 $"rm $WORKING_DIR/* -rf" 
-  ssh HOST2 $"mkdir $WORKING_DIR -p" 
+  ssh $HOST2 $"rm $WORKING_DIR/* -rf" 
+  ssh $HOST2 $"mkdir $WORKING_DIR -p" 
 fi
 
 # ******************************************************
