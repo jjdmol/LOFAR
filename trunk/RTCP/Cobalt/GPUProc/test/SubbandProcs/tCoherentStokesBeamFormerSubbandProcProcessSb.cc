@@ -1,4 +1,4 @@
-//# tBeamFormerSubbandProcProcessSb: test of Beamformer subband processor.
+//# tCoherentStokesBeamFormerSubbandProcProcessSb: test of bf coh stokes sb proc
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
