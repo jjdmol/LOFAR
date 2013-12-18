@@ -125,7 +125,9 @@ fi
 echo "Updating configuration and parset file to reflect correct host and data locations"
 cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
 
-echo "Configuring the input parset and configuration files "
+echo "Configuring the input parset and configuration files for cep!"
+
+# TODO: This script only work on CEP1!!
 # insert the cluserdesc for test cluster (default install is for cep2)
 sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 # specify the new working directory
