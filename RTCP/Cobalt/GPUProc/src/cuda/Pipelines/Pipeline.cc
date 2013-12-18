@@ -59,12 +59,13 @@ namespace LOFAR
       devices(devices),
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
-      workQueues((profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size()),
+      workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
       performance(devices.size()),
       writePool(subbandIndices.size())
     {
+      ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
     }
 
     Pipeline::~Pipeline()

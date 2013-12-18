@@ -66,3 +66,4 @@ PIC.Core.RS106HBA.RSP.ports = [file:/var/scratch/mol/test_sets/3sec/rs106.udp]
 _DPname = LOFAR_ObsSW_TempObs0024
 _parsetPrefix = CorrAppl.CorrProc.
 _processName = CorrProc
+Cobalt.Nodes = [localhost]
