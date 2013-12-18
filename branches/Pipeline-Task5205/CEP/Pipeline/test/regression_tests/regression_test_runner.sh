@@ -98,6 +98,9 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
+ssh lce072 $"mkdir $WORKING_DIR -p" 
+ssh lce072 $"rm $WORKING_DIR/* -rf" 
+
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
 
@@ -122,7 +125,6 @@ then
   scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host2/"* $HOST2:$"$WORKING_DIR/input_data"
 fi
 
-echo "Updating configuration and parset file to reflect correct host and data locations"
 cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
 
 echo "Configuring the input parset and configuration files for cep!"
