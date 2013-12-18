@@ -44,10 +44,12 @@ public:
 
     PointSource(const SourceInfo &source, Scope &scope);
 
-    Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr&,
-        const Expr<Vector<3> >::ConstPtr&) const;
+    Expr<JonesMatrix>::Ptr coherence(const baseline_t&,
+        const Expr<Vector<3> >::ConstPtr&, const Expr<Vector<3> >::ConstPtr&)
+        const;
 
 private:
+    Expr<Vector<4> >::Ptr           itsStokesVector;
     mutable Expr<JonesMatrix>::Ptr  itsCoherence;
 };
 

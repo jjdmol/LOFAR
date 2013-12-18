@@ -29,6 +29,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
 
+#include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/Expr.h>
 
 namespace LOFAR
@@ -48,24 +49,40 @@ public:
     typedef shared_ptr<Source>          Ptr;
     typedef shared_ptr<const Source>    ConstPtr;
 
-    virtual ~Source();
-
     static Source::Ptr create(const SourceInfo &source, Scope &scope);
+    static Source::Ptr create(const string &name, const VisBuffer::Ptr &buffer);
+
+    virtual ~Source();
 
     const string &name() const;
     Expr<Vector<2> >::Ptr position() const;
-    Expr<Vector<4> >::Ptr stokes() const;
 
-    virtual Expr<JonesMatrix>::Ptr
-        coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
-            const Expr<Vector<3> >::ConstPtr &uvwRHS) const = 0;
+    virtual Expr<JonesMatrix>::Ptr coherence(const baseline_t &baseline,
+        const Expr<Vector<3> >::ConstPtr &uvwLHS,
+        const Expr<Vector<3> >::ConstPtr &uvwRHS) const = 0;
 
 protected:
     Source(const SourceInfo &source, Scope &scope);
+    Source(const string &name, const Expr<Vector<2> >::Ptr &position);
 
     string                  itsName;
     Expr<Vector<2> >::Ptr   itsPosition;
-    Expr<Vector<4> >::Ptr   itsStokesVector;
+};
+
+class PrecomputedSource: public Source
+{
+public:
+    typedef shared_ptr<PrecomputedSource>       Ptr;
+    typedef shared_ptr<const PrecomputedSource> ConstPtr;
+
+    PrecomputedSource(const string &name, const VisBuffer::Ptr &buffer);
+
+    virtual Expr<JonesMatrix>::Ptr coherence(const baseline_t &baseline,
+        const Expr<Vector<3> >::ConstPtr&,
+        const Expr<Vector<3> >::ConstPtr&) const;
+
+private:
+    VisBuffer::Ptr  itsBuffer;
 };
 
 // @}

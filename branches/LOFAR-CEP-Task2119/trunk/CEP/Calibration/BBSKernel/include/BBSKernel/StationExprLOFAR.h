@@ -31,12 +31,12 @@
 #include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/ModelConfig.h>
-#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/ExprValue.h>
 #include <BBSKernel/Expr/Scope.h>
+#include <BBSKernel/Expr/Source.h>
 #include <ParmDB/SourceDB.h>
 #include <measures/Measures/MDirection.h>
 
@@ -95,10 +95,9 @@ private:
         bool useMMSE,
         double sigmaMMSE);
 
-    PatchExprBase::Ptr makePatchExpr(const string &name,
-        const casa::MDirection &refPhase,
-        SourceDB &sourceDB,
-        const BufferMap &buffers);
+    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
+        const BufferMap &buffers, const vector<string> &patterns);
+    vector<string> findSources(SourceDB &sourceDB, const string &pattern);
 
     Request                         itsRequest;
     Cache                           itsCache;

@@ -31,6 +31,8 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 
+#include <casa/Utilities/Regex.h>
+
 namespace LOFAR
 {
 namespace BBS
@@ -63,8 +65,100 @@ private:
     bool    itsPhasors;
 };
 
+class CasaStringFilter
+{
+public:
+    CasaStringFilter(const string &filter);
+
+    bool matches(const string &in) const;
+    bool operator()(const string &in) const;
+
+private:
+    friend ostream &operator<<(ostream &out, const CasaStringFilter &obj);
+
+    vector<bool>        itsInverted;
+    vector<casa::Regex> itsRegEx;
+};
+
+// Specification of a partition of sources into groups based on wildcard
+// (shell-like) patterns that define the groups. Each pattern can be flagged as
+// defining a group, in which case all sources matching the pattern form a
+// single group. If not flagged as defining a group, each source matching the
+// pattern forms a group by itself.
+class DDEPartition
+{
+public:
+    DDEPartition() { ignoreRemainder(); }
+
+    unsigned int size() const;
+    bool matches(unsigned int i, const string &name) const;
+    bool group(unsigned int i) const;
+    string name(unsigned int i) const;
+    bool empty() const
+    {
+        return itsRegEx.empty() && !itsRemainderMatch;
+    }
+
+    void matchRemainderAsGroup(const string &name)
+    {
+        itsRemainderMatch = true;
+        itsRemainderName = name;
+    }
+
+    void matchRemainder()
+    {
+        itsRemainderMatch = true;
+        itsRemainderName = string();
+    }
+
+    void ignoreRemainder()
+    {
+        itsRemainderMatch = false;
+        itsRemainderName = string();
+    }
+
+    bool matchesRemainder() const
+    {
+        return itsRemainderMatch;
+    }
+
+    bool groupRemainder() const
+    {
+        return !itsRemainderName.empty();
+    }
+
+    string remainderGroupName() const
+    {
+        return itsRemainderName;
+    }
+
+    void append(const string &pattern);
+    void append(const string &name, const string &pattern);
+
+private:
+    friend ostream &operator<<(ostream &out, const DDEPartition &obj);
+
+    vector<string>              itsGroupName;
+    vector<CasaStringFilter>    itsRegEx;
+    bool                        itsRemainderMatch;
+    string                      itsRemainderName;
+};
+
+// Configuration options specific to direction dependent models.
+class DDEConfig
+{
+public:
+    virtual ~DDEConfig();
+
+    const DDEPartition &partition() const;
+    void setPartition(const DDEPartition &partition);
+
+private:
+    DDEPartition  itsPartition;
+};
+
 // Configuration options specific to the direction dependent gain model.
-class DirectionalGainConfig
+class DirectionalGainConfig: public DDEConfig
 {
 public:
     explicit DirectionalGainConfig(bool phasors = false);
@@ -88,7 +182,7 @@ private:
 };
 
 // Configuration options specific to the beam model.
-class BeamConfig
+class BeamConfig: public DDEConfig
 {
 public:
     int notdef;
@@ -100,8 +194,8 @@ public:
         N_Mode
     };
 
-    BeamConfig();
-    BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF);
+    explicit BeamConfig(Mode mode = DEFAULT, bool useChannelFreq = false,
+        bool conjugateAF = false);
 
     Mode mode() const;
     bool useChannelFreq() const;
@@ -118,7 +212,7 @@ private:
 };
 
 // Configuration options specific to the ionospheric model.
-class IonosphereConfig
+class IonosphereConfig: public DDEConfig
 {
 public:
     int notdef;
@@ -129,9 +223,8 @@ public:
         N_ModelType
     };
 
-    IonosphereConfig();
-    IonosphereConfig(ModelType type, unsigned int degree);
-
+    explicit IonosphereConfig(ModelType type = N_ModelType,
+        unsigned int degree = 0);
     ModelType getModelType() const;
     unsigned int degree() const;
 
@@ -148,9 +241,7 @@ private:
 class FlaggerConfig
 {
 public:
-    FlaggerConfig();
-    FlaggerConfig(double threshold);
-
+    explicit FlaggerConfig(double threshold = 1.0);
     double threshold() const;
 
 private:
@@ -201,10 +292,14 @@ public:
     void clearBeamConfig();
 
     bool useDirectionalTEC() const;
-    void setDirectionalTEC(bool value = true);
+    void setDirectionalTECConfig(const DDEConfig &config);
+    const DDEConfig &getDirectionalTECConfig() const;
+    void clearDirectionalTECConfig();
 
     bool useFaradayRotation() const;
-    void setFaradayRotation(bool value = true);
+    void setFaradayRotationConfig(const DDEConfig &config);
+    const DDEConfig &getFaradayRotationConfig() const;
+    void clearFaradayRotationConfig();
 
     bool useRotation() const;
     void setRotation(bool value = true);
@@ -252,19 +347,23 @@ private:
 
     bool                    itsModelOptions[N_ModelOptions];
 
-    ClockConfig             itsConfigClock;
     GainConfig              itsConfigGain;
     DirectionalGainConfig   itsConfigDirectionalGain;
-    ElevationCutConfig      itsConfigElevationCut;
+    ElevationCutConfig  	itsConfigElevationCut;
     BeamConfig              itsConfigBeam;
+    DDEConfig               itsConfigDirectionalTEC;
+    DDEConfig               itsConfigFaradayRotation;
     IonosphereConfig        itsConfigIonosphere;
     FlaggerConfig           itsConfigFlagger;
+    ClockConfig             itsConfigClock;
 
-    vector<string>          itsSources;
+    vector<string>      	itsSources;
 };
 
 ostream &operator<<(ostream &out, const ClockConfig &obj);
 ostream &operator<<(ostream &out, const GainConfig &obj);
+ostream &operator<<(ostream &out, const DDEPartition &obj);
+ostream &operator<<(ostream &out, const DDEConfig &obj);
 ostream &operator<<(ostream &out, const DirectionalGainConfig &obj);
 ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);

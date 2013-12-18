@@ -30,11 +30,9 @@
 
 #include <BBSKernel/BaselineMask.h>
 #include <BBSKernel/Instrument.h>
-#include <BBSKernel/IonosphereExpr.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/ParmManager.h>
-#include <BBSKernel/PatchExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <BBSKernel/Expr/CachePolicy.h>
 #include <BBSKernel/Expr/Expr.h>
@@ -122,12 +120,9 @@ private:
 
     void setCorrelations(bool circular);
 
-    vector<string> makePatchList(SourceDB &sourceDB, vector<string> patterns);
-
-    PatchExprBase::Ptr makePatchExpr(const string &name,
-        const casa::MDirection &phaseRef,
-        SourceDB &sourceDB,
-        const BufferMap &buffers);
+    vector<Source::Ptr> makeSourceList(SourceDB &sourceDB,
+        const BufferMap &buffers, const vector<string> &patterns);
+    vector<string> findSources(SourceDB &sourceDB, const string &pattern);
 
     BaselineSeq                     itsBaselines;
     CorrelationSeq                  itsCorrelations;

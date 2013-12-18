@@ -23,32 +23,24 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFAR.h>
+#include <BBSKernel/MeasurementExprLOFARGen.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Correlation.h>
 #include <BBSKernel/Exceptions.h>
 #include <BBSKernel/Measurement.h>
-#include <BBSKernel/Expr/ConditionNumber.h>
 #include <BBSKernel/Expr/ExprVisData.h>
-#include <BBSKernel/Expr/FlagIf.h>
-#include <BBSKernel/Expr/LinearToCircularRL.h>
-#include <BBSKernel/Expr/MatrixInverse.h>
-#include <BBSKernel/Expr/MatrixInverseMMSE.h>
-#include <BBSKernel/Expr/MatrixSum.h>
-#include <BBSKernel/Expr/MergeFlags.h>
 #include <BBSKernel/Expr/Request.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
-#include <Common/lofar_set.h>
 #include <Common/lofar_fstream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_complex.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_smartptr.h>
 
-#include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
@@ -99,7 +91,6 @@ MeasurementExprLOFAR::MeasurementExprLOFAR(SourceDB &sourceDB,
 
 void MeasurementExprLOFAR::solvablesChanged()
 {
-//    LOG_DEBUG_STR("" << itsCache);
     itsCache.clear(Cache::VOLATILE);
     itsCache.clearStats();
 }
@@ -123,246 +114,15 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
 
     // Make a list of patches matching the selection criteria specified by the
     // user.
-    vector<string> patches = makePatchList(sourceDB, config.sources());
-    LOG_DEBUG_STR("No. of patches used in the model: " << patches.size());
-    if(patches.empty())
+    vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
+        config.sources());
+    if(sources.empty())
     {
-        THROW(BBSKernelException, "No patches found matching selection.");
+        THROW(BBSKernelException, "No sources found matching selection.");
     }
 
-    // Beam reference position on the sky.
-    Expr<Vector<2> >::Ptr exprRefDelay = makeDirectionExpr(refDelay);
-    Expr<Vector<3> >::Ptr exprRefDelayITRF =
-        makeITRFExpr(instrument->position(), exprRefDelay);
-
-    // Tile beam reference position on the sky.
-    Expr<Vector<2> >::Ptr exprRefTile = makeDirectionExpr(refTile);
-    Expr<Vector<3> >::Ptr exprRefTileITRF =
-        makeITRFExpr(instrument->position(), exprRefTile);
-
-    // Create an UVW expression per station.
-    vector<Expr<Vector<3> >::Ptr> exprUVW(instrument->nStations());
-    for(size_t i = 0; i < instrument->nStations(); ++i)
-    {
-        exprUVW[i] = makeStationUVWExpr(instrument->position(),
-            instrument->station(i)->position(), refPhase);
-    }
-
-    IonosphereExpr::Ptr exprIonosphere;
-    if(config.useIonosphere())
-    {
-        exprIonosphere = IonosphereExpr::create(config.getIonosphereConfig(),
-            itsScope);
-    }
-
-    // -------------------------------------------------------------------------
-    // Direction dependent effects (DDE).
-    // -------------------------------------------------------------------------
-
-    vector<MatrixSum::Ptr> coherenceExpr(itsBaselines.size());
-    for(size_t i = 0; i < patches.size(); ++i)
-    {
-        const string &patch = patches[i];
-
-        PatchExprBase::Ptr exprPatch = makePatchExpr(patch, refPhase, sourceDB,
-            buffers);
-
-        // Patch position (ITRF direction vector).
-        Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-            makeITRFExpr(instrument->position(), exprPatch->position());
-
-        Expr<JonesMatrix>::Ptr exprElevationCut;
-        if(config.useElevationCut())
-        {
-            Expr<Vector<2> >::Ptr exprAzEl =
-                makeAzElExpr(instrument->position(), exprPatch->position());
-            exprElevationCut = makeElevationCutExpr(exprAzEl,
-                config.getElevationCutConfig());
-        }
-
-        vector<Expr<JonesMatrix>::Ptr> exprDDE(instrument->nStations());
-        for(size_t j = 0; j < instrument->nStations(); ++j)
-        {
-            // Directional gain.
-            if(config.useDirectionalGain())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeDirectionalGainExpr(itsScope, instrument->station(j),
-                    patch, config.getDirectionalGainConfig()));
-            }
-
-            // Elevation cut.
-            if(config.useElevationCut())
-            {
-                exprDDE[j] = compose(exprDDE[j], exprElevationCut);
-            }
-
-            // Beam.
-            if(config.useBeam())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeBeamExpr(instrument->station(j), refFreq,
-                    exprPatchPositionITRF, exprRefDelayITRF, exprRefTileITRF,
-                    config.getBeamConfig()));
-            }
-
-            // Directional TEC.
-            if(config.useDirectionalTEC())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeDirectionalTECExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
-            // Faraday rotation.
-            if(config.useFaradayRotation())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeFaradayRotationExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
-            // Polarization rotation.
-            if(config.useRotation())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeRotationExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
-            // Scalar phase.
-            if(config.useScalarPhase())
-            {
-                exprDDE[j] = compose(exprDDE[j],
-                    makeScalarPhaseExpr(itsScope, instrument->station(j),
-                    patch));
-            }
-
-            // Ionosphere.
-            if(config.useIonosphere())
-            {
-                // Create an AZ, EL expression for the centroid direction of the
-                // patch.
-//                 Expr<Vector<2> >::Ptr exprAzEl =
-//                     makeAzElExpr(instrument->station(j)->position(),
-//                     exprPatch->position());
-
-                exprDDE[j] = compose(exprDDE[j],
-                    makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
-            }
-        }
-
-        for(size_t j = 0; j < itsBaselines.size(); ++j)
-        {
-            const baseline_t baseline = itsBaselines[j];
-
-            // Construct an expression for the patch coherence on this baseline.
-            Expr<JonesMatrix>::Ptr patchCoherenceExpr =
-                exprPatch->coherence(baseline, exprUVW[baseline.first],
-                exprUVW[baseline.second]);
-
-            // Apply direction dependent effects.
-            patchCoherenceExpr = apply(exprDDE[baseline.first],
-                patchCoherenceExpr, exprDDE[baseline.second]);
-
-            // Add patch coherence to the visibilities for this baseline.
-            if(!coherenceExpr[j])
-            {
-                coherenceExpr[j] = MatrixSum::Ptr(new MatrixSum());
-            }
-
-            coherenceExpr[j]->connect(patchCoherenceExpr);
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Direction independent effects (DIE).
-    // -------------------------------------------------------------------------
-
-    // Create a linear to circular-RL transformation Jones matrix.
-    Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
-
-    const bool isLOFAR = (instrument->name() == "LOFAR");
-
-    vector<Expr<JonesMatrix>::Ptr> exprDIE(instrument->nStations());
-    for(size_t i = 0; i < instrument->nStations(); ++i)
-    {
-        // Convert from linear to circular-RL polarization. For the LOFAR array,
-        // which has linearly polarized antennae, this conversion is done at the
-        // end of the chain.
-        if(circular && isLOFAR)
-        {
-            exprDIE[i] = compose(exprDIE[i], H);
-        }
-
-        // Create a clock delay expression per station.
-        if(config.useClock())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                    config.getClockConfig()));
-        }
-
-        // Bandpass.
-        if(config.useBandpass())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeBandpassExpr(itsScope, instrument->station(i)));
-        }
-
-        // Create a direction independent gain expression per station.
-        if(config.useGain())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
-        }
-
-        // Create a direction independent TEC expression per station. Note that
-        // TEC is a scalar effect, so it commutes.
-        if(config.useTEC())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeTECExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent polarization rotation.
-        if(config.useCommonRotation())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeCommonRotationExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent scalar phase.
-        if(config.useCommonScalarPhase())
-        {
-            exprDIE[i] = compose(exprDIE[i],
-                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
-        }
-
-        // Convert from linear to circular-RL polarization. It is assumed that
-        // for telescopes other than LOFAR, the polarization of the data is the
-        // same as the polarization of the antennae.
-        //
-        // The conversion from linear to circular would usually be part of the
-        // beam model. The conversion applied here is a hack for telescopes
-        // with circularly polarized antennae for which the beam model is not
-        // implemented. i.e. there is no telescope specific class derived from
-        // MeasurmentExpr.
-        if(circular && !isLOFAR)
-        {
-            exprDIE[i] = compose(exprDIE[i], H);
-        }
-    }
-
-    itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
-    for(size_t i = 0; i < itsBaselines.size(); ++i)
-    {
-        const baseline_t baseline = itsBaselines[i];
-        itsExpr[i] = apply(exprDIE[baseline.first], coherenceExpr[i],
-            exprDIE[baseline.second]);
-    }
+    itsExpr = makeMeasurementExpr(itsScope, sources, instrument, itsBaselines,
+        config, refFreq, refPhase, refDelay, refTile, circular);
 
     // Set caching policy.
     itsCachePolicy = CachePolicy::Ptr(new DefaultCachePolicy());
@@ -387,298 +147,34 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
 
     LOG_DEBUG_STR("Building expression tree...");
 
-    Instrument::ConstPtr instrument = buffer->instrument();
-
-    // Allocate space for the station response expressions.
-    vector<Expr<JonesMatrix>::Ptr> stationExpr(instrument->nStations());
-
-    // -------------------------------------------------------------------------
-    // Direction independent effects (DIE).
-    // -------------------------------------------------------------------------
-
-    // Create a linear to circular-RL transformation Jones matrix.
-    Expr<JonesMatrix>::Ptr H(new LinearToCircularRL());
-
-    const bool haveDIE = config.useClock() || config.useBandpass()
-        || config.useGain() || config.useTEC() || config.useCommonRotation()
-        || config.useCommonScalarPhase();
-
-    const bool circular = buffer->isCircular();
-    const bool isLOFAR = (instrument->name() == "LOFAR");
-
-    for(size_t i = 0; i < instrument->nStations(); ++i)
+    vector<Expr<JonesMatrix>::Ptr> stationExpr;
+    if(config.sources().empty())
     {
-        // Convert from linear to circular-RL polarization. For the LOFAR array,
-        // which has linearly polarized antennae, this conversion is done at the
-        // end of the chain.
-        if(circular && isLOFAR)
-        {
-            stationExpr[i] = compose(stationExpr[i], H);
-        }
-
-        // Create a clock delay expression per station.
-        if(config.useClock())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeClockExpr(itsScope, instrument->station(i),
-                  config.getClockConfig()));
-        }
-
-        // Bandpass.
-        if(config.useBandpass())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeBandpassExpr(itsScope, instrument->station(i)));
-        }
-
-        // Create a direction independent gain expression per station.
-        if(config.useGain())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
-        }
-
-        // Create a direction independent TEC expression per station. Note that
-        // TEC is a scalar effect, so it commutes.
-        if(config.useTEC())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeTECExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent polarization rotation.
-        if(config.useCommonRotation())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeCommonRotationExpr(itsScope, instrument->station(i)));
-        }
-
-        // Direction independent scalar phase.
-        if(config.useCommonScalarPhase())
-        {
-            stationExpr[i] = compose(stationExpr[i],
-                makeCommonScalarPhaseExpr(itsScope, instrument->station(i)));
-        }
-
-        // Convert from linear to circular-RL polarization. It is assumed that
-        // for telescopes other than LOFAR, the polarization of the data is the
-        // same as the polarization of the antennae.
-        //
-        // The conversion from linear to circular would usually be part of the
-        // beam model. The conversion applied here is a hack for telescopes
-        // with circularly polarized antennae for which the beam model is not
-        // implemented. i.e. there is no telescope specific class derived from
-        // MeasurmentExpr.
-        if(circular && !isLOFAR)
-        {
-            stationExpr[i] = compose(stationExpr[i], H);
-        }
+        stationExpr = makeStationExpr(itsScope, buffer->getPhaseReference(),
+            buffer->instrument(), config, buffer->getReferenceFreq(),
+            buffer->getDelayReference(), buffer->getTileReference(), true,
+            useMMSE, sigmaMMSE);
     }
-
-    // -------------------------------------------------------------------------
-    // Direction dependent effects (DDE).
-    // -------------------------------------------------------------------------
-
-    const bool haveDDE = config.useDirectionalGain()
-        || config.useBeam() || config.useDirectionalTEC()
-        || config.useFaradayRotation() || config.useRotation()
-        || config.useScalarPhase() || config.useIonosphere();
-
-    if(haveDDE)
+    else
     {
-        // Position of interest on the sky (given as patch name).
-        if(config.sources().size() > 1)
-        {
-            THROW(BBSKernelException, "Multiple patches selected, yet a"
-                " correction can only be applied for a single direction on the"
-                " sky.");
-        }
+        // Make a list of patches matching the selection criteria specified by
+        // the user.
+        vector<Source::Ptr> sources = makeSourceList(sourceDB, buffers,
+            config.sources());
 
-        // Beam reference position on the sky.
-        Expr<Vector<2> >::Ptr exprRefDelay =
-            makeDirectionExpr(buffer->getDelayReference());
-        Expr<Vector<3> >::Ptr exprRefDelayITRF =
-            makeITRFExpr(instrument->position(), exprRefDelay);
-
-        // Tile beam reference position on the sky.
-        Expr<Vector<2> >::Ptr exprRefTile =
-            makeDirectionExpr(buffer->getTileReference());
-        Expr<Vector<3> >::Ptr exprRefTileITRF =
-            makeITRFExpr(instrument->position(), exprRefTile);
-
-        // Functor for the creation of the ionosphere sub-expression.
-        IonosphereExpr::Ptr exprIonosphere;
-        if(config.useIonosphere())
-        {
-            exprIonosphere =
-                IonosphereExpr::create(config.getIonosphereConfig(), itsScope);
-        }
-
-        if(config.sources().empty())
-        {
-            LOG_DEBUG_STR("Applying a correction for the phase reference of the"
-                " observation.");
-
-            if(config.useDirectionalGain() || config.useDirectionalTEC()
-                || config.useFaradayRotation() || config.useRotation()
-                || config.useScalarPhase())
-            {
-                THROW(BBSKernelException, "Cannot correct for DirectionalGain,"
-                    " DirectionalTEC, FaradayRotation, Rotation, and / or"
-                    " ScalarPhase when correcting for the (unnamed) phase"
-                    " reference direction.");
-            }
-
-            // Phase reference position on the sky.
-            Expr<Vector<2> >::Ptr exprRefPhase =
-                makeDirectionExpr(buffer->getPhaseReference());
-            Expr<Vector<3> >::Ptr exprRefPhaseITRF =
-                makeITRFExpr(instrument->position(), exprRefPhase);
-
-            for(size_t i = 0; i < stationExpr.size(); ++i)
-            {
-                // Beam.
-                if(config.useBeam())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(instrument->station(i),
-                        buffer->getReferenceFreq(), exprRefPhaseITRF,
-                        exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig()));
-                }
-
-                // Ionosphere.
-                if(config.useIonosphere())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
-                }
-            }
-        }
-        else
-        {
-            const string &patch = config.sources().front();
-            LOG_DEBUG_STR("Applying a correction for the centroid of patch: "
-                << patch);
-
-            PatchExprBase::Ptr exprPatch = makePatchExpr(patch,
-                buffer->getPhaseReference(), sourceDB, buffers);
-
-            // Patch position (ITRF direction vector).
-            Expr<Vector<3> >::Ptr exprPatchPositionITRF =
-                makeITRFExpr(instrument->position(), exprPatch->position());
-
-            for(size_t i = 0; i < stationExpr.size(); ++i)
-            {
-                // Directional gain.
-                if(config.useDirectionalGain())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch,
-                        config.getDirectionalGainConfig()));
-                }
-                // Beam.
-                if(config.useBeam())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeBeamExpr(instrument->station(i),
-                        buffer->getReferenceFreq(), exprPatchPositionITRF,
-                        exprRefDelayITRF, exprRefTileITRF,
-                        config.getBeamConfig()));
-                }
-
-                // Directional TEC.
-                if(config.useDirectionalTEC())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeDirectionalTECExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
-                // Faraday rotation.
-                if(config.useFaradayRotation())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeFaradayRotationExpr(itsScope,
-                        instrument->station(i), patch));
-                }
-
-                // Polarization rotation.
-                if(config.useRotation())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeRotationExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
-                // Scalar phase.
-                if(config.useScalarPhase())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeScalarPhaseExpr(itsScope, instrument->station(i),
-                        patch));
-                }
-
-                // Ionosphere.
-                if(config.useIonosphere())
-                {
-                    stationExpr[i] = compose(stationExpr[i],
-                        makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
-                }
-            }
-        }
-    }
-
-    if(haveDIE || haveDDE)
-    {
-        for(size_t i = 0; i < instrument->nStations(); ++i)
-        {
-            if(config.useFlagger())
-            {
-                const FlaggerConfig &flagConfig = config.getFlaggerConfig();
-
-                Expr<Scalar>::Ptr exprCond =
-                    Expr<Scalar>::Ptr(new ConditionNumber(stationExpr[i]));
-                Expr<Scalar>::Ptr exprThreshold(makeFlagIf(exprCond,
-                    std::bind2nd(std::greater_equal<double>(),
-                    flagConfig.threshold())));
-
-                typedef MergeFlags<JonesMatrix, Scalar> T_MERGEFLAGS;
-                stationExpr[i] =
-                    T_MERGEFLAGS::Ptr(new T_MERGEFLAGS(stationExpr[i],
-                    exprThreshold));
-            }
-
-            if(useMMSE && sigmaMMSE > 0.0)
-            {
-                stationExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverseMMSE(stationExpr[i],
-                    sigmaMMSE));
-            }
-            else
-            {
-                stationExpr[i] =
-                    Expr<JonesMatrix>::Ptr(new MatrixInverse(stationExpr[i]));
-            }
-        }
+        stationExpr = makeStationExpr(itsScope, sources, buffer->instrument(),
+            config, buffer->getReferenceFreq(), buffer->getDelayReference(),
+            buffer->getTileReference(), true, useMMSE, sigmaMMSE);
     }
 
     itsExpr = vector<Expr<JonesMatrix>::Ptr>(itsBaselines.size());
     for(size_t i = 0; i < itsBaselines.size(); ++i)
     {
-        const baseline_t baseline = itsBaselines[i];
+        const baseline_t &baseline = itsBaselines[i];
+        Expr<JonesMatrix>::Ptr coherence(new ExprVisData(buffer, baseline));
 
-        itsExpr[i] = Expr<JonesMatrix>::Ptr(new ExprVisData(buffer, baseline));
-
-        if(haveDIE || haveDDE)
-        {
-            itsExpr[i] = apply(stationExpr[baseline.first], itsExpr[i],
-                stationExpr[baseline.second]);
-        }
+        itsExpr[i] = apply(stationExpr[baseline.first], coherence,
+            stationExpr[baseline.second]);
     }
 
     // Set caching policy.
@@ -807,7 +303,6 @@ void MeasurementExprLOFAR::setEvalGrid(const Grid &grid)
     // TODO: Set cache size in number of Matrix instances... ?
 }
 
-// i is baseline index, index in baselineseq
 const JonesMatrix MeasurementExprLOFAR::evaluate(unsigned int i)
 {
     JonesMatrix result;
@@ -880,50 +375,79 @@ void MeasurementExprLOFAR::setCorrelations(bool circular)
     }
 }
 
-vector<string>
-MeasurementExprLOFAR::makePatchList(SourceDB &sourceDB, vector<string> patterns)
+vector<Source::Ptr> MeasurementExprLOFAR::makeSourceList(SourceDB &sourceDB,
+    const BufferMap &buffers, const vector<string> &patterns)
 {
+    // Find all matching sources.
+    vector<string> names;
     if(patterns.empty())
     {
-        patterns.push_back("*");
+        names = findSources(sourceDB, "*");
+    }
+    else
+    {
+        for(vector<string>::const_iterator it = patterns.begin(),
+            end = patterns.end(); it != end; ++it)
+        {
+            if(it->empty())
+            {
+                continue;
+            }
+
+            if((*it)[0] == '@')
+            {
+                names.push_back(*it);
+            }
+            else
+            {
+                vector<string> match = findSources(sourceDB, *it);
+                names.insert(names.end(), match.begin(), match.end());
+            }
+        }
     }
 
-    set<string> patches;
-    vector<string>::iterator it = patterns.begin();
-    while(it != patterns.end())
+    // Remove duplicates.
+    sort(names.begin(), names.end());
+    vector<string>::const_iterator end = unique(names.begin(), names.end());
+
+    // Create Source instances.
+    vector<Source::Ptr> sources;
+    for(vector<string>::const_iterator it = names.begin(); it != end; ++it)
     {
-        if(!it->empty() && (*it)[0] == '@')
+        if(it->empty())
         {
-            patches.insert(*it);
-            it = patterns.erase(it);
+            continue;
+        }
+
+        if((*it)[0] == '@')
+        {
+            BufferMap::const_iterator itBuffer = buffers.find(*it);
+            ASSERT(itBuffer != buffers.end());
+            sources.push_back(Source::create(*it, itBuffer->second));
         }
         else
         {
-            vector<string> match(sourceDB.getPatches(-1, *it));
-            patches.insert(match.begin(), match.end());
-            ++it;
+            sources.push_back(Source::create(sourceDB.getSource(*it),
+                itsScope));
         }
     }
 
-    return vector<string>(patches.begin(), patches.end());
+    return sources;
 }
 
-PatchExprBase::Ptr MeasurementExprLOFAR::makePatchExpr(const string &name,
-    const casa::MDirection &refPhase,
-    SourceDB &sourceDB,
-    const BufferMap &buffers)
+vector<string> MeasurementExprLOFAR::findSources(SourceDB &sourceDB,
+    const string &pattern)
 {
-    if(!name.empty() && name[0] == '@')
+    vector<SourceInfo> match = sourceDB.getSources(pattern);
+
+    vector<string> result;
+    result.reserve(match.size());
+    for(vector<SourceInfo>::const_iterator it = match.begin(),
+        end = match.end(); it != end; ++it)
     {
-        BufferMap::const_iterator it = buffers.find(name);
-        ASSERT(it != buffers.end());
-
-        return PatchExprBase::Ptr(new StoredPatchExpr(name.substr(1),
-            it->second));
+        result.push_back(it->getName());
     }
-
-    return PatchExprBase::Ptr(new PatchExpr(itsScope, sourceDB, name,
-        refPhase));
+    return result;
 }
 
 } // namespace BBS

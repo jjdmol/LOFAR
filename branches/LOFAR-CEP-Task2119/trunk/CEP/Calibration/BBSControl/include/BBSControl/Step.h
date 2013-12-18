@@ -147,6 +147,23 @@ namespace LOFAR
       // Model configuration options as specified in the parameter set file.
       ModelConfig       itsModelConfig;
 
+      // Source partitions for the supported DDEs (direction dependent effects).
+      string            itsPartitionDirectionalGain;
+      string            itsPartitionBeam;
+      string            itsPartitionDirectionalTEC;
+      string            itsPartitionFaradayRotation;
+      string            itsPartitionIonosphere;
+
+      // Parse a DDEPartition from a string.
+      DDEPartition parsePartition(const string &in) const;
+
+      // Construct a DDEPartition instance from a list of strings.
+      DDEPartition makePartition(const vector<string> &pattern) const;
+
+      // Split the input string a the first colon and return the substrings
+      // before and after the colon as a pair.
+      pair<string, string> split(const string &in) const;
+
       // Write the contents of a Step to an output stream.
       friend ostream& operator<<(ostream&, const Step&);
     };

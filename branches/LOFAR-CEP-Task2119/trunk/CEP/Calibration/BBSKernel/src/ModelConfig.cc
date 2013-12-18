@@ -22,7 +22,9 @@
 
 #include <lofar_config.h>
 #include <BBSKernel/ModelConfig.h>
+#include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_iomanip.h>
 
@@ -64,19 +66,6 @@ bool GainConfig::phasors() const
 }
 
 // -------------------------------------------------------------------------- //
-// - DirectionalGainConfig implementation                                   - //
-// -------------------------------------------------------------------------- //
-DirectionalGainConfig::DirectionalGainConfig(bool phasors)
-    :   itsPhasors(phasors)
-{
-}
-
-bool DirectionalGainConfig::phasors() const
-{
-    return itsPhasors;
-}
-
-// -------------------------------------------------------------------------- //
 // - ElevationCutConfig implementation                                      - //
 // -------------------------------------------------------------------------- //
 ElevationCutConfig::ElevationCutConfig()
@@ -92,6 +81,174 @@ ElevationCutConfig::ElevationCutConfig(double threshold)
 double ElevationCutConfig::threshold() const
 {
     return itsThreshold;
+}
+
+// -------------------------------------------------------------------------- //
+// - CasaStringFilter implementation                                        - //
+// -------------------------------------------------------------------------- //
+
+CasaStringFilter::CasaStringFilter(const string &filter)
+{
+//    LOG_DEBUG_STR("Create filter: " << filter);
+    size_t last = 0;
+    while(last < filter.size())
+    {
+//        LOG_DEBUG_STR("last: " << last << " find: " << filter.find(';', last));
+        size_t pos = filter.find(';', last);
+        if(pos == string::npos)
+        {
+            pos = filter.size();
+        }
+
+        ASSERTSTR(pos >= last, "pos: " << pos << " last: " << last);
+        string term = filter.substr(last, pos - last);
+        ltrim(term);
+        rtrim(term);
+
+        if(!term.empty())
+        {
+            if(term[0] != '!')
+            {
+                itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(term)));
+                itsInverted.push_back(false);
+            }
+            else if(term.size() > 1)
+            {
+                term = term.substr(1);
+                ltrim(term);
+                rtrim(term);
+
+                if(!term.empty())
+                {
+                    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(term)));
+                    itsInverted.push_back(true);
+                }
+            }
+        }
+
+        last = pos + 1;
+    }
+}
+
+bool CasaStringFilter::matches(const string &in) const
+{
+    casa::String tmp(in);
+
+    size_t i = 0, end = itsInverted.size();
+    while(i < end)
+    {
+        if(itsInverted[i])
+        {
+            ++i;
+            continue;
+        }
+
+        if(!tmp.matches(itsRegEx[i]))
+        {
+            ++i;
+            continue;
+        }
+
+        ++i;
+        bool accept = true;
+        while(i < end && itsInverted[i])
+        {
+            if(tmp.matches(itsRegEx[i]))
+            {
+                accept = false;
+                break;
+            }
+
+            ++i;
+        }
+
+        if(accept)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool CasaStringFilter::operator()(const string &in) const
+{
+    return matches(in);
+}
+
+// -------------------------------------------------------------------------- //
+// - DDEPartition implementation                                            - //
+// -------------------------------------------------------------------------- //
+
+unsigned int DDEPartition::size() const
+{
+    return itsRegEx.size();
+}
+
+bool DDEPartition::matches(unsigned int i, const string &name) const
+{
+//    casa::String tmp(name);
+//    return tmp.matches(itsRegEx[i]);
+    return itsRegEx[i].matches(name);
+}
+
+bool DDEPartition::group(unsigned int i) const
+{
+//    return itsGroupFlag[i];
+    return !itsGroupName[i].empty();
+}
+
+string DDEPartition::name(unsigned int i) const
+{
+    return itsGroupName[i];
+}
+
+void DDEPartition::append(const string &pattern)
+{
+//    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
+//    itsGroupFlag.push_back(group);
+    itsGroupName.push_back(string());
+    itsRegEx.push_back(CasaStringFilter(pattern));
+}
+
+void DDEPartition::append(const string &name, const string &pattern)
+{
+//    itsRegEx.push_back(casa::Regex(casa::Regex::fromPattern(pattern)));
+//    itsGroupFlag.push_back(group);
+    itsGroupName.push_back(name);
+    itsRegEx.push_back(CasaStringFilter(pattern));
+}
+
+// -------------------------------------------------------------------------- //
+// - DDEConfig implementation                                               - //
+// -------------------------------------------------------------------------- //
+
+DDEConfig::~DDEConfig()
+{
+}
+
+const DDEPartition &DDEConfig::partition() const
+{
+    return itsPartition;
+}
+
+void DDEConfig::setPartition(const DDEPartition &partition)
+{
+    itsPartition = partition;
+}
+
+// -------------------------------------------------------------------------- //
+// - DirectionalGainConfig implementation                                   - //
+// -------------------------------------------------------------------------- //
+
+DirectionalGainConfig::DirectionalGainConfig(bool phasors)
+    :   itsPhasors(phasors)
+{
+}
+
+bool DirectionalGainConfig::phasors() const
+{
+    return itsPhasors;
 }
 
 // -------------------------------------------------------------------------- //
@@ -129,13 +286,6 @@ const string &BeamConfig::asString(Mode in)
         "<UNDEFINED>"};
 
     return name[in];
-}
-
-BeamConfig::BeamConfig()
-    :   itsMode(DEFAULT),
-        itsUseChannelFreq(false),
-        itsConjugateAF(false)
-{
 }
 
 BeamConfig::BeamConfig(Mode mode, bool useChannelFreq, bool conjugateAF)
@@ -196,13 +346,7 @@ const string &IonosphereConfig::asString(ModelType in)
     return name[in];
 }
 
-IonosphereConfig::IonosphereConfig()
-    :   itsModelType(N_ModelType),
-        itsDegree(0)
-{
-}
-
-IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree = 0)
+IonosphereConfig::IonosphereConfig(ModelType type, unsigned int degree)
     :   itsModelType(type),
         itsDegree(degree)
 {
@@ -221,11 +365,6 @@ unsigned int IonosphereConfig::degree() const
 // -------------------------------------------------------------------------- //
 // - FlaggerConfig implementation                                           - //
 // -------------------------------------------------------------------------- //
-FlaggerConfig::FlaggerConfig()
-    :   itsThreshold(1.0)
-{
-}
-
 FlaggerConfig::FlaggerConfig(double threshold)
     :   itsThreshold(threshold)
 {
@@ -319,6 +458,11 @@ bool ModelConfig::useDirectionalTEC() const
     return itsModelOptions[DIRECTIONAL_TEC];
 }
 
+const DDEConfig &ModelConfig::getDirectionalTECConfig() const
+{
+    return itsConfigDirectionalTEC;
+}
+
 bool ModelConfig::useFaradayRotation() const
 {
     return itsModelOptions[FARADAY_ROTATION];
@@ -327,6 +471,11 @@ bool ModelConfig::useFaradayRotation() const
 bool ModelConfig::useRotation() const
 {
     return itsModelOptions[ROTATION];
+}
+
+const DDEConfig &ModelConfig::getFaradayRotationConfig() const
+{
+    return itsConfigFaradayRotation;
 }
 
 bool ModelConfig::useScalarPhase() const
@@ -439,14 +588,28 @@ void ModelConfig::clearBeamConfig()
     itsModelOptions[BEAM] = false;
 }
 
-void ModelConfig::setDirectionalTEC(bool value)
+void ModelConfig::setDirectionalTECConfig(const DDEConfig &config)
 {
-    itsModelOptions[DIRECTIONAL_TEC] = value;
+    itsModelOptions[DIRECTIONAL_TEC] = true;
+    itsConfigDirectionalTEC = config;
 }
 
-void ModelConfig::setFaradayRotation(bool value)
+void ModelConfig::clearDirectionalTECConfig()
 {
-    itsModelOptions[FARADAY_ROTATION] = value;
+    itsConfigDirectionalTEC = DDEConfig();
+    itsModelOptions[DIRECTIONAL_TEC] = false;
+}
+
+void ModelConfig::setFaradayRotationConfig(const DDEConfig &config)
+{
+    itsModelOptions[FARADAY_ROTATION] = true;
+    itsConfigFaradayRotation = config;
+}
+
+void ModelConfig::clearFaradayRotationConfig()
+{
+    itsConfigFaradayRotation = DDEConfig();
+    itsModelOptions[FARADAY_ROTATION] = false;
 }
 
 void ModelConfig::setRotation(bool value)
@@ -514,21 +677,91 @@ ostream &operator<<(ostream &out, const GainConfig &obj)
     return out;
 }
 
+ostream &operator<<(ostream &out, const CasaStringFilter &obj)
+{
+    for(unsigned int i = 0; i < obj.itsInverted.size(); ++i)
+    {
+        if(obj.itsInverted[i])
+        {
+            out << "!";
+        }
+
+        out << obj.itsRegEx[i].regexp();
+
+        if(obj.itsInverted.size() > i + 1)
+        {
+            out << ";";
+        }
+    }
+
+    return out;
+}
+
+ostream &operator<<(ostream &out, const DDEPartition &obj)
+{
+    out << "[";
+    for(unsigned int i = 0; i < obj.size(); ++i)
+    {
+        if(obj.group(i))
+        {
+            out << obj.name(i) << ":" << obj.itsRegEx[i];
+        }
+        else
+        {
+            out << obj.itsRegEx[i];
+        }
+
+        if(obj.size() > i + 1)
+        {
+            out << ", ";
+        }
+    }
+
+    if(obj.matchesRemainder())
+    {
+        if(obj.size() > 0)
+        {
+            out << ", ";
+        }
+
+        if(obj.groupRemainder())
+        {
+            out << obj.remainderGroupName() << ":*";
+        }
+        else
+        {
+            out << "*";
+        }
+    }
+    out << "]";
+
+    return out;
+}
+
+ostream &operator<<(ostream &out, const DDEConfig &obj)
+{
+    out << indent << "Partition: " << obj.partition();
+    return out;
+}
+
 ostream &operator<<(ostream &out, const DirectionalGainConfig &obj)
 {
-    out << indent << "Phasors: " << boolalpha << obj.phasors() << noboolalpha;
+    out << static_cast<const DDEConfig&>(obj);
+    out << endl << indent << "Phasors: " << boolalpha << obj.phasors()
+        << noboolalpha;
     return out;
 }
 
 ostream &operator<<(ostream &out, const ElevationCutConfig &obj)
 {
     out << indent << "Threshold: " << obj.threshold() << " (deg)";
-    return out;
+	return out;
 }
 
 ostream &operator<<(ostream &out, const BeamConfig &obj)
 {
-    out << indent << "Mode: " << BeamConfig::asString(obj.mode())
+    out << static_cast<const DDEConfig&>(obj);
+    out << endl << indent << "Mode: " << BeamConfig::asString(obj.mode())
         << endl << indent << "Use channel frequency: " << boolalpha
         << obj.useChannelFreq() << noboolalpha
         << endl << indent << "Conjugate array factor: " << boolalpha
@@ -538,7 +771,8 @@ ostream &operator<<(ostream &out, const BeamConfig &obj)
 
 ostream &operator<<(ostream &out, const IonosphereConfig &obj)
 {
-    out << indent << "Ionosphere model type: "
+    out << static_cast<const DDEConfig&>(obj);
+    out << endl << indent << "Ionosphere model type: "
         << IonosphereConfig::asString(obj.getModelType());
 
     if(obj.getModelType() == IonosphereConfig::MIM)
@@ -609,8 +843,20 @@ ostream& operator<<(ostream &out, const ModelConfig &obj)
 
     out << endl << indent << "Direction dependent TEC enabled: " << boolalpha
         << obj.useDirectionalTEC() << noboolalpha;
+    if(obj.useDirectionalTEC())
+    {
+        Indent id;
+        out << endl << obj.getDirectionalTECConfig();
+    }
+
     out << endl << indent << "Faraday rotation enabled: " << boolalpha
         << obj.useFaradayRotation() << noboolalpha;
+    if(obj.useFaradayRotation())
+    {
+        Indent id;
+        out << endl << obj.getFaradayRotationConfig();
+    }
+
     out << endl << indent << "Polarization rotation enabled: " << boolalpha
         << obj.useRotation() << noboolalpha;
     out << endl << indent << "Scalar phase enabled: " << boolalpha

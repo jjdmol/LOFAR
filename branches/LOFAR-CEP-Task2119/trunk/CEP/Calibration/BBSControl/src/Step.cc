@@ -33,6 +33,7 @@
 #include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
@@ -165,12 +166,16 @@ namespace LOFAR
       ps.add(prefix + "Model.DirectionalGain.Enable",
         toString(itsModelConfig.useDirectionalGain()));
       if(itsModelConfig.useDirectionalGain()) {
+        ps.add(prefix + "Model.DirectionalGain.Patches",
+          itsPartitionDirectionalGain);
         ps.add(prefix + "Model.DirectionalGain.Phasors",
           toString(itsModelConfig.getDirectionalGainConfig().phasors()));
       }
 
       ps.add(prefix + "Model.Beam.Enable", toString(itsModelConfig.useBeam()));
       if(itsModelConfig.useBeam()) {
+        ps.add(prefix + "Model.Beam.Patches", itsPartitionBeam);
+
         const BeamConfig &config = itsModelConfig.getBeamConfig();
         ps.add(prefix + "Model.Beam.Mode", BeamConfig::asString(config.mode()));
         ps.add(prefix + "Model.Beam.UseChannelFreq",
@@ -181,8 +186,18 @@ namespace LOFAR
 
       ps.add(prefix + "Model.DirectionalTEC.Enable",
         toString(itsModelConfig.useDirectionalTEC()));
+      if(itsModelConfig.useDirectionalTEC()) {
+        ps.add(prefix + "Model.DirectionalTEC.Patches",
+          itsPartitionDirectionalTEC);
+      }
+
       ps.add(prefix + "Model.FaradayRotation.Enable",
         toString(itsModelConfig.useFaradayRotation()));
+      if(itsModelConfig.useFaradayRotation()) {
+        ps.add(prefix + "Model.FaradayRotation.Patches",
+          itsPartitionFaradayRotation);
+      }
+
       ps.add(prefix + "Model.Rotation.Enable",
         toString(itsModelConfig.useRotation()));
       ps.add(prefix + "Model.ScalarPhase.Enable",
@@ -191,6 +206,8 @@ namespace LOFAR
       ps.add(prefix + "Model.Ionosphere.Enable",
         toString(itsModelConfig.useIonosphere()));
       if(itsModelConfig.useIonosphere()) {
+        ps.add(prefix + "Model.Ionosphere.Patches", itsPartitionIonosphere);
+
         const IonosphereConfig &config = itsModelConfig.getIonosphereConfig();
         ps.add(prefix + "Model.Ionosphere.Type",
           IonosphereConfig::asString(config.getModelType()));
@@ -271,11 +288,21 @@ namespace LOFAR
 
         const DirectionalGainConfig &parentConfig =
           itsModelConfig.getDirectionalGainConfig();
+
+        string defaultPartition("*");
+        if(itsModelConfig.useDirectionalGain()) {
+          defaultPartition = itsPartitionDirectionalGain;
+        }
+        itsPartitionDirectionalGain =
+            ps.getString("Model.DirectionalGain.Patches", defaultPartition);
+
         bool phasors = ps.getBool("Model.DirectionalGain.Phasors",
           itsModelConfig.useDirectionalGain() ? parentConfig.phasors()
           : usePhasors);
 
-        itsModelConfig.setDirectionalGainConfig(DirectionalGainConfig(phasors));
+        DirectionalGainConfig config(phasors);
+        config.setPartition(parsePartition(itsPartitionDirectionalGain));
+        itsModelConfig.setDirectionalGainConfig(config);
       }
       else {
         itsModelConfig.clearDirectionalGainConfig();
@@ -284,12 +311,20 @@ namespace LOFAR
       if(ps.getBool("Model.Beam.Enable", itsModelConfig.useBeam())) {
         const BeamConfig &parentConfig = itsModelConfig.getBeamConfig();
 
+        string defaultPartition("*");
+        if(itsModelConfig.useBeam()) {
+          defaultPartition = itsPartitionBeam;
+        }
+        itsPartitionBeam = ps.getString("Model.Beam.Patches", defaultPartition);
+
         string modeString = ps.getString("Model.Beam.Mode",
           itsModelConfig.useBeam() ? BeamConfig::asString(parentConfig.mode())
             : BeamConfig::asString(BeamConfig::DEFAULT));
+
         BeamConfig::Mode mode = BeamConfig::asMode(modeString);
         if(!BeamConfig::isDefined(mode)) {
-          THROW(BBSControlException, "Key Model.Beam.Mode invalid.");
+          THROW(BBSControlException, "Invalid beam model mode specified: "
+            << modeString);
         }
 
         bool useChannelFreq = ps.getBool("Model.Beam.UseChannelFreq",
@@ -297,18 +332,48 @@ namespace LOFAR
         bool conjugateAF = ps.getBool("Model.Beam.ConjugateAF",
           itsModelConfig.useBeam() ? parentConfig.conjugateAF() : false);
 
-        itsModelConfig.setBeamConfig(BeamConfig(mode, useChannelFreq,
-          conjugateAF));
+        BeamConfig config(mode, useChannelFreq, conjugateAF);
+        config.setPartition(parsePartition(itsPartitionBeam));
+        itsModelConfig.setBeamConfig(config);
       } else {
         itsModelConfig.clearBeamConfig();
       }
 
-      itsModelConfig.setDirectionalTEC(ps.getBool("Model.DirectionalTEC.Enable",
-        itsModelConfig.useDirectionalTEC()));
+      if(ps.getBool("Model.DirectionalTEC.Enable",
+        itsModelConfig.useDirectionalTEC())) {
 
-      itsModelConfig.setFaradayRotation
-        (ps.getBool("Model.FaradayRotation.Enable",
-          itsModelConfig.useFaradayRotation()));
+        string defaultPartition("*");
+        if(itsModelConfig.useDirectionalTEC()) {
+          defaultPartition = itsPartitionDirectionalTEC;
+        }
+        itsPartitionDirectionalTEC =
+          ps.getString("Model.DirectionalTEC.Patches", defaultPartition);
+
+        DDEConfig config;
+        config.setPartition(parsePartition(itsPartitionDirectionalTEC));
+        itsModelConfig.setDirectionalTECConfig(config);
+      }
+      else {
+        itsModelConfig.clearDirectionalTECConfig();
+      }
+
+      if(ps.getBool("Model.FaradayRotation.Enable",
+        itsModelConfig.useFaradayRotation())) {
+
+        string defaultPartition("*");
+        if(itsModelConfig.useFaradayRotation()) {
+          defaultPartition = itsPartitionFaradayRotation;
+        }
+        itsPartitionFaradayRotation =
+          ps.getString("Model.FaradayRotation.Patches", defaultPartition);
+
+        DDEConfig config;
+        config.setPartition(parsePartition(itsPartitionFaradayRotation));
+        itsModelConfig.setFaradayRotationConfig(config);
+      }
+      else {
+        itsModelConfig.clearFaradayRotationConfig();
+      }
 
       itsModelConfig.setRotation(ps.getBool("Model.Rotation.Enable",
         itsModelConfig.useRotation()));
@@ -320,6 +385,13 @@ namespace LOFAR
       {
         const IonosphereConfig &parentConfig =
             itsModelConfig.getIonosphereConfig();
+
+        string defaultPartition("*");
+        if(itsModelConfig.useIonosphere()) {
+          defaultPartition = itsPartitionIonosphere;
+        }
+        itsPartitionIonosphere = ps.getString("Model.Ionosphere.Patches",
+          defaultPartition);
 
         string modelTypeString;
         if(itsModelConfig.useIonosphere()) {
@@ -344,7 +416,9 @@ namespace LOFAR
           degree = ps.getUint("Model.Ionosphere.Degree");
         }
 
-        itsModelConfig.setIonosphereConfig(IonosphereConfig(modelType, degree));
+        IonosphereConfig config(modelType, degree);
+        config.setPartition(parsePartition(itsPartitionIonosphere));
+        itsModelConfig.setIonosphereConfig(config);
       } else {
         itsModelConfig.clearIonosphereConfig();
       }
@@ -383,6 +457,90 @@ namespace LOFAR
         << endl << indent << itsModelConfig;
     }
 
+    DDEPartition Step::parsePartition(const string &in) const
+    {
+        ParameterValue tmp(in);
+        DDEPartition partition = makePartition(tmp.getStringVector());
+        if(partition.empty())
+        {
+            THROW(BBSControlException, "Invalid patch specification: " << in);
+        }
+
+        return partition;
+    }
+
+    DDEPartition Step::makePartition(const vector<string> &in) const
+    {
+        DDEPartition partition;
+
+        size_t count = in.size();
+        if(count > 0)
+        {
+            // Special case for "*" at the end of the definition. Will match all
+            // remaining sources in this case.
+            pair<string, string> back = split(in.back());
+            ASSERT(!back.second.empty());
+            if(back.second == "*")
+            {
+                if(back.first.empty())
+                {
+                    partition.matchRemainder();
+                }
+                else
+                {
+                    partition.matchRemainderAsGroup(back.first);
+                }
+
+                --count;
+            }
+        }
+
+        // Process the rest of the definition.
+        for(size_t i = 0; i < count; ++i)
+        {
+            pair<string, string> current = split(in[i]);
+            ASSERT(!current.second.empty());
+
+            if(current.first.empty())
+            {
+                partition.append(current.second);
+            }
+            else
+            {
+                partition.append(current.first, current.second);
+            }
+        }
+
+        return partition;
+    }
+
+    pair<string, string> Step::split(const string &in) const
+    {
+        pair<string, string> result;
+
+        size_t pos = in.find(':');
+        if(pos == string::npos)
+        {
+            result.second = in;
+        }
+        else
+        {
+            result.first = in.substr(0, pos);
+
+            if(in.size() > pos + 1)
+            {
+                result.second = in.substr(pos + 1);
+            }
+        }
+
+        ltrim(result.first);
+        rtrim(result.first);
+
+        ltrim(result.second);
+        rtrim(result.second);
+
+        return result;
+    }
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 

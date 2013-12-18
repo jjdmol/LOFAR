@@ -29,6 +29,7 @@
 #include <Common/lofar_math.h>
 #include <Common/lofar_sstream.h>
 #include <Common/Timer.h>
+#include <Common/OpenMP.h>
 
 namespace LOFAR
 {
@@ -184,10 +185,9 @@ namespace
     // Helper function to initialize each cell in the range [\p start, \p end).
     // \pre The range starting at \p cell should contain exactly one Cell
     // instance for each cell in the range [\p start, \p end].
-    template <typename T>
     void initCells(const Location &start, const Location &end,
         const ParmGroup &solvables, size_t nCoeff,
-        const EstimateOptions &options, T cell);
+        const EstimateOptions &options, vector<Cell> &cells);
 
     // Cell counts separated by state. Used to indicate the status of all the
     // cells after performing an iteration.
@@ -201,10 +201,9 @@ namespace
     // to the new estimates found.
     // \pre The range starting at \p cell should contain exactly one Cell
     // instance for each cell in the range [\p start, \p end].
-    template <typename T>
     IterationStatus iterate(ParmDBLog &log, const Grid &grid,
         const Location &start, const Location &end, const ParmGroup &solvables,
-        const EstimateOptions &options, T cell);
+        const EstimateOptions &options, vector<Cell> &cells);
 
     // Decode casa::LSQFit ready codes and update the status counts.
     void updateIterationStatus(const Cell &cell, IterationStatus &status);
@@ -589,7 +588,7 @@ namespace
             // Initialize a cell instance for each cell in [chunkEnd,
             // chunkStart].
             initCells(chunkStart, chunkEnd, solvables, coeffMap.size(), options,
-                cells.begin());
+                cells);
 
             Statistics stats;
             IterationStatus status = {0, 0, 0, 0, 0};
@@ -606,7 +605,7 @@ namespace
                 // Perform a single iteration.
                 timerIterate.start();
                 status = iterate(log, grid, chunkStart, chunkEnd, solvables,
-                    options, cells.begin());
+                    options, cells);
                 timerIterate.stop();
 
                 // Notify model that solvables have changed.
@@ -684,117 +683,138 @@ namespace
         }
     }
 
-    template <typename T>
     IterationStatus iterate(ParmDBLog &log, const Grid &grid,
         const Location &start, const Location &end, const ParmGroup &solvables,
-        const EstimateOptions &options, T cell)
+        const EstimateOptions &options, vector<Cell> &cells)
     {
-        IterationStatus status = {0, 0, 0, 0, 0};
-        for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
+        const size_t nCellFreq = end.first - start.first + 1;
+        const size_t nCellTime = end.second - start.second + 1;
+        const size_t nCell = nCellFreq * nCellTime;
+
+        IterationStatus result = {0, 0, 0, 0, 0};
+        vector<IterationStatus> threadStatus(OpenMP::maxThreads(), result);
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < nCell; ++i)
         {
+            Cell &cell = cells[i];
+            IterationStatus &status = threadStatus[OpenMP::threadNum()];
+            Location location(start.first + i % nCellFreq, start.second + i
+                / nCellFreq);
+
             // If processing on the cell is already done, only update the status
             // counts and continue to the next cell.
-            if(cell->done)
+            if(cell.done)
             {
-                updateIterationStatus(*cell, status);
+                updateIterationStatus(cell, status);
                 continue;
             }
 
             // Compute RMS.
-            if(cell->count > 0)
+            if(cell.count > 0)
             {
-                cell->rms = sqrt(cell->rms / cell->count);
+                cell.rms = sqrt(cell.rms / cell.count);
             }
 
             // Turn outlier detection off by default. May be enabled later on.
-            cell->flag = false;
+            cell.flag = false;
 
             // Perform a single iteration if the cell has not yet converged or
             // failed.
-            if(!cell->solver.isReady())
+            if(!cell.solver.isReady())
             {
                 // LSQFit::solveLoop() only returns false if the normal
                 // equations are singular. This can also be seen from the result
                 // of LSQFit::isReady(), so we don't update the iteration status
                 // here but do skip the update of the solvables.
                 casa::uInt rank;
-                if(cell->solver.solveLoop(rank, &(cell->coeff[0]),
+                if(cell.solver.solveLoop(rank, &(cell.coeff[0]),
                     options.lsqOptions().useSVD))
                 {
                     // Store the updated coefficient values.
-                    storeCoeff(*it, solvables, cell->coeff.begin());
+                    storeCoeff(location, solvables, cell.coeff.begin());
                 }
             }
 
             // Handle L1 restart with a different epsilon value.
-            if(cell->solver.isReady()
+            if(cell.solver.isReady()
                 && options.algorithm() == EstimateOptions::L1
-                && cell->epsilonIdx < options.nEpsilon())
+                && cell.epsilonIdx < options.nEpsilon())
             {
                 // Move to the next epsilon value.
-                ++cell->epsilonIdx;
+                ++cell.epsilonIdx;
 
-                if(cell->epsilonIdx < options.nEpsilon())
+                if(cell.epsilonIdx < options.nEpsilon())
                 {
                     // Re-initialize LSQ solver.
-                    size_t nCoeff = cell->coeff.size();
-                    cell->solver =
+                    size_t nCoeff = cell.coeff.size();
+                    cell.solver =
                         casa::LSQFit(static_cast<casa::uInt>(nCoeff));
-                    configLSQSolver(cell->solver, options.lsqOptions());
+                    configLSQSolver(cell.solver, options.lsqOptions());
 
                     // Update epsilon value.
-                    cell->epsilon = options.epsilon(cell->epsilonIdx);
+                    cell.epsilon = options.epsilon(cell.epsilonIdx);
                 }
             }
 
             // Handle restart with a new RMS threshold value.
-            if(cell->solver.isReady()
+            if(cell.solver.isReady()
                 && options.robust()
-                && cell->thresholdIdx < options.nThreshold())
+                && cell.thresholdIdx < options.nThreshold())
             {
                 // Re-initialize LSQ solver.
-                size_t nCoeff = cell->coeff.size();
-                cell->solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
-                configLSQSolver(cell->solver, options.lsqOptions());
+                size_t nCoeff = cell.coeff.size();
+                cell.solver = casa::LSQFit(static_cast<casa::uInt>(nCoeff));
+                configLSQSolver(cell.solver, options.lsqOptions());
 
                 // Reset L1 state.
-                cell->epsilonIdx = 0;
-                cell->epsilon = options.algorithm() == EstimateOptions::L1
+                cell.epsilonIdx = 0;
+                cell.epsilon = options.algorithm() == EstimateOptions::L1
                     ? options.epsilon(0) : 0.0;
 
                 // Compute new RMS threshold and activate outlier detection.
-                cell->threshold = options.threshold(cell->thresholdIdx)
-                    * cell->rms;
-                cell->flag = true;
+                cell.threshold = options.threshold(cell.thresholdIdx)
+                    * cell.rms;
+                cell.flag = true;
 
                 // Move to the next threshold.
-                 ++cell->thresholdIdx;
+                 ++cell.thresholdIdx;
             }
 
-            // Log solution statistics.
-            if(!options.robust()
-                && (options.algorithm() == EstimateOptions::L2))
-            {
-                logCellStats(log, grid.getCell(*it), *cell);
-            }
+//            // Log solution statistics.
+//            if(!options.robust()
+//                && (options.algorithm() == EstimateOptions::L2))
+//            {
+//                logCellStats(log, grid.getCell(location), cell);
+//            }
 
-            if(cell->solver.isReady())
+            if(cell.solver.isReady())
             {
-                cell->done = true;
+                cell.done = true;
             }
             else
             {
                 // If not yet converged or failed, reset state for the next
                 // iteration.
-                cell->rms = 0.0;
-                cell->count = 0;
-                cell->outliers = 0;
+                cell.rms = 0.0;
+                cell.count = 0;
+                cell.outliers = 0;
             }
 
-            updateIterationStatus(*cell, status);
+            updateIterationStatus(cell, status);
         }
 
-        return status;
+        for(size_t i = 0; i < OpenMP::maxThreads(); ++i)
+        {
+            const IterationStatus &status = threadStatus[i];
+            result.nActive += status.nActive;
+            result.nConverged += status.nConverged;
+            result.nStopped += status.nStopped;
+            result.nNoReduction += status.nNoReduction;
+            result.nSingular += status.nSingular;
+        }
+
+        return result;
     }
 
     void updateIterationStatus(const Cell &cell, IterationStatus &status)
@@ -879,7 +899,7 @@ namespace
             && level.is(ParmDBLoglevel::PERITERATION_CORRMATRIX))
             || (cell.solver.isReady() && level.is(ParmDBLoglevel::PERSOLUTION)))
         {
-        	log.add(box.lower().first, box.upper().first, box.lower().second,
+            log.add(box.lower().first, box.upper().first, box.lower().second,
                 box.upper().second, cell.solver.nIterations(),
                 cell.solver.isReady(), rank, cell.solver.getDeficiency(),
                 cell.solver.getChi(), nonlin, cell.coeff,
@@ -903,11 +923,11 @@ namespace
         }
     }
 
-    template <typename T>
     void initCells(const Location &start, const Location &end,
         const ParmGroup &solvables, size_t nCoeff,
-        const EstimateOptions &options, T cell)
+        const EstimateOptions &options, vector<Cell> &cells)
     {
+        vector<Cell>::iterator cell = cells.begin();
         for(CellIterator it(start, end); !it.atEnd(); ++it, ++cell)
         {
             // Processing has not completed yet.

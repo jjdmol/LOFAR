@@ -116,6 +116,15 @@ makeBeamExpr(const Station::ConstPtr &station,
     const BeamConfig &config);
 
 Expr<JonesMatrix>::Ptr
+makeBeamExpr(Scope &scope,
+	const Station::ConstPtr &station,
+    double refFreq,
+    const Expr<Vector<3> >::Ptr &exprITRF,
+    const Expr<Vector<3> >::Ptr &exprRefDelayITRF,
+    const Expr<Vector<3> >::Ptr &exprRefTileITRF,
+    const BeamConfig &config);
+
+Expr<JonesMatrix>::Ptr
 makeDirectionalTECExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch);
@@ -136,7 +145,8 @@ makeScalarPhaseExpr(Scope &scope,
     const string &patch);
 
 Expr<JonesMatrix>::Ptr
-makeIonosphereExpr(const Station::ConstPtr &station,
+makeIonosphereExpr(Scope &scope,
+	const Station::ConstPtr &station,
     const casa::MPosition &refPosition,
     const Expr<Vector<3> >::Ptr &exprDirection,
     const IonosphereExpr::Ptr &exprIonosphere);

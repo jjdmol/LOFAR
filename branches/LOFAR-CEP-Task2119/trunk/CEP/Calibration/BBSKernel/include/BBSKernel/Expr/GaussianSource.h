@@ -45,10 +45,12 @@ public:
 
     GaussianSource(const SourceInfo &source, Scope &scope);
 
-    Expr<JonesMatrix>::Ptr coherence(const Expr<Vector<3> >::ConstPtr &uvwLHS,
+    Expr<JonesMatrix>::Ptr coherence(const baseline_t&,
+        const Expr<Vector<3> >::ConstPtr &uvwLHS,
         const Expr<Vector<3> >::ConstPtr &uvwRHS) const;
 
 private:
+    Expr<Vector<4> >::Ptr   itsStokesVector;
     Expr<Vector<2> >::Ptr   itsDimensions;
     Expr<Scalar>::Ptr       itsOrientation;
 };
