@@ -1,0 +1,23 @@
+// \ingroup LCS
+// \defgroup Blob Binary Large Objects (Blob)
+//
+// Classes for serializing one or more objects into a blob and
+// de-serializing the blob to objects.
+// It also has classes to hold a map of heterogeneous values. This
+// includes a parser to convert text to such a map.
+
+
+// @{
+
+//   \defgroup KeyValue Handling and parsing key-value pairs
+//   Class to hold a map of heterogeneous key-value pairs.
+//   The value can have any basic data type (including complex and
+//   string) and vectors of them.
+//   Furthermore the value can be a map itself.
+//
+//   A parser exists to convert a text file to such a map object.
+
+
+//   \defgroup BlobArray Global BlobArray functions
+
+// @}
