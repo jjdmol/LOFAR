@@ -1,27 +1,25 @@
 #!/bin/bash -l
 HELP=$" This programs runs LOFAR regressions test in a standalone fashion. 
-Usage: regression_test_runner.sh pipeline_type [host1 host2]
+Usage: regression_test_runner.sh pipeline_type host1 host2
 Run the regressions test for pipeline_type. Perform the work on host1 and host2
 Test should be started from the base installation directory eg: ~/build/gnu_debug
 
-pipeline_types: 
-  msss_calibratior_pipeline -or- 1
-  msss_target_pipeline      -or- 2 
-  msss_imager_pipeline      -or- 3
-default hosts: 
-  lce068 and lce069
+pipeline_type select any one of: 
+  msss_calibratior_pipeline 
+  msss_target_pipeline      
+  msss_imager_pipeline      
 
 All input, output and temporary files are stored in the following directory:
     /data/scratch/$USER/regression_test_runner/<pipeline_type> 
     
-*** Warning: Directory will be cleared at start of the run (lce069-lce072)*** 
+*** Warning: Directory of target noder will be cleared at start of the run (lce069-lce072)*** 
                Should not be shared between worker nodes"
-
 # ******************************************************
+
 # 1) validate input and print help if needed
 # Print usage
 echo "Validating environment and input"
-if [[ $# < 3 || $1 = "--help" ]]; then
+if [[ $# < 3 ]]; then
   echo "$HELP"
   exit 1
 fi
@@ -31,7 +29,7 @@ PIPELINE=$1                                                             # First 
 WORKING_DIR=$"/data/scratch/$USER/regression_test_runner/$PIPELINE"     # Default working space
 WORKSPACE=$PWD                                                          # Directory script is started from
 HOST1=$2
-HOST2=$3
+HOST2=$3  # not always need
 
 # test if we started in the correct directory
 # we need to be able to grab and change installed files for full functionality
@@ -63,7 +61,12 @@ else
     exit 1
 fi
 
-# todo increase commentingmof this step
+# Not all pipelines (specifically the imaging pipeline) have all data for two nodes
+# Therefore we test here if the there is a host2 directory in the data dir. 
+# It is now possible to use the pipeline for this case without manual selection of the number
+# of hosts. 
+# TODO: If the second host is skip we could set the node to be skipped and we could 
+# run 4 pipelines in parallel.
 SECONDHOST=false
 if [ -d $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host2" ]; 
 then
@@ -75,7 +78,7 @@ fi
 # 2) Set environment and set global variables
 echo "Settings up environment"
 # Make sure aliases are expanded, which is not the default for non-interactive
-# shells. Used for the use commands. TODO is this still needed 
+# shells. Used for the use commands. TODO is this still needed?
 shopt -s expand_aliases
 
 # create the var run directory
@@ -83,30 +86,27 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
 . /opt/cep/login/bashrc # source the login of use commands
-use LofIm
+use LofIm               # this is a weak point in the script we should be able to run without
 use Pythonlibs
-. $"$WORKSPACE/lofarinit.sh"
+. $"$WORKSPACE/lofarinit.sh"  
 
 # *****************************************************
 # 3) Clear old data:
 # Clear var run directory: remove state, map and logfiles
 echo "Clearing working directories"
-rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf
+rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 
+echo "Clearing working directory"
 # Assure working directory exists
-#todo onlu clear target host
-ssh lce068 $"mkdir $WORKING_DIR -p" 
-ssh lce069 $"mkdir $WORKING_DIR -p" 
-ssh lce070 $"mkdir $WORKING_DIR -p" 
-ssh lce071 $"mkdir $WORKING_DIR -p" 
-ssh lce072 $"mkdir $WORKING_DIR -p" 
+# and remove all files in these dirs
+ssh HOST1 $"mkdir $WORKING_DIR -p" 
+ssh HOST1 $"rm $WORKING_DIR/* -rf" 
 
-# now remove all files in these dirs
-ssh lce068 $"rm $WORKING_DIR/* -rf" 
-ssh lce069 $"rm $WORKING_DIR/* -rf" 
-ssh lce070 $"rm $WORKING_DIR/* -rf" 
-ssh lce071 $"rm $WORKING_DIR/* -rf" 
-ssh lce072 $"rm $WORKING_DIR/* -rf" 
+if [ $SECONDHOST ]
+then
+  ssh HOST2 $"rm $WORKING_DIR/* -rf" 
+  ssh HOST2 $"mkdir $WORKING_DIR -p" 
+fi
 
 # ******************************************************
 # 4) prepare the config and parset to run in a pipeline type depending but static location 
@@ -126,11 +126,11 @@ fi
 echo "Updating configuration and parset file to reflect correct host and data locations"
 cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
 
+echo "Configuring the input parset and configuration files "
 # insert the cluserdesc for test cluster (default install is for cep2)
 sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 # specify the new working directory
 sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
-
 
 # copy parset to working dir (to allow output of meta information):
 cp /data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset $"$WORKING_DIR/$PIPELINE.parset"
@@ -149,6 +149,7 @@ sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/
 
 # *********************************************************************
 # 5) Run the pipeline
+echo "Run the pipeline"
 python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
 
 # ***********************************************************************
@@ -172,6 +173,7 @@ then
   mkdir $WORKING_DIR/target_data/host2 -p
   cp -r /data/lofar/testdata/regression_test_runner/$PIPELINE/target_data/host2/*  $WORKING_DIR/target_data/host2 || echo "*** Skipping comparison of node 2 ***"
 fi
+
 # get the source dir method allows for symlinks and other fancy methods of scripting
 # http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SOURCE="${BASH_SOURCE[0]}"
@@ -187,7 +189,7 @@ DELTA=0.0001
 python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host1/* $WORKING_DIR/output_data/host1/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
 if [ $SECONDHOST == true ]
 then
-  python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host2/* $WORKING_DIR/output_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host1" ; exit 1; }
+  python $"$REGRESSION_TEST_DIR/$PIPELINE"_test.py $WORKING_DIR/target_data/host2/* $WORKING_DIR/output_data/host2/* $DELTA || { echo $"regressiontest failed on data in dir $WORKING_DIR/output_data/host2" ; exit 1; }
 fi
 
 
