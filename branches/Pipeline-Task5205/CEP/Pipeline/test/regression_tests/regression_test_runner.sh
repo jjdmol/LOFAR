@@ -98,8 +98,8 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh lce072 $"mkdir $WORKING_DIR -p" 
-ssh lce072 $"rm $WORKING_DIR/* -rf" 
+mkdir $WORKING_DIR -p
+rm $WORKING_DIR/* -rf
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
