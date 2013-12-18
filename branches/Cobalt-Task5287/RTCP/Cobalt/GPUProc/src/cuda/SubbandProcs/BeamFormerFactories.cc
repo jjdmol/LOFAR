@@ -34,7 +34,7 @@ namespace LOFAR
         delayCompensation(delayCompensationParams(ps)),
         beamFormer(beamFormerParams(ps)),
         coherentTranspose(coherentTransposeParams(ps)),
-        fftShiftKernel(FFTShiftKernelParams(ps)),
+        fftShift(fftShiftParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
@@ -129,7 +129,7 @@ namespace LOFAR
       }
 
       FFTShiftKernel::Parameters
-      BeamFormerFactories::FFTShiftKernelParams(const Parset &ps) const
+      BeamFormerFactories::fftShiftParams(const Parset &ps) const
       {
         FFTShiftKernel::Parameters params(ps);
         // Currently a static in the subband proc
