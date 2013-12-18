@@ -158,11 +158,13 @@ if __name__ == "__main__":
     error = False
     print sys.argv
     try:
-        parmdb_1, parmdb_2, max_delta = sys.argv[1:4]
+        # We are comparing directories. 
+        ms_1, parmdb_1, ms_2, parmdb_2, max_delta = sys.argv[1:6]
     except Exception, e:
         print e
-        print "usage: python {0} parmdb_1_path "\
-            " parmdb_2_path [max_delta (type=float)]".format(sys.argv[0])
+        print "usage: python {0} ms_1_path parmdb_1_path "\
+            " ms_2_path parmdb_2_path [max_delta (type=float)]".format(sys.argv[0])
+        print "The measurement sets are not checked"
         sys.exit(1)
 
     max_delta = None
