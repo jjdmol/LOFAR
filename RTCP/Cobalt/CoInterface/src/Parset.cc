@@ -1407,9 +1407,9 @@ namespace LOFAR
       ps.add("_isCobalt", "T");
 
       ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
-             str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+             str(format("%u") % nrStreams(BEAM_FORMED_DATA)));
       ps.add("Observation.DataProducts.nrOfOutput_Correlated_", 
-             str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+             str(format("%u") % nrStreams(CORRELATED_DATA)));
 
       if (settings.correlator.enabled) {
         ps.add("Observation.Correlator.integrationInterval",
