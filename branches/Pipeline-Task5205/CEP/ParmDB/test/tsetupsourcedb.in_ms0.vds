@@ -1,0 +1,10 @@
+Name = tsetupsourcedb_tmp.ms0
+FileName = tsetupsourcedb_tmp.ms0
+FileSys = node1:/usr
+ClusterDesc = tsetupsourcedb.in_cd
+StartTime = 0
+EndTime = 2
+StepTime = 0.5
+NChan = [2]
+StartFreqs = [20,25]
+EndFreqs = [22,30]
