@@ -174,11 +174,11 @@ do
 
   # Ignore hosts that already have the parset
   # (for example, through NFS).
-  timeout 5s ssh -qn $h [ -e $PWD/$PARSET ] && continue;
+  timeout 5s ssh -qn $h [ -e $PARSET ] && continue;
 
   # Copy parset to remote node
-  echo "Copying parset to $h:$PWD"
-  timeout 30s scp -Bq $PARSET $h:$PWD || error "Could not copy parset to $h"
+  echo "Copying parset to $h:$PARSET"
+  timeout 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
 done
 
 # Run in the background to allow signals to propagate
