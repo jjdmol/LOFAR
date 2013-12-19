@@ -98,13 +98,13 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-mkdir $WORKING_DIR -p
-rm $WORKING_DIR/* -rf
+ssh lce072 $"mkdir $WORKING_DIR -p" 
+ssh lce072 $"rm $WORKING_DIR/* -rf" 
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
 
-if [ $SECONDHOST ]
+if [ $SECONDHOST  == true ]
 then
   ssh $HOST2 $"rm $WORKING_DIR/* -rf" 
   ssh $HOST2 $"mkdir $WORKING_DIR -p" 
@@ -163,7 +163,7 @@ echo "validating output"
 mkdir $WORKING_DIR/output_data/host1 -p
 
 scp -r $HOST1:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host1
-if [ $SECONDHOST ]
+if [ $SECONDHOST  == true ]
 then
   mkdir $WORKING_DIR/output_data/host2 -p
   scp -r $HOST2:$WORKING_DIR/output_data/* $WORKING_DIR/output_data/host2 
