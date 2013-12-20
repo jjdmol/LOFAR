@@ -449,26 +449,18 @@ namespace LOFAR
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
-      dumpBuffer(firstFFTShiftBuffers.output, "firstFFTShift.dat");
-
       firstFFT.enqueue(input.blockID, counters.firstFFT);
-      dumpBuffer(firstFFTShiftBuffers.output, "firstFFT.dat");
 
       delayCompensationKernel->enqueue(
         input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
-      dumpBuffer(delayCompensationBuffers.output, "delayCompensation.dat");
 
       secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
-      dumpBuffer(secondFFTShiftBuffers.output, "secondFFTShift.dat");
-
       secondFFT.enqueue(input.blockID, counters.secondFFT);
-      dumpBuffer(secondFFTShiftBuffers.output, "secondFFT.dat");
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
-      dumpBuffer(bandPassCorrectionBuffers.output, "bandPassCorrection.dat");
 
       // ********************************************************************
       // coherent stokes kernels
@@ -479,6 +471,7 @@ namespace LOFAR
           ps.settings.subbands[subband].SAP);
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
+
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
         inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
 
@@ -501,15 +494,11 @@ namespace LOFAR
         // incoherent stokes kernels
         incoherentTranspose->enqueue(
           input.blockID, counters.incoherentStokesTranspose);
-        dumpBuffer(incoherentTransposeBuffers.output, "incoherentTranspose.dat");
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
-        dumpBuffer(incoherentTransposeBuffers.output, "incoherentInverseFFT.dat");
-
         incoherentInverseFFTShiftKernel->enqueue(
           input.blockID, counters.incoherentInverseFFTShift);
-        dumpBuffer(incoherentTransposeBuffers.output, "incoherentInverseFFTShift.dat");
 
         if (incoherentStokesPPF) 
         {
