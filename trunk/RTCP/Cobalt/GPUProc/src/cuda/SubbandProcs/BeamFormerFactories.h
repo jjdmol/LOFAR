@@ -50,7 +50,7 @@ namespace LOFAR
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
-      KernelFactory<FFTShiftKernel> fftShiftKernel;
+      KernelFactory<FFTShiftKernel> fftShift;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
       KernelFactory<IncoherentStokesKernel> incoherentStokes;
@@ -74,7 +74,7 @@ namespace LOFAR
       delayCompensationParams(const Parset &ps) const;
 
       FFTShiftKernel::Parameters
-        FFTShiftKernelParams(const Parset &ps) const;
+      fftShiftParams(const Parset &ps) const;
 
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;

@@ -37,6 +37,7 @@
 #include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
+#include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
@@ -90,18 +91,22 @@ namespace LOFAR
 
         // gpu kernel counters
         PerformanceCounter intToFloat;
+        PerformanceCounter firstFFTShift;
         PerformanceCounter firstFFT;
         PerformanceCounter delayBp;
+        PerformanceCounter secondFFTShift;
         PerformanceCounter secondFFT;
         PerformanceCounter correctBandpass;
         PerformanceCounter beamformer;
         PerformanceCounter transpose;
         PerformanceCounter inverseFFT;
+        PerformanceCounter inverseFFTShift;
         PerformanceCounter firFilterKernel;
         PerformanceCounter finalFFT;
         PerformanceCounter coherentStokes;
 
         PerformanceCounter incoherentInverseFFT;
+        PerformanceCounter incoherentInverseFFTShift;
         PerformanceCounter incoherentFirFilterKernel;
         PerformanceCounter incoherentFinalFFT;
         PerformanceCounter incoherentStokes;
@@ -149,12 +154,20 @@ namespace LOFAR
       IntToFloatKernel::Buffers intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 
+      // First FFT-shift
+      FFTShiftKernel::Buffers firstFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
+
       // First (64 points) FFT
       FFT_Kernel firstFFT;
 
       // Delay compensation
       DelayAndBandPassKernel::Buffers delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
+
+      // Second FFT-shift
+      FFTShiftKernel::Buffers secondFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
 
       // Second (64 points) FFT
       FFT_Kernel secondFFT;
@@ -182,6 +195,10 @@ namespace LOFAR
       // inverse (4k points) FFT
       FFT_Kernel inverseFFT;
 
+      // inverse FFT-shift
+      FFTShiftKernel::Buffers inverseFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
+
       // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devFilterWeights;
       gpu::DeviceMemory devFilterHistoryData;
@@ -204,6 +221,10 @@ namespace LOFAR
 
       // Inverse (4k points) FFT
       FFT_Kernel incoherentInverseFFT;
+
+      // Inverse FFT-shift
+      FFTShiftKernel::Buffers incoherentInverseFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devIncoherentFilterWeights;

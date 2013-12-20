@@ -23,6 +23,7 @@
 
 #include <complex>
 #include <cmath>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -39,16 +40,20 @@ using namespace LOFAR::TYPES;
 template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
-  double freq = 1.0 / 4.0; // in samples
-  // double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double amp = (1 << (nrBits - 1)) - 1;
-
+#if 1 // Toggle to experiment with pulse like input
+  // Sine wave
+  // double freq = 1.0 / 4.0; // in samples
+  double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double angle = (double)t * 2.0 * M_PI * freq;
-
   double s = ::sin(angle);
   double c = ::cos(angle);
-
   return T(::round(amp * c), ::round(amp * s));
+#else
+  // Pulse train
+  if (t % (2 * 64 + 17) == 0) return T(amp);
+  else return T(0);
+#endif
 }
 
 int main() {
@@ -152,7 +157,7 @@ int main() {
   // Block number: 0 .. inf
   in.blockID.block = 0;
 
- // Subband index in the observation: [0, ps.nrSubbands())
+  // Subband index in the observation: [0, ps.nrSubbands())
   in.blockID.globalSubbandIdx = 0;
 
   // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
@@ -206,9 +211,10 @@ int main() {
   for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
       for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(fpEquals(out[0][s][t][c], outVal), 
+        ASSERTSTR(fpEquals(out[0][s][t][c], outVal, 1e-4f), 
                   "out[" << s << "][" << t << "][" << c << "] = " << 
-                  out[0][s][t][c] << "; outVal = " << outVal);
+                  setprecision(12) << out[0][s][t][c] << 
+                  "; outVal = " << outVal);
   
   return 0;
 }
