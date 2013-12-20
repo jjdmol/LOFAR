@@ -98,6 +98,11 @@ namespace LOFAR
       intToFloatBuffers(devInput.inputSamples, devB),
       intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
 
+      // FFTShift: B -> B
+      firstFFTShiftBuffers(devB, devB),
+      firstFFTShiftKernel(
+        factories.fftShift.create(queue, firstFFTShiftBuffers)),
+
       // FFT: B -> B
       firstFFT(queue,
         ps.settings.beamFormer.nrDelayCompensationChannels,
@@ -111,6 +116,11 @@ namespace LOFAR
                                devInput.phase0s, devNull),
       delayCompensationKernel(
         factories.delayCompensation.create(queue, delayCompensationBuffers)),
+
+      // FFTShift: A -> A
+      secondFFTShiftBuffers(devA, devA),
+      secondFFTShiftKernel(
+        factories.fftShift.create(queue, secondFFTShiftBuffers)),
 
       // FFT: A -> A
       secondFFT(queue,
@@ -166,6 +176,12 @@ namespace LOFAR
          ps.nrSamplesPerSubband() /
          ps.settings.beamFormer.nrHighResolutionChannels),
          false, coherentTransposeBuffers.output),
+
+      // fftshift: C/D -> C/D (in-place) = transposeBuffers.output
+      inverseFFTShiftBuffers(
+        coherentTransposeBuffers.output, coherentTransposeBuffers.output),
+      inverseFFTShiftKernel(
+        factories.fftShift.create(queue, inverseFFTShiftBuffers)),
 
       // FIR filter: D/C -> C/D
       //
@@ -224,6 +240,11 @@ namespace LOFAR
         (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
          ps.settings.beamFormer.nrHighResolutionChannels),
         false, devA),
+
+      // inverse FFTShift: A -> A
+      incoherentInverseFFTShiftBuffers(devA, devA),
+      incoherentInverseFFTShiftKernel(
+        factories.fftShift.create(queue, incoherentInverseFFTShiftBuffers)),
 
       // FIR filter: A -> B
       devIncoherentFilterWeights(
@@ -335,17 +356,21 @@ namespace LOFAR
     BeamFormerSubbandProc::Counters::Counters(gpu::Context &context)
       :
     intToFloat(context),
+    firstFFTShift(context),
     firstFFT(context),
     delayBp(context),
+    secondFFTShift(context),
     secondFFT(context),
     correctBandpass(context),
     beamformer(context),
     transpose(context),
     inverseFFT(context),
+    inverseFFTShift(context),
     firFilterKernel(context),
     finalFFT(context),
     coherentStokes(context),
     incoherentInverseFFT(context),
+    incoherentInverseFFTShift(context),
     incoherentFirFilterKernel(context),
     incoherentFinalFFT(context),
     incoherentStokes(context),
@@ -362,13 +387,16 @@ namespace LOFAR
       LOG_INFO_STR(
         "**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
         std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
+        std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
         std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
+        std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
         std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
         std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<
         std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
         std::setw(20) << "(transpose)" << transpose.stats << endl <<
         std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
+        std::setw(20) << "(inverseFFTShift)" << inverseFFTShift.stats << endl <<
         std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
         std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
         std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
@@ -376,6 +404,7 @@ namespace LOFAR
         std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
         std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl <<
         std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
+        std::setw(20) << "(incoherentInverseFFTShift)" << incoherentInverseFFTShift.stats << endl <<
         std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
         std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT.stats << endl <<
         std::setw(20) << "(incoherentStokes)" << incoherentStokes.stats << endl <<
@@ -419,6 +448,7 @@ namespace LOFAR
       // Otherwise, a kernel arg may not be set...
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
+      firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
       firstFFT.enqueue(input.blockID, counters.firstFFT);
 
       delayCompensationKernel->enqueue(
@@ -426,6 +456,7 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
+      secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
       secondFFT.enqueue(input.blockID, counters.secondFFT);
 
       bandPassCorrectionKernel->enqueue(
@@ -440,7 +471,9 @@ namespace LOFAR
           ps.settings.subbands[subband].SAP);
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
+
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+        inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
 
         if (coherentStokesPPF) 
         {
@@ -464,6 +497,8 @@ namespace LOFAR
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
+        incoherentInverseFFTShiftKernel->enqueue(
+          input.blockID, counters.incoherentInverseFFTShift);
 
         if (incoherentStokesPPF) 
         {
