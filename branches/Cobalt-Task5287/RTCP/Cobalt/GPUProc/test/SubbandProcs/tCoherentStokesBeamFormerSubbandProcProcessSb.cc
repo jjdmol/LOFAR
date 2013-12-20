@@ -40,16 +40,20 @@ using namespace LOFAR::TYPES;
 template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
-  double freq = 1.0 / 4.0; // in samples
-  // double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double amp = (1 << (nrBits - 1)) - 1;
-
+#if 1
+  // Sine wave
+  // double freq = 1.0 / 4.0; // in samples
+  double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double angle = (double)t * 2.0 * M_PI * freq;
-
   double s = ::sin(angle);
   double c = ::cos(angle);
-
   return T(::round(amp * c), ::round(amp * s));
+#else
+  // Pulse train
+  if (t % (2 * 64 + 17) == 0) return T(amp);
+  else return T(0);
+#endif
 }
 
 int main() {
@@ -219,7 +223,7 @@ int main() {
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
     {
-      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal),
+      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1e-4f),
         "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
         out[tab][s][t][c] << "; outVal = " << outVal);
     }
