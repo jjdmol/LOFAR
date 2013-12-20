@@ -136,7 +136,7 @@ sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
 
 # copy parset to working dir (to allow output of meta information):
-cp /data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset $"$WORKING_DIR/$PIPELINE.parset"
+cp /data/lofar/testdata/regression_test_runner/$PIPELINE/$PIPELINE.parset $"$WORKING_DIR/$PIPELINE.parset" ||  { echo "The pipeline returned a non zero exit value, aborting test" ; exit 1; }
 
 # update the parset to reflect to correct input data set location
 # Add the hosts to run the pipeline on
