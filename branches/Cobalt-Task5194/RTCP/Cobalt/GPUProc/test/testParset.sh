@@ -120,7 +120,7 @@ function parse_logs
 
       for f in *.MS
       do
-        $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
+        $testdir/cmpfloat --type=cfloat --epsilon=$EPSILON --verbose `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
       done
     done
   fi

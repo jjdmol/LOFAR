@@ -1,4 +1,4 @@
-//# cmpfloat.cc
+//# cmpfloat.cc: compare floating point values between two binary files
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,152 +21,334 @@
 //#include <lofar_config.h>
 
 #include <cstdlib>
+#include <complex>
+#include <string>
+#include <vector>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <limits>
 
 #include "fpequals.h"
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ifstream;
+namespace {
 
+using namespace std;
 using LOFAR::Cobalt::fpEquals;
 
+struct args {
+  string filename1;
+  string filename2;
+  enum type {FLOAT, DOUBLE, CFLOAT, CDOUBLE} type;
+  size_t skip;
+  size_t nvals;
+  double epsilon;
+  bool verbose;
+};
 
-int main(int argc, char *argv[])
-{
-  cerr.precision(8); // print full float precision (7 + the 0.).
+void pr_usage(const char* progname) {
+  cerr << "Usage: " << progname << " [--type=float|double|cfloat|cdouble]"
+                                   " [--skip=bytes] [--size=nvals]"
+                                   " [--epsilon=fpval] [--verbose] file1 file2" << endl;
+  cerr << "  --type     interpret input data as array of specified type" << endl;
+  cerr << "             cfloat means complex float. Default: double" << endl;
+  cerr << "  --skip     number of bytes to skip before comparison starts. Default: 0" << endl;
+  cerr << "  --size     must compare number of values of type. Default: until EOF" << endl;
+  cerr << "  --epsilon  maximum absolute difference tolerance. Default: std::numeric_limits<T>::epsilon()" << endl;
+  cerr << "  --verbose  print some info to stdout, regardless of exit status" << endl;
+}
 
-  // Default epsilon.
-  double epsilon = std::numeric_limits<float>::epsilon();
+bool parseArgs(int argc, char *argv[], struct args &args) {
+  // defaults
+  args.type = args.DOUBLE;
+  args.skip = 0;
+  args.nvals = std::numeric_limits<size_t>::max();
+  args.epsilon = std::numeric_limits<double>::epsilon();
+  args.verbose = false;
 
-  if (argc < 3 || argc > 4)
-  {
-    cerr << "Usage: " << argv[0] << " [" << epsilon << "] <file1> <file2>" << endl;
-    cerr << "  where the optional floating point argument overrides the comparison epsilon" << endl;
-    return 1;
+  const string typePrefix("--type=");
+  const string skipPrefix("--skip=");
+  const string sizePrefix("--size=");
+  const string epsilonPrefix("--epsilon=");
+  const string verbosePrefix("--verbose");
+
+  bool ok = true;
+  bool epsSet = false;
+  unsigned nfiles = 0;
+
+  for (int i = 1; i < argc; i++) {
+    string opt(argv[i]);
+    string val;
+
+    if (opt.compare(0, typePrefix.size(), typePrefix) == 0) {
+      val = opt.erase(0, typePrefix.size());
+
+      if (val == "float") {
+        args.type = args.FLOAT;
+        if (!epsSet)
+          args.epsilon = std::numeric_limits<float>::epsilon();
+      } else if (val == "double") {
+        args.type = args.DOUBLE;
+        if (!epsSet)
+          args.epsilon = std::numeric_limits<double>::epsilon();
+      } else if (val == "cfloat") {
+        args.type = args.CFLOAT;
+        if (!epsSet)
+          args.epsilon = std::numeric_limits<float>::epsilon();
+      } else if (val == "cdouble") {
+        args.type = args.CDOUBLE;
+        if (!epsSet)
+          args.epsilon = std::numeric_limits<double>::epsilon();
+      } else {
+        cerr << "Error: invalid value in --type argument: " << val << endl;
+        ok = false;
+      }
+    } else if (opt.compare(0, skipPrefix.size(), skipPrefix) == 0) {
+      val = opt.erase(0, skipPrefix.size());
+      istringstream iss(val);
+      iss >> args.skip;
+      if (!iss.eof() || (ssize_t)args.skip < 0) {
+        cerr << "Error: invalid value in --skip argument: " << val << endl;
+        ok = false;
+      }
+    } else if (opt.compare(0, sizePrefix.size(), sizePrefix) == 0) {
+      val = opt.erase(0, sizePrefix.size());
+      istringstream iss(val);
+      iss >> args.nvals;
+      if (!iss.eof() || (ssize_t)args.nvals < 0) {
+        cerr << "Error: invalid value in --size argument: " << val << endl;
+        ok = false;
+      }
+    } else if (opt.compare(0, epsilonPrefix.size(), epsilonPrefix) == 0) {
+      val = opt.erase(0, epsilonPrefix.size());
+      istringstream iss(val);
+      iss >> args.epsilon;
+      if (!iss.eof()) {
+        cerr << "Error: invalid value in --epsilon argument: " << val << endl;
+        ok = false;
+      } else {
+        std::abs(args.epsilon);
+        epsSet = true;
+      }
+    } else if (opt == verbosePrefix) {
+      args.verbose = true;
+    } else { // filename
+      if (nfiles == 0) {
+        args.filename1 = opt;
+      } else if (nfiles == 1) {
+        args.filename2 = opt;
+      }
+      nfiles += 1;
+    }
   }
 
-  char *filename1;
-  char *filename2;
+  if (nfiles != 2) {
+    cerr << "Error: need 2 file arguments, got " << nfiles << endl;
+    ok = false;
+  }
 
-  if (argc == 3)
-  {
-    filename1 = argv[1];
-    filename2 = argv[2];
-  } else { // argc == 4
-    filename1 = argv[2];
-    filename2 = argv[3];
+  return ok;
+}
 
-    epsilon = std::atof(argv[1]);
-    if (epsilon <= 0.0 || epsilon > 1.0)
-    {
-      cerr << "Epsilon command line argument is out of range" << endl;
-      return 1;
+template <typename T>
+bool compareValues(T v1, T v2, double epsilon, size_t pos,
+                   T& maxFactor, T& minFactor) {
+  if (!fpEquals(v1, v2, (T)epsilon)) {
+    cerr << "Error: value diff beyond epsilon at compared value " << pos << ": "
+         << v1 << " " << v2 << endl;
+
+    T factor = v2 / v1; // inf is fine, NaN if eps was set to 0 or odd data
+    if (maxFactor == T(1.0)) {
+      // first unequal val
+      maxFactor = minFactor = factor;
+    } else if (factor > maxFactor) {
+      maxFactor = factor;
+    } else if (factor < minFactor) {
+      minFactor = factor;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+// Note the plural form of the complex identifiers: both factors are in the cval
+template <typename T>
+bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
+                   complex<T>& maxFactors, complex<T>& minFactors) {
+  if (!fpEquals(v1, v2, (T)epsilon)) {
+    cerr << "Error: value diff beyond epsilon at compared value " << pos << ": "
+         << v1 << " " << v2 << endl;
+
+    T realFactor = v2.real() / v1.real(); // idem as above
+    T imagFactor = v2.imag() / v1.imag(); // idem
+    if (maxFactors == T(1.0)) {
+      // first unequal val
+      maxFactors.real() = minFactors.real() = realFactor;
+      maxFactors.imag() = minFactors.imag() = imagFactor;
     } else {
-      cout << "Using an epsilon of " << epsilon << endl;
-    }
-  }
-  float eps = (float)epsilon; // atm, we only cmp single precision floats
-
-  ifstream ifs1(filename1, std::ios::binary);
-  if (!ifs1)
-  {
-    cerr << "Failed to open file " << filename1 << endl;
-    return 1;
-  }
-
-  ifstream ifs2(filename2, std::ios::binary);
-  if (!ifs2)
-  {
-    cerr << "Failed to open file " << filename2 << endl;
-    return 1;
-  }
-
-  const size_t bufLen = 2048;
-  float *buf1 = new float[bufLen];
-  float *buf2 = new float[bufLen];
-
-  int status = 0;
-  size_t total = 0;
-
-  float maxFactorOff = 0.0f;
-  float minFactorOff = 0.0f;
-
-  while (ifs1.good() && ifs2.good()) {
-    size_t len = bufLen;
-    size_t nbytes1, nbytes2;
-
-    ifs1.read(reinterpret_cast<char *>(buf1), bufLen);
-    nbytes1 = ifs1.gcount();
-
-    ifs2.read(reinterpret_cast<char *>(buf2), bufLen);
-    nbytes2 = ifs2.gcount();
-
-    if (nbytes1 == 0 || nbytes1 != nbytes2 ||
-        nbytes1 % sizeof(float) != 0 || nbytes2 % sizeof(float) != 0)
-    {
-      cerr << "Failed to read an equal amount of bytes of at least a float from both input streams" << endl;
-      status = 1;
-      break;
-    }
-
-    if (nbytes1 < len * sizeof(float))
-      len = nbytes1 / sizeof(float);
-
-    for (size_t i = 0; i < len; i++)
-    {
-      if (!fpEquals(buf1[i], buf2[i], eps))
-      {
-        cerr << "Error: value diff beyond eps at pos " << total + i << ": " << buf1[i] << " " << buf2[i] << endl;
-        status = 2;
-
-        // Try to detect a max and min factor to print at the end.
-        // If near, then the diff is probably scale only. Conj if -1 every odd...
-        float factor = buf1[i] / buf2[i];
-        if (maxFactorOff == 0.0f) {
-          // init
-          maxFactorOff = factor;
-          minFactorOff = factor;
-        } else if (factor > maxFactorOff) {
-          maxFactorOff = factor;
-        } else if (factor < minFactorOff) {
-          minFactorOff = factor;
-        }
+      if (realFactor > maxFactors.real()) {
+        maxFactors.real(realFactor);
+      } else if (realFactor < minFactors.real()) {
+        minFactors.real(realFactor);
+      }
+      if (imagFactor > maxFactors.imag()) {
+        maxFactors.imag(imagFactor);
+      } else if (realFactor < minFactors.imag()) {
+        minFactors.imag(imagFactor);
       }
     }
 
-    total += len;
+    return false;
   }
 
-  // If cmp error, see if we can easily detect a scale-only error.
-  if (status == 2)
-  {
-    const float facEps = 1e-1; // needs to be very loose as value pairs can be of any magnitude
-    if (std::abs(maxFactorOff - minFactorOff) < facEps)
-      cerr << "All errors of vals for this pair of files are within " <<
-              facEps << " to a factor " << 0.5f * (maxFactorOff + minFactorOff) << endl;
-    else
-      cerr << "No clear common factor among all errors: maxFactor=" <<
-              maxFactorOff << " minFactor=" << minFactorOff << endl;
+  return true;
+}
+
+template <typename T>
+void printCommonFactorMessage(const T& maxFactor, const T& minFactor) {
+  // If maxFactor and minFactor are near, then the diff is probably scale only.
+  const T facEps = (T)1e-1; // very loose as values can be of any magnitude
+  bool eq = fpEquals(maxFactor, minFactor, facEps);
+  T avgFac;
+  if (eq) {
+    avgFac = (T)0.5 * (maxFactor + minFactor);
+    cerr << "All errors of vals for this pair of files are within "
+         << facEps << " to a factor " << avgFac << " (inverse="
+         << (T)1.0 / avgFac << ')' << endl;
+  } else
+    cerr << "No clear common factor among all errors: maxFactor=" <<
+            maxFactor << "; minFactor=" << minFactor << endl;
+}
+
+// Note the plural form of the complex identifiers: both factors are in the cval
+template <typename T>
+void printCommonFactorMessage(const complex<T>& maxFactors,
+                              const complex<T>& minFactors) {
+  // If maxFactor and minFactor are near, then the diff is probably scale only.
+  // For complex types, also see if real and imag are *-1 of each other (conj).
+  const T facEps = (T)1e-1; // very loose as values can be of any magnitude
+  bool realEq = fpEquals(maxFactors.real(), minFactors.real(), facEps);
+  bool imagEq = fpEquals(maxFactors.imag(), minFactors.imag(), facEps);
+  T avgRealFac, avgImagFac;
+  if (realEq) {
+    avgRealFac = (T)0.5 * (maxFactors.real() + minFactors.real());
+    cerr << "All errors of real vals for this pair of files are within "
+         << facEps << " to a factor " << avgRealFac << " (inverse="
+         << (T)1.0 / avgRealFac << ')' << endl;
+  }
+  if (imagEq) {
+    avgImagFac = (T)0.5 * (maxFactors.imag() + minFactors.imag());
+    cerr << "All errors of imag vals for this pair of files are within "
+         << facEps << " to a factor " << avgImagFac << " (inverse="
+         << (T)1.0 / avgImagFac << ')' << endl;
+  }
+  if (realEq && imagEq && fpEquals(avgRealFac, -avgImagFac, facEps))
+      cerr << "Common real and imag factors appear to (also) differ roughly by "
+           << "a factor -1.0 (likely conjugation error)" << endl;
+  if (!(realEq && imagEq))
+    cerr << "No clear common factor among all errors: maxFactors="
+         << maxFactors << "; minFactors=" << minFactors << endl;
+}
+
+template <typename T>
+bool compareStreams(ifstream& ifs1, ifstream& ifs2, size_t skipped,
+             size_t nvals, double epsilon, bool verbose) {
+  bool ok = true;
+
+  cerr.precision(17); // print full double precision on errors
+  T maxFactor = T(1.0);
+  T minFactor = T(1.0);
+
+  size_t i;
+  for (i = 0; i < nvals; i++) {
+    T v1, v2;
+    ifs1.read(reinterpret_cast<char *>(&v1), sizeof(T));
+    ifs2.read(reinterpret_cast<char *>(&v2), sizeof(T));
+
+    // Simultaneous EOF is ok iff nvals wasn't set as prog arg (default is max).
+    bool eof1 = ifs1.eof();
+    bool eof2 = ifs2.eof();
+    if (eof1 && eof2 && nvals == std::numeric_limits<size_t>::max()) {
+      break;
+    } else if (eof1 || eof2) {
+      cerr << "Error: Unexpected EOF in (at least) one stream after comparing "
+           << i << " values" << endl;
+      ok = false;
+      break;
+    }
+
+    size_t nread1 = ifs1.gcount();
+    size_t nread2 = ifs2.gcount();
+    if (nread1 != nread2 || nread1 < sizeof(T)) {
+      cerr << "Failed to read enough data from both streams for another "
+           << "comparison after comparing " << i << " values" << endl;
+      ok = false;
+      break;
+    }
+
+    ok &= compareValues(v1, v2, epsilon, i, maxFactor, minFactor);
   }
 
-  if (!ifs1.eof())
-  {
-    cerr << "Error occurred while reading from file " << filename1 << endl;
-    status = 1;
+  if (verbose)
+    cout << "Compared " << i << " values (after skipping " << skipped
+         << " bytes)" << endl;
+
+  if (!ok && i > 0)
+    printCommonFactorMessage(maxFactor, minFactor);
+
+  return ok;
+}
+
+} // anon namespace
+
+int main(int argc, char *argv[]) {
+  struct args args;
+  if (!parseArgs(argc, argv, args)) {
+    cerr << endl;
+    pr_usage(argv[0]);
+    return 2;
   }
 
-  if (!ifs2.eof())
-  {
-    cerr << "Error occurred while reading from file " << filename2 << endl;
-    status = 1;
+  // open files
+  ifstream ifs1(args.filename1.c_str(), std::ios::binary);
+  if (!ifs1) {
+    cerr << "Failed to open file " << args.filename1 << endl;
+    return 2;
+  }
+  ifstream ifs2(args.filename2.c_str(), std::ios::binary);
+  if (!ifs2) {
+    cerr << "Failed to open file " << args.filename2 << endl;
+    return 2;
   }
 
-  delete[] buf2;
-  delete[] buf1;
+  // skip bytes (e.g. file header)
+  // Don't check, as it turns out that this does not fail if skip > file size.
+  ifs1.seekg(args.skip);
+  ifs2.seekg(args.skip);
 
-  return status;
+  // compare
+  if (args.verbose)
+    cout << "Comparing using an epsilon of " << args.epsilon << endl;
+  bool cmpOk;
+  if (args.type == args.FLOAT)
+    cmpOk = compareStreams<float>(ifs1, ifs2, args.skip, args.nvals,
+                                  args.epsilon, args.verbose);
+  else if (args.type == args.DOUBLE)
+    cmpOk = compareStreams<double>(ifs1, ifs2, args.skip, args.nvals,
+                                   args.epsilon, args.verbose);
+  else if (args.type == args.CFLOAT)
+    cmpOk = compareStreams<complex<float> >(ifs1, ifs2, args.skip, args.nvals,
+                                            args.epsilon, args.verbose);
+  else if (args.type == args.CDOUBLE)
+    cmpOk = compareStreams<complex<double> >(ifs1, ifs2, args.skip, args.nvals,
+                                             args.epsilon, args.verbose);
+  else {
+      cerr << "Internal error: unknown data type" << endl;
+      return 2;
+  }
+
+  return cmpOk ? 0 : 1;
 }
 
