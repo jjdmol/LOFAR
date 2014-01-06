@@ -66,6 +66,6 @@ echo "Test 9"
 ./cmpfloat --skip=8 --size=4 tcmpfloat-9.1.bin tcmpfloat-9.2.bin
 if [ $? -ne 1 ]; then echo "TEST ERROR: Test 9 (file too short after skip) failed"; status=1; fi
 
-if [ $status -eq 0 ]; then echo "\nAll tcmpfloat tests PASSED"; fi
+if [ $status -eq 0 ]; then echo -e "\nAll tcmpfloat tests PASSED"; fi
 exit $status
 

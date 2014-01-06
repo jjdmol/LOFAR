@@ -26,8 +26,8 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <limits>
+#include <boost/lexical_cast.hpp>
 
 #include "fpequals.h"
 
@@ -36,7 +36,7 @@ namespace {
 using namespace std;
 using LOFAR::Cobalt::fpEquals;
 
-struct args {
+struct Args {
   string filename1;
   string filename2;
   enum type {FLOAT, DOUBLE, CFLOAT, CDOUBLE} type;
@@ -58,7 +58,7 @@ void pr_usage(const char* progname) {
   cerr << "  --verbose  print some info to stdout, regardless of exit status" << endl;
 }
 
-bool parseArgs(int argc, char *argv[], struct args &args) {
+bool parseArgs(int argc, char *argv[], Args &args) {
   // defaults
   args.type = args.DOUBLE;
   args.skip = 0;
@@ -105,30 +105,33 @@ bool parseArgs(int argc, char *argv[], struct args &args) {
       }
     } else if (opt.compare(0, skipPrefix.size(), skipPrefix) == 0) {
       val = opt.erase(0, skipPrefix.size());
-      istringstream iss(val);
-      iss >> args.skip;
-      if (!iss.eof() || (ssize_t)args.skip < 0) {
+      try {
+        args.skip = boost::lexical_cast<size_t>(val);
+        if ((ssize_t)args.skip < 0)
+          throw boost::bad_lexical_cast();
+      } catch (boost::bad_lexical_cast& exc) {
         cerr << "Error: invalid value in --skip argument: " << val << endl;
         ok = false;
       }
     } else if (opt.compare(0, sizePrefix.size(), sizePrefix) == 0) {
       val = opt.erase(0, sizePrefix.size());
-      istringstream iss(val);
-      iss >> args.nvals;
-      if (!iss.eof() || (ssize_t)args.nvals < 0) {
+      try {
+        args.nvals = boost::lexical_cast<size_t>(val);
+        if ((ssize_t)args.nvals < 0)
+          throw boost::bad_lexical_cast();
+      } catch (boost::bad_lexical_cast& exc) {
         cerr << "Error: invalid value in --size argument: " << val << endl;
         ok = false;
       }
     } else if (opt.compare(0, epsilonPrefix.size(), epsilonPrefix) == 0) {
       val = opt.erase(0, epsilonPrefix.size());
-      istringstream iss(val);
-      iss >> args.epsilon;
-      if (!iss.eof()) {
+      try {
+        args.epsilon = boost::lexical_cast<double>(val);
+        args.epsilon = std::abs(args.epsilon);
+        epsSet = true;
+      } catch (boost::bad_lexical_cast& exc) {
         cerr << "Error: invalid value in --epsilon argument: " << val << endl;
         ok = false;
-      } else {
-        std::abs(args.epsilon);
-        epsSet = true;
       }
     } else if (opt == verbosePrefix) {
       args.verbose = true;
@@ -159,7 +162,7 @@ bool compareValues(T v1, T v2, double epsilon, size_t pos,
 
     T factor = v2 / v1; // inf is fine, NaN if eps was set to 0 or odd data
     if (maxFactor == T(1.0)) {
-      // first unequal val
+      // first unequal val, so 1.0 must be as initialized (not a factor)
       maxFactor = minFactor = factor;
     } else if (factor > maxFactor) {
       maxFactor = factor;
@@ -184,7 +187,7 @@ bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
     T realFactor = v2.real() / v1.real(); // idem as above
     T imagFactor = v2.imag() / v1.imag(); // idem
     if (maxFactors == T(1.0)) {
-      // first unequal val
+      // first unequal val, so 1.0 must be as initialized (not a factor)
       maxFactors.real() = minFactors.real() = realFactor;
       maxFactors.imag() = minFactors.imag() = imagFactor;
     } else {
@@ -209,7 +212,7 @@ bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
 template <typename T>
 void printCommonFactorMessage(const T& maxFactor, const T& minFactor) {
   // If maxFactor and minFactor are near, then the diff is probably scale only.
-  const T facEps = (T)1e-1; // very loose as values can be of any magnitude
+  const T facEps = (T)1e-1; // very loose as values can be of any magnitude (but too loose if no scale, yet min and max < 1e-1. The program then still exits non-zero, but possibly with the wrong message.)
   bool eq = fpEquals(maxFactor, minFactor, facEps);
   T avgFac;
   if (eq) {
@@ -258,8 +261,8 @@ bool compareStreams(ifstream& ifs1, ifstream& ifs2, size_t skipped,
   bool ok = true;
 
   cerr.precision(17); // print full double precision on errors
-  T maxFactor = T(1.0);
-  T minFactor = T(1.0);
+  T maxFactor = T(1.0); // cmp needs init; 1.0 is not a valid unequality factor
+  T minFactor = T(1.0); // symmetry / good practice, but not used
 
   size_t i;
   for (i = 0; i < nvals; i++) {
@@ -304,7 +307,7 @@ bool compareStreams(ifstream& ifs1, ifstream& ifs2, size_t skipped,
 } // anon namespace
 
 int main(int argc, char *argv[]) {
-  struct args args;
+  Args args;
   if (!parseArgs(argc, argv, args)) {
     cerr << endl;
     pr_usage(argv[0]);
