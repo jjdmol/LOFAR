@@ -251,6 +251,7 @@ namespace LOFAR {
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
       uint nSt   = info().antennaUsed().size();
+#pragma omp parallel for
       for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
