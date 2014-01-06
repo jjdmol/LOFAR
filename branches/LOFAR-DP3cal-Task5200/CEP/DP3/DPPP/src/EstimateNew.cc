@@ -47,7 +47,7 @@ namespace LOFAR {
       itsSolveStation.resize (nStation);
       itsUnknowns.resize (maxndir * nStation * 4 * 2);
       itsSolution.resize (itsUnknowns.size());
-      std::fill (itsSolution.begin(), itsSolution.end(), 0.);
+      std::fill (itsSolution.begin(), itsSolution.end(), 0);
       itsDerivIndex.resize (maxndir*4*2*4);
       itsM.resize  (maxndir*4);
       itsdM.resize (maxndir*4*4);
@@ -55,10 +55,11 @@ namespace LOFAR {
       itsdI.resize (maxndir*8);
     }
 
-    // Initialize the solution to 0 for sources/stations not to solve.
-    // At other places set to 1 where diagonal is 0.
+    // Initialize the solution to the defaultGain for sources/stations not to solve.
+    // Set to 0 and diagonal to defaultGaib for solvable ones if no propagation.
     void EstimateNew::initSolution (const vector<vector<int> >& unknownsIndex,
-                                    const vector<uint>& srcSet)
+                                    const vector<uint>& srcSet,
+				    double defaultGain)
     {
       uint dr=0;
       double* solution = &(itsSolution[0]);
@@ -68,14 +69,15 @@ namespace LOFAR {
           for (size_t st=0; st<itsNrStations; ++st) {
             if (unknownsIndex[dr][st] >= 0) {
               if (! itsPropagateSolution) {
-                std::fill (solution, solution+8, 0.);
+                std::fill (solution, solution+8, 0);
               }
               // Solvable; set diagonal to 1 if it is 0.
-              if (solution[0] == 0) solution[0] = 1;
-              if (solution[6] == 0) solution[6] = 1;
+              if (solution[0] == 0) solution[0] = defaultGain;
+              if (solution[6] == 0) solution[6] = defaultGain;
             } else {
               // Set non-solvable station-source to 0.
-              std::fill (solution, solution+8, 0.);
+              std::fill (solution, solution+8, 0);
+              solution[0] = solution[6] = defaultGain;
             }
             solution += 8;
           }
@@ -83,6 +85,31 @@ namespace LOFAR {
         } else {
           // Set entire non-solvable source to 0.
           std::fill (solution, solution + 8*itsNrStations, 0.);
+          solution += 8*itsNrStations;
+        }
+      }
+    }
+
+    // Clear the solution for unsolvable stations
+    // (essentially changing defaultGain to 0).
+    void EstimateNew::clearNonSolvable (const vector<vector<int> >& unknownsIndex,
+                                        const vector<uint>& srcSet)
+    {
+      uint dr=0;
+      double* solution = &(itsSolution[0]);
+      for (size_t i=0; i<itsNrDir; ++i) {
+        if (dr < srcSet.size()  &&  srcSet[dr] == i) {
+          // This source is to be solved.
+          for (size_t st=0; st<itsNrStations; ++st) {
+            if (unknownsIndex[dr][st] < 0) {
+              // Set non-solvable station-source to 0.
+              std::fill (solution, solution+8, 0);
+            }
+            solution += 8;
+          }
+          dr++;
+        } else {
+          // Skip entire source.
           solution += 8*itsNrStations;
         }
       }
@@ -159,9 +186,11 @@ namespace LOFAR {
                                 const_cursor<bool> flag,
                                 const_cursor<float> weight,
                                 const_cursor<dcomplex> mix,
+				double defaultGain,
+                                bool solveBoth,
                                 uint verbose)
     {
-      initSolution (unknownsIndex, srcSet);
+      initSolution (unknownsIndex, srcSet, defaultGain);
       // Determine if a station has to be solved for any source.
       itsSolveStation = false;
       size_t nUnknowns = 0;
@@ -194,7 +223,7 @@ namespace LOFAR {
           const size_t q = baselines->second;
           // Only compute if no autocorr and if stations need to be solved.
           ///if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) { ????
-          if (p != q  &&  (itsSolveStation[p] && itsSolveStation[q])) {
+          if (p != q) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (srcSet.size(), unknownsIndex,
                                               *baselines);
@@ -298,47 +327,43 @@ namespace LOFAR {
                     for (size_t dr=0; dr<nDirection; ++dr) {
                       bool do1 = unknownsIndex[dr][p] >= 0;
                       bool do2 = unknownsIndex[dr][q] >= 0;
-                      // Only generate equations if a station has to be solved
-                      // for this direction.
-                      if (do1 && do2) {
-                        // Look-up mixing weight.
-                        const dcomplex mix_weight = *mix;
-                        // Sum weighted model visibilities.
-                        visibility += mix_weight * itsM[dr * 4 + cr];
+                      // Look-up mixing weight.
+                      const dcomplex mix_weight = *mix;
+                      // Sum weighted model visibilities.
+                      visibility += mix_weight * itsM[dr * 4 + cr];
 
-                        // Compute weighted partial derivatives.
-                        if (do1) {
-                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
-                          itsdR[off]     = real(der);
-                          itsdI[off]     = imag(der);
-                          itsdR[off + 1] = -imag(der);
-                          itsdI[off + 1] = real(der);
-                          off += 2;
-                        }
-                        if (do2) {
-                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 1]);
-                          itsdR[off]     = real(der);
-                          itsdI[off]     = imag(der);
-                          itsdR[off + 1] = -imag(der);
-                          itsdI[off + 1] = real(der);
-                          off += 2;
-                        }
-                        if (do1) {
-                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
-                          itsdR[off]     = real(der);
-                          itsdI[off]     = imag(der);
-                          itsdR[off + 1] = imag(der);  // conjugate
-                          itsdI[off + 1] = -real(der);
-                          off += 2;
-                        }
-                        if (do2) {
-                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 3]);
-                          itsdR[off]     = real(der);
-                          itsdI[off]     = imag(der);
-                          itsdR[off + 1] = imag(der);
-                          itsdI[off + 1] = -real(der);
-                          off += 2;
-                        }
+                      // Compute weighted partial derivatives.
+                      if (do1) {
+                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
+                        itsdR[off]     = real(der);
+                        itsdI[off]     = imag(der);
+                        itsdR[off + 1] = -imag(der);
+                        itsdI[off + 1] = real(der);
+                        off += 2;
+                      }
+                      if (do2) {
+                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 1]);
+                        itsdR[off]     = real(der);
+                        itsdI[off]     = imag(der);
+                        itsdR[off + 1] = -imag(der);
+                        itsdI[off + 1] = real(der);
+                        off += 2;
+                      }
+                      if (do1) {
+                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
+                        itsdR[off]     = real(der);
+                        itsdI[off]     = imag(der);
+                        itsdR[off + 1] = imag(der);  // conjugate
+                        itsdI[off + 1] = -real(der);
+                        off += 2;
+                      }
+                      if (do2) {
+                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 3]);
+                        itsdR[off]     = real(der);
+                        itsdI[off]     = imag(der);
+                        itsdR[off + 1] = imag(der);
+                        itsdI[off + 1] = -real(der);
+                        off += 2;
                       }
                       // Move to next source direction.
                       mix.forward(1);
@@ -437,6 +462,7 @@ namespace LOFAR {
       }
       bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT  ||
                         solver.isReady() == casa::LSQFit::DERIVLEVEL);
+      ///      clearNonSolvable (unknownsIndex, srcSet);
       return converged;
     }
 

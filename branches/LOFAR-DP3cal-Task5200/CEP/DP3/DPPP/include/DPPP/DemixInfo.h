@@ -1,4 +1,4 @@
-//# DemixInfo.h: Struct to hold the common demix variables
+//# DemixInfo.h: DPPP struct to hold the common demix variables
 //# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -25,24 +25,15 @@
 #define DPPP_DEMIXINFO_H
 
 // @file
-// @brief DPPP step class to average in time and/or freq
+// @brief DPPP struct to hold the common demix variables
 
+#include <DPPP/DPInfo.h>
+#include <DPPP/BaselineSelection.h>
 #include <DPPP/Baseline.h>
-#include <DPPP/DPInput.h>
-#include <DPPP/DPBuffer.h>
 #include <DPPP/Patch.h>
-#include <DPPP/PhaseShift.h>
-#include <DPPP/Filter.h>
+#include <Common/ParameterSet.h>
 
-#include <casa/Arrays/Cube.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
+#include <casa/Arrays/Vector.h>
 
 namespace LOFAR {
   namespace DPPP {
@@ -93,9 +84,11 @@ namespace LOFAR {
       double ratio2() const                      {return itsRatio2;}
       double ateamAmplThreshold() const          {return itsAteamAmplThreshold;}
       double targetAmplThreshold() const         {return itsTargetAmplThreshold;}
+      double defaultGain() const                 {return itsDefaultGain;}
       bool   isAteamNearby() const               {return itsIsAteamNearby;}
       bool   propagateSolution() const           {return itsPropagateSolution;}
       bool   applyBeam() const                   {return itsApplyBeam;}
+      bool   solveBoth() const                   {return itsSolveBoth;}
       bool   doSubtract() const                  {return itsDoSubtract;}
       const BaselineSelection& selBL() const     {return itsSelBL;}
       const vector<int>& uvwSplitIndex() const   {return itsUVWSplitIndex;}
@@ -164,31 +157,33 @@ namespace LOFAR {
       double                  itsCosTargetDelta;
       double                  itsAngdistThreshold;
       double                  itsAngdistRefFreq;
+      double                  itsDefaultGain;
       bool                    itsIsAteamNearby;
       bool                    itsPropagateSolution;
       bool                    itsApplyBeam;
+      bool                    itsSolveBoth;    //# solve if both stat solvable
       bool                    itsDoSubtract;
       uint                    itsTargetHandling;
-      uint                    itsVerbose;            //# trace verbosity level
-      uint                    itsMaxIter;            //# max #iter in solve
-      uint                    itsMinNBaseline;       //# min #baselines for solve
-      uint                    itsMinNStation;        //# min #stations for solve
+      uint                    itsVerbose;           //# trace verbosity level
+      uint                    itsMaxIter;           //# max #iter in solve
+      uint                    itsMinNBaseline;      //# min #baselines for solve
+      uint                    itsMinNStation;       //# min #stations for solve
       uint                    itsNStation;
       uint                    itsNBl;
       uint                    itsNCorr;
       uint                    itsNChanIn;
-      uint                    itsNChanAvgSubtr;      //# subtract averaging
-      uint                    itsNChanAvg;           //# demix averaging
+      uint                    itsNChanAvgSubtr;     //# subtract averaging
+      uint                    itsNChanAvg;          //# demix averaging
       uint                    itsNChanOutSubtr;
       uint                    itsNChanOut;
-      uint                    itsNTimeAvgSubtr;      //# subtract averaging
-      uint                    itsNTimeAvg;           //# demix averaging
-      uint                    itsNTimeOutSubtr;      //# #output times per chunk
-      uint                    itsNTimeOut;           //# #demix times per chunk
-      uint                    itsChunkSize;          //# predict time step
-      uint                    itsNTimeChunk;         //# nr chunks in parallel
+      uint                    itsNTimeAvgSubtr;     //# subtract averaging
+      uint                    itsNTimeAvg;          //# demix averaging
+      uint                    itsNTimeOutSubtr;     //# #output times per chunk
+      uint                    itsNTimeOut;          //# #demix times per chunk
+      uint                    itsChunkSize;         //# predict time step
+      uint                    itsNTimeChunk;        //# nr chunks in parallel
       double                  itsTimeIntervalAvg;
-      Position                itsPhaseRef;           //# original phaseref
+      Position                itsPhaseRef;          //# original phaseref
       vector<Baseline>        itsBaselines;
       casa::Vector<bool>      itsSelTarget;     //# baselines in target estimate
       casa::Vector<double>    itsFreqDemix;
