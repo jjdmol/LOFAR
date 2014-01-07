@@ -146,6 +146,15 @@ namespace LOFAR {
       }
     }
 
+    MeasureHolder DPInfo::copyMeasure(const MeasureHolder fromMeas) {
+      Record rec;
+      String msg;
+      ASSERT (fromMeas.toRecord (msg, rec));
+      MeasureHolder mh2;
+      ASSERT (mh2.fromRecord (msg, rec));
+      return mh2;
+    }
+
     uint DPInfo::update (uint chanAvg, uint timeAvg)
     {
       if (chanAvg > itsNChan) {

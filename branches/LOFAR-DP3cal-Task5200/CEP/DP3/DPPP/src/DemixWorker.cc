@@ -238,31 +238,9 @@ namespace LOFAR {
       // same Measure object in multiple threads is not safe.
       // The only way to make a deep copy if using a MeasureHolder which
       // gets converted to/from a Record.
-      String msg;
-      {
-        Record rec;
-        MeasureHolder mh1(info.arrayPos());
-        ASSERT (mh1.toRecord (msg, rec));
-        MeasureHolder mh2;
-        ASSERT (mh2.fromRecord (msg, rec));
-        itsArrayPos = mh2.asMPosition();
-      }
-      {
-        Record rec;
-        MeasureHolder mh1(info.delayCenter());
-        ASSERT (mh1.toRecord (msg, rec));
-        MeasureHolder mh2;
-        ASSERT (mh2.fromRecord (msg, rec));
-        itsDelayCenter = mh2.asMDirection();
-      }
-      {
-        Record rec;
-        MeasureHolder mh1(info.tileBeamDir());
-        ASSERT (mh1.toRecord (msg, rec));
-        MeasureHolder mh2;
-        ASSERT (mh2.fromRecord (msg, rec));
-        itsTileBeamDir = mh2.asMDirection();
-      }
+      itsArrayPos = info.arrayPosCopy();
+      itsDelayCenter = info.delayCenterCopy();
+      itsTileBeamDir = info.tileBeamDirCopy();
       // Create the Measure ITRF conversion info given the array position.
       // The time and direction are filled in later.
       itsMeasFrame.set (itsArrayPos);
@@ -273,6 +251,8 @@ namespace LOFAR {
       // seem to be thread-safe.
       dir2Itrf(itsDelayCenter);
     }
+
+
 
     void DemixWorker::process (const DPBuffer* bufin, uint nbufin,
                                DPBuffer* bufout, vector<double>* solutions,
