@@ -187,11 +187,6 @@ int main(int argc, char **argv)
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
 
-  // Restrict access to (tmp build) files we create to owner
-  // JD: Don't do that! We want to be able to clean up each other's
-  // mess.
-  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
