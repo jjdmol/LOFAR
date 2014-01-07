@@ -61,6 +61,10 @@ echo "***************************"
 echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
+# Add the connection information for this test
+echo "Cobalt.Feedback.host=localhost" >> $testdir/tstartBGL.in_parset
+echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> $testdir/tstartBGL.in_parset
+echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> $testdir/tstartBGL.in_parset
 startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
 # PID file must be gone

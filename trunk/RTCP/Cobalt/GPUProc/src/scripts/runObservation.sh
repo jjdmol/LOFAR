@@ -174,11 +174,11 @@ do
 
   # Ignore hosts that already have the parset
   # (for example, through NFS).
-  timeout 5s ssh -qn $h [ -e $PARSET ] && continue;
+  timeout -k1 5s ssh -qn $h [ -e $PARSET ] && continue;
 
   # Copy parset to remote node
   echo "Copying parset to $h:$PARSET"
-  timeout 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
+  timeout -k1 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
 done
 
 # Run in the background to allow signals to propagate
@@ -215,29 +215,36 @@ echo "Result code of observation: $OBSRESULT"
 
 if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
 then
-  # Communicate result back to OnlineControl
-
-  ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
-  ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
-
-  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-
   if [ $OBSRESULT -eq 0 ]
   then
     # ***** Observation ran successfully
+    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
 
-    # 1. Copy LTA feedback file to ccu001
+    # Copy LTA feedback file to ccu001
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
+    FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
     echo "Copying feedback to $FEEDBACK_DEST"
-    timeout 30s scp $LOFARROOT/var/run/Observation${OBSID}_feedback $FEEDBACK_DEST
+    timeout -k2 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
+    FEEDBACK_RESULT=$?
+    if [ $FEEDBACK_RESULT -ne 0 ]
+    then
+      echo "Failed to copy file $FEEDBACK_FILE to $FEEDBACK_DEST (status: $FEEDBACK_RESULT)"
+      OBSRESULT=$FEEDBACK_RESULT
+    fi
+  fi
 
-    # 2. Signal success to OnlineControl
+  # Communicate result back to OnlineControl
+  ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
+
+  if [ $OBSRESULT -eq 0 ]
+  then
+    # Signal success to OnlineControl
     echo "Signalling success to $ONLINECONTROL_HOST"
     echo -n "FINISHED" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
   else
-    # ***** Observation failed for some reason
-
-    # 1. Signal failure to OnlineControl
+    # ***** Observation or sending feedback failed for some reason
+    # Signal failure to OnlineControl
     echo "Signalling failure to $ONLINECONTROL_HOST"
     echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
   fi
