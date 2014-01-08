@@ -37,6 +37,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
+#include <OutputProc/Package__Version.h>
 #include "GPUProcIO.h"
 #include "IOPriority.h"
 
@@ -56,6 +57,8 @@ char stdoutbuf[1024], stderrbuf[1024];
 int main(int argc, char *argv[])
 {
   INIT_LOGGER("outputProc");
+
+  LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
 
   CasaLogSink::attach();
 
