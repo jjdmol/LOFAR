@@ -259,7 +259,7 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
 #if NR_STATIONS_PER_PASS >= 19
     fcomplex weight_18;
-    if (first_station + 18 < NR_STATIONS)
+    if (first_station + 18 < NR_STATIONS) {
       double delay = (*delays)[sap][first_station + 18][tab];
       dcomplex weight = dphaseShift(frequency, delay);
       weight_18 = make_float2(weight.x, weight.y);
