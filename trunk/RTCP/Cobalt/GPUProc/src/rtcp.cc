@@ -19,7 +19,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <GPUProc/Package__Version.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -72,6 +71,7 @@
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
+#include <GPUProc/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
