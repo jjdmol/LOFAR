@@ -267,7 +267,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           //
           // Start with block -1, to allow the initialisation of historySamples,
           // etc for block 0.
-          ssize_t block = -1;
+          ssize_t block = 0;  // from -1
 
           size_t blockSize = ps.nrSamplesPerSubband();         
           LOG_INFO_STR("Time stamp before loop current: " << from + block * blockSize);
@@ -284,13 +284,14 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
             // Fetch end delays (start delays are set by the previous block, or
             // before the loop).
             delays.getNextDelays(*delaysAfterEnd);
+            LOG_INFO_STR("delays.getNextDelays(*delaysAfterEnd)");
 
             // Compute the next set of metaData and read_offsets from the new
             // delays pair.
             delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, metaDatas, read_offsets);
 
             //LOG_DEBUG_STR("Delays obtained");
-
+            LOG_INFO_STR("after generateMetaData");
             // Read the next block from the circular buffer.
             SmartPtr<struct BlockReader<SampleT>::LockedBlock> block(reader.block(current, current + blockSize, read_offsets));
 
@@ -298,15 +299,18 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
 #ifdef HAVE_MPI
             // Send the block to the receivers
+            LOG_INFO_STR("before sender.sendBlock<SampleT>(*block, metaDatas)");
             sender.sendBlock<SampleT>(*block, metaDatas);
+            LOG_INFO_STR("after sender.sendBlock<SampleT>(*block, metaDatas)");
 #else
             DirectInput::instance().sendBlock<SampleT>(stationIdx, *block, metaDatas);
 #endif
 
-            //LOG_INFO_STR("Block sent");
+            LOG_INFO_STR("Block sent");
 
             // Swap delay sets to accomplish delaysAtBegin = delaysAfterEnd
             swap(delaysAtBegin, delaysAfterEnd);
+            LOG_INFO_STR("swap done");
           }
 #ifdef HAVE_MPI
         }
