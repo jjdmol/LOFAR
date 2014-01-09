@@ -142,7 +142,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     return;
   }
 
-  LOG_INFO_STR(logPrefix << "Processing station data");
+  LOG_INFO_STR("sendInputToPipeline, Set up circular buffer ");
 
   const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
   const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
@@ -159,8 +159,10 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
   /*
    * Stream the data.
    */
+  LOG_INFO_STR("sendInputToPipeline, before omp parallel sections ");
   #pragma omp parallel sections num_threads(2)
   {
+    LOG_INFO_STR("sendInputToPipeline, before omp section");
     // Start a circular buffer
     #pragma omp section
     { 
