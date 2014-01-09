@@ -270,13 +270,16 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           ssize_t block = -1;
 
           size_t blockSize = ps.nrSamplesPerSubband();         
-          LOG_INFO_STR("Time stamp current: " << from + block * blockSize);
+          LOG_INFO_STR("Time stamp before loop current: " << from + block * blockSize);
           LOG_INFO_STR("sendInputToPipeline, blockSize: " << blockSize);
           LOG_INFO_STR("Time stamp (current + blockSize < to): " << (from + block * blockSize + blockSize < to));
           LOG_INFO_STR("Time stamp from " << from);
           LOG_INFO_STR("Time stamp to: " << to);
-          for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
-            LOG_DEBUG_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
+          for (TimeStamp current = from + block * blockSize;
+               current + blockSize < to;
+               current += blockSize, ++block) {
+            LOG_INFO_STR("current in loop:" << current);
+            LOG_INFO_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
 
             // Fetch end delays (start delays are set by the previous block, or
             // before the loop).
