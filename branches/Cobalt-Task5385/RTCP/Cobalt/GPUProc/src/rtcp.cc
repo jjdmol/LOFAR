@@ -416,20 +416,25 @@ int main(int argc, char **argv)
   LOG_INFO("===== LAUNCH =====");
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
-
+  LOG_INFO_STR("Processing subbands with new info from wouter" );
   #pragma omp parallel sections num_threads(2)
   {
+    LOG_INFO_STR(" #pragma omp parallel sections num_threads(2)");
     #pragma omp section
     {
       // Read and forward station data
+      LOG_INFO_STR("number of station from parset:" << ps.nrStations());
       #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat)
+      {
+        LOG_INFO_STR("sendInputToPipeline idx:" << stat);
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
     #pragma omp section
     {
+    LOG_INFO_STR("before pipeline->processObservation();" << subbandDistribution[rank].empty());
       // Process station data
       if (!subbandDistribution[rank].empty()) {
         pipeline->processObservation();
