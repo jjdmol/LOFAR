@@ -124,6 +124,7 @@ template<typename T> void PacketWriter<T>::writePacket( const struct RSP &packet
   board.stopWrite(end);
 
   ++nrWritten;
+  LOG_INFO_STR("Wrote packet: " + packet.timeStamp());
 }
 
 

@@ -356,6 +356,7 @@ DirectInput::DirectInput(const Parset &ps)
 template<typename T>
 void DirectInput::sendBlock(unsigned stationIdx, const struct BlockReader<T>::LockedBlock &block, const vector<SubbandMetaData> &metaDatas)
 {
+  LOG_INFO_STR("Received data for station: " + stationIdx);
   // Send the block to the stationDataQueues global object
   for (size_t subband = 0; subband < block.beamlets.size(); ++subband) {
     const struct Cobalt::Block<T>::Beamlet &beamlet = block.beamlets[subband];
