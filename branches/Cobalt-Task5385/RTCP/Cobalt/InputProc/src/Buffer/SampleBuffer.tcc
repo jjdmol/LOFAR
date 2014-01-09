@@ -145,7 +145,7 @@ namespace LOFAR
        *  noReadBefore(beamlet, begin);
        */
       (void)begin;
-
+      LOG_DEBUG_STR("startRead, synz = " << sync);
       if (sync) {
         ASSERT(beamlet < syncLock->readLock.size());
 
@@ -153,11 +153,11 @@ namespace LOFAR
         const BoardMode mode(T::bitMode());
         size_t boardNr = mode.boardIndex(beamlet);
 
-        DEBUG_SYNCLOCK("startRead(" << beamlet << ", " << begin << ", " << end << "): waits on board " << boardNr);
-
+        LOG_DEBUG_STR("startRead(" << beamlet << ", " << begin << ", " << end << "): waits on board " << boardNr);
+        LOG_DEBUG_STR("Before getting lock");
         syncLock->writeLock[boardNr].waitFor(end);
-
-        DEBUG_SYNCLOCK("startRead(" << beamlet << ", " << begin << ", " << end << "): reading from board " << boardNr);
+        LOG_DEBUG_STR("after getting lock");
+        LOG_DEBUG_STR("startRead(" << beamlet << ", " << begin << ", " << end << "): reading from board " << boardNr);
       }
     }
 
