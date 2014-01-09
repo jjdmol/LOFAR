@@ -108,6 +108,7 @@ namespace LOFAR {
       minFrom(from + *std::min_element(beamletOffsets.begin(), beamletOffsets.end())),
       maxTo(to + *std::max_element(beamletOffsets.begin(), beamletOffsets.end()))
     {
+      LOG_DEBUG_STR("LockedBlock(): Before asserts");
       this->from = from;
       this->to   = to;
 
@@ -118,23 +119,24 @@ namespace LOFAR {
       for (size_t i = 0; i < this->beamlets.size(); ++i) {
         this->beamlets[i] = getBeamlet(i, beamletOffsets[i]);
       }
-
+      LOG_DEBUG_STR("after fill static beamlet info");
       // clear path for writer
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
         reader.buffer.noReadBefore(*b, minFrom);
       }
-
+      LOG_DEBUG_STR("clear path for writer");
       // signal read intent on all buffers
       for (std::vector<size_t>::const_iterator b = reader.beamlets.begin(); b != reader.beamlets.end(); ++b) {
         reader.buffer.startRead(*b, minFrom, maxTo);
       }
 
-      //LOG_DEBUG_STR("Locked block " << this->from << " to " << this->to);
+      LOG_DEBUG_STR("Locked block " << this->from << " to " << this->to);
 
       // record initial flags
       for (size_t i = 0; i < this->beamlets.size(); ++i) {
         this->beamlets[i].flagsAtBegin = flags(i);
       }
+      LOG_DEBUG_STR("LockedBlock construction done");
     }
 
 
@@ -213,6 +215,7 @@ namespace LOFAR {
     template<typename T>
     SmartPtr<typename BlockReader<T>::LockedBlock> BlockReader<T>::block( const TimeStamp &from, const TimeStamp &to, const std::vector<ssize_t> &beamletOffsets )
     {
+      LOG_DEBUG_STR("block(): Before asserts");
       ASSERT( to > from );
       ASSERTSTR( (to - from) < buffer.nrSamples, 
                  "Requested to read block " << from << " to " << to << 
@@ -221,7 +224,9 @@ namespace LOFAR {
                  " wide" );
 
       // wait for block start (but only in real-time mode)
-      if (!buffer.sync) {
+      LOG_DEBUG_STR("buffer.sync: " << buffer.sync);
+      if (!buffer.sync) 
+      {
         const TimeStamp deadline = to + maxDelay;
 
         LOG_DEBUG_STR("Waiting until " << deadline << " for " << from << " to " << to);
