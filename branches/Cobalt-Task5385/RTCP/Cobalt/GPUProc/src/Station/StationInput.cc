@@ -270,9 +270,10 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           ssize_t block = -1;
 
           size_t blockSize = ps.nrSamplesPerSubband();         
-          LOG_INFO_STR("Time stamp current: " << current);
+          LOG_INFO_STR("Time stamp current: " << from + block * blockSize);
           LOG_INFO_STR("sendInputToPipeline, blockSize: " << blockSize);
-          LOG_INFO_STR("Time stamp (current + blockSize < to): " << (current + blockSize < to));
+          LOG_INFO_STR("Time stamp (current + blockSize < to): " << (from + block * blockSize + blockSize < to));
+          LOG_INFO_STR("Time stamp from " << from);
           LOG_INFO_STR("Time stamp to: " << to);
           for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
             LOG_DEBUG_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
