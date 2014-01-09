@@ -201,7 +201,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 #ifdef HAVE_MPI
         // All receiver ranks -- we have a dedicated thread for each one
         const vector<int> targetRanks(keys(subbandDistribution));
-
+        LOG_INFO_STR("sendInputToPipeline, Set up circular buffers: " << targetRanks.size());
         // Send to all receivers in PARALLEL for higher performance
 #       pragma omp parallel for num_threads(targetRanks.size())
         for(size_t i = 0; i < targetRanks.size(); ++i) {
@@ -238,7 +238,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           for( size_t i = 0; i < targetSubbands.size(); ++i) {
             targetBeamlets[i] = beamlets[targetSubbands[i]];
           }
-
+          LOG_INFO_STR("sendInputToPipeline, reader ");
           BlockReader<SampleT> reader(settings, mode, targetBeamlets, 1.0);
 
           /*
@@ -246,7 +246,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
            */
           Delays delays(ps, stationIdx, from, ps.nrSamplesPerSubband());
           delays.start();
-
+          LOG_INFO_STR("sendInputToPipeline, delays ");
           // We keep track of the delays at the beginning and end of each block.
           // After each block, we'll swap the afterEnd delays into atBegin.
           Delays::AllDelays delaySet1(ps), delaySet2(ps);
@@ -259,7 +259,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           /*
            * Transfer all blocks.
            */
-
+          LOG_INFO_STR("sendInputToPipeline, getNextDelays ");
           vector<SubbandMetaData> metaDatas(targetSubbands.size());
           vector<ssize_t> read_offsets(targetSubbands.size());
 
@@ -270,6 +270,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           ssize_t block = -1;
 
           size_t blockSize = ps.nrSamplesPerSubband();
+          LOG_INFO_STR("sendInputToPipeline, ps.nrSamplesPerSubband(): " << ps.nrSamplesPerSubband());
           for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
             LOG_DEBUG_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
 
