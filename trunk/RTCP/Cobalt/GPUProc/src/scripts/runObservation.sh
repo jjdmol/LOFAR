@@ -176,7 +176,7 @@ do
   [ "$h" == "`hostname`" ] && continue;
 
   # Ignore hosts that already have the parset (for example, through NFS).
-# Disabled: buggy for manual tests that re-use a localhome parset filename, but have updated the file content.
+  # NOTE: Buggy for manual tests that re-use a localhome parset filename, but have updated the file content.
   timeout $KILLOPT 5s ssh -qn $h [ -e $PARSET ] && continue;
 
   # Copy parset to remote node
