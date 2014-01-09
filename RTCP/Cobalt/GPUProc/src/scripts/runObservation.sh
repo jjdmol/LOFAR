@@ -116,6 +116,9 @@ then
   trap "rm -f $PIDFILE" EXIT
 fi
 
+# Test the -k option of timeout(1). It only appeared since GNU coreutils 8.5 (fails on DAS-4).
+timeout -k2 1 /bin/true 2> /dev/null && KILLOPT=-k2
+
 # Read parset
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
 
@@ -172,13 +175,13 @@ do
   [ "$h" == "localhost" ] && continue;
   [ "$h" == "`hostname`" ] && continue;
 
-  # Ignore hosts that already have the parset
-  # (for example, through NFS).
-  timeout -k1 5s ssh -qn $h [ -e $PARSET ] && continue;
+  # Ignore hosts that already have the parset (for example, through NFS).
+# Disabled: buggy for manual tests that re-use a localhome parset filename, but have updated the file content.
+  timeout $KILLOPT 5s ssh -qn $h [ -e $PARSET ] && continue;
 
   # Copy parset to remote node
   echo "Copying parset to $h:$PARSET"
-  timeout -k1 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
+  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
 done
 
 # Run in the background to allow signals to propagate
@@ -208,10 +211,6 @@ echo "Result code of observation: $OBSRESULT"
 # ******************************
 # Post-process the observation
 # ******************************
-#
-# Note: don't propagate errors here as observation failure,
-#       because that would be too harsh and also makes testing
-#       harder.
 
 if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
 then
@@ -225,7 +224,7 @@ then
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
     FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
     echo "Copying feedback to $FEEDBACK_DEST"
-    timeout -k2 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
+    timeout $KILLOPT 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
     FEEDBACK_RESULT=$?
     if [ $FEEDBACK_RESULT -ne 0 ]
     then
@@ -253,5 +252,6 @@ else
 fi
 
 # Our exit code is that of the observation
+# In production this script is started in the background, so the exit code is for tests.
 exit $OBSRESULT
 
