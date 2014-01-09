@@ -1,3 +1,5 @@
+
+#include <lofar_config.h>
 #include "SampleBuffer.h"
 
 #include "BufferSettings.h"
