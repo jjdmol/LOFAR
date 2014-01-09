@@ -155,7 +155,7 @@ namespace LOFAR
 
         LOG_DEBUG_STR("startRead(" << beamlet << ", " << begin << ", " << end << "): waits on board " << boardNr);
         LOG_DEBUG_STR("Before getting lock");
-        LOG_DEBUG_STR(Backtrace());
+        LOG_DEBUG_STR(LOFAR::Backtrace());
         syncLock->writeLock[boardNr].waitFor(end);
         LOG_DEBUG_STR("after getting lock");
         LOG_DEBUG_STR("startRead(" << beamlet << ", " << begin << ", " << end << "): reading from board " << boardNr);
