@@ -65,6 +65,7 @@ namespace LOFAR {
 
 void receiveStation(const Parset &ps, const struct StationID &stationID, Semaphore &bufferReady, Semaphore &stopSignal)
 {
+  LOG_INFO_STR("receiveStation, start function");
   const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   // settings for the circular buffer
@@ -81,6 +82,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
 
   settings.nrBoards = inputStreams.size();
 
+  LOG_INFO_STR("receiveStation, before lock");
   // Force buffer reader/writer syncing if observation is non-real time
   SyncLock syncLock(settings, ps.settings.subbands.size());
   if (!ps.realTime()) {
@@ -96,7 +98,7 @@ void receiveStation(const Parset &ps, const struct StationID &stationID, Semapho
 
   // Signal the creation of the SHM buffer
   bufferReady.up();
-
+  LOG_INFO_STR("receiveStation, before omp");
   #pragma omp parallel sections num_threads(2)
   {
     // Start a circular buffer
@@ -169,8 +171,9 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     #pragma omp section
     {
       // Wait for SHM buffer to be created and initialised
+      LOG_INFO_STR("sendInputToPipeline, before SHM buffer lock");
       bufferReady.down();
-
+      LOG_INFO_STR("sendInputToPipeline, after SHM buffer lock");
       { // Make sure the SHM buffer is unused when we raise stopSignal
 
         // Fetch buffer settings from SHM.
@@ -223,7 +226,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
             targetSubbands[i] = i;
           }
 #endif
-
+          LOG_INFO_STR("sendInputToPipeline, Set up circular buffer ");
           /*
            * Set up circular buffer data reader.
            */
@@ -265,7 +268,6 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           ssize_t block = -1;
 
           size_t blockSize = ps.nrSamplesPerSubband();
-
           for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) {
             LOG_DEBUG_STR(logPrefix << str(format("[rank %i block %d] Sending data") % rank % block));
 
