@@ -134,12 +134,19 @@ then
   AUGMENTED_PARSET=$LOFARROOT/var/run/rtcp-$OBSID.parset
 
   # Add static keys
+#  # Ignore sneaky .cobalt/ parset overrides in production (lofarsys)
+#  if [ "$USER" != "lofarsys" ]; then
+#    DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
+#    DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
+#  fi
   cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
-      $HOME/.cobalt/default/*.parset \
+      $DOT_COBALT_DEFAULT \
       $PARSET \
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
-      $HOME/.cobalt/override/*.parset \
+      $DOT_COBALT_OVERRIDE \
       > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+  unset DOT_COBALT_DEFAULT
+  unset DOT_COBALT_OVERRIDE
 
   # If we force localhost, we need to remove the node list, or the first one will be used
   if [ "$FORCE_LOCALHOST" -eq "1" ]
