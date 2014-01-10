@@ -115,6 +115,11 @@ namespace LOFAR
     }
 
 
+    template<typename T> OutputThread<T>::~OutputThread()
+    {
+    }
+
+
     template<typename T> void OutputThread<T>::checkForDroppedData(StreamableData *data)
     {
       // TODO: check for dropped data at end of observation
