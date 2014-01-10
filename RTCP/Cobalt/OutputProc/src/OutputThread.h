@@ -53,6 +53,8 @@ namespace LOFAR
     public:
       OutputThread(const Parset &, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix);
 
+      virtual ~OutputThread();
+
       // Create the data container, and process blocks from outputPool.
       void           process();
 
