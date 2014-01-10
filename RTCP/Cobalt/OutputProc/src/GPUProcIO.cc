@@ -134,7 +134,7 @@ void process(Stream &controlStream, size_t myRank)
     TABTranspose::MultiReceiver mr("2nd-transpose-", collectors);
 
 
-#   pragma omp parallel sections num_threads(2)
+#   pragma omp parallel sections num_threads(3)
     {
       // Done signal from controller, by sending the final meta data
 #     pragma omp section
