@@ -173,6 +173,7 @@ fi
 echo "Hosts: $HOSTS"
 
 # Copy parset to all hosts
+cksumline=`md5sum $PARSET`
 for h in `echo $HOSTS | tr ',' ' '`
 do
   # Ignore empty hostnames
@@ -182,9 +183,8 @@ do
   [ "$h" == "localhost" ] && continue;
   [ "$h" == "`hostname`" ] && continue;
 
-  # Ignore hosts that already have the parset (for example, through NFS).
-  # NOTE: Buggy for manual tests that re-use a localhome parset filename, but have updated the file content.
-  timeout $KILLOPT 5s ssh -qn $h [ -e $PARSET ] && continue;
+  # Ignore hosts that already have the same parset (for example, through NFS).
+  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
 
   # Copy parset to remote node
   echo "Copying parset to $h:$PARSET"
