@@ -33,6 +33,8 @@ set_tests_properties(
   tCorrelate_3sec_2st_5sb
   tBeamform_1sec_1st_5sb_noflagging
   tBeamform_incoherent_2sec_1st_5sb_noflagging
+  tstartBGL
+  tMACfeedback
   PROPERTIES RUN_SERIAL ON
 )
 
