@@ -28,10 +28,12 @@ wait $ONLINECONTROL_PID
 ONLINECONTROLRESULT=$?
 
 if [ $OBSRESULT -gt 0 ]; then
+  echo "runObservation.sh failed (status: $OBSRESULT)"
   exit $OBSRESULT
 fi
 
 if [ $ONLINECONTROLRESULT -gt 0 ]; then
+  echo "MockOnlineControl.sh failed (status: $ONLINECONTROLRESULT)"
   exit $ONLINECONTROLRESULT
 fi
 
