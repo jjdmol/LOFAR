@@ -466,7 +466,7 @@ substitute_cobaltnode()
 		if (hasCobaltNode > 0) {
 			for (cnode=1; cnode<10; cnode++) {
 				dpname=$1;
-				sub("@cobaltnode@", "Cobalt_CBT00"cnode, dpname);
+				sub("@cobaltnode@", "CBT00"cnode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -962,7 +962,8 @@ create_dpt_file()
 	) >${DESTDIR}/${DPT_FILE}
 
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
+	# Note: ignore the PermSW_@ring and PermSW_cluster lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -982,14 +983,6 @@ create_dpt_file()
 			echo "	status	41#:ObjectStatus"
 			let count=count+1
 		fi
-# Storage need an ObjectStatus && ProcessStatus element
-		if [ "${dpt}" == "Storage" ];then
-			echo "	status	41#:ObjectStatus"
-		  	echo "	process	41#:ProcessStatus"
-			let count=count+2
-		fi
-
-
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
@@ -997,8 +990,10 @@ create_dpt_file()
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
 			if [[ ${dpt} != *Observation ]]; then
+			    if [[ "${leaf}" == "Y" ]]; then
 				echo "	process	41#:ProcessStatus"
 				let count=count+1
+			    fi
 			fi
 		fi
 
@@ -1070,7 +1065,8 @@ create_dpt_file()
 		echo    "ElementName	TypeName	_original.._value	_original.._status"
 	) >${TMP_FILE}
 
-	cleanlist $1 | awk -v dbtype=$2 '{ 
+	# Note: ignore the PermSW_@ring and PermSW_cluster lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | awk -v dbtype=$2 '{
 		if ($3 == dbtype && $4 == "Y") {
 			print "_mp_"$1".status.leaf	"$1"	1	0x101"
 		} }' >>${TMP_FILE}
@@ -1262,7 +1258,7 @@ create_dp_file()
 	# setup master point and archives 
 	# NOTE: THIS IS ADDED TO THE DataPointTYPES file!
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -1285,6 +1281,7 @@ create_dp_file()
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [[ ${dpt} != *Observation ]]; then
+			    if [[ "${leaf}" == "Y" ]]; then
 				echo "ElementName	TypeName	_original.._value	_original.._status"
 				echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
 				echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
@@ -1294,6 +1291,7 @@ create_dp_file()
 				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
 				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
 				echo ""
+			    fi
 			fi
 		fi
 

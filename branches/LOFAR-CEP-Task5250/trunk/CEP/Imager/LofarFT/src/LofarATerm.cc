@@ -474,7 +474,7 @@ namespace LOFAR
       {
         for(uint x = 0; x < nX; ++x)
         {
-          matrix22c_t response = field->singleElementResponse(map.time0,
+          matrix22c_t response = field->elementResponse(map.time0,
             freq(idx), map.directions(x, y));
 
           slice(x, y, 0) = response[0][0];

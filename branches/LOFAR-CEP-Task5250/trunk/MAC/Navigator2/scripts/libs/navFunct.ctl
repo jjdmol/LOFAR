@@ -70,6 +70,17 @@
 // navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
 // navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
+// navFunct_isCoreStation                     : returns TRUE if the station is part of the Core stations
+// navFunct_isHBA                             : returns true if the antenna is an International HBA antenna
+// navFunct_isHBAZero                         : returns true if the antenna is a Core HBA Zero antenna
+// navFunct_isHBAOne                          : returns true if the antenna is a Core HBA One antenna
+// navFunct_isHBAInner                        : returns true if the antenna is a Remote HBA Inner antenna
+// navFunct_isHBAOuter                        : returns true if the antenna is a Remote HBA Outer antenna
+// navFunct_isInternationalStation            : returns TRUE if the station is part of the International stations
+// navFunct_isLBA                             : returns true if the antenna is an International LBA antenna
+// navFunct_isLBAInner                        : returns true if the antenna is a Core or Remote LBA Inner antenna
+// navFunct_isLBAOuter                        : returns true if the antenna is a Core or Remote LBA Outer antenna
+// navFunct_isRemoteStation                   : returns TRUE if the station is part of the Remote stations
 // navFunct_isObservation                     : returns  true is a given observationnumber is an observation or false when it is a pipeline
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
@@ -101,6 +112,7 @@
 global dyn_string oldActiveObservations;                        
 global dyn_string oldPlannedObservations;                        
 global dyn_string oldFinishedObservations;  
+dyn_int HBAInnerCircle = makeDynInt(5,6,10,11,12,13,17,18,19,20,21,22,25,26,27,28,29,30,34,35,36,37,41,42);  // Telescopenrs in de Inner HBA (Remote only)
                      
 
 // ****************************************
@@ -1415,9 +1427,58 @@ void navFunct_fillProcessesList() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| Entered");     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_stationsList: "+g_stationList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_processesList: "+g_processesList);     
-  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);
+
+  dynClear(strHighlight);
+  dynClear(highlight);
   
-  // to do
+
+  if (dynlen(g_stationList) > 0) {                      // else hardware based processes
+    dyn_string stationList;
+    dyn_string aTemp;
+
+    // if the stationlist involves rings, we need to expand those rings to real stations
+    for (int k=1;k<= dynlen(g_stationList); k++) {
+      if (g_stationList[k] == "Europe") {
+        aTemp=europeStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Remote") {
+        aTemp=remoteStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Core") {
+        aTemp=coreStations;
+        dynAppend(stationList,aTemp);
+      } else {
+        dynAppend(stationList,g_stationList[k]);
+      }
+    }
+    
+    // For each type of "station" (MCU,CCU and stations) we need to gather the involved running processes, 
+    // Observation software if any active observations that involve this "stations" and the permanent software
+    //
+
+    for (int k=1;k<= dynlen(stationList); k++) {
+      int z;
+      dyn_dyn_anytype tab;
+      //PermSW + PermSW_Daemons
+      if (navFunct_dpReachable(stationList[k]+":")) {
+        dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.process.error' REMOTE '"+stationList[k]+"'", tab);
+        LOG_TRACE("navFunct.ctl:navFunct_fillProcessesList|Found: "+ tab);
+  
+        dyn_string aDS=navFunct_getDynString(tab, 2,1);
+        dynSortAsc(aDS);
+  
+        for(z=1;z<=dynlen(aDS);z++){
+    
+          // strip .status.state from CEP_result
+          string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+          dynAppend(g_processesList,aS);
+        }
+      }
+    }
+  }
+  // now prepare the ProcessesTree    
+  navFunct_fillProcessesTree(); 
 }
 
 // ****************************************
@@ -1654,7 +1715,47 @@ void navFunct_fillHardwareTree() {
 //
 // ****************************************
 void navFunct_fillProcessesTree() {
-  //to do
+
+  if (dynlen(g_processesList) <=0) return;
+  
+  dyn_string result;
+  string lvl="";
+  string station ="";
+  string dp="";
+  
+  dynSortAsc(g_processesList);
+
+  for (int i = 1; i <= dynlen(g_processesList); i++) {
+    // Analyze the datapointpath and see if all elements are available to be able to connect to them
+    dp = g_processesList[i];
+    string db = navFunct_bareDBName(dpSubStr(dp,DPSUB_SYS));
+    dp = dpSubStr(dp,DPSUB_DP);
+    // find out if on PermSW or ObsSW level 
+    if (strpos(dp,"PermSW_") >= 0) {
+      lvl = "PermSW";
+      dp =substr(dp,13);
+    } else {
+      lvl = "ObsSW";
+      dp =substr(dp,12);
+    }
+    dyn_string pathList = strsplit(dp,"_");
+    // now we have the db name and the path in seperateparts
+    string connectTo = db+":LOFAR_"+lvl;
+    if (!dynContains(result,","+db+","+db+":LOFAR_"+lvl)) { 
+      dynAppend(result,","+db+","+db+":LOFAR_"+lvl);
+    }
+    string fullProcessPath=connectTo;
+    for (int j=1; j <= dynlen(pathList); j++) {
+      fullProcessPath+="_"+pathList[j];
+      if (!dynContains(result,connectTo+","+pathList[j]+","+fullProcessPath)) {
+       dynAppend(result,connectTo+","+pathList[j]+","+fullProcessPath);
+      }
+      connectTo=fullProcessPath;      
+    }
+  }
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result);  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);  
 }
 
 // ****************************************
@@ -2344,6 +2445,8 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   }
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
+
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   dpQuery(query,tab);
   for(int z=2;z<=dynlen(tab);z++) {
@@ -2365,6 +2468,8 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
 dyn_string navFunct_getInputBuffersForStation(string station) {
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
+  
+  if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.stationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+station+"\"";
   dpQuery(query,tab);
   for(int z=2;z<=dynlen(tab);z++) {
@@ -2390,6 +2495,7 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   }
   dyn_string adders;
   dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return adders;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_Adder*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   //DebugN("query: "+query);
   dpQuery(query,tab);
@@ -2443,6 +2549,8 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
   }
   dyn_string writers;
   dyn_dyn_anytype tab;
+
+  if (!navFunct_dpReachable(CEPDBName)) return writers;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_Writer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   
   dpQuery(query,tab);
@@ -2468,6 +2576,179 @@ bool navFunct_stationInObservation(string station,string pool) {
         return true;
       }
     }
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isCoreStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the Core stations
+// **********************
+//
+bool navFunct_isCoreStation(string stationName) {
+  if (strpos(stationName,"CS") == 0) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isInternationalStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the International stations
+// **********************
+//
+bool navFunct_isInternationalStation(string stationName) {
+  if (strpos(stationName,"CS") == 0 || strpos(stationName,"RS") == 0) {
+    return false;
+  }
+  return true;
+}
+
+// **********************
+// navFunct_isRemoteStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the Remote stations
+// **********************
+//
+bool navFunct_isRemoteStation(string stationName) {
+  if (strpos(stationName,"RS") == 0) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBA
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is an International HBA antenna
+// **********************
+//
+bool navFunct_isHBA(string stationName,int antennaNr) {
+  if (navFunct_isInternationalStation(stationName) && antennaNr < 96) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAZero
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core HBA Zero antenna
+// **********************
+//
+bool navFunct_isHBAZero(string stationName,int antennaNr) {
+  if (navFunct_isCoreStation(stationName) && antennaNr < 24) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAOne
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core HBA One antenna
+// **********************
+//
+bool navFunct_isHBAOne(string stationName,int antennaNr) {
+  if (navFunct_isCoreStation(stationName) && antennaNr > 23) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAInner
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Remote HBA Inner antenna
+// **********************
+//
+bool navFunct_isHBAInner(string stationName,int antennaNr) {
+  if (navFunct_isRemoteStation(stationName) && dynContains(HBAInnerCircle,antennaNr)) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAOuter
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Remote HBA Outer antenna
+// **********************
+//
+bool navFunct_isHBAOuter(string stationName,int antennaNr) {
+  if (navFunct_isRemoteStation(stationName) && !dynContains(HBAInnerCircle,antennaNr)) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBA
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is an International LBA antenna
+// **********************
+//
+bool navFunct_isLBA(string stationName,int antennaNr) {
+  if (navFunct_isInternationalStation(stationName) && antennaNr < 96) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBAInner
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core or Remote LBA Inner antenna
+// **********************
+//
+bool navFunct_isLBAInner(string stationName,int antennaNr) {
+  if ((navFunct_isCoreStation(stationName) || navFunct_isRemoteStation(stationName))&& antennaNr < 48) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBAOuter
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core or Remote LBA Outer antenna
+// **********************
+//
+bool navFunct_isLBAOuter(string stationName,int antennaNr) {
+  if ((navFunct_isCoreStation(stationName) || navFunct_isRemoteStation(stationName))&& antennaNr > 47) {
+    return true;
   }
   return false;
 }

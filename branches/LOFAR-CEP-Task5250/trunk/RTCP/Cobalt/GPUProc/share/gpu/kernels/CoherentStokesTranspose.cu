@@ -42,7 +42,10 @@
  *   + inner dim (x): nr (( params.nrTABs + 16 - 1) / 16) * 16 
  *   + middle dim (y): nr samples ( /16)
  *   + outer dim (z): number of channels (/1)
+ *
+ * $Id$
  */
+
 #include "gpu_math.cuh"
 
 #if !(NR_SAMPLES_PER_CHANNEL >= 1)

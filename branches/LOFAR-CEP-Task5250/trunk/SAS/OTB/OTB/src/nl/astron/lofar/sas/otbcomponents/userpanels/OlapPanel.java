@@ -121,22 +121,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel {
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
-            //we also need the Virtual Instrument Storagenodes here
-            ArrayList<jOTDBnode> VIchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%VirtualInstrument"));
-
-            // get all the params per child
-            for (jOTDBnode aNode : VIchilds) {
-                aParam = null;
-
-                // We need to keep all the nodes needed by this panel
-                // if the node is a leaf we need to get the pointed to value via Param.
-                if (aNode.leaf) {
-                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
-                    setField(itsNode, aParam, aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
-                    this.retrieveAndDisplayChildDataForNode(aNode);
-                }
-            }
 
             //we also need the Output_ nodes from the Dataproducts here
             ArrayList<jOTDBnode> OUchilds = new ArrayList(OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), "%Output_%"));

@@ -14,6 +14,8 @@ set(_gpuproc_sources
   FilterBank.cc
   global_defines.cc
   RunningStatistics.cc
+  Package__Version.cc
+  SysInfoLogger.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
   Storage/SSH.cc
@@ -45,6 +47,7 @@ if(USE_CUDA)
     cuda/Kernels/IncoherentStokesKernel.cc
     cuda/Kernels/IncoherentStokesTransposeKernel.cc
     cuda/Kernels/IntToFloatKernel.cc
+    cuda/Kernels/FFTShiftKernel.cc
     #cuda/Kernels/UHEP_BeamFormerKernel.cc
     #cuda/Kernels/UHEP_InvFFT_Kernel.cc
     #cuda/Kernels/UHEP_InvFIR_Kernel.cc
@@ -111,6 +114,7 @@ if(USE_OPENCL)
 endif()
 
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
+lofar_add_bin_program(station_stream Station/station_stream.cc)
 
 # install the scripts for MAC and for auto-updating casacore measures tables
 install(PROGRAMS
@@ -125,4 +129,5 @@ install(PROGRAMS
 install(FILES
   rtcp.log_prop
   Station/mpi_node_list.log_prop
+  Station/station_stream.log_prop
   DESTINATION etc)

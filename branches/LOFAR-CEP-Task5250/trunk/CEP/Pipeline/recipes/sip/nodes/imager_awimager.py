@@ -250,22 +250,22 @@ class imager_awimager(LOFARnodeTCP):
         # calculate a sizeconverter value  (to be applied to the cellsize)
         if npix < 256:
             self.logger.warn("Using a image size smaller then 256x256:"
-                " This leads to problematic imaging in some instances!!")
-
-        cell_size_formatted = str(
-                        int(round(cell_size))) + 'arcsec'
-
-        self.logger.info("Using the following dynamic generated awimager parameters:"
-            " cell_size: {0}, npix: {1},".format(
-                        cell_size_formatted, npix) +
-             " w_max: {0}, w_proj_planes: {1}".format(w_max, w_proj_planes))
+            " This leads to problematic imaging in some instances!!")
 
         # If we are not autocalculating based on ms or fov, use the npix
         # and cell_size specified in the parset
         # keep the wmax and w_proj_planes
         if (not autogenerate_parameters and not specify_fov):
             npix = parset_object.getString('npix')
-            cell_size = parset_object.getString('cellsize')
+            cell_size_formatted = parset_object.getString('cellsize')
+        else:
+            cell_size_formatted = str(
+                        int(round(cell_size))) + 'arcsec'
+
+        self.logger.info("Using the following awimager parameters:"
+            " cell_size: {0}, npix: {1},".format(
+                        cell_size_formatted, npix) +
+             " w_max: {0}, w_proj_planes: {1}".format(w_max, w_proj_planes))
 
         return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
 

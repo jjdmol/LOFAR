@@ -71,12 +71,12 @@ public class ResultPanelHelper {
         itsPanelMap.put("*",itsArrayList);
 
         //ParmDB
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
-        itsPanelMap.put("ParmDB",itsArrayList);
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
-        itsPanelMap.put("ParmDBValues",itsArrayList);
+ //       itsArrayList = new ArrayList<>();
+ //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBConfigPanel");
+ //       itsPanelMap.put("ParmDB",itsArrayList);
+ //       itsArrayList = new ArrayList<>();
+ //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.ParmDBPlotPanel");
+ //       itsPanelMap.put("ParmDBValues",itsArrayList);
         
         // Observation
         itsArrayList = new ArrayList<>();
@@ -90,6 +90,12 @@ public class ResultPanelHelper {
         itsPanelMap.put("OLAP",itsArrayList);        
         addParSetAndLogPanels();
         
+        //Cobalt
+        itsArrayList = new ArrayList<>();
+        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.CobaltPanel");
+        itsPanelMap.put("Cobalt",itsArrayList);        
+        addParSetAndLogPanels();
+        
         //TBB
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
@@ -97,10 +103,10 @@ public class ResultPanelHelper {
         addParSetAndLogPanels();
 
         //Imager
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-        itsPanelMap.put("Imager",itsArrayList);
-        addParSetAndLogPanels();
+ //       itsArrayList = new ArrayList<>();
+ //       itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
+ //       itsPanelMap.put("Imager",itsArrayList);
+ //       addParSetAndLogPanels();
     }
     
     

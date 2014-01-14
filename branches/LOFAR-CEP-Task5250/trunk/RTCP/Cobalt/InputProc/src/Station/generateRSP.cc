@@ -29,11 +29,9 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
+#include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/RSPTimeStamp.h>

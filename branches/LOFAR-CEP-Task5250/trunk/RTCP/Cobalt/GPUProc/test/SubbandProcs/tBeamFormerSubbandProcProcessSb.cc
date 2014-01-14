@@ -23,6 +23,7 @@
 
 #include <complex>
 #include <cmath>
+#include <iomanip>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -36,22 +37,23 @@ using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 
-const unsigned nrChannel1 = 64;
-const unsigned nrChannel2 = 64;
-
 template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
-  double freq = 1.0 / 4.0; // in samples
-  // double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double amp = (1 << (nrBits - 1)) - 1;
-
+#if 1 // Toggle to experiment with pulse like input
+  // Sine wave
+  // double freq = 1.0 / 4.0; // in samples
+  double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
   double angle = (double)t * 2.0 * M_PI * freq;
-
   double s = ::sin(angle);
   double c = ::cos(angle);
-
   return T(::round(amp * c), ::round(amp * s));
+#else
+  // Pulse train
+  if (t % (2 * 64 + 17) == 0) return T(amp);
+  else return T(0);
+#endif
 }
 
 int main() {
@@ -80,6 +82,9 @@ int main() {
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;
   const size_t nrBytesPerComplexSample = ps.nrBytesPerComplexSample();
 
+  const unsigned fft1Size = ps.settings.beamFormer.nrDelayCompensationChannels;
+  const unsigned fft2Size = ps.settings.beamFormer.nrHighResolutionChannels / fft1Size;
+
   // We only support 8-bit or 16-bit input samples
   ASSERT(nrBitsPerSample == 8 || nrBitsPerSample == 16);
 
@@ -95,7 +100,9 @@ int main() {
     "\n  maxNrTABsPerSAP = " << maxNrTABsPerSAP <<
     "\n  nrSamplesPerSubband = " << nrSamplesPerSubband <<
     "\n  nrBitsPerSample = " << nrBitsPerSample <<
-    "\n  nrBytesPerComplexSample = " << nrBytesPerComplexSample);
+    "\n  nrBytesPerComplexSample = " << nrBytesPerComplexSample <<
+    "\n  fft1Size = " << fft1Size <<
+    "\n  fft2Size = " << fft2Size);
 
   // Output array sizes
   const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
@@ -150,7 +157,7 @@ int main() {
   // Block number: 0 .. inf
   in.blockID.block = 0;
 
- // Subband index in the observation: [0, ps.nrSubbands())
+  // Subband index in the observation: [0, ps.nrSubbands())
   in.blockID.globalSubbandIdx = 0;
 
   // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
@@ -165,8 +172,8 @@ int main() {
     in.delaysAtBegin.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.delaysAfterEnd.num_elements(); i++)
     in.delaysAfterEnd.get<float>()[i] = 0.0f;
-  for (size_t i = 0; i < in.phaseOffsets.num_elements(); i++)
-    in.phaseOffsets.get<float>()[i] = 0.0f;
+  for (size_t i = 0; i < in.phase0s.num_elements(); i++)
+    in.phase0s.get<float>()[i] = 0.0f;
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
@@ -187,38 +194,27 @@ int main() {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: (nrStation * amp * scaleFactor * nrChannel1 * nrChannel2)^2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
   // Hence, each output sample should be: 
   // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
-  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 1082398867456
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
-  float outVal;
-  switch(nrBitsPerSample) {
-  case 8:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  case 16:
-    outVal = 
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2 *
-      nrStations * amplitude * scaleFactor * nrChannel1 * nrChannel2; 
-    break;
-  default:
-    break;
-  }
+  float outVal = 
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size *
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size; 
   cout << "outVal = " << outVal << endl;
 
   for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
       for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(fpEquals(out[s][t][c], outVal), 
+        ASSERTSTR(fpEquals(out[0][s][t][c], outVal, 1e-4f), 
                   "out[" << s << "][" << t << "][" << c << "] = " << 
-                  out[s][t][c] << "; outVal = " << outVal);
+                  setprecision(12) << out[0][s][t][c] << 
+                  "; outVal = " << outVal);
   
   return 0;
 }

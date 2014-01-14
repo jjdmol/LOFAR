@@ -34,7 +34,25 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    EXCEPTION_CLASS(BadModeException, LOFAR::Exception);
+    class BadModeException : public Exception
+    {
+    public:
+      BadModeException(const std::string& text, const BoardMode &mode, const std::string& file="",
+           int line=0, const std::string& function="",
+           Backtrace* bt=0)
+      :
+        Exception(text, file, line, function, bt),
+        mode(mode)
+      {
+      }
+
+      virtual const std::string& type() const {
+        static const std::string itsType("BadModeException");
+        return itsType;
+      }
+
+      const BoardMode mode;
+    };
 
     /*
      * Writes RSP packets to a SampleBuffer

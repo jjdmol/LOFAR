@@ -17,7 +17,7 @@ JOB="$1"
 OBSID="$2"
 
 # The name of what will be our parset
-PARSET=$LOFARROOT/var/run/Observation$OBSID.parset
+PARSET=$LOFARROOT/var/run/rtcp-$OBSID.parset
 
 # The file to store the PID in
 PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
@@ -49,8 +49,10 @@ echo "Process:"
 ps --no-headers -p "$PID" || error "Process not running: PID $PID"
 
 # Kill the process
-echo "Sending SIGTERM"
-kill "$PID" || error "Could not kill process: PID $PID"
+# echo "Sending SIGTERM"
+
+# TODO: Disabled actual killing, since MAC calls stopBGL.sh way too soon!
+# kill "$PID" || error "Could not kill process: PID $PID"
 
 # Done
 echo "Done"

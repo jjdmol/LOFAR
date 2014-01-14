@@ -23,8 +23,10 @@
 
 #include <CoInterface/Parset.h>
 
-#include <cstdio>
+#include <cstring>
+#include <cmath>
 #include <set>
+#include <algorithm>
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -80,6 +82,25 @@ namespace LOFAR
         case INVALID_STOKES:
         default:
           return 0;
+      }
+    }
+
+
+    static string stokesType( StokesType type )
+    {
+      switch(type) {
+      case STOKES_I: 
+        return "I";
+
+      case STOKES_IQUV: 
+        return "IQUV";
+
+      case STOKES_XXYY:
+        return "XXYY";
+
+      case INVALID_STOKES:
+      default:
+        return "";
       }
     }
 
@@ -265,6 +286,30 @@ namespace LOFAR
       return newname;
     }
 
+    /*
+     * operator<() for station names.
+     *
+     * Sorts in the following order:
+     *   1. Core stations (CSxxx)
+     *   2. Remote stations (RSxxx)
+     *   3. International stations (others)
+     *
+     * Within each group, the stations are
+     * sorted lexicographically. For group 3
+     * we skip the first 2 chars when sorting.
+     */
+    bool compareStationNames( const string &a, const string &b ) {
+      if (a.size() >= 5 && b.size() >= 5) { // common case
+        if ( (a[0] == 'C' || a[0] == 'R') && a[1] == 'S' &&
+             (b[0] == 'C' || b[0] == 'R') && b[1] == 'S' ) {
+          return a < b; // both CS/RS stations; 'C'<'R'
+        } else { // at least 1 non-CS/RS name; cmp (presumed) nrs
+          return std::strcmp(&a.c_str()[2], &b.c_str()[2]) < 0;
+        }
+      }
+      return a < b; // at least 1 short name
+    }
+
 
     struct ObservationSettings Parset::observationSettings() const
     {
@@ -297,10 +342,12 @@ namespace LOFAR
       settings.corrections.dedisperse = getBool(renamedKey("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels"), true);
 
       settings.delayCompensation.enabled              = getBool(renamedKey("Cobalt.delayCompensation", "OLAP.delayCompensation"), true);
-      settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", emptyVectorDouble, true);
+      settings.delayCompensation.referencePhaseCenter = getDoubleVector("Observation.referencePhaseCenter", vector<double>(3,0), true);
+      if (settings.delayCompensation.referencePhaseCenter == emptyVectorDouble)
+        LOG_WARN("Parset: Observation.referencePhaseCenter is missing (or (0.0, 0.0, 0.0)).");
 
       // Station information (required by pointing information)
-      settings.antennaSet     = getString("Observation.antennaSet", "LBA");
+      settings.antennaSet     = getString("Observation.antennaSet", "LBA_INNER");
       settings.bandFilter     = getString("Observation.bandFilter", "LBA_30_70");
 
       // Pointing information
@@ -345,11 +392,16 @@ namespace LOFAR
       if (isDefined("Cobalt.blockSize")) {
         settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
       } else {
+        // Old, fall-back configuration
         settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
       }
 
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+
+      // Sort stations (CS, RS, intl), to get a consistent and predictable
+      // order in the MeasurementSets.
+      std::sort(stations.begin(), stations.end(), compareStationNames);
 
       vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
 
@@ -360,12 +412,21 @@ namespace LOFAR
         struct ObservationSettings::Station &station = settings.stations[i];
 
         station.name              = fieldNames[i].fullName();
+        station.inputStreams      = getStringVector(
+            renamedKey(str(format("PIC.Core.%s.RSP.ports") % station.name),
+                       str(format("PIC.Core.Station.%s.RSP.ports") % station.name)),
+            emptyVectorString, true);
+        station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
+
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter       = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), emptyVectorDouble, true);
-        station.phaseCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phaseCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.phaseCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.x = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.X") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delayCorrection.y = getDouble(str(format("PIC.Core.%s.%s.%s.delayCorrection.Y") % fieldNames[i].station % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phaseCenter = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3, 0), true);
+        if (station.phaseCenter == emptyVectorDouble)
+          LOG_WARN_STR("Parset: PIC.Core." << station.name << ".phaseCenter is missing (or (0.0, 0.0, 0.0)).");
+        station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -377,31 +438,25 @@ namespace LOFAR
         if (!isDefined(key)) key = "Observation.rspSlotList";
         station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".rspSlotList" );
+        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".DataslotList" );
       }
 
       // Resource information
-      size_t nrNodes = getUint32("Cobalt.Hardware.nrNodes",1);
-      settings.nodes.resize(nrNodes);
-      for (size_t i = 0; i < nrNodes; ++i) {
+      vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
+      settings.nodes.resize(nodes.size());
+
+      for (size_t i = 0; i < nodes.size(); ++i) {
         struct ObservationSettings::Node &node = settings.nodes[i];
 
-        string prefix = str(format("Cobalt.Hardware.Node[%u].") % i);
-
         node.rank     = i;
+        node.name     = nodes[i];
+
+        string prefix = str(format("PIC.Core.Cobalt.%s.") % node.name);
+
         node.hostName = getString(prefix + "host", "localhost");
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
-
-        vector<string> stationNames = getStringVector(prefix + "stations", emptyVectorString, true);
-
-        for (size_t j = 0; j < stationNames.size(); ++j) {
-          ssize_t index = settings.stationIndex(stationNames[j]);
-
-          if (index >= 0)
-            node.stations.push_back(index);
-        }
       }
 
       /* ===============================
@@ -412,12 +467,17 @@ namespace LOFAR
       settings.correlator.enabled = getBool("Observation.DataProducts.Output_Correlated.enabled", false);
       if (settings.correlator.enabled) {
         settings.correlator.nrChannels = getUint32(renamedKey("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband"), 64);
+        //settings.correlator.nrChannels = getUint32("Observation.channelsPerSubband", 64);
         settings.correlator.channelWidth = settings.subbandWidth() / settings.correlator.nrChannels;
         settings.correlator.nrSamplesPerChannel = settings.blockSize / settings.correlator.nrChannels;
         settings.correlator.nrBlocksPerIntegration = getUint32(renamedKey("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps"), 1);
         settings.correlator.nrBlocksPerObservation = static_cast<size_t>(floor((settings.stopTime - settings.startTime) / settings.correlator.integrationTime()));
 
         // super-station beam former
+        //
+        // TODO: Super-station beam former is unused, so will likely be
+        // implemented differently. The code below is only there to show how
+        // the OLAP.* keys used to be interpreted.
 
         // OLAP.CNProc.tabList[i] = j <=> superstation j contains (input) station i
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
@@ -448,14 +508,17 @@ namespace LOFAR
           }
         }
 
-        if (settings.correlator.enabled) { // TODO: redundant check, but as long as '|| true' is there (just above), this is needed as some test parsets (e.g. tKernel.parset.in) has no locations and filenames (and enabled) keys. See tCorrelatorPipelineProcessObs.parset what is needed or refactor this function.
-          // Files to output
-          settings.correlator.files.resize(settings.subbands.size());
-          for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
-            settings.correlator.files[i].location = getFileLocation("Correlated", i);
+        // Files to output
+        const vector<ObservationSettings::FileLocation> locations = getFileLocations("Correlated");
 
-            outputProcHosts.insert(settings.correlator.files[i].location.host);
-          }
+        settings.correlator.files.resize(settings.subbands.size());
+        for (size_t i = 0; i < settings.correlator.files.size(); ++i) {
+          if (i >= locations.size())
+            THROW(CoInterfaceException, "No correlator filename or location specified for subband " << i);
+
+          settings.correlator.files[i].location = locations[i];
+
+          outputProcHosts.insert(settings.correlator.files[i].location.host);
         }
       }
 
@@ -467,26 +530,54 @@ namespace LOFAR
       // SAP/TAB-crossing counter for the files we generate
       size_t bfStreamNr = 0;
 
-      settings.beamFormer.enabled = getBool("Observation.DataProducts.Output_Beamformed.enabled", false);
+      settings.beamFormer.enabled =
+           getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false)
+        || getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
       if (settings.beamFormer.enabled) {
         // Parse global settings
+
+        // 4096 channels is enough, but allow parset override.
+        if (!isDefined("Cobalt.BeamFormer.nrHighResolutionChannels")) {
+          settings.beamFormer.nrHighResolutionChannels = 4096;
+        } else {
+          settings.beamFormer.nrHighResolutionChannels =
+              getUint32("Cobalt.BeamFormer.nrHighResolutionChannels");
+          ASSERTSTR(powerOfTwo(settings.beamFormer.nrHighResolutionChannels) &&
+              settings.beamFormer.nrHighResolutionChannels < 65536,
+              "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
+        }
+
+        unsigned nrDelayCompCh;
+        if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
+          nrDelayCompCh = calcNrDelayCompensationChannels(settings);
+        } else {
+          nrDelayCompCh = getUint32("Cobalt.BeamFormer.nrDelayCompensationChannels");
+        }
+        if (nrDelayCompCh > settings.beamFormer.nrHighResolutionChannels) {
+          nrDelayCompCh = settings.beamFormer.nrHighResolutionChannels;
+        }
+        settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
+
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
 
-          string prefix = "";
+          string oldprefix = "";
+          string newprefix = "";
           struct ObservationSettings::BeamFormer::StokesSettings *set = 0;
           
           // Select coherent or incoherent for this iteration
           switch(i) {
             case 0:
-              prefix = "OLAP.CNProc_CoherentStokes";
+              oldprefix = "OLAP.CNProc_CoherentStokes";
+              newprefix = "Cobalt.BeamFormer.CoherentStokes";
               set = &settings.beamFormer.coherentSettings;
               set->coherent = true;
               break;
 
             case 1:
-              prefix = "OLAP.CNProc_IncoherentStokes";
+              oldprefix = "OLAP.CNProc_IncoherentStokes";
+              newprefix = "Cobalt.BeamFormer.IncoherentStokes";
               set = &settings.beamFormer.incoherentSettings;
               set->coherent = false;
               break;
@@ -497,11 +588,20 @@ namespace LOFAR
           }
 
           // Obtain settings of selected stokes
-          set->type = stokesType(getString(prefix + ".which", "I"));
+          set->type = stokesType(getString(
+                renamedKey(newprefix + ".which", oldprefix + ".which"),
+                "I"));
           set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(prefix + ".channelsPerSubband", 1);
-          set->timeIntegrationFactor = getUint32(prefix + ".timeIntegrationFactor", 1);
-          set->nrSubbandsPerFile = getUint32(prefix + ".subbandsPerFile", 0);
+          set->nrChannels = getUint32(
+                renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
+                1);
+          set->timeIntegrationFactor = getUint32(
+                renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
+                1);
+          set->nrSubbandsPerFile = getUint32(
+                renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
+                0);
+
           if (set->nrSubbandsPerFile == 0) {
             // apply default
             set->nrSubbandsPerFile = settings.subbands.size();
@@ -509,6 +609,14 @@ namespace LOFAR
 
           ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
         }
+
+        const vector<ObservationSettings::FileLocation> coherent_locations =
+          getFileLocations("CoherentStokes");
+        const vector<ObservationSettings::FileLocation> incoherent_locations =
+          getFileLocations("IncoherentStokes");
+
+        size_t coherent_idx = 0;
+        size_t incoherent_idx = 0;
 
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
@@ -558,7 +666,16 @@ namespace LOFAR
               file.coherent = tab.coherent;
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
-              file.location = getFileLocation("Beamformed", file.streamNr);
+
+              if (file.coherent) {
+                if (coherent_idx >= coherent_locations.size())
+                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = coherent_locations[coherent_idx++];
+              } else {
+                if (incoherent_idx >= incoherent_locations.size())
+                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                file.location = incoherent_locations[incoherent_idx++];
+              }
 
               tab.files[s] = file;
               settings.beamFormer.files.push_back(file);
@@ -584,6 +701,92 @@ namespace LOFAR
       return settings;
     }
 
+    // pos and ref must each have at least size 3.
+    double Parset::distanceVec3(const vector<double>& pos,
+                                const vector<double>& ref) const {
+      double dx = pos.at(0) - ref.at(0);
+      double dy = pos.at(1) - ref.at(1);
+      double dz = pos.at(2) - ref.at(2);
+      return std::sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    // max delay distance in meters; static per obs, i.e. unprojected (some upper bound)
+    double Parset::maxDelayDistance(const struct ObservationSettings& settings) const {
+      // Available in each parset through included StationCalibration.parset.
+      const vector<double> refPhaseCenter =
+          settings.delayCompensation.referencePhaseCenter;
+
+      double maxDelayDistance = 0.0;
+
+      for (unsigned st = 0; st < settings.stations.size(); st++) {
+        vector<double> phaseCenter = settings.stations[st].phaseCenter;
+        double delayDist = distanceVec3(phaseCenter, refPhaseCenter);
+        if (delayDist > maxDelayDistance)
+          maxDelayDistance = delayDist;
+      }
+
+      return maxDelayDistance;
+    }
+
+    // Top frequency of highest subband observed in Hz.
+    double Parset::maxObservationFrequency(const struct ObservationSettings& settings,
+                                           double subbandWidth) const {
+      double maxCentralFrequency = 0.0;
+
+      for (unsigned sb = 0; sb < settings.subbands.size(); sb++) {
+        if (settings.subbands[sb].centralFrequency > maxCentralFrequency)
+          maxCentralFrequency = settings.subbands[sb].centralFrequency;
+      }
+
+      return maxCentralFrequency + 0.5 * subbandWidth;
+    }
+
+    // Determine the nr of channels per subband for delay compensation.
+    // We aim for the visibility samples to be good to about 1 part in 1000.
+    // See the Cobalt beamformer design doc for more info on how and why.
+    unsigned Parset::calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const {
+      double d = maxDelayDistance(settings); // in meters
+      if (d < 400.0)
+        d = 400.0; // for e.g. CS002LBA only; CS001LBA-CS002LBA is ~441 m
+      double nu_clk = settings.clockMHz * 1e6; // in Hz
+      double subbandWidth = nu_clk / 1024.0;
+      double nu = maxObservationFrequency(settings, subbandWidth); // in Hz
+      if (nu < 10e6)
+        nu = 10e6;
+
+      // deltaPhi is the phase change over t_u in rad: ~= sqrt(24.0*1e-3) (Taylor approx)
+      // Design doc states deltaPhi must be <= 0.155
+      double deltaPhi = 0.15491933384829667540;
+      const double omegaE = 7.29211585e-5; // sidereal angular velocity of Earth in rad/s
+      const double speedOfLight = 299792458.0; // in vacuum in m/s
+      double phi = 2.0 * M_PI * nu * omegaE / speedOfLight * d /* * cos(delta) (=1) */;
+
+      // Fringe stopping of the residual delay is done at an interval t_u.
+      double t_u = deltaPhi / phi;
+      double max_n_FFT = t_u * subbandWidth;
+      unsigned max_n_FFT_pow2 = roundUpToPowerOfTwo(((unsigned)max_n_FFT + 1) / 2); // round down to pow2
+
+      // Little benefit beyond 256; more work and lower GPU FFT efficiency.
+      if (max_n_FFT_pow2 > 256)
+        max_n_FFT_pow2 = 256;
+
+      // This lower bound comes from the derivation in the design doc.
+      // It is pi*cbrt(2.0/(9.0*1e-3)) (also after Taylor approx).
+      const double min_n_ch = 19.02884235042726617904; // design doc states n_ch >= 19
+      const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
+
+      if (max_n_FFT_pow2 < min_n_ch_pow2) {
+        LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
+                      max_n_FFT << " ends up below lower bound " << min_n_ch <<
+                      ". Returning " << min_n_ch_pow2 << ". Stations far from"
+                      " the core may not be delay compensated optimally.");
+        max_n_FFT_pow2 = min_n_ch_pow2;
+      }
+
+      return max_n_FFT_pow2;
+    }
+
+
     double ObservationSettings::subbandWidth() const {
       return 1.0 * clockMHz * 1000000 / 1024;
     }
@@ -604,7 +807,7 @@ namespace LOFAR
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
 
-    struct ObservationSettings::FileLocation Parset::getFileLocation(const std::string outputType, unsigned idx) const {
+    std::vector<struct ObservationSettings::FileLocation> Parset::getFileLocations(const std::string outputType) const {
       //
       const string prefix = "Observation.DataProducts.Output_" + outputType;
 
@@ -612,26 +815,24 @@ namespace LOFAR
       vector<string> filenames = getStringVector(prefix + ".filenames", empty, true);
       vector<string> locations = getStringVector(prefix + ".locations", empty, true);
 
-      if (idx >= filenames.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".filenames: " << idx);
+      size_t numValidEntries = std::min(filenames.size(), locations.size());
+
+      vector<struct ObservationSettings::FileLocation> result(numValidEntries);
+
+      for (size_t i = 0; i < numValidEntries; ++i) {
+        ObservationSettings::FileLocation &location = result[i];
+        const vector<string> host_dir = StringUtil::split(locations[i], ':');
+
+        if (host_dir.size() != 2) {
+          THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[i]);
+        }
+
+        location.filename  = filenames[i];
+        location.host      = host_dir[0];
+        location.directory = host_dir[1];
       }
 
-      if (idx >= locations.size()) {
-        THROW(CoInterfaceException, "Invalid index for " << prefix << ".locations: " << idx);
-      }
-
-      vector<string> host_dir = StringUtil::split(locations[idx], ':');
-
-      if (host_dir.size() != 2) {
-        THROW(CoInterfaceException, "Location must adhere to 'host:directory' in " << prefix << ".locations: " << locations[idx]);
-      }
-
-      ObservationSettings::FileLocation location;
-      location.filename  = filenames[idx];
-      location.host      = host_dir[0];
-      location.directory = host_dir[1];
-
-      return location;
+      return result;
     }
 
     size_t ObservationSettings::nrSubbands(size_t SAP) const
@@ -683,24 +884,6 @@ namespace LOFAR
 
     void Parset::check() const
     {
-      checkInputConsistency();
-      checkVectorLength("Observation.beamList", nrSubbands());
-
-      for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++)
-        if (outputThisType(outputType)) {
-          std::string prefix = keyPrefix(outputType);
-          unsigned expected = nrStreams(outputType);
-
-          checkVectorLength(prefix + ".locations", expected);
-          checkVectorLength(prefix + ".filenames", expected);
-        }
-
-      if (CNintegrationSteps() % dedispersionFFTsize() != 0)
-        THROW(CoInterfaceException, "OLAP.CNProc.integrationSteps (" << CNintegrationSteps() << ") must be divisible by OLAP.CNProc.dedispersionFFTsize (" << dedispersionFFTsize() << ')');
-
-      if (outputThisType(BEAM_FORMED_DATA) || outputThisType(TRIGGER_DATA)) {
-        // second transpose is performed
-      }
     }
 
 
@@ -710,37 +893,15 @@ namespace LOFAR
     }
 
 
-    string Parset::getInputStreamName(const string &stationName, unsigned rspBoardNumber) const
-    {
-      string key = string("PIC.Core.Station.") + stationName + ".RSP.ports";
-
-      if (!isDefined(key)) {
-        LOG_ERROR_STR("Key not found: " << key << ", falling back to reading from /dev/null");
-
-        return "file:/dev/null";
-      }
-
-      return getStringVector(key, true)[rspBoardNumber];
-    }
-
-
-    std::string Parset::keyPrefix(OutputType outputType)
-    {
-      switch (outputType) {
-      case CORRELATED_DATA:   return "Observation.DataProducts.Output_Correlated";
-      case BEAM_FORMED_DATA:  return "Observation.DataProducts.Output_Beamformed";
-      case TRIGGER_DATA:      return "Observation.DataProducts.Output_Trigger";
-      default:                THROW(CoInterfaceException, "Unknown output type");
-      }
-    }
-
-
     std::string Parset::getHostName(OutputType outputType, unsigned streamNr) const
     {
       if (outputType == CORRELATED_DATA)
-        return settings.correlator.files[streamNr].location.host; // TODO: add to check() to reject parset or obsconfig early to avoid segfault here if streamNr >= settings.correlator.files.size()
+        return settings.correlator.files[streamNr].location.host;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[0];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.host;
+
+      return "unknown";
     }
 
 
@@ -749,16 +910,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.filename;
 
-      const std::string keyname = keyPrefix(outputType) + ".filenames";
-      if (!isDefined(keyname))
-        THROW(CoInterfaceException, "Could not find filename key: " << keyname);
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.filename;
 
-      const std::vector<std::string> filenames = getStringVector(keyname, true);
-
-      if (streamNr >= filenames.size())
-        THROW(CoInterfaceException, "Filename index out of bounds for key " << keyname << ": " << streamNr << " >= " << filenames.size());
-
-      return filenames[streamNr];
+      return "unknown";
     }
 
 
@@ -767,7 +922,10 @@ namespace LOFAR
       if (outputType == CORRELATED_DATA)
         return settings.correlator.files[streamNr].location.directory;
 
-      return StringUtil::split(getStringVector(keyPrefix(outputType) + ".locations", true)[streamNr], ':')[1];
+      if (outputType == BEAM_FORMED_DATA)
+        return settings.beamFormer.files[streamNr].location.directory;
+
+      return "unknown";
     }
 
 
@@ -777,9 +935,8 @@ namespace LOFAR
         return 0;
 
       switch (outputType) {
-      case CORRELATED_DATA:   return settings.correlator.files.size();
-      case BEAM_FORMED_DATA:        // FALL THROUGH
-      case TRIGGER_DATA:      return settings.beamFormer.files.size();
+      case CORRELATED_DATA:    return settings.correlator.files.size();
+      case BEAM_FORMED_DATA:   return settings.beamFormer.files.size();
       default:                 THROW(CoInterfaceException, "Unknown output type");
       }
     }
@@ -1110,78 +1267,14 @@ namespace LOFAR
       return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
-    bool Parset::outputCorrelatedData() const
-    {
-      return settings.correlator.enabled;
-    }
-
-    bool Parset::outputBeamFormedData() const
-    {
-      return settings.beamFormer.enabled;
-    }
-
-    bool Parset::outputTrigger() const
-    {
-      return getBool("Observation.DataProducts.Output_Trigger.enabled", false);
-    }
-
     bool Parset::outputThisType(OutputType outputType) const
     {
-      return getBool(keyPrefix(outputType) + ".enabled", false);
+      switch (outputType) {
+      case CORRELATED_DATA:   return settings.correlator.enabled;
+      case BEAM_FORMED_DATA:  return settings.beamFormer.enabled;
+      default:                THROW(CoInterfaceException, "Unknown output type");
+      }
     }
-
-#if 0
-    bool Parset::onlineFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlineFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationFlagging", false);
-    }
-
-    bool Parset::onlinePreCorrelationNoChannelsFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePreCorrelationNoChannelsFlagging", false);
-    }
-
-    bool Parset::onlinePostCorrelationFlagging() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlagging", false);
-    }
-
-    unsigned Parset::onlinePreCorrelationFlaggingIntegration() const
-    {
-      return getUint32("OLAP.CNProc.onlinePostCorrelationFlaggingIntegration", 0);
-    }
-
-
-    string Parset::onlinePreCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePreCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePreCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingType", defaultVal);
-    }
-
-    string Parset::onlinePostCorrelationFlaggingStatisticsType(std::string defaultVal) const
-    {
-      return getString("OLAP.CNProc.onlinePostCorrelationFlaggingStatisticsType", defaultVal);
-    }
-
-    bool Parset::onlinePostCorrelationFlaggingDetectBrokenStations() const
-    {
-      return getBool("OLAP.CNProc.onlinePostCorrelationFlaggingDetectBrokenStations", false);
-    }
-#endif
 
     double Parset::CNintegrationTime() const
     {
@@ -1304,6 +1397,75 @@ namespace LOFAR
     {
       return getString("_DPname","");
     }
+
+
+    Parset Parset::getGlobalLTAFeedbackParameters() const
+    {
+      Parset ps;
+
+      // for MoM, to discriminate between Cobalt and BG/P observations
+      ps.add("_isCobalt", "T");
+
+      ps.add("Observation.DataProducts.nrOfOutput_Beamformed_", 
+             str(format("%u") % nrStreams(BEAM_FORMED_DATA)));
+      ps.add("Observation.DataProducts.nrOfOutput_Correlated_", 
+             str(format("%u") % nrStreams(CORRELATED_DATA)));
+
+      if (settings.correlator.enabled) {
+        ps.add("Observation.Correlator.integrationInterval",
+               str(format("%.16g") % settings.correlator.integrationTime()));
+      }
+
+      if (settings.beamFormer.enabled) {
+        // For Cobalt, we do not collapse channels. There's no need to do so,
+        // because we can do the final PPF/FFT on the desired number of output
+        // channels. The BlueGene, on the other hand, uses a fixed PPF/FFT size,
+        // so that the number of channels has to be reduced in the final step.
+        // As a result, `rawSamplingTime` is identical to `samplingTime`,
+        // `nrOfCollapsedChannels` is equal to the number of output channels per
+        // subband, and `frequencyDownsamplingFactor` is always 1.
+        const ObservationSettings::BeamFormer::StokesSettings&
+          coherentStokes = settings.beamFormer.coherentSettings;
+        const ObservationSettings::BeamFormer::StokesSettings&
+          incoherentStokes = settings.beamFormer.incoherentSettings;
+        ps.add("Observation.CoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels)));
+        ps.add("Observation.IncoherentStokes.rawSamplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels)));
+        ps.add("Observation.CoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * coherentStokes.nrChannels)));
+        ps.add("Observation.IncoherentStokes.samplingTime",
+               str(format("%.16g") % 
+                   (sampleDuration() * incoherentStokes.nrChannels)));
+        ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % coherentStokes.timeIntegrationFactor));
+        ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
+               str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
+        ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % coherentStokes.nrChannels));
+        ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
+               str(format("%u") % incoherentStokes.nrChannels));
+        ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
+        ps.add("Observation.CoherentStokes.stokes",
+               stokesType(coherentStokes.type));
+        ps.add("Observation.IncoherentStokes.stokes",
+               stokesType(incoherentStokes.type));
+        ps.add("Observation.CoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.IncoherentStokes.antennaSet",
+               settings.antennaSet);
+        ps.add("Observation.CoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+        ps.add("Observation.IncoherentStokes.stationList",
+               get("Observation.VirtualInstrument.stationList"));
+      }
+      return ps;
+    }
+
 
     size_t ObservationSettings::BeamFormer::SAP::nrCoherentTAB() const
     {

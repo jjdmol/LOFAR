@@ -41,7 +41,7 @@ using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
 using LOFAR::Exception;
 
-unsigned NR_CHANNELS = 512;
+unsigned NR_CHANNELS = 256;
 unsigned NR_SAMPLES_PER_CHANNEL = 253;
 unsigned NR_TABS = 79;
 unsigned NR_POLARIZATIONS = 2;
@@ -51,7 +51,7 @@ Exception::TerminateHandler t(Exception::terminate);
 void runTest( Context &ctx, Stream &stream )
 {
   Parset ps;
-  ps.add("Observation.DataProducts.Output_Beamformed.enabled", "true");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
   ps.updateSettings();
 
   CoherentStokesTransposeKernel::Parameters params(ps);

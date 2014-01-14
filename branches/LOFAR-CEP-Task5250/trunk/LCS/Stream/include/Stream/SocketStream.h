@@ -30,6 +30,7 @@
 
 #include <time.h>
 #include <string>
+#include <vector>
 
 namespace LOFAR {
 
@@ -57,6 +58,8 @@ class SocketStream : public FileDescriptorBasedStream
     const Protocol protocol;
     const Mode mode;
 
+    template<typename T> size_t recvmmsg( std::vector<T> &buffers, bool oneIsEnough ); // only for UDP server socket
+
   private:
     const std::string hostname;
     uint16 port;
@@ -73,5 +76,7 @@ class SocketStream : public FileDescriptorBasedStream
 };
 
 } // namespace LOFAR
+
+#include "SocketStream.tcc"
 
 #endif

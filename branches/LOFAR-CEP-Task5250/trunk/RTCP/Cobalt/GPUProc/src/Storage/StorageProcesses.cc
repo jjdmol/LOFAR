@@ -29,6 +29,7 @@
 #include <boost/format.hpp>
 
 #include <Stream/PortBroker.h>
+#include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
 
 #include "SSH.h"
@@ -109,12 +110,19 @@ namespace LOFAR
 
       Thread thread(this, &StorageProcesses::finalMetaDataThread, itsLogPrefix + "[FinalMetaDataThread] ", 65536);
 
+      LOG_DEBUG("forwardFinalMetaData(): cancelling FinalMetaDataThread");
       thread.cancel(deadline_ts);
+      thread.wait();
+
+      // Notify clients
+      itsFinalMetaDataAvailable.trigger();
     }
 
 
     void StorageProcesses::finalMetaDataThread()
     {
+      // Note that some parset keys are overriden as test case's .run files append keys.
+      // And runObservation.sh adds defaults by prepending keys to the parset.
       std::string hostName = itsParset.getString("Cobalt.FinalMetaDataGatherer.host", "localhost");
       std::string userName = itsParset.getString("Cobalt.FinalMetaDataGatherer.userName", "");
       std::string pubKey = itsParset.getString("Cobalt.FinalMetaDataGatherer.sshPublicKey", "");
@@ -125,13 +133,16 @@ namespace LOFAR
         // No username given -- use $USER
         const char *USER = getenv("USER");
 
-        ASSERTSTR(USER, "$USER not set.");
-
-        userName = USER;
+        if (USER)
+          userName = USER;
+        else {
+          LOG_WARN("[FinalMetaData] no userName given in parset and $USER not set. Using 'lofarsys'.");
+          userName = "lofarsys";
+        }
       }
 
       if (pubKey == "" && privKey == "") {
-        // No SSH keys given -- try to discover them
+        LOG_DEBUG(itsLogPrefix + "[FinalMetaData] no SSH keys given. Try to discover them...");
 
         char discover_pubkey[1024];
         char discover_privkey[1024];
@@ -139,6 +150,9 @@ namespace LOFAR
         if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
           pubKey = discover_pubkey;
           privKey = discover_privkey;
+        } else {
+          LOG_ERROR(itsLogPrefix + "[FinalMetaData] no SSH keys given and discovery failed: failed to obtain final meta data");
+          return;
         }
       }
 
@@ -148,25 +162,51 @@ namespace LOFAR
                                     );
 
       // Start the remote process
+      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
+                    userName << '@' << hostName << " using key pair filenames " <<
+                    pubKey << ", " << privKey << " to execute command '" << commandLine << '\'');
       SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
       sshconn.start();
 
       // Connect
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connecting...");
-      std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
-      PortBroker::ClientStream stream(hostName, storageBrokerPort(itsParset.observationID()), resource, 0);
+
+      const std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
+      SmartPtr<Stream> stream;
+
+      // FinalMetaDataGatherer has 5 seconds to start and listen on the
+      // PortBroker connection. We need this because SSH.cc/libssh2 sometimes
+      // keeps connections open even though FinalMetaDataGatherer cannot even
+      // be started.
+      //
+      // TODO: For now, we also need a deadline for non-real-time observations,
+      // because FinalMetaDataGather is not necessarily present.
+      const time_t deadline = time(0) + 5;
+
+      // Keep trying to connect to the FinalMetaDataGatherer, but only
+      // while the SSH connection is alive. If not, there's no point in waiting
+      // for a connection that can never be established.
+      while(!stream) {
+        if (deadline > 0 && time(0) < deadline)
+          return;
+
+        if (sshconn.isDone())
+          return;
+
+        try {
+          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 1);
+        } catch (SocketStream::TimeOutException &) {
+        }
+      }
 
       // Send parset
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
-      itsParset.write(&stream);
+      itsParset.write(stream);
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
 
       // Receive final meta data
-      itsFinalMetaData.read(stream);
+      itsFinalMetaData.read(*stream);
       LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
-
-      // Notify clients
-      itsFinalMetaDataAvailable.trigger();
 
       // Wait for or end the remote process
       sshconn.wait();

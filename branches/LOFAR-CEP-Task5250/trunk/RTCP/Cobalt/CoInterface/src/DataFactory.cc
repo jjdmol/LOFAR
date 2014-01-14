@@ -53,8 +53,6 @@ namespace LOFAR
         return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
       }
 
-      case TRIGGER_DATA: return new TriggerData;
-
       default: THROW(CoInterfaceException, "unsupported output type");
       }
 
