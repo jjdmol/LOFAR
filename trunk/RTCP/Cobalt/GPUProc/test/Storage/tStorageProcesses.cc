@@ -46,6 +46,8 @@ void test_simple()
   // Test whether executing an application works. The
   // communication protocol after startup is ignored.
 
+  LOG_INFO("**** test_simple() ****");
+
   const char *USER = getenv("USER");
   Parset p;
 
@@ -74,6 +76,8 @@ void test_protocol()
 {
   // Test whether we follow the communication protocol
   // as expected by Storage_main.
+
+  LOG_INFO("**** test_protocol() ****");
 
   const char *USER = getenv("USER");
   Parset p;
