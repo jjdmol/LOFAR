@@ -7,11 +7,15 @@ CPU int
 # Interface name (eth2 .. eth5)
 Interface string
 
-# IP address (10.168.X.Y)
-IP string
-
 # MAC address
 MAC string
 
 # List of stations received on this interface
 stationList stringArr
+
+# RSP number for each connected station (0 or 1)
+RSPList stringArr
+
+# IP address for each connected station(10.X.Y.Z)
+IPList stringArr
+
