@@ -282,7 +282,7 @@ StationResponse::evaluateImplElementResponse(const Grid &grid,
         for(size_t j = 0; j < nFreq; ++j)
         {
             LOFAR::StationResponse::matrix22c_t response =
-                field->singleElementResponse(time, grid[FREQ]->center(j),
+                field->elementResponse(time, grid[FREQ]->center(j),
                 v_direction);
 
             *E00_re++ = real(response[0][0]);

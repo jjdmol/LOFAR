@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 995 747 N "_3DFace" 0
+PANEL,-1 -1 1200 823 N "_3DFace" 0
 "main()
 {
   // Initialise the Panel
@@ -546,7 +546,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -7378.867681650218 -1812 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -9908.043387347643 -2098 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -923,7 +923,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 36
 "PRIMITIVE_TEXT25"
 ""
-1 -7378.867681650218 -1768 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -9908.043387347643 -2032 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -958,7 +958,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 40
 "PRIMITIVE_TEXT27"
 ""
-1 -7378.867681650218 -1720 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -9908.043387347643 -1960 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E

@@ -7,7 +7,7 @@
 # > Component_diff.sh -o <old_version> -n <new_version> -s -D <otdb database> 
 #                     -H <otdb host> 
 #                     
-# -s: Show list of all available revision numbers in OTDB; requires 
+#   -s: Show list of all available revision numbers in OTDB; requires 
 #   -D: Database name; default is LOFAR_4
 #   -H: Database server; default is sasdb
 # If new version is omitted, we assume the latest (HEAD)
@@ -24,9 +24,14 @@ SyntaxError()
         [ -z "${Msg}" ] || echo "ERROR: ${Msg}"
         echo ""
         echo "Syntax: $(basename $0) -o <old_revision> -n <new_revision>"
+        echo "                 [ -s -D <otdb database> -H <otdb host>]"  
         echo ""
-	echo "  - If new version is omitted, we assume the latest (HEAD)"
-        echo "  - Script will find out which branch revision number belongs to"
+        echo "  - old and new_revision are SVN revision numbers"
+	echo "  - If new revision is omitted, we assume the latest (HEAD)"
+        echo "  - Script will find out which branch a revision number belongs to"
+	echo "  -s: Show list of all available revision numbers in OTDB; requires: "
+	echo "     -D: Database name; default is LOFAR_4"
+	echo "     -H: Database server; default is sasdb"
         echo ""
 }
 
@@ -35,6 +40,8 @@ function find_branch_name {
   head=`echo $line | awk -F/ '{print $2}'`
   if [ "$head" != "trunk" ]; then
     branch=`echo $line | awk -F/ '{print $3}' | awk '{print $1}'`
+  else
+    branch=$head
   fi
 }
 
@@ -173,14 +180,42 @@ cd $curdir
 diff -bB -u /tmp/comp_$old_version/data/OTDB/all_old_comps.lst /tmp/comp_$new_version/data/OTDB/all_new_comps.lst > diff_compfiles_$old_version_$new_version
 echo ""
 echo "Differences in component files:"
-echo "=============="
-echo "New files in rev. $new_version ($new_branch) compared to rev. $old_version ($old_branch):"
-grep ^+[A-Z] diff_compfiles_$old_version_$new_version
-echo "=============="
-echo "Removed files in rev. $new_version ($new_branch) since rev. $old_version ($old_branch):"
-grep ^-[A-Z] diff_compfiles_$old_version_$new_version
-echo "=============="
-echo ""
+new_files=( `grep ^+[A-Z] diff_compfiles_$old_version_$new_version` )
+
+if [ ${#new_files[@]} -ge 1 ]; then 
+  echo "=============="
+  echo "New files in rev. $new_version ($new_branch) compared to rev. $old_version ($old_branch):"
+  for new_file in "${new_files[@]}"
+  do
+    new_file=`echo $new_file | awk -F+ '{print $2}'`
+    echo $new_file":"
+    echo "+++++++++++++++++"
+    echo ""
+    cat /tmp/comp_$new_version/data/OTDB/${new_file} | awk '{print "+"$0}'
+    echo ""
+    echo "+++++++++++++++++"
+    echo ""
+  done
+  echo "=============="
+fi
+removed_files=( `grep ^-[A-Z] diff_compfiles_$old_version_$new_version` )
+if [ ${#removed_files[@]} -ge 1 ]; then 
+  echo "Removed files in rev. $new_version ($new_branch) since rev. $old_version ($old_branch):"
+  for removed_file in "${removed_files[@]}"
+  do
+    removed_file=`echo $removed_file | awk -F+ '{print $2}'`
+    echo $removed_file":"
+    echo "-----------------"
+    echo ""
+    cat /tmp/comp_$old_version/data/OTDB/${removed_file} | awk '{print "-"$0}'
+    echo ""
+    echo "-----------------"
+    echo ""
+  done
+  echo "=============="
+  echo
+fi
+
 if [ -s diff_compfiles_$old_version_$new_version ]; then 
   cat diff_compfiles_$old_version_$new_version | grep ^\ [A-Z] | awk '{print $1}' > all_present.lst
 else

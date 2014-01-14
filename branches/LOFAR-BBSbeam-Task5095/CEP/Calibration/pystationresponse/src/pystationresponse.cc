@@ -397,7 +397,7 @@ namespace BBS
       vector3r_t direction = itsDirection->at(time);
       for(unsigned int i = 0; i < freq.size(); ++i)
       {
-        matrix22c_t response = field->singleElementResponse(time, freq(i),
+        matrix22c_t response = field->elementResponse(time, freq(i),
           direction);
 
         if(itsInverse)
@@ -470,7 +470,7 @@ namespace BBS
       AntennaField::ConstPtr field = *station->beginFields();
 
       vector3r_t direction = itsDirection->at(time);
-      matrix22c_t response = field->singleElementResponse(time, freq,
+      matrix22c_t response = field->elementResponse(time, freq,
         direction);
 
       if(itsInverse)

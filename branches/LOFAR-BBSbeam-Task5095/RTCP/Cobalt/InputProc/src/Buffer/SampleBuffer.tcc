@@ -76,12 +76,12 @@ namespace LOFAR
 
       if (create) {
         // register settings
-        LOG_INFO_STR( logPrefix << "Registering " << localSettings.station );
+        LOG_DEBUG_STR( logPrefix << "Registering " << localSettings.station );
         *sharedSettings = localSettings;
       } else {
         // verify settings
         ASSERT( *sharedSettings == localSettings );
-        LOG_INFO_STR( logPrefix << "Connected to " << localSettings.station );
+        LOG_DEBUG_STR( logPrefix << "Connected to " << localSettings.station );
       }
 
       return sharedSettings;
@@ -110,6 +110,17 @@ namespace LOFAR
 
       // set the new mode
       *this->mode = mode;
+    }
+
+
+    template<typename T>
+    double SampleBuffer<T>::Board::flagPercentage( const TimeStamp &from, const TimeStamp &to ) const
+    {
+      // count available samples in the given range
+      const size_t nrSamples = available.sparseSet(from, to).count();
+
+      // return percentage of samples NOT available in the given range
+      return 100.0 - (100.0 * nrSamples / (to - from));
     }
 
 

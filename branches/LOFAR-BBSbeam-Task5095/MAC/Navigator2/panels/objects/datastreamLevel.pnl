@@ -21,7 +21,17 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
     setValue(\"stream1-5_text\",\"visible\",false);
     return;
   }
+
+  if (!navFunct_isCoreStation(station)){
+    setValue(\"stream1-1_text\",\"visible\",false);
+    setValue(\"stream1-2_text\",\"visible\",false);
+    setValue(\"stream1-3_text\",\"visible\",false);
+    setValue(\"stream1-4_text\",\"visible\",false);
+    setValue(\"stream1-5_text\",\"visible\",false);
+    corestation = false;
+  }
   
+    
   baseDP = station+\":LOFAR_PIC_StationInfo\";
   if (navFunct_dpReachable(baseDP)) {
     if (dpExists(baseDP)) {
@@ -46,6 +56,7 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
 E "#uses \"navPanel.ctl\"
 string station = \"\";
 string baseDP=\"\";
+bool corestation = true;
 
 bool bDoubleClicked  = false;
 
@@ -136,7 +147,7 @@ showDatastreams()
     LOG_DEBUG(\"statstreamLevel.pnl:showLevels|error connecting to: \"+ dpStream0);
   }    
 
-  if(dpExists(dpStream1)) {
+  if(dpExists(dpStream1) && corestation) {
     // gather the historical data:
     dyn_dyn_anytype tab;
     int z;

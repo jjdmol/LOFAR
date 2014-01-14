@@ -52,6 +52,28 @@ private:
     bool itsSplitClock;
 };
 
+// Configuration options specific to the direction independent gain model.
+class GainConfig
+{
+public:
+    explicit GainConfig(bool phasors = false);
+    bool phasors() const;
+
+private:
+    bool    itsPhasors;
+};
+
+// Configuration options specific to the direction dependent gain model.
+class DirectionalGainConfig
+{
+public:
+    explicit DirectionalGainConfig(bool phasors = false);
+    bool phasors() const;
+
+private:
+    bool    itsPhasors;
+};
+
 // Configuration options specific to the elevation cut-off.
 class ElevationCutConfig
 {
@@ -139,9 +161,6 @@ class ModelConfig
 public:
     ModelConfig();
 
-    bool usePhasors() const;
-    void setPhasors(bool value = true);
-
     bool useBandpass() const;
     void setBandpass(bool value = true);
 
@@ -151,7 +170,9 @@ public:
     void clearClockConfig();
 
     bool useGain() const;
-    void setGain(bool value = true);
+    void setGainConfig(const GainConfig &config);
+    const GainConfig &getGainConfig() const;
+    void clearGainConfig();
 
     bool useTEC() const;
     void setTEC(bool value = true);
@@ -163,7 +184,9 @@ public:
     void setCommonScalarPhase(bool value = true);
 
     bool useDirectionalGain() const;
-    void setDirectionalGain(bool value = true);
+    void setDirectionalGainConfig(const DirectionalGainConfig &config);
+    const DirectionalGainConfig &getDirectionalGainConfig() const;
+    void clearDirectionalGainConfig();
 
     bool useElevationCut() const;
     void setElevationCutConfig(const ElevationCutConfig &config);
@@ -206,7 +229,6 @@ public:
 private:
     enum ModelOptions
     {
-        PHASORS,
         BANDPASS,
         CLOCK,
         GAIN,
@@ -226,18 +248,22 @@ private:
         N_ModelOptions
     };
 
-    bool                itsModelOptions[N_ModelOptions];
+    bool                    itsModelOptions[N_ModelOptions];
 
-    ClockConfig         itsConfigClock;
-    ElevationCutConfig  itsConfigElevationCut;
-    BeamConfig          itsConfigBeam;
-    IonosphereConfig    itsConfigIonosphere;
-    FlaggerConfig       itsConfigFlagger;
+    ClockConfig             itsConfigClock;
+    GainConfig              itsConfigGain;
+    DirectionalGainConfig   itsConfigDirectionalGain;
+    ElevationCutConfig      itsConfigElevationCut;
+    BeamConfig              itsConfigBeam;
+    IonosphereConfig        itsConfigIonosphere;
+    FlaggerConfig           itsConfigFlagger;
 
-    vector<string>      itsSources;
+    vector<string>          itsSources;
 };
 
 ostream &operator<<(ostream &out, const ClockConfig &obj);
+ostream &operator<<(ostream &out, const GainConfig &obj);
+ostream &operator<<(ostream &out, const DirectionalGainConfig &obj);
 ostream &operator<<(ostream &out, const ElevationCutConfig &obj);
 ostream &operator<<(ostream &out, const BeamConfig &obj);
 ostream &operator<<(ostream &out, const IonosphereConfig &obj);

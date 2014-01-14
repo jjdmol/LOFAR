@@ -30,12 +30,14 @@
 #include <unistd.h>
 #include <iomanip>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <Common/StringUtil.h>
 #include <Common/SystemCallException.h>
 #include <Common/Thread/Mutex.h>
-#include <Common/Thread/Semaphore.h>
 #include <Common/Thread/Cancellation.h>
+
+#include <CoInterface/OutputTypes.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -88,7 +90,7 @@ namespace LOFAR
       string curdir;
       vector<string> splitName;
 
-      split(splitName, dirname, is_any_of("/"));
+      boost::split(splitName, dirname, boost::is_any_of("/"));
 
       for (unsigned i = 0; i < splitName.size(); i++) {
         curdir += splitName[i] + '/';
@@ -97,100 +99,39 @@ namespace LOFAR
     }
 
 
-    OutputThread::OutputThread(const Parset &parset, OutputType outputType, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix, bool isBigEndian, const std::string &targetDirectory)
+    template<typename T> OutputThread<T>::OutputThread(const Parset &parset, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix)
       :
       itsParset(parset),
-      itsOutputType(outputType),
       itsStreamNr(streamNr),
-      itsIsBigEndian(isBigEndian),
-      itsLogPrefix(logPrefix + "[OutputThread] "),
+      itsLogPrefix(logPrefix),
       itsTargetDirectory(targetDirectory),
-      itsFreeQueue(freeQueue),
-      itsReceiveQueue(receiveQueue),
+      itsLTAfeedbackPrefix(LTAfeedbackPrefix),
       itsBlocksWritten(0),
       itsBlocksDropped(0),
       itsNrExpectedBlocks(0),
-      itsNextSequenceNumber(0)
+      itsNextSequenceNumber(0),
+      itsOutputPool(outputPool)
     {
     }
 
 
-    void OutputThread::start()
+    template<typename T> OutputThread<T>::~OutputThread()
     {
-      itsThread = new Thread(this, &OutputThread::mainLoop, itsLogPrefix);
     }
 
 
-    void OutputThread::createMS()
-    {
-      // even the HDF5 writer accesses casacore, to perform conversions
-      ScopedLock sl(casacoreMutex);
-      ScopedDelayCancellation dc; // don't cancel casacore calls
-
-      std::string directoryName = itsTargetDirectory == "" ? itsParset.getDirectoryName(itsOutputType, itsStreamNr) : itsTargetDirectory;
-      std::string fileName = itsParset.getFileName(itsOutputType, itsStreamNr);
-      std::string path = directoryName + "/" + fileName;
-
-      recursiveMakeDir(directoryName, itsLogPrefix);
-      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
-
-      try {
-        // HDF5 writer requested
-        switch (itsOutputType) {
-        case CORRELATED_DATA:
-          itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr, itsIsBigEndian);
-          break;
-
-#ifdef HAVE_DAL
-        case BEAM_FORMED_DATA:
-          itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr, itsIsBigEndian);
-          break;
-#endif
-
-        default:
-          itsWriter = new MSWriterFile(path);
-          break;
-        }
-      } catch (Exception &ex) {
-        LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        itsWriter = new MSWriterNull;
-      }
-
-      // log some core characteristics for CEPlogProcessor for feedback to MoM/LTA
-      switch (itsOutputType) {
-      case CORRELATED_DATA:
-        itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
-
-        LOG_INFO_STR(itsLogPrefix << "Characteristics: "
-                                  << "SAP " << itsParset.settings.subbands[itsStreamNr].SAP
-                                  << ", subband " << itsParset.settings.subbands[itsStreamNr].stationIdx
-                                  << ", centralfreq " << setprecision(8) << itsParset.settings.subbands[itsStreamNr].centralFrequency / 1e6 << " MHz"
-                                  << ", duration " << setprecision(8) << itsNrExpectedBlocks * itsParset.IONintegrationTime() << " s"
-                                  << ", integration " << setprecision(8) << itsParset.IONintegrationTime() << " s"
-                                  << ", channels " << itsParset.nrChannelsPerSubband()
-                                  << ", channelwidth " << setprecision(8) << itsParset.channelWidth() / 1e3 << " kHz"
-                     );
-        break;
-      case BEAM_FORMED_DATA:
-        itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
-        break;
-
-      default:
-        break;
-      }
-    }
-
-
-    void OutputThread::checkForDroppedData(StreamableData *data)
+    template<typename T> void OutputThread<T>::checkForDroppedData(StreamableData *data)
     {
       // TODO: check for dropped data at end of observation
 
       unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
+      ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
+
       if (droppedBlocks > 0) {
         itsBlocksDropped += droppedBlocks;
 
-        LOG_WARN_STR(itsLogPrefix << "OutputThread dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+        LOG_WARN_STR(itsLogPrefix << "Dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
@@ -198,33 +139,19 @@ namespace LOFAR
     }
 
 
-    static Semaphore writeSemaphore(300);
-
-
-    void OutputThread::doWork()
+    template<typename T> void OutputThread<T>::doWork()
     {
       time_t prevlog = 0;
 
-      for (SmartPtr<StreamableData> data; (data = itsReceiveQueue.remove()) != 0; itsFreeQueue.append(data.release())) {
-        //NSTimer writeTimer("write data", false, false);
-
-        //writeTimer.start();
-        writeSemaphore.down();
-
+      for (SmartPtr<T> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
         try {
           itsWriter->write(data);
           checkForDroppedData(data);
         } catch (SystemCallException &ex) {
           LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
-        } catch (...) {
-          writeSemaphore.up();
-          throw;
         }
 
-        writeSemaphore.up();
-        //writeTimer.stop();
-
-        time_t now = time(0L);
+        const time_t now = time(0L);
 
         if (now > prevlog + 5) {
           // print info every 5 seconds
@@ -239,7 +166,7 @@ namespace LOFAR
     }
 
 
-    void OutputThread::cleanUp() const
+    template<typename T> void OutputThread<T>::cleanUp() const
     {
       float dropPercent = itsBlocksWritten + itsBlocksDropped == 0 ? 0.0 : (100.0 * itsBlocksDropped) / (itsBlocksWritten + itsBlocksDropped);
 
@@ -247,65 +174,141 @@ namespace LOFAR
     }
 
 
-    ParameterSet OutputThread::feedbackLTA() const
+    template<typename T> void OutputThread<T>::augment( const FinalMetaData &finalMetaData )
     {
-      string prefix;
+      try {
+        // augment the data product
+        ASSERT(itsWriter.get());
 
-      switch (itsOutputType) {
-      case CORRELATED_DATA:
-        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Correlated_[%u].", itsStreamNr);
-        break;
-
-      case BEAM_FORMED_DATA:
-        prefix = formatString("LOFAR.ObsSW.Observation.DataProducts.Output_Beamformed_[%u].", itsStreamNr);
-        break;
-
-      default:
-        prefix = "UNKNOWN.";
-        break;
+        itsWriter->augment(finalMetaData);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not add final meta data: " << ex);
       }
+    }
 
+
+    template<typename T> ParameterSet OutputThread<T>::feedbackLTA() const
+    {
       ParameterSet result;
-      result.adoptCollection(itsWriter->configuration(), prefix);
+
+      try {
+        result.adoptCollection(itsWriter->configuration(), itsLTAfeedbackPrefix);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Could not obtain feedback for LTA: " << ex);
+      }
 
       return result;
     }
 
 
-    void OutputThread::augment( const FinalMetaData &finalMetaData )
+    template<typename T> void OutputThread<T>::process()
     {
-      // wait for writer thread to finish, so we'll have an itsWriter
-      ASSERT(itsThread.get());
+      LOG_DEBUG_STR(itsLogPrefix << "process() entered");
 
-      itsThread = 0;
+      createMS();
+      doWork();
+      cleanUp();
+    }
 
-      // augment the data product
-      ASSERT(itsWriter.get());
+    // Make required instantiations
+    template class OutputThread<StreamableData>;
+    template class OutputThread<TABTranspose::Block>;
 
-      itsWriter->augment(finalMetaData);
+
+    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+      :
+      OutputThread<StreamableData>(
+          parset,
+          streamNr,
+          outputPool,
+          logPrefix + "[SubbandOutputThread] ",
+          targetDirectory,
+          formatString("Observation.DataProducts.Output_Correlated_[%u].", streamNr))
+    {
     }
 
 
-    void OutputThread::mainLoop()
+    void SubbandOutputThread::createMS()
     {
-      LOG_DEBUG_STR(itsLogPrefix << "OutputThread::mainLoop() entered");
+      ScopedLock sl(casacoreMutex);
+      ScopedDelayCancellation dc; // don't cancel casacore calls
+
+      const std::string directoryName =
+        itsTargetDirectory == ""
+        ? itsParset.getDirectoryName(CORRELATED_DATA, itsStreamNr)
+        : itsTargetDirectory;
+      const std::string fileName = itsParset.getFileName(CORRELATED_DATA, itsStreamNr);
+
+      const std::string path = directoryName + "/" + fileName;
+
+      recursiveMakeDir(directoryName, itsLogPrefix);
+      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
       try {
-        createMS();
-        doWork();
+        itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
+        itsWriter = new MSWriterNull;
 #if defined HAVE_AIPSPP
       } catch (casa::AipsError &ex) {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
         cleanUp();
 #endif
-      } catch (...) {
-        cleanUp(); // Of course, C++ does not need "finally" >:(
-        throw;
       }
 
-      cleanUp();
+      itsNrExpectedBlocks = itsParset.nrCorrelatedBlocks();
     }
 
+
+    TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+      :
+      OutputThread<TABTranspose::Block>(
+          parset,
+          streamNr,
+          outputPool,
+          logPrefix + "[TABOutputThread] ",
+          targetDirectory,
+          formatString("Observation.DataProducts.Output_Beamformed_[%u].", streamNr)
+          )
+    {
+    }
+
+
+    void TABOutputThread::createMS()
+    {
+      // even the HDF5 writer accesses casacore, to perform conversions
+      ScopedLock sl(casacoreMutex);
+      ScopedDelayCancellation dc; // don't cancel casacore calls
+
+      const std::string directoryName =
+        itsTargetDirectory == ""
+        ? itsParset.getDirectoryName(BEAM_FORMED_DATA, itsStreamNr)
+        : itsTargetDirectory;
+      const std::string fileName = itsParset.getFileName(BEAM_FORMED_DATA, itsStreamNr);
+
+      const std::string path = directoryName + "/" + fileName;
+
+      recursiveMakeDir(directoryName, itsLogPrefix);
+      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
+
+      try {
+#ifdef HAVE_DAL
+        itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr);
+#else
+        itsWriter = new MSWriterFile(path);
+#endif
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
+        itsWriter = new MSWriterNull;
+#if defined HAVE_AIPSPP
+      } catch (casa::AipsError &ex) {
+        LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
+        cleanUp();
+#endif
+      }
+
+      itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
+    }
   } // namespace Cobalt
 } // namespace LOFAR
 

@@ -97,10 +97,10 @@ namespace LOFAR { namespace CEP {
 
   // This class forms the envelope of messages used in the MW framework.
   // MW messages are transmitted as blobs.
-  // The envelope consist of the basic blob header with type 'mw'. The
+  // The envelope consists of the basic blob header with type 'mw'. The
   // blob header defines things like endianness, version, and length.
   // The envelope also contains the operation type and streamId.
-  // The operation type tells the worker what is has to do.
+  // The operation type tells the worker what it has to do.
   // The streamId is for future use to make it possible to have parallel
   // work streams in a worker to keep it busy.
   // The workerId gives the id of the worker.

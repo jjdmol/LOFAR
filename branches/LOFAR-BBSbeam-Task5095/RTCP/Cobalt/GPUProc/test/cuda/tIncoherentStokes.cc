@@ -57,23 +57,26 @@ struct ParsetFixture
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
     blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
-    nrStations = 43;
+    nrStations = 43,
+    nrDelayCompensationChannels = 64;
 
   Parset parset;
 
   ParsetFixture() {
-    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
+    parset.add("Observation.DataProducts.Output_IncoherentStokes.enabled", 
                "true");
-    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
-    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband",
                lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_IncoherentStokes.which",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.which",
                "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
                str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
+               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };
@@ -84,7 +87,8 @@ const size_t
   ParsetFixture::nrOutputSamples,
   ParsetFixture::nrInputSamples,
   ParsetFixture::blockSize,
-  ParsetFixture::nrStations;
+  ParsetFixture::nrStations,
+  ParsetFixture::nrDelayCompensationChannels;
 
 
 // Test correctness of reported buffer sizes
@@ -128,7 +132,7 @@ struct KernelFixture : ParsetFixture
     nrStokes(parset.settings.beamFormer.incoherentSettings.nrStokes),
     factory(parset),
     hInput(
-      boost::extents[nrStations][nrChannels][nrInputSamples][NR_POLARIZATIONS],
+      boost::extents[nrStations][NR_POLARIZATIONS][nrInputSamples][nrChannels],
       context),
     hOutput(
       boost::extents[nrStokes][nrOutputSamples][nrChannels],
@@ -214,41 +218,41 @@ TEST_FIXTURE(KernelFixture, StokesTest)
   for(size_t n = 0; n < nrInputSamples; n++)
   {
     // Station 1, channel 3: linear polarization in X  ==>  I, +Q
-    hInput[1][3][n][0] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[1][0][n][3] = fcomplex(cosine[n%N], sine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][3] = float(timeIntegrationFactor);  // Stokes I
       hRefOutput[1][n][3] = float(timeIntegrationFactor);  // Stokes Q
     }
     // Station 4, channel 7: linear polarization in Y  ==>  I, -Q
-    hInput[4][7][n][1] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[4][1][n][7] = fcomplex(cosine[n%N], sine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][7] = float(timeIntegrationFactor);  // Stokes I
       hRefOutput[1][n][7] = -float(timeIntegrationFactor); // Stokes Q
     }
     // Station 6, channel 8: linear polarization in X and Y  ==>  I, +U
-    hInput[6][8][n][0] = fcomplex(cosine[n%N], sine[n%N]);
-    hInput[6][8][n][1] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[6][0][n][8] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[6][1][n][8] = fcomplex(cosine[n%N], sine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][8] = float(2 * timeIntegrationFactor);  // Stokes I
       hRefOutput[2][n][8] = float(2 * timeIntegrationFactor);  // Stokes U
     }
     // Station 7, channel 11: linear polarization in X and -Y  ==>  I, -U
-    hInput[7][11][n][0] = fcomplex(cosine[n%N], sine[n%N]);
-    hInput[7][11][n][1] = -fcomplex(cosine[n%N], sine[n%N]);
+    hInput[7][0][n][11] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[7][1][n][11] = -fcomplex(cosine[n%N], sine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][11] = float(2 * timeIntegrationFactor);  // Stokes I
       hRefOutput[2][n][11] = -float(2 * timeIntegrationFactor); // Stokes U
     }
     // Station 10, channel 13: right circular polarization  ==>  I, +V
-    hInput[10][13][n][0] = fcomplex(cosine[n%N], sine[n%N]);
-    hInput[10][13][n][1] = fcomplex(sine[n%N], -cosine[n%N]);
+    hInput[10][0][n][13] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[10][1][n][13] = fcomplex(sine[n%N], -cosine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][13] = float(2 * timeIntegrationFactor);  // Stokes I
       hRefOutput[3][n][13] = float(2 * timeIntegrationFactor);  // Stokes V
     }
     // Station 12, channel 17: left circular polarization  ==>  I, -V
-    hInput[12][17][n][0] = fcomplex(cosine[n%N], sine[n%N]);
-    hInput[12][17][n][1] = fcomplex(-sine[n%N], cosine[n%N]);
+    hInput[12][0][n][17] = fcomplex(cosine[n%N], sine[n%N]);
+    hInput[12][1][n][17] = fcomplex(-sine[n%N], cosine[n%N]);
     if (n < nrOutputSamples) {
       hRefOutput[0][n][17] = float(2 * timeIntegrationFactor);  // Stokes I
       hRefOutput[3][n][17] = -float(2 * timeIntegrationFactor); // Stokes V

@@ -9,6 +9,7 @@ import struct
 import string
 from general_lib import sendCmd
 
+os.umask(001)
 lofar_version = '0913f'
 
 CoreStations          = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C',\
@@ -31,18 +32,23 @@ def init_lofar_lib():
     global logger
     logger = logging.getLogger()
     logger.debug("init logger lofar_lib")
+    if os.access(dataDir(), os.F_OK):
+        removeAllDataFiles()
+    else:
+        os.mkdir(dataDir())
 
 
 def dataDir():
-    return (r'/tmp/data')
+    return (r'/localhome/data/stationtest/')
 
 # remove all *.dat 
 def removeAllDataFiles():
-    files = os.listdir(dataDir())
-    #print files
-    for f in files:
-        if f[-3:] == 'dat' or f[-3:] == 'nfo':
-            os.remove(os.path.join(dataDir(),f))
+    if os.access(dataDir(), os.F_OK):
+        files = os.listdir(dataDir())
+        #print files
+        for f in files:
+            if f[-3:] == 'dat' or f[-3:] == 'nfo':
+                os.remove(os.path.join(dataDir(),f))
 
 
 # return station type
@@ -311,22 +317,52 @@ def waitRSPready():
         timeout -= 1
     return (0)
 
-def selectStr(rcus):
-    last_rcu = -2
-    reeks = False
+def selectStr(sel_list):
+    last_sel = -2
+    set = False
     select = ""
-    for rcu in rcus:
-        if rcu == last_rcu+1:
-            reeks = True
+    for sel in sorted(sel_list):
+        if sel == last_sel+1:
+            set = True
         else:
-            if reeks:
-                reeks = False
-                select += ':%d' %(last_rcu)
-            select += ",%d" %(rcu)
-        last_rcu = rcu
-    if reeks:
-        select += ':%d' %(last_rcu)
+            if set:
+                set = False
+                select += ':%d' %(last_sel)
+            select += ",%d" %(sel)
+        last_sel = sel
+    if set:
+        select += ':%d' %(last_sel)
     return (select[1:])
+
+def extractSelectStr(selectStr):
+    selectStr += '.'
+    sel_list = list()
+    num_str = ''
+    num = 0
+    set_num = -1
+    for ch in selectStr:
+        if ch.isalnum():
+            num_str += ch
+            continue
+        
+        num = int(num_str)
+        num_str = ''
+            
+        if set_num > -1:
+            while (set_num < num):
+                sel_list.append(set_num)
+                set_num += 1
+            set_num = -1
+        
+        if ch == ',':
+            sel_list.append(num)
+            
+        if ch == ':':
+            set_num = num
+             
+    sel_list.append(num)        
+    return (sorted(sel_list))
+
     
 # function used for antenna testing        
 def swapXY(state):

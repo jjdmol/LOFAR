@@ -46,12 +46,12 @@
 #error Precondition violated: TIME_PARALLEL_FACTOR >= 1
 #endif
 
-//4D output array of stokes values. Each sample contains 1 or 4 stokes
-//paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels
+//4D input array of complex samples. For each tab and polarization there are
+//time lines with data for each channel
 typedef float2 (*InputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNEL][NR_CHANNELS]; 
 
-//4D input array of complex samples. For each tab and polarization there are
-//timelines with data for each channel
+//4D output array of stokes values. Each sample contains 1 or 4 stokes
+//paramters. For each tab, there are NR_COHERENT_STOKES timeseries of channels
 typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL/INTEGRATION_SIZE][NR_CHANNELS];
 
 /*!
@@ -120,10 +120,17 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
 extern "C" __global__ void coherentStokes(OutputDataType output,
                                           const InputDataType input) 
 {
+
   //# Define the indexes in the data depending on the block and thread idx
-  unsigned channel_idx = threadIdx.x;  //# If we have channels do the read and write with 16 in parallel
+  unsigned channel_idx = blockIdx.x * blockDim.x + threadIdx.x;  //# If we have channels do the read and write with 16 in parallel
   unsigned time_idx = threadIdx.y;     
-  unsigned tab_idx = threadIdx.z;    
+  unsigned tab_idx = blockIdx.z * blockDim.z + threadIdx.z;    
+
+  // We support al sizes of channels and tabs: skip current thread of not needed
+  if ( channel_idx >= NR_CHANNELS)
+    return;
+  if ( tab_idx >= NR_TABS)
+    return;
 
   //# Step over (part of) the timerange of samples with INTEGRATION_SIZE steps
   //# The time_idx determines which part of (or the whole of) the time range this
@@ -143,7 +150,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
     float halfStokesU = 0;
     float halfStokesV = 0;
 #   endif
-
+    
     //# Do the integration
     for (unsigned idx_step = 0; idx_step < INTEGRATION_SIZE; idx_step++) 
     {
@@ -160,6 +167,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
       halfStokesV += X.y * Y.x - X.x * Y.y;
 #     endif
     }
+
     //# We step in the data with INTEGRATION_SIZE
     unsigned write_idx = idx_stride / INTEGRATION_SIZE;
 

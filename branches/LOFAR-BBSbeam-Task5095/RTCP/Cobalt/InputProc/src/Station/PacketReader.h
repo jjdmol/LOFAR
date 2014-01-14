@@ -43,6 +43,10 @@ namespace LOFAR
     public:
       PacketReader( const std::string &logPrefix, Stream &inputStream );
 
+      // Reads a set of packets from the input stream. Sets valid[i] to
+      // true for each valid packet i.
+      void readPackets( std::vector<struct RSP> &packets, std::vector<bool> &valid );
+
       // Reads a packet from the input stream. Returns true if a packet was
       // succesfully read.
       bool readPacket( struct RSP &packet );
@@ -56,12 +60,13 @@ namespace LOFAR
       // The stream from which packets are read.
       Stream &inputStream;
 
-      // Whether inputStream can do a small read() without data loss.
-      bool supportPartialReads;
+      // Whether inputStream is an UDP stream
+      // (UDP streams allow partial reads, and recvmmsg).
+      bool inputIsUDP;
 
       // Statistics covering the packets read so far
       size_t nrReceived; // nr. of packets received
-      size_t nrBadSize; // nr. of packets with wrong size (only if supportPartialReads == false)
+      size_t nrBadSize; // nr. of packets with wrong size (only if inputIsUDP == false)
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
       size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
@@ -69,6 +74,8 @@ namespace LOFAR
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
 
       double lastLogTime; // time since last log print, to monitor data rates
+
+      bool validatePacket(const struct RSP &packet);
     };
 
 

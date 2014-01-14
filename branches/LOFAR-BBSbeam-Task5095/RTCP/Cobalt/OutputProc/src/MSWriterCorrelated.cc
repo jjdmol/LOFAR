@@ -45,10 +45,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
+    MSWriterCorrelated::MSWriterCorrelated (const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
       :
       MSWriterFile(
-        (makeMeasurementSet(logPrefix, msName, parset, subbandIndex, isBigEndian),
+        (makeMeasurementSet(logPrefix, msName, parset, subbandIndex),
          str(format("%s/table.f0data") % msName))),
       itsLogPrefix(logPrefix),
       itsMSname(msName),
@@ -104,14 +104,14 @@ namespace LOFAR
     }
 
 
-    void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex, bool isBigEndian)
+    void MSWriterCorrelated::makeMeasurementSet(const std::string &logPrefix, const std::string &msName, const Parset &parset, unsigned subbandIndex)
     {
 #if defined HAVE_AIPSPP
       MeasurementSetFormat myFormat(parset, 512);
 
-      myFormat.addSubband(msName, subbandIndex, isBigEndian);
+      myFormat.addSubband(msName, subbandIndex);
 
-      LOG_INFO_STR(logPrefix << "MeasurementSet created");
+      LOG_DEBUG_STR(logPrefix << "MeasurementSet created");
 #endif // defined HAVE_AIPSPP
     }
 
@@ -173,14 +173,14 @@ namespace LOFAR
         brokenDuring[rcu.station].push_back(FailedTileInfo(rcu.station, rcu.time, datetime2epoch(rcu.time), rcu.type, rcu.seqnr));
       }
 
-      LOG_INFO_STR(itsLogPrefix << "Reopening MeasurementSet");
+      LOG_DEBUG_STR(itsLogPrefix << "Reopening MeasurementSet");
 
       Table ms(itsMSname, Table::Update);
 
       vector<FailedTileInfo::VectorFailed> before(FailedTileInfo::antennaConvert(ms, brokenBefore));
       vector<FailedTileInfo::VectorFailed> during(FailedTileInfo::antennaConvert(ms, brokenDuring));
 
-      LOG_INFO_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
+      LOG_DEBUG_STR(itsLogPrefix << "Writing broken hardware information to MeasurementSet");
 
       try {
         FailedTileInfo::writeFailed(ms, before, during);

@@ -26,8 +26,8 @@ def load_and_compare_data_sets(ms1, ms2):
 
             div_array[idx][0][idy] = div_value
     print "maximum different value between measurement sets: {0}".format(div_max)
-
-    if div_max != 0:
+    # Use a delta of about float precision
+    if div_max > 1e-6:
         print "The measurement sets are contained a different value"
         print "failed delta test!"
         return False

@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -47,12 +48,17 @@
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/Buffer/StationID.h>
+
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -64,6 +70,8 @@
 #include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
+#include <GPUProc/SysInfoLogger.h>
+#include <GPUProc/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -165,18 +173,19 @@ int main(int argc, char **argv)
   LOG_WARN("Running without MPI!");
 #endif
 
+  LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
+
   /*
    * Initialise the system environment
    */
 
+  // Ignore SIGPIPE, as we handle disconnects ourselves
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    THROW_SYSCALL("signal(SIGPIPE)");
+
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
-
-  // Restrict access to (tmp build) files we create to owner
-  // JD: Don't do that! We want to be able to clean up each other's
-  // mess.
-  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
@@ -207,6 +216,17 @@ int main(int argc, char **argv)
   /*
    * INIT stage
    */
+
+  // Send identification string to the MAC Log Processor
+  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "",
+                                      ps.getString("_DPname")));
+  format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  LOG_INFO_STR("MACProcessScope: " << str(prFmt
+                   % toUpper(myHostname(false))
+                   % (ps.settings.nodes.size() > size_t(rank) ? 
+                      ps.settings.nodes[rank].cpu : 0)));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
@@ -268,6 +288,8 @@ int main(int argc, char **argv)
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
     for (size_t i = 0; i < gpuIds.size(); ++i) {
+      ASSERTSTR(gpuIds[i] < allDevices.size(), "Request to use GPU #" << gpuIds[i] << ", but found only " << allDevices.size() << " GPUs");
+
       gpu::Device &d = allDevices[gpuIds[i]];
 
       devices.push_back(d);
@@ -330,20 +352,16 @@ int main(int argc, char **argv)
   }
 
   SmartPtr<Pipeline> pipeline;
-  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-    outputType = CORRELATED_DATA;
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-    outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
-    outputType = BEAM_FORMED_DATA;
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
@@ -388,6 +406,9 @@ int main(int argc, char **argv)
   DirectInput::instance(&ps);
 #endif
 
+  // Periodically log system information
+  SysInfoLogger siLogger(ps.startTime(), ps.stopTime());
+
   /*
    * RUN stage
    */
@@ -411,10 +432,12 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation(outputType);
+        pipeline->processObservation();
       }
     }
   }
+
+  pipeline = 0;
 
   /*
    * COMPLETING stage
@@ -422,18 +445,16 @@ int main(int argc, char **argv)
   LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
-    time_t completing_start = time(0);
-
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    // TODO: Increase timeouts when FinalMetaDataGatherer starts working again
-    storageProcesses->forwardFinalMetaData(completing_start + 2);
+    time_t completing_start = time(0);
+    storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 10);
+    storageProcesses->stop(completing_start + 600);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -442,8 +463,7 @@ int main(int argc, char **argv)
     feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+    feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
@@ -458,6 +478,9 @@ int main(int argc, char **argv)
     } else {
       LOG_WARN("Could not write feedback file: $LOFARROOT not set.");
     }
+
+    // final cleanup
+    storageProcesses = 0;
   }
   LOG_INFO("===== SUCCESS =====");
 

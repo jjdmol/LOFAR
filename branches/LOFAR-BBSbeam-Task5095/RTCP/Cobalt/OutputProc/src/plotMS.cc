@@ -53,6 +53,10 @@ Exception::TerminateHandler t(Exception::terminate);
 
 bool shouldSwap = false;
 
+// true: print power
+// false: print real / imag
+bool realimag = false;
+
 float power( fcomplex s )
 {
   float r = real(s);
@@ -68,9 +72,11 @@ float power( fcomplex s )
 
 static void usage(char *progname, int exitcode)
 {
-  printf("Usage: %s -p parset [-b baseline | -B station1-station2] [-c channel]\n", progname);
+  printf("Usage: %s -p parset [-b baseline | -B station1-station2] [-c channel] [-i]\n", progname);
   printf("\n");
-  printf("Run within the MS directory of the subband to plot.\n");
+  printf("-i: print real & imaginary values instead of power\n");
+  printf("\n");
+  printf("Run within the MS directory of the subband to plot. Outputs blocknr followed by XX XY YX YY.\n");
   exit(exitcode);
 }
 
@@ -95,7 +101,7 @@ int main(int argc, char *argv[])
     unsigned baseline = 0;
     int channel = -1;
 
-    while ((opt = getopt(argc, argv, "p:b:B:c:")) != -1) {
+    while ((opt = getopt(argc, argv, "p:b:B:c:i")) != -1) {
       switch (opt) {
       case 'p':
         parset_filename = strdup(optarg);
@@ -111,6 +117,10 @@ int main(int argc, char *argv[])
 
       case 'c':
         channel = atoi(optarg);
+        break;
+
+      case 'i':
+        realimag = true;
         break;
 
       default:   /* '?' */
@@ -176,6 +186,10 @@ int main(int argc, char *argv[])
 
     printf( "# baseline %s - %s channel %d\n", firstStation.c_str(), secondStation.c_str(), channel);
     printf( "# observation %u\n", parset.observationID());
+    if (realimag)
+      printf( "# blocknr real(XX) imag(XX) real(XY) imag(XY) real(YX) imag(YX) real(YY) imag(YY)\n");
+    else
+      printf( "# blocknr power(XX) power(XY) power(YX) power(YY)\n");
 
     for(;; ) {
       try {
@@ -188,7 +202,19 @@ int main(int argc, char *argv[])
 
       printf( "# valid samples: %u\n", data->getNrValidSamples(baseline,channel));
 
-      printf( "%6d %10g %10g %10g %10g\n",
+      if (realimag)
+        printf( "%6d %10g %10g %10g %10g %10g %10g %10g %10g\n",
+              data->sequenceNumber(),
+              real( data->visibilities[baseline][channel][0][0] ),
+              imag( data->visibilities[baseline][channel][0][0] ),
+              real( data->visibilities[baseline][channel][0][1] ),
+              imag( data->visibilities[baseline][channel][0][1] ),
+              real( data->visibilities[baseline][channel][1][0] ),
+              imag( data->visibilities[baseline][channel][1][0] ),
+              real( data->visibilities[baseline][channel][1][1] ),
+              imag( data->visibilities[baseline][channel][1][1] ) );
+      else
+        printf( "%6d %10g %10g %10g %10g\n",
               data->sequenceNumber(),
               power( data->visibilities[baseline][channel][0][0] ),
               power( data->visibilities[baseline][channel][0][1] ),

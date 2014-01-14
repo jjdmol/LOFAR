@@ -5,6 +5,7 @@
 TypeName
 Claim.Claim	1#
 	claimDate	26#
+	freeDate	26#
 	name	25#
 
 TypeName
@@ -25,6 +26,7 @@ ClaimManager.ClaimManager	1#
 		newObjectNames	9#
 		DPNames	9#
 		claimDates	10#
+		freeDates	10#
 
 TypeName
 LofarSpeedTest.LofarSpeedTest	1#

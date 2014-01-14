@@ -18,7 +18,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: PortBroker.cc 20465 2012-03-16 15:53:48Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -81,7 +81,7 @@ PortBroker::~PortBroker()
     ScopedLock sl(itsMutex);
 
     // release all unfulfilled requests
-    for( requestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
+    for( RequestMapType::iterator it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {
       LOG_DEBUG_STR( "PortBroker request: discarding " << it->first );
       delete it->second;
     }
@@ -189,7 +189,7 @@ PortBroker::ConnectedClient PortBroker::waitForClient( const string &resource, b
   ScopedLock sl(itsMutex);
 
   while(!itsDone) {
-    requestMapType::iterator it = itsRequestMap.end();
+    RequestMapType::iterator it;
     
     if (prefix) {
       for( it = itsRequestMap.begin(); it != itsRequestMap.end(); ++it ) {

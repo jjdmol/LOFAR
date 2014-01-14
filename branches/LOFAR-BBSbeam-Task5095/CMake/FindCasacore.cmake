@@ -40,6 +40,8 @@
 #                              for backward compatibility with AIPS++
 #  HAVE_CASACORE             - True if system has Casacore (cached)
 #                              identical to CASACORE_FOUND
+#  TAQL_EXECUTABLE           - The absolute path of the TaQL executable
+#                              (cached)
 #
 # ATTENTION: The component names need to be in lower case, just as the
 # casacore library names. However, the CMake variables use all upper case.
@@ -199,6 +201,11 @@ else(NOT CASACORE_INCLUDE_DIR)
   # We've found the header file; let's continue.
   set(CASACORE_FOUND TRUE)
   set(CASACORE_INCLUDE_DIRS ${CASACORE_INCLUDE_DIR})
+
+  # Search for some often used binaries.
+  find_program(TAQL_EXECUTABLE taql
+    HINTS ${CASACORE_ROOT_DIR}/bin)
+  mark_as_advanced(TAQL_EXECUTABLE)
 
   # If the user specified components explicity, use that list; otherwise we'll
   # assume that the user wants to use all components.

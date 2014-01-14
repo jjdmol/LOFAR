@@ -1,0 +1,726 @@
+V 11
+1
+LANG:1 6 RCUTBB
+PANEL,-1 -1 569 377 N "_3DFace" 1
+"$nodeNr"
+"main()
+{
+  
+  nodeNr=$nodeNr;
+  nodeTxt=navFunct_formatInt(nodeNr,999);
+  baseDP = g_currentDatapoint+\"_CBT\"+nodeTxt;
+ 	
+  setValue(\"txt_node\",\"text\",\"CBT\"+nodeTxt);
+   	  
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  showChildState(baseDP);
+}
+" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rCLick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();      
+}" 0
+ 1 0 0 0  16 105
+""0  1
+E "#uses \"navPanel.ctl\"
+string baseDP          = \"\";
+int    nodeNr          = -1;
+string nodeTxt         = \"\";
+bool   bDoubleClicked  = false;
+
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"CBT\"+nodeTxt,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_CobaltNode_detailed_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"CBT\"+nodeTxt,\"ChangePanel\"); 
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"CBT\"+nodeTxt,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 23
+"nodeHighlight"
+""
+1 280 30 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+22 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"NodeCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void NodeCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_CobaltNode_detailed_small.pnl:NodeCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_CobaltNode_detailed_small.pnl:NodeCallback|Found highlight : \" + highlight + \" Looking for: CBT\" + navFunct_formatInt(nodeNr,999));
+  bool bHighlight=false;
+  if (dynContains(highlight,\"CBT\"+navFunct_formatInt(nodeNr,999))) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_CobaltNode_detailed_small.pnl:NodeCallback|Highlight request: \"+bHighlight);
+  nodeHighlight.visible = bHighlight;    
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 2 1 2 1 E 1 0 1 -10 -30 1 E 10 30 225 215
+6 25
+"childStateBorder"
+""
+1 100 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+23 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 2 1 E 1 0 1 1 1 1 E 3 3 210 180
+4 26
+"LINE1"
+""
+1 3 108 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+24 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 1 1 1 2 1 E  3 108 213 108
+6 27
+"RECTANGLE2"
+""
+1 350 90 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -257 3 1 E 350 90 371 104
+2 28
+"PRIMITIVE_TEXT1"
+""
+1 98 93 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 98 93 112 106
+0 2 2 "0s" 0 0 0 192 0 0  98 93 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 3 ib0
+6 29
+"RECTANGLE3"
+""
+1 350 90 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -257 76 1 E 350 90 371 104
+2 30
+"PRIMITIVE_TEXT2"
+""
+1 98 166 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+28 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 98 166 112 179
+0 2 2 "0s" 0 0 0 192 0 0  98 166 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 3 ib1
+1 64 0 "" 1
+0
+2 32
+"txt_node"
+""
+1 72 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+30 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 72 10 135 29
+0 2 2 "0s" 0 0 0 192 0 0  72 10 1
+1
+LANG:1 35 MS Shell Dlg 2,12,-1,5,75,0,0,0,0,0
+0 1
+LANG:1 6 CBT001
+6 33
+"RECTANGLE5"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+31 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -370 -40 1 E 380 80 409 99
+2 34
+"PRIMITIVE_TEXT4"
+""
+1 13 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 13 43 35 56
+0 2 2 "0s" 0 0 0 192 0 0  13 43 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 eth2
+6 35
+"RECTANGLE6"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -370 -10 1 E 380 80 409 99
+2 36
+"PRIMITIVE_TEXT5"
+""
+1 13 73 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 13 73 35 86
+0 2 2 "0s" 0 0 0 192 0 0  13 73 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 eth3
+6 37
+"RECTANGLE7"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+35 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -370 37 1 E 380 80 409 99
+2 38
+"PRIMITIVE_TEXT6"
+""
+1 13 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+36 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 13 120 35 133
+0 2 2 "0s" 0 0 0 192 0 0  13 120 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 eth4
+6 39
+"RECTANGLE8"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+37 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -370 67 1 E 380 80 409 99
+2 40
+"PRIMITIVE_TEXT7"
+""
+1 13 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 13 150 35 163
+0 2 2 "0s" 0 0 0 192 0 0  13 150 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 eth5
+4 41
+"LINE2"
+""
+1 3 30 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  3 30 213 30
+6 42
+"RECTANGLE9"
+""
+1 350 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -270 -30 1 E 350 80 400 110
+2 43
+"PRIMITIVE_TEXT8"
+""
+1 92 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 92 60 118 73
+0 2 2 "0s" 0 0 0 192 0 0  92 60 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 CPU0
+6 44
+"RECTANGLE10"
+""
+1 350 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+42 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1 -270 45 1 E 350 80 400 110
+2 45
+"PRIMITIVE_TEXT9"
+""
+1 92 135 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+43 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 92 135 118 148
+0 2 2 "0s" 0 0 0 192 0 0  92 135 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 CPU1
+6 46
+"RECTANGLE11"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+44 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 150 40 184 59
+2 47
+"PRIMITIVE_TEXT10"
+""
+1 153 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+45 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 153 43 179 56
+0 2 2 "0s" 0 0 0 192 0 0  153 43 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 GPU0
+6 48
+"RECTANGLE12"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+46 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 150 70 184 89
+2 49
+"PRIMITIVE_TEXT11"
+""
+1 153 73 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+47 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 153 73 179 86
+0 2 2 "0s" 0 0 0 192 0 0  153 73 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 GPU1
+6 50
+"RECTANGLE13"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 150 117 184 136
+2 51
+"PRIMITIVE_TEXT12"
+""
+1 153 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+49 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 153 120 179 133
+0 2 2 "0s" 0 0 0 192 0 0  153 120 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 GPU2
+6 52
+"RECTANGLE14"
+""
+1 380 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 150 147 184 166
+2 53
+"PRIMITIVE_TEXT13"
+""
+1 153 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 153 150 179 163
+0 2 2 "0s" 0 0 0 192 0 0  153 150 1
+1
+LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 4 GPU3
+4 54
+"LINE3"
+""
+1 150 50 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  150 50 130 60
+4 55
+"LINE4"
+""
+1 130 70 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  130 70 150 80
+4 56
+"LINE5"
+""
+1 40 50 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  40 50 80 60
+4 57
+"LINE6"
+""
+1 40 80 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+55 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  40 80 80 70
+4 59
+"LINE8"
+""
+1 130 130 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+57 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  130 130 150 120
+4 61
+"LINE10"
+""
+1 40 130 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+59 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  40 130 80 140
+4 62
+"LINE11"
+""
+1 40 160 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+60 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  40 160 80 150
+4 63
+"LINE12"
+""
+1 130 140 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+61 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E  130 140 150 160
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 0 "selfState" -1
+"objects\\lofar_self_state.pnl" 17 39 T 21 1 0 1 -9 -31
+0
+0

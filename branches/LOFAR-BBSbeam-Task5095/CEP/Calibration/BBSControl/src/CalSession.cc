@@ -90,7 +90,8 @@ namespace
 CalSession::CalSession(const string &key, const string &db, const string &user,
     const string &password, const string &host, const string &port)
     :   itsSessionId(-1),
-        itsProcessId(ProcessId::id())
+        itsProcessId(ProcessId::id()),
+        itsRegisterDirty(true)
 {
     // Build connection string.
     string opts("dbname='" + db + "' user='" + user + "' host='" + host + "'");
@@ -116,10 +117,6 @@ CalSession::CalSession(const string &key, const string &db, const string &user,
     syncWorkerRegister(true);
 }
 
-CalSession::~CalSession()
-{
-}
-
 ProcessId CalSession::getProcessId() const
 {
     return itsProcessId;
@@ -127,8 +124,9 @@ ProcessId CalSession::getProcessId() const
 
 bool CalSession::registerAsControl()
 {
-    int32 status = -1;
+    itsRegisterDirty = true;
 
+    int32 status = -1;
     try
     {
         itsConnection->perform(PQRegisterAsControl(itsSessionId, itsProcessId,
@@ -142,8 +140,9 @@ bool CalSession::registerAsControl()
 bool CalSession::registerAsKernel(const string &filesys, const string &path,
     const Axis::ShPtr &freqAxis, const Axis::ShPtr &timeAxis)
 {
-    int32 status = -1;
+    itsRegisterDirty = true;
 
+    int32 status = -1;
     try
     {
         itsConnection->perform(PQRegisterAsKernel(itsSessionId, itsProcessId,
@@ -156,8 +155,9 @@ bool CalSession::registerAsKernel(const string &filesys, const string &path,
 
 bool CalSession::registerAsSolver(size_t port)
 {
-    int32 status = -1;
+    itsRegisterDirty = true;
 
+    int32 status = -1;
     try
     {
         itsConnection->perform(PQRegisterAsSolver(itsSessionId, itsProcessId,
@@ -171,7 +171,6 @@ bool CalSession::registerAsSolver(size_t port)
 void CalSession::setState(State state)
 {
     int32 status = -1;
-
     try
     {
         itsConnection->perform(PQSetState(itsSessionId, itsProcessId, state,
@@ -189,7 +188,6 @@ CalSession::State CalSession::getState() const
 {
     int32 status = -1;
     State result;
-
     try
     {
         itsConnection->perform(PQGetState(itsSessionId, status, result));
@@ -207,7 +205,6 @@ CalSession::State CalSession::getState() const
 void CalSession::setTimeAxis(const Axis::ShPtr &axis)
 {
     int32 status = -1;
-
     try
     {
         itsConnection->perform(PQSetAxisTime(itsSessionId, itsProcessId, axis,
@@ -225,7 +222,6 @@ Axis::ShPtr CalSession::getTimeAxis()
 {
     int32 status = -1;
     Axis::ShPtr axis;
-
     try
     {
         itsConnection->perform(PQGetAxisTime(itsSessionId, status, axis));
@@ -243,7 +239,6 @@ Axis::ShPtr CalSession::getTimeAxis()
 void CalSession::setParset(const ParameterSet &parset) const
 {
     int32 status = -1;
-
     try
     {
         itsConnection->perform(PQSetParset(itsSessionId, itsProcessId, parset,
@@ -261,7 +256,6 @@ ParameterSet CalSession::getParset() const
 {
     int32 status = -1;
     ParameterSet parset;
-
     try
     {
         itsConnection->perform(PQGetParset(itsSessionId, status, parset));
@@ -278,6 +272,8 @@ ParameterSet CalSession::getParset() const
 
 void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
 {
+    itsRegisterDirty = true;
+
     try
     {
         itsConnection->perform(PQInitWorkerRegister(itsSessionId, itsProcessId,
@@ -288,8 +284,9 @@ void CalSession::initWorkerRegister(const CEP::VdsDesc &vds, bool useSolver)
 
 void CalSession::setWorkerIndex(const ProcessId &worker, size_t index)
 {
-    int32 status = -1;
+    itsRegisterDirty = true;
 
+    int32 status = -1;
     try
     {
         itsConnection->perform(PQSetWorkerIndex(itsSessionId, itsProcessId,
@@ -309,7 +306,6 @@ CommandId CalSession::postCommand(const Command& cmd, WorkerType addressee)
 {
     int32 status = -1;
     CommandId id(-1);
-
     try
     {
         itsConnection->perform(PQPostCommand(itsSessionId, itsProcessId,
@@ -330,7 +326,6 @@ pair<CommandId, shared_ptr<Command> > CalSession::getCommand() const
     int32 status = -1;
     pair<CommandId, shared_ptr<Command> > cmd(CommandId(-1),
         shared_ptr<Command>());
-
     try
     {
         itsConnection->perform(PQGetCommand(itsSessionId, itsProcessId, status,
@@ -352,7 +347,6 @@ void CalSession::postResult(const CommandId &id, const CommandResult &result)
     const
 {
     int32 status = -1;
-
     try
     {
         itsConnection->perform(PQPostResult(itsSessionId, itsProcessId, id,
@@ -372,7 +366,6 @@ CalSession::CommandStatus CalSession::getCommandStatus(const CommandId &id)
     int32 status = -1;
     WorkerType addressee;
     CommandStatus cmdStatus;
-
     try
     {
         itsConnection->perform(PQGetCommandStatus(id, status, addressee,
@@ -393,7 +386,6 @@ vector<pair<ProcessId, CommandResult> > CalSession::getResults(const CommandId
     &id) const
 {
     vector<pair<ProcessId, CommandResult> > results;
-
     try
     {
         itsConnection->perform(PQGetResults(id, results));
@@ -465,7 +457,7 @@ bool CalSession::isSolver(const ProcessId &id) const
 
 size_t CalSession::getIndex() const
 {
-    // Note: syncWorkerRegister() already called via getWorkerIndex(ProcessId).
+    // Note: syncWorkerRegister() already called via getIndex(ProcessId).
     return getIndex(getProcessId());
 }
 
@@ -548,7 +540,6 @@ Axis::ShPtr CalSession::getFreqAxis(const ProcessId &id) const
 
     int32 status = -1;
     Axis::ShPtr axis;
-
     try
     {
         itsConnection->perform(PQGetWorkerAxisFreq(itsSessionId, id, status,
@@ -576,7 +567,6 @@ Axis::ShPtr CalSession::getTimeAxis(const ProcessId &id) const
 
     int32 status = -1;
     Axis::ShPtr axis;
-
     try
     {
         itsConnection->perform(PQGetWorkerAxisTime(itsSessionId, id, status,
@@ -634,29 +624,31 @@ ProcessId CalSession::getWorkerByIndex(WorkerType type, size_t index) const
 
 void CalSession::syncWorkerRegister(bool force) const
 {
-    if(!force && !waitForTrigger(Trigger::WorkerRegisterModified, 0))
+    if(force
+        || itsRegisterDirty
+        || waitForTrigger(Trigger::WorkerRegisterModified, 0))
     {
-        return;
-    }
+        vector<size_t> tmpSlotCount;
+        vector<Worker> tmpRegister;
 
-    vector<size_t> tmpSlotCount;
-    vector<Worker> tmpRegister;
+        try
+        {
+            itsConnection->perform(PQGetWorkerRegister(itsSessionId,
+                tmpSlotCount, tmpRegister));
+        }
+        CATCH_PQXX_AND_RETHROW;
 
-    try
-    {
-        itsConnection->perform(PQGetWorkerRegister(itsSessionId, tmpSlotCount,
-            tmpRegister));
-    }
-    CATCH_PQXX_AND_RETHROW;
+        itsSlotCount = tmpSlotCount;
+        itsRegister = tmpRegister;
 
-    itsSlotCount = tmpSlotCount;
-    itsRegister = tmpRegister;
+        // Recreate the mapping from ProcessId to index in the register.
+        itsRegisterMap.clear();
+        for(size_t i = 0; i < itsRegister.size(); ++i)
+        {
+            itsRegisterMap[itsRegister[i].id] = i;
+        }
 
-    // Recreate the mapping from ProcessId to index in the register.
-    itsRegisterMap.clear();
-    for(size_t i = 0; i < itsRegister.size(); ++i)
-    {
-        itsRegisterMap[itsRegister[i].id] = i;
+        itsRegisterDirty = false;
     }
 }
 

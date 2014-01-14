@@ -90,7 +90,7 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
         {
             itsExpr[i] = compose(itsExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.usePhasors()));
+                config.getGainConfig()));
         }
 
         // Create a direction independent TEC expression per station.
@@ -208,8 +208,10 @@ void StationExprLOFAR::initialize(SourceDB &sourceDB, const BufferMap &buffers,
                 {
                     itsExpr[i] = compose(itsExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch, config.usePhasors()));
+                        instrument->station(i), patch,
+                        config.getDirectionalGainConfig()));
                 }
+
                 // Beam.
                 if(config.useBeam())
                 {

@@ -34,11 +34,13 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 
+// \file
+// TODO: Update documentation
+
 namespace LOFAR
 {
   namespace Cobalt
   {
-    // 
     //   Collect all inputData for the correlatorSubbandProc item:
     //    \arg inputsamples
     //    \arg delays
@@ -57,17 +59,17 @@ namespace LOFAR
       {
         gpu::DeviceMemory delaysAtBegin;
         gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phaseOffsets;
+        gpu::DeviceMemory phase0s;
         // We don't have tabDelays here, as it is only for bf.
         // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
         // similar to the bandpass correction and FIR filter weights (also not here).
         gpu::DeviceMemory inputSamples;
 
         DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
-                      size_t phaseOffsetsSize, gpu::Context &context) :
+                      size_t phase0sSize, gpu::Context &context) :
           delaysAtBegin(context, delaysSize),
           delaysAfterEnd(context, delaysSize),
-          phaseOffsets(context, phaseOffsetsSize),
+          phase0s(context, phase0sSize),
           inputSamples(context, inputSamplesSize)
         {
         }
@@ -86,7 +88,7 @@ namespace LOFAR
       MultiDimArrayHostBuffer<double, 3> delaysAfterEnd;
 
       //!< Remainder of delays
-      MultiDimArrayHostBuffer<double, 2> phaseOffsets;
+      MultiDimArrayHostBuffer<double, 2> phase0s;
 
       //!< Delays for TABs (aka pencil beams) after station beam correction
       MultiDimArrayHostBuffer<double, 3> tabDelays;
@@ -100,16 +102,19 @@ namespace LOFAR
       // CPU-side holder for the Meta Data
       std::vector<SubbandMetaData> metaData; // [station]
 
-      // Create the inputData object we need shared host/device memory on the supplied devicequeue
-      SubbandProcInputData(size_t n_beams, size_t n_stations, size_t n_polarizations,
-                         size_t n_tabs, size_t n_samples, size_t bytes_per_complex_sample,
-                         gpu::Context &context, unsigned int hostBufferFlags = 0)
+      // Create the inputData object we need shared host/device memory on the
+      // supplied devicequeue
+      SubbandProcInputData(size_t n_beams, size_t n_stations, 
+                           size_t n_polarizations, size_t n_tabs, 
+                           size_t n_samples, size_t bytes_per_complex_sample,
+                           gpu::Context &context,
+                           unsigned int hostBufferFlags = 0)
         :
         delaysAtBegin(boost::extents[n_beams][n_stations][n_polarizations],
                        context, hostBufferFlags),
         delaysAfterEnd(boost::extents[n_beams][n_stations][n_polarizations],
                        context, hostBufferFlags),
-        phaseOffsets(boost::extents[n_stations][n_polarizations],
+        phase0s(boost::extents[n_stations][n_polarizations],
                        context, hostBufferFlags),
         tabDelays(boost::extents[n_beams][n_stations][n_tabs],
                        context, hostBufferFlags),
@@ -121,7 +126,8 @@ namespace LOFAR
       }
 
       // process the given meta data 
-      void applyMetaData(const Parset &ps, unsigned station, unsigned SAP, const SubbandMetaData &metaData);
+      void applyMetaData(const Parset &ps, unsigned station,
+                         unsigned SAP, const SubbandMetaData &metaData);
 
       // set all flagged inputSamples to zero.
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
@@ -168,7 +174,8 @@ namespace LOFAR
      */
     class SubbandProc {
     public:
-      SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc = 1);
+      SubbandProc(const Parset &ps, gpu::Context &context,
+                  size_t nrSubbandsPerSubbandProc = 1);
       virtual ~SubbandProc();
 
       // TODO: clean up access by Pipeline class and move under protected
@@ -177,7 +184,8 @@ namespace LOFAR
       class Flagger
       {
       public:
-        // 1.1 Convert the flags per station to channel flags, change time scale if nchannel > 1
+        // 1.1 Convert the flags per station to channel flags, change time scale
+        // if nchannel > 1
         static void convertFlagsToChannelFlags(Parset const &parset,
           MultiDimArray<SparseSet<unsigned>, 1> const &inputFlags,
           MultiDimArray<SparseSet<unsigned>, 2> &flagsPerChannel);
@@ -200,15 +208,23 @@ namespace LOFAR
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
 
-      // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output) = 0;
+      // Do post processing on the CPU.
+      // \return Whether output must be sent to the output processor or
+      // not. This feature is needed to do long-time integration (longer than
+      // the maximum block size that can be processed on a GPU).
+      virtual bool postprocessSubband(StreamableData &output) = 0;
 
     protected:
       const Parset &ps;
+      const size_t nrSubbandsPerSubbandProc;
 
       gpu::Stream queue;
 
       void addTimer(const std::string &name);
+
+      // Returns the number of output elements to create to get a smooth
+      // running pipeline.
+      size_t nrOutputElements() const;
     };
   }
 }

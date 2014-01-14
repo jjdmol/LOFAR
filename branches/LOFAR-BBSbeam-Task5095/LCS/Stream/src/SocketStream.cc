@@ -40,11 +40,14 @@
 #include <cstdlib>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 //# AI_NUMERICSERV is not defined on OS-X
 #ifndef AI_NUMERICSERV
 # define AI_NUMERICSERV 0
 #endif
+
+using boost::format;
 
 
 namespace LOFAR {
@@ -105,8 +108,11 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
-        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0)
-          throw SystemCallException("getaddrinfo", retval, THROW_ARGS); // TODO: getaddrinfo does not return errno; needs gai_strerror() to stringify
+        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
+          const string errorstr = gai_strerror(retval);
+
+          throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+        }
 
         // make sure result will be freed
         struct D {
@@ -270,8 +276,7 @@ void SocketStream::accept(time_t deadline)
   }
 
   if ((fd = ::accept(listen_sk, 0, 0)) < 0)
-    //THROW_SYSCALL("accept");
-    return;
+    THROW_SYSCALL("accept");
 }
 
 
