@@ -32,6 +32,7 @@
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Parset.h>
+#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -39,6 +40,8 @@ using namespace std;
 
 int observationID;
 unsigned rank;
+
+Exception::TerminateHandler th(Exception::terminate);
 
 FinalMetaData origFinalMetaData;
 
@@ -115,7 +118,7 @@ int main(int argc, char **argv)
 
   // Make sure DummyStorage always dies, even if the test
   // malfunctions.
-  alarm(60);
+  alarm(2);
 
   observationID = boost::lexical_cast<int>(argv[1]);
   rank = boost::lexical_cast<unsigned>(argv[2]);
