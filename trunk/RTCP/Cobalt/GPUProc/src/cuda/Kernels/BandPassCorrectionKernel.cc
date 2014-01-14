@@ -83,7 +83,7 @@ namespace LOFAR
 
       gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
       BandPass::computeCorrectionFactors(bpWeights.get<float>(),
-                                         params.nrChannelsPerSubband,
+                                         params.nrHighResolutionChannels,
                                          1.0 / params.nrHighResolutionChannels);
       stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
     }
