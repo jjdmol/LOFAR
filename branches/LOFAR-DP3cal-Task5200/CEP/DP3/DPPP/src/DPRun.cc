@@ -273,7 +273,7 @@ namespace LOFAR {
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
         } else if (type == "gaincal"  ||  type == "calibrate") {
-          step = DPStep::ShPtr(new GainCalOld (reader, parset, prefix));
+          step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else {
           THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
         }
