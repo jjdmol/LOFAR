@@ -320,6 +320,13 @@ void rotateUVW(const Position &from, const Position &to, size_t nUVW,
 
 void simulate(const Position &reference, const Patch::ConstPtr &patch,
     size_t nStation, size_t nBaseline, size_t nChannel,
+    vector<Baseline> &baselines, casa::Vector<double> &freq,
+    casa::Matrix<double> &uvw, casa::Cube<dcomplex> &vis) {
+  //TODO TJ
+}
+
+void simulate(const Position &reference, const Patch::ConstPtr &patch,
+    size_t nStation, size_t nBaseline, size_t nChannel,
     const_cursor<Baseline> baselines, const_cursor<double> freq,
     const_cursor<double> uvw, cursor<dcomplex> vis)
 {

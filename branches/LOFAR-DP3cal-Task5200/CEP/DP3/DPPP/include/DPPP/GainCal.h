@@ -37,8 +37,6 @@
 #include <StationResponse/Types.h>
 #include <ParmDB/Parm.h>
 #include <casa/Arrays/Cube.h>
-#include <casa/Quanta/MVEpoch.h>
-#include <measures/Measures/MEpoch.h>
 #include <casa/Arrays/ArrayMath.h>
 
 namespace LOFAR {
@@ -57,7 +55,7 @@ namespace {
     typedef vector<Patch::ConstPtr> PatchList;
     typedef std::pair<size_t, size_t >Baseline;
 
-    class GainCal: public DPStep
+    class GainCalOld: public DPStep
     {
     public:
       struct ThreadPrivateStorage
@@ -69,17 +67,13 @@ namespace {
         vector<dcomplex>  model_subtr;
         vector<StationResponse::matrix22c_t> beamvalues; // [nst,nch]
         size_t            count_converged;
-
-        //# Variables for conversion of directions to ITRF
-        casa::MeasFrame                       measFrame;
-        casa::MDirection::Convert             measConverter;
       };
 
       // Construct the object.
       // Parameters are obtained from the parset using the given prefix.
-      GainCal (DPInput*, const ParameterSet&, const string& prefix);
+      GainCalOld (DPInput*, const ParameterSet&, const string& prefix);
 
-      virtual ~GainCal();
+      virtual ~GainCalOld();
 
       // Process the data.
       // It keeps the data.
@@ -100,7 +94,7 @@ namespace {
 
 
     private:
-      void initThreadPrivateStorage(ThreadPrivateStorage &storage,
+      static void initThreadPrivateStorage(ThreadPrivateStorage &storage,
                                     size_t nDirection, size_t nStation,
                                     size_t nBaseline, size_t nChannel,
                                     size_t nChannelSubtr)
@@ -112,17 +106,6 @@ namespace {
         storage.model_subtr.resize(nBaseline * nChannelSubtr * 4);
         storage.beamvalues.resize(nStation * nChannel);
         storage.count_converged = 0;
-
-        // Create the Measure ITRF conversion info given the array position.
-        // The time and direction are filled in later.
-        info().arrayPosCopy();
-        storage.measFrame.set (info().arrayPosCopy());
-        storage.measFrame.set (casa::MEpoch(casa::MVEpoch(info().startTime()/86400), casa::MEpoch::UTC));
-        storage.measConverter.set (casa::MDirection::J2000,
-                              casa::MDirection::Ref(casa::MDirection::ITRF, storage.measFrame));
-        // Do a dummy conversion, because Measure initialization does not
-        // seem to be thread-safe.
-        dir2Itrf(info().delayCenterCopy(),storage.measConverter);
       }
 
       // Calculate the beam for the given sky direction and frequencies.
@@ -132,11 +115,10 @@ namespace {
                       const casa::Vector<double>& chanFreqs, dcomplex* data,
                       StationResponse::vector3r_t& refdir,
                       StationResponse::vector3r_t& tiledir,
-                      StationResponse::matrix22c_t* beamvalues,
-                      casa::MDirection::Convert& converter);
+                      StationResponse::matrix22c_t* beamvalues);
 
       // Convert a direction to ITRF.
-      StationResponse::vector3r_t dir2Itrf (const casa::MDirection&, casa::MDirection::Convert&) const;
+      StationResponse::vector3r_t dir2Itrf (const casa::MDirection&);
 
       // Do the actual calibration (called by process and finish)
       void handleCal();
@@ -155,6 +137,10 @@ namespace {
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
+
+      //# Variables for conversion of directions to ITRF.
+      casa::MeasFrame                       itsMeasFrame;
+      casa::MDirection::Convert             itsMeasConverter;
 
       //# The info needed to calculate the station beams.
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;

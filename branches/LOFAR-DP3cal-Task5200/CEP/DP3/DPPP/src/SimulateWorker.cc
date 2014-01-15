@@ -23,45 +23,24 @@
 
 #include <lofar_config.h>
 #include <DPPP/SimulateWorker.h>
-#include <DPPP/Apply.h>
 #include <DPPP/CursorUtilCasa.h>
 #include <DPPP/DPBuffer.h>
 #include <DPPP/DPInfo.h>
 #include <DPPP/Simulate.h>
-#include <DPPP/DPLogger.h>
 #include <DPPP/Baseline.h>
 
-#include <ParmDB/Axis.h>
-#include <ParmDB/SourceDB.h>
-#include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmSet.h>
-#include <ParmDB/ParmCache.h>
-#include <ParmDB/Parm.h>
-
-#include <Common/ParameterSet.h>
-#include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
-#include <Common/StreamUtil.h>
-#include <Common/lofar_iomanip.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_fstream.h>
 
-#include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVEpoch.h>
-#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/MatrixIter.h>
-#include <casa/Containers/Record.h>
-#include <scimath/Mathematics/MatrixMathLA.h>
 #include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MeasureHolder.h>
 
-#include <sstream>
+#include <map>
+#include <algorithm>
+#include <DPPP/Cursor.h>
+#include <casa/Quanta/Quantum.h>
+#include <measures/Measures/MeasRef.h>
 
 using namespace casa;
 
@@ -70,48 +49,82 @@ namespace LOFAR {
 
     using LOFAR::operator<<;
 
-    SimulateWorker::SimulateWorker (DPInput* input,
-                              const DPInfo& info,
-                              int workerNr)
-      : itsWorkerNr    (workerNr)
+    SimulateWorker::SimulateWorker(DPInput* input, const DPInfo& info,
+                                   vector<Patch::ConstPtr>* patchList,
+                                   uint firstBl, uint lastBl, uint firstCh,
+                                   uint lastCh)
+        : itsPatchList(patchList)
     {
+      // Set directions
       itsRefFreq = info.refFreq();
+      itsDelayCenter = info.delayCenterCopy();
+      itsTileBeamDir = info.tileBeamDirCopy();
       // Create the Measure ITRF conversion info given the array position.
       // The time and direction are filled in later.
-      itsMeasFrame.set (info.arrayPosCopy());
-      itsMeasFrame.set (MEpoch(MVEpoch(info.startTime()/86400), MEpoch::UTC));
-      itsMeasConverter.set (MDirection::J2000,
-                            MDirection::Ref(MDirection::ITRF, itsMeasFrame));
+      itsMeasFrame.set(info.arrayPosCopy());
+      itsMeasFrame.set(MEpoch(MVEpoch(info.startTime() / 86400), MEpoch::UTC));
+      itsMeasConverter.set(MDirection::J2000,
+                           MDirection::Ref(MDirection::ITRF, itsMeasFrame));
       // Do a dummy conversion, because Measure initialization does not
       // seem to be thread-safe.
-      dir2Itrf(info.delayCenterCopy());
+      dir2Itrf(itsDelayCenter);
 
-      uint nBl=info.nbaselines();
-      for (uint i=0; i<nBl; ++i) {
-        itsBaselines.push_back (Baseline(info.getAnt1()[i],
-                                         info.getAnt2()[i]));
-      }
-
-      MDirection dirJ2000(MDirection::Convert(info.phaseCenter(),
+      MDirection dirJ2000(MDirection::Convert(info.phaseCenterCopy(),
                                               MDirection::J2000)());
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()[0],
                              angles.getBaseValue()[1]);
 
-      // Read the antenna beam info from the MS.
-      // Only take the stations actually used.
-      itsNSt=info.antennaUsed().size();
-      casa::Vector<casa::String> antennaUsedNames(itsNSt);
+      // Fill baselines and antennas
+      uint nBl=lastBl-firstBl;
+      itsBaselines=vector<Baseline>(nBl);
+      for (uint i=firstBl; i<lastBl; ++i) {
+        itsBaselines[i]=Baseline(info.getAnt1()[i],info.getAnt2()[i]);
+      }
 
+      // Determine the stations actually used in the baselines for this thread
+      vector<int> antennaUsed;
+      if (nBl==info.nbaselines()) { // all baselines used
+        antennaUsed=info.antennaUsed();
+      } else { // fill antennaUsed
+        antennaUsed.reserve(info.antennaUsed().size());
+
+        map<int,bool> antennaUsedMap;
+        for (vector<Baseline>::iterator bl_it=itsBaselines.begin(),
+             bl_end=itsBaselines.end(); bl_it!=bl_end; ++bl_it) {
+          antennaUsedMap[(*bl_it).first]=true;
+          antennaUsedMap[(*bl_it).second]=true;
+        }
+        for (map<int,bool>::iterator map_it = antennaUsedMap.begin(),
+             map_end = antennaUsedMap.end(); map_it != map_end; ++map_it ) {
+          antennaUsed.push_back( map_it->first );
+        }
+        std::sort(antennaUsed.begin(),antennaUsed.end());
+      }
+      itsNSt=antennaUsed.size();
+
+      // Read the antenna beam info from the MS.
+      // Only take the stations actually used in this thread
+      casa::Vector<casa::String> antennaUsedNames(info.antennaUsed().size());
+      casa::Vector<int> antsUsed = info.antennaUsed();
       for (int ant=0, nAnts=info.antennaUsed().size(); ant<nAnts; ++ant) {
-        antennaUsedNames[ant]=info.antennaNames()[info.antennaUsed()[ant]];
+        antennaUsedNames[ant]=info.antennaNames()[antennaUsed[ant]];
       }
       input->fillBeamInfo (itsAntBeamInfo, antennaUsedNames);
 
 
-      // Not thread safe! Should go to different place..
-      itsDelayCenter = dir2Itrf(info.delayCenterCopy());
-      itsTileBeamDir = dir2Itrf(info.tileBeamDirCopy());
+      // Fill channels
+      itsChanFreqs.resize(lastCh-firstCh);
+
+      for (uint i=firstCh; i<lastCh; ++i) {
+        itsChanFreqs[i-firstCh]=info.chanFreqs()[i];
+      }
+
+      // Fill buffers
+      const size_t nDr = itsPatchList->size();
+      const size_t nCh = itsChanFreqs.size();
+      itsModelVis.resize(nBl * nCh * 4);
+      itsModelVisPatch.resize(nBl * nCh * 4);
     }
 
 
@@ -121,11 +134,10 @@ namespace LOFAR {
 
       DPBuffer buf(bufin);
       // Determine the various sizes.
-      const size_t nDr = itsPatchList.size();
+      const size_t nDr = itsPatchList->size();
       const size_t nBl = itsBaselines.size();
       const size_t nCh = itsChanFreqs.size();
       const size_t nCr = 4;
-      //const size_t nSamples = nBl * nCh * nCr;
       // Define various cursors to iterate through arrays.
       const_cursor<double> cr_freq = casa_const_cursor(itsChanFreqs);
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
@@ -149,7 +161,6 @@ namespace LOFAR {
       splitUVW(itsNSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
       cursor<dcomplex> cr_model(&(itsModelVisPatch[0]), 3, stride_model);
 
-
       // Convert the directions to ITRF for the given time.
       itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
 
@@ -157,13 +168,13 @@ namespace LOFAR {
       {
         fill(itsModelVisPatch.begin(), itsModelVisPatch.end(), dcomplex());
 
-        simulate(itsPhaseRef, itsPatchList[dr], itsNSt, nBl, nCh, cr_baseline,
-                 cr_freq, cr_uvw_split, cr_model);
-        applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
+        simulate(itsPhaseRef, (*itsPatchList)[dr], itsNSt, nBl, nCh,
+                 cr_baseline, cr_freq, cr_uvw_split, cr_model);
+        applyBeam(time, (*itsPatchList)[dr]->position(), itsApplyBeam,
                   itsChanFreqs, &(itsModelVisPatch[0]));
 
-        for (size_t i=0; i<itsModelVisPatch.size();++i) {
-          itsModelVis[i]+=itsModelVisPatch[i];
+        for (size_t i = 0; i < itsModelVisPatch.size(); ++i) {
+          itsModelVis[i] += itsModelVisPatch[i];
         }
       }
 
@@ -182,8 +193,8 @@ namespace LOFAR {
         return;
       }
       itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
-      StationResponse::vector3r_t refdir  = itsDelayCenter;
-      StationResponse::vector3r_t tiledir = itsTileBeamDir;
+      StationResponse::vector3r_t refdir  = dir2Itrf(itsDelayCenter);
+      StationResponse::vector3r_t tiledir = dir2Itrf(itsTileBeamDir);
       // Convert the source direction to ITRF for the given time.
       MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
       StationResponse::vector3r_t srcdir = dir2Itrf(dir);
@@ -199,15 +210,15 @@ namespace LOFAR {
       dcomplex tmp[4];
       for (size_t bl=0; bl<itsBaselines.size(); ++bl) {
         const StationResponse::matrix22c_t* left =
-          &(itsBeamValues[nchan * itsBaselines[bl].first]);
+            &(itsBeamValues[nchan * itsBaselines[bl].first]);
         const StationResponse::matrix22c_t* right =
-          &(itsBeamValues[nchan * itsBaselines[bl].second]);
+            &(itsBeamValues[nchan * itsBaselines[bl].second]);
         for (size_t ch=0; ch<nchan; ++ch) {
           dcomplex l[] = {left[ch][0][0], left[ch][0][1],
-                          left[ch][1][0], left[ch][1][1]};
+              left[ch][1][0], left[ch][1][1]};
           // Form transposed conjugate of right.
           dcomplex r[] = {conj(right[ch][0][0]), conj(right[ch][1][0]),
-                          conj(right[ch][0][1]), conj(right[ch][1][1])};
+              conj(right[ch][0][1]), conj(right[ch][1][1])};
           // left*data
           tmp[0] = l[0] * data[0] + l[1] * data[2];
           tmp[1] = l[0] * data[1] + l[1] * data[3];

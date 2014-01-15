@@ -52,7 +52,7 @@ using namespace LOFAR::BBS;
 namespace LOFAR {
   namespace DPPP {
 
-    GainCal::GainCal (DPInput* input,
+    GainCalOld::GainCalOld (DPInput* input,
                         const ParameterSet& parset,
                         const string& prefix)
       : itsInput       (input),
@@ -78,10 +78,10 @@ namespace LOFAR {
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
 
-    GainCal::~GainCal()
+    GainCalOld::~GainCalOld()
     {}
 
-    void GainCal::updateInfo (const DPInfo& infoIn)
+    void GainCalOld::updateInfo (const DPInfo& infoIn)
     {
       info() = infoIn;
       info().setNeedVisData();
@@ -93,7 +93,7 @@ namespace LOFAR {
                                          info().getAnt2()[i]));
       }
 
-      MDirection dirJ2000(MDirection::Convert(infoIn.phaseCenterCopy(),
+      MDirection dirJ2000(MDirection::Convert(infoIn.phaseCenter(),
                                               MDirection::J2000)());
       Quantum<Vector<Double> > angles = dirJ2000.getAngle();
       itsPhaseRef = Position(angles.getBaseValue()[0],
@@ -114,6 +114,15 @@ namespace LOFAR {
         initThreadPrivateStorage(*it, nDr, nSt, nBl, nCh, nCh);
       }
 
+      // Create the Measure ITRF conversion info given the array position.
+      // The time and direction are filled in later.
+      itsMeasFrame.set (info().arrayPos());
+      itsMeasFrame.set (MEpoch(MVEpoch(info().startTime()/86400), MEpoch::UTC));
+      itsMeasConverter.set (MDirection::J2000,
+                            MDirection::Ref(MDirection::ITRF, itsMeasFrame));
+      // Do a dummy conversion, because Measure initialization does not
+      // seem to be thread-safe.
+      dir2Itrf(info().delayCenter());
 
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
@@ -125,10 +134,9 @@ namespace LOFAR {
       itsInput->fillBeamInfo (itsAntBeamInfo, antennaUsedNames);
     }
 
-    StationResponse::vector3r_t GainCal::dir2Itrf (const MDirection& dir,
-                                                   MDirection::Convert& converter) const
+    StationResponse::vector3r_t GainCalOld::dir2Itrf (const MDirection& dir)
     {
-      const MDirection& itrfDir = converter(dir);
+      const MDirection& itrfDir = itsMeasConverter(dir);
       const Vector<Double>& itrf = itrfDir.getValue().getValue();
       StationResponse::vector3r_t vec;
       vec[0] = itrf[0];
@@ -137,7 +145,7 @@ namespace LOFAR {
       return vec;
     }
 
-    void GainCal::show (std::ostream& os) const
+    void GainCalOld::show (std::ostream& os) const
     {
       os << "GainCal " << itsName << std::endl;
       os << "  sourcedb:       " << itsSourceDBName << endl;
@@ -146,7 +154,7 @@ namespace LOFAR {
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
     }
 
-    void GainCal::showTimings (std::ostream& os, double duration) const
+    void GainCalOld::showTimings (std::ostream& os, double duration) const
     {
       os << "  ";
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
@@ -155,7 +163,7 @@ namespace LOFAR {
 
 
 
-    bool GainCal::process (const DPBuffer& bufin)
+    bool GainCalOld::process (const DPBuffer& bufin)
     {
       itsTimer.start();
       DPBuffer buf(bufin);
@@ -199,10 +207,10 @@ namespace LOFAR {
       splitUVW(nSt, nBl, cr_baseline, cr_uvw, cr_uvw_split);
       cursor<dcomplex> cr_model(&(storage.model_patch[0]), 3, stride_model);
 
-      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenterCopy(),storage.measConverter);
-      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDirCopy(),storage.measConverter);
+      StationResponse::vector3r_t refdir = dir2Itrf(info().delayCenter());
+      StationResponse::vector3r_t tiledir = dir2Itrf(info().tileBeamDir());
       // Convert the directions to ITRF for the given time.
-      storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
+      itsMeasFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
 
       for(size_t dr = 0; dr < nDr; ++dr)
       {
@@ -212,8 +220,7 @@ namespace LOFAR {
                  cr_freq, cr_uvw_split, cr_model);
         applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
                   info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                  refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
-                  storage.measConverter);
+                  refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]));
 
         for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
           itsThreadStorage[thread].model[i]+=
@@ -229,23 +236,22 @@ namespace LOFAR {
       return false;
     }
 
-    void GainCal::applyBeam (double time, const Position& pos, bool apply,
+    void GainCalOld::applyBeam (double time, const Position& pos, bool apply,
                              const Vector<double>& chanFreqs, dcomplex* data,
                              StationResponse::vector3r_t& refdir,
                              StationResponse::vector3r_t& tiledir,
-                             StationResponse::matrix22c_t* beamvalues,
-                             casa::MDirection::Convert& converter)
+                             StationResponse::matrix22c_t* beamvalues)
     {
       if (! apply) {
         return;
       }
 
       MDirection dir (MVDirection(pos[0], pos[1]), MDirection::J2000);
-      StationResponse::vector3r_t srcdir = dir2Itrf(dir,converter);
+      StationResponse::vector3r_t srcdir = dir2Itrf(dir);
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
       uint nSt   = info().antennaUsed().size();
-#pragma omp parallel for
+
       for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
@@ -253,6 +259,7 @@ namespace LOFAR {
       }
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
+
       for (size_t bl=0; bl<info().nbaselines(); ++bl) {
         const StationResponse::matrix22c_t* left =
           &(beamvalues[nchan * info().getAnt1()[bl]]);
@@ -279,7 +286,7 @@ namespace LOFAR {
       }
     }
 
-    void GainCal::finish()
+    void GainCalOld::finish()
     {
 
       // Let the next steps finish.
