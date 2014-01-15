@@ -66,6 +66,7 @@ SUITE(SubbandWriter)
       ps.add("Observation.DataProducts.Output_Correlated.enabled",   "true");
       ps.add("Observation.DataProducts.Output_Correlated.filenames", "[tWriter.out_raw]");
       ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
+      ps.add("Cobalt.OutputProc.StaticMetaDataDirectory",            "tSubbandWriter.in_1");
       ps.updateSettings();
     }
 
