@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <Common/lofar_string.h>
 
 using namespace LOFAR;
