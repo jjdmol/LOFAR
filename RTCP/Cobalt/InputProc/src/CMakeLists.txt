@@ -22,6 +22,10 @@ set(_inputproc_sources
   Station/RSPPacketFactory.cc
 )
 
+message(STATUS "**** MPI_FOUND = ${MPI_FOUND}")
+message(STATUS "**** USE_MPI = ${USE_MPI}")
+message(STATUS "**** HAVE_MPI = ${HAVE_MPI}")
+
 if(MPI_FOUND)
   list(APPEND _inputproc_sources
     Transpose/MPISendStation.cc
