@@ -390,9 +390,6 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
@@ -402,6 +399,8 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\Kernels\FFTShiftKernel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.cc">
@@ -683,9 +682,6 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
@@ -722,9 +718,6 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
@@ -740,6 +733,12 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -943,9 +942,6 @@
     <None Include="..\..\GPUProc\src\rtcp.log_prop">
       <Filter>src</Filter>
     </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
-      <Filter>share</Filter>
-    </None>
     <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu">
       <Filter>share</Filter>
     </None>
@@ -981,24 +977,6 @@
     </None>
     <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu">
       <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
     </None>
     <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.sh">
       <Filter>test\Kernels</Filter>
@@ -1062,6 +1040,22 @@
     </None>
     <None Include="..\..\GPUProc\test\cuda\tTranspose2.sh">
       <Filter>test\cuda</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\FFTShift.cu" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.parset">
+      <Filter>test</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

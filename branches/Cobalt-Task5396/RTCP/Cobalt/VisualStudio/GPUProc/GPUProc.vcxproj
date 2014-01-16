@@ -325,6 +325,9 @@
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.sh" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.parset" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.run" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2Sap.sh" />
     <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.run" />
     <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.sh" />
