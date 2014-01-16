@@ -41,7 +41,7 @@ int main (int	argc, char*		argv[])
 		exit (EXIT_FAILURE);
 	}
 
-	INIT_LOGGER(basename(argv[0]));
+	INIT_LOGGER(LOFAR::basename(argv[0]));
 
 	switch (atoi(argv[1])) {
 	case 1:	// do everything right
