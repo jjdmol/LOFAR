@@ -111,8 +111,7 @@ set_mvapich2_options()
   done
 }
 
-#if [ "@HAVE_MPI@" = "TRUE" ]
-if [ "@MPI_FOUND@" = "TRUE" ]
+if [ "@HAVE_MPI@" = "TRUE" ]
 then
   MPIEXEC=@MPIEXEC@
   MPIEXEC_PREFLAGS=@MPIEXEC_PREFLAGS@
