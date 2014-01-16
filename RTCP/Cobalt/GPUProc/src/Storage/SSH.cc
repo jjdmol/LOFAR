@@ -506,15 +506,19 @@ namespace LOFAR
 
       Cancellation::enable();
 
-      do {
-        struct timeval timeout;
+      /*
+       * Do NOT repeat select() if it returns 0! For some reason,
+       * input will not arrive anymore if that happens once and
+       * we don't communicate to libssh2 in the mean time.
+       */
 
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
+      struct timeval timeout;
 
-        // select() is a cancellation point
-        rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
-      } while (rc == 0);
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
+
+      // select() is a cancellation point
+      rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
 
       Cancellation::disable();
 
