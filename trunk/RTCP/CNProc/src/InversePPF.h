@@ -68,6 +68,7 @@
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
 #include <vector>
+#include <boost/noncopyable.hpp>
 #include <FilterBank.h>
 #include <FIR.h>
 
