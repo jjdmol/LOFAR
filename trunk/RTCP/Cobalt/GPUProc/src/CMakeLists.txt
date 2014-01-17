@@ -118,6 +118,7 @@ lofar_add_bin_program(station_stream Station/station_stream.cc)
 
 # install the scripts for MAC and for auto-updating casacore measures tables
 install(PROGRAMS
+  scripts/CobaltControl.sh
   scripts/runObservation.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
