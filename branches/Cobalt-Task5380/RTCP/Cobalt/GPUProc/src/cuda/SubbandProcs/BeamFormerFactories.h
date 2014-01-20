@@ -47,16 +47,18 @@ namespace LOFAR
                             size_t nrSubbandsPerSubbandProc = 1);
 
       KernelFactory<IntToFloatKernel> intToFloat;
+      KernelFactory<FFTShiftKernel> firstFFTShift;
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
+      KernelFactory<FFTShiftKernel> secondFFTShift;
+      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
-      KernelFactory<FFTShiftKernel> fftShift;
+      KernelFactory<FFTShiftKernel> inverseFFTShift;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
       KernelFactory<IncoherentStokesKernel> incoherentStokes;
       KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
       KernelFactory<FIR_FilterKernel> incoherentFirFilter;
-      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
 
       BandPassCorrectionKernel::Parameters
       bandPassCorrectionParams(const Parset &ps) const;
@@ -74,7 +76,7 @@ namespace LOFAR
       delayCompensationParams(const Parset &ps) const;
 
       FFTShiftKernel::Parameters
-      fftShiftParams(const Parset &ps) const;
+      fftShiftParams(const Parset &ps, size_t nrChannels) const;
 
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;
