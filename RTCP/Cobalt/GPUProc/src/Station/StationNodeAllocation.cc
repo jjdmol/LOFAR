@@ -5,6 +5,7 @@
 #include <mpi.h>
 #endif
 #include <boost/format.hpp>
+#include <sstream>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Stream.h>
@@ -77,14 +78,37 @@ int StationNodeAllocation::receiverRank() const
 
 std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 {
+  const string logPrefix = str(format("[station %s] ") % stationID.name());
+
   vector<string> inputStreamDescs = parset.settings.stations[stationIdx].inputStreams;
 
   vector< SmartPtr<Stream> > inputStreams(inputStreamDescs.size());
 
-  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
-    const string desc = inputStreamDescs[board];
+  // Log all input descriptions
+  stringstream inputDescription;
 
-    LOG_DEBUG_STR("Input stream for board " << board << ": " << desc);
+  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
+    const string &desc = inputStreamDescs[board];
+
+    if (board > 0)
+      inputDescription << ", ";
+    inputDescription << desc;
+  }
+
+  LOG_INFO_STR(logPrefix << "Input streams: " << inputDescription.str());
+
+  // Connect to specified input stream
+  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
+    const string &desc = inputStreamDescs[board];
+
+    LOG_DEBUG_STR(logPrefix << "Connecting input stream for board " << board << ": " << desc);
+
+    // Sanity checks
+    if (parset.settings.realTime) {
+      ASSERTSTR(desc.find("udp:") == 0, logPrefix << "Real-time observations should read input from UDP, not " << desc);
+    } else {
+      ASSERTSTR(desc.find("udp:") != 0, logPrefix << "Non-real-time observations should NOT read input from UDP, got " << desc);
+    }
 
     if (desc == "factory:") {
       const TimeStamp from(parset.startTime() * parset.subbandBandwidth(), parset.clockSpeed());
@@ -99,7 +123,7 @@ std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
     }
   }
 
-  ASSERTSTR(inputStreams.size() > 0, "No input streams for station " << stationID);
+  ASSERTSTR(inputStreams.size() > 0, logPrefix << "No input streams");
 
   return inputStreams;
 }
