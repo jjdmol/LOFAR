@@ -330,13 +330,16 @@ namespace LOFAR
               ps.nrSamplesPerSubband()),
             context));
         else
+        {
           outputPool.free.append(
-            new BeamFormedData(
-              ps.settings.beamFormer.incoherentSettings.nrStokes,
-              ps.settings.beamFormer.incoherentSettings.nrChannels,
-              ps.settings.beamFormer.incoherentSettings.nrSamples(
-                ps.nrSamplesPerSubband()),
-              context));
+          new BeamFormedData(
+            ps.settings.beamFormer.incoherentSettings.nrStokes,
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            ps.settings.beamFormer.incoherentSettings.nrSamples(
+              ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.maxNrTABsPerSAP(),
+            context));
+         }
       }
 
       //// CPU timers are set by CorrelatorPipeline

@@ -268,7 +268,7 @@ namespace LOFAR
 
           const size_t nrSamples = file.coherent
             ?  ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize)
-            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize);
+            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); 
 
           // Object to write to outputProc
           SmartPtr<struct TABTranspose::Subband> subband = new TABTranspose::Subband(nrSamples, nrChannels);
@@ -280,6 +280,7 @@ namespace LOFAR
           // Create a copy to be able to release outputData
           if (file.coherent) {
             // Copy coherent beam
+            // TODO: I dont trust this part of the code (Wouter)
             ASSERTSTR(beamFormedData.shape()[0] > coherentIdx, "No room for coherent beam " << coherentIdx);
             ASSERTSTR(beamFormedData.shape()[1] == nrTabs, "nrTabs is " <<
               beamFormedData.shape()[1] << " but expected " << nrTabs);
@@ -295,10 +296,17 @@ namespace LOFAR
             //
             // TODO: For now, we assume we store coherent OR incoherent beams
             // in the same struct beamFormedData.
-            ASSERTSTR(beamFormedData.shape()[0] > incoherentIdx, "No room for incoherent beam " << incoherentIdx);
-            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " << beamFormedData.shape()[2] << " but expected " << nrSamples);
-            ASSERTSTR(beamFormedData.shape()[3] == nrChannels, "nrChannels is " << beamFormedData.shape()[3] << " but expected " << nrChannels);
-            memcpy(subband->data.origin(), beamFormedData[incoherentIdx].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
+            
+            ASSERTSTR(beamFormedData.shape()[0] == nrTabs, "nrTabs is " <<
+              beamFormedData.shape()[0] << " but expected " << nrTabs);
+            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " <<
+              beamFormedData.shape()[2] << " but expected " << nrSamples);
+            ASSERTSTR(beamFormedData.shape()[3] == nrChannels, "nrChannels is " <<
+              beamFormedData.shape()[3] << " but expected " << nrChannels);
+            memcpy(subband->data.origin(), 
+                   beamFormedData[incoherentIdx].origin(), 
+                   subband->data.num_elements() *
+                      sizeof *subband->data.origin());
 
             incoherentIdx++;
           }
