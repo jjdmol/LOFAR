@@ -76,7 +76,7 @@ static char stderrbuf[STDLOG_BUFFER_SIZE];
 
 LOFAR::NewHandler badAllocExcHandler(LOFAR::BadAllocException::newHandler);
 
-static volatile bool sigint_seen;
+static volatile sig_atomic_t sigint_seen;
 
 static void termSigsHandler(int sig_nr)
 {
@@ -85,7 +85,7 @@ static void termSigsHandler(int sig_nr)
      * For graceful user abort. Signal might be missed, but timeout
      * catches it later, so don't bother with cascaded signals.
      */
-    sigint_seen = true;
+    sigint_seen = 1;
   }
 }
 
@@ -302,7 +302,7 @@ static int doTBB_Run(const vector<string>& inputStreamNames, const LOFAR::Cobalt
     size_t nrWorkersDone;
     do {
       pause();
-      if (sigint_seen) { // typically Ctrl-C
+      if (sigint_seen == 1) { // typically Ctrl-C
         args.keepRunning = false; // for main(), not for worker threads
         break;
       }
