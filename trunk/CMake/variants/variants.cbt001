@@ -13,6 +13,7 @@ option(USE_CUDA      "Use CUDA"      ON)
 set(CASACORE_ROOT_DIR /opt/casacore)
 set(MPI_ROOT_DIR /opt/openmpi)
 set(DAL_ROOT_DIR /localhome/lofarsystem/DAL)  # should also go to /opt
+set(VALGRIND_ROOT_DIR       /globalhome/lofarsystem/cobalt-root)
 
 #set(GNU_C         /globalhome/amesfoort/cbtroot/bin/gcc-4.8)
 #set(GNU_CXX       /globalhome/amesfoort/cbtroot/bin/g++-4.8)
