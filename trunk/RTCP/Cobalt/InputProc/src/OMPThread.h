@@ -71,8 +71,9 @@ namespace LOFAR
     void kill()
     {
       while (!stopped) {
-        // interrupt blocking system calls (most notably, read())
-        // note that the thread will stick around until the end
+        // Interrupt blocking system calls (most notably, read()),
+        // possibly multiple in a row.
+        // Note that the thread will stick around until the end
         // of pragma parallel, so the thread id is always valid
         // once it has been set.
         pthread_t oldid = id;
@@ -112,8 +113,16 @@ namespace LOFAR
 
     static void init()
     {
-      signal(SIGHUP, sighandler);
-      siginterrupt(SIGHUP, 1);
+      // We avoid cancellation exception for OpenMP threads.
+      // Allow signalling them ourselves to interrupt some blocking syscalls.
+      struct sigaction sa;
+      sa.sa_handler = sighandler;
+      ::sigemptyset(&sa.sa_mask);
+      sa.sa_flags = 0;
+      int err = ::sigaction(SIGHUP, &sa, NULL);
+      if (err != 0) {
+        LOG_WARN("Failed to register a handler for SIGHUP: OpenMP threads may not terminate!");
+      }
     }
 
   private:
