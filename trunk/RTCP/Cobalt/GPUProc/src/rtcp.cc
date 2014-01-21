@@ -78,13 +78,13 @@ using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
-void usage(char **argv)
+static void usage(const char *argv0)
 {
-  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
+  cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
   cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
   cerr << "beam-forming for the Pulsar mode." << endl;
   cerr << endl;
-  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
@@ -103,14 +103,14 @@ int main(int argc, char **argv)
       break;
 
     default: /* '?' */
-      usage(argv);
+      usage(argv[0]);
       exit(1);
     }
   }
 
   // we expect a parset filename as an additional parameter
   if (optind >= argc) {
-    usage(argv);
+    usage(argv[0]);
     exit(1);
   }
 
