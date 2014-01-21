@@ -38,7 +38,8 @@ Observation.bandFilter=HBA_110_190
 #PIC.Core.CS001.LBA_INNER.LBA_30_90.delayCorrection.Y=0.0
 
 # Retrieved from station_configuration.parset
-#PIC.Core.CS001LBA.ports=[udp:0.0.0.0:4346, udp:0.0.0.0:4347, udp:0.0.0.0:4348, udp:0.0.0.0:4349]
+#PIC.Core.CS001LBA.RSP.ports=[udp:0.0.0.0:4346, udp:0.0.0.0:4347, udp:0.0.0.0:4348, udp:0.0.0.0:4349]
+#or e.g. PIC.Core.CS001HBA0.RSP.ports=[4*file:/dev/null]
 
 # Optional: mapping of subbands on RSP boards, per station
 # Example: subbands 0 and 1 are emitted on board 0, slots 0 and 1.
