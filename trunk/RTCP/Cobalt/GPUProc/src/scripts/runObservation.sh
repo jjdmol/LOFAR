@@ -33,7 +33,7 @@ shopt -s nullglob
 echo "Called as $@"
 
 if test "$LOFARROOT" == ""; then
-  echo "LOFARROOT is not set! Exiting."
+  echo "LOFARROOT is not set! Exiting." >&2
   exit 1
 fi
 echo "LOFARROOT is set to $LOFARROOT"
@@ -83,7 +83,7 @@ then
 fi
 
 function error {
-  echo "$@"
+  echo "$@" >&2
   exit 1
 }
 
