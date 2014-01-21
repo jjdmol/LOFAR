@@ -10,7 +10,7 @@
 # This script is called by OnlineControl to start an observation.
 
 if test "$LOFARROOT" == ""; then
-  echo "LOFARROOT is not set! Exiting."
+  echo "LOFARROOT is not set! Exiting." >&2
   exit 1
 fi
 
@@ -36,7 +36,7 @@ echo "log file:  $LOGFILE"
 echo "---------------"
 
 function error {
-  echo "$@"
+  echo "$@" >&2
   exit 1
 }
 

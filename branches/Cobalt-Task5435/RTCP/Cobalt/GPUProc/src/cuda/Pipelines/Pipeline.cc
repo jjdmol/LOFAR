@@ -77,7 +77,7 @@ namespace LOFAR
       // Need SubbandProcs to send work to
       ASSERT(workQueues.size() > 0);
 
-      NSTimer receiveTimer("MPI: Receive station data", true, false);
+      NSTimer receiveTimer("MPI: Receive station data", true, true);
 
       // The length of a block in samples
       size_t blockSize = ps.nrSamplesPerSubband();
