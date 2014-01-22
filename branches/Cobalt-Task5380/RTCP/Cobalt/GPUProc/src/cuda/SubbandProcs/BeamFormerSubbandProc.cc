@@ -101,7 +101,7 @@ namespace LOFAR
       // FFTShift: B -> B
       firstFFTShiftBuffers(devB, devB),
       firstFFTShiftKernel(
-        factories.firstFFTShift.create(queue, firstFFTShiftBuffers)),
+        factories.fftShift.create(queue, firstFFTShiftBuffers)),
 
       // FFT: B -> B
       firstFFT(queue,
@@ -120,7 +120,7 @@ namespace LOFAR
       // FFTShift: A -> A
       secondFFTShiftBuffers(devA, devA),
       secondFFTShiftKernel(
-        factories.secondFFTShift.create(queue, secondFFTShiftBuffers)),
+        factories.fftShift.create(queue, secondFFTShiftBuffers)),
 
       // FFT: A -> A
       secondFFT(queue,
@@ -181,7 +181,7 @@ namespace LOFAR
       inverseFFTShiftBuffers(
         coherentTransposeBuffers.output, coherentTransposeBuffers.output),
       inverseFFTShiftKernel(
-        factories.inverseFFTShift.create(queue, inverseFFTShiftBuffers)),
+        factories.fftShift.create(queue, inverseFFTShiftBuffers)),
 
       // FIR filter: D/C -> C/D
       //
@@ -244,8 +244,7 @@ namespace LOFAR
       // inverse FFTShift: A -> A
       incoherentInverseFFTShiftBuffers(devA, devA),
       incoherentInverseFFTShiftKernel(
-        factories.inverseFFTShift.create(
-          queue, incoherentInverseFFTShiftBuffers)),
+        factories.fftShift.create(queue, incoherentInverseFFTShiftBuffers)),
 
       // FIR filter: A -> B
       devIncoherentFilterWeights(

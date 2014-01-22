@@ -31,26 +31,17 @@ namespace LOFAR
     BeamFormerFactories::BeamFormerFactories(const Parset &ps,
                                              size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
-        firstFFTShift(
-          fftShiftParams(ps, 
-                         ps.settings.beamFormer.nrDelayCompensationChannels)),
         delayCompensation(delayCompensationParams(ps)),
-        secondFFTShift(
-          fftShiftParams(ps, 
-                         (ps.settings.beamFormer.nrHighResolutionChannels / 
-                          ps.settings.beamFormer.nrDelayCompensationChannels))),
-        bandPassCorrection(bandPassCorrectionParams(ps)),
         beamFormer(beamFormerParams(ps)),
         coherentTranspose(coherentTransposeParams(ps)),
-        inverseFFTShift(
-          fftShiftParams(ps, 
-                         ps.settings.beamFormer.nrHighResolutionChannels)),
+        fftShift(fftShiftParams(ps)),
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
         incoherentStokes(incoherentStokesParams(ps)),
         incoherentStokesTranspose(incoherentStokesTransposeParams(ps)),
         incoherentFirFilter(
-          incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc))
+          incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
+        bandPassCorrection(bandPassCorrectionParams(ps))
       {
       }
 
@@ -138,12 +129,15 @@ namespace LOFAR
       }
 
       FFTShiftKernel::Parameters
-      BeamFormerFactories::fftShiftParams(const Parset &ps,
-                                          size_t nrChannels) const
+      BeamFormerFactories::fftShiftParams(const Parset &ps) const
       {
         FFTShiftKernel::Parameters params(ps);
-        params.nrChannelsPerSubband = nrChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() / nrChannels;
+        // Currently a static in the subband proc
+        params.nrChannelsPerSubband =
+          ps.settings.beamFormer.nrDelayCompensationChannels;
+
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         return params;
       }
