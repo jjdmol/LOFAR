@@ -47,16 +47,21 @@ namespace LOFAR {
 
   namespace Cobalt {
 
-    MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets )
+    MPISendStation::MPISendStation( const struct BufferSettings &settings,
+     size_t stationIdx, 
+     int targetRank,
+     const std::vector<size_t> &beamlets )
     :
       logPrefix(str(boost::format("[station %s] [MPISendStation] ") % settings.station.stationName)),
+      headerCounter(0),
+      dataCounter(0),
+      metaCounter(0),
       settings(settings),
       stationIdx(stationIdx),
       targetRank(targetRank),
-      beamlets(beamlets)
+      beamlets(beamlets)     
     {
-      LOG_DEBUG_STR(logPrefix << "Initialised");
-
+     
       // Check whether we send each subband to at most one node
       ASSERT(!beamlets.empty());
 
@@ -75,11 +80,17 @@ namespace LOFAR {
       ASSERT(header->nrBeamlets < sizeof header->beamlets / sizeof header->beamlets[0]);
 
       std::copy(beamlets.begin(), beamlets.end(), &header->beamlets[0]);
+      LOG_INFO_STR(logPrefix << "MPISendStation Initialised");
     }
 
 
     MPISendStation::~MPISendStation()
     {
+
+      LOG_INFO_STR("*******************************\nMPISendStationsum...\nheaderCounter: " << headerCounter <<
+        "\ndataCounter: " << dataCounter <<
+        "\nmetaCounter: " << metaCounter << "\n*******************************\n");
+      LOG_INFO_STR(logPrefix << "MPISendStation Destroyed");
     }
 
 
@@ -106,6 +117,7 @@ namespace LOFAR {
       tag.bits.type     = CONTROL;
       tag.bits.station  = stationIdx;
 
+      headerCounter++;
       return Guarded_MPI_Isend(header, sizeof *header, targetRank, tag.value);
     }
 
@@ -128,7 +140,7 @@ namespace LOFAR {
         const T *to   = ib.ranges[transfer].to;
 
         ASSERT( from < to ); // There must be data to send, or MPI will error
-
+        dataCounter++;
         requests[transfer] = Guarded_MPI_Issend((void*)from, (to - from) * sizeof(T), targetRank, tag.value);
       }
 
@@ -148,12 +160,14 @@ namespace LOFAR {
       // Flags are sent if the data have been transferred,
       // and the flags Irecv is posted before the data Irecvs,
       // so we are sure that the flag Irecv is posted.
+      metaCounter++;
       return Guarded_MPI_Irsend(&metaData, sizeof metaData, targetRank, tag.value);
     }
 
 
     template<typename T>
-    void MPISendStation::sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData )
+    void MPISendStation::sendBlock( const struct Block<T> &block, 
+             std::vector<SubbandMetaData> &metaData )
     {
       DEBUG("entry");
 
@@ -227,7 +241,8 @@ namespace LOFAR {
 
         ASSERT(!finishedRequests.empty());
 
-        for(size_t f = 0; f < finishedRequests.size(); ++f, ++b) {
+        for(size_t f = 0; f < finishedRequests.size(); ++f, ++b) 
+        {
           const int sendIdx              = finishedRequests[f];
 
           ASSERT(sendIdx >= 0);
@@ -242,7 +257,8 @@ namespace LOFAR {
           const struct Block<T>::Beamlet &ib = block.beamlets[beamletIdx];
 
           // waitSome sets finished requests to MPI_REQUEST_NULL in our array.
-          if (ib.nrRanges == 1 || beamletRequests[sendIdx + (transfer == 0 ? 1 : -1)] == MPI_REQUEST_NULL) {
+          if (ib.nrRanges == 1 || beamletRequests[sendIdx + (transfer == 0 ? 1 : -1)] == MPI_REQUEST_NULL) 
+          {
             /*
              * SEND FLAGS FOR BEAMLET
              */
@@ -279,8 +295,10 @@ namespace LOFAR {
 
       // Wait on all pending requests
       waitAll(metaDataRequests);
+      
 
       DEBUG("exit");
+      LOG_INFO_STR("MPISendStation::sendBlock finished");
     }
 
     // Create all necessary instantiations

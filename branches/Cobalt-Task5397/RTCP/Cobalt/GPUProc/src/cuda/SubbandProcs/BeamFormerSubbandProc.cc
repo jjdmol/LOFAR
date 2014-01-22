@@ -37,17 +37,22 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, gpu::Context &context) :
+    BeamFormedData::BeamFormedData(unsigned nrStokes,
+                                   unsigned nrChannels,
+                                   size_t nrSamples,
+                                   gpu::Context &context) :
     MultiDimArrayHostBuffer<float, 4>(
       boost::extents[1][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, unsigned nrTabs, gpu::Context &context) :
+    BeamFormedData::BeamFormedData(unsigned nrStokes,
+                                   unsigned nrChannels,
+                                   size_t nrSamples, 
+                                   unsigned nrTabs, 
+                                   gpu::Context &context) :
       MultiDimArrayHostBuffer<float, 4>(
-      boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
+          boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
@@ -414,11 +419,11 @@ namespace LOFAR
         std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
     }
 
-    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
+    void BeamFormerSubbandProc::processSubband(
+      SubbandProcInputData &input,
       StreamableData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
-      BeamFormedData &incoherentOutput = dynamic_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
@@ -523,12 +528,13 @@ namespace LOFAR
 
       // Output in devD and devE, by design.
       if (coherentBeamformer)
-        queue.readBuffer(
-          output, devD, counters.visibilities, true);
+        queue.readBuffer(output,
+                         devD,
+                         counters.visibilities, true);
       else
-        queue.readBuffer(
-          incoherentOutput, devE, 
-          counters.incoherentOutput, true);
+        queue.readBuffer(output,
+                         devE,
+                         counters.incoherentOutput, true);
 
       // ************************************************
       // Perform performance statistics if needed

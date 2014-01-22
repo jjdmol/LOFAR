@@ -273,6 +273,12 @@ namespace LOFAR
         // key: Observation.Beam[sapIdx].*
         struct Direction direction;
 
+
+        // The list of sabbands in this SAP
+        //
+        // key: Observation.Beam[idx].subbandList 
+        std::vector<unsigned> subbandIndices;
+
         // Name of target
         //
         // key: Observation.Beam[sapIdx].target
@@ -308,6 +314,8 @@ namespace LOFAR
         //
         // set to: equals the index in the subbands vector
         unsigned idx;
+
+        unsigned idxInSAP;
 
         // Index at station (f.e. 100..343)
         //
@@ -481,6 +489,9 @@ namespace LOFAR
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
+
+          // list of subbands in this sap
+          vector<unsigned> subbandIndices;
         };
 
         // All SAPs, with information about the TABs to form.

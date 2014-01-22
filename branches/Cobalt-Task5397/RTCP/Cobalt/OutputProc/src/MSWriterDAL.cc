@@ -93,11 +93,14 @@ namespace LOFAR
     static Mutex HDF5Mutex;
 
     template <typename T,unsigned DIM>
-    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno)
+    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename,
+     const Parset &parset,
+     unsigned fileno)
       :
       MSWriterFile(forceextension(string(filename),".raw")),
       itsParset(parset),
-      itsNextSeqNr(0)
+      itsNextSeqNr(0),
+      itsFileNr(fileno)
     {
       itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
 
@@ -121,21 +124,23 @@ namespace LOFAR
         f.coherent ? parset.settings.beamFormer.coherentSettings
                    : parset.settings.beamFormer.incoherentSettings;
 
-      itsNrChannels = stokesSet.nrChannels * parset.nrSubbands(); // <-- FIXME in case of multiple parts/file
-      itsNrSamples = parset.settings.nrSamplesPerSubband() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+      //*******************************
+      // DIt moet per sap
+      unsigned nrSubbands = parset.settings.SAPs[sapNr].subbandIndices.size();
+      itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
+      itsNrSamples = parset.settings.nrSamplesPerSubband() /
+                     stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+
       itsBlockSize = itsNrSamples * itsNrChannels;
 
       unsigned nrBlocks = parset.nrBeamFormedBlocks();
 
       // all subbands in this file
-      vector<unsigned> subbandIndices;
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
       
-      // for now, all subbands are in one file
-      subbandIndices.resize(parset.nrSubbands());
-      for (size_t sb = 0; sb < parset.nrSubbands(); ++sb)
-        subbandIndices[sb] = sb;
 
-      unsigned nrSubbands = subbandIndices.size();
+
+      //*******************************
 
       vector<string> stokesVars;
       vector<string> stokesVars_LTA;
@@ -575,10 +580,14 @@ namespace LOFAR
 
       ASSERT( data );
       ASSERT( sdata );
-      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize, "A block is at least " << itsBlockSize << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
+      
+      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize,
+             "A block is at least " << itsBlockSize <<
+             " elements, but provided sdata only has " << 
+             sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
-      unsigned bytesPerBlock = itsBlockSize * sizeof(T);
+      unsigned bytesPerBlock = itsBlockSize * sizeof(T);  // Deze fix het probleem
 
       // fill in zeroes for lost blocks
       if (itsNextSeqNr < seqNr)

@@ -55,6 +55,9 @@
     <Filter Include="test\Kernels">
       <UniqueIdentifier>{d12b2f89-11b7-4abe-b8d3-b244619f1bc9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="test\SubbandProcs">
+      <UniqueIdentifier>{1c9b6305-4c92-4639-bd70-5f8309f67daf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.h">
@@ -734,11 +737,21 @@
       <Filter>src\cuda\SubbandProcs</Filter>
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc" />
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.cc" />
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc" />
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc" />
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc" />
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1042,12 +1055,6 @@
       <Filter>test\cuda</Filter>
     </None>
     <None Include="..\..\GPUProc\share\gpu\kernels\FFTShift.cu" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run">
       <Filter>test</Filter>
     </None>
@@ -1056,6 +1063,24 @@
     </None>
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset">
       <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

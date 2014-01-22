@@ -82,6 +82,9 @@ namespace LOFAR
       SmartPtr<MPIProtocol::MetaData, SmartPtrMPI<MPIProtocol::MetaData> > metaDatas;
 
     private:
+      size_t headerCounter;
+      size_t dataCounter;
+      size_t metaCounter;
       const std::string logPrefix;
       const BufferSettings &settings;
 

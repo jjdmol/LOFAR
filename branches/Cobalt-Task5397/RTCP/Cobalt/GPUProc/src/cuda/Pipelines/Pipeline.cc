@@ -65,7 +65,7 @@ namespace LOFAR
       performance(devices.size()),
       writePool(subbandIndices.size())
     {
-      ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
+      ASSERTSTR(!devices.empty(), "Pipeline.cc: Not bound to any GPU!");
     }
 
     Pipeline::~Pipeline()
@@ -75,8 +75,10 @@ namespace LOFAR
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
+      LOG_INFO_STR("receiveInput nrBlocks:" << nrBlocks);
       ASSERT(workQueues.size() > 0);
 
+      
       NSTimer receiveTimer("MPI: Receive station data", true, false);
 
       // The length of a block in samples
@@ -84,6 +86,7 @@ namespace LOFAR
 
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
+      LOG_INFO_STR("MPIReceiveStations, pipeline.cc");
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 #else
       DirectInput &receiver = DirectInput::instance();
@@ -93,7 +96,8 @@ namespace LOFAR
       // block.
       vector<struct ReceiveStations::Block<SampleT> > blocks(ps.nrStations());
 
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+      for (size_t stat = 0; stat < ps.nrStations();  ++stat) 
+      {
         blocks[stat].beamlets.resize(subbandIndices.size());
       }
 
@@ -101,7 +105,8 @@ namespace LOFAR
       //
       // Start processing from block -1, and don't process anything if the
       // observation is empty.
-      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
+      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) 
+      {
         // Receive the samples of all subbands from the stations for this
         // block.
 
@@ -189,7 +194,8 @@ namespace LOFAR
       }
 
       // Signal end of input
-      for (size_t i = 0; i < workQueues.size(); ++i) {
+      for (size_t i = 0; i < workQueues.size(); ++i) 
+      {
         workQueues[i]->inputPool.filled.append(NULL);
       }
     }

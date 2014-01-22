@@ -39,19 +39,31 @@ namespace LOFAR {
     :
       logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
       nrStations(nrStations),
+      headerCounter(0),
+      dataCounter(0),
+      metaCounter(0),
       beamlets(beamlets),
       blockSize(blockSize),
       stationSourceRanks(nrStations, MPI_ANY_SOURCE)
     {
+      LOG_INFO_STR(logPrefix << "MPIReceiveStations Initialised");
     }
 
+    MPIReceiveStations::~MPIReceiveStations()
+    {
+      LOG_INFO_STR("*******************************\nMPIReceiveStationssum...\nheaderCounter: " << headerCounter <<
+        "\ndataCounter: " << dataCounter <<
+        "\nmetaCounter: " << metaCounter << "\n*******************************\n");
+
+      LOG_INFO_STR(logPrefix << "MPIReceiveStations Destroyed");
+    }
 
     MPI_Request MPIReceiveStations::receiveHeader( size_t station, struct MPIProtocol::Header &header )
     {
       tag_t tag;
       tag.bits.type    = CONTROL;
       tag.bits.station = station;
-
+      headerCounter ++;
       return Guarded_MPI_Irecv(&header, sizeof header, stationSourceRanks[station], tag.value);
     }
 
@@ -64,7 +76,7 @@ namespace LOFAR {
       tag.bits.station = station;
       tag.bits.beamlet = beamlet;
       tag.bits.transfer = transfer;
-
+      dataCounter ++; 
       return Guarded_MPI_Irecv(from, nrSamples * sizeof(T), stationSourceRanks[station], tag.value);
     }
 
@@ -75,7 +87,7 @@ namespace LOFAR {
       tag.bits.type    = METADATA;
       tag.bits.station = station;
       tag.bits.beamlet = beamlet;
-
+      metaCounter ++;
       return Guarded_MPI_Irecv(&metaData, sizeof metaData, stationSourceRanks[station], tag.value);
     }
 
@@ -87,7 +99,6 @@ namespace LOFAR {
 
       // All requests except the headers
       std::vector<MPI_Request> requests;
-
       /*
        * RECEIVE HEADERS (ASYNC)
        */
@@ -184,7 +195,7 @@ namespace LOFAR {
           blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
         }
       }
-
+     
     }
 
     // Create all necessary instantiations

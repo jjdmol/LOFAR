@@ -487,7 +487,7 @@ int main(int argc, char **argv)
   SSH_Finalize();
 
 #ifdef HAVE_MPI
-  MPI_Finalize();
+  MPI_Finalize();  // all 4 rtcp hang in this call
 #endif
 
   return 0;

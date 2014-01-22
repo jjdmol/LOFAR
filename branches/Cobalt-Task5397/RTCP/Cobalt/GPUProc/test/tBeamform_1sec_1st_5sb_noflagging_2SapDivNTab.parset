@@ -98,7 +98,7 @@ Observation.DataProducts.Output_Correlated.filenames = [SB0.MS,SB1.MS,SB2.MS,SB3
 Observation.DataProducts.Output_Correlated.locations = [5*:.]
 Observation.DataProducts.Output_IncoherentStokes.enabled = true
 Observation.DataProducts.Output_IncoherentStokes.filenames = [TAB00.raw, TAB10.raw, TAB11.raw]
-Observation.DataProducts.Output_IncoherentStokes.locations = [localhost:.,localhost:.,localhost:.]
+Observation.DataProducts.Output_IncoherentStokes.locations = [localhost:/localhome/klijn/output,localhost:/localhome/klijn/output,localhost:/localhome/klijn/output]
 Observation.Dataslots.DataslotInfo.DataslotList = []
 Observation.Dataslots.DataslotInfo.RSPBoardList = []
 Observation.Dataslots.RS106HBA.DataslotList = [0..10]
@@ -145,3 +145,7 @@ PIC.Core.RS106HBA.RSP.ports = [file:/var/scratch/mol/test_sets/3sec/rs106.udp]
 _DPname = LOFAR_ObsSW_TempObs0024
 _parsetPrefix = CorrAppl.CorrProc.
 _processName = CorrProc
+# The executable of the process to start.
+# which thus needs to be found in $PATH after login.
+Cobalt.OutputProc.executable = /globalhome/klijn/build/5397/gnu_debug/installed/bin/outputProc
+

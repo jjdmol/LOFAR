@@ -67,9 +67,17 @@ namespace LOFAR
       template<typename T>
       void receiveBlock( std::vector< struct Block<T> > &blocks );
 
+      ~MPIReceiveStations();
+
     private:
+      typedef boost::shared_ptr<std::vector<MPI_Request> > ptrToReq;
+
       const std::string logPrefix;
       const size_t nrStations;
+      size_t headerCounter;
+      size_t dataCounter;
+      size_t metaCounter;
+
 
     public:
       const std::vector<size_t> beamlets;

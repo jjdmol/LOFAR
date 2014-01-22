@@ -356,7 +356,8 @@ namespace LOFAR
       
       settings.SAPs.resize(nrSAPs);
       settings.subbands.clear();
-      for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) {
+      for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) 
+      {
         struct ObservationSettings::SAP &sap = settings.SAPs[sapNr];
 
         sap.direction.type   = getString(str(format("Observation.Beam[%u].directionType") % sapNr), "J2000");
@@ -365,15 +366,17 @@ namespace LOFAR
         sap.target           = getString(str(format("Observation.Beam[%u].target") % sapNr), "");
 
         // Process the subbands of this SAP
-        vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        sap.subbandIndices = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
-        for (unsigned sb = 0; sb < subbandList.size(); ++sb) {
+        for (unsigned sb = 0; sb < sap.subbandIndices.size(); ++sb)
+        {
           struct ObservationSettings::Subband subband;
 
           subband.idx              = settings.subbands.size();
-          subband.stationIdx       = subbandList[sb];
+          subband.stationIdx      = sap.subbandIndices[sb];
           subband.SAP              = sapNr;
+          subband.idxInSAP         = sb;
           subband.centralFrequency = frequencyList.empty()
                                      ? settings.subbandWidth() * (subband.stationIdx + subbandOffset)
                                      : frequencyList[sb];
