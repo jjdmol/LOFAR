@@ -121,7 +121,7 @@ struct SUTWrapper : ParsetSUT
     stream(context),
     nrStokes(parset.settings.beamFormer.coherentSettings.nrStokes),
     nrTabs(parset.settings.beamFormer.maxNrTABsPerSAP()),
-    factory(FFTShiftParams(parset, inrChannels)),
+    factory(FFTShiftParams(parset)),
     hInput(
       boost::extents[inrStations][NR_POLARIZATIONS][nrChannels][inrOutputinSamplesPerSuband],
       context),
@@ -139,7 +139,7 @@ struct SUTWrapper : ParsetSUT
 
   // Needed to adapt the number of channels in the parameterset
   // These values are normaly added in the SubbandProc (compile time default).
-  FFTShiftKernel::Parameters FFTShiftParams(Parset parset, unsigned nrChannels)
+  FFTShiftKernel::Parameters FFTShiftParams(Parset parset)
   {
     FFTShiftKernel::Parameters params(parset);
 
