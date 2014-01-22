@@ -20,7 +20,7 @@
 
 #include "gpu_math.cuh"
 
-typedef float2 DataType;
+typedef float2 *DataType;
 
 /**
  * Shift the zero-frequency component to the center of the spectrum.
@@ -42,7 +42,7 @@ typedef float2 DataType;
 
 extern "C"
 {
-  __global__ void FFTShift(DataType *data, unsigned size)
+  __global__ void FFTShift(DataType data)
   {
     unsigned sample  = blockIdx.x * blockDim.x + threadIdx.x;
 
