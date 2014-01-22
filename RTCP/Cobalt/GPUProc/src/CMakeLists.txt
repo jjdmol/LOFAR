@@ -124,6 +124,7 @@ install(PROGRAMS
   scripts/stopBGL.sh
   scripts/get_casacore_measures_data.sh
   scripts/apply_casacore_measures_data.sh
+  scripts/setloglevels.sh
   DESTINATION bin)
 
 # install the logprop file
