@@ -1,0 +1,116 @@
+#
+# HardwareList.parset describes the properties of each node
+# known to Cobalt. 
+#
+
+# A generic configuration for 'localhost'
+
+PIC.Core.Cobalt.localhost.host=localhost
+PIC.Core.Cobalt.localhost.cpu=0
+PIC.Core.Cobalt.localhost.nic=
+PIC.Core.Cobalt.localhost.gpus=
+
+# DAS-4 nodes
+
+PIC.Core.Cobalt.gpu01_0.host=gpu01
+PIC.Core.Cobalt.gpu01_0.cpu=0
+PIC.Core.Cobalt.gpu01_0.nic=
+PIC.Core.Cobalt.gpu01_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.gpu01_1.host=gpu01
+PIC.Core.Cobalt.gpu01_1.cpu=1
+PIC.Core.Cobalt.gpu01_1.nic=
+PIC.Core.Cobalt.gpu01_1.gpus=[2, 3]
+
+# The Cobalt cluster
+
+PIC.Core.Cobalt.cbt001_0.host=cbt001
+PIC.Core.Cobalt.cbt001_0.cpu=0
+PIC.Core.Cobalt.cbt001_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt001_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt001_1.host=cbt001
+PIC.Core.Cobalt.cbt001_1.cpu=1
+PIC.Core.Cobalt.cbt001_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt001_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt002_0.host=cbt002
+PIC.Core.Cobalt.cbt002_0.cpu=0
+PIC.Core.Cobalt.cbt002_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt002_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt002_1.host=cbt002
+PIC.Core.Cobalt.cbt002_1.cpu=1
+PIC.Core.Cobalt.cbt002_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt002_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt003_0.host=cbt003
+PIC.Core.Cobalt.cbt003_0.cpu=0
+PIC.Core.Cobalt.cbt003_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt003_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt003_1.host=cbt003
+PIC.Core.Cobalt.cbt003_1.cpu=1
+PIC.Core.Cobalt.cbt003_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt003_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt004_0.host=cbt004
+PIC.Core.Cobalt.cbt004_0.cpu=0
+PIC.Core.Cobalt.cbt004_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt004_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt004_1.host=cbt004
+PIC.Core.Cobalt.cbt004_1.cpu=1
+PIC.Core.Cobalt.cbt004_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt004_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt005_0.host=cbt005
+PIC.Core.Cobalt.cbt005_0.cpu=0
+PIC.Core.Cobalt.cbt005_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt005_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt005_1.host=cbt005
+PIC.Core.Cobalt.cbt005_1.cpu=1
+PIC.Core.Cobalt.cbt005_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt005_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt006_0.host=cbt006
+PIC.Core.Cobalt.cbt006_0.cpu=0
+PIC.Core.Cobalt.cbt006_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt006_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt006_1.host=cbt006
+PIC.Core.Cobalt.cbt006_1.cpu=1
+PIC.Core.Cobalt.cbt006_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt006_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt007_0.host=cbt007
+PIC.Core.Cobalt.cbt007_0.cpu=0
+PIC.Core.Cobalt.cbt007_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt007_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt007_1.host=cbt007
+PIC.Core.Cobalt.cbt007_1.cpu=1
+PIC.Core.Cobalt.cbt007_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt007_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt008_0.host=cbt008
+PIC.Core.Cobalt.cbt008_0.cpu=0
+PIC.Core.Cobalt.cbt008_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt008_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt008_1.host=cbt008
+PIC.Core.Cobalt.cbt008_1.cpu=1
+PIC.Core.Cobalt.cbt008_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt008_1.gpus=[2, 3]
+
+PIC.Core.Cobalt.cbt009_0.host=cbt009
+PIC.Core.Cobalt.cbt009_0.cpu=0
+PIC.Core.Cobalt.cbt009_0.nic=mlx4_0
+PIC.Core.Cobalt.cbt009_0.gpus=[0, 1]
+
+PIC.Core.Cobalt.cbt009_1.host=cbt009
+PIC.Core.Cobalt.cbt009_1.cpu=1
+PIC.Core.Cobalt.cbt009_1.nic=mlx4_1
+PIC.Core.Cobalt.cbt009_1.gpus=[2, 3]
+
