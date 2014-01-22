@@ -152,8 +152,8 @@ int main(int argc, char **argv)
     RSPPacketFactory packetFactory(inStream, boardMode, subbands);
     RSP packet;
 
-    TimeStamp current(from);
-    TimeStamp end(to);
+    TimeStamp current(TimeStamp::convert(from, clockmode * 1000000));
+    TimeStamp end(TimeStamp::convert(to, clockmode * 1000000));
 
     while(current < end && packetFactory.makePacket(packet, current, boardNr)) {
       // Write packet

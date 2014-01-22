@@ -94,8 +94,8 @@ namespace LOFAR
         errMsgs << "  - localWorkSize total must be at most " 
                 << maxThreadsPerBlock << " threads/block" << endl;
 
-      // globalWorkSize may (in theory) be all zero (no work). Reject such
-      // localWorkSize.
+      // globalWorkSize may (in theory) be all zero (no work), so allow.
+      // Do reject an all zero localWorkSize. We need to mod or div by it.
       if (localWorkSize.x == 0 || 
           localWorkSize.y == 0 ||
           localWorkSize.z == 0) {

@@ -19,7 +19,7 @@ set(CFITSIO_ROOT_DIR        /home/jenkins/root)
 set(PYRAP_ROOT_DIR          /home/jenkins/root)
 set(LIBSSH2_ROOT_DIR        /home/jenkins/root)
 set(BLITZ_ROOT_DIR          /home/jenkins/root)
-set(VALGRIND_ROOT_DIR       /home/jenkins/root)  # also in /usr, but not the includes (needed for what?)
+set(VALGRIND_ROOT_DIR       /home/jenkins/root)  # also in /usr, but ours has --with-mpicc=... (and includes, but we don't use them)
 # On fs5, setting PQ_LIBRARY here is not enough: put it in the CMake cache by passing
 # -DPQ_LIBRARY=/usr/pgsql-8.4/lib/libpq.so.5
 set(DAL_ROOT_DIR            /home/jenkins/root)

@@ -166,14 +166,16 @@ Dependency for: some LOFAR MAC packages
 
 valgrind (easier to install using your OS' package manager; optional for LOFAR Cobalt)
 --------
+needed for mpi to prevent tons of false positives
 
 Dependency for: running LOFAR tests under valgrind
 
   cd $HOME/root/src
-  wget http://valgrind.org/downloads/valgrind-3.8.1.tar.bz2  # or whatever version you like
-  tar jxf valgrind-3.8.1.tar.bz2
-  cd valgrind-3.8.1
-  ./configure --prefix=$HOME/root
+  wget http://valgrind.org/downloads/valgrind-3.9.0.tar.bz2  # or whatever version you like
+  tar jxf valgrind-3.9.0.tar.bz2
+  cd valgrind-3.9.0
+  ./configure --prefix=$HOME/root --with-mpicc=/cm/shared/apps/openmpi/gcc/64/1.4.4/bin/mpicc
+# on cobalt, use: ./configure --prefix=/globalhome/lofarsystem/cobalt-root --with-mpicc=/opt/openmpi/bin/mpicc
   make -j 8 install
   valgrind ls -l   # optional (test), should exit 0
 
