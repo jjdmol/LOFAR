@@ -162,7 +162,7 @@ void monitorStreamsCB(dyn_string dps, dyn_float values)
     }
     
     
-    if ( !navFunct_isCoreStation(station)) {
+    if (strpos(station,\"CS\") < 0) {
       rsp0found=true;
       rsp1found=true;
       setValue(\"stationStreamObject0\", \"backCol\", color);

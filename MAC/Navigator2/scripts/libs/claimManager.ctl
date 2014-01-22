@@ -123,7 +123,7 @@ void claimManager_queryConnectClaims()
   if (g_standAlone) {
     DPT = "StnObservation";
   }    
-  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value, .claim.freeDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM 'LOFAR_ObsSW_*' WHERE _DPT = \""+DPT+"\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
@@ -145,7 +145,6 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
   string strDP;
   string strName;
   time tClaimDate;
-  time tFreeDate;
   bool bClaimed;
   
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
@@ -161,14 +160,12 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
     aDP        = aResult[t][1];
     strName    = aResult[t][2];
     tClaimDate = aResult[t][3];
-    tFreeDate  = aResult[t][3];
     
     strDP=dpSubStr(aDP,DPSUB_DP);
     
     LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
     LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
     LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tClaimDate: "+tClaimDate);
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tFreeDate: "+tClaimDate);
     
     // We are claimed when the date is not 1970
     bClaimed = year( tClaimDate ) != 1970;

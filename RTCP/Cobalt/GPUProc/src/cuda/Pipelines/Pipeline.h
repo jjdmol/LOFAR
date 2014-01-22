@@ -51,7 +51,7 @@ namespace LOFAR
       virtual ~Pipeline();
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      virtual void processObservation();
+      void processObservation(OutputType outputType);
 
     protected:
       const Parset             &ps;
@@ -115,7 +115,12 @@ namespace LOFAR
       void postprocessSubbands(SubbandProc &workQueue);
 
       // Send subbands to Storage
-      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
+      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
+                        SmartPtr<Stream> outputStream);
+
+      // Create Stream to Storage
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
+                                       OutputType outputType) const;
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };

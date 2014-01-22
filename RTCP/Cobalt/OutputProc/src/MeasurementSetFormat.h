@@ -29,6 +29,7 @@
 #include <MSLofar/MSLofar.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
+#include "Format.h"
 
 #include <casa/aips.h>
 #include <casa/Utilities/DataType.h>
@@ -62,13 +63,13 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class MeasurementSetFormat
+    class MeasurementSetFormat : public Format
     {
     public:
       MeasurementSetFormat(const Parset &, uint32 alignment = 1);
-      ~MeasurementSetFormat();
+      virtual ~MeasurementSetFormat();
 
-      void addSubband(const std::string MSname, unsigned subband);
+      virtual void addSubband(const std::string MSname, unsigned subband, bool isBigEndian);
 
       // casacore/measurementset mutex
       static Mutex sharedMutex;
@@ -91,7 +92,7 @@ namespace LOFAR
       const uint32 itsAlignment;
 
       void createMSTables(const std::string &MSname, unsigned subband);
-      void createMSMetaFile(const std::string &MSname, unsigned subband);
+      void createMSMetaFile(const std::string &MSname, unsigned subband, bool isBigEndian);
 
       void fillFeed();
       void fillAntenna(const casa::Block<casa::MPosition>& antMPos);

@@ -751,4 +751,3 @@ PIC.Core.UK608LBA.clockCorrectionTime = 0
 PIC.Core.UK608LBA.phaseCenter = [4008428.362,-100303.525,4943744.070]
 _parsetPrefix = CorrAppl.CNProc.
 _processName = CNProc
-Cobalt.OutputProc.StaticMetaDataDirectory = tMeasurementSetFormat.in_1

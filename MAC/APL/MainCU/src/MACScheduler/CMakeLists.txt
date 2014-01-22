@@ -5,10 +5,6 @@ lofar_add_bin_program(MACScheduler
   MACScheduler.cc
   ObsClaimer.cc)
                                                   
-lofar_add_bin_program(claimTest
-  claimTest.cc
-  ObsClaimer.cc)
-                                                  
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/MACScheduler.conf.in
   ${CMAKE_CURRENT_BINARY_DIR}/MACScheduler.conf)

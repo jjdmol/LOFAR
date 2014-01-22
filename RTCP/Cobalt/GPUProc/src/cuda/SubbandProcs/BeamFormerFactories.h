@@ -25,10 +25,9 @@
 #include <GPUProc/KernelFactory.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
+#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
@@ -49,8 +48,7 @@ namespace LOFAR
       KernelFactory<IntToFloatKernel> intToFloat;
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
       KernelFactory<BeamFormerKernel> beamFormer;
-      KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
-      KernelFactory<FFTShiftKernel> fftShift;
+      KernelFactory<BeamFormerTransposeKernel> transpose;
       KernelFactory<FIR_FilterKernel> firFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
       KernelFactory<IncoherentStokesKernel> incoherentStokes;
@@ -64,17 +62,14 @@ namespace LOFAR
       BeamFormerKernel::Parameters
       beamFormerParams(const Parset &ps) const;
 
-      CoherentStokesTransposeKernel::Parameters
-      coherentTransposeParams(const Parset &ps) const;
+      BeamFormerTransposeKernel::Parameters
+      transposeParams(const Parset &ps) const;
 
       CoherentStokesKernel::Parameters
       coherentStokesParams(const Parset &ps) const;
 
       DelayAndBandPassKernel::Parameters
       delayCompensationParams(const Parset &ps) const;
-
-      FFTShiftKernel::Parameters
-      fftShiftParams(const Parset &ps) const;
 
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;

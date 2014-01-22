@@ -138,38 +138,6 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 	// else: some other timer must be active.
 }
 
-//
-// freeObject(objectype, nameInAppl)
-//
-void ClaimMgrTask::freeObject(const string&		objectType,
-							  const string&		nameInAppl)
-{
-	// not yet started yet? (user called us directly after creation)
-	if (itsResolveState==RO_UNDEFINED) {
-		itsRequestPool.push(cmRequest_t(objectType,nameInAppl,0));
-		LOG_INFO_STR("freerequest '" << nameInAppl << "' queued because manager is still starting up");
-		return;
-	}
-
-	// are we in an idle state?
-	if (!itsObjectType.empty() || !itsNameInAppl.empty()) {
-		itsRequestPool.push(cmRequest_t(objectType,nameInAppl,0));
-		LOG_INFO_STR("freerequest '" << nameInAppl << "' queued because manager is still busy with " << itsNameInAppl);
-		return;
-	}
-
-	// save info
-	itsObjectType = objectType;
-	itsNameInAppl = nameInAppl;
-	itsReplyPort  = 0;
-	LOG_INFO_STR("freerequest '" << nameInAppl << "' will be handled immediately");
-	if (itsResolveState == RO_READY) {
-		itsTimerPort->setTimer(0.1);	// wake up FSM
-	}
-	// else: some other timer must be active.
-}
-
-
 
 // -------------------- INTERNAL FUNCTIONS --------------------
 
@@ -219,7 +187,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		case RO_READY:			// 4
 			if (itsObjectType.empty() || itsNameInAppl.empty()) {
 				if (itsRequestPool.empty()) {
-					LOG_DEBUG_STR("Nothing to claim or free");
+					LOG_DEBUG_STR("Nothing to claim");
 					break;
 				}
 				// continue with requests on the stack
@@ -229,35 +197,20 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 				itsReplyPort  = newRequest.replyPort;
 				itsRequestPool.pop();
 			}
-			// free request?
-			if (itsReplyPort == 0) {
-				LOG_INFO_STR("FreeObject(" << itsObjectType << "," << itsNameInAppl << ")");
-				itsClaimMgrPS->setValue("reset.typeName",   GCFPVString(itsObjectType), 0.0, false);
-				itsClaimMgrPS->setValue("reset.objectName", GCFPVString(itsNameInAppl), 0.0, false);
-				itsClaimMgrPS->flush();
-				// stay in current (idle) mode
-				itsObjectType.clear();
-				itsNameInAppl.clear();
-				itsResultDPname.clear();
-				itsTimerPort->cancelAllTimers();
-				itsTimerPort->setTimer(0.1);		// hop to next request.
-			}
-			else {
-				// request a DPname
-				LOG_INFO_STR("ClaimObject(" << itsObjectType << "," << itsNameInAppl << ")");
-				itsClaimMgrPS->setValue("request.typeName",       GCFPVString(itsObjectType), 0.0, false);
-				itsClaimMgrPS->setValue("request.newObjectName",  GCFPVString(itsNameInAppl), 0.0, false);
-				// clear the answer also otherwise we will not be notified when asking the same question twice.
-				itsClaimMgrPS->setValue("response.DPName",        GCFPVString(""), 0.0, false);
-				itsClaimMgrPS->setValue("response.newObjectName", GCFPVString(""), 0.0, false);
-				itsClaimMgrPS->flush();
-				itsResolveState = RO_ASKED; // 3
-				// clear result fields
-				itsFieldsReceived = 0;
-				itsResultDPname.clear();
-				itsTimerPort->cancelAllTimers();
-				itsTimerPort->setTimer(3.0);		// don't wait forever.
-			}
+			// request a DPname
+			LOG_INFO_STR("ClaimObject(" << itsObjectType << "," << itsNameInAppl << ")");
+			itsClaimMgrPS->setValue("request.typeName",       GCFPVString(itsObjectType), 0.0, false);
+			itsClaimMgrPS->setValue("request.newObjectName",  GCFPVString(itsNameInAppl), 0.0, false);
+			// clear the answer also otherwise we will not be notified when asking the same question twice.
+			itsClaimMgrPS->setValue("response.DPName",        GCFPVString(""), 0.0, false);
+			itsClaimMgrPS->setValue("response.newObjectName", GCFPVString(""), 0.0, false);
+			itsClaimMgrPS->flush();
+			itsResolveState = RO_ASKED; // 3
+			// clear result fields
+			itsFieldsReceived = 0;
+			itsResultDPname.clear();
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(3.0);		// don't wait forever.
 		break;
 
 		case RO_ASKED:		// 3

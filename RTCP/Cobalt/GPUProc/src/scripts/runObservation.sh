@@ -33,7 +33,7 @@ shopt -s nullglob
 echo "Called as $@"
 
 if test "$LOFARROOT" == ""; then
-  echo "LOFARROOT is not set! Exiting." >&2
+  echo "LOFARROOT is not set! Exiting."
   exit 1
 fi
 echo "LOFARROOT is set to $LOFARROOT"
@@ -83,7 +83,7 @@ then
 fi
 
 function error {
-  echo "$@" >&2
+  echo "$@"
   exit 1
 }
 
@@ -115,9 +115,6 @@ then
   # clean it up.
   trap "rm -f $PIDFILE" EXIT
 fi
-
-# Test the -k option of timeout(1). It only appeared since GNU coreutils 8.5 (fails on DAS-4).
-timeout -k2 1 /bin/true 2> /dev/null && KILLOPT=-k2
 
 # Read parset
 [ -f "$PARSET" -a -r "$PARSET" ] || error "Cannot read parset: $PARSET"
@@ -166,7 +163,6 @@ fi
 echo "Hosts: $HOSTS"
 
 # Copy parset to all hosts
-cksumline=`md5sum $PARSET`
 for h in `echo $HOSTS | tr ',' ' '`
 do
   # Ignore empty hostnames
@@ -176,12 +172,13 @@ do
   [ "$h" == "localhost" ] && continue;
   [ "$h" == "`hostname`" ] && continue;
 
-  # Ignore hosts that already have the same parset (for example, through NFS).
-  timeout $KILLOPT 5s ssh -qn $h "[ -f $PARSET ] && echo \"$cksumline\" | md5sum -c --status" && continue
+  # Ignore hosts that already have the parset
+  # (for example, through NFS).
+  timeout 5s ssh -qn $h [ -e $PWD/$PARSET ] && continue;
 
   # Copy parset to remote node
-  echo "Copying parset to $h:$PARSET"
-  timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
+  echo "Copying parset to $h:$PWD"
+  timeout 30s scp -Bq $PARSET $h:$PWD || error "Could not copy parset to $h"
 done
 
 # Run in the background to allow signals to propagate
@@ -211,39 +208,36 @@ echo "Result code of observation: $OBSRESULT"
 # ******************************
 # Post-process the observation
 # ******************************
+#
+# Note: don't propagate errors here as observation failure,
+#       because that would be too harsh and also makes testing
+#       harder.
 
 if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
 then
+  # Communicate result back to OnlineControl
+
+  ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
+  ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
+
+  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+
   if [ $OBSRESULT -eq 0 ]
   then
     # ***** Observation ran successfully
-    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
 
-    # Copy LTA feedback file to ccu001
+    # 1. Copy LTA feedback file to ccu001
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
-    FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
     echo "Copying feedback to $FEEDBACK_DEST"
-    timeout $KILLOPT 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
-    FEEDBACK_RESULT=$?
-    if [ $FEEDBACK_RESULT -ne 0 ]
-    then
-      echo "Failed to copy file $FEEDBACK_FILE to $FEEDBACK_DEST (status: $FEEDBACK_RESULT)"
-      OBSRESULT=$FEEDBACK_RESULT
-    fi
-  fi
+    timeout 30s scp $LOFARROOT/var/run/Observation${OBSID}_feedback $FEEDBACK_DEST
 
-  # Communicate result back to OnlineControl
-  ONLINECONTROL_RESULT_PORT=$((21000 + $OBSID % 1000))
-
-  if [ $OBSRESULT -eq 0 ]
-  then
-    # Signal success to OnlineControl
+    # 2. Signal success to OnlineControl
     echo "Signalling success to $ONLINECONTROL_HOST"
     echo -n "FINISHED" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
   else
-    # ***** Observation or sending feedback failed for some reason
-    # Signal failure to OnlineControl
+    # ***** Observation failed for some reason
+
+    # 1. Signal failure to OnlineControl
     echo "Signalling failure to $ONLINECONTROL_HOST"
     echo -n "ABORT" > /dev/tcp/$ONLINECONTROL_HOST/$ONLINECONTROL_RESULT_PORT
   fi
@@ -252,6 +246,5 @@ else
 fi
 
 # Our exit code is that of the observation
-# In production this script is started in the background, so the exit code is for tests.
 exit $OBSRESULT
 

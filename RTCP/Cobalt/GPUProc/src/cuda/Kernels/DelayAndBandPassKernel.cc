@@ -51,7 +51,7 @@ namespace LOFAR
       nrSAPs(ps.settings.SAPs.size()),
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
-      transpose(true), // sane for correlator; bf redefines
+      transpose(correctBandPass), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
       dumpBuffers = 
@@ -70,13 +70,12 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
-                    " delayCompensation=" <<
-                    (params.delayCompensation ? "true" : "false") <<
-                    " #channels/sb=" << params.nrChannelsPerSubband <<
-                    " correctBandPass=" << 
+      LOG_DEBUG_STR("DelayAndBandPassKernel: " <<
+                    "correctBandPass=" << 
                     (params.correctBandPass ? "true" : "false") <<
-                    " transpose=" << (params.transpose ? "true" : "false"));
+                    ", delayCompensation=" <<
+                    (params.delayCompensation ? "true" : "false") <<
+                    ", transpose=" << (params.transpose ? "true" : "false"));
 
       ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);

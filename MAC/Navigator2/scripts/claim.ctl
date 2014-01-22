@@ -11,9 +11,6 @@
 //    dpSet( 
 //      "ClaimManager.request.typeName", "Observation",
 //      "ClaimManager.request.newObjectName", "MYOBSERVATION" );
-//      the Claim.name will be filled 
-//          Claim.claimDate will be set to now
-//          Claim.freeDate will be set to 1970
 //
 //    And can be freed via:
 //
@@ -21,8 +18,6 @@
 //    dpSet( 
 //      "ClaimManager.reset.typeName", "Observation",
 //      "ClaimManager.reset.objectName", "MYOBSERVATION" );
-//      Claim.freeDate will be set to NOW
-//      Claim.claimDate will be set to 1970
 //
 //    The Claim Manager has a global array of claimed datapoints
 //    for better performance. If the claimmanager runs on the mainserver
@@ -30,8 +25,7 @@
 //    dpSet("ClaimManager.cache.typeNames",*add the new typename to the dyn_string*,
 //          "ClaimManager.cache.newObjectNames",*add the new ObjectName to the dyn_string*,
 //          "ClaimManager.cache.DPNames",*add the new DPName to the dyn_string*,
-//          "ClaimManager.cache.claimDates",*add the new claimDate to the dyn_time*)
-//          "ClaimManager.cache.freeDates",*add the new freeDate to the dyn_time*)
+//          "ClaimManager.cache.claimDates",*add the new ClaimDate to the dyn_string*)
 //
 //    When a client connects to the maindatabase he will fill his internal cache map (gClaimdTypes)
 //    from the ClaimManager.Cache  arrays.  This will also be done after a disconnect/reconnect
@@ -46,7 +40,6 @@
 // *******************************************
 
 #uses "GCFCommon.ctl"
-#uses "GCFAlarm.ctl"
 
 global mapping g_ClaimedTypes;
 
@@ -67,7 +60,6 @@ void main()
   DebugN( "***************************" );
   DebugN( "ClaimManager is starting   " );
   DebugN( "***************************" );
-  
   
   // append all Claimable types, for now only Observations needed
   dynAppend(claimableTypes,"Observation");
@@ -198,7 +190,6 @@ void syncClient() {
   dyn_string newObjectNames;
   dyn_string DPNames;
   dyn_time   claimDates;
-  dyn_time   freeDates;
   mapping    tmp;
   
   if (bDebug) DebugN("claim.ctl:syncClient|client sync entered.");
@@ -222,7 +213,6 @@ void syncClient() {
   dpGet(MainDBName+"ClaimManager.cache.typeNames",typeNames,
         MainDBName+"ClaimManager.cache.newObjectNames",newObjectNames,
         MainDBName+"ClaimManager.cache.DPNames",DPNames,
-        MainDBName+"ClaimManager.cache.freeDates",freeDates,
         MainDBName+"ClaimManager.cache.claimDates",claimDates);
   
   for (int t = 1 ; t <= dynlen(typeNames); t++) {
@@ -236,19 +226,17 @@ void syncClient() {
   	  g_ClaimedTypes[ typeNames[t] ][ "DP"        ] = makeDynString(DPNames[t]);
   	  g_ClaimedTypes[ typeNames[t] ][ "NAME"      ] = makeDynString(newObjectNames[t]);
   	  g_ClaimedTypes[ typeNames[t] ][ "CLAIMDATE" ] = makeDynTime(claimDates[t]);
-  	  g_ClaimedTypes[ typeNames[t] ][ "FREEDATE"  ] = makeDynTime(freeDates[t]);
     } else {
     
     // we did have the type, so we can add this entry to it
       dynAppend(g_ClaimedTypes[ typeNames[t] ][ "DP"        ],DPNames[t]);
       dynAppend(g_ClaimedTypes[ typeNames[t] ][ "NAME"      ],newObjectNames[t]);
       dynAppend(g_ClaimedTypes[ typeNames[t] ][ "CLAIMDATE" ],claimDates[t]);
-      dynAppend(g_ClaimedTypes[ typeNames[t] ][ "FREEDATE"  ],freeDates[t]);
     } 
     if (bDebug) DebugN("Setting DPNames[t].claim.name : "+dpSubStr(DPNames[t],DPSUB_DP) + " --> "+newObjectNames[t]);
-    dpSet(dpSubStr(DPNames[t],DPSUB_DP)+".claim.name",newObjectNames[t],dpSubStr(DPNames[t],DPSUB_DP)+".claim.claimDate",claimDates[t],dpSubStr(DPNames[t],DPSUB_DP)+".claim.freeDate",freeDates[t]); 
+    dpSet(dpSubStr(DPNames[t],DPSUB_DP)+".claim.name",newObjectNames[t],dpSubStr(DPNames[t],DPSUB_DP)+".claim.claimDate",claimDates[t]); 
   }
- // showMapping("syncClient");
+  showMapping("syncClient");
 
 }
 
@@ -277,7 +265,6 @@ void clientAddClaimCallback(
 )
 {
   
-  time freeDate; // 1970
   if (bDebug) DebugN("claim.ctl:clientAddClaimCallback| entered.");
   if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|typeName  : " + typeName);
   if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|objectName: " + newObjectName);
@@ -294,11 +281,10 @@ void clientAddClaimCallback(
   if( mappingHasKey( g_ClaimedTypes, typeName )){  // when we know the type
     // if length is 0 then we just need to add
     if( !dynlen( g_ClaimedTypes[ typeName ][ "DP" ] )) {
-      if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|Adding entry because 0 entries in type");
-	  	 dynAppend(g_ClaimedTypes[ typeName ][ "DP"        ],DPName);
-  		 dynAppend(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName);
-  		 dynAppend(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate); 
-  		 dynAppend(g_ClaimedTypes[ typeName ][ "FREEDATE"  ],freeDate); 
+        if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|Adding entry because 0 entries in type");
+	  	dynAppend(g_ClaimedTypes[ typeName ][ "DP"        ],DPName);
+  		dynAppend(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName);
+  		dynAppend(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate); 
     } else {
        
   		// Look at all elements to see if you can find a claimed object
@@ -312,8 +298,6 @@ void clientAddClaimCallback(
           
           dynRemove(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],t);
           dynInsertAt(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate,t);
-          dynRemove(g_ClaimedTypes[ typeName ][ "FREEDATE"  ],t);
-          dynInsertAt(g_ClaimedTypes[ typeName ][ "FREEDATE" ],freeDate,t);
           index=t;
           
         // in case of aDPname is the same but the newObjectName differs then the spot 
@@ -321,12 +305,10 @@ void clientAddClaimCallback(
         } else if ( (g_ClaimedTypes[ typeName ][ "DP"   ][t] == DPName) &&
             				(g_ClaimedTypes[ typeName ][ "NAME" ][t] != newObjectName)) {
           if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|Found existing DP, but new Name, so overwrite to reuse");
-          dynRemove(  g_ClaimedTypes[ typeName ][ "NAME"      ],t);
-          dynInsertAt(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName,t);
           dynRemove(  g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],t);
           dynInsertAt(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate,t);
-          dynRemove(  g_ClaimedTypes[ typeName ][ "FREEDATE"  ],t);
-          dynInsertAt(g_ClaimedTypes[ typeName ][ "FREEDATE" ],freeDate,t);
+          dynRemove(  g_ClaimedTypes[ typeName ][ "NAME"      ],t);
+          dynInsertAt(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName,t);
           index=t;
         }
       }
@@ -355,7 +337,6 @@ void clientAddClaimCallback(
 	  	    dynAppend(g_ClaimedTypes[ typeName ][ "DP"        ],DPName);
   		    dynAppend(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName);
   		    dynAppend(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate); 
-  		    dynAppend(g_ClaimedTypes[ typeName ][ "FREEDATE"  ],freeDate); 
         }
       } 
     }
@@ -368,16 +349,14 @@ void clientAddClaimCallback(
   		g_ClaimedTypes[ typeName ][ "DP"        ] = makeDynString(DPName);
   		g_ClaimedTypes[ typeName ][ "NAME"      ] = makeDynString(newObjectName);
   		g_ClaimedTypes[ typeName ][ "CLAIMDATE" ] = makeDynTime(claimDate); 
-  		g_ClaimedTypes[ typeName ][ "FREEDATE"  ] = makeDynTime(freeDate); 
-      
     }
     string aS= dpSubStr(DPName,DPSUB_DP);
     if (dpExists(aS+".claim.name")) {
-      dpSet(aS+".claim.name",newObjectName,aS+".claim.claimDate",claimDate,aS+".claim.freeDate",freeDate); 
+      dpSet(aS+".claim.name",newObjectName,aS+".claim.claimDate",claimDate); 
     }
   }  
   
-  //if (bDebug) showMapping("clientAddClaimCallback");
+  if (bDebug) showMapping("clientAddClaimCallback");
 }
 
 // *******************************************
@@ -420,10 +399,6 @@ void startLocalClaim() {
 //      "ClaimManager.reset.typeName", "Observation",
 //      "ClaimManager.reset.newObjectName", "MYOBSERVATION" );
 //
-//    When reset has been asked, the claimdate needs to be set to 1970, but only if type/dp exists
-//    also in the objectType.claim.date
-//    rewrite the database cache
-//
 // Returns:
 //    None
 // *******************************************
@@ -435,90 +410,69 @@ void resetCallback(
 {
   // Local data
   string strDP="";
-  time claimDate; //1970
-  time freeDate = getCurrentTime();
-  int iIndex=-1;
-  
-  
-  // only master is allowed to set claims free
-  if (isClient) {
-    return;
-  }  
+  time resetDate;
+  bool error=false;
   
   if( bDebug ) DebugN( "claim.ctl:resetCallback| request for " + strTypeName + "," + strObjectName );
   
   // We want to reset a datapoint
   // First verify the datapoint type 
-  if (bDebug) DebugN("claim.ctl:claimCallback|Check if Type is in mapping"); 
- 	VerifyDatapointType( strTypeName );
+  if (isClient) {
+    if( ! mappingHasKey( g_ClaimedTypes, strTypeName )) {
+      DebugN("claim.ctl:claimCallback|ERROR!!!!  Client was asked for DPtype: "+strTypeName+" But has no such type local.");
+      error=true;    
+    }
+  } else {
+    if (bDebug) DebugN("claim.ctl:claimCallback|Check if Type is in mapping"); 
+   	VerifyDatapointType( strTypeName );
+  }
   
   // (2) We should have the right type. ( from step (1) )
   // now look for the point that needs to be resetted
-  for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "NAME" ] )) && (iIndex == -1 ); t++)
-  {
-    if (g_ClaimedTypes[ strTypeName ][ "NAME" ][t] == strObjectName )
-    {  
-      if( bDebug ) DebugN( "claim.ctl:resetCallback|  we found an existing claim for :" + strObjectName );
-      iIndex = t;
-      break;      
-    } 
-  } 
-
-  // (3) Set the 'ClaimDate'  and  'freeDate' of the datapoint if the datapoint exists
-    
-  if (iIndex != -1) {  
-    // Update our mapping so that we know what is reset
-    g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][iIndex] = claimDate;
-    g_ClaimedTypes[ strTypeName ][ "FREEDATE"  ][iIndex] = freeDate;
+  if (!error) {
+          
+    // (3) Set the 'ClaimDate' of the datapoint
+    // that we've found and the master should add the response to the Cache arrays
+    if (!isClient ) {
       
-    // also set the typeDP name of the claimed datapoint
-    string strDP = g_ClaimedTypes[ strTypeName ][ "DP" ][iIndex];
-    dpSet( strDP + ".claim.claimDate", claimDate);
-    dpSet( strDP + ".claim.freeDate", freeDate);
-    
-    // the master should add the response to the Cache arrays
-      
-    if (bDebug) DebugN("claim.ctl:claimCallback|Master Cache action required");
-    dyn_string typeNames;
-    dyn_string newObjectNames;
-    dyn_string DPNames;
-    dyn_time   claimDates;
-    dyn_time   freeDates;
+      if (bDebug) DebugN("claim.ctl:claimCallback|Master Cache action required");
+      dyn_string typeNames;
+      dyn_string newObjectNames;
+      dyn_string DPNames;
+      dyn_time   claimDates;
 
-    // get all lists of claimed datapoints 
-    dpGet("ClaimManager.cache.typeNames",typeNames,
+      // get all lists of claimed datapoints 
+      dpGet("ClaimManager.cache.typeNames",typeNames,
         		"ClaimManager.cache.newObjectNames",newObjectNames,
         		"ClaimManager.cache.DPNames",DPNames,
-        		"ClaimManager.cache.claimDates",claimDates, 
-        		"ClaimManager.cache.freeDates",freeDates); 
+        		"ClaimManager.cache.claimDates",claimDates); 
       
      
-    bool found = false;
-    for (int i=1; i<= dynlen(typeNames); i++) {
+      bool found = false;
+      for (int i=1; i<= dynlen(typeNames); i++) {
         
-      // same only claimdate can be altered
-      if (typeNames[i] == strTypeName &&
-          newObjectNames[i] == strObjectName) {
-        if (bDebug) DebugN("claim.ctl:resetCallback|Found type and Objectname are the same, reset Cache entry Claimdate and freeDate");
-        dynRemove(  claimDates,i); 
-        dynInsertAt(claimDates,claimDate,i);
-        dynRemove(  freeDates,i); 
-        dynInsertAt(freeDates,freeDate,i);
-        found = true;
-        exit;
+        // same only claimdate can be altered
+        if (typeNames[i] == strTypeName &&
+            newObjectNames[i] == strObjectName) {
+          
+          if (bDebug) DebugN("claim.ctl:resetCallback|Found type and Objectname are the same, reset Cache entry Claimdate");
+          dynRemove(  claimDates,i); 
+          dynInsertAt(claimDates,resetDate,i);
+          found = true;
+          exit;
+        }
       }
-    }
             
-    // write back
-    if (found) {
-      dpSet("ClaimManager.cache.typeNames",typeNames,
+      // write back
+      if (found) {
+        dpSet("ClaimManager.cache.typeNames",typeNames,
           		"ClaimManager.cache.newObjectNames",newObjectNames,
           		"ClaimManager.cache.DPNames",DPNames,
-          		"ClaimManager.cache.claimDates",claimDates,
-          		"ClaimManager.cache.freeDates",freeDates);  
+          		"ClaimManager.cache.claimDates",claimDates);  
+      }
+    } else {
+      DebugN("claim.ctl:resetCallback| ERROR: Observation not found in cache");
     }
-  } else {
-    DebugN("claim.ctl:resetCallback| ERROR: Observation not found in DBcache");
   }
 }
 
@@ -537,21 +491,6 @@ void resetCallback(
 //      "ClaimManager.request.typeName", "Observation",
 //      "ClaimManager.request.newObjectName", "MYOBSERVATION" );
 //
-//     When a claim is demanded the flow will be as follows:
-//    
-//      1) Look in existing claims for the type if it already exists.
-//      2) Seek a free spot (claimdate == 1970 && freedate == 1970)
-//      3) Seek the oldest freed spot where claimdate = 1970 
-//      4) Seek the oldest claimed spot   (This is a fallback and preferably never 
-//                                         should happen, but it will clean the database also 
-//                                         when a reset has failed at a certain point)
-//         
-//      In all cases:
-//          reset cache claimdate and typeObject.claim.claimdate to NOW
-//          reset cache freedate and typeObject.claim.freedate to 1970
-//          return the existing DP
-//          write back cache to database
-//
 // Returns:
 //    None
 // *******************************************
@@ -563,10 +502,8 @@ void claimCallback(
 {
   // Local data
   string strDP="";
-  time claimDate; // 1970
-  time freeDate; // 1970
+  time claimDate;
   bool error=false;
-  bool changed=false;
   
   if( bDebug ) DebugN( "claim.ctl:claimCallback| request for " + strTypeName + "," + strNewObjectName );
   
@@ -582,7 +519,7 @@ void claimCallback(
    	VerifyDatapointType( strTypeName );
   }
   
-  // (2) We now should have the right type. ( from step (1) )
+  // (2) We should have the right type. ( from step (1) )
   // now look for a free place
   if (!error) {
     strDP = FindFreeClaim( strTypeName, strNewObjectName, claimDate );
@@ -596,14 +533,12 @@ void claimCallback(
       dyn_string newObjectNames;
       dyn_string DPNames;
       dyn_time   claimDates;
-      dyn_time   freeDates;
 
       // get all lists of claimed datapoints 
       dpGet("ClaimManager.cache.typeNames",typeNames,
         		"ClaimManager.cache.newObjectNames",newObjectNames,
         		"ClaimManager.cache.DPNames",DPNames,
-        		"ClaimManager.cache.claimDates",claimDates,
-        		"ClaimManager.cache.freeDates",freeDates); 
+        		"ClaimManager.cache.claimDates",claimDates); 
       
       // we need to check if the data is allready in the cacheArrays, to avoid duplication.
       // same type and same name and same dpname  only the claimdate might need to be changed.
@@ -613,16 +548,14 @@ void claimCallback(
       bool found = false;
       for (int i=1; i<= dynlen(typeNames); i++) {
         
-        // same only claimdate or freeDate can be altered
+        // same only claimdate can be altered
         if (typeNames[i] == strTypeName &&
             newObjectNames[i] == strNewObjectName &&
             DPNames[i] == dpSubStr(strDP,DPSUB_DP) && !found) {
           
-          if (bDebug) DebugN("claim.ctl:claimCallback|Found type and Objectname and DPname are the same, refresh Cache entry Claimdate && freeDate");
+          if (bDebug) DebugN("claim.ctl:claimCallback|Found type and Objectname and DPname are the same, refresh Cache entry Claimdate");
           dynRemove(  claimDates,i); 
           dynInsertAt(claimDates,claimDate,i);
-          dynRemove(  freeDates,i); 
-          dynInsertAt(freeDates,freeDate,i);
           found = true;
           exit;
         }
@@ -634,12 +567,10 @@ void claimCallback(
                 
           if (bDebug) DebugN("claim.ctl:claimCallback|type and DPname are the same, but ObjectName is different, Cache entry has been reused");
                 
+       	  dynRemove(  claimDates,i);                
+       	  dynInsertAt(claimDates,claimDate,i);
          	dynRemove(  newObjectNames,i);
          	dynInsertAt(newObjectNames,strNewObjectName,i);
-           dynRemove(  claimDates,i);                
-        	  dynInsertAt(claimDates,claimDate,i);
-        	  dynRemove(  freeDates,i);                
-        	  dynInsertAt(freeDates,freeDate,i);
           found=true;
           exit;
        	}    
@@ -647,21 +578,20 @@ void claimCallback(
        
 
       if (!found) {
+      
         if (bDebug) DebugN("claim.ctl:claimCallback|Claim needs to be added to Cache"); 
 	      // append new info
   	    dynAppend(typeNames,strTypeName);
-       dynAppend(newObjectNames,strNewObjectName);
-       dynAppend(DPNames,dpSubStr(strDP,DPSUB_DP));
-       dynAppend(claimDates,claimDate);
-       dynAppend(freeDates,freeDate);
+    	  dynAppend(newObjectNames,strNewObjectName);
+      	dynAppend(DPNames,dpSubStr(strDP,DPSUB_DP));
+      	dynAppend(claimDates,claimDate);
       }
       
       // write back
       dpSet("ClaimManager.cache.typeNames",typeNames,
         		"ClaimManager.cache.newObjectNames",newObjectNames,
         		"ClaimManager.cache.DPNames",DPNames,
-        		"ClaimManager.cache.claimDates",claimDates,  
-        		"ClaimManager.cache.freeDates",freeDates);  
+        		"ClaimManager.cache.claimDates",claimDates);  
     }
     
     if (bDebug) DebugN("claim.ctl:claimCallback|Set ClaimManagers Response point");
@@ -692,20 +622,18 @@ void VerifyDatapointType( string strType )
 {
   // Local data
   mapping tmp;
-  dyn_time ClaimDate; // 1970
-  dyn_time freeDate;  // 1970
+  dyn_time ClaimDate;
   dyn_string strDPNames;
   dyn_string strDPClaimDate;
-  dyn_string strDPFreeDate;
   dyn_time tCurrentTime;
   int t;
     
   if( mappingHasKey( g_ClaimedTypes, strType )){  // when we know the type
-    if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType|type is already known: "+strType );
+    if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType|type is already known" );
     return;                                  // then we are ready
   }  
 
-  if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType|allocating new element in mapping: "+strType );
+  if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType|allocating new element in mapping" );
   
   g_ClaimedTypes[ strType ] = tmp;
   
@@ -713,7 +641,6 @@ void VerifyDatapointType( string strType )
   g_ClaimedTypes[ strType ][ "DP"        ] = makeDynString();
   g_ClaimedTypes[ strType ][ "NAME"      ] = makeDynString();
   g_ClaimedTypes[ strType ][ "CLAIMDATE" ] = makeDynTime(); 
-  g_ClaimedTypes[ strType ][ "FREEDATE"  ] = makeDynTime(); 
   
   if( bDebug ) DebugN( "claim.ctl:VerifyDatapointType| looking for DP type " + strType ); 
   
@@ -725,18 +652,17 @@ void VerifyDatapointType( string strType )
   if( !dynlen(  g_ClaimedTypes[ strType ][ "DP"   ] ))
     return; 
   
-  // Determine the dp names of the elements 'ClaimDate' 'FreeDate' and 'name'
+  // Determine the dp names of the elements 'ClaimDate' and 'name'
   for( t = 1; t <= dynlen( g_ClaimedTypes[ strType ][ "DP"   ] ); t++)
   {
      dynAppend( strDPNames    , g_ClaimedTypes[ strType ][ "DP"   ][t] + ".claim.name" );
      dynAppend( strDPClaimDate, g_ClaimedTypes[ strType ][ "DP"   ][t] + ".claim.claimDate" );
-     dynAppend( strDPFreeDate , g_ClaimedTypes[ strType ][ "DP"   ][t] + ".claim.freeDate" );
   }
 
   // Note:
   // Some functions ( like dpGet() ) do not like it when you pas them an 
   // element of a mapping
-  // ( dpGet() fails when you use the elements in the mapping )
+  // ( dpGet() fails when you use the element sin the mapping )
   // That is why we pass the mapping elements to a function.
   // The function 'GetClaimInfo' will accept the elements
   // of the mapping and dpGet() will be happy !
@@ -745,25 +671,22 @@ void VerifyDatapointType( string strType )
   // of every possible datapoint
   GetClaimInfo( 
     strDPNames    , g_ClaimedTypes[ strType ][ "NAME"      ],
-    strDPClaimDate, g_ClaimedTypes[ strType ][ "CLAIMDATE" ],
-    strDPFreeDate , g_ClaimedTypes[ strType ][ "FREEDATE"  ] );
+    strDPClaimDate, g_ClaimedTypes[ strType ][ "CLAIMDATE" ] );
   
   
   if (bDebug) DebugN("claimedTypes after getClaimInfo :");
-  //if (bDebug) showMapping("VerifyDatapointType");
+  if (bDebug) showMapping("VerifyDatapointType");
  
 }
 
 void GetClaimInfo(
   dyn_string &strDPNames, dyn_string &strReceiveName,
-  dyn_string &strDPClaimDate, dyn_time &tReceiveClaimDates,
-  dyn_string &strDPFreeDate, dyn_time &tReceiveFreeDates 
+  dyn_string &strDPClaimDate, dyn_time &tReceiveDates 
 )
 {
   dpGet( 
     strDPNames    , strReceiveName,
-    strDPClaimDate, tReceiveClaimDates,
-    strDPFreeDate , tReceiveFreeDates);
+    strDPClaimDate, tReceiveDates );
   
 }    
 
@@ -778,22 +701,7 @@ void GetClaimInfo(
 //    if the mapping for a certain strType exceeds the number of DP's for that type AND there is no free claim
 //    the oldest Claim will be found and that entry will be overwritten.
 //
-//    Free means that the 'ClaimDate' is 1970 
-//
-//     When a claim is demanded the flow will be as follows:
-//    
-//      1) Look in existing claims for the type if it already exists.
-//      2) Seek a free spot (claimdate == 1970 && freedate == 1970)
-//      3) Seek the oldest freed spot where claimdate = 1970 
-//      4) Seek the oldest claimed spot   (This is a fallback and preferably never 
-//                                         should happen, but it will clean the database also 
-//                                         when a reset has failed at a certain point)
-//         
-//      In all cases:
-//          reset cache claimdate and typeObject.claim.claimdate to NOW
-//          reset cache freedate and typeObject.claim.freedate to 1970
-//          return the existing DP
-//          write back cache to database
+//    Free means that the 'ClaimDate' is 1970.
 //
 // Returns:
 //    None
@@ -807,22 +715,24 @@ string  FindFreeClaim(
 {
   // Local data
   string strDP="";
-  time freeDate;  //1970
-  
     
   int iIndex = -1;          // Index of the item that we find ( if any )
   
   if( bDebug ) DebugN( "claim.ctl:FindFreeClaim| is looking for a a" + strTypeName );
 
   // When we have no instances ( then they probably requested the wrong type )
-  if( !dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] ))
-  return "";
+
+
+    if( !dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] ))
+    return "";
 
   // Look at all elements to see if you can find a claimed object
-  // that has the right name and reuse it
-  for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "NAME" ] )) && (iIndex == -1 ); t++)
+  // that has the right name
+  for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) && (iIndex == -1 ); t++)
   {
-    if (g_ClaimedTypes[ strTypeName ][ "NAME" ][t] == strNewObjectName )
+    if( 
+     (year(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) != 1970 ) &&
+     (g_ClaimedTypes[ strTypeName ][ "NAME" ][t] == strNewObjectName ) )
     {  
       if( bDebug ) DebugN( "claim.ctl:FindFreeClaim|  we found an existing claim for :" + strNewObjectName );
       iIndex = t;
@@ -835,36 +745,21 @@ string  FindFreeClaim(
   // the next entries will prepare to add data, so they are only allowed for the Master ClaimManager
   if (!isClient) { 
 
-    // We did not find a match by name, so we are just going to look for a never used spot (claimdate 1970 and freeDate 1970
+    // We did not find a match by name, so we are just going to look for a free element
     if( iIndex == -1 ) {      
       for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) && (iIndex ==-1); t++) {
-        // When the year is empty ( e.g. 1970 ) for claim and free
-        if ( year(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) == 1970 && year(  g_ClaimedTypes[ strTypeName ][ "FREEDATE" ][t]) == 1970 ) {
+        // When the year is empty ( e.g. 1970 ) or when the claimtime is older then 7 days then it marks a free datapoint
+        if ( year(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) == 1970  || 
+             period(getCurrentTime()) - period(  g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t])  >= 604800) {
           
           if (bDebug) DebugN("claim.ctl:FindFreeClaim|We found a free objectPlace.");
           iIndex = t;
           break;
         }  
-    	 }
+    	}
   	}
   
-    // We did not find an unused spot so now we take the oldest freed claim
-    if( iIndex == -1 ) {
-      time old = getCurrentTime();      
- 
-      if (bDebug) DebugN("claim.ctl:FindFreeClaim|We need to reuse the oldest freed entry");
-
-      for( int t = 1; (t <= dynlen( g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ] )) ; t++) {
-        if( g_ClaimedTypes[ strTypeName ][ "FREEDATE" ][t] < old && year(g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][t]) == 1970) {
-          if (bDebug) DebugN("older time found: " ,g_ClaimedTypes[ strTypeName ][ "FREEDATE" ][t] );
-          if (bDebug) DebugN("old was: ", old);
-          old = g_ClaimedTypes[ strTypeName ][ "FREEDATE" ][t];
-          iIndex = t;
-        }
-      }
-    }
-
-    // we didn't find a freed element, so we need to find the oldest claimDate and reuse that
+    // we didn't find a free element, so we need to find the oldest claimDate and reuse that
     if( iIndex == -1 ) {
       time old = getCurrentTime();      
  
@@ -878,11 +773,7 @@ string  FindFreeClaim(
           iIndex = t;
         }
       }
-
-      sendAlarm(g_ClaimedTypes[ strTypeName ][ "DP" ][iIndex],
-                "No free claim available, reuse oldest existing claim: "+g_ClaimedTypes[ strTypeName ][ "NAME" ][iIndex],
-                TRUE);
-      }
+    }
   }
      
     
@@ -893,9 +784,8 @@ string  FindFreeClaim(
     claimDate = getCurrentTime();
     
     // Update our mapping so that we know what is claimed
-    g_ClaimedTypes[ strTypeName ][ "NAME"      ][iIndex] = strNewObjectName;
     g_ClaimedTypes[ strTypeName ][ "CLAIMDATE" ][iIndex] = claimDate;
-    g_ClaimedTypes[ strTypeName ][ "FREEDATE"  ][iIndex] = freeDate;
+    g_ClaimedTypes[ strTypeName ][ "NAME"      ][iIndex] = strNewObjectName;
       
     // Return the DP name of the claimed datapoint
     strDP = g_ClaimedTypes[ strTypeName ][ "DP" ][iIndex];
@@ -905,12 +795,11 @@ string  FindFreeClaim(
     if (!isClient) {
       dpSet( 
         strDP + ".claim.name", strNewObjectName,
-        strDP + ".claim.claimDate", claimDate,
-        strDP + ".claim.freeDate", freeDate);
+        strDP + ".claim.claimDate", claimDate);
     }
   }
   
-  //if (bDebug) showMapping("FindFreeClaim");
+  if (bDebug) showMapping("FindFreeClaim");
   
   // Return the result
   return strDP;
@@ -993,20 +882,6 @@ void checkAndCreateDPs() {
             //BGPProc
             if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
-              changed = true;
-            }
-            //CobaltGPUProc
-            for (int k=1; k < 10; k++) {
-              for (int l=0; l < 2; l++) {
-                if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OSCBT00"+k+"_CobaltGPUProc0"+l)) {
-                  dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OSCBT00"+k+"_CobaltGPUProc0"+l,"CobaltGPUProc");
-                  changed = true;
-                }
-              }
-            }
-            //CobaltOutputProc
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_CobaltOutputProc")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_CobaltOutputProc","CobaltOutputProc");
               changed = true;
             }
           } else {

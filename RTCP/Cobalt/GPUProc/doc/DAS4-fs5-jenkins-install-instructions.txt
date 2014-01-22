@@ -116,7 +116,8 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   svn co http://casacore.googlecode.com/svn/trunk/ casacore
   mkdir casacore/build
   cd casacore/build
-  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=$HOME/casacore/data ..
+  cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=/home/jenkins/root/share/casacore/data ..  # don't use ~ or $HOME in -DDATA_DIR to allow using jenkins' measures tables for any user
+  #cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=/localhome/lofarsystem/casacore/data ..  # use another DATA_DIR for the Cobalt nodes
   make -j 8 install
   ctest    # optional
 
@@ -166,16 +167,14 @@ Dependency for: some LOFAR MAC packages
 
 valgrind (easier to install using your OS' package manager; optional for LOFAR Cobalt)
 --------
-needed for mpi to prevent tons of false positives
 
 Dependency for: running LOFAR tests under valgrind
 
   cd $HOME/root/src
-  wget http://valgrind.org/downloads/valgrind-3.9.0.tar.bz2  # or whatever version you like
-  tar jxf valgrind-3.9.0.tar.bz2
-  cd valgrind-3.9.0
-  ./configure --prefix=$HOME/root --with-mpicc=/cm/shared/apps/openmpi/gcc/64/1.4.4/bin/mpicc
-# on cobalt, use: ./configure --prefix=/globalhome/lofarsystem/cobalt-root --with-mpicc=/opt/openmpi/bin/mpicc
+  wget http://valgrind.org/downloads/valgrind-3.8.1.tar.bz2  # or whatever version you like
+  tar jxf valgrind-3.8.1.tar.bz2
+  cd valgrind-3.8.1
+  ./configure --prefix=$HOME/root
   make -j 8 install
   valgrind ls -l   # optional (test), should exit 0
 

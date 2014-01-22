@@ -23,7 +23,6 @@
 
 #include <lofar_config.h>
 #include <DPPP/DPInfo.h>
-#include <DPPP/DPInput.h>
 #include <Common/LofarLogger.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCPosition.h>
@@ -211,17 +210,10 @@ namespace LOFAR {
       }
       setAntUsed();
       // If needed, remove the stations and renumber the baselines.
-      if (removeAnt) {
-        removeUnusedAnt();
-      }
-    }
-
-    void DPInfo::removeUnusedAnt()
-    {
-      if (itsAntUsed.size() < itsAntMap.size()) {
+      if (removeAnt  &&  itsAntUsed.size() < itsAntMap.size()) {
         // First remove stations.
         Vector<String> antNames (itsAntUsed.size());
-        Vector<Double> antDiam (itsAntUsed.size());
+        Vector<Double> antDiam (itsAntUsed.size());;
         vector<MPosition> antPos;
         antPos.reserve (itsAntUsed.size());
         for (uint i=0; i<itsAntUsed.size(); ++i) {

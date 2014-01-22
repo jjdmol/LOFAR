@@ -116,19 +116,18 @@ function parse_logs
 
       for f in *.MS
       do
-        $testdir/cmpfloat --type=cfloat --epsilon=$EPSILON --verbose `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
+        $testdir/cmpfloat $EPSILON `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
       done
     done
   fi
 
   # run correlator -- with profiling
-#disabled, as we do not use it atm and the ops nrs are out-of-date, but it is time-consuming)
-#  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
+  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
 
-  # check logs for performance degradation (disabled, checks not good enough and operation counts out-of-date)
-#  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
+  # check logs
+  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
   # toss output if everything is ok, but do not fail test if removal fails
-#  rm -rf $testdir/$OUTDIR || true # Comment this line for output
+  rm -rf $testdir/$OUTDIR || true # Comment this line for output
 ) || exit 1
 

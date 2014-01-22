@@ -57,26 +57,23 @@ struct ParsetFixture
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
     blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
-    nrStations = 43,
-    nrDelayCompensationChannels = 64;
+    nrStations = 43;
 
   Parset parset;
 
   ParsetFixture() {
-    parset.add("Observation.DataProducts.Output_IncoherentStokes.enabled", 
+    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
                "true");
-    parset.add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor", 
+    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
-    parset.add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband",
+    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
                lexical_cast<string>(nrChannels));
-    parset.add("Cobalt.BeamFormer.IncoherentStokes.which",
+    parset.add("OLAP.CNProc_IncoherentStokes.which",
                "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
                str(format("[%d*RS000]") % nrStations));
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
-    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
-               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };
@@ -87,8 +84,7 @@ const size_t
   ParsetFixture::nrOutputSamples,
   ParsetFixture::nrInputSamples,
   ParsetFixture::blockSize,
-  ParsetFixture::nrStations,
-  ParsetFixture::nrDelayCompensationChannels;
+  ParsetFixture::nrStations;
 
 
 // Test correctness of reported buffer sizes

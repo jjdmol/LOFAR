@@ -58,6 +58,9 @@ E "#uses \"navPanel.ctl\"
 dyn_string stationList;
 dyn_string observationsList;
 dyn_string backLinesRefNames;
+dyn_string swCtrlRefNames;
+dyn_string memAndHDDRefNames;
+dyn_string stationViewRefNames;
 dyn_string observationRefNames;
 
 string strPanelName;
@@ -77,6 +80,30 @@ void clearBackLinesRefNames() {
     removeSymbol(strModuleName,\"\",backLinesRefNames[i]);
   }
   dynClear(backLinesRefNames);
+}
+
+void clearSwCtrlRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(swCtrlRefNames); i++) {
+    removeSymbol(strModuleName,\"\",swCtrlRefNames[i]);
+  }
+  dynClear(swCtrlRefNames);
+}
+
+void clearMemAndHDDRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(memAndHDDRefNames); i++) {
+    removeSymbol(strModuleName,\"\",memAndHDDRefNames[i]);
+  }
+  dynClear(memAndHDDRefNames);
+}
+
+void clearStationViewRefNames() {
+  // remove all symbols because new ones will be added
+  for (int i=1; i <= dynlen(stationViewRefNames); i++) {
+    removeSymbol(strModuleName,\"\",stationViewRefNames[i]);
+  }
+  dynClear(stationViewRefNames);
 }
 
 void clearObservationRefNames() {
@@ -116,10 +143,27 @@ void redraw() {
   if (dynlen(backLinesRefNames) > 0) {
     clearBackLinesRefNames();
   }
-       
+        
+  if (dynlen(swCtrlRefNames) > 0) {
+    clearSwCtrlRefNames();
+  }
+
+  if (dynlen(memAndHDDRefNames) > 0) {
+    clearMemAndHDDRefNames();
+  }
+
+  if (dynlen(stationViewRefNames) > 0) {
+    clearStationViewRefNames();
+  }
+
 
   addBackLines();
+
+  addSWCtrlers();
   
+  addMemAndHDD();
+  
+  addStationView();
  
   // trigger that the panel values are calculated and ready
   dynClear(highlight);
@@ -150,9 +194,7 @@ void addBackLines() {
                       addPanelName,                    // Panel to add
                       backLinesRefNames[ref],          // Ref of the addedPanel
                       makeDynString( \"$station:\" + stationList[i],
-                                     \"$barColor:\" + barColor,
-                                     \"$xPos:\" + xPos_AddSymbol,
-                                     \"$yPos:\" + yPos_AddSymbol) ,     // Define all $values
+                                     \"$barColor:\" + barColor) ,     // Define all $values
                       xPos_AddSymbol,                  // Xpos of the AddedSymbol
                       yPos_AddSymbol,                  // Ypos of the AddedSymbol
                       0,                               // angle
@@ -162,15 +204,57 @@ void addBackLines() {
           }
     yPos_AddSymbol += 12;
     ref++;
-    addProcesses(stationList[i]+\":\");
   }
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
 }
 
 
 
+void addSWCtrlers() {
+  int xPos_AddSymbol = 235; 
+  int yPos_AddSymbol = 31;
+  int ref = 1;
 
-void addProcesses(string selectedStation) {
+  string addPanelName;
+  //loop over list and prepare panel with all datastreamobjects   
+  for (int i=1; i<= dynlen(stationList); i++) {
+    //CCU and MCU machines different layout
+    if (strpos(stationList[i],\"MCU\") >=0 ) {
+      addPanelName    = \"objects/Processes/MCUSWLevelView.pnl\";
+    } else if( strpos(stationList[i],\"CCU\") >=0) {
+      addPanelName    = \"objects/Processes/CCUSWLevelView.pnl\";
+    } else {
+      addPanelName    = \"objects/Processes/stationSWLevelView.pnl\";
+    }
+    swCtrlRefNames[ref]=\"swCtrl\"+(ref);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      swCtrlRefNames[ref],         // Ref of the addedPanel
+                      makeDynString( \"$station:\" + stationList[i]) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"swlevel.pnl:addSWCtrlers|Error swCtrl for : \" + stationList[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 12;
+    ref++;
+    //CCU and MCU machines different layout
+    if (strpos(stationList[i],\"MCU\") >=0 ) {
+//      addMCUProcesses(stationList[i]+\":\");
+    } else if( strpos(stationList[i],\"CCU\") >=0) {
+//      addCCUProcesses(stationList[i]+\":\");
+    } else {
+      addStationProcesses(stationList[i]+\":\");
+    }
+  }
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",station_result);
+
+}
+
+void addStationProcesses(string selectedStation) {
     if (!navFunct_dpReachable(selectedStation)) {
     return;
   }
@@ -180,7 +264,7 @@ void addProcesses(string selectedStation) {
   string query=\"SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' REMOTE '\" +selectedStation + \"'\";
   
   dpQuery(query, tab);
-  LOG_TRACE(\"main.pnl:addProcesses|Found: \"+ tab);
+  LOG_TRACE(\"main.pnl:addStationProcesses|Found: \"+ tab);
   
 
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
@@ -200,20 +284,73 @@ void addProcesses(string selectedStation) {
     // Remainder should be PermsSW Programs + Daemons  split on _ 
     dyn_string spl=strsplit(aS,\"_\");
     if (dynlen(spl) > 1) { // Daemon
-      string aS=navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path;
-      if (!dynContains(station_result,aS)) dynAppend(station_result,aS);
-      if (!dynContains(station_procList,path)) dynAppend(station_procList,path);
+      dynAppend(station_result,navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path);
+      dynAppend(station_procList,path);
     } else {   // Program
-      string aS=\",\"+spl[1]+\",\"+path;
-      if (!dynContains(station_result,aS)) dynAppend(station_result,aS);
+      dynAppend(station_result,\",\"+spl[1]+\",\"+path);
       if (spl[1] != \"Daemons\") {
-        if (!dynContains(station_procList,path)) dynAppend(station_procList,path);
+        dynAppend(station_procList,path);
       }
     }
   }
-  LOG_TRACE(\"main.pnl:addProcesses|station_result composed: \"+ station_result);  
+  LOG_TRACE(\"main.pnl:addStationProcesses|station_result composed: \"+ station_result);  
 }
 
+void addMemAndHDD() {
+  int xPos_AddSymbol = 631; 
+  int yPos_AddSymbol = 31; 
+  int ref = 1;
+  string addPanelName    = \"objects/Hardware/System_MemAndHDD.pnl\";
+  //loop over list and prepare panel with all MainInfo   
+  for (int i=1; i<= dynlen(stationList); i++) {
+
+    memAndHDDRefNames[i]=\"memAndHDD\"+(i);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      memAndHDDRefNames[ref],         // Ref of the addedPanel
+                      makeDynString( \"$station:\" + stationList[i]) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"main.pnl:addMemAndHDD|Error memAndHDD for : \" + stationList[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 12;
+    ref++;
+  }
+}
+
+void addStationView() {
+  int xPos_AddSymbol = 671; 
+  int yPos_AddSymbol = 31; 
+  int ref = 1;
+  string addPanelName    = \"objects/Hardware/Station_mainView.pnl\";
+  //loop over list and prepare panel with all MainInfo   
+  for (int i=1; i<= dynlen(stationList); i++) {
+    //skip CCU and MCU machines
+    if (strpos(stationList[i],\"MCU\") >=0 ||strpos(stationList[i],\"CCU\") >=0) continue;
+
+    stationViewRefNames[ref]=\"stationView\"+(ref);
+      
+    if (  addSymbol(  strModuleName,                   // Stay in this modul
+                      \"\",                              // Name of this panel
+                      addPanelName,                    // Panel to add
+                      stationViewRefNames[ref],         // Ref of the addedPanel
+                      makeDynString( \"$station:\" + stationList[i]) ,     // Define all $values
+                      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+                      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+                      0,                               // angle
+                      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"main.pnl:addStationView|Error stationView for : \" + stationList[i] + \" in this panel.\");
+          }
+    yPos_AddSymbol += 12;
+    ref++;
+  }
+}
 
 void addObservations() {
   int xPos_AddSymbol = 0; 
@@ -920,7 +1057,7 @@ E E 0 1 1 2 1 E 1 0 1 15 0 1 E 970 160 980 200
 E E E
 0
 1
-LANG:1 13 33% > 66% bad
+LANG:1 22 33% >=  bad data < 66%
 
 1
 "dashclr"N "_Transparent"
@@ -934,7 +1071,7 @@ E E 0 1 1 2 1 E 1 0 1 15 20 1 E 970 220 980 260
 E E E
 0
 1
-LANG:1 14 66% > 100% bad
+LANG:1 22 66% >= bad data < 100%
 
 1
 "dashclr"N "_Transparent"
@@ -962,7 +1099,7 @@ E E 0 1 1 2 1 E 1 0 1 15 40 1 E 970 280 980 320
 E E E
 0
 1
-LANG:1 12 0% > 33% bad
+LANG:1 19 0% > bad data < 33%
 
 1
 "dashclr"N "_Transparent"

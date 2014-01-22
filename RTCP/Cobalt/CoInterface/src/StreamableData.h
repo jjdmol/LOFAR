@@ -37,11 +37,30 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    // TODO: Update documentation.
     // Data which needs to be transported between CN, ION and Storage.
     // Apart from read() and write() functionality, the data is augmented
     // with a sequence number in order to detect missing data. Furthermore,
     // an integration operator += can be defined to reduce the data.
+
+    // Endianness:
+    // * Endianness is defined by the correlator.
+    // * Both Data and sequence number will have endianness of the
+    //   correlator
+    //
+    // WARNING: We consider all data streams to have the endianness of the
+    // correlator. No conversion is done here.
+
+    class IntegratableData
+    {
+    public:
+      virtual ~IntegratableData()
+      {
+      }
+
+      virtual IntegratableData &operator += (const IntegratableData &) = 0;
+    };
+
+
     class StreamableData
     {
     public:

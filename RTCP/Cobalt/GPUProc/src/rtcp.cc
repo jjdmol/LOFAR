@@ -19,6 +19,7 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <GPUProc/Package__Version.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -27,7 +28,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -71,20 +71,19 @@
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
-#include <GPUProc/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
-static void usage(const char *argv0)
+void usage(char **argv)
 {
-  cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
+  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
   cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
   cerr << "beam-forming for the Pulsar mode." << endl;
   cerr << endl;
-  cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
+  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
 }
@@ -103,14 +102,14 @@ int main(int argc, char **argv)
       break;
 
     default: /* '?' */
-      usage(argv[0]);
+      usage(argv);
       exit(1);
     }
   }
 
   // we expect a parset filename as an additional parameter
   if (optind >= argc) {
-    usage(argv[0]);
+    usage(argv);
     exit(1);
   }
 
@@ -179,13 +178,14 @@ int main(int argc, char **argv)
    * Initialise the system environment
    */
 
-  // Ignore SIGPIPE, as we handle disconnects ourselves
-  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
-    THROW_SYSCALL("signal(SIGPIPE)");
-
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
+
+  // Restrict access to (tmp build) files we create to owner
+  // JD: Don't do that! We want to be able to clean up each other's
+  // mess.
+  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
@@ -218,12 +218,9 @@ int main(int argc, char **argv)
    */
 
   // Send identification string to the MAC Log Processor
-  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "",
-                                      ps.getString("_DPname")));
-  format prFmt;
-  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
-  prFmt.parse(fmtStr);
-  LOG_INFO_STR("MACProcessScope: " << str(prFmt
+  LOG_INFO_STR("MACProcessScope: " << 
+               str(format(createPropertySetName(
+                            PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
                    % toUpper(myHostname(false))
                    % (ps.settings.nodes.size() > size_t(rank) ? 
                       ps.settings.nodes[rank].cpu : 0)));
@@ -288,8 +285,6 @@ int main(int argc, char **argv)
     // derive the set of gpus we're allowed to use
     const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
     for (size_t i = 0; i < gpuIds.size(); ++i) {
-      ASSERTSTR(gpuIds[i] < allDevices.size(), "Request to use GPU #" << gpuIds[i] << ", but found only " << allDevices.size() << " GPUs");
-
       gpu::Device &d = allDevices[gpuIds[i]];
 
       devices.push_back(d);
@@ -352,16 +347,20 @@ int main(int argc, char **argv)
   }
 
   SmartPtr<Pipeline> pipeline;
+  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
   if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
+    outputType = CORRELATED_DATA;
   } else if (correlatorEnabled) {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+    outputType = CORRELATED_DATA;
   } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
+    outputType = BEAM_FORMED_DATA;
   } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
@@ -432,7 +431,7 @@ int main(int argc, char **argv)
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation();
+        pipeline->processObservation(outputType);
       }
     }
   }
@@ -445,10 +444,11 @@ int main(int argc, char **argv)
   LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
+    time_t completing_start = time(0);
+
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    time_t completing_start = time(0);
     storageProcesses->forwardFinalMetaData(completing_start + 300);
 
     LOG_INFO("Stopping Storage processes");
@@ -463,7 +463,9 @@ int main(int argc, char **argv)
     feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
-    feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
+    feedbackLTA.add("_isCobalt", "T"); // for MoM, to discriminate between Cobalt and BG/P observations
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
+    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");

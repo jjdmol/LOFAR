@@ -23,8 +23,6 @@
 
 #include <cstddef>
 
-#include <Common/LofarTypes.h>
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -32,37 +30,27 @@ namespace LOFAR
 
 
     /*
-     * Returns true iff n is a power of two. Else, return false.
-     * T must be an integral type.
+     * Returns true iff n is a power of two.
      */
     template <typename T>
     inline static bool powerOfTwo(T n)
     {
-      return n > 0 && !(n & (n - 1));
+      return n > 0 && (n & -n) == n;
     }
 
 
     /*
-     * Returns the first power of two greater or equal than n.
-     * T must be an integral type.
-     * n must be less or equal to the largest representable power of two.
+     * Returns the first power of two higher than n.
      */
     template <typename T>
-    inline static T roundUpToPowerOfTwo(T n)
+    inline static T nextPowerOfTwo(T n)
     {
-      n -= 1;
-      n |= n >> 1;
-      n |= n >> 2;
-      n |= n >> 4;
-      if (sizeof n > sizeof(uint8))
-        n |= n >> 8;
-      if (sizeof n > sizeof(uint16))
-        n |= n >> 16;
-      if (sizeof n > sizeof(uint32))
-        n |= (uint64)n >> 32; // quell warning
-      n++;
-      n += (n == 0);
-      return n;
+      T p;
+
+      for (p = 1; p < n; p <<= 1)
+        ;
+
+      return p;
     }
 
 

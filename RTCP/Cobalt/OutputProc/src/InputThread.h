@@ -25,8 +25,11 @@
 
 #include <string>
 
+#include <Common/Thread/Thread.h>
+#include <Common/Thread/Queue.h>
+#include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
+#include <CoInterface/SmartPtr.h>
 #include <CoInterface/StreamableData.h>
 
 
@@ -34,31 +37,26 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    /*
-     * InputThread receives data blocks from a Stream,
-     * and inserts them into a Pool<>, to be sent to
-     * an OutputThread.
-     *
-     * The Stream is created from the parset through using
-     * getStreamDescriptorBetweenIONandStorage.
-     *
-     * This class is designed to handle visibilities only.
-     */
+
+
     class InputThread
     {
     public:
-      InputThread(const Parset &parset,
-                  unsigned streamNr,
-                  Pool<StreamableData> &outputPool,
-                  const std::string &logPrefix);
+      InputThread(const Parset &parset, OutputType index, unsigned streamNr, Queue<SmartPtr<StreamableData> > &freeQueue, Queue<SmartPtr<StreamableData> > &receiveQueue, const std::string &logPrefix);
 
-      virtual void process();
+      void                             start();
+      void                             cancel();
 
     private:
+      void                             mainLoop();
+
       const std::string itsLogPrefix, itsInputDescriptor;
-      Pool<StreamableData> &itsOutputPool;
+      Queue<SmartPtr<StreamableData> > &itsFreeQueue, &itsReceiveQueue;
+      SmartPtr<Thread>                 itsThread;
       const double itsDeadline;
     };
+
+
   } // namespace Cobalt
 } // namespace LOFAR
 

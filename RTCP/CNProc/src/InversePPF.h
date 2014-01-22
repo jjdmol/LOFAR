@@ -67,7 +67,6 @@
 #include <Interface/InverseFilteredData.h>
 #include <Interface/Align.h>
 #include <Interface/AlignedStdAllocator.h>
-#include <boost/noncopyable.hpp>
 #include <vector>
 #include <FilterBank.h>
 #include <FIR.h>

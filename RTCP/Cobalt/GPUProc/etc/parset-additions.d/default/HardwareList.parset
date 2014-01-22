@@ -8,7 +8,7 @@
 PIC.Core.Cobalt.localhost.host=localhost
 PIC.Core.Cobalt.localhost.cpu=0
 PIC.Core.Cobalt.localhost.nic=
-PIC.Core.Cobalt.localhost.gpus=[0]
+PIC.Core.Cobalt.localhost.gpus=
 
 # DAS-4 nodes
 

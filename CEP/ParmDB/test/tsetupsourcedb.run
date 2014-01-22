@@ -24,18 +24,13 @@
 
 
 # Set srcdir if undefined (if run outside 'make check')
+wd=`pwd`
 if test "$srcdir" = ""; then
   srcdir=../../../../../LOFAR/CEP/ParmDB/test
 fi
-curdir=`pwd`
-srcdir=`cd $srcdir/../src > /dev/null && pwd`
-exedir=`cd ../src > /dev/null && pwd`
-mwsdir=`cd $srcdir/../../LMWCommon/src > /dev/null && pwd`
-mwedir=`cd ../../LMWCommon/src > /dev/null && pwd`
-gpvdir=`cd ../../../LCS/Common/src > /dev/null && pwd`
 
-# Extend PATH.
-PATH=$curdir:$srcdir:$exedir:$mwsdir:$mwedir:$gpvdir:$PATH
+# Add current (test) and source directory to PATH.
+PATH="$wd:$wd/../src:$srcdir/../src:$PATH"
 export PATH
 
 # Create directories to create the sourcedb-s in.
@@ -51,7 +46,7 @@ mkdir tsetupsourcedb_tmp.ms2
 # Use _tmp name for the gds, so the resulting sourcedb also gets a _tmp name.
 cp tsetupsourcedb.in_gds tsetupsourcedb_tmp.gds
 echo ">>>"
-setupsourcedb -overwrite tsetupsourcedb_tmp.gds tsetupsourcedb.in "" "" tsetupsourcedb_tmp.log 0 tsetupsourcedb_tmp.hfn "$curdir"
+"$srcdir/../src/setupsourcedb" -overwrite tsetupsourcedb_tmp.gds tsetupsourcedb.in "" "" tsetupsourcedb_tmp.log 0 tsetupsourcedb_tmp.hfn "$wd"
 echo "<<<"
 
 # Append the three log files to the output.

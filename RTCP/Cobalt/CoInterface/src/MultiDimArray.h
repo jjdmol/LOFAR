@@ -144,17 +144,6 @@ namespace LOFAR
       }
 
       /*
-       * Reset the contents of the array.
-       */
-      void reset()
-      {
-        T *ptr = this->data();
-        for(size_t i = 0; i < this->num_elements(); i++) {
-          ptr[i] = T();
-        }
-      }
-
-      /*
        * Assignment operator. Works on any two arrays of the same dimensionality,
        * type, and total number of elements.
        */

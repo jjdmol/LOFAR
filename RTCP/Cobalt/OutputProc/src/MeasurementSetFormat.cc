@@ -122,7 +122,7 @@ namespace LOFAR
     }
 
 
-    void MeasurementSetFormat::addSubband(const string MSname, unsigned subband)
+    void MeasurementSetFormat::addSubband(const string MSname, unsigned subband, bool isBigEndian)
     {
       ScopedLock scopedLock(sharedMutex);
 
@@ -131,7 +131,7 @@ namespace LOFAR
       createMSTables(MSname, subband);
       /// Next make a metafile which describes the raw datafile we're
       /// going to write
-      createMSMetaFile(MSname, subband);
+      createMSMetaFile(MSname, subband, isBigEndian);
     }
 
 
@@ -193,10 +193,7 @@ namespace LOFAR
             configLocator.addPathAtFront(lofarroot);
           }
           // Add static meta data path from parset at the front for regression testing.
-          string staticMetaDataDir =
-            itsPS.isDefined("Cobalt.OutputProc.StaticMetaDataDirectory")
-            ? itsPS.getString("Cobalt.OutputProc.StaticMetaDataDirectory", "")
-            : itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
+          string staticMetaDataDir = itsPS.getString("OLAP.Storage.StaticMetaDataDirectory", "");
           if (!staticMetaDataDir.empty()) {
             configLocator.addPathAtFront(staticMetaDataDir);
           }
@@ -559,7 +556,7 @@ namespace LOFAR
     }
 
 
-    void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband)
+    void MeasurementSetFormat::createMSMetaFile(const string &MSname, unsigned subband, bool isBigEndian)
     {
       (void) subband;
 
@@ -594,7 +591,7 @@ namespace LOFAR
           << itsPS.nrCrossPolarisations()
           << static_cast<double>(itsPS.CNintegrationSteps() * itsPS.IONintegrationSteps())
           << itsAlignment
-          << false; // isBigEndian
+          << isBigEndian;
       if (LofarStManVersion > 1) {
         uInt itsNrBytesPerNrValidSamples =
           itsPS.integrationSteps() < 256 ? 1 : itsPS.integrationSteps() < 65536 ? 2 : 4;

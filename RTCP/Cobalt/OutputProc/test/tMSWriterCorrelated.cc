@@ -31,6 +31,12 @@ using namespace std;
 using namespace LOFAR;
 using namespace Cobalt;
 
+#if defined WORDS_BIGENDIAN
+const int bigEndian = 1;
+#else
+const int bigEndian = 0;
+#endif
+
 int main()
 {
   INIT_LOGGER("tMSWriterCorrelated");
@@ -39,7 +45,7 @@ int main()
 
   {
     // Create MeasurementSet
-    MSWriterCorrelated writer("", "tMSWriterCorrelated.in_1/SB000.MS", parset, 0);
+    MSWriterCorrelated writer("", "tMSWriterCorrelated.in_1/SB000.MS", parset, 0, bigEndian);
 
     // Write some data
     StreamableData *data = newStreamableData(parset, CORRELATED_DATA, 0);

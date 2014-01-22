@@ -32,13 +32,19 @@ using namespace std;
 using namespace LOFAR;
 using namespace Cobalt;
 
+#if defined WORDS_BIGENDIAN
+const int bigEndian = 1;
+#else
+const int bigEndian = 0;
+#endif
+
 int main()
 {
 #ifdef HAVE_DAL
   Parset parset("tMSWriterDAL.parset");
 
   {
-    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, 0);
+    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, 0, bigEndian);
 
     StreamableData *data = newStreamableData(parset, BEAM_FORMED_DATA, 0);
 

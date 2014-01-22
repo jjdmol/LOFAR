@@ -195,7 +195,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		LOG_INFO_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
+		LOG_DEBUG_STR ("Activating my propertySet(" << PSN_MAC_SCHEDULER << ")");
 		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
 											 PST_MAC_SCHEDULER,
 											 PSAT_CW,
@@ -234,7 +234,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		string password	= pParamSet->getString("OTDBpassword");
 		string hostname	= pParamSet->getString("OTDBhostname");
 
-		LOG_INFO_STR ("Trying to connect to the OTDB on " << hostname);
+		LOG_DEBUG_STR ("Trying to connect to the OTDB on " << hostname);
 		itsOTDBconnection= new OTDBconnection(username, password, DBname, hostname);
 		ASSERTSTR (itsOTDBconnection, "Memory allocation error (OTDB)");
 		ASSERTSTR (itsOTDBconnection->connect(),
@@ -430,7 +430,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_CONNECTED: {
 		// The observationController has registered itself at childControl.
 		CONTROLConnectedEvent conEvent(event);
-		LOG_INFO_STR(conEvent.cntlrName << " is connected, updating SAS)");
+		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
 		// in the SAS list again.
@@ -493,9 +493,6 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		else {
 			tm.setTreeState(theObs->second, tsc.get("aborted"));
 		}
-
-		// free claimed observation in PVSS
-		itsClaimerTask->freeObservation(observationName(theObs->second));
 
 		// update our administration
 		LOG_INFO_STR("Removing observation " << quitedEvent.cntlrName << " from activeList");
@@ -661,7 +658,7 @@ void MACScheduler::_updatePlannedList()
 			}
 			else {
 				// Claim a DP in PVSS and write obssettings to it so the operator can see it.
-				LOG_INFO_STR("Requesting preparation of PVSS for " << obsName);
+				LOG_DEBUG_STR("Requesting preparation of PVSS for " << obsName);
 				itsClaimerTask->prepareObservation(obsName);
 				itsPreparedObs[obsID] = schedInfo(modTime, false);	// requested claim but no answer yet.
 			}
@@ -677,7 +674,7 @@ void MACScheduler::_updatePlannedList()
 //		LOG_DEBUG_STR(obsName << " starts over " << timeBeforeStart << " seconds");
 		if (timeBeforeStart > 0 && timeBeforeStart <= (int)itsQueuePeriod) {
 			if (itsPreparedObs[obsID].prepReady == false) {
-				LOG_INFO_STR("Observation " << obsID << " must be started but is not claimed yet.");
+				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
 			}
 			else {
 				// starttime of observation lays in queuePeriod. Start the controller-chain,
@@ -686,7 +683,7 @@ void MACScheduler::_updatePlannedList()
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
 				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
 				if (itsControllerMap.find(cntlrName) == itsControllerMap.end()) {
-					LOG_INFO_STR("Requesting start of " << cntlrName);
+					LOG_DEBUG_STR("Requesting start of " << cntlrName);
 					itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
 												obsID, 
 												0,		// instanceNr

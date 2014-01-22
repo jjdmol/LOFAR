@@ -36,9 +36,6 @@
 namespace LOFAR {
   namespace DPPP {
 
-    //# Forward declarations.
-    class DPInput;
-
     // @ingroup NDPPP
 
     // This class contains the information about the number of correlations,
@@ -97,12 +94,9 @@ namespace LOFAR {
       uint update (uint chanAvg, uint timeAvg);
 
       // Update the info from the given selection parameters.
-      // Optionally unused stations are really removed from the antenna lists.
+      // Optionally the stations are really removed from the antenna lists.
       void update (uint startChan, uint nchan,
                    const vector<uint>& baselines, bool remove);
-
-      // Remove unused stations from the antenna lists.
-      void removeUnusedAnt();
 
       // Set the phase center.
       // If original=true, it is set to the original phase center.
@@ -120,12 +114,10 @@ namespace LOFAR {
         { return itsNChan; }
       uint startchan() const
         { return itsStartChan; }
-      uint origNChan() const
+        uint origNChan() const
         { return itsOrigNChan; }
       uint nchanAvg() const
         { return itsChanAvg; }
-      uint nantenna() const
-        { return itsAntNames.size(); }
       uint nbaselines() const
         { return itsAnt1.size(); }
       uint ntime() const
@@ -233,8 +225,8 @@ namespace LOFAR {
       casa::Vector<casa::String> itsAntNames;
       casa::Vector<casa::Double> itsAntDiam;
       vector<casa::MPosition>    itsAntPos;
-      vector<int>                itsAntUsed;
-      vector<int>                itsAntMap;
+      vector<int>                itsAntUsed;       //# tells which ant are used
+      vector<int>                itsAntMap;        //# reverse of itsAntUsed
       casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines
       casa::Vector<casa::Int>    itsAnt2;          //# ant2 of all baselines
       mutable vector<double>     itsBLength;       //# baseline lengths

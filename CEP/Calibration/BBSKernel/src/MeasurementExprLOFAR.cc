@@ -188,7 +188,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalGainExpr(itsScope, instrument->station(j),
-                    patch, config.getDirectionalGainConfig()));
+                    patch, config.usePhasors()));
             }
 
             // Elevation cut.
@@ -316,7 +316,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         {
             exprDIE[i] = compose(exprDIE[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station. Note that
@@ -436,7 +436,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.getGainConfig()));
+                config.usePhasors()));
         }
 
         // Create a direction independent TEC expression per station. Note that
@@ -577,8 +577,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch,
-                        config.getDirectionalGainConfig()));
+                        instrument->station(i), patch, config.usePhasors()));
                 }
                 // Beam.
                 if(config.useBeam())

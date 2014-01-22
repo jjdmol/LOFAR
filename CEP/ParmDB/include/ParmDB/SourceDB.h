@@ -100,11 +100,6 @@ namespace BBS {
                            double ra, double dec,
                            bool check) = 0;
 
-    // Update the ra/dec and apparent brightness of a patch.
-    virtual void updatePatch (uint patchId, 
-                              double apparentBrightness,
-                              double ra, double dec) = 0;
-
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default
     // values in the associated ParmDB tables. The names of the parameters
@@ -245,13 +240,6 @@ namespace BBS {
                    bool check = true)
       { return itsRep->addPatch (patchName, catType, apparentBrightness,
                                  ra, dec, check); }
-
-    // Update the ra/dec and apparent brightness of a patch.
-    void updatePatch (uint patchId, 
-                      double apparentBrightness,
-                      double ra, double dec)
-      { itsRep->updatePatch (patchId, apparentBrightness, ra, dec); }
-
 
     // Add a source to a patch.
     // Its ra and dec and default parameters will be stored as default

@@ -29,9 +29,11 @@
 #include <iostream>
 #include <vector>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <Common/LofarLogger.h>
 #include <ApplCommon/PosixTime.h>
-#include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/RSPTimeStamp.h>
@@ -152,8 +154,8 @@ int main(int argc, char **argv)
     RSPPacketFactory packetFactory(inStream, boardMode, subbands);
     RSP packet;
 
-    TimeStamp current(TimeStamp::convert(from, clockmode * 1000000));
-    TimeStamp end(TimeStamp::convert(to, clockmode * 1000000));
+    TimeStamp current(from);
+    TimeStamp end(to);
 
     while(current < end && packetFactory.makePacket(packet, current, boardNr)) {
       // Write packet

@@ -1,4 +1,4 @@
-# This is test input for tmergesourcedb
+# This is test input for tmakesourcedb
  #
 
 format = name,   type, patch,   Ra,   Dec, I, Q, U, V, SpectralIndex, ReferenceFrequency

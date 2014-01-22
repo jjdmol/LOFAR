@@ -802,17 +802,7 @@ namespace LOFAR
           ScopedCurrentContext scc(_context);
 
           float ms;
-
-          try {
-            checkCuCall(cuEventElapsedTime(&ms, other, _event));
-          } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent crashes caused by querying unused timers
-            //
-            // NOTE: checkCuCall already logs the error
-
-            ms = 0.0f;
-          }
-
+          checkCuCall(cuEventElapsedTime(&ms, other, _event));
           return ms;
         }
 

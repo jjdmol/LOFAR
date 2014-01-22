@@ -37,5 +37,5 @@ if test $? != 0; then
 fi
 
 # Start parmdbremote for each part.
-startdistproc -useenv -mode "$1" -masterhost "$host" -nostartmaster \
+startdistproc -useenv -mode "$1" -nowait -masterhost "$host" -nostartmaster \
               -cdn "$2" -dsn "$3" "$pgmpath/parmdbremote-scr" "`pwd`"

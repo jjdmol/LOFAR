@@ -52,11 +52,68 @@
     <Filter Include="src\opencl\Kernels">
       <UniqueIdentifier>{773522c4-e9e7-4c46-be83-2ba0cf75ac54}</UniqueIdentifier>
     </Filter>
-    <Filter Include="test\Kernels">
-      <UniqueIdentifier>{d12b2f89-11b7-4abe-b8d3-b244619f1bc9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FIR_FilterKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\IntToFloatKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Kernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_BeamFormerKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFFT_Kernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFIR_Kernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TransposeKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.h">
       <Filter>src\cuda\Pipelines</Filter>
     </ClInclude>
@@ -95,6 +152,39 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\PerformanceCounter.h">
       <Filter>src\cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\BandPass.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\BestEffortQueue.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\FilterBank.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\global_defines.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\gpu_incl.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\gpu_utils.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\gpu_wrapper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\KernelFactory.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\MultiDimArrayHostBuffer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\OpenMP_Lock.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\PerformanceCounter.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\Pipelines\BeamFormerPipeline.h">
       <Filter>src\Pipelines</Filter>
@@ -180,6 +270,21 @@
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcess.h">
       <Filter>src\Storage</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\UHEP_SubbandProc.h">
+      <Filter>src\SubbandProcs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\BeamFormerSubbandProc.h">
+      <Filter>src\SubbandProcs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\CorrelatorSubbandProc.h">
+      <Filter>src\SubbandProcs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\SubbandProcs\SubbandProc.h">
+      <Filter>src\SubbandProcs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cpu_utils.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h">
       <Filter>test\cuda</Filter>
     </ClInclude>
@@ -197,6 +302,9 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\opencl\PerformanceCounter.h">
       <Filter>src\opencl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\RunningStatistics.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\opencl\Pipelines\BeamFormerPipeline.h">
       <Filter>src\opencl\Pipelines</Filter>
@@ -288,122 +396,71 @@
     <ClInclude Include="..\..\GPUProc\src\Kernels\CoherentStokesTransposeKernel.h">
       <Filter>src\Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\test\TestUtil.h">
-      <Filter>test</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\test\fpequals.h">
-      <Filter>test</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\gpu_incl.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\gpu_utils.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\gpu_wrapper.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\KernelFactory.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\MultiDimArrayHostBuffer.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\OpenMP_Lock.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\PerformanceCounter.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\RunningStatistics.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\BandPass.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cpu_utils.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\FilterBank.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\global_defines.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h">
-      <Filter>src\cuda\SubbandProcs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FIR_FilterKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesTransposeKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\IntToFloatKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\Kernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_BeamFormerKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFFT_Kernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFIR_Kernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TransposeKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.h">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FIR_FilterKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\IntToFloatKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Kernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_BeamFormerKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFFT_Kernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFIR_Kernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TransposeKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.cc">
       <Filter>src\cuda\Pipelines</Filter>
     </ClCompile>
@@ -440,6 +497,18 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\PerformanceCounter.cc">
       <Filter>src\cuda</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\BandPass.cc">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\FilterBank.cc">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\global_defines.cc">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\rtcp.cc">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\Station\StationInput.cc">
       <Filter>src\Station</Filter>
     </ClCompile>
@@ -454,6 +523,21 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc">
       <Filter>src\Storage</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cpu_utils.cc">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\tBestEffortQueue.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\tSSH.cc">
+      <Filter>test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokes.cc">
       <Filter>test\cuda</Filter>
@@ -503,6 +587,17 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\PerformanceCounter.cc">
       <Filter>src\opencl</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\RunningStatistics.cc">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.cc" />
     <ClCompile Include="..\..\GPUProc\src\opencl\Pipelines\CorrelatorPipeline.cc">
       <Filter>src\opencl\Pipelines</Filter>
     </ClCompile>
@@ -587,158 +682,11 @@
     <ClCompile Include="..\..\GPUProc\src\opencl\Kernels\FFT_Plan.cc">
       <Filter>src\opencl\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc">
-      <Filter>test\cuda</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tfpequals.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tRunningStatistics.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tSSH.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cmpfloat.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\rtcp.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\RunningStatistics.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\BandPass.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cpu_utils.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\FilterBank.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\global_defines.cc">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
-      <Filter>src\cuda\SubbandProcs</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CorrelatorKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionBackwardFFTkernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionChirpKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DedispersionForwardFFTkernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\DelayAndBandPassKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Kernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFT_Plan.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Filter_FFT_Kernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FIR_FilterKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\IncoherentStokesTransposeKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\IntToFloatKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\Kernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_BeamFormerKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFFT_Kernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_InvFIR_Kernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TransposeKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\UHEP_TriggerKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BeamFormerTransposeKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\CoherentStokesTransposeKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.cc">
-      <Filter>src\cuda\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFFTShiftKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tKernelFunctions.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc">
-      <Filter>test\Kernels</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc">
-      <Filter>src\cuda\SubbandProcs</Filter>
+    <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc">
+      <Filter>test\cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -750,6 +698,111 @@
     </None>
     <None Include="..\..\GPUProc\src\cuda\gpu_wrapper.tcc">
       <Filter>src\cuda</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\BestEffortQueue.tcc">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\..\GPUProc\src\CMakeLists.txt">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\CMakeLists.txt">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\cmpfloat.py">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\runrtcp.sh.in">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\t_cpu_utils.in_parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\t_cpu_utils.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\t_cpu_utils.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\testFuncs.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\testParset.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tGPUPerformance.parset">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tGPUPerformance.run">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tGPUPerformance.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cuh">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu">
+      <Filter>share</Filter>
+    </None>
+    <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu">
+      <Filter>share</Filter>
     </None>
     <None Include="..\..\GPUProc\test\cuda\tBeamFormer.sh">
       <Filter>test\cuda</Filter>
@@ -838,244 +891,27 @@
     <None Include="..\..\GPUProc\src\opencl\NewCorrelator.cl">
       <Filter>src\opencl</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.sh">
-      <Filter>test\cuda</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\testFuncs.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\testParset.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tGPUPerformance.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tGPUPerformance.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tGPUPerformance.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tMACfeedback.in_parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tMACfeedback.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tMACfeedback.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tProductionParsets.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tProductionParsets.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tstartBGL.in_parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tstartBGL.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tstartBGL.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\cmpfloat.py">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\MockOnlineControl.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\t_cpu_utils.in_parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\t_cpu_utils.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\t_cpu_utils.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_incoherent_2sec_1st_5sb_noflagging.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_1sec_1st_5sb_noflagging.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_1st_5sb.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tCorrelate_3sec_2st_5sb.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\src\rtcp.log_prop">
-      <Filter>src</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\BeamFormer.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokes.cu">
-      <Filter>share</Filter>
-    </None>
+    <None Include="..\..\GPUProc\test\Kernels\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
+    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
     <None Include="..\..\GPUProc\share\gpu\kernels\CoherentStokesTranspose.cu">
       <Filter>share</Filter>
     </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\Correlator.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\DelayAndBandPass.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\FIR_Filter.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\gpu_math.cuh">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\IncoherentStokes.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\IncoherentStokesTranspose.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\IntToFloat.cuh">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\share\gpu\kernels\Transpose.cu">
-      <Filter>share</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCoherentStokesKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tCorrelatorKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tDelayAndBandPassKernel2.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFFT_Kernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tFIR_FilterKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tKernelFunctions.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.sh">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.in_parset">
-      <Filter>test\Kernels</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\cuda\tTranspose2.sh">
+    <None Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.sh">
       <Filter>test\cuda</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="..\..\GPUProc\test\CMakeLists.txt">
-      <Filter>test</Filter>
-    </Text>
-    <Text Include="..\..\GPUProc\src\CMakeLists.txt">
-      <Filter>src</Filter>
-    </Text>
-    <Text Include="..\..\GPUProc\share\gpu\kernels\CMakeLists.txt">
-      <Filter>share</Filter>
-    </Text>
-    <Text Include="..\..\GPUProc\test\Kernels\CMakeLists.txt">
-      <Filter>test\Kernels</Filter>
-    </Text>
   </ItemGroup>
 </Project>

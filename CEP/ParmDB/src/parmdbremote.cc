@@ -59,209 +59,146 @@ void getRecord (BlobIStream& bis, casa::Record& rec)
   aio >> rec;
 }
 
-void putMsg (MWBlobOut&bbo, const string& msg)
-{
-  bbo.setOperation (-1);   // indicate error
-  bbo.blobStream() << msg;
-}
-
-void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void getRange (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
   bis >> pattern;
-  vector<double> range;
-  try {
-    range = pdb.getRange (pattern);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
-  bbo.blobStream() << range;
+  bos << pdb.getRange (pattern);
 }
 
-void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo,
+void getValues (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos,
                 const vector<double>& range)
 {
   string pattern;
   double sfreq, efreq, stime, etime, freqStep, timeStep;
-  bool includeDefaults;
   bis >> pattern >> sfreq >> efreq >> freqStep
-      >> stime >> etime >> timeStep >> includeDefaults;
+      >> stime >> etime >> timeStep;
   if (sfreq < range[0]) sfreq = range[0];
   if (efreq > range[1]) efreq = range[1];
   if (stime < range[2]) stime = range[2];
   if (etime > range[3]) etime = range[3];
   casa::Record rec;
+  string msg;
   if (sfreq <= efreq  &&  stime <= etime) {
     try {
       rec = pdb.getValues (pattern, sfreq, efreq, freqStep,
-                           stime, etime, timeStep, true, includeDefaults);
+                           stime, etime, timeStep, true);
     } catch (std::exception& x) {
-      putMsg (bbo, x.what());
-      return;
+      msg = x.what();
     }
   }
-  putRecord (bbo.blobStream(), rec);
+  putRecord (bos, rec);
+  bos << msg;
 }
 
-void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void getValuesVec (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
   vector<double> freqv1, freqv2, timev1, timev2;
-  bool asStartEnd, includeDefaults;
-  bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2
-      >> asStartEnd >> includeDefaults;
+  bool asStartEnd;
+  bis >> pattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
   casa::Record rec;
+  string msg;
   try {
     rec = pdb.getValues (pattern, freqv1, freqv2,
-                         timev1, timev2, asStartEnd, includeDefaults);
+                         timev1, timev2, asStartEnd);
   } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
+    msg = x.what();
   }
-  putRecord (bbo.blobStream(), rec);
+  putRecord (bos, rec);
+  bos << msg;
 }
 
-void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void getValuesGrid (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
   double sfreq, efreq, stime, etime;
   bis >> pattern >> sfreq >> efreq >> stime >> etime;
   casa::Record rec;
+  string msg;
   if (sfreq <= efreq  &&  stime <= etime) {
     try {
       rec = pdb.getValuesGrid (pattern, sfreq, efreq, stime, etime, true);
     } catch (std::exception& x) {
-      putMsg (bbo, x.what());
-      return;
+      msg = x.what();
     }
   }
-  putRecord (bbo.blobStream(), rec);
+  putRecord (bos, rec);
+  bos << msg;
 }
 
-void getCoeff (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void getCoeff (ParmFacadeLocal& pdb, BlobIStream& bis, BlobOStream& bos)
 {
   string pattern;
   double sfreq, efreq, stime, etime;
   bis >> pattern >> sfreq >> efreq >> stime >> etime;
   casa::Record rec;
+  string msg;
   if (sfreq <= efreq  &&  stime <= etime) {
     try {
       rec = pdb.getCoeff (pattern, sfreq, efreq, stime, etime, true);
     } catch (std::exception& x) {
-      putMsg (bbo, x.what());
-      return;
+      msg = x.what();
     }
   }
-  putRecord (bbo.blobStream(), rec);
+  putRecord (bos, rec);
+  bos << msg;
 }
 
-void flush (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void flush (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   bool fsync;
   bis >> fsync;
-  try {
-    pdb.flush (fsync);
-    } catch (std::exception& x) {
-      putMsg (bbo, x.what());
-      return;
-    }
+  pdb.flush (fsync);
 }
 
-void lock (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void lock (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   bool lockForWrite;
   bis >> lockForWrite;
-  try {
-    pdb.lock (lockForWrite);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.lock (lockForWrite);
 }
 
-void unlock (ParmFacadeLocal& pdb, MWBlobOut& bbo)
+void unlock (ParmFacadeLocal& pdb)
 {
-  try {
-    pdb.unlock();
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.unlock();
 }
 
-void clearTables (ParmFacadeLocal& pdb, MWBlobOut& bbo)
+void clearTables (ParmFacadeLocal& pdb)
 {
-  try {
-    pdb.clearTables();
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.clearTables();
 }
 
-void getDefaultSteps (ParmFacadeLocal& pdb, MWBlobOut& bbo)
-{
-  vector<double> steps;
-  try {
-    steps = pdb.getDefaultSteps();
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
-  bbo.blobStream() << steps;
-}
-
-void setDefaultSteps (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void setDefaultSteps (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   vector<double> steps;
   bis >> steps;
-  try {
-    pdb.setDefaultSteps (steps);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.setDefaultSteps (steps);
 }
 
-void deleteDefValues (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void deleteDefValues (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   string namePattern;
   bis >> namePattern;
-  try {
-    pdb.deleteDefValues (namePattern);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.deleteDefValues (namePattern);
 }
 
-void addDefValues (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void addDefValues (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   casa::Record values;
   bool check;
   getRecord (bis, values);
   bis >> check;
-  try {
-    pdb.addDefValues (values, check);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.addDefValues (values, check);
 }
 
-void deleteValues (ParmFacadeLocal& pdb, BlobIStream& bis, MWBlobOut& bbo)
+void deleteValues (ParmFacadeLocal& pdb, BlobIStream& bis)
 {
   string namePattern;
   double freqv1, freqv2, timev1, timev2;
   bool asStartEnd;
   bis >> namePattern >> freqv1 >> freqv2 >> timev1 >> timev2 >> asStartEnd;
-  try {
-    pdb.deleteValues (namePattern, freqv1, freqv2, timev1, timev2, asStartEnd);
-  } catch (std::exception& x) {
-    putMsg (bbo, x.what());
-    return;
-  }
+  pdb.deleteValues (namePattern, freqv1, freqv2, timev1, timev2, asStartEnd);
 }
 
 
@@ -282,46 +219,43 @@ void doIt (SocketConnection& conn, ParmFacadeLocal& pdb)
       bbi.finish();
       return;
     case ParmFacadeDistr::GetRange:
-      getRange (pdb, bbi.blobStream(), bbo);
+      getRange (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetValues:
-      getValues (pdb, bbi.blobStream(), bbo, range);
+      getValues (pdb, bbi.blobStream(), bbo.blobStream(), range);
       break;
     case ParmFacadeDistr::GetValuesVec:
-      getValuesVec (pdb, bbi.blobStream(), bbo);
+      getValuesVec (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetValuesGrid:
-      getValuesGrid (pdb, bbi.blobStream(), bbo);
+      getValuesGrid (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::GetCoeff:
-      getCoeff (pdb, bbi.blobStream(), bbo);
+      getCoeff (pdb, bbi.blobStream(), bbo.blobStream());
       break;
     case ParmFacadeDistr::ClearTables:
-      clearTables (pdb, bbo);
+      clearTables (pdb);
       break;
     case ParmFacadeDistr::Flush:
-      flush (pdb, bbi.blobStream(), bbo);
+      flush (pdb, bbi.blobStream());
       break;
     case ParmFacadeDistr::Lock:
-      lock (pdb, bbi.blobStream(), bbo);
+      lock (pdb, bbi.blobStream());
       break;
     case ParmFacadeDistr::Unlock:
-      unlock (pdb, bbo);
-      break;
-    case ParmFacadeDistr::GetDefaultSteps:
-      getDefaultSteps (pdb, bbo);
+      unlock (pdb);
       break;
     case ParmFacadeDistr::SetDefaultSteps:
-      setDefaultSteps (pdb, bbi.blobStream(), bbo);
+      setDefaultSteps (pdb, bbi.blobStream());
       break;
     case ParmFacadeDistr::AddDefValues:
-      addDefValues (pdb, bbi.blobStream(), bbo);
+      addDefValues (pdb, bbi.blobStream());
       break;
     case ParmFacadeDistr::DeleteDefValues:
-      deleteDefValues (pdb, bbi.blobStream(), bbo);
+      deleteDefValues (pdb, bbi.blobStream());
       break;
     case ParmFacadeDistr::DeleteValues:
-      deleteValues (pdb, bbi.blobStream(), bbo);
+      deleteValues (pdb, bbi.blobStream());
       break;
     default:
       ASSERTSTR(false, "parmdbremote: unknown command-id "
@@ -353,7 +287,7 @@ int main (int argc, char* argv[])
       BlobString bufout;
       MWBlobOut bbo(bufout, 1, 0);
       bbo.blobStream() << fname;
-      bbo.blobStream() << parmdb.getNames("*", false);
+      bbo.blobStream() << parmdb.getNames("*");
       putRecord (bbo.blobStream(), parmdb.getDefValues("*"));
       bbo.finish();
       conn->write (bufout);

@@ -57,13 +57,11 @@ set_nompi_options()
   # Ignore all mpirun options
   :
 
-  for KEY in "${!ENVVARS[@]}"
+  for KEY in "${!ENVVARS[*]}"
   do
-    if [ "$KEY" != "" ]; then
-      VAL=${ENVVARS[$KEY]}
+    VAL=${ENVVARS[$KEY]}
 
-      export $KEY="$VAL"
-    fi
+    export $KEY="$VAL"
   done
 }
 
@@ -79,13 +77,11 @@ set_openmpi_options()
     MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -H $HOSTS"
   fi
 
-  for KEY in "${!ENVVARS[@]}"
+  for KEY in "${!ENVVARS[*]}"
   do
-    if [ "$KEY" != "" ]; then
-      VAL=${ENVVARS[$KEY]}
+    VAL=${ENVVARS[$KEY]}
 
-      MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -x $KEY=$VAL"
-    fi
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -x $KEY=$VAL"
   done
 }
 
@@ -101,13 +97,11 @@ set_mvapich2_options()
     MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -hosts $HOSTS"
   fi
 
-  for KEY in "${!ENVVARS[@]}"
+  for KEY in "${!ENVVARS[*]}"
   do
-    if [ "$KEY" != "" ]; then
-      VAL=${ENVVARS[$KEY]}
+    VAL=${ENVVARS[$KEY]}
 
-      MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -env $KEY $VAL"
-    fi
+    MPIEXEC_PREFLAGS="$MPIEXEC_PREFLAGS -env $KEY $VAL"
   done
 }
 

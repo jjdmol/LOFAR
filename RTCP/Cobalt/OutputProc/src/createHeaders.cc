@@ -48,10 +48,13 @@ Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
-  if (argc != 2) {
-    cout << str(boost::format("usage: %s parset") % argv[0]) << endl;
+  bool isBigEndian = true;
+
+  if (argc < 2 || argc > 3) {
+    cout << str(boost::format("usage: %s parset [is_bigendian]") % argv[0]) << endl;
     cout << endl;
     cout << "parset: the filename of the parset to convert (parset must have been produced by RTCP/Run/src/LOFAR/Parset.py, aka an 'OLAP parset')." << endl;
+    cout << "is_bigendian: 1 if data is written big endian (f.e. data comes from the BlueGene/P), 0 otherwise. Default: " << (int)isBigEndian << endl;
     return 1;
   }
 
@@ -71,6 +74,8 @@ int main(int argc, char *argv[])
 
   try {
     Parset parset(argv[1]);
+    if (argc > 2) isBigEndian = boost::lexical_cast<bool>(argv[2]);
+
     for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
       const unsigned nrStreams = parset.nrStreams(outputType);
 
@@ -81,7 +86,7 @@ int main(int argc, char *argv[])
           // a dummy queue
           Queue<SmartPtr<StreamableData> > queue;
 
-          OutputThread ot(parset, outputType, streamNr, queue, queue, logPrefix, ".");
+          OutputThread ot(parset, outputType, streamNr, queue, queue, logPrefix, isBigEndian, ".");
 
           // create measurement set
           ot.createMS();

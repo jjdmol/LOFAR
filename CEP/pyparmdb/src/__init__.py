@@ -64,15 +64,11 @@ class parmdb(ParmDB):
         """
         return self._getRange (parmnamepattern)
 
-    def getNames (self, parmnamepattern='', includeDefaults=False):
+    def getNames (self, parmnamepattern=''):
 	"""Return the list of matching parameter names with actual values.
 
-        parmnamepattern
-          Parameter name pattern given as a shell-like filename pattern.
-          An empty pattern (the default) means '*' (thus all names).
-        includeDefaults
-          True  = include names of  parameters only having a default value
-          False = only use parameters having true values
+        The pattern must be given as a shell-like filename pattern.
+        An empty pattern (the default) means '*' (thus all names).
 
         """
         return self._getNames (parmnamepattern)
@@ -98,8 +94,7 @@ class parmdb(ParmDB):
     def getValues (self, parmnamepattern, 
                    sfreq=-1e30, efreq=1e30,
                    stime=-1e30, etime=1e30,
-                   asStartEnd=True,
-                   includeDefaults=False):
+                   asStartEnd=True):
         """Return the parameter values for the given names and grid as a dict.
 
         The values are calculated on a grid defined by the given frequency
@@ -123,9 +118,6 @@ class parmdb(ParmDB):
         asStartEnd
           True  = frequency and time given as start/end (default)
           False = given as center/width.
-        includeDefaults
-          True  = also use parameters only having a default value
-          False = only use parameters having true values
 
         The values are returned as a dict mapping each parameter name to a
         subdict. Each subdict has the fields `values`, `freqs`, `freqwidths`,
@@ -138,19 +130,16 @@ class parmdb(ParmDB):
             a = len(sfreq)
             # Domain given as vectors.
             return self._getValuesVec (parmnamepattern, sfreq, efreq,
-                                       stime, etime, asStartEnd,
-                                       includeDefaults)
+                                       stime, etime, asStartEnd)
         except:
             # Domain given as scalars.
             return self._getValues (parmnamepattern, sfreq, efreq,
-                                    stime, etime, asStartEnd,
-                                    includeDefaults)
+                                    stime, etime, asStartEnd)
 
     def getValuesStep (self, parmnamepattern,
                        sfreq, efreq, freqstep,
                        stime, etime, timestep,
-                       asStartEnd=True,
-                       includeDefaults=False):
+                       asStartEnd=True):
         """Get the parameter values for the given names and domain as a dict.
 
         The values are calculated on a grid defined by the given frequency
@@ -176,14 +165,10 @@ class parmdb(ParmDB):
         asStartEnd
           True  = frequency and time given as start/end (default)
           False = given as center/width.
-        includeDefaults
-          True  = also use parameters only having a default value
-          False = only use parameters having true values
 
           """
         return self._getValues (parmnamepattern, sfreq, efreq, freqstep,
-                                stime, etime, timestep, asStartEnd,
-                                includeDefaults)
+                                stime, etime, timestep, asStartEnd)
         
     def getValuesGrid (self, parmnamepattern,
                        sfreq=-1e30, efreq=1e30,

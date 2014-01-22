@@ -23,7 +23,6 @@ set(parmdb_LIB_SRCS
   ParmFacadeLocal.cc
   ParmFacadeDistr.cc
   ParmFacade.cc
-  PatchInfo.cc
   SourceData.cc
   SourceDB.cc
   SourceDBBlob.cc

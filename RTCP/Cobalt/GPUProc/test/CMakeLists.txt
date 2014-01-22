@@ -6,7 +6,6 @@ include(LofarCTest)
 # source files and headers in subdirectories include UnitTest.h
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-lofar_add_test(tBandPass tBandPass.cc)
 lofar_add_test(tSSH tSSH.cc)
 lofar_add_test(tfpequals tfpequals.cc)
 lofar_add_test(tstartBGL DEPENDS rtcp)
@@ -15,7 +14,6 @@ lofar_add_test(tProductionParsets DEPENDS rtcp)
 
 # cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
 lofar_add_executable(cmpfloat cmpfloat.cc)
-lofar_add_test(tcmpfloat DEPENDS cmpfloat)
 
 # tests that use testParset.sh
 
@@ -33,8 +31,6 @@ set_tests_properties(
   tCorrelate_3sec_2st_5sb
   tBeamform_1sec_1st_5sb_noflagging
   tBeamform_incoherent_2sec_1st_5sb_noflagging
-  tstartBGL
-  tMACfeedback
   PROPERTIES RUN_SERIAL ON
 )
 

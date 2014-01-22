@@ -24,7 +24,6 @@
 #include <vector>
 
 #include <CoInterface/Parset.h>
-#include <CoInterface/TABTranspose.h>
 
 #include "Pipeline.h"
 
@@ -35,19 +34,10 @@ namespace LOFAR
     class BeamFormerPipeline : public Pipeline
     {
     public:
-      BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices(), int hostID = 0);
+      BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
 
       // When gpuProfiling isenabled will print the kernel statistics
-      virtual ~BeamFormerPipeline();
-
-      virtual void processObservation();
-
-      // Send subbands to outputProc
-      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
-
-    private:
-      // Output send engine, takes care of the host connections and the multiplexing.
-      TABTranspose::MultiSender multiSender;
+      ~BeamFormerPipeline();
     };
   }
 }

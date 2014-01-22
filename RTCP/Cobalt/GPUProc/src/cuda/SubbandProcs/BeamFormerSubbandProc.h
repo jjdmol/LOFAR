@@ -32,17 +32,16 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
+#include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/FFT_Kernel.h>
+#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
+#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 
 #include "SubbandProc.h"
 
@@ -54,16 +53,12 @@ namespace LOFAR
     struct BeamFormerFactories;
 
     // Our output data type
-    class BeamFormedData : public MultiDimArrayHostBuffer<float, 4>,
+    class BeamFormedData : public MultiDimArrayHostBuffer<float, 3>,
                            public StreamableData
     {
     public:
-     
       BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-        size_t nrSamples, gpu::Context &context);
-
-      BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-        size_t nrSamples, unsigned nrTabs, gpu::Context &context);
+                     size_t nrSamples, gpu::Context &context);
     private:
       virtual void readData(Stream *str, unsigned);
       virtual void writeData(Stream *str, unsigned);
@@ -81,7 +76,13 @@ namespace LOFAR
                                   StreamableData &output);
 
       // Do post processing on the CPU
-      virtual bool postprocessSubband(StreamableData &output);
+      virtual void postprocessSubband(StreamableData &output);
+
+      // first FFT
+      static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
+
+      // second FFT
+      static const size_t BEAM_FORMER_NR_CHANNELS = 4096;
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -91,22 +92,18 @@ namespace LOFAR
 
         // gpu kernel counters
         PerformanceCounter intToFloat;
-        PerformanceCounter firstFFTShift;
         PerformanceCounter firstFFT;
         PerformanceCounter delayBp;
-        PerformanceCounter secondFFTShift;
         PerformanceCounter secondFFT;
         PerformanceCounter correctBandpass;
         PerformanceCounter beamformer;
         PerformanceCounter transpose;
         PerformanceCounter inverseFFT;
-        PerformanceCounter inverseFFTShift;
         PerformanceCounter firFilterKernel;
         PerformanceCounter finalFFT;
         PerformanceCounter coherentStokes;
 
         PerformanceCounter incoherentInverseFFT;
-        PerformanceCounter incoherentInverseFFTShift;
         PerformanceCounter incoherentFirFilterKernel;
         PerformanceCounter incoherentFinalFFT;
         PerformanceCounter incoherentStokes;
@@ -154,20 +151,12 @@ namespace LOFAR
       IntToFloatKernel::Buffers intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 
-      // First FFT-shift
-      FFTShiftKernel::Buffers firstFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
-
       // First (64 points) FFT
       FFT_Kernel firstFFT;
 
       // Delay compensation
       DelayAndBandPassKernel::Buffers delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
-
-      // Second FFT-shift
-      FFTShiftKernel::Buffers secondFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
 
       // Second (64 points) FFT
       FFT_Kernel secondFFT;
@@ -189,15 +178,11 @@ namespace LOFAR
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
       // Transpose 
-      CoherentStokesTransposeKernel::Buffers coherentTransposeBuffers;
-      std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
+      BeamFormerTransposeKernel::Buffers transposeBuffers;
+      std::auto_ptr<BeamFormerTransposeKernel> transposeKernel;
 
       // inverse (4k points) FFT
       FFT_Kernel inverseFFT;
-
-      // inverse FFT-shift
-      FFTShiftKernel::Buffers inverseFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devFilterWeights;
@@ -221,10 +206,6 @@ namespace LOFAR
 
       // Inverse (4k points) FFT
       FFT_Kernel incoherentInverseFFT;
-
-      // Inverse FFT-shift
-      FFTShiftKernel::Buffers incoherentInverseFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
       gpu::DeviceMemory devIncoherentFilterWeights;

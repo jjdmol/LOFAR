@@ -30,7 +30,6 @@
 //# Includes
 #include <ApplCommon/LofarDirs.h>
 #include <Common/LofarTypes.h>
-#include <Common/lofar_string.h>
 
 //# Avoid 'using namespace' in headerfiles
 

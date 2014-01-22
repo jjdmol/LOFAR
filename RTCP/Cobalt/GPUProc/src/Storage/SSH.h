@@ -46,15 +46,12 @@ namespace LOFAR
     class SSHconnection
     {
     public:
-      // The number of micro seconds to wait to retry if establishing a connection fails.
-      static const unsigned RETRY_USECS = 10000000; // 10 secs
+      // The number of seconds to wait to retry if establishing a connection fails.
+      static const unsigned RETRY_DELAY = 60;
 
       EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
-      SSHconnection(const std::string &logPrefix, const std::string &hostname,
-                    const std::string &commandline, const std::string &username,
-                    const std::string &pubkey, const std::string &privkey,
-                    bool captureStdout = false, ostream &_cout = cout, ostream &_cerr = cerr);
+      SSHconnection(const std::string &logPrefix, const std::string &hostname, const std::string &commandline, const std::string &username, const std::string &pubkey, const std::string &privkey, bool captureStdout = false, ostream &_cout = cout, ostream &_cerr = cerr);
 
       ~SSHconnection();
 
@@ -72,7 +69,7 @@ namespace LOFAR
       bool isDone();
 
       // Returns whether the SSH session is (or was) connected succesfully to the
-      // remote SSH daemon (incl an opened session and an opened channel to send commands).
+      // remote SSH daemon.
       bool connected() const;
 
       // If stdout is captured, return the captured output
@@ -85,18 +82,19 @@ namespace LOFAR
       const std::string itsUserName;
       const std::string itsPublicKey;
       const std::string itsPrivateKey;
+
+      bool itsConnected;
+
+      SmartPtr<Thread> itsThread;
       const bool itsCaptureStdout;
+      std::stringstream itsStdoutBuffer;
+
       std::ostream &itsCout;
       std::ostream &itsCerr;
 
-      bool itsConnected;
-      std::stringstream itsStdoutBuffer;
-      SmartPtr<Thread> itsThread;
+      bool waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
 
-
-      int waitsocket( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
-
-      LIBSSH2_SESSION *open_session( FileDescriptorBasedStream &sock, bool& authError );
+      LIBSSH2_SESSION *open_session( FileDescriptorBasedStream &sock );
       void close_session( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
       LIBSSH2_CHANNEL *open_channel( LIBSSH2_SESSION *session, FileDescriptorBasedStream &sock );
       void close_channel( LIBSSH2_SESSION *session, LIBSSH2_CHANNEL *channel, FileDescriptorBasedStream &sock );

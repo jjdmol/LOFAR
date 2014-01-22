@@ -80,14 +80,13 @@ namespace LOFAR
     {
       if (remainder) {
         // pad with zeroes
-        size_t nrpadbytes = alignment - remainder;
         ensureBuffer(alignment);
-        memset(buffer.get() + remainder, 0, nrpadbytes);
+        memset(buffer.get() + remainder, 0, alignment - remainder);
         forceWrite(buffer, alignment);
 
         remainder = 0;
 
-        return nrpadbytes;
+        return alignment;
       }
 
       return 0;
@@ -177,7 +176,7 @@ namespace LOFAR
 
       // get rid of the old remainder first
       if (bytes + remainder >= alignment) {
-        bytes -= writeRemainder();
+        bytes -= (writeRemainder() - remainder);
 
         if (bytes >= alignment ) {
           // skip whole number of blocks

@@ -228,33 +228,20 @@ namespace BBS {
                  "Patch " << patchName << " already exists");
     }
     itsPatchSet.insert (patchName);
-    uint rownr = itsPatchTable.nrow();
-    itsPatchTable.addRow();
+    // Okay, add it to the patch table.
     ScalarColumn<String> nameCol(itsPatchTable, "PATCHNAME");
     ScalarColumn<uint>   catCol (itsPatchTable, "CATEGORY");
-    nameCol.put (rownr, patchName);
-    catCol.put  (rownr, catType);
-    writePatch (apparentBrightness, ra, dec, rownr);
-    return rownr;
-  }
-
-  void SourceDBCasa::updatePatch (uint patchId,
-                                  double apparentBrightness,
-                                  double ra, double dec)
-  {
-    // Note: patchId is the rownr in the PATCHES subtable.
-    writePatch (apparentBrightness, ra, dec, patchId);
-  }
-
-  void SourceDBCasa::writePatch (double apparentBrightness,
-                                 double ra, double dec, uint rownr)
-  {
     ScalarColumn<double> brCol  (itsPatchTable, "APPARENT_BRIGHTNESS");
     ScalarColumn<double> raCol  (itsPatchTable, "RA");
     ScalarColumn<double> decCol (itsPatchTable, "DEC");
+    uint rownr = itsPatchTable.nrow();
+    itsPatchTable.addRow();
+    nameCol.put (rownr, patchName);
+    catCol.put  (rownr, catType);
     brCol.put   (rownr, apparentBrightness);
     raCol.put   (rownr, ra);
     decCol.put  (rownr, dec);
+    return rownr;
   }
 
   void SourceDBCasa::addSource (const SourceInfo& sourceInfo,
@@ -373,13 +360,8 @@ namespace BBS {
         name = name + suffix;
       }
       getParmDB().putDefValue (name, iter->second, false);
-      if (name.substr(0,3) == "Ra:") {
-        foundRa  = true;
-        ra = iter->second.getFirstParmValue().getValues().data()[0];
-      } else if (name.substr(0,4) == "Dec:") {
-        foundDec = true;
-        dec = iter->second.getFirstParmValue().getValues().data()[0];
-      }
+      if (name.substr(0,3) == "Ra:")  foundRa  = true;
+      if (name.substr(0,4) == "Dec:") foundDec = true;
     }
     // If Ra or Dec given and not in parameters, put it.
     // Use absolute perturbations for them.

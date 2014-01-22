@@ -191,30 +191,6 @@ int stateToStatus(int aState) {
 }
 
 
-// *******************************************
-// Name : sendAlarm
-// *******************************************
-// Description:
-//    sends an Alarm to the database
-//
-//
-// *******************************************
-void sendAlarm(string aDPName,string aMessage,bool force) {
-  
-  int aStateNr = BROKEN_CAME;
 
-  if (dpExists(aDPName) && aMessage != "") {
-    dpSet( "__navObjectState.DPName",aDPName+".status.state",
-           "__navObjectState.stateNr",aStateNr,
-           "__navObjectState.message",aMessage,
-           "__navObjectState.force",force);
-  } else {
-    if (aMessage == "") {
-      LOG_ERROR("GCFAlarm.ctl:sendAlarm|ERROR: empty message for alarm ");
-    } else {
-      LOG_ERROR("GCFAlarm.ctl:sendAlarm|ERROR: non existing DP for alarm: "+aDPName);
-    }
-  }
-}
 
 

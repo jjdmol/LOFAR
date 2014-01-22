@@ -127,13 +127,10 @@ namespace LOFAR
         if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
           pubKey = discover_pubkey;
           privKey = discover_privkey;
-        } else {
-          LOG_ERROR(itsLogPrefix + "[ControlThread] no SSH keys given and discovery failed: failed to send final meta data and read LTA feedback");
-          return;
         }
       }
 
-      std::string commandLine = str(boost::format("%s%s %u %d")
+      std::string commandLine = str(boost::format("%s%s %u %d %u")
 #if defined USE_VALGRIND
                                     % "valgrind --leak-check=full "
 #else
@@ -142,9 +139,14 @@ namespace LOFAR
                                     % executable
                                     % itsParset.observationID()
                                     % itsRank
+#if defined WORDS_BIGENDIAN
+                                    % 1
+#else
+                                    % 0
+#endif
                                     );
 
-      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey);
+      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
       sshconn.start();
 
       // Connect control stream

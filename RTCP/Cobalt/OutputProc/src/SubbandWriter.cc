@@ -1,4 +1,4 @@
-//# SubbandWriter.cc: Writes visibilities and beam-formed data
+//# SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -28,39 +28,37 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
-    :
-      itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
-      itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
-    {
-      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsOutputPool.free.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
-    }
 
-    
-    void SubbandWriter::process()
-    {
-#     pragma omp parallel sections num_threads(2)
-      {
-#       pragma omp section
-        itsInputThread.process();
 
-#       pragma omp section
-        itsOutputThread.process();
+    SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix)
+    {
+      itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
+      itsInputThread->start();
+
+      try {
+        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
+        itsOutputThread->start();
+      } catch (...) {
+        itsInputThread->cancel();
+        throw;
       }
-    }
 
+      for (unsigned i = 0; i < maxReceiveQueueSize; i++)
+        itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
+
+    }
 
     void SubbandWriter::augment( const FinalMetaData &finalMetaData )
     {
-      itsOutputThread.augment(finalMetaData);
+      itsOutputThread->augment(finalMetaData);
     }
-
 
     ParameterSet SubbandWriter::feedbackLTA() const
     {
-      return itsOutputThread.feedbackLTA();
+      return itsOutputThread->feedbackLTA();
     }
+
+
   } // namespace Cobalt
 } // namespace LOFAR
 

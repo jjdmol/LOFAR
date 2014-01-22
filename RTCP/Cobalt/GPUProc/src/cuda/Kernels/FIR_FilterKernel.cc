@@ -107,9 +107,6 @@ namespace LOFAR
       FilterBank filterBank(true, params.nrTaps, 
                             params.nrChannelsPerSubband, KAISER);
       filterBank.negateWeights();
-      // To always output visibilities with the same flux scale, compensate for
-      // scaling introduced by FFTW/CUFFT.
-      filterBank.scaleWeights(1.0 / params.nrChannelsPerSubband);
 
       gpu::HostMemory firWeights(stream.getContext(), buffers.filterWeights.size());
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),

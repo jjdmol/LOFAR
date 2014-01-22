@@ -60,9 +60,6 @@ public:
 	// ask the ObsClaimer to prepare the PVSS database for the given observation.
 	void prepareObservation(const string&		observationName);
 
-	// ask the ObsClaimer to release the claim on this observation DP
-	void freeObservation(const string&			observationName);
-
 private:
 	// Connect to the PS of the claimManager
    	GCFEvent::TResult connect2claimMgr_state (GCFEvent& e, GCFPortInterface& p);
@@ -95,13 +92,9 @@ private:
 
 	// ----- DATAMEMBERS -----
 	// admin for observations
-	// queue for claiming
 	map<string, obsInfo*>	itsObsMap;
 	typedef		map<string, obsInfo*>::iterator		OMiter;
 	OMiter					itsCurrentObs;			// Obs currently handled by claimMgr.
-	// queue for freeing
-	map<string, obsInfo*>	itsFreeMap;
-	typedef		map<string, obsInfo*>::iterator		FMiter;
 
 	ClaimMgrTask*	itsClaimMgrTask;		// Pointer to claimMgr.
 	GCFITCPort*		itsITCPort;				// Answer back from CMtask.

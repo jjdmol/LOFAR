@@ -93,7 +93,7 @@ namespace LOFAR
     static Mutex HDF5Mutex;
 
     template <typename T,unsigned DIM>
-    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno)
+    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno, bool isBigEndian)
       :
       MSWriterFile(forceextension(string(filename),".raw")),
       itsParset(parset),
@@ -490,7 +490,7 @@ namespace LOFAR
       maxdims[0] = -1;
       maxdims[1] = itsNrChannels;
 
-      stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), BF_StokesDataset::LITTLE);
+      stokesDS.create(dims, maxdims, LOFAR::basename(rawfilename), isBigEndian ? BF_StokesDataset::BIG : BF_StokesDataset::LITTLE);
       stokesDS.groupType().value = "bfData";
       stokesDS.dataType().value = "float";
 

@@ -21,7 +21,6 @@ from gausfit import Gaussian
 from interface import wrap
 import mylogger
 import numpy as N
-
 N.seterr(divide='raise')
 
 nsrc = Int(doc="Number of sources in the image")
@@ -101,7 +100,7 @@ class Op_gaul2srl(Op):
                 message += 'should be fit, try adjusting the flagging options (use\n'\
                            'show_fit with "ch0_flagged=True" to see the flagged Gaussians)\n'\
                            'or enabling the wavelet module (with "atrous_do=True").'
-            message += '\nTo include empty islands in output source catalogs, set\n'\
+            message += '\nTo include these islands in output source catalogs, set\n'\
                         'incl_empty=True in the write_catalog task.'
             mylog.warning(message)
 

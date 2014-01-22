@@ -20,17 +20,17 @@ PANEL,-1 -1 569 377 N "_3DFace" 1
   showChildState(baseDP);
 }
 " 0
- E "main()
+ E "main(int x, int y)
 {
   click();
 }" 0
  "main()
 {
-  rClick();
+  rCLick();
 }" 0
- "main()
+ "main(int x, int y)
 {
-  dblClick();
+  dblClick();      
 }" 0
  1 0 0 0  16 105
 ""0  1
@@ -54,6 +54,7 @@ void click() {
 void dblClick() {
   // indicate this is a doubleClick
   bDoubleClicked = true; 
+  
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"CEP_CobaltNode_detailed_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
@@ -123,15 +124,7 @@ void NodeCallback(string dp1, bool aTrig) {
 "childStateBorder"
 ""
 1 100 150 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 23 0 0 0 0 0
 E E E
 0
@@ -140,11 +133,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 2 1 2 1 E 1 0 1 1 1 1 E 3 3 210 180
+E E 0 2 1 2 1 E 1 0 1 1 1 1 E 3 3 210 180
 4 26
 "LINE1"
 ""
@@ -177,15 +166,7 @@ E E 0 1 1 2 1 E 1 0 1 -257 3 1 E 350 90 371 104
 "PRIMITIVE_TEXT1"
 ""
 1 98 93 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 26 0 0 0 0 0
 E E E
 0
@@ -194,11 +175,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 98 93 112 106
+E E 0 1 1 2 1 E U  0 E 98 93 112 106
 0 2 2 "0s" 0 0 0 192 0 0  98 93 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -276,15 +253,7 @@ E E 0 1 1 2 1 E 1 0 1 -370 -40 1 E 380 80 409 99
 "PRIMITIVE_TEXT4"
 ""
 1 13 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 32 0 0 0 0 0
 E E E
 0
@@ -293,11 +262,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 13 43 35 56
+E E 0 1 1 2 1 E U  0 E 13 43 35 56
 0 2 2 "0s" 0 0 0 192 0 0  13 43 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -321,15 +286,7 @@ E E 0 1 1 2 1 E 1 0 1 -370 -10 1 E 380 80 409 99
 "PRIMITIVE_TEXT5"
 ""
 1 13 73 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 34 0 0 0 0 0
 E E E
 0
@@ -338,11 +295,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 13 73 35 86
+E E 0 1 1 2 1 E U  0 E 13 73 35 86
 0 2 2 "0s" 0 0 0 192 0 0  13 73 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -366,15 +319,7 @@ E E 0 1 1 2 1 E 1 0 1 -370 37 1 E 380 80 409 99
 "PRIMITIVE_TEXT6"
 ""
 1 13 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 36 0 0 0 0 0
 E E E
 0
@@ -383,11 +328,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 13 120 35 133
+E E 0 1 1 2 1 E U  0 E 13 120 35 133
 0 2 2 "0s" 0 0 0 192 0 0  13 120 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -411,15 +352,7 @@ E E 0 1 1 2 1 E 1 0 1 -370 67 1 E 380 80 409 99
 "PRIMITIVE_TEXT7"
 ""
 1 13 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 38 0 0 0 0 0
 E E E
 0
@@ -428,11 +361,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 13 150 35 163
+E E 0 1 1 2 1 E U  0 E 13 150 35 163
 0 2 2 "0s" 0 0 0 192 0 0  13 150 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -470,15 +399,7 @@ E E 0 1 1 2 1 E 1 0 1 -270 -30 1 E 350 80 400 110
 "PRIMITIVE_TEXT8"
 ""
 1 92 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 41 0 0 0 0 0
 E E E
 0
@@ -487,11 +408,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 92 60 118 73
+E E 0 1 1 2 1 E U  0 E 92 60 118 73
 0 2 2 "0s" 0 0 0 192 0 0  92 60 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -515,15 +432,7 @@ E E 0 1 1 2 1 E 1 0 1 -270 45 1 E 350 80 400 110
 "PRIMITIVE_TEXT9"
 ""
 1 92 135 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 43 0 0 0 0 0
 E E E
 0
@@ -532,11 +441,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 92 135 118 148
+E E 0 1 1 2 1 E U  0 E 92 135 118 148
 0 2 2 "0s" 0 0 0 192 0 0  92 135 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -560,15 +465,7 @@ E E 0 1 1 2 1 E U  1 E 150 40 184 59
 "PRIMITIVE_TEXT10"
 ""
 1 153 43 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 45 0 0 0 0 0
 E E E
 0
@@ -577,11 +474,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 153 43 179 56
+E E 0 1 1 2 1 E U  0 E 153 43 179 56
 0 2 2 "0s" 0 0 0 192 0 0  153 43 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -605,15 +498,7 @@ E E 0 1 1 2 1 E U  1 E 150 70 184 89
 "PRIMITIVE_TEXT11"
 ""
 1 153 73 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 47 0 0 0 0 0
 E E E
 0
@@ -622,11 +507,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 153 73 179 86
+E E 0 1 1 2 1 E U  0 E 153 73 179 86
 0 2 2 "0s" 0 0 0 192 0 0  153 73 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -650,15 +531,7 @@ E E 0 1 1 2 1 E U  1 E 150 117 184 136
 "PRIMITIVE_TEXT12"
 ""
 1 153 120 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 49 0 0 0 0 0
 E E E
 0
@@ -667,11 +540,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 153 120 179 133
+E E 0 1 1 2 1 E U  0 E 153 120 179 133
 0 2 2 "0s" 0 0 0 192 0 0  153 120 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
@@ -695,15 +564,7 @@ E E 0 1 1 2 1 E U  1 E 150 147 184 166
 "PRIMITIVE_TEXT13"
 ""
 1 153 150 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
+ E E
 51 0 0 0 0 0
 E E E
 0
@@ -712,11 +573,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E "main()
-{
-  click();
-}" 0
- 0 1 1 2 1 E U  0 E 153 150 179 163
+E E 0 1 1 2 1 E U  0 E 153 150 179 163
 0 2 2 "0s" 0 0 0 192 0 0  153 150 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
