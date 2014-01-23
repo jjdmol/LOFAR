@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: awimager.cc 27579 2013-11-29 16:32:41Z vdtol $
 
 //# Includes
 #include <lofar_config.h>
-#include <LofarFT/Imager.h>
+#include <LofarFT/LofarImager.h>
 #include <Common/InputParSet.h>
 
 #include <images/Images/PagedImage.h>
@@ -47,6 +47,73 @@
 #include <casa/sstream.h>
 
 using namespace casa;
+
+
+vector<String> Operation::operations() 
+{
+  vector<String> v;
+  for(std::map<String,Creator>::iterator iter = creator_map().begin(); iter != creator_map().end(); ++iter)
+  {
+    v.push_back(iter->first);
+  }
+  return v;
+}
+
+map<String,Operation::Creator>& Operation::creator_map()
+{
+  static map<String,Creator> m;
+  return m;
+};
+
+void Operation::registrate(String name, Creator creator) 
+{
+  cout << "register: " << name << endl;
+  creator_map()[name] = creator;
+};
+
+Operation::Ptr Operation::create(String name)
+{
+  if (creator_map().count(name))
+  {
+    Creator creator = creator_map()[name];
+    return (*creator)();
+  }
+  else
+  {
+    return NULL;
+  }
+};
+
+// ===================================================
+class OperationClean : Operation
+{
+  static Operation::Ptr create() {return new OperationClean();};
+  static void __attribute__((constructor)) registrate()  {Operation::registrate("clean", &OperationClean::create);};
+  
+  virtual void run ();
+  
+};
+
+void OperationClean::run()
+{
+  cout << "Hi, I am Clean." << endl;
+}
+// ===================================================
+class OperationPredict : Operation
+{
+  static Operation::Ptr create() {return new OperationPredict();};
+  static void __attribute__((constructor)) registrate()  {Operation::registrate("predict", &OperationPredict::create);};
+  
+  virtual void run ();
+  
+};
+
+void OperationPredict::run()
+{
+  cout << "Hi, I am Clean." << endl;
+}
+
+
 
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
@@ -137,20 +204,14 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
   if (s == "FULL") {
     s = "ALL";
   }
-  if (s == "DIAGONAL") 
-  {
+  if (s == "DIAGONAL") {
     mat = False;
     mat.diagonal() = True;
-  } 
-  else if (s != "ALL" ) 
-  {
+  } else if (s != "ALL" ) {
     mat(0,4) = mat(4,0) = False;
-    if (s == "BAND1") 
-    {
+    if (s == "BAND1") {
       mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
-    } 
-    else if (s != "BAND2") 
-    {
+    } else if (s != "BAND2") {
       throw AipsError (str + " is an invalid Mueller specification");
     }
   }
@@ -171,7 +232,7 @@ Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
   return mat;
 }
 
-void makeEmpty (LOFAR::LofarFT::Imager& imager, const String& imgName, Int fieldid)
+void makeEmpty (Imager& imager, const String& imgName, Int fieldid)
 {
   CoordinateSystem coords;
   AlwaysAssert (imager.imagecoordinates(coords), AipsError);
@@ -198,15 +259,10 @@ void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
   ///  cout << "applied factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
 }
 
-void correctImages (
-  const String& restoName, 
-  const String& modelName,
-  const String& residName, 
-  const String& imgName,
-  Imager&,
-  Bool CorrectElement, 
-  Bool CorrectWPlanes, 
-  Bool doRestored)
+void correctImages (const String& restoName, const String& modelName,
+                    const String& residName, const String& imgName,
+                    LOFAR::LofarImager&,
+                    Bool CorrectElement, Bool CorrectWPlanes, Bool doRestored)
 {
   // Copy the images to .corr ones.
   {
@@ -222,8 +278,8 @@ void correctImages (
   //              restoredImage.shape() == modelImage.shape(), SynthesisError);
 
   // Get average primary beam and spheroidal.
-  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
-  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
+  Matrix<Float> avgPB = LOFAR::LofarConvolutionFunction::getAveragePB(imgName+"0");
+  Matrix<Float> spheroidCut = LOFAR::LofarConvolutionFunction::getSpheroidCut(imgName+"0");
 
   // String nameii("Spheroid_cut_im_element.img");
   // ostringstream nameiii(nameii);
@@ -249,6 +305,15 @@ void correctImages (
                                              IPosition(2, nximg, nximg)));
   Array<Float> ones(IPosition(sphinner.shape()),1.);
   Array<Float> factors;
+  // Array<Float> sphinner_el = (spheroidCutElement(Slicer(IPosition(4, offsph, offsph,0,0),
+  // 							  IPosition(4, nximg, nximg,1,1)))).nonDegenerate();
+
+  // if(CorrectElement){
+  //   factors = sphinner_el *sphinner / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  // } else{
+  //   factors = ones / sqrt(pbinner);//sphinner_el * sphinner / sqrt(pbinner);
+  // }
+  //if(CorrectWPlanes){factors *= sphinner;}
 
   factors = ones / sqrt(pbinner);
   cout<<"Final normalisation"<<endl;
@@ -266,6 +331,21 @@ void correctImages (
 
 int main (Int argc, char** argv)
 {
+  String operation_name("cleaner");
+  Operation::Ptr operation = Operation::create(operation_name);
+  if (!operation.null())
+  {
+    operation->run();
+    return 0;
+  }
+  else
+  {
+    cout << "Unknown operation: " << operation_name << endl;
+    cout << "Must be one of: " << Operation::operations() << endl;
+    return 1;
+  }
+  
+  
   try {
     LOFAR::InputParSet inputs;
     // define the input structure
@@ -767,7 +847,7 @@ int main (Int argc, char** argv)
     
     //params.define ("FillFactor", FillFactor);
     
-    LOFAR::LofarFT::Imager imager(ms, params);
+    LOFAR::LofarImager imager(ms, params);
 
     MSSpWindowColumns window(ms.spectralWindow());
     // ROMSObservationColumns timerange(ms.observation());

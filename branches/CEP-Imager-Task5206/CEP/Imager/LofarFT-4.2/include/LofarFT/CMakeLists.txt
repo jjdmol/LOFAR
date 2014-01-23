@@ -3,14 +3,21 @@
 # List of header files that will be installed.
 set(inst_HEADERS
   FFTCMatrix.h
-  LofarVisResampler.h
-  LofarFTMachine.h
-  LofarImager.h
-  LofarATerm.h
-  LofarWTerm.h
-  LofarCFStore.h
-  LofarCFDefs.h
-  LofarVBStore.h
+  VisResampler.h
+  FTMachine.h
+  FTMachineSimple.h
+  Imager.h
+  ATerm.h
+  WTerm.h
+  CFStore.h
+  CFDefs.h
+  VBStore.h
+  VisBuffer.h
+  VisibilityIterator.h
+  VisImagingWeight.h
+  Operation.h
+  OperationClean.h
+  OperationPredict.h
 )
 
 # Create symbolic link to include directory.
