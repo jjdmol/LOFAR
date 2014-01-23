@@ -59,7 +59,7 @@
 #include <casa/sstream.h>
 #include <iomanip>
 
-#include <LofarFT/helper_functions.tcc>
+#include "helper_functions.tcc"
 
 using casa::IPosition;
 using casa::DirectionCoordinate;
