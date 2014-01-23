@@ -19,7 +19,7 @@ usage()
 
 
 if [ $# -eq 0 ]; then
-  echo -e 'Error: needs at least 1 argument\n'
+  echo -e 'Error: need at least 1 argument\n'
   usage
 fi
 
