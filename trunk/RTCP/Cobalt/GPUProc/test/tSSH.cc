@@ -44,7 +44,7 @@ void test_SSHconnection( const string &stdout_str, const string &stderr_str, boo
   const char *USER = getenv("USER");
   stringstream ssh_stdout, ssh_stderr;
   const string cmd = str(format("echo %s; echo %s > /dev/stderr") % stdout_str % stderr_str);
-  SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, capture, ssh_stdout, ssh_stderr);
+  SSHconnection ssh("", "localhost", cmd, USER, pubkey, privkey, true, capture, ssh_stdout, ssh_stderr);
 
   ssh.start();
 
