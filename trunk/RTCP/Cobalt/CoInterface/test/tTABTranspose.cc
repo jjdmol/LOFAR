@@ -301,10 +301,16 @@ SUITE(SendReceive) {
 
   TEST_FIXTURE(Fixture, OneToOne) {
     const size_t nrTABs = nrBlocks; // we know we have enough outputPool.free for nrBlocks TABs
+    map<size_t, SmartPtr< Pool<Block> > > outputPools;
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      collectors[i] = new BlockCollector(outputPool, i);
+      outputPools[i] = new Pool<Block>;
+      for (size_t b = 0; b < nrBlocks; ++b) {
+        outputPools[i]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
+      }
+
+      collectors[i] = new BlockCollector(*outputPools[i], i);
     }
 
     StringStream str;
@@ -331,11 +337,11 @@ SUITE(SendReceive) {
     // Wait for the receiver to receive and process everything
     CHECK(receiver.finish());
 
-    // Should have one complete block
-    CHECK_EQUAL(nrTABs, outputPool.filled.size());
-
     for (size_t i = 0; i < nrTABs; ++i) {
-      SmartPtr<Block> block = outputPool.filled.remove();
+      // Should have one complete block
+      CHECK_EQUAL(1UL, outputPools[i]->filled.size());
+
+      SmartPtr<Block> block = outputPools[i]->filled.remove();
 
       CHECK(block != NULL);
       CHECK(block->complete());
