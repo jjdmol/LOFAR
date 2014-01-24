@@ -281,10 +281,10 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
     if (compute_correlations) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
-        float4 sample_0 = samples[0][time][y];
-        float4 sample_A = samples[0][time][x];
-        float4 sample_B = samples[1][time][x];
-        float4 sample_1 = samples[1][time][y];
+        float4 sample_0 = samples[0][time][x];
+        float4 sample_A = samples[0][time][y];
+        float4 sample_B = samples[1][time][y];
+        float4 sample_1 = samples[1][time][x];
 
         /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
         /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
