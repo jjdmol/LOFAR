@@ -30,17 +30,18 @@
 usage()
 {
     echo "usage:"
-    echo "  calibrate-stand-alone [options] <observation> <parset> <catalog>"
+    echo "  calibrate-stand-alone [options] <observation> <parset> [catalog]"
     echo
     echo "arguments:"
     echo "  <observation>        observation (MS)"
     echo "  <parset>             parset describing the reduction strategy"
-    echo "  <catalog>            catalog file (in makesourcedb format)"
+    echo "  [catalog]            catalog file (in makesourcedb format)"
+    echo "                         either catalog or --sourcedb must be specified"
     echo
     echo "options:"
     echo "  -h, --help           print usage information and exit"
     echo "  -v, --verbose        be verbose"
-    echo "  -f, --force          expands to --replace-sourcedb, --replace-parmdb"
+    echo "  -f, --force          expands to --replace-parmdb, --replace-sourcedb"
     echo "  -n, --no-columns     do not add CASA imaging columns to the MS"
     echo "  --dry-run            print commands but do not start any processes"
     echo "  --sourcedb           path to a user specified source database"
@@ -168,7 +169,12 @@ do
     fi
 done
 
-if test $# -ne 3 -o ${help} -eq 1; then
+nargs=3 # If --sourcedb is specified, then catalog is optional
+if test "${sourcedb}"; then
+    nargs=2
+fi
+
+if test $# -lt $nargs -o $# -gt 3 -o ${help} -eq 1; then
     usage
 fi
 
@@ -176,47 +182,6 @@ fi
 observation=${1}
 parset=${2}
 catalog=${3}
-
-# Test preconditions.
-if test ! -d "${observation}"; then
-    error "not a measurement set: ${observation}"
-fi
-
-if test ! -r "${observation}"; then
-    error "unreadable measurement set: ${observation}"
-fi
-
-if test ! -r "${parset}"; then
-    error "unreadable file: ${parset}"
-fi
-
-if test ! -r "${catalog}"; then
-    error "unreadable file: ${catalog}"
-fi
-
-if test "${sourcedb}" -a ! -d "${sourcedb}"; then
-    error "not a directory: ${sourcedb}"
-fi
-
-if test "${parmdb}" -a ! -d "${parmdb}"; then
-    error "not a directory: ${parmdb}"
-fi
-
-# Get absolute paths.
-tmp=`dirname ${observation}`
-observation=`cd ${tmp} > /dev/null; pwd`/`basename ${observation}`
-tmp=`dirname ${parset}`
-parset=`cd ${tmp} > /dev/null; pwd`/`basename ${parset}`
-tmp=`dirname ${catalog}`
-catalog=`cd ${tmp} > /dev/null; pwd`/`basename ${catalog}`
-if test "${sourcedb}"; then
-    tmp=`dirname ${sourcedb}`
-    sourcedb=`cd ${tmp} > /dev/null; pwd`/`basename ${sourcedb}`
-fi
-if test "${parmdb}"; then
-    tmp=`dirname ${parmdb}`
-    parmdb=`cd ${tmp} > /dev/null; pwd`/`basename ${parmdb}`
-fi
 
 # Derived values.
 if test ${force} -eq 1; then
@@ -232,6 +197,49 @@ if test "${parmdb}"; then
     replace_parmdb=1
 fi
 
+# Test preconditions.
+if test ! -d "${observation}"; then
+    error "not a measurement set: ${observation}"
+fi
+
+if test ! -r "${observation}"; then
+    error "unreadable measurement set: ${observation}"
+fi
+
+if test ! -r "${parset}"; then
+    error "parset file unreadable: ${parset}"
+fi
+
+if test \( ! -r "${catalog}" \) -a \( ${replace_sourcedb} -eq 1 \); then
+    error "catalog file unreadable: ${catalog}"
+fi
+
+if test "${sourcedb}" -a ! -d "${sourcedb}"; then
+    error "sourcedb not a directory: ${sourcedb}"
+fi
+
+if test "${parmdb}" -a ! -d "${parmdb}"; then
+    error "parmdb not a directory: ${parmdb}"
+fi
+
+# Get absolute paths.
+tmp=`dirname ${observation}`
+observation=`cd ${tmp} > /dev/null; pwd`/`basename ${observation}`
+tmp=`dirname ${parset}`
+parset=`cd ${tmp} > /dev/null; pwd`/`basename ${parset}`
+if test "${catalog}"; then
+  tmp=`dirname ${catalog}`
+  catalog=`cd ${tmp} > /dev/null; pwd`/`basename ${catalog}`
+fi
+if test "${sourcedb}"; then
+    tmp=`dirname ${sourcedb}`
+    sourcedb=`cd ${tmp} > /dev/null; pwd`/`basename ${sourcedb}`
+fi
+if test "${parmdb}"; then
+    tmp=`dirname ${parmdb}`
+    parmdb=`cd ${tmp} > /dev/null; pwd`/`basename ${parmdb}`
+fi
+
 sourcedb_path=${observation}/${sourcedb_basename}
 parmdb_path=${observation}/${parmdb_basename}
 
@@ -243,7 +251,11 @@ fi
 echo "arguments:"
 echo "    observation: ${observation}"
 echo "    parset: ${parset}"
-echo "    catalog: ${catalog}"
+if test "${catalog}"; then
+    echo "    catalog: ${catalog}"
+else
+    echo "    catalog: [not specified]"
+fi
 echo
 
 if test ${verbose} -eq 1; then

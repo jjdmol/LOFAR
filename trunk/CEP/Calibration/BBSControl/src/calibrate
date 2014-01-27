@@ -30,22 +30,23 @@
 usage()
 {
     echo "usage:"
-    echo "  calibrate [options] <observation> <parset> <catalogue> <work-dir>"
+    echo "  calibrate [options] <observation> <parset> [catalogue] <work-dir>"
     echo
     echo "arguments:"
     echo "  <observation>     observation (gds file)"
     echo "  <parset>          parset containing the calibration strategy"
     echo "                    NOTE: should not contain Observation or BBDB keys"
-    echo "  <catalogue>       initial sky model (in makesourcedb format)"
+    echo "  [catalogue]       initial sky model (in makesourcedb format)"
     echo "                    NOTE: must be reachable from all remote hosts"
+    echo "                      either catalogue or --sky-db must be specified"
     echo "  <working-dir>     directory where remote processes will execute"
     echo "                    NOTE: assumes homogeneous cluster layout"
     echo
     echo "options:"
     echo "  -h, --help        display this help text"
     echo "  -v, --verbose     be verbose"
-    echo "  -f, --force       expands to --clean, --replace-sky-db,"
-    echo "                    --replace-instrument-db"
+    echo "  -f, --force       expands to --clean, --replace-instrument-db,"
+    echo "                    --replace-sky-db"
     echo "  -n, --no-columns  do not add imaging columns to MS (default=do it)"
     echo "  --dry             do not start any processes"
     echo "  --clean           clean control database for the specified key"
@@ -273,7 +274,12 @@ do
   fi
 done
 
-if test $# -ne 4 -o ${help} -eq 1; then
+nargs=4 # If --sky-db is specified, then catalogue is optional 
+if test "${sky_db}"; then
+    nargs=3
+fi
+
+if test $# -lt $nargs -o $# -gt 4 -o ${help} -eq 1; then
     usage
 fi
 
@@ -281,8 +287,12 @@ fi
 # Get arguments.
 observation=${1}
 parset=${2}
-catalogue=${3}
-wd=${4}
+if test "${sky_db}" -a $# -eq 3; then
+  wd=${3}
+else
+  catalogue=${3}
+  wd=${4}
+fi
 
 # Get absolute paths.
 tmp=`dirname ${observation}`
@@ -291,8 +301,10 @@ tmp=`dirname ${cluster_desc}`
 cluster_desc=`cd ${tmp} > /dev/null; pwd`/`basename ${cluster_desc}`
 tmp=`dirname ${parset}`
 parset=`cd ${tmp} > /dev/null; pwd`/`basename ${parset}`
-tmp=`dirname ${catalogue}`
-catalogue=`cd ${tmp} > /dev/null; pwd`/`basename ${catalogue}`
+if test "${catalogue}"; then
+    tmp=`dirname ${catalogue}`
+    catalogue=`cd ${tmp} > /dev/null; pwd`/`basename ${catalogue}`
+fi
 if test "${instrument_db}"; then
     tmp=`dirname ${instrument_db}`
     instrument_db=`cd ${tmp} > /dev/null; pwd`/`basename ${instrument_db}`
@@ -301,7 +313,11 @@ fi
 echo "arguments:"
 echo "    observation: ${observation}"
 echo "    parset: ${parset}"
-echo "    catalogue: ${catalogue}"
+if test "${catalogue}"; then
+    echo "    catalogue: ${catalogue}"
+else
+    echo "    catalogue: [not specified]"
+fi
 echo "    wd: ${wd}"
 echo
 
@@ -334,29 +350,36 @@ if test ${verbose} -eq 1; then
     echo
 fi
 
+# Derived values
+if test ${force} -eq 1; then
+    clean=1
+    replace_sky_db=1
+    replace_instrument_db=1
+fi
+
 # Test preconditions.
 if test ! -r "${observation}"; then
-    error "unreadable file: ${observation}"
+    error "observation file unreadable: ${observation}"
 fi
 
 if test ! -r "${parset}"; then
-    error "unreadable file: ${parset}"
+    error "parset file unreadable: ${parset}"
 fi
 
-if test ! -r "${catalogue}"; then
-    error "unreadable file: ${catalogue}"
+if test \( ! -r "${catalogue}" \) -a \( ${replace_sky_db} -eq 1 \); then
+    error "catalogue file unreadable: ${catalogue}"
 fi
 
 if test ! -r "${cluster_desc}"; then
-    error "unreadable file: ${cluster_desc}"
+    error "cluster_desc file unreadable: ${cluster_desc}"
 fi
 
 if test "${sky_db}" -a ! -d "${sky_db}"; then
-    error "not a directory: ${sky_db}"
+    error "sky_db not a directory: ${sky_db}"
 fi
 
 if test "${instrument_db}" -a ! -d "${instrument_db}"; then
-    error "not a directory: ${instrument_db}"
+    error "instrument_db not a directory: ${instrument_db}"
 fi
 
 # Try to get observation gds file from parset
@@ -372,12 +395,6 @@ echo
 # Parse boolean from parset.
 if test "${parset_solver}" = "T" -o "${parset_solver}" = "t" -o "${parset_solver}" = "Y" -o "${parset_solver}" = "y" -o "${parset_solver}" = "1"; then
     solver=1
-fi
-
-if test ${force} -eq 1; then
-    clean=1
-    replace_sky_db=1
-    replace_instrument_db=1
 fi
 
 # CLEAN DATABASE
