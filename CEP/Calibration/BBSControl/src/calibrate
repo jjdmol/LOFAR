@@ -274,8 +274,15 @@ do
   fi
 done
 
+# Derived values
+if test ${force} -eq 1; then
+    clean=1
+    replace_sky_db=1
+    replace_instrument_db=1
+fi
+
 nargs=4 # If --sky-db is specified, then catalogue is optional 
-if test "${sky_db}"; then
+if test "${sky_db}" -o "$replace_sky_db" -eq 0; then
     nargs=3
 fi
 
@@ -348,13 +355,6 @@ if test ${verbose} -eq 1; then
     echo "    instrument db: ${instrument_db}"
     echo "    instrument name: ${instrument_basename}"
     echo
-fi
-
-# Derived values
-if test ${force} -eq 1; then
-    clean=1
-    replace_sky_db=1
-    replace_instrument_db=1
 fi
 
 # Test preconditions.

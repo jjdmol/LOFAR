@@ -169,20 +169,6 @@ do
     fi
 done
 
-nargs=3 # If --sourcedb is specified, then catalog is optional
-if test "${sourcedb}"; then
-    nargs=2
-fi
-
-if test $# -lt $nargs -o $# -gt 3 -o ${help} -eq 1; then
-    usage
-fi
-
-# Get arguments.
-observation=${1}
-parset=${2}
-catalog=${3}
-
 # Derived values.
 if test ${force} -eq 1; then
     replace_sourcedb=1
@@ -196,6 +182,20 @@ fi
 if test "${parmdb}"; then
     replace_parmdb=1
 fi
+
+nargs=3 # If --sourcedb is specified, then catalog is optional
+if test "${sourcedb}" -o "$replace_sourcedb" -eq 0; then
+    nargs=2
+fi
+
+if test $# -lt $nargs -o $# -gt 3 -o ${help} -eq 1; then
+    usage
+fi
+
+# Get arguments.
+observation=${1}
+parset=${2}
+catalog=${3}
 
 # Test preconditions.
 if test ! -d "${observation}"; then
