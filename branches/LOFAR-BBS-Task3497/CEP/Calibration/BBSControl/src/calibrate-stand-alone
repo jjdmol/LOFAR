@@ -41,8 +41,7 @@ usage()
     echo "options:"
     echo "  -h, --help           print usage information and exit"
     echo "  -v, --verbose        be verbose"
-    echo "  -f, --force          expands to --replace-parmdb, and if a catalog"
-    echo "                         is given also to --replace-sourcedb"
+    echo "  -f, --force          expands to --replace-parmdb, --replace-sourcedb"
     echo "  -n, --no-columns     do not add CASA imaging columns to the MS"
     echo "  --dry-run            print commands but do not start any processes"
     echo "  --sourcedb           path to a user specified source database"
@@ -186,9 +185,7 @@ catalog=${3}
 
 # Derived values.
 if test ${force} -eq 1; then
-    if test "${catalog}"; then
-        replace_sourcedb=1
-    fi
+    replace_sourcedb=1
     replace_parmdb=1
 fi
 
@@ -213,7 +210,7 @@ if test ! -r "${parset}"; then
     error "parset file unreadable: ${parset}"
 fi
 
-if test \( ! -r "${catalog}" \) -a \( ${replace_parmdb} -eq 1 \); then
+if test \( ! -r "${catalog}" \) -a \( ${replace_sourcedb} -eq 1 \); then
     error "catalog file unreadable: ${catalog}"
 fi
 

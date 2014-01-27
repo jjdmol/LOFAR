@@ -46,7 +46,7 @@ usage()
     echo "  -h, --help        display this help text"
     echo "  -v, --verbose     be verbose"
     echo "  -f, --force       expands to --clean, --replace-instrument-db,"
-    echo "                     also to --replace-sky-db if a catalogue is given"
+    echo "                    --replace-sky-db"
     echo "  -n, --no-columns  do not add imaging columns to MS (default=do it)"
     echo "  --dry             do not start any processes"
     echo "  --clean           clean control database for the specified key"
@@ -353,9 +353,7 @@ fi
 # Derived values
 if test ${force} -eq 1; then
     clean=1
-    if test "${catalogue}"; then
-        replace_sky_db=1
-    fi
+    replace_sky_db=1
     replace_instrument_db=1
 fi
 
