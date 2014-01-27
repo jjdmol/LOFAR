@@ -214,11 +214,12 @@ echo "Result code of observation: $OBSRESULT"
 
 if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
 then
+  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+  ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
+
   if [ $OBSRESULT -eq 0 ]
   then
     # ***** Observation ran successfully
-    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
 
     # Copy LTA feedback file to ccu001
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
