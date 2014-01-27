@@ -92,7 +92,8 @@ function parse_logs
   mklofarroot $OUTDIR
 
   # run correlator -- without profiling
-  runObservation.sh -F -l 4 $PARSET > performance_normal.txt 2>&1 || error "Observation failed"
+  runObservation.sh -F -l 2 $PARSET > performance_normal.txt 2>&1 || error "Observation failed"
+  
 
   # compare output
   if [ -n "$REFDIR" ]
