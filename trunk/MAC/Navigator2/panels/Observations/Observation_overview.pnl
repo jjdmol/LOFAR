@@ -101,7 +101,7 @@ updateObservationControl(string dp1, int claimPeriod,
   string SymbolCol=\"_Window\";
 
   if (strtolower(runState) == \"running\") {
-    _Observation.visible(true);
+    Abort_Observation.visible(true);
     Abort_Observation.enabled(true);
     Finish_Observation.visible(true);
     Finish_Observation.enabled(true);
@@ -550,7 +550,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT16"
 ""
-1 -13102.79164717597 -2384 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -17138.26313327491 -2670 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 33 0 0 0 0 0
 E E E
@@ -927,7 +927,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 36
 "PRIMITIVE_TEXT25"
 ""
-1 -13102.79164717597 -2296 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -17138.26313327491 -2560 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -962,7 +962,7 @@ LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
 2 40
 "PRIMITIVE_TEXT27"
 ""
-1 -13102.79164717597 -2200 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 -17138.26313327491 -2440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E
