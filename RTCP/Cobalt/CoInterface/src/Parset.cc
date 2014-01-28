@@ -641,9 +641,16 @@ namespace LOFAR
 
             const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
 
-            tab.directionDelta.type    = getString(prefix + ".directionType", "J2000");
-            tab.directionDelta.angle1  = getDouble(prefix + ".angle1", 0.0);
-            tab.directionDelta.angle2  = getDouble(prefix + ".angle2", 0.0);
+            tab.direction.type    = getString(prefix + ".directionType", "J2000");
+            tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
+                                                         prefix + ".angle1"), 0.0);
+            tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
+                                                         prefix + ".angle2"), 0.0);
+            // Always store absolute angles. So this is for backwards compat.
+            if (!isDefined(prefix + ".absoluteAngle1"))
+              tab.direction.angle1 += settings.SAPs[i].direction.angle1;
+            if (!isDefined(prefix + ".absoluteAngle2"))
+              tab.direction.angle2 += settings.SAPs[i].direction.angle2;
 
             tab.coherent          = getBool(prefix + ".coherent", true);
             if (tab.coherent)
@@ -1033,8 +1040,8 @@ namespace LOFAR
     {
       std::vector<double> TAB(2);
 
-      TAB[0] = settings.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle1;
-      TAB[1] = settings.beamFormer.SAPs[beam].TABs[pencil].directionDelta.angle2;
+      TAB[0] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle1;
+      TAB[1] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle2;
 
       return TAB;
     }
