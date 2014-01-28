@@ -92,12 +92,14 @@ Observation.Campaign.name = Pulsars2
 Observation.Campaign.title = Pulsars2
 Observation.DataProducts.Output_CoherentStokes.enabled = true
 Observation.DataProducts.Output_CoherentStokes.filenames = [cohTAB00.raw, cohTAB10.raw, cohTAB11.raw]
+# TODO: For now use specific locations for output location: We need to move this test to a sub system
 Observation.DataProducts.Output_CoherentStokes.locations = [localhost:/localhome/klijn/output,localhost:/localhome/klijn/output,localhost:/localhome/klijn/output]
 Observation.DataProducts.Output_Correlated.enabled = false
 Observation.DataProducts.Output_Correlated.filenames = [SB0.MS,SB1.MS,SB2.MS,SB3.MS,SB4.MS]
 Observation.DataProducts.Output_Correlated.locations = [5*:.]
 Observation.DataProducts.Output_IncoherentStokes.enabled = false
 Observation.DataProducts.Output_IncoherentStokes.filenames = [TAB00.raw, TAB10.raw, TAB11.raw]
+# TODO: For now use specific locations for output location: We need to move this test to a sub system
 Observation.DataProducts.Output_IncoherentStokes.locations = [localhost:/localhome/klijn/output,localhost:/localhome/klijn/output,localhost:/localhome/klijn/output]
 Observation.Dataslots.DataslotInfo.DataslotList = []
 Observation.Dataslots.DataslotInfo.RSPBoardList = []
