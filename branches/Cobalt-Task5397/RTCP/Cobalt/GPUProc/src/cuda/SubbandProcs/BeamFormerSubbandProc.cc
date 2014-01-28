@@ -328,11 +328,11 @@ namespace LOFAR
         if (coherentBeamformer) 
         outputPool.free.append(
           new BeamFormedData(
-            (ps.settings.beamFormer.maxNrTABsPerSAP() *
-             ps.settings.beamFormer.coherentSettings.nrStokes),
-            ps.settings.beamFormer.coherentSettings.nrChannels,
-            ps.settings.beamFormer.coherentSettings.nrSamples(
+            ps.settings.beamFormer.incoherentSettings.nrStokes,
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            ps.settings.beamFormer.incoherentSettings.nrSamples(
               ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.maxNrTABsPerSAP(),
             context));
         else
         {
@@ -424,6 +424,7 @@ namespace LOFAR
       StreamableData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
+      BeamFormedData &incoherentOutput = dynamic_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
@@ -532,7 +533,7 @@ namespace LOFAR
                          devD,
                          counters.visibilities, true);
       else
-        queue.readBuffer(output,
+        queue.readBuffer(incoherentOutput,
                          devE,
                          counters.incoherentOutput, true);
 

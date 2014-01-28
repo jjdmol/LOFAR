@@ -47,6 +47,10 @@ void Subband::write(Stream &stream) const {
 
   size_t dim1 = data.shape()[0];
   size_t dim2 = data.shape()[1];
+  LOG_INFO_STR("************************************");
+  LOG_INFO_STR("Subband::write(Stream &stream): dim 1: " << dim1);
+  LOG_INFO_STR("Subband::write(Stream &stream): dim 2: " << dim2);
+  LOG_INFO_STR("************************************");
   stream.write(&dim1, sizeof dim1);
   stream.write(&dim2, sizeof dim2);
   stream.write(data.origin(), data.num_elements() * sizeof *data.origin());

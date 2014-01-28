@@ -315,6 +315,10 @@ namespace LOFAR
         // set to: equals the index in the subbands vector
         unsigned idx;
 
+
+        // Index of this subband in the SAP it is part of
+        //
+        // Calculated based on  Observation.Beam[x].subbandList
         unsigned idxInSAP;
 
         // Index at station (f.e. 100..343)

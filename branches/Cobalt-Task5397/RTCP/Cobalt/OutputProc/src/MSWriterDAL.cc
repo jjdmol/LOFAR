@@ -125,7 +125,7 @@ namespace LOFAR
                    : parset.settings.beamFormer.incoherentSettings;
 
       //*******************************
-      // DIt moet per sap
+      // We could have multiple saps with each a specific number of subbands
       unsigned nrSubbands = parset.settings.SAPs[sapNr].subbandIndices.size();
       itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
       itsNrSamples = parset.settings.nrSamplesPerSubband() /
@@ -587,7 +587,7 @@ namespace LOFAR
              sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
-      unsigned bytesPerBlock = itsBlockSize * sizeof(T);  // Deze fix het probleem
+      unsigned bytesPerBlock = itsBlockSize * sizeof(T);  
 
       // fill in zeroes for lost blocks
       if (itsNextSeqNr < seqNr)

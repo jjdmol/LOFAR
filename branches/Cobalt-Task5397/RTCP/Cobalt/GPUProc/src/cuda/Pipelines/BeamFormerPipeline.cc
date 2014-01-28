@@ -226,7 +226,6 @@ namespace LOFAR
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
     {
-      LOG_INFO_STR("BeamFormerPipeline::writeOutput");
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       SmartPtr<StreamableData> outputData;
@@ -253,7 +252,7 @@ namespace LOFAR
         //const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
         //const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
 
-        for (size_t fileIdx = 0; 
+        for (size_t fileIdx = 0                           ; 
              fileIdx < ps.settings.beamFormer.files.size();
              ++fileIdx) 
         {
@@ -285,19 +284,17 @@ namespace LOFAR
           subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
           subband->id.block   = id.block;
 
+          // TODO we are not validating the 2nd dimension
           // Create a copy to be able to release outputData
           if (file.coherent)
           {
             // Copy coherent beam
-            // TODO: I dont trust this part of the code (Wouter)
-            ASSERTSTR(beamFormedData.shape()[0] > coherentIdx,
-                      "No room for coherent beam " << coherentIdx);
-            ASSERTSTR(beamFormedData.shape()[1] == nrTabs, "nrTabs is " <<
-              beamFormedData.shape()[1] << " but expected " << nrTabs);
-            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " << 
-                      beamFormedData.shape()[2] << " but expected " << nrSamples);
+            ASSERTSTR(beamFormedData.shape()[0] == nrTabs, "nrTabs is " <<
+              beamFormedData.shape()[0] << " but expected " << nrTabs);
+            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " <<
+              beamFormedData.shape()[2] << " but expected " << nrSamples);
             ASSERTSTR(beamFormedData.shape()[3] == nrChannels, "nrChannels is " <<
-                      beamFormedData.shape()[3] << " but expected " << nrChannels);
+              beamFormedData.shape()[3] << " but expected " << nrChannels);
             memcpy(subband->data.origin(),
                    beamFormedData[coherentIdx].origin(),
                    subband->data.num_elements() *

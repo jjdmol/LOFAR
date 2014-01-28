@@ -506,7 +506,7 @@ namespace LOFAR
 
       Cancellation::enable();
 
-      do {
+      //do {
         struct timeval timeout;
 
         timeout.tv_sec = 1;
@@ -514,7 +514,7 @@ namespace LOFAR
 
         // select() is a cancellation point
         rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
-      } while (rc == 0);
+      //} while (rc == 0);
 
       Cancellation::disable();
 
