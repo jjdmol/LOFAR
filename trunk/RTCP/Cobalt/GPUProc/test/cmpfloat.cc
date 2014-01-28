@@ -198,7 +198,7 @@ bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
       }
       if (imagFactor > maxFactors.imag()) {
         maxFactors.imag(imagFactor);
-      } else if (realFactor < minFactors.imag()) {
+      } else if (imagFactor < minFactors.imag()) {
         minFactors.imag(imagFactor);
       }
     }
