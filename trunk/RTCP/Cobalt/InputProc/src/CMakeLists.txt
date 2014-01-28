@@ -37,6 +37,7 @@ endif(UNIX AND NOT APPLE)
 
 lofar_add_bin_program(filterRSP Station/filterRSP.cc)
 lofar_add_bin_program(printRSP Station/printRSP.cc)
+lofar_add_bin_program(repairRSP Station/repairRSP.cc)
 lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(capture Station/capture.cc)
