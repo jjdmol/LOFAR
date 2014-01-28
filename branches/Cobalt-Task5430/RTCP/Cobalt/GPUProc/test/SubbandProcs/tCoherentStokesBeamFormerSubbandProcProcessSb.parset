@@ -16,6 +16,7 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = T
 Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
 Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[1].coherent = T
+Observation.Beam[0].nrTiedArrayBeams = 2
 
 OLAP.CNProc_CoherentStokes.which	 = I # IQUV
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
