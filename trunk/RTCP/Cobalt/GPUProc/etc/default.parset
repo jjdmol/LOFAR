@@ -165,12 +165,11 @@ Observation.Beam[0].nrTabRings=0
 # Distance between rings
 Observation.Beam[0].ringWidth=0
 
-# TAB pointing, relative to the SAP (station beam).
-# The directionType must therefor match the directionType
-# of the SAP.
+# TAB pointing (absolute). The relative pointings still end up in the metadata,
+# so the directionType must therefor match the directionType of the SAP.
 Observation.Beam[0].TiedArrayBeam[0].directionType=J2000
-Observation.Beam[0].TiedArrayBeam[0].angle1=0.0
-Observation.Beam[0].TiedArrayBeam[0].angle2=0.0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1=0.0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2=0.0
 
 # If >0, dedisperse the data for the given DM
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure=0.0
