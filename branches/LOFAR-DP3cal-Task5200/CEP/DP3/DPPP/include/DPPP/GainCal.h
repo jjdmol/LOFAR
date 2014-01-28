@@ -147,7 +147,7 @@ namespace {
       string           itsSourceDBName;
       string           itsParmDBName;
       bool             itsApplyBeam;
-      boost::shared_ptr<BBS::ParmFacade> itsParmDB;
+      shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;
 
       uint             itsCellSizeTime;
@@ -155,6 +155,13 @@ namespace {
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
+
+      vector<vector<vector<casa::DComplex> > > itsSols;
+      casa::Vector<casa::String> itsAntennaUsedNames;
+      map<string,int>         itsParmIdMap; //# -1 = new parm name
+
+      uint             itsMaxIter;
+      bool             itsPropagateSolutions;
 
       //# The info needed to calculate the station beams.
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;
