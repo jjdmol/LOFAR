@@ -165,6 +165,9 @@ namespace LOFAR
 
       unsigned bitMode() const
       {
+        if (header.version < 3)
+          return 16;
+
         switch (header.sourceInfo2 & 0x3) {
         default:
         case 0x0: return 16;
