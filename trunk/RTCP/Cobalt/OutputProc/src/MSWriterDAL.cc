@@ -327,13 +327,13 @@ namespace LOFAR
 
       BeamCoordinates pbeamDirs = parset.TABs(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
-      beam.pointRA().value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;
+      beam.pointRA().value = pbeamDir[0] * 180.0 / M_PI;
       beam.pointRAUnit().value = "deg";
-      beam.pointDEC().value = (beamDir[1] + pbeamDir[1]) * 180.0 / M_PI;
+      beam.pointDEC().value = pbeamDir[1] * 180.0 / M_PI;
       beam.pointDECUnit().value = "deg";
-      beam.pointOffsetRA().value = pbeamDir[0] * 180.0 / M_PI;
+      beam.pointOffsetRA().value = (pbeamDir[0] - beamDir[0]) * 180.0 / M_PI;
       beam.pointOffsetRAUnit().value = "deg";
-      beam.pointOffsetDEC().value = pbeamDir[1] * 180.0 / M_PI;
+      beam.pointOffsetDEC().value = (pbeamDir[1] - beamDir[1]) * 180.0 / M_PI;
       beam.pointOffsetDECUnit().value = "deg";
 
 

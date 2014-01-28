@@ -244,7 +244,7 @@ namespace LOFAR
 
         // NIC(s) to bind to (comma seperated)
         //
-        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        // E.g. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
       };
 
@@ -261,8 +261,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.angle1
-        // key: *.angle2
+        // key: *.absoluteAngle1
+        // key: *.absoluteAngle2
         double angle1;
         double angle2;
       };
@@ -444,11 +444,10 @@ namespace LOFAR
         unsigned nrHighResolutionChannels;
 
         struct TAB {
-          // The direction in wich the TAB points, relative
-          // to the SAP's coordinates
+          // The (absolute) direction where the TAB points to.
           //
           // key: Observation.Beam[sap].TiedArrayBeam[tab].*
-          struct Direction directionDelta;
+          struct Direction direction;
 
           // Whether the beam is coherent (or incoherent)
           //
