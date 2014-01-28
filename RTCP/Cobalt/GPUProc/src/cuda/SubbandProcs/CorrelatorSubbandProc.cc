@@ -316,7 +316,7 @@ namespace LOFAR
 
           // If all samples flagged, weights is zero.
           // TODO: make a lookup table for the expensive division; measure first
-          float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
+          float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
           applyWeight(bl, ch, weight, output);
         }
