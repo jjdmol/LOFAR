@@ -47,7 +47,8 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      subbandBandwidth(ps.settings.subbandWidth())
+      subbandBandwidth(ps.settings.subbandWidth()),
+      doFlysEye(ps.settings.beamFormer.doFlysEye)
     {
       // override the correlator settings with beamformer specifics
       nrChannelsPerSubband = 
@@ -137,6 +138,8 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrTABs);
       defs["SUBBAND_BANDWIDTH"] =
         str(format("%.7f") % itsParameters.subbandBandwidth);
+      if (itsParameters.doFlysEye)
+        defs["FLYS_EYE"] = "1";
 
       return defs;
     }

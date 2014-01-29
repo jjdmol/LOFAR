@@ -45,6 +45,7 @@ namespace LOFAR
         unsigned nrSAPs;
         unsigned nrTABs;
         double subbandBandwidth;
+        bool doFlysEye;
       };
 
       enum BufferType
