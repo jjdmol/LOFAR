@@ -582,17 +582,27 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                 if CStec0:
                     pos=ionmodel.station_positions[:]
                     lats=np.degrees(np.arctan2(pos[:,2],np.sqrt(pos[:,0]*pos[:,0]+pos[:,1]*pos[:,1])))
-                    lats-=lats[0]
                     lats=lats[stationIndices]
+                    lats-=lats[0]
+                    lons=np.degrees(np.arctan2(pos[:,1],pos[:,0]))
+                    lons=lons[stationIndices]
+                    lons-=lons[0]
                     TEC=tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol]+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
-                    slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
-                    chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
+                    lonlat=np.concatenate((lons,lats)).reshape((2,)+lons.shape)
+
+                    slope=np.dot(np.diag(1./np.diag(np.dot(lonlat,lonlat.T))),np.dot(lonlat,TEC.T))
+                    chi2=np.sum(np.square(TEC-np.dot(lonlat.T,slope).T),axis=1)
+
+                    
+                    #slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
+                    #chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
                     chi2select=chi2<np.average(chi2)
                     chi2select=chi2<np.average(chi2[chi2select])
                     #return chi2,slope,TEC,lats
                     print "wraps",wraps
-                    print "slope",slope[chi2select][0]                    
-                    offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
+                    print "slope",slope[:,chi2select][:,0]                    
+                    #offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
+                    offsets=-1*(np.average(TEC[chi2select]-np.dot(slope.T,lonlat)[chi2select],axis=0))*2.*np.pi/steps[0]
                     print "step",steps[0]
                     print offsets
                     remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
@@ -602,11 +612,14 @@ def getAll(ionmodel,refstIdx=0,doClockTEC=True,doRM=False,add_to_h5=True,station
                     #one more iteration
                     if np.sum(np.absolute(remainingwraps))>0:
                        TEC=tecarray[timerange[0]:timerange[1],stationIndices,pol]-tecarray[timerange[0]:timerange[1],[0],pol]+steps[0]*(np.round(wraps[stationIndices])-np.round(wraps[0]))
-                       slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
-                       chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
+                       slope=np.dot(np.diag(1./np.diag(np.dot(lonlat,lonlat.T))),np.dot(lonlat,TEC.T))
+                       chi2=np.sum(np.square(TEC-np.dot(lonlat.T,slope).T),axis=1)
+                       #slope=np.dot(1./(np.dot(lats.T,lats)), np.dot(lats.T,TEC.T))
+                       #chi2=np.sum(np.square(TEC-lats*slope[:,np.newaxis]),axis=1)
                        chi2select=chi2<np.average(chi2)
                        chi2select=chi2<np.average(chi2[chi2select])
-                       offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
+                       offsets=-1*(np.average(TEC[chi2select]-np.dot(slope.T,lonlat)[chi2select],axis=0))*2.*np.pi/steps[0]
+                       #offsets=-1*(np.average(TEC[chi2select]-lats*slope[chi2select][:,np.newaxis],axis=0))*2.*np.pi/steps[0]
                        print "offsets itereation2:",offsets
                        remainingwraps=np.round(offsets/(2*np.pi))#-np.round(wraps[stationIndices])
                        print "remaining wraps iteration 2",remainingwraps
