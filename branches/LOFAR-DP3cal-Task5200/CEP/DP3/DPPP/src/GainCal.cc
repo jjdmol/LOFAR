@@ -151,6 +151,7 @@ namespace LOFAR {
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
       os << "  max iter:       " << itsMaxIter << endl;
+      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -232,7 +233,7 @@ namespace LOFAR {
       //copy result of model to data
       //copy(storage.model.begin(),storage.model.begin()+nSamples,data);
 
-      cout<<"storage.model[0]="<<storage.model[0]<<endl;
+      //cout<<"storage.model[4]="<<storage.model[4]<<endl;
 
       // Begin StefCal
 
@@ -305,7 +306,7 @@ namespace LOFAR {
           dcomplex *mvis=&storage.model[bl*nCr];
 
           // Upper diagonal, ant1 < ant2
-          cout<<"mvis0"<<mvis[0]<<endl;
+          //cout<<"mvis0"<<mvis[0]<<endl;
           z[0] = h[ant1][0] * mvis[0] + h[ant1][2] * mvis[2];
           z[1] = h[ant1][0] * mvis[1] + h[ant1][2] * mvis[3];
           z[2] = h[ant1][1] * mvis[0] + h[ant1][3] * mvis[2];
@@ -340,11 +341,11 @@ namespace LOFAR {
 
 
         for (uint ant2=0;ant2<nSt;++ant2) {
-          cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
-          cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
+          //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
+          //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
         }
         for (uint ant2=0;ant2<nSt;++ant2) {
-          cout<<"tt["<<ant2<<"]={"<<tt[ant2][0]<<", "<<tt[ant2][1]<<", "<<tt[ant2][2]<<", "<<tt[ant2][3]<<"}"<<endl;
+          //cout<<"tt["<<ant2<<"]={"<<tt[ant2][0]<<", "<<tt[ant2][1]<<", "<<tt[ant2][2]<<", "<<tt[ant2][3]<<"}"<<endl;
         }
 
         for (uint ant=0;ant<nSt;++ant) {
@@ -427,6 +428,7 @@ namespace LOFAR {
       if (dg > tol) {
         cerr<<"!";
       }
+
       //cout<<"iter:"<<iter<<"?"<<endl;
 
       DComplex p = conj(g[0][0])/abs(g[0][0]);
