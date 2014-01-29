@@ -443,6 +443,9 @@ namespace LOFAR
         // Power of two and at least nrDelayCompensationChannels.
         unsigned nrHighResolutionChannels;
 
+        // Are we in fly's eye mode?
+        bool doFlysEye;
+
         struct TAB {
           // The direction in wich the TAB points, relative
           // to the SAP's coordinates

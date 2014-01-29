@@ -547,6 +547,9 @@ namespace LOFAR
               "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
         }
 
+        settings.beamFormer.doFlysEye = 
+          getBool("OLAP.PencilInfo.flysEye", false);
+
         unsigned nrDelayCompCh;
         if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
           nrDelayCompCh = calcNrDelayCompensationChannels(settings);
