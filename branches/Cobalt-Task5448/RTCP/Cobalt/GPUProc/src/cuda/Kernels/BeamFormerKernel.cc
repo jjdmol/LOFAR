@@ -54,7 +54,8 @@ namespace LOFAR
       nrChannelsPerSubband = 
         ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+        ps.settings.beamFormer.coherentSettings.nrSamples(
+          ps.nrSamplesPerSubband());
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -73,24 +74,11 @@ namespace LOFAR
       setArg(2, buffers.beamFormerDelays);
 
       // Beamformer kernel prefers 1 channel in the blockDim.z dimension
-      setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrPolarizations, params.nrTABs, 1) );
-
-#if 0
-      size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
-      size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
-      size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
-
-      size_t count = 
-        params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrPolarizations;
-      unsigned nrPasses = std::max((params.nrStations + 6) / 16, 1U);
-
-      nrOperations = count * params.nrStations * params.nrTABs * 8;
-      nrBytesRead = 
-        nrDelaysBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
-        nrComplexVoltagesBytesPerPass;
-      nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
-#endif
+      setEnqueueWorkSizes(
+        gpu::Grid(params.nrPolarizations, 
+                  params.nrTABs,
+                  params.nrChannelsPerSubband),
+        gpu::Block(params.nrPolarizations, params.nrTABs, 1));
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
@@ -110,16 +98,18 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband *
+          itsParameters.nrSamplesPerChannel * itsParameters.nrPolarizations *
+          itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannelsPerSubband * 
+          itsParameters.nrSamplesPerChannel * itsParameters.nrPolarizations *
+          itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-            sizeof(double);
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations *
+          itsParameters.nrTABs * sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
