@@ -332,7 +332,7 @@ int test()
          filterBank.getWeights().num_elements());
 
   double* expectedSums = new double[NR_CHANNELS];
-  memset(expectedSums, 0, std::sqrt((double)NR_CHANNELS) * sizeof(double));
+  memset(expectedSums, 0, NR_CHANNELS * sizeof(double));
   for (ch = 0; ch < NR_CHANNELS; ch++) {
     for (unsigned tap = 0; tap < NR_TAPS; tap++) {
       firWeightsArr[ch][tap] = filterBank.getWeights()[ch][tap];
