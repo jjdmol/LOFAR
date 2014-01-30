@@ -125,8 +125,13 @@ namespace LOFAR
                    : parset.settings.beamFormer.incoherentSettings;
 
       //*******************************
+
+      // all subbands in this file
       // We could have multiple saps with each a specific number of subbands
-      unsigned nrSubbands = parset.settings.SAPs[sapNr].subbandIndices.size();
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
+
+      unsigned nrSubbands = subbandIndices.size();
+
       itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
       itsNrSamples = parset.settings.nrSamplesPerSubband() /
                      stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
@@ -134,12 +139,7 @@ namespace LOFAR
       itsBlockSize = itsNrSamples * itsNrChannels;
 
       unsigned nrBlocks = parset.nrBeamFormedBlocks();
-
-      // all subbands in this file
-      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
       
-
-
       //*******************************
 
       vector<string> stokesVars;
