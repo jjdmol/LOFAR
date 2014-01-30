@@ -1,2 +1,3 @@
 #!/bin/sh
-mpirun.sh -host localhost -np 2 tMPISendReceiveStation
+EXECUTABLE_PREFIX=${LOFAR_CHECKTOOL} \
+  mpirun.sh -host localhost -np 2 tMPISendReceiveStation
