@@ -442,13 +442,9 @@ namespace LOFAR
             input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phase0s,
             input.phase0s, false);
-
         }
-        // The host buffers are initalized on zeros
-        // We just upload this buffer with zeros resulting in 
-        // 'correct' delay compensation to (0.0 , 0.0)
-        // THis upload will be done to often if we dont do delaycompensation
-        // but solving this in the kernel would be a big big big hassle
+        
+        // Upload the new beamformerDelays (pointings) to the GPU 
         queue.writeBuffer(devBeamFormerDelays,
           input.tabDelays, false);
 
