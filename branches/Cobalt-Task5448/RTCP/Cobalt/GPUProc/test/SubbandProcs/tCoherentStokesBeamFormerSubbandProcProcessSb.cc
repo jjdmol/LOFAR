@@ -194,22 +194,19 @@ int main() {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
+  // should be: (nrStations * amp * scaleFactor * fft1Size * fft2Size) ** 2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
-  // Hence, each output sample should be: 
-  // - for 16-bit input: 2 * (2 * 32767 * 1 * 64 * 64) ^2 = 144106392117051392
-  // - for 8-bit input: 2 *(2 * 127 * 16 * 64 * 64)^2 = 554188220137472
+  // Hence, each output sample should be (nrStations from parset): 
+  // - for 16-bit input: (5 * 32767 * 1 * 64 * 64) ** 2 = 450332475365785600
+  // - for 8-bit input: (5 * 127 * 16 * 64 * 64) ** 2 = 1731838187929600
 
   float outVal = 
     (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
     (nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
-  cout << "outVal = " << outVal << endl;
-  cout << "nrStokes:  " << nrStokes << endl
-      << "nrSamples:  " << nrSamples << endl
-      << "nrChannels:  " << nrChannels << endl;
+  cout << "outVal = " << setprecision(12) << outVal << endl;
 
   for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
     for (size_t s = 0; s < nrStokes; s++)
