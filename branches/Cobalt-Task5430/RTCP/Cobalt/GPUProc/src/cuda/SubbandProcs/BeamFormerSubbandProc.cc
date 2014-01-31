@@ -32,6 +32,14 @@
 
 #include <iomanip>
 
+// Set to true to get detailed buffer informatio
+#if 1
+  #define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
+#else
+  #define DUMPBUFFER(a,b)
+#endif
+
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -422,42 +430,56 @@ namespace LOFAR
       queue.writeBuffer(devInput.inputSamples, input.inputSamples,
                         counters.samples, true);
 
-      if (ps.delayCompensation())
-      {
-        unsigned SAP = ps.settings.subbands[subband].SAP;
+      unsigned SAP = ps.settings.subbands[subband].SAP;
 
-        // Only upload delays if they changed w.r.t. the previous subband.
-        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+      // Only upload delays if they changed w.r.t. the previous subband.
+      if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+        if (ps.delayCompensation())
+        {
           queue.writeBuffer(devInput.delaysAtBegin,
-                            input.delaysAtBegin, false);
+            input.delaysAtBegin, false);
           queue.writeBuffer(devInput.delaysAfterEnd,
-                            input.delaysAfterEnd, false);
+            input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phase0s,
-                            input.phase0s, false);
-          queue.writeBuffer(devBeamFormerDelays,
-                            input.tabDelays, false);
+            input.phase0s, false);
 
-          prevSAP = SAP;
-          prevBlock = block;
         }
+        // The host buffers are initalized on zeros
+        // We just upload this buffer with zeros resulting in 
+        // 'correct' delay compensation to (0.0 , 0.0)
+        // THis upload will be done to often if we dont do delaycompensation
+        // but solving this in the kernel would be a big big big hassle
+        queue.writeBuffer(devBeamFormerDelays,
+          input.tabDelays, false);
+
+        prevSAP = SAP;
+        prevBlock = block;
       }
 
       //****************************************
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
+      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
+      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
+
       firstFFT.enqueue(input.blockID, counters.firstFFT);
+      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
         input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
+      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
       secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
+      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+
       secondFFT.enqueue(input.blockID, counters.secondFFT);
+      DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
@@ -471,9 +493,13 @@ namespace LOFAR
           ps.settings.subbands[subband].SAP);
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
+        DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+        DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
+
         inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
+        DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
 
         if (coherentStokesPPF) 
         {
@@ -482,9 +508,10 @@ namespace LOFAR
             input.blockID.subbandProcSubbandIdx);
           finalFFT.enqueue(input.blockID, counters.finalFFT);
         }
-
+        
         if (!outputComplexVoltages)
         {
+          DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
         }
       }
@@ -497,8 +524,15 @@ namespace LOFAR
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
+
+        DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
+          "incoherentInverseFFTShiftBuffers.input.dat");
+
         incoherentInverseFFTShiftKernel->enqueue(
           input.blockID, counters.incoherentInverseFFTShift);
+
+        DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
+          "incoherentInverseFFTShiftBuffers.output.dat");
 
         if (incoherentStokesPPF) 
         {

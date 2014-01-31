@@ -105,11 +105,11 @@ int main() {
     "\n  fft2Size = " << fft2Size);
 
   // Output array sizes
-  const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
+  const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
   const size_t nrChannels = 
-    ps.settings.beamFormer.incoherentSettings.nrChannels;
+    ps.settings.beamFormer.coherentSettings.nrChannels;
   const size_t nrSamples = 
-    ps.settings.beamFormer.incoherentSettings.nrSamples(
+    ps.settings.beamFormer.coherentSettings.nrSamples(
       ps.settings.nrSamplesPerSubband());
 
   LOG_INFO_STR(
