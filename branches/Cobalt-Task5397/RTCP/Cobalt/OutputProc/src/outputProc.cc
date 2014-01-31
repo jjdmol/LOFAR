@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
   INIT_LOGGER("outputProc");
 
   LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
-  LOG_INFO_STR("debug 1");
+
   CasaLogSink::attach();
-  LOG_INFO_STR("debug 2");
+
   if (argc < 3)
     throw StorageException(str(boost::format("usage: %s obsid rank") % argv[0]), THROW_ARGS);
    
