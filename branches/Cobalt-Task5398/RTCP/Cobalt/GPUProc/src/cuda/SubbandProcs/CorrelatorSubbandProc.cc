@@ -341,7 +341,7 @@ namespace LOFAR
 
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input,
-                                               StreamableData &_output)
+                                               SubbandProcOutputData &_output)
     {
       CorrelatedDataHostBuffer &output = 
         dynamic_cast<CorrelatedDataHostBuffer&>(_output);
@@ -443,7 +443,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
+    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
       CorrelatedDataHostBuffer &output = 
         dynamic_cast<CorrelatedDataHostBuffer&>(_output);

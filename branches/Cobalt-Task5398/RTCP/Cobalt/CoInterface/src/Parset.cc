@@ -675,10 +675,14 @@ namespace LOFAR
               file.streamNr = bfStreamNr++;
 
               if (file.coherent) {
+                file.coherentIdxInSAP = sap.nrCoherent - 1;
+
                 if (coherent_idx >= coherent_locations.size())
                   THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = coherent_locations[coherent_idx++];
               } else {
+                file.incoherentIdxInSAP = sap.nrIncoherent - 1;
+
                 if (incoherent_idx >= incoherent_locations.size())
                   THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = incoherent_locations[incoherent_idx++];
@@ -860,6 +864,28 @@ namespace LOFAR
 
       for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
         max = std::max(max, SAPs[sapNr].TABs.size());
+
+      return max;
+    }
+
+
+    size_t ObservationSettings::BeamFormer::maxNrCoherentTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].nrCoherent);
+
+      return max;
+    }
+
+
+    size_t ObservationSettings::BeamFormer::maxNrIncoherentTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].nrIncoherent);
 
       return max;
     }

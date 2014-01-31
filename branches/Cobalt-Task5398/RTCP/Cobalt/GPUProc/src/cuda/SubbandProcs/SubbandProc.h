@@ -29,7 +29,6 @@
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
@@ -133,12 +132,16 @@ namespace LOFAR
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
 
+    class SubbandProcOutputData
+    {
+    };
+
     /*
      * The SubbandProc does the following transformation:
-     *   SubbandProcInputData -> StreamableData
+     *   SubbandProcInputData -> SubbandProcOutputData
      *
      * The SubbandProcInputData represents one block of one subband
-     * of input data, and the StreamableData (for example) the complex
+     * of input data, and the SubbandProcOutputData (for example) the complex
      * visibilities of such a block.
      *
      * For both input and output, a fixed set of objects is created,
@@ -159,7 +162,7 @@ namespace LOFAR
      *   input->blockID.localSubbandIdx  = subbandIdx;
      *
      *   // Fetch the next output object to fill
-     *   SmartPtr<StreamableData> output = queue.outputPool.free.remove();
+     *   SmartPtr<SubbandProcOutputData> output = queue.outputPool.free.remove();
      *
      *   // Process block
      *   queue.doSubband(input, output);
@@ -203,16 +206,16 @@ namespace LOFAR
 
       // A pool of output data, to allow items to be filled
       // and written in parallel.
-      Pool<StreamableData> outputPool;
+      Pool<SubbandProcOutputData> outputPool;
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
+      virtual void processSubband(SubbandProcInputData &input, SubbandProcOutputData &output) = 0;
 
       // Do post processing on the CPU.
       // \return Whether output must be sent to the output processor or
       // not. This feature is needed to do long-time integration (longer than
       // the maximum block size that can be processed on a GPU).
-      virtual bool postprocessSubband(StreamableData &output) = 0;
+      virtual bool postprocessSubband(SubbandProcOutputData &output) = 0;
 
     protected:
       const Parset &ps;

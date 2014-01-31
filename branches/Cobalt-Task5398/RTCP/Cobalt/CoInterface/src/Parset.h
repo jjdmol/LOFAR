@@ -427,6 +427,12 @@ namespace LOFAR
           size_t stokesNr;
           bool coherent;
 
+          // this TAB is the ....th coherent TAB in this SAP
+          size_t coherentIdxInSAP;
+
+          // this TAB is the ....th incoherent TAB in this SAP
+          size_t incoherentIdxInSAP;
+
           struct FileLocation location;
         };
 
@@ -488,6 +494,8 @@ namespace LOFAR
         std::vector<struct SAP> SAPs;
 
         size_t maxNrTABsPerSAP() const;
+        size_t maxNrCoherentTABsPerSAP() const;
+        size_t maxNrIncoherentTABsPerSAP() const;
 
         struct StokesSettings {
           // Reflection: whether this struct captures

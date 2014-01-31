@@ -115,10 +115,12 @@ namespace LOFAR
     {
       SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
 
-      SmartPtr<StreamableData> outputData;
+      SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
       while ((outputData = output.bequeue->remove()) != NULL) {
+        CorrelatedData &correlatedData = dynamic_cast<CorrelatedData&>(*outputData);
+
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
 
@@ -126,7 +128,7 @@ namespace LOFAR
 
         // Write block to disk 
         try {
-          outputData->write(outputStream.get(), true);
+          correlatedData.write(outputStream.get(), true);
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
 

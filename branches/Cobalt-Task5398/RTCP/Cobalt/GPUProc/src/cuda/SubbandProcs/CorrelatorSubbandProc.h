@@ -51,7 +51,8 @@ namespace LOFAR
     // A CorrelatedData object tied to a HostBuffer. Represents an output
     // data item that can be efficiently filled from the GPU.
     class CorrelatedDataHostBuffer: public MultiDimArrayHostBuffer<fcomplex, 4>,
-                                    public CorrelatedData
+                                    public CorrelatedData,
+                                    public SubbandProcOutputData
     {
     public:
       CorrelatedDataHostBuffer(unsigned nrStations, 
@@ -95,10 +96,10 @@ namespace LOFAR
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,
-                                  StreamableData &output);
+                                  SubbandProcOutputData &output);
 
       // Do post processing on the CPU
-      virtual bool postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(SubbandProcOutputData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
