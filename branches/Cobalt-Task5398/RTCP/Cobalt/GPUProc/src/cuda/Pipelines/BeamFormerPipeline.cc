@@ -222,15 +222,17 @@ namespace LOFAR
       }
     }
 
-
-    void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
+    // TODO: Needs more documentation
+    void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
+           struct Output &output )
     {
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
-      while ((outputData = output.bequeue->remove()) != NULL) {
+      while ((outputData = output.bequeue->remove()) != NULL) 
+      {
         BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*outputData);
 
         const struct BlockID id = outputData->blockID;
@@ -242,8 +244,12 @@ namespace LOFAR
         //const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
         //const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
 
-        for (size_t fileIdx = 0; fileIdx < ps.settings.beamFormer.files.size(); ++fileIdx) {
-          const struct ObservationSettings::BeamFormer::File &file = ps.settings.beamFormer.files[fileIdx];
+        for (size_t fileIdx = 0                           ; 
+             fileIdx < ps.settings.beamFormer.files.size();
+             ++fileIdx) 
+        {
+          const struct ObservationSettings::BeamFormer::File &file = 
+                ps.settings.beamFormer.files[fileIdx];
 
           // Skip what we aren't part of
           //
@@ -261,20 +267,25 @@ namespace LOFAR
 
           const size_t nrSamples = file.coherent
             ?  ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize)
-            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize);
+            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); 
 
           // Object to write to outputProc
-          SmartPtr<struct TABTranspose::Subband> subband = new TABTranspose::Subband(nrSamples, nrChannels);
+          SmartPtr<struct TABTranspose::Subband> subband = 
+                new TABTranspose::Subband(nrSamples, nrChannels);
 
           subband->id.fileIdx = file.streamNr;
-          subband->id.subband = globalSubbandIdx;
+          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
           subband->id.block   = id.block;
 
+          // TODO we are not validating the 2nd dimension
           // Create a copy to be able to release outputData
-          if (file.coherent) {
+          if (file.coherent)
+          {
             // Copy coherent beam
             memcpy(subband->data.origin(), beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
-          } else {
+          } 
+          else 
+          {
             // Copy incoherent beam
             memcpy(subband->data.origin(), beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
           }

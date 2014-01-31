@@ -81,6 +81,7 @@
     <ClCompile Include="..\..\OutputProc\src\ExitOnClosedStdin.cc" />
     <ClCompile Include="..\..\OutputProc\src\FastFileStream.cc" />
     <ClCompile Include="..\..\OutputProc\src\Format.cc" />
+    <ClCompile Include="..\..\OutputProc\src\GPUProcIO.cc" />
     <ClCompile Include="..\..\OutputProc\src\InputThread.cc" />
     <ClCompile Include="..\..\OutputProc\src\MeasurementSetFormat.cc" />
     <ClCompile Include="..\..\OutputProc\src\MSWriter.cc" />
@@ -106,6 +107,7 @@
     <ClInclude Include="..\..\OutputProc\src\ExitOnClosedStdin.h" />
     <ClInclude Include="..\..\OutputProc\src\FastFileStream.h" />
     <ClInclude Include="..\..\OutputProc\src\Format.h" />
+    <ClInclude Include="..\..\OutputProc\src\GPUProcIO.h" />
     <ClInclude Include="..\..\OutputProc\src\HDF5Attributes.h" />
     <ClInclude Include="..\..\OutputProc\src\InputThread.h" />
     <ClInclude Include="..\..\OutputProc\src\IOPriority.h" />

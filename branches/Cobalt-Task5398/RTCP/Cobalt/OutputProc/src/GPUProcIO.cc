@@ -170,7 +170,7 @@ void process(Stream &controlStream, size_t myRank)
       // TABWriters
 #     pragma omp section
       {
-#       pragma omp parallel for num_threads(subbandWriters.size())
+#       pragma omp parallel for num_threads(tabWriters.size())       
         for (int i = 0; i < (int)tabWriters.size(); ++i)
           tabWriters[i]->process();
       }

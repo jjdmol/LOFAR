@@ -54,9 +54,6 @@ namespace LOFAR
                                    [nrIncoherentStokes]
                                    [nrIncoherentSamples]
                                    [nrIncoherentChannels], context, 0)
-    {
-    }
-
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
@@ -303,6 +300,7 @@ namespace LOFAR
             ps.settings.beamFormer.incoherentSettings.nrStokes,
             ps.settings.beamFormer.incoherentSettings.nrChannels,
             ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.maxNrTABsPerSAP(),
             context));
       }
 
@@ -378,7 +376,8 @@ namespace LOFAR
         std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
     }
 
-    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
+    void BeamFormerSubbandProc::processSubband(
+      SubbandProcInputData &input,
       SubbandProcOutputData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
