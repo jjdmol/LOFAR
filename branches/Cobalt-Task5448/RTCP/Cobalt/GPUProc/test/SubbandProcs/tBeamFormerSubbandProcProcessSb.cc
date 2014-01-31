@@ -133,7 +133,7 @@ int main() {
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
   // Initialize synthetic input to input signal
-  for (size_t st = 0; st < nrStations; st++)
+  for (size_t st = 0; st < nrStations; st++) {
     for (size_t i = 0; i < nrSamplesPerSubband; i++) {
       size_t pol = i % nrPolarisations;
       switch(nrBitsPerSample) {
@@ -149,6 +149,7 @@ int main() {
         break;
       }
     }
+  }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
   // do the 1st block of whatever.
