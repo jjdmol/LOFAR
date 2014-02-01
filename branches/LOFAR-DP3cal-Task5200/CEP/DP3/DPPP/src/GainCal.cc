@@ -199,6 +199,7 @@ namespace LOFAR {
       cursor<double> cr_uvw_split(&(storage.uvw[0]), 2, stride_uvw);
 
       Complex* data=buf.getData().data();
+      float* weight = buf.getWeights().data();
       const Bool* flag=buf.getFlags().data();
 
       size_t stride_model[3] = {1, nCr, nCr * nCh};
@@ -270,7 +271,6 @@ namespace LOFAR {
         }
       }
 
-
       gx = g;
       int sstep=0;
 
@@ -299,7 +299,9 @@ namespace LOFAR {
           }
 
           DComplex vis[4];
+          DComplex wgt[4];
           for (uint cr=0;cr<4;++cr) {
+            wgt[cr] = weight[bl*nCr+cr];
             vis[cr] = data[bl*nCr+cr];
           }
           //Complex *vis =&data[bl*nCr];
@@ -307,36 +309,36 @@ namespace LOFAR {
 
           // Upper diagonal, ant1 < ant2
           //cout<<"mvis0"<<mvis[0]<<endl;
-          z[0] = h[ant1][0] * mvis[0] + h[ant1][2] * mvis[2];
-          z[1] = h[ant1][0] * mvis[1] + h[ant1][2] * mvis[3];
-          z[2] = h[ant1][1] * mvis[0] + h[ant1][3] * mvis[2];
-          z[3] = h[ant1][1] * mvis[1] + h[ant1][3] * mvis[3];
+          z[0] = h[ant1][0] * mvis[0] * sqrt(wgt[0]) + h[ant1][2] * mvis[2] * sqrt(wgt[2]);
+          z[1] = h[ant1][0] * mvis[1] * sqrt(wgt[1]) + h[ant1][2] * mvis[3] * sqrt(wgt[3]);
+          z[2] = h[ant1][1] * mvis[0] * sqrt(wgt[0]) + h[ant1][3] * mvis[2] * sqrt(wgt[2]);
+          z[3] = h[ant1][1] * mvis[1] * sqrt(wgt[1]) + h[ant1][3] * mvis[3] * sqrt(wgt[3]);
 
           w[ant2][0] += conj(z[0]) * z[0] + conj(z[2]) * z[2];
           w[ant2][1] += conj(z[0]) * z[1] + conj(z[2]) * z[3];
           w[ant2][2] += conj(z[1]) * z[0] + conj(z[3]) * z[2];
           w[ant2][3] += conj(z[1]) * z[1] + conj(z[3]) * z[3];
 
-          tt[ant2][0] += conj(z[0]) * vis[0] + conj(z[2]) * vis[2];
-          tt[ant2][1] += conj(z[0]) * vis[1] + conj(z[2]) * vis[3];
-          tt[ant2][2] += conj(z[1]) * vis[0] + conj(z[3]) * vis[2];
-          tt[ant2][3] += conj(z[1]) * vis[1] + conj(z[3]) * vis[3];
+          tt[ant2][0] += conj(z[0]) * vis[0] * sqrt(wgt[0]) + conj(z[2]) * vis[2] * sqrt(wgt[2]);
+          tt[ant2][1] += conj(z[0]) * vis[1] * sqrt(wgt[1]) + conj(z[2]) * vis[3] * sqrt(wgt[3]);
+          tt[ant2][2] += conj(z[1]) * vis[0] * sqrt(wgt[0]) + conj(z[3]) * vis[2] * sqrt(wgt[2]);
+          tt[ant2][3] += conj(z[1]) * vis[1] * sqrt(wgt[1]) + conj(z[3]) * vis[3] * sqrt(wgt[3]);
 
           // Lower diagonal, ant1 > ant2
-          z[0] = h[ant2][0] * conj(mvis[0]) + h[ant2][2] * conj(mvis[1]);
-          z[1] = h[ant2][0] * conj(mvis[2]) + h[ant2][2] * conj(mvis[3]);
-          z[2] = h[ant2][1] * conj(mvis[0]) + h[ant2][3] * conj(mvis[1]);
-          z[3] = h[ant2][1] * conj(mvis[2]) + h[ant2][3] * conj(mvis[3]);
+          z[0] = h[ant2][0] * conj(mvis[0]) * sqrt(wgt[0]) + h[ant2][2] * conj(mvis[1]) * sqrt(wgt[1]);
+          z[1] = h[ant2][0] * conj(mvis[2]) * sqrt(wgt[2]) + h[ant2][2] * conj(mvis[3]) * sqrt(wgt[3]);
+          z[2] = h[ant2][1] * conj(mvis[0]) * sqrt(wgt[0]) + h[ant2][3] * conj(mvis[1]) * sqrt(wgt[1]);
+          z[3] = h[ant2][1] * conj(mvis[2]) * sqrt(wgt[2]) + h[ant2][3] * conj(mvis[3]) * sqrt(wgt[3]);
 
           w[ant1][0] += conj(z[0]) * z[0] + conj(z[2]) * z[2];
           w[ant1][1] += conj(z[0]) * z[1] + conj(z[2]) * z[3];
           w[ant1][2] += conj(z[1]) * z[0] + conj(z[3]) * z[2];
           w[ant1][3] += conj(z[1]) * z[1] + conj(z[3]) * z[3];
 
-          tt[ant1][0] += conj(z[0] * vis[0] + z[2] * vis[1]);
-          tt[ant1][1] += conj(z[0] * vis[2] + z[2] * vis[3]);
-          tt[ant1][2] += conj(z[1] * vis[0] + z[3] * vis[1]);
-          tt[ant1][3] += conj(z[1] * vis[2] + z[3] * vis[3]);
+          tt[ant1][0] += conj(z[0] * vis[0] * sqrt(wgt[0]) + z[2] * vis[1] * sqrt(wgt[1]));
+          tt[ant1][1] += conj(z[0] * vis[2] * sqrt(wgt[2]) + z[2] * vis[3] * sqrt(wgt[3]));
+          tt[ant1][2] += conj(z[1] * vis[0] * sqrt(wgt[0]) + z[3] * vis[1] * sqrt(wgt[1]));
+          tt[ant1][3] += conj(z[1] * vis[2] * sqrt(wgt[2]) + z[3] * vis[3] * sqrt(wgt[3]));
         }
 
 
@@ -429,6 +431,7 @@ namespace LOFAR {
         cerr<<"!";
       }
 
+
       //cout<<"iter:"<<iter<<"?"<<endl;
 
       DComplex p = conj(g[0][0])/abs(g[0][0]);
@@ -437,6 +440,11 @@ namespace LOFAR {
         for (uint cr=0;cr<nCr;++cr) {
            g[st][cr]*=p;
         }
+      }
+
+      for (uint ant2=0;ant2<nSt;++ant2) {
+        //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
+        //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
       }
 
       // Stefcal terminated (either by maxiter or by converging)
@@ -535,6 +543,7 @@ namespace LOFAR {
         itsParmDB->setDefaultSteps(resolution);
       }
       // Write the solutions per parameter.
+      const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
       const char* str01[] = {"0:","1:"};
       const char* strri[] = {"Real:","Imag:"};
       Matrix<double> values(1, ntime);
@@ -543,17 +552,18 @@ namespace LOFAR {
         uint seqnr = 0;
         string suffix(itsAntennaUsedNames[st]);
 
-        for (int i=0; i<2; ++i) {
-          for (int j=0; j<2; j++) {
+        for (int i=0; i<4; ++i) {
+          //for (int j=0; j<2; j++) {
             for (int k=0; k<2; ++k) {
               string name(string("Gain:") +
-                          str01[i] + str01[j] + strri[k] + suffix);
+                          //str01[i] + str01[j] + strri[k] + suffix);
+                          str0101[i] + strri[k] + suffix);
               // Collect its solutions for all times in a single array.
               for (uint ts=0; ts<ntime; ++ts) {
                 if (seqnr%2==0) {
                   values(0, ts) = real(itsSols[ts][st][seqnr/2]);
                 } else {
-                  values(0, ts) = imag(itsSols[ts][st][seqnr/2]);
+                  values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
                 }
               }
               seqnr++;
@@ -573,9 +583,10 @@ namespace LOFAR {
                 itsParmDB->putValues (name, nameId, pvs);
               }
             }
-          }
+          //}
         }
       }
+
       itsTimer.stop();
       // Let the next steps finish.
       getNextStep()->finish();
