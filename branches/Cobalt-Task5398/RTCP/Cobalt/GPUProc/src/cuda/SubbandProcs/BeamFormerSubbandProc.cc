@@ -42,6 +42,7 @@ namespace LOFAR
         unsigned nrCoherentStokes,
         unsigned nrCoherentChannels,
         size_t nrCoherentSamples,
+        unsigned nrIncoherentTABs,
         unsigned nrIncoherentStokes,
         unsigned nrIncoherentChannels,
         size_t nrIncoherentSamples,
@@ -54,6 +55,8 @@ namespace LOFAR
                                    [nrIncoherentStokes]
                                    [nrIncoherentSamples]
                                    [nrIncoherentChannels], context, 0)
+    {
+    }
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
@@ -288,8 +291,6 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
       {
-        //**********************************************************************
-        // Coherent/incoheren switch
         outputPool.free.append(
           new BeamFormedData(
             ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
@@ -300,7 +301,6 @@ namespace LOFAR
             ps.settings.beamFormer.incoherentSettings.nrStokes,
             ps.settings.beamFormer.incoherentSettings.nrChannels,
             ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
-            ps.settings.beamFormer.maxNrTABsPerSAP(),
             context));
       }
 

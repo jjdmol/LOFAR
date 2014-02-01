@@ -241,10 +241,7 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        //const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
-        //const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
-
-        for (size_t fileIdx = 0                           ; 
+        for (size_t fileIdx = 0;
              fileIdx < ps.settings.beamFormer.files.size();
              ++fileIdx) 
         {
@@ -269,7 +266,15 @@ namespace LOFAR
             ?  ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize)
             :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); 
 
-          // Object to write to outputProc
+          // Our data has the shape
+          //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
+          //
+          // To transpose our data, we copy a slice representing
+          //   slice[sample][channel]
+          // and send it to outputProc to combine with the other subbands.
+          //
+          // We create a copy to be able to release outputData, since our
+          // slices can be blocked by writes to any number of outputProcs.
           SmartPtr<struct TABTranspose::Subband> subband = 
                 new TABTranspose::Subband(nrSamples, nrChannels);
 
@@ -277,18 +282,17 @@ namespace LOFAR
           subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
           subband->id.block   = id.block;
 
-          // TODO we are not validating the 2nd dimension
-          // Create a copy to be able to release outputData
-          if (file.coherent)
-          {
-            // Copy coherent beam
-            memcpy(subband->data.origin(), beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
-          } 
-          else 
-          {
-            // Copy incoherent beam
-            memcpy(subband->data.origin(), beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(), subband->data.num_elements() * sizeof *subband->data.origin());
-          }
+
+          // Create view of subarray 
+          MultiDimArray<float, 2> srcData(
+              boost::extents[nrSamples][nrChannels],
+              file.coherent
+                   ? beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
+                   : beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
+              false);
+
+          // Copy data to block
+          subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
 
           // Forward block to MultiSender, who takes ownership.
           multiSender.append(subband);

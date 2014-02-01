@@ -28,6 +28,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/BlockID.h>
 #include <CoInterface/SubbandMetaData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -134,6 +135,11 @@ namespace LOFAR
 
     class SubbandProcOutputData
     {
+    public:
+      struct BlockID blockID;
+
+      // Need a virtual destructor to make type polymorphic
+      virtual ~SubbandProcOutputData() {}
     };
 
     /*

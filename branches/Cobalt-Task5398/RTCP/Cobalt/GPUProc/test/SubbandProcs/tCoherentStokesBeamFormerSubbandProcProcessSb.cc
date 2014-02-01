@@ -185,10 +185,23 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
+  BeamFormedData out(
+      /* coherent dimensions */
+      maxNrTABsPerSAP,
+      nrStokes,
+      nrChannels,
+      nrSamples,
 
-  for (size_t i = 0; i < out.num_elements(); i++)
-    out.get<float>()[i] = 42.0f;
+      /* incoherent dimensions */
+      0,
+      0,
+      0,
+      0,
+
+      ctx);
+
+  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
+    out.coherentData.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -223,9 +236,9 @@ int main() {
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
     {
-      ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1e-4f),
-        "out[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
-        out[tab][s][t][c] << "; outVal = " << outVal);
+      ASSERTSTR(fpEquals(out.coherentData[tab][s][t][c], outVal, 1e-4f),
+        "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
+        out.coherentData[tab][s][t][c] << "; outVal = " << outVal);
     }
   return 0;
 }
