@@ -1064,101 +1064,9 @@ namespace LOFAR
       return settings.SAPs[beam].target;
     }
 
-
-    std::vector<double> Parset::getTAB(unsigned beam, unsigned pencil) const
-    {
-      std::vector<double> TAB(2);
-
-      TAB[0] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle1;
-      TAB[1] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle2;
-
-      return TAB;
-    }
-
-
-    bool Parset::isCoherent(unsigned beam, unsigned pencil) const
-    {
-      return settings.beamFormer.SAPs[beam].TABs[pencil].coherent;
-    }
-
-
-    double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
-    {
-      if (!settings.corrections.dedisperse)
-        return 0.0;
-
-      return settings.beamFormer.SAPs[beam].TABs[pencil].dispersionMeasure;
-    }
-
-
-    std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil, bool raw) const
-    {
-      // can't use settings until 'raw' is supported, which is needed to
-      // distinguish between fly's eye mode with one station, and coherent
-      // addition with one station
-      string key = str(format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
-      std::vector<string> stations;
-
-      if (isDefined(key))
-        stations = getStringVector(key,true);
-
-      if (raw)
-        return stations;
-
-      // default to all stations
-      if (stations.empty())
-        stations = mergedStationNames();
-
-      return stations;
-    }
-
-
-    std::vector<double> Parset::getBeamDirection(unsigned beam) const
-    {
-      std::vector<double> beamDirs(2);
-
-      beamDirs[0] = settings.SAPs[beam].direction.angle1;
-      beamDirs[1] = settings.SAPs[beam].direction.angle2;
-
-      return beamDirs;
-    }
-
-
-    std::string Parset::getBeamDirectionType(unsigned beam) const
-    {
-      return settings.SAPs[beam].direction.type;
-    }
-
-
-    bool Parset::haveAnaBeam() const
-    {
-      return settings.anaBeam.enabled;
-    }
-
-
-    std::vector<double> Parset::getAnaBeamDirection() const
-    {
-      std::vector<double> anaBeamDirections(2);
-
-      anaBeamDirections[0] = settings.anaBeam.direction.angle1;
-      anaBeamDirections[1] = settings.anaBeam.direction.angle2;
-
-      return anaBeamDirections;
-    }
-
-
-    std::string Parset::getAnaBeamDirectionType() const
-    {
-      return settings.anaBeam.direction.type;   }
-
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
       return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
-    }
-
-    unsigned Parset::nrTABs(unsigned beam) const
-    {
-      return settings.beamFormer.SAPs[beam].TABs.size();
     }
 
     std::string Parset::name() const
@@ -1293,16 +1201,6 @@ namespace LOFAR
       return CNintegrationSteps() * IONintegrationSteps();
     }
 
-    unsigned Parset::coherentStokesTimeIntegrationFactor() const
-    {
-      return settings.beamFormer.coherentSettings.timeIntegrationFactor;
-    }
-
-    unsigned Parset::incoherentStokesTimeIntegrationFactor() const
-    {
-      return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
-    }
-
     bool Parset::outputThisType(OutputType outputType) const
     {
       switch (outputType) {
@@ -1383,40 +1281,6 @@ namespace LOFAR
     bool Parset::realTime() const
     {
       return settings.realTime;
-    }
-
-    std::vector<unsigned> Parset::nrTABs() const
-    {
-      std::vector<unsigned> counts(nrBeams());
-
-      for (unsigned beam = 0; beam < nrBeams(); beam++)
-        counts[beam] = nrTABs(beam);
-
-      return counts;
-    }
-
-    unsigned Parset::maxNrTABs() const
-    {
-      std::vector<unsigned> beams = nrTABs();
-
-      if (beams.empty())
-        return 0;
-
-      return *std::max_element(beams.begin(), beams.end());
-    }
-
-    BeamCoordinates Parset::TABs(unsigned beam) const
-    {
-      BeamCoordinates coordinates;
-
-      for (unsigned pencil = 0; pencil < nrTABs(beam); pencil++) {
-        const std::vector<double> coords = getTAB(beam, pencil);
-
-        // assume ra,dec
-        coordinates += BeamCoord3D(coords[0],coords[1]);
-      }
-
-      return coordinates;
     }
 
     string Parset::bandFilter() const

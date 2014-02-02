@@ -294,13 +294,13 @@ namespace LOFAR
       sap.totalIntegrationTimeUnit().value = "s";
 
       // TODO: non-J2000 pointings
-      if( parset.getBeamDirectionType(sapNr) != "J2000" )
+      if( parset.settings.SAPs[sapNr].direction.type != "J2000" )
         LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 
-      vector<double> beamDir = parset.getBeamDirection(sapNr);
-      sap.pointRA().value = beamDir[0] * 180.0 / M_PI;
+      const struct ObservationSettings::Direction &beamDir = parset.settings.SAPs[sapNr].direction;
+      sap.pointRA().value = beamDir.angle1 * 180.0 / M_PI;
       sap.pointRAUnit().value = "deg";
-      sap.pointDEC().value = beamDir[1] * 180.0 / M_PI;
+      sap.pointDEC().value = beamDir.angle2 * 180.0 / M_PI;
       sap.pointDECUnit().value = "deg";
 
       sap.observationNofBeams().value = parset.settings.beamFormer.SAPs[sapNr].TABs.size();
@@ -330,15 +330,14 @@ namespace LOFAR
       beam.targets().value = beamtargets;
       beam.tracking().value = parset.settings.SAPs[sapNr].direction.type;
 
-      BeamCoordinates pbeamDirs = parset.TABs(sapNr);
-      BeamCoord3D pbeamDir = pbeamDirs[beamNr];
-      beam.pointRA().value = pbeamDir[0] * 180.0 / M_PI;
+      const struct ObservationSettings::Direction &tabDir = parset.settings.beamFormer.SAPs[sapNr].TABs[beamNr].direction;
+      beam.pointRA().value = tabDir.angle1 * 180.0 / M_PI;
       beam.pointRAUnit().value = "deg";
-      beam.pointDEC().value = pbeamDir[1] * 180.0 / M_PI;
+      beam.pointDEC().value = tabDir.angle2 * 180.0 / M_PI;
       beam.pointDECUnit().value = "deg";
-      beam.pointOffsetRA().value = (pbeamDir[0] - beamDir[0]) * 180.0 / M_PI;
+      beam.pointOffsetRA().value = (tabDir.angle1 - beamDir.angle1) * 180.0 / M_PI;
       beam.pointOffsetRAUnit().value = "deg";
-      beam.pointOffsetDEC().value = (pbeamDir[1] - beamDir[1]) * 180.0 / M_PI;
+      beam.pointOffsetDEC().value = (tabDir.angle2 - beamDir.angle2) * 180.0 / M_PI;
       beam.pointOffsetDECUnit().value = "deg";
 
 
@@ -558,13 +557,13 @@ namespace LOFAR
       if (type == "CoherentStokesBeam") {
         itsConfiguration.add(prefix + "Pointing.equinox",   "J2000");
         itsConfiguration.add(prefix + "Pointing.coordType", "RA-DEC");
-        itsConfiguration.add(prefix + "Pointing.angle1",    str(format("%f") % (beamDir[0] + pbeamDir[0])));
-        itsConfiguration.add(prefix + "Pointing.angle2",    str(format("%f") % (beamDir[1] + pbeamDir[1])));
+        itsConfiguration.add(prefix + "Pointing.angle1",    str(format("%f") % tabDir.angle1));
+        itsConfiguration.add(prefix + "Pointing.angle2",    str(format("%f") % tabDir.angle2));
 
         itsConfiguration.add(prefix + "Offset.equinox",     "J2000");
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
-        itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % pbeamDir[0]));
-        itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % pbeamDir[1]));
+        itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % (tabDir.angle1 - beamDir.angle1)));
+        itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % (tabDir.angle2 - beamDir.angle2)));
       }
     }
 

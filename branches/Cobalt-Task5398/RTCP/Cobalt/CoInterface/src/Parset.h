@@ -644,9 +644,6 @@ namespace LOFAR
       unsigned                    CNintegrationSteps() const;
       unsigned                    IONintegrationSteps() const;
       unsigned                    integrationSteps() const;
-  
-      unsigned                    coherentStokesTimeIntegrationFactor() const;
-      unsigned                    incoherentStokesTimeIntegrationFactor() const;
 
       double                      CNintegrationTime() const;
       double                      IONintegrationTime() const;
@@ -671,38 +668,14 @@ namespace LOFAR
       std::string                 bandFilter() const;
       std::string                 antennaSet() const;
 
-      size_t          nrCoherentStokes() const
-      {
-        return settings.beamFormer.coherentSettings.nrStokes;
-      }
-      size_t          nrIncoherentStokes() const
-      {
-        return settings.beamFormer.incoherentSettings.nrStokes;
-      }
-
       unsigned                    nrBeams() const;
       std::string                 beamTarget(unsigned beam) const;
-
-      unsigned                    nrTABs(unsigned beam) const;
-      std::vector<unsigned>       nrTABs() const;
-      unsigned                    maxNrTABs() const;
-      bool                        isCoherent(unsigned beam, unsigned pencil) const;
-      BeamCoordinates             TABs(unsigned beam) const;
-      double                      dispersionMeasure(unsigned beam = 0,unsigned pencil = 0) const;
-      std::vector<std::string>    TABStationList(unsigned beam = 0,unsigned pencil = 0, bool raw = false) const;
 
       size_t                      nrSubbands() const;
 
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
 
       bool                        realTime() const;
-
-      std::vector<double>         getBeamDirection(unsigned beam) const;
-      std::string                 getBeamDirectionType(unsigned beam) const;
-
-      bool                        haveAnaBeam() const;
-      std::vector<double>         getAnaBeamDirection() const;
-      std::string                 getAnaBeamDirectionType() const;
 
       std::vector<double>         itsStPositions;
 
@@ -722,8 +695,6 @@ namespace LOFAR
 
       void                        checkVectorLength(const std::string &key, unsigned expectedSize) const;
       void                        checkInputConsistency() const;
-
-      std::vector<double>         getTAB(unsigned beam, unsigned pencil) const;
 
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;

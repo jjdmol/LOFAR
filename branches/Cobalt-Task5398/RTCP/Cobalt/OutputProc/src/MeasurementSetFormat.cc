@@ -303,18 +303,18 @@ namespace LOFAR
     {
 
       // Beam direction
-      MVDirection radec(Quantity(itsPS.getBeamDirection(subarray)[0], "rad"),
-                        Quantity(itsPS.getBeamDirection(subarray)[1], "rad"));
+      MVDirection radec(Quantity(itsPS.settings.SAPs[subarray].direction.angle1, "rad"),
+                        Quantity(itsPS.settings.SAPs[subarray].direction.angle2, "rad"));
       MDirection::Types beamDirectionType;
-      MDirection::getType(beamDirectionType, itsPS.getBeamDirectionType(subarray));
+      MDirection::getType(beamDirectionType, itsPS.settings.SAPs[subarray].direction.type);
       MDirection indir(radec, beamDirectionType);
       casa::Vector<MDirection> outdir(1);
       outdir(0) = indir;
 
       // AnaBeam direction type
       MDirection::Types anaBeamDirectionType;
-      if (itsPS.haveAnaBeam())
-        MDirection::getType(anaBeamDirectionType, itsPS.getAnaBeamDirectionType());
+      if (itsPS.settings.anaBeam.enabled)
+        MDirection::getType(anaBeamDirectionType, itsPS.settings.anaBeam.direction.type);
 
       // Put the direction into the FIELD subtable.
       MSLofarField msfield = itsMS->field();
@@ -323,7 +323,7 @@ namespace LOFAR
       uInt rownr = msfield.nrow();
       ASSERT(rownr == 0); // can only set directionType on first row, so only one field per MeasurementSet for now
 
-      if (itsPS.haveAnaBeam())
+      if (itsPS.settings.anaBeam.enabled)
         msfieldCol.setDirectionRef(beamDirectionType, anaBeamDirectionType);
       else
         msfieldCol.setDirectionRef(beamDirectionType);
@@ -341,10 +341,10 @@ namespace LOFAR
       msfieldCol.sourceId().put(rownr, -1);
       msfieldCol.flagRow().put(rownr, False);
 
-      if (itsPS.haveAnaBeam()) {
+      if (itsPS.settings.anaBeam.enabled) {
         // Analog beam direction
-        MVDirection radec_AnaBeamDirection(Quantity(itsPS.getAnaBeamDirection()[0], "rad"),
-                                           Quantity(itsPS.getAnaBeamDirection()[1], "rad"));
+        MVDirection radec_AnaBeamDirection(Quantity(itsPS.settings.anaBeam.direction.angle1, "rad"),
+                                           Quantity(itsPS.settings.anaBeam.direction.angle2, "rad"));
         MDirection anaBeamDirection(radec_AnaBeamDirection, anaBeamDirectionType);
         msfieldCol.tileBeamDirMeasCol().put(rownr, anaBeamDirection);
       } else {
