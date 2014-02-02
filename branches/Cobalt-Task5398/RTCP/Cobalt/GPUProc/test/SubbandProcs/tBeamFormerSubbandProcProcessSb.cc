@@ -177,20 +177,7 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(
-      /* coherent dimensions */
-      0,
-      0,
-      0,
-      0,
-
-      /* incoherent dimensions */
-      1,
-      nrStokes,
-      nrChannels,
-      nrSamples,
-      
-      ctx);
+  BeamFormedData out(ps, ctx);
 
   for (size_t i = 0; i < out.incoherentData.num_elements(); i++)
     out.incoherentData.get<float>()[i] = 42.0f;

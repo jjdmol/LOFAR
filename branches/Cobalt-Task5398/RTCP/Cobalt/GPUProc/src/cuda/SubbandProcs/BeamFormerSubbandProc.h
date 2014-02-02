@@ -61,12 +61,17 @@ namespace LOFAR
      
       BeamFormedData(unsigned nrCoherentTABs,
                      unsigned nrCoherentStokes,
-                     unsigned nrCoherentChannels,
                      size_t nrCoherentSamples,
+                     unsigned nrCoherentChannels,
                      unsigned nrIncoherentTABs,
                      unsigned nrIncoherentStokes,
-                     unsigned nrIncoherentChannels,
                      size_t nrIncoherentSamples,
+                     unsigned nrIncoherentChannels,
+                     gpu::Context &context);
+
+      /* Short-hand constructor to fetch all dimensions
+       * from a Parset */
+      BeamFormedData(const Parset &ps,
                      gpu::Context &context);
     };
 

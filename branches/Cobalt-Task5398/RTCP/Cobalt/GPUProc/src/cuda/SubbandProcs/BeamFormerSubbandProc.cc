@@ -40,12 +40,12 @@ namespace LOFAR
     BeamFormedData::BeamFormedData(
         unsigned nrCoherentTABs,
         unsigned nrCoherentStokes,
-        unsigned nrCoherentChannels,
         size_t nrCoherentSamples,
+        unsigned nrCoherentChannels,
         unsigned nrIncoherentTABs,
         unsigned nrIncoherentStokes,
-        unsigned nrIncoherentChannels,
         size_t nrIncoherentSamples,
+        unsigned nrIncoherentChannels,
         gpu::Context &context) :
       coherentData(boost::extents[nrCoherentTABs]
                                  [nrCoherentStokes]
@@ -55,6 +55,22 @@ namespace LOFAR
                                    [nrIncoherentStokes]
                                    [nrIncoherentSamples]
                                    [nrIncoherentChannels], context, 0)
+    {
+    }
+
+    BeamFormedData::BeamFormedData(
+        const Parset &ps,
+        gpu::Context &context) :
+      coherentData(boost::extents[ps.settings.beamFormer.maxNrCoherentTABsPerSAP()]
+                                 [ps.settings.beamFormer.coherentSettings.nrStokes]
+                                 [ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                 [ps.settings.beamFormer.coherentSettings.nrChannels],
+                                 context, 0),
+      incoherentData(boost::extents[ps.settings.beamFormer.maxNrIncoherentTABsPerSAP()]
+                                   [ps.settings.beamFormer.incoherentSettings.nrStokes]
+                                   [ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                   [ps.settings.beamFormer.incoherentSettings.nrChannels],
+                                   context, 0)
     {
     }
 
@@ -291,17 +307,7 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
       {
-        outputPool.free.append(
-          new BeamFormedData(
-            ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
-            ps.settings.beamFormer.coherentSettings.nrStokes,
-            ps.settings.beamFormer.coherentSettings.nrChannels,
-            ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband()),
-            ps.settings.beamFormer.maxNrIncoherentTABsPerSAP(),
-            ps.settings.beamFormer.incoherentSettings.nrStokes,
-            ps.settings.beamFormer.incoherentSettings.nrChannels,
-            ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband()),
-            context));
+        outputPool.free.append(new BeamFormedData(ps, context));
       }
 
       //// CPU timers are set by CorrelatorPipeline
