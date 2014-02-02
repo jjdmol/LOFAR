@@ -1250,11 +1250,6 @@ namespace LOFAR
       return settings.delayCompensation.enabled;
     }
 
-    unsigned Parset::nrCalcDelays() const
-    {
-      return 16;
-    }
-
     string Parset::positionType() const
     {
       return "ITRF";

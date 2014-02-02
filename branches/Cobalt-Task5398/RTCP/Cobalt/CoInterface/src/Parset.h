@@ -652,7 +652,6 @@ namespace LOFAR
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;
-      unsigned                    nrCalcDelays() const;
       bool                        correctClocks() const;
       bool                        correctBandPass() const;
       std::string                 stationName(int index) const;
