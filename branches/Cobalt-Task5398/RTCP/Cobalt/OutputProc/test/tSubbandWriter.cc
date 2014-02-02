@@ -39,11 +39,16 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Quanta/MVTime.h>
 
+#include <boost/lexical_cast.hpp>
+#include <string>
+
 using namespace std;
 using namespace LOFAR;
 using namespace Cobalt;
 using namespace casa;
 using boost::format;
+
+unsigned obsId = 0;
 
 SUITE(SubbandWriter)
 {
@@ -57,7 +62,7 @@ SUITE(SubbandWriter)
       ps.add("PIC.Core.CS001LBA.position",                           "[0,0,0]");
       ps.add("PIC.Core.CS001LBA.phaseCenter",                        "[0,0,0]");
 
-      ps.add("Observation.ObsID",                                    "0");
+      ps.add("Observation.ObsID",                                    boost::lexical_cast<string>(obsId));
       ps.add("Observation.startTime",                                "2013-01-01 00:00");
       ps.add("Observation.stopTime",                                 "2013-01-01 01:00");
 
@@ -211,7 +216,17 @@ int main()
 
   omp_set_nested(true);
 
-  PortBroker::createInstance(storageBrokerPort(0));
+  /* Try different obsIds to try different ports. */
+  for (obsId = 0; obsId < 1000; obsId++)
+    try {
+      LOG_INFO_STR("PortBroker: Trying obs Id " << obsId);
+      PortBroker::createInstance(storageBrokerPort(obsId));
+
+      LOG_INFO_STR("PortBroker: Success! Running tests.");
+      break;
+    } catch(LOFAR::SystemCallException&) {
+      continue;
+    }
 
   return UnitTest::RunAllTests() > 0;
 }
