@@ -9,19 +9,26 @@ Observation.VirtualInstrument.stationList = [CS002]
 Observation.antennaSet = HBA_DUAL
 Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300]
-Observation.Beam[0].nrTiedArrayBeams     = 1
+Observation.Beam[0].nrTiedArrayBeams     = 2
 Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1 = 0
 Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].coherent = F
+Observation.Beam[1].TiedArrayBeam[1].absoluteAngle1 = 0
+Observation.Beam[1].TiedArrayBeam[1].absoluteAngle2 = 0
+Observation.Beam[1].TiedArrayBeam[1].coherent = T
 
-OLAP.CNProc_CoherentStokes.which	 = I # IQUV
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.channelsPerSubband = 1
-OLAP.CNProc_IncoherentStokes.which	 = I # IQUV
-OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
+Cobalt.BeamFormer.CoherentStokes.which	 = I # IQUV
+Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband = 1
+Cobalt.BeamFormer.IncoherentStokes.which	 = I # IQUV
+Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband = 1
 Observation.rspBoardList                 = [0]
 Observation.rspSlotList                  = [0]
+
+Observation.DataProducts.Output_CoherentStokes.enabled=true
+Observation.DataProducts.Output_CoherentStokes.filenames=[tab1.raw]
+Observation.DataProducts.Output_CoherentStokes.locations=[1*:.]
 
 Observation.DataProducts.Output_IncoherentStokes.enabled=true
 Observation.DataProducts.Output_IncoherentStokes.filenames=[tab0.raw]

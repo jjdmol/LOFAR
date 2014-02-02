@@ -29,6 +29,7 @@
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/SubbandMetaData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -105,7 +106,7 @@ namespace LOFAR
       // Create the inputData object we need shared host/device memory on the
       // supplied devicequeue
       SubbandProcInputData(size_t n_beams, size_t n_stations, 
-                           size_t n_polarizations, size_t n_tabs, 
+                           size_t n_polarizations, size_t n_coherent_tabs, 
                            size_t n_samples, size_t bytes_per_complex_sample,
                            gpu::Context &context,
                            unsigned int hostBufferFlags = 0)
@@ -116,12 +117,32 @@ namespace LOFAR
                        context, hostBufferFlags),
         phase0s(boost::extents[n_stations][n_polarizations],
                        context, hostBufferFlags),
-        tabDelays(boost::extents[n_beams][n_stations][n_tabs],
+        tabDelays(boost::extents[n_beams][n_stations][n_coherent_tabs],
                        context, hostBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations]),
         metaData(n_stations)
+      {
+      }
+
+      // Short-hand constructor pulling all relevant values from a Parset
+      SubbandProcInputData(const Parset &ps,
+                           gpu::Context &context,
+                           unsigned int hostBufferFlags = 0)
+        :
+        delaysAtBegin(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        phase0s(boost::extents[ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        tabDelays(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][ps.settings.beamFormer.maxNrCoherentTABsPerSAP()],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[ps.settings.stations.size()][ps.settings.blockSize][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
+        inputFlags(boost::extents[ps.settings.stations.size()]),
+        metaData(ps.settings.stations.size())
       {
       }
 
