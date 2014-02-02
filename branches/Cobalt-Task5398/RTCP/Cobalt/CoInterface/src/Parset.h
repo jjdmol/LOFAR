@@ -654,7 +654,6 @@ namespace LOFAR
       bool                        delayCompensation() const;
       bool                        correctClocks() const;
       bool                        correctBandPass() const;
-      std::string                 stationName(int index) const;
       std::vector<std::string>    allStationNames() const;
 
       bool outputThisType(OutputType) const;
@@ -668,7 +667,6 @@ namespace LOFAR
       std::string                 antennaSet() const;
 
       unsigned                    nrBeams() const;
-      std::string                 beamTarget(unsigned beam) const;
 
       size_t                      nrSubbands() const;
 

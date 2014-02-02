@@ -1052,17 +1052,6 @@ namespace LOFAR
 
       return list;
     }
-    /*
-       std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
-       {
-       return getDoubleVector(str(format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
-       }
-     */
-
-    string Parset::beamTarget(unsigned beam) const
-    {
-      return settings.SAPs[beam].target;
-    }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
@@ -1097,11 +1086,6 @@ namespace LOFAR
     unsigned Parset::nrBeamFormedBlocks() const
     {
       return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
-    }
-
-    string Parset::stationName(int index) const
-    {
-      return settings.stations[index].name;
     }
 
     ssize_t ObservationSettings::stationIndex(const std::string &name) const
