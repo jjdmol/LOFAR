@@ -258,13 +258,13 @@ namespace LOFAR
           // produced can be visited 1 or 4 times.
 
           // Compute shape of block
-          const size_t nrChannels = file.coherent
-            ?  ps.settings.beamFormer.coherentSettings.nrChannels
-            :  ps.settings.beamFormer.incoherentSettings.nrChannels;
+          const ObservationSettings::BeamFormer::StokesSettings &stokes =
+            file.coherent
+            ? ps.settings.beamFormer.coherentSettings
+            : ps.settings.beamFormer.incoherentSettings;
 
-          const size_t nrSamples = file.coherent
-            ?  ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize)
-            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); 
+          const size_t nrChannels = stokes.nrChannels;
+          const size_t nrSamples =  stokes.nrSamples(ps.settings.blockSize);
 
           // Our data has the shape
           //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
@@ -281,7 +281,6 @@ namespace LOFAR
           subband->id.fileIdx = file.streamNr;
           subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
           subband->id.block   = id.block;
-
 
           // Create view of subarray 
           MultiDimArray<float, 2> srcData(
