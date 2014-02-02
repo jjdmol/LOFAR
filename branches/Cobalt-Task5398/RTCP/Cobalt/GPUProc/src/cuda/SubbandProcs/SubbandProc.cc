@@ -97,15 +97,15 @@ namespace LOFAR
       delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
       phase0s[station][1]             = ps.settings.stations[station].phase0.y;
 
-
       if (ps.settings.beamFormer.enabled)
       {
+        // we already compensated for the delay for the first beam
+        double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                   metaData.stationBeam.delayAtBegin) * 0.5;
+
+        // Note: We only get delays for the coherent TABs
         for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
         {
-          // we already compensated for the delay for the first beam
-          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
-                                     metaData.stationBeam.delayAtBegin) * 0.5;
-
           // subtract the delay that was already compensated for
           tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -

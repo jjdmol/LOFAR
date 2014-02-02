@@ -85,7 +85,8 @@ namespace LOFAR
           if (parset.settings.beamFormer.enabled) {
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
 
-            SAPs[sap].TABs.resize(bfSap.TABs.size());
+            // Reserve room for coherent TABs only
+            SAPs[sap].TABs.resize(bfSap.nrCoherentTAB());
           }
         }
     }
@@ -226,11 +227,19 @@ namespace LOFAR
           if (parset.settings.beamFormer.enabled) {
             // Convert the TAB directions using the convert engine
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
-            for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
-              const MVDirection dir(bfSap.TABs[tab].direction.angle1,
-                                    bfSap.TABs[tab].direction.angle2);
 
-              result.SAPs[sap].TABs[tab] = convert(converter, dir);
+            size_t resultTabIdx = 0;
+
+            for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
+              const struct ObservationSettings::BeamFormer::TAB &bfTab = bfSap.TABs[tab];
+
+              if (!bfTab.coherent)
+                continue;
+
+              const MVDirection dir(bfTab.direction.angle1,
+                                    bfTab.direction.angle2);
+
+              result.SAPs[sap].TABs[resultTabIdx++] = convert(converter, dir);
             }
           }
         }
@@ -357,9 +366,10 @@ namespace LOFAR
       // correction is done by shifting the block to read by a whole
       // number of samples. Then, in the GPU, the remainder of the delay
       // will be corrected for using a phase shift.
-      vector<ssize_t> coarseDelaysSamples(parset.settings.SAPs.size()); // [sap], in samples
-      vector<double>  coarseDelaysSeconds(parset.settings.SAPs.size()); // [sap], in seconds
-      for (size_t sap = 0; sap < parset.nrBeams(); ++sap) {
+      size_t nrSAPs = parset.settings.SAPs.size();
+      vector<ssize_t> coarseDelaysSamples(nrSAPs); // [sap], in samples
+      vector<double>  coarseDelaysSeconds(nrSAPs); // [sap], in seconds
+      for (size_t sap = 0; sap < nrSAPs; ++sap) {
         double delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay();
         double delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay();
 
