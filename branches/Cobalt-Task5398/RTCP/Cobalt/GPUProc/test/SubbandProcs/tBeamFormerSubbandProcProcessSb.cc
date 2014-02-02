@@ -179,21 +179,21 @@ int main() {
 
   BeamFormedData out(
       /* coherent dimensions */
-      maxNrTABsPerSAP,
+      0,
+      0,
+      0,
+      0,
+
+      /* incoherent dimensions */
+      1,
       nrStokes,
       nrChannels,
       nrSamples,
-
-      /* incoherent dimensions */
-      0,
-      0,
-      0,
-      0,
       
       ctx);
 
-  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
-    out.coherentData.get<float>()[i] = 42.0f;
+  for (size_t i = 0; i < out.incoherentData.num_elements(); i++)
+    out.incoherentData.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -224,9 +224,9 @@ int main() {
   for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
       for (size_t c = 0; c < nrChannels; c++)
-        ASSERTSTR(fpEquals(out.coherentData[0][s][t][c], outVal, 1e-4f), 
-                  "out.coherentData[" << s << "][" << t << "][" << c << "] = " << 
-                  setprecision(12) << out.coherentData[0][s][t][c] << 
+        ASSERTSTR(fpEquals(out.incoherentData[0][s][t][c], outVal, 1e-4f), 
+                  "out.incoherentData[" << s << "][" << t << "][" << c << "] = " << 
+                  setprecision(12) << out.incoherentData[0][s][t][c] << 
                   "; outVal = " << outVal);
   
   return 0;
