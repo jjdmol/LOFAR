@@ -82,14 +82,14 @@ using boost::format;
 /* Tuning parameters */
 
 // Deadline for the FinalMetaDataGatherer, in seconds
-const time_t finalMetaDataTimeout = 5 * 60;
+const time_t finalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
 const time_t outputProcTimeout = 2 * 60;
 
 // Amount of seconds to stay alive after Observation.stopTime
 // has passed.
-const time_t rtcpTimeout = 10 * 60;
+const time_t rtcpTimeout = 5 * 60;
 
 static void usage(const char *argv0)
 {
