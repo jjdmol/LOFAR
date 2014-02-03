@@ -124,7 +124,8 @@ namespace LOFAR
       Counters counters;
 
     private:
-
+      void initCoherentMembers(gpu::Context &context,
+        BeamFormerFactories &factories);
       void initIncoherentMembers(gpu::Context &context,
        BeamFormerFactories &factories);
       // The previously processed SAP/block, or -1 if nothing has been
@@ -184,38 +185,38 @@ namespace LOFAR
       //  Objects needed to produce Coherent stokes output
       // beam former
 
-      const bool outputComplexVoltages;
-      const bool coherentStokesPPF;
+      bool outputComplexVoltages;
+      bool coherentStokesPPF;
 
-      gpu::DeviceMemory devBeamFormerDelays;
-      BeamFormerKernel::Buffers beamFormerBuffers;
+      std::auto_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+      std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
       // Transpose 
-      CoherentStokesTransposeKernel::Buffers coherentTransposeBuffers;
+      std::auto_ptr<CoherentStokesTransposeKernel::Buffers> coherentTransposeBuffers;
       std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
 
       // inverse (4k points) FFT
-      FFT_Kernel inverseFFT;
+      std::auto_ptr<FFT_Kernel> inverseFFT;
 
       // inverse FFT-shift
-      FFTShiftKernel::Buffers inverseFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel::Buffers> inverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      gpu::DeviceMemory devFilterWeights;
-      gpu::DeviceMemory devFilterHistoryData;
-      FIR_FilterKernel::Buffers firFilterBuffers;
+      std::auto_ptr<gpu::DeviceMemory> devFilterWeights;
+      std::auto_ptr<gpu::DeviceMemory> devFilterHistoryData;
+      std::auto_ptr<FIR_FilterKernel::Buffers> firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
-      FFT_Kernel finalFFT;
+      std::auto_ptr<FFT_Kernel>finalFFT ;
 
       // Coherent Stokes
-      CoherentStokesKernel::Buffers coherentStokesBuffers;
+      std::auto_ptr<CoherentStokesKernel::Buffers> coherentStokesBuffers;
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
+
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
-
       bool incoherentStokesPPF;
 
       // Transpose 
