@@ -42,9 +42,6 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        // unsigned nrBitsPerSample;
-        // unsigned nrChannels;
-        // unsigned nrBytesPerComplexSample;
       };
 
       enum BufferType
@@ -53,19 +50,25 @@ namespace LOFAR
         OUTPUT_DATA
       };
 
+      // Construct a FFTShift kernel.
+      // \pre The number of samples per channel must be even.
+      // \pre The product of the number of stations, the number of
+      // polarizations, the number of channels per subband, and the number of
+      // samples per channel must be divisible by the maximum number of threads
+      // per block (typically 1024).
       FFTShiftKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+                     const gpu::Module &module,
+                     const Buffers &buffers,
+                     const Parameters &param);
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
 
     template<> size_t
-      KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
+    KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
-      KernelFactory<FFTShiftKernel>::compileDefinitions() const;
+    KernelFactory<FFTShiftKernel>::compileDefinitions() const;
   }
 
 }

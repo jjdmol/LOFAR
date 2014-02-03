@@ -42,7 +42,7 @@ do
   echo "Observation.DataProducts.Output_Beamformed.locations=[500*:.]" >> $PARSET
 
   # Run the observation
-  timeout 90s runObservation.sh -F -l 1 $PARSET
+  timeout 90s runObservation.sh -C -F -l 1 $PARSET
   OBSRESULT=$?
 
   if [ $OBSRESULT -gt 0 ]; then

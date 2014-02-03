@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\OutputProc\src\MSWriter.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\OutputProc\src\GPUProcIO.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\OutputProc\src\PropertyInterface.conf" />
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\OutputProc\src\TBB_Writer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\OutputProc\src\GPUProcIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

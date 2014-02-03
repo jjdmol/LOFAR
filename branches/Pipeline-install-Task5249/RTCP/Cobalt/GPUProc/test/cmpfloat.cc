@@ -198,7 +198,7 @@ bool compareValues(complex<T> v1, complex<T> v2, double epsilon, size_t pos,
       }
       if (imagFactor > maxFactors.imag()) {
         maxFactors.imag(imagFactor);
-      } else if (realFactor < minFactors.imag()) {
+      } else if (imagFactor < minFactors.imag()) {
         minFactors.imag(imagFactor);
       }
     }
@@ -248,8 +248,8 @@ void printCommonFactorMessage(const complex<T>& maxFactors,
          << (T)1.0 / avgImagFac << ')' << endl;
   }
   if (realEq && imagEq && fpEquals(avgRealFac, -avgImagFac, facEps))
-      cerr << "Common real and imag factors appear to (also) differ roughly by "
-           << "a factor -1.0 (likely conjugation error)" << endl;
+    cerr << "Common real and imag factors appear to (also) differ roughly by "
+         << "a factor -1.0 (likely conjugation error)" << endl;
   if (!(realEq && imagEq))
     cerr << "No clear common factor among all errors: maxFactors="
          << maxFactors << "; minFactors=" << minFactors << endl;

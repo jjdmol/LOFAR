@@ -54,6 +54,17 @@ Exception::TerminateHandler t(Exception::terminate);
 
 char stdoutbuf[1024], stderrbuf[1024];
 
+static void usage(const char *argv0)
+{
+  cerr << "OutputProc: Data writer for the Real-Time Central Processing of the" << endl;
+  cerr << "LOFAR radio telescope." << endl;
+  cerr << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
+  cerr << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
+  cerr << "for the Pulsar mode." << endl; 
+  cerr << endl;
+  cerr << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
+}
+
 int main(int argc, char *argv[])
 {
   INIT_LOGGER("outputProc");
@@ -62,9 +73,12 @@ int main(int argc, char *argv[])
 
   CasaLogSink::attach();
 
-  if (argc < 3)
-    throw StorageException(str(boost::format("usage: %s obsid rank") % argv[0]), THROW_ARGS);
-
+  if (argc != 3)
+  {
+    usage(argv[0]);
+    return 1;
+  }
+   
   setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
   setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 

@@ -93,11 +93,14 @@ namespace LOFAR
     static Mutex HDF5Mutex;
 
     template <typename T,unsigned DIM>
-    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename, const Parset &parset, unsigned fileno)
+    MSWriterDAL<T,DIM>::MSWriterDAL (const string &filename,
+     const Parset &parset,
+     unsigned fileno)
       :
       MSWriterFile(forceextension(string(filename),".raw")),
       itsParset(parset),
-      itsNextSeqNr(0)
+      itsNextSeqNr(0),
+      itsFileNr(fileno)
     {
       itsNrExpectedBlocks = itsParset.nrBeamFormedBlocks();
 
@@ -121,21 +124,23 @@ namespace LOFAR
         f.coherent ? parset.settings.beamFormer.coherentSettings
                    : parset.settings.beamFormer.incoherentSettings;
 
-      itsNrChannels = stokesSet.nrChannels * parset.nrSubbands(); // <-- FIXME in case of multiple parts/file
-      itsNrSamples = parset.settings.nrSamplesPerSubband() / stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+      //*******************************
+
+      // all subbands in this file
+      // We could have multiple saps with each a specific number of subbands
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
+
+      unsigned nrSubbands = subbandIndices.size();
+
+      itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
+      itsNrSamples = parset.settings.nrSamplesPerSubband() /
+                     stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
+
       itsBlockSize = itsNrSamples * itsNrChannels;
 
       unsigned nrBlocks = parset.nrBeamFormedBlocks();
-
-      // all subbands in this file
-      vector<unsigned> subbandIndices;
       
-      // for now, all subbands are in one file
-      subbandIndices.resize(parset.nrSubbands());
-      for (size_t sb = 0; sb < parset.nrSubbands(); ++sb)
-        subbandIndices[sb] = sb;
-
-      unsigned nrSubbands = subbandIndices.size();
+      //*******************************
 
       vector<string> stokesVars;
       vector<string> stokesVars_LTA;
@@ -327,13 +332,13 @@ namespace LOFAR
 
       BeamCoordinates pbeamDirs = parset.TABs(sapNr);
       BeamCoord3D pbeamDir = pbeamDirs[beamNr];
-      beam.pointRA().value = (beamDir[0] + pbeamDir[0]) * 180.0 / M_PI;
+      beam.pointRA().value = pbeamDir[0] * 180.0 / M_PI;
       beam.pointRAUnit().value = "deg";
-      beam.pointDEC().value = (beamDir[1] + pbeamDir[1]) * 180.0 / M_PI;
+      beam.pointDEC().value = pbeamDir[1] * 180.0 / M_PI;
       beam.pointDECUnit().value = "deg";
-      beam.pointOffsetRA().value = pbeamDir[0] * 180.0 / M_PI;
+      beam.pointOffsetRA().value = (pbeamDir[0] - beamDir[0]) * 180.0 / M_PI;
       beam.pointOffsetRAUnit().value = "deg";
-      beam.pointOffsetDEC().value = pbeamDir[1] * 180.0 / M_PI;
+      beam.pointOffsetDEC().value = (pbeamDir[1] - beamDir[1]) * 180.0 / M_PI;
       beam.pointOffsetDECUnit().value = "deg";
 
 
@@ -575,10 +580,14 @@ namespace LOFAR
 
       ASSERT( data );
       ASSERT( sdata );
-      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize, "A block is at least " << itsBlockSize << " elements, but provided sdata only has " << sdata->samples.num_elements() << " elements" );
+      
+      ASSERTSTR( sdata->samples.num_elements() >= itsBlockSize,
+             "A block is at least " << itsBlockSize <<
+             " elements, but provided sdata only has " << 
+             sdata->samples.num_elements() << " elements" );
 
       unsigned seqNr = data->sequenceNumber();
-      unsigned bytesPerBlock = itsBlockSize * sizeof(T);
+      unsigned bytesPerBlock = itsBlockSize * sizeof(T);  
 
       // fill in zeroes for lost blocks
       if (itsNextSeqNr < seqNr)

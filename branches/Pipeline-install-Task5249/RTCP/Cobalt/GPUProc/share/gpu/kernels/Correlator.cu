@@ -281,10 +281,10 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
     if (compute_correlations) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
-        float4 sample_0 = samples[0][time][y];
-        float4 sample_A = samples[0][time][x];
-        float4 sample_B = samples[1][time][x];
-        float4 sample_1 = samples[1][time][y];
+        float4 sample_0 = samples[0][time][x];
+        float4 sample_A = samples[0][time][y];
+        float4 sample_B = samples[1][time][y];
+        float4 sample_1 = samples[1][time][x];
 
         /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
         /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
@@ -430,12 +430,12 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
     if (compute_correlations) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
-        fcomplex2 sample_0 = samples[0][time][y];
-        fcomplex2 sample_A = samples[0][time][x];
-        fcomplex2 sample_B = samples[1][time][x];
-        fcomplex2 sample_C = samples[2][time][x];
-        fcomplex2 sample_1 = samples[1][time][y];
-        fcomplex2 sample_2 = samples[2][time][y];
+        fcomplex2 sample_0 = samples[0][time][x];
+        fcomplex2 sample_A = samples[0][time][y];
+        fcomplex2 sample_B = samples[1][time][y];
+        fcomplex2 sample_C = samples[2][time][y];
+        fcomplex2 sample_1 = samples[1][time][x];
+        fcomplex2 sample_2 = samples[2][time][x];
 
         /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
         /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */
@@ -643,8 +643,8 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   int y = block - x * (x + 1) / 2;
 
   // NOTE: stat_0 >= stat_A holds
-  int stat_0 = 4 * y;
-  int stat_A = 4 * x;
+  int stat_0 = 4 * x;
+  int stat_A = 4 * y;
 
   bool compute_correlations = stat_0 < NR_STATIONS;
 
@@ -697,14 +697,14 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
     if (compute_correlations) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
-        fcomplex2 sample_0 = samples[0][time][y];
-        fcomplex2 sample_A = samples[0][time][x];
-        fcomplex2 sample_B = samples[1][time][x];
-        fcomplex2 sample_C = samples[2][time][x];
-        fcomplex2 sample_D = samples[3][time][x];
-        fcomplex2 sample_1 = samples[1][time][y];
-        fcomplex2 sample_2 = samples[2][time][y];
-        fcomplex2 sample_3 = samples[3][time][y];
+        fcomplex2 sample_0 = samples[0][time][x];
+        fcomplex2 sample_A = samples[0][time][y];
+        fcomplex2 sample_B = samples[1][time][y];
+        fcomplex2 sample_C = samples[2][time][y];
+        fcomplex2 sample_D = samples[3][time][y];
+        fcomplex2 sample_1 = samples[1][time][x];
+        fcomplex2 sample_2 = samples[2][time][x];
+        fcomplex2 sample_3 = samples[3][time][x];
 
         /* vis_0A_r += sample_0.xxzz * sample_A.xzxz; */
         /* vis_0A_i += sample_0.yyww * sample_A.xzxz; */

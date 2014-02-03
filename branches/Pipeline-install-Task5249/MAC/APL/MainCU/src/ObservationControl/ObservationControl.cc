@@ -635,7 +635,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event, 
 													  GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
+	LOG_INFO_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -836,7 +836,7 @@ void  ObservationControl::doHeartBeatTask()
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
 		if (itsState >= CTState::QUIT) {
-			LOG_DEBUG_STR("Time for me to shutdown");
+			LOG_INFO_STR("Time for me to shutdown");
 			TRAN(ObservationControl::finishing_state);
 			return;
 		}
@@ -980,14 +980,20 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			string  command = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			if (command == "ABORT") {
 				LOG_INFO("Received manual request for abort, accepting it.");
-				if (itsState <= CTState::RESUME) {
-					itsQuitReason = CT_RESULT_MANUAL_ABORT;
-				}
+				itsQuitReason = CT_RESULT_MANUAL_ABORT;
 				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
 				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
 			}
+			else if (command == "FINISH") {
+				LOG_INFO("Received manual request for finish, accepting it.");
+				itsQuitReason = CT_RESULT_NO_ERROR;
+				itsTimerPort->cancelTimer(itsStopTimer);	// cancel old timer
+				itsStopTimer = itsTimerPort->setTimer(0.0);	// expire immediately
+			}
+			else {
+				LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
+			}
 			return;
-			LOG_INFO_STR ("Received unknown command " << command << ". Ignoring it.");
 		}
 
 		// When datapoint does not concern the observation itself, where are done
