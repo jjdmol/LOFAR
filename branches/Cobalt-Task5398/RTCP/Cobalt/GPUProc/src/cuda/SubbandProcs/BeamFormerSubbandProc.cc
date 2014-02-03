@@ -394,6 +394,8 @@ namespace LOFAR
       unsigned nrCoherent   = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
       unsigned nrIncoherent = ps.settings.beamFormer.SAPs[SAP].nrIncoherent;
 
+      //****************************************
+      // Send input to GPU
       queue.writeBuffer(devInput.inputSamples, input.inputSamples,
                         counters.samples, true);
 
@@ -461,6 +463,9 @@ namespace LOFAR
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
         }
 
+        // Reshape output to only read nrCoherent TABs
+        output.coherentData.resizeOneDimensionInplace(0, nrCoherent);
+
         // Output in devD, by design
         queue.readBuffer(
           output.coherentData, devD, counters.visibilities, false);
@@ -490,6 +495,9 @@ namespace LOFAR
 
         incoherentStokesKernel->enqueue(
           input.blockID, counters.incoherentStokes);
+
+        // Reshape output to only read nrIncoherent TABs
+        output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
 
         // Output in devE, by design
         queue.readBuffer(
