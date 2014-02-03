@@ -32,25 +32,14 @@
 #error "need more passes to beam for this number of stations"
 #endif
 
-#ifdef FLYS_EYE
-# if !(NR_STATIONS == NR_TABS)
-# error Precondition violated: NR_STATIONS == NR_TABS
-# endif
-#endif
-
 //# Typedefs used to map input data on arrays
 typedef  double (*DelaysType)[NR_SAPS][NR_STATIONS][NR_TABS];
-#ifdef FLYS_EYE
-typedef  float2 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_POLARIZATIONS];
-#else
 typedef  float4 (*BandPassCorrectedType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
-#endif
 typedef  float2 (*ComplexVoltagesType)[NR_CHANNELS][NR_SAMPLES_PER_CHANNEL][NR_TABS][NR_POLARIZATIONS];
 
 /*!
  * The beamformer kernel performs a complex weighted multiply-add of each sample
- * of the provided input data, except when fly's eye mode is enabled (FLYS_EYE
- * is defined). Then data is only transposed, nothing more.
+ * of the provided input data.
  *
  * \param[out] complexVoltagesPtr      4D output array of beams. For each channel a number of Tied Array Beams time serires is created for two polarizations
  * \param[in]  samplesPtr              3D input array of samples. A time series for each station and channel pair. Each sample contains the 2 polarizations X, Y, each of complex float type.
@@ -82,20 +71,11 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 {
   ComplexVoltagesType complexVoltages = (ComplexVoltagesType) complexVoltagesPtr;
   BandPassCorrectedType samples = (BandPassCorrectedType) samplesPtr;
+  DelaysType delays = (DelaysType) delaysPtr;
 
   unsigned pol = threadIdx.x;
   unsigned tab = threadIdx.y;
   unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks only, not extra threads per block
-
-#ifdef FLYS_EYE
-
-  for (unsigned t = 0; t < NR_SAMPLES_PER_CHANNEL; t++) {
-    (*complexVoltages)[channel][t][tab][pol] = (*samples)[tab][channel][t][pol];
-  }
-
-#else
-
-  DelaysType delays = (DelaysType) delaysPtr;
 
   // This union is in shared memory because it is used by all threads in the block
   __shared__ union { // Union: Maps two variables to the same adress space
@@ -662,6 +642,5 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
       __syncthreads();
     }
   }
-#endif /* FLYS_EYE */
 }
 
