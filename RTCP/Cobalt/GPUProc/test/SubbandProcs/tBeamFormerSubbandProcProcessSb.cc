@@ -133,23 +133,23 @@ int main() {
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
   // Initialize synthetic input to input signal
-  for (size_t st = 0; st < nrStations; st++) {
-    for (size_t i = 0; i < nrSamplesPerSubband; i++) {
-      size_t pol = i % nrPolarisations;
-      switch(nrBitsPerSample) {
-      case 8:
-        reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
-          inputSignal<i8complex>(i);
-        break;
-      case 16:
-        reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) = 
-          inputSignal<i16complex>(i);
-        break;
-      default:
-        break;
+  for (size_t st = 0; st < nrStations; st++)
+    for (size_t i = 0; i < nrSamplesPerSubband; i++)
+      for (size_t pol = 0; pol < nrPolarisations; pol++)
+      {
+        switch(nrBitsPerSample) {
+        case 8:
+          reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
+            inputSignal<i8complex>(i);
+          break;
+        case 16:
+          reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) = 
+            inputSignal<i16complex>(i);
+          break;
+        default:
+          break;
+        }
       }
-    }
-  }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
   // do the 1st block of whatever.
@@ -194,18 +194,18 @@ int main() {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: nrStations * (amp * scaleFactor * fft1Size * fft2Size) ** 2
+  // should be: (nrStation * amp * scaleFactor * fft1Size * fft2Size)^2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
-  // Hence, each output sample should be (nrStations from parset): 
-  // - for 16-bit input: 5 * (32767 * 1 * 64 * 64) ** 2 = 90066495073157120
-  // - for 8-bit input: 5 * (127 * 16 * 64 * 64) ** 2 = 346367637585920
+  // Hence, each output sample should be: 
+  // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
+  // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
-  float outVal = nrStations * 
-    amplitude * scaleFactor * fft1Size * fft2Size *
-    amplitude * scaleFactor * fft1Size * fft2Size; 
+  float outVal = 
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size *
+    nrStations * amplitude * scaleFactor * fft1Size * fft2Size; 
   cout << "outVal = " << outVal << endl;
 
   for (size_t s = 0; s < nrStokes; s++)

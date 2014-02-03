@@ -7,22 +7,15 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tSubbandProc tSubbandProc.cc)
 endif()
 
-lofar_add_test(tBeamFormerSubbandProcProcessSb 
-  tBeamFormerSubbandProcProcessSb.cc)
-lofar_add_test(tCorrelatorSubbandProcProcessSb
-  tCorrelatorSubbandProcProcessSb.cc)
-lofar_add_test(tCoherentStokesBeamFormerSubbandProcProcessSb
-  tCoherentStokesBeamFormerSubbandProcProcessSb.cc)
-lofar_add_test(tFlysEyeBeamFormerSubbandProcProcessSb
-  tFlysEyeBeamFormerSubbandProcProcessSb.cc)
-
+lofar_add_test(tBeamFormerSubbandProcProcessSb tBeamFormerSubbandProcProcessSb.cc)
+lofar_add_test(tCorrelatorSubbandProcProcessSb tCorrelatorSubbandProcProcessSb.cc)
+lofar_add_test(tCoherentStokesBeamFormerSubbandProcProcessSb tCoherentStokesBeamFormerSubbandProcProcessSb.cc)
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
 set_tests_properties(
   tBeamFormerSubbandProcProcessSb
   tCorrelatorSubbandProcProcessSb
   tCoherentStokesBeamFormerSubbandProcProcessSb
-  tFlysEyeBeamFormerSubbandProcProcessSb
   PROPERTIES ENVIRONMENT "LOFARROOT=${PACKAGE_SOURCE_DIR}"
 )
 
