@@ -221,6 +221,18 @@ OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
 
+FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
+
+if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
+then
+  # There is a feedback file! Consider the observation as succesful,
+  # to prevent crashes in the tear down from ruining an otherwise
+  # perfectly good observation
+  echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
+
+  OBSRESULT=0
+fi
+
 # ******************************
 # Post-process the observation
 # ******************************
@@ -236,7 +248,7 @@ then
 
     # Copy LTA feedback file to ccu001
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
-    FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
+
     echo "Copying feedback to $FEEDBACK_DEST"
     timeout $KILLOPT 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
     FEEDBACK_RESULT=$?
