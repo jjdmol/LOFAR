@@ -561,6 +561,9 @@ namespace LOFAR
               "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
         }
 
+        settings.beamFormer.doFlysEye = 
+          getBool("OLAP.PencilInfo.flysEye", false);
+
         unsigned nrDelayCompCh;
         if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
           nrDelayCompCh = calcNrDelayCompensationChannels(settings);
@@ -648,13 +651,24 @@ namespace LOFAR
 
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
+          // For Fly's Eye mode we have exactly one TAB per station.
+          if (settings.beamFormer.doFlysEye) {
+            nrTABs = nrStations;
+          }
+
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            const string prefix =
+              settings.beamFormer.doFlysEye ?
+              str(format("Observation.Beam[%u]") % i) :
+              str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
 
+            tab.directionDelta.type   = getString(prefix + ".directionType", "J2000");
+            tab.directionDelta.angle1 = getDouble(prefix + ".angle1", 0.0);
+            tab.directionDelta.angle2 = getDouble(prefix + ".angle2", 0.0);
             tab.direction.type    = getString(prefix + ".directionType", "J2000");
             tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
                                                          prefix + ".angle1"), 0.0);
@@ -665,13 +679,14 @@ namespace LOFAR
               tab.direction.angle1 += settings.SAPs[i].direction.angle1;
             if (!isDefined(prefix + ".absoluteAngle2"))
               tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+            // The following two keys will not be present in fly's eye mode.
+            tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+            tab.coherent              = getBool(prefix + ".coherent", true);
 
-            tab.coherent          = getBool(prefix + ".coherent", true);
             if (tab.coherent)
               sap.nrCoherent++;
             else
               sap.nrIncoherent++;
-            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
                tab.coherent ? settings.beamFormer.coherentSettings
