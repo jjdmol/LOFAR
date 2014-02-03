@@ -23,6 +23,7 @@ lofar_add_test(tcmpfloat DEPENDS cmpfloat)
 lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
 
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
+lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2Sap DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp cmpfloat)
 lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
@@ -33,6 +34,7 @@ set_tests_properties(
   tCorrelate_3sec_1st_5sb
   tCorrelate_3sec_2st_5sb
   tBeamform_1sec_1st_5sb_noflagging
+  tBeamform_1sec_1st_5sb_noflagging_2Sap
   tBeamform_incoherent_2sec_1st_5sb_noflagging
   #tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab # Needs to be moved to a subsystem
   tstartBGL
