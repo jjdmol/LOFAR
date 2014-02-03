@@ -28,7 +28,7 @@ then
     STORAGE_HOME=/data/home/lofartest
     OTDB_HOST=sasdbtest
 
-    IONPROC_PARSET="/bghome0/lofarsys/parsets/T$OBSID.parset"
+    IONPROC_PARSET="/lofar/lofarsys/parsets/T$OBSID.parset"
     STORAGE_PARSET="/globalhome/lofartest/log/T$OBSID.parset"
     LOGPARAMS="-s `CEPlogProcessorSettings | awk '/test/ { print $2; }'`"
   else
@@ -36,7 +36,7 @@ then
     STORAGE_HOME=/data/home/lofarsys
     OTDB_HOST=sasdb
 
-    IONPROC_PARSET="/bghome0/lofarsys/parsets/L$OBSID.parset"
+    IONPROC_PARSET="/lofar/lofarsys/parsets/L$OBSID.parset"
     STORAGE_PARSET="/globalhome/lofarsystem/log/L$OBSID.parset"
     LOGPARAMS="-s `CEPlogProcessorSettings | awk '/production/ { print $2; }'`"
   fi
