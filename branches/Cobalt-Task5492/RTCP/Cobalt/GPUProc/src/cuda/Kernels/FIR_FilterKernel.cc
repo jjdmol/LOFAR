@@ -48,7 +48,8 @@ namespace LOFAR
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrSTABs(nrStations), // default to filter station data
       nrSubbands(1),
-      scaleFactor(1.0f)
+      scaleFactor(1.0f),
+      inputIsStationData(true)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);
@@ -171,7 +172,10 @@ namespace LOFAR
         return
           (size_t) itsParameters.nrSubbands *
             itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * itsParameters.nrBytesPerComplexSample;
+            itsParameters.nrPolarizations *
+            (itsParameters.inputIsStationData
+             ? itsParameters.nrBytesPerComplexSample
+             : sizeof(float));
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -191,6 +195,8 @@ namespace LOFAR
         lexical_cast<string>(itsParameters.nrSTABs);
       defs["NR_SUBBANDS"] = 
         lexical_cast<string>(itsParameters.nrSubbands);
+      if (itsParameters.inputIsStationData)
+        defs["INPUT_IS_STATIONDATA"] = "1";
 
       return defs;
     }
