@@ -7,6 +7,7 @@ from search_lib import *
 import os
 import numpy as np
 import logging
+from time import sleep
 
 test_version = '1113'
 
@@ -22,21 +23,26 @@ class cRCUdata:
     def __init__(self, n_rcus, minvalue=1):
         self.n_rcus = n_rcus
         self.frames = 0
+        self.clock = 200.0
         self.minvalue = minvalue
         self.ssData = np.ones((n_rcus, 1, 512), np.float64)
         self.testSignal_X = -1.0
         self.testSubband_X = 0
         self.testSignal_Y = -1.0
         self.testSubband_Y = 0
-    
+        self.mean_spectra = np.zeros((512), float)
+    # TODO:
+    # lees als record time = 10seconden lees dan iedere keer 1a2 seconden en append aan data matrix. 
     def record(self, rec_time=2, read=True):
         removeAllDataFiles()
         logger.debug("Wait %d seconds while recording data" %(rec_time))
         rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(rec_time, dataDir(), self.n_rcus-1), wait=0.0)
         if read:
             self.readFiles()
+            self.mean_spectra = np.median(np.mean(self.ssData, axis=1), axis=0)
     
     def readFile(self, full_filename):
+        sleep(0.02)
         data = np.fromfile(full_filename, dtype=np.float64)
         n_samples = len(data)
         if (n_samples % 512) > 0:
@@ -62,6 +68,9 @@ class cRCUdata:
                 continue
             self.ssData[:,:,sb] = np.ma.masked
         return
+        
+    def getMeanSpectra(self):
+        return (self.mean_spectra)
     
     def getSubbands(self, rcu):
         return (self.ssData[int(rcu),:,:].mean(axis=0))
