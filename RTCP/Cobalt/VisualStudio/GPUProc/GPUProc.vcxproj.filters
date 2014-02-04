@@ -56,7 +56,7 @@
       <UniqueIdentifier>{d12b2f89-11b7-4abe-b8d3-b244619f1bc9}</UniqueIdentifier>
     </Filter>
     <Filter Include="test\SubbandProcs">
-      <UniqueIdentifier>{1c9b6305-4c92-4639-bd70-5f8309f67daf}</UniqueIdentifier>
+      <UniqueIdentifier>{0ddb3aaa-b339-4fc9-933d-51ab12f2f419}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -404,6 +404,9 @@
     </ClInclude>
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\Kernels\FFTShiftKernel.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
+      <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.cc">
@@ -752,8 +755,8 @@
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc">
       <Filter>test\SubbandProcs</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc">
-      <Filter>test\SubbandProcs</Filter>
+    <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
+      <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1058,15 +1061,6 @@
       <Filter>test\cuda</Filter>
     </None>
     <None Include="..\..\GPUProc\share\gpu\kernels\FFTShift.cu" />
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset">
-      <Filter>test</Filter>
-    </None>
     <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset">
       <Filter>test\SubbandProcs</Filter>
     </None>
@@ -1085,11 +1079,8 @@
     <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
       <Filter>test\SubbandProcs</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh">
-      <Filter>test\SubbandProcs</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset">
-      <Filter>test\SubbandProcs</Filter>
+    <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
+      <Filter>share</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -4,6 +4,7 @@ Observation.sampleClock			 = 200
 Observation.nrBitsPerSample  = 16
 Cobalt.blockSize             = 65536
 Cobalt.BeamFormer.nrDelayCompensationChannels = 64
+Cobalt.BeamFormer.nrHighResolutionChannels = 4096
 
 Observation.VirtualInstrument.stationList = [5*CS002]
 Observation.antennaSet = HBA_ZERO
@@ -16,11 +17,12 @@ Observation.Beam[0].TiedArrayBeam[0].coherent = T
 Observation.Beam[0].TiedArrayBeam[1].absoluteAngle1 = 0
 Observation.Beam[0].TiedArrayBeam[1].absoluteAngle2 = 0
 Observation.Beam[0].TiedArrayBeam[1].coherent = T
+Observation.Beam[0].nrTiedArrayBeams = 2
 
-OLAP.CNProc_CoherentStokes.which	 = I # IQUV
+OLAP.CNProc_CoherentStokes.which	 = I # IQUV / XXYY
 OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.channelsPerSubband = 1
-OLAP.CNProc_IncoherentStokes.which	 = I # IQUV
+OLAP.CNProc_CoherentStokes.channelsPerSubband = 1  # if > 1 the coherentStokesPPF == true
+OLAP.CNProc_IncoherentStokes.which	 = I # IQUV 
 OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
 OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
 Observation.rspBoardList                 = [0]
@@ -29,6 +31,10 @@ Observation.rspSlotList                  = [0]
 Observation.DataProducts.Output_CoherentStokes.enabled=true
 Observation.DataProducts.Output_CoherentStokes.filenames=[5*tab0.raw]
 Observation.DataProducts.Output_CoherentStokes.locations=[5*:.]
+
+Observation.DataProducts.Output_IncoherentStokes.enabled=true
+Observation.DataProducts.Output_IncoherentStokes.filenames=[BEAM0.raw]
+Observation.DataProducts.Output_IncoherentStokes.locations=[:.]
 
 Cobalt.Kernels.BeamFormerKernel.dumpOutput = true
 Cobalt.Kernels.BandPassCorrectionKernel.dumpOutput = true
