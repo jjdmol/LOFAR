@@ -20,4 +20,5 @@ lofar_add_library(cointerface
   TABTranspose.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
+lofar_add_bin_program(write_pvss_dp write_pvss_dp.cc)
 
