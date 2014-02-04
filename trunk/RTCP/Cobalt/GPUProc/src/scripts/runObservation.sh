@@ -203,7 +203,7 @@ done
 mpirun.sh -x LOFARROOT="$LOFARROOT" \
           -H "$HOSTS" \
           $MPIRUN_PARAMS \
-          $CHECKTOOL \
+          $CHECK_TOOL \
           `which rtcp` $RTCP_PARAMS "$PARSET" &
 PID=$!
 
