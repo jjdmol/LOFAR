@@ -113,6 +113,10 @@ namespace LOFAR
 
         params.nrSubbands = nrSubbandsPerSubbandProc;
 
+        // Normalize flux output for number of channels.
+        // See the correlator variant for more detail.
+        params.scaleFactor = params.nrChannelsPerSubband;
+
         return params;
       }
 
@@ -160,6 +164,10 @@ namespace LOFAR
           ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
 
         params.nrSubbands = nrSubbandsPerSubbandProc;
+
+        // Normalize flux output for number of channels.
+        // See the correlator variant for more detail.
+        params.scaleFactor = params.nrChannelsPerSubband;
 
         return params;
       }
