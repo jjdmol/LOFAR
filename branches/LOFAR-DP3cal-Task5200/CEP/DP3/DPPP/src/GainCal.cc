@@ -37,6 +37,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/OpenMP.h>
 
+#include <fstream>
+#include <ctime>
+
 #include <casa/Arrays/ArrayMath.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasConvert.h>
@@ -138,6 +141,11 @@ namespace LOFAR {
       const size_t nDr = itsPatchList.size();
       const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
+
+      if (nCh>1) {
+        THROW(Exception, "Sorry, for now this code only handles MSs with one channel");
+      }
+
       // initialize storage
       const size_t nThread=1;//OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
@@ -431,16 +439,6 @@ namespace LOFAR {
           //Complex *vis =&data[bl*nCr];
           dcomplex *mvis=&model[bl*nCr];
 
-          if (itsDebugLevel>1) {
-            double maxabsmvis=0;
-            for (uint cr=0;cr<nCr;++cr) {
-              if (abs(mvis[cr])>maxabsmvis) {
-                maxabsmvis=abs(mvis[cr]);
-              }
-            }
-            cout<<"max abs model: "<<maxabsmvis<<endl;
-          }
-
           // Upper diagonal, ant1 < ant2
           //cout<<"mvis0"<<mvis[0]<<endl;
           z[0] = h[ant1][0] * mvis[0] * sqrt(wgt[0]) + h[ant1][2] * mvis[2] * sqrt(wgt[2]);
@@ -564,6 +562,8 @@ namespace LOFAR {
       if (dg > tol) {
         cerr<<"!";
       }
+      cout<<"Export to Matlab"<<endl;
+      exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
 
 
       //cout<<"iter:"<<iter<<"?"<<endl;
@@ -584,6 +584,73 @@ namespace LOFAR {
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
       itsSols.push_back(g);
+    }
+
+    void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
+                                 const Bool* flag, uint nCr, uint nSt, uint nBl) {
+      vis.resize(nSt*2,nSt*2);
+      mvis.resize(nSt*2,nSt*2);
+
+      vis=0;
+      mvis=0;
+      for (uint bl=0;bl<nBl;++bl) {
+        // Assume nCh = 1 for now
+
+        uint ant1=info().getAnt1()[bl];
+        uint ant2=info().getAnt2()[bl];
+        if (ant1==ant2 || flag[bl*nCr]) {
+          continue;
+        }
+
+        vis(2*ant1  ,2*ant2  ) = DComplex(data[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
+        vis(2*ant1  ,2*ant2+1) = DComplex(data[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
+        vis(2*ant1+1,2*ant2  ) = DComplex(data[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
+        vis(2*ant1+1,2*ant2+1) = DComplex(data[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
+        vis(2*ant2  ,2*ant1  ) = DComplex(conj(data[bl*nCr  ]))*DComplex(sqrt(weight[bl*nCr+0]));
+        vis(2*ant2+1,2*ant1  ) = DComplex(conj(data[bl*nCr+1]))*DComplex(sqrt(weight[bl*nCr+1]));
+        vis(2*ant2  ,2*ant1+1) = DComplex(conj(data[bl*nCr+2]))*DComplex(sqrt(weight[bl*nCr+2]));
+        vis(2*ant2+1,2*ant1+1) = DComplex(conj(data[bl*nCr+3]))*DComplex(sqrt(weight[bl*nCr+3]));
+
+        mvis(2*ant1  ,2*ant2  ) = model[bl*nCr  ]*DComplex(sqrt(weight[bl*nCr+0]));
+        mvis(2*ant1  ,2*ant2+1) = model[bl*nCr+1]*DComplex(sqrt(weight[bl*nCr+1]));
+        mvis(2*ant1+1,2*ant2  ) = model[bl*nCr+2]*DComplex(sqrt(weight[bl*nCr+2]));
+        mvis(2*ant1+1,2*ant2+1) = model[bl*nCr+3]*DComplex(sqrt(weight[bl*nCr+3]));
+        mvis(2*ant2  ,2*ant1  ) = conj(model[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
+        mvis(2*ant2+1,2*ant1  ) = conj(model[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
+        mvis(2*ant2  ,2*ant1+1) = conj(model[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
+        mvis(2*ant2+1,2*ant1+1) = conj(model[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
+      }
+
+      ofstream mFile;
+      mFile.open ("debug.txt");
+      mFile << "# Created by NDPPP"<<endl;
+      mFile << "# name: V"<<endl;
+      mFile << "# type: complex matrix"<<endl;
+      mFile << "# rows: "<<nSt*2<<endl;
+      mFile << "# columns: "<<nSt*2<<endl;
+
+      for (uint row=0;row<nSt*2;++row) {
+        for (uint col=0;col<nSt*2;++col) {
+          mFile << vis(row,col)<<" ";
+        }
+        mFile << endl;
+      }
+
+      mFile << endl;
+      mFile << "# name: Vm"<<endl;
+      mFile << "# type: complex matrix"<<endl;
+      mFile << "# rows: "<<nSt*2<<endl;
+      mFile << "# columns: "<<nSt*2<<endl;
+
+      for (uint row=0;row<nSt*2;++row) {
+        for (uint col=0;col<nSt*2;++col) {
+          mFile << mvis(row,col)<<" ";
+        }
+        mFile << endl;
+      }
+
+      mFile.close();
+      THROW(Exception,"Wrote output to a file, stoppint now");
     }
 
     void GainCal::applyBeam (double time, const Position& pos, bool apply,

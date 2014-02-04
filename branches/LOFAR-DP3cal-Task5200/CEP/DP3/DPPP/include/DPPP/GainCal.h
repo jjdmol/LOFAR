@@ -100,6 +100,9 @@ namespace {
 
 
     private:
+      void exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
+                          const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
+
       void initThreadPrivateStorage(ThreadPrivateStorage &storage,
                                     size_t nDirection, size_t nStation,
                                     size_t nBaseline, size_t nChannel,
