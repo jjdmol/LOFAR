@@ -191,8 +191,8 @@ def main():
                 print "-- Checks done      : %s" %(string.join(d[4:],', ')) 
             
             if msg == 'STATISTICS':
-                print "-- Bad antennas     : LBL=%s, LBH=%s, HBA=%s" %\
-                      (kv.get('BAD_LBL'), kv.get('BAD_LBH'), kv.get('BAD_HBA'))
+                print "-- Bad antennas     : LBL=%s, LBH=%s, HBA=%s, HBA0=%s, HBA1=%s" %\
+                      (kv.get('BAD_LBL'), kv.get('BAD_LBH'), kv.get('BAD_HBA'), kv.get('BAD_HBA0','-'), kv.get('BAD_HBA1','-'))
             
             if msg == 'BADLIST':
                 bad_ant_str = string.join(d[4:],';').replace('=','(').replace(' ',',').replace(';',')   ')+')'
