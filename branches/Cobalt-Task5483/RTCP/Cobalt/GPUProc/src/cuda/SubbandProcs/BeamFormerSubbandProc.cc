@@ -88,69 +88,31 @@ namespace LOFAR
           DelayAndBandPassKernel::DELAYS),
         factories.delayCompensation.bufferSize(
           DelayAndBandPassKernel::PHASE_ZEROS),
-        context),
-      // coherent stokes buffers
-      devA(devInput.inputSamples),
-      devB(context, devA.size()),
-      // Buffers for incoherent stokes
-      devC(context, devA.size()),
-      devD(context, devA.size()),
-      devE(context, factories.incoherentStokes.bufferSize(
-             IncoherentStokesKernel::OUTPUT_DATA)),
-      devNull(context, 1),
+        context)
 
-      // intToFloat: input -> B
-      intToFloatBuffers(devInput.inputSamples, devB),
-      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
-
-      // FFTShift: B -> B
-      firstFFTShiftBuffers(devB, devB),
-      firstFFTShiftKernel(
-        factories.fftShift.create(queue, firstFFTShiftBuffers)),
-
-      // FFT: B -> B
-      firstFFT(queue,
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-         ps.settings.beamFormer.nrDelayCompensationChannels),
-        true, devB),
-
-      // delayComp: B -> A
-      delayCompensationBuffers(devB, devA, devInput.delaysAtBegin,
-                               devInput.delaysAfterEnd,
-                               devInput.phase0s, devNull),
-      delayCompensationKernel(
-        factories.delayCompensation.create(queue, delayCompensationBuffers)),
-
-      // FFTShift: A -> A
-      secondFFTShiftBuffers(devA, devA),
-      secondFFTShiftKernel(
-        factories.fftShift.create(queue, secondFFTShiftBuffers)),
-
-      // FFT: A -> A
-      secondFFT(queue,
-        ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-         (ps.settings.beamFormer.nrHighResolutionChannels /
-          ps.settings.beamFormer.nrDelayCompensationChannels)),
-        true, devA),
-
-      // bandPass: A -> B
-      devBandPassCorrectionWeights(
-        context,
-        factories.bandPassCorrection.bufferSize(
-          BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      bandPassCorrectionBuffers(
-        devA, devB, devBandPassCorrectionWeights),
-      bandPassCorrectionKernel(
-        factories.bandPassCorrection.create(queue, bandPassCorrectionBuffers))
-
-
+      
     {
 
+      // coherent stokes buffers
+      unsigned sizeKernelBuffers = devInput.inputSamples.size();
+      devA = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context, sizeKernelBuffers));
+      devB = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context, sizeKernelBuffers));
+      // Buffers for incoherent stokes
+      devC = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context, sizeKernelBuffers));
+      devD = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context, sizeKernelBuffers));
+      devE = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context, 
+         factories.incoherentStokes.bufferSize(
+            IncoherentStokesKernel::OUTPUT_DATA)));
+      devNull = std::auto_ptr<gpu::DeviceMemory>(
+         new gpu::DeviceMemory(context, 1));
 
       //################################################
+      initFFTAndFlagMembers(context, factories);
       initCoherentMembers(context, factories);
       initIncoherentMembers(context, factories);
       
@@ -229,6 +191,71 @@ namespace LOFAR
       //addTimer("GPU - wait");
     }
 
+    void BeamFormerSubbandProc::initFFTAndFlagMembers(gpu::Context &context,
+      BeamFormerFactories &factories){
+      // intToFloat: input -> B
+      intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
+        new IntToFloatKernel::Buffers(devInput.inputSamples, *devB));
+      intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
+        factories.intToFloat.create(queue, *intToFloatBuffers));
+
+      // FFTShift: B -> B
+      firstFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(*devB, *devB));
+
+      firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+        factories.fftShift.create(queue, *firstFFTShiftBuffers));
+
+      // FFT: B -> B
+      firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.nrDelayCompensationChannels),
+        true, *devB));
+
+      // delayComp: B -> A
+      delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
+        new DelayAndBandPassKernel::Buffers(*devB, *devA, devInput.delaysAtBegin,
+        devInput.delaysAfterEnd,
+        devInput.phase0s, *devNull));
+
+      delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
+        factories.delayCompensation.create(queue, *delayCompensationBuffers));
+
+      // FFTShift: A -> A
+      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(*devA, *devA));
+
+      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+        factories.fftShift.create(queue, *secondFFTShiftBuffers));
+      // FFT: A -> A
+      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+        ps.nrSamplesPerSubband() /
+        (ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels);
+
+      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        secondFFTnrFFTs, true, *devA));
+
+      // bandPass: A -> B
+      devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.bandPassCorrection.bufferSize(
+        BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)));
+
+      bandPassCorrectionBuffers =
+        std::auto_ptr<BandPassCorrectionKernel::Buffers>(
+        new BandPassCorrectionKernel::Buffers(*devA, *devB,
+        *devBandPassCorrectionWeights));
+
+      bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
+        factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
+
+
+    }
+
 
     void BeamFormerSubbandProc::initCoherentMembers(gpu::Context &context,
       BeamFormerFactories &factories)
@@ -249,7 +276,7 @@ namespace LOFAR
         )
         );
       beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
-        new BeamFormerKernel::Buffers(devB, devA, *devBeamFormerDelays));
+        new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));
 
       beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
         factories.beamFormer.create(queue, *beamFormerBuffers));
@@ -260,7 +287,8 @@ namespace LOFAR
       // PPF: CS: D, CV: C
 
       coherentTransposeBuffers = std::auto_ptr<CoherentStokesTransposeKernel::Buffers>(
-        new CoherentStokesTransposeKernel::Buffers(devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC));
+        new CoherentStokesTransposeKernel::Buffers(*devA, 
+          outputComplexVoltages ^ coherentStokesPPF ? *devD : *devC));
 
       coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
         factories.coherentTranspose.create(
@@ -321,7 +349,7 @@ namespace LOFAR
       // Nch: input comes from finalFFT in C
 
       coherentStokesBuffers = std::auto_ptr<CoherentStokesKernel::Buffers>(
-        new CoherentStokesKernel::Buffers(devC, devD));
+        new CoherentStokesKernel::Buffers(*devC, *devD));
 
       coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
         factories.coherentStokes.create(queue, *coherentStokesBuffers));
@@ -341,7 +369,7 @@ namespace LOFAR
         // Transpose: B -> A
         incoherentTransposeBuffers =
           std::auto_ptr<IncoherentStokesTransposeKernel::Buffers>(
-          new IncoherentStokesTransposeKernel::Buffers(devB, devA));
+          new IncoherentStokesTransposeKernel::Buffers(*devB, *devA));
 
         incoherentTranspose = std::auto_ptr<IncoherentStokesTransposeKernel>(
           factories.incoherentStokesTranspose.create(queue,
@@ -353,12 +381,12 @@ namespace LOFAR
 
         incoherentInverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
           queue, ps.settings.beamFormer.nrHighResolutionChannels,
-          incInversNrFFTs, false, devA));
+          incInversNrFFTs, false, *devA));
 
         // inverse FFTShift: A -> A
         incoherentInverseFFTShiftBuffers =
           std::auto_ptr<FFTShiftKernel::Buffers>(
-          new FFTShiftKernel::Buffers(devA, devA));
+          new FFTShiftKernel::Buffers(*devA, *devA));
 
         incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
           factories.fftShift.create(queue, *incoherentInverseFFTShiftBuffers));
@@ -375,7 +403,7 @@ namespace LOFAR
           ));
         incoherentFirFilterBuffers =
           std::auto_ptr<FIR_FilterKernel::Buffers>(
-          new FIR_FilterKernel::Buffers(devA, devB,
+          new FIR_FilterKernel::Buffers(*devA, *devB,
           *devIncoherentFilterWeights,
           *devIncoherentFilterHistoryData));
 
@@ -390,7 +418,7 @@ namespace LOFAR
         incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
           new FFT_Kernel(
           queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-          nrFFTs, true, devB));
+          nrFFTs, true, *devB));
 
         // incoherentstokes kernel: A/B -> E
         //
@@ -399,7 +427,7 @@ namespace LOFAR
         incoherentStokesBuffers =
           std::auto_ptr<IncoherentStokesKernel::Buffers>(
           new IncoherentStokesKernel::Buffers(
-          incoherentStokesPPF ? devB : devA, devE));
+          incoherentStokesPPF ? *devB : *devA, *devE));
         incoherentStokesKernel = std::auto_ptr<IncoherentStokesKernel>(
           factories.incoherentStokes.create(queue, *incoherentStokesBuffers));
 
@@ -503,7 +531,7 @@ namespace LOFAR
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
-      firstFFT.enqueue(input.blockID, counters.firstFFT);
+      firstFFT->enqueue(input.blockID, counters.firstFFT);
 
       delayCompensationKernel->enqueue(
         input.blockID, counters.delayBp,
@@ -511,7 +539,7 @@ namespace LOFAR
         ps.settings.subbands[subband].SAP);
 
       secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
-      secondFFT.enqueue(input.blockID, counters.secondFFT);
+      secondFFT->enqueue(input.blockID, counters.secondFFT);
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
@@ -575,11 +603,11 @@ namespace LOFAR
       // Output in devD and devE, by design.
       if (coherentBeamformer)
         queue.readBuffer(output,
-                         devD,
+                         *devD,
                          counters.visibilities, true);
       else
         queue.readBuffer(incoherentOutput,
-                         devE,
+                         *devE,
                          counters.incoherentOutput, true);
 
       // ************************************************
