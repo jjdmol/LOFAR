@@ -156,6 +156,7 @@ namespace LOFAR {
       }
 
       itsSols.reserve(info().ntime());
+      itsDiagSols.reserve(info().ntime());
 
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
@@ -291,6 +292,10 @@ namespace LOFAR {
 
       double tol=1.0e-10;
 
+      if (itsCellSizeTime==1) { // Export only first time slot, abuse cellsizetime
+        //exportToMatlab(model,data,weight,flag,nCr,nSt,nBl);
+        itsCellSizeTime=2;
+      }
       vis=0;
       mvis=0;
       for (uint bl=0;bl<nBl;++bl) {
@@ -340,13 +345,10 @@ namespace LOFAR {
           t=0;
           for (uint i=0;i<2*nSt;++i) {
             z[i]=conj(gold[i])*mvis(i,j);
-            cout<<"z["<<i<<"]="<<z[i]<<endl;
             w+=norm(z[i]);
             t+=conj(z[i])*vis(i,j);
           }
-          for (uint i=0;i<2*nSt;++i) {
-            g[i]=w/t;
-          }
+          g[j]=t/w;
         }
         if (iter%2==1) {
           gx = g;
@@ -358,7 +360,6 @@ namespace LOFAR {
           }
           if (sqrt(diffnorm/gxnorm)<tol) {
             break;
-            cout<<"Converged!"<<endl;
           } else {
             for (uint i=0;i<2*nSt;++i) {
               g[i]=0.5*g[i]+0.5*gold[i];
@@ -366,6 +367,11 @@ namespace LOFAR {
           }
         }
       }
+      if (iter==itsMaxIter) {
+        cerr<<"!";
+      }
+
+      itsDiagSols.push_back(g);
     }
 
     void GainCal::stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
@@ -561,9 +567,9 @@ namespace LOFAR {
       }
       if (dg > tol) {
         cerr<<"!";
+        cout<<"Export to Matlab"<<endl;
+        exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
       }
-      cout<<"Export to Matlab"<<endl;
-      exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
 
 
       //cout<<"iter:"<<iter<<"?"<<endl;
@@ -650,7 +656,7 @@ namespace LOFAR {
       }
 
       mFile.close();
-      THROW(Exception,"Wrote output to a file, stoppint now");
+      THROW(Exception,"Wrote output to a file, stopping now");
     }
 
     void GainCal::applyBeam (double time, const Position& pos, bool apply,
@@ -708,7 +714,7 @@ namespace LOFAR {
       itsTimer.start();
       uint nSt=info().antennaUsed().size();
 
-      uint ntime=itsSols.size();
+      uint ntime=max(itsSols.size(),itsDiagSols.size());
 
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
@@ -748,17 +754,29 @@ namespace LOFAR {
         string suffix(itsAntennaUsedNames[st]);
 
         for (int i=0; i<4; ++i) {
+          if (itsMode=="diaggain" && (i==2||i==3)) {
+            continue;
+          }
           for (int k=0; k<2; ++k) {
             string name(string("Gain:") +
                         str0101[i] + strri[k] + suffix);
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
-              if (seqnr%2==0) {
-                values(0, ts) = real(itsSols[ts][st][seqnr/2]);
+              if (itsMode=="fullgain") {
+                if (seqnr%2==0) {
+                  values(0, ts) = real(itsSols[ts][st][seqnr/2]);
+                } else {
+                  values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
+                }
               } else {
-                values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
+                if (seqnr%2==0) {
+                  values(0, ts) = real(itsDiagSols[ts][i/4*nSt+st]); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                } else {
+                  values(0, ts) = -imag(itsDiagSols[ts][i/4*nSt+st]); // Conjugate transpose!
+                }
               }
             }
+            cout.flush();
             seqnr++;
             BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
             pv->setScalars (solGrid, values);

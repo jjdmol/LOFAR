@@ -176,7 +176,8 @@ namespace {
       casa::Matrix<casa::Complex> casa_vis;
       casa::Matrix<casa::DComplex> casa_mvis;
 
-      vector<vector<vector<casa::DComplex> > > itsSols;
+      vector<vector<vector<casa::DComplex> > > itsSols; // for every timeslot, nSt gains with vector of length nCr values
+      vector<vector<casa::DComplex > > itsDiagSols; // for every timeslot, 2*nSt gains
       casa::Vector<casa::String> itsAntennaUsedNames;
       map<string,int>         itsParmIdMap; //# -1 = new parm name
 
