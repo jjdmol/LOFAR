@@ -194,7 +194,7 @@ namespace LOFAR
       file.projectPI().value = parset.getString("Observation.Campaign.PI", "");
       ostringstream oss;
       // Use ';' instead of ',' to pretty print, because ',' already occurs in names (e.g. Smith, J.).
-      writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I", ""), "; ", "", "");
+      writeVector(oss, parset.getStringVector("Observation.Campaign.CO_I", vector<string>(0), true), "; ", "", "");
       file.projectCOI().value = oss.str();
       file.projectContact().value = parset.getString("Observation.Campaign.contact", "");
 
