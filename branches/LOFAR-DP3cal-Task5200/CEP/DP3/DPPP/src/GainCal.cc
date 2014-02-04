@@ -60,18 +60,18 @@ namespace LOFAR {
     GainCal::GainCal (DPInput* input,
                         const ParameterSet& parset,
                         const string& prefix)
-      : itsInput       (input),
-        itsName        (prefix),
-        itsSourceDBName (parset.getString (prefix + "sourcedb")),
-        itsParmDBName  (parset.getString (prefix + "parmdb")),
-        itsApplyBeam   (parset.getBool (prefix + "model.beam")),
-        itsCellSizeTime (parset.getInt (prefix + "cellsize.time", 1)),
-        itsCellSizeFreq (parset.getInt (prefix + "cellsize.freq", 0)),
-        itsBaselines   (),
-        itsThreadStorage (),
-        itsMaxIter     (parset.getInt (prefix + "maxiter", 1000)),
+      : itsInput         (input),
+        itsName          (prefix),
+        itsSourceDBName  (parset.getString (prefix + "sourcedb")),
+        itsParmDBName    (parset.getString (prefix + "parmdb")),
+        itsApplyBeam     (parset.getBool (prefix + "model.beam")),
+        itsCellSizeTime  (parset.getInt (prefix + "cellsize.time", 1)),
+        itsCellSizeFreq  (parset.getInt (prefix + "cellsize.freq", 0)),
+        itsBaselines     (),
+        itsThreadStorage  (),
+        itsMaxIter       (parset.getInt (prefix + "maxiter", 1000)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
-        itsPatchList   ()
+        itsPatchList     ()
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -81,6 +81,33 @@ namespace LOFAR {
       vector<string> sourcePatterns=parset.getStringVector(prefix + "sources",
               vector<string>());
       patchNames=makePatchList(sourceDB, sourcePatterns);
+
+      vector<string> parms = parset.getStringVector(prefix+"parms",vector<string>());
+      uint numdiag=0;
+      uint numoffdiag=0;
+      for (vector<string>::iterator parmname=parms.begin(); parmname!=parms.end();++parmname) {
+        if ((*parmname).length()<8 ||
+            (*parmname).substr(0,5)!="Gain:") {
+          THROW (Exception, "Can only solve for gains");
+        }
+        string parmpol=(*parmname).substr(5,3);
+        if (parmpol=="0:1" || parmpol=="1:0") {
+          numoffdiag++;
+        } else if (parmpol=="0:0" || parmpol=="1:1") {
+          numdiag++;
+        } else {
+          THROW (Exception, "Can only solve for gains");
+        }
+      }
+      if (numoffdiag==2 && numdiag==2) {
+        itsMode="fullgain";
+      } else if (numoffdiag==0 && numdiag==2) {
+        itsMode="diaggain";
+      } else if (parms.size()==0) {
+        itsMode="fullgain";
+      } else {
+        THROW (Exception, "Can only solve for diagonal or all gains");
+      }
 
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
@@ -152,6 +179,7 @@ namespace LOFAR {
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
       os << "  max iter:       " << itsMaxIter << endl;
       os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
+      os << "  mode:           " << itsMode << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -180,7 +208,7 @@ namespace LOFAR {
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
-      const size_t nSamples = nBl * nCh * nCr;
+//      const size_t nSamples = nBl * nCh * nCr;
       // Define various cursors to iterate through arrays.
       const_cursor<double> cr_freq = casa_const_cursor(info().chanFreqs());
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
@@ -236,8 +264,103 @@ namespace LOFAR {
 
       //cout<<"storage.model[4]="<<storage.model[4]<<endl;
 
-      // Begin StefCal
+      if (itsMode=="diaggain") {
+        stefcalunpol(&storage.model[0], data, weight, flag, nCr, nSt, nBl);
+      } else {
+        stefcalpol(&storage.model[0], data, weight, flag, nCr, nSt, nBl);
+      }
 
+      itsTimer.stop();
+      getNextStep()->process(buf);
+      return false;
+    }
+
+    void GainCal::stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
+    const Bool* flag, uint nCr, uint nSt, uint nBl) {
+      vis.resize(nSt*2,nSt*2);
+      mvis.resize(nSt*2,nSt*2);
+
+      double tol=1.0e-10;
+
+      vis=0;
+      mvis=0;
+      for (uint bl=0;bl<nBl;++bl) {
+        // Assume nCh = 1 for now
+
+        uint ant1=info().getAnt1()[bl];
+        uint ant2=info().getAnt2()[bl];
+        if (ant1==ant2 || flag[bl*nCr]) {
+          continue;
+        }
+
+        vis(ant1    ,ant2    ) = DComplex(data[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
+        vis(ant1    ,ant2+nSt) = DComplex(data[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
+        vis(ant1+nSt,ant2    ) = DComplex(data[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
+        vis(ant1+nSt,ant2+nSt) = DComplex(data[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
+        vis(ant2    ,ant1    ) = DComplex(conj(data[bl*nCr  ]))*DComplex(sqrt(weight[bl*nCr+0]));
+        vis(ant2+nSt,ant1    ) = DComplex(conj(data[bl*nCr+1]))*DComplex(sqrt(weight[bl*nCr+1]));
+        vis(ant2    ,ant1+nSt) = DComplex(conj(data[bl*nCr+2]))*DComplex(sqrt(weight[bl*nCr+2]));
+        vis(ant2+nSt,ant1+nSt) = DComplex(conj(data[bl*nCr+3]))*DComplex(sqrt(weight[bl*nCr+3]));
+
+        mvis(ant1    ,ant2    ) = model[bl*nCr  ]*DComplex(sqrt(weight[bl*nCr+0]));
+        mvis(ant1    ,ant2+nSt) = model[bl*nCr+1]*DComplex(sqrt(weight[bl*nCr+1]));
+        mvis(ant1+nSt,ant2    ) = model[bl*nCr+2]*DComplex(sqrt(weight[bl*nCr+2]));
+        mvis(ant1+nSt,ant2+nSt) = model[bl*nCr+3]*DComplex(sqrt(weight[bl*nCr+3]));
+        mvis(ant2    ,ant1    ) = conj(model[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
+        mvis(ant2+nSt,ant1    ) = conj(model[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
+        mvis(ant2    ,ant1+nSt) = conj(model[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
+        mvis(ant2+nSt,ant1+nSt) = conj(model[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
+      }
+
+      vector<DComplex> g(nSt*2);   // First nSt * Gain:0:0 then nSt * Gain:1:1
+      for (uint i=0;i<2*nSt;++i) {
+        g[i]=1.0;
+      }
+      vector<DComplex> gold(nSt*2);
+      vector<DComplex> gx(nSt*2);
+      vector<DComplex> z(nSt*2);
+
+      double w;
+      DComplex t;
+
+      uint iter=0;
+      for (;iter<itsMaxIter;++iter) {
+        gold = g;
+        for (uint j=0;j<2*nSt;++j) {
+          w=0;
+          t=0;
+          for (uint i=0;i<2*nSt;++i) {
+            z[i]=conj(gold[i])*mvis(i,j);
+            cout<<"z["<<i<<"]="<<z[i]<<endl;
+            w+=norm(z[i]);
+            t+=conj(z[i])*vis(i,j);
+          }
+          for (uint i=0;i<2*nSt;++i) {
+            g[i]=w/t;
+          }
+        }
+        if (iter%2==1) {
+          gx = g;
+          double gxnorm=0;
+          double diffnorm=0;
+          for (uint i=0;i<2*nSt;++i) {
+            diffnorm+=norm(gx[i]-gold[i]);
+            gxnorm+=  norm(gx[i]);
+          }
+          if (sqrt(diffnorm/gxnorm)<tol) {
+            break;
+            cout<<"Converged!"<<endl;
+          } else {
+            for (uint i=0;i<2*nSt;++i) {
+              g[i]=0.5*g[i]+0.5*gold[i];
+            }
+          }
+        }
+      }
+    }
+
+    void GainCal::stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
+                              const Bool* flag, uint nCr, uint nSt, uint nBl) {
       double f2 = -1.0;
       double f3 = -0.5;
       double f1 = 1 - f2 - f3;
@@ -305,7 +428,7 @@ namespace LOFAR {
             vis[cr] = data[bl*nCr+cr];
           }
           //Complex *vis =&data[bl*nCr];
-          dcomplex *mvis=&storage.model[bl*nCr];
+          dcomplex *mvis=&model[bl*nCr];
 
           // Upper diagonal, ant1 < ant2
           //cout<<"mvis0"<<mvis[0]<<endl;
@@ -450,11 +573,6 @@ namespace LOFAR {
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
       itsSols.push_back(g);
-
-
-      itsTimer.stop();
-      getNextStep()->process(buf);
-      return false;
     }
 
     void GainCal::applyBeam (double time, const Position& pos, bool apply,
@@ -544,7 +662,6 @@ namespace LOFAR {
       }
       // Write the solutions per parameter.
       const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
-      const char* str01[] = {"0:","1:"};
       const char* strri[] = {"Real:","Imag:"};
       Matrix<double> values(1, ntime);
 
@@ -553,37 +670,34 @@ namespace LOFAR {
         string suffix(itsAntennaUsedNames[st]);
 
         for (int i=0; i<4; ++i) {
-          //for (int j=0; j<2; j++) {
-            for (int k=0; k<2; ++k) {
-              string name(string("Gain:") +
-                          //str01[i] + str01[j] + strri[k] + suffix);
-                          str0101[i] + strri[k] + suffix);
-              // Collect its solutions for all times in a single array.
-              for (uint ts=0; ts<ntime; ++ts) {
-                if (seqnr%2==0) {
-                  values(0, ts) = real(itsSols[ts][st][seqnr/2]);
-                } else {
-                  values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
-                }
-              }
-              seqnr++;
-              BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
-              pv->setScalars (solGrid, values);
-              BBS::ParmValueSet pvs(domainGrid,
-                                    vector<BBS::ParmValue::ShPtr>(1, pv));
-              map<string,int>::const_iterator pit = itsParmIdMap.find(name);
-              if (pit == itsParmIdMap.end()) {
-                // First time, so a new nameId will be set.
-                int nameId = -1;
-                itsParmDB->putValues (name, nameId, pvs);
-                itsParmIdMap[name] = nameId;
+          for (int k=0; k<2; ++k) {
+            string name(string("Gain:") +
+                        str0101[i] + strri[k] + suffix);
+            // Collect its solutions for all times in a single array.
+            for (uint ts=0; ts<ntime; ++ts) {
+              if (seqnr%2==0) {
+                values(0, ts) = real(itsSols[ts][st][seqnr/2]);
               } else {
-                // Parm has been put before.
-                int nameId = pit->second;
-                itsParmDB->putValues (name, nameId, pvs);
+                values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
               }
             }
-          //}
+            seqnr++;
+            BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
+            pv->setScalars (solGrid, values);
+            BBS::ParmValueSet pvs(domainGrid,
+                                  vector<BBS::ParmValue::ShPtr>(1, pv));
+            map<string,int>::const_iterator pit = itsParmIdMap.find(name);
+            if (pit == itsParmIdMap.end()) {
+              // First time, so a new nameId will be set.
+              int nameId = -1;
+              itsParmDB->putValues (name, nameId, pvs);
+              itsParmIdMap[name] = nameId;
+            } else {
+              // Parm has been put before.
+              int nameId = pit->second;
+              itsParmDB->putValues (name, nameId, pvs);
+            }
+          }
         }
       }
 

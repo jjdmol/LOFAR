@@ -125,6 +125,14 @@ namespace {
         dir2Itrf(info().delayCenterCopy(),storage.measConverter);
       }
 
+      // Do a polarized stefcal
+      void stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
+                       const casa::Bool* flag, const uint nSt, const uint nCr,
+                       const uint nBl);
+
+      void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
+
       // Calculate the beam for the given sky direction and frequencies.
       // Apply it to the data.
       // If apply==False, nothing is done.
@@ -150,11 +158,18 @@ namespace {
       shared_ptr<BBS::ParmDB> itsParmDB;
       Position         itsPhaseRef;
 
+      string           itsMode;
       uint             itsCellSizeTime;
       uint             itsCellSizeFreq;
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
+
+      casa::Matrix<casa::DComplex> vis;
+      casa::Matrix<casa::DComplex> mvis;
+
+      casa::Matrix<casa::Complex> casa_vis;
+      casa::Matrix<casa::DComplex> casa_mvis;
 
       vector<vector<vector<casa::DComplex> > > itsSols;
       casa::Vector<casa::String> itsAntennaUsedNames;
