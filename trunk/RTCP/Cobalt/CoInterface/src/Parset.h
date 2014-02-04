@@ -82,6 +82,9 @@ namespace LOFAR
       // key: Observation.sampleClock
       unsigned clockMHz;
 
+      // The station clock, in Hz
+      unsigned clockHz() const;
+
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
 
