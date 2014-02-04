@@ -158,15 +158,15 @@ namespace LOFAR
 
       // @{
       // Device memory buffers. These buffers are used interleaved.
-      gpu::DeviceMemory devA;
-      gpu::DeviceMemory devB;
-      gpu::DeviceMemory devC;
-      gpu::DeviceMemory devD;
-      gpu::DeviceMemory devE;
+      std::auto_ptr<gpu::DeviceMemory> devA;
+      std::auto_ptr<gpu::DeviceMemory> devB;
+      std::auto_ptr<gpu::DeviceMemory> devC;
+      std::auto_ptr<gpu::DeviceMemory> devD;
+      std::auto_ptr<gpu::DeviceMemory> devE;
       // @}
 
       // NULL placeholder for unused DeviceMemory parameters
-      gpu::DeviceMemory devNull;
+      std::auto_ptr<gpu::DeviceMemory> devNull;
       /*
       * Kernels
       */
