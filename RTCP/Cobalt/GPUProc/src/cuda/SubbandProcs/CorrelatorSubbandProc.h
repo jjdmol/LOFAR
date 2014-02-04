@@ -22,6 +22,7 @@
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_SUBBAND_PROC_H
 
 // @file
+#include <cmath>
 #include <complex>
 #include <utility>
 #include <memory>
@@ -81,6 +82,15 @@ namespace LOFAR
       {
         FIR_FilterKernel::Parameters params(ps);
         params.nrSubbands = nrSubbandsPerSubbandProc;
+
+        // Scale to always output visibilities or stokes with the same flux scale.
+        // With the same bandwidth, twice the (narrower) channels _average_ (not
+        // sum) to the same fluxes (and same noise). Twice the channels (twice the
+        // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
+        // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
+        // effectively squares, integr on fewer channels averages over more values.
+        params.scaleFactor = std::sqrt((double)params.nrChannelsPerSubband);
+
         return params;
       }
     };
