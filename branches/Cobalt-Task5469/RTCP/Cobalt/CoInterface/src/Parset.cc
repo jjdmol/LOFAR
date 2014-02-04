@@ -356,7 +356,8 @@ namespace LOFAR
       
       settings.SAPs.resize(nrSAPs);
       settings.subbands.clear();
-      for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) {
+      for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) 
+      {
         struct ObservationSettings::SAP &sap = settings.SAPs[sapNr];
 
         sap.direction.type   = getString(str(format("Observation.Beam[%u].directionType") % sapNr), "J2000");
@@ -365,15 +366,17 @@ namespace LOFAR
         sap.target           = getString(str(format("Observation.Beam[%u].target") % sapNr), "");
 
         // Process the subbands of this SAP
-        vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        sap.subbandIndices = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
-        for (unsigned sb = 0; sb < subbandList.size(); ++sb) {
+        for (unsigned sb = 0; sb < sap.subbandIndices.size(); ++sb)
+        {
           struct ObservationSettings::Subband subband;
 
           subband.idx              = settings.subbands.size();
-          subband.stationIdx       = subbandList[sb];
+          subband.stationIdx      = sap.subbandIndices[sb];
           subband.SAP              = sapNr;
+          subband.idxInSAP         = sb;
           subband.centralFrequency = frequencyList.empty()
                                      ? settings.subbandWidth() * (subband.stationIdx + subbandOffset)
                                      : frequencyList[sb];
@@ -418,6 +421,9 @@ namespace LOFAR
             emptyVectorString, true);
         station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
 
+        // NOTE: Support for clockCorrectionTime can be phased out when the
+        // BG/P is gone. delay.X and delay.Y are superior to it, being
+        // polarisation specific.
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3, 0), true);
         if (station.phaseCenter == emptyVectorDouble)
@@ -427,6 +433,14 @@ namespace LOFAR
         station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
         station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
 
+        if (station.delay.x > 0.0 || station.delay.y > 0.0) {
+          if (station.clockCorrection != 0.0) {
+            // Ignore clockCorrectionTime if delay.X or delay.Y are specified.
+
+            station.clockCorrection = 0.0;
+            LOG_WARN_STR("Ignoring PIC.Core." << station.name << ".clockCorrectionTime in favor of PIC.Core." << fieldNames[i].fullName() << "." << settings.antennaSet << "." << settings.bandFilter << ".delay.{X,Y}");
+          }
+        }
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";

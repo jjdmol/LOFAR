@@ -466,7 +466,7 @@ namespace LOFAR
 
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
-      
+
       // We don't want to copy the data if we don't need to integrate.
       if (nblock == 1) {
         output.setSequenceNumber(output.blockID.block);
@@ -478,9 +478,11 @@ namespace LOFAR
       if (integratedData[idx].first < nblock) {
         *integratedData[idx].second += output;
         return false;
-      }
-      else {
+      } else {
+        // Integration is actually averaging to have a normalized flux scale
+        // independent of integration time.
         output += *integratedData[idx].second;
+        //output = (output + *integratedData[idx].second) / nblock;
         output.setSequenceNumber(output.blockID.block / nblock);
         integratedData[idx].first = 0;
         integratedData[idx].second->reset();

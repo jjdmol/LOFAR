@@ -37,17 +37,22 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, gpu::Context &context) :
+    BeamFormedData::BeamFormedData(unsigned nrStokes,
+                                   unsigned nrChannels,
+                                   size_t nrSamples,
+                                   gpu::Context &context) :
     MultiDimArrayHostBuffer<float, 4>(
       boost::extents[1][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, unsigned nrTabs, gpu::Context &context) :
+    BeamFormedData::BeamFormedData(unsigned nrStokes,
+                                   unsigned nrChannels,
+                                   size_t nrSamples, 
+                                   unsigned nrTabs, 
+                                   gpu::Context &context) :
       MultiDimArrayHostBuffer<float, 4>(
-      boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
+          boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
     {
     }
 
@@ -323,20 +328,23 @@ namespace LOFAR
         if (coherentBeamformer) 
         outputPool.free.append(
           new BeamFormedData(
-            (ps.settings.beamFormer.maxNrTABsPerSAP() *
-             ps.settings.beamFormer.coherentSettings.nrStokes),
-            ps.settings.beamFormer.coherentSettings.nrChannels,
-            ps.settings.beamFormer.coherentSettings.nrSamples(
+            ps.settings.beamFormer.incoherentSettings.nrStokes,
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            ps.settings.beamFormer.incoherentSettings.nrSamples(
               ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.maxNrTABsPerSAP(),
             context));
         else
+        {
           outputPool.free.append(
-            new BeamFormedData(
-              ps.settings.beamFormer.incoherentSettings.nrStokes,
-              ps.settings.beamFormer.incoherentSettings.nrChannels,
-              ps.settings.beamFormer.incoherentSettings.nrSamples(
-                ps.nrSamplesPerSubband()),
-              context));
+          new BeamFormedData(
+            ps.settings.beamFormer.incoherentSettings.nrStokes,
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            ps.settings.beamFormer.incoherentSettings.nrSamples(
+              ps.nrSamplesPerSubband()),
+            ps.settings.beamFormer.maxNrTABsPerSAP(),
+            context));
+         }
       }
 
       //// CPU timers are set by CorrelatorPipeline
@@ -411,7 +419,8 @@ namespace LOFAR
         std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
     }
 
-    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
+    void BeamFormerSubbandProc::processSubband(
+      SubbandProcInputData &input,
       StreamableData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
@@ -520,12 +529,13 @@ namespace LOFAR
 
       // Output in devD and devE, by design.
       if (coherentBeamformer)
-        queue.readBuffer(
-          output, devD, counters.visibilities, true);
+        queue.readBuffer(output,
+                         devD,
+                         counters.visibilities, true);
       else
-        queue.readBuffer(
-          incoherentOutput, devE, 
-          counters.incoherentOutput, true);
+        queue.readBuffer(incoherentOutput,
+                         devE,
+                         counters.incoherentOutput, true);
 
       // ************************************************
       // Perform performance statistics if needed

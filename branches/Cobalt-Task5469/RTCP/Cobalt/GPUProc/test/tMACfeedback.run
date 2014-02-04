@@ -20,7 +20,7 @@ MockOnlineControl.sh $PARSET &
 ONLINECONTROL_PID=$!
 
 # Run the observation
-runObservation.sh -l 1 $PARSET
+runObservation.sh -C -l 1 $PARSET
 OBSRESULT=$?
 
 # Wait for OnlineControl to finish
