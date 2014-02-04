@@ -33,7 +33,7 @@
 #include <iomanip>
 
 // Set to true to get detailed buffer informatio
-#if 1
+#if 0
   #define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
 #else
   #define DUMPBUFFER(a,b)
