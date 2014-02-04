@@ -124,6 +124,12 @@ namespace LOFAR
     }
 
 
+    unsigned ObservationSettings::clockHz() const
+    {
+      return clockMHz * 1000000;
+    }
+
+
     Parset::Parset()
     {
     }
@@ -822,7 +828,7 @@ namespace LOFAR
 
 
     double ObservationSettings::subbandWidth() const {
-      return 1.0 * clockMHz * 1000000 / 1024;
+      return 1.0 * clockHz() / 1024;
     }
 
     unsigned ObservationSettings::nrCrossPolarisations() const {
@@ -1253,7 +1259,7 @@ namespace LOFAR
 
     unsigned Parset::clockSpeed() const
     {
-      return settings.clockMHz * 1000000;
+      return settings.clockHz();
     }
 
     double Parset::subbandBandwidth() const
