@@ -23,6 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/cpu_utils.h>
+#include <GPUProc/MPISetup.h>
 
 #include <mpi.h>
 #include <iostream>
@@ -34,16 +35,14 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char **argv)
 {
-  INIT_LOGGER("t_cpu_utils.cc");
+  INIT_LOGGER("t_cpu_utils");
 
   Parset ps("t_cpu_utils.in_parset");
+
+  MPISetup mpi;
   
-    // Initialise and query MPI
-  int provided_mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
-  }
+  // Initialise and query MPI
+  mpi.init(argc, argv);
 
   // Get the name of the processor
   // skip test if we are not on cobalt!!!
@@ -59,43 +58,35 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
   }
-    
 
-
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
   //exercise the set processorAffinity functionality
-  int cpuId = ps.settings.nodes[rank].cpu;
+  int cpuId = ps.settings.nodes[mpi.rank].cpu;
   setProcessorAffinity(cpuId);
   unsigned numCPU = sysconf( _SC_NPROCESSORS_ONLN );
-
 
   // Validate the correct setting of the affinity
   // Get the cpu of the current thread
   cpu_set_t mask;  
-  sched_getaffinity(0, sizeof(cpu_set_t), &mask);
+  sched_getaffinity(0, sizeof mask, &mask);
 
   // Test if affinity is set correctly!
   // The cpu with rank 0 should be all even cpus the rank should have odd cpu's
-  for (unsigned idx_cpu = rank; idx_cpu < numCPU; idx_cpu += 2) 
+  for (unsigned idx_cpu = mpi.rank; idx_cpu < numCPU; idx_cpu += 2) 
   {
     if (1 != CPU_ISSET(idx_cpu, &mask))
     {
-      LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
-      LOG_FATAL_STR(rank);
+      LOG_FATAL_STR("Found a cpu that is NOT set while is should be set! Rank = " << mpi.rank);
       exit(1);
     }
     if (0 != CPU_ISSET(idx_cpu + 1, &mask))
     {
-      LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
-      LOG_FATAL_STR(rank);
+      LOG_FATAL_STR("Found a cpu that is set while is should be NOT set! Rank = " << mpi.rank);
       exit(1);
     }
   }
 
-  MPI_Finalize();
-      
+  mpi.finalise();
+
   return 0;
 }
 
