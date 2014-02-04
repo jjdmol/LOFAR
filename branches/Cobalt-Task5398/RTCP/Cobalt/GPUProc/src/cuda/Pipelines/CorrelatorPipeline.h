@@ -26,6 +26,7 @@
 #include <CoInterface/Parset.h>
 
 #include "Pipeline.h"
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 namespace LOFAR
 {
@@ -49,11 +50,17 @@ namespace LOFAR
       // Destructor, when profiling is enabled prints the gpu performance counters
       virtual ~CorrelatorPipeline();
 
+      // Create the SubbandProcs
+      virtual void allocateResources();
+
       // Send subbands to outputProc
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
 
       // Create Stream to outputProc
       SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx) const;
+
+    private:
+      CorrelatorFactories factories;
     };
   }
 }

@@ -33,7 +33,6 @@
 #include <Stream/NullStream.h>
 
 #include <CoInterface/Stream.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
@@ -46,9 +45,14 @@ namespace LOFAR
 
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
       :
-      Pipeline(ps, subbandIndices, devices)
+      Pipeline(ps, subbandIndices, devices),
+      factories(ps, nrSubbandsPerSubbandProc)
     {
-      CorrelatorFactories factories(ps, nrSubbandsPerSubbandProc);
+    }
+
+    void CorrelatorPipeline::allocateResources()
+    {
+      Pipeline::allocateResources();
 
       // Create the SubbandProcs
       for (size_t i = 0; i < workQueues.size(); ++i) 

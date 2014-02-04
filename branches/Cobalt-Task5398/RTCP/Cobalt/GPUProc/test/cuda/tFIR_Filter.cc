@@ -41,6 +41,7 @@ typedef signed char SampleType;
 #endif
 
 #include <cstdlib> 
+#include <cmath>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -324,7 +325,7 @@ int test()
   // imag input.
   FilterBank filterBank(true, NR_TAPS, NR_CHANNELS, KAISER);
   filterBank.negateWeights(); // not needed for testing, but as we use it
-  filterBank.scaleWeights(1.0 / NR_CHANNELS); // idem
+  filterBank.scaleWeights(std::sqrt((double)NR_CHANNELS)); // idem
   //filterBank.printWeights();
 
   assert(firWeightsArr.num_elements() == 

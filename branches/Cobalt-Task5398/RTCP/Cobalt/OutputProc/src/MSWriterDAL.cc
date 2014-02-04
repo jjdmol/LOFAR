@@ -293,7 +293,8 @@ namespace LOFAR
       sap.totalIntegrationTime().value = nrBlocks * parset.settings.blockDuration();
       sap.totalIntegrationTimeUnit().value = "s";
 
-      // TODO: non-J2000 pointings
+      // TODO: non-J2000 pointings.
+      // Idem for TABs: now we subtract absolute angles to store TAB offsets. Also see TODO below.
       if( parset.settings.SAPs[sapNr].direction.type != "J2000" )
         LOG_WARN("HDF5 writer does not record positions of non-J2000 observations yet.");
 

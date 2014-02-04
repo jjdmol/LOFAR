@@ -28,6 +28,8 @@
 
 #include "Pipeline.h"
 
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -40,12 +42,16 @@ namespace LOFAR
       // When gpuProfiling isenabled will print the kernel statistics
       virtual ~BeamFormerPipeline();
 
+      virtual void allocateResources();
+
       virtual void processObservation();
 
       // Send subbands to outputProc
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
 
     private:
+      BeamFormerFactories factories;
+
       // Output send engine, takes care of the host connections and the multiplexing.
       TABTranspose::MultiSender multiSender;
     };

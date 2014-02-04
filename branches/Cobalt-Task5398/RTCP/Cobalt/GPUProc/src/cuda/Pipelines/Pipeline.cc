@@ -36,6 +36,8 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
+#include <InputProc/WallClockTime.h>
+#include <InputProc/RSPTimeStamp.h>
 // TODO: Following include is only needed for dynamic_cast. Code smell!
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h> 
 
@@ -44,6 +46,8 @@
 #else
 #include <GPUProc/Station/StationInput.h>
 #endif
+
+#include <cmath>
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
@@ -215,19 +219,30 @@ namespace LOFAR
     }
 
 
+    void Pipeline::allocateResources()
+    {
+    }
+
+
     void Pipeline::processObservation()
     {
+      if (ps.realTime()) {
+        // Wait just before the obs starts to allocate resources
+        LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+
+        const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
+        WallClockTime waiter;
+        waiter.waitUntil(deadline);
+      }
+
+      LOG_INFO("----- Allocating resources");
+      allocateResources();
+
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
         writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
       }
-
-      double startTime = ps.startTime();
-      double stopTime = ps.stopTime();
-      double blockTime = ps.CNintegrationTime();
-
-      size_t nrBlocks = floor((stopTime - startTime) / blockTime);
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
@@ -240,6 +255,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
           receiveInput(nrBlocks);
         }
 

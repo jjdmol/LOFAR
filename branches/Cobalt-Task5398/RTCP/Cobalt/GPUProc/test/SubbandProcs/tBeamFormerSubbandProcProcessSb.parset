@@ -5,8 +5,8 @@ Observation.nrBitsPerSample  = 16
 Cobalt.blockSize             = 65536
 Cobalt.BeamFormer.nrDelayCompensationChannels = 64
 
-Observation.VirtualInstrument.stationList = [CS002]
-Observation.antennaSet = HBA_DUAL
+Observation.VirtualInstrument.stationList = [5*CS002]
+Observation.antennaSet = HBA_ZERO
 Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300]
 Observation.Beam[0].nrTiedArrayBeams     = 2
@@ -31,8 +31,8 @@ Observation.DataProducts.Output_CoherentStokes.filenames=[tab1.raw]
 Observation.DataProducts.Output_CoherentStokes.locations=[1*:.]
 
 Observation.DataProducts.Output_IncoherentStokes.enabled=true
-Observation.DataProducts.Output_IncoherentStokes.filenames=[tab0.raw]
-Observation.DataProducts.Output_IncoherentStokes.locations=[1*:.]
+Observation.DataProducts.Output_IncoherentStokes.filenames=[5*tab0.raw]
+Observation.DataProducts.Output_IncoherentStokes.locations=[5*:.]
 
 Cobalt.Kernels.BeamFormerKernel.dumpOutput = true
 Cobalt.Kernels.BeamFormerTransposeKernel.dumpOutput = true

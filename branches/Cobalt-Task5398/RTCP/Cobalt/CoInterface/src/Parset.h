@@ -82,6 +82,9 @@ namespace LOFAR
       // key: Observation.sampleClock
       unsigned clockMHz;
 
+      // The station clock, in Hz
+      unsigned clockHz() const;
+
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
 
@@ -460,6 +463,9 @@ namespace LOFAR
         // flagging, beamforming, and coherent dedispersion.
         // Power of two and at least nrDelayCompensationChannels.
         unsigned nrHighResolutionChannels;
+
+        // Are we in fly's eye mode?
+        bool doFlysEye;
 
         struct TAB {
           // The (absolute) direction where the TAB points to.

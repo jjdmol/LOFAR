@@ -124,6 +124,12 @@ namespace LOFAR
     }
 
 
+    unsigned ObservationSettings::clockHz() const
+    {
+      return clockMHz * 1000000;
+    }
+
+
     Parset::Parset()
     {
     }
@@ -421,6 +427,9 @@ namespace LOFAR
             emptyVectorString, true);
         station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
 
+        // NOTE: Support for clockCorrectionTime can be phased out when the
+        // BG/P is gone. delay.X and delay.Y are superior to it, being
+        // polarisation specific.
         station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
         station.phaseCenter = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3, 0), true);
         if (station.phaseCenter == emptyVectorDouble)
@@ -430,6 +439,14 @@ namespace LOFAR
         station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
         station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
 
+        if (station.delay.x > 0.0 || station.delay.y > 0.0) {
+          if (station.clockCorrection != 0.0) {
+            // Ignore clockCorrectionTime if delay.X or delay.Y are specified.
+
+            station.clockCorrection = 0.0;
+            LOG_WARN_STR("Ignoring PIC.Core." << station.name << ".clockCorrectionTime in favor of PIC.Core." << fieldNames[i].fullName() << "." << settings.antennaSet << "." << settings.bandFilter << ".delay.{X,Y}");
+          }
+        }
 
         string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
         if (!isDefined(key)) key = "Observation.rspBoardList";
@@ -550,6 +567,9 @@ namespace LOFAR
               "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
         }
 
+        settings.beamFormer.doFlysEye = 
+          getBool("OLAP.PencilInfo.flysEye", false);
+
         unsigned nrDelayCompCh;
         if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
           nrDelayCompCh = calcNrDelayCompensationChannels(settings);
@@ -637,12 +657,20 @@ namespace LOFAR
 
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
+          // For Fly's Eye mode we have exactly one TAB per station.
+          if (settings.beamFormer.doFlysEye) {
+            nrTABs = nrStations;
+          }
+
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            const string prefix =
+              settings.beamFormer.doFlysEye ?
+              str(format("Observation.Beam[%u]") % i) :
+              str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
 
             tab.direction.type    = getString(prefix + ".directionType", "J2000");
             tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
@@ -655,12 +683,14 @@ namespace LOFAR
             if (!isDefined(prefix + ".absoluteAngle2"))
               tab.direction.angle2 += settings.SAPs[i].direction.angle2;
 
-            tab.coherent          = getBool(prefix + ".coherent", true);
+            // The following two keys will not be present in fly's eye mode.
+            tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+            tab.coherent              = getBool(prefix + ".coherent", true);
+
             if (tab.coherent)
               sap.nrCoherent++;
             else
               sap.nrIncoherent++;
-            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
                tab.coherent ? settings.beamFormer.coherentSettings
@@ -802,7 +832,7 @@ namespace LOFAR
 
 
     double ObservationSettings::subbandWidth() const {
-      return 1.0 * clockMHz * 1000000 / 1024;
+      return 1.0 * clockHz() / 1024;
     }
 
     unsigned ObservationSettings::nrCrossPolarisations() const {
@@ -1147,7 +1177,7 @@ namespace LOFAR
 
     unsigned Parset::clockSpeed() const
     {
-      return settings.clockMHz * 1000000;
+      return settings.clockHz();
     }
 
     double Parset::subbandBandwidth() const
