@@ -20,42 +20,27 @@
 
 #include <lofar_config.h>
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <iostream>
 #include <vector>
 #include <string>
-#include <omp.h>
-#include <time.h>
+#include <ctime>
+#include <unistd.h>
 
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
-#include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/OutputTypes.h>
-
-#include <InputProc/SampleType.h>
-#include <InputProc/Buffer/StationID.h>
 
 #include <ApplCommon/PVSSDatapointDefs.h>
 #include <ApplCommon/StationInfo.h>
 
-#include "global_defines.h"
 #include "MPISetup.h"
 #include "SystemSetup.h"
 #include <GPUProc/Station/StationInput.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
-//#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
