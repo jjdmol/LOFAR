@@ -212,6 +212,7 @@ int main() {
     for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
+    {
       ASSERTSTR(fpEquals(out.coherentData[tab][s][t][c], outVal, 1e-4f),
         "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
         out.coherentData[tab][s][t][c] << "; outVal = " << outVal);

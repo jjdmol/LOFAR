@@ -193,7 +193,7 @@ int main() {
   // - for 16-bit input: 5 * (32767 * 1 * 64 * 64) ** 2 = 90066495073157120
   // - for 8-bit input: 5 * (127 * 16 * 64 * 64) ** 2 = 346367637585920
 
-  float coh_outVal = nrStations * sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
+  float coh_outVal = nrStations * sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size) / 2;
   cout << "coherent outVal = " << coh_outVal << endl;
 
   for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize); t++)
@@ -216,7 +216,7 @@ int main() {
   // - for 16-bit input: (2 * 32767 * 1 * 64 * 64)^2 = 72053196058525696
   // - for 8-bit input: (2 * 127 * 16 * 64 * 64)^2 = 277094110068736
 
-  float incoh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
+  float incoh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size) / 2;
   cout << "incoherent outVal = " << incoh_outVal << endl;
 
   for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); t++)

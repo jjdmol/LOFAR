@@ -5,7 +5,7 @@ Observation.nrBitsPerSample  = 16
 Cobalt.blockSize             = 65536
 Cobalt.BeamFormer.nrDelayCompensationChannels = 64
 
-Observation.VirtualInstrument.stationList = [5*CS002]
+Observation.VirtualInstrument.stationList = [2*CS002]
 Observation.antennaSet = HBA_ZERO
 Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300]
