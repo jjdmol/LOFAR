@@ -233,31 +233,20 @@ namespace LOFAR
     {
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
-      SmartPtr<StreamableData> outputData;
+      SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
       while ((outputData = output.bequeue->remove()) != NULL) 
       {
+        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*outputData);
+
         const struct BlockID id = outputData->blockID;
         ASSERT( globalSubbandIdx == id.globalSubbandIdx );
         ASSERT( id.block >= 0 ); // Negative blocks should not reach storage
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        // Cast it to our output, which we know will succeed because BeamFormerSubbandProc
-        // only ingests BeamFormedData into the pipeline.
-        //
-        // beamFormedData dimensions are [nrStokes][nrSamples][nrChannels]
-        BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*outputData);
-
-        // running indices for coherent/incoherent stokes being processed
-        size_t coherentIdx = 0;
-        size_t incoherentIdx = 0;
-
-        //const size_t nrCoherentStokes   = ps.settings.beamFormer.coherentSettings.nrStokes * sapInfo.nrCoherentTAB();
-        //const size_t nrIncoherentStokes = ps.settings.beamFormer.incoherentSettings.nrStokes * sapInfo.nrIncoherentTAB();
-
-        for (size_t fileIdx = 0                           ; 
+        for (size_t fileIdx = 0;
              fileIdx < ps.settings.beamFormer.files.size();
              ++fileIdx) 
         {
@@ -270,18 +259,27 @@ namespace LOFAR
           if (file.sapNr != SAP)
             continue;
 
+          // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
+          // produced can be visited 1 or 4 times.
+
           // Compute shape of block
-          const size_t nrChannels = file.coherent
-            ?  ps.settings.beamFormer.coherentSettings.nrChannels
-            :  ps.settings.beamFormer.incoherentSettings.nrChannels;
+          const ObservationSettings::BeamFormer::StokesSettings &stokes =
+            file.coherent
+            ? ps.settings.beamFormer.coherentSettings
+            : ps.settings.beamFormer.incoherentSettings;
 
-          const size_t nrTabs =  ps.settings.beamFormer.maxNrTABsPerSAP();
+          const size_t nrChannels = stokes.nrChannels;
+          const size_t nrSamples =  stokes.nrSamples(ps.settings.blockSize);
 
-          const size_t nrSamples = file.coherent
-            ?  ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize)
-            :  ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); 
-
-          // Object to write to outputProc
+          // Our data has the shape
+          //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
+          //
+          // To transpose our data, we copy a slice representing
+          //   slice[sample][channel]
+          // and send it to outputProc to combine with the other subbands.
+          //
+          // We create a copy to be able to release outputData, since our
+          // slices can be blocked by writes to any number of outputProcs.
           SmartPtr<struct TABTranspose::Subband> subband = 
                 new TABTranspose::Subband(nrSamples, nrChannels);
 
@@ -289,44 +287,16 @@ namespace LOFAR
           subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
           subband->id.block   = id.block;
 
-          // TODO we are not validating the 2nd dimension
-          // Create a copy to be able to release outputData
-          if (file.coherent)
-          {
-            // Copy coherent beam
-            ASSERTSTR(beamFormedData.shape()[0] == nrTabs, "nrTabs is " <<
-              beamFormedData.shape()[0] << " but expected " << nrTabs);
-            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " <<
-              beamFormedData.shape()[2] << " but expected " << nrSamples);
-            ASSERTSTR(beamFormedData.shape()[3] == nrChannels, "nrChannels is " <<
-              beamFormedData.shape()[3] << " but expected " << nrChannels);
-            memcpy(subband->data.origin(),
-                   beamFormedData[coherentIdx].origin(),
-                   subband->data.num_elements() *
-                      sizeof * subband->data.origin());
+          // Create view of subarray 
+          MultiDimArray<float, 2> srcData(
+              boost::extents[nrSamples][nrChannels],
+              file.coherent
+                   ? beamFormedData.coherentData[file.coherentIdxInSAP][file.stokesNr].origin()
+                   : beamFormedData.incoherentData[file.incoherentIdxInSAP][file.stokesNr].origin(),
+              false);
 
-            coherentIdx++;
-          } 
-          else 
-          {
-            // Copy incoherent beam
-            //
-            // TODO: For now, we assume we store coherent OR incoherent beams
-            // in the same struct beamFormedData.
-            
-            ASSERTSTR(beamFormedData.shape()[0] == nrTabs, "nrTabs is " <<
-              beamFormedData.shape()[0] << " but expected " << nrTabs);
-            ASSERTSTR(beamFormedData.shape()[2] == nrSamples, "nrSamples is " <<
-              beamFormedData.shape()[2] << " but expected " << nrSamples);
-            ASSERTSTR(beamFormedData.shape()[3] == nrChannels, "nrChannels is " <<
-              beamFormedData.shape()[3] << " but expected " << nrChannels);
-            memcpy(subband->data.origin(), 
-                   beamFormedData[incoherentIdx].origin(), 
-                   subband->data.num_elements() *
-                      sizeof *subband->data.origin());
-
-            incoherentIdx++;
-          }
+          // Copy data to block
+          subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
 
           // Forward block to MultiSender, who takes ownership.
           multiSender.append(subband);

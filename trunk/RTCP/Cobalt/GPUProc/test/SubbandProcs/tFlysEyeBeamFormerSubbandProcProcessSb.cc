@@ -184,10 +184,10 @@ int main() {
     in.tabDelays.get<float>()[i] = 0.0f;
 
   // Allocate buffer for output signal
-  BeamFormedData out(nrStokes, nrChannels, nrSamples, nrTABs, ctx);
+  BeamFormedData out(ps, ctx);
 
-  for (size_t i = 0; i < out.num_elements(); i++)
-    out.get<float>()[i] = 42.0f;
+  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
+    out.coherentData.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -219,9 +219,9 @@ int main() {
     for (size_t s = 0; s < nrStokes; s++)
       for (size_t t = 0; t < nrSamples; t++)
         for (size_t c = 0; c < nrChannels; c++)
-          ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1e-4f),
-                    "out[" << tab << "][" << s << "][" << t << "][" << c << 
-                    "] = " << setprecision(12) << out[tab][s][t][c] << 
+          ASSERTSTR(fpEquals(out.coherentData[tab][s][t][c], outVal, 1e-4f),
+                    "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << 
+                    "] = " << setprecision(12) << out.coherentData[tab][s][t][c] <<
                     "; outVal = " << outVal);
   return 0;
 }

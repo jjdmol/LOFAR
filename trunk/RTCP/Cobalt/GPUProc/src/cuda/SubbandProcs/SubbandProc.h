@@ -28,8 +28,9 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <CoInterface/StreamableData.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
@@ -105,7 +106,7 @@ namespace LOFAR
       // Create the inputData object we need shared host/device memory on the
       // supplied devicequeue
       SubbandProcInputData(size_t n_beams, size_t n_stations, 
-                           size_t n_polarizations, size_t n_tabs, 
+                           size_t n_polarizations, size_t n_coherent_tabs, 
                            size_t n_samples, size_t bytes_per_complex_sample,
                            gpu::Context &context,
                            unsigned int hostBufferFlags = 0)
@@ -116,12 +117,32 @@ namespace LOFAR
                        context, hostBufferFlags),
         phase0s(boost::extents[n_stations][n_polarizations],
                        context, hostBufferFlags),
-        tabDelays(boost::extents[n_beams][n_stations][n_tabs],
+        tabDelays(boost::extents[n_beams][n_stations][n_coherent_tabs],
                        context, hostBufferFlags),
         inputSamples(boost::extents[n_stations][n_samples][n_polarizations][bytes_per_complex_sample],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
         inputFlags(boost::extents[n_stations]),
         metaData(n_stations)
+      {
+      }
+
+      // Short-hand constructor pulling all relevant values from a Parset
+      SubbandProcInputData(const Parset &ps,
+                           gpu::Context &context,
+                           unsigned int hostBufferFlags = 0)
+        :
+        delaysAtBegin(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        delaysAfterEnd(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        phase0s(boost::extents[ps.settings.stations.size()][NR_POLARIZATIONS],
+                       context, hostBufferFlags),
+        tabDelays(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][ps.settings.beamFormer.maxNrCoherentTABsPerSAP()],
+                       context, hostBufferFlags),
+        inputSamples(boost::extents[ps.settings.stations.size()][ps.settings.blockSize][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
+                       context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
+        inputFlags(boost::extents[ps.settings.stations.size()]),
+        metaData(ps.settings.stations.size())
       {
       }
 
@@ -133,12 +154,21 @@ namespace LOFAR
       void flagInputSamples(unsigned station, const SubbandMetaData& metaData);
     };
 
+    class SubbandProcOutputData
+    {
+    public:
+      struct BlockID blockID;
+
+      // Need a virtual destructor to make type polymorphic
+      virtual ~SubbandProcOutputData() {}
+    };
+
     /*
      * The SubbandProc does the following transformation:
-     *   SubbandProcInputData -> StreamableData
+     *   SubbandProcInputData -> SubbandProcOutputData
      *
      * The SubbandProcInputData represents one block of one subband
-     * of input data, and the StreamableData (for example) the complex
+     * of input data, and the SubbandProcOutputData (for example) the complex
      * visibilities of such a block.
      *
      * For both input and output, a fixed set of objects is created,
@@ -159,7 +189,7 @@ namespace LOFAR
      *   input->blockID.localSubbandIdx  = subbandIdx;
      *
      *   // Fetch the next output object to fill
-     *   SmartPtr<StreamableData> output = queue.outputPool.free.remove();
+     *   SmartPtr<SubbandProcOutputData> output = queue.outputPool.free.remove();
      *
      *   // Process block
      *   queue.doSubband(input, output);
@@ -203,16 +233,16 @@ namespace LOFAR
 
       // A pool of output data, to allow items to be filled
       // and written in parallel.
-      Pool<StreamableData> outputPool;
+      Pool<SubbandProcOutputData> outputPool;
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(SubbandProcInputData &input, StreamableData &output) = 0;
+      virtual void processSubband(SubbandProcInputData &input, SubbandProcOutputData &output) = 0;
 
       // Do post processing on the CPU.
       // \return Whether output must be sent to the output processor or
       // not. This feature is needed to do long-time integration (longer than
       // the maximum block size that can be processed on a GPU).
-      virtual bool postprocessSubband(StreamableData &output) = 0;
+      virtual bool postprocessSubband(SubbandProcOutputData &output) = 0;
 
     protected:
       const Parset &ps;

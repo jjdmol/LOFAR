@@ -238,6 +238,7 @@
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.cc" />
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.cc" />
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc" />
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\test\tfpequals.cc" />
     <ClCompile Include="..\..\GPUProc\test\tRunningStatistics.cc" />
@@ -322,6 +323,8 @@
     <None Include="..\..\GPUProc\test\SubbandProcs\tCoherentStokesBeamFormerSubbandProcProcessSb.sh" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.parset" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.run" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging.sh" />
