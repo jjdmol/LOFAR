@@ -32,6 +32,7 @@
 #include <vector>
 #include <string>
 #include <omp.h>
+#include <time.h>
 #include <sys/resource.h>
 #include <sys/mman.h>
 
@@ -77,6 +78,18 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
+
+/* Tuning parameters */
+
+// Deadline for the FinalMetaDataGatherer, in seconds
+const time_t finalMetaDataTimeout = 2 * 60;
+
+// Deadline for outputProc, in seconds.
+const time_t outputProcTimeout = 2 * 60;
+
+// Amount of seconds to stay alive after Observation.stopTime
+// has passed.
+const time_t rtcpTimeout = 5 * 60;
 
 static void usage(const char *argv0)
 {
@@ -190,6 +203,25 @@ int main(int argc, char **argv)
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
+
+  if (ps.realTime()) {
+    // First of all, make sure we can't freeze for too long
+    // by scheduling an alarm() some time after the observation
+    // ends.
+
+    const time_t now = time(0);
+    const double stopTime = ps.stopTime();
+
+    if (now < stopTime + rtcpTimeout) {
+      size_t maxRunTime = stopTime + rtcpTimeout - now;
+
+      LOG_INFO_STR("RTCP will self-destruct in " << maxRunTime << " seconds");
+      alarm(maxRunTime);
+    } else {
+      LOG_ERROR_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
+      return 0;
+    }
+  }
 
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
@@ -449,12 +481,12 @@ int main(int argc, char **argv)
 
     // retrieve and forward final meta data
     time_t completing_start = time(0);
-    storageProcesses->forwardFinalMetaData(completing_start + 300);
+    storageProcesses->forwardFinalMetaData(completing_start + finalMetaDataTimeout);
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 600);
+    storageProcesses->stop(completing_start + finalMetaDataTimeout + outputProcTimeout);
 
     LOG_INFO("Writing LTA feedback to disk");
 

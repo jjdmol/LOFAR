@@ -244,7 +244,7 @@ namespace LOFAR
 
         // NIC(s) to bind to (comma seperated)
         //
-        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        // E.g. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
       };
 
@@ -261,8 +261,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.angle1
-        // key: *.angle2
+        // key: *.absoluteAngle1
+        // key: *.absoluteAngle2
         double angle1;
         double angle2;
       };
@@ -272,6 +272,12 @@ namespace LOFAR
         //
         // key: Observation.Beam[sapIdx].*
         struct Direction direction;
+
+
+        // The list of sabbands in this SAP
+        //
+        // key: Observation.Beam[idx].subbandList 
+        std::vector<unsigned> subbandIndices;
 
         // Name of target
         //
@@ -308,6 +314,12 @@ namespace LOFAR
         //
         // set to: equals the index in the subbands vector
         unsigned idx;
+
+
+        // Index of this subband in the SAP it is part of
+        //
+        // Calculated based on  Observation.Beam[x].subbandList
+        unsigned idxInSAP;
 
         // Index at station (f.e. 100..343)
         //
@@ -447,11 +459,10 @@ namespace LOFAR
         bool doFlysEye;
 
         struct TAB {
-          // The direction in wich the TAB points, relative
-          // to the SAP's coordinates
+          // The (absolute) direction where the TAB points to.
           //
           // key: Observation.Beam[sap].TiedArrayBeam[tab].*
-          struct Direction directionDelta;
+          struct Direction direction;
 
           // Whether the beam is coherent (or incoherent)
           //
@@ -484,6 +495,9 @@ namespace LOFAR
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
+
+          // list of subbands in this sap
+          vector<unsigned> subbandIndices;
         };
 
         // All SAPs, with information about the TABs to form.

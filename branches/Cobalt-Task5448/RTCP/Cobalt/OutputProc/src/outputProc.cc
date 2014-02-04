@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     usage(argv[0]);
     return 1;
   }
-
+   
   setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
   setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 

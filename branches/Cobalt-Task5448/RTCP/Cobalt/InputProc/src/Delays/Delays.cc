@@ -227,8 +227,8 @@ namespace LOFAR
             // Convert the TAB directions using the convert engine
             const struct ObservationSettings::BeamFormer::SAP &bfSap = parset.settings.beamFormer.SAPs[sap];
             for (size_t tab = 0; tab < bfSap.TABs.size(); tab++) {
-              const MVDirection dir(sapInfo.direction.angle1 + bfSap.TABs[tab].directionDelta.angle1,
-                                    sapInfo.direction.angle2 + bfSap.TABs[tab].directionDelta.angle2);
+              const MVDirection dir(bfSap.TABs[tab].direction.angle1,
+                                    bfSap.TABs[tab].direction.angle2);
 
               result.SAPs[sap].TABs[tab] = convert(converter, dir);
             }

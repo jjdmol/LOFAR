@@ -88,15 +88,15 @@ namespace LOFAR
         Performance(size_t nrGPUs = 1);
       } performance;
 
-    private:
-      struct Output {
+      struct Output 
+      {
         // synchronisation to write blocks in-order
         SlidingPointer<size_t> sync;
 
         // output data queue
         SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
       };
-
+    private:
       // For each block, read all subbands from all stations, and divide the
       // work over the workQueues
       void receiveInput( size_t nrBlocks );

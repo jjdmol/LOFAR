@@ -90,7 +90,7 @@ TEST(propagateFlags)
           CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[idx_baseline][idx_channel][idx_pol1][idx_pol2]);
 
   // 2. station zero and one have no flags, the baselines for these station should be default 
-  float weight_of_unflagged_sample = 1e-6f/1024; // default weighting / number of samples
+  float weight_of_unflagged_sample = 1.0f/1024; // default weighting / number of samples
   for(unsigned idx_baseline = 0; idx_baseline < 3; ++idx_baseline)  //bl 0-3 are 0.0 1.0 and 1.1
     for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
@@ -101,7 +101,7 @@ TEST(propagateFlags)
 
   // 3. Now check the weights for bl 4 to 6: flagging should be a single flagged sample on the input
   // only a single point in time is flagged should result in weight_of_single_sample
-  float weight_of_single_sample = 1e-6f/(1024 - 1 * NR_TAPS);  // 1 * filter width
+  float weight_of_single_sample = 1.0f/(1024 - 1 * NR_TAPS);  // 1 * filter width
   for(unsigned idx_baseline = 3; idx_baseline < 6; ++idx_baseline)
     for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
@@ -121,7 +121,7 @@ TEST(propagateFlags)
                       1e-18f);  // float compare with this delta
 
   // station 2 and 3: two samples
-  float weight_of_two_sample = 1e-6f/(1024 - 2 * NR_TAPS);  // 1 * filter width
+  float weight_of_two_sample = 1.0f/(1024 - 2 * NR_TAPS);  // 1 * filter width
   for(unsigned idx_baseline = 8; idx_baseline < 9; ++idx_baseline)
     for(unsigned idx_channel = 1; idx_channel < 4; ++idx_channel)    //validate channel ONE and higher
       for(unsigned idx_pol1 = 0; idx_pol1 < NR_POLARIZATIONS; ++idx_pol1)    
@@ -269,14 +269,13 @@ TEST(applyWeights)
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[0][0][0][0]);
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][0][1][1]); // check origin and far corner
 
-  // the weighted values should be multiplied with 1e-6 divided
-  // by the number of samples
-  CHECK_EQUAL(std::complex<float>(1e-6/n_valid_samples,0), output.visibilities[0][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(1e-6/n_valid_samples,0), output.visibilities[0][1][1][1]);
+  // the weighted values should be divided by the number of samples
+  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), output.visibilities[0][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(1.0/n_valid_samples,0), output.visibilities[0][1][1][1]);
 
   // baselines 1 
-  CHECK_EQUAL(std::complex<float>(1e-6/256,0), output.visibilities[1][1][0][0]);
-  CHECK_EQUAL(std::complex<float>(1e-6/256,0), output.visibilities[1][1][1][1]);
+  CHECK_EQUAL(std::complex<float>(1.0/256,0), output.visibilities[1][1][0][0]);
+  CHECK_EQUAL(std::complex<float>(1.0/256,0), output.visibilities[1][1][1][1]);
 
   //baseline 2 no samples so should be zero
   CHECK_EQUAL(std::complex<float>(0,0), output.visibilities[2][1][0][0]);

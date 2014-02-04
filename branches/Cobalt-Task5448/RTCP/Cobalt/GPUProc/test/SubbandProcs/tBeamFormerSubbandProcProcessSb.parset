@@ -10,8 +10,8 @@ Observation.antennaSet = HBA_ZERO
 Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300]
 Observation.Beam[0].nrTiedArrayBeams     = 1
-Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
-Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1 = 0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].coherent = F
 
 OLAP.CNProc_CoherentStokes.which	 = I # IQUV

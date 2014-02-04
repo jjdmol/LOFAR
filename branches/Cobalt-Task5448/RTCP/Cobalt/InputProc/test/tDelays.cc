@@ -97,8 +97,8 @@ TEST(TiedArrayBeam) {
   ps.add( "Observation.Beam[1].angle2", "0" );
   ps.add( "Observation.Beam[1].nrTiedArrayBeams", "1" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].absoluteAngle1", "1" ); // Observation.Beam[1].angle1 + 0
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].absoluteAngle2", "1" ); // Observation.Beam[1].angle2 + 1
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].coherent", "true" );
   ps.updateSettings();
 

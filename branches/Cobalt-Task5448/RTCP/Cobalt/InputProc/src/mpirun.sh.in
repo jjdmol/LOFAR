@@ -2,6 +2,12 @@
 #
 # Script to start MPI. It tries to wrap (part of) the different scripts that
 # exist to start MPI (e.g., mpirun, mpiexec, etc.)
+#
+# Usage: mpirun.sh <executable> [<arg> ...]
+#
+# The name of the executable will be prefixed with the contents of the
+# environment variable EXECUTABLE_PREFIX. This way you can, e.g., run your
+# MPI program through valgrind.
 
 error()
 {
@@ -141,7 +147,7 @@ set_${MPI_FLAVOUR}_options
 # &: Execute in the background to be able to propagate signals.
 # Put the & here, and not after eval, because we don't want
 # to background the 'eval' command itself!
-COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS} &"
+COMMAND="${MPIEXEC} ${MPIEXEC_PREFLAGS} ${EXECUTABLE_PREFIX} ${EXECUTABLE} ${MPIEXEC_POSTFLAGS} ${ARGS} &"
 
 echo "Executing: $COMMAND"
 
@@ -151,8 +157,8 @@ PID=$!
 # Propagate SIGTERM
 trap "echo mpirun.sh: killing $PID; kill $PID" SIGTERM SIGINT SIGQUIT SIGHUP
 
-# Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
-# receives a signal.
+# Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if
+# it receives a signal.
 #
 # Return code:
 #   signal:    >128
