@@ -13,9 +13,11 @@ set(_gpuproc_sources
   cpu_utils.cc
   FilterBank.cc
   global_defines.cc
+  MPISetup.cc
   RunningStatistics.cc
   Package__Version.cc
   SysInfoLogger.cc
+  SystemSetup.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
   Storage/SSH.cc
