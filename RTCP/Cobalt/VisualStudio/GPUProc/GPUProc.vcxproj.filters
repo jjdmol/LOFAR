@@ -752,6 +752,9 @@
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc">
       <Filter>test\SubbandProcs</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1080,6 +1083,12 @@
       <Filter>test\SubbandProcs</Filter>
     </None>
     <None Include="..\..\GPUProc\test\SubbandProcs\tCorrelatorSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset">
       <Filter>test\SubbandProcs</Filter>
     </None>
   </ItemGroup>

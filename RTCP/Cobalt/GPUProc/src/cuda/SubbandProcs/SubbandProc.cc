@@ -41,14 +41,7 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(
-                ps.nrBeams(),
-                ps.nrStations(),
-                ps.settings.nrPolarisations,
-                ps.settings.beamFormer.maxNrTABsPerSAP(),
-                ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                context));
+        inputPool.free.append(new SubbandProcInputData(ps, context));
       }
     }
 
@@ -97,15 +90,15 @@ namespace LOFAR
       delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
       phase0s[station][1]             = ps.settings.stations[station].phase0.y;
 
-
       if (ps.settings.beamFormer.enabled)
       {
+        // we already compensated for the delay for the first beam
+        double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                   metaData.stationBeam.delayAtBegin) * 0.5;
+
+        // Note: We only get delays for the coherent TABs
         for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
         {
-          // we already compensated for the delay for the first beam
-          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
-                                     metaData.stationBeam.delayAtBegin) * 0.5;
-
           // subtract the delay that was already compensated for
           tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -

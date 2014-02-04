@@ -25,7 +25,6 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/StreamableData.h>
 
 #include <GPUProc/gpu_wrapper.h>
 
@@ -54,19 +53,26 @@ namespace LOFAR
     struct BeamFormerFactories;
 
     // Our output data type
-    class BeamFormedData : public MultiDimArrayHostBuffer<float, 4>,
-                           public StreamableData
+    class BeamFormedData: public SubbandProcOutputData
     {
     public:
+      MultiDimArrayHostBuffer<float, 4> coherentData;
+      MultiDimArrayHostBuffer<float, 4> incoherentData;
      
-      BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-        size_t nrSamples, gpu::Context &context);
+      BeamFormedData(unsigned nrCoherentTABs,
+                     unsigned nrCoherentStokes,
+                     size_t nrCoherentSamples,
+                     unsigned nrCoherentChannels,
+                     unsigned nrIncoherentTABs,
+                     unsigned nrIncoherentStokes,
+                     size_t nrIncoherentSamples,
+                     unsigned nrIncoherentChannels,
+                     gpu::Context &context);
 
-      BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-        size_t nrSamples, unsigned nrTabs, gpu::Context &context);
-    private:
-      virtual void readData(Stream *str, unsigned);
-      virtual void writeData(Stream *str, unsigned);
+      /* Short-hand constructor to fetch all dimensions
+       * from a Parset */
+      BeamFormedData(const Parset &ps,
+                     gpu::Context &context);
     };
 
     class BeamFormerSubbandProc : public SubbandProc
@@ -78,10 +84,10 @@ namespace LOFAR
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,
-                                  StreamableData &output);
+                                  SubbandProcOutputData &output);
 
       // Do post processing on the CPU
-      virtual bool postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(SubbandProcOutputData &output);
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -124,6 +130,12 @@ namespace LOFAR
       Counters counters;
 
     private:
+      // Whether we form any coherent beams
+      bool formCoherentBeams;
+
+      // Whether we form any incoherent beams
+      bool formIncoherentBeams;
+
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
       // to be uploaded.
