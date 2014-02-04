@@ -50,7 +50,7 @@ namespace LOFAR
       unsigned itsNrChannels;
       unsigned itsNrSamples;
       unsigned itsNextSeqNr;
-
+      unsigned itsFileNr;
       unsigned itsBlockSize; // the size of StreamableData::samples, in T
     };
   }

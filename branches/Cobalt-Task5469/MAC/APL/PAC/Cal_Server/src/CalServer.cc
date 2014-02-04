@@ -653,7 +653,8 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			bitset<MAX_RCUS> testmask;
 			Timestamp timeStamp;
 
-			#define N_PWR_RCUS_PER_STEP 12
+//			#define N_PWR_RCUS_PER_STEP 12
+			#define N_PWR_RCUS_PER_STEP 8
 
 			int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
 			int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
