@@ -8,7 +8,7 @@ import os
 import numpy as np
 import logging
 
-test_version = '1013e'
+test_version = '0214'
 
 logger = None
 def init_test_lib():
@@ -267,6 +267,11 @@ class cLBA:
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+        
+        if self.db.checkEndTime(duration=28.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+                
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -276,6 +281,11 @@ class cLBA:
         
         clean = False
         while not clean:
+            if self.db.checkEndTime(duration=18.0) == False:
+                logger.warn("check stopped, end time reached")
+                return
+        
+            
             clean = True
             self.rcudata.record(rec_time=5)
             
@@ -302,12 +312,17 @@ class cLBA:
         self.db.addTestDone('O%d' %(mode))
         logger.info("=== Done %s oscillation test ===" %(self.lba.label))
         return
-    
+
     def checkNoise(self, mode, record_time, low_deviation, high_deviation, max_diff):
         logger.info("=== Start %s noise test ===" %(self.lba.label))
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+
+        if self.db.checkEndTime(duration=(record_time+100.0)) == False:
+            logger.warn("check stopped, end time reached")
+            return
+
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -397,6 +412,11 @@ class cLBA:
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=12.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -427,12 +447,16 @@ class cLBA:
         logger.info("=== Done %s spurious test ===" %(self.lba.label))
         return        
         
-        
     def checkSignal(self, mode, subband, min_signal, low_deviation, high_deviation):
         logger.info("=== Start %s RF test ===" %(self.lba.label))
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=15.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             if mode < 3:
@@ -573,12 +597,17 @@ class cHBA:
             if tile.x.osc or tile.y.osc or (no_modem >= 8) or (modem_error >= 8):
                 self.turnOffTile(tile.nr)
         return
-        
+    
     def checkModem(self, mode):
         logger.info("=== Start HBA modem test ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+        
+        if self.db.checkEndTime(duration=50.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+        
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -619,12 +648,17 @@ class cHBA:
         logger.info("=== Done HBA modem test ===")
         return
         
-    # check for summator noise and turn off RCU 
+    # check for summator noise and turn off RCU
     def checkSummatorNoise(self, mode):
         logger.info("=== Start HBA tile based summator-noise test ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=25.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -637,7 +671,7 @@ class cHBA:
         self.rcudata.record(rec_time=15)
         
         logger.debug("- test X -")
-        sum_noise = search_summator_noise(self.rcudata.getAllX())
+        sum_noise, cable_reflectio = search_summator_noise(self.rcudata.getAllX())
         for n in sum_noise:
             tile, cnt, n_peaks = n
             logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].x.rcu, tile, cnt, n_peaks))
@@ -645,7 +679,7 @@ class cHBA:
             self.turnOffTile(tile)
         
         logger.debug("- test Y -")
-        sum_noise = search_summator_noise(self.rcudata.getAllY())
+        sum_noise, cable_reflectio = search_summator_noise(self.rcudata.getAllY())
         for n in sum_noise:
             tile, cnt, n_peaks = n
             logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].y.rcu, tile, cnt, n_peaks))
@@ -668,6 +702,11 @@ class cHBA:
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=35.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -680,6 +719,10 @@ class cHBA:
         
         clean = False
         while not clean:
+            if self.db.checkEndTime(duration=25.0) == False:
+                logger.warn("check stopped, end time reached")
+                return
+
             clean = True
             self.rcudata.record(rec_time=8)
             
@@ -706,12 +749,17 @@ class cHBA:
         self.db.addTestDone('O%d' %(mode))
         logger.info("=== Done HBA tile based oscillation test ===")
         return
-    
+ 
     def checkNoise(self, mode, record_time, low_deviation, high_deviation, max_diff):
         logger.info("=== Start HBA tile based noise test ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=(record_time+60.0)) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -797,12 +845,17 @@ class cHBA:
         self.db.addTestDone('NS%d=%d' %(mode, record_time))
         logger.info("=== Done HBA tile based noise test ===")
         return    
-    
+  
     def checkSpurious(self, mode):
         logger.info("=== Start HBA tile based spurious test ===")
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=12.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -840,6 +893,11 @@ class cHBA:
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+            
+        if self.db.checkEndTime(duration=37.0) == False:
+            logger.warn("check stopped, end time reached")
+            return
+            
         if self.db.rcumode != mode:
             self.db.rcumode = mode
             swapXY(state=0)
@@ -856,6 +914,10 @@ class cHBA:
                 logger.info("skip signal test for tile %d, RCUs turned off" %(tile.nr))
                     
         for ctrl in ('128,', '253,'):
+            if self.db.checkEndTime(duration=20.0) == False:
+                logger.warn("check stopped, end time reached")
+                return
+
             if ctrl == '128,': ctrl_nr = 0
             elif ctrl == '253,': ctrl_nr = 1
                 
@@ -985,6 +1047,11 @@ class cHBA:
              
             for elem in range(self.hba.tile[0].nr_elements):
                 logger.info("check elements %d, ctrlword=%s" %(elem+1, ctrl))
+                
+                if self.db.checkEndTime(duration=45.0) == False:
+                    logger.warn("check stopped, end time reached")
+                    return
+
                 if n_rcus_off > 0:
                     rsp_rcu_mode(mode=mode, rcus=self.hba.selectList())
                     n_rcus_off = 0
@@ -999,6 +1066,10 @@ class cHBA:
                 
                 clean = False
                 while not clean:
+                    if self.db.checkEndTime(duration=(record_time+45.0)) == False:
+                        logger.warn("check stopped, end time reached")
+                        return
+
                     clean = True
                     self.rcudata.record(rec_time=record_time)
                     
@@ -1030,6 +1101,11 @@ class cHBA:
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down, skip test")
             return
+        
+        if self.db.checkEndTime(duration=45.0) == False:
+            logger.warn("check stopped, end time reached")
+            return    
+            
         self.db.rcumode = mode
         swapXY(state=0)
         turnoffRCUs()

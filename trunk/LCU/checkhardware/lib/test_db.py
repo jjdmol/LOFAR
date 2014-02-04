@@ -3,9 +3,10 @@
 from copy import deepcopy
 from general_lib import *
 from lofar_lib import *
+import time
 import logging
 
-db_version = '1013c'
+db_version = '0214'
 
 logger = None
 def init_test_db():
@@ -15,24 +16,25 @@ def init_test_db():
 
 class cDB:
     global logger
-    def __init__(self, StID, nRSP, nTBB, nLBL, nLBH, nHBA):
-        self.StID   = StID
-        self.nr_rsp = nRSP
-        self.nr_rcu = nRSP * 8
-        self.nr_lbl = nLBL
-        self.nr_lbh = nLBH
-        self.nr_hba = nHBA
-        self.nr_tbb = nTBB
+    def __init__(self, StID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT):
+        self.StID              = StID
+        self.nr_rsp            = nRSP
+        self.nr_rcu            = nRSP * 8
+        self.nr_lbl            = nLBL
+        self.nr_lbh            = nLBH
+        self.nr_hba            = nHBA
+        self.hba_split         = HBA_SPLIT
+        self.nr_tbb            = nTBB
         
-        self.script_versions = ''
+        self.script_versions   = ''
         
-        self.board_errors = list()
-        self.rcumode = -1
-        self.tests   = ''
-        self.check_start_time = 0
-        self.check_stop_time  = 0
-        self.rsp_driver_down  = False 
-        self.tbb_driver_down  = False 
+        self.board_errors      = list()
+        self.rcumode           = -1
+        self.tests             = ''
+        self.check_start_time  = 0
+        self.check_stop_time   = 0
+        self.rsp_driver_down   = False 
+        self.tbb_driver_down   = False 
         
         self.station_error     = 0
         self.rspdriver_version = "ok"
@@ -40,6 +42,7 @@ class cDB:
         self.tbbdriver_version = "ok"
         self.tbbctl_version    = "ok"
         
+        self.test_end_time     = -1
         
         self.rsp = list()
         for i in range(nRSP):
@@ -55,8 +58,24 @@ class cDB:
         
         self.lbl = deepcopy(self.cLBA_DB(label='LBL', nr_antennas=nLBL, nr_offset=48))
         self.lbh = deepcopy(self.cLBA_DB(label='LBH', nr_antennas=nLBH, nr_offset=0))
-        self.hba = deepcopy(self.cHBA_DB(nr_tiles=nHBA))
+        self.hba = deepcopy(self.cHBA_DB(nr_tiles=nHBA, split=self.hba_split))
     
+    def setTestEndTime(self, end_time):
+        if end_time > time.time():
+    	    self.test_end_time = end_time
+        else:
+            logger.warn("end time in past")	
+        return
+   
+    # returns True if before end time 
+    def checkEndTime(self, duration=0.0):
+        if self.test_end_time == -1:
+        	return (True)
+        if (time.time() + duration) < self.test_end_time:
+            return (True)
+        else:
+            return (False)		
+    	
     # add only ones
     def addTestDone(self, name):
         if self.tests.find(name) == -1:
@@ -162,7 +181,8 @@ class cDB:
         
         log.addLine("%s,NFO,---,CHECKS%s" %(date, self.tests))
         
-        log.addLine("%s,NFO,---,STATISTICS,BAD_LBL=%d,BAD_LBH=%d,BAD_HBA=%d" %(date, self.lbl.nr_bad_antennas, self.lbh.nr_bad_antennas, self.hba.nr_bad_tiles))
+        log.addLine("%s,NFO,---,STATISTICS,BAD_LBL=%d,BAD_LBH=%d,BAD_HBA=%d,BAD_HBA0=%d,BAD_HBA1=%d" %\
+                   (date, self.lbl.nr_bad_antennas, self.lbh.nr_bad_antennas, self.hba.nr_bad_tiles, self.hba.nr_bad_tiles_0, self.hba.nr_bad_tiles_1))
         
         
         if self.rspdriver_version != "ok" or self.rspctl_version != "ok":
@@ -555,7 +575,7 @@ class cDB:
                 return
             
     class cHBA_DB:
-        def __init__(self, nr_tiles):
+        def __init__(self, nr_tiles, split):
             self.rsp_driver_down           = False
             self.modem_check_done          = 0
             self.noise_check_done          = 0
@@ -565,6 +585,7 @@ class cDB:
             self.summatornoise_check_done  = 0
             self.element_check_done        = 0
             
+            self.hba_split                 = split
             self.check_time_noise          = 0
             self.check_time_noise_elements = 0
             self.nr_tiles                  = nr_tiles
@@ -572,6 +593,8 @@ class cDB:
             self.avg_2_low                 = 0
             self.tile                      = list()
             self.nr_bad_tiles              = -1
+            self.nr_bad_tiles_0            = -1
+            self.nr_bad_tiles_1            = -1
             for i in range(self.nr_tiles):
                 self.tile.append(self.cTile(i))
             return
@@ -581,7 +604,11 @@ class cDB:
                 return (self.error)
             if self.modem_check_done or self.noise_check_done or self.signal_check_done or self.spurious_check_done \
                or self.oscillation_check_done or self.summatornoise_check_done or self.element_check_done :
-                self.nr_bad_tiles = 0
+                if self.hba_split == 1:
+                    self.nr_bad_tiles_0 = 0
+                    self.nr_bad_tiles_1 = 0
+                else:
+                    self.nr_bad_tiles   = 0
                     
             for tile in self.tile:
                 tile.test()
@@ -589,8 +616,13 @@ class cDB:
                 self.error = max(self.error, tile_error)
                 
                 if tile_error:
-                    self.nr_bad_tiles += 1
-
+                    if self.hba_split == 1:
+                        if tile.nr < 24:
+                            self.nr_bad_tiles_0 += 1
+                        else:
+                            self.nr_bad_tiles_1 += 1
+                    else:        
+                        self.nr_bad_tiles += 1
             return (self.error)   
         
         # return select string for rspctl command

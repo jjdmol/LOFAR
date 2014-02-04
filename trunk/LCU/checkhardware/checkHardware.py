@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-check_version = '1013f'
+check_version = '0214'
 
 import sys
 import os
@@ -8,6 +8,8 @@ import os
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
 sys.path.insert(0, libPath)
+
+logPath  = r'/localhome/stationtest/log'
 
 import time
 import datetime
@@ -225,9 +227,13 @@ def init_logging():
     # create logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-
+    
+    # check if log dir exist  
+    if not os.access(logPath, os.F_OK):
+        os.mkdir(logPath)
+    
     # create file handler
-    full_filename = os.path.join(mainPath, 'checkHardware.log')
+    full_filename = os.path.join(logPath, 'checkHardware.log')
     #backup_filename = os.path.join(mainPath, 'checkHardware_bk.log')
     #sendCmd('cp', '%s %s' %(full_filename, backup_filename))
     file_handler = logging.FileHandler(full_filename, mode='w')
@@ -325,12 +331,15 @@ def main():
     
     start_time = time.gmtime()
     # Read in RemoteStation.conf
-    ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
+    ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT = readStationConfig()
 
     # setup intern database with station layout
-    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA)
-
+    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT)
     
+    
+    if (stop_time > 0.0):
+        db.setTestEndTime((stop_time-120.0))
+        
                     
     # set manualy marked bad antennas
     log_dir = conf.getStr('log-dir-global')
@@ -511,6 +520,7 @@ def main():
                                                         high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
                             
         
+                            runtime = (time.time() - runstart)
                             
                             # All element test
                             if args.has_key('EHBA'):
@@ -553,10 +563,10 @@ def main():
                                 
                             # one run done
                             repeat_cnt += 1
-                            runtime = max((time.time() - runstart), 45.0)
+                            
 
                         except:
-                            logger.warn("Program fault, RSP test")
+                            logger.warn("Program fault, RSP test (%s)" %(sys.exc_value))
                             #raise
                             break
                             
@@ -578,7 +588,7 @@ def main():
                         db.addTestDone('TM')
                         tbb.checkMemory()
                 except:
-                    logger.warn("Program fault, TBB test")
+                    logger.warn("Program fault, TBB test (%s)" %(sys.exc_value))
     db.check_stop_time = time.gmtime()
 
     # do db test and write result files to log directory
