@@ -32,7 +32,6 @@
 
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
@@ -92,12 +91,18 @@ namespace LOFAR
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
       :
       Pipeline(ps, subbandIndices, devices),
+      factories(ps, nrSubbandsPerSubbandProc),
       multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
+    }
 
-      BeamFormerFactories factories(ps, nrSubbandsPerSubbandProc);
+    void BeamFormerPipeline::allocateResources()
+    {
+      Pipeline::allocateResources();
 
+      // Create the SubbandProcs, which in turn allocate the GPU buffers and
+      // functions.
       for (size_t i = 0; i < workQueues.size(); ++i) {
         gpu::Context context(devices[i % devices.size()]);
 
