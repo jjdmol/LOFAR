@@ -159,93 +159,12 @@ namespace LOFAR
       bandPassCorrectionBuffers(
         devA, devB, devBandPassCorrectionWeights),
       bandPassCorrectionKernel(
-        factories.bandPassCorrection.create(queue, bandPassCorrectionBuffers)),
-
-      //**************************************************************
-      //coherent stokes
-      //bool:
-      outputComplexVoltages(  
-        ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
-      //bool: 
-      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1), 
-
-      // beamForm: B -> A
-      // TODO: support >1 SAP
-      devBeamFormerDelays(
-        context,
-        factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
-      beamFormerBuffers(devB, devA, devBeamFormerDelays),
-      beamFormerKernel(factories.beamFormer.create(queue, beamFormerBuffers)),
-
-      // transpose after beamforming: A -> C/D
-      //
-      // Output buffer: 
-      // 1ch: CS: C, CV: D
-      // PPF: CS: D, CV: C
-      coherentTransposeBuffers(
-        devA, outputComplexVoltages ^ coherentStokesPPF ? devD : devC),
-      coherentTransposeKernel(
-          factories.coherentTranspose.create(
-             queue, coherentTransposeBuffers)),
-
-      // inverse FFT: C/D -> C/D (in-place) = transposeBuffers.output
-      inverseFFT(
-        queue,
-        ps.settings.beamFormer.nrHighResolutionChannels,
-        (ps.settings.beamFormer.maxNrTABsPerSAP() * NR_POLARIZATIONS *
-         ps.nrSamplesPerSubband() /
-         ps.settings.beamFormer.nrHighResolutionChannels),
-         false, coherentTransposeBuffers.output),
-
-      // fftshift: C/D -> C/D (in-place) = transposeBuffers.output
-      inverseFFTShiftBuffers(
-        coherentTransposeBuffers.output, coherentTransposeBuffers.output),
-      inverseFFTShiftKernel(
-        factories.fftShift.create(queue, inverseFFTShiftBuffers)),
-
-      // FIR filter: D/C -> C/D
-      //
-      // Input buffer:
-      // 1ch: CS: -, CV: - (no FIR will be done)
-      // PPF: CS: D, CV: C = transposeBuffers.output
-      //
-      // Output buffer:
-      // 1ch: CS: -, CV: - (no FIR will be done)
-      // PPF: CS: C, CV: D = transposeBuffers.input
-      devFilterWeights(
-        context,
-        factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(
-        context,
-        factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
-      firFilterBuffers(
-        coherentTransposeBuffers.output, coherentTransposeBuffers.input,
-        devFilterWeights, devFilterHistoryData),
-      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
-
-      // final FFT: C/D -> C/D (in-place) = firFilterBuffers.output
-      finalFFT(
-        queue,
-        ps.settings.beamFormer.coherentSettings.nrChannels,
-        (ps.settings.beamFormer.maxNrTABsPerSAP() *
-         NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-         ps.settings.beamFormer.coherentSettings.nrChannels),
-        true, firFilterBuffers.output),
-
-      // coherentStokes: C -> D
-      //
-      // 1ch: input comes from inverseFFT in C
-      // Nch: input comes from finalFFT in C
-      coherentStokesBuffers(
-        devC,
-        devD),
-      coherentStokesKernel(
-        factories.coherentStokes.create(queue, coherentStokesBuffers))
+        factories.bandPassCorrection.create(queue, bandPassCorrectionBuffers))
     {
-
-        initIncoherentMembers(context, factories);
+      initCoherentMembers(context, factories);
+      initIncoherentMembers(context, factories);
       // initialize history data for both coherent and incoherent stokes.
-      devFilterHistoryData.set(0);
+      devFilterHistoryData->set(0);
       devIncoherentFilterHistoryData->set(0);
 
       formCoherentBeams = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0;
@@ -274,6 +193,108 @@ namespace LOFAR
       //addTimer("GPU - wait");
     }
       
+      void BeamFormerSubbandProc::initCoherentMembers(gpu::Context &context,
+        BeamFormerFactories &factories)
+      {
+        //**************************************************************
+        //coherent stokes
+        //bool:
+        outputComplexVoltages =
+          ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY;
+        //bool: 
+        coherentStokesPPF = ps.settings.beamFormer.coherentSettings.nrChannels > 1;
+
+        // beamForm: B -> A
+        // TODO: support >1 SAP
+        devBeamFormerDelays = std::auto_ptr<gpu::DeviceMemory>(
+          new gpu::DeviceMemory(context,
+          factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)
+          )
+          );
+        beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
+          new BeamFormerKernel::Buffers(devB, devA, *devBeamFormerDelays));
+
+        beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
+          factories.beamFormer.create(queue, *beamFormerBuffers));
+        // transpose after beamforming: A -> C/D
+        //
+        // Output buffer: 
+        // 1ch: CS: C, CV: D
+        // PPF: CS: D, CV: C
+
+        coherentTransposeBuffers = std::auto_ptr<CoherentStokesTransposeKernel::Buffers>(
+          new CoherentStokesTransposeKernel::Buffers(devA,
+          outputComplexVoltages ^ coherentStokesPPF ? devD : devC));
+
+        coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
+          factories.coherentTranspose.create(
+          queue, *coherentTransposeBuffers));
+
+        // inverse FFT: C/D -> C/D (in-place) = transposeBuffers.output
+        unsigned nrInverFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+          NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+          ps.settings.beamFormer.nrHighResolutionChannels;
+        inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
+          queue, ps.settings.beamFormer.nrHighResolutionChannels,
+          nrInverFFTs, false, coherentTransposeBuffers->output));
+
+        // fftshift: C/D -> C/D (in-place) = transposeBuffers.output
+        inverseFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+          new FFTShiftKernel::Buffers(coherentTransposeBuffers->output,
+          coherentTransposeBuffers->output));
+
+        inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+          factories.fftShift.create(queue, *inverseFFTShiftBuffers));
+
+        // FIR filter: D/C -> C/D
+        //
+        // Input buffer:
+        // 1ch: CS: -, CV: - (no FIR will be done)
+        // PPF: CS: D, CV: C = transposeBuffers.output
+        //
+        // Output buffer:
+        // 1ch: CS: -, CV: - (no FIR will be done)
+        // PPF: CS: C, CV: D = transposeBuffers.input
+        devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
+          new gpu::DeviceMemory(context,
+          factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
+
+        devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
+          new gpu::DeviceMemory(context,
+          factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)));
+
+        firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
+          new FIR_FilterKernel::Buffers(
+          coherentTransposeBuffers->output, coherentTransposeBuffers->input,
+          *devFilterWeights, *devFilterHistoryData));
+
+        firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
+          factories.firFilter.create(queue, *firFilterBuffers));
+        // final FFT: C/D -> C/D (in-place) = firFilterBuffers.output
+
+        unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+          NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+          ps.settings.beamFormer.coherentSettings.nrChannels;
+        finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
+          queue, ps.settings.beamFormer.coherentSettings.nrChannels,
+          nrFinalFFTs, true, firFilterBuffers->output));
+
+        // coherentStokes: C -> D
+        //
+        // 1ch: input comes from inverseFFT in C
+        // Nch: input comes from finalFFT in C
+
+        coherentStokesBuffers = std::auto_ptr<CoherentStokesKernel::Buffers>(
+          new CoherentStokesKernel::Buffers(devC, devD));
+
+        coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
+          factories.coherentStokes.create(queue, *coherentStokesBuffers));
+
+
+
+
+      }
+
       void BeamFormerSubbandProc::initIncoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories)
       {
@@ -437,7 +458,7 @@ namespace LOFAR
         }
         
         // Upload the new beamformerDelays (pointings) to the GPU 
-          queue.writeBuffer(devBeamFormerDelays,
+          queue.writeBuffer(*devBeamFormerDelays,
                             input.tabDelays, false);
 
           prevSAP = SAP;
@@ -483,7 +504,7 @@ namespace LOFAR
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
         DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
-        inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+        inverseFFT->enqueue(input.blockID, counters.inverseFFT);
         DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
 
         inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
@@ -494,7 +515,7 @@ namespace LOFAR
           firFilterKernel->enqueue(input.blockID, 
             counters.firFilterKernel,
             input.blockID.subbandProcSubbandIdx);
-          finalFFT.enqueue(input.blockID, counters.finalFFT);
+          finalFFT->enqueue(input.blockID, counters.finalFFT);
         }
 
         if (!outputComplexVoltages)
