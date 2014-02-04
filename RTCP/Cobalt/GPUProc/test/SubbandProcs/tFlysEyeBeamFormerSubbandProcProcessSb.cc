@@ -1,4 +1,5 @@
-//# tCoherentStokesBeamFormerSubbandProcProcessSb: test of bf coh stokes sb proc
+//# tFlysEyeBeamFormerSubbandProcProcessSb: 
+//#   test of the Fly's Eye mode of the Beamformer subband processor.
 //#
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
@@ -41,7 +42,7 @@ template<typename T> T inputSignal(size_t t)
 {
   size_t nrBits = sizeof(T) / 2 * 8;
   double amp = (1 << (nrBits - 1)) - 1;
-#if 1  // Toggle to experiment with pulse type input
+#if 1 // Toggle to experiment with pulse like input
   // Sine wave
   // double freq = 1.0 / 4.0; // in samples
   double freq = (2 * 64.0 + 17.0) / 4096.0; // in samples
@@ -57,7 +58,7 @@ template<typename T> T inputSignal(size_t t)
 }
 
 int main() {
-  INIT_LOGGER("tCoherentStokesBeamFormerSubbandProcProcessSb");
+  INIT_LOGGER("tFlysEyeBeamFormerSubbandProcProcessSb");
 
   try {
     gpu::Platform pf;
@@ -71,7 +72,7 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
+  Parset ps("tFlysEyeBeamFormerSubbandProcProcessSb.parset");
 
   // Input array sizes
   const size_t nrBeams = ps.nrBeams();
@@ -104,19 +105,24 @@ int main() {
     "\n  fft1Size = " << fft1Size <<
     "\n  fft2Size = " << fft2Size);
 
+  // Because this is fly's eye mode!
+  ASSERT(nrStations == maxNrTABsPerSAP);
+
   // Output array sizes
-  const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
-  const size_t nrChannels = 
-    ps.settings.beamFormer.incoherentSettings.nrChannels;
+  const size_t nrTABs = maxNrTABsPerSAP;
+  const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
   const size_t nrSamples = 
-    ps.settings.beamFormer.incoherentSettings.nrSamples(
+    ps.settings.beamFormer.coherentSettings.nrSamples(
       ps.settings.nrSamplesPerSubband());
+  const size_t nrChannels = 
+    ps.settings.beamFormer.coherentSettings.nrChannels;
 
   LOG_INFO_STR(
     "Output info:" <<
+    "\n  nrTABs = " << nrTABs <<
     "\n  nrStokes = " << nrStokes <<
-    "\n  nrChannels = " << nrChannels <<
     "\n  nrSamples = " << nrSamples <<
+    "\n  nrChannels = " << nrChannels <<
     "\n  scaleFactor = " << scaleFactor);
 
   // Create very simple kernel programs, with predictable output. Skip as much
@@ -129,7 +135,7 @@ int main() {
   BeamFormerSubbandProc bwq(ps, ctx, factories);
 
   SubbandProcInputData in(
-    nrBeams, nrStations, nrPolarisations, maxNrTABsPerSAP, 
+    nrBeams, nrStations, nrPolarisations, nrTABs, 
     nrSamplesPerSubband, nrBytesPerComplexSample, ctx);
 
   // Initialize synthetic input to input signal
@@ -157,7 +163,7 @@ int main() {
   // Block number: 0 .. inf
   in.blockID.block = 0;
 
- // Subband index in the observation: [0, ps.nrSubbands())
+  // Subband index in the observation: [0, ps.nrSubbands())
   in.blockID.globalSubbandIdx = 0;
 
   // Subband index for this pipeline/workqueue: [0, subbandIndices.size())
@@ -177,7 +183,8 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
+  // Allocate buffer for output signal
+  BeamFormedData out(nrStokes, nrChannels, nrSamples, nrTABs, ctx);
 
   for (size_t i = 0; i < out.num_elements(); i++)
     out.get<float>()[i] = 42.0f;
@@ -194,21 +201,21 @@ int main() {
 
   // We can calculate the expected output values, since we're supplying a
   // complex sine/cosine input signal. We only have Stokes-I, so the output
-  // should be: (nrStations * amp * scaleFactor * fft1Size * fft2Size) ** 2
+  // should be: (amp * scaleFactor * fft1Size * fft2Size) ** 2
   // - amp is set to the maximum possible value for the bit-mode:
   //   i.e. 127 for 8-bit and 32767 for 16-bit mode
   // - scaleFactor is the scaleFactor applied by the IntToFloat kernel. 
   //   It is 16 for 8-bit mode and 1 for 16-bit mode.
-  // Hence, each output sample should be (nrStations from parset): 
-  // - for 16-bit input: (5 * 32767 * 1 * 64 * 64) ** 2 = 450332475365785600
-  // - for 8-bit input: (5 * 127 * 16 * 64 * 64) ** 2 = 1731838187929600
+  // Hence, each output sample should be: 
+  // - for 16-bit input: (32767 * 1 * 64 * 64) ** 2 = 18013299014631424
+  // - for 8-bit input: (127 * 16 * 64 * 64) ** 2 = 69273527517184
 
   float outVal = 
-    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size) *
-    (nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
+    amplitude * scaleFactor * fft1Size * fft2Size *
+    amplitude * scaleFactor * fft1Size * fft2Size;
   cout << "outVal = " << setprecision(12) << outVal << endl;
 
-  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+  for (size_t tab = 0; tab < nrTABs; tab++)
     for (size_t s = 0; s < nrStokes; s++)
       for (size_t t = 0; t < nrSamples; t++)
         for (size_t c = 0; c < nrChannels; c++)
@@ -216,7 +223,6 @@ int main() {
                     "out[" << tab << "][" << s << "][" << t << "][" << c << 
                     "] = " << setprecision(12) << out[tab][s][t][c] << 
                     "; outVal = " << outVal);
-
   return 0;
 }
 
