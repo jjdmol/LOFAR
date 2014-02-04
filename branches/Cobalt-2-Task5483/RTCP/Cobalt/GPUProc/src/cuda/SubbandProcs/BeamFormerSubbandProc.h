@@ -130,6 +130,10 @@ namespace LOFAR
       Counters counters;
 
     private:
+
+      void initIncoherentMembers(gpu::Context &context,
+        BeamFormerFactories &factories);
+
       // Whether we form any coherent beams
       bool formCoherentBeams;
 
@@ -224,29 +228,29 @@ namespace LOFAR
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
-
-      const bool incoherentStokesPPF;
+      bool incoherentStokesPPF;
 
       // Transpose 
-      IncoherentStokesTransposeKernel::Buffers incoherentTransposeBuffers;
+      std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;
       std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
 
       // Inverse (4k points) FFT
-      FFT_Kernel incoherentInverseFFT;
+      std::auto_ptr<FFT_Kernel> incoherentInverseFFT;
 
       // Inverse FFT-shift
-      FFTShiftKernel::Buffers incoherentInverseFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel::Buffers> incoherentInverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      gpu::DeviceMemory devIncoherentFilterWeights;
-      gpu::DeviceMemory devIncoherentFilterHistoryData;
-      FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
+      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterWeights;
+      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterHistoryData;
+
+      std::auto_ptr<FIR_FilterKernel::Buffers> incoherentFirFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
-      FFT_Kernel incoherentFinalFFT;
+      std::auto_ptr<FFT_Kernel> incoherentFinalFFT;
 
       // Incoherent Stokes
-      IncoherentStokesKernel::Buffers incoherentStokesBuffers;
+      std::auto_ptr<IncoherentStokesKernel::Buffers> incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
 
       bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
