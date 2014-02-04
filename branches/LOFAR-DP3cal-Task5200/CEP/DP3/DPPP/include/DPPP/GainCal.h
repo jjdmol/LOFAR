@@ -162,6 +162,8 @@ namespace {
       uint             itsCellSizeTime;
       uint             itsCellSizeFreq;
 
+      uint             itsDebugLevel;
+
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
 

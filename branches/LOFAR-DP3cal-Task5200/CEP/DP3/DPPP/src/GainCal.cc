@@ -67,6 +67,7 @@ namespace LOFAR {
         itsApplyBeam     (parset.getBool (prefix + "model.beam")),
         itsCellSizeTime  (parset.getInt (prefix + "cellsize.time", 1)),
         itsCellSizeFreq  (parset.getInt (prefix + "cellsize.freq", 0)),
+        itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
         itsThreadStorage  (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 1000)),
@@ -429,6 +430,16 @@ namespace LOFAR {
           }
           //Complex *vis =&data[bl*nCr];
           dcomplex *mvis=&model[bl*nCr];
+
+          if (itsDebugLevel>1) {
+            double maxabsmvis=0;
+            for (uint cr=0;cr<nCr;++cr) {
+              if (abs(mvis[cr])>maxabsmvis) {
+                maxabsmvis=abs(mvis[cr]);
+              }
+            }
+            cout<<"max abs model: "<<maxabsmvis<<endl;
+          }
 
           // Upper diagonal, ant1 < ant2
           //cout<<"mvis0"<<mvis[0]<<endl;
