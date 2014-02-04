@@ -112,55 +112,10 @@ namespace LOFAR
       devD(context, devA.size()),
       devE(context, factories.incoherentStokes.bufferSize(
              IncoherentStokesKernel::OUTPUT_DATA)),
-      devNull(context, 1),
-
-      // intToFloat: input -> B
-      intToFloatBuffers(devInput.inputSamples, devB),
-      intToFloatKernel(factories.intToFloat.create(queue, intToFloatBuffers)),
-
-      // FFTShift: B -> B
-      firstFFTShiftBuffers(devB, devB),
-      firstFFTShiftKernel(
-        factories.fftShift.create(queue, firstFFTShiftBuffers)),
-
-      // FFT: B -> B
-      firstFFT(queue,
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-         ps.settings.beamFormer.nrDelayCompensationChannels),
-        true, devB),
-
-      // delayComp: B -> A
-      delayCompensationBuffers(devB, devA, devInput.delaysAtBegin,
-                               devInput.delaysAfterEnd,
-                               devInput.phase0s, devNull),
-      delayCompensationKernel(
-        factories.delayCompensation.create(queue, delayCompensationBuffers)),
-
-      // FFTShift: A -> A
-      secondFFTShiftBuffers(devA, devA),
-      secondFFTShiftKernel(
-        factories.fftShift.create(queue, secondFFTShiftBuffers)),
-
-      // FFT: A -> A
-      secondFFT(queue,
-        ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-         (ps.settings.beamFormer.nrHighResolutionChannels /
-          ps.settings.beamFormer.nrDelayCompensationChannels)),
-        true, devA),
-
-      // bandPass: A -> B
-      devBandPassCorrectionWeights(
-        context,
-        factories.bandPassCorrection.bufferSize(
-          BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)),
-      bandPassCorrectionBuffers(
-        devA, devB, devBandPassCorrectionWeights),
-      bandPassCorrectionKernel(
-        factories.bandPassCorrection.create(queue, bandPassCorrectionBuffers))
+      devNull(context, 1)
     {
+
+      initFFTAndFlagMembers(context, factories);
       initCoherentMembers(context, factories);
       initIncoherentMembers(context, factories);
       // initialize history data for both coherent and incoherent stokes.
@@ -193,6 +148,72 @@ namespace LOFAR
       //addTimer("GPU - wait");
     }
       
+
+    void BeamFormerSubbandProc::initFFTAndFlagMembers(gpu::Context &context,
+      BeamFormerFactories &factories){
+      // intToFloat: input -> B
+      intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
+        new IntToFloatKernel::Buffers(devInput.inputSamples, devB));
+      intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
+        factories.intToFloat.create(queue, *intToFloatBuffers));
+
+      // FFTShift: B -> B
+      firstFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(devB, devB));
+
+      firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+        factories.fftShift.create(queue, *firstFFTShiftBuffers));
+
+      // FFT: B -> B
+      firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.nrDelayCompensationChannels),
+        true, devB));
+
+      // delayComp: B -> A
+      delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
+        new DelayAndBandPassKernel::Buffers(devB, devA, devInput.delaysAtBegin,
+        devInput.delaysAfterEnd,
+        devInput.phase0s, devNull));
+
+      delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
+        factories.delayCompensation.create(queue, *delayCompensationBuffers));
+
+      // FFTShift: A -> A
+      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+        new FFTShiftKernel::Buffers(devA, devA));
+
+      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+        factories.fftShift.create(queue, *secondFFTShiftBuffers));
+      // FFT: A -> A
+      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+        ps.nrSamplesPerSubband() /
+        (ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels);
+
+      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+        ps.settings.beamFormer.nrHighResolutionChannels /
+        ps.settings.beamFormer.nrDelayCompensationChannels,
+        secondFFTnrFFTs, true, devA));
+
+      // bandPass: A -> B
+      devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.bandPassCorrection.bufferSize(
+        BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)));
+
+      bandPassCorrectionBuffers =
+        std::auto_ptr<BandPassCorrectionKernel::Buffers>(
+        new BandPassCorrectionKernel::Buffers(devA, devB,
+        *devBandPassCorrectionWeights));
+
+      bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
+        factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
+
+
+    }
+
       void BeamFormerSubbandProc::initCoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories)
       {
@@ -475,7 +496,7 @@ namespace LOFAR
       firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
       DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
 
-      firstFFT.enqueue(input.blockID, counters.firstFFT);
+      firstFFT->enqueue(input.blockID, counters.firstFFT);
       DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
@@ -487,7 +508,7 @@ namespace LOFAR
       secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
       DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
-      secondFFT.enqueue(input.blockID, counters.secondFFT);
+      secondFFT->enqueue(input.blockID, counters.secondFFT);
       DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(

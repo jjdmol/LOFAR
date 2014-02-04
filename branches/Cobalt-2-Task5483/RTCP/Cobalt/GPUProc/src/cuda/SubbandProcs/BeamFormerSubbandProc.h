@@ -131,6 +131,8 @@ namespace LOFAR
 
     private:
 
+      void initFFTAndFlagMembers(gpu::Context &context,
+        BeamFormerFactories &factories);
 
       void initCoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories);
@@ -165,37 +167,38 @@ namespace LOFAR
 
       // NULL placeholder for unused DeviceMemory parameters
       gpu::DeviceMemory devNull;
-
       /*
-       * Kernels
-       */
+      * Kernels
+      */
 
       // Int -> Float conversion
-      IntToFloatKernel::Buffers intToFloatBuffers;
+      std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;
       std::auto_ptr<IntToFloatKernel> intToFloatKernel;
 
       // First FFT-shift
-      FFTShiftKernel::Buffers firstFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel::Buffers> firstFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
 
       // First (64 points) FFT
-      FFT_Kernel firstFFT;
+      std::auto_ptr<FFT_Kernel> firstFFT;
 
       // Delay compensation
-      DelayAndBandPassKernel::Buffers delayCompensationBuffers;
+      std::auto_ptr<DelayAndBandPassKernel::Buffers> delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
 
+
       // Second FFT-shift
-      FFTShiftKernel::Buffers secondFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel::Buffers> secondFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
 
       // Second (64 points) FFT
-      FFT_Kernel secondFFT;
+      std::auto_ptr<FFT_Kernel> secondFFT;
 
       // Bandpass correction and tranpose
-      gpu::DeviceMemory devBandPassCorrectionWeights;
-      BandPassCorrectionKernel::Buffers bandPassCorrectionBuffers;
+      std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
+      std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
       std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
+
 
       // *****************************************************************
       //  Objects needed to produce Coherent stokes output
