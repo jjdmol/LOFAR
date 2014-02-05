@@ -391,7 +391,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf,mfclark)",
+		   "Operation (empty,image,csclean,predict,psf,mfclark,multiscale)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -696,8 +696,15 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf"||operation=="mfclark");
-    ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
+    ASSERTSTR (operation=="empty" || 
+                  operation=="image" || 
+                  operation=="csclean"|| 
+                  operation=="msmfs"||
+                  operation=="predict"||
+                  operation=="psf"||
+                  operation=="mfclark"||
+                  operation=="multiscale", 
+                  "Unknown operation");
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
@@ -773,7 +780,7 @@ int main (Int argc, char** argv)
 
     cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
     if(ChanBlockSize!=0){
-      AlwaysAssertExit (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]));
+      AlwaysAssert (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]), AipsError);
     }
 
     Vector<Int> chansel(1);

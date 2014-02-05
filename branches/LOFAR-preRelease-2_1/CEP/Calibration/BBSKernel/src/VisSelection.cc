@@ -29,7 +29,6 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>
 
-
 namespace LOFAR
 {
 namespace BBS
@@ -67,16 +66,6 @@ Interval<double> VisSelection::getTimeRange() const
 {
     return itsTimeRange;
 }
-
-//pair<size_t, size_t> VisSelection::getChannelRange() const
-//{
-//    return itsChannelRange;
-//}
-
-//pair<double, double> VisSelection::getTimeRange() const
-//{
-//    return itsTimeRange;
-//}
 
 void VisSelection::setStartChannel(size_t start)
 {
