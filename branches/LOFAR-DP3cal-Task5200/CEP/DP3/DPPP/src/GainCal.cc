@@ -723,12 +723,12 @@ namespace LOFAR {
         * 0.5, freqWidth[0], 1));
       BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
                                 (info().startTime(),
-                                 info().timeInterval(), info().ntime()));
+                                 info().timeInterval(), ntime));
       BBS::Grid solGrid(freqAxis, timeAxis);
       // Create domain grid.
       BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
                                 (info().startTime(),
-                                 info().timeInterval() * info().ntime(), 1));
+                                 info().timeInterval() * ntime, 1));
       BBS::Grid domainGrid(freqAxis, tdomAxis);
 
       // Open the ParmDB at the first write.
