@@ -8,7 +8,7 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   navPanel_initPanel(\"fw_viewBox\");
 
   baseDP = g_currentDatapoint;
-    LOG_DEBUG(\"CEP_CobaltNIC.pnl:initialize| baseDP: \"+baseDP);
+  LOG_DEBUG(\"CEP_CobaltNIC.pnl:initialize| baseDP: \"+baseDP);
 
   dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
 
@@ -23,7 +23,6 @@ PANEL,-1 -1 1200 823 N "_3DFace" 0
   nicTxt = \"CobaltNIC\"+navFunct_formatInt(nicNr,99);
   setValue(\"nodeName\",\"text\",\"CBT\"+navFunct_formatInt(nodeNr,999)+\"_\"+nicTxt);
  
-  DebugN(\"baseDP: \"+baseDP);
   if(dpExists(baseDP + \".MAC\")) {
     dpConnect(\"controlCobaltNode\", baseDP + \".CPU:_online.._value\",
                                    baseDP + \".Interface:_online.._value\",
@@ -284,7 +283,7 @@ E "main()
   click();
 }" 0
  0 1 1 0 1 E U  1 E 250 180 789 519
-1 40 0 "" 1
+1 77 0 "" 1
 0
 2 4
 "station1"
@@ -330,10 +329,10 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 490 150 535 163
+ 0 1 1 2 1 E U  1 E 490 150 537 166
 0 2 2 "0s" 0 0 0 192 0 0  490 150 1
 1
-LANG:1 33 MS Shell Dlg,-1,11,5,75,0,0,0,0,0
+LANG:1 27 Tahoma,10,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 6 CBT001
 2 10
@@ -961,7 +960,7 @@ LANG:1 8 RSP# : 0
 2 60
 "rsp8"
 ""
-1 270 394.9999999999999 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 270 364.9999999999998 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 57 0 0 0 0 0
 E E E
