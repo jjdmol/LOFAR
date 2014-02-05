@@ -125,6 +125,12 @@ namespace LOFAR
         PerformanceCounter incoherentOutput;
         // Print the mean and std of each performance counter on the logger
         void printStats();
+
+        void logTime(unsigned nrCoherent,
+          unsigned nrIncoherent,
+          bool coherentStokesPPF,
+          bool outputComplexVoltages,
+          bool incoherentStokesPPF);
       };
 
       Counters counters;
@@ -139,6 +145,12 @@ namespace LOFAR
 
       void initIncoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories);
+
+      void processFirstStage(BlockID blockID, unsigned subband);
+
+      void processCoherentStage(BlockID blockID, unsigned subband);
+
+      void processIncoherentStage(BlockID blockID) ;
 
       // Whether we form any coherent beams
       bool formCoherentBeams;

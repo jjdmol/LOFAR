@@ -430,6 +430,54 @@ namespace LOFAR
     {
     }
 
+    void BeamFormerSubbandProc::Counters::logTime(unsigned nrCoherent,
+      unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
+      bool incoherentStokesPPF)
+    {
+      // Update the counters
+      intToFloat.logTime();
+      firstFFT.logTime();
+      delayBp.logTime();
+      secondFFT.logTime();
+      correctBandpass.logTime();
+      
+      samples.logTime();
+
+
+      if (nrCoherent > 0)
+      {
+        if (coherentStokesPPF)
+        {
+          firFilterKernel.logTime();
+          finalFFT.logTime();
+        }
+
+        beamformer.logTime();
+        transpose.logTime();
+        inverseFFT.logTime();
+
+        if (!outputComplexVoltages)
+        {
+          coherentStokes.logTime();
+        }
+
+        visibilities.logTime();
+      }
+
+      if (nrIncoherent > 0) {
+        incoherentStokesTranspose.logTime();
+        incoherentInverseFFT.logTime();
+        if (incoherentStokesPPF)
+        {
+          incoherentFirFilterKernel.logTime();
+          incoherentFinalFFT.logTime();
+        }
+        incoherentStokes.logTime();
+        incoherentOutput.logTime();
+      }
+
+    }
+
     void BeamFormerSubbandProc::Counters::printStats()
     {     
       // Print the individual counter stats: mean and stDev
@@ -477,84 +525,33 @@ namespace LOFAR
       queue.writeBuffer(devInput.inputSamples, input.inputSamples,
                         counters.samples, true);
 
-        // Only upload delays if they changed w.r.t. the previous subband.
-        if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+      // Only upload delays if they changed w.r.t. the previous subband.
+      if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
         if (ps.delayCompensation())
         {
           queue.writeBuffer(devInput.delaysAtBegin,
-                            input.delaysAtBegin, false);
+            input.delaysAtBegin, false);
           queue.writeBuffer(devInput.delaysAfterEnd,
-                            input.delaysAfterEnd, false);
+            input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phase0s,
-                            input.phase0s, false);
+            input.phase0s, false);
         }
-        
+
         // Upload the new beamformerDelays (pointings) to the GPU 
-          queue.writeBuffer(*devBeamFormerDelays,
-                            input.tabDelays, false);
+        queue.writeBuffer(*devBeamFormerDelays,
+          input.tabDelays, false);
 
-          prevSAP = SAP;
-          prevBlock = block;
-        }
+        prevSAP = SAP;
+        prevBlock = block;
+      }
 
-      //****************************************
-      // Enqueue the kernels
-      // Note: make sure to call the right enqueue() for each kernel.
-      // Otherwise, a kernel arg may not be set...
-      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
-      intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
-
-      firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
-      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
-
-      firstFFT->enqueue(input.blockID, counters.firstFFT);
-      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
-
-      delayCompensationKernel->enqueue(
-        input.blockID, counters.delayBp,
-        ps.settings.subbands[subband].centralFrequency,
-        ps.settings.subbands[subband].SAP);
-      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
-
-      secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
-      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
-
-      secondFFT->enqueue(input.blockID, counters.secondFFT);
-      DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
-
-      bandPassCorrectionKernel->enqueue(
-        input.blockID, counters.correctBandpass);
+      processFirstStage(input.blockID, subband);
 
       // ********************************************************************
       // coherent stokes kernels
       if (nrCoherent > 0)
       {
-        beamFormerKernel->enqueue(input.blockID, counters.beamformer,
-          ps.settings.subbands[subband].centralFrequency,
-          ps.settings.subbands[subband].SAP);
-
-        coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
-        DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
-
-        inverseFFT->enqueue(input.blockID, counters.inverseFFT);
-        DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
-
-        inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
-        DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
-
-        if (coherentStokesPPF) 
-        {
-          firFilterKernel->enqueue(input.blockID, 
-            counters.firFilterKernel,
-            input.blockID.subbandProcSubbandIdx);
-          finalFFT->enqueue(input.blockID, counters.finalFFT);
-        }
-
-        if (!outputComplexVoltages)
-        {
-          DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
-          coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
-        }
+        processCoherentStage(input.blockID, subband);
 
         // Reshape output to only read nrCoherent TABs
         output.coherentData.resizeOneDimensionInplace(0, nrCoherent);
@@ -566,42 +563,13 @@ namespace LOFAR
 
       if (nrIncoherent > 0)
       {
-        // ********************************************************************
-        // incoherent stokes kernels
-        incoherentTranspose->enqueue(
-          input.blockID, counters.incoherentStokesTranspose);
-
-        incoherentInverseFFT->enqueue(
-          input.blockID, counters.incoherentInverseFFT);
-
-        DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
-          "incoherentInverseFFTShiftBuffers.input.dat");
-
-        incoherentInverseFFTShiftKernel->enqueue(
-          input.blockID, counters.incoherentInverseFFTShift);
-
-        DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
-          "incoherentInverseFFTShiftBuffers.output.dat");
-
-        if (incoherentStokesPPF) 
-        {
-          incoherentFirFilterKernel->enqueue(
-            input.blockID, counters.incoherentFirFilterKernel,
-            input.blockID.subbandProcSubbandIdx);
-
-          incoherentFinalFFT->enqueue(
-            input.blockID, counters.incoherentFinalFFT);
-        }
-
-        incoherentStokesKernel->enqueue(
-          input.blockID, counters.incoherentStokes);
+         processIncoherentStage(input.blockID);
 
         // Reshape output to only read nrIncoherent TABs
         output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
 
         // Output in devE, by design
-        queue.readBuffer(
-          output.incoherentData, *devE, 
+        queue.readBuffer( output.incoherentData, *devE, 
           counters.incoherentOutput, false);
 
         // TODO: Propagate flags
@@ -612,49 +580,111 @@ namespace LOFAR
       // ************************************************
       // Perform performance statistics if needed
       if (gpuProfiling)
-      {
+      {      
         // assure that the queue is done so all events are fished
         queue.synchronize();
-        // Update the counters
-        counters.intToFloat.logTime();
-        counters.firstFFT.logTime();
-        counters.delayBp.logTime();
-        counters.secondFFT.logTime();
-        counters.correctBandpass.logTime();
 
-        counters.samples.logTime();
-        if (nrCoherent > 0)
-        {
-          if (coherentStokesPPF) 
-          {
-            counters.firFilterKernel.logTime();
-            counters.finalFFT.logTime();
-          }
-
-          counters.beamformer.logTime();
-          counters.transpose.logTime();
-          counters.inverseFFT.logTime();
-
-          if (!outputComplexVoltages)
-          {
-            counters.coherentStokes.logTime();
-          }
-
-          counters.visibilities.logTime();
-        }
-
-        if (nrIncoherent > 0) {
-          counters.incoherentStokesTranspose.logTime();
-          counters.incoherentInverseFFT.logTime();
-          if (incoherentStokesPPF) 
-          {
-            counters.incoherentFirFilterKernel.logTime();
-            counters.incoherentFinalFFT.logTime();
-          }
-          counters.incoherentStokes.logTime();
-          counters.incoherentOutput.logTime();
-        }
+        counters.logTime(nrCoherent, nrIncoherent, coherentStokesPPF, 
+         outputComplexVoltages, incoherentStokesPPF);
       }
+    }
+
+    void BeamFormerSubbandProc::processFirstStage(BlockID blockID,
+            unsigned subband)
+    {
+
+      //****************************************
+      // Enqueue the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
+      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
+      intToFloatKernel->enqueue(blockID, counters.intToFloat);
+
+      firstFFTShiftKernel->enqueue(blockID, counters.firstFFTShift);
+      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
+
+      firstFFT->enqueue(blockID, counters.firstFFT);
+      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
+
+      delayCompensationKernel->enqueue(
+        blockID, counters.delayBp,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
+      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
+
+      secondFFTShiftKernel->enqueue(blockID, counters.secondFFTShift);
+      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+
+      secondFFT->enqueue(blockID, counters.secondFFT);
+      DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+
+      bandPassCorrectionKernel->enqueue(
+        blockID, counters.correctBandpass);
+    }
+
+    void BeamFormerSubbandProc::processCoherentStage(BlockID blockID,
+      unsigned subband)
+    {
+      beamFormerKernel->enqueue(blockID, counters.beamformer,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
+
+      coherentTransposeKernel->enqueue(blockID, counters.transpose);
+      DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
+
+      inverseFFT->enqueue(blockID, counters.inverseFFT);
+      DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
+
+      inverseFFTShiftKernel->enqueue(blockID, counters.inverseFFTShift);
+      DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
+
+      if (coherentStokesPPF)
+      {
+        firFilterKernel->enqueue(blockID,
+          counters.firFilterKernel,
+          blockID.subbandProcSubbandIdx);
+        finalFFT->enqueue(blockID, counters.finalFFT);
+      }
+
+      if (!outputComplexVoltages)
+      {
+        DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
+        coherentStokesKernel->enqueue(blockID, counters.coherentStokes);
+      }
+
+    }
+
+    void BeamFormerSubbandProc::processIncoherentStage(BlockID blockID)
+    {
+      // ********************************************************************
+      // incoherent stokes kernels
+      incoherentTranspose->enqueue(
+        blockID, counters.incoherentStokesTranspose);
+
+      incoherentInverseFFT->enqueue(
+        blockID, counters.incoherentInverseFFT);
+
+      DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
+        "incoherentInverseFFTShiftBuffers.input.dat");
+
+      incoherentInverseFFTShiftKernel->enqueue(
+        blockID, counters.incoherentInverseFFTShift);
+
+      DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
+        "incoherentInverseFFTShiftBuffers.output.dat");
+
+      if (incoherentStokesPPF)
+      {
+        incoherentFirFilterKernel->enqueue(
+          blockID, counters.incoherentFirFilterKernel,
+          blockID.subbandProcSubbandIdx);
+
+        incoherentFinalFFT->enqueue(
+          blockID, counters.incoherentFinalFFT);
+      }
+
+      incoherentStokesKernel->enqueue(
+        blockID, counters.incoherentStokes);
     }
 
     bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
