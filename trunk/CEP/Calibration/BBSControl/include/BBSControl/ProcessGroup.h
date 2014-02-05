@@ -29,8 +29,8 @@
 
 #include <BBSControl/ProcessId.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSKernel/Interval.h>
 #include <BBSKernel/Types.h>
-
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
