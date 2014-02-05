@@ -69,6 +69,7 @@ CEPlogProcessor			-		C	Y	LOFAR_PermSW_Daemons_CEPlogProcessor
 ServiceBroker			- 		C	Y	LOFAR_PermSW_Daemons_ServiceBroker
 SoftwareMonitor			-		C	Y	LOFAR_PermSW_Daemons_SoftwareMonitor
 SASGateway			-		C	Y	LOFAR_PermSW_Daemons_SASGateway
+PVSSGateway			-		C	Y	LOFAR_PermSW_Daemons_PVSSGateway
 CTStartDaemon			-		C	Y	LOFAR_PermSW_CTStartDaemon
 CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
