@@ -925,6 +925,8 @@ namespace LOFAR
 
     size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
     {
+      ASSERT(nrChannels > 0);
+      ASSERT(timeIntegrationFactor > 0);
       return inputBlockSize / nrChannels / timeIntegrationFactor;
     }
 
