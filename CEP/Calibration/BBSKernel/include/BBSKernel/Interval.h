@@ -1,7 +1,8 @@
-//# AntennaElementLBA.h: Model of an idealized LOFAR LBA dual dipole antenna
-//# element.
+//# Interval.h: A struct template that represents an interval. Similar to
+//# std::pair<>, but the attribute names "start" and "end" make the code more
+//# readable when dealing with intervals.
 //#
-//# Copyright (C) 2011
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,34 +22,51 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTLBA_H
-#define LOFAR_BBSKERNEL_EXPR_ANTENNAELEMENTLBA_H
+#ifndef LOFAR_BBSKERNEL_INTERVAL_H
+#define LOFAR_BBSKERNEL_INTERVAL_H
 
 // \file
-// Model of an idealized LOFAR LBA dual dipole antenna element.
-
-#include <BBSKernel/Expr/BasicExpr.h>
+// A struct template that represents an interval. Similar to std::pair<>, but
+// the attribute names "start" and "end" make the code more readable when
+// dealing with intervals.
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \addtogroup Expr
+// \addtogroup BBSKernel
 // @{
 
-class AntennaElementLBA: public BasicUnaryExpr<Vector<2>, JonesMatrix>
+template <typename T>
+struct Interval
 {
-public:
-    typedef shared_ptr<AntennaElementLBA>       Ptr;
-    typedef shared_ptr<const AntennaElementLBA> ConstPtr;
+    Interval()
+        :   start(),
+            end()
+    {
+    }
 
-    AntennaElementLBA(const Expr<Vector<2> >::ConstPtr &target);
+    Interval(const T &start, const T &end)
+        :   start(start),
+            end(end)
+    {
+    }
 
-protected:
-    virtual const JonesMatrix::View evaluateImpl(const Grid &grid,
-        const Vector<2>::View &target) const;
+    T   start, end;
 };
+
+template <typename T>
+inline bool operator==(const Interval<T> &x, const Interval<T> &y)
+{
+    return x.start == y.start && x.end == y.end;
+}
+
+template <typename T>
+inline bool operator!=(const Interval<T> &x, const Interval<T> &y)
+{
+    return !(x == y);
+}
 
 // @}
 

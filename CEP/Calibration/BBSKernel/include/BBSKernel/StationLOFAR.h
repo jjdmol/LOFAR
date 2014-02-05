@@ -1,6 +1,6 @@
-//# TileArrayFactor.h: Compute the array factor of a LOFAR HBA tile.
+//# StationLOFAR.h: Description of a LOFAR station.
 //#
-//# Copyright (C) 2009
+//# Copyright (C) 2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,39 +20,36 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
-#define LOFAR_BBSKERNEL_EXPR_TILEARRAYFACTOR_H
+#ifndef LOFAR_BBSKERNEL_STATIONLOFAR_H
+#define LOFAR_BBSKERNEL_STATIONLOFAR_H
 
 // \file
-// Compute the array factor of a LOFAR HBA tile.
+// Description of a LOFAR station.
 
-#include <BBSKernel/Expr/BasicExpr.h>
 #include <BBSKernel/Instrument.h>
+#include <StationResponse/Station.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
-// \addtogroup Expr
+// \addtogroup BBSKernel
 // @{
 
-class TileArrayFactor: public BasicBinaryExpr<Vector<3>, Vector<3>, Scalar>
+class StationLOFAR: public Station
 {
 public:
-    TileArrayFactor(const Expr<Vector<3> >::ConstPtr &direction,
-        const Expr<Vector<3> >::ConstPtr &reference,
-        const AntennaField::ConstPtr &field,
-        bool conjugate = false);
+    typedef shared_ptr<StationLOFAR>        Ptr;
+    typedef shared_ptr<const StationLOFAR>  ConstPtr;
 
-protected:
-    virtual const Scalar::View evaluateImpl(const Grid &grid,
-        const Vector<3>::View &direction, const Vector<3>::View &reference)
-        const;
+    StationLOFAR(const string &name, const casa::MPosition &position,
+        const StationResponse::Station::ConstPtr &station);
+
+    StationResponse::Station::ConstPtr station() const;
 
 private:
-    AntennaField::ConstPtr  itsField;
-    bool                    itsConjugateFlag;
+    StationResponse::Station::ConstPtr  itsStation;
 };
 
 // @}
