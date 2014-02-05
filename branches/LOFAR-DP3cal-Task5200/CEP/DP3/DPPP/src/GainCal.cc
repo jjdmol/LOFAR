@@ -74,6 +74,7 @@ namespace LOFAR {
         itsBaselines     (),
         itsThreadStorage  (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 1000)),
+        itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-9)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsPatchList     ()
     {
@@ -290,8 +291,6 @@ namespace LOFAR {
       vis.resize(nSt*2,nSt*2);
       mvis.resize(nSt*2,nSt*2);
 
-      double tol=1.0e-10;
-
       if (itsCellSizeTime==1) { // Export only first time slot, abuse cellsizetime
         //exportToMatlab(model,data,weight,flag,nCr,nSt,nBl);
         itsCellSizeTime=2;
@@ -326,6 +325,17 @@ namespace LOFAR {
         mvis(ant2+nSt,ant1+nSt) = conj(model[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
       }
 
+      double qv=0;
+      double qvm=0;
+      for (uint ant1=0;ant1<2*nSt;++ant1) {
+        for (uint ant2=0;ant2<2*nSt;++ant2) {
+          qv+=norm(vis(ant1,ant2));
+          qvm+=norm(mvis(ant1,ant2));
+        }
+      }
+      double q=sqrt(qv)/sqrt(qvm);
+      cout<<"q="<<q<<endl;
+
       vector<DComplex> g(nSt*2);   // First nSt * Gain:0:0 then nSt * Gain:1:1
       for (uint i=0;i<2*nSt;++i) {
         g[i]=1.0;
@@ -358,7 +368,7 @@ namespace LOFAR {
             diffnorm+=norm(gx[i]-gold[i]);
             gxnorm+=  norm(gx[i]);
           }
-          if (sqrt(diffnorm/gxnorm)<tol) {
+          if (sqrt(diffnorm/gxnorm)<itsTolerance) {
             break;
           } else {
             for (uint i=0;i<2*nSt;++i) {
@@ -389,7 +399,6 @@ namespace LOFAR {
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
-      double tol=1.0e-10;
 
       vector<vector<DComplex> > g(nSt), gold(nSt), gx(nSt), gxx(nSt);
       vector<vector<DComplex> > h(nSt);
@@ -514,7 +523,7 @@ namespace LOFAR {
 
           dg = fronormdiff/fronormg;
 
-          if (dg <= tol) {
+          if (dg <= itsTolerance) {
             break;
           }
 
@@ -565,10 +574,10 @@ namespace LOFAR {
           gx = g;
         }
       }
-      if (dg > tol) {
+      if (dg > itsTolerance) {
         cerr<<"!";
-        cout<<"Export to Matlab"<<endl;
-        exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
+        //cout<<"Export to Matlab"<<endl;
+        //exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
       }
 
 

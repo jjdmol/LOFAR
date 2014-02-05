@@ -182,6 +182,7 @@ namespace {
       map<string,int>         itsParmIdMap; //# -1 = new parm name
 
       uint             itsMaxIter;
+      double           itsTolerance;
       bool             itsPropagateSolutions;
 
       //# The info needed to calculate the station beams.
