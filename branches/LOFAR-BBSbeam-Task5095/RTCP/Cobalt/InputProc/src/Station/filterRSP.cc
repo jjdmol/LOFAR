@@ -69,6 +69,9 @@ int main(int argc, char **argv)
 {
   INIT_LOGGER("filterRSP");
 
+  // Force printing times in UTC
+  setenv("TZ", "UTC", 1);
+
   int opt;
 
   time_t from = 0;

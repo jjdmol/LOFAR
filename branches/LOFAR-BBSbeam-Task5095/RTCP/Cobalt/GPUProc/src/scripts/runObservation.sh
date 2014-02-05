@@ -5,7 +5,51 @@
 # This script takes care of running all the commands surrounding mpirun.sh,
 # based on the given parset.
 
+
+########  Functions  ########
+
+function error {
+  echo -e "$@" >&2
+  exit 1
+}
+
+function getkey {
+  KEY=$1
+  DEFAULT=$2
+
+  # grab the last key matching "^$KEY=", ignoring spaces.
+  VALUE=`<$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1`
+
+  if [ "$VALUE" == "" ]
+  then
+    echo "$DEFAULT"
+  else
+    echo "$VALUE"
+  fi
+}
+
+function usage {
+  error \
+    "\nUsage: $0 [-A] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
+    "\n"\
+    "\n  Run the observation specified by PARSET"\
+    "\n"\
+    "\n    -A: do NOT augment parset"\
+    "\n    -C: run with check tool specified in environment variable"\
+    "LOFAR_CHECKTOOL"\
+    "\n    -F: do NOT send feedback to OnlineControl"\
+    "\n    -P: create PID file"\
+    "\n    -l: run on localhost using 'nprocs' processes"\
+    "\n    -p: enable profiling\n"
+}
+
+#############################
+
+echo "Called as: $0 $@"
+
+# ******************************
 # Set default options
+# ******************************
 
 # Provide feedback to OnlineControl?
 ONLINECONTROL_FEEDBACK=1
@@ -30,18 +74,14 @@ RTCP_PARAMS=""
 # Avoid passing on "*" if it matches nothing
 shopt -s nullglob
 
-echo "Called as $@"
-
-if test "$LOFARROOT" == ""; then
-  echo "LOFARROOT is not set! Exiting."
-  exit 1
-fi
-echo "LOFARROOT is set to $LOFARROOT"
-
+# ******************************
 # Parse command-line options
-while getopts ":AFP:l:p" opt; do
+# ******************************
+while getopts ":ACFP:l:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
+          ;;
+      C)  CHECK_TOOL="$LOFAR_CHECKTOOL"
           ;;
       F)  ONLINECONTROL_FEEDBACK=0
           ;;
@@ -68,39 +108,11 @@ shift $((OPTIND-1))
 PARSET="$1"
 
 # Show usage if no parset was provided
-if [ -z "$PARSET" ]
-then
-  echo "Usage: $0 [-A] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"
-  echo " "
-  echo "Runs the observation specified by PARSET"
-  echo " "
-  echo "-A: do NOT augment parset"
-  echo "-F: do NOT send feedback to OnlineControl"
-  echo "-P: create PID file"
-  echo "-l: run on localhost using 'nprocs' processes"
-  echo "-p: enable profiling"
-  exit 1
-fi
+[ -n "$PARSET" ] || usage
 
-function error {
-  echo "$@"
-  exit 1
-}
-
-function getkey {
-  KEY=$1
-  DEFAULT=$2
-
-  # grab the last key matching "^$KEY=", ignoring spaces.
-  VALUE=`<$PARSET perl -ne '/^'$KEY'\s*=\s*"?(.*?)"?\s*$/ || next; print "$1\n";' | tail -n 1`
-
-  if [ "$VALUE" == "" ]
-  then
-    echo "$DEFAULT"
-  else
-    echo "$VALUE"
-  fi
-}
+# Check if LOFARROOT is set.
+[ -n "$LOFARROOT" ] || error "LOFARROOT is not set!"
+echo "LOFARROOT is set to $LOFARROOT"
 
 # ******************************
 # Preprocess: initialise
@@ -134,19 +146,12 @@ then
   AUGMENTED_PARSET=$LOFARROOT/var/run/rtcp-$OBSID.parset
 
   # Add static keys
-#  # Ignore sneaky .cobalt/ parset overrides in production (lofarsys)
-#  if [ "$USER" != "lofarsys" ]; then
-#    DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
-#    DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
-#  fi
   cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
-      $DOT_COBALT_DEFAULT \
+      $HOME/.cobalt/default/*.parset \
       $PARSET \
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
-      $DOT_COBALT_OVERRIDE \
+      $HOME/.cobalt/override/*.parset \
       > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
-  unset DOT_COBALT_DEFAULT
-  unset DOT_COBALT_OVERRIDE
 
   # If we force localhost, we need to remove the node list, or the first one will be used
   if [ "$FORCE_LOCALHOST" -eq "1" ]
@@ -198,6 +203,7 @@ done
 mpirun.sh -x LOFARROOT="$LOFARROOT" \
           -H "$HOSTS" \
           $MPIRUN_PARAMS \
+          $CHECK_TOOL \
           `which rtcp` $RTCP_PARAMS "$PARSET" &
 PID=$!
 
@@ -215,21 +221,34 @@ OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
 
+FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
+
+if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
+then
+  # There is a feedback file! Consider the observation as succesful,
+  # to prevent crashes in the tear down from ruining an otherwise
+  # perfectly good observation
+  echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
+
+  OBSRESULT=0
+fi
+
 # ******************************
 # Post-process the observation
 # ******************************
 
 if [ "$ONLINECONTROL_FEEDBACK" -eq "1" ]
 then
+  ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
+  ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
+
   if [ $OBSRESULT -eq 0 ]
   then
     # ***** Observation ran successfully
-    ONLINECONTROL_USER=`getkey Cobalt.Feedback.userName $USER`
-    ONLINECONTROL_HOST=`getkey Cobalt.Feedback.host`
 
     # Copy LTA feedback file to ccu001
     FEEDBACK_DEST=$ONLINECONTROL_USER@$ONLINECONTROL_HOST:`getkey Cobalt.Feedback.remotePath`
-    FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
+
     echo "Copying feedback to $FEEDBACK_DEST"
     timeout $KILLOPT 30s scp $FEEDBACK_FILE $FEEDBACK_DEST
     FEEDBACK_RESULT=$?

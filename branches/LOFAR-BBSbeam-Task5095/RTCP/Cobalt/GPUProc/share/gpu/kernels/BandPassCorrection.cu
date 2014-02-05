@@ -51,9 +51,9 @@
 #error Precondition violated: NR_CHANNELS_1 > 0
 #endif
 
-#if !(NR_CHANNELS_2 % 16 == 0)
-#error Precondition violated: NR_CHANNELS_2 % 16 == 0
-#endif
+//#if !(NR_CHANNELS_2 % 16 == 0)
+//#error Precondition violated: NR_CHANNELS_2 % 16 == 0
+//#endif
 
 #if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0)
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0

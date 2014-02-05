@@ -51,10 +51,19 @@ namespace LOFAR
 
       EXCEPTION_CLASS(SSHException, LOFAR::Exception);
 
+      /* Set up an SSH connection in the background.
+       *
+       * Emulates
+       *   ssh username@hostname -p 22 -i pubkey -i privkey commandline 1>_cout 2>_cerr
+       *
+       * logPrefix:     prefix log lines with this string.
+       * reportErrors:  errors are logged using LOG_ERROR (instead of LOG_DEBUG).
+       * captureStdout: redirect stdout to a buffer, see stdoutBuffer().
+       */
       SSHconnection(const std::string &logPrefix, const std::string &hostname,
                     const std::string &commandline, const std::string &username,
                     const std::string &pubkey, const std::string &privkey,
-                    bool captureStdout = false, ostream &_cout = cout, ostream &_cerr = cerr);
+                    bool reportErrors = true, bool captureStdout = false, ostream &_cout = cout, ostream &_cerr = cerr);
 
       ~SSHconnection();
 
@@ -75,7 +84,8 @@ namespace LOFAR
       // remote SSH daemon (incl an opened session and an opened channel to send commands).
       bool connected() const;
 
-      // If stdout is captured, return the captured output
+      // If stdout is captured, return the captured output. Note that the
+      // contents of the buffer is undefined if the connection is not finished.
       std::string stdoutBuffer() const;
 
     private:
@@ -85,6 +95,7 @@ namespace LOFAR
       const std::string itsUserName;
       const std::string itsPublicKey;
       const std::string itsPrivateKey;
+      const bool itsReportErrors;
       const bool itsCaptureStdout;
       std::ostream &itsCout;
       std::ostream &itsCerr;

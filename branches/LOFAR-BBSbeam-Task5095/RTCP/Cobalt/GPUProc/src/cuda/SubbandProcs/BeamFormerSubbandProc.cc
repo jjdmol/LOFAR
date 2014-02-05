@@ -32,35 +32,55 @@
 
 #include <iomanip>
 
+// Set to true to get detailed buffer informatio
+#if 0
+  #define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
+#else
+  #define DUMPBUFFER(a,b)
+#endif
+
+
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, gpu::Context &context) :
-    MultiDimArrayHostBuffer<float, 4>(
-      boost::extents[1][nrStokes][nrSamples][nrChannels], context, 0)
+    BeamFormedData::BeamFormedData(
+        unsigned nrCoherentTABs,
+        unsigned nrCoherentStokes,
+        size_t nrCoherentSamples,
+        unsigned nrCoherentChannels,
+        unsigned nrIncoherentTABs,
+        unsigned nrIncoherentStokes,
+        size_t nrIncoherentSamples,
+        unsigned nrIncoherentChannels,
+        gpu::Context &context) :
+      coherentData(boost::extents[nrCoherentTABs]
+                                 [nrCoherentStokes]
+                                 [nrCoherentSamples]
+                                 [nrCoherentChannels], context, 0),
+      incoherentData(boost::extents[nrIncoherentTABs]
+                                   [nrIncoherentStokes]
+                                   [nrIncoherentSamples]
+                                   [nrIncoherentChannels], context, 0)
     {
     }
 
-    BeamFormedData::BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-      size_t nrSamples, unsigned nrTabs, gpu::Context &context) :
-      MultiDimArrayHostBuffer<float, 4>(
-      boost::extents[nrTabs][nrStokes][nrSamples][nrChannels], context, 0)
+    BeamFormedData::BeamFormedData(
+        const Parset &ps,
+        gpu::Context &context) :
+      coherentData(boost::extents[ps.settings.beamFormer.maxNrCoherentTABsPerSAP()]
+                                 [ps.settings.beamFormer.coherentSettings.nrStokes]
+                                 [ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                 [ps.settings.beamFormer.coherentSettings.nrChannels],
+                                 context, 0),
+      incoherentData(boost::extents[ps.settings.beamFormer.maxNrIncoherentTABsPerSAP()]
+                                   [ps.settings.beamFormer.incoherentSettings.nrStokes]
+                                   [ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                   [ps.settings.beamFormer.incoherentSettings.nrChannels],
+                                   context, 0)
     {
     }
-
-    void BeamFormedData::readData(Stream *str, unsigned)
-    {
-      str->read(origin(), size());
-    }
-
-    void BeamFormedData::writeData(Stream *str, unsigned)
-    {
-      str->write(origin(), size());
-    }
-
 
     BeamFormerSubbandProc::BeamFormerSubbandProc(
       const Parset &parset,
@@ -286,57 +306,16 @@ namespace LOFAR
       devFilterHistoryData.set(0);
       devIncoherentFilterHistoryData.set(0);
 
-      // TODO For now we only allow pure coherent and incoherent runs
-      // count the number of coherent and incoherent saps
-      size_t nrCoherent = 0;
-      size_t nrIncoherent = 0;
-      for (size_t idx_sap = 0; 
-           idx_sap < ps.settings.beamFormer.SAPs.size();
-           ++idx_sap)
-      {
-        if (ps.settings.beamFormer.SAPs[idx_sap].nrIncoherent != 0)
-          nrIncoherent++;
-        if (ps.settings.beamFormer.SAPs[idx_sap].nrCoherent != 0)
-          nrCoherent++;
-      }
+      formCoherentBeams = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0;
+      formIncoherentBeams = ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0;
 
-      // raise exception if the parset contained an incorrect configuration
-      if (nrCoherent != 0 && nrIncoherent != 0)
-        THROW(GPUProcException, 
-              "Parset contained both incoherent and coherent stokes SAPS. "
-              "This is not supported");
-
-      if (nrCoherent)
-        coherentBeamformer = true;
-      else
-        coherentBeamformer = false;
-
-      LOG_INFO_STR("Running "
-                   << (coherentBeamformer ? "a coherent" : "an incoherent")
-                   << " Stokes beamformer pipeline");
+      LOG_INFO_STR("Running coherent pipeline: " << (formCoherentBeams ? "yes" : "no")
+                << ", incoherent pipeline: " <<   (formIncoherentBeams ? "yes" : "no"));
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
       {
-        //**********************************************************************
-        // Coherent/incoheren switch
-        if (coherentBeamformer) 
-        outputPool.free.append(
-          new BeamFormedData(
-            (ps.settings.beamFormer.maxNrTABsPerSAP() *
-             ps.settings.beamFormer.coherentSettings.nrStokes),
-            ps.settings.beamFormer.coherentSettings.nrChannels,
-            ps.settings.beamFormer.coherentSettings.nrSamples(
-              ps.nrSamplesPerSubband()),
-            context));
-        else
-          outputPool.free.append(
-            new BeamFormedData(
-              ps.settings.beamFormer.incoherentSettings.nrStokes,
-              ps.settings.beamFormer.incoherentSettings.nrChannels,
-              ps.settings.beamFormer.incoherentSettings.nrSamples(
-                ps.nrSamplesPerSubband()),
-              context));
+        outputPool.free.append(new BeamFormedData(ps, context));
       }
 
       //// CPU timers are set by CorrelatorPipeline
@@ -411,69 +390,87 @@ namespace LOFAR
         std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
     }
 
-    void BeamFormerSubbandProc::processSubband(SubbandProcInputData &input,
-      StreamableData &_output)
+    void BeamFormerSubbandProc::processSubband(
+      SubbandProcInputData &input,
+      SubbandProcOutputData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
-      BeamFormedData &incoherentOutput = dynamic_cast<BeamFormedData&>(_output);
 
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
+      unsigned SAP = ps.settings.subbands[subband].SAP;
+      unsigned nrCoherent   = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
+      unsigned nrIncoherent = ps.settings.beamFormer.SAPs[SAP].nrIncoherent;
+
+      //****************************************
+      // Send input to GPU
       queue.writeBuffer(devInput.inputSamples, input.inputSamples,
                         counters.samples, true);
 
-      if (ps.delayCompensation())
-      {
-        unsigned SAP = ps.settings.subbands[subband].SAP;
-
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
+        if (ps.delayCompensation())
+        {
           queue.writeBuffer(devInput.delaysAtBegin,
                             input.delaysAtBegin, false);
           queue.writeBuffer(devInput.delaysAfterEnd,
                             input.delaysAfterEnd, false);
           queue.writeBuffer(devInput.phase0s,
                             input.phase0s, false);
+        }
+        
+        // Upload the new beamformerDelays (pointings) to the GPU 
           queue.writeBuffer(devBeamFormerDelays,
                             input.tabDelays, false);
 
           prevSAP = SAP;
           prevBlock = block;
         }
-      }
 
       //****************************************
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
+      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
       intToFloatKernel->enqueue(input.blockID, counters.intToFloat);
 
       firstFFTShiftKernel->enqueue(input.blockID, counters.firstFFTShift);
+      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
+
       firstFFT.enqueue(input.blockID, counters.firstFFT);
+      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
         input.blockID, counters.delayBp,
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
+      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
       secondFFTShiftKernel->enqueue(input.blockID, counters.secondFFTShift);
+      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+
       secondFFT.enqueue(input.blockID, counters.secondFFT);
+      DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
         input.blockID, counters.correctBandpass);
 
       // ********************************************************************
       // coherent stokes kernels
-      if (coherentBeamformer)
+      if (nrCoherent > 0)
       {
         beamFormerKernel->enqueue(input.blockID, counters.beamformer,
           ps.settings.subbands[subband].centralFrequency,
           ps.settings.subbands[subband].SAP);
 
         coherentTransposeKernel->enqueue(input.blockID, counters.transpose);
+        DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
         inverseFFT.enqueue(input.blockID, counters.inverseFFT);
+        DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
+
         inverseFFTShiftKernel->enqueue(input.blockID, counters.inverseFFTShift);
+        DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
 
         if (coherentStokesPPF) 
         {
@@ -485,10 +482,19 @@ namespace LOFAR
 
         if (!outputComplexVoltages)
         {
+          DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
           coherentStokesKernel->enqueue(input.blockID, counters.coherentStokes);
         }
+
+        // Reshape output to only read nrCoherent TABs
+        output.coherentData.resizeOneDimensionInplace(0, nrCoherent);
+
+        // Output in devD, by design
+        queue.readBuffer(
+          output.coherentData, devD, counters.visibilities, false);
       }
-      else
+
+      if (nrIncoherent > 0)
       {
         // ********************************************************************
         // incoherent stokes kernels
@@ -497,8 +503,15 @@ namespace LOFAR
 
         incoherentInverseFFT.enqueue(
           input.blockID, counters.incoherentInverseFFT);
+
+        DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
+          "incoherentInverseFFTShiftBuffers.input.dat");
+
         incoherentInverseFFTShiftKernel->enqueue(
           input.blockID, counters.incoherentInverseFFTShift);
+
+        DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
+          "incoherentInverseFFTShiftBuffers.output.dat");
 
         if (incoherentStokesPPF) 
         {
@@ -513,19 +526,18 @@ namespace LOFAR
         incoherentStokesKernel->enqueue(
           input.blockID, counters.incoherentStokes);
 
+        // Reshape output to only read nrIncoherent TABs
+        output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
+
+        // Output in devE, by design
+        queue.readBuffer(
+          output.incoherentData, devE, 
+          counters.incoherentOutput, false);
+
         // TODO: Propagate flags
       }
 
       queue.synchronize();
-
-      // Output in devD and devE, by design.
-      if (coherentBeamformer)
-        queue.readBuffer(
-          output, devD, counters.visibilities, true);
-      else
-        queue.readBuffer(
-          incoherentOutput, devE, 
-          counters.incoherentOutput, true);
 
       // ************************************************
       // Perform performance statistics if needed
@@ -541,7 +553,7 @@ namespace LOFAR
         counters.correctBandpass.logTime();
 
         counters.samples.logTime();
-        if (coherentBeamformer)
+        if (nrCoherent > 0)
         {
           if (coherentStokesPPF) 
           {
@@ -560,8 +572,8 @@ namespace LOFAR
 
           counters.visibilities.logTime();
         }
-        else
-        {
+
+        if (nrIncoherent > 0) {
           counters.incoherentStokesTranspose.logTime();
           counters.incoherentInverseFFT.logTime();
           if (incoherentStokesPPF) 
@@ -575,7 +587,7 @@ namespace LOFAR
       }
     }
 
-    bool BeamFormerSubbandProc::postprocessSubband(StreamableData &_output)
+    bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
       (void)_output;
       return true;

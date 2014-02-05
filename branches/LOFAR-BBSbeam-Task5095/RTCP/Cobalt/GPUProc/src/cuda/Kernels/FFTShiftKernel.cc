@@ -60,25 +60,20 @@ namespace LOFAR
     {
       setArg(0, buffers.input);
 
-      ASSERT(params.nrSamplesPerChannel > 0 &&
-             params.nrSamplesPerChannel % maxThreadsPerBlock == 0);
+      // Number of samples per channel must be even
+      ASSERT(params.nrSamplesPerChannel % 2 == 0);
 
-      //Assert correct dimensions for kernel infocation
-      unsigned threadz = (params.nrChannelsPerSubband > 1) ? 2 : 1;
-      unsigned threadx = params.nrChannelsPerSubband > 1 ?
-        maxThreadsPerBlock / 2 : maxThreadsPerBlock;
-      ASSERT((threadz * threadx ) <= 1024);  // maxthread block size
-      ASSERT(params.nrChannelsPerSubband  == 1 || 
-             params.nrChannelsPerSubband % 2 == 0);
-      ASSERT((params.nrChannelsPerSubband / threadz) < 64); //Max z dim for grid 
+      size_t nrSamples = 
+        params.nrStations * params.nrPolarizations *
+        params.nrChannelsPerSubband * params.nrSamplesPerChannel;
+
+      // The total number of samples must be divisible by the maximum number of
+      // threads per block (typically 1024).
+      ASSERT(nrSamples % maxThreadsPerBlock == 0);
 
       setEnqueueWorkSizes(
-        gpu::Grid(
-          params.nrSamplesPerChannel, 
-          params.nrStations,
-          params.nrChannelsPerSubband),
-          gpu::Block(threadx, 1, threadz)
-        );
+        gpu::Grid(nrSamples),   // use of grid.x only is safe in practice
+        gpu::Block(maxThreadsPerBlock));
 
     }
 

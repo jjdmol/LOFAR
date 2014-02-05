@@ -82,6 +82,9 @@ namespace LOFAR
       // key: Observation.sampleClock
       unsigned clockMHz;
 
+      // The station clock, in Hz
+      unsigned clockHz() const;
+
       // The bandwidth of a single subband, in Hz
       double subbandWidth() const;
 
@@ -244,7 +247,7 @@ namespace LOFAR
 
         // NIC(s) to bind to (comma seperated)
         //
-        // F.e. 'mlx4_0', 'mlx_4_1', 'eth0', etc
+        // E.g. 'mlx4_0', 'mlx_4_1', 'eth0', etc
         std::string nic;
       };
 
@@ -261,8 +264,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.angle1
-        // key: *.angle2
+        // key: *.absoluteAngle1
+        // key: *.absoluteAngle2
         double angle1;
         double angle2;
       };
@@ -272,6 +275,12 @@ namespace LOFAR
         //
         // key: Observation.Beam[sapIdx].*
         struct Direction direction;
+
+
+        // The list of sabbands in this SAP
+        //
+        // key: Observation.Beam[idx].subbandList 
+        std::vector<unsigned> subbandIndices;
 
         // Name of target
         //
@@ -308,6 +317,12 @@ namespace LOFAR
         //
         // set to: equals the index in the subbands vector
         unsigned idx;
+
+
+        // Index of this subband in the SAP it is part of
+        //
+        // Calculated based on  Observation.Beam[x].subbandList
+        unsigned idxInSAP;
 
         // Index at station (f.e. 100..343)
         //
@@ -427,6 +442,12 @@ namespace LOFAR
           size_t stokesNr;
           bool coherent;
 
+          // this TAB is the ....th coherent TAB in this SAP
+          size_t coherentIdxInSAP;
+
+          // this TAB is the ....th incoherent TAB in this SAP
+          size_t incoherentIdxInSAP;
+
           struct FileLocation location;
         };
 
@@ -443,12 +464,14 @@ namespace LOFAR
         // Power of two and at least nrDelayCompensationChannels.
         unsigned nrHighResolutionChannels;
 
+        // Are we in fly's eye mode?
+        bool doFlysEye;
+
         struct TAB {
-          // The direction in wich the TAB points, relative
-          // to the SAP's coordinates
+          // The (absolute) direction where the TAB points to.
           //
           // key: Observation.Beam[sap].TiedArrayBeam[tab].*
-          struct Direction directionDelta;
+          struct Direction direction;
 
           // Whether the beam is coherent (or incoherent)
           //
@@ -481,6 +504,9 @@ namespace LOFAR
           // calculated at construction time
           size_t nrCoherent;
           size_t nrIncoherent;
+
+          // list of subbands in this sap
+          vector<unsigned> subbandIndices;
         };
 
         // All SAPs, with information about the TABs to form.
@@ -489,6 +515,8 @@ namespace LOFAR
         std::vector<struct SAP> SAPs;
 
         size_t maxNrTABsPerSAP() const;
+        size_t maxNrCoherentTABsPerSAP() const;
+        size_t maxNrIncoherentTABsPerSAP() const;
 
         struct StokesSettings {
           // Reflection: whether this struct captures
@@ -622,9 +650,6 @@ namespace LOFAR
       unsigned                    CNintegrationSteps() const;
       unsigned                    IONintegrationSteps() const;
       unsigned                    integrationSteps() const;
-  
-      unsigned                    coherentStokesTimeIntegrationFactor() const;
-      unsigned                    incoherentStokesTimeIntegrationFactor() const;
 
       double                      CNintegrationTime() const;
       double                      IONintegrationTime() const;
@@ -633,10 +658,8 @@ namespace LOFAR
       unsigned                    nrChannelsPerSubband() const;
       double                      channelWidth() const;
       bool                        delayCompensation() const;
-      unsigned                    nrCalcDelays() const;
       bool                        correctClocks() const;
       bool                        correctBandPass() const;
-      std::string                 stationName(int index) const;
       std::vector<std::string>    allStationNames() const;
 
       bool outputThisType(OutputType) const;
@@ -649,38 +672,13 @@ namespace LOFAR
       std::string                 bandFilter() const;
       std::string                 antennaSet() const;
 
-      size_t          nrCoherentStokes() const
-      {
-        return settings.beamFormer.coherentSettings.nrStokes;
-      }
-      size_t          nrIncoherentStokes() const
-      {
-        return settings.beamFormer.incoherentSettings.nrStokes;
-      }
-
       unsigned                    nrBeams() const;
-      std::string                 beamTarget(unsigned beam) const;
-
-      unsigned                    nrTABs(unsigned beam) const;
-      std::vector<unsigned>       nrTABs() const;
-      unsigned                    maxNrTABs() const;
-      bool                        isCoherent(unsigned beam, unsigned pencil) const;
-      BeamCoordinates             TABs(unsigned beam) const;
-      double                      dispersionMeasure(unsigned beam = 0,unsigned pencil = 0) const;
-      std::vector<std::string>    TABStationList(unsigned beam = 0,unsigned pencil = 0, bool raw = false) const;
 
       size_t                      nrSubbands() const;
 
       double channel0Frequency( size_t subband, size_t nrChannels ) const;
 
       bool                        realTime() const;
-
-      std::vector<double>         getBeamDirection(unsigned beam) const;
-      std::string                 getBeamDirectionType(unsigned beam) const;
-
-      bool                        haveAnaBeam() const;
-      std::vector<double>         getAnaBeamDirection() const;
-      std::string                 getAnaBeamDirectionType() const;
 
       std::vector<double>         itsStPositions;
 
@@ -700,8 +698,6 @@ namespace LOFAR
 
       void                        checkVectorLength(const std::string &key, unsigned expectedSize) const;
       void                        checkInputConsistency() const;
-
-      std::vector<double>         getTAB(unsigned beam, unsigned pencil) const;
 
       void                        addPosition(string stName);
       double                      getTime(const std::string &name, const std::string &defaultValue) const;

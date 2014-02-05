@@ -114,6 +114,8 @@ namespace LOFAR
 
       struct BeamDelays {
         struct Delay              SAP;
+
+        // Delays for all coherent (!) TABs
         std::vector<struct Delay> TABs;
 
         bool operator==(const BeamDelays &other) const {

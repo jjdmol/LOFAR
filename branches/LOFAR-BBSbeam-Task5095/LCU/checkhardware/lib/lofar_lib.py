@@ -39,7 +39,7 @@ def init_lofar_lib():
 
 
 def dataDir():
-    return (r'/localhome/data/stationtest/')
+    return (r'/localhome/stationtest/sb_data')
 
 # remove all *.dat 
 def removeAllDataFiles():
@@ -62,36 +62,47 @@ def getStationType(StID):
 
 
 # read from RemoteStation.conf file number of RSP and TB Boards
+"""
+#
+# THIS FILE IS GENERATED, DO NOT MODIFY IT.
+#
+# RemoteStation.conf for CS002
+#
+# Describes the amount of available hardware on the station.
+#
+
+RS.STATION_ID  = 2
+RS.N_RSPBOARDS = 12
+RS.N_TBBOARDS  = 6
+RS.N_LBAS      = 96
+RS.N_HBAS      = 48
+RS.HBA_SPLIT   = Yes
+RS.WIDE_LBAS   = Yes
+"""
 def readStationConfig():
     f = open('/opt/lofar/etc/RemoteStation.conf', 'r')
     lines = f.readlines()
     f.close()
     
-    ID = nRSP = nTBB = nLBL = nLBH = nHBA = 0
+    ID = nRSP = nTBB = nLBA = nLBL = nLBH = nHBA = HBA_SPLIT = 0
     
     for line in lines:
-        if line[0] == '#':
+        if (line[0] == '#') or (len(line) < 2):
             continue
-        ptr = line.find('STATION_ID')
-        if ptr > 0:
-            ptr = line.find('=', ptr) + 1
-            ID = int(line[ptr:].strip())
+        key, val = line.split('=')
+        key = key.strip()
+        val = val.strip()
+        if key == "RS.STATION_ID":
+            ID = int(val)
             continue
-        ptr = line.find('N_RSPBOARDS')
-        if ptr > 0:
-            ptr = line.find('=', ptr) + 1
-            nRSP = int(line[ptr:].strip())
+        if key == "RS.N_RSPBOARDS":
+            nRSP = int(val)
             continue
-        ptr = line.find('N_TBBOARDS')
-        if ptr > 0:
-            ptr = line.find('=', ptr) + 1
-            nTBB = int(line[ptr:].strip())
-            continue
-        ptr = line.find('N_LBAS')
-        if ptr > 0:
-            ptr = line.find('=', ptr) + 1
-            nLBA = int(line[ptr:].strip())
-    
+        if key == "RS.N_TBBBOARDS":
+            nTBB = int(val)
+            continue    
+        if key == "RS.N_LBAS":
+            nLBA = int(val)
             if nLBA == nRSP * 8:
                 nLBL = nLBA / 2
                 nLBH = nLBA / 2
@@ -99,12 +110,14 @@ def readStationConfig():
                 nLBL = 0
                 nLBH = nLBA       
             continue
-        ptr = line.find('N_HBAS')
-        if ptr > 0:
-            ptr = line.find('=', ptr) + 1
-            nHBA = int(line[ptr:].strip())
+        if key == "RS.N_HBAS":
+            nHBA = int(val)
             continue
-    return(ID, nRSP, nTBB, nLBL, nLBH, nHBA)
+        if key == "RS.HBA_SPLIT":
+            if string.upper(val) == "YES":
+                HBA_SPLIT = 1
+                continue
+    return(ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT)
 
     
 # [lofarsys@RS306C stationtest]$ swlevel 2
@@ -363,6 +376,11 @@ def extractSelectStr(selectStr):
     sel_list.append(num)        
     return (sorted(sel_list))
 
+def getClock():
+    answer = rspctl("--clock")
+    #print answer[-6:-3]
+    clock = float(answer[-7:-4])
+    return (clock)
     
 # function used for antenna testing        
 def swapXY(state):

@@ -51,7 +51,7 @@ namespace LOFAR
       nrSAPs(ps.settings.SAPs.size()),
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
-      transpose(correctBandPass), // sane for correlator; bf redefines
+      transpose(true), // sane for correlator; bf redefines
       subbandBandwidth(ps.settings.subbandWidth())
     {
       dumpBuffers = 

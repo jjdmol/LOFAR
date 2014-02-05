@@ -12,22 +12,22 @@ Observation.ObsID=0
 
 # start and stop times (UTC)
 Observation.startTime=2013-01-01 00:00:00
-Observation.stopTime=2013-01-01 00:01:00
+Observation.stopTime=2013-01-01 00:00:00
 
 # ===============================
 # Station information
 # ===============================
 
 # List of input stations
-Observation.VirtualInstrument.stationList=[CS001, CS002]
+Observation.VirtualInstrument.stationList=[CS001]
 # Station clock in Mhz [200, 160]
 Observation.sampleClock=200
 # Number of bit/sample emitted by the stations [(4), 8, 16]
 Observation.nrBitsPerSample=8
 # Antenna set [HBA_DUAL, HBA_ZERO, HBA_ONE, HBA_JOINED, HBA_DUAL_INNER, HBA_ONE_INNER, HBA_ZERO_INNER, HBA_JOINED_INNER, LBA_INNER, LBA_OUTER, LBA_SPARSE_EVEN, LBA_SPARSE_ODD]
-Observation.antennaSet=HBA_DUAL
+Observation.antennaSet=LBA_INNER
 # sensitivity spectrum of station [LBA_10_70, LBA_30_70, LBA_10_90, LBA_30_90, HBA_110_190, HBA_170_230, HBA_210_250]
-Observation.bandFilter=HBA_110_190
+Observation.bandFilter=LBA_10_70
 
 # Retrieved from StationCalibration.parset
 #PIC.Core.CS001.clockCorrectionTime=0.0
@@ -38,7 +38,8 @@ Observation.bandFilter=HBA_110_190
 #PIC.Core.CS001.LBA_INNER.LBA_30_90.delayCorrection.Y=0.0
 
 # Retrieved from station_configuration.parset
-#PIC.Core.CS001LBA.ports=[udp:0.0.0.0:4346, udp:0.0.0.0:4347, udp:0.0.0.0:4348, udp:0.0.0.0:4349]
+#PIC.Core.CS001LBA.RSP.ports=[udp:0.0.0.0:4346, udp:0.0.0.0:4347, udp:0.0.0.0:4348, udp:0.0.0.0:4349]
+#or e.g. PIC.Core.CS001HBA0.RSP.ports=[file:/input/file1, file:/input/file2, file:/input/file3, file:/input/file4]
 
 # Optional: mapping of subbands on RSP boards, per station
 # Example: subbands 0 and 1 are emitted on board 0, slots 0 and 1.
@@ -104,8 +105,8 @@ Observation.AnaBeam[0].angle2=0.0
 
 # number of samples in a block. multiple of:
 # - Cobalt.Correlator.nrChannelsPerSubband
-# - OLAP.CNProc.CoherentStokes.channelsPerSubband * OLAP.CNProc.CoherentStokes.timeIntegrationFactor
-# - OLAP.CNProc.IncoherentStokes.channelsPerSubband * OLAP.CNProc.IncoherentStokes.timeIntegrationFactor
+# - Cobalt.Beamformer.CoherentStokes.nrChannelsPerSubband * Cobalt.Beamformer.CoherentStokes.timeIntegrationFactor
+# - Cobalt.Beamformer.IncoherentStokes.nrChannelsPerSubband * Cobalt.Beamformer.IncoherentStokes.timeIntegrationFactor
 # - Cobalt.Beamformer.dedispersionFFTsize (due to BeamFormer FFT)
 # - 3 (due to Correlator.cu)
 #
@@ -131,27 +132,28 @@ Observation.DataProducts.Output_Correlated.locations=[3*:.] # host:directory
 # Beamformer pipeline information
 # ===============================
        
-Observation.DataProducts.Output_Beamformed.enabled=false
+Observation.DataProducts.Output_CoherentStokes.enabled=false
+Observation.DataProducts.Output_IncoherentStokes.enabled=false
 
 # Apply DM (dispersion measure, delay due to interstellar medium)
 Cobalt.Beamformer.coherentDedisperseChannels=true
 
 # Which stokes to create [I, IQUV, XXYY]
 # XXYY is not supported for incoherent beams
-OLAP.CNProc_CoherentStokes.which=XXYY
-OLAP.CNProc_IncoherentStokes.which=I
+Cobalt.Beamformer.CoherentStokes.which=XXYY
+Cobalt.Beamformer.IncoherentStokes.which=I
 
 # Number of channels to create in the output
-OLAP.CNProc_CoherentStokes.channelsPerSubband=64
-OLAP.CNProc_IncoherentStokes.channelsPerSubband=64
+Cobalt.Beamformer.CoherentStokes.nrChannelsPerSubband=64
+Cobalt.Beamformer.IncoherentStokes.nrChannelsPerSubband=64
 
 # Temporal data reduction
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor=1
-OLAP.CNProc_IncoherentStokes.timeIntegrationFactor=1
+Cobalt.Beamformer.CoherentStokes.timeIntegrationFactor=1
+Cobalt.Beamformer.IncoherentStokes.timeIntegrationFactor=1
 
 # Maximum number of subbands to store in each file
-OLAP.CNProc_CoherentStokes.subbandsPerFile=488
-OLAP.CNProc_IncoherentStokes.subbandsPerFile=488
+Cobalt.Beamformer.CoherentStokes.subbandsPerFile=488
+Cobalt.Beamformer.IncoherentStokes.subbandsPerFile=488
 
 Observation.Beam[0].nrTiedArrayBeams=1
 
@@ -164,12 +166,11 @@ Observation.Beam[0].nrTabRings=0
 # Distance between rings
 Observation.Beam[0].ringWidth=0
 
-# TAB pointing, relative to the SAP (station beam).
-# The directionType must therefor match the directionType
-# of the SAP.
+# TAB pointing (absolute). The relative pointings still end up in the metadata,
+# so the directionType must therefor match the directionType of the SAP.
 Observation.Beam[0].TiedArrayBeam[0].directionType=J2000
-Observation.Beam[0].TiedArrayBeam[0].angle1=0.0
-Observation.Beam[0].TiedArrayBeam[0].angle2=0.0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1=0.0
+Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2=0.0
 
 # If >0, dedisperse the data for the given DM
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure=0.0
@@ -182,8 +183,11 @@ Observation.Beam[0].TiedArrayBeam[0].coherent=true
 #   Per SAP, each TAB is put in a different file
 #   Per TAB, each Stokes is put into a different file
 #   Per Stokes, the data is divided using the .subbandsPerFile setting
-Observation.DataProducts.Output_Beamformed.filenames=[BEAM000.h5]  # filename 
-Observation.DataProducts.Output_Beamformed.locations=[localhost:.] # host:directory
+Observation.DataProducts.Output_CoherentStokes.filenames=[BEAM000.h5]  # filename 
+Observation.DataProducts.Output_CoherentStokes.locations=[localhost:.] # host:directory
+
+Observation.DataProducts.Output_IncoherentStokes.filenames=[BEAM001.h5]  # filename 
+Observation.DataProducts.Output_IncoherentStokes.locations=[localhost:.] # host:directory
 
 # Number of channels used in the 1st FFT for delay compensation.
 # This value is auto-detected if the parset contains station

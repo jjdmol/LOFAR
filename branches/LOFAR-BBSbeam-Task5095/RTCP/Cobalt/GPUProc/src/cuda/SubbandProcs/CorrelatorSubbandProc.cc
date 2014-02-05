@@ -226,11 +226,12 @@ namespace LOFAR
     }
 
     namespace {
-      unsigned baseline(unsigned stat1, unsigned stat2)
+      // Return the baseline number for a pair of stations
+      unsigned baseline(unsigned major, unsigned minor)
       {
-        // baseline(stat1, stat2);
-        // TODO: This function should be moved to a helper class
-        return stat2 * (stat2 + 1) / 2 + stat1;
+        ASSERT(major >= minor);
+
+        return major * (major + 1) / 2 + minor;
       }
     }
 
@@ -242,8 +243,8 @@ namespace LOFAR
       unsigned nrSamplesPerIntegration = parset.nrSamplesPerChannel();
 
       // loop the stations
-      for (unsigned stat2 = 0; stat2 < parset.nrStations(); stat2 ++) {
-        for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
+      for (unsigned stat1 = 0; stat1 < parset.nrStations(); stat1 ++) {
+        for (unsigned stat2 = 0; stat2 <= stat1; stat2 ++) {
           unsigned bl = baseline(stat1, stat2);
 
           // If there is a single channel then the index 0 contains real data
@@ -315,7 +316,7 @@ namespace LOFAR
 
           // If all samples flagged, weights is zero.
           // TODO: make a lookup table for the expensive division; measure first
-          float weight = nrValidSamples ? 1e-6f / nrValidSamples : 0;  
+          float weight = nrValidSamples ? 1.0f / nrValidSamples : 0;  
 
           applyWeight(bl, ch, weight, output);
         }
@@ -340,7 +341,7 @@ namespace LOFAR
 
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input,
-                                               StreamableData &_output)
+                                               SubbandProcOutputData &_output)
     {
       CorrelatedDataHostBuffer &output = 
         dynamic_cast<CorrelatedDataHostBuffer&>(_output);
@@ -442,7 +443,7 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorSubbandProc::postprocessSubband(StreamableData &_output)
+    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
     {
       CorrelatedDataHostBuffer &output = 
         dynamic_cast<CorrelatedDataHostBuffer&>(_output);

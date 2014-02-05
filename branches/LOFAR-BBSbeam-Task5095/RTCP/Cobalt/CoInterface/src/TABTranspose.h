@@ -54,7 +54,7 @@ namespace LOFAR
 
         Subband( size_t nrSamples = 0, size_t nrChannels = 0 );
 
-        struct {
+        struct BlockID {
           size_t fileIdx;
           size_t subband;
           size_t block;
@@ -63,6 +63,8 @@ namespace LOFAR
         void write(Stream &stream) const;
         void read(Stream &stream);
       };
+
+      std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id);
 
       /*
        * A block of data, representing for one time slice all
@@ -97,7 +99,16 @@ namespace LOFAR
          */
         bool complete() const;
 
+        /*
+         * Reset the meta data for this block. NOTE: The dimensions
+         * of the data remain unchanged.
+         */
+        void reset( size_t newFileIdx, size_t newBlockIdx );
+
       private:
+        // The total number of subbands in this block.
+        const size_t nrSubbands;
+
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
       };
@@ -152,7 +163,10 @@ namespace LOFAR
         Pool<Block> &outputPool;
         const size_t fileIdx;
         const size_t nrBlocks;
-        Mutex mutex;
+        Mutex mutex; // protects concurrent access to `blocks'
+
+        bool fetchingNextBlock;
+        Condition fetchSignal;
 
         // upper limit for blocks.size(), or 0 if unlimited
         const size_t maxBlocksInFlight;

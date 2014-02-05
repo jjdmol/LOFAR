@@ -47,7 +47,8 @@ namespace LOFAR
       nrBitsPerSample(ps.nrBitsPerSample()),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrSTABs(nrStations), // default to filter station data
-      nrSubbands(1)
+      nrSubbands(1),
+      scaleFactor(1.0f)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);
@@ -107,9 +108,7 @@ namespace LOFAR
       FilterBank filterBank(true, params.nrTaps, 
                             params.nrChannelsPerSubband, KAISER);
       filterBank.negateWeights();
-      // To always output visibilities with the same flux scale, compensate for
-      // scaling introduced by FFTW/CUFFT.
-      filterBank.scaleWeights(1.0 / params.nrChannelsPerSubband);
+      filterBank.scaleWeights(params.scaleFactor);
 
       gpu::HostMemory firWeights(stream.getContext(), buffers.filterWeights.size());
       std::memcpy(firWeights.get<void>(), filterBank.getWeights().origin(),

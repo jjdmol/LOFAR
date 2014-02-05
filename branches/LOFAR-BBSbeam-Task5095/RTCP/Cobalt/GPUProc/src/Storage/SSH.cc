@@ -281,7 +281,7 @@ namespace LOFAR
     SSHconnection::SSHconnection(const string &logPrefix, const string &hostname,
                                  const string &commandline, const string &username,
                                  const string &pubkey, const string &privkey,
-                                 bool captureStdout, ostream &_cout, ostream &_cerr)
+                                 bool reportErrors, bool captureStdout, ostream &_cout, ostream &_cerr)
       :
       itsLogPrefix(logPrefix),
       itsHostName(hostname),
@@ -289,6 +289,7 @@ namespace LOFAR
       itsUserName(username),
       itsPublicKey(pubkey),
       itsPrivateKey(privkey),
+      itsReportErrors(reportErrors),
       itsCaptureStdout(captureStdout),
       itsCout(_cout),
       itsCerr(_cerr),
@@ -409,7 +410,12 @@ namespace LOFAR
       }
 
       if (rc) {
-        LOG_DEBUG_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")"); // don't make this >=WARN as we will be spammed through discover_ssh_keys() (also true for previous LOG_ERROR_STR(), but this one triggers all the time; we should throw, not log in this func)
+        if (itsReportErrors) {
+          LOG_ERROR_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")");
+        } else {
+          LOG_DEBUG_STR( itsLogPrefix << "Authentication for user '" << itsUserName << "' by public/private keys '" << itsPublicKey << "'/'" << itsPrivateKey << "' failed: " << rc << " (" << explainLibSSH2Error(session, rc) << ")"); // don't make this >=WARN as we will be spammed through discover_ssh_keys() (also true for previous LOG_ERROR_STR(), but this one triggers all the time; we should throw, not log in this func)
+        }
+
         authError = true;
         return NULL;
       }
@@ -506,15 +512,19 @@ namespace LOFAR
 
       Cancellation::enable();
 
-      do {
-        struct timeval timeout;
+      /*
+       * Do NOT repeat select() if it returns 0! For some reason,
+       * input will not arrive anymore if that happens once and
+       * we don't communicate to libssh2 in the mean time.
+       */
 
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
+      struct timeval timeout;
 
-        // select() is a cancellation point
-        rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
-      } while (rc == 0);
+      timeout.tv_sec = 1;
+      timeout.tv_usec = 0;
+
+      // select() is a cancellation point
+      rc = ::select(sock.fd + 1, readfd, writefd, NULL, &timeout);
 
       Cancellation::disable();
 
@@ -543,7 +553,7 @@ namespace LOFAR
         try {
           sock = new SocketStream( itsHostName, 22, SocketStream::TCP, SocketStream::Client, 0 );
         } catch (LOFAR::Exception& lfe) { // SystemCallException (or TimeoutException, but deadline=0)
-          LOG_INFO_STR( itsLogPrefix << "Connection failed. Waiting " <<
+          LOG_WARN_STR( itsLogPrefix << "Connection failed. Waiting " <<
                         RETRY_USECS << " usec to retry. Error message: " <<
                         lfe.what() );
           ::usleep(RETRY_USECS);
@@ -798,7 +808,7 @@ namespace LOFAR
       ASSERTSTR(USER, "$USER not set");
 
       // connect, running /bin/true
-      SSHconnection sshconn("", "localhost", "/bin/true", USER, pubkey, privkey, true);
+      SSHconnection sshconn("", "localhost", "/bin/true", USER, pubkey, privkey, false, true);
       sshconn.start();
 
       // wait 5 seconds for connection to succeed

@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 12 Event Viewer
-PANEL,-1 -1 1165 830 N "_3DFace" 0
+PANEL,-1 -1 1200 843 N "_3DFace" 0
 "main()
 {
   int retry=0;
@@ -137,7 +137,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 6
 "PRIMITIVE_TEXT4"
 ""
-1 692 384.6269190170683 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 964 396.8815591721578 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -156,7 +156,7 @@ LANG:1 18 Initiating Object:
 2 7
 "PRIMITIVE_TEXT5"
 ""
-1 693 359.4095519265014 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 967 377.7757142804825 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -175,7 +175,7 @@ LANG:1 15 Event Received:
 2 8
 "PRIMITIVE_TEXT6"
 ""
-1 693 409.8364185435547 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 967 418.0177004080704 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 8 0 0 0 0 0
 E E E
@@ -461,87 +461,87 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  261 644 279 642
-1 786 0 "" 0
+1 835 0 "" 0
 0
-1 787 1 "" 0
+1 836 1 "" 0
 0
-1 788 2 "" 0
+1 837 2 "" 0
 0
-1 789 4 "" 0
+1 838 4 "" 0
 0
-1 790 5 "" 0
+1 839 5 "" 0
 0
-1 791 6 "" 0
+1 840 6 "" 0
 0
-1 792 7 "" 0
+1 841 7 "" 0
 0
-1 793 7 "" 1
+1 842 7 "" 1
 0
-1 794 7 "" 2
+1 843 7 "" 2
 0
-1 795 7 "" 3
+1 844 7 "" 3
 0
-1 796 7 "" 4
+1 845 7 "" 4
 0
-1 797 9 "" 0
+1 846 9 "" 0
 0
-1 798 9 "" 1
+1 847 9 "" 1
 0
-1 799 9 "" 2
+1 848 9 "" 2
 0
-1 800 9 "" 3
+1 849 9 "" 3
 0
-1 801 9 "" 4
+1 850 9 "" 4
 0
-1 802 12 "" 0
+1 851 12 "" 0
 0
-1 803 12 "" 1
+1 852 12 "" 1
 0
-1 804 12 "" 2
+1 853 12 "" 2
 0
-1 805 12 "" 3
+1 854 12 "" 3
 0
-1 806 12 "" 4
+1 855 12 "" 4
 0
-1 807 14 "" 0
+1 856 14 "" 0
 0
-1 808 14 "" 1
+1 857 14 "" 1
 0
-1 809 14 "" 2
+1 858 14 "" 2
 0
-1 810 14 "" 3
+1 859 14 "" 3
 0
-1 811 14 "" 4
+1 860 14 "" 4
 0
-1 812 17 "" 0
+1 861 17 "" 0
 0
-1 813 17 "" 1
+1 862 17 "" 1
 0
-1 814 17 "" 2
+1 863 17 "" 2
 0
-1 815 17 "" 3
+1 864 17 "" 3
 0
-1 816 17 "" 4
+1 865 17 "" 4
 0
-1 817 18 "" 0
+1 866 18 "" 0
 0
-1 818 18 "" 1
+1 867 18 "" 1
 0
-1 819 18 "" 2
+1 868 18 "" 2
 0
-1 820 18 "" 3
+1 869 18 "" 3
 0
-1 821 18 "" 4
+1 870 18 "" 4
 0
-1 822 19 "" 0
+1 871 19 "" 0
 0
-1 823 19 "" 1
+1 872 19 "" 1
 0
-1 824 19 "" 2
+1 873 19 "" 2
 0
-1 825 19 "" 3
+1 874 19 "" 3
 0
-1 826 19 "" 4
+1 875 19 "" 4
 0
 4 87
 "LINE21"
@@ -599,7 +599,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  184 290 196 290
-1 827 20 "" 0
+1 876 20 "" 0
 0
 14 134
 "txt_datapoint"
@@ -620,7 +620,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 135
 "PRIMITIVE_TEXT11"
 ""
-1 722.4300558768761 307.2110786440587 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 1069.377234756191 272.578802767559 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 125 0 0 0 0 0
 E E E
@@ -1002,29 +1002,10 @@ LANG:1 18 show g_connections
   showMapping(g_connections,\"g_connections\");
 }" 0
  E E E
-2 494
-"PRIMITIVE_TEXT1"
-""
-1 730 684 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-166 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 2 1 1 2 1 E U  1 E 730 684 810 708
-0 2 2 "0s" 0 0 0 64 0 0  730 684 1
-1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0 1
-LANG:1 10 Type name:
 2 495
 "PRIMITIVE_TEXT2"
 ""
-1 730 708 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 720 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 168 0 0 0 0 0
 E E E
@@ -1034,8 +1015,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 2 1 1 2 1 E U  1 E 730 708 810 732
-0 2 2 "0s" 0 0 0 64 0 0  730 708 1
+E E 2 1 1 2 1 E U  1 E 720 680 800 704
+0 2 2 "0s" 0 0 0 64 0 0  720 680 1
 1
 LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
 0 1
@@ -1043,7 +1024,7 @@ LANG:1 16 New object name:
 13 496
 "PUSH_BUTTON16"
 ""
-1 954 676 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 720 710 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 170 0 0 0 0 0
 E E E
@@ -1054,7 +1035,7 @@ LANG:1 0
 0
 1
 LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  952 674 1036 734
+0  718 708 802 738
 
 T 
 1
@@ -1062,7 +1043,7 @@ LANG:1 5 claim
 "main()
 {
   dpSet(
-      \"ClaimManager.request.typeName\"      , TYPE.text,
+      \"ClaimManager.request.typeName\"      , \"Observation\",
       \"ClaimManager.request.newObjectName\" , NAME.text );
   
   dyn_string dpNamesWait   = makeDynString(\"ClaimManager.response.newObjectName:_original.._value\");
@@ -1076,71 +1057,51 @@ LANG:1 5 claim
   int status = dpWaitForValue( dpNamesWait, conditions, dpNamesReturn, returnValues, 25 );
   
   if ( status == -1 ) {
-		LOG_DEBUG( \"Event_Viewer.pnl:Error in dpWaitFor Value\" );
+		DebugN( \"Event_Viewer.pnl:Error in dpWaitFor Value\" );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
+		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
+		DebugN( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
-		LOG_DEBUG( \"returnValues : \" + returnValues );
+		DebugN( \"returnValues : \" + returnValues );
 	} else if ( dynlen(getLastError()) != 0 ) {
 
-		LOG_DEBUG( \"Event_Viewer.pnl:Error returned in message dpWaitForValue\" );
+		DebugN( \"Event_Viewer.pnl:Error returned in message dpWaitForValue\" );
 
 		// Reaction: e.g. output
 
-		LOG_DEBUG( getLastError() );
+		DebugN( getLastError() );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
+		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		LOG_DEBUG( \"dpNamesReturn : \" + dpNamesReturn );
+		DebugN( \"dpNamesReturn : \" + dpNamesReturn );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
+		DebugN( \"Event_Viewer.pnl:returnValues : \" + returnValues );
 	} else {
-		LOG_DEBUG( \"Event_Viewer.pnl:dpWaitForValue : everything ok\" );
+		DebugN( \"Event_Viewer.pnl:dpWaitForValue : everything ok\" );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
+		DebugN( \"Event_Viewer.pnl:dpNamesWait : \" + dpNamesWait );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:conditions : \" + conditions );
+		DebugN( \"Event_Viewer.pnl:conditions : \" + conditions );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
+		DebugN( \"Event_Viewer.pnl:dpNamesReturn : \" + dpNamesReturn );
 
-		LOG_DEBUG( \"Event_Viewer.pnl:returnValues : \" + returnValues );
+		DebugN( \"Event_Viewer.pnl:returnValues : \" + returnValues );
        
-    LOG_DEBUG(\"Set txt_response to: \"+ returnValues[3]);
+    DebugN(\"Set txt_response to: \"+ returnValues[3]);
     setValue(\"txt_response\",\"text\",returnValues[3]);
 
 		}
 }" 0
  E E E
-14 497
-"TYPE"
-""
-1 866 676 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-172 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  864 674 948 702
-3 "0s" 0 0 0 0 0 -1  E "main()
-{
-  this.text = \"Observation\";
-}" 0
- E
 14 498
 "NAME"
 ""
-1 866 708 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 820 680 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 174 0 0 0 0 0
 E E E
@@ -1151,7 +1112,7 @@ LANG:1 0
 0
 1
 LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
-0  864 706 948 734
+0  818 678 1032 706
 3 "0s" 0 0 0 0 0 -1  E E E
 30 499
 "FRAME2"
@@ -1229,7 +1190,7 @@ LANG:1 8 Response
 2 548
 "PRIMITIVE_TEXT3"
 ""
-1 721.9999999999998 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 721.9999999999996 764 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 190 0 0 0 0 0
 E E E
@@ -1312,17 +1273,17 @@ LANG:1 20 show g_processesList
   }
 }" 0
  E E E
-1 828 21 "" 0
+1 877 21 "" 0
 0
-1 829 21 "" 1
+1 878 21 "" 1
 0
-1 830 21 "" 2
+1 879 21 "" 2
 0
-1 831 21 "" 3
+1 880 21 "" 3
 0
-1 832 21 "" 4
+1 881 21 "" 4
 0
-1 833 22 "" 0
+1 882 22 "" 0
 0
 4 685
 "LINE28"
@@ -1451,6 +1412,36 @@ EP_childPanelOn()
 // OffsetY {0}
 // SimpleCtrlScriptEnd {EP_childPanelOn}
 " 0
+ E E E
+13 834
+"PUSH_BUTTON21"
+""
+1 830 710 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+209 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  828 708 912 738
+
+T 
+1
+LANG:1 4 free
+"main()
+{
+  int ret = dpSet(
+      \"ClaimManager.reset.typeName\"      , \"Observation\",
+      \"ClaimManager.reset.objectName\" , NAME.text );
+
+ if (ret < 0) DebugN(\"something went wrong resetting DP \"+NAME.txt+ \" \" + getLastError());  
+
+  
+}" 0
  E E E
 0
 LAYER, 1 
