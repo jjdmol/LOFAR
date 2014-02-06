@@ -576,8 +576,9 @@ namespace LOFAR {
       }
       if (dg > itsTolerance) {
         cerr<<"!";
-        //cout<<"Export to Matlab"<<endl;
-        //exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
+        if (itsDebugLevel>10) {
+          exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
+        }
       }
 
 
