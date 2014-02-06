@@ -435,15 +435,14 @@ namespace LOFAR
       bool incoherentStokesPPF)
     {
       intToFloatKernel->itsCounter.logTime();
+      firstFFT->itsCounter.logTime();
       delayCompensationKernel->itsCounter.logTime();
+      secondFFT->itsCounter.logTime();
       bandPassCorrectionKernel->itsCounter.logTime();
 
-      firstFFT->itsCounter.logTime();
-      secondFFT->itsCounter.logTime();
-
+      // samples.logTime();  // performance count the transfer      
       if (nrCoherent > 0)
       {
-
         if (coherentStokesPPF)
         {
           firFilterKernel->itsCounter.logTime();
@@ -452,22 +451,25 @@ namespace LOFAR
 
         beamFormerKernel->itsCounter.logTime();
         coherentTransposeKernel->itsCounter.logTime();
-
+        inverseFFT->itsCounter.logTime();
         if (!outputComplexVoltages)
         {
           coherentStokesKernel->itsCounter.logTime();
         }
-        inverseFFT->itsCounter.logTime();
+        //visibilities.logTime(); //transfer
       }
 
 
       if (nrIncoherent > 0) {
         incoherentTranspose->itsCounter.logTime();
+        incoherentInverseFFT->itsCounter.logTime();
         if (incoherentStokesPPF)
         {
           incoherentFirFilterKernel->itsCounter.logTime();
+          incoherentFinalFFT->itsCounter.logTime();
         }
         incoherentStokesKernel->itsCounter.logTime();
+        //incoherentOutput.logTime();  //transfer
       }
     }
 
