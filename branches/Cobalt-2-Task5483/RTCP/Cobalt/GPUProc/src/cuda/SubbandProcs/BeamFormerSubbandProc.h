@@ -152,6 +152,14 @@ namespace LOFAR
 
       void processIncoherentStage(BlockID blockID) ;
 
+      void logTimeFirstStage();
+
+      void logTimeCoherentStage(bool coherentStokesPPF,
+        bool outputComplexVoltages);
+
+      void logTimeIncoherentStage(bool incoherentStokesPPF);
+
+
       // Whether we form any coherent beams
       bool formCoherentBeams;
 

@@ -434,43 +434,63 @@ namespace LOFAR
       unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
       bool incoherentStokesPPF)
     {
+
+
+      // samples.logTime();  // performance count the transfer      
+      if (nrCoherent > 0)
+      {
+        logTimeCoherentStage(coherentStokesPPF,
+          outputComplexVoltages);
+      }
+
+
+      if (nrIncoherent > 0) 
+      {
+        logTimeIncoherentStage( incoherentStokesPPF);
+      }
+    }
+
+    void BeamFormerSubbandProc::logTimeFirstStage()
+    {
+
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();
       delayCompensationKernel->itsCounter.logTime();
       secondFFT->itsCounter.logTime();
       bandPassCorrectionKernel->itsCounter.logTime();
+    }
 
-      // samples.logTime();  // performance count the transfer      
-      if (nrCoherent > 0)
+    void BeamFormerSubbandProc::logTimeCoherentStage(bool coherentStokesPPF,
+      bool outputComplexVoltages)
+    {
+      if (coherentStokesPPF)
       {
-        if (coherentStokesPPF)
-        {
-          firFilterKernel->itsCounter.logTime();
-          finalFFT->itsCounter.logTime();
-        }
-
-        beamFormerKernel->itsCounter.logTime();
-        coherentTransposeKernel->itsCounter.logTime();
-        inverseFFT->itsCounter.logTime();
-        if (!outputComplexVoltages)
-        {
-          coherentStokesKernel->itsCounter.logTime();
-        }
-        //visibilities.logTime(); //transfer
+        firFilterKernel->itsCounter.logTime();
+        finalFFT->itsCounter.logTime();
       }
 
-
-      if (nrIncoherent > 0) {
-        incoherentTranspose->itsCounter.logTime();
-        incoherentInverseFFT->itsCounter.logTime();
-        if (incoherentStokesPPF)
-        {
-          incoherentFirFilterKernel->itsCounter.logTime();
-          incoherentFinalFFT->itsCounter.logTime();
-        }
-        incoherentStokesKernel->itsCounter.logTime();
-        //incoherentOutput.logTime();  //transfer
+      beamFormerKernel->itsCounter.logTime();
+      coherentTransposeKernel->itsCounter.logTime();
+      inverseFFT->itsCounter.logTime();
+      if (!outputComplexVoltages)
+      {
+        coherentStokesKernel->itsCounter.logTime();
       }
+      //visibilities.logTime(); //transfer
+
+    }
+
+    void BeamFormerSubbandProc::logTimeIncoherentStage(bool incoherentStokesPPF)
+    {
+      incoherentTranspose->itsCounter.logTime();
+      incoherentInverseFFT->itsCounter.logTime();
+      if (incoherentStokesPPF)
+      {
+        incoherentFirFilterKernel->itsCounter.logTime();
+        incoherentFinalFFT->itsCounter.logTime();
+      }
+      incoherentStokesKernel->itsCounter.logTime();
+      //incoherentOutput.logTime();  //transfer
     }
 
     void BeamFormerSubbandProc::printStats()

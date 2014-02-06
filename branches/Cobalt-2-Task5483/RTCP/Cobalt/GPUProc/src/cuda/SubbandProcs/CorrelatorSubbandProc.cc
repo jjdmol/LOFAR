@@ -432,10 +432,11 @@ namespace LOFAR
           counters.fir.logTime();
           counters.fft.logTime();
         }
-        counters.delayBp.logTime();
-        counters.correlator.logTime();
-        counters.samples.logTime();
-        counters.visibilities.logTime();
+        // TODO: on of these counter is not used
+        //counters.delayBp.logTime();  // Suspect this one
+        //counters.correlator.logTime();
+        //counters.samples.logTime();
+        //counters.visibilities.logTime();
 
       }
       // now perform weighting of the data based on the number of valid samples;
