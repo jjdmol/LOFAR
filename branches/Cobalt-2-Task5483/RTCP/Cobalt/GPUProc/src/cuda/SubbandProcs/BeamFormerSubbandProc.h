@@ -101,34 +101,11 @@ namespace LOFAR
       public:
         Counters(gpu::Context &context);
 
-        // gpu kernel counters
-        PerformanceCounter intToFloat;
-        PerformanceCounter firstFFTShift;
-        PerformanceCounter firstFFT;
-        PerformanceCounter delayBp;
-        PerformanceCounter secondFFTShift;
-        PerformanceCounter secondFFT;
-        PerformanceCounter correctBandpass;
-        PerformanceCounter beamformer;
-        PerformanceCounter transpose;
-        PerformanceCounter inverseFFT;
-        PerformanceCounter inverseFFTShift;
-        PerformanceCounter firFilterKernel;
-        PerformanceCounter finalFFT;
-        PerformanceCounter coherentStokes;
-
-        PerformanceCounter incoherentInverseFFT;
-        PerformanceCounter incoherentInverseFFTShift;
-        PerformanceCounter incoherentFirFilterKernel;
-        PerformanceCounter incoherentFinalFFT;
-        PerformanceCounter incoherentStokes;
-        PerformanceCounter incoherentStokesTranspose;
-
-
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
         PerformanceCounter incoherentOutput;
+
         // Print the mean and std of each performance counter on the logger
         void printStats();
       };

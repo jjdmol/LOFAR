@@ -129,6 +129,7 @@ namespace LOFAR
       initFFTAndFlagMembers(context, factories);
       initCoherentMembers(context, factories);
       initIncoherentMembers(context, factories);
+
       // initialize history data for both coherent and incoherent stokes.
       devFilterHistoryData->set(0);
       devIncoherentFilterHistoryData->set(0);
@@ -404,26 +405,7 @@ namespace LOFAR
 
     BeamFormerSubbandProc::Counters::Counters(gpu::Context &context)
       :
-    intToFloat(context),
-    firstFFTShift(context),
-    firstFFT(context),
-    delayBp(context),
-    secondFFTShift(context),
-    secondFFT(context),
-    correctBandpass(context),
-    beamformer(context),
-    transpose(context),
-    inverseFFT(context),
-    inverseFFTShift(context),
-    firFilterKernel(context),
-    finalFFT(context),
-    coherentStokes(context),
-    incoherentInverseFFT(context),
-    incoherentInverseFFTShift(context),
-    incoherentFirFilterKernel(context),
-    incoherentFinalFFT(context),
-    incoherentStokes(context),
-    incoherentStokesTranspose(context),
+
     samples(context),
     visibilities(context),
     incoherentOutput(context)
