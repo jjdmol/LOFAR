@@ -434,25 +434,17 @@ namespace LOFAR
       unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
       bool incoherentStokesPPF)
     {
-
-
+      logTimeFirstStage();
       // samples.logTime();  // performance count the transfer      
       if (nrCoherent > 0)
-      {
-        logTimeCoherentStage(coherentStokesPPF,
-          outputComplexVoltages);
-      }
-
+        logTimeCoherentStage(coherentStokesPPF, outputComplexVoltages);
 
       if (nrIncoherent > 0) 
-      {
         logTimeIncoherentStage( incoherentStokesPPF);
-      }
     }
 
     void BeamFormerSubbandProc::logTimeFirstStage()
     {
-
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();
       delayCompensationKernel->itsCounter.logTime();
@@ -495,8 +487,55 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::printStats()
     {
+      printStatsFirstStage();
+
+      printStatsCoherentStage();
+
+      printStatsIncoherentStage();
+
       counters.printStats();
 
+    }
+
+    void BeamFormerSubbandProc::printStatsFirstStage()
+    {
+      // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc FirstStage GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(intToFloatKernel)" << intToFloatKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
+        std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
+        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
+    }
+
+    void BeamFormerSubbandProc::printStatsCoherentStage()
+    {
+          // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc coherent stage GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(firFilterKernel)" << firFilterKernel->itsCounter.stats << endl <<
+        std::setw(20) << "(finalFFT)" << finalFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(beamformer)" << beamFormerKernel->itsCounter.stats << endl <<
+        std::setw(20) << "(coherentTranspose)" << coherentTransposeKernel->itsCounter.stats << endl <<
+        std::setw(20) << "(inverseFFT)" << inverseFFT->itsCounter.stats << endl <<
+        //std::setw(20) << "(inverseFFTShift)" << inverseFFTShift.stats << endl <<
+        std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl );
+     
+    }
+
+    void BeamFormerSubbandProc::printStatsIncoherentStage()
+    {
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc incoherent stage GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(incoherentStokesTranspose)" << incoherentTranspose->itsCounter.stats << endl <<
+        std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT->itsCounter.stats << endl <<
+        // std::setw(20) << "(incoherentInverseFFTShift)" << incoherentInverseFFTShift.stats << endl <<
+        std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel->itsCounter.stats << endl <<
+        std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl);
     }
 
 
@@ -504,30 +543,12 @@ namespace LOFAR
     {     
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
-        "**** BeamFormerSubbandProc GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(intToFloat)" << intToFloat.stats << endl <<
-        std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
-        std::setw(20) << "(firstFFT)" << firstFFT.stats << endl <<
-        std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
-        std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
-        std::setw(20) << "(secondFFT)" << secondFFT.stats << endl <<
-        std::setw(20) << "(correctBandpass)" << correctBandpass.stats << endl <<
-        std::setw(20) << "(beamformer)" << beamformer.stats << endl <<
-        std::setw(20) << "(transpose)" << transpose.stats << endl <<
-        std::setw(20) << "(inverseFFT)" << inverseFFT.stats << endl <<
-        std::setw(20) << "(inverseFFTShift)" << inverseFFTShift.stats << endl <<
-        std::setw(20) << "(firFilterKernel)" << firFilterKernel.stats << endl <<
-        std::setw(20) << "(finalFFT)" << finalFFT.stats << endl <<
-        std::setw(20) << "(coherentStokes)" << coherentStokes.stats << endl <<
+        "**** BeamFormerSubbandProc cpu to GPU transfers GPU mean and stDev ****" << endl <<
+
         std::setw(20) << "(samples)" << samples.stats << endl <<       
         std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
-        std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl <<
-        std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT.stats << endl <<
-        std::setw(20) << "(incoherentInverseFFTShift)" << incoherentInverseFFTShift.stats << endl <<
-        std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel.stats << endl <<
-        std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT.stats << endl <<
-        std::setw(20) << "(incoherentStokes)" << incoherentStokes.stats << endl <<
-        std::setw(20) << "(incoherentStokesTranspose)" << incoherentStokesTranspose.stats << endl);
+        std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl );
+
     }
 
     void BeamFormerSubbandProc::processSubband(
