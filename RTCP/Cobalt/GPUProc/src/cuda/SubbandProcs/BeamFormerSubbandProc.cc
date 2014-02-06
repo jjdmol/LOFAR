@@ -219,7 +219,7 @@ namespace LOFAR
         context,
         factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(
-        coherentTransposeBuffers.output, coherentTransposeBuffers.input,
+        coherentTransposeBuffers.output, outputComplexVoltages ? devD : devC,
         devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
