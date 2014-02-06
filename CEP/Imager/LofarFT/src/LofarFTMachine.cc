@@ -215,8 +215,8 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
   itsListFreq.resize(window.nrow());
   for(uInt i=0; i<window.nrow();++i){
     itsListFreq[i]=window.refFrequency()(i);
-    cout<<"SPW="<<i<<", freq="<<itsListFreq[i]<<endl;
     if (itsVerbose > 0) {
+      cout<<"SPW="<<i<<", freq="<<itsListFreq[i]<<endl;
       for(uInt j=0; j<(window.chanFreq()(i)).shape()[0];++j){
         cout<<"chan"<<(window.chanFreq()(i))[j]<<endl;
       }
@@ -451,12 +451,13 @@ void LofarFTMachine::init() {
   padded_shape = image->shape();
   padded_shape(0) = nx;
   padded_shape(1) = ny;
-  //if (itsVerbose > 0) {
+  if (itsVerbose > 0) 
+  {
     cout << "Original shape " << image->shape()(0) << ","
          << image->shape()(1) << endl;
     cout << "Padded shape " << padded_shape(0) << ","
          << padded_shape(1) << endl;
-    //}
+  }
   //assert(padded_shape(0)!=image->shape()(0));
     fftw_init_threads();
     fftw_plan_with_nthreads(1);
@@ -477,12 +478,12 @@ void LofarFTMachine::init() {
 
   VecFFTMachine.resize(image->shape()(2));
   Matrix<Complex> dummy(IPosition(2,nx,nx),0.);
-  cout<<" initialise plans"<<endl;
+  if (itsVerbose) cout<<" initialise plans"<<endl;
   for(Int pol=0; pol<npol; ++pol){
       VecFFTMachine[pol].normalized_forward(dummy.nrow(),dummy.data(),OpenMP::maxThreads()/npol , FFTW_MEASURE);
       VecFFTMachine[pol].normalized_backward(dummy.nrow(),dummy.data(),OpenMP::maxThreads()/npol , FFTW_MEASURE);
     }
-  	cout<<" done..."<<endl;
+  if (itsVerbose) cout<<" done..."<<endl;
 	
 
   //   cout<<"computing fft for size="<<sz<<endl;
@@ -847,7 +848,6 @@ void LofarFTMachine::finalizeToVis()
   if (itsVerbose > 0) {
     cout<<"---------------------------> finalizeToVis"<<endl;
   }
-  cout<<"---------------------------> finalizeToVis"<<endl;
   itsAllAtermsDone=true;
 }
 
@@ -1037,11 +1037,12 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //PrecTimer TimerCyril;
   //TimerCyril.start();
 
-  //if (itsVerbose > 0) {
-    logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL
-            << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  logIO() << LogOrigin("LofarFTMachine", "put") << LogIO::NORMAL;
+  if (itsVerbose > 0)
+  {
+    logIO() << "I am gridding " << vb.nRow() << " row(s)."  << LogIO::POST;
     logIO() << LogIO::NORMAL << "Padding is " << padding_p  << LogIO::POST;
-    //}
+  }
 
 
   gridOk(gridder->cSupport()(0));
@@ -1126,7 +1127,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   //LofarFTMachine::make_mapping(vb);
   //vector<vector<vector<uInt> > > MapBlTimesW=LofarFTMachine::make_mapping_time_W(vb, spw);
   // dims are w-plane, non-touching bl-timechunk group, bl-timechunk, row
-  cout<<"do mapping"<<endl;
+  if (itsVerbose) cout<<"do mapping"<<endl;
   vector<vector<vector<vector<uInt> > > > MapBlTimesW_grid=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
 
 //   vector<vector<vector<vector<vector<uInt> > > > > MapBlTimesW_grid_threads;
@@ -1140,7 +1141,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
 //       MapBlTimesW_grid_threads[i]=LofarFTMachine::make_mapping_time_W_grid(vb, spw);
 //     }
 //   }
-  cout<<"done"<<endl;
+  if (itsVerbose) cout<<"done"<<endl;
   //assert(false);
   
 
@@ -1179,10 +1180,10 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   CyrilTimer2Aterm.start();
 
   if(!itsAllAtermsDone){
-    cout<<"Calc Aterm"<<endl;
+    if (itsVerbose) cout<<"Calc Aterm"<<endl;
     itsConvFunc->computeAterm (timeChunk);
     itsConvFunc->computeVecAterm(times[0],times[times.size()-1],its_TimeWindow);
-    cout<<"... done"<<endl;
+    if (itsVerbose) cout<<"... done"<<endl;
   }
   CyrilTimer2Aterm.stop();
   double Taterm=CyrilTimer2Aterm.getReal();
@@ -1459,7 +1460,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
 
   //FFTConvolution
   
-  cout<<"  put::apply-W"<<endl;
+  if (itsVerbose) cout<<"  put::apply-W"<<endl;
   // ArrayLattice<Complex> tmp_stacked_GriddedData_arrayLattice(tmp_stacked_GriddedData);
   // LatticeFFT::cfft2d(tmp_stacked_GriddedData_arrayLattice, false);
 
@@ -1488,7 +1489,7 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   itsConvFunc->ApplyWterm_Image(tmp_stacked_GriddedData, tmp_stacked_GriddedData, spw, false, w_index);
   //cout<<" ... done "<<endl;;
   CyrilW.stop();
-  cout<<"  Wtime = "<< CyrilW.getReal()<<endl;
+  if (itsVerbose) cout<<"  Wtime = "<< CyrilW.getReal()<<endl;
   time_w+=CyrilW.getReal();
   CyrilW.reset();
   // if(!itsMasksGridAllDone){
@@ -1566,17 +1567,20 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
     tot_nvis+=nvis[iii];
   }
 
-  cout<<"Nvis_El= "<<tot_nvis<<endl;
-  cout<<"Nchunk = "<<tot_chunk<<endl;
-  cout<<"Tcf    = "<<tot_time_cf<<endl;
-  cout<<"Tgrid  = "<<tot_time_grid<<endl;
-  cout<<"Tel    = "<<CyrilElement.getReal()<<endl;
-  cout<<"Tw     = "<<time_w<<endl;
-  cout<<"wmax   = "<<itsWMax<<endl;
-  cout<<"Diam   = "<<abs(uvScale(0))<<endl;
-  cout<<"Ns     = "<<itsSupport_Speroidal<<endl;
-  cout<<"Nw     = "<<itsConvFunc->m_nWPlanes<<endl;
-
+  if (itsVerbose)
+  {
+    cout<<"Nvis_El= "<<tot_nvis<<endl;
+    cout<<"Nchunk = "<<tot_chunk<<endl;
+    cout<<"Tcf    = "<<tot_time_cf<<endl;
+    cout<<"Tgrid  = "<<tot_time_grid<<endl;
+    cout<<"Tel    = "<<CyrilElement.getReal()<<endl;
+    cout<<"Tw     = "<<time_w<<endl;
+    cout<<"wmax   = "<<itsWMax<<endl;
+    cout<<"Diam   = "<<abs(uvScale(0))<<endl;
+    cout<<"Ns     = "<<itsSupport_Speroidal<<endl;
+    cout<<"Nw     = "<<itsConvFunc->m_nWPlanes<<endl;
+  }
+  
   its_tot_time_grid += tot_time_grid/itsNThread;
   its_tot_time_cf   += tot_time_cf/itsNThread;
   its_tot_time_w    += time_w;
@@ -1584,10 +1588,17 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   its_tot_time_tot  = its_tot_time_grid+its_tot_time_cf+its_tot_time_w+its_tot_time_el;
 
   cout.precision(5);
-  cout<<"cf="<<100*its_tot_time_cf/its_tot_time_tot<<"%, grid="<<100*its_tot_time_grid/its_tot_time_tot<<"%, el="<<100*its_tot_time_el/its_tot_time_tot<<"%, w="<<100*its_tot_time_w/its_tot_time_tot<<"%, tot="<<its_tot_time_tot<<endl;
+  if (itsVerbose)
+  {  
+    cout << "cf="<<100*its_tot_time_cf/its_tot_time_tot
+         <<"%, grid="<<100*its_tot_time_grid/its_tot_time_tot
+         <<"%, el="<<100*its_tot_time_el/its_tot_time_tot
+         <<"%, w="<<100*its_tot_time_w/its_tot_time_tot
+         <<"%, tot="<<its_tot_time_tot<<endl;
+  }
 
-
-  if (itsVerbose > 0) {
+  if (itsVerbose > 0) 
+  {
     ofstream outFile("outputTimes.txt");
     outFile<<tot_nvis<<endl;
     outFile<<tot_chunk<<endl;
@@ -1601,8 +1612,11 @@ void LofarFTMachine::putSplitWplanesOverlap(const VisBuffer& vb, Int row, Bool d
   }
   CyrilElement.reset();
 
-  cout<<"  put::apply-W ...done"<<endl;
-  cout<<endl;
+  if (itsVerbose)
+  {
+    cout<<"  put::apply-W ...done"<<endl;
+    cout<<endl;
+  }
   SumGridsOMP(its_stacked_GriddedData, tmp_stacked_stacked_GriddedData);
   itsTotalStepsGrid+=1;
 
@@ -1644,8 +1658,11 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
   uInt spw(vb.spectralWindow());
   //cout<<"... De-Gridding Spectral Window: "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
 
-  logIO() << LogOrigin("LofarFTMachine", "get") << LogIO::NORMAL
-	  << "I am degridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  logIO() << LogOrigin("LofarFTMachine", "get") << LogIO::NORMAL;
+  if (itsVerbose)
+  {
+    logIO() << "I am degridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  }
 
 
   //Channel matching for the actual spectral window of buffer
@@ -1767,7 +1784,7 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
     // for (int i=0; i<itsNThread; ++i) {
     //   (*itsGriddedData)[i]=Complex();
     // }
-    cout<<"  get:: apply-w "<<iwplane<<" "<<w_index<<endl;
+    if (itsVerbose) cout<<"  get:: apply-w "<<iwplane<<" "<<w_index<<endl;
     //itsGridToDegrid.reference(itsConvFunc->ApplyWterm(GridToDegridElement, spw, true, w_index, (*itsGriddedData), itsTotalStepsDeGrid, w_index));
     //itsGridToDegrid.reference(itsConvFunc->ApplyWterm_Image(GridToDegridElement, itsGridToDegrid, spw, true, w_index).copy());
     itsConvFunc->ApplyWterm_Image(GridToDegridElement, itsGridToDegrid, spw, true, w_index);
@@ -1800,8 +1817,11 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
     //   //slice=slice*itsGridToDegrid.shape()[0]*itsGridToDegrid.shape()[0];
     // }
   //fftw_plan_with_nthreads(1);
+  if (itsVerbose)
+  {
     cout<<"  get:: apply-w .... done"<<endl;
     cout<<"  get:: degrid"<<endl;
+  }
     //cout<<" get: apply-w: done"<<endl;
     //cout<<" get: degrid "<<iwplane<<endl;
     //itsGridToDegrid.reference(its_stacked_GriddedData);
@@ -1913,8 +1933,11 @@ void LofarFTMachine::getSplitWplanes(VisBuffer& vb, Int row)
     };
 
   }//end While loop
+  if (itsVerbose)
+  {
     cout<<"  get:: done"<<endl;
     cout<<endl;
+  }
   }//end for wplanes loop
   //cout<<"Element: "<<CyrilElement.getReal()<<", Conv: "<<CyrilConv.getReal()<<", Grid: "<<CyrilGrid.getReal()<<endl;;
 
@@ -2574,7 +2597,7 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
 					 const ImageInterface<Complex>& imageTemplate,
 					 ImageInterface<Float>& sensitivityImage)
   {
-    cout<<"============================== makeSensitivityImage"<<endl;
+    if (itsVerbose) cout<<"============================== makeSensitivityImage"<<endl;
     if (convFuncCtor_p->makeAverageResponse(vb, imageTemplate, sensitivityImage))
       cfCache_p->flush(sensitivityImage,sensitivityPatternQualifierStr_p);
   }
@@ -2597,8 +2620,11 @@ void LofarFTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
     Array<Float> outBuf;
 
     isRefIn  = inImage.get(inBuf);
-    log_l << "Normalizing the average PBs to unity"
-	  << LogIO::NORMAL << LogIO::POST;
+    if (itsVerbose)
+    {
+      log_l << "Normalizing the average PBs to unity"
+            << LogIO::NORMAL << LogIO::POST;
+    }
     //
     // Normalize each plane of the inImage separately to unity.
     //
@@ -3401,9 +3427,11 @@ void LofarFTMachine::getTraditional(VisBuffer& vb, Int row)
   uInt spw(vb.spectralWindow());
   //cout<<"... De-Gridding Spectral Window: "<<vb.spectralWindow()<<", with Taylor Term: "<< thisterm_p<<endl;
 
-  logIO() << LogOrigin("LofarFTMachine", "get") << LogIO::NORMAL
-	  << "I am degridding " << vb.nRow() << " row(s)."  << LogIO::POST;
-
+  logIO() << LogOrigin("LofarFTMachine", "get") << LogIO::NORMAL;
+  if (itsVerbose)
+  {
+    logIO() << "I am degridding " << vb.nRow() << " row(s)."  << LogIO::POST;
+  }
 
   //Channel matching for the actual spectral window of buffer
   if(doConversion_p[vb.spectralWindow()])
@@ -3957,24 +3985,24 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
   //   //cout<<" MaskNew "<<endl;
   //   itsConvFunc->MakeVectorMaskWplanesNew(tmp_stacked_GriddedData, itsTotalStepsGrid, w_index, true, false, 0);
   // }
-  cout<<" put::ApplyW w_index="<<w_index<<endl;
+  if (itsVerbose) cout<<" put::ApplyW w_index="<<w_index<<endl;
   //tmp_stacked_GriddedData.reference(itsConvFunc->ApplyWterm(tmp_stacked_GriddedData, spw, false, w_index, (*itsGriddedData),itsTotalStepsGrid, w_index));
 
   //FFTConvolution
   
-  cout<<"dofft lp"<<endl;
+  if (itsVerbose) cout<<"dofft lp"<<endl;
   // ArrayLattice<Complex> tmp_stacked_GriddedData_arrayLattice(tmp_stacked_GriddedData);
   // LatticeFFT::cfft2d(tmp_stacked_GriddedData_arrayLattice, false);
 
   for(uInt pol=0; pol<4; ++pol){
-    cout<<"pol="<<pol<<endl;
+    if (itsVerbose) cout<<"pol="<<pol<<endl;
     Matrix<Complex> slice = ((tmp_stacked_GriddedData(Slicer(IPosition(4, 0, 0,pol,0),
 							     IPosition(4, tmp_stacked_GriddedData.shape()[0], tmp_stacked_GriddedData.shape()[0],1,1)))).nonDegenerate()).copy();
     itsConvFunc->normalized_fft (slice, false);
   }
-  cout<<"donefft lp"<<endl;
+  if (itsVerbose) cout<<"donefft lp"<<endl;
   itsConvFunc->ApplyWterm_Image(tmp_stacked_GriddedData, tmp_stacked_GriddedData, spw, false, w_index);
-  cout<<" ... done "<<endl;;
+  if (itsVerbose) cout<<" ... done "<<endl;;
 
 
   // if(!itsMasksGridAllDone){
@@ -3982,15 +4010,15 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
   //   itsConvFunc->MakeVectorMaskWplanesNew(tmp_stacked_GriddedData, itsTotalStepsGrid,w_index, false, false, 1);
   // }
 
-  cout<<" Sum "<<endl;
+  if (itsVerbose) cout<<" Sum "<<endl;
   SumGridsOMP(tmp_stacked_stacked_GriddedData, tmp_stacked_GriddedData);
-  cout<<" ... Done Sum "<<endl;
-  cout<<" put to 0 "<<endl;
+  if (itsVerbose) cout<<" ... Done Sum "<<endl;
+  if (itsVerbose) cout<<" put to 0 "<<endl;
 #pragma omp parallel for schedule(dynamic)
   for (uInt i=0; i<its_NGrids; ++i) {
     (*itsGriddedData)[i]=Complex();
   }
-  cout<<" ... Done put to 0"<<endl;
+  if (itsVerbose) cout<<" ... Done put to 0"<<endl;
   }//end for w-planes
   
 
@@ -3999,13 +4027,13 @@ void LofarFTMachine::putSplitWplanes(const VisBuffer& vb, Int row, Bool dopsf,
     //   //cout<<" Mask Element"<<endl;
     //   itsConvFunc->MakeVectorMaskWplanesNew(tmp_stacked_stacked_GriddedData, itsTotalStepsGrid,0, false, true, 2);
     // }
-    cout<<" Apply Element"<<endl;
+    if (itsVerbose) cout<<" Apply Element"<<endl;
     // //tmp_stacked_stacked_GriddedData.reference(itsConvFunc->ApplyElementBeam3 (tmp_stacked_stacked_GriddedData, timeChunk, spw,
     // //                                          tsGridMuellerMask, false,(*itsGriddedData),itsTotalStepsGrid));
     // //cout<<" .. Done Apply Element"<<endl;
     itsConvFunc->ApplyElementBeam_Image(tmp_stacked_stacked_GriddedData, timeChunk, spw,
 					itsGridMuellerMask, false);
-    cout<<" .. Done Apply Element"<<endl;
+    if (itsVerbose) cout<<" .. Done Apply Element"<<endl;
      
   }
   
