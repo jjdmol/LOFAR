@@ -93,13 +93,14 @@ AntennaField::AntennaList::const_iterator AntennaField::endAntennae() const
 
 vector3r_t AntennaField::ncp(real_t time) const
 {
-    if(time != itsNCPCacheTime)
-    {
-        itsNCPCacheDirection = itsNCP->at(time);
-        itsNCPCacheTime = time;
-    }
+    //if(time != itsNCPCacheTime)
+    //{
+    //    itsNCPCacheDirection = itsNCP->at(time);
+    //    itsNCPCacheTime = time;
+    //}
+    vector3r_t ncp={0.,0.,1.};
 
-    return itsNCPCacheDirection;
+    return ncp;//itsNCPCacheDirection;
 }
 
 vector3r_t AntennaField::itrf2field(const vector3r_t &itrf) const
