@@ -38,6 +38,8 @@
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 
+#include "SubbandProc.h"
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -46,24 +48,26 @@ namespace LOFAR
     //# Forward declarations
     struct BeamFormerFactories;
 
-    class BeamFOrmerPreprocessingPart
+    class BeamFormerPreprocessingPart
     {
     
     public:
 
-      BeamFOrmerPreprocessingPart(gpu::Stream i_queue,
+      BeamFormerPreprocessingPart(const Parset &parset, 
+        gpu::Stream &i_queue,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
-
-      
+     
 
     private:
-
+      const Parset ps;
       gpu::Stream queue;
+
+
       //Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> DevInput;
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devNull;

@@ -22,7 +22,9 @@
 #define LOFAR_GPUPROC_CUDA_BEAM_FORMER_SUBBAND_PROC_H
 
 #include <complex>
+#include <memory>
 
+#include <boost/shared_ptr.hpp>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
@@ -42,6 +44,8 @@
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
+
+#include "BeamFormerPreprocessingPart.h"
 
 #include "SubbandProc.h"
 
@@ -114,6 +118,7 @@ namespace LOFAR
 
     private:
 
+
       void initFFTAndFlagMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
@@ -156,19 +161,21 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      SubbandProcInputData::DeviceBuffers devInput;
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
 
       // @{
       // Device memory buffers. These buffers are used interleaved.
-      std::auto_ptr<gpu::DeviceMemory> devA;
-      std::auto_ptr<gpu::DeviceMemory> devB;
-      std::auto_ptr<gpu::DeviceMemory> devC;
-      std::auto_ptr<gpu::DeviceMemory> devD;
-      std::auto_ptr<gpu::DeviceMemory> devE;
+      boost::shared_ptr<gpu::DeviceMemory> devA;
+      boost::shared_ptr<gpu::DeviceMemory> devB;
+      boost::shared_ptr<gpu::DeviceMemory> devC;
+      boost::shared_ptr<gpu::DeviceMemory> devD;
+      boost::shared_ptr<gpu::DeviceMemory> devE;
       // @}
 
       // NULL placeholder for unused DeviceMemory parameters
-      std::auto_ptr<gpu::DeviceMemory> devNull;
+      boost::shared_ptr<gpu::DeviceMemory> devNull;
+
+      std::auto_ptr<BeamFormerPreprocessingPart> preprocessingPart;
       /*
       * Kernels
       */

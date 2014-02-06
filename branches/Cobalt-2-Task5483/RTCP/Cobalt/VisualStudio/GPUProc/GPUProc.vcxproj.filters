@@ -58,6 +58,9 @@
     <Filter Include="test\SubbandProcs">
       <UniqueIdentifier>{0ddb3aaa-b339-4fc9-933d-51ab12f2f419}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\cuda\SubbandProcs\parts">
+      <UniqueIdentifier>{523a5915-d119-4fbc-bf32-f57136137d3e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.h">
@@ -406,6 +409,9 @@
     <ClInclude Include="..\..\GPUProc\src\Kernels\FFTShiftKernel.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
       <Filter>src\cuda\Kernels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingPart.h">
+      <Filter>src\cuda\SubbandProcs\parts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -758,6 +764,10 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingPart.cc">
+      <Filter>src\cuda\SubbandProcs\parts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1082,6 +1092,11 @@
     <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
       <Filter>share</Filter>
     </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset" />
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\GPUProc\test\CMakeLists.txt">

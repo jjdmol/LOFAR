@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 
 #include <iomanip>
+#include "BeamFormerPreprocessingPart.h"
 
 // Set to true to get detailed buffer informatio
 #if 0
@@ -91,39 +92,44 @@ namespace LOFAR
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),
       counters(context),
       prevBlock(-1),
-      prevSAP(-1),
-
-      // NOTE: Make sure the history samples are dealt with properly until the
-      // FIR, which the beam former does in a later stage!
-      devInput(
-        std::max(
-          factories.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA),
-          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
-        factories.delayCompensation.bufferSize(
-          DelayAndBandPassKernel::DELAYS),
-        factories.delayCompensation.bufferSize(
-          DelayAndBandPassKernel::PHASE_ZEROS),
-        context)
+      prevSAP(-1)
 
     {
+      // NOTE: Make sure the history samples are dealt with properly until the
+      // FIR, which the beam former does in a later stage!
+      devInput.reset(new SubbandProcInputData::DeviceBuffers(
+        std::max(
+        factories.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA),
+        factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
+        factories.delayCompensation.bufferSize(
+        DelayAndBandPassKernel::DELAYS),
+        factories.delayCompensation.bufferSize(
+        DelayAndBandPassKernel::PHASE_ZEROS),
+        context));
       // coherent stokes buffers
-      unsigned sizeKernelBuffers = devInput.inputSamples.size();
-      devA = std::auto_ptr<gpu::DeviceMemory>(
+      unsigned sizeKernelBuffers = devInput->inputSamples.size();
+
+      devA.reset(
         new gpu::DeviceMemory(context, sizeKernelBuffers));
-      devB = std::auto_ptr<gpu::DeviceMemory>(
+      devB.reset(
         new gpu::DeviceMemory(context, sizeKernelBuffers));
       // Buffers for incoherent stokes
-      devC = std::auto_ptr<gpu::DeviceMemory>(
+      devC.reset(
         new gpu::DeviceMemory(context, sizeKernelBuffers));
-      devD = std::auto_ptr<gpu::DeviceMemory>(
+      devD.reset(
         new gpu::DeviceMemory(context, sizeKernelBuffers));
-      devE = std::auto_ptr<gpu::DeviceMemory>(
+      devE.reset(
         new gpu::DeviceMemory(context,
         factories.incoherentStokes.bufferSize(
         IncoherentStokesKernel::OUTPUT_DATA)));
-      devNull = std::auto_ptr<gpu::DeviceMemory>(
+      devNull.reset(
         new gpu::DeviceMemory(context, 1));
 
+
+      preprocessingPart = std::auto_ptr<BeamFormerPreprocessingPart>(
+        new BeamFormerPreprocessingPart(parset,
+        queue,
+        devInput, devA, devB,  devNull));
       //################################################
 
       initFFTAndFlagMembers(context, factories);
@@ -165,7 +171,7 @@ namespace LOFAR
       BeamFormerFactories &factories){
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
-        new IntToFloatKernel::Buffers(devInput.inputSamples, *devB));
+        new IntToFloatKernel::Buffers(devInput->inputSamples, *devB));
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
         factories.intToFloat.create(queue, *intToFloatBuffers));
 
@@ -185,9 +191,9 @@ namespace LOFAR
 
       // delayComp: B -> A
       delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
-        new DelayAndBandPassKernel::Buffers(*devB,* devA, devInput.delaysAtBegin,
-        devInput.delaysAfterEnd,
-        devInput.phase0s, *devNull));
+        new DelayAndBandPassKernel::Buffers(*devB,* devA, devInput->delaysAtBegin,
+        devInput->delaysAfterEnd,
+        devInput->phase0s, *devNull));
 
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));
@@ -547,18 +553,18 @@ namespace LOFAR
 
       //****************************************
       // Send input to GPU
-      queue.writeBuffer(devInput.inputSamples, input.inputSamples,
+      queue.writeBuffer(devInput->inputSamples, input.inputSamples,
                         counters.samples, true);
 
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
         if (ps.delayCompensation())
         {
-          queue.writeBuffer(devInput.delaysAtBegin,
+          queue.writeBuffer(devInput->delaysAtBegin,
             input.delaysAtBegin, false);
-          queue.writeBuffer(devInput.delaysAfterEnd,
+          queue.writeBuffer(devInput->delaysAfterEnd,
             input.delaysAfterEnd, false);
-          queue.writeBuffer(devInput.phase0s,
+          queue.writeBuffer(devInput->phase0s,
             input.phase0s, false);
         }
 

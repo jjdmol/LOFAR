@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFOrmerPreprocessingPart.h"
+#include "BeamFormerPreprocessingPart.h"
 #include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
@@ -44,23 +44,24 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFOrmerPreprocessingPart::BeamFOrmerPreprocessingPart(
-      gpu::Stream i_queue,
+    BeamFormerPreprocessingPart::BeamFormerPreprocessingPart(
+      const Parset &parset,
+      gpu::Stream &i_queue,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
+      ps(parset),
       queue(i_queue)
     {
-
-      devInput.reset(i_devInput);
-      devA.reset(i_devA);
-      devb.reset(i_devb);
-      i_devNull.reset(i_devNull);
+      devInput=i_devInput;
+      devA=i_devA;
+      devB=i_devB;
+      i_devNull=i_devNull;
     }
 
-    void BeamFOrmerPreprocessingPart::initFFTAndFlagMembers(gpu::Context &context,
+    void BeamFormerPreprocessingPart::initFFTAndFlagMembers(gpu::Context &context,
       BeamFormerFactories &factories){
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
@@ -85,8 +86,8 @@ namespace LOFAR
       // delayComp: B -> A
       delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
         new DelayAndBandPassKernel::Buffers(*devB, *devA, devInput->delaysAtBegin,
-        devInput.delaysAfterEnd,
-        devInput.phase0s, *devNull));
+        devInput->delaysAfterEnd,
+        devInput->phase0s, *devNull));
 
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));

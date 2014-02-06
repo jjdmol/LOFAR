@@ -152,22 +152,22 @@ namespace LOFAR
             // Print the individual counters
             proc->printStats();
             
-            // Calculate aggregate statistics for the whole pipeline
-            intToFloat += proc->counters.intToFloat.stats;
-            firstFFT += proc->counters.firstFFT.stats;
-            delayBp += proc->counters.delayBp.stats;
-            secondFFT += proc->counters.secondFFT.stats;
-            correctBandpass += proc->counters.correctBandpass.stats;
-            beamformer += proc->counters.beamformer.stats;
-            transpose += proc->counters.transpose.stats;
-            inverseFFT += proc->counters.inverseFFT.stats;
-            firFilterKernel += proc->counters.firFilterKernel.stats;
-            finalFFT += proc->counters.finalFFT.stats;
-            coherentStokes += proc->counters.coherentStokes.stats;
-            incoherentInverseFFT += proc->counters.incoherentInverseFFT.stats;
-            incoherentFirFilterKernel += proc->counters.incoherentFirFilterKernel.stats;
-            incoherentFinalFFT += proc->counters.incoherentFinalFFT.stats;
-            incoherentStokes += proc->counters.incoherentStokes.stats;
+            //// Calculate aggregate statistics for the whole pipeline
+            //intToFloat += proc->counters.intToFloat.stats;
+            //firstFFT += proc->counters.firstFFT.stats;
+            //delayBp += proc->counters.delayBp.stats;
+            //secondFFT += proc->counters.secondFFT.stats;
+            //correctBandpass += proc->counters.correctBandpass.stats;
+            //beamformer += proc->counters.beamformer.stats;
+            //transpose += proc->counters.transpose.stats;
+            //inverseFFT += proc->counters.inverseFFT.stats;
+            //firFilterKernel += proc->counters.firFilterKernel.stats;
+            //finalFFT += proc->counters.finalFFT.stats;
+            //coherentStokes += proc->counters.coherentStokes.stats;
+            //incoherentInverseFFT += proc->counters.incoherentInverseFFT.stats;
+            //incoherentFirFilterKernel += proc->counters.incoherentFirFilterKernel.stats;
+            //incoherentFinalFFT += proc->counters.incoherentFinalFFT.stats;
+            //incoherentStokes += proc->counters.incoherentStokes.stats;
           
             samples += proc->counters.samples.stats;
             visibilities += proc->counters.visibilities.stats;
