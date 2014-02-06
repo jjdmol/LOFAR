@@ -171,7 +171,8 @@ namespace LOFAR
   } //# unnamed namespace
 
 
-  LofarATerm::LofarATerm(const MeasurementSet& ms, const Record& parameters)
+  LofarATerm::LofarATerm(const MeasurementSet& ms, const Record& parameters) :
+    itsVerbose(parameters.asInt("verbose"))
   {
     // Read station information.
     readStations(ms, std::back_inserter(itsStations));
@@ -203,9 +204,9 @@ namespace LOFAR
       {
         parmdbname = ms.tableName() + "/" + parameters.asString("parmdbname");
       }
-      cout << parmdbname << endl;
+      if (itsVerbose) cout << parmdbname << endl;
       initParmDB(parmdbname);
-      cout << cal_pp_names << endl;
+      if (itsVerbose) cout << cal_pp_names << endl;
     }
   }
 
@@ -214,7 +215,7 @@ namespace LOFAR
     this->pdb = new LOFAR::BBS::ParmFacade(parmdbname);
     std::string prefix = "Piercepoint:X:";
     std::vector<std::string> v = this->pdb->getNames(prefix + "*");
-    cout << "Nparm: " << v.size() << endl;
+    if (itsVerbose) cout << "Nparm: " << v.size() << endl;
     this->cal_pp_names = Vector<String>(v.size());
     this->cal_pp = Matrix<Double>(3,v.size());
     this->tec_white = Vector<Double>(v.size());
