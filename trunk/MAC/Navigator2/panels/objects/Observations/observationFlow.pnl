@@ -174,11 +174,11 @@ void setStates(int state, int childState) {
 
    SymbolCol = getStateColor(childState);
    DebugN(\"child:\"+SymbolCol);
-   setValue(\"childStateBorder\", \"backCol\", SymbolCol);
+   setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
 
    SymbolCol = getStateColor(state);
    DebugN(\"state:\"+SymbolCol);
-   setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
+   setValue(\"childStateBorder\", \"backCol\", SymbolCol);
 }" 0
  2
 "CBRef" "1"
