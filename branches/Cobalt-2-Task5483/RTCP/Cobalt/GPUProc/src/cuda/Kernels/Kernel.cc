@@ -58,9 +58,9 @@ namespace LOFAR
                    const Parameters &params)
       : 
       gpu::Function(function),
+      itsCounter(stream.getContext()),
       maxThreadsPerBlock(
         stream.getContext().getDevice().getMaxThreadsPerBlock()),
-      itsCounter(stream.getContext()),
       itsStream(stream),
       itsBuffers(buffers),
       itsParameters(params)

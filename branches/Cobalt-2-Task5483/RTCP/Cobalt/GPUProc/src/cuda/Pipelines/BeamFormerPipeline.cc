@@ -150,7 +150,7 @@ namespace LOFAR
             BeamFormerSubbandProc *proc = dynamic_cast<BeamFormerSubbandProc *>(workQueues[idx_queue].get());
 
             // Print the individual counters
-            proc->counters.printStats();
+            proc->printStats();
             
             // Calculate aggregate statistics for the whole pipeline
             intToFloat += proc->counters.intToFloat.stats;

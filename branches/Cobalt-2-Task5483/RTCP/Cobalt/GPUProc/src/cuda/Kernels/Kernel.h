@@ -79,6 +79,9 @@ namespace LOFAR
 
       PerformanceCounter &getCounter();
 
+      // Performance counter for all work done by this kernel
+      PerformanceCounter itsCounter;
+
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream,
@@ -95,10 +98,6 @@ namespace LOFAR
 
       const unsigned maxThreadsPerBlock;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
-
-
-      // Performance counter for all work done by this kernel
-      PerformanceCounter itsCounter;
 
     private:
       // The GPU Stream associated with this kernel.

@@ -89,6 +89,12 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(SubbandProcOutputData &output);
 
+      void printStats();
+
+      void logTime(unsigned nrCoherent,
+        unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
+        bool incoherentStokesPPF);
+
       // Beamformer specific collection of PerformanceCounters
       class Counters
       {

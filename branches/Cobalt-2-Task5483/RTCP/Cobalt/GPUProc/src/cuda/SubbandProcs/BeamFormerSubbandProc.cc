@@ -430,18 +430,57 @@ namespace LOFAR
     {
     }
 
+    void BeamFormerSubbandProc::logTime(unsigned nrCoherent,
+      unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
+      bool incoherentStokesPPF)
+    {
+      intToFloatKernel->itsCounter.logTime();
+      delayCompensationKernel->itsCounter.logTime();
+      bandPassCorrectionKernel->itsCounter.logTime();
+
+      if (nrCoherent > 0)
+      {
+        if (coherentStokesPPF)
+        {
+          firFilterKernel->itsCounter.logTime();
+        }
+
+        beamFormerKernel->itsCounter.logTime();
+        coherentTransposeKernel->itsCounter.logTime();
+
+      if (!outputComplexVoltages)
+         {
+
+            //coherentStokes.logTime();
+         }
+      }
+
+      if (nrIncoherent > 0) {
+        incoherentTranspose->itsCounter.logTime();
+        if (incoherentStokesPPF)
+        {
+    //          incoherentFirFilterKernel.logTime();
+        }
+        //incoherentStokes.logTime();
+      }
+
+
+      counters.logTime( nrCoherent,
+         nrIncoherent,  coherentStokesPPF,  outputComplexVoltages,
+         incoherentStokesPPF);
+    }
+
+
     void BeamFormerSubbandProc::Counters::logTime(unsigned nrCoherent,
       unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
       bool incoherentStokesPPF)
     {
       // Update the counters
-      intToFloat.logTime();
+
       firstFFT.logTime();
-      delayBp.logTime();
       secondFFT.logTime();
-      correctBandpass.logTime();
-      
-      samples.logTime();
+     
+      samples.logTime();  // data move
 
 
       if (nrCoherent > 0)
@@ -456,27 +495,36 @@ namespace LOFAR
         transpose.logTime();
         inverseFFT.logTime();
 
-        if (!outputComplexVoltages)
-        {
-          coherentStokes.logTime();
-        }
+      //  if (!outputComplexVoltages)
+      //  {
+      //    coherentStokes.logTime();
+      //  }
 
-        visibilities.logTime();
+      //  visibilities.logTime();  // buffer mutatiuon
       }
 
-      if (nrIncoherent > 0) {
-        incoherentStokesTranspose.logTime();
-        incoherentInverseFFT.logTime();
-        if (incoherentStokesPPF)
-        {
-          incoherentFirFilterKernel.logTime();
-          incoherentFinalFFT.logTime();
-        }
-        incoherentStokes.logTime();
-        incoherentOutput.logTime();
-      }
+      //if (nrIncoherent > 0) {
+      
+      //  incoherentStokesTranspose.logTime();
+      //  incoherentInverseFFT.logTime();
+      //  if (incoherentStokesPPF)
+      //  {
+      //    incoherentFirFilterKernel.logTime();
+      //    incoherentFinalFFT.logTime();
+      //  }
+      //  incoherentStokes.logTime();
+      //  incoherentOutput.logTime();
+      //}
 
     }
+
+
+    void BeamFormerSubbandProc::printStats()
+    {
+      counters.printStats();
+
+    }
+
 
     void BeamFormerSubbandProc::Counters::printStats()
     {     
@@ -583,9 +631,11 @@ namespace LOFAR
       {      
         // assure that the queue is done so all events are fished
         queue.synchronize();
+        logTime(nrCoherent, nrIncoherent, coherentStokesPPF,
+          outputComplexVoltages, incoherentStokesPPF);
 
-        counters.logTime(nrCoherent, nrIncoherent, coherentStokesPPF, 
-         outputComplexVoltages, incoherentStokesPPF);
+        /*counters.logTime(nrCoherent, nrIncoherent, coherentStokesPPF, 
+         outputComplexVoltages, incoherentStokesPPF);*/
       }
     }
 
