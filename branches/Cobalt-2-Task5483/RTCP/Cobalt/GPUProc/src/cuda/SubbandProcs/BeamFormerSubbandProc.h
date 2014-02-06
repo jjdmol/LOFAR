@@ -131,12 +131,6 @@ namespace LOFAR
         PerformanceCounter incoherentOutput;
         // Print the mean and std of each performance counter on the logger
         void printStats();
-
-        void logTime(unsigned nrCoherent,
-          unsigned nrIncoherent,
-          bool coherentStokesPPF,
-          bool outputComplexVoltages,
-          bool incoherentStokesPPF);
       };
 
       Counters counters;

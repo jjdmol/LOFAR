@@ -443,6 +443,7 @@ namespace LOFAR
 
       if (nrCoherent > 0)
       {
+
         if (coherentStokesPPF)
         {
           firFilterKernel->itsCounter.logTime();
@@ -454,8 +455,7 @@ namespace LOFAR
 
         if (!outputComplexVoltages)
         {
-
-          //coherentStokes.logTime();
+          coherentStokesKernel->itsCounter.logTime();
         }
         inverseFFT->itsCounter.logTime();
       }
@@ -465,62 +465,11 @@ namespace LOFAR
         incoherentTranspose->itsCounter.logTime();
         if (incoherentStokesPPF)
         {
-          //          incoherentFirFilterKernel.logTime();
+          incoherentFirFilterKernel->itsCounter.logTime();
         }
-        //incoherentStokes.logTime();
+        incoherentStokesKernel->itsCounter.logTime();
       }
-
-
-      counters.logTime(nrCoherent,
-        nrIncoherent, coherentStokesPPF, outputComplexVoltages,
-        incoherentStokesPPF);
     }
-
-
-    void BeamFormerSubbandProc::Counters::logTime(unsigned nrCoherent,
-      unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
-      bool incoherentStokesPPF)
-    {
-      // Update the counters
-
-     
-      samples.logTime();  // data move
-
-
-      if (nrCoherent > 0)
-      {
-        if (coherentStokesPPF)
-        {
-          firFilterKernel.logTime();
-        }
-
-        beamformer.logTime();
-        transpose.logTime();
-        
-
-      //  if (!outputComplexVoltages)
-      //  {
-      //    coherentStokes.logTime();
-      //  }
-
-      //  visibilities.logTime();  // buffer mutatiuon
-      }
-
-      //if (nrIncoherent > 0) {
-      
-      //  incoherentStokesTranspose.logTime();
-      //  incoherentInverseFFT.logTime();
-      //  if (incoherentStokesPPF)
-      //  {
-      //    incoherentFirFilterKernel.logTime();
-      //    incoherentFinalFFT.logTime();
-      //  }
-      //  incoherentStokes.logTime();
-      //  incoherentOutput.logTime();
-      //}
-
-    }
-
 
     void BeamFormerSubbandProc::printStats()
     {

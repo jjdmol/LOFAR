@@ -803,15 +803,16 @@ namespace LOFAR
 
           float ms;
 
-          try {
+          // Disable this catch to force uncaught exception
+          //try {
             checkCuCall(cuEventElapsedTime(&ms, other, _event));
-          } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent crashes caused by querying unused timers
-            //
-            // NOTE: checkCuCall already logs the error
+          //} catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
+          //  // Prevent crashes caused by querying unused timers
+          //  //
+          //  // NOTE: checkCuCall already logs the error
 
-            ms = 0.0f;
-          }
+          //  ms = 0.0f;
+          //}
 
           return ms;
         }
