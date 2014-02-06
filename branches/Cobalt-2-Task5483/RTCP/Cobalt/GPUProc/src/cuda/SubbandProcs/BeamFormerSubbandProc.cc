@@ -438,36 +438,42 @@ namespace LOFAR
       delayCompensationKernel->itsCounter.logTime();
       bandPassCorrectionKernel->itsCounter.logTime();
 
+      firstFFT->itsCounter.logTime();
+      secondFFT->itsCounter.logTime();
+
       if (nrCoherent > 0)
       {
         if (coherentStokesPPF)
         {
           firFilterKernel->itsCounter.logTime();
+          finalFFT->itsCounter.logTime();
         }
 
         beamFormerKernel->itsCounter.logTime();
         coherentTransposeKernel->itsCounter.logTime();
 
-      if (!outputComplexVoltages)
-         {
+        if (!outputComplexVoltages)
+        {
 
-            //coherentStokes.logTime();
-         }
+          //coherentStokes.logTime();
+        }
+        inverseFFT->itsCounter.logTime();
       }
+
 
       if (nrIncoherent > 0) {
         incoherentTranspose->itsCounter.logTime();
         if (incoherentStokesPPF)
         {
-    //          incoherentFirFilterKernel.logTime();
+          //          incoherentFirFilterKernel.logTime();
         }
         //incoherentStokes.logTime();
       }
 
 
-      counters.logTime( nrCoherent,
-         nrIncoherent,  coherentStokesPPF,  outputComplexVoltages,
-         incoherentStokesPPF);
+      counters.logTime(nrCoherent,
+        nrIncoherent, coherentStokesPPF, outputComplexVoltages,
+        incoherentStokesPPF);
     }
 
 
@@ -477,8 +483,6 @@ namespace LOFAR
     {
       // Update the counters
 
-      firstFFT.logTime();
-      secondFFT.logTime();
      
       samples.logTime();  // data move
 
@@ -488,12 +492,11 @@ namespace LOFAR
         if (coherentStokesPPF)
         {
           firFilterKernel.logTime();
-          finalFFT.logTime();
         }
 
         beamformer.logTime();
         transpose.logTime();
-        inverseFFT.logTime();
+        
 
       //  if (!outputComplexVoltages)
       //  {
@@ -653,7 +656,7 @@ namespace LOFAR
       firstFFTShiftKernel->enqueue(blockID);
       DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
 
-      firstFFT->enqueue(blockID, counters.firstFFT);
+      firstFFT->enqueue(blockID);
       DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
@@ -665,7 +668,7 @@ namespace LOFAR
       secondFFTShiftKernel->enqueue(blockID);
       DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
-      secondFFT->enqueue(blockID, counters.secondFFT);
+      secondFFT->enqueue(blockID);
       DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
@@ -682,7 +685,7 @@ namespace LOFAR
       coherentTransposeKernel->enqueue(blockID);
       DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
-      inverseFFT->enqueue(blockID, counters.inverseFFT);
+      inverseFFT->enqueue(blockID);
       DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
 
       inverseFFTShiftKernel->enqueue(blockID);
@@ -692,7 +695,7 @@ namespace LOFAR
       {
         firFilterKernel->enqueue(blockID,
           blockID.subbandProcSubbandIdx);
-        finalFFT->enqueue(blockID, counters.finalFFT);
+        finalFFT->enqueue(blockID);
       }
 
       if (!outputComplexVoltages)
@@ -711,7 +714,7 @@ namespace LOFAR
         blockID);
 
       incoherentInverseFFT->enqueue(
-        blockID, counters.incoherentInverseFFT);
+        blockID);
 
       DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
         "incoherentInverseFFTShiftBuffers.input.dat");
@@ -729,7 +732,7 @@ namespace LOFAR
           blockID.subbandProcSubbandIdx);
 
         incoherentFinalFFT->enqueue(
-          blockID, counters.incoherentFinalFFT);
+          blockID);
       }
 
       incoherentStokesKernel->enqueue(

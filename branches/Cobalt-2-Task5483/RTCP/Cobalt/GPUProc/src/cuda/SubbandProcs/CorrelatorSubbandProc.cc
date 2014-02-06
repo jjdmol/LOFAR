@@ -389,7 +389,7 @@ namespace LOFAR
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(input.blockID, counters.fft);
+        fftKernel.enqueue(input.blockID);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare), run
