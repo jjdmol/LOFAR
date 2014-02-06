@@ -45,6 +45,9 @@ int main()
     writer.write(data);
 
     delete data;
+
+    // Dump feedback data to stdout
+    cout << writer.configuration() << endl;
   }
 #else
   cout << "Built without DAL, skipped actual test code." << endl;
