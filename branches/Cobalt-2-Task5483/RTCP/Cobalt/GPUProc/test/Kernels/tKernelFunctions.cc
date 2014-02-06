@@ -93,14 +93,17 @@ TEST(tKernelFunctions)
   stream.synchronize();
  
   // update the counter
-  counter.logTime();
+  kernel->getCounter().logTime();
 
   stringstream str;
-  counter.stats.print(str);
-  
+  kernel->getCounter().stats.print(str);
+
+  //cout << str.str() << endl;
   // Most functionality is tested at the specific stats class. Just test if
   // the stats object has been used once
   CHECK(str.str() != "*Not executed*");
+
+
 
 }
 

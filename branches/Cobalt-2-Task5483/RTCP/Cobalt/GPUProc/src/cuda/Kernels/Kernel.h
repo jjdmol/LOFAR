@@ -77,6 +77,8 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
 
+      PerformanceCounter &getCounter();
+
     protected:
       // Construct a kernel.
       Kernel(const gpu::Stream& stream,
@@ -109,6 +111,10 @@ namespace LOFAR
 
       // The block of threads dimensions for kernel execution.
       gpu::Block itsBlockDims;
+
+      // Performance counter for all work done by this kernel
+      PerformanceCounter itsCounter;
+
 
 
       // Dump output buffer of a this kernel to disk. Use \a blockId to
