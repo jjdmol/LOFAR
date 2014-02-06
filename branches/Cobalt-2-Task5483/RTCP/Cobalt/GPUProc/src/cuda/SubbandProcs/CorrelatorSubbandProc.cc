@@ -357,10 +357,10 @@ namespace LOFAR
       // DelayAndBandPass kernel reads from.
       if (ps.nrChannelsPerSubband() == 1)
         queue.writeBuffer(
-          devFilteredData, input.inputSamples, counters.samples, true);
+          devFilteredData, input.inputSamples, true);
       else // #ch/sb > 1
         queue.writeBuffer(
-          devInput.inputSamples, input.inputSamples,  counters.samples, true);
+          devInput.inputSamples, input.inputSamples,  true);
    
       if (ps.delayCompensation())
       {
@@ -387,7 +387,7 @@ namespace LOFAR
       // Otherwise, a kernel arg may not be set...
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(input.blockID, counters.fir, 
+        firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
         fftKernel.enqueue(input.blockID, counters.fft);
       }
@@ -395,11 +395,11 @@ namespace LOFAR
       // Even if we skip delay compensation and bandpass correction (rare), run
       // that kernel, as it also reorders the data for the correlator kernel.
       delayAndBandPassKernel->enqueue(
-        input.blockID, counters.delayBp, 
+        input.blockID, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(input.blockID, counters.correlator);
+      correlatorKernel->enqueue(input.blockID );
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.

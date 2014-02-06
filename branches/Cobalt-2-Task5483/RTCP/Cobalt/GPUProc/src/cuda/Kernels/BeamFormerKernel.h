@@ -73,7 +73,7 @@ namespace LOFAR
                              const Buffers &buffers,
                              const Parameters &param);
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
 
     };

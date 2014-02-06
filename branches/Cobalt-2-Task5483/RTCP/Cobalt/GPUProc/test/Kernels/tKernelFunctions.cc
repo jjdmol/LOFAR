@@ -85,7 +85,7 @@ TEST(tKernelFunctions)
   // excercise it
   PerformanceCounter counter(context);  //create a counter
   BlockID blockId;                      // create a dummy block-ID struct
-  kernel->enqueue(blockId, counter, 0); // insert in kernel queue
+  kernel->enqueue(blockId,  0); // insert in kernel queue
 
 
   stream.readBuffer(hOutput, dOutput);

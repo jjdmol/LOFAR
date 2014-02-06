@@ -106,12 +106,11 @@ namespace LOFAR
 
 
     void DelayAndBandPassKernel::enqueue(const BlockID &blockId,
-                                         PerformanceCounter &counter,
                                          double subbandFrequency, unsigned SAP)
     {
       setArg(2, subbandFrequency);
       setArg(3, SAP);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(blockId);
     }
 
     //--------  Template specializations for KernelFactory  --------//

@@ -121,11 +121,10 @@ namespace LOFAR
     }
 
     void FIR_FilterKernel::enqueue(const BlockID &blockId,
-                                   PerformanceCounter &counter,
                                    unsigned subbandIdx)
     {
       setArg(4, subbandIdx);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(blockId);
     }
 
     void FIR_FilterKernel::prefixHistoryFlags(MultiDimArray<SparseSet<unsigned>, 1> &inputFlags, unsigned subbandIdx) {

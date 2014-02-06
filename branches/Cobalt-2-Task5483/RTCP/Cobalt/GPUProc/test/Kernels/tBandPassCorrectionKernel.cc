@@ -70,7 +70,7 @@ int main() {
 
   PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, counter);
+  kernel->enqueue(blockId);
   stream.synchronize();
 
   return 0;

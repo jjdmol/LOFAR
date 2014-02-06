@@ -60,17 +60,19 @@ namespace LOFAR
       gpu::Function(function),
       maxThreadsPerBlock(
         stream.getContext().getDevice().getMaxThreadsPerBlock()),
+      itsCounter(stream.getContext()),
       itsStream(stream),
       itsBuffers(buffers),
-      itsParameters(params),
-      itsCounter(stream.getContext())
+      itsParameters(params)
+
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
         "\n  max. threads per block: " << 
         function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
         "\n  nr. of registers used : " <<
-        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));     
+        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+     
     }
 
     void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
@@ -137,19 +139,13 @@ namespace LOFAR
 
     void Kernel::enqueue(const BlockID &blockId) const
     {
+      itsStream.recordEvent(itsCounter.start);
       itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
-    }
-
-    void Kernel::enqueue(const BlockID &blockId, 
-                         PerformanceCounter &counter) const
-    {
-      itsStream.recordEvent(itsCounter.start);
-      enqueue(blockId);
       itsStream.recordEvent(itsCounter.stop);
     }
 
@@ -166,6 +162,7 @@ namespace LOFAR
 
       return itsCounter;
     }
+
 
   }
 }

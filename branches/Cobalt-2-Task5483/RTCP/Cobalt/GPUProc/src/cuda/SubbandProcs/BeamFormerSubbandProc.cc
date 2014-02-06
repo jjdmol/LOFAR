@@ -598,50 +598,49 @@ namespace LOFAR
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
       DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
-      intToFloatKernel->enqueue(blockID, counters.intToFloat);
+      intToFloatKernel->enqueue(blockID);
 
-      firstFFTShiftKernel->enqueue(blockID, counters.firstFFTShift);
+      firstFFTShiftKernel->enqueue(blockID);
       DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
 
       firstFFT->enqueue(blockID, counters.firstFFT);
       DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
       delayCompensationKernel->enqueue(
-        blockID, counters.delayBp,
+        blockID, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
       DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
-      secondFFTShiftKernel->enqueue(blockID, counters.secondFFTShift);
+      secondFFTShiftKernel->enqueue(blockID);
       DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
       secondFFT->enqueue(blockID, counters.secondFFT);
       DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
 
       bandPassCorrectionKernel->enqueue(
-        blockID, counters.correctBandpass);
+        blockID);
     }
 
     void BeamFormerSubbandProc::processCoherentStage(BlockID blockID,
       unsigned subband)
     {
-      beamFormerKernel->enqueue(blockID, counters.beamformer,
+      beamFormerKernel->enqueue(blockID, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      coherentTransposeKernel->enqueue(blockID, counters.transpose);
+      coherentTransposeKernel->enqueue(blockID);
       DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
 
       inverseFFT->enqueue(blockID, counters.inverseFFT);
       DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
 
-      inverseFFTShiftKernel->enqueue(blockID, counters.inverseFFTShift);
+      inverseFFTShiftKernel->enqueue(blockID);
       DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
 
       if (coherentStokesPPF)
       {
         firFilterKernel->enqueue(blockID,
-          counters.firFilterKernel,
           blockID.subbandProcSubbandIdx);
         finalFFT->enqueue(blockID, counters.finalFFT);
       }
@@ -649,7 +648,7 @@ namespace LOFAR
       if (!outputComplexVoltages)
       {
         DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
-        coherentStokesKernel->enqueue(blockID, counters.coherentStokes);
+        coherentStokesKernel->enqueue(blockID);
       }
 
     }
@@ -659,7 +658,7 @@ namespace LOFAR
       // ********************************************************************
       // incoherent stokes kernels
       incoherentTranspose->enqueue(
-        blockID, counters.incoherentStokesTranspose);
+        blockID);
 
       incoherentInverseFFT->enqueue(
         blockID, counters.incoherentInverseFFT);
@@ -668,7 +667,7 @@ namespace LOFAR
         "incoherentInverseFFTShiftBuffers.input.dat");
 
       incoherentInverseFFTShiftKernel->enqueue(
-        blockID, counters.incoherentInverseFFTShift);
+        blockID);
 
       DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
         "incoherentInverseFFTShiftBuffers.output.dat");
@@ -676,7 +675,7 @@ namespace LOFAR
       if (incoherentStokesPPF)
       {
         incoherentFirFilterKernel->enqueue(
-          blockID, counters.incoherentFirFilterKernel,
+          blockID,
           blockID.subbandProcSubbandIdx);
 
         incoherentFinalFFT->enqueue(
@@ -684,7 +683,7 @@ namespace LOFAR
       }
 
       incoherentStokesKernel->enqueue(
-        blockID, counters.incoherentStokes);
+        blockID);
     }
 
     bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)

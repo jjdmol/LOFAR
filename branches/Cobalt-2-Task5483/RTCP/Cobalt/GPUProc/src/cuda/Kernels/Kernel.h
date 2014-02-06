@@ -75,7 +75,7 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId) const;
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
+      //void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
 
       PerformanceCounter &getCounter();
 
@@ -96,6 +96,10 @@ namespace LOFAR
       const unsigned maxThreadsPerBlock;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
 
+
+      // Performance counter for all work done by this kernel
+      PerformanceCounter itsCounter;
+
     private:
       // The GPU Stream associated with this kernel.
       gpu::Stream itsStream;
@@ -112,8 +116,6 @@ namespace LOFAR
       // The block of threads dimensions for kernel execution.
       gpu::Block itsBlockDims;
 
-      // Performance counter for all work done by this kernel
-      PerformanceCounter itsCounter;
 
 
 
