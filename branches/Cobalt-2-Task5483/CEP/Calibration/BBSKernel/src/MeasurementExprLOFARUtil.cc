@@ -24,9 +24,6 @@
 #include <lofar_config.h>
 #include <BBSKernel/MeasurementExprLOFARUtil.h>
 #include <BBSKernel/Exceptions.h>
-#include <BBSKernel/Expr/AntennaElementLBA.h>
-#include <BBSKernel/Expr/AntennaElementHBA.h>
-#include <BBSKernel/Expr/AntennaFieldThetaPhi.h>
 #include <BBSKernel/Expr/AzEl.h>
 #include <BBSKernel/Expr/Delay.h>
 #include <BBSKernel/Expr/ElevationCut.h>
@@ -40,14 +37,12 @@
 #include <BBSKernel/Expr/MatrixMul2.h>
 #include <BBSKernel/Expr/MatrixMul3.h>
 #include <BBSKernel/Expr/MatrixSum.h>
-#include <BBSKernel/Expr/ParallacticRotation.h>
 #include <BBSKernel/Expr/PhaseShift.h>
 #include <BBSKernel/Expr/ScalarMatrixMul.h>
-#include <BBSKernel/Expr/StationBeamFormer.h>
+#include <BBSKernel/Expr/StationResponse.h>
 #include <BBSKernel/Expr/StationShift.h>
 #include <BBSKernel/Expr/StationUVW.h>
 #include <BBSKernel/Expr/TECU2Phase.h>
-#include <BBSKernel/Expr/TileArrayFactor.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 
@@ -276,87 +271,33 @@ makeBeamExpr(const Station::ConstPtr &station,
     const Expr<Vector<3> >::Ptr &exprRefTileITRF,
     const BeamConfig &config)
 {
+    StationLOFAR::ConstPtr stationLOFAR =
+        dynamic_pointer_cast<const StationLOFAR>(station);
+
     // Check if the beam model can be computed for this station.
-    if(!station->isPhasedArray())
+    if(!stationLOFAR)
     {
         THROW(BBSKernelException, "Station " << station->name() << " is not a"
             " LOFAR station or the additional information needed to compute the"
             " station beam is missing.");
     }
 
-    // Build expressions for the dual-dipole or tile beam of each antenna field.
-    vector<Expr<JonesMatrix>::Ptr> exprElementBeam(station->nField());
-    for(size_t i = 0; i < station->nField(); ++i)
-    {
-        AntennaField::ConstPtr field = station->field(i);
+    StationResponse::Ptr beam(new StationResponse(exprITRF, exprRefDelayITRF,
+        exprRefTileITRF, stationLOFAR->station()));
 
-        // Element (dual-dipole) beam expression.
-        if(config.mode() != BeamConfig::ARRAY_FACTOR)
-        {
-            Expr<Vector<2> >::Ptr exprThetaPhi =
-                Expr<Vector<2> >::Ptr(new AntennaFieldThetaPhi(exprITRF,
-                field));
-
-            if(field->isHBA())
-            {
-                exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new AntennaElementHBA(exprThetaPhi));
-            }
-            else
-            {
-                exprElementBeam[i] =
-                    Expr<JonesMatrix>::Ptr(new AntennaElementLBA(exprThetaPhi));
-            }
-
-            Expr<JonesMatrix>::Ptr exprRotation =
-                Expr<JonesMatrix>::Ptr(new ParallacticRotation(exprITRF,
-                field));
-
-            exprElementBeam[i] =
-                Expr<JonesMatrix>::Ptr(new MatrixMul2(exprElementBeam[i],
-                exprRotation));
-        }
-        else
-        {
-            Expr<Scalar>::Ptr exprOne(new Literal(1.0));
-            Expr<JonesMatrix>::Ptr exprIdentity(new AsDiagonalMatrix(exprOne,
-                exprOne));
-            exprElementBeam[i] = exprIdentity;
-        }
-
-        // Tile array factor.
-        if(field->isHBA() && config.mode() != BeamConfig::ELEMENT)
-        {
-            Expr<Scalar>::Ptr exprTileFactor(new TileArrayFactor(exprITRF,
-                exprRefTileITRF, field, config.conjugateAF()));
-            exprElementBeam[i] =
-                Expr<JonesMatrix>::Ptr(new ScalarMatrixMul(exprTileFactor,
-                exprElementBeam[i]));
-        }
-    }
-
-    if(config.mode() == BeamConfig::ELEMENT)
-    {
-        // If the station consists of multiple antenna fields, but beam forming
-        // is disabled, then we have to decide which antenna field to use. By
-        // default the first antenna field will be used. The differences between
-        // the dipole beam response of the antenna fields of a station should
-        // only vary as a result of differences in the field coordinate systems
-        // (because all dipoles are oriented the same way).
-
-        return exprElementBeam[0];
-    }
+    beam->useArrayFactor(config.mode() != BeamConfig::ELEMENT);
+    beam->useElementResponse(config.mode() != BeamConfig::ARRAY_FACTOR);
 
     if(config.useChannelFreq())
     {
-        return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-            exprRefDelayITRF, station, exprElementBeam.begin(),
-            exprElementBeam.end(), config.conjugateAF()));
+        beam->useChannelFreq();
+    }
+    else
+    {
+        beam->useReferenceFreq(refFreq);
     }
 
-    return Expr<JonesMatrix>::Ptr(new StationBeamFormer(exprITRF,
-        exprRefDelayITRF, station, exprElementBeam.begin(),
-        exprElementBeam.end(), refFreq, config.conjugateAF()));
+    return beam;
 }
 
 Expr<JonesMatrix>::Ptr

@@ -241,15 +241,10 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             // Ionosphere.
             if(config.useIonosphere())
             {
-                // Create an AZ, EL expression for the centroid direction of the
-                // patch.
-//                 Expr<Vector<2> >::Ptr exprAzEl =
-//                     makeAzElExpr(instrument->station(j)->position(),
-//                     exprPatch->position());
-
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                    instrument->position(), exprPatchPositionITRF,
+                    exprIonosphere));
             }
         }
 
@@ -553,7 +548,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF,
+                        exprIonosphere));
                 }
             }
         }
@@ -627,7 +623,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF,
+                        exprIonosphere));
                 }
             }
         }

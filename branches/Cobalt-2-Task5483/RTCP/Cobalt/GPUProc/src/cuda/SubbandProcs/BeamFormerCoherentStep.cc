@@ -140,7 +140,7 @@ namespace LOFAR
 
     firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
       new FIR_FilterKernel::Buffers(
-      coherentTransposeBuffers->output, coherentTransposeBuffers->input,
+      coherentTransposeBuffers->output, outputComplexVoltages ? *devD : *devC,
       *devFilterWeights, *devFilterHistoryData));
 
     firFilterKernel = std::auto_ptr<FIR_FilterKernel>(

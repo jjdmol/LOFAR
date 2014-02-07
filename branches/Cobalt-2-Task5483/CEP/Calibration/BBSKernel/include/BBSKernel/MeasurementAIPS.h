@@ -24,14 +24,13 @@
 #define LOFAR_BBSKERNEL_MEASUREMENTAIPS_H
 
 #include <BBSKernel/Measurement.h>
-#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
+#include <Common/ParameterSet.h>
 
 #include <casa/Arrays/Slicer.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/ExprNodeSet.h>
-
-#include <Common/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -117,16 +116,6 @@ private:
     unsigned int            itsIdDataDescription;
 };
 
-Instrument::Ptr readInstrument(const casa::MeasurementSet &ms,
-    unsigned int idObservation = 0);
-casa::MDirection readPhaseReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readDelayReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-casa::MDirection readTileReference(const casa::MeasurementSet &ms,
-    unsigned int idField = 0);
-double readFreqReference(const casa::MeasurementSet &ms,
-    unsigned int idDataDescription = 0);
 // @}
 
 } //# namespace BBS
