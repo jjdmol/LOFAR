@@ -113,20 +113,21 @@ namespace LOFAR
 
       devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devB.reset( new gpu::DeviceMemory(context, sizeKernelBuffers));
-      
-      // Buffers for incoherent stokes
+
       devC.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devD.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devE.reset(new gpu::DeviceMemory(context,
                  factories.incoherentStokes.bufferSize(
                   IncoherentStokesKernel::OUTPUT_DATA)));
+      // Null buffer for unused parts of the pipeline
       devNull.reset(new gpu::DeviceMemory(context, 1));
 
-      // beamForm: B -> A
       // TODO: support >1 SAP
       devBeamFormerDelays.reset(new gpu::DeviceMemory(context,
         factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)));
 
+
+      // Create objects containing the kernel and device buffers
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
         new BeamFormerPreprocessingStep(parset,
         queue, devInput, devA, devB,  devNull));
@@ -134,6 +135,7 @@ namespace LOFAR
       coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
         new BeamFormerCoherentStep(parset,
         queue, devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
+
       incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
         new BeamFormerIncoherentStep(parset,
         queue, devInput, devA, devB, devC, devD, devE, devNull));
@@ -143,11 +145,10 @@ namespace LOFAR
       coherentStep->initMembers(context, factories);
       incoherentStep->initMembers(context, factories);
 
-      formCoherentBeams = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0;
-      formIncoherentBeams = ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0;
-
-      LOG_INFO_STR("Running coherent pipeline: " << (formCoherentBeams ? "yes" : "no")
-                << ", incoherent pipeline: " <<   (formIncoherentBeams ? "yes" : "no"));
+      LOG_INFO_STR("Running coherent pipeline: " 
+        << (ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0 ? "yes" : "no")  
+        << ", incoherent pipeline: " 
+        << (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0 ? "yes" : "no"));
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
@@ -155,19 +156,17 @@ namespace LOFAR
         outputPool.free.append(new BeamFormedData(ps, context));
       }
     }
-      
-
+     
     BeamFormerSubbandProc::Counters::Counters(gpu::Context &context)
       :
-    samples(context),
-    visibilities(context),
-    incoherentOutput(context)
+      inputsamples(context),
+      coherentOutput(context),
+      incoherentOutput(context)
     {
     }
 
     void BeamFormerSubbandProc::logTime(unsigned nrCoherent,
-      unsigned nrIncoherent,
-      bool incoherentStokesPPF)
+      unsigned nrIncoherent)
     {
       preprocessingPart->logTime();
       // samples.logTime();  // performance count the transfer      
@@ -176,9 +175,10 @@ namespace LOFAR
 
       if (nrIncoherent > 0) 
         incoherentStep->logTime();
+
+      counters.logTime( nrCoherent,
+         nrIncoherent);
     }
-
-
 
     void BeamFormerSubbandProc::printStats()
     {
@@ -187,23 +187,34 @@ namespace LOFAR
       incoherentStep->printStats();
       counters.printStats();
     }
-    
+
+    void BeamFormerSubbandProc::Counters::logTime(
+      unsigned nrCoherent, unsigned nrIncoherent)
+    {
+      inputsamples.logTime();
+      if (nrCoherent)
+        coherentOutput.logTime();
+      if (nrIncoherent)
+        incoherentOutput.logTime();      
+    }
+
     void BeamFormerSubbandProc::Counters::printStats()
     {     
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** BeamFormerSubbandProc cpu to GPU transfers GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(samples)" << samples.stats << endl <<       
-        std::setw(20) << "(visibilities)" << visibilities.stats << endl <<
+        std::setw(20) << "(inputsamples)" << inputsamples.stats << endl <<
+        std::setw(20) << "(coherentOutput)" << coherentOutput.stats << endl <<
         std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl );
     }
 
-    void BeamFormerSubbandProc::processSubband(
-      SubbandProcInputData &input,
+    void BeamFormerSubbandProc::processSubband( SubbandProcInputData &input,
       SubbandProcOutputData &_output)
     {
       BeamFormedData &output = dynamic_cast<BeamFormedData&>(_output);
 
+      //*******************************************************************
+      // calculate some variables depending on the input subband
       size_t block = input.blockID.block;
       unsigned subband = input.blockID.globalSubbandIdx;
       unsigned SAP = ps.settings.subbands[subband].SAP;
@@ -211,10 +222,11 @@ namespace LOFAR
       unsigned nrIncoherent = ps.settings.beamFormer.SAPs[SAP].nrIncoherent;
 
       //****************************************
-      // Send input to GPU
+      // Send inputs to GPU
       queue.writeBuffer(devInput->inputSamples, input.inputSamples,
-                        counters.samples, true);
+        counters.inputsamples, true);
 
+      // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
         if (ps.delayCompensation())
@@ -228,16 +240,17 @@ namespace LOFAR
         }
 
         // Upload the new beamformerDelays (pointings) to the GPU 
-        queue.writeBuffer(*devBeamFormerDelays,
-          input.tabDelays, false);
+        queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
 
         prevSAP = SAP;
         prevBlock = block;
       }
 
+      // ************************************************
+      // Start the processing
+      // Preprocessing, the same for all
       preprocessingPart->process(input.blockID, subband);
-      // ********************************************************************
-      // coherent stokes kernels
+
       if (nrCoherent > 0)
       {
         coherentStep->process(input.blockID, subband);
@@ -247,7 +260,7 @@ namespace LOFAR
 
         // Output in devD, by design
         queue.readBuffer( output.coherentData, *devD,
-         counters.visibilities, false);
+         counters.coherentOutput, false);
       }
 
       if (nrIncoherent > 0)
@@ -263,19 +276,14 @@ namespace LOFAR
 
         // TODO: Propagate flags
       }
-
+      // Synchronise to assure that all the work in the data is done
       queue.synchronize();
 
       // ************************************************
       // Perform performance statistics if needed
       if (gpuProfiling)
       {      
-        // assure that the queue is done so all events are fished
-        queue.synchronize();
-        logTime(nrCoherent, nrIncoherent, incoherentStokesPPF);
-
-        /*counters.logTime(nrCoherent, nrIncoherent, coherentStokesPPF, 
-         outputComplexVoltages, incoherentStokesPPF);*/
+        logTime(nrCoherent, nrIncoherent);
       }
     }
 

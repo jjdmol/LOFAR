@@ -33,18 +33,6 @@
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/CoherentStokesKernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-
 #include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerCoherentStep.h"
 #include "BeamFormerIncoherentStep.h"
@@ -97,9 +85,7 @@ namespace LOFAR
 
       void printStats();
 
-      void logTime(unsigned nrCoherent,
-        unsigned nrIncoherent, 
-        bool incoherentStokesPPF);
+      void logTime(unsigned nrCoherent, unsigned nrIncoherent);
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -108,24 +94,23 @@ namespace LOFAR
         Counters(gpu::Context &context);
 
         // gpu transfer counters
-        PerformanceCounter samples;
-        PerformanceCounter visibilities;
+        PerformanceCounter inputsamples;
+
+        PerformanceCounter coherentOutput;
+
         PerformanceCounter incoherentOutput;
 
         // Print the mean and std of each performance counter on the logger
         void printStats();
+
+        void logTime(unsigned nrCoherent, unsigned nrIncoherent);
+
+
       };
 
       Counters counters;
 
     private:
-
-      // Whether we form any coherent beams
-      bool formCoherentBeams;
-
-      // Whether we form any incoherent beams
-      bool formIncoherentBeams;
-
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
       // to be uploaded.
@@ -149,25 +134,11 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devNull;
 
       boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-
       boost::shared_ptr<gpu::DeviceMemory> IncoherentFilterHistoryData;
 
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;
       std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
-
-      /*
-      * Kernels
-      */
-
-
-      // *****************************************************************
-      //  Objects needed to produce incoherent stokes output
-      bool incoherentStokesPPF;
-
-
-
-      bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };
 
   }

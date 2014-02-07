@@ -169,8 +169,8 @@ namespace LOFAR
             //incoherentFinalFFT += proc->counters.incoherentFinalFFT.stats;
             //incoherentStokes += proc->counters.incoherentStokes.stats;
           
-            samples += proc->counters.samples.stats;
-            visibilities += proc->counters.visibilities.stats;
+            samples += proc->counters.inputsamples.stats;
+            visibilities += proc->counters.coherentOutput.stats;
             incoherentOutput += proc->counters.incoherentOutput.stats;
           }
 
