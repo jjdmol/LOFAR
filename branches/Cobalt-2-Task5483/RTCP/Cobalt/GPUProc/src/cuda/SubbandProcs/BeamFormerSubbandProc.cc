@@ -125,17 +125,24 @@ namespace LOFAR
       devNull.reset(
         new gpu::DeviceMemory(context, 1));
 
-
+      LOG_INFO_STR("************************************");
+      LOG_INFO_STR("debug 1");
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingPart>(
         new BeamFormerPreprocessingPart(parset,
         queue,
         devInput, devA, devB,  devNull));
+
+      LOG_INFO_STR("debug 2");
       //################################################
 
-      initFFTAndFlagMembers(context, factories);
-      initCoherentMembers(context, factories);
-      initIncoherentMembers(context, factories);
+      preprocessingPart->initFFTAndFlagMembers(context, factories);
 
+      LOG_INFO_STR("debug 3");
+
+      initCoherentMembers(context, factories);
+      LOG_INFO_STR("debug 4");
+      initIncoherentMembers(context, factories);
+      LOG_INFO_STR("debug 5");
       // initialize history data for both coherent and incoherent stokes.
       devFilterHistoryData->set(0);
       devIncoherentFilterHistoryData->set(0);
@@ -167,70 +174,7 @@ namespace LOFAR
     }
       
 
-    void BeamFormerSubbandProc::initFFTAndFlagMembers(gpu::Context &context,
-      BeamFormerFactories &factories){
-      // intToFloat: input -> B
-      intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
-        new IntToFloatKernel::Buffers(devInput->inputSamples, *devB));
-      intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
-        factories.intToFloat.create(queue, *intToFloatBuffers));
 
-      // FFTShift: B -> B
-      firstFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devB, *devB));
-
-      firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *firstFFTShiftBuffers));
-
-      // FFT: B -> B
-      firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.nrDelayCompensationChannels),
-        true, *devB));
-
-      // delayComp: B -> A
-      delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
-        new DelayAndBandPassKernel::Buffers(*devB,* devA, devInput->delaysAtBegin,
-        devInput->delaysAfterEnd,
-        devInput->phase0s, *devNull));
-
-      delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
-        factories.delayCompensation.create(queue, *delayCompensationBuffers));
-
-      // FFTShift: A -> A
-      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devA, *devA));
-
-      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *secondFFTShiftBuffers));
-      // FFT: A -> A
-      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        (ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels);
-
-      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-        ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        secondFFTnrFFTs, true, *devA));
-
-      // bandPass: A -> B
-      devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.bandPassCorrection.bufferSize(
-        BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)));
-
-      bandPassCorrectionBuffers =
-        std::auto_ptr<BandPassCorrectionKernel::Buffers>(
-        new BandPassCorrectionKernel::Buffers(*devA, *devB,
-        *devBandPassCorrectionWeights));
-
-      bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
-        factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
-
-
-    }
 
       void BeamFormerSubbandProc::initCoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories)
@@ -422,7 +366,7 @@ namespace LOFAR
       unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
       bool incoherentStokesPPF)
     {
-      logTimeFirstStage();
+      preprocessingPart->logTimeFirstStage();
       // samples.logTime();  // performance count the transfer      
       if (nrCoherent > 0)
         logTimeCoherentStage(coherentStokesPPF, outputComplexVoltages);
@@ -431,14 +375,6 @@ namespace LOFAR
         logTimeIncoherentStage( incoherentStokesPPF);
     }
 
-    void BeamFormerSubbandProc::logTimeFirstStage()
-    {
-      intToFloatKernel->itsCounter.logTime();
-      firstFFT->itsCounter.logTime();
-      delayCompensationKernel->itsCounter.logTime();
-      secondFFT->itsCounter.logTime();
-      bandPassCorrectionKernel->itsCounter.logTime();
-    }
 
     void BeamFormerSubbandProc::logTimeCoherentStage(bool coherentStokesPPF,
       bool outputComplexVoltages)
@@ -475,7 +411,7 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::printStats()
     {
-      printStatsFirstStage();
+      preprocessingPart->printStatsFirstStage();
 
       printStatsCoherentStage();
 
@@ -485,19 +421,7 @@ namespace LOFAR
 
     }
 
-    void BeamFormerSubbandProc::printStatsFirstStage()
-    {
-      // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR(
-        "**** BeamFormerSubbandProc FirstStage GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(intToFloatKernel)" << intToFloatKernel->itsCounter.stats << endl <<
-        //std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
-        std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
-        std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
-        //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
-        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
-        std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
-    }
+
 
     void BeamFormerSubbandProc::printStatsCoherentStage()
     {
@@ -576,7 +500,9 @@ namespace LOFAR
         prevBlock = block;
       }
 
-      processFirstStage(input.blockID, subband);
+
+      preprocessingPart->processFirstStage(input.blockID, subband);
+      
 
       // ********************************************************************
       // coherent stokes kernels
@@ -622,38 +548,7 @@ namespace LOFAR
       }
     }
 
-    void BeamFormerSubbandProc::processFirstStage(BlockID blockID,
-            unsigned subband)
-    {
 
-      //****************************************
-      // Enqueue the kernels
-      // Note: make sure to call the right enqueue() for each kernel.
-      // Otherwise, a kernel arg may not be set...
-      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
-      intToFloatKernel->enqueue(blockID);
-
-      firstFFTShiftKernel->enqueue(blockID);
-      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
-
-      firstFFT->enqueue(blockID);
-      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
-
-      delayCompensationKernel->enqueue(
-        blockID, 
-        ps.settings.subbands[subband].centralFrequency,
-        ps.settings.subbands[subband].SAP);
-      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
-
-      secondFFTShiftKernel->enqueue(blockID);
-      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
-
-      secondFFT->enqueue(blockID);
-      DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
-
-      bandPassCorrectionKernel->enqueue(
-        blockID);
-    }
 
     void BeamFormerSubbandProc::processCoherentStage(BlockID blockID,
       unsigned subband)
@@ -724,6 +619,8 @@ namespace LOFAR
       (void)_output;
       return true;
     }
+
+
 
   }
 }

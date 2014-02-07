@@ -119,8 +119,7 @@ namespace LOFAR
     private:
 
 
-      void initFFTAndFlagMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+
 
       void initCoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories);
@@ -128,20 +127,18 @@ namespace LOFAR
       void initIncoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
-      void processFirstStage(BlockID blockID, unsigned subband);
 
       void processCoherentStage(BlockID blockID, unsigned subband);
 
       void processIncoherentStage(BlockID blockID) ;
 
-      void logTimeFirstStage();
 
       void logTimeCoherentStage(bool coherentStokesPPF,
         bool outputComplexVoltages);
 
       void logTimeIncoherentStage(bool incoherentStokesPPF);
 
-      void printStatsFirstStage();
+
 
       void printStatsCoherentStage();
 

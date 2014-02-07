@@ -59,7 +59,19 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
-     
+
+
+      void initFFTAndFlagMembers(gpu::Context &context,
+        BeamFormerFactories &factories);
+
+      void processFirstStage(BlockID blockID,
+        unsigned subband);
+
+      void printStatsFirstStage();
+
+
+      void logTimeFirstStage();
+
 
     private:
       const Parset ps;
@@ -73,16 +85,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devNull;
 
 
-      
-      void initFFTAndFlagMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
-
-      void logTimeFirstStage();
-
-      void printStatsFirstStage();
-
-      void processFirstStage(BlockID blockID,
-        unsigned subband);
 
       // Int -> Float conversion
       std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;

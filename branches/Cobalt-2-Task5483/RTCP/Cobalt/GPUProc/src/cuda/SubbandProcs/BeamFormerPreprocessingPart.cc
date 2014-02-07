@@ -55,10 +55,12 @@ namespace LOFAR
       ps(parset),
       queue(i_queue)
     {
+      LOG_INFO_STR("************************************");
+      LOG_INFO_STR("debug 3");
       devInput=i_devInput;
       devA=i_devA;
       devB=i_devB;
-      i_devNull=i_devNull;
+      devNull=i_devNull;
     }
 
     void BeamFormerPreprocessingPart::initFFTAndFlagMembers(gpu::Context &context,
@@ -66,6 +68,7 @@ namespace LOFAR
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
         new IntToFloatKernel::Buffers(devInput->inputSamples, *devB));
+
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
         factories.intToFloat.create(queue, *intToFloatBuffers));
 
@@ -123,7 +126,65 @@ namespace LOFAR
       bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
         factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
 
+    }
 
+    void BeamFormerPreprocessingPart::processFirstStage(BlockID blockID,
+      unsigned subband)
+    {
+
+      //****************************************
+      // Enqueue the kernels
+      // Note: make sure to call the right enqueue() for each kernel.
+      // Otherwise, a kernel arg may not be set...
+      LOG_INFO_STR("********************************************");
+      LOG_INFO_STR("debug 20");
+      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
+      intToFloatKernel->enqueue(blockID);
+
+      firstFFTShiftKernel->enqueue(blockID);
+      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
+
+      firstFFT->enqueue(blockID);
+      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
+
+      delayCompensationKernel->enqueue(
+        blockID,
+        ps.settings.subbands[subband].centralFrequency,
+        ps.settings.subbands[subband].SAP);
+      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
+
+      secondFFTShiftKernel->enqueue(blockID);
+      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+
+      secondFFT->enqueue(blockID);
+      //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+
+      bandPassCorrectionKernel->enqueue(
+        blockID);
+    }
+
+
+    void BeamFormerPreprocessingPart::printStatsFirstStage()
+    {
+      // Print the individual counter stats: mean and stDev
+      LOG_INFO_STR(
+        "**** BeamFormerSubbandProc FirstStage GPU mean and stDev ****" << endl <<
+        std::setw(20) << "(intToFloatKernel)" << intToFloatKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
+        std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
+        //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
+        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
+    }
+
+    void BeamFormerPreprocessingPart::logTimeFirstStage()
+    {
+      intToFloatKernel->itsCounter.logTime();
+      firstFFT->itsCounter.logTime();
+      delayCompensationKernel->itsCounter.logTime();
+      secondFFT->itsCounter.logTime();
+      bandPassCorrectionKernel->itsCounter.logTime();
     }
   }
 }
