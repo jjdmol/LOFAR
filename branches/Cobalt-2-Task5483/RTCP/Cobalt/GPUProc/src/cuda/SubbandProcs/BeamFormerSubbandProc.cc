@@ -32,6 +32,7 @@
 
 #include <iomanip>
 #include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
 
 // Set to true to get detailed buffer informatio
 #if 0
@@ -129,6 +130,11 @@ namespace LOFAR
         new BeamFormerPreprocessingStep(parset,
         queue,
         devInput, devA, devB,  devNull));
+
+      coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
+        new BeamFormerCoherentStep(parset,
+        queue,
+        devInput, devA, devB, devNull));
 
 
       //################################################
@@ -620,3 +626,4 @@ namespace LOFAR
 
   }
 }
+

@@ -46,6 +46,7 @@
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 
 #include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
 
 #include "SubbandProc.h"
 
@@ -173,38 +174,11 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devNull;
 
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
+      std::auto_ptr<BeamFormerCoherentStep> coherentStep;
+
       /*
       * Kernels
       */
-
-      // Int -> Float conversion
-      std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;
-      std::auto_ptr<IntToFloatKernel> intToFloatKernel;
-
-      // First FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> firstFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
-
-      // First (64 points) FFT
-      std::auto_ptr<FFT_Kernel> firstFFT;
-
-      // Delay compensation
-      std::auto_ptr<DelayAndBandPassKernel::Buffers> delayCompensationBuffers;
-      std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
-
-
-      // Second FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> secondFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
-
-      // Second (64 points) FFT
-      std::auto_ptr<FFT_Kernel> secondFFT;
-
-      // Bandpass correction and tranpose
-      std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
-      std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
-      std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
-
 
       // *****************************************************************
       //  Objects needed to produce Coherent stokes output

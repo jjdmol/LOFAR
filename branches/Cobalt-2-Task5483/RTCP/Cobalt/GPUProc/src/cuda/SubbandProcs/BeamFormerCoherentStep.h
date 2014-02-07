@@ -18,9 +18,6 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_STEP_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_STEP_H
-
 #include <complex>
 
 #include <Common/LofarLogger.h>
@@ -35,31 +32,31 @@
 #include "SubbandProc.h"
 #include "BeamFormerSubbandProcStep.h"
 
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
+#include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
+#include <GPUProc/Kernels/CoherentStokesKernel.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
     //# Forward declarations
     struct BeamFormerFactories;
 
-
-    class BeamFormerPreprocessingStep: public BeamFormerSubbandProcStep
+    class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
     {
     public:
-
-      BeamFormerPreprocessingStep(const Parset &parset, 
+      BeamFormerCoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
+        boost::shared_ptr<gpu::DeviceMemory> i_devC,
+        boost::shared_ptr<gpu::DeviceMemory> i_devD,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
 
@@ -73,45 +70,41 @@ namespace LOFAR
 
       void logTime();
 
-      ~BeamFormerPreprocessingStep();
+      ~BeamFormerCoherentStep();
 
     private:
 
-      //Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
-      boost::shared_ptr<gpu::DeviceMemory> devA;
-      boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
+      std::auto_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+      std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
+      std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
-      // Int -> Float conversion
-      std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;
-      std::auto_ptr<IntToFloatKernel> intToFloatKernel;
+      // Transpose 
+      std::auto_ptr<CoherentStokesTransposeKernel::Buffers> coherentTransposeBuffers;
+      std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
 
-      // First FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> firstFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> firstFFTShiftKernel;
+      // inverse (4k points) FFT
+      std::auto_ptr<FFT_Kernel> inverseFFT;
 
-      // First (64 points) FFT
-      std::auto_ptr<FFT_Kernel> firstFFT;
+      // inverse FFT-shift
+      std::auto_ptr<FFTShiftKernel::Buffers> inverseFFTShiftBuffers;
+      std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
 
-      // Delay compensation
-      std::auto_ptr<DelayAndBandPassKernel::Buffers> delayCompensationBuffers;
-      std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
+      // Poly-phase filter (FIR + FFT)
+      std::auto_ptr<gpu::DeviceMemory> devFilterWeights;
+      std::auto_ptr<gpu::DeviceMemory> devFilterHistoryData;
+      std::auto_ptr<FIR_FilterKernel::Buffers> firFilterBuffers;
+      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
+      std::auto_ptr<FFT_Kernel>finalFFT;
+
+      // Coherent Stokes
+      std::auto_ptr<CoherentStokesKernel::Buffers> coherentStokesBuffers;
+      std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
 
 
-      // Second FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> secondFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
 
-      // Second (64 points) FFT
-      std::auto_ptr<FFT_Kernel> secondFFT;
 
-      // Bandpass correction and tranpose
-      std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
-      std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
-      std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
     };
+
+
   }
 }
-
-#endif

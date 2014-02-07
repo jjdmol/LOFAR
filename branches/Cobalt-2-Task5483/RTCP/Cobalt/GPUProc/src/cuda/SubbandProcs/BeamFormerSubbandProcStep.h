@@ -21,22 +21,11 @@
 #ifndef LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
 #define LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
 
-#include <complex>
-
-#include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 
-#include <boost/shared_ptr.hpp>
 #include <GPUProc/gpu_wrapper.h>
 
-#include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
-
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
 
 #include "SubbandProc.h"
 
