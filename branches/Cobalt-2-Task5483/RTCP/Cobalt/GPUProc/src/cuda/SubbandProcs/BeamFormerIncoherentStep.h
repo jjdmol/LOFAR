@@ -47,8 +47,6 @@
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 
 
-
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -94,8 +92,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devD;
       boost::shared_ptr<gpu::DeviceMemory> devE;
       boost::shared_ptr<gpu::DeviceMemory> devNull;
-
-
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output

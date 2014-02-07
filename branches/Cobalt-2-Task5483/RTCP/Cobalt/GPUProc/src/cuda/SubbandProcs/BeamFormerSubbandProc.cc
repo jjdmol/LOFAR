@@ -107,6 +107,7 @@ namespace LOFAR
         factories.delayCompensation.bufferSize(
         DelayAndBandPassKernel::PHASE_ZEROS),
         context));
+
       // coherent stokes buffers
       unsigned sizeKernelBuffers = devInput->inputSamples.size();
 
@@ -245,8 +246,8 @@ namespace LOFAR
         output.coherentData.resizeOneDimensionInplace(0, nrCoherent);
 
         // Output in devD, by design
-        queue.readBuffer(
-          output.coherentData, *devD, counters.visibilities, false);
+        queue.readBuffer( output.coherentData, *devD,
+         counters.visibilities, false);
       }
 
       if (nrIncoherent > 0)
