@@ -47,6 +47,7 @@
 
 #include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerCoherentStep.h"
+#include "BeamFormerIncoherentStep.h"
 
 #include "SubbandProc.h"
 
@@ -119,20 +120,6 @@ namespace LOFAR
 
     private:
 
-
-      void initIncoherentMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
-
-
-
-      void processIncoherentStage(BlockID blockID) ;
-
-
-      void logTimeIncoherentStage(bool incoherentStokesPPF);
-
-
-      void printStatsIncoherentStage();
-
       // Whether we form any coherent beams
       bool formCoherentBeams;
 
@@ -163,8 +150,11 @@ namespace LOFAR
 
       boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
 
+      boost::shared_ptr<gpu::DeviceMemory> IncoherentFilterHistoryData;
+
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;
+      std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
 
       /*
       * Kernels
@@ -175,28 +165,7 @@ namespace LOFAR
       //  Objects needed to produce incoherent stokes output
       bool incoherentStokesPPF;
 
-      // Transpose 
-      std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;
-      std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
 
-      // Inverse (4k points) FFT
-      std::auto_ptr<FFT_Kernel> incoherentInverseFFT;
-
-      // Inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> incoherentInverseFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
-
-      // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterWeights;
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterHistoryData;
-
-      std::auto_ptr<FIR_FilterKernel::Buffers> incoherentFirFilterBuffers;
-      std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
-      std::auto_ptr<FFT_Kernel> incoherentFinalFFT;
-
-      // Incoherent Stokes
-      std::auto_ptr<IncoherentStokesKernel::Buffers> incoherentStokesBuffers;
-      std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
 
       bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };

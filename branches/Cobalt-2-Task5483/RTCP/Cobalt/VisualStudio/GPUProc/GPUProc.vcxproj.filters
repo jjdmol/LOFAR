@@ -58,7 +58,7 @@
     <Filter Include="test\SubbandProcs">
       <UniqueIdentifier>{0ddb3aaa-b339-4fc9-933d-51ab12f2f419}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\cuda\SubbandProcs\parts">
+    <Filter Include="src\cuda\SubbandProcs\steps">
       <UniqueIdentifier>{523a5915-d119-4fbc-bf32-f57136137d3e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -410,8 +410,17 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.h">
       <Filter>src\cuda\Kernels</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingPart.h">
-      <Filter>src\cuda\SubbandProcs\parts</Filter>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProcStep.h">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingStep.h">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerCoherentStep.h">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.h">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -765,8 +774,14 @@
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc" />
-    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingPart.cc">
-      <Filter>src\cuda\SubbandProcs\parts</Filter>
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingStep.cc">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerCoherentStep.cc">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.cc">
+      <Filter>src\cuda\SubbandProcs\steps</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
