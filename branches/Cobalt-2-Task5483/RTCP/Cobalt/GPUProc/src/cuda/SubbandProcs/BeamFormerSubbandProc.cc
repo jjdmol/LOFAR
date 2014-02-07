@@ -135,7 +135,7 @@ namespace LOFAR
       LOG_INFO_STR("debug 2");
       //################################################
 
-      preprocessingPart->initFFTAndFlagMembers(context, factories);
+      preprocessingPart->initMembers(context, factories);
 
       LOG_INFO_STR("debug 3");
 
@@ -366,7 +366,7 @@ namespace LOFAR
       unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
       bool incoherentStokesPPF)
     {
-      preprocessingPart->logTimeFirstStage();
+      preprocessingPart->logTime();
       // samples.logTime();  // performance count the transfer      
       if (nrCoherent > 0)
         logTimeCoherentStage(coherentStokesPPF, outputComplexVoltages);
@@ -411,7 +411,7 @@ namespace LOFAR
 
     void BeamFormerSubbandProc::printStats()
     {
-      preprocessingPart->printStatsFirstStage();
+      preprocessingPart->printStats();
 
       printStatsCoherentStage();
 
@@ -501,7 +501,7 @@ namespace LOFAR
       }
 
 
-      preprocessingPart->processFirstStage(input.blockID, subband);
+      preprocessingPart->process(input.blockID, subband);
       
 
       // ********************************************************************

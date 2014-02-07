@@ -39,6 +39,7 @@
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 
 #include "SubbandProc.h"
+#include "BeamFormerSubbandProcStep.h"
 
 namespace LOFAR
 {
@@ -48,9 +49,9 @@ namespace LOFAR
     //# Forward declarations
     struct BeamFormerFactories;
 
-    class BeamFormerPreprocessingPart
+
+    class BeamFormerPreprocessingPart: public BeamFormerSubbandProcStep
     {
-    
     public:
 
       BeamFormerPreprocessingPart(const Parset &parset, 
@@ -61,30 +62,23 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
 
-      void initFFTAndFlagMembers(gpu::Context &context,
+      void initMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
-      void processFirstStage(BlockID blockID,
+      void process(BlockID blockID,
         unsigned subband);
 
-      void printStatsFirstStage();
+      void printStats();
 
-
-      void logTimeFirstStage();
-
+      void logTime();
 
     private:
-      const Parset ps;
-      gpu::Stream queue;
-
 
       //Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devNull;
-
-
 
       // Int -> Float conversion
       std::auto_ptr<IntToFloatKernel::Buffers> intToFloatBuffers;
@@ -113,9 +107,7 @@ namespace LOFAR
       std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
       std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
       std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
-
     };
-
   }
 }
 

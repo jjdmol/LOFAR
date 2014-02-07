@@ -52,18 +52,15 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
-      ps(parset),
-      queue(i_queue)
+      BeamFormerSubbandProcStep(parset, i_queue)
     {
-      LOG_INFO_STR("************************************");
-      LOG_INFO_STR("debug 3");
       devInput=i_devInput;
       devA=i_devA;
       devB=i_devB;
       devNull=i_devNull;
     }
 
-    void BeamFormerPreprocessingPart::initFFTAndFlagMembers(gpu::Context &context,
+    void BeamFormerPreprocessingPart::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
@@ -128,7 +125,7 @@ namespace LOFAR
 
     }
 
-    void BeamFormerPreprocessingPart::processFirstStage(BlockID blockID,
+    void BeamFormerPreprocessingPart::process(BlockID blockID,
       unsigned subband)
     {
 
@@ -164,7 +161,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerPreprocessingPart::printStatsFirstStage()
+    void BeamFormerPreprocessingPart::printStats()
     {
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
@@ -178,7 +175,7 @@ namespace LOFAR
         std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
     }
 
-    void BeamFormerPreprocessingPart::logTimeFirstStage()
+    void BeamFormerPreprocessingPart::logTime()
     {
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();
