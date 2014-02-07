@@ -17,25 +17,27 @@
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
 //# $Id$
-
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_COHERENT_STEP_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_COHERENT_STEP_H
+#include <lofar_config.h>
 
 #include <complex>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
 
 #include <boost/shared_ptr.hpp>
-#include <GPUProc/gpu_wrapper.h>
 
+#include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
 
 #include "BeamFormerSubbandProcStep.h"
 #include "BeamFormerCoherentStep.h"
+#include "BeamFormerFactories.h"
+
+#include <iomanip>
 
 // Set to true to get detailed buffer informatio
 #if 0
@@ -57,14 +59,19 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devC,
       boost::shared_ptr<gpu::DeviceMemory> i_devD,
+      boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
-      BeamFormerSubbandProcStep(parset, i_queue)
+      BeamFormerSubbandProcStep(parset, i_queue),
+      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
+      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1)
     {
       devInput = i_devInput;
       devA = i_devA;
       devB = i_devB;
-      devC = i_devD;
+      devC = i_devC;
+      devD = i_devD;
+      devBeamFormerDelays = i_devBeamFormerDelays;
       devNull = i_devNull;
     }
 
@@ -74,21 +81,8 @@ namespace LOFAR
     void BeamFormerCoherentStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories)
     {
-      //**************************************************************
-      //coherent stokes
-      //bool:
-      bool outputComplexVoltages =
-        ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY;
-      //bool: 
-      bool coherentStokesPPF = ps.settings.beamFormer.coherentSettings.nrChannels > 1;
 
-    // beamForm: B -> A
-    // TODO: support >1 SAP
-    devBeamFormerDelays = std::auto_ptr<gpu::DeviceMemory>(
-      new gpu::DeviceMemory(context,
-      factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)
-      )
-      );
+
     beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
       new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));
 
@@ -168,13 +162,13 @@ namespace LOFAR
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
       factories.coherentStokes.create(queue, *coherentStokesBuffers));
 
-
+    // initialize history data for both coherent and incoherent stokes.
+    devFilterHistoryData->set(0);
 
 
   }
 
-void BeamFormerCoherentStep::logTime(bool coherentStokesPPF,
-  bool outputComplexVoltages)
+void BeamFormerCoherentStep::logTime()
 {
   if (coherentStokesPPF)
   {
@@ -244,5 +238,3 @@ void BeamFormerCoherentStep::process(BlockID blockID,
 
   }
 }
-
-#endif

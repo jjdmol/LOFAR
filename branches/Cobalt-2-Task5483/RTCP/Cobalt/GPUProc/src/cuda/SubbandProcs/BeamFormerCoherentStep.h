@@ -18,6 +18,10 @@
 //#
 //# $Id$
 
+#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_COHERENT_STEP_H
+#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_COHERENT_STEP_H
+
+
 #include <complex>
 
 #include <Common/LofarLogger.h>
@@ -57,6 +61,7 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devC,
         boost::shared_ptr<gpu::DeviceMemory> i_devD,
+        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
 
@@ -74,7 +79,22 @@ namespace LOFAR
 
     private:
 
-      std::auto_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+      bool outputComplexVoltages;
+      bool coherentStokesPPF;
+
+      // Data members
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
+      boost::shared_ptr<gpu::DeviceMemory> devA;
+      boost::shared_ptr<gpu::DeviceMemory> devB;
+      boost::shared_ptr<gpu::DeviceMemory> devC;
+      boost::shared_ptr<gpu::DeviceMemory> devD;
+      boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+      boost::shared_ptr<gpu::DeviceMemory> devNull;
+
+
+
+      // Kernel members
+
       std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
@@ -108,3 +128,7 @@ namespace LOFAR
 
   }
 }
+
+#endif
+
+

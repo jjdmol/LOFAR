@@ -97,7 +97,7 @@ namespace LOFAR
       void printStats();
 
       void logTime(unsigned nrCoherent,
-        unsigned nrIncoherent, bool coherentStokesPPF, bool outputComplexVoltages,
+        unsigned nrIncoherent, 
         bool incoherentStokesPPF);
 
       // Beamformer specific collection of PerformanceCounters
@@ -120,28 +120,16 @@ namespace LOFAR
     private:
 
 
-
-
-      void initCoherentMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
-
       void initIncoherentMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
 
-      void processCoherentStage(BlockID blockID, unsigned subband);
 
       void processIncoherentStage(BlockID blockID) ;
 
 
-      void logTimeCoherentStage(bool coherentStokesPPF,
-        bool outputComplexVoltages);
-
       void logTimeIncoherentStage(bool incoherentStokesPPF);
 
-
-
-      void printStatsCoherentStage();
 
       void printStatsIncoherentStage();
 
@@ -173,45 +161,14 @@ namespace LOFAR
       // NULL placeholder for unused DeviceMemory parameters
       boost::shared_ptr<gpu::DeviceMemory> devNull;
 
+      boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;
 
       /*
       * Kernels
       */
-
-      // *****************************************************************
-      //  Objects needed to produce Coherent stokes output
-      // beam former
-
-      bool outputComplexVoltages;
-      bool coherentStokesPPF;
-
-      std::auto_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-      std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
-      std::auto_ptr<BeamFormerKernel> beamFormerKernel;
-
-      // Transpose 
-      std::auto_ptr<CoherentStokesTransposeKernel::Buffers> coherentTransposeBuffers;
-      std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
-
-      // inverse (4k points) FFT
-      std::auto_ptr<FFT_Kernel> inverseFFT;
-
-      // inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> inverseFFTShiftBuffers;
-      std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
-
-      // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<gpu::DeviceMemory> devFilterWeights;
-      std::auto_ptr<gpu::DeviceMemory> devFilterHistoryData;
-      std::auto_ptr<FIR_FilterKernel::Buffers> firFilterBuffers;
-      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
-      std::auto_ptr<FFT_Kernel>finalFFT ;
-
-      // Coherent Stokes
-      std::auto_ptr<CoherentStokesKernel::Buffers> coherentStokesBuffers;
-      std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
 
 
       // *****************************************************************
