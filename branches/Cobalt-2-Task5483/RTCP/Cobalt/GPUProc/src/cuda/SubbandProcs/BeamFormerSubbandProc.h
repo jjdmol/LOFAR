@@ -104,8 +104,6 @@ namespace LOFAR
         void printStats();
 
         void logTime(unsigned nrCoherent, unsigned nrIncoherent);
-
-
       };
 
       Counters counters;

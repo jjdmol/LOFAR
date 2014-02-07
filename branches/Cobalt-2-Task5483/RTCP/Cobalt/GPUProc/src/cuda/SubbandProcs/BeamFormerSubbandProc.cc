@@ -86,7 +86,6 @@ namespace LOFAR
       counters(context),
       prevBlock(-1),
       prevSAP(-1)
-
     {
       // NOTE: Make sure the history samples are dealt with properly until the
       // FIR, which the beam former does in a later stage!

@@ -54,15 +54,6 @@ namespace LOFAR
     class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
     {
     public:
-      BeamFormerCoherentStep(const Parset &parset,
-        gpu::Stream &i_queue,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
-        boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
       BeamFormerCoherentStep(const Parset &parset,
         gpu::Stream &i_queue,

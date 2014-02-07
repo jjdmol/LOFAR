@@ -151,7 +151,7 @@ namespace LOFAR
 
             // Print the individual counters
             proc->printStats();
-            
+            // TODO Reenable running statistics
             //// Calculate aggregate statistics for the whole pipeline
             //intToFloat += proc->counters.intToFloat.stats;
             //firstFFT += proc->counters.firstFFT.stats;

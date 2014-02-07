@@ -71,8 +71,6 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
-
-
       void initMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
