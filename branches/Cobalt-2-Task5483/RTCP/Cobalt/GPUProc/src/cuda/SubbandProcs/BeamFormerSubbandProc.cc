@@ -31,7 +31,7 @@
 #include <Common/LofarLogger.h>
 
 #include <iomanip>
-#include "BeamFormerPreprocessingPart.h"
+#include "BeamFormerPreprocessingStep.h"
 
 // Set to true to get detailed buffer informatio
 #if 0
@@ -125,8 +125,8 @@ namespace LOFAR
       devNull.reset(
         new gpu::DeviceMemory(context, 1));
 
-      preprocessingPart = std::auto_ptr<BeamFormerPreprocessingPart>(
-        new BeamFormerPreprocessingPart(parset,
+      preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
+        new BeamFormerPreprocessingStep(parset,
         queue,
         devInput, devA, devB,  devNull));
 
