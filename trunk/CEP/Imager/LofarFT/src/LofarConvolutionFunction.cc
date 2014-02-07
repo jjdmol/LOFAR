@@ -394,7 +394,7 @@ namespace LOFAR
   };
       }
       m_nWPlanes=int(m_maxW/wmax_plane)+2;
-      cout<<" Number of w-planes set to: "<<m_nWPlanes<<endl;
+      if (itsVerbose) cout<<" Number of w-planes set to: "<<m_nWPlanes<<endl;
       return m_nWPlanes;
       // Update the timing info.
     } // end omp parallel
@@ -1949,9 +1949,9 @@ namespace LOFAR
   {
     // Only calculate if not done yet.
     if (Im_Stack_PB_CF0.empty()) {
-      //if (itsVerbose > 0) {
+      if (itsVerbose > 0) {
         cout<<"..... Compute average PB"<<endl;
-      //}
+      }
       Sum_Stack_PB_CF_small /= float(sum_weight_square);
       Matrix<Complex> Sum_Stack_PB_CF(zero_padding(Sum_Stack_PB_CF_small,m_shape[0]));
 
