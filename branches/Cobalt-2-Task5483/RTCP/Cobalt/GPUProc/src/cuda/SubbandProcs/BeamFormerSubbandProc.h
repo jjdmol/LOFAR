@@ -45,7 +45,7 @@
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 #include <GPUProc/Kernels/IntToFloatKernel.h>
 
-#include "BeamFormerPreprocessingPart.h"
+#include "BeamFormerPreprocessingStep.h"
 
 #include "SubbandProc.h"
 
@@ -172,7 +172,7 @@ namespace LOFAR
       // NULL placeholder for unused DeviceMemory parameters
       boost::shared_ptr<gpu::DeviceMemory> devNull;
 
-      std::auto_ptr<BeamFormerPreprocessingPart> preprocessingPart;
+      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       /*
       * Kernels
       */

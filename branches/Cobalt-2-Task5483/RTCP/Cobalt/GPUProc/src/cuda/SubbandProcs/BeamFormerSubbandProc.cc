@@ -125,24 +125,20 @@ namespace LOFAR
       devNull.reset(
         new gpu::DeviceMemory(context, 1));
 
-      LOG_INFO_STR("************************************");
-      LOG_INFO_STR("debug 1");
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingPart>(
         new BeamFormerPreprocessingPart(parset,
         queue,
         devInput, devA, devB,  devNull));
 
-      LOG_INFO_STR("debug 2");
+
       //################################################
 
       preprocessingPart->initMembers(context, factories);
 
-      LOG_INFO_STR("debug 3");
-
       initCoherentMembers(context, factories);
-      LOG_INFO_STR("debug 4");
+
       initIncoherentMembers(context, factories);
-      LOG_INFO_STR("debug 5");
+
       // initialize history data for both coherent and incoherent stokes.
       devFilterHistoryData->set(0);
       devIncoherentFilterHistoryData->set(0);

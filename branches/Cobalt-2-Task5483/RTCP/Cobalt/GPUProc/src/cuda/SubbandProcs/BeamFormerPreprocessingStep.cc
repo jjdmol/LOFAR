@@ -1,4 +1,4 @@
-//# BeamFOrmerPreprocessingPart.cc
+//# BeamFormerPreprocessingStep.cc
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "BeamFormerPreprocessingPart.h"
+#include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
@@ -44,7 +44,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    BeamFormerPreprocessingPart::BeamFormerPreprocessingPart(
+    BeamFormerPreprocessingStep::BeamFormerPreprocessingStep(
       const Parset &parset,
       gpu::Stream &i_queue,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
@@ -60,10 +60,10 @@ namespace LOFAR
       devNull=i_devNull;
     }
 
-    BeamFormerPreprocessingPart::~BeamFormerPreprocessingPart()
+    BeamFormerPreprocessingStep::~BeamFormerPreprocessingStep()
     {}
 
-    void BeamFormerPreprocessingPart::initMembers(gpu::Context &context,
+    void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
@@ -128,7 +128,7 @@ namespace LOFAR
 
     }
 
-    void BeamFormerPreprocessingPart::process(BlockID blockID,
+    void BeamFormerPreprocessingStep::process(BlockID blockID,
       unsigned subband)
     {
 
@@ -164,7 +164,7 @@ namespace LOFAR
     }
 
 
-    void BeamFormerPreprocessingPart::printStats()
+    void BeamFormerPreprocessingStep::printStats()
     {
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
@@ -178,7 +178,7 @@ namespace LOFAR
         std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
     }
 
-    void BeamFormerPreprocessingPart::logTime()
+    void BeamFormerPreprocessingStep::logTime()
     {
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();

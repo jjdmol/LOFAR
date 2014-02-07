@@ -1,4 +1,4 @@
-//# BeamFOrmerPreprocessingPart.h
+//# BeamFormerPreprocessingStep.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_PART_H
-#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_PART_H
+#ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_STEP_H
+#define LOFAR_GPUPROC_CUDA_BEAM_FORMER_PREPROCESSING_STEP_H
 
 #include <complex>
 
@@ -50,11 +50,11 @@ namespace LOFAR
     struct BeamFormerFactories;
 
 
-    class BeamFormerPreprocessingPart: public BeamFormerSubbandProcStep
+    class BeamFormerPreprocessingStep: public BeamFormerSubbandProcStep
     {
     public:
 
-      BeamFormerPreprocessingPart(const Parset &parset, 
+      BeamFormerPreprocessingStep(const Parset &parset, 
         gpu::Stream &i_queue,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
@@ -72,7 +72,7 @@ namespace LOFAR
 
       void logTime();
 
-      virtual ~BeamFormerPreprocessingPart();
+      ~BeamFormerPreprocessingStep();
 
     private:
 
