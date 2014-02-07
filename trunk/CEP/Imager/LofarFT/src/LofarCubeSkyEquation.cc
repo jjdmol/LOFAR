@@ -262,7 +262,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      ftm_p[0]->setMiscInfo(0);
      iftm_p[0]->setMiscInfo(0);
-     cout<<"nmod="<<nmod<<endl;
+//      cout<<"nmod="<<nmod<<endl;
      //if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
      //  throw(AipsError("No multifield with a-projection allowed"));
      for (Int k=1; k < (nmod); ++k){

@@ -314,7 +314,7 @@ namespace LOFAR
     Double aPixelAngSize = min(m_pixelSizeSpheroidal,
                  estimateAResolution(m_shape, m_coordinates));
     //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
-    cout<<"    Aterm support: "<<imageDiameter /estimateAResolution(m_shape, m_coordinates)<<endl;
+    if (itsVerbose) cout << "    Aterm support: "<<imageDiameter /estimateAResolution(m_shape, m_coordinates)<<endl;
     Int nPixelsConv = imageDiameter / aPixelAngSize;
     nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
     // Matrix<Complex> spheroid_cut_element(IPosition(2,nPixelsConv,nPixelsConv),1.);
@@ -350,9 +350,9 @@ namespace LOFAR
       }
     }
     m_NPixATerm=nPixelsConv;
-    cout<<"  Initialising wTerm Interpolation..."<<endl;
+    if (itsVerbose) cout<<"  Initialising wTerm Interpolation..."<<endl;
     initMeanWStepsGridder();
-    cout<<"  done"<<endl;
+    if (itsVerbose) cout<<"  done"<<endl;
     //initStoreMasks();
 
   }
@@ -458,7 +458,7 @@ namespace LOFAR
   // Precalculate all W-terms in the fourier domain
   void LofarConvolutionFunction::store_all_W_images()
   {
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"Computing the Wterms..."<< LogIO::POST;//<<endl;
+    if (itsVerbose) logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"Computing the Wterms..."<< LogIO::POST;//<<endl;
     PrecTimer wTimer;
     wTimer.start();
     Double pixelSize = abs(m_coordinates.increment()[0]);
@@ -527,7 +527,7 @@ namespace LOFAR
 
     wTimer.stop();
     itsTimeW = wTimer.getReal();
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"... Done!"<< LogIO::POST;//<<endl;
+    if (itsVerbose) logIO() << "LofarConvolutionFunction::store_all_W_images() " << "... Done!" << LogIO::POST;//<<endl;
   }
 
 
@@ -2200,7 +2200,7 @@ namespace LOFAR
       ++Npix;
       Pixel_Size_Spheroidal = diam_image/Npix;
     }
-    cout<<"    Spheroidal support: "<<Npix<<endl;
+    if (itsVerbose) cout << "    Spheroidal support: "<<Npix<<endl;
 
     Matrix<Complex> Spheroid_cut0(IPosition(2,Npix,Npix),1.);
     Spheroid_cut=Spheroid_cut0;

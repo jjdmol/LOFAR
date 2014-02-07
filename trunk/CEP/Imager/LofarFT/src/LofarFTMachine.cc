@@ -149,12 +149,15 @@ LofarFTMachine::LofarFTMachine(Long icachesize, Int itilesize,
     itsDegridMuellerMask(degridMuellerMask),
     itsGriddingTime(0), itsDegriddingTime(0), itsCFTime(0)
 {
-  cout << "=======LofarFTMachine====================================" << endl;
-  cout << itsParameters << endl;
-  cout << "=========================================================" << endl;
+  if (itsVerbose)
+  {
+    cout << "=======LofarFTMachine====================================" << endl;
+    cout << itsParameters << endl;
+    cout << "=========================================================" << endl;
+  }
 
   logIO() << LogOrigin("LofarFTMachine", "LofarFTMachine")  << LogIO::NORMAL;
-  logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
+  if (itsVerbose) logIO() << "You are using a non-standard FTMachine" << LogIO::WARN << LogIO::POST;
   mLocation_p=mLocation;
   tangentSpecified_p=False;
   useDoubleGrid_p=useDoublePrec;
