@@ -64,6 +64,19 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
+      BeamFormerCoherentStep(const Parset &parset,
+        gpu::Stream &i_queue,
+        gpu::Context &context,
+        BeamFormerFactories &factories,
+        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
+        boost::shared_ptr<gpu::DeviceMemory> i_devA,
+        boost::shared_ptr<gpu::DeviceMemory> i_devB,
+        boost::shared_ptr<gpu::DeviceMemory> i_devC,
+        boost::shared_ptr<gpu::DeviceMemory> i_devD,
+        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
+        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+
+
 
       void initMembers(gpu::Context &context,
         BeamFormerFactories &factories);

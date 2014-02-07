@@ -34,14 +34,6 @@
 #include "BeamFormerPreprocessingStep.h"
 #include "BeamFormerCoherentStep.h"
 
-// Set to true to get detailed buffer informatio
-#if 0
-  #define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
-#else
-  #define DUMPBUFFER(a,b)
-#endif
-
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -108,7 +100,6 @@ namespace LOFAR
         DelayAndBandPassKernel::PHASE_ZEROS),
         context));
 
-      // coherent stokes buffers
       unsigned sizeKernelBuffers = devInput->inputSamples.size();
 
       devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
@@ -118,7 +109,8 @@ namespace LOFAR
       devD.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devE.reset(new gpu::DeviceMemory(context,
                  factories.incoherentStokes.bufferSize(
-                  IncoherentStokesKernel::OUTPUT_DATA)));
+                 IncoherentStokesKernel::OUTPUT_DATA)));
+
       // Null buffer for unused parts of the pipeline
       devNull.reset(new gpu::DeviceMemory(context, 1));
 
@@ -126,24 +118,20 @@ namespace LOFAR
       devBeamFormerDelays.reset(new gpu::DeviceMemory(context,
         factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)));
 
-
+      //################################################
       // Create objects containing the kernel and device buffers
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
-        new BeamFormerPreprocessingStep(parset,
-        queue, devInput, devA, devB,  devNull));
+        new BeamFormerPreprocessingStep(parset, queue, context, factories, 
+        devInput, devA, devB, devNull));
 
       coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
-        new BeamFormerCoherentStep(parset,
-        queue, devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
+        new BeamFormerCoherentStep(parset, queue, context, factories,       
+        devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
 
       incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
-        new BeamFormerIncoherentStep(parset,
-        queue, devInput, devA, devB, devC, devD, devE, devNull));
+        new BeamFormerIncoherentStep(parset, queue, context, factories, 
+            devInput, devA, devB, devC, devD, devE, devNull));
 
-      //################################################
-      preprocessingPart->initMembers(context, factories);
-      coherentStep->initMembers(context, factories);
-      incoherentStep->initMembers(context, factories);
 
       LOG_INFO_STR("Running coherent pipeline: " 
         << (ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0 ? "yes" : "no")  

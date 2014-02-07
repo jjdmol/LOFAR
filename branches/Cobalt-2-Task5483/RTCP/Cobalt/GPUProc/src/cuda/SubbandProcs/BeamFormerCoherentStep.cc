@@ -54,6 +54,8 @@ namespace LOFAR
     BeamFormerCoherentStep::BeamFormerCoherentStep(
       const Parset &parset,
       gpu::Stream &i_queue,
+      gpu::Context &context,
+      BeamFormerFactories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -73,6 +75,7 @@ namespace LOFAR
       devD = i_devD;
       devBeamFormerDelays = i_devBeamFormerDelays;
       devNull = i_devNull;
+      initMembers(context, factories);
     }
 
     BeamFormerCoherentStep::~BeamFormerCoherentStep()

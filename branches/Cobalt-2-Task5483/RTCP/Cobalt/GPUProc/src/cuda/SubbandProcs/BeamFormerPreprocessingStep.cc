@@ -47,6 +47,8 @@ namespace LOFAR
     BeamFormerPreprocessingStep::BeamFormerPreprocessingStep(
       const Parset &parset,
       gpu::Stream &i_queue,
+      gpu::Context &context,
+      BeamFormerFactories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -58,6 +60,7 @@ namespace LOFAR
       devA=i_devA;
       devB=i_devB;
       devNull=i_devNull;
+      initMembers(context, factories);
     }
 
     BeamFormerPreprocessingStep::~BeamFormerPreprocessingStep()
