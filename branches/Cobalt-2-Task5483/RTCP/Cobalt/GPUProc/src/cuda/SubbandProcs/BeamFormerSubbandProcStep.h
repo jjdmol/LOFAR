@@ -62,7 +62,8 @@ namespace LOFAR
 
       virtual void logTime() = 0;
 
-      virtual ~BeamFormerSubbandProcStep();
+       ~BeamFormerSubbandProcStep()
+       {}
 
     protected:
       BeamFormerSubbandProcStep(const Parset &parset,

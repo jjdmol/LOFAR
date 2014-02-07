@@ -72,6 +72,8 @@ namespace LOFAR
 
       void logTime();
 
+      virtual ~BeamFormerPreprocessingPart();
+
     private:
 
       //Data members

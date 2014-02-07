@@ -60,6 +60,9 @@ namespace LOFAR
       devNull=i_devNull;
     }
 
+    BeamFormerPreprocessingPart::~BeamFormerPreprocessingPart()
+    {}
+
     void BeamFormerPreprocessingPart::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
       // intToFloat: input -> B
