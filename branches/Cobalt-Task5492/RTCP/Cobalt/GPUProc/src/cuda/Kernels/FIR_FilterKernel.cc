@@ -119,6 +119,10 @@ namespace LOFAR
       // start with all history samples flagged
       for (size_t n = 0; n < historyFlags.num_elements(); ++n)
         historyFlags.origin()[n].include(0, params.nrHistorySamples());
+
+      // set all history samples to 0, to prevent adding uninitialised data
+      // to the stream
+      buffers.historySamples.set(0);
     }
 
     void FIR_FilterKernel::enqueue(const BlockID &blockId,
