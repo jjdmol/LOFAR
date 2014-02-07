@@ -82,12 +82,11 @@ namespace LOFAR
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
-                                   PerformanceCounter &counter,
                                    double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(blockId);
     }
 
     //--------  Template specializations for KernelFactory  --------//
