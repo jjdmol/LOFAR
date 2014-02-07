@@ -42,8 +42,6 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId) const;
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
-
       enum BufferType
       {
         INPUT_DATA,
@@ -52,6 +50,7 @@ namespace LOFAR
 
       // Return required buffer size for \a bufferType
       static size_t bufferSize(const Parset& ps, BufferType bufferType);
+      PerformanceCounter itsCounter;
 
     private:
 

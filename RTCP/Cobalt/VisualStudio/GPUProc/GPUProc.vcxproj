@@ -46,8 +46,12 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerCoherentStep.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingStep.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.h" />
+    <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProcStep.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.h" />
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\UHEP_SubbandProc.h" />
@@ -164,7 +168,10 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\CorrelatorPipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\Pipeline.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\UHEP_Pipeline.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerCoherentStep.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerFactories.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.cc" />
+    <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingStep.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\CorrelatorSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\SubbandProc.cc" />
@@ -400,7 +407,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include</IncludePath>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;..\..\..\static_fixture;..\..\;..\symbolic_links;C:\Program Files (x86)\boost\boost_1_41;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include;D:\Users\klijn\Downloads\boost_1_55_0\boost_1_55_0\boost</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

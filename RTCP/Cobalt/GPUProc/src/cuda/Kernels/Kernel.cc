@@ -58,6 +58,7 @@ namespace LOFAR
                    const Parameters &params)
       : 
       gpu::Function(function),
+      itsCounter(stream.getContext()),
       maxThreadsPerBlock(
         stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsStream(stream),
@@ -70,6 +71,7 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
         "\n  nr. of registers used : " <<
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+    
     }
 
     void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
@@ -136,20 +138,14 @@ namespace LOFAR
 
     void Kernel::enqueue(const BlockID &blockId) const
     {
+      itsStream.recordEvent(itsCounter.start);
       itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
-    }
-
-    void Kernel::enqueue(const BlockID &blockId, 
-                         PerformanceCounter &counter) const
-    {
-      itsStream.recordEvent(counter.start);
-      enqueue(blockId);
-      itsStream.recordEvent(counter.stop);
+      itsStream.recordEvent(itsCounter.stop);
     }
 
     void Kernel::dumpBuffers(const BlockID &blockId) const
@@ -158,6 +154,12 @@ namespace LOFAR
                  str(boost::format(itsParameters.dumpFilePattern) %
                      blockId.globalSubbandIdx %
                      blockId.block));
+    }
+
+    PerformanceCounter &Kernel::getCounter()
+    {
+
+      return itsCounter;
     }
 
   }

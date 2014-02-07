@@ -70,10 +70,10 @@ namespace LOFAR
       nrBytesRead = nrBytesWritten = sizeof(std::complex<float>) * ps.nrTABs(0) * NR_POLARIZATIONS * ps.nrChannelsPerSubband() * ps.nrSamplesPerChannel();
     }
 
-    void DedispersionChirpKernel::enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, double subbandFrequency)
+    void DedispersionChirpKernel::enqueue(gpu::Stream &queue, double subbandFrequency)
     {
       setArg(2, (float) subbandFrequency);
-      Kernel::enqueue(queue/*, counter*/);
+      Kernel::enqueue(queue);
     }
   }
 }
