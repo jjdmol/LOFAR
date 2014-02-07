@@ -87,7 +87,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devC,
       boost::shared_ptr<gpu::DeviceMemory> i_devD,
       boost::shared_ptr<gpu::DeviceMemory> i_devE,
-      boost::shared_ptr<gpu::DeviceMemory> i_devNull      )
+      boost::shared_ptr<gpu::DeviceMemory> i_devNull )
       :
       BeamFormerSubbandProcStep(parset, i_queue),
       outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
@@ -192,9 +192,7 @@ namespace LOFAR
         incoherentFinalFFT->itsCounter.logTime();
       }
       incoherentStokesKernel->itsCounter.logTime();
-      //incoherentOutput.logTime();  //transfer
     }
-
 
     void BeamFormerIncoherentStep::printStats()
     {
@@ -206,9 +204,7 @@ namespace LOFAR
         std::setw(20) << "(incoherentFirFilterKernel)" << incoherentFirFilterKernel->itsCounter.stats << endl <<
         std::setw(20) << "(incoherentFinalFFT)" << incoherentFinalFFT->itsCounter.stats << endl <<
         std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl);
-
     }
-
 
     void BeamFormerIncoherentStep::process(BlockID blockID,
       unsigned subband)

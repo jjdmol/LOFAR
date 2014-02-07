@@ -133,13 +133,9 @@ namespace LOFAR
       // Incoherent Stokes
       std::auto_ptr<IncoherentStokesKernel::Buffers> incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
-
-      bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
     };
   }
 }
 
 #endif
-
-
 
