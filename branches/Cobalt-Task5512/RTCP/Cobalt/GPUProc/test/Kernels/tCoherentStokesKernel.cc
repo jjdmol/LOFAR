@@ -106,7 +106,7 @@ TEST(BufferSizes)
   CHECK_EQUAL(sut.nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
   CHECK_EQUAL(sut.nrStations, sut.parset.nrStations());
-  CHECK_EQUAL(sut.nrInputSamples, settings.nrSamples(sut.blockSize));
+  CHECK_EQUAL(sut.nrInputSamples, settings.nrSamples);
 }
 
 // Test if we can succesfully create a KernelFactory

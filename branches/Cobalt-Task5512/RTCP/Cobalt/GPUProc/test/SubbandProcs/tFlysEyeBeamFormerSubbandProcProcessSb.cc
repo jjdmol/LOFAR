@@ -112,8 +112,7 @@ int main() {
   const size_t nrTABs = maxNrTABsPerSAP;
   const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
   const size_t nrSamples = 
-    ps.settings.beamFormer.coherentSettings.nrSamples(
-      ps.settings.nrSamplesPerSubband());
+    ps.settings.beamFormer.coherentSettings.nrSamples;
   const size_t nrChannels = 
     ps.settings.beamFormer.coherentSettings.nrChannels;
 

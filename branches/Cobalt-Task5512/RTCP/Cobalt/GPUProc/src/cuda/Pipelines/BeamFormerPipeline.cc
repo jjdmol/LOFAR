@@ -269,7 +269,7 @@ namespace LOFAR
             : ps.settings.beamFormer.incoherentSettings;
 
           const size_t nrChannels = stokes.nrChannels;
-          const size_t nrSamples =  stokes.nrSamples(ps.settings.blockSize);
+          const size_t nrSamples =  stokes.nrSamples;
 
           // Our data has the shape
           //   beamFormedData.(in)coherentData[tab][stokes][sample][channel]
