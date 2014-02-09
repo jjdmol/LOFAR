@@ -124,6 +124,12 @@ namespace LOFAR
     }
 
 
+    unsigned ObservationSettings::clockHz() const
+    {
+      return clockMHz * 1000000;
+    }
+
+
     Parset::Parset()
     {
     }
@@ -561,6 +567,9 @@ namespace LOFAR
               "Parset: Cobalt.BeamFormer.nrHighResolutionChannels must be a power of 2 and < 64k");
         }
 
+        settings.beamFormer.doFlysEye = 
+          getBool("OLAP.PencilInfo.flysEye", false);
+
         unsigned nrDelayCompCh;
         if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
           nrDelayCompCh = calcNrDelayCompensationChannels(settings);
@@ -648,12 +657,20 @@ namespace LOFAR
 
           ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
 
+          // For Fly's Eye mode we have exactly one TAB per station.
+          if (settings.beamFormer.doFlysEye) {
+            nrTABs = nrStations;
+          }
+
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            const string prefix =
+              settings.beamFormer.doFlysEye ?
+              str(format("Observation.Beam[%u]") % i) :
+              str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
 
             tab.direction.type    = getString(prefix + ".directionType", "J2000");
             tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
@@ -666,12 +683,14 @@ namespace LOFAR
             if (!isDefined(prefix + ".absoluteAngle2"))
               tab.direction.angle2 += settings.SAPs[i].direction.angle2;
 
-            tab.coherent          = getBool(prefix + ".coherent", true);
+            // The following two keys will not be present in fly's eye mode.
+            tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+            tab.coherent              = getBool(prefix + ".coherent", true);
+
             if (tab.coherent)
               sap.nrCoherent++;
             else
               sap.nrIncoherent++;
-            tab.dispersionMeasure = getDouble(prefix + ".dispersionMeasure", 0.0);
 
             struct ObservationSettings::BeamFormer::StokesSettings &set =
                tab.coherent ? settings.beamFormer.coherentSettings
@@ -689,10 +708,14 @@ namespace LOFAR
               file.streamNr = bfStreamNr++;
 
               if (file.coherent) {
+                file.coherentIdxInSAP = sap.nrCoherent - 1;
+
                 if (coherent_idx >= coherent_locations.size())
                   THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = coherent_locations[coherent_idx++];
               } else {
+                file.incoherentIdxInSAP = sap.nrIncoherent - 1;
+
                 if (incoherent_idx >= incoherent_locations.size())
                   THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = incoherent_locations[incoherent_idx++];
@@ -809,7 +832,7 @@ namespace LOFAR
 
 
     double ObservationSettings::subbandWidth() const {
-      return 1.0 * clockMHz * 1000000 / 1024;
+      return 1.0 * clockHz() / 1024;
     }
 
     unsigned ObservationSettings::nrCrossPolarisations() const {
@@ -878,8 +901,32 @@ namespace LOFAR
       return max;
     }
 
+
+    size_t ObservationSettings::BeamFormer::maxNrCoherentTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].nrCoherent);
+
+      return max;
+    }
+
+
+    size_t ObservationSettings::BeamFormer::maxNrIncoherentTABsPerSAP() const
+    {
+      size_t max = 0;
+
+      for (size_t sapNr = 0; sapNr < SAPs.size(); ++sapNr)
+        max = std::max(max, SAPs[sapNr].nrIncoherent);
+
+      return max;
+    }
+
     size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
     {
+      ASSERT(nrChannels > 0);
+      ASSERT(timeIntegrationFactor > 0);
       return inputBlockSize / nrChannels / timeIntegrationFactor;
     }
 
@@ -1037,113 +1084,10 @@ namespace LOFAR
 
       return list;
     }
-    /*
-       std::vector<double> Parset::getPhaseCorrection(const string &name, char pol) const
-       {
-       return getDoubleVector(str(format("PIC.Core.%s.%s.phaseCorrection.%c") % name % antennaSet() % pol));
-       }
-     */
-
-    string Parset::beamTarget(unsigned beam) const
-    {
-      return settings.SAPs[beam].target;
-    }
-
-
-    std::vector<double> Parset::getTAB(unsigned beam, unsigned pencil) const
-    {
-      std::vector<double> TAB(2);
-
-      TAB[0] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle1;
-      TAB[1] = settings.beamFormer.SAPs[beam].TABs[pencil].direction.angle2;
-
-      return TAB;
-    }
-
-
-    bool Parset::isCoherent(unsigned beam, unsigned pencil) const
-    {
-      return settings.beamFormer.SAPs[beam].TABs[pencil].coherent;
-    }
-
-
-    double Parset::dispersionMeasure(unsigned beam, unsigned pencil) const
-    {
-      if (!settings.corrections.dedisperse)
-        return 0.0;
-
-      return settings.beamFormer.SAPs[beam].TABs[pencil].dispersionMeasure;
-    }
-
-
-    std::vector<string> Parset::TABStationList(unsigned beam, unsigned pencil, bool raw) const
-    {
-      // can't use settings until 'raw' is supported, which is needed to
-      // distinguish between fly's eye mode with one station, and coherent
-      // addition with one station
-      string key = str(format("Observation.Beam[%u].TiedArrayBeam[%u].stationList") % beam % pencil);
-      std::vector<string> stations;
-
-      if (isDefined(key))
-        stations = getStringVector(key,true);
-
-      if (raw)
-        return stations;
-
-      // default to all stations
-      if (stations.empty())
-        stations = mergedStationNames();
-
-      return stations;
-    }
-
-
-    std::vector<double> Parset::getBeamDirection(unsigned beam) const
-    {
-      std::vector<double> beamDirs(2);
-
-      beamDirs[0] = settings.SAPs[beam].direction.angle1;
-      beamDirs[1] = settings.SAPs[beam].direction.angle2;
-
-      return beamDirs;
-    }
-
-
-    std::string Parset::getBeamDirectionType(unsigned beam) const
-    {
-      return settings.SAPs[beam].direction.type;
-    }
-
-
-    bool Parset::haveAnaBeam() const
-    {
-      return settings.anaBeam.enabled;
-    }
-
-
-    std::vector<double> Parset::getAnaBeamDirection() const
-    {
-      std::vector<double> anaBeamDirections(2);
-
-      anaBeamDirections[0] = settings.anaBeam.direction.angle1;
-      anaBeamDirections[1] = settings.anaBeam.direction.angle2;
-
-      return anaBeamDirections;
-    }
-
-
-    std::string Parset::getAnaBeamDirectionType() const
-    {
-      return settings.anaBeam.direction.type;   }
 
     double Parset::getTime(const std::string &name, const std::string &defaultValue) const
     {
       return to_time_t(boost::posix_time::time_from_string(getString(name, defaultValue)));
-    }
-
-    unsigned Parset::nrTABs(unsigned beam) const
-    {
-      return settings.beamFormer.SAPs[beam].TABs.size();
     }
 
     std::string Parset::name() const
@@ -1174,11 +1118,6 @@ namespace LOFAR
     unsigned Parset::nrBeamFormedBlocks() const
     {
       return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
-    }
-
-    string Parset::stationName(int index) const
-    {
-      return settings.stations[index].name;
     }
 
     ssize_t ObservationSettings::stationIndex(const std::string &name) const
@@ -1240,7 +1179,7 @@ namespace LOFAR
 
     unsigned Parset::clockSpeed() const
     {
-      return settings.clockMHz * 1000000;
+      return settings.clockHz();
     }
 
     double Parset::subbandBandwidth() const
@@ -1276,16 +1215,6 @@ namespace LOFAR
     unsigned Parset::integrationSteps() const
     {
       return CNintegrationSteps() * IONintegrationSteps();
-    }
-
-    unsigned Parset::coherentStokesTimeIntegrationFactor() const
-    {
-      return settings.beamFormer.coherentSettings.timeIntegrationFactor;
-    }
-
-    unsigned Parset::incoherentStokesTimeIntegrationFactor() const
-    {
-      return settings.beamFormer.incoherentSettings.timeIntegrationFactor;
     }
 
     bool Parset::outputThisType(OutputType outputType) const
@@ -1337,11 +1266,6 @@ namespace LOFAR
       return settings.delayCompensation.enabled;
     }
 
-    unsigned Parset::nrCalcDelays() const
-    {
-      return 16;
-    }
-
     string Parset::positionType() const
     {
       return "ITRF";
@@ -1368,40 +1292,6 @@ namespace LOFAR
     bool Parset::realTime() const
     {
       return settings.realTime;
-    }
-
-    std::vector<unsigned> Parset::nrTABs() const
-    {
-      std::vector<unsigned> counts(nrBeams());
-
-      for (unsigned beam = 0; beam < nrBeams(); beam++)
-        counts[beam] = nrTABs(beam);
-
-      return counts;
-    }
-
-    unsigned Parset::maxNrTABs() const
-    {
-      std::vector<unsigned> beams = nrTABs();
-
-      if (beams.empty())
-        return 0;
-
-      return *std::max_element(beams.begin(), beams.end());
-    }
-
-    BeamCoordinates Parset::TABs(unsigned beam) const
-    {
-      BeamCoordinates coordinates;
-
-      for (unsigned pencil = 0; pencil < nrTABs(beam); pencil++) {
-        const std::vector<double> coords = getTAB(beam, pencil);
-
-        // assume ra,dec
-        coordinates += BeamCoord3D(coords[0],coords[1]);
-      }
-
-      return coordinates;
     }
 
     string Parset::bandFilter() const

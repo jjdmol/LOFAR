@@ -45,6 +45,7 @@ namespace LOFAR
         unsigned nrSAPs;
         unsigned nrTABs;
         double subbandBandwidth;
+        bool doFlysEye;
       };
 
       enum BufferType
@@ -72,7 +73,7 @@ namespace LOFAR
                              const Buffers &buffers,
                              const Parameters &param);
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
 
     };

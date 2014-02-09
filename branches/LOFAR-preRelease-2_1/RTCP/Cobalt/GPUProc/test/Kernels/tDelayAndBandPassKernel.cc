@@ -69,7 +69,7 @@ int main() {
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
   PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, counter, centralFrequency, SAP);
+  kernel->enqueue(blockId,  centralFrequency, SAP);
   stream.synchronize();
 
   return 0;

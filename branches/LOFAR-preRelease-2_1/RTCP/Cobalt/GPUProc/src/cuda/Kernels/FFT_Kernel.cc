@@ -38,6 +38,7 @@ namespace LOFAR
                            unsigned nrFFTs, bool forward, 
                            const gpu::DeviceMemory &buffer)
       :
+      itsCounter(stream.getContext()),
       context(stream.getContext()),
       nrFFTs(nrFFTs),
       fftSize(fftSize),
@@ -52,16 +53,10 @@ namespace LOFAR
                     ", nrFFTs=" << nrFFTs);
     }
 
-    void FFT_Kernel::enqueue(const BlockID &blockId, 
-                             PerformanceCounter &counter) const
-    {
-      itsStream.recordEvent(counter.start); 
-      enqueue(blockId);
-      itsStream.recordEvent(counter.stop); 
-    }
 
     void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
+      itsStream.recordEvent(itsCounter.start);
       gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
@@ -89,6 +84,7 @@ namespace LOFAR
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));*/
+      itsStream.recordEvent(itsCounter.stop);
     }
 
     size_t FFT_Kernel::bufferSize(const Parset& ps, BufferType bufferType)

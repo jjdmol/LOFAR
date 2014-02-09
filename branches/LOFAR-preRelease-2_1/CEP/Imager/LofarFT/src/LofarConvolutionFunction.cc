@@ -314,7 +314,7 @@ namespace LOFAR
     Double aPixelAngSize = min(m_pixelSizeSpheroidal,
                  estimateAResolution(m_shape, m_coordinates));
     //Double aPixelAngSize = estimateAResolution(m_shape, m_coordinates, 30);
-    cout<<"    Aterm support: "<<imageDiameter /estimateAResolution(m_shape, m_coordinates)<<endl;
+    if (itsVerbose) cout << "    Aterm support: "<<imageDiameter /estimateAResolution(m_shape, m_coordinates)<<endl;
     Int nPixelsConv = imageDiameter / aPixelAngSize;
     nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
     // Matrix<Complex> spheroid_cut_element(IPosition(2,nPixelsConv,nPixelsConv),1.);
@@ -350,9 +350,9 @@ namespace LOFAR
       }
     }
     m_NPixATerm=nPixelsConv;
-    cout<<"  Initialising wTerm Interpolation..."<<endl;
+    if (itsVerbose) cout<<"  Initialising wTerm Interpolation..."<<endl;
     initMeanWStepsGridder();
-    cout<<"  done"<<endl;
+    if (itsVerbose) cout<<"  done"<<endl;
     //initStoreMasks();
 
   }
@@ -394,7 +394,7 @@ namespace LOFAR
   };
       }
       m_nWPlanes=int(m_maxW/wmax_plane)+2;
-      cout<<" Number of w-planes set to: "<<m_nWPlanes<<endl;
+      if (itsVerbose) cout<<" Number of w-planes set to: "<<m_nWPlanes<<endl;
       return m_nWPlanes;
       // Update the timing info.
     } // end omp parallel
@@ -458,7 +458,7 @@ namespace LOFAR
   // Precalculate all W-terms in the fourier domain
   void LofarConvolutionFunction::store_all_W_images()
   {
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"Computing the Wterms..."<< LogIO::POST;//<<endl;
+    if (itsVerbose) logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"Computing the Wterms..."<< LogIO::POST;//<<endl;
     PrecTimer wTimer;
     wTimer.start();
     Double pixelSize = abs(m_coordinates.increment()[0]);
@@ -527,7 +527,7 @@ namespace LOFAR
 
     wTimer.stop();
     itsTimeW = wTimer.getReal();
-    logIO()<<"LofarConvolutionFunction::store_all_W_images() "<<"... Done!"<< LogIO::POST;//<<endl;
+    if (itsVerbose) logIO() << "LofarConvolutionFunction::store_all_W_images() " << "... Done!" << LogIO::POST;//<<endl;
   }
 
 
@@ -1949,9 +1949,9 @@ namespace LOFAR
   {
     // Only calculate if not done yet.
     if (Im_Stack_PB_CF0.empty()) {
-      //if (itsVerbose > 0) {
+      if (itsVerbose > 0) {
         cout<<"..... Compute average PB"<<endl;
-      //}
+      }
       Sum_Stack_PB_CF_small /= float(sum_weight_square);
       Matrix<Complex> Sum_Stack_PB_CF(zero_padding(Sum_Stack_PB_CF_small,m_shape[0]));
 
@@ -2200,7 +2200,7 @@ namespace LOFAR
       ++Npix;
       Pixel_Size_Spheroidal = diam_image/Npix;
     }
-    cout<<"    Spheroidal support: "<<Npix<<endl;
+    if (itsVerbose) cout << "    Spheroidal support: "<<Npix<<endl;
 
     Matrix<Complex> Spheroid_cut0(IPosition(2,Npix,Npix),1.);
     Spheroid_cut=Spheroid_cut0;

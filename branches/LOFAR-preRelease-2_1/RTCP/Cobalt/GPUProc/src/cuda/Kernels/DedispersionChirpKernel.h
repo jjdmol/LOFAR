@@ -40,7 +40,7 @@ namespace LOFAR
                               gpu::DeviceMemory &buffer,
                               gpu::DeviceMemory &DMs);
 
-      void enqueue(gpu::Stream &queue/*, PerformanceCounter &counter*/, double subbandFrequency);
+      void enqueue(gpu::Stream &queue, double subbandFrequency);
 
     };
 

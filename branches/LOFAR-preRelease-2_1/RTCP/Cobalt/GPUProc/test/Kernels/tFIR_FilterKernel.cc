@@ -83,7 +83,7 @@ TEST(FIR_FilterKernel)
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   PerformanceCounter counter(context);
   BlockID blockId;
-  kernel->enqueue(blockId, counter, 0);
+  kernel->enqueue(blockId,  0);
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);

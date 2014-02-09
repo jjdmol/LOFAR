@@ -36,6 +36,8 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
+#include <InputProc/WallClockTime.h>
+#include <InputProc/RSPTimeStamp.h>
 // TODO: Following include is only needed for dynamic_cast. Code smell!
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h> 
 
@@ -44,6 +46,8 @@
 #else
 #include <GPUProc/Station/StationInput.h>
 #endif
+
+#include <cmath>
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
@@ -215,19 +219,30 @@ namespace LOFAR
     }
 
 
+    void Pipeline::allocateResources()
+    {
+    }
+
+
     void Pipeline::processObservation()
     {
+      if (ps.realTime()) {
+        // Wait just before the obs starts to allocate resources
+        LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+
+        const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
+        WallClockTime waiter;
+        waiter.waitUntil(deadline);
+      }
+
+      LOG_INFO("----- Allocating resources");
+      allocateResources();
+
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
       }
-
-      double startTime = ps.startTime();
-      double stopTime = ps.stopTime();
-      double blockTime = ps.CNintegrationTime();
-
-      size_t nrBlocks = floor((stopTime - startTime) / blockTime);
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
@@ -240,6 +255,8 @@ namespace LOFAR
          */
 #       pragma omp section
         {
+          size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
           receiveInput(nrBlocks);
         }
 
@@ -368,7 +385,7 @@ namespace LOFAR
         LOG_DEBUG_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
-        SmartPtr<StreamableData> output = workQueue.outputPool.free.remove();
+        SmartPtr<SubbandProcOutputData> output = workQueue.outputPool.free.remove();
 
         // Only _we_ signal end-of-data, so we should _never_ receive it
         ASSERT(output != NULL); 
@@ -400,7 +417,7 @@ namespace LOFAR
 
     void Pipeline::postprocessSubbands(SubbandProc &workQueue)
     {
-      SmartPtr<StreamableData> output;
+      SmartPtr<SubbandProcOutputData> output;
 
       size_t nrBlocksForwarded = 0;
       size_t nrBlocksDropped = 0;
@@ -424,13 +441,6 @@ namespace LOFAR
 
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
-
-        // Set the sequence number if we're NOT a CorrelatorSubbandProc
-        // TODO: Get rid of dynamic_cast
-        if (!dynamic_cast<CorrelatorSubbandProc*>(&workQueue)) {
-          // We do the ordering, so we set the sequence numbers
-          output->setSequenceNumber(id.block);
-        }
 
         if (pool.bequeue->append(output)) {
           nrBlocksForwarded++;

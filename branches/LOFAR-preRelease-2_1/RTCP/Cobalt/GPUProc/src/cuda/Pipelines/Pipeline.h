@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <time.h>
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
@@ -49,6 +50,19 @@ namespace LOFAR
       Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
       virtual ~Pipeline();
+
+      // allocate resources, such as GPU buffers.
+      //
+      // Pipeline deploys delayed construction, because the resources may still
+      // be occupied by a previous observation at the time of construction.
+      //
+      // An alternative to delayed allocation could be to retry the GPU malloc
+      // with a timeout, but that could potentially dead-lock two concurrent
+      // observations.
+      virtual void allocateResources();
+
+      // Number of seconds to schedule for the allocation of resources.
+      static const time_t allocationTimeout = 10;
 
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       virtual void processObservation();
@@ -94,7 +108,7 @@ namespace LOFAR
         SlidingPointer<size_t> sync;
 
         // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
+        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
       };
     private:
       // For each block, read all subbands from all stations, and divide the

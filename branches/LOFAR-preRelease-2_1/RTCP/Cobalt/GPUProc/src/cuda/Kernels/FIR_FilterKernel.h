@@ -60,6 +60,11 @@ namespace LOFAR
 
         // The number of history samples used for each block
         unsigned nrHistorySamples() const;
+
+        // Additional scale factor (e.g. for FFT normalization).
+        // Derived differently from nrChannelsPerSubband for correlation
+        // and beamforming, so must be passed into this class.
+        float scaleFactor;
       };
 
       enum BufferType
@@ -90,7 +95,6 @@ namespace LOFAR
                        const Parameters& param);
 
       void enqueue(const BlockID &blockId,
-                   PerformanceCounter &counter,
                    unsigned subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,

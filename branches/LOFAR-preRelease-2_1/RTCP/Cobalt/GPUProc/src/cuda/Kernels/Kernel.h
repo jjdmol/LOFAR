@@ -75,7 +75,10 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId) const;
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
+      PerformanceCounter &getCounter();
+
+      // Performance counter for work done by this kernel
+      PerformanceCounter itsCounter;
 
     protected:
       // Construct a kernel.
