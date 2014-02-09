@@ -241,7 +241,7 @@ namespace LOFAR
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<StreamableData> >(3, ps.realTime());
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
       }
 
       //sections = program segments defined by the following omp section directive
@@ -385,7 +385,7 @@ namespace LOFAR
         LOG_DEBUG_STR("[" << id << "] Processing start");
 
         // Also fetch an output object to store results
-        SmartPtr<StreamableData> output = workQueue.outputPool.free.remove();
+        SmartPtr<SubbandProcOutputData> output = workQueue.outputPool.free.remove();
 
         // Only _we_ signal end-of-data, so we should _never_ receive it
         ASSERT(output != NULL); 
@@ -417,7 +417,7 @@ namespace LOFAR
 
     void Pipeline::postprocessSubbands(SubbandProc &workQueue)
     {
-      SmartPtr<StreamableData> output;
+      SmartPtr<SubbandProcOutputData> output;
 
       size_t nrBlocksForwarded = 0;
       size_t nrBlocksDropped = 0;
@@ -441,13 +441,6 @@ namespace LOFAR
 
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
-
-        // Set the sequence number if we're NOT a CorrelatorSubbandProc
-        // TODO: Get rid of dynamic_cast
-        if (!dynamic_cast<CorrelatorSubbandProc*>(&workQueue)) {
-          // We do the ordering, so we set the sequence numbers
-          output->setSequenceNumber(id.block);
-        }
 
         if (pool.bequeue->append(output)) {
           nrBlocksForwarded++;

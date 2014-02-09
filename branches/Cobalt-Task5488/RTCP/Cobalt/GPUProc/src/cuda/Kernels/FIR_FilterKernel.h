@@ -95,7 +95,6 @@ namespace LOFAR
                        const Parameters& param);
 
       void enqueue(const BlockID &blockId,
-                   PerformanceCounter &counter,
                    unsigned subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,

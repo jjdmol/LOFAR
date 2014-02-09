@@ -28,7 +28,7 @@
 
 #include "Pipeline.h"
 
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>"
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 namespace LOFAR
 {

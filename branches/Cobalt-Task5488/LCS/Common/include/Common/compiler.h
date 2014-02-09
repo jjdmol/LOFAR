@@ -23,6 +23,7 @@
 #ifndef LOFAR_COMMON_COMPILER_H
 #define LOFAR_COMMON_COMPILER_H
 
+// \file
 // Compiler hints for branch prediction (and code layout).
 // Use only after profiling performance critical code,
 // or on checks for exceptional conditions.

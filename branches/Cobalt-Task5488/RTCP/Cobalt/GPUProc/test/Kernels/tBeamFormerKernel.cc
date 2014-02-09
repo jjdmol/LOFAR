@@ -135,7 +135,7 @@ int main() {
 
   PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, counter, subbandFreq, sap);
+  kernel->enqueue(blockId, subbandFreq, sap);
   stream.synchronize();
 
   return 0;

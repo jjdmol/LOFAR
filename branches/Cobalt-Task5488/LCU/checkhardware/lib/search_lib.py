@@ -8,6 +8,7 @@ P.Donker ASTRON
 from numpy import ma, fft, power, arange, asarray, isscalar, NaN, Inf, zeros
 from sys import exit
 import logging
+from time import sleep
 
 search_version = '1013f'
 
@@ -46,6 +47,7 @@ class cSearchPeak:
         lookformax = True
         
         for i in range(self.n_data):
+            #sleep(0.001)
             if ma.count_masked(self.data) > 1 and self.data.mask[i] == True:
                 continue
 
@@ -60,10 +62,6 @@ class cSearchPeak:
                             
             if lookformax:
                 if now < (maxval - delta):
-                    #for j in range(maxpos,0,-1):
-                    #    if self.data[j] < (maxval - delta):
-                    #        self.max_peaks.append((x[i] + x[j]) / 2)
-                    #        break
                     self.max_peaks.append(maxpos)
                     minval = now
                     minpos = x[i]
@@ -275,8 +273,9 @@ def search_summator_noise(data):
     
     secs = _data.shape[1]
     for rcu in range(_data.shape[0]):
-        max_valid = 0
-        max_peaks = 0            
+        sum_sn_peaks = 0
+        sum_cr_peaks = 0
+        max_peaks = 0          
         for sec in range(secs):
             peaks = cSearchPeak(_data[rcu,sec,:])
             
@@ -284,20 +283,27 @@ def search_summator_noise(data):
                 peaks.search(delta=0.7)
                 n_peaks = peaks.nMaxPeaks()
     
-                n_valid = 0
+                sn_peaks = 0
+                cr_peaks = 0
                 last_p = 0
                 for p in peaks.max_peaks:
                     p_diff = p - last_p
                     if p_diff in (3,4):
-                        n_valid += 1
+                        sn_peaks += 1
+                    if p_diff in (6,7):
+                        cr_peaks += 1   
                     last_p = p
-                max_valid = max_valid + n_valid
+                sum_sn_peaks += sn_peaks
+                sum_cr_peaks += cr_peaks
                 max_peaks = max(max_peaks, n_peaks)
 
-        if max_valid > (secs * 3.0):
-            max_valid = max_valid / secs             
-            info.append((rcu, max_valid, max_peaks))
-    return (info)
+        if sum_sn_peaks > (secs * 3.0):
+            sn_peaks = sum_sn_peaks / secs             
+            sn_info.append((rcu, sn_peaks, max_peaks))
+        if sum_cr_peaks > (secs * 3.0):
+            cr_peaks = sum_cr_peaks / secs             
+            cr_info.append((rcu, cr_peaks, max_peaks))  
+    return (sn_info, cr_info)
 
     
 # find noise

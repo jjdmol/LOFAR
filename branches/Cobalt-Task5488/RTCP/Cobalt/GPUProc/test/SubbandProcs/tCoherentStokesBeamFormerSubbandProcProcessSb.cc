@@ -105,11 +105,11 @@ int main() {
     "\n  fft2Size = " << fft2Size);
 
   // Output array sizes
-  const size_t nrStokes = ps.settings.beamFormer.incoherentSettings.nrStokes;
+  const size_t nrStokes = ps.settings.beamFormer.coherentSettings.nrStokes;
   const size_t nrChannels = 
-    ps.settings.beamFormer.incoherentSettings.nrChannels;
+    ps.settings.beamFormer.coherentSettings.nrChannels;
   const size_t nrSamples = 
-    ps.settings.beamFormer.incoherentSettings.nrSamples(
+    ps.settings.beamFormer.coherentSettings.nrSamples(
       ps.settings.nrSamplesPerSubband());
 
   LOG_INFO_STR(
@@ -136,19 +136,19 @@ int main() {
   for (size_t st = 0; st < nrStations; st++) {
     for (size_t i = 0; i < nrSamplesPerSubband; i++) {
       size_t pol = i % nrPolarisations;
-      switch(nrBitsPerSample) {
-      case 8:
-        reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
-          inputSignal<i8complex>(i);
-        break;
-      case 16:
-        reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) = 
-          inputSignal<i16complex>(i);
-        break;
-      default:
-        break;
-      }
+    switch (nrBitsPerSample) {
+    case 8:
+      reinterpret_cast<i8complex&>(in.inputSamples[st][i][pol][0]) =
+        inputSignal<i8complex>(i);
+      break;
+    case 16:
+      reinterpret_cast<i16complex&>(in.inputSamples[st][i][pol][0]) =
+        inputSignal<i16complex>(i);
+      break;
+    default:
+      break;
     }
+  }
   }
 
   // Initialize subbands partitioning administration (struct BlockID). We only
@@ -177,10 +177,10 @@ int main() {
   for (size_t i = 0; i < in.tabDelays.num_elements(); i++)
     in.tabDelays.get<float>()[i] = 0.0f;
 
-  BeamFormedData out(nrStokes, nrChannels, nrSamples, maxNrTABsPerSAP, ctx);
+  BeamFormedData out(ps, ctx);
 
-  for (size_t i = 0; i < out.num_elements(); i++)
-    out.get<float>()[i] = 42.0f;
+  for (size_t i = 0; i < out.coherentData.num_elements(); i++)
+    out.coherentData.get<float>()[i] = 42.0f;
 
   // Don't bother initializing out.blockID; processSubband() doesn't need it.
 
@@ -210,13 +210,13 @@ int main() {
 
   for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
     for (size_t s = 0; s < nrStokes; s++)
-      for (size_t t = 0; t < nrSamples; t++)
-        for (size_t c = 0; c < nrChannels; c++)
-          ASSERTSTR(fpEquals(out[tab][s][t][c], outVal, 1e-4f),
-                    "out[" << tab << "][" << s << "][" << t << "][" << c << 
-                    "] = " << setprecision(12) << out[tab][s][t][c] << 
-                    "; outVal = " << outVal);
-
+    for (size_t t = 0; t < nrSamples; t++)
+    for (size_t c = 0; c < nrChannels; c++)
+    {
+      ASSERTSTR(fpEquals(out.coherentData[tab][s][t][c], outVal, 1e-4f),
+        "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
+        out.coherentData[tab][s][t][c] << "; outVal = " << outVal);
+    }
   return 0;
 }
 
