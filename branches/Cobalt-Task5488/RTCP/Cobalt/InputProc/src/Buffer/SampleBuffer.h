@@ -116,6 +116,9 @@ namespace LOFAR
         Ranges available;
         size_t boardNr; // Caller can modify this
 
+        // Initialise a new board
+        void init();
+
         // Change the mode of this board
         void changeMode( const struct BoardMode &mode );
 

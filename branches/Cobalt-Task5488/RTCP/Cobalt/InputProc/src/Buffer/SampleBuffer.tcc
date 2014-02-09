@@ -50,8 +50,6 @@ namespace LOFAR
     {
       // Check if non-realtime mode is set up correctly
       if (sync) {
-        const BoardMode mode(T::bitMode());
-
         ASSERTSTR(syncLock, "Synced buffer requires syncLock object");
         ASSERTSTR(syncLock->writeLock.size() == nrBoards, "SampleBuffer has " << nrBoards << " RSP boards, but syncLock expects " << syncLock->writeLock.size() << " boards");
       }
@@ -62,6 +60,11 @@ namespace LOFAR
         boards[b].available = Ranges(static_cast<int64*>(allocator.allocate(numBytes, ALIGNMENT)), numBytes, nrSamples, create);
         boards[b].boardNr = b;
         boards[b].mode = allocator.allocateTyped(ALIGNMENT);
+
+        if (shmMode == SharedMemoryArena::CREATE
+         || shmMode == SharedMemoryArena::CREATE_EXCL) {
+          boards[b].init();
+        }
       }
 
       LOG_DEBUG_STR( logPrefix << "Initialised" );
@@ -95,6 +98,20 @@ namespace LOFAR
       boardNr(boardNr),
       buffer(buffer)
     {
+    }
+
+
+    template<typename T>
+    void SampleBuffer<T>::Board::init()
+    {
+      // default mode
+      const BoardMode mode(T::bitMode());
+
+      // invalidate all data
+      available.clear();
+
+      // set the mode
+      *this->mode = mode;
     }
 
 
