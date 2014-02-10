@@ -139,8 +139,6 @@ namespace LOFAR
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
-      LOG_INFO_STR("********************************************");
-      LOG_INFO_STR("debug 20");
       DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
       intToFloatKernel->enqueue(blockID);
 
