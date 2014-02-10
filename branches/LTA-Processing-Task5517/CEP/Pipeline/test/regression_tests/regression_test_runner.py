@@ -192,12 +192,12 @@ if __name__ == '__main__':
 	print username, ' ',lofarroot,' ',homedir
 	parser = argparse.ArgumentParser()
 	parser.add_argument('pipeline',help='give the name of the pipeline to test')
-	parser.add_argument('--workdir',help='path of the working directory',default=homedir + '/regression_test_workdir')
+	parser.add_argument('--workdir',help='path of the working directory',default='/data/scratch/'+username+'/regression_test_runner')
 	parser.add_argument('--workspace',help='root path of the installation',default=lofarroot)
 	parser.add_argument('--controlhost',help='name of the host to run the job on',default='localhost')
 	parser.add_argument('--computehost1',help='name of the host to run the job on',default='localhost')
 	parser.add_argument('--computehost2',help='optional second host for distributed job tests',default='localhost')
-	parser.add_argument('--testdata',help='base directory with the testdata',default=homedir + '/regression_test_runner')
+	parser.add_argument('--testdata',help='base directory with the testdata',default='/data/lofar/testdata/regression_test_runner')
 	parser.add_argument('--pipelinecfg',help='name of the pipeline config file',default='pipeline.cfg')
 	parser.add_argument('--gsmserver',help='optional name of the server of the gsm database.')
 
