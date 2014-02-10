@@ -33,16 +33,23 @@ def clear_old_data(lofarroot,pipeline,workdir,host0=None,host1=None,host2=None):
 	#subprocess.call(['mkdir','-p', rundir])
 
 	if host0 == 'localhost':
+		print "clear localhost"
 		shutil.rmtree(workdir,True)
 		os.makedirs(workdir)
 	if host0 == 'lce072':
+		print "clear lce072"
 		subprocess.call(['ssh',host0,'rm','-rf',workdir])
 		subprocess.call(['ssh',host0,'mkdir','-p',workdir])
 
 	if host1 != None and host1 != 'localhost':
+		print "clear host 1"
+		print " ".join(['ssh',host1,'rm','-rf',workdir])
+		print " ".join(['ssh',host1,'mkdir','-p',workdir])
+
 		subprocess.call(['ssh',host1,'rm','-rf',workdir])
 		subprocess.call(['ssh',host1,'mkdir','-p',workdir])
 	if host2 != None and host2 != 'localhost':
+		print "clear  host2"
 		subprocess.call(['ssh',host2,'rm','-rf',workdir])
 		subprocess.call(['ssh',host2,'mkdir','-p',workdir])
 
