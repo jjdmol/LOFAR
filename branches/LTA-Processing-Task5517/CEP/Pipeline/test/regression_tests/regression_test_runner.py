@@ -109,7 +109,7 @@ def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,h
 		#	line = line.replace('ldb002',gsmserver)
 		sys.stdout.write(line)
 
-def prepare_pipeline_config(lofarroot,workdir):
+def prepare_pipeline_config(lofarroot,workdir,username):
 	shutil.copy(lofarroot + '/share/pipeline/pipeline.cfg',workdir)
 	print 'edit pipeline.cfg file'
 	replacelist = None
@@ -126,6 +126,7 @@ def prepare_pipeline_config(lofarroot,workdir):
 		if replacelist:
 			for key,val in replacelist:
 				line = line.replace(key,val)
+		line = line.replace('/data/scratch/' + username, workdir)
 		sys.stdout.write(line)
 
 	with open(workdir + '/pipeline.cfg', 'a') as myfile:
@@ -233,6 +234,6 @@ if __name__ == '__main__':
 	test_environment(lofarroot,args.pipeline,testdata)
 	clear_old_data(lofarroot,args.pipeline,workdir,'localhost',args.computehost1,args.computehost2)
 	prepare_testdata(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2,args.gsmserver)
-	prepare_pipeline_config(lofarroot,workdir)
+	prepare_pipeline_config(lofarroot,workdir,username)
 	run_pipeline(lofarroot,args.pipeline,workdir)
 	validate_output(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2)
