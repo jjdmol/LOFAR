@@ -383,8 +383,6 @@ namespace LOFAR
 
       // *********************************************
       // Run the kernels
-      // Note: make sure to call the right enqueue() for each kernel.
-      // Otherwise, a kernel arg may not be set...
 
       if (ps.nrChannelsPerSubband() > 1) {
         firFilterKernel->enqueue(input.blockID, 

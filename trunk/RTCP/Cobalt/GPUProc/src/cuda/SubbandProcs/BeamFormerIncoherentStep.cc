@@ -181,8 +181,7 @@ namespace LOFAR
         std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl);
     }
 
-    void BeamFormerIncoherentStep::process(BlockID blockID,
-      unsigned subband)
+    void BeamFormerIncoherentStep::process(BlockID blockID, unsigned /*subband*/)
     {
       // ********************************************************************
       // incoherent stokes kernels
