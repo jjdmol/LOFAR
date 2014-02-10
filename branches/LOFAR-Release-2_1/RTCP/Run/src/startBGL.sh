@@ -33,7 +33,7 @@ then
 
   # Copy parset to Cobalt
   echo "Transferring parset to Cobalt..."
-  COBALT_PARSET="/globalhome/mol/parsets/`basename $PARSET`"
+  COBALT_PARSET="/opt/lofar/var/run/`basename $PARSET`"
   scp $PARSET "10.168.96.1:$COBALT_PARSET"
 
   # Copy the parset to NFS for post processing
