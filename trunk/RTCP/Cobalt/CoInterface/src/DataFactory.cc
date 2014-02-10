@@ -46,9 +46,9 @@ namespace LOFAR
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        unsigned nrSubbands = parset.settings.nrSubbands(file.sapNr);
+        unsigned nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
         unsigned nrChannels = sset.nrChannels;
-        unsigned nrSamples = parset.settings.nrSamplesPerSubband() / sset.nrChannels / sset.timeIntegrationFactor;
+        unsigned nrSamples = sset.nrSamples;
 
         return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
       }

@@ -109,8 +109,7 @@ int main() {
   const size_t nrChannels = 
     ps.settings.beamFormer.coherentSettings.nrChannels;
   const size_t nrSamples = 
-    ps.settings.beamFormer.coherentSettings.nrSamples(
-      ps.settings.nrSamplesPerSubband());
+    ps.settings.beamFormer.coherentSettings.nrSamples;
 
   LOG_INFO_STR(
     "Output info:" <<

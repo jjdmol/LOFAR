@@ -100,7 +100,7 @@ TEST_FIXTURE(ParsetFixture, BufferSizes)
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
   CHECK_EQUAL(nrStations, parset.nrStations());
-  CHECK_EQUAL(nrInputSamples, settings.nrSamples(blockSize));
+  CHECK_EQUAL(nrInputSamples, settings.nrSamples);
 }
 
 

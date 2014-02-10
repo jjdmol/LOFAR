@@ -128,7 +128,7 @@ namespace LOFAR
 
       // all subbands in this file
       // We could have multiple saps with each a specific number of subbands
-      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices();
 
       unsigned nrSubbands = subbandIndices.size();
 
@@ -547,7 +547,7 @@ namespace LOFAR
       for (size_t i = 0; i < nrSubbands; ++i) {
         if( i > 0 )
           stationSubbandsStr << ", ";
-        stationSubbandsStr << str(format("%u") % parset.settings.subbands[subbandIndices[i]].stationIdx);
+        stationSubbandsStr << str(format("%u") % parset.settings.SAPs[sapNr].subbands[i].stationIdx);
       }
       stationSubbandsStr << "]";
 

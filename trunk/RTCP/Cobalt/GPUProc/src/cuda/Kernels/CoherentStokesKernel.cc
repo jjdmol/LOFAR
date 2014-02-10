@@ -51,7 +51,7 @@ namespace LOFAR
         ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
      {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
+      nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples;
 
       // The number of samples should be a multiple of 16
       timeParallelFactor = 1;
