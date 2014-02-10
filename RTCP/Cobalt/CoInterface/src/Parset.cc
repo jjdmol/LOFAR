@@ -372,22 +372,24 @@ namespace LOFAR
         sap.target           = getString(str(format("Observation.Beam[%u].target") % sapNr), "");
 
         // Process the subbands of this SAP
-        sap.subbandIndices = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
-        for (unsigned sb = 0; sb < sap.subbandIndices.size(); ++sb)
+        for (unsigned sb = 0; sb < subbandList.size(); ++sb)
         {
           struct ObservationSettings::Subband subband;
 
           subband.idx              = settings.subbands.size();
-          subband.stationIdx      = sap.subbandIndices[sb];
+          subband.stationIdx       = subbandList[sb];
           subband.SAP              = sapNr;
           subband.idxInSAP         = sb;
           subband.centralFrequency = frequencyList.empty()
                                      ? settings.subbandWidth() * (subband.stationIdx + subbandOffset)
                                      : frequencyList[sb];
 
+          // Register the subband both globally and in the SAP structure
           settings.subbands.push_back(subband);
+          settings.SAPs[sapNr].subbands.push_back(subband);
         }
       }
 
@@ -624,6 +626,7 @@ namespace LOFAR
           set->nrSubbandsPerFile = getUint32(
                 renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
                 0);
+          set->nrSamples = settings.blockSize / set->timeIntegrationFactor / set->nrChannels;
 
           if (set->nrSubbandsPerFile == 0) {
             // apply default
@@ -847,6 +850,16 @@ namespace LOFAR
       return nrSamplesPerSubband() / subbandWidth();
     }
 
+    vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
+      vector<unsigned> indices;
+
+      for(size_t i = 0; i < subbands.size(); ++i) {
+        indices.push_back(subbands[i].idx);
+      }
+
+      return indices;
+    }
+
     double ObservationSettings::Correlator::integrationTime() const {
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
@@ -877,17 +890,6 @@ namespace LOFAR
       }
 
       return result;
-    }
-
-    size_t ObservationSettings::nrSubbands(size_t SAP) const
-    {
-      size_t count = 0;
-
-      for (size_t sb = 0; sb < subbands.size(); ++sb)
-        if (subbands[sb].SAP == SAP)
-          ++count;
-
-      return count;
     }
 
 
@@ -921,13 +923,6 @@ namespace LOFAR
         max = std::max(max, SAPs[sapNr].nrIncoherent);
 
       return max;
-    }
-
-    size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
-    {
-      ASSERT(nrChannels > 0);
-      ASSERT(timeIntegrationFactor > 0);
-      return inputBlockSize / nrChannels / timeIntegrationFactor;
     }
 
 

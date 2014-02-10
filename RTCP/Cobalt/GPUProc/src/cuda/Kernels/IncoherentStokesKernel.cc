@@ -47,8 +47,7 @@ namespace LOFAR
       nrChannelsPerSubband = 
         ps.settings.beamFormer.incoherentSettings.nrChannels;
       nrSamplesPerChannel =
-        ps.settings.beamFormer.incoherentSettings.nrSamples(
-          ps.nrSamplesPerSubband());
+        ps.settings.beamFormer.incoherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IncoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 

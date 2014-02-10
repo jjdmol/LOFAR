@@ -197,7 +197,7 @@ int main() {
   float coh_outVal = sqr(nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
   cout << "coherent outVal = " << coh_outVal << endl;
 
-  for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples(ps.settings.blockSize); t++)
+  for (size_t t = 0; t < ps.settings.beamFormer.coherentSettings.nrSamples; t++)
     for (size_t c = 0; c < ps.settings.beamFormer.coherentSettings.nrChannels; c++)
       ASSERTSTR(fpEquals(out.coherentData[0][0][t][c], coh_outVal, 1e-4f), 
                 "out.coherentData[0][0][" << t << "][" << c << "] = " << 
@@ -221,7 +221,7 @@ int main() {
   float incoh_outVal = nrStations * sqr(amplitude * scaleFactor * fft1Size * fft2Size);
   cout << "incoherent outVal = " << incoh_outVal << endl;
 
-  for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples(ps.settings.blockSize); t++)
+  for (size_t t = 0; t < ps.settings.beamFormer.incoherentSettings.nrSamples; t++)
     for (size_t c = 0; c < ps.settings.beamFormer.incoherentSettings.nrChannels; c++)
       ASSERTSTR(fpEquals(out.incoherentData[0][0][t][c], incoh_outVal, 1e-4f), 
                 "out.incoherentData[0][0][" << t << "][" << c << "] = " << 

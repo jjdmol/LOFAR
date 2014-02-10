@@ -64,12 +64,12 @@ namespace LOFAR
         gpu::Context &context) :
       coherentData(boost::extents[ps.settings.beamFormer.maxNrCoherentTABsPerSAP()]
                                  [ps.settings.beamFormer.coherentSettings.nrStokes]
-                                 [ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                 [ps.settings.beamFormer.coherentSettings.nrSamples]
                                  [ps.settings.beamFormer.coherentSettings.nrChannels],
                                  context, 0),
       incoherentData(boost::extents[ps.settings.beamFormer.maxNrIncoherentTABsPerSAP()]
                                    [ps.settings.beamFormer.incoherentSettings.nrStokes]
-                                   [ps.settings.beamFormer.incoherentSettings.nrSamples(ps.nrSamplesPerSubband())]
+                                   [ps.settings.beamFormer.incoherentSettings.nrSamples]
                                    [ps.settings.beamFormer.incoherentSettings.nrChannels],
                                    context, 0)
     {

@@ -254,61 +254,6 @@ namespace LOFAR
       std::vector<struct Node> nodes;
 
       /*
-       * Pointing information
-       */
-      struct Direction {
-        // Coordinate type (J2000, etc)
-        //
-        // key: *.directionType
-        std::string type;
-
-        // Two angles within the coordinate type (RA/DEC, etc)
-        //
-        // key: *.absoluteAngle1
-        // key: *.absoluteAngle2
-        double angle1;
-        double angle2;
-      };
-
-      struct SAP {
-        // Direction in which the SAP points
-        //
-        // key: Observation.Beam[sapIdx].*
-        struct Direction direction;
-
-
-        // The list of sabbands in this SAP
-        //
-        // key: Observation.Beam[idx].subbandList 
-        std::vector<unsigned> subbandIndices;
-
-        // Name of target
-        //
-        // key: Observation.Beam[sapIdx].target
-        std::string target;
-      };
-
-      // All station beams
-      //
-      // length: Observation.nrBeams
-      std::vector<struct SAP> SAPs;
-
-      struct AnaBeam {
-        // Whether the observation employs an analog beam
-        //
-        // key: Observation.antennaSet starts with "HBA"
-        bool enabled;
-
-        // Direction in which the analog beam points
-        //
-        // key: Observation.AnaBeam[0].*
-        struct Direction direction;
-      };
-
-      // The analog beam, if any
-      struct AnaBeam anaBeam;
-
-      /*
        * Spectral resolution information
        */
 
@@ -345,7 +290,63 @@ namespace LOFAR
       // length: len(Observation.subbandList)
       std::vector<struct Subband> subbands;
 
-      size_t nrSubbands(size_t SAP) const;
+      /*
+       * Pointing information
+       */
+      struct Direction {
+        // Coordinate type (J2000, etc)
+        //
+        // key: *.directionType
+        std::string type;
+
+        // Two angles within the coordinate type (RA/DEC, etc)
+        //
+        // key: *.absoluteAngle1
+        // key: *.absoluteAngle2
+        double angle1;
+        double angle2;
+      };
+
+      struct SAP {
+        // Direction in which the SAP points
+        //
+        // key: Observation.Beam[sapIdx].*
+        struct Direction direction;
+
+        // The list of subbands in this SAP
+        //
+        // key: Observation.Beam[idx].subbandList 
+        std::vector<struct Subband> subbands;
+
+        // Name of target
+        //
+        // key: Observation.Beam[sapIdx].target
+        std::string target;
+
+        // Return the list of indices of our subbands
+        // within the global settings.subbands list.
+        vector<unsigned> subbandIndices() const;
+      };
+
+      // All station beams
+      //
+      // length: Observation.nrBeams
+      std::vector<struct SAP> SAPs;
+
+      struct AnaBeam {
+        // Whether the observation employs an analog beam
+        //
+        // key: Observation.antennaSet starts with "HBA"
+        bool enabled;
+
+        // Direction in which the analog beam points
+        //
+        // key: Observation.AnaBeam[0].*
+        struct Direction direction;
+      };
+
+      // The analog beam, if any
+      struct AnaBeam anaBeam;
 
       struct FileLocation {
         string host;
@@ -544,8 +545,8 @@ namespace LOFAR
           // key: *.timeIntegrationFactor
           size_t timeIntegrationFactor;
 
-          // return the number of samples per channel
-          size_t nrSamples(size_t inputBlockSize) const;
+          // The number of samples per channel
+          size_t nrSamples;
 
           // The number of subbands to store in each file.
           // The last file can have fewer subbands.
