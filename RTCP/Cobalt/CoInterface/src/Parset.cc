@@ -620,9 +620,11 @@ namespace LOFAR
           set->nrChannels = getUint32(
                 renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
                 1);
+          ASSERT(set->nrChannels > 0);
           set->timeIntegrationFactor = getUint32(
                 renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
                 1);
+          ASSERT(set->timeIntegrationFactor > 0);
           set->nrSubbandsPerFile = getUint32(
                 renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
                 0);

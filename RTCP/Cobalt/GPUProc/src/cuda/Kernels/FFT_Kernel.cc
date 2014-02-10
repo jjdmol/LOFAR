@@ -56,24 +56,21 @@ namespace LOFAR
 
     void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
-      itsStream.recordEvent(itsCounter.start);
       gpu::ScopedCurrentContext scc(context);
-
-      cufftResult error;
 
       // Tie our plan to the specified stream
       plan.setStream(itsStream);
 
-      LOG_DEBUG("Launching cuFFT");
-        
       // Enqueue the FFT execution
-      error = cufftExecC2C(plan.plan,
+      itsStream.recordEvent(itsCounter.start);
+      LOG_DEBUG("Launching cuFFT");
+      cufftResult error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
                            static_cast<cufftComplex*>(buffer.get()),
                            direction);
-
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
+      itsStream.recordEvent(itsCounter.stop);
 
       if (itsStream.isSynchronous()) {
         itsStream.synchronize();
@@ -84,7 +81,6 @@ namespace LOFAR
                           (size_t) nrFFTs * 5 * fftSize * log2(fftSize),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>),
                           (size_t) nrFFTs * fftSize * sizeof(std::complex<float>));*/
-      itsStream.recordEvent(itsCounter.stop);
     }
 
     size_t FFT_Kernel::bufferSize(const Parset& ps, BufferType bufferType)

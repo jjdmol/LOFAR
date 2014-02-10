@@ -806,10 +806,8 @@ namespace LOFAR
           try {
             checkCuCall(cuEventElapsedTime(&ms, other, _event));
           } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent crashes caused by querying unused timers
-            //
-            // NOTE: checkCuCall already logs the error
-
+            // Prevent exceptions/crashes caused by querying unused timers
+            // checkCuCall already logs the error
             ms = 0.0f;
           }
 
