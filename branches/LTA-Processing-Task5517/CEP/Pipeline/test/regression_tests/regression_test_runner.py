@@ -234,6 +234,5 @@ if __name__ == '__main__':
 	clear_old_data(lofarroot,args.pipeline,workdir,'localhost',args.computehost1,args.computehost2)
 	prepare_testdata(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2,args.gsmserver)
 	prepare_pipeline_config(lofarroot,workdir)
-    def run_pipeline(lofarroot,pipeline,workdir,testdata):
 	run_pipeline(lofarroot,args.pipeline,workdir)
 	validate_output(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2)
