@@ -99,7 +99,7 @@ def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,h
 		if host1 != 'localhost':
 			line = line.replace('output_path1_placeholder',workdir + '/output_data')
 			line = line.replace('output_path2_placeholder',workdir + '/output_data')
-		elif host1 == 'localhost':
+		else:
 			line = line.replace('output_path1_placeholder',workdir + '/output_data/host1')
 			line = line.replace('output_path2_placeholder',workdir + '/output_data/host2')
 		if replacelist:
@@ -228,9 +228,11 @@ if __name__ == '__main__':
 	script_path = os.path.dirname(os.path.realpath(__file__))
 	print 'Running script: ',script_path
 
+	workdir = args.workdir + "/" + args.pipeline
+
 	test_environment(lofarroot,args.pipeline,testdata)
-	clear_old_data(lofarroot,args.pipeline,args.workdir,'localhost',args.computehost1,args.computehost2)
-	prepare_testdata(lofarroot,args.pipeline,args.workdir,testdata,'localhost',args.computehost1,args.computehost2,args.gsmserver)
-	prepare_pipeline_config(lofarroot,args.workdir)
-	run_pipeline(lofarroot,args.pipeline,args.workdir,args.testdata)
-	validate_output(lofarroot,args.pipeline,args.workdir,testdata,'localhost',args.computehost1,args.computehost2)
+	clear_old_data(lofarroot,args.pipeline,workdir,'localhost',args.computehost1,args.computehost2)
+	prepare_testdata(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2,args.gsmserver)
+	prepare_pipeline_config(lofarroot,workdir)
+	run_pipeline(lofarroot,args.pipeline,args.workdir,workdir)
+	validate_output(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2)
