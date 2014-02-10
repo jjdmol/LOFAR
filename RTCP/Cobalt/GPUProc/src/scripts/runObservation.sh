@@ -137,6 +137,10 @@ timeout -k2 1 /bin/true 2> /dev/null && KILLOPT=-k2
 OBSID=`getkey Observation.ObsID`
 echo "Observation ID: $OBSID"
 
+# Remove stale feedback file (useful for testing)
+FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
+rm -f $FEEDBACK_FILE
+
 # ******************************
 # Preprocess: augment parset
 # ******************************
@@ -220,8 +224,6 @@ wait $PID
 OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
-
-FEEDBACK_FILE=$LOFARROOT/var/run/Observation${OBSID}_feedback
 
 if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
 then
