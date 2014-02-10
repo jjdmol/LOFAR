@@ -34,7 +34,7 @@ then
   # Copy parset to Cobalt
   echo "Transferring parset to Cobalt..."
   COBALT_PARSET="/globalhome/mol/parsets/`basename $PARSET`"
-  scp $PARSET "mol@10.168.96.1:$COBALT_PARSET"
+  scp $PARSET "10.168.96.1:$COBALT_PARSET"
 
   # Copy the parset to NFS for post processing
   cp $PARSET $STORAGE_PARSET
@@ -44,7 +44,7 @@ then
 
   # Start the observation on Cobalt
   echo "Signalling start to Cobalt..."
-  ssh mol@10.168.96.1 startBGL.sh 1 2 3 "$COBALT_PARSET" $OBSID
+  ssh 10.168.96.1 startBGL.sh 1 2 3 "$COBALT_PARSET" $OBSID
 
   # And.. done!
   echo "Done"
