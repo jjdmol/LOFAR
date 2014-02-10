@@ -73,6 +73,14 @@ namespace LOFAR
        * The constructor fixes the size of the data and the number
        * of subbands per block, but other fields are left to the
        * caller to fill.
+       *
+       * The subbands are weaved together: each subband has dimensions
+       *
+       *   subband[samples][channels]
+       *
+       * and each block has dimensions
+       *
+       *   block[samples][subbbands][channels]
        */
       class Block: public SampleData<float, 3> {
       public:
@@ -106,8 +114,10 @@ namespace LOFAR
         void reset( size_t newFileIdx, size_t newBlockIdx );
 
       private:
-        // The total number of subbands in this block.
+        // Dimensions of each block
+        const size_t nrSamples;
         const size_t nrSubbands;
+        const size_t nrChannels;
 
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;

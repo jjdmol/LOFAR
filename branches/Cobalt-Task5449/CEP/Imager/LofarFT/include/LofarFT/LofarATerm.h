@@ -171,6 +171,7 @@ namespace LOFAR
     casa::Vector<casa::String>                  cal_pp_names;
     casa::Matrix<casa::Double>                  cal_pp;
     casa::Vector<casa::Double>                  tec_white;
+    casa::Int                                   itsVerbose;
   };
 
 } // namespace LOFAR

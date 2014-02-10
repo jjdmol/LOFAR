@@ -101,7 +101,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     observationsList = activeObservations;
   }
   
-  DebugN(\"observationList: \"+observationsList);
+  LOG_DEBUG(\"ObservationFlow.pnl:updateActiveObservations|observationList: \"+observationsList);
   connectObservations();
 }
 
@@ -109,23 +109,6 @@ void updateActiveObservations(string dp1, dyn_string obs,
 void connectObservations() {
   string obsDP=\"\";
   dyn_string dpList;
-  
-
-/*
-  if (dynlen(oldObservationsList) > 0) {
-    // disconnect old connections
-    for(int i=1; i <= dynlen(oldObservationsList); i++) {
-      // get real name from claimmanager
-      obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+oldObservationsList[i]);
-      if (dpExists(obsDP)) {
-        dynAppend(dpList, obsDP+\".status.state\");
-        dynAppend(dpList, obsDP+\".status.childState\");
-      }
-    }
-    LOG_DEBUG(\"ObservationFlow.pnl:connectObservations|DISconnecting : \"+dpList);
-    dpDisconnect(\"updateObservations\",dpList);
-  }
-  */
 
   dynClear(dpList);
   if (dynlen(observationsList) > 0) {
@@ -152,7 +135,7 @@ void connectObservations() {
 }
  
 void updateObservations(dyn_string dps,dyn_string values) {
-  DebugTN(\"updateObservations dps:    \" + \"updateObservations values: \"+values);
+ LOG_DEBUG(\"ObservationFlow.pnl:updateObservations| dps:    \" + \"updateObservations values: \"+values);
   // determine the highest state and the highest childState, and add those to the observationsObject
   int highestState=0;
   int highestChildState=0;
@@ -173,11 +156,9 @@ void setStates(int state, int childState) {
    string SymbolCol;
 
    SymbolCol = getStateColor(childState);
-   DebugN(\"child:\"+SymbolCol);
    setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
 
    SymbolCol = getStateColor(state);
-   DebugN(\"state:\"+SymbolCol);
    setValue(\"childStateBorder\", \"backCol\", SymbolCol);
 }" 0
  2

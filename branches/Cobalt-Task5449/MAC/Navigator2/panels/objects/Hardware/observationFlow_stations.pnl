@@ -101,7 +101,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     observationsList = activeObservations;
   }
   
-  DebugN(\"observationList: \"+observationsList);
+  LOG_DEBUG(\"observationFlow_stations.pnl:updateActiveObservations|observationList: \"+observationsList);
   connectObservations();
 }
 
@@ -152,7 +152,7 @@ void connectObservations() {
 }
  
 void updateObservations(dyn_string dps,dyn_dyn_string values) {
-  DebugTN(\"ObservationFlow_stations.pnl:updateObservations| dps:    \" + \"updateObservations values: \"+values);
+  LOG_DEBUG(\"observationFlow_stations.pnl:updateObservations| dps:    \" + \"updateObservations values: \"+values);
 
   // collect all stations involved  
   dyn_string stationDPList;
@@ -177,7 +177,6 @@ void updateObservations(dyn_string dps,dyn_dyn_string values) {
     setStates(0,0);
     return;
   }
-  DebugN(stationDPList);
   if (dpConnect(\"updateStationStates\",stationDPList) == -1) {
     LOG_ERROR(\"ObservationFlow_stations.pnl:updateObservations|ERROR: couldn't connect to : \"+stationDPList+ \" \" + getLastError());
   }
@@ -203,11 +202,9 @@ void setStates(int state, int childState) {
    string SymbolCol;
 
    SymbolCol = getStateColor(childState);
-   DebugN(\"stations child:\"+SymbolCol);
    setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
 
    SymbolCol = getStateColor(state);
-   DebugN(\"stations state:\"+SymbolCol);
    setValue(\"childStateBorder\", \"backCol\", SymbolCol);
 }" 0
  2

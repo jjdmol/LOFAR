@@ -1,4 +1,4 @@
-//# DedispersionChirpKernel.h
+//# BeamFormerSubbandProcStep.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,34 +18,55 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_DEDISPERSION_CHIRP_KERNEL_H
-#define LOFAR_GPUPROC_CUDA_DEDISPERSION_CHIRP_KERNEL_H
+#ifndef LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
+#define LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
 
 #include <CoInterface/Parset.h>
 
-#include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/PerformanceCounter.h>
+
+#include <CoInterface/BlockID.h>
+
+#include "SubbandProc.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    class DedispersionChirpKernel : public Kernel
+    //# Forward declarations
+    struct BeamFormerFactories;
+
+    class BeamFormerSubbandProcStep
     {
     public:
-      DedispersionChirpKernel(const Parset &ps,
-                              gpu::Context &context,
-                              gpu::DeviceMemory &buffer,
-                              gpu::DeviceMemory &DMs);
 
-      void enqueue(gpu::Stream &queue, double subbandFrequency);
+      virtual void initMembers(gpu::Context &context,
+        BeamFormerFactories &factories) = 0;
+
+      virtual void process(BlockID blockID,
+        unsigned subband) = 0;
+
+      virtual void printStats() =0;
+
+      virtual void logTime() = 0;
+
+       ~BeamFormerSubbandProcStep()
+       {}
+
+    protected:
+      BeamFormerSubbandProcStep(const Parset &parset,
+        gpu::Stream &i_queue)
+        :
+        ps(parset),
+        queue(i_queue) 
+        {} ;
+
+      const Parset ps;
+      gpu::Stream queue;
 
     };
-
   }
 }
 
 #endif
-
