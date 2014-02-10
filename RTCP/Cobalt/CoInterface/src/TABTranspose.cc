@@ -77,13 +77,11 @@ std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
 
 Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
-  SampleData<float,3>(boost::extents[nrSamples][nrSubbands][nrChannels], boost::extents[nrSubbands][nrChannels]),
+  SampleData<float,3>(boost::extents[nrSubbands][nrSamples][nrChannels], boost::extents[nrSubbands][nrChannels]),
   subbandWritten(nrSubbands, false),
   fileIdx(0),
   block(0),
-  nrSamples(nrSamples),
   nrSubbands(nrSubbands),
-  nrChannels(nrChannels),
   nrSubbandsLeft(nrSubbands)
 {
 }
@@ -99,12 +97,7 @@ void Block::addSubband( const Subband &subband ) {
   // Subbands should not arrive twice
   ASSERT(subbandWritten[subband.id.subband] == false);
 
-  // Weave subbands together
-  for (size_t t = 0; t < nrSamples; ++t) {
-    // Copy all channels for sample t
-    memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
-  }
-
+  memcpy(samples[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof *subband.data.origin());
   subbandWritten[subband.id.subband] = true;
 
   nrSubbandsLeft--;

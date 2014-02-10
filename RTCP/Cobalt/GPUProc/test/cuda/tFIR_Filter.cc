@@ -87,7 +87,6 @@ int test()
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
   definitions["NR_BITS_PER_SAMPLE"] = lexical_cast<string>(NR_BITS_PER_SAMPLE);
   definitions["NR_SUBBANDS"] = lexical_cast<string>(NR_SUBBANDS);
-  definitions["INPUT_IS_STATIONDATA"] = "1";
 
   // Create a default context
   Platform pf;

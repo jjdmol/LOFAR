@@ -71,6 +71,7 @@ namespace LOFAR
         function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
         "\n  nr. of registers used : " <<
         function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+    
     }
 
     void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
@@ -79,7 +80,8 @@ namespace LOFAR
       gpu::Grid grid;
       ostringstream errMsgs;
 
-      // Enforce by the hardware supported work sizes to see errors early
+      // Enforce by the hardware supported work sizes to see errors clearly and
+      // early.
 
       gpu::Block maxLocalWorkSize = 
         itsStream.getContext().getDevice().getMaxBlockDims();
@@ -101,6 +103,8 @@ namespace LOFAR
           localWorkSize.z == 0) {
         errMsgs << "  - localWorkSize components must be non-zero" << endl;
       } else {
+        // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
+        // ('gridWorkSize').
         if (globalWorkSize.x % localWorkSize.x != 0 ||
             globalWorkSize.y % localWorkSize.y != 0 ||
             globalWorkSize.z % localWorkSize.z != 0)
@@ -136,12 +140,12 @@ namespace LOFAR
     {
       itsStream.recordEvent(itsCounter.start);
       itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
-      itsStream.recordEvent(itsCounter.stop);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
+      itsStream.recordEvent(itsCounter.stop);
     }
 
     void Kernel::dumpBuffers(const BlockID &blockId) const
@@ -154,6 +158,7 @@ namespace LOFAR
 
     PerformanceCounter &Kernel::getCounter()
     {
+
       return itsCounter;
     }
 

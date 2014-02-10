@@ -571,7 +571,7 @@ namespace LOFAR
           return _ptr;
         }
 
-        void set(unsigned char uc, size_t n) const
+        void set(unsigned char uc, size_t n)
         {
           ScopedCurrentContext scc(_context);
 
@@ -605,7 +605,7 @@ namespace LOFAR
         return (void *)_impl->get();
       }
 
-      void DeviceMemory::set(unsigned char uc, size_t n) const
+      void DeviceMemory::set(unsigned char uc, size_t n)
       {
         _impl->set(uc, std::min(n, size()));
       }

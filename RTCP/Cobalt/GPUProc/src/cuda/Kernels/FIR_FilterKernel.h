@@ -65,13 +65,6 @@ namespace LOFAR
         // Derived differently from nrChannelsPerSubband for correlation
         // and beamforming, so must be passed into this class.
         float scaleFactor;
-
-        // If true, we'll read integers in the order as they're coming from the
-        // stations: intXX[stab][sample][pol]
-        //
-        // If false, we'll read floats in the order produced by the beam-former
-        // pipeline: float[stab][pol][sample]
-        bool inputIsStationData;
       };
 
       enum BufferType

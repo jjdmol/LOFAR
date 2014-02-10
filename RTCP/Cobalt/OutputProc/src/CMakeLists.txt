@@ -21,6 +21,7 @@ lofar_add_library(outputproc
   OutputThread.cc
   SubbandWriter.cc
   TBB_StaticMapping.cc
+#  TBB_Writer.cc
 )
 
 install(PROGRAMS
@@ -35,5 +36,5 @@ lofar_add_bin_program(outputProc outputProc.cc)
 #lofar_add_bin_program(createHeaders createHeaders.cc)
 lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionoutputproc versionoutputproc.cc)
-#lofar_add_bin_program(TBB_Writer TBB_Writer_main.cc TBB_Writer.cc)
+#lofar_add_bin_program(TBB_Writer_main TBB_Writer_main.cc)
 

@@ -355,10 +355,10 @@ SUITE(SendReceive) {
         for (size_t s = 0; s < nrSamples; ++s) {
           for (size_t c = 0; c < nrChannels; ++c) {
             size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
-            size_t actual = static_cast<size_t>(block->samples[s][sb][c]);
+            size_t actual = static_cast<size_t>(block->samples[sb][s][c]);
 
             if (expected != actual)
-              LOG_ERROR_STR("Mismatch at [" << s << "][" << sb << "][" << c << "]");
+              LOG_ERROR_STR("Mismatch at [" << sb << "][" << s << "][" << c << "]");
             CHECK_EQUAL(expected, actual);
           }
         }
@@ -402,10 +402,8 @@ SUITE(MultiReceiver) {
 
       // Send one block
       {
-        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+        SmartPtr<Subband> sb = new Subband(11, 13);
         sb->id.fileIdx = 0;
-        sb->id.block   = 0;
-        sb->id.subband = 0;
 
         sb->write(cs);
       }

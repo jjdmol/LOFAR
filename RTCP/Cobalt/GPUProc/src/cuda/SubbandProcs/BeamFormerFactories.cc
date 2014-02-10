@@ -117,8 +117,6 @@ namespace LOFAR
         // See the correlator variant for more detail.
         params.scaleFactor = params.nrChannelsPerSubband;
 
-        params.inputIsStationData = false;
-
         return params;
       }
 
@@ -170,8 +168,6 @@ namespace LOFAR
         // Normalize flux output for number of channels.
         // See the correlator variant for more detail.
         params.scaleFactor = params.nrChannelsPerSubband;
-
-        params.inputIsStationData = false;
 
         return params;
       }
