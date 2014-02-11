@@ -116,8 +116,12 @@ void Block::addSubband( const Subband &subband ) {
 void Block::zeroRemainingSubbands() {
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
-      LOG_DEBUG_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
-      memset(samples[subbandIdx].origin(), 0, samples[subbandIdx].size() * sizeof *samples[subbandIdx].origin());
+      LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
+
+      for (size_t t = 0; t < nrSamples; ++t) {
+        // Zero all channels for sample t
+        memset(&samples[t][subband.id.subband][0], 0, nrChannels * sizeof *samples.origin());
+      }
     }
   }
 }
