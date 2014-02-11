@@ -20,13 +20,14 @@
 
 #include <lofar_config.h>
 
-#include <CoInterface/DataFactory.h>
-#include <CoInterface/StreamableData.h>
+#include <CoInterface/BeamFormedData.h>
 #include <CoInterface/Parset.h>
 
 #ifdef HAVE_DAL
 #include <OutputProc/MSWriterDAL.h>
 #endif
+
+#include <cstring>
 
 using namespace std;
 using namespace LOFAR;
@@ -38,13 +39,26 @@ int main()
   Parset parset("tMSWriterDAL.parset");
 
   {
-    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, 0);
+    const size_t fileNo = 0;
 
-    StreamableData *data = newStreamableData(parset, BEAM_FORMED_DATA, 0);
+    MSWriterDAL<float,3> writer("tMSWriterDAL_tmp.h5", parset, fileNo);
 
-    writer.write(data);
+    const ObservationSettings::BeamFormer::File &file =
+      parset.settings.beamFormer.files[fileNo];
 
-    delete data;
+    const ObservationSettings::BeamFormer::StokesSettings &sset =
+      file.coherent
+      ? parset.settings.beamFormer.coherentSettings
+      : parset.settings.beamFormer.incoherentSettings;
+
+    BeamFormedData data(
+        sset.nrSamples,
+        parset.settings.SAPs[file.sapNr].subbands.size(),
+        sset.nrChannels);
+
+    memset(data.samples.origin(), 0, data.samples.num_elements() * sizeof *data.samples.origin());
+
+    writer.write(&data);
 
     // Dump feedback data to stdout
     cout << writer.configuration() << endl;
