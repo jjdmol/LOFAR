@@ -8,6 +8,8 @@
 # observationID   observation number
 #
 # This script is called by OnlineControl to start an observation.
+#
+# $Id$
 
 if test "$LOFARROOT" == ""; then
   echo "LOFARROOT is not set! Exiting." >&2

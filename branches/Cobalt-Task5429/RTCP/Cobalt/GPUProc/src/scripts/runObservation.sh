@@ -4,6 +4,8 @@
 #
 # This script takes care of running all the commands surrounding mpirun.sh,
 # based on the given parset.
+#
+# $Id$
 
 
 ########  Functions  ########
