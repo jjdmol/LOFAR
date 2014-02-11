@@ -120,7 +120,7 @@ void Block::zeroRemainingSubbands() {
 
       for (size_t t = 0; t < nrSamples; ++t) {
         // Zero all channels for sample t
-        memset(&samples[t][subband.id.subband][0], 0, nrChannels * sizeof *samples.origin());
+        memset(&samples[t][subbandIdx][0], 0, nrChannels * sizeof *samples.origin());
       }
     }
   }
