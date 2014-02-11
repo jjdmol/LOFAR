@@ -300,7 +300,9 @@ namespace LOFAR
 
           // Forward block to MultiSender, who takes ownership.
           multiSender.append(subband);
-          ASSERT(!subband);
+
+          // If `subband' is still alive, it has been dropped instead of sent.
+          ASSERT(ps.realTime() || !subband); 
         }
 
         // Return outputData back to the workQueue.
