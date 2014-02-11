@@ -56,6 +56,7 @@
 
 #include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
+#include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
 
 #include <ApplCommon/PVSSDatapointDefs.h>
@@ -80,6 +81,10 @@ using namespace std;
 using boost::format;
 
 /* Tuning parameters */
+
+// Number of seconds to schedule for the allocation of resources. That is,
+// we start allocating resources at startTime - allocationTimeout.
+const time_t allocationTimeout = 10;
 
 // Deadline for the FinalMetaDataGatherer, in seconds
 const time_t finalMetaDataTimeout = 2 * 60;
@@ -448,6 +453,16 @@ int main(int argc, char **argv)
   LOG_INFO("===== LAUNCH =====");
 
   LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+
+  if (ps.realTime()) {
+    // Wait just before the obs starts to allocate resources,
+    // both the UDP sockets and the GPU buffers!
+    LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+
+    const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
+    WallClockTime waiter;
+    waiter.waitUntil(deadline);
+  }
 
   #pragma omp parallel sections num_threads(2)
   {
