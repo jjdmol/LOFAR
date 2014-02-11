@@ -672,25 +672,33 @@ namespace LOFAR
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix =
-              settings.beamFormer.doFlysEye ?
-              str(format("Observation.Beam[%u]") % i) :
-              str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            if (settings.beamFormer.doFlysEye) {
+              const string prefix = str(format("Observation.Beam[%u]") % i);
 
-            tab.direction.type    = getString(prefix + ".directionType", "J2000");
-            tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
-                                                         prefix + ".angle1"), 0.0);
-            tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
-                                                         prefix + ".angle2"), 0.0);
-            // Always store absolute angles. So this is for backwards compat.
-            if (!isDefined(prefix + ".absoluteAngle1"))
-              tab.direction.angle1 += settings.SAPs[i].direction.angle1;
-            if (!isDefined(prefix + ".absoluteAngle2"))
-              tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+              tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
+              tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
-            // The following two keys will not be present in fly's eye mode.
-            tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
-            tab.coherent              = getBool(prefix + ".coherent", true);
+              tab.dispersionMeasure     = 0.0;
+              tab.coherent              = true;
+            } else {
+              const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+
+              tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
+                                                           prefix + ".angle1"), 0.0);
+              tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
+                                                           prefix + ".angle2"), 0.0);
+
+              // Always store absolute angles. So this is for backwards compat.
+              if (!isDefined(prefix + ".absoluteAngle1"))
+                tab.direction.angle1 += settings.SAPs[i].direction.angle1;
+              if (!isDefined(prefix + ".absoluteAngle2"))
+                tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+
+              tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+              tab.coherent              = getBool(prefix + ".coherent", true);
+            }
 
             if (tab.coherent)
               sap.nrCoherent++;
