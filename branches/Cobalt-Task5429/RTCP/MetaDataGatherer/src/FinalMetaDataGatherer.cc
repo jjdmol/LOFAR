@@ -1,10 +1,23 @@
-//#  FinalMetaDataGatherer.cc:
+//# FinalMetaDataGatherer.cc:
+//# Copyright (C) 2012-2014
+//# ASTRON (Netherlands Institute for Radio Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
-//#  Copyright (C) 2002-2004
-//#  ASTRON (Netherlands Foundation for Research in Astronomy)
-//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//# This file is part of the LOFAR software suite.
+//# The LOFAR software suite is free software: you can redistribute it and/or
+//# modify it under the terms of the GNU General Public License as published
+//# by the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
 //#
-//#  $Id: Storage_main.cc 22339 2012-10-15 09:33:57Z mol $
+//# The LOFAR software suite is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+//#
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -193,7 +206,7 @@ int main(int argc, char *argv[])
 
     LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1]);
 
-    int				          observationID = boost::lexical_cast<int>(argv[1]);
+    int observationID = boost::lexical_cast<int>(argv[1]);
 
     PortBroker::createInstance(storageBrokerPort(observationID));
 
@@ -202,9 +215,13 @@ int main(int argc, char *argv[])
     PortBroker::ServerStream controlStream(resource);
 
     Parset parset(&controlStream);
-    logPrefix = str(boost::format("[obs %u] ") % parset.observationID());
+    logPrefix = str(boost::format("[FinalMetaDataGatherer obs %u] ") % parset.observationID());
 
-    string host     = parset.getString("OLAP.FinalMetaDataGatherer.database.host");
+    string host;
+    if (parset.isDefined("Cobalt.FinalMetaDataGatherer.database.host")
+      host = parset.getString("Cobalt.FinalMetaDataGatherer.database.host");
+    else // TODO: remove last OLAP key when BG/P is gone
+      host = parset.getString("OLAP.FinalMetaDataGatherer.database.host");
     string db       = "LOFAR_4";
     string user     = "paulus";
     string password = "boskabouter";
@@ -220,7 +237,7 @@ int main(int argc, char *argv[])
 
     OTDBconnection conn(user, password, db, host, port); 
     bool connected = conn.connect();
-    ASSERTSTR(connected, "Connnection failed");
+    ASSERTSTR(connected, "FinalMetaDataGatherer: Connnection failed");
 
     LOG_INFO_STR (logPrefix << "Retrieving hardware broken at observation start");
     vector<OTDBvalue> hardwareBrokenAtBegin = getHardwareTree(conn, timeStart);
@@ -234,10 +251,11 @@ int main(int argc, char *argv[])
     finalMetaData.write(controlStream);
 
   } catch (Exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
+    LOG_FATAL_STR("[FinalMetaDataGatherer obs unknown] Caught Exception: " << ex);
     return 1;
   }
 
-  LOG_INFO_STR("[obs unknown] Program end");
+  LOG_INFO_STR("[FinalMetaDataGatherer obs unknown] Program end");
   return 0;
 }
+
