@@ -783,6 +783,9 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.cc">
       <Filter>src\cuda\SubbandProcs\steps</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc">
+      <Filter>test\cuda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1112,6 +1115,9 @@
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh" />
+    <None Include="..\..\GPUProc\test\cuda\tBandPassCorrection.sh">
+      <Filter>test\cuda</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\GPUProc\test\CMakeLists.txt">
