@@ -78,12 +78,13 @@ void runKernel(gpu::Function kfunc,
   kfunc.setArg(1, devInput);
   kfunc.setArg(2, devBandPassFactors);
 
-  // This test is fragile for it no uses the Kernel class interface
-  gpu::Grid globalWorkSize(NR_SAMPLES_PER_CHANNEL / 16,
+  // This test is fragile for it not uses the Kernel class interface
+  gpu::Grid globalWorkSize(
                            NR_CHANNELS_2 / 16,
-                           NR_CHANNELS_1);
+                           NR_CHANNELS_1,
+                           NR_SAMPLES_PER_CHANNEL / 16);
 
-  gpu::Block localWorkSize(16, 16, 1);
+  gpu::Block localWorkSize(16, 1, 16);
 
   
   // Overwrite devOutput, so result verification is more reliable.
