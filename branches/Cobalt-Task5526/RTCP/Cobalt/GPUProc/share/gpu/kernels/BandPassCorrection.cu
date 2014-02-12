@@ -30,8 +30,8 @@
  * into account:
  * - @c NR_POLARIZATIONS: 2
  * - @c NR_STATIONS: > 0
- * - @c NR_CHANNELS_1: > 0 
- * - @c NR_CHANNELS_2: a multiple of 16
+ * - @c NR_CHANNELS_1: a multiple of 16 
+ * - @c NR_CHANNELS_2: > 0 
  * - @c NR_SAMPLES_PER_CHANNEL: > a multiple of 16
  * - @c NR_BITS_PER_SAMPLE: 8 or 16
  * - @c DO_BANDPASS_CORRECTION: if defined, perform bandpass correction
@@ -47,16 +47,16 @@
 #error Precondition violated: NR_STATIONS > 0
 #endif
 
-#if !(NR_CHANNELS_1 > 0)
-#error Precondition violated: NR_CHANNELS_1 > 0
+#if !(NR_CHANNELS_1 > 0 && NR_CHANNELS_1 % 16 == 0)
+#error Precondition violated: NR_CHANNELS_1 > 0 && NR_CHANNELS_1 % 16 == 0
 #endif
 
-//#if !(NR_CHANNELS_2 % 16 == 0)
-//#error Precondition violated: NR_CHANNELS_2 % 16 == 0
-//#endif
+#if !(NR_CHANNELS_2 > 0)
+#error Precondition violated: NR_CHANNELS_2 > 0
+#endif
 
-#if !(NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0)
-#error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0 && NR_SAMPLES_PER_CHANNEL % 16 == 0
+#if !(NR_SAMPLES_PER_CHANNEL > 0)
+#error Precondition violated: NR_SAMPLES_PER_CHANNEL > 0
 #endif
 
 #if !(NR_BITS_PER_SAMPLE == 16 || NR_BITS_PER_SAMPLE == 8)
@@ -76,6 +76,9 @@ typedef  const float (* BandPassFactorsType)[NR_CHANNELS_1 * NR_CHANNELS_2];
  *   hence it can be fully compensated for.
  * - Transpose the data so that the samples for each channel are placed
  *   consecutively in memory with both polarization next to each other.
+ * - Note: This kernel is optimized for performance in dims samples and channel_1
+ *   Previous version was optimized for channel_2 (still supported)
+ *   
  *
  * @param[out] correctedDataPtr    pointer to output data of ::OutputDataType,
  *                                 a 4D array  [station][channels1 * channels2][samples][pol]
@@ -104,14 +107,6 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
   unsigned idx_channel1 = blockIdx.y * blockDim.y + threadIdx.y;
   unsigned chan2 = blockIdx.z * blockDim.z + threadIdx.z;
   
-  //unsigned station = blockIdx.z * blockDim.z + threadIdx.z;
-  // Shared memory to perform a transpose in shared memory
-  // one too wide to avoid bank-conflicts on read
-  // 16 by 16 limitation for the channels2 and samples per channel are caused by the
-  // dimensions of this array
-  // TODO: Increasing to 32 x 32 allows for a speedup of 13%
-  __shared__ fcomplex tmp[16][16 + 1][NR_POLARIZATIONS];
-
   for (unsigned station = 0; station < NR_STATIONS; ++station)
   {
     // Read from global memory in the quickest dimension (optimal)
@@ -120,7 +115,6 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
     unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + chan2;
 
 #if defined DO_BANDPASS_CORRECTION
-    // idx_channel1 steps with NR_CHANNELS_2 tru the channel weights 
     float weight((*bandPassFactors)[chan_index]);
     sampleX.x *= weight;
     sampleX.y *= weight;
@@ -130,7 +124,6 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 
     (*outputData)[station][chan_index][sample][0] = sampleX; 
     (*outputData)[station][chan_index][sample][1] = sampleY; 
-
   }
 }
 }
