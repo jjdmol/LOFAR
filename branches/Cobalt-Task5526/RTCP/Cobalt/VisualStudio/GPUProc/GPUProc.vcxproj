@@ -217,6 +217,7 @@
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcess.cc" />
     <ClCompile Include="..\..\GPUProc\src\Storage\StorageProcesses.cc" />
     <ClCompile Include="..\..\GPUProc\test\cmpfloat.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tBeamFormer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokes.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.cc" />
@@ -284,6 +285,7 @@
     <None Include="..\..\GPUProc\src\rtcp.log_prop" />
     <None Include="..\..\GPUProc\test\cmpfloat.py" />
     <None Include="..\..\GPUProc\test\cuda\CMakeLists.txt" />
+    <None Include="..\..\GPUProc\test\cuda\tBandPassCorrection.sh" />
     <None Include="..\..\GPUProc\test\cuda\tBeamFormer.sh" />
     <None Include="..\..\GPUProc\test\cuda\tCoherentStokes.sh" />
     <None Include="..\..\GPUProc\test\cuda\tCoherentStokesTranspose.sh" />

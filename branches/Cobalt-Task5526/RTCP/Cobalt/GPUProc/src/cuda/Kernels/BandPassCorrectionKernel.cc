@@ -73,11 +73,7 @@ namespace LOFAR
       const unsigned nrChannels2 = params.nrHighResolutionChannels / params.nrDelayCompensationChannels;
 
       // The cu kernel requires a square for the (x,y) block dimensions.
-      //
-      // Since the block is connected to (x,y) = (nrChannels2,nrSamples) work division,
-      // we need smaller blocks than 16x16 if nrChannels2 is too small.
-      const unsigned xyDim = std::min(nrChannels2, 16U);
-      
+    
       setEnqueueWorkSizes( gpu::Grid(params.nrSamplesPerChannel,
                                      params.nrDelayCompensationChannels,
                                      nrChannels2),

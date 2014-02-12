@@ -117,40 +117,20 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
     // Read from global memory in the quickest dimension (optimal)
     fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
     fcomplex sampleY = (*inputData)[station][1][idx_channel1][sample][chan2];
+    unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + chan2;
 
 #if defined DO_BANDPASS_CORRECTION
     // idx_channel1 steps with NR_CHANNELS_2 tru the channel weights 
-    float weight((*bandPassFactors)[idx_channel1 * NR_CHANNELS_2 + chan2]);
+    float weight((*bandPassFactors)[chan_index]);
     sampleX.x *= weight;
     sampleX.y *= weight;
     sampleY.x *= weight;
     sampleY.y *= weight;
 #endif
 
-    // Write the data to shared memory
-    //tmp[threadIdx.x][threadIdx.z][0] = sampleX;
-    //tmp[threadIdx.x][threadIdx.z][1] = sampleY;
-    tmp[threadIdx.y][threadIdx.x][0] = sampleX;
-    tmp[threadIdx.y][threadIdx.x][1] = sampleY;
-    __syncthreads();  // assures all writes are done
+    (*outputData)[station][chan_index][sample][0] = sampleX; 
+    (*outputData)[station][chan_index][sample][1] = sampleY; 
 
-    // Now write from shared to global memory.
-    //         for loop index step with NR_CHANNELS_2  
-    //         + The blockidx is used to parallelize work items larged then the shared memory
-    //         + The slow changing threadIdx 
-    unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + chan2;
-
-
-    //unsigned chan_index = idx_channel1 * NR_CHANNELS_2 +
-    //  blockIdx.z * blockDim.z + threadIdx.x;
-    // Use the threadidx.x for the highest array index: coalesced writes to the global memory
-    //         Use the blockIdx to select the correct part of the work items
-    //         + The fast changin threadIdx to allow fast writes 
-    unsigned sample_index = sample;
-
-    (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.y][threadIdx.x][0];  // The threadIdx.y in shared mem is not a problem
-    (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.y][threadIdx.x][1];
-    __syncthreads();  // ensure are writes are done. The next for itteration reuses the array
   }
 }
 }
