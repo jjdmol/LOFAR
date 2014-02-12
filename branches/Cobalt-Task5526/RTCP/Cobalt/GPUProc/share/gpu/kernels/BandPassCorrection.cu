@@ -100,9 +100,10 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 #endif
 
   // fasted dims
-  unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
-  unsigned idx_channel1 = blockIdx.z * blockDim.z + threadIdx.z;
+  unsigned sample = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned idx_channel1 = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned chan2 = blockIdx.z * blockDim.z + threadIdx.z;
+  
   //unsigned station = blockIdx.z * blockDim.z + threadIdx.z;
   // Shared memory to perform a transpose in shared memory
   // one too wide to avoid bank-conflicts on read
@@ -127,22 +128,22 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
 #endif
 
     // Write the data to shared memory
-    tmp[threadIdx.y][threadIdx.x][0] = sampleX;
-    tmp[threadIdx.y][threadIdx.x][1] = sampleY;
+    tmp[threadIdx.x][threadIdx.z][0] = sampleX;
+    tmp[threadIdx.x][threadIdx.z][1] = sampleY;
     __syncthreads();  // assures all writes are done
 
     // Now write from shared to global memory.
     //         for loop index step with NR_CHANNELS_2  
     //         + The blockidx is used to parallelize work items larged then the shared memory
     //         + The slow changing threadIdx 
-    unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.x * blockDim.x + threadIdx.y;
+    unsigned chan_index = idx_channel1 * NR_CHANNELS_2 + blockIdx.z * blockDim.z + threadIdx.x;
     // Use the threadidx.x for the highest array index: coalesced writes to the global memory
     //         Use the blockIdx to select the correct part of the work items
     //         + The fast changin threadIdx to allow fast writes 
-    unsigned sample_index = blockIdx.y * blockDim.y + threadIdx.x;
+    unsigned sample_index = blockIdx.x * blockDim.x + threadIdx.z;
 
-    (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.x][threadIdx.y][0];  // The threadIdx.y in shared mem is not a problem
-    (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.x][threadIdx.y][1];
+    (*outputData)[station][chan_index][sample_index][0] = tmp[threadIdx.z][threadIdx.x][0];  // The threadIdx.y in shared mem is not a problem
+    (*outputData)[station][chan_index][sample_index][1] = tmp[threadIdx.z][threadIdx.x][1];
     __syncthreads();  // ensure are writes are done. The next for itteration reuses the array
   }
 }

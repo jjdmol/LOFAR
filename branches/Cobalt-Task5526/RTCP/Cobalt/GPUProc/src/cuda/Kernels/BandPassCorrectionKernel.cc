@@ -78,10 +78,10 @@ namespace LOFAR
       // we need smaller blocks than 16x16 if nrChannels2 is too small.
       const unsigned xyDim = std::min(nrChannels2, 16U);
       
-      setEnqueueWorkSizes( gpu::Grid(nrChannels2,
-                                     params.nrSamplesPerChannel,
-                                     params.nrDelayCompensationChannels),
-                           gpu::Block(xyDim, xyDim, 1) );
+      setEnqueueWorkSizes( gpu::Grid(params.nrSamplesPerChannel,
+                                     params.nrDelayCompensationChannels,
+                                     nrChannels2),
+                                     gpu::Block(xyDim, 1, xyDim));
 
       size_t nrSamples = params.nrStations * params.nrSamplesPerChannel *
                          params.nrHighResolutionChannels * NR_POLARIZATIONS;
