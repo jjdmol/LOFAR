@@ -187,7 +187,7 @@ namespace LOFAR
       // while the SSH connection is alive. If not, there's no point in waiting
       // for a connection that can never be established.
       while(!stream) {
-        if (deadline > 0 && time(0) < deadline)
+        if (deadline > 0 && time(0) > deadline)
           return;
 
         if (sshconn.isDone())
