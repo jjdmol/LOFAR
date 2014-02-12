@@ -80,7 +80,7 @@ namespace LOFAR
       
       setEnqueueWorkSizes( gpu::Grid(nrChannels2,
                                      params.nrSamplesPerChannel,
-                                     params.nrStations),
+                                     params.nrDelayCompensationChannels),
                            gpu::Block(xyDim, xyDim, 1) );
 
       size_t nrSamples = params.nrStations * params.nrSamplesPerChannel *

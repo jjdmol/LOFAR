@@ -102,8 +102,8 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
   // fasted dims
   unsigned chan2        = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned sample       = blockIdx.y * blockDim.y + threadIdx.y;
-  unsigned station      = blockIdx.z * blockDim.z + threadIdx.z;
-
+  unsigned idx_channel1 = blockIdx.z * blockDim.z + threadIdx.z;
+  //unsigned station = blockIdx.z * blockDim.z + threadIdx.z;
   // Shared memory to perform a transpose in shared memory
   // one too wide to avoid bank-conflicts on read
   // 16 by 16 limitation for the channels2 and samples per channel are caused by the
@@ -111,7 +111,7 @@ __global__ void bandPassCorrection( fcomplex * outputDataPtr,
   // TODO: Increasing to 32 x 32 allows for a speedup of 13%
   __shared__ fcomplex tmp[16][16 + 1][NR_POLARIZATIONS];
 
-  for (unsigned idx_channel1 = 0; idx_channel1 < NR_CHANNELS_1; ++idx_channel1)
+  for (unsigned station = 0; station < NR_STATIONS; ++station)
   {
     // Read from global memory in the quickest dimension (optimal)
     fcomplex sampleX = (*inputData)[station][0][idx_channel1][sample][chan2];
