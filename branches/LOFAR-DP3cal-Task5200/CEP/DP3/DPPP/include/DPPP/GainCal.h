@@ -100,6 +100,15 @@ namespace {
 
 
     private:
+      struct StefVecs {
+        casa::Matrix<casa::DComplex> g;
+        casa::Matrix<casa::DComplex> gold;
+        casa::Matrix<casa::DComplex> gx;
+        casa::Matrix<casa::DComplex> gxx;
+        casa::Matrix<casa::DComplex> h;
+        casa::Matrix<casa::DComplex> z;
+      };
+
       void exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
                           const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
 
@@ -132,6 +141,21 @@ namespace {
       void stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
                        const casa::Bool* flag, const uint nSt, const uint nCr,
                        const uint nBl);
+
+      // Do a unpolarized stefcal
+      void stefcalunpol2(dcomplex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag);
+
+      // Do a polarized stefcal
+      void stefcalpol2(dcomplex* model, casa::Complex* data, float* weight,
+                       const casa::Bool* flag);
+
+      // Find all antennas with data
+      void setAntUsedNotFlagged (const casa::Bool* flag);
+
+      // Fills the matrices itsVis and itsMVis
+      void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag);
 
       void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
@@ -170,14 +194,19 @@ namespace {
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
 
-      casa::Matrix<casa::DComplex> vis;
-      casa::Matrix<casa::DComplex> mvis;
+      casa::Matrix<casa::DComplex> itsOldVis;
+      casa::Matrix<casa::DComplex> itsOldMVis;
 
-      casa::Matrix<casa::Complex> casa_vis;
-      casa::Matrix<casa::DComplex> casa_mvis;
+      casa::Array<casa::DComplex> itsVis;
+      casa::Array<casa::DComplex> itsMVis;
 
       vector<vector<vector<casa::DComplex> > > itsSols; // for every timeslot, nSt gains with vector of length nCr values
       vector<vector<casa::DComplex > > itsDiagSols; // for every timeslot, 2*nSt gains
+      vector<vector<int> > itsAntUseds;
+      vector<vector<int> > itsAntMaps;
+
+      StefVecs         iS;
+
       casa::Vector<casa::String> itsAntennaUsedNames;
       map<string,int>         itsParmIdMap; //# -1 = new parm name
 
