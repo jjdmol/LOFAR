@@ -201,8 +201,6 @@ namespace LOFAR {
       os << " GainCal " << itsName << endl;
     }
 
-
-
     bool GainCal::process (const DPBuffer& bufin)
     {
       itsTimer.start();
@@ -277,17 +275,17 @@ namespace LOFAR {
       //cout<<"storage.model[4]="<<storage.model[4]<<endl;
 
       if (itsMode=="diaggain") {
-        stefcalunpol(&storage.model[0], data, weight, flag, nCr, nSt, nBl);
+        stefcalunpol(&storage.model[0], data, weight, flag);
       } else {
-        stefcalpol2(&storage.model[0], data, weight, flag);
+        stefcalpol(&storage.model[0], data, weight, flag);
       }
 
       itsTimer.stop();
       getNextStep()->process(buf);
       return false;
     }
-
-    void GainCal::stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
+/*
+    void GainCal::stefcalunpolold (dcomplex* model, casa::Complex* data, float* weight,
     const Bool* flag, uint nCr, uint nSt, uint nBl) {
       itsOldVis.resize(nSt*2,nSt*2);
       itsOldMVis.resize(nSt*2,nSt*2);
@@ -380,7 +378,7 @@ namespace LOFAR {
 
       itsDiagSols.push_back(g);
     }
-
+*/
     void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
@@ -466,411 +464,11 @@ namespace LOFAR {
       itsAntMaps.push_back(antMap);
     }
 
-    void GainCal::stefcalpol2 (dcomplex* model, casa::Complex* data, float* weight,
-                              const Bool* flag) {
-      setAntUsedNotFlagged(flag);
-      fillMatrices(model,data,weight,flag);
-
-      double f2 = -1.0;
-      double f3 = -0.5;
-      double f1 = 1 - f2 - f3;
-      double f2q = -0.5;
-      double f1q = 1 - f2q;
-      double omega = 0.5;
-      uint nomega = 24;
-      double c1 = 0.5;
-      double c2 = 1.2;
-      double dg  =1.0e30;
-      double dgx =1.0e30;
-      double dgxx;
-      bool threestep = false;
-
-      uint nSt=itsMVis.shape()[0];
-      uint nCr=4;
-
-      iS.g.resize(nSt,nCr);
-      iS.gold.resize(nSt,nCr);
-      iS.gx.resize(nSt,nCr);
-      iS.gxx.resize(nSt,nCr);
-      iS.h.resize(nSt,nCr);
-      iS.z.resize(nSt,nCr);
-
-      Vector<DComplex> w(nCr);
-      Vector<DComplex> t(nCr);
-
-      // Initialize all vectors
-      for (uint st=0;st<nSt;++st) {
-        iS.g(st,0)=1.;
-        iS.g(st,1)=0.;
-        iS.g(st,2)=0.;
-        iS.g(st,3)=1.;
-      }
-
-      iS.gx = iS.g;
-      int sstep=0;
-
-      uint iter=0;
-      for (;iter<itsMaxIter;++iter) {
-        //cout<<"iter+1 = "<<iter+1<<endl;
-        iS.gold=iS.g;
-
-        for (uint st=0;st<nSt;++st) {
-          iS.h(st,0)=conj(iS.g(st,0));
-          iS.h(st,1)=conj(iS.g(st,1));
-          iS.h(st,2)=conj(iS.g(st,2));
-          iS.h(st,3)=conj(iS.g(st,3));
-        }
-
-        for (uint st1=0;st1<nSt;++st1) {
-          for (uint st2=0;st2<nSt;++st2) {
-            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,0)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,0));
-            iS.z(st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,0)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,0));
-            iS.z(st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,0)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,0));
-            iS.z(st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,0)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,0));
-          }
-
-          w=0;
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
-            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
-            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
-          }
-          w(2)=conj(w(1));
-
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,0));
-            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,0));
-          }
-          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
-          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
-          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
-          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
-          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
-        }
-
-        if (iter % 2 == 1) {
-          dgxx = dgx;
-          dgx  = dg;
-
-          double fronormdiff=0;
-          double fronormg=0;
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
-              fronormdiff+=abs(diff*diff);
-              fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
-            }
-          }
-          fronormdiff=sqrt(fronormdiff);
-          fronormg=sqrt(fronormg);
-
-          dg = fronormdiff/fronormg;
-          if (itsDebugLevel>1) {
-            cout<<"dg="<<dg<<endl;
-          }
-
-          if (dg <= itsTolerance) {
-            break;
-          }
-
-          if (itsDebugLevel>2) {
-            cout<<"Averaged"<<endl;
-          }
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
-            }
-          }
-
-          if (!threestep) {
-            threestep = (iter+1 >= nomega) ||
-                ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>2) {
-              cout<<"Threestep="<<boolalpha<<threestep<<endl;
-            }
-          }
-
-          if (threestep) {
-            if (itsDebugLevel>2) {
-              cout<<"threestep"<<endl;
-            }
-            if (sstep <= 0) {
-              if (dg <= c1 * dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=c1*dgx"<<endl;
-                }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
-                  }
-                }
-              } else if (dg <= dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=dgx"<<endl;
-                }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
-                  }
-                }
-              } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=c2*dgx"<<endl;
-                }
-                iS.g = iS.gx;
-                sstep = 1;
-              } else {
-                //cout<<"else"<<endl;
-                iS.g = iS.gxx;
-                sstep = 2;
-              }
-            } else {
-              if (itsDebugLevel>2) {
-                cout<<"no sstep"<<endl;
-              }
-              sstep = sstep - 1;
-            }
-          }
-          iS.gxx = iS.gx;
-          iS.gx = iS.g;
-        }
-      }
-      if (dg > itsTolerance) {
-        cerr<<"!";
-      }
-
-      if (itsDebugLevel>1) {
-        cout<<"iter:"<<iter<<endl;
-      }
-
-      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
-      // Set phase of first gain to zero
-      for (uint st=0;st<nSt;++st) {
-        for (uint cr=0;cr<nCr;++cr) {
-           iS.g(st,cr)*=p;
-        }
-      }
-
-      for (uint ant2=0;ant2<nSt;++ant2) {
-        //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
-        //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-      }
-
-      // Stefcal terminated (either by maxiter or by converging)
-      // Let's save G...
-      //itsSols.push_back(g);
-
-      cout<<"g="<<iS.g<<endl;
-    }
-
-
-    void GainCal::stefcalunpol2 (dcomplex* model, casa::Complex* data, float* weight,
-                              const Bool* flag) {
-      setAntUsedNotFlagged(flag);
-      fillMatrices(model,data,weight,flag);
-
-      double f2 = -1.0;
-      double f3 = -0.5;
-      double f1 = 1 - f2 - f3;
-      double f2q = -0.5;
-      double f1q = 1 - f2q;
-      double omega = 0.5;
-      uint nomega = 24;
-      double c1 = 0.5;
-      double c2 = 1.2;
-      double dg  =1.0e30;
-      double dgx =1.0e30;
-      double dgxx;
-      bool threestep = false;
-
-      uint nSt=itsMVis.shape()[0];
-      uint nCr=4;
-
-      iS.g.resize(nSt,nCr);
-      iS.gold.resize(nSt,nCr);
-      iS.gx.resize(nSt,nCr);
-      iS.gxx.resize(nSt,nCr);
-      iS.h.resize(nSt,nCr);
-      iS.z.resize(nSt,nCr);
-
-      Vector<DComplex> w(nCr);
-      Vector<DComplex> t(nCr);
-
-      // Initialize all vectors
-      for (uint st=0;st<nSt;++st) {
-        iS.g(st,0)=1.;
-        iS.g(st,1)=0.;
-        iS.g(st,2)=0.;
-        iS.g(st,3)=1.;
-      }
-
-      iS.gx = iS.g;
-      int sstep=0;
-
-      uint iter=0;
-      for (;iter<itsMaxIter;++iter) {
-        //cout<<"iter+1 = "<<iter+1<<endl;
-        iS.gold=iS.g;
-
-        for (uint st=0;st<nSt;++st) {
-          iS.h(st,0)=conj(iS.g(st,0));
-          iS.h(st,1)=conj(iS.g(st,1));
-          iS.h(st,2)=conj(iS.g(st,2));
-          iS.h(st,3)=conj(iS.g(st,3));
-        }
-
-        for (uint st1=0;st1<nSt;++st1) {
-          for (uint st2=0;st2<nSt;++st2) {
-            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,0)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,0));
-            iS.z(st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,0)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,0));
-            iS.z(st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,0)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,0));
-            iS.z(st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,0)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,0));
-          }
-
-          w=0;
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
-            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
-            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
-          }
-          w(2)=conj(w(1));
-
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,0));
-            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,0));
-          }
-          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
-          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
-          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
-          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
-          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
-        }
-
-        if (iter % 2 == 1) {
-          dgxx = dgx;
-          dgx  = dg;
-
-          double fronormdiff=0;
-          double fronormg=0;
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
-              fronormdiff+=abs(diff*diff);
-              fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
-            }
-          }
-          fronormdiff=sqrt(fronormdiff);
-          fronormg=sqrt(fronormg);
-
-          dg = fronormdiff/fronormg;
-          if (itsDebugLevel>1) {
-            cout<<"dg="<<dg<<endl;
-          }
-
-          if (dg <= itsTolerance) {
-            break;
-          }
-
-          if (itsDebugLevel>2) {
-            cout<<"Averaged"<<endl;
-          }
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
-            }
-          }
-
-          if (!threestep) {
-            threestep = (iter+1 >= nomega) ||
-                ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>2) {
-              cout<<"Threestep="<<boolalpha<<threestep<<endl;
-            }
-          }
-
-          if (threestep) {
-            if (itsDebugLevel>2) {
-              cout<<"threestep"<<endl;
-            }
-            if (sstep <= 0) {
-              if (dg <= c1 * dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=c1*dgx"<<endl;
-                }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
-                  }
-                }
-              } else if (dg <= dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=dgx"<<endl;
-                }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
-                  }
-                }
-              } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>2) {
-                  cout<<"dg<=c2*dgx"<<endl;
-                }
-                iS.g = iS.gx;
-                sstep = 1;
-              } else {
-                //cout<<"else"<<endl;
-                iS.g = iS.gxx;
-                sstep = 2;
-              }
-            } else {
-              if (itsDebugLevel>2) {
-                cout<<"no sstep"<<endl;
-              }
-              sstep = sstep - 1;
-            }
-          }
-          iS.gxx = iS.gx;
-          iS.gx = iS.g;
-        }
-      }
-      if (dg > itsTolerance) {
-        cerr<<"!";
-      }
-
-      if (itsDebugLevel>1) {
-        cout<<"iter:"<<iter<<endl;
-      }
-
-      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
-      // Set phase of first gain to zero
-      for (uint st=0;st<nSt;++st) {
-        for (uint cr=0;cr<nCr;++cr) {
-           iS.g(st,cr)*=p;
-        }
-      }
-
-      for (uint ant2=0;ant2<nSt;++ant2) {
-        //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
-        //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-      }
-
-      // Stefcal terminated (either by maxiter or by converging)
-      // Let's save G...
-      //itsSols.push_back(g);
-
-      cout<<"g="<<iS.g<<endl;
-    }
-
     void GainCal::stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
-                              const Bool* flag, uint nCr, uint nSt, uint nBl) {
+                              const Bool* flag) {
+      setAntUsedNotFlagged(flag);
+      fillMatrices(model,data,weight,flag);
+
       double f2 = -1.0;
       double f3 = -0.5;
       double f1 = 1 - f2 - f3;
@@ -885,109 +483,72 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
 
-      vector<vector<DComplex> > g(nSt), gold(nSt), gx(nSt), gxx(nSt);
-      vector<vector<DComplex> > h(nSt);
-      vector<DComplex> z(4);
-      vector<vector<DComplex> > w(nSt);
-      vector<vector<DComplex> > tt(nSt);
+      uint nSt=itsMVis.shape()[0];
+      uint nCr=4;
+
+      iS.g.resize(nSt,nCr);
+      iS.gold.resize(nSt,nCr);
+      iS.gx.resize(nSt,nCr);
+      iS.gxx.resize(nSt,nCr);
+      iS.h.resize(nSt,nCr);
+      iS.z.resize(nSt,nCr);
+
+      Vector<DComplex> w(nCr);
+      Vector<DComplex> t(nCr);
 
       // Initialize all vectors
-      if (itsPropagateSolutions && itsSols.size()>0) {
-        g = itsSols[itsSols.size()-1];
-      } else {
-        for (uint st=0;st<nSt;++st) {
-          vector<DComplex> gst(4,0.0);
-          gst[0]=1.0;
-          gst[3]=1.0;
-          g[st] = gst;
-        }
+      for (uint st=0;st<nSt;++st) {
+        iS.g(st,0)=1.;
+        iS.g(st,1)=0.;
+        iS.g(st,2)=0.;
+        iS.g(st,3)=1.;
       }
 
-      gx = g;
+      iS.gx = iS.g;
       int sstep=0;
 
+      uint ch=0;
       uint iter=0;
       for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
-        gold=g;
-        h=g;
+        iS.gold=iS.g;
+
         for (uint st=0;st<nSt;++st) {
-          h[st][0]=conj(h[st][0]);
-          h[st][1]=conj(h[st][1]);
-          h[st][2]=conj(h[st][2]);
-          h[st][3]=conj(h[st][3]);
-
-          w[st] =vector<DComplex>(4);
-          tt[st]=vector<DComplex>(4);
+          iS.h(st,0)=conj(iS.g(st,0));
+          iS.h(st,1)=conj(iS.g(st,1));
+          iS.h(st,2)=conj(iS.g(st,2));
+          iS.h(st,3)=conj(iS.g(st,3));
         }
 
-        for (uint bl=0;bl<nBl;++bl) {
-          // Assume nCh = 1 for now
-
-          uint ant1=info().getAnt1()[bl];
-          uint ant2=info().getAnt2()[bl];
-          if (ant1==ant2 || flag[bl*nCr]) {
-            continue;
+        for (uint st1=0;st1<nSt;++st1) {
+          for (uint st2=0;st2<nSt;++st2) {
+            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,ch));
+            iS.z(st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,ch));
+            iS.z(st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,ch));
+            iS.z(st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,ch));
           }
 
-          DComplex vis[4];
-          DComplex wgt[4];
-          for (uint cr=0;cr<4;++cr) {
-            wgt[cr] = weight[bl*nCr+cr];
-            vis[cr] = data[bl*nCr+cr];
+          w=0;
+          t=0;
+          for (uint st2=0;st2<nSt;++st2) {
+            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
+            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
+            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
           }
-          //Complex *vis =&data[bl*nCr];
-          dcomplex *mvis=&model[bl*nCr];
+          w(2)=conj(w(1));
 
-          // Upper diagonal, ant1 < ant2
-          //cout<<"mvis0"<<mvis[0]<<endl;
-          z[0] = h[ant1][0] * mvis[0] * sqrt(wgt[0]) + h[ant1][2] * mvis[2] * sqrt(wgt[2]);
-          z[1] = h[ant1][0] * mvis[1] * sqrt(wgt[1]) + h[ant1][2] * mvis[3] * sqrt(wgt[3]);
-          z[2] = h[ant1][1] * mvis[0] * sqrt(wgt[0]) + h[ant1][3] * mvis[2] * sqrt(wgt[2]);
-          z[3] = h[ant1][1] * mvis[1] * sqrt(wgt[1]) + h[ant1][3] * mvis[3] * sqrt(wgt[3]);
-
-          w[ant2][0] += conj(z[0]) * z[0] + conj(z[2]) * z[2];
-          w[ant2][1] += conj(z[0]) * z[1] + conj(z[2]) * z[3];
-          w[ant2][2] += conj(z[1]) * z[0] + conj(z[3]) * z[2];
-          w[ant2][3] += conj(z[1]) * z[1] + conj(z[3]) * z[3];
-
-          tt[ant2][0] += conj(z[0]) * vis[0] * sqrt(wgt[0]) + conj(z[2]) * vis[2] * sqrt(wgt[2]);
-          tt[ant2][1] += conj(z[0]) * vis[1] * sqrt(wgt[1]) + conj(z[2]) * vis[3] * sqrt(wgt[3]);
-          tt[ant2][2] += conj(z[1]) * vis[0] * sqrt(wgt[0]) + conj(z[3]) * vis[2] * sqrt(wgt[2]);
-          tt[ant2][3] += conj(z[1]) * vis[1] * sqrt(wgt[1]) + conj(z[3]) * vis[3] * sqrt(wgt[3]);
-
-          // Lower diagonal, ant1 > ant2
-          z[0] = h[ant2][0] * conj(mvis[0]) * sqrt(wgt[0]) + h[ant2][2] * conj(mvis[1]) * sqrt(wgt[1]);
-          z[1] = h[ant2][0] * conj(mvis[2]) * sqrt(wgt[2]) + h[ant2][2] * conj(mvis[3]) * sqrt(wgt[3]);
-          z[2] = h[ant2][1] * conj(mvis[0]) * sqrt(wgt[0]) + h[ant2][3] * conj(mvis[1]) * sqrt(wgt[1]);
-          z[3] = h[ant2][1] * conj(mvis[2]) * sqrt(wgt[2]) + h[ant2][3] * conj(mvis[3]) * sqrt(wgt[3]);
-
-          w[ant1][0] += conj(z[0]) * z[0] + conj(z[2]) * z[2];
-          w[ant1][1] += conj(z[0]) * z[1] + conj(z[2]) * z[3];
-          w[ant1][2] += conj(z[1]) * z[0] + conj(z[3]) * z[2];
-          w[ant1][3] += conj(z[1]) * z[1] + conj(z[3]) * z[3];
-
-          tt[ant1][0] += conj(z[0] * vis[0] * sqrt(wgt[0]) + z[2] * vis[1] * sqrt(wgt[1]));
-          tt[ant1][1] += conj(z[0] * vis[2] * sqrt(wgt[2]) + z[2] * vis[3] * sqrt(wgt[3]));
-          tt[ant1][2] += conj(z[1] * vis[0] * sqrt(wgt[0]) + z[3] * vis[1] * sqrt(wgt[1]));
-          tt[ant1][3] += conj(z[1] * vis[2] * sqrt(wgt[2]) + z[3] * vis[3] * sqrt(wgt[3]));
-        }
-
-
-        for (uint ant2=0;ant2<nSt;++ant2) {
-          //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
-          //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-        }
-        for (uint ant2=0;ant2<nSt;++ant2) {
-          //cout<<"tt["<<ant2<<"]={"<<tt[ant2][0]<<", "<<tt[ant2][1]<<", "<<tt[ant2][2]<<", "<<tt[ant2][3]<<"}"<<endl;
-        }
-
-        for (uint ant=0;ant<nSt;++ant) {
-          DComplex invdet= 1./(w[ant][0] * w [ant][3] - w[ant][1]*w[ant][2]);
-          g[ant][0] = invdet * ( w[ant][3] * tt[ant][0] - w[ant][1] * tt[ant][2] );
-          g[ant][1] = invdet * ( w[ant][3] * tt[ant][1] - w[ant][1] * tt[ant][3] );
-          g[ant][2] = invdet * ( w[ant][0] * tt[ant][2] - w[ant][2] * tt[ant][0] );
-          g[ant][3] = invdet * ( w[ant][0] * tt[ant][3] - w[ant][2] * tt[ant][1] );
+          t=0;
+          for (uint st2=0;st2<nSt;++st2) {
+            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,ch));
+            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,ch));
+            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,ch));
+            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,ch));
+          }
+          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
+          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
+          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
+          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
+          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
         }
 
         if (iter % 2 == 1) {
@@ -998,82 +559,98 @@ namespace LOFAR {
           double fronormg=0;
           for (uint ant=0;ant<nSt;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
-              DComplex diff=g[ant][cr]-gold[ant][cr];
+              DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
               fronormdiff+=abs(diff*diff);
-              fronormg+=abs(g[ant][cr]*g[ant][cr]);
+              fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
             }
           }
           fronormdiff=sqrt(fronormdiff);
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
+          if (itsDebugLevel>1) {
+            cout<<"dg="<<dg<<endl;
+          }
 
           if (dg <= itsTolerance) {
             break;
           }
 
+          if (itsDebugLevel>2) {
+            cout<<"Averaged"<<endl;
+          }
           for (uint ant=0;ant<nSt;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
-              g[ant][cr] = (1-omega) * g[ant][cr] + omega * gold[ant][cr];
+              iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
             }
           }
 
           if (!threestep) {
             threestep = (iter+1 >= nomega) ||
                 ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            //cout<<"Threestep="<<boolalpha<<threestep<<endl;
+            if (itsDebugLevel>2) {
+              cout<<"Threestep="<<boolalpha<<threestep<<endl;
+            }
           }
 
           if (threestep) {
-            //cout<<"threestep"<<endl;
+            if (itsDebugLevel>2) {
+              cout<<"threestep"<<endl;
+            }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
-                //cout<<"dg<=c1*dgx"<<endl;
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=c1*dgx"<<endl;
+                }
                 for (uint ant=0;ant<nSt;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
-                    g[ant][cr] = f1q * g[ant][cr] + f2q * gx[ant][cr];
+                    iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
                   }
                 }
               } else if (dg <= dgx) {
-                //cout<<"dg<=dgx"<<endl;
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=dgx"<<endl;
+                }
                 for (uint ant=0;ant<nSt;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
-                    g[ant][cr] = f1 * g[ant][cr] + f2 * gx[ant][cr] + f3 * gxx[ant][cr];
+                    iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
                   }
                 }
               } else if (dg <= c2 *dgx) {
-                //cout<<"dg<=c2*dgx"<<endl;
-                g = gx;
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=c2*dgx"<<endl;
+                }
+                iS.g = iS.gx;
                 sstep = 1;
               } else {
                 //cout<<"else"<<endl;
-                g = gxx;
+                iS.g = iS.gxx;
                 sstep = 2;
               }
             } else {
-              //cout<<"no sstep"<<endl;
+              if (itsDebugLevel>2) {
+                cout<<"no sstep"<<endl;
+              }
               sstep = sstep - 1;
             }
           }
-          gxx = gx;
-          gx = g;
+          iS.gxx = iS.gx;
+          iS.gx = iS.g;
         }
       }
       if (dg > itsTolerance) {
         cerr<<"!";
-        if (itsDebugLevel>10) {
-          exportToMatlab(model, data, weight, flag, nCr, nSt, nBl);
-        }
       }
 
+      if (itsDebugLevel>1) {
+        cout<<"iter:"<<iter<<endl;
+      }
 
-      //cout<<"iter:"<<iter<<"?"<<endl;
-
-      DComplex p = conj(g[0][0])/abs(g[0][0]);
+      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
       // Set phase of first gain to zero
       for (uint st=0;st<nSt;++st) {
         for (uint cr=0;cr<nCr;++cr) {
-           g[st][cr]*=p;
+           iS.g(st,cr)*=p;
         }
       }
 
@@ -1084,7 +661,223 @@ namespace LOFAR {
 
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
-      itsSols.push_back(g);
+      //itsSols.push_back(g);
+
+      cout<<"g="<<iS.g<<endl;
+    }
+
+
+    void GainCal::stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
+                                const Bool* flag) {
+      setAntUsedNotFlagged(flag);
+      fillMatrices(model,data,weight,flag);
+
+      double f2 = -1.0;
+      double f3 = -0.5;
+      double f1 = 1 - f2 - f3;
+      double f2q = -0.5;
+      double f1q = 1 - f2q;
+      double omega = 0.5;
+      uint nomega = 24;
+      double c1 = 0.5;
+      double c2 = 1.2;
+      double dg  =1.0e30;
+      double dgx =1.0e30;
+      double dgxx;
+      bool threestep = false;
+
+      uint nSt=2*itsMVis.shape()[0];
+      uint nCr=4;
+
+      iS.g.resize(nSt,1);
+      iS.gold.resize(nSt,1);
+      iS.gx.resize(nSt,1);
+      iS.gxx.resize(nSt,1);
+      iS.h.resize(nSt,1);
+      iS.z.resize(nSt,1);
+
+      double w;
+      DComplex t;
+
+      // Initialize all vectors
+      iS.g=1.;
+
+      iS.gx = iS.g;
+      int sstep=0;
+
+      uint ch=0;
+
+      DComplex* mvis=itsMVis.data();
+      for (uint st1=0;st1<nSt;++st1) {
+        for (uint st2=0;st2<nSt;++st2) {
+          cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<mvis[nSt*nSt*ch+st1*nSt+st2]<<endl;
+        }
+      }
+
+#ifdef undef
+      uint iter=0;
+      for (;iter<itsMaxIter;++iter) {
+        //cout<<"iter+1 = "<<iter+1<<endl;
+        iS.gold=iS.g;
+
+        for (uint st=0;st<nSt;++st) {
+          iS.h(st,0)=conj(iS.g(st,0));
+        }
+
+        /*
+        for (uint j=0;j<2*nSt;++j) {
+          w=0;
+          t=0;
+          for (uint i=0;i<2*nSt;++i) {
+            z[i]=conj(gold[i])*itsOldMVis(i,j);
+            w+=norm(z[i]);
+            t+=conj(z[i])*itsOldVis(i,j);
+          }
+          g[j]=t/w;
+        }
+        */
+
+        for (uint st1=0;st1<nSt;++st1) {
+          for (uint st2=0;st2<nSt;++st2) {
+            iS.z(st2,0) = iS.h(st2,0) * mvis[nSt*nSt*ch+st1*nSt+st2];
+          }
+
+          w=0;
+          t=0;
+          for (uint st2=0;st2<nSt;++st2) {
+            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
+            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
+            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
+          }
+
+          t=0;
+          for (uint st2=0;st2<nSt;++st2) {
+            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,0));
+            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,0));
+            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,0));
+            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,0));
+          }
+          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
+          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
+          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
+          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
+          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
+        }
+
+        if (iter % 2 == 1) {
+          dgxx = dgx;
+          dgx  = dg;
+
+          double fronormdiff=0;
+          double fronormg=0;
+          for (uint ant=0;ant<nSt;++ant) {
+            for (uint cr=0;cr<nCr;++cr) {
+              DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
+              fronormdiff+=abs(diff*diff);
+              fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
+            }
+          }
+          fronormdiff=sqrt(fronormdiff);
+          fronormg=sqrt(fronormg);
+
+          dg = fronormdiff/fronormg;
+          if (itsDebugLevel>1) {
+            cout<<"dg="<<dg<<endl;
+          }
+
+          if (dg <= itsTolerance) {
+            break;
+          }
+
+          if (itsDebugLevel>2) {
+            cout<<"Averaged"<<endl;
+          }
+          for (uint ant=0;ant<nSt;++ant) {
+            for (uint cr=0;cr<nCr;++cr) {
+              iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
+            }
+          }
+
+          if (!threestep) {
+            threestep = (iter+1 >= nomega) ||
+                ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
+            if (itsDebugLevel>2) {
+              cout<<"Threestep="<<boolalpha<<threestep<<endl;
+            }
+          }
+
+          if (threestep) {
+            if (itsDebugLevel>2) {
+              cout<<"threestep"<<endl;
+            }
+            if (sstep <= 0) {
+              if (dg <= c1 * dgx) {
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=c1*dgx"<<endl;
+                }
+                for (uint ant=0;ant<nSt;++ant) {
+                  for (uint cr=0;cr<nCr;++cr) {
+                    iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
+                  }
+                }
+              } else if (dg <= dgx) {
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=dgx"<<endl;
+                }
+                for (uint ant=0;ant<nSt;++ant) {
+                  for (uint cr=0;cr<nCr;++cr) {
+                    iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
+                  }
+                }
+              } else if (dg <= c2 *dgx) {
+                if (itsDebugLevel>2) {
+                  cout<<"dg<=c2*dgx"<<endl;
+                }
+                iS.g = iS.gx;
+                sstep = 1;
+              } else {
+                //cout<<"else"<<endl;
+                iS.g = iS.gxx;
+                sstep = 2;
+              }
+            } else {
+              if (itsDebugLevel>2) {
+                cout<<"no sstep"<<endl;
+              }
+              sstep = sstep - 1;
+            }
+          }
+          iS.gxx = iS.gx;
+          iS.gx = iS.g;
+        }
+      }
+      if (dg > itsTolerance) {
+        cerr<<"!";
+      }
+
+      if (itsDebugLevel>1) {
+        cout<<"iter:"<<iter<<endl;
+      }
+
+      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
+      // Set phase of first gain to zero
+      for (uint st=0;st<nSt;++st) {
+        for (uint cr=0;cr<nCr;++cr) {
+           iS.g(st,cr)*=p;
+        }
+      }
+
+      for (uint ant2=0;ant2<nSt;++ant2) {
+        //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
+        //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
+      }
+
+      // Stefcal terminated (either by maxiter or by converging)
+      // Let's save G...
+      //itsSols.push_back(g);
+
+      cout<<"g="<<iS.g<<endl;
+#endif
     }
 
     void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,

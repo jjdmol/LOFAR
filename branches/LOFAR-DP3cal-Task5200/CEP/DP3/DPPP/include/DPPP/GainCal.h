@@ -137,17 +137,12 @@ namespace {
         dir2Itrf(info().delayCenterCopy(),storage.measConverter);
       }
 
-      // Do a polarized stefcal
-      void stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
-                       const casa::Bool* flag, const uint nSt, const uint nCr,
-                       const uint nBl);
-
       // Do a unpolarized stefcal
-      void stefcalunpol2(dcomplex* model, casa::Complex* data, float* weight,
+      void stefcalunpol(dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
       // Do a polarized stefcal
-      void stefcalpol2(dcomplex* model, casa::Complex* data, float* weight,
+      void stefcalpol(dcomplex* model, casa::Complex* data, float* weight,
                        const casa::Bool* flag);
 
       // Find all antennas with data
