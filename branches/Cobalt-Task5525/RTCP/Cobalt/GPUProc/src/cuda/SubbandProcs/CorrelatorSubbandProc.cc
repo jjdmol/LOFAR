@@ -427,8 +427,10 @@ namespace LOFAR
         // Update the counters
         if (ps.nrChannelsPerSubband() > 1) 
         {
-          counters.fir.logTime();
-          counters.fft.logTime();
+          // Counter are now part of the kernels themselve
+          firFilterKernel->itsCounter.logTime();
+          fftKernel.itsCounter.logTime();
+          //counters.fft.logTime();
         }
         // TODO: on of these counter is not used
         //counters.delayBp.logTime();  // Suspect this one
