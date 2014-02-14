@@ -21,6 +21,7 @@ lofar_add_library(gcfpvss
   GCF_PVUnsigned.cc
   GCF_PVDynArr.cc
   GCF_PVBlob.cc
+  GCF_PVTypes.cc
   GSA_SCADAHandler.cc
   GSA_PvssApi.cc
   GSA_Resources.cc
