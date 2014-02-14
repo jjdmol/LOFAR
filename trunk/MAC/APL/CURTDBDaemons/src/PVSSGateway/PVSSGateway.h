@@ -28,18 +28,22 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <queue>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include <Common/KVpair.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/PVSS/GCF_Defines.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 #include <GCF/RTDB/DPservice.h>
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
+  using std::queue;
   using MACIO::GCFEvent;
   namespace GCF {  
     namespace RTDBDaemons {
@@ -71,16 +75,27 @@ private:
 	void	finish();
 
 	// helper methods
-	void	_registerClient (TM::GCFPortInterface&	port, const string&	name, uint32 obsID);
-	void    _registerFailure(TM::GCFPortInterface&	port);
-	bool	_addKVT			(const KVpair& kvp);
+	void	_registerClient 	(TM::GCFPortInterface&	port, const string&	name, uint32 obsID);
+	void    _registerFailure	(TM::GCFPortInterface&	port);
+	bool	_writeKVT			(const KVpair&	kvp);
+	bool	_setIndexedValue	(const string& keyname, uint	index, const string&	value);
+	bool	_add2MsgBuffer		(const KVpair&	kvp);
+	void	_processMsgBuffer	();
+	void	_adoptRequestPool	(const string& DPname);
+	void	_flushValueCache	();
+	void	_cleanValueCache	();
+	void	_garbageCollection	();
 	PVSS::TMACValueType	_KVpairType2PVSStype(int	kvpType);
 
-	// data members        
+	// ----- data members -----
 	TM::GCFTCPPort*			itsListener;	// application inpt
 	RTDB::DPservice*		itsDPservice;	// connection to PVSS
 	TM::GCFTimerPort*		itsTimerPort;	// timer
-	RTDB::RTDBPropertySet*	itsPropertySet;
+	RTDB::RTDBPropertySet*	itsPropertySet; // for updating my own state
+	uint					itsMsgBufTimer;	// fast timer for processing the MsgBuffer
+	double					itsRemovalDelay;	// time in s after which cached values are considered obsolete.
+	double					itsFlushInterval;	// time in s between database flushes of modified dynArrays
+	uint					itsMaxExpandSize;	// max size to expand an dynarray to.
 
 	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
 	LogClientMap 	 		itsClients;
@@ -89,6 +104,21 @@ private:
 	typedef list<TM::GCFPortInterface*> TClients;
 	TClients        		itsClientsGarbage;
 
+	// temp storage
+	queue<KVpair>			itsMsgBuffer;			// mutex protected queue for user delivered KVpairs
+
+	// value cache for caching updates of dynarr changes
+	typedef struct dynArr_t {
+		double					lastModify;
+		double					lastFlush;
+		PVSS::GCFPVDynArr*		valArr;
+		PVSS::TMACValueType		valType;
+		dynArr_t() : lastModify(0.0), lastFlush(0.0),valArr(0) {};
+	} dynArr_t;
+	typedef map<string,dynArr_t>::iterator		VCiter;
+	map<string,dynArr_t>		itsValueCache;			// cache with retrieved dynarray variables
+
+	multimap<string,KVpair>		itsRequestBuffer;		// temp. stack for storing 'get PVSS value' requests
 };
 
     } // namespace RTDBDaemons
