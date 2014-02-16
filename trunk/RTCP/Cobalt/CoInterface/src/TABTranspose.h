@@ -170,12 +170,13 @@ namespace LOFAR
 
       private:
         std::map<size_t, SmartPtr<Block> > blocks;
+        std::map<size_t, bool> fetching;
+
         Pool<Block> &outputPool;
         const size_t fileIdx;
         const size_t nrBlocks;
         Mutex mutex; // protects concurrent access to `blocks'
 
-        bool fetchingNextBlock;
         Condition fetchSignal;
 
         // upper limit for blocks.size(), or 0 if unlimited
