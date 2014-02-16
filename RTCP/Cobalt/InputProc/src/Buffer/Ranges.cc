@@ -226,11 +226,40 @@ namespace LOFAR
         if (i->to == 0)
           continue;
 
-        // we shouldn't fall into an already existing range,
-        // or we'd be a duplicate packet
-        ASSERT(to <= i->from || from >= i->to);
+        if (to > i->from && from < i->to) {
+          // If [from,to) falls into an already existing range,
+          // we're receiving duplicate data. This occasionally
+          // happens if a board resyncs.
+          //
+          // We need to take care to include the non-overlapping part.
+          //
+          // 3 cases:
+          //   1. from < i->from < to < i->to (overlap is to - i->from)
+          //   2. i->from < from < to < i->to (overlap is to - from)
+          //   3. i->from < from < i->to < to (overlap is i->to - from)
 
-        if (i->to == from) {
+          // Draw *i out of the volatile domain.
+          const value_type i_to = i->to;
+          const value_type i_from = i->from;
+
+          const value_type overlap =
+            std::min(i_to, to) - std::max(i_from, from);
+
+          LOG_WARN_STR("Packet [" << from << ", " << to << ") contains already-received data. Overlap is " << overlap << " samples.");
+
+          if (from < i_from) {
+            // case 1, reduce to (packet) (i)
+            to = i_from;
+          } else if (to < i_to) {
+            // case 2, nothing to add
+            return true;
+          } else {
+            // case 3, reduce to (i) (packet)
+            from = i_to;
+          }
+        }
+
+        if (i->to == from) { // (i) (packet)
           // *i can be extended
           i->to = to;
 
@@ -243,7 +272,7 @@ namespace LOFAR
           }
 
           return true;
-        } else if (i->from == to) {
+        } else if (i->from == to) { // (packet) (i)
           // *i can be extended
           i->from = from;
 
