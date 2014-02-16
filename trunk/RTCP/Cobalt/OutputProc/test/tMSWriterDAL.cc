@@ -51,7 +51,7 @@ int main()
       ? parset.settings.beamFormer.coherentSettings
       : parset.settings.beamFormer.incoherentSettings;
 
-    BeamFormedData data(
+    FinalBeamFormedData data(
         sset.nrSamples,
         parset.settings.SAPs[file.sapNr].subbands.size(),
         sset.nrChannels);
