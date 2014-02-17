@@ -192,7 +192,7 @@ void receiver()
   MPIReceiveStations receiver(nrStations, beamlets, blockSize);
 
   // create space for the samples
-  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize]);
+  MultiDimArray<SampleT, 3> samples(boost::extents[nrStations][nrBeamlets][blockSize], 1, mpiAllocator);
 
   // create blocks -- they all have to be the right size already
   std::vector< struct MPIReceiveStations::Block<SampleT> > blocks(nrStations);
