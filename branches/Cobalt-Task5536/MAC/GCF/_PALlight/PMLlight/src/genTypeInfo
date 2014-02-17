@@ -1,0 +1,4 @@
+#!/bin/sh
+
+PVSS00ascii -out typeInfo_$1.dpl.tmp -filterDpType $2 -filter T -proj LCU
+exit 0
