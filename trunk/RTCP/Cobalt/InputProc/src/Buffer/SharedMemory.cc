@@ -23,6 +23,7 @@
 #include "SharedMemory.h"
 
 #include <ctime>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <sys/mman.h>
@@ -179,6 +180,9 @@ namespace LOFAR
         if ((open_flags & O_CREAT) > 0) {
           preexisting = false;
           fakeSharedMem[key] = allocate(itsSize);
+
+          // initialise memory to zero
+          memset(fakeSharedMem[key], 0, itsSize);
         } else {
           if (!timeout)
             THROW_SYSCALL("(dummy)");
