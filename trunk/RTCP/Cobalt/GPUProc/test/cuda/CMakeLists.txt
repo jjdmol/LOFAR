@@ -61,9 +61,11 @@ endif(UNITTEST++_FOUND)
 # To compile .cu files, invoke CUDA's nvcc, but respect the host C/C++ compiler (variants) selection.
 set(COMPILER_BINDIR_OPT --compiler-bindir ${CMAKE_CXX_COMPILER})
 
+#cuda_add_executable(tcu-test   cu-test.cu   OPTIONS ${COMPILER_BINDIR_OPT})
+#cuda_add_executable(tcuda-test cuda-test.cu OPTIONS ${COMPILER_BINDIR_OPT})
+
 # The t_cuda_complex test has been disabled, because we no longer need complex.cuh (deleted),
 # but do leave the cmake code to compile .cu files, which we probably will need again.
 #cuda_add_executable(t_cuda_complex t_cuda_complex.cu OPTIONS ${COMPILER_BINDIR_OPT})
 #add_test(t_cuda_complex ${CMAKE_CURRENT_SOURCE_DIR}/t_cuda_complex.sh)
-
 
