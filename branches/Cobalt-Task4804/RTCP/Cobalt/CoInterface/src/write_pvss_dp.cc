@@ -45,14 +45,15 @@ int main(int argc, char *argv[]) {
 
   unsigned obsId = 12345;
   string registerName("OnlineControl"); // see table in LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
-  string defaultHostname("ccu001.control.lofar");
+  string defaultHostname("ccu099.control.lofar");
   LOFAR::MACIO::RTmetadata rtmd(obsId, registerName, defaultHostname);
   bool rv;
 
   vector<string> keys;
   vector<string> vals;
-  vector<double> times(4, 393939393.004567);
+  vector<double> times(4, 0.0); // irrel
 
+/*
   keys.push_back("LOFAR_ObsSW_TempObs0001_CobaltOutputProc.written[0]");
   vals.push_back("42");
   keys.push_back("LOFAR_ObsSW_TempObs0001_CobaltOutputProc.written[1]");
@@ -61,21 +62,34 @@ int main(int argc, char *argv[]) {
   vals.push_back("21");
   keys.push_back("LOFAR_ObsSW_TempObs0001_CobaltOutputProc.dropped[1]");
   vals.push_back("22");
+*/
+  keys.push_back("LOFAR_TEST.DynArrDouble[0]");
+  vals.push_back("0.12345");
+  keys.push_back("LOFAR_TEST.DynArrDouble[7]");
+  vals.push_back("4.97");
+  keys.push_back("LOFAR_TEST.Double");
+  vals.push_back("31.2565478");
+  keys.push_back("LOFAR_TEST.DynArrDouble[5]");
+  vals.push_back("2.55");
   rv = rtmd.log(keys, vals, times);
   if (!rv)
   {
     LOG_WARN("Failed to write data points");
   }
 
-
+/*
   string key0("nonexisting_test-by-alexander");
   string val0("3.3");
+*/
+/*
+  string key0("LOFAR_TEST.DynArrDouble[98765]"); // overflow?
+  string val0("1.01");
   rv = rtmd.log(key0, val0);
   if (!rv)
   {
     LOG_WARN("Failed to write data point");
   }
-
+*/
   return 0;
 }
 
