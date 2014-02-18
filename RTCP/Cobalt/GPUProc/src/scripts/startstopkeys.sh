@@ -18,11 +18,11 @@ function usage() {
   exit 1;
 }
 
-while getopts ":s:rh" opt; do
+while getopts "s:r:h" opt; do
   case $opt in
-    s) STARTDELAY=$OPTARG
+    s) STARTDELAY="$OPTARG"
        ;;
-    r) RUNTIME=$OPTARG
+    r) RUNTIME="$OPTARG"
        ;;
     h) usage;
        ;;
@@ -40,7 +40,7 @@ done
 # Calculate start and stop times in seconds since 1970 UTC
 NOW=`date -u +%s`
 START=$(($NOW + $STARTDELAY))
-STOP=$((START + $RUNTIME))
+STOP=$(($START + $RUNTIME))
 
 # The date format used in the parset
 FORMAT="%F %T"
