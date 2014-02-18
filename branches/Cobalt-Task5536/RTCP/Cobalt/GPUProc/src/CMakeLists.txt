@@ -75,6 +75,7 @@ if(USE_CUDA)
   endif()
 
   lofar_add_bin_program(rtcp rtcp.cc)
+  lofar_add_bin_program(getOutputProcHosts getOutputProcHosts.cc)
 endif()
 
 if(USE_OPENCL)
