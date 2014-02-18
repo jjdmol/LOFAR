@@ -58,7 +58,7 @@ class SocketStream : public FileDescriptorBasedStream
     const Protocol protocol;
     const Mode mode;
 
-    template<typename T> size_t recvmmsg( std::vector<T> &buffers, bool oneIsEnough ); // only for UDP server socket
+    template<typename T> size_t recvmmsg( std::vector<T> &buffers, bool oneIsEnough, struct timespec *timeout = NULL ); // only for UDP server socket
 
   private:
     const std::string hostname;

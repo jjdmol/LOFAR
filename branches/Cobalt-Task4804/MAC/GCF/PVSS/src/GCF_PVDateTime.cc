@@ -89,6 +89,15 @@ TGCFResult GCFPVDateTime::setValue(double	newVal)
 	return (GCF_NO_ERROR);
 }
 
+//
+// setValue(time_t)
+//
+void GCFPVDateTime::setValue(time_t	newVal, uint16	milliSec)
+{
+	itsSeconds = newVal;
+	itsMilli   = milliSec % 1000;
+}
+
 
 //
 // setValue(string)

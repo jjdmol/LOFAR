@@ -61,6 +61,10 @@ if(USE_CUDA)
     cuda/SubbandProcs/BeamFormerSubbandProc.cc
     cuda/SubbandProcs/BeamFormerFactories.cc
     cuda/SubbandProcs/CorrelatorSubbandProc.cc
+    cuda/SubbandProcs/BeamFormerPreprocessingStep.cc
+    cuda/SubbandProcs/BeamFormerCoherentStep.cc
+    cuda/SubbandProcs/BeamFormerIncoherentStep.cc
+    
 #    cuda/SubbandProcs/UHEP_SubbandProc.cc
   )
   add_subdirectory(cuda)

@@ -778,7 +778,7 @@ int main (Int argc, char** argv)
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
-    cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
+    if (verbose) cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
     if(ChanBlockSize!=0){
       AlwaysAssert (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]), AipsError);
     }

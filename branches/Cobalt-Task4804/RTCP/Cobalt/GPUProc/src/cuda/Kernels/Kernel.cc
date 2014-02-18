@@ -58,6 +58,7 @@ namespace LOFAR
                    const Parameters &params)
       : 
       gpu::Function(function),
+      itsCounter(stream.getContext()),
       maxThreadsPerBlock(
         stream.getContext().getDevice().getMaxThreadsPerBlock()),
       itsStream(stream),
@@ -78,8 +79,7 @@ namespace LOFAR
       gpu::Grid grid;
       ostringstream errMsgs;
 
-      // Enforce by the hardware supported work sizes to see errors clearly and
-      // early.
+      // Enforce by the hardware supported work sizes to see errors early
 
       gpu::Block maxLocalWorkSize = 
         itsStream.getContext().getDevice().getMaxBlockDims();
@@ -101,8 +101,6 @@ namespace LOFAR
           localWorkSize.z == 0) {
         errMsgs << "  - localWorkSize components must be non-zero" << endl;
       } else {
-        // TODO: to globalWorkSize in terms of localWorkSize (CUDA)
-        // ('gridWorkSize').
         if (globalWorkSize.x % localWorkSize.x != 0 ||
             globalWorkSize.y % localWorkSize.y != 0 ||
             globalWorkSize.z % localWorkSize.z != 0)
@@ -136,20 +134,14 @@ namespace LOFAR
 
     void Kernel::enqueue(const BlockID &blockId) const
     {
+      itsStream.recordEvent(itsCounter.start);
       itsStream.launchKernel(*this, itsGridDims, itsBlockDims);
+      itsStream.recordEvent(itsCounter.stop);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
         dumpBuffers(blockId);
       }
-    }
-
-    void Kernel::enqueue(const BlockID &blockId, 
-                         PerformanceCounter &counter) const
-    {
-      itsStream.recordEvent(counter.start);
-      enqueue(blockId);
-      itsStream.recordEvent(counter.stop);
     }
 
     void Kernel::dumpBuffers(const BlockID &blockId) const
@@ -158,6 +150,11 @@ namespace LOFAR
                  str(boost::format(itsParameters.dumpFilePattern) %
                      blockId.globalSubbandIdx %
                      blockId.block));
+    }
+
+    PerformanceCounter &Kernel::getCounter()
+    {
+      return itsCounter;
     }
 
   }

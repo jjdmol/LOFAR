@@ -161,18 +161,23 @@ void claimManager_queryConnectClaim_Callback(string strIdent,  dyn_dyn_anytype a
     aDP        = aResult[t][1];
     strName    = aResult[t][2];
     tClaimDate = aResult[t][3];
-    tFreeDate  = aResult[t][3];
+    tFreeDate  = aResult[t][4];
     
     strDP=dpSubStr(aDP,DPSUB_DP);
     
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tClaimDate: "+tClaimDate);
-    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| tFreeDate: "+tClaimDate);
+//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strDP     : "+ strDP);
+//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| strName   : "+strName);
+//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| ClaimDate : "+year(tClaimDate));
+//    LOG_DEBUG("claimManager.ctl:claimManager_queryConnectClaim_Callback| FreeDate  : "+year(tFreeDate));
     
-    // We are claimed when the date is not 1970
-    bClaimed = year( tClaimDate ) != 1970;
-  
+    
+    // We are unclaimed when the date == 1970 and the freedate == 1970
+    if (year(tClaimDate) == 1970 && year(tFreeDate) == 1970) {
+      bClaimed = false;
+    } else {
+      bClaimed = true;
+    }
+    
     // Do we already have this name 
     iPos = dynContains( strClaimDPName, strDP );  
     

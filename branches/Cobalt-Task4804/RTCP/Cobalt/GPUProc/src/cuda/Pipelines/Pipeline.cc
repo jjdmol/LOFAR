@@ -36,10 +36,7 @@
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 #include <InputProc/SampleType.h>
-#include <InputProc/WallClockTime.h>
 #include <InputProc/RSPTimeStamp.h>
-// TODO: Following include is only needed for dynamic_cast. Code smell!
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h> 
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
@@ -226,14 +223,6 @@ namespace LOFAR
 
     void Pipeline::processObservation()
     {
-      if (ps.realTime()) {
-        // Wait just before the obs starts to allocate resources
-        LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
-
-        const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
-        WallClockTime waiter;
-        waiter.waitUntil(deadline);
-      }
 
       LOG_INFO("----- Allocating resources");
       allocateResources();

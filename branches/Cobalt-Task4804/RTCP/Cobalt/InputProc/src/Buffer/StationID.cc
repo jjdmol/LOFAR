@@ -52,7 +52,10 @@ namespace LOFAR
       ASSERTSTR( stationName.size() < sizeof this->stationName, "Station name longer than " << (sizeof this->stationName - 1) << " characters.");
       ASSERTSTR( antennaField.size() < sizeof this->antennaField, "Antenna-set name longer than " << (sizeof this->antennaField - 1) << " characters.");
 
+      memset(&this->stationName[0], 0, sizeof this->stationName);
       snprintf(this->stationName, sizeof this->stationName, "%s", stationName.c_str());
+
+      memset(&this->antennaField[0], 0, sizeof this->antennaField);
       snprintf(this->antennaField, sizeof this->antennaField, "%s", antennaField.c_str());
     }
 

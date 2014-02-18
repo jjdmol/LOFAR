@@ -96,6 +96,8 @@ TEST(Header) {
   MPIProtocol::Header header_in;
   MPIProtocol::Header header_out;
 
+  memset(&header_in, 0, sizeof header_in); // satisfy valgrind
+
   // NOTE: Headers are already partially filled by MPISendStation constructor,
   // so we need to do some filling as well
   header_in.nrBeamlets = block.beamlets.size();
@@ -206,6 +208,8 @@ TEST(MetaData) {
 
   MPIProtocol::MetaData mdBuf_in;
   MPIProtocol::MetaData mdBuf_out;
+
+  memset(&mdBuf_in, 0, sizeof mdBuf_in); // satisfy valgrind
 
   // Fill input
   metaData_in.flags.include(10, 20);

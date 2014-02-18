@@ -54,8 +54,7 @@ namespace LOFAR
       nrChannelsPerSubband = 
         ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples(
-          ps.nrSamplesPerSubband());
+        ps.settings.beamFormer.coherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -82,12 +81,11 @@ namespace LOFAR
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
-                                   PerformanceCounter &counter,
                                    double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(blockId);
     }
 
     //--------  Template specializations for KernelFactory  --------//

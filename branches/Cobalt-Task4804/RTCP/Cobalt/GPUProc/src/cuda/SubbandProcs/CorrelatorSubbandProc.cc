@@ -357,10 +357,10 @@ namespace LOFAR
       // DelayAndBandPass kernel reads from.
       if (ps.nrChannelsPerSubband() == 1)
         queue.writeBuffer(
-          devFilteredData, input.inputSamples, counters.samples, true);
+          devFilteredData, input.inputSamples, true);
       else // #ch/sb > 1
         queue.writeBuffer(
-          devInput.inputSamples, input.inputSamples,  counters.samples, true);
+          devInput.inputSamples, input.inputSamples,  true);
    
       if (ps.delayCompensation())
       {
@@ -383,23 +383,21 @@ namespace LOFAR
 
       // *********************************************
       // Run the kernels
-      // Note: make sure to call the right enqueue() for each kernel.
-      // Otherwise, a kernel arg may not be set...
 
       if (ps.nrChannelsPerSubband() > 1) {
-        firFilterKernel->enqueue(input.blockID, counters.fir, 
+        firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(input.blockID, counters.fft);
+        fftKernel.enqueue(input.blockID);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare), run
       // that kernel, as it also reorders the data for the correlator kernel.
       delayAndBandPassKernel->enqueue(
-        input.blockID, counters.delayBp, 
+        input.blockID, 
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(input.blockID, counters.correlator);
+      correlatorKernel->enqueue(input.blockID );
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
@@ -429,13 +427,15 @@ namespace LOFAR
         // Update the counters
         if (ps.nrChannelsPerSubband() > 1) 
         {
-          counters.fir.logTime();
-          counters.fft.logTime();
+          // Counter are now part of the kernels themselve
+          firFilterKernel->itsCounter.logTime();
+          fftKernel.itsCounter.logTime();
         }
-        counters.delayBp.logTime();
-        counters.correlator.logTime();
-        counters.samples.logTime();
-        counters.visibilities.logTime();
+        // TODO: on of these counter is not used
+        //counters.delayBp.logTime();  // Suspect this one
+        //counters.correlator.logTime();
+        //counters.samples.logTime();
+        //counters.visibilities.logTime();
 
       }
       // now perform weighting of the data based on the number of valid samples;

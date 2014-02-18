@@ -77,11 +77,13 @@ std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
 
 Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
-  SampleData<float,3>(boost::extents[nrSubbands][nrSamples][nrChannels], boost::extents[nrSubbands][nrChannels]),
+  SampleData<float,3>(boost::extents[nrSamples][nrSubbands][nrChannels], boost::extents[nrSubbands][nrChannels]),
   subbandWritten(nrSubbands, false),
   fileIdx(0),
   block(0),
+  nrSamples(nrSamples),
   nrSubbands(nrSubbands),
+  nrChannels(nrChannels),
   nrSubbandsLeft(nrSubbands)
 {
 }
@@ -97,7 +99,12 @@ void Block::addSubband( const Subband &subband ) {
   // Subbands should not arrive twice
   ASSERT(subbandWritten[subband.id.subband] == false);
 
-  memcpy(samples[subband.id.subband].origin(), subband.data.origin(), subband.data.num_elements() * sizeof *subband.data.origin());
+  // Weave subbands together
+  for (size_t t = 0; t < nrSamples; ++t) {
+    // Copy all channels for sample t
+    memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
+  }
+
   subbandWritten[subband.id.subband] = true;
 
   nrSubbandsLeft--;
@@ -109,8 +116,12 @@ void Block::addSubband( const Subband &subband ) {
 void Block::zeroRemainingSubbands() {
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
-      LOG_DEBUG_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
-      memset(samples[subbandIdx].origin(), 0, samples[subbandIdx].size() * sizeof *samples[subbandIdx].origin());
+      LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
+
+      for (size_t t = 0; t < nrSamples; ++t) {
+        // Zero all channels for sample t
+        memset(&samples[t][subbandIdx][0], 0, nrChannels * sizeof *samples.origin());
+      }
     }
   }
 }
@@ -141,7 +152,6 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   outputPool(outputPool),
   fileIdx(fileIdx),
   nrBlocks(nrBlocks),
-  fetchingNextBlock(false),
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1)
@@ -270,35 +280,34 @@ void BlockCollector::fetch(size_t block) {
   ASSERT(!have(block));
 
   // Make sure we don't exceed our maximum cache size
-  if (canDrop && blocks.size() >= maxBlocksInFlight) {
+  if (canDrop && blocks.size() + fetching.size() >= maxBlocksInFlight) {
     // No more room -- force out oldest block
     emit(minBlock());
-  } else if (!canDrop) {
-    if (fetchingNextBlock) {
-      // We know that if some other thread is fetching, that it MUST be the same block.
-      // That's because we cannot drop data, so the same block cannot be completed without
-      // before this fetch() call returns.
-      LOG_DEBUG_STR("BlockCollector: some thread is already fetching block " << block);
+  }
 
+  if (fetching.find(block) != fetching.end()) {
+    LOG_DEBUG_STR("BlockCollector: some thread is already fetching block " << block);
+
+    // Wait for OUR block to be fetched
+    do {
       fetchSignal.wait(mutex);
+    } while(!have(block));
 
-      ASSERT(have(block));
-      return;
-    }
+    return;
   }
 
   LOG_DEBUG_STR("BlockCollector: fetching block " << block);
 
   SmartPtr<Block> newBlock;
 
-  fetchingNextBlock = true;
+  fetching[block] = true;
   {
     // Allow other threads to manipulate older blocks while we're waiting for
     // a new free one.
     ScopedLock sl(mutex, true);
     newBlock = outputPool.free.remove();
   }
-  fetchingNextBlock = false;
+  fetching.erase(block);
 
   LOG_DEBUG_STR("BlockCollector: fetched block " << block);
 

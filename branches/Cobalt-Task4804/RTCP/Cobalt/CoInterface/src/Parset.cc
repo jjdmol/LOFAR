@@ -372,22 +372,24 @@ namespace LOFAR
         sap.target           = getString(str(format("Observation.Beam[%u].target") % sapNr), "");
 
         // Process the subbands of this SAP
-        sap.subbandIndices = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
-        for (unsigned sb = 0; sb < sap.subbandIndices.size(); ++sb)
+        for (unsigned sb = 0; sb < subbandList.size(); ++sb)
         {
           struct ObservationSettings::Subband subband;
 
           subband.idx              = settings.subbands.size();
-          subband.stationIdx      = sap.subbandIndices[sb];
+          subband.stationIdx       = subbandList[sb];
           subband.SAP              = sapNr;
           subband.idxInSAP         = sb;
           subband.centralFrequency = frequencyList.empty()
                                      ? settings.subbandWidth() * (subband.stationIdx + subbandOffset)
                                      : frequencyList[sb];
 
+          // Register the subband both globally and in the SAP structure
           settings.subbands.push_back(subband);
+          settings.SAPs[sapNr].subbands.push_back(subband);
         }
       }
 
@@ -618,12 +620,15 @@ namespace LOFAR
           set->nrChannels = getUint32(
                 renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
                 1);
+          ASSERT(set->nrChannels > 0);
           set->timeIntegrationFactor = getUint32(
                 renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
                 1);
+          ASSERT(set->timeIntegrationFactor > 0);
           set->nrSubbandsPerFile = getUint32(
                 renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
                 0);
+          set->nrSamples = settings.blockSize / set->timeIntegrationFactor / set->nrChannels;
 
           if (set->nrSubbandsPerFile == 0) {
             // apply default
@@ -667,25 +672,33 @@ namespace LOFAR
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
 
-            const string prefix =
-              settings.beamFormer.doFlysEye ?
-              str(format("Observation.Beam[%u]") % i) :
-              str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            if (settings.beamFormer.doFlysEye) {
+              const string prefix = str(format("Observation.Beam[%u]") % i);
 
-            tab.direction.type    = getString(prefix + ".directionType", "J2000");
-            tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
-                                                         prefix + ".angle1"), 0.0);
-            tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
-                                                         prefix + ".angle2"), 0.0);
-            // Always store absolute angles. So this is for backwards compat.
-            if (!isDefined(prefix + ".absoluteAngle1"))
-              tab.direction.angle1 += settings.SAPs[i].direction.angle1;
-            if (!isDefined(prefix + ".absoluteAngle2"))
-              tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+              tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
+              tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
-            // The following two keys will not be present in fly's eye mode.
-            tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
-            tab.coherent              = getBool(prefix + ".coherent", true);
+              tab.dispersionMeasure     = 0.0;
+              tab.coherent              = true;
+            } else {
+              const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+
+              tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
+                                                           prefix + ".angle1"), 0.0);
+              tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
+                                                           prefix + ".angle2"), 0.0);
+
+              // Always store absolute angles. So this is for backwards compat.
+              if (!isDefined(prefix + ".absoluteAngle1"))
+                tab.direction.angle1 += settings.SAPs[i].direction.angle1;
+              if (!isDefined(prefix + ".absoluteAngle2"))
+                tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+
+              tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+              tab.coherent              = getBool(prefix + ".coherent", true);
+            }
 
             if (tab.coherent)
               sap.nrCoherent++;
@@ -847,6 +860,16 @@ namespace LOFAR
       return nrSamplesPerSubband() / subbandWidth();
     }
 
+    vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
+      vector<unsigned> indices;
+
+      for(size_t i = 0; i < subbands.size(); ++i) {
+        indices.push_back(subbands[i].idx);
+      }
+
+      return indices;
+    }
+
     double ObservationSettings::Correlator::integrationTime() const {
       return 1.0 * nrSamplesPerChannel * nrBlocksPerIntegration / channelWidth;
     }
@@ -877,17 +900,6 @@ namespace LOFAR
       }
 
       return result;
-    }
-
-    size_t ObservationSettings::nrSubbands(size_t SAP) const
-    {
-      size_t count = 0;
-
-      for (size_t sb = 0; sb < subbands.size(); ++sb)
-        if (subbands[sb].SAP == SAP)
-          ++count;
-
-      return count;
     }
 
 
@@ -921,11 +933,6 @@ namespace LOFAR
         max = std::max(max, SAPs[sapNr].nrIncoherent);
 
       return max;
-    }
-
-    size_t ObservationSettings::BeamFormer::StokesSettings::nrSamples(size_t inputBlockSize) const
-    {
-      return inputBlockSize / nrChannels / timeIntegrationFactor;
     }
 
 

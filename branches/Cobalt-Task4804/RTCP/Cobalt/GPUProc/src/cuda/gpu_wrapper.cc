@@ -571,7 +571,7 @@ namespace LOFAR
           return _ptr;
         }
 
-        void set(unsigned char uc, size_t n)
+        void set(unsigned char uc, size_t n) const
         {
           ScopedCurrentContext scc(_context);
 
@@ -605,7 +605,7 @@ namespace LOFAR
         return (void *)_impl->get();
       }
 
-      void DeviceMemory::set(unsigned char uc, size_t n)
+      void DeviceMemory::set(unsigned char uc, size_t n) const
       {
         _impl->set(uc, std::min(n, size()));
       }
@@ -806,10 +806,8 @@ namespace LOFAR
           try {
             checkCuCall(cuEventElapsedTime(&ms, other, _event));
           } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent crashes caused by querying unused timers
-            //
-            // NOTE: checkCuCall already logs the error
-
+            // Prevent exceptions/crashes caused by querying unused timers
+            // checkCuCall already logs the error
             ms = 0.0f;
           }
 

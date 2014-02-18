@@ -128,7 +128,7 @@ namespace LOFAR
 
       // all subbands in this file
       // We could have multiple saps with each a specific number of subbands
-      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices;
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices();
 
       unsigned nrSubbands = subbandIndices.size();
 
@@ -506,7 +506,9 @@ namespace LOFAR
 
       // construct feedback for LTA -- Implements Output_Beamformed_.comp
 
-      const string type = stokesSet.coherent ? "CoherentStokesBeam" : "IncoherentStokesBeam";
+      const string type = 
+        parset.settings.beamFormer.doFlysEye ? "FlysEyeBeam" : 
+        (stokesSet.coherent ? "CoherentStokesBeam" : "IncoherentStokesBeam");
 
       itsConfiguration.add("fileFormat",                "HDF5");
       itsConfiguration.add("filename",                  LOFAR::basename(h5filename));
@@ -545,7 +547,7 @@ namespace LOFAR
       for (size_t i = 0; i < nrSubbands; ++i) {
         if( i > 0 )
           stationSubbandsStr << ", ";
-        stationSubbandsStr << str(format("%u") % parset.settings.subbands[subbandIndices[i]].stationIdx);
+        stationSubbandsStr << str(format("%u") % parset.settings.SAPs[sapNr].subbands[i].stationIdx);
       }
       stationSubbandsStr << "]";
 
@@ -565,6 +567,13 @@ namespace LOFAR
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
         itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % (tabDir.angle1 - beamDir.angle1)));
         itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % (tabDir.angle2 - beamDir.angle2)));
+      }
+      if (type == "FlysEyeBeam") {
+        string fullName = parset.settings.stations.at(beamNr).name;
+        string stationName = fullName.substr(0,5);
+        string antennaFieldName = fullName.substr(5);
+        itsConfiguration.add(prefix + "stationName", stationName);
+        itsConfiguration.add(prefix + "antennaFieldName", antennaFieldName);
       }
     }
 

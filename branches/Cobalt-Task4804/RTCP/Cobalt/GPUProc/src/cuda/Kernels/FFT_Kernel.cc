@@ -38,6 +38,7 @@ namespace LOFAR
                            unsigned nrFFTs, bool forward, 
                            const gpu::DeviceMemory &buffer)
       :
+      itsCounter(stream.getContext()),
       context(stream.getContext()),
       nrFFTs(nrFFTs),
       fftSize(fftSize),
@@ -52,33 +53,24 @@ namespace LOFAR
                     ", nrFFTs=" << nrFFTs);
     }
 
-    void FFT_Kernel::enqueue(const BlockID &blockId, 
-                             PerformanceCounter &counter) const
-    {
-      itsStream.recordEvent(counter.start); 
-      enqueue(blockId);
-      itsStream.recordEvent(counter.stop); 
-    }
 
     void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
       gpu::ScopedCurrentContext scc(context);
 
-      cufftResult error;
-
       // Tie our plan to the specified stream
       plan.setStream(itsStream);
 
-      LOG_DEBUG("Launching cuFFT");
-        
       // Enqueue the FFT execution
-      error = cufftExecC2C(plan.plan,
+      itsStream.recordEvent(itsCounter.start);
+      LOG_DEBUG("Launching cuFFT");
+      cufftResult error = cufftExecC2C(plan.plan,
                            static_cast<cufftComplex*>(buffer.get()),
                            static_cast<cufftComplex*>(buffer.get()),
                            direction);
-
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
+      itsStream.recordEvent(itsCounter.stop);
 
       if (itsStream.isSynchronous()) {
         itsStream.synchronize();
