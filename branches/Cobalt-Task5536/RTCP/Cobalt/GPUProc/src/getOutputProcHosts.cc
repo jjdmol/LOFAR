@@ -21,6 +21,9 @@
 #include <lofar_config.h>
 #include <unistd.h>
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <string>
 
 #include <CoInterface/Parset.h>
 
@@ -64,6 +67,16 @@ int main(int argc, char **argv)
 
   INIT_LOGGER("getOutputProcHosts");
 
+  // Open the parset
   Parset ps(argv[optind]);
 
+  // Get the list of stations and output to stdout space separated
+  for (std::vector<string>::const_iterator host = ps.settings.outputProcHosts.begin();
+       host != ps.settings.outputProcHosts.end();
+       ++host)
+  {
+    cout << *host << " ";
+  }
+
+  return 0;
  }
