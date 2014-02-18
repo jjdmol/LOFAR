@@ -61,9 +61,6 @@ namespace LOFAR
       // observations.
       virtual void allocateResources();
 
-      // Number of seconds to schedule for the allocation of resources.
-      static const time_t allocationTimeout = 10;
-
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       virtual void processObservation();
 

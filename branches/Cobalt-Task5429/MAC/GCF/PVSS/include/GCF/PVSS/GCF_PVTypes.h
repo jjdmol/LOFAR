@@ -34,4 +34,23 @@
 #include <GCF/PVSS/GCF_PVString.h>
 #include <GCF/PVSS/GCF_PVUnsigned.h>
 
+namespace LOFAR {
+  namespace GCF {
+	namespace PVSS {
+
+GCFPValue*	createPValue(const bool		someVal);
+GCFPValue*	createPValue(const char		someVal);
+GCFPValue*	createPValue(const uint		someVal);
+GCFPValue*	createPValue(const int		someVal);
+GCFPValue*	createPValue(const float	someVal);
+GCFPValue*	createPValue(const double	someVal);
+GCFPValue*	createPValue(const char*	someVal);
+GCFPValue*	createPValue(const string&	someVal);
+GCFPValue*	createPValue(const time_t	someVal);
+
+  } // namespace PVS
+ } // namespace GCF
+} // namespace LOFAR
+
+
 #endif

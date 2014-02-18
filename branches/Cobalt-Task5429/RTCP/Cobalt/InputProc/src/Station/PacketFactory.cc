@@ -23,7 +23,7 @@
 
 #include "PacketFactory.h"
 
-#include <string.h>
+#include <cstring>
 
 namespace LOFAR
 {
@@ -42,6 +42,8 @@ namespace LOFAR
 
     bool PacketFactory::makePacket( struct RSP &packet, const TimeStamp &timestamp, size_t boardNr )
     {
+      memset(&packet, 0, sizeof packet);
+
       return 
         makeHeader(packet, timestamp, boardNr) &&
         makePayload(packet);

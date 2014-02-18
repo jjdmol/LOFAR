@@ -60,6 +60,14 @@ TEST(Two) {
   }
 }
 
+TEST(now) {
+  unsigned clock = 200 * 1000 * 1000;
+
+  TimeStamp now(TimeStamp::now(clock));
+
+  LOG_INFO_STR("Now: " << now);
+}
+
 int main()
 {
   INIT_LOGGER("tRSPTimeStamp");

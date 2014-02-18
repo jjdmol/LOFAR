@@ -10,7 +10,7 @@
 
 namespace LOFAR {
 
-template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, bool oneIsEnough )
+template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, bool oneIsEnough, struct timespec *timeout )
 {
   ASSERT(protocol == UDP);
   ASSERT(mode == Server);
@@ -38,7 +38,7 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
   }
 
   // receive data
-  int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, 0);
+  int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, timeout);
 
   if (numRead < 0)
     THROW_SYSCALL("recvmmsg");
@@ -60,7 +60,7 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
   msg.msg_name    = NULL; // we don't need to know who sent the data
   msg.msg_control = NULL; // we're not interested in OoB data
 
-  if (recvmsg(fd, &msg, 0) < 0)
+  if (recvmsg(fd, &msg, timeout) < 0)
     THROW_SYSCALL("recvmsg");
 
   /* the recvmsg return value is the number of bytes received */
