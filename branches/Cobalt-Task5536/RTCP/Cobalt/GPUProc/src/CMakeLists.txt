@@ -135,6 +135,7 @@ install(PROGRAMS
 # install the logprop file
 install(FILES
   rtcp.log_prop
+  getOutputProcHosts.log_prop
   Station/mpi_node_list.log_prop
   Station/station_stream.log_prop
   DESTINATION etc)

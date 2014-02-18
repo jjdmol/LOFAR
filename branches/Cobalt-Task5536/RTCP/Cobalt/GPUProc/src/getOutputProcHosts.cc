@@ -20,18 +20,24 @@
 
 #include <lofar_config.h>
 #include <unistd.h>
+#include <iostream>
 
 #include <CoInterface/Parset.h>
 
+using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::Cobalt;
+
 static void usage(const char *argv0)
 {
-  cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
-  cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
-  cerr << "beam-forming for the Pulsar mode." << endl;
+  cerr << "getOutputProcHosts: Helper program used in combination with rtcp" << endl;
+  cerr << "Outputs a space seperate list of outputProc hosts on the stdout" << endl;
+  cerr << "These hosts are retrieved using the parset (parset) class" << endl;
+
   cerr << endl;
-  cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
+  cerr << "Usage: " << argv0 << " parset" << endl;
   cerr << endl;
-  cerr << "  -p: enable profiling" << endl;
+
 }
 
 int main(int argc, char **argv)
@@ -41,11 +47,8 @@ int main(int argc, char **argv)
   */
 
   int opt;
-  while ((opt = getopt(argc, argv, "p")) != -1) {
+  while ((opt = getopt(argc, argv, "h")) != -1) {
     switch (opt) {
-    case 'p':
-      profiling = true;
-      break;
 
     default: /* '?' */
       usage(argv[0]);
@@ -58,5 +61,9 @@ int main(int argc, char **argv)
     usage(argv[0]);
     exit(1);
   }
+
+  INIT_LOGGER("getOutputProcHosts");
+
+  Parset ps(argv[optind]);
 
  }
