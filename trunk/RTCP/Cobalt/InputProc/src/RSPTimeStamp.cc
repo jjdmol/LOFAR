@@ -40,7 +40,7 @@ namespace LOFAR
       gettimeofday(&tv, NULL);
 
       unsigned long usec = tv.tv_sec * 1000000 + tv.tv_usec;
-      return TimeStamp(usec * clockSpeed / 1024 / 1000000, clockSpeed);
+      return convert((double)usec / 1000000, clockSpeed);
     }
 
 
