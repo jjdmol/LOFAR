@@ -21,6 +21,9 @@
 #ifndef LOFAR_GPUPROC_FPEQUALS_H
 #define LOFAR_GPUPROC_FPEQUALS_H
 
+// @file
+// Templated floating point comparison routines with epsilon
+
 #include <cmath>
 #include <complex>
 #include <limits>
@@ -29,52 +32,40 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    // Inexact floating point comparison routines.
-    // The 'tfpequals' test covers these routines
-    // and has some more hints on reasonable epsilon values.
-
-
-    // T can be float, double, long double, or complex of those (overloads below).
-    template <typename T>
-    bool fpEquals(T x, T y, T eps = std::numeric_limits<T>::epsilon())
+    // Type traits for Epsilon type to be used by fpEquals.
+    // @{
+    template<typename T>
+    struct Epsilon
     {
-      // Despite comparisons below, x==y is still needed to correctly eval the
-      // equality of identical inf args: 1.0/0.0==1.0/0.0 and -1.0/0.0==-1.0/0.0
-      if (x == y)
-      {
-        return true;
-      }
+      typedef T Type;
+    };
 
-      // absolute
-      if (std::abs(x - y) <= eps)
-      {
-        return true;
-      }
-
-      // relative
-      if (std::abs(y) < std::abs(x)) {
-        return std::abs((x - y) / x) <= eps;
-      } else {
-        return std::abs((x - y) / y) <= eps;
-      }
-    }
-
-    template <typename T>
-    bool fpEquals(std::complex<T> x, std::complex<T> y,
-                  T eps = std::numeric_limits<T>::epsilon())
+    template<typename T>
+    struct Epsilon< std::complex<T> >
     {
-      return fpEquals(x.real(), y.real(), eps) &&
-             fpEquals(x.imag(), y.imag(), eps);
-    }
+      typedef T Type;
+    };
+    // @}
 
+    // Inexact floating point comparison routine. The 'tfpequals' test covers
+    // these routines and has some more hints on reasonable epsilon values.
+    // @c T can be float, double, long double, or complex of those.
     template <typename T>
-    bool fpEquals(std::complex<T> x, T y, T eps = std::numeric_limits<T>::epsilon())
+    bool fpEquals(T x, T y, 
+                  typename Epsilon<T>::Type eps = 
+                  std::numeric_limits<typename Epsilon<T>::Type>::epsilon())
     {
-      return fpEquals(x.real(), y, eps) &&
-             fpEquals(x.imag(), (T)0.0, eps);
-    }
+      //# equality: shortcut, also needed to correctly handle inf args.
+      if (x == y) return true;
 
+      //# absolute
+      typename Epsilon<T>::Type d_xy = std::abs(x - y);
+      if (d_xy <= eps) return true;
+
+      //# relative
+      typename Epsilon<T>::Type d_max = std::max(std::abs(x), std::abs(y));
+      return d_xy / d_max <= eps;
+    }
 
   }
 }

@@ -21,26 +21,12 @@
 #include <lofar_config.h>
 
 #include <iomanip>
-#include <iostream>
 
 #include <Common/LofarLogger.h>
 
 #include "fpequals.h"
 
 using namespace LOFAR::Cobalt;
-using namespace std;
-
-template<typename T>
-struct Epsilon
-{
-  typedef T Type;
-};
-
-template<typename T>
-struct Epsilon< std::complex<T> >
-{
-  typedef T Type;
-};
 
 template <typename T>
 void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, typename Epsilon<T>::Type eps)
@@ -79,18 +65,6 @@ void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, typen
   ASSERT(!fpEquals(negInf, posInf, eps));
   ASSERT(!fpEquals(posInf, nan, eps));
   ASSERT(!fpEquals(nan, negInf, eps));
-
-  // // complex<T>
-  // T r = 1.0;
-  // T i = 2.0;
-  // std::complex<T> c0(r, i);
-  // ASSERT(fpEquals(c0, c0, eps));
-
-  // std::complex<T> c1(r, r);
-  // std::complex<T> c2(i, i);
-  // ASSERT(!fpEquals(c0, c1, eps));
-  // ASSERT(!fpEquals(c0, c2, eps));
-  // ASSERT(!fpEquals(c1, c2, eps));
 }
 
 // A suitable epsilon is calculation dependent, but try to use a reasonable one-size-fits-all (yeah, right...)
