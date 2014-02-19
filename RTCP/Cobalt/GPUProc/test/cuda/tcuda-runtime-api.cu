@@ -74,7 +74,10 @@ int main() {
   err = cudaFree(dptr);
   if (err != cudaSuccess) { cerr << "cudaFree failed: " << cudaGetErrorString(err) << " (" << err << ")" << endl; exit(1); }
 
-  cout << "Test passed" << endl;
+  if (rv == 0)
+    cout << "Test passed" << endl;
+  else
+    cout << "Test failed" << endl;
   return rv;
 }
 
