@@ -46,6 +46,7 @@ function mklofarroot {
   # stdout without it.
   cp $srcdir/../src/Station/mpi_node_list.log_prop . || error "Could not copy mpi_node_list.log_prop"
   cp $srcdir/../src/rtcp.log_prop . || error "Could not copy rtcp.log_prop"
+  cp $srcdir/../src/getOutputProcHosts.log_prop . || error "Could not copy getOutputProcHosts.log_prop"
 
   # Be able to find all binaries through $PATH
   export PATH=$LOFARROOT/bin:$srcdir/../src:$srcdir/../src/scripts:$srcdir:$PATH
