@@ -52,4 +52,3 @@ function mklofarroot {
   export PATH=$LOFARROOT/bin:$srcdir/../src:$srcdir/../src/scripts:$srcdir:$PATH
   echo "PATH=$PATH"
 }
-
