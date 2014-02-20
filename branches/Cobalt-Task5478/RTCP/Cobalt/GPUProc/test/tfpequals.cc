@@ -29,7 +29,8 @@
 using namespace LOFAR::Cobalt;
 
 template <typename T>
-void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, typename Epsilon<T>::Type eps)
+void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff,
+                  typename Epsilon<T>::Type eps)
 {
   T v0 = 0.0;
   T v1 = 1.0;
@@ -67,16 +68,21 @@ void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, typen
   ASSERT(!fpEquals(nan, negInf, eps));
 }
 
-// A suitable epsilon is calculation dependent, but try to use a reasonable one-size-fits-all (yeah, right...)
-// Do some basic tests, also to check behavior wrt NaN and Inf. (One should use binary/hex, not decimal notation...)
+// A suitable epsilon is calculation dependent, but try to use a reasonable
+// one-size-fits-all (yeah, right...).  Do some basic tests, also to check
+// behavior wrt NaN and Inf. (One should use binary/hex, not decimal
+// notation...)
 int main()
 {
   INIT_LOGGER("tfpequals");
 
-  // On Linux x86-64 (gcc-4.6.1), epsilon() returns 1.192092896e-07f and 2.22044604925031308e-16
-  // Run gcc -dM -E empty.h | less for the list of predefines.
-  LOG_INFO_STR("numeric_limits<float>::epsilon()="  << std::setprecision(9+1)  << std::numeric_limits<float>::epsilon());
-  LOG_INFO_STR("numeric_limits<double>::epsilon()=" << std::setprecision(17+1) << std::numeric_limits<double>::epsilon());
+  // On Linux x86-64 (gcc-4.6.1), epsilon() returns 1.192092896e-07f and
+  // 2.22044604925031308e-16 Run gcc -dM -E empty.h | less for the list of
+  // predefines.
+  LOG_INFO_STR("numeric_limits<float>::epsilon()="  << std::setprecision(9+1)
+               << std::numeric_limits<float>::epsilon());
+  LOG_INFO_STR("numeric_limits<double>::epsilon()=" << std::setprecision(17+1)
+               << std::numeric_limits<double>::epsilon());
 
   float epsf = 4.0f * std::numeric_limits<float>::epsilon();
   float difff = epsf / 2.0f;
