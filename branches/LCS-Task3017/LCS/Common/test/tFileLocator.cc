@@ -41,6 +41,28 @@ using namespace LOFAR;
 
 int errors;
 
+// Helper function that expands environment variables in a path. Do not try to
+// be smart, we only handle the case where the environment variable itself is
+// used, i.e. without leading or trailing stuff.
+string expandPath(const string& path)
+{
+	string result;
+	vector<string> dirs = StringUtil::split(path, ':');
+	for (size_t i = 0; i < dirs.size(); i++) {
+		string dir = dirs[i];
+		if (dir.empty()) continue;
+		if (dir[0] == '$') {
+			char* env = getenv(dir.substr(1).c_str());
+			dir = (env ? env : "");
+		}
+		if (!dir.empty()) {
+			if (!result.empty()) result += ":";
+			result += dir;
+		}
+	}
+	return result;
+}
+
 int main (int, char *argv[]) {
  
 	using LOFAR::basename;
@@ -93,11 +115,7 @@ int main (int, char *argv[]) {
 	LOG_INFO (formatString("Path / is %sin the chain", path2 ? "" : "NOT "));
 	CHECK(path2);
 
-	LOG_INFO ("Searching file 'CLUSTER_INFO'");
-	LOG_INFO_STR ("fullname = " << Locator1.locate("CLUSTER_INFO"));
-	CHECK(Locator1.locate("CLUSTER_INFO") == "");
-
-	LOG_INFO ("Searching file 'test'");
+	LOG_INFO ("Searching file 'wc'");
 	LOG_INFO_STR ("fullname = " << Locator1.locate("wc"));
 	CHECK(Locator1.locate("wc") == "/usr/bin/wc");
 
@@ -115,41 +133,41 @@ int main (int, char *argv[]) {
 
 #if RESOLVE_INPUT_NOT_PRIVATE
 	LOG_INFO_STR("'$iserniet': " <<  Locator1.resolveInput("$iserniet"));
-	LOG_INFO_STR("'$lofarroot': " <<  Locator1.resolveInput("$lofarroot"));
-	LOG_INFO_STR("'$lofarroot/bin': " <<  
-						Locator1.resolveInput("$lofarroot/bin"));
-	LOG_INFO_STR("'/sbin:$lofarroot/bin': " <<  
-						Locator1.resolveInput("/sbin:$lofarroot/bin"));
-	LOG_INFO_STR("'/sbin:$lofarroot/bin:/usr/sbin': " <<  
-						Locator1.resolveInput("/sbin:$lofarroot/bin:/usr/sbin"));
+	LOG_INFO_STR("'$LOFARROOT': " <<  Locator1.resolveInput("$LOFARROOT"));
+	LOG_INFO_STR("'$LOFARROOT/bin': " <<  
+						Locator1.resolveInput("$LOFARROOT/bin"));
+	LOG_INFO_STR("'/sbin:$LOFARROOT/bin': " <<  
+						Locator1.resolveInput("/sbin:$LOFARROOT/bin"));
+	LOG_INFO_STR("'/sbin:$LOFARROOT/bin:/usr/sbin': " <<  
+						Locator1.resolveInput("/sbin:$LOFARROOT/bin:/usr/sbin"));
 #endif	
 
-	LOG_INFO ("FOR THE NEXT TESTS THE ENVVAR $lofarroot IS SET TO /opt/lofar");
-	setenv("lofarroot", "/opt/lofar", 1);
+	LOG_INFO ("FOR THE NEXT TESTS THE ENVVAR $LOFARROOT IS SET TO /usr/local");
+	setenv("LOFARROOT", "/usr/local", 1);
 
 	LOG_INFO ("Creating default fileLocator");
 	FileLocator		Locator2;
 	LOG_INFO_STR ("registered path = " << Locator2.getPath());
-	CHECK(Locator2.getPath() == string(BASE_SEARCH_DIR) + ":" +
+	CHECK(Locator2.getPath() == expandPath(BASE_SEARCH_DIR) + ":" +
 		dirname(getExecutablePath()) + ":" +
 		dirname(dirname(getExecutablePath())));
 
-	path1 = Locator2.hasPath("$lofarroot");
+	path1 = Locator2.hasPath("$LOFARROOT");
 	path2 = Locator2.hasPath("/opt/lofar/");
-	LOG_INFO (formatString("Path $lofarroot is %sin the chain", path1 ? "" : "NOT "));
+	LOG_INFO (formatString("Path $LOFARROOT is %sin the chain", path1 ? "" : "NOT "));
 	LOG_INFO (formatString("Path /opt/lofar/ is %sin the chain", path2 ? "" : "NOT "));
 	CHECK(path1);
 	CHECK(path2);
 
-	path1 = Locator2.hasPath("$unexisting_envvar");
-	LOG_INFO (formatString("Path $unexisting_envvar is %sin the chain", path1 ? "" : "NOT "));
+	path1 = Locator2.hasPath("$NONEXISTING_ENVVAR");
+	LOG_INFO (formatString("Path $NONEXISTING_ENVVAR is %sin the chain", path1 ? "" : "NOT "));
 	CHECK(!path1);
 
 	LOG_INFO("Setting subdir to 'foo'");
 	Locator2.setSubdir("foo");
 	LOG_INFO_STR ("registered path = " << Locator2.getPath());
 	LOG_INFO_STR ("registered subdir = " << Locator2.getSubdir());
-	CHECK(Locator2.getPath() == string(BASE_SEARCH_DIR) + ":" +
+	CHECK(Locator2.getPath() == expandPath(BASE_SEARCH_DIR) + ":" +
 		dirname(getExecutablePath()) + ":" + 
 		dirname(dirname(getExecutablePath())));
 	CHECK(Locator2.getSubdir() == "foo");
@@ -166,7 +184,7 @@ int main (int, char *argv[]) {
 	ConfigLocator	aCL;
 	LOG_INFO_STR ("registered path = " << aCL.getPath());
 	LOG_INFO_STR ("registered subdir = " << aCL.getSubdir());
-	CHECK(aCL.getPath() == string(BASE_SEARCH_DIR) + ":" +
+	CHECK(aCL.getPath() == expandPath(BASE_SEARCH_DIR) + ":" +
 		dirname(getExecutablePath()) + ":" + 
 		dirname(dirname(getExecutablePath())));
 	CHECK(aCL.getSubdir() == "etc");
