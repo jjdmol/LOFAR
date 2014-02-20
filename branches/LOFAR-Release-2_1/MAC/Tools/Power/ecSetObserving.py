@@ -7,6 +7,7 @@
 from isEcLib import *
 import time
 import subprocess
+import os,sys
 
 def main():
     host = getIP()
@@ -54,6 +55,14 @@ def cmd(cmd, args=''):
 
 # start main()
 if __name__ == "__main__":
+
+	# Fork the process, so we can run it as a daemon
+	# using /etc/init.d/ecSetObserving [start/stop/status]	
+	fpid = os.fork()
+	if fpid!=0:
+  	# Running as daemon now. PID is fpid
+  		sys.exit(0)
+
 	main()
 
 
