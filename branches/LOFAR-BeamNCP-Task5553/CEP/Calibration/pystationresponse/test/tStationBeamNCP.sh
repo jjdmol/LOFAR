@@ -1,2 +1,2 @@
 #!/bin/sh
-./runctest.sh tApplyCal
+./runctest.sh tStationBeamNCP
