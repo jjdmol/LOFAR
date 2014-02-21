@@ -181,16 +181,12 @@ namespace {
       Position         itsPhaseRef;
 
       string           itsMode;
-      uint             itsCellSizeTime;
-      uint             itsCellSizeFreq;
+      bool             itsPhaseOnly;
 
       uint             itsDebugLevel;
 
       vector<Baseline> itsBaselines;
       vector<ThreadPrivateStorage> itsThreadStorage;
-
-      casa::Matrix<casa::DComplex> itsOldVis;
-      casa::Matrix<casa::DComplex> itsOldMVis;
 
       casa::Array<casa::DComplex> itsVis;
       casa::Array<casa::DComplex> itsMVis;
@@ -213,6 +209,7 @@ namespace {
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;
 
       PatchList        itsPatchList;
+      int              itsThingie;
 
       NSTimer          itsTimer;
     };

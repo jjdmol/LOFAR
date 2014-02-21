@@ -69,14 +69,13 @@ namespace LOFAR {
         itsSourceDBName  (parset.getString (prefix + "sourcedb")),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "model.beam")),
-        itsCellSizeTime  (parset.getInt (prefix + "cellsize.time", 1)),
-        itsCellSizeFreq  (parset.getInt (prefix + "cellsize.freq", 0)),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
         itsThreadStorage  (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 1000)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-9)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
+        itsThingie       (0),
         itsPatchList     ()
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
@@ -115,6 +114,18 @@ namespace LOFAR {
         THROW (Exception, "Can only solve for diagonal or all gains");
       }
 
+      string parmmode=parset.getString(prefix+"mode","COMPLEX");
+      if (parmmode=="COMPLEX") {
+        itsPhaseOnly = false;
+      } else if (parmmode=="PHASE") {
+        itsPhaseOnly = true;
+        if (itsMode!="diaggain") {
+          THROW (Exception, "Mode PHASE only works when solving for diagonal gains");
+        }
+      } else {
+        THROW (Exception, "Can only handle the modes Phase and Complex");
+      }
+
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
 
@@ -145,7 +156,7 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
 
       if (nCh>1) {
-        THROW(Exception, "Sorry, for now this code only handles MSs with one channel");
+        cout<<"WARNING: for now this code only handles MSs with one channel"<<endl;
       }
 
       // initialize storage
@@ -190,8 +201,10 @@ namespace LOFAR {
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
       os << "  max iter:       " << itsMaxIter << endl;
+      os << "  tolerance:      " << itsTolerance << endl;
       os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
+      os << "  phase only:     " << boolalpha << itsPhaseOnly << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -284,101 +297,8 @@ namespace LOFAR {
       getNextStep()->process(buf);
       return false;
     }
-/*
-    void GainCal::stefcalunpolold (dcomplex* model, casa::Complex* data, float* weight,
-    const Bool* flag, uint nCr, uint nSt, uint nBl) {
-      itsOldVis.resize(nSt*2,nSt*2);
-      itsOldMVis.resize(nSt*2,nSt*2);
 
-      itsOldVis=0;
-      itsOldMVis=0;
-      for (uint bl=0;bl<nBl;++bl) {
-        // Assume nCh = 1 for now
 
-        uint ant1=info().getAnt1()[bl];
-        uint ant2=info().getAnt2()[bl];
-        if (ant1==ant2 || flag[bl*nCr]) {
-          continue;
-        }
-
-        itsOldVis(ant1    ,ant2    ) = DComplex(data[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldVis(ant1    ,ant2+nSt) = DComplex(data[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldVis(ant1+nSt,ant2    ) = DComplex(data[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldVis(ant1+nSt,ant2+nSt) = DComplex(data[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
-        itsOldVis(ant2    ,ant1    ) = DComplex(conj(data[bl*nCr  ]))*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldVis(ant2+nSt,ant1    ) = DComplex(conj(data[bl*nCr+1]))*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldVis(ant2    ,ant1+nSt) = DComplex(conj(data[bl*nCr+2]))*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldVis(ant2+nSt,ant1+nSt) = DComplex(conj(data[bl*nCr+3]))*DComplex(sqrt(weight[bl*nCr+3]));
-
-        itsOldMVis(ant1    ,ant2    ) = model[bl*nCr  ]*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldMVis(ant1    ,ant2+nSt) = model[bl*nCr+1]*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldMVis(ant1+nSt,ant2    ) = model[bl*nCr+2]*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldMVis(ant1+nSt,ant2+nSt) = model[bl*nCr+3]*DComplex(sqrt(weight[bl*nCr+3]));
-        itsOldMVis(ant2    ,ant1    ) = conj(model[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldMVis(ant2+nSt,ant1    ) = conj(model[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldMVis(ant2    ,ant1+nSt) = conj(model[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldMVis(ant2+nSt,ant1+nSt) = conj(model[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
-      }
-
-      double qv=0;
-      double qvm=0;
-      for (uint ant1=0;ant1<2*nSt;++ant1) {
-        for (uint ant2=0;ant2<2*nSt;++ant2) {
-          qv+=norm(itsOldVis(ant1,ant2));
-          qvm+=norm(itsOldMVis(ant1,ant2));
-        }
-      }
-      double q=sqrt(qv)/sqrt(qvm);
-      cout<<"q="<<q<<endl;
-
-      vector<DComplex> g(nSt*2);   // First nSt * Gain:0:0 then nSt * Gain:1:1
-      for (uint i=0;i<2*nSt;++i) {
-        g[i]=1.0;
-      }
-      vector<DComplex> gold(nSt*2);
-      vector<DComplex> gx(nSt*2);
-      vector<DComplex> z(nSt*2);
-
-      double w;
-      DComplex t;
-
-      uint iter=0;
-      for (;iter<itsMaxIter;++iter) {
-        gold = g;
-        for (uint j=0;j<2*nSt;++j) {
-          w=0;
-          t=0;
-          for (uint i=0;i<2*nSt;++i) {
-            z[i]=conj(gold[i])*itsOldMVis(i,j);
-            w+=norm(z[i]);
-            t+=conj(z[i])*itsOldVis(i,j);
-          }
-          g[j]=t/w;
-        }
-        if (iter%2==1) {
-          gx = g;
-          double gxnorm=0;
-          double diffnorm=0;
-          for (uint i=0;i<2*nSt;++i) {
-            diffnorm+=norm(gx[i]-gold[i]);
-            gxnorm+=  norm(gx[i]);
-          }
-          if (sqrt(diffnorm/gxnorm)<itsTolerance) {
-            break;
-          } else {
-            for (uint i=0;i<2*nSt;++i) {
-              g[i]=0.5*g[i]+0.5*gold[i];
-            }
-          }
-        }
-      }
-      if (iter==itsMaxIter) {
-        cerr<<"!";
-      }
-
-      itsDiagSols.push_back(g);
-    }
-*/
     void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
@@ -663,7 +583,9 @@ namespace LOFAR {
       // Let's save G...
       //itsSols.push_back(g);
 
-      cout<<"g="<<iS.g<<endl;
+      if (itsDebugLevel>1) {
+        cout<<"g="<<iS.g<<endl;
+      }
     }
 
 
@@ -686,15 +608,14 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
 
-      uint nSt=2*itsMVis.shape()[0];
-      uint nCr=4;
+      uint nSt=itsMVis.shape()[0];
 
-      iS.g.resize(nSt,1);
-      iS.gold.resize(nSt,1);
-      iS.gx.resize(nSt,1);
-      iS.gxx.resize(nSt,1);
-      iS.h.resize(nSt,1);
-      iS.z.resize(nSt,1);
+      iS.g.resize(2*nSt,1);
+      iS.gold.resize(2*nSt,1);
+      iS.gx.resize(2*nSt,1);
+      iS.gxx.resize(2*nSt,1);
+      iS.h.resize(2*nSt,1);
+      iS.z.resize(2*nSt,1);
 
       double w;
       DComplex t;
@@ -706,76 +627,48 @@ namespace LOFAR {
       int sstep=0;
 
       uint ch=0;
-
-      DComplex* mvis=itsMVis.data();
-      for (uint st1=0;st1<nSt;++st1) {
-        for (uint st2=0;st2<nSt;++st2) {
-          cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<mvis[nSt*nSt*ch+st1*nSt+st2]<<endl;
+      if (itsDebugLevel>10) {
+        for (uint st1=0;st1<2*nSt;++st1) {
+          for (uint st2=0;st2<2*nSt;++st2) {
+            uint crjump=(st2/nSt)+(st1/nSt);
+            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,st1%nSt,st2%nSt,crjump,ch))<<endl;
+          }
         }
       }
 
-#ifdef undef
       uint iter=0;
       for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
-        for (uint st=0;st<nSt;++st) {
+        for (uint st=0;st<2*nSt;++st) {
           iS.h(st,0)=conj(iS.g(st,0));
         }
 
-        /*
-        for (uint j=0;j<2*nSt;++j) {
+        for (uint st1=0;st1<2*nSt;++st1) {
           w=0;
           t=0;
-          for (uint i=0;i<2*nSt;++i) {
-            z[i]=conj(gold[i])*itsOldMVis(i,j);
-            w+=norm(z[i]);
-            t+=conj(z[i])*itsOldVis(i,j);
+          for (uint st2=0;st2<2*nSt;++st2) {
+            uint crjump=2*(st2/nSt)+(st1/nSt);
+            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+            w+=norm(iS.z(st2,0));
+            t+=conj(iS.z(st2,0)) * itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
           }
-          g[j]=t/w;
+          iS.g(st1,0)=t/w;
+          if (itsPhaseOnly) {
+            iS.g(st1,0)/=abs(iS.g(st1,0));
+          }
         }
-        */
-
-        for (uint st1=0;st1<nSt;++st1) {
-          for (uint st2=0;st2<nSt;++st2) {
-            iS.z(st2,0) = iS.h(st2,0) * mvis[nSt*nSt*ch+st1*nSt+st2];
-          }
-
-          w=0;
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
-            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
-            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
-          }
-
-          t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,0));
-            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,0));
-            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,0)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,0));
-          }
-          DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
-          iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
-          iS.g(st1,1) = invdet * ( w(3) * t(1) - w(1) * t(3) );
-          iS.g(st1,2) = invdet * ( w(0) * t(2) - w(2) * t(0) );
-          iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
-        }
-
         if (iter % 2 == 1) {
           dgxx = dgx;
           dgx  = dg;
 
           double fronormdiff=0;
           double fronormg=0;
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
-              fronormdiff+=abs(diff*diff);
-              fronormg+=abs(iS.g(ant,cr)*iS.g(ant,cr));
-            }
+          for (uint ant=0;ant<2*nSt;++ant) {
+            DComplex diff=iS.g(ant,0)-iS.gold(ant,0);
+            fronormdiff+=abs(diff*diff);
+            fronormg+=abs(iS.g(ant,0)*iS.g(ant,0));
           }
           fronormdiff=sqrt(fronormdiff);
           fronormg=sqrt(fronormg);
@@ -792,10 +685,8 @@ namespace LOFAR {
           if (itsDebugLevel>2) {
             cout<<"Averaged"<<endl;
           }
-          for (uint ant=0;ant<nSt;++ant) {
-            for (uint cr=0;cr<nCr;++cr) {
-              iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
-            }
+          for (uint ant=0;ant<2*nSt;++ant) {
+            iS.g(ant,0) = (1-omega) * iS.g(ant,0) + omega * iS.gold(ant,0);
           }
 
           if (!threestep) {
@@ -815,19 +706,15 @@ namespace LOFAR {
                 if (itsDebugLevel>2) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
-                  }
+                for (uint ant=0;ant<2*nSt;++ant) {
+                    iS.g(ant,0) = f1q * iS.g(ant,0) + f2q * iS.gx(ant,0);
                 }
               } else if (dg <= dgx) {
                 if (itsDebugLevel>2) {
                   cout<<"dg<=dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
-                  for (uint cr=0;cr<nCr;++cr) {
-                    iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
-                  }
+                for (uint ant=0;ant<2*nSt;++ant) {
+                  iS.g(ant,0) = f1 * iS.g(ant,0) + f2 * iS.gx(ant,0) + f3 * iS.gxx(ant,0);
                 }
               } else if (dg <= c2 *dgx) {
                 if (itsDebugLevel>2) {
@@ -861,10 +748,8 @@ namespace LOFAR {
 
       DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
       // Set phase of first gain to zero
-      for (uint st=0;st<nSt;++st) {
-        for (uint cr=0;cr<nCr;++cr) {
-           iS.g(st,cr)*=p;
-        }
+      for (uint st=0;st<2*nSt;++st) {
+        iS.g(st,0)*=p;
       }
 
       for (uint ant2=0;ant2<nSt;++ant2) {
@@ -877,44 +762,14 @@ namespace LOFAR {
       //itsSols.push_back(g);
 
       cout<<"g="<<iS.g<<endl;
-#endif
+      if (itsThingie>0) {
+        THROW(Exception,"Klaar!");
+      }
+      itsThingie++;
     }
 
     void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
                                  const Bool* flag, uint nCr, uint nSt, uint nBl) {
-      itsOldVis.resize(nSt*2,nSt*2);
-      itsOldMVis.resize(nSt*2,nSt*2);
-
-      itsOldVis=0;
-      itsOldMVis=0;
-      for (uint bl=0;bl<nBl;++bl) {
-        // Assume nCh = 1 for now
-
-        uint ant1=info().getAnt1()[bl];
-        uint ant2=info().getAnt2()[bl];
-        if (ant1==ant2 || flag[bl*nCr]) {
-          continue;
-        }
-
-        itsOldVis(2*ant1  ,2*ant2  ) = DComplex(data[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldVis(2*ant1  ,2*ant2+1) = DComplex(data[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldVis(2*ant1+1,2*ant2  ) = DComplex(data[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldVis(2*ant1+1,2*ant2+1) = DComplex(data[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
-        itsOldVis(2*ant2  ,2*ant1  ) = DComplex(conj(data[bl*nCr  ]))*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldVis(2*ant2+1,2*ant1  ) = DComplex(conj(data[bl*nCr+1]))*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldVis(2*ant2  ,2*ant1+1) = DComplex(conj(data[bl*nCr+2]))*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldVis(2*ant2+1,2*ant1+1) = DComplex(conj(data[bl*nCr+3]))*DComplex(sqrt(weight[bl*nCr+3]));
-
-        itsOldMVis(2*ant1  ,2*ant2  ) = model[bl*nCr  ]*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldMVis(2*ant1  ,2*ant2+1) = model[bl*nCr+1]*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldMVis(2*ant1+1,2*ant2  ) = model[bl*nCr+2]*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldMVis(2*ant1+1,2*ant2+1) = model[bl*nCr+3]*DComplex(sqrt(weight[bl*nCr+3]));
-        itsOldMVis(2*ant2  ,2*ant1  ) = conj(model[bl*nCr  ])*DComplex(sqrt(weight[bl*nCr+0]));
-        itsOldMVis(2*ant2+1,2*ant1  ) = conj(model[bl*nCr+1])*DComplex(sqrt(weight[bl*nCr+1]));
-        itsOldMVis(2*ant2  ,2*ant1+1) = conj(model[bl*nCr+2])*DComplex(sqrt(weight[bl*nCr+2]));
-        itsOldMVis(2*ant2+1,2*ant1+1) = conj(model[bl*nCr+3])*DComplex(sqrt(weight[bl*nCr+3]));
-      }
-
       ofstream mFile;
       mFile.open ("debug.txt");
       mFile << "# Created by NDPPP"<<endl;
@@ -925,7 +780,7 @@ namespace LOFAR {
 
       for (uint row=0;row<nSt*2;++row) {
         for (uint col=0;col<nSt*2;++col) {
-          mFile << itsOldVis(row,col)<<" ";
+          //mFile << itsVis(row,col)<<" ";
         }
         mFile << endl;
       }
@@ -938,7 +793,7 @@ namespace LOFAR {
 
       for (uint row=0;row<nSt*2;++row) {
         for (uint col=0;col<nSt*2;++col) {
-          mFile << itsOldMVis(row,col)<<" ";
+          //mFile << itsMVis(row,col)<<" ";
         }
         mFile << endl;
       }
