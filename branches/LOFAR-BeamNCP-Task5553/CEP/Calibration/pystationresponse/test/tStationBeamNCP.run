@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if test ! -f tStationBeamNCP.tgz; then
+  return 3   # untested
+fi
+
+tar zxf tStationBeamNCP.tgz
+python tStationBeamNCP.py
