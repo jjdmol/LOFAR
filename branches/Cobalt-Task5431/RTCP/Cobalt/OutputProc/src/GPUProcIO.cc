@@ -143,7 +143,11 @@ void process(Stream &controlStream, size_t myRank)
         // that is obtained after the end of an observation.
         LOG_INFO_STR("Waiting for final meta data");
 
-        finalMetaData.read(controlStream);
+        try {
+          finalMetaData.read(controlStream);
+        } catch (Stream::EndOfStreamException &err) {
+          LOG_ERROR_STR("Failed to read final meta data: " << err);
+        }
 
         if (parset.realTime()) {
           // Real-time observations: stop now. MultiReceiver::kill
