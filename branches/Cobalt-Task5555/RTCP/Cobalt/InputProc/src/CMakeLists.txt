@@ -27,6 +27,7 @@ if(MPI_FOUND)
     Transpose/MPISendStation.cc
     Transpose/MPIReceiveStations.cc
     Transpose/MPIUtil.cc
+    Transpose/MPIUtil2.cc
   )
 endif(MPI_FOUND)
 
