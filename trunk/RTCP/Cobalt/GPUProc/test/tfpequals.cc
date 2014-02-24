@@ -29,7 +29,8 @@
 using namespace LOFAR::Cobalt;
 
 template <typename T>
-void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, T eps)
+void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff,
+                  typename Epsilon<T>::Type eps)
 {
   T v0 = 0.0;
   T v1 = 1.0;
@@ -54,6 +55,7 @@ void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, T eps
 
   ASSERT(fpEquals(large-largeDiff, large, eps));
   ASSERT(fpEquals(-large+largeDiff, -large-largeDiff, eps));
+  ASSERT(fpEquals(v1+large, v2+large, eps));
 
   // NaN, Inf
   // A NaN is unequal to any value, even NaN.
@@ -64,34 +66,27 @@ void testFpEquals(T nan, T posInf, T negInf, T diff, T large, T largeDiff, T eps
   ASSERT(!fpEquals(negInf, posInf, eps));
   ASSERT(!fpEquals(posInf, nan, eps));
   ASSERT(!fpEquals(nan, negInf, eps));
-
-  // complex<T>
-  T r = 1.0;
-  T i = 2.0;
-  std::complex<T> c0(r, i);
-  ASSERT(fpEquals(c0, c0, eps));
-
-  std::complex<T> c1(r, r);
-  std::complex<T> c2(i, i);
-  ASSERT(!fpEquals(c0, c1, eps));
-  ASSERT(!fpEquals(c0, c2, eps));
-  ASSERT(!fpEquals(c1, c2, eps));
 }
 
-// A suitable epsilon is calculation dependent, but try to use a reasonable one-size-fits-all (yeah, right...)
-// Do some basic tests, also to check behavior wrt NaN and Inf. (One should use binary/hex, not decimal notation...)
+// A suitable epsilon is calculation dependent, but try to use a reasonable
+// one-size-fits-all (yeah, right...).  Do some basic tests, also to check
+// behavior wrt NaN and Inf. (One should use binary/hex, not decimal
+// notation...)
 int main()
 {
   INIT_LOGGER("tfpequals");
 
-  // On Linux x86-64 (gcc-4.6.1), epsilon() returns 1.192092896e-07f and 2.22044604925031308e-16
-  // Run gcc -dM -E empty.h | less for the list of predefines.
-  LOG_INFO_STR("numeric_limits<float>::epsilon()="  << std::setprecision(9+1)  << std::numeric_limits<float>::epsilon());
-  LOG_INFO_STR("numeric_limits<double>::epsilon()=" << std::setprecision(17+1) << std::numeric_limits<double>::epsilon());
+  // On Linux x86-64 (gcc-4.6.1), epsilon() returns 1.192092896e-07f and
+  // 2.22044604925031308e-16 Run gcc -dM -E empty.h | less for the list of
+  // predefines.
+  LOG_INFO_STR("numeric_limits<float>::epsilon()="  << std::setprecision(9+1)
+               << std::numeric_limits<float>::epsilon());
+  LOG_INFO_STR("numeric_limits<double>::epsilon()=" << std::setprecision(17+1)
+               << std::numeric_limits<double>::epsilon());
 
   float epsf = 4.0f * std::numeric_limits<float>::epsilon();
   float difff = epsf / 2.0f;
-  float largef = 1000000.0f;
+  float largef = 1e7f;
   float largeDifff = 1e-1f;
   float nanf =     0.0f/0.0f;
   float posInff =  1.0f/0.0f;
@@ -101,13 +96,31 @@ int main()
 
   double eps = 4.0 * std::numeric_limits<double>::epsilon();
   double diff = eps / 2.0;
-  double large = 100000000000.0;
-  double largeDiff = 1e-5f;
+  double large = 1e16;
+  double largeDiff = 1e-5;
   double nan =     0.0/0.0;
   double posInf =  1.0/0.0;
   double negInf = -1.0/0.0;
   LOG_INFO("testFpEquals<double>()");
   testFpEquals(nan, posInf, negInf, diff, large, largeDiff, eps);
+
+  std::complex<float> cdifff(0.0f, difff);
+  std::complex<float> clargef(0.0f, largef);
+  std::complex<float> clargeDifff(0.0f, largeDifff);
+  std::complex<float> cnanf(0.0f, nanf);
+  std::complex<float> cposInff(0.0f, posInff);
+  std::complex<float> cnegInff(0.0f, negInff);
+  LOG_INFO("testFpEquals<complex<float>>()");
+  testFpEquals(cnanf, cposInff, cnegInff, cdifff, clargef, clargeDifff, epsf);
+
+  std::complex<double> cdiff(0.0f, diff);
+  std::complex<double> clarge(0.0f, large);
+  std::complex<double> clargeDiff(0.0f, largeDiff);
+  std::complex<double> cnan(0.0f, nan);
+  std::complex<double> cposInf(0.0f, posInf);
+  std::complex<double> cnegInf(0.0f, negInf);
+  LOG_INFO("testFpEquals<complex<double>>()");
+  testFpEquals(cnan, cposInf, cnegInf, cdiff, clarge, clargeDiff, eps);
 
   LOG_INFO("all cool");
   return 0;
