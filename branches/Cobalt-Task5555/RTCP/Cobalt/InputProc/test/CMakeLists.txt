@@ -27,6 +27,7 @@ if(UNITTEST++_FOUND)
   if(MPI_FOUND)
     lofar_add_test(tMPISendReceiveStation tMPISendReceiveStation.cc)
   endif(MPI_FOUND)
+  lofar_add_test(tMPIUtil2 tMPIUtil2.cc)
 endif(UNITTEST++_FOUND)
 
 if(MPI_FOUND)
