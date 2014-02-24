@@ -48,6 +48,9 @@
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
+// Actually do any processing
+//#define DO_PROCESSING
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -154,7 +157,7 @@ namespace LOFAR
         for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
           SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
           SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
-
+#ifdef DO_PROCESSING
           // Copy the meta data to the SubbandProcInputData struct
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
@@ -165,6 +168,9 @@ namespace LOFAR
           }
 
           queue.inputPool.filled.append(data);
+#else
+          queue.inputPool.free.append(data);
+#endif
         }
 
         // Report flags per station
