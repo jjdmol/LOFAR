@@ -47,8 +47,9 @@ using boost::format;
 namespace LOFAR {
 namespace Cobalt {
 
-void process(Stream &controlStream, size_t myRank)
+bool process(Stream &controlStream, size_t myRank)
 {
+  bool success(true);
   Parset parset(&controlStream);
 
   // Send identification string to the MAC Log Processor
@@ -145,8 +146,9 @@ void process(Stream &controlStream, size_t myRank)
 
         try {
           finalMetaData.read(controlStream);
-        } catch (Stream::EndOfStreamException &err) {
-          LOG_ERROR_STR("Failed to read final meta data: " << err);
+        } catch (LOFAR::Exception &err) {
+          success = false;
+          LOG_ERROR_STR("Failed to read broken tile information: " << err);
         }
 
         if (parset.realTime()) {
@@ -206,7 +208,14 @@ void process(Stream &controlStream, size_t myRank)
       feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
 
     LOG_INFO_STR("Forwarding LTA feedback");
-    feedbackLTA.write(&controlStream);
+    try {
+      feedbackLTA.write(&controlStream);
+    } catch (LOFAR::Exception &err) {
+      success = false;
+      LOG_ERROR_STR("Failed to forward LTA feedback information: " << err);
+    }
+
+    return success;
   }
 }
 
