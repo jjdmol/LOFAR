@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 #include <vector>
+#include <string>
 
 #include <Common/Singleton.h>
 #include <Common/Thread/Mutex.h>
@@ -46,6 +47,9 @@ namespace LOFAR {
       // Stop watching the registered MPI requests.
       void stop();
 
+      // Return whether we've been started
+      bool is_started() const { return started; }
+
     private:
       MPIPoll();
       friend class Singleton<MPIPoll>;
@@ -58,6 +62,9 @@ namespace LOFAR {
 
       // The thread that periodically polls MPI
       SmartPtr<Thread> thread;
+
+      // Unregister a set of MPI requests (doesn't grab mutex)
+      void _remove( RequestSet *set );
 
       // Call MPI to test which requests have finished.
       //
@@ -88,7 +95,7 @@ namespace LOFAR {
     public:
       // Register a set of handles to watch
       // for completion.
-      RequestSet(const std::vector<handle_t> &handles);
+      RequestSet(const std::vector<handle_t> &handles, const std::string &name = "<anonymous>");
 
       ~RequestSet();
 
@@ -104,7 +111,13 @@ namespace LOFAR {
       void waitAll();
 
     private:
+      // non-copyable
+      RequestSet(const RequestSet &);
+
       friend class MPIPoll;
+
+      // An identifier for this set, used for debugging purposes
+      const std::string name;
 
       // MPI handles to watch
       const std::vector<handle_t> handles;
@@ -116,7 +129,7 @@ namespace LOFAR {
       enum State { ACTIVE, FINISHED, REPORTED };
 
       // State of each handle
-      std::vector<bool> states;
+      std::vector<State> states;
 
       // How many requests have been completed
       size_t nrFinished;

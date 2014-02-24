@@ -4,6 +4,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Singleton.h>
+#include <Common/Timer.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Condition.h>
 #include <Common/Thread/Mutex.h>
@@ -14,7 +15,7 @@
 //#define DEBUG_MPI
 
 #ifdef DEBUG_MPI
-#define DEBUG(str)  LOG_DEBUG_STR(str)
+#define DEBUG(str)  LOG_INFO_STR(str)
 #else
 #define DEBUG(str)
 #endif
@@ -34,6 +35,12 @@ namespace LOFAR {
 
 
     void MPIPoll::add( RequestSet *set ) {
+      ASSERT(set != NULL);
+
+      DEBUG("MPIPoll::add " << set->name);
+
+      ASSERT(MPIPoll::instance().is_started());
+
       ScopedLock sl(mutex);
 
       requests.push_back(set);
@@ -44,10 +51,20 @@ namespace LOFAR {
     void MPIPoll::remove( RequestSet *set ) {
       ScopedLock sl(mutex);
 
+      _remove(set);
+    }
+
+    void MPIPoll::_remove( RequestSet *set ) {
+      ASSERT(set != NULL);
+
+      DEBUG("MPIPoll::_remove " << set->name);
+
       const std::vector<RequestSet*>::iterator i = std::find(requests.begin(), requests.end(), set);
 
       if (i == requests.end())
         return;
+
+      DEBUG("MPIPoll::_remove found and removing " << set->name);
 
       requests.erase(i);
     }
@@ -61,6 +78,8 @@ namespace LOFAR {
 
 
     void MPIPoll::start() {
+      DEBUG("MPIPoll::start");
+
       started = true;
 
       thread = new Thread(this, &MPIPoll::pollThread, "MPIPoll::pollThread");
@@ -68,6 +87,8 @@ namespace LOFAR {
 
 
     void MPIPoll::stop() {
+      DEBUG("MPIPoll::stop");
+
       done = true;
 
       // Unlock thread if it is waiting for a new request
@@ -75,9 +96,16 @@ namespace LOFAR {
 
       // Wait for thread to finish
       thread = 0;
+
+      DEBUG("MPIPoll::stop stopped");
     }
 
+    NSTimer MPIMutexTimer("MPIPoll::MPIMutex", true, false);
+    NSTimer MPITestsomeTimer("MPIPoll::MPI_Testsome", true, false);
+
     std::vector<int> MPIPoll::testSome( std::vector<handle_t> &handles ) const {
+      DEBUG("MPIPoll::testSome on " << handles.size() << " handles");
+
       vector<int> doneset;
 
       if (handles.empty())
@@ -88,13 +116,17 @@ namespace LOFAR {
       int outcount;
 
       {
+        MPIMutexTimer.start();
         ScopedLock sl(MPIMutex);
+        MPIMutexTimer.stop();
 
         // MPI_Testsome will put the indices of finished requests in doneset,
         // and set the respective handle to MPI_REQUEST_NULL.
         //
         // Note that handles that are MPI_REQUEST_NULL on input are ignored.
+        MPITestsomeTimer.start();
         MPI_Testsome(handles.size(), &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
+        MPITestsomeTimer.stop();
       }
 
       // Cut off doneset at the actual number of returned indices
@@ -144,18 +176,23 @@ namespace LOFAR {
         ScopedLock sl(set.mutex);
 
         // Mark as FINISHED
+        DEBUG("MPIPoll::handleRequest: marking " << set.name << "[" << ref.index << "] as FINISHED");
+        ASSERT(set.states[ref.index] == RequestSet::ACTIVE);
         set.states[ref.index] = RequestSet::FINISHED;
+
         set.nrFinished++;
 
         // Inform waitAny/waitSome threads
         set.oneFinished.signal();
 
         if (set.nrFinished == set.handles.size()) {
+          DEBUG("MPIPoll::handleRequest: all requests in " << set.name << " are FINISHED");
+
           // Inform waitAll threads
           set.allFinished.signal();
 
           // Remove this set from the requests to watch
-          remove(&set);
+          _remove(&set);
         }
       }
     }
@@ -180,7 +217,11 @@ namespace LOFAR {
             struct timespec deadline;
 
             deadline.tv_sec  = now.tv_sec;
-            deadline.tv_nsec = now.tv_usec * 1000 + 1000000; // 1 ms
+            deadline.tv_nsec = now.tv_usec * 1000 + 1*1000*1000; // 50 ms
+            if (deadline.tv_nsec > 1000*1000*1000) {
+              deadline.tv_nsec -= 1000*1000*1000;
+              deadline.tv_sec++;
+            }
 
             newRequest.wait(mutex, deadline);
           }
@@ -189,8 +230,9 @@ namespace LOFAR {
     }
 
 
-   RequestSet::RequestSet(const std::vector<handle_t> &handles)
+   RequestSet::RequestSet(const std::vector<handle_t> &handles, const std::string &name)
    :
+     name(name),
      handles(handles),
      states(handles.size(), ACTIVE),
      nrFinished(0)
@@ -229,29 +271,29 @@ namespace LOFAR {
    size_t RequestSet::waitAny() {
      ScopedLock sl(mutex);
 
-     // There has to be something to wait for
-     ASSERT(nrFinished < handles.size());
-
      for(;;) {
        // Look for a finished request that hasn't been
        // reported yet.
        for (size_t i = 0; i < states.size(); ++i) {
          if (states[i] == FINISHED) {
            states[i] = REPORTED;
+
+           DEBUG("RequestSet::waitAny: set " << name << " finished request " << i);
            return i;
          }
        }
 
        // Wait for another request to finish
+       DEBUG("RequestSet::waitAny: set " << name << " waits for a request to finish");
+
+       // There has to be something to wait for
+       ASSERT(nrFinished < handles.size());
        oneFinished.wait(mutex);
      }
    }
 
    vector<size_t> RequestSet::waitSome() {
      ScopedLock sl(mutex);
-
-     // There has to be something to wait for
-     ASSERT(nrFinished < handles.size());
 
      vector<size_t> finished;
 
@@ -266,11 +308,17 @@ namespace LOFAR {
          }
        }
 
-       if (!finished.empty()) {
+       if (finished.empty()) {
          // Wait for another request to finish
+         DEBUG("RequestSet::waitSome: set " << name << " waits for a request to finish");
+
+         // There has to be something to wait for
+         ASSERT(nrFinished < handles.size());
          oneFinished.wait(mutex);
        }
      } while (finished.empty());
+
+     DEBUG("RequestSet::waitSome: set " << name << " finished " << finished.size() << " requests");
 
      return finished;
    }
@@ -279,8 +327,19 @@ namespace LOFAR {
      ScopedLock sl(mutex);
 
      while (nrFinished < handles.size()) {
+       DEBUG("RequestSet::waitAll: set " << name << " has " << nrFinished << "/" << handles.size() << " requests finished");
+
        // Wait for all requests to finish
        allFinished.wait(mutex);
+     }
+
+     DEBUG("RequestSet::waitAll: set " << name << " finished all requests");
+
+     // Mark all requests as reported
+     for (size_t i = 0; i < states.size(); ++i) {
+       ASSERT(states[i] >= FINISHED);
+
+       states[i] = REPORTED;
      }
    }
 
