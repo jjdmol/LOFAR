@@ -77,6 +77,11 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
   nfskey(nfskey),
   listen_sk(-1)
 {  
+  const std::string description = str(boost::format("%s:%s:%s")
+      % (protocol == TCP ? "tcp" : "udp")
+      % hostname
+      % _port);
+
   struct addrinfo hints;
   bool            autoPort = (port == 0);
 
@@ -142,7 +147,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
                 THROW_SYSCALL("sleep");
               }
             } else
-              THROW_SYSCALL("connect");
+              THROW_SYSCALL(str(boost::format("connect [%s]") % description));
         } else {
           int on = 1;
 
@@ -150,7 +155,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
 
           if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-            THROW_SYSCALL("bind");
+            THROW_SYSCALL(str(boost::format("bind [%s]") % description));
 
           if (protocol == TCP) {
             listen_sk = fd;
@@ -158,7 +163,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
             int listenBacklog = 15;
             if (listen(listen_sk, listenBacklog) < 0)
-              THROW_SYSCALL("listen");
+              THROW_SYSCALL(str(boost::format("listen [%s]") % description));
 
             if (doAccept)
               accept(deadline);
@@ -283,7 +288,7 @@ void SocketStream::accept(time_t deadline)
 void SocketStream::setReadBufferSize(size_t size)
 {
   if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
-    perror("setsockopt failed");
+    perror("setsockopt(SO_RCVBUF)");
 }
 
 
