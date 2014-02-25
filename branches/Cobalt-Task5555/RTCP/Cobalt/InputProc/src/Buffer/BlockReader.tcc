@@ -225,9 +225,12 @@ namespace LOFAR {
         const TimeStamp deadline = to + maxDelay;
 
         LOG_DEBUG_STR("Waiting until " << deadline << " for " << from << " to " << to);
-        if (deadline < TimeStamp::now(deadline.getClock())) {
+
+	const TimeStamp now = TimeStamp::now(deadline.getClock());
+        if (deadline < now) {
           // We're too late!
-          LOG_ERROR_STR("Not running at real time! Deadline was " << deadline << " for " << from << " to " << to);
+
+          LOG_ERROR_STR("Not running at real time! Deadline was " << TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago: " << deadline << " for " << from << " to " << to);
         }
 
         waiter.waitUntil(deadline);
