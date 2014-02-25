@@ -1,8 +1,0 @@
-// \ingroup GCF
-// \defgroup PVSS lowlevel interface for accessing the PVSS database contents.
-//
-// The PVSS package contains a lowlevel interface for accessing the PVSS database contents.
-// It defines PVSS equivalents for all basic types like Integer, String, Float etc.
-// and it provides functions for setting and getting values, and for querying the database.
-// This layer is normally not using by the 'end-applications', these use the RTDB package.
-
