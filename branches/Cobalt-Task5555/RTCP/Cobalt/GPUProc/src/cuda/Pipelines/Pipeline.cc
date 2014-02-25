@@ -48,8 +48,10 @@
 
 #define NR_WORKQUEUES_PER_DEVICE  2
 
-// Actually do any processing
-//#define DO_PROCESSING
+// Actually do any processing.
+//
+// If not set, station input is received but discarded immediately.
+#define DO_PROCESSING
 
 namespace LOFAR
 {
