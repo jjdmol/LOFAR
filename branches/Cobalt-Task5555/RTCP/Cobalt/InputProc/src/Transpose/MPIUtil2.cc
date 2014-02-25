@@ -100,7 +100,10 @@ namespace LOFAR {
       DEBUG("MPIPoll::stop stopped");
     }
 
-    NSTimer MPIMutexTimer("MPIPoll::MPIMutex", true, false);
+    // Track the time spent on lock contention
+    NSTimer MPIMutexTimer("MPIPoll::MPIMutex lock()", true, false);
+
+    // Track the time spent in MPI_Testsome
     NSTimer MPITestsomeTimer("MPIPoll::MPI_Testsome", true, false);
 
     std::vector<int> MPIPoll::testSome( std::vector<handle_t> &handles ) const {
@@ -197,10 +200,47 @@ namespace LOFAR {
       }
     }
 
+    namespace {
+      // Returns the current time, as a struct timespec
+      struct timespec now() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        struct timespec ts;
+        ts.tv_sec  = tv.tv_sec;
+        ts.tv_nsec = tv.tv_usec * 1000;
+
+        return ts;
+      }
+
+      // Increment a timespec with a certain number of seconds
+      void inc(struct timespec &ts, double seconds) {
+        const long ns_per_second = 1000 * 1000 * 1000;
+
+        ts.tv_sec  += floor(seconds);
+        ts.tv_nsec += (seconds - floor(seconds)) * ns_per_second;
+
+        // normalize
+        if (ts.tv_nsec > ns_per_second) {
+          ts.tv_nsec -= ns_per_second;
+          ts.tv_sec++;
+        }
+      }
+    }
+
     void MPIPoll::pollThread() {
       ScopedLock sl(mutex);
 
+      struct timespec deadline = now();
+
       while(!done) {
+        // next poll will be in 0.1 ms
+        //
+        // NOTE: MPI is VERY sensitive to this, requiring
+        //       often enough polling to keep transfers
+        //       running smoothly.
+        inc(deadline, 0.0001);
+
         if (requests.empty()) {
           // wait for request, with lock released
           newRequest.wait(mutex);
@@ -211,17 +251,7 @@ namespace LOFAR {
           // if there are still pending requests, release
           // the lock and just wait with a timeout
           if (!requests.empty()) {
-            struct timeval now;
-            gettimeofday(&now, NULL);
 
-            struct timespec deadline;
-
-            deadline.tv_sec  = now.tv_sec;
-            deadline.tv_nsec = now.tv_usec * 1000 + 1*1000*1000; // 50 ms
-            if (deadline.tv_nsec > 1000*1000*1000) {
-              deadline.tv_nsec -= 1000*1000*1000;
-              deadline.tv_sec++;
-            }
 
             newRequest.wait(mutex, deadline);
           }
