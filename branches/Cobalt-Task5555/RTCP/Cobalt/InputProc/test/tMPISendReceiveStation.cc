@@ -36,6 +36,7 @@
 #include <InputProc/Transpose/MPIReceiveStations.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MPIUtil.h>
+#include <InputProc/Transpose/MPIUtil2.h>
 
 #include <UnitTest++.h>
 
@@ -346,12 +347,16 @@ int main( int argc, char **argv )
     data_in[i].y = i16complex(1000, 1000 + i);
   }
 
+  MPIPoll::instance().start();
+
   // Run tests
   int result = UnitTest::RunAllTests() > 0;
 
   // Tear down
   receiver = 0;
   sender = 0;
+
+  MPIPoll::instance().stop();
 
   MPI_Finalize();
 

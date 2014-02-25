@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include "MPIReceiveStations.h"
 #include "MPIUtil.h"
+#include "MPIUtil2.h"
 
 #include <InputProc/SampleType.h>
 
@@ -94,22 +95,23 @@ namespace LOFAR {
 
       // Post receives for all headers
       std::vector<MPI_Request> header_requests(nrStations, MPI_REQUEST_NULL);
-      std::vector<struct Header> headers(nrStations);
+      Vector<struct Header> headers(nrStations, 1, mpiAllocator);
 
       {
         ScopedLock sl(MPIMutex);
 
-      for (size_t stat = 0; stat < nrStations; ++stat) {
-        //LOG_DEBUG_STR(logPrefix << "Posting receive for header from station " << stat);
+        for (size_t stat = 0; stat < nrStations; ++stat) {
+          //LOG_DEBUG_STR(logPrefix << "Posting receive for header from station " << stat);
 
-        // receive the header
-        header_requests[stat] = receiveHeader(stat, headers[stat]);
+          // receive the header
+          header_requests[stat] = receiveHeader(stat, headers[stat]);
+        }
       }
 
-      }
+      RequestSet headers_rs(header_requests, str(boost::format("%s headers") % logPrefix));
 
       // Process stations in the order in which we receive the headers
-      Matrix<struct MetaData> metaData(nrStations, beamlets.size()); // [station][beamlet]
+      Matrix<struct MetaData> metaData(nrStations, beamlets.size(), 1, mpiAllocator); // [station][beamlet]
 
       for (size_t i = 0; i < nrStations; ++i) {
         /*
@@ -119,7 +121,7 @@ namespace LOFAR {
         //LOG_DEBUG_STR(logPrefix << "Waiting for headers");
 
         // Wait for any header request to finish
-        int stat = waitAny(header_requests);
+        int stat = headers_rs.waitAny();
 
         /*
          * CHECK HEADER
@@ -172,7 +174,8 @@ namespace LOFAR {
        * WAIT FOR ALL DATA TO ARRIVE
        */
 
-      waitAll(requests);
+      RequestSet payload_rs(requests, str(boost::format("%s data & metadata") % logPrefix));
+      payload_rs.waitAll();
 
       /*
        * PROCESS DATA

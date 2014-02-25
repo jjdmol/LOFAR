@@ -23,6 +23,7 @@
 #include "MPISendStation.h"
 #include "MapUtil.h"
 #include "MPIUtil.h"
+#include "MPIUtil2.h"
 
 #include <InputProc/SampleType.h>
 
@@ -49,7 +50,7 @@ namespace LOFAR {
 
     MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets )
     :
-      logPrefix(str(boost::format("[station %s] [MPISendStation] ") % settings.station.stationName)),
+      logPrefix(str(boost::format("[station %s to rank %s] [MPISendStation] ") % settings.station.name() % targetRank)),
       settings(settings),
       stationIdx(stationIdx),
       targetRank(targetRank),
@@ -210,6 +211,8 @@ namespace LOFAR {
       ASSERT(nrBeamletRequests <= beamletRequests.size());
       beamletRequests.resize(nrBeamletRequests);
 
+      RequestSet beamlet_rs(beamletRequests, str(boost::format("%s data") % logPrefix));
+
       /*
        * SEND METADATA
        */
@@ -217,22 +220,17 @@ namespace LOFAR {
       std::vector<MPI_Request> metaDataRequests(block.beamlets.size(), MPI_REQUEST_NULL);
 
       for(size_t b = 0; b < nrBeamletRequests; ) { // inner loop increments b, once per request
-#if 0
-        // waitSome is bugged for an unknown reason, that is, using
-        // this causes rtcp to freeze.
-        vector<int> finishedRequests = waitSome(beamletRequests);
-#else
-        vector<int> finishedRequests(1, waitAny(beamletRequests));
-#endif
+        vector<size_t> finishedRequests = beamlet_rs.waitSome();
 
         ASSERT(!finishedRequests.empty());
 
         for(size_t f = 0; f < finishedRequests.size(); ++f, ++b) {
-          const int sendIdx              = finishedRequests[f];
+          const size_t sendIdx              = finishedRequests[f];
 
-          ASSERT(sendIdx >= 0);
-          ASSERT((size_t)sendIdx < beamletRequests.size());
-          ASSERT(beamletRequests[sendIdx] == MPI_REQUEST_NULL);
+          ASSERT(sendIdx < beamletRequests.size());
+
+          // mark as done
+          beamletRequests[sendIdx] = MPI_REQUEST_NULL;
 
           //const size_t globalBeamletIdx  = sendIdx / 2;
           //const size_t transfer          = sendIdx % 2;
@@ -241,7 +239,8 @@ namespace LOFAR {
 
           const struct Block<T>::Beamlet &ib = block.beamlets[beamletIdx];
 
-          // waitSome sets finished requests to MPI_REQUEST_NULL in our array.
+          // we either have one transfer, or iwe check whether the
+          // other transfer is done
           if (ib.nrRanges == 1 || beamletRequests[sendIdx + (transfer == 0 ? 1 : -1)] == MPI_REQUEST_NULL) {
             /*
              * SEND FLAGS FOR BEAMLET
@@ -278,7 +277,8 @@ namespace LOFAR {
        */
 
       // Wait on all pending requests
-      waitAll(metaDataRequests);
+      RequestSet metadata_rs(metaDataRequests, str(boost::format("%s metadata") % logPrefix));
+      metadata_rs.waitAll();
 
       DEBUG("exit");
     }

@@ -43,6 +43,7 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPIUtil2.h>
 #endif
 
 #include <boost/format.hpp>
@@ -281,7 +282,7 @@ int main(int argc, char **argv)
 
   // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
-
+#if 1
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
   if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
@@ -342,6 +343,9 @@ int main(int argc, char **argv)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
+#else
+  {
+#endif
     LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
     devices = allDevices;
   }
@@ -351,7 +355,7 @@ int main(int argc, char **argv)
                  devices[i].getComputeCapabilityMajor() << "." <<
                  devices[i].getComputeCapabilityMinor() <<
                  " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
-
+#if 1
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
   {
@@ -362,12 +366,7 @@ int main(int argc, char **argv)
   } else {
     LOG_DEBUG("All memory is now pinned.");
   }
-
-  // Allow usage of nested omp calls
-  omp_set_nested(true);
-
-  // Allow OpenMP thread registration
-  OMPThread::init();
+#endif
 
   LOG_INFO("----- Initialising Pipeline");
 
@@ -438,6 +437,8 @@ int main(int argc, char **argv)
 
   ASSERT(rank    == real_rank);
   ASSERT(nrHosts == real_size);
+
+  MPIPoll::instance().start();
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
@@ -534,6 +535,8 @@ int main(int argc, char **argv)
   SSH_Finalize();
 
 #ifdef HAVE_MPI
+  MPIPoll::instance().stop();
+
   MPI_Finalize();
 #endif
 
