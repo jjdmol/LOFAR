@@ -80,7 +80,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 1 "PANEL_REF2" -1
-"objects\\Processes\\daemon_big.pnl" 49 72 T 20 1 0 1 0.999999999999986 -22
+"objects\\Processes\\daemon_big.pnl" 49 72 T 20 1 0 1 0.9999999999999858 -22
 1
-"$daemonName""SASGateway"
+"$daemonName""PVSSGateway"
 0
