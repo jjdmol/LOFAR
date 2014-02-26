@@ -13,10 +13,6 @@ lofar_add_test(tstartBGL DEPENDS rtcp)
 lofar_add_test(tMACfeedback DEPENDS rtcp)
 lofar_add_test(tProductionParsets DEPENDS rtcp)
 
-# cmpfloat is started by scripts for a fuzzy compare of 2 output files with raw floats
-lofar_add_executable(cmpfloat cmpfloat.cc)
-lofar_add_test(tcmpfloat DEPENDS cmpfloat)
-
 # tests that use testParset.sh
 
 # fail on all system skip for now
