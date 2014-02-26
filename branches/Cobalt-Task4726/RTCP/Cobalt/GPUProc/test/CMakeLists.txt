@@ -8,7 +8,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_test(tBandPass tBandPass.cc)
 lofar_add_test(tSSH tSSH.cc)
-lofar_add_test(tfpequals tfpequals.cc)
 lofar_add_test(tstartBGL DEPENDS rtcp)
 lofar_add_test(tMACfeedback DEPENDS rtcp)
 lofar_add_test(tProductionParsets DEPENDS rtcp)
