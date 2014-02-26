@@ -83,7 +83,7 @@ namespace LOFAR {
       //
       // If all requests from a RequestSet are completed, the set
       // will be unregistered.
-      void handleRequests();
+      bool handleRequests();
 
       // Keep polling for new requests, and handle the registered ones
       // periodically.
@@ -95,7 +95,7 @@ namespace LOFAR {
     public:
       // Register a set of handles to watch
       // for completion.
-      RequestSet(const std::vector<handle_t> &handles, const std::string &name = "<anonymous>");
+      RequestSet(const std::vector<handle_t> &handles, bool willWaitAll, const std::string &name = "<anonymous>");
 
       ~RequestSet();
 
@@ -118,6 +118,10 @@ namespace LOFAR {
 
       // An identifier for this set, used for debugging purposes
       const std::string name;
+
+      // true:  caller will use waitAll()
+      // false: caller will use waitAny()/waitSome()
+      const bool willWaitAll;
 
       // MPI handles to watch
       const std::vector<handle_t> handles;

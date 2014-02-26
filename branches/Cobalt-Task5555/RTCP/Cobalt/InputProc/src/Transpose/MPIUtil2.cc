@@ -128,7 +128,21 @@ namespace LOFAR {
         //
         // Note that handles that are MPI_REQUEST_NULL on input are ignored.
         MPITestsomeTimer.start();
+#if 1
         MPI_Testsome(handles.size(), &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
+#else
+        outcount = 0;
+        int flag;
+        do {
+          int index;
+
+          MPI_Testany(handles.size(), &handles[0], &index, &flag, MPI_STATUS_IGNORE);
+
+          if (flag && index != MPI_UNDEFINED)
+            doneset[outcount++] = index;
+
+        } while(flag && outcount < handles.size());
+#endif
         MPITestsomeTimer.stop();
       }
 
@@ -147,7 +161,7 @@ namespace LOFAR {
       };
     };
 
-    void MPIPoll::handleRequests()
+    bool MPIPoll::handleRequests()
     {
       // Collect all ACTIVE requests, and keep track of their index
       vector<handle_t> handles;
@@ -186,18 +200,22 @@ namespace LOFAR {
         set.nrFinished++;
 
         // Inform waitAny/waitSome threads
-        set.oneFinished.signal();
+        if (!set.willWaitAll)
+          set.oneFinished.signal();
 
         if (set.nrFinished == set.handles.size()) {
           DEBUG("MPIPoll::handleRequest: all requests in " << set.name << " are FINISHED");
 
           // Inform waitAll threads
-          set.allFinished.signal();
+          if (set.willWaitAll)
+            set.allFinished.signal();
 
           // Remove this set from the requests to watch
           _remove(&set);
         }
       }
+
+      return !finishedIndices.empty();
     }
 
     namespace {
@@ -208,20 +226,20 @@ namespace LOFAR {
 
         struct timespec ts;
         ts.tv_sec  = tv.tv_sec;
-        ts.tv_nsec = tv.tv_usec * 1000;
+        ts.tv_nsec = tv.tv_usec * 1000L;
 
         return ts;
       }
 
       // Increment a timespec with a certain number of seconds
       void inc(struct timespec &ts, double seconds) {
-        const long ns_per_second = 1000 * 1000 * 1000;
+        const long ns_per_second = 1000L * 1000L * 1000L;
 
         ts.tv_sec  += floor(seconds);
         ts.tv_nsec += (seconds - floor(seconds)) * ns_per_second;
 
         // normalize
-        if (ts.tv_nsec > ns_per_second) {
+        if (ts.tv_nsec >= ns_per_second) {
           ts.tv_nsec -= ns_per_second;
           ts.tv_sec++;
         }
@@ -229,9 +247,9 @@ namespace LOFAR {
     }
 
     void MPIPoll::pollThread() {
-      ScopedLock sl(mutex);
+      //Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-      struct timespec deadline = now();
+      ScopedLock sl(mutex);
 
       while(!done) {
         // next poll will be in 0.1 ms
@@ -239,6 +257,8 @@ namespace LOFAR {
         // NOTE: MPI is VERY sensitive to this, requiring
         //       often enough polling to keep transfers
         //       running smoothly.
+
+        struct timespec deadline = now();
         inc(deadline, 0.0001);
 
         if (requests.empty()) {
@@ -246,13 +266,11 @@ namespace LOFAR {
           newRequest.wait(mutex);
         } else {
           // poll all handles
-          handleRequests();
+          (void)handleRequests();
 
           // if there are still pending requests, release
           // the lock and just wait with a timeout
           if (!requests.empty()) {
-
-
             newRequest.wait(mutex, deadline);
           }
         }
@@ -260,9 +278,10 @@ namespace LOFAR {
     }
 
 
-   RequestSet::RequestSet(const std::vector<handle_t> &handles, const std::string &name)
+   RequestSet::RequestSet(const std::vector<handle_t> &handles, bool willWaitAll, const std::string &name)
    :
      name(name),
+     willWaitAll(willWaitAll),
      handles(handles),
      states(handles.size(), ACTIVE),
      nrFinished(0)
@@ -299,6 +318,8 @@ namespace LOFAR {
    }
 
    size_t RequestSet::waitAny() {
+     ASSERT(!willWaitAll);
+
      ScopedLock sl(mutex);
 
      for(;;) {
@@ -323,6 +344,8 @@ namespace LOFAR {
    }
 
    vector<size_t> RequestSet::waitSome() {
+     ASSERT(!willWaitAll);
+
      ScopedLock sl(mutex);
 
      vector<size_t> finished;
@@ -354,6 +377,8 @@ namespace LOFAR {
    }
 
    void RequestSet::waitAll() {
+     ASSERT(willWaitAll);
+
      ScopedLock sl(mutex);
 
      while (nrFinished < handles.size()) {
