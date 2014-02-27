@@ -42,7 +42,9 @@ namespace LOFAR {
       nrStations(nrStations),
       beamlets(beamlets),
       blockSize(blockSize),
-      stationSourceRanks(nrStations, MPI_ANY_SOURCE)
+      stationSourceRanks(nrStations, MPI_ANY_SOURCE),
+      headers(nrStations, 1, mpiAllocator),
+      metaData(nrStations, beamlets.size(), 1, mpiAllocator)
     {
     }
 
@@ -95,7 +97,6 @@ namespace LOFAR {
 
       // Post receives for all headers
       std::vector<MPI_Request> header_requests(nrStations, MPI_REQUEST_NULL);
-      Vector<struct Header> headers(nrStations, 1, mpiAllocator);
 
       {
         ScopedLock sl(MPIMutex);
@@ -111,7 +112,6 @@ namespace LOFAR {
       RequestSet headers_rs(header_requests, false, str(boost::format("%s headers") % logPrefix));
 
       // Process stations in the order in which we receive the headers
-      Matrix<struct MetaData> metaData(nrStations, beamlets.size(), 1, mpiAllocator); // [station][beamlet]
 
       for (size_t i = 0; i < nrStations; ++i) {
         /*

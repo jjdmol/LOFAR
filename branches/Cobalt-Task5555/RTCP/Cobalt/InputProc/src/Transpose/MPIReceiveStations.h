@@ -77,6 +77,9 @@ namespace LOFAR
 
       std::vector<int> stationSourceRanks; // [station]
 
+      Vector<struct MPIProtocol::Header> headers; // [station]
+      Matrix<struct MPIProtocol::MetaData> metaData; // [station][beamlet]
+
       // Receive a header (async) from the given rank.
       MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
 
