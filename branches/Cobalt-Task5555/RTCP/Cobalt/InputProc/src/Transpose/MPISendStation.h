@@ -78,9 +78,6 @@ namespace LOFAR
       // Cache for the header to send
       SmartPtr<MPIProtocol::Header, SmartPtrMPI<MPIProtocol::Header> > header;
 
-      // Cache for meta data to send
-      SmartPtr<MPIProtocol::MetaData, SmartPtrMPI<MPIProtocol::MetaData> > metaDatas;
-
     private:
       const std::string logPrefix;
       const BufferSettings &settings;
@@ -94,6 +91,8 @@ namespace LOFAR
       // Which beamlets to send
       const std::vector<size_t> beamlets;
 
+      Vector<struct MPIProtocol::MetaData> metaData; // [beamlet]
+
     public:
       // Construct and send a header to the given rank (async).
       template<typename T>
@@ -105,7 +104,7 @@ namespace LOFAR
       unsigned sendData( unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendMetaData( unsigned beamlet, const struct MPIProtocol::MetaData &metaData );
+      MPI_Request sendMetaData();
     };
 
   }

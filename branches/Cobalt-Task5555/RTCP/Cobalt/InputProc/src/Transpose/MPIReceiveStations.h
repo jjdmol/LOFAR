@@ -88,7 +88,7 @@ namespace LOFAR
       MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
-      MPI_Request receiveMetaData( size_t station, size_t beamlet, struct MPIProtocol::MetaData &metaData );
+      MPI_Request receiveMetaData( size_t station );
     };
 
   }

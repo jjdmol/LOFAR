@@ -72,14 +72,14 @@ namespace LOFAR {
     }
 
 
-    MPI_Request MPIReceiveStations::receiveMetaData( size_t station, size_t beamlet, struct MetaData &metaData )
+    MPI_Request MPIReceiveStations::receiveMetaData( size_t station )
     {
       tag_t tag;
       tag.bits.type    = METADATA;
       tag.bits.station = station;
-      tag.bits.beamlet = beamlet;
+      tag.bits.beamlet = beamlets[0];
 
-      return Guarded_MPI_Irecv(&metaData, sizeof metaData, stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(&metaData[station][0], beamlets.size() * sizeof metaData[station][0], stationSourceRanks[station], tag.value);
     }
 
 
@@ -138,6 +138,15 @@ namespace LOFAR {
 
         ScopedLock sl(MPIMutex);
 
+        /*
+         * RECEIVE FLAGS (ASYNC)
+         *
+         * Post these first, so that beam transfer implies that the FLAGS
+         * request has been posted (allowing the use of Irsend).
+         */
+
+        requests.push_back(receiveMetaData(stat));
+
         // Post receives for all beamlets from this station
         for (size_t beamletIdx = 0; beamletIdx < header.nrBeamlets; ++beamletIdx) {
           const size_t beamlet = beamlets[beamletIdx];
@@ -145,15 +154,6 @@ namespace LOFAR {
 
           ASSERTSTR(header.beamlets[beamletIdx] == beamlet, "Got beamlet " << header.beamlets[beamletIdx] << ", but expected beamlet " << beamlet);
           ASSERT(wrapOffset < blockSize);
-
-          /*
-           * RECEIVE FLAGS (ASYNC)
-           *
-           * Post these first, so that beam transfer implies that the FLAGS
-           * request has been posted (allowing the use of Irsend).
-           */
-
-          requests.push_back(receiveMetaData(stat, beamlet, metaData[stat][beamletIdx]));
 
           /*
            * RECEIVE BEAMLET (ASYNC)
