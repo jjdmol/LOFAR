@@ -26,8 +26,10 @@
 
 #include <Common/LofarTypes.h>
 #include <CoInterface/MultiDimArray.h>
+#include <CoInterface/SmartPtr.h>
 
 #include "MPIProtocol.h"
+#include "MPIUtil.h"
 #include "ReceiveStations.h"
 
 #include <vector>
@@ -79,13 +81,14 @@ namespace LOFAR
 
       Vector<struct MPIProtocol::Header> headers; // [station]
       Matrix<struct MPIProtocol::MetaData> metaData; // [station][beamlet]
+      SmartPtr<char, SmartPtrMPI<char> > data; // T[station][beamlet][sample]
 
       // Receive a header (async) from the given rank.
       MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
 
       // Receive beamlet data (async) from the given rank.
       template<typename T>
-      MPI_Request receiveData( size_t station, size_t beamlet, int transfer, T *from, size_t nrSamples );
+      MPI_Request receiveData( size_t station, T *buffer, size_t nrSamples );
 
       // Receive marshalled flags and metadata (async) from the given rank.
       MPI_Request receiveMetaData( size_t station );

@@ -28,6 +28,7 @@
 #include <InputProc/SampleType.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <CoInterface/PrintVector.h>
 
 #include <boost/format.hpp>
@@ -61,21 +62,6 @@ namespace LOFAR {
 
       // Check whether we send each subband to at most one node
       ASSERT(!beamlets.empty());
-
-      int sourceRank = MPI_Rank();
-
-      // Allocate MPI memory
-      header = mpiAllocator.allocateTyped();
-
-      // Set the static header info
-      header->station      = settings.station;
-      header->sourceRank   = sourceRank;
-
-      // Set beamlet info
-      header->nrBeamlets = beamlets.size();
-      ASSERT(header->nrBeamlets < sizeof header->beamlets / sizeof header->beamlets[0]);
-
-      std::copy(beamlets.begin(), beamlets.end(), &header->beamlets[0]);
     }
 
 
@@ -84,56 +70,16 @@ namespace LOFAR {
     }
 
 
-    template<typename T>
-    MPI_Request MPISendStation::sendHeader( const struct Block<T> &block )
+    MPI_Request MPISendStation::sendData()
     {
-      DEBUG(logPrefix << "Sending header to rank " << targetRank);
+      DEBUG(logPrefix << "Sending beamlets to rank " << targetRank);
 
-      // Copy dynamic header info
-      header->from             = block.from;
-      header->to               = block.to;
-
-      // Copy the beam-specific data
-      ASSERT(header->nrBeamlets <= sizeof header->wrapOffsets / sizeof header->wrapOffsets[0]);
-
-      for(size_t i = 0; i < header->nrBeamlets; ++i) {
-        const struct Block<T>::Beamlet &ib = block.beamlets[i];
-
-        header->wrapOffsets[i] = ib.nrRanges == 1 ? 0 : ib.ranges[0].to - ib.ranges[0].from;
-      }
-
-      // Send the actual header
       union tag_t tag;
-      tag.bits.type     = CONTROL;
+      tag.bits.type     = BEAMLET;
       tag.bits.station  = stationIdx;
+      tag.bits.beamlet  = beamlets[0];
 
-      return Guarded_MPI_Isend(header, sizeof *header, targetRank, tag.value);
-    }
-
-
-    template<typename T>
-    unsigned MPISendStation::sendData( unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] )
-    {
-      DEBUG(logPrefix << "Sending beamlet " << beamlet << " to rank " << targetRank << " using " << ib.nrRanges << " transfers");
-
-      // Send beamlet using 1 or 2 transfers
-      for(unsigned transfer = 0; transfer < ib.nrRanges; ++transfer) {
-        union tag_t tag;
-
-        tag.bits.type     = BEAMLET;
-        tag.bits.station  = stationIdx;
-        tag.bits.beamlet  = beamlet;
-        tag.bits.transfer = transfer;
-
-        const T *from = ib.ranges[transfer].from;
-        const T *to   = ib.ranges[transfer].to;
-
-        ASSERT( from < to ); // There must be data to send, or MPI will error
-
-        requests[transfer] = Guarded_MPI_Issend((void*)from, (to - from) * sizeof(T), targetRank, tag.value);
-      }
-
-      return ib.nrRanges;
+      return Guarded_MPI_Issend(data.get(), blockSize, targetRank, tag.value);
     }
 
 
@@ -160,55 +106,26 @@ namespace LOFAR {
 
       ASSERT(metaData.size() == block.beamlets.size());
 
-      /*
-       * SEND HEADER
-       */
+      const size_t nrBeamlets = block.beamlets.size();
+      const size_t nrSamples  = block.beamlets[0].size();
 
-      {
-        ScopedLock sl(MPIMutex);
-
-        MPI_Request headerRequest;
-     
-        headerRequest = sendHeader<T>(block);
-
-        // If other requests are received, the header will be as well
-        freeRequest(headerRequest);
+      if (!data) {
+        blockSize = nrSamples * sizeof(T);
+        data = static_cast<char*>(mpiAllocator.allocate(nrBeamlets * nrSamples * sizeof(T)));
       }
 
+      MultiDimArray<T,2> dataMatrix(boost::extents[nrBeamlets][nrSamples], (T*)(data.get()), false);
+
       /*
-       * SEND BEAMLETS
+       * STAGE BEAMLETS
        */
 
-      std::vector<MPI_Request> beamletRequests(block.beamlets.size() * 2, MPI_REQUEST_NULL); // [beamlet][transfer]
-      size_t nrBeamletRequests = 0;
-
-      {
-        ScopedLock sl(MPIMutex);
-
-        for(size_t b = 0; b < beamlets.size(); ++b) {
-          const size_t globalBeamletIdx = beamlets[b];
-
-          // Send beamlet
-          const struct Block<T>::Beamlet &ib = block.beamlets[b];
-
-          MPI_Request requests[2];
-
-          size_t nrTransfers = sendData<T>(globalBeamletIdx, ib, requests);
-
-          for (size_t i = 0; i < nrTransfers; ++i) {
-            beamletRequests[nrBeamletRequests] = requests[i];
-
-            nrBeamletRequests++;
-          }
-        }
+      NSTimer timer(str(boost::format("data processing station %s") % stationIdx), true, false);
+      timer.start();
+      for(size_t b = 0; b < beamlets.size(); ++b) {
+        block.beamlets[b].copy(&dataMatrix[b][0]);
       }
-
-      // Cut off beamletRequests
-      ASSERT(nrBeamletRequests <= beamletRequests.size());
-      beamletRequests.resize(nrBeamletRequests);
-
-      RequestSet beamlet_rs(beamletRequests, true, str(boost::format("%s data") % logPrefix));
-      beamlet_rs.waitAll();
+      timer.stop();
 
       /*
        * COMPUTE METADATA
@@ -229,26 +146,26 @@ namespace LOFAR {
       }
 
       /*
-       * SEND METADATA
+       * SEND BEAMLETS AND METADATA
        */
 
-      std::vector<MPI_Request> metaDataRequests(1, MPI_REQUEST_NULL);
+      std::vector<MPI_Request> requests(2, MPI_REQUEST_NULL);
 
       {
         ScopedLock sl(MPIMutex);
-        metaDataRequests[0] = sendMetaData();
+
+        requests[0] = sendData();
+        requests[1] = sendMetaData();
       }
 
-      RequestSet metadata_rs(metaDataRequests, true, str(boost::format("%s metadata") % logPrefix));
-      metadata_rs.waitAll();
+      RequestSet rs(requests, true, str(boost::format("%s data") % logPrefix));
+      rs.waitAll();
 
       DEBUG("exit");
     }
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-      template MPI_Request MPISendStation::sendHeader<T>( const struct Block<T> &block ); \
-      template unsigned MPISendStation::sendData<T>( unsigned beamlet, const struct Block<T>::Beamlet &ib, MPI_Request requests[2] ); \
       template void MPISendStation::sendBlock<T>( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
 
     INSTANTIATE(SampleType<i4complex>);
