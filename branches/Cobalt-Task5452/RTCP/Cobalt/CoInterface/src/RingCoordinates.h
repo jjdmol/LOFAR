@@ -22,11 +22,40 @@
 #ifndef LOFAR_INTERFACE_RINGCOORDINATES_H
 #define LOFAR_INTERFACE_RINGCOORDINATES_H
 
+#include <utility>      // std::pair, std::make_pair
+#include <vector>         
+#include <cstddef>
+
 namespace LOFAR
 {
   namespace Cobalt
   {
+    class RingCoordinates
+    {
+    public:
 
+      enum COORDTYPES
+      {
+        J2000,
+        B1950
+      };
+      
+      
+      typedef std::pair<float, float> Coordinate;
+      typedef std::vector<Coordinate > CoordinateVector;
+
+      RingCoordinates(size_t nRings, float width, 
+        Coordinate const &center, RingCoordinates::COORDTYPES type);
+
+      const CoordinateVector&  coordinates() const;
+
+    private:    
+      CoordinateVector itsCoordinates;
+
+
+
+
+    };
   }
 }
 

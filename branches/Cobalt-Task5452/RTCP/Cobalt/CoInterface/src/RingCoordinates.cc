@@ -21,14 +21,25 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include "RingCoordinates.h"
+
 using namespace std;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    RingCoordinates::RingCoordinates(size_t nRings, float width,
+      RingCoordinates::Coordinate const  &center,
+      RingCoordinates::COORDTYPES type)
+    {
+      itsCoordinates.push_back(pair<float, float>(0.2, 0.3));
+    }
 
-
+    const RingCoordinates::CoordinateVector&  RingCoordinates::coordinates() const
+    {
+      return itsCoordinates;
+    }
 
   }
 }
