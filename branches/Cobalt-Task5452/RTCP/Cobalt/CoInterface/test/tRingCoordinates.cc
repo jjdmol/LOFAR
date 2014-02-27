@@ -26,16 +26,10 @@
 
 using namespace std;
 
-namespace LOFAR
-{
-  namespace Cobalt
-  {
 
-    int main()
+    int main(void)
     {
-      return 0;
+      //INIT_LOGGER("tRingCoordinates");
+
+      return  0;
     }
-
-  }
-}
-
