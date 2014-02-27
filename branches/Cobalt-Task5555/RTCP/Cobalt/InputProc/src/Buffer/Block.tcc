@@ -39,6 +39,11 @@ namespace LOFAR
         memcpy(dest + ranges[0].size(), ranges[1].from, ranges[1].size() * sizeof(T));
       }
     }
+
+    template<typename T> size_t Block<T>::Beamlet::size() const
+    {
+      return ranges[0].size() + (nrRanges > 1 ? ranges[1].size() : 0UL);
+    }
   }
 }
 

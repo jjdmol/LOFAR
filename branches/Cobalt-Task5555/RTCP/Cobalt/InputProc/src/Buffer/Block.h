@@ -66,6 +66,9 @@ namespace LOFAR
 
         // Copy the samples for this beamlet to dest
         void copy(T *dest) const;
+
+        // The number of samples in this block
+        size_t size() const;
       };
 
       std::vector<struct Beamlet> beamlets; // [beamlet]
