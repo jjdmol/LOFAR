@@ -7,6 +7,7 @@ lofar_add_test(tCorrelatedData tCorrelatedData.cc)
 lofar_add_test(tMultiDimArray tMultiDimArray.cc)
 lofar_add_test(tpow2 tpow2.cc)
 lofar_add_test(tSparseSet tSparseSet.cc)
+lofar_add_test(tRingCoordinates tRingCoordinates.cc)
 
 if(UNITTEST++_FOUND)
   lofar_add_test(tParset tParset.cc)

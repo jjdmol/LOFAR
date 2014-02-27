@@ -1,5 +1,5 @@
-//# RingCoordinates.h
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tRingCoordinates.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,16 +18,24 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
 
-#ifndef LOFAR_INTERFACE_RINGCOORDINATES_H
-#define LOFAR_INTERFACE_RINGCOORDINATES_H
+#include <Common/LofarLogger.h>
+
+#include <UnitTest++.h>
+
+using namespace std;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
+    int main()
+    {
+      return 0;
+    }
+
   }
 }
 
-#endif
