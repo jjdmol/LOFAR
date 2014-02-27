@@ -40,6 +40,7 @@
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
+#include <InputProc/Transpose/MPIProtocol.h>
 #else
 #include <GPUProc/Station/StationInput.h>
 #endif
@@ -78,6 +79,16 @@ namespace LOFAR
     {
     }
 
+    template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
+    {
+      data     = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
+      metaData = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
+    }
+
+    template void Pipeline::MPIData::allocate< SampleType<i16complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i8complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i4complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
@@ -91,17 +102,18 @@ namespace LOFAR
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
+
+      for (size_t i = 0; i < 3; i++) {
+        SmartPtr<struct MPIData> mpiData = new MPIData;
+
+        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
+
+        mpiPool.free.append(mpiData);
+      }
+
 #else
       DirectInput &receiver = DirectInput::instance();
 #endif
-
-      // Create a block object to hold all information for receiving one
-      // block.
-      vector<struct ReceiveStations::Block<SampleT> > blocks(ps.nrStations());
-
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        blocks[stat].beamlets.resize(subbandIndices.size());
-      }
 
       // Receive input from StationInput::sendInputToPipeline.
       //
@@ -113,39 +125,23 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
 
-        // The set of InputData objects we're using for this block.
-        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
+        SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
 
-        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          // Fetch an input object to store this inputIdx.
-          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
+        mpiData->block = block;
 
-          // Fetch an input object to fill from the selected queue.
-          // NOTE: We'll put it in a SmartPtr right away!
-          SmartPtr<SubbandProcInputData> data = queue.inputPool.free.remove();
+        MultiDimArray<SampleT,3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)mpiData->data.get(), false);
 
-          // Annotate the block
-          struct BlockID id;
-          id.block                 = block;
-          id.globalSubbandIdx      = subbandIndices[inputIdx];
-          id.localSubbandIdx       = inputIdx;
-          id.subbandProcSubbandIdx = inputIdx / workQueues.size();
-          data->blockID = id;
-
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            // Incorporate it in the receiver's input set.
-            blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
-          }
-
-          // Record the block (transfers ownership)
-          inputDatas[inputIdx] = data;
-        }
+        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
         // Receive all subbands from all stations
         LOG_DEBUG_STR("[block " << block << "] Receive input");
 
         if (block > 2) receiveTimer.start();
-        receiver.receiveBlock<SampleT>(blocks);
+        receiver.receiveBlock<SampleT>(data, metaData);
         if (block > 2) receiveTimer.stop();
 
         if (processingSubband0)
@@ -153,54 +149,11 @@ namespace LOFAR
         else
           LOG_DEBUG_STR("[block " << block << "] Input received");
 
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
-
-        // Process and forward the received input to the processing threads
-        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
-          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
-#ifdef DO_PROCESSING
-          // Copy the meta data to the SubbandProcInputData struct
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
-
-            data->metaData[stat] = metaData;
-
-            nrFlaggedSamples[stat] += metaData.flags.count();
-          }
-
-          queue.inputPool.filled.append(data);
-#else
-          queue.inputPool.free.append(data);
-#endif
-        }
-
-        // Report flags per station
-        stringstream flagStr;  // stations with >0% flags
-        stringstream cleanStr; // stations with  0% flags
-
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / inputDatas.size() / blockSize;
-
-          if (flagPerc == 0.0)
-            cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
-          else
-            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
-        }
-
-        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
-
-        if (!flagStr.str().empty()) {
-          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
-        }
-
-        LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
+        mpiPool.filled.append(mpiData);
       }
 
       // Signal end of input
-      for (size_t i = 0; i < workQueues.size(); ++i) {
-        workQueues[i]->inputPool.filled.append(NULL);
-      }
+      mpiPool.filled.append(NULL);
     }
 
     template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
@@ -226,6 +179,11 @@ namespace LOFAR
 
     void Pipeline::allocateResources()
     {
+      for (size_t i = 0; i < writePool.size(); i++) {
+        // Allow 10 blocks to be in the best-effort queue.
+        // TODO: make this dynamic based on memory or time
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
+      }
     }
 
 
@@ -235,26 +193,29 @@ namespace LOFAR
       LOG_INFO("----- Allocating resources");
       allocateResources();
 
-      for (size_t i = 0; i < writePool.size(); i++) {
-        // Allow 10 blocks to be in the best-effort queue.
-        // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
-      }
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections num_threads(5)
+#     pragma omp parallel sections num_threads(6)
       {
         /*
-         * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
+         * BLOCK OF SUBBANDS -> MPIQUEUE
          */
 #       pragma omp section
         {
           size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
 
           receiveInput(nrBlocks);
+        }
+
+        /*
+         * MPIQUEUE -> WORKQUEUE INPUTPOOL
+         */
+#       pragma omp section
+        {
+          transposeInput();
         }
 
         /*
@@ -338,6 +299,112 @@ namespace LOFAR
 
       // log performance figures
       performance.log(workQueues.size());
+    }
+
+
+    template<typename SampleT>
+    void Pipeline::transposeInput()
+    {
+      SmartPtr<struct MPIData> input;
+
+      // Keep fetching input objects until end-of-output
+      while ((input = mpiPool.filled.remove()) != NULL) {
+#ifdef DO_PROCESSING
+        const size_t block = input->block;
+
+        MultiDimArray<SampleT,3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)input->data.get(), false);
+
+        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)input->metaData.get(), false);
+
+        // The set of InputData objects we're using for this block.
+        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
+
+        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+
+        for (size_t subbandIdx = 0; subbandIdx < subbandIndices.size(); ++subbandIdx) {
+          // Fetch an input object to store this subband.
+          SubbandProc &queue = *workQueues[subbandIdx % workQueues.size()];
+
+          // Fetch an input object to fill from the selected queue.
+          SmartPtr<SubbandProcInputData> subbandData = queue.inputPool.free.remove();
+
+          // Annotate the block
+          struct BlockID id;
+          id.block                 = block;
+          id.globalSubbandIdx      = subbandIndices[subbandIdx];
+          id.localSubbandIdx       = subbandIdx;
+          id.subbandProcSubbandIdx = subbandIdx / workQueues.size();
+          subbandData->blockID = id;
+
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            // Copy the data
+            memcpy(&subbandData->inputSamples[stat][0][0][0],
+                   &data[stat][subbandIdx][0],
+                   ps.nrSamplesPerSubband() * sizeof(SampleT));
+
+            // Copy the metadata
+            subbandData->metaData[stat] = metaData[stat][subbandIdx];
+
+            nrFlaggedSamples[stat] += subbandData->metaData[stat].flags.count();
+          }
+
+          queue.inputPool.filled.append(subbandData);
+        }
+#endif
+
+        mpiPool.free.append(input);
+        ASSERT(!input);
+
+        // Report flags per station
+        stringstream flagStr;  // stations with >0% flags
+        stringstream cleanStr; // stations with  0% flags
+
+        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.nrSamplesPerSubband();
+
+          if (flagPerc == 0.0)
+            cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
+          else
+            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
+        }
+
+        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
+
+        if (!flagStr.str().empty()) {
+          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        }
+
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
+      }
+
+      // Signal end of input
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i]->inputPool.filled.append(NULL);
+      }
+    }
+
+    template void Pipeline::transposeInput< SampleType<i16complex> >();
+    template void Pipeline::transposeInput< SampleType<i8complex> >();
+    template void Pipeline::transposeInput< SampleType<i4complex> >();
+
+    void Pipeline::transposeInput()
+    {
+      switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        transposeInput< SampleType<i16complex> >();
+        break;
+      case 8:
+        transposeInput< SampleType<i8complex> >();
+        break;
+      case 4:
+        transposeInput< SampleType<i4complex> >();
+        break;
+      }
     }
 
 

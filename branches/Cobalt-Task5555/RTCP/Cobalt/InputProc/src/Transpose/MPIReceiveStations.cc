@@ -43,48 +43,39 @@ namespace LOFAR {
       nrStations(nrStations),
       beamlets(beamlets),
       blockSize(blockSize),
-      stationSourceRanks(nrStations, MPI_ANY_SOURCE),
-      metaData(nrStations, beamlets.size(), 1, mpiAllocator)
+      stationSourceRanks(nrStations, MPI_ANY_SOURCE)
     {
     }
 
 
     template<typename T>
-    MPI_Request MPIReceiveStations::receiveData( size_t station, T *buffer, size_t nrSamples )
+    MPI_Request MPIReceiveStations::receiveData( size_t station, T *buffer )
     {
       tag_t tag;
       tag.bits.type    = BEAMLET;
       tag.bits.station = station;
       tag.bits.beamlet = beamlets[0];
 
-      return Guarded_MPI_Irecv(buffer, nrSamples * sizeof(T), stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(buffer, blockSize * sizeof(T), stationSourceRanks[station], tag.value);
     }
 
 
-    MPI_Request MPIReceiveStations::receiveMetaData( size_t station )
+    MPI_Request MPIReceiveStations::receiveMetaData( size_t station, struct MPIProtocol::MetaData *buffer )
     {
       tag_t tag;
       tag.bits.type    = METADATA;
       tag.bits.station = station;
       tag.bits.beamlet = beamlets[0];
 
-      return Guarded_MPI_Irecv(&metaData[station][0], beamlets.size() * sizeof metaData[station][0], stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(buffer, beamlets.size() * sizeof(struct MPIProtocol::MetaData), stationSourceRanks[station], tag.value);
     }
 
 
     template<typename T>
-    void MPIReceiveStations::receiveBlock( std::vector< struct ReceiveStations::Block<T> > &blocks )
+    void MPIReceiveStations::receiveBlock( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData )
     {
-      ASSERT(blocks.size() == nrStations);
-
-      const size_t nrBeamlets = beamlets.size();
-      const size_t nrSamples  = blockSize;
-
-      if (!data) {
-        data = static_cast<char*>(mpiAllocator.allocate(nrStations * nrBeamlets * nrSamples * sizeof(T)));
-      }
-
-      MultiDimArray<T,3> dataMatrix(boost::extents[nrStations][nrBeamlets][nrSamples], (T*)(data.get()), false);
+      ASSERT(data.num_elements() == nrStations * beamlets.size() * blockSize);
+      ASSERT(metaData.num_elements() == nrStations * beamlets.size());
 
       // All requests except the headers
       std::vector<MPI_Request> requests;
@@ -93,8 +84,8 @@ namespace LOFAR {
         ScopedLock sl(MPIMutex);
 
         for (size_t stat = 0; stat < nrStations; ++stat) {
-          requests.push_back(receiveData<T>(stat, &dataMatrix[stat][0][0], nrSamples));
-          requests.push_back(receiveMetaData(stat));
+          requests.push_back(receiveData<T>(stat, &data[stat][0][0]));
+          requests.push_back(receiveMetaData(stat, &metaData[stat][0]));
         }
       }
 
@@ -104,33 +95,12 @@ namespace LOFAR {
 
       RequestSet payload_rs(requests, true, str(boost::format("%s data & metadata") % logPrefix));
       payload_rs.waitAll();
-
-      /*
-       * PROCESS DATA
-       */
-
-      NSTimer timer(str(boost::format("data processing rank %s") % MPI_Rank()), true, false);
-      timer.start();
-
-      for (size_t stat = 0; stat < nrStations; ++stat) {
-        // Copy the data
-        for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
-          memcpy(&blocks[stat].beamlets[beamletIdx].samples[0], &dataMatrix[stat][beamletIdx][0], nrSamples * sizeof(T));
-        }
-
-        // Convert the flags array
-        for (size_t beamletIdx = 0; beamletIdx < beamlets.size(); ++beamletIdx) {
-          blocks[stat].beamlets[beamletIdx].metaData = metaData[stat][beamletIdx];
-        }
-      }
-      timer.stop();
-
     }
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-    template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, T *buffer, size_t nrSamples ); \
-    template void MPIReceiveStations::receiveBlock<T>( std::vector< struct ReceiveStations::Block<T> > &blocks );
+    template MPI_Request MPIReceiveStations::receiveData<T>( size_t station, T *buffer ); \
+    template void MPIReceiveStations::receiveBlock<T>( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);

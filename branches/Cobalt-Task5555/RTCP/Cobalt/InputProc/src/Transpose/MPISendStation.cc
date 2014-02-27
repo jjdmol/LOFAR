@@ -120,12 +120,9 @@ namespace LOFAR {
        * STAGE BEAMLETS
        */
 
-      NSTimer timer(str(boost::format("data processing station %s") % stationIdx), true, false);
-      timer.start();
       for(size_t b = 0; b < beamlets.size(); ++b) {
-        block.beamlets[b].copy(&dataMatrix[b][0]);
+        //block.beamlets[b].copy(&dataMatrix[b][0]);
       }
-      timer.stop();
 
       /*
        * COMPUTE METADATA

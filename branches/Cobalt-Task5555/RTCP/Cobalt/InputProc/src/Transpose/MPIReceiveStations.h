@@ -67,7 +67,7 @@ namespace LOFAR
       // It is the callers responsibility to call receiveBlock exactly as often
       // as sendBlock is called by the stations.
       template<typename T>
-      void receiveBlock( std::vector< struct Block<T> > &blocks );
+      void receiveBlock( MultiDimArray<T,3> &data, MultiDimArray<struct MPIProtocol::MetaData,2> &metaData );
 
     private:
       const std::string logPrefix;
@@ -79,19 +79,12 @@ namespace LOFAR
 
       std::vector<int> stationSourceRanks; // [station]
 
-      Vector<struct MPIProtocol::Header> headers; // [station]
-      Matrix<struct MPIProtocol::MetaData> metaData; // [station][beamlet]
-      SmartPtr<char, SmartPtrMPI<char> > data; // T[station][beamlet][sample]
-
-      // Receive a header (async) from the given rank.
-      MPI_Request receiveHeader( size_t station, struct MPIProtocol::Header &header );
-
       // Receive beamlet data (async) from the given rank.
       template<typename T>
-      MPI_Request receiveData( size_t station, T *buffer, size_t nrSamples );
+      MPI_Request receiveData( size_t station, T *buffer );
 
       // Receive marshalled flags and metadata (async) from the given rank.
-      MPI_Request receiveMetaData( size_t station );
+      MPI_Request receiveMetaData( size_t station, struct MPIProtocol::MetaData *metaData );
     };
 
   }

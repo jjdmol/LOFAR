@@ -33,6 +33,9 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
+#include <CoInterface/Pool.h>
+
+#include <InputProc/Transpose/MPIUtil.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
@@ -108,13 +111,27 @@ namespace LOFAR
         SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
       };
     private:
-      // For each block, read all subbands from all stations, and divide the
-      // work over the workQueues
-      void receiveInput( size_t nrBlocks );
+      struct MPIData
+      {
+        size_t block;
 
-      // Templated version of receiveInput(), to specialise in receiving
-      // a certain type of input sample.
+        SmartPtr<char, SmartPtrMPI<char> > data;
+        SmartPtr<char, SmartPtrMPI<char> > metaData;
+
+        template<typename SampleT>
+        void allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+      };
+
+      Pool<struct MPIData> mpiPool;
+
+      // For each block, read all data and put it (untransposed) in the mpiPool
+      void receiveInput( size_t nrBlocks );
       template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      // For each block, transpose all subbands from all stations, and divide the
+      // work over the workQueues
+      void transposeInput();
+      template<typename SampleT> void transposeInput();
 
       // preprocess subbands on the CPU
       void preprocessSubbands(SubbandProc &workQueue);
