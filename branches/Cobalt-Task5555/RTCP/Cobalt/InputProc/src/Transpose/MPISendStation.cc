@@ -211,7 +211,7 @@ namespace LOFAR {
       ASSERT(nrBeamletRequests <= beamletRequests.size());
       beamletRequests.resize(nrBeamletRequests);
 
-      RequestSet beamlet_rs(beamletRequests, str(boost::format("%s data") % logPrefix));
+      RequestSet beamlet_rs(beamletRequests, false, str(boost::format("%s data") % logPrefix));
 
       /*
        * SEND METADATA
@@ -277,7 +277,7 @@ namespace LOFAR {
        */
 
       // Wait on all pending requests
-      RequestSet metadata_rs(metaDataRequests, str(boost::format("%s metadata") % logPrefix));
+      RequestSet metadata_rs(metaDataRequests, true, str(boost::format("%s metadata") % logPrefix));
       metadata_rs.waitAll();
 
       DEBUG("exit");

@@ -108,7 +108,7 @@ namespace LOFAR {
         }
       }
 
-      RequestSet headers_rs(header_requests, str(boost::format("%s headers") % logPrefix));
+      RequestSet headers_rs(header_requests, false, str(boost::format("%s headers") % logPrefix));
 
       // Process stations in the order in which we receive the headers
       Matrix<struct MetaData> metaData(nrStations, beamlets.size(), 1, mpiAllocator); // [station][beamlet]
@@ -174,7 +174,7 @@ namespace LOFAR {
        * WAIT FOR ALL DATA TO ARRIVE
        */
 
-      RequestSet payload_rs(requests, str(boost::format("%s data & metadata") % logPrefix));
+      RequestSet payload_rs(requests, true, str(boost::format("%s data & metadata") % logPrefix));
       payload_rs.waitAll();
 
       /*
