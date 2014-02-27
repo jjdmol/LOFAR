@@ -333,7 +333,8 @@ int main(int argc, char *argv[]) {
 
   // compare
   if (args.verbose)
-    cout << "Comparing using an epsilon of " << args.epsilon << endl;
+    cout << "Comparing " << args.filename1 << " and " << args.filename2 
+	 << " using an epsilon of " << args.epsilon << endl;
   bool cmpOk;
   if (args.type == args.FLOAT)
     cmpOk = compareStreams<float>(ifs1, ifs2, args.skip, args.nvals,
