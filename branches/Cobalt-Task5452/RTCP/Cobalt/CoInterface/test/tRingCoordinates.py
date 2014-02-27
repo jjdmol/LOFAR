@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 from math import sqrt, cos, pi
 
 class RingCoordinates:
@@ -139,3 +140,23 @@ class RingCoordinates:
 
         return map(self.cos_adjust, coordinates)
 
+if __name__ == "__main__":
+  if len(sys.argv) < 6:
+    print """usage:
+    python RingCoordinates.py nrrings, width, center_angle1, center_angle2, dirtype 
+
+    prints coordinates on ctdout
+    """
+    sys.exit( 1)
+
+  nrrings = int(sys.argv[1])
+  width = float(sys.argv[2])
+  center_angle1 = float(sys.argv[3])
+  center_angle2 = float(sys.argv[4])
+  dirtype = sys.argv[5]
+  
+  ringcoordinates = RingCoordinates(nrrings, width,
+    (center_angle1, center_angle2), dirtype ).coordinates()
+
+  print ringcoordinates
+  

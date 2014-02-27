@@ -22,6 +22,8 @@
 
 #include <Common/LofarLogger.h>
 
+#include <CoInterface/RingCoordinates.h>
+
 #include <UnitTest++.h>
 
 using namespace std;
