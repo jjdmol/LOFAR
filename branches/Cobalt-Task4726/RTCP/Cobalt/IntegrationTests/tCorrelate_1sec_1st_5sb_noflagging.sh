@@ -1,4 +1,3 @@
-#!/bin/bash -x
-TESTNAME=`basename "${0%%.sh}"`
-./runctest.sh $TESTNAME
+#!/bin/sh
+./runctest.sh "$(basename "${0%%.sh}")"
 

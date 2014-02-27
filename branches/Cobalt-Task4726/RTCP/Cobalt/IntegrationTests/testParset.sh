@@ -1,35 +1,34 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # Run a parset and compare the output to that in the reference_output directory.
 # 
-# Syntax: testParset.sh parset [-r reference-output-directory] [-g minimal-gpu-efficiency]
+# Syntax: testParset.sh parset [-r reference-output-directory]
+
+# Include some useful shell functions
+. $srcdir/testFuncs.sh
+
+# Set exit status of piped commands to that of the last failed command.
+set -o pipefail
 
 # Set defaults for options
 REFDIR=
-GPUEFFICIENCY=0
 
 echo "Invoked as" "$0" "$@"
 
-# Parse options
-while getopts "r:g:" opt
+# Parse command-line options
+while getopts "r:" opt
 do
   case $opt in
     r)
       REFDIR=$OPTARG
       ;;
 
-    g)
-      GPUEFFICIENCY=$OPTARG
-      ;;
-
     \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
+      error "Invalid option: -$OPTARG"
       ;;
 
     :)
-      echo "Option needs argument: -$OPTARG" >&2
-      exit 1
+      error "Option needs argument: -$OPTARG"
       ;;
   esac
 done
@@ -37,9 +36,6 @@ done
 shift $((OPTIND-1))
 
 PARSET=$1
-
-# Include some useful shell functions
-. $srcdir/testFuncs.sh
 
 # Some host info
 echo "Running as `whoami`"
@@ -60,39 +56,13 @@ echo "Testing $PARSET"
 
 OUTDIR=`basename "${PARSET%.parset}.output"`
 
-function parse_logs
-{
-  NORMAL=$1
-  PROFILED=$2
-
-  test -r $NORMAL || return 1
-  test -r $PROFILED || return 1
-
-  # obtain wall time
-  WALLTIME=`<$NORMAL perl -ne 'if (/Wall seconds spent.*?([0-9.]+)$/) { print $1; }'`
-  # obtain GPU cost
-  GPUCOST=`<$PROFILED perl -ne 'if (/GPU  seconds spent computing.*?([0-9.]+)$/) { print $1; }'`
-
-  # log efficiency
-  GPUUSAGE=`echo "scale=0;100*$GPUCOST/$WALLTIME" | bc -l`
-  echo "Total processing time: $WALLTIME s"
-  echo "GPU usage            : $GPUUSAGE %"
-
-  if [ "$GPUUSAGE" -lt "$GPUEFFICIENCY" ]
-  then
-    echo "ERROR: GPU usage < $GPUEFFICIENCY% -- considering test a failure." >&2
-    return 1
-  fi
-
-  return 0
-}
-
 (
-  # Create fake LOFARROOT environment
-  mklofarroot $OUTDIR
+  # Create temporary output directory and cd into it.
+  mkdir -p "$OUTDIR" || error "Failed to create temporary directory $OUTDIR"
+  cd "$OUTDIR"
 
-  # run correlator -- without profiling
-  runObservation.sh -C -F -l 4 $PARSET > performance_normal.txt 2>&1 || error "Observation failed"
+  # run an observation
+  runObservation.sh -C -F -l 2 $PARSET || error "Observation failed!"
 
   # compare output
   if [ -n "$REFDIR" ]
@@ -105,28 +75,21 @@ function parse_logs
     # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
     numfp32eps=\(1.192092896/10000000\)
 
-    # Generally (tCorrelate_*), the first 5 decimals are ok; occasionally, the 5th is off.
-    # For the tCorrelate tests, 16*num_lim<float>::eps() is not enough.
-    # Taking 32*..., we still get a few dozen miscomparisons, so resort to 64.0
-    #
-    # Try bigger epsilons as well to see how big the error actually is.
+    # Generally (tCorrelate_*), the first 5 decimals are ok; occasionally,
+    # the 5th is off. Hence, 8*num_lim<float>::eps() should be OK. However,
+    # try bigger epsilons as well to see how big the error actually is.
     for eps_factor in 1024.0 512.0 256.0 128.0 64.0 32.0 16.0 8.0
     do
       EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
 
       for f in *.MS
       do
-        $testdir/cmpfloat --type=cfloat --epsilon=$EPSILON --verbose `pwd`/$f $REFDIR/$f || error "Output does not match reference for eps_factor=$eps_factor"
+        cmpfloat --type=cfloat --epsilon=$EPSILON --verbose \
+	    "`pwd`/$f" "$REFDIR/$f" || error "Output does not match " \
+	    "reference for eps_factor=$eps_factor"
       done
     done
   fi
-
-  # run correlator -- with profiling
-#disabled, as we do not use it atm and the ops nrs are out-of-date, but it is time-consuming)
-#  runObservation.sh -F -l 4 -p $PARSET > performance_profiled.txt 2>&1 || error "Profiling observation failed"
-
-  # check logs for performance degradation (disabled, checks not good enough and operation counts out-of-date)
-#  parse_logs performance_normal.txt performance_profiled.txt || error "Could not parse log files"
 
   # toss output if everything is ok, but do not fail test if removal fails
 #  rm -rf $testdir/$OUTDIR || true # Comment this line for output

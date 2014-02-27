@@ -7,16 +7,13 @@ haveGPU || exit 3
 
 PARSET=$PWD/tMACfeedback.in_parset
 
-# Create and use LOFARROOT environment
-mklofarroot tMACfeedback_tmp.lofarroot
-
 # Add the connection information for this test
 echo "Cobalt.Feedback.host=localhost" >> $PARSET
 echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> $PARSET
 echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> $PARSET
 
 # Start a mock OnlineControl to verify the communications of runObservation.sh
-MockOnlineControl.sh $PARSET &
+$srcdir/MockOnlineControl.sh $PARSET &
 ONLINECONTROL_PID=$!
 
 # Run the observation
