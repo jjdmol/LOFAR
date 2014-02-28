@@ -1,0 +1,9 @@
+# $Id$
+
+include(LofarCTest)
+
+#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging)
+#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2Sap)
+#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab)
+#lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging)
+lofar_add_test(tCoherentStokes_3sec_2st_20sb)

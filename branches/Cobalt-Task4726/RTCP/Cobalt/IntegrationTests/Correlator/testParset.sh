@@ -5,7 +5,7 @@
 # Syntax: testParset.sh parset [-r reference-output-directory]
 
 # Include some useful shell functions
-. $srcdir/testFuncs.sh
+. $srcdir/../testFuncs.sh
 
 # Set exit status of piped commands to that of the last failed command.
 set -o pipefail
