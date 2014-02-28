@@ -3,6 +3,7 @@
 import sys
 from math import sqrt, cos, pi
 import subprocess
+import itertools
 
 class RingCoordinates:
     def __init__(self, numrings, width, center, dirtype):
@@ -181,6 +182,13 @@ def isClose(a,b, rtol=1e-05,atol=1e-08):
 def compareCoordArray(array1, array2):
   # compare the two array
   # on error print the offending value and exit(1)
+  if (len(array1) != len(array2)):
+    print "Returned arrays not of same size: comparison failed"
+    print array1
+    print "!="
+    print array2
+    exit(1)
+
   for idx, (entry1, entry2) in enumerate(zip(array1, array2)):
     if(not (isClose(entry1[0], entry2[0]) and
        isClose(entry1[1], entry2[1]))):
@@ -189,10 +197,18 @@ def compareCoordArray(array1, array2):
       exit(1)
 
 if __name__ == "__main__":
-  # test uno
+  # test 1
   # If zero rings then return empty array!!
+  print "Test 1: zero rings return empthy coord list. "
+  cppOutput = getCPPValue(0, 2, (3,4), "J2000")  
+  referenceOutput = RingCoordinates(0, 2, (3, 4), "J2000" ).coordinates()
+  
+  compareCoordArray(cppOutput, referenceOutput)
+  print "succes"
 
+  # test 2
   # Take some values and get the correct results
+  print "Test 2: input values: 1, 2, (3,4), J2000"
   cppOutput = getCPPValue(1, 2, (3,4), "J2000")  
   referenceOutput = RingCoordinates(1, 2, (3, 4), "J2000" ).coordinates()
   print cppOutput

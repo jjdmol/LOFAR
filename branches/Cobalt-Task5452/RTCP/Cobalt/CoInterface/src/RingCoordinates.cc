@@ -22,6 +22,8 @@
 #include <lofar_config.h>
 
 #include "RingCoordinates.h"
+#include <math.h>       /* sqrt */
+#include <algorithm>    // std::transform
 
 using namespace std;
 
@@ -29,12 +31,188 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    RingCoordinates::RingCoordinates(size_t nRings, float width,
+    RingCoordinates::RingCoordinates(size_t nRings, double width,
       RingCoordinates::Coordinate const  &center,
       RingCoordinates::COORDTYPES type)
+    :
+      itsNRings(nRings),
+      itsWidth(width),
+      itsCenter(center),
+      itsType(type)
     {
-      itsCoordinates.push_back(pair<float, float>(0.2, 0.3));
+      // If there are zero rings we do not create any tabs
+      // itsCoordinates will be default constructed empty
+      if (nRings == 0)
+        return;
+      
+      // *****************************************
+      // create the beams (tabs)
+      
+      CoordinateVector preCompiledCoordDelta = createPrecompiledCoords();
+
+      // start with central beam
+      itsCoordinates.push_back(pair<double, double>(0., 0.));
+
+      //ring 1-n: create the TAB Beams from the inner ring outwards
+      for (size_t idx_ring = 1; idx_ring < itsNRings + 1; ++idx_ring)
+      {
+        double l = 0.0;
+        double m = len_height() * idx_ring;
+
+        // For each side in the hexagon
+        for (size_t idx_side = 0; idx_side < 6; ++idx_side)
+        {
+          //each side has length of the tab ring we are in!
+          for (size_t idx_in_side = 0; idx_in_side < idx_ring; ++idx_in_side)
+          {
+            itsCoordinates.push_back(Coordinate(l, m));
+
+            l += preCompiledCoordDelta[idx_side].first;
+            m += preCompiledCoordDelta[idx_side].second;
+          }
+        }
+      }
+
+      //// adjust the coordinates depending on the reference frame
+      for (CoordinateVector::iterator coord = itsCoordinates.begin();
+        coord != itsCoordinates.end(); ++coord)
+      {
+        // adjest the
+        *coord = cos_adjust(*coord);
+      }
+
     }
+
+    /*
+    *  _
+    * / \
+    * \_/
+    * |.|
+    */
+    double RingCoordinates::len_edge()
+    {
+      return itsWidth / sqrt(3);
+    }
+
+    /*
+    *  _
+    * / \
+    * \_/
+    *|...|
+    */
+    double RingCoordinates::len_width()
+    {
+      return 2 * len_edge();
+    } 
+
+    /*
+    *  _  _
+    * / \ :
+    * \_/ _
+    *
+    */
+    double RingCoordinates::len_height()
+    {
+      return len_width(); 
+    }
+
+    /*
+    *  _
+    * / \_
+    * \_/ \
+    *   \_/
+    *  |.|
+    */
+    double RingCoordinates::delta_width()
+    {
+      return 1.5 * len_edge();
+    }
+
+    /*
+    *  _
+    * / \_  -
+    * \_/ \ -
+    *   \_/
+    *
+    */
+    double RingCoordinates::delta_height()
+    {
+      return 0.5 * len_width();
+    }
+
+    RingCoordinates::CoordinateVector RingCoordinates::createPrecompiledCoords()
+    {
+      //# stride for each side, starting left from the top, clock - wise
+      CoordinateVector preCoords;
+
+      /*
+      #  _
+      # / \_
+      # \_/ \
+      #   \_/
+      */
+      preCoords.push_back(Coordinate(delta_width(), -delta_height()));
+      /*
+      #  _
+      # / \
+      # \_/
+      # / \
+      # \_/
+      */
+      preCoords.push_back(Coordinate(0.0, -len_height()));
+
+      /*
+      #    _
+      #  _/ \
+      # / \_/
+      # \_/
+      */
+      preCoords.push_back(Coordinate(-delta_width(), -delta_height()));
+
+      /*
+      #  _
+      # / \_
+      # \_/ \
+      #   \_/
+      */
+      preCoords.push_back(Coordinate(-delta_width(), delta_height()));
+
+      /*
+      #  _
+      # / \
+      # \_/
+      # / \
+      # \_/
+      */
+      preCoords.push_back(Coordinate(0.0, len_height()));
+
+      /*
+      #    _
+      #  _/ \
+      # / \_/
+      # \_/
+      */
+      preCoords.push_back(Coordinate(delta_width(), delta_height()));
+
+
+      return preCoords;
+    }
+
+    RingCoordinates::Coordinate RingCoordinates::cos_adjust(
+            RingCoordinates::Coordinate const &offset)
+    {
+      if (itsType == RingCoordinates::OTHER)
+        return offset;
+
+      double cos_dec = cos(itsCenter.second + offset.second);
+      double epsilon = 0.0001;
+
+      if (cos_dec > epsilon)
+        return  Coordinate(offset.first / cos_dec, offset.second);
+      else
+        return offset;
+    }
+
 
     const RingCoordinates::CoordinateVector&  RingCoordinates::coordinates() const
     {

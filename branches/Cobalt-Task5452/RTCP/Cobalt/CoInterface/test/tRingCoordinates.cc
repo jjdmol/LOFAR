@@ -29,19 +29,18 @@
 #include <vector>   
 #include <cstdlib>
 
-// output the maximum floating point precision in cout
+// output the maximum doubleing point precision in cout
 #include <limits>
 #include <string>
-typedef std::numeric_limits< float > flt;
+typedef std::numeric_limits< double > flt;
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
-// This is a shallow (no input validation except #arguments)
+// This is a shallow (minimum input validation except #arguments)
 // wrapper arround the RingCoordinates class
 // It receives settings on the command line. Feeds these to the RingCOordinates
-// class and prints  (cout) the created tabs in the same format as the previous 
-// python implementation ( a python list)
+// class and prints  (cout) the created tabs as a python array of pairs
 int main(int argc, char* argv[])
 { 
   INIT_LOGGER("tRingCoordinates");
@@ -51,25 +50,26 @@ int main(int argc, char* argv[])
   {
     cerr << "usage" << endl
       << "RingCoordinates nrrings, width, center_angle1, center_angle2, dirtype" << endl
-      << "                    int, float,         float,         float, [J2000, B1950]"
+      << "                    int, double,         double,         double, [J2000, B1950]"
       << endl;
     exit(1);
   }
+
   // parse the arguments
   int nrings = atoi(argv[1]);
-  float width = float(atof(argv[2]));
-  float center1 = float(atof(argv[3]));
-  float center2 = float(atof(argv[4]));
+  double width = double(atof(argv[2]));
+  double center1 = double(atof(argv[3]));
+  double center2 = double(atof(argv[4]));
   string typeString(argv[5]);
 
+  // Get type
   RingCoordinates::COORDTYPES type;
   if (typeString == "J2000")
     type = RingCoordinates::J2000;
   else if (typeString == "B1950")
     type = RingCoordinates::B1950;
   else
-  {
-    
+  {    
     cerr << "encountered an unknown dirtype: >" << typeString << "<" << endl
         << "  please select from : [J2000, B1950]" << endl;
     exit(1);
@@ -85,8 +85,8 @@ int main(int argc, char* argv[])
         ringCoords.coordinates();
 
   // Output the coordinates as a python array!
-  // REFACTORME Maybee there is an existing implementation common/streamutils
-  cout.precision(flt::digits10);  // set the maximum floating point precisionin cout
+  // REFACTOR Maybee there is an existing implementation common/streamutils
+  cout.precision(flt::digits10);  // set the maximum doubleing point precisionin cout
   cout << "[" ;
   // skip seperator , on the first coord
   bool firstcoord = true;

@@ -37,23 +37,73 @@ namespace LOFAR
       enum COORDTYPES
       {
         J2000,
-        B1950
+        B1950,
+        OTHER
       };
       
       
-      typedef std::pair<float, float> Coordinate;
+      typedef std::pair<double, double> Coordinate;
       typedef std::vector<Coordinate > CoordinateVector;
 
-      RingCoordinates(size_t nRings, float width, 
+      RingCoordinates(size_t nRings, double width, 
         Coordinate const &center, RingCoordinates::COORDTYPES type);
 
       const CoordinateVector&  coordinates() const;
 
-    private:    
+    private:
+
+      /*
+      *  _
+      * / \
+      * \_/
+      * |.|
+      */
+      double len_edge();
+
+      /*
+      *  _
+      * / \
+      * \_/
+      *|...|
+      */
+      double len_width();
+
+      /*
+      *  _  _
+      * / \ :
+      * \_/ _
+      * 
+      */
+      double len_height();
+
+      /*
+      *  _
+      * / \_
+      * \_/ \
+      *   \_/
+      *  |.|
+      */
+      double delta_width();
+
+      /*
+      *  _
+      * / \_  -
+      * \_/ \ -
+      *   \_/
+      *  
+      */
+      double delta_height();
+     
+      CoordinateVector createPrecompiledCoords();
+
+      Coordinate cos_adjust(Coordinate const& offset);
+
       CoordinateVector itsCoordinates;
-
-
-
+      size_t itsNRings;
+      double itsWidth;
+      Coordinate itsCenter;
+      COORDTYPES itsType;
+      
 
     };
   }
