@@ -30,8 +30,6 @@
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPTimeStamp.h>
-#include <InputProc/Buffer/Block.h>
-#include <InputProc/Buffer/BufferSettings.h>
 #include "MPIProtocol.h"
 #include "MPIUtil.h"
 
@@ -57,27 +55,23 @@ namespace LOFAR
     public:
       // Create a sender of blocks over MPI.
       //
-      // settings
-      //   The station to send info from.
-      //
       // stationIdx
       //   The station index within this observation.
       // beamletDistribution
       //   The distribution of beamlets:
       //     key   = receiver MPI rank
       //     value = beamlets to send in [0, ps.nrSubbands())
-      MPISendStation( const struct BufferSettings &settings, size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets );
+      MPISendStation( size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets, size_t nrSamples );
 
       ~MPISendStation();
 
       // Send one block. The caller is responsible for matching the number of
       // posted receiveBlocks.
       template<typename T>
-      void sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
+      void sendBlock( const T *data, MPIProtocol::MetaData *metaData );
 
     private:
       const std::string logPrefix;
-      const BufferSettings &settings;
 
       // Station number in observation [0..nrStations)
       const size_t stationIdx;
@@ -88,16 +82,15 @@ namespace LOFAR
       // Which beamlets to send
       const std::vector<size_t> beamlets;
 
-      Vector<struct MPIProtocol::MetaData> metaData; // [beamlet]
-      SmartPtr<char, SmartPtrMPI<char> > data; // T[beamlet][sample]
-      size_t blockSize;
+      const size_t nrSamples;
 
     public:
       // Send beamlet data to the given rank (async).
-      MPI_Request sendData();
+      template<typename T>
+      MPI_Request sendData( const T* buffer );
 
       // Send flags data to the given rank (async).
-      MPI_Request sendMetaData();
+      MPI_Request sendMetaData( const MPIProtocol::MetaData *metaData );
     };
 
   }

@@ -49,14 +49,13 @@ namespace LOFAR {
 
   namespace Cobalt {
 
-    MPISendStation::MPISendStation( const struct BufferSettings &settings, size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets )
+    MPISendStation::MPISendStation( size_t stationIdx, int targetRank, const std::vector<size_t> &beamlets, size_t nrSamples )
     :
-      logPrefix(str(boost::format("[station %s to rank %s] [MPISendStation] ") % settings.station.name() % targetRank)),
-      settings(settings),
+      logPrefix(str(boost::format("[station %s to rank %s] [MPISendStation] ") % stationIdx % targetRank)),
       stationIdx(stationIdx),
       targetRank(targetRank),
       beamlets(beamlets),
-      metaData(beamlets.size(), 1, mpiAllocator)
+      nrSamples(nrSamples)
     {
       LOG_DEBUG_STR(logPrefix << "Initialised");
 
@@ -69,8 +68,8 @@ namespace LOFAR {
     {
     }
 
-
-    MPI_Request MPISendStation::sendData()
+    template<typename T>
+    MPI_Request MPISendStation::sendData( const T *data )
     {
       DEBUG(logPrefix << "Sending beamlets to rank " << targetRank);
 
@@ -79,11 +78,11 @@ namespace LOFAR {
       tag.bits.station  = stationIdx;
       tag.bits.beamlet  = beamlets[0];
 
-      return Guarded_MPI_Issend(data.get(), blockSize, targetRank, tag.value);
+      return Guarded_MPI_Issend(data, nrSamples * sizeof(T), targetRank, tag.value);
     }
 
 
-    MPI_Request MPISendStation::sendMetaData()
+    MPI_Request MPISendStation::sendMetaData( const MPIProtocol::MetaData *metaData )
     {
       DEBUG("Sending flags to rank " << targetRank);
 
@@ -95,52 +94,14 @@ namespace LOFAR {
       // Flags are sent if the data have been transferred,
       // and the flags Irecv is posted before the data Irecvs,
       // so we are sure that the flag Irecv is posted.
-      return Guarded_MPI_Isend(&metaData[0], beamlets.size() * sizeof metaData, targetRank, tag.value);
+      return Guarded_MPI_Isend(metaData, beamlets.size() * sizeof *metaData, targetRank, tag.value);
     }
 
 
     template<typename T>
-    void MPISendStation::sendBlock( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData )
+    void MPISendStation::sendBlock( const T *data, MPIProtocol::MetaData *metaData )
     {
       DEBUG("entry");
-
-      ASSERT(metaData.size() == block.beamlets.size());
-
-      const size_t nrBeamlets = block.beamlets.size();
-      const size_t nrSamples  = block.beamlets[0].size();
-
-      if (!data) {
-        blockSize = nrSamples * sizeof(T);
-        data = static_cast<char*>(mpiAllocator.allocate(nrBeamlets * nrSamples * sizeof(T)));
-      }
-
-      MultiDimArray<T,2> dataMatrix(boost::extents[nrBeamlets][nrSamples], (T*)(data.get()), false);
-
-      /*
-       * STAGE BEAMLETS
-       */
-
-      for(size_t b = 0; b < beamlets.size(); ++b) {
-        //block.beamlets[b].copy(&dataMatrix[b][0]);
-      }
-
-      /*
-       * COMPUTE METADATA
-       */
-
-      for(size_t beamletIdx = 0; beamletIdx < beamlets.size(); beamletIdx++) {
-        /*
-         * OBTAIN FLAGS AFTER DATA IS SENT
-         */
-
-        // The only valid samples are those that existed both
-        // before and after the transfer.
-
-        SubbandMetaData &md = metaData[beamletIdx];
-        md.flags = block.beamlets[beamletIdx].flagsAtBegin | block.flags(beamletIdx);
-
-        this->metaData[beamletIdx] = md;
-      }
 
       /*
        * SEND BEAMLETS AND METADATA
@@ -151,8 +112,8 @@ namespace LOFAR {
       {
         ScopedLock sl(MPIMutex);
 
-        requests[0] = sendData();
-        requests[1] = sendMetaData();
+        requests[0] = sendData(data);
+        requests[1] = sendMetaData(metaData);
       }
 
       RequestSet rs(requests, true, str(boost::format("%s data") % logPrefix));
@@ -163,7 +124,8 @@ namespace LOFAR {
 
     // Create all necessary instantiations
 #define INSTANTIATE(T) \
-      template void MPISendStation::sendBlock<T>( const struct Block<T> &block, std::vector<SubbandMetaData> &metaData );
+      template MPI_Request MPISendStation::sendData<T>( const T* data ); \
+      template void MPISendStation::sendBlock<T>( const T* data, MPIProtocol::MetaData *metaData );
 
     INSTANTIATE(SampleType<i4complex>);
     INSTANTIATE(SampleType<i8complex>);
