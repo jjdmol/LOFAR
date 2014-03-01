@@ -38,8 +38,15 @@ template <typename T> class Queue
   public:
     Queue() {}
 
+    // Add an element to the back of the queue
     void     append(T);
+
+    // Remove the front element; waits for an element to be appended
     T	     remove();
+
+    // Remove the front element; waits until `deadline' for an element,
+    // and returns `null' if the deadline passed.
+    T	     remove(const timespec &deadline, T null);
 
     unsigned size() const;
     bool     empty() const;
@@ -69,6 +76,21 @@ template <typename T> inline T Queue<T>::remove()
 
   while (itsQueue.empty())
     itsNewElementAppended.wait(itsMutex);
+
+  T element = itsQueue.front();
+  itsQueue.pop_front();
+
+  return element;
+}
+
+
+template <typename T> inline T Queue<T>::remove(const timespec &deadline, T null)
+{
+  ScopedLock scopedLock(itsMutex);
+
+  while (itsQueue.empty())
+    if (!itsNewElementAppended.wait(itsMutex, deadline))
+      return null;
 
   T element = itsQueue.front();
   itsQueue.pop_front();
