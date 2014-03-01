@@ -43,6 +43,11 @@ namespace LOFAR
       return convert((double)usec / 1000000, clockSpeed);
     }
 
+    TimeStamp TimeStamp::universe_heat_death( unsigned clockSpeed )
+    {
+      return TimeStamp(0x7FFFFFFFFFFFFFFFUL, clockSpeed);
+    }
+
 
     TimeStamp TimeStamp::convert( double seconds, unsigned clockSpeed )
     {
