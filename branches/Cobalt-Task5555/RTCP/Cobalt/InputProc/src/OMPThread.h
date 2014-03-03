@@ -70,27 +70,31 @@ namespace LOFAR
     // kill() will wait.
     void kill()
     {
-      while (!stopped) {
-        // Interrupt blocking system calls (most notably, read()),
-        // possibly multiple in a row.
-        // Note that the thread will stick around until the end
-        // of pragma parallel, so the thread id is always valid
-        // once it has been set.
-        pthread_t oldid = id;
+      try {
+        while (!stopped) {
+          // Interrupt blocking system calls (most notably, read()),
+          // possibly multiple in a row.
+          // Note that the thread will stick around until the end
+          // of pragma parallel, so the thread id is always valid
+          // once it has been set.
+          pthread_t oldid = id;
 
-        if (oldid > 0) {
-          // Do not use THROW_SYSCALL(), because pthread_*() does not set errno,
-          // but returns it.
-          int error = pthread_kill(oldid, SIGHUP);
-          if (error != 0)
-            throw SystemCallException("pthread_kill", error, THROW_ARGS);
+          if (oldid > 0) {
+            // Do not use THROW_SYSCALL(), because pthread_*() does not set errno,
+            // but returns it.
+            int error = pthread_kill(oldid, SIGHUP);
+            if (error != 0)
+              throw SystemCallException("pthread_kill", error, THROW_ARGS);
+          }
+
+          // sleep for 100ms - do NOT let us get killed here,
+          // because we're maintaining integrity
+          const struct timespec ts = { 1, 200 * 1000 };
+          while (nanosleep( &ts, NULL ) == -1 && errno == EINTR)
+            ;
         }
-
-        // sleep for 100ms - do NOT let us get killed here,
-        // because we're maintaining integrity
-        const struct timespec ts = { 1, 200 * 1000 };
-        while (nanosleep( &ts, NULL ) == -1 && errno == EINTR)
-          ;
+      } catch(Exception &ex) {
+        LOG_ERROR_STR("Caught exception: " << ex);
       }
     }
 
