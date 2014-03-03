@@ -774,11 +774,12 @@ namespace LOFAR {
       //itsSols.push_back(g);
 
       if (dg > itsTolerance) {
-      cout<<"g="<<iS.g<<endl;
-      if (itsThingie>0) {
-        THROW(Exception,"Klaar!");
-      }
-      itsThingie++;
+        cout<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<endl;
+        cout<<"g="<<iS.g<<endl;
+        if (itsThingie>0) {
+          THROW(Exception,"Klaar!");
+        }
+        itsThingie++;
       }
     }
 
