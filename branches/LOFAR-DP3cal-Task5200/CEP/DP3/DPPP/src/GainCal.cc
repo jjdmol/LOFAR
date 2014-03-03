@@ -762,10 +762,12 @@ namespace LOFAR {
         cout<<"iter:"<<iter<<endl;
       }
 
-      DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
-      // Set phase of first gain to zero
-      for (uint st=0;st<2*nSt;++st) {
-        iS.g(st,0)*=p;
+      if (nSt>0) {
+        DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
+        // Set phase of first gain to zero
+        for (uint st=0;st<2*nSt;++st) {
+          iS.g(st,0)*=p;
+        }
       }
 
       //for (uint ant2=0;ant2<nSt;++ant2) {
