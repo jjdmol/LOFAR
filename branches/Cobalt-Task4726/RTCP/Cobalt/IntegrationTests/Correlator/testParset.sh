@@ -69,7 +69,7 @@ OUTDIR=`basename "${PARSET%.parset}.output"`
   then
     # create script to accept output (ie. copy it to the source dir for check in)
     echo "#!/bin/bash
-    cp `pwd`/*.MS $REFDIR" > accept_output
+    cp `pwd`/*.raw $REFDIR" > accept_output
     chmod a+x accept_output
 
     # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
@@ -82,7 +82,7 @@ OUTDIR=`basename "${PARSET%.parset}.output"`
     do
       EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
 
-      for f in *.MS
+      for f in *.raw
       do
         cmpfloat --type=cfloat --epsilon=$EPSILON --verbose \
 	    "`pwd`/$f" "$REFDIR/$f" || error "Output does not match " \
