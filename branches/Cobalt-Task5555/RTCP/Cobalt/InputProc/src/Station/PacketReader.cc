@@ -35,15 +35,16 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    const BoardMode PacketReader::MODE_ANY;
 
-
-    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream )
+    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode )
       :
       logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
       inputStream(inputStream),
+      mode(mode),
 
       nrReceived(0),
-      nrBadSize(0),
+      nrBadMode(0),
       nrBadTime(0),
       nrBadData(0),
       nrBadOther(0),
@@ -114,7 +115,7 @@ namespace LOFAR
             hadSizeError = true;
           }
 
-          ++nrBadSize;
+          ++nrBadOther;
           return false;
         }
       } else {
@@ -153,6 +154,14 @@ namespace LOFAR
         //return false;
       }
 
+      if (packet.bitMode() != mode.bitMode
+       || packet.clockMHz() != mode.clockMHz) {
+        if (mode != MODE_ANY) {
+          ++nrBadMode;
+          return false;
+        }
+      }
+
       // everything is ok
       return true;
     }
@@ -168,12 +177,12 @@ namespace LOFAR
       const double interval = now - lastLogTime;
 
       // Emit log line
-      LOG_INFO_STR( logPrefix << (nrReceived/interval) << " pps: received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
+      LOG_INFO_STR( logPrefix << (nrReceived/interval) << " pps: received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadMode << " bad clock/bitmode, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
 
       // Reset counters
       nrReceived = 0;
       nrBadTime = 0;
-      nrBadSize = 0;
+      nrBadMode = 0;
       nrBadData = 0;
       nrBadOther = 0;
 

@@ -25,6 +25,7 @@
 
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
+#include <InputProc/Buffer/BoardMode.h>
 
 #include "RSP.h"
 
@@ -41,7 +42,9 @@ namespace LOFAR
     class PacketReader
     {
     public:
-      PacketReader( const std::string &logPrefix, Stream &inputStream );
+      static const BoardMode MODE_ANY;
+
+      PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode = MODE_ANY );
 
       // Reads a set of packets from the input stream. Sets valid[i] to
       // true for each valid packet i.
@@ -60,16 +63,19 @@ namespace LOFAR
       // The stream from which packets are read.
       Stream &inputStream;
 
+      // The mode against which to validate (ignored if mode == MODE_ANY)
+      const BoardMode mode;
+
       // Whether inputStream is an UDP stream
       // (UDP streams allow partial reads, and recvmmsg).
       bool inputIsUDP;
 
       // Statistics covering the packets read so far
       size_t nrReceived; // nr. of packets received
-      size_t nrBadSize; // nr. of packets with wrong size (only if inputIsUDP == false)
+      size_t nrBadMode; // nr. of packets with wrong mode (clock, bit mode)
       size_t nrBadTime; // nr. of packets with an illegal time stamp
       size_t nrBadData; // nr. of packets with payload errors
-      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, etc)
+      size_t nrBadOther; // nr. of packets that are bad in another fashion (illegal header, packet size, etc)
 
       bool hadSizeError; // already reported about wrongly sized packets since last logStatistics()
 
