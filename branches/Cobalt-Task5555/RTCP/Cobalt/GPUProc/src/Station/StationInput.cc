@@ -55,6 +55,7 @@
 #include <InputProc/Buffer/SampleBuffer.h>
 #include <InputProc/Station/PacketsToBuffer.h>
 #include <InputProc/Delays/Delays.h>
+#include <InputProc/OMPThread.h>
 
 #include "StationNodeAllocation.h"
 
@@ -100,6 +101,7 @@ struct MPIData {
    *
    * because rank 0 will process [0, 2] and rank 1
    * will process [1, 3].
+   *
    */
 
   MultiDimArray<SampleT, 2> mpi_samples; // [subband][sample]
@@ -117,11 +119,11 @@ struct MPIData {
   }
 
   // Returns true if we're spilling into the next packet
-  bool write(struct RSP &packet, const vector<ssize_t> &beamletIndices);
+  bool write(struct RSP &packet, const ssize_t *beamletIndices);
 };
 
 template<typename SampleT>
-bool MPIData<SampleT>::write(struct RSP &packet, const vector<ssize_t> &beamletIndices) {
+bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) {
   const TimeStamp packetBegin = packet.timeStamp();
   const TimeStamp packetEnd   = packetBegin + packet.header.nrBlocks;
 
@@ -177,25 +179,33 @@ bool MPIData<SampleT>::write(struct RSP &packet, const vector<ssize_t> &beamletI
       consider_next = true;
     }
 
+    /* Absolute offset within our block */
+    const size_t absSample = beamletBegin - from + firstSample;
+
     /* Write the remaining data */
-    memcpy(&mpi_samples[absBeamlet][beamletBegin - from + firstSample],
+    memcpy(&mpi_samples[absBeamlet][absSample],
 	   srcPtr + b * packet.header.nrBlocks + firstSample,
 	   nrSamplesToCopy * sizeof(SampleT));
 
     /* Update the flags */
-    metaData[absBeamlet].flags.include(firstSample, firstSample + nrSamplesToCopy);
+    metaData[absBeamlet].flags.include(absSample, absSample + nrSamplesToCopy);
   }
 
   return consider_next;
 }
 
 
+/*
+ * Generates MPIData<Sample> blocks, and computes its meta data (delays, etc).
+ */
 template <typename SampleT>
-class StationInput {
+class StationMetaData {
 public:
-  StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
+  StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
-  void computeMetaData( Pool< MPIData<SampleT> > &metaDataPool );
+  void computeMetaData();
+
+  Pool< MPIData<SampleT> > metaDataPool;
 
 private:
   const Parset &ps;
@@ -207,14 +217,16 @@ private:
   const TimeStamp stopTime;
 
   const size_t nrSamples;
+public:
   const size_t nrBlocks;
+private:
 
   const SubbandDistribution subbandDistribution;
   const std::vector<size_t> targetSubbands;
 };
 
 template <typename SampleT>
-StationInput<SampleT>::StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
+StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
 :
   ps(ps),
   stationIdx(stationIdx),
@@ -239,8 +251,16 @@ StationInput<SampleT>::StationInput( const Parset &ps, size_t stationIdx, const 
  * Output: metaDataPool.filled
  */
 template <typename SampleT>
-void StationInput<SampleT>::computeMetaData( Pool< MPIData<SampleT> > &metaDataPool )
+void StationMetaData<SampleT>::computeMetaData()
 {
+  /*
+   * Allocate buffer elements.
+   */
+
+  // Each element represents 1 block of buffer.
+  for (size_t i = 0; i < 5; ++i)
+    metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples));
+
   /*
    * Set up delay compensation.
    */
@@ -298,60 +318,359 @@ void StationInput<SampleT>::computeMetaData( Pool< MPIData<SampleT> > &metaDataP
   metaDataPool.filled.append(NULL);
 }
 
-template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
-{
-  StationInput<SampleT> si(ps, stationIdx, subbandDistribution);
+class StationInput {
+public:
+  StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
-  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name));
-  const std::string logPrefix = str(format("[station %s] ") % stationID.name());
+  bool receivedHere() const;
 
-  StationNodeAllocation allocation(stationID, ps);
-
-  if (!allocation.receivedHere()) {
-    // Station is not sending from this node
-    return;
-  }
-
-  LOG_INFO_STR(logPrefix << "Processing station data");
-
-  const TimeStamp startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
-  const TimeStamp stopTime(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
-
-  const ssize_t nrBlocks = (stopTime - startTime) / ps.nrSamplesPerSubband();
-
-  // Don't run if there is no data to process
-  if (nrBlocks == 0)
-    return;
-
-  Pool< MPIData<SampleT> > metaDataPool;
-  Pool< MPIData<SampleT> > dataPool;
+  template <typename SampleT>
+  void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
 
   Pool< RSPData > rspDataPool;
 
-  for (size_t i = 0; i < 3; ++i)
-    metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), ps.nrSamplesPerSubband()));
+private:
+  const Parset &ps;
 
+  const size_t stationIdx;
+  const struct StationID stationID;
+  const StationNodeAllocation allocation;
+
+  const std::string logPrefix;
+
+  const size_t nrBoards;
+
+  const std::vector<size_t> targetSubbands;
+
+  // Mapping of
+  // [board][slot] -> offset of this beamlet in the MPIData struct
+  //                  or: -1 = discard this beamlet (not used in obs)
+  const MultiDimArray<ssize_t, 2> beamletIndices;
+
+  MultiDimArray<ssize_t, 2> generateBeamletIndices();
+
+  /*
+   * Reads data from all the station input streams, and puts their packets in rspDataPool.
+   *
+   * Real-time mode:
+   *   - Packets are collected in batches per board
+   *   - Batches are interleaved as they arrive
+   *
+   * Non-real-time mode:
+   *   - Packets are interleaved between the streams,
+   *     staying as close to in-order as possible.
+   *   - An "+inf" TimeStamp is added at the end to signal
+   *     end-of-data
+   *
+   * Reads:  rspDataPool.free
+   * Writes: rspDataPool.filled
+   *
+   * Read data from one board in real-time mode.
+   */
+  void readRSPRealTime( size_t board, Stream &inputStream );
+
+  /*
+   * Read data from all boards in non-real-time mode.
+   */
+  void readRSPNonRealTime();
+
+  /*
+   * Fills 'current' with RSP data. Potentially spills into 'next'.
+   */
+  template <typename SampleT>
+  void writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
+  template <typename SampleT>
+  void writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
+
+};
+
+StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
+:
+  ps(ps),
+  stationIdx(stationIdx),
+  stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name)),
+  allocation(stationID, ps),
+
+  logPrefix(str(format("[station %s] ") % stationID.name())),
+
+  nrBoards(ps.settings.stations.at(stationIdx).inputStreams.size()),
+
+  targetSubbands(values(subbandDistribution)),
+  beamletIndices(generateBeamletIndices())
+{
   for (size_t i = 0; i < 1024; ++i)
-    rspDataPool.free.append(new RSPData(256));
+    rspDataPool.free.append(new RSPData(ps.realTime() ? 256 : 1));
+}
+
+
+MultiDimArray<ssize_t, 2> StationInput::generateBeamletIndices()
+{
+  /*
+   * We need to create a mapping from
+   *
+   * [board][slot]          = the dimensions of the RSP data
+   *
+   * to
+   *
+   * [subband]              = the dimensions of the data sent over MPI,
+   *                          which is ordered by `targetSubbands'.
+   */
+  const BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+
+  MultiDimArray<ssize_t, 2> result(boost::extents[nrBoards][mode.nrBeamletsPerBoard()]);
+
+  // Any untouched [board][slot] means we'll discard that input
+  for(size_t n = 0; n < result.num_elements(); ++n)
+    result.origin()[n] = -1;
+
+  for(size_t i = 0; i < ps.nrSubbands(); ++i) {
+    // The subband stored at position i
+    const size_t sb = targetSubbands.at(i);
+
+    // The corresponding (board,slot) combination for that subband,
+    // for this station.
+    const size_t board = ps.settings.stations[stationIdx].rspBoardMap[sb];
+    const size_t slot  = ps.settings.stations[stationIdx].rspSlotMap[sb];
+
+    ASSERT(board < nrBoards);
+    ASSERT(slot < mode.nrBeamletsPerBoard());
+
+    // The specified (board,slot) is stored at position i
+    ASSERTSTR(result[board][slot] == -1, "Station " << stationID.name() << ": board " << board << " slot " << slot << " is used multiple times!");
+    result[board][slot] = i;
+  }
+
+  return result;
+}
+
+
+bool StationInput::receivedHere() const
+{
+  return allocation.receivedHere();
+}
+
+
+void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
+{
+  /*
+   * In real-time mode, we can't get ahead of the `current'
+   * block of the reader due to clock synchronisation.
+   */
+
+  const time_t LOG_INTERVAL = 10;
+  time_t lastlog_timestamp = 0;
+
+  PacketReader reader(logPrefix, inputStream);
+
+  try {
+    for(;;) {
+      // Fill rspDataPool elements with RSP packets
+      SmartPtr<RSPData> data = rspDataPool.free.remove();
+
+      reader.readPackets(data->packets, data->valid);
+      data->board = board;
+
+      rspDataPool.filled.append(data);
+
+      // Periodically log progress
+      if (data->valid[0] && data->packets[0].header.timestamp > lastlog_timestamp + LOG_INTERVAL) {
+        lastlog_timestamp = data->packets[0].header.timestamp;
+
+        reader.logStatistics();
+      }
+    }
+  } catch (Stream::EndOfStreamException &ex) {
+    // Ran out of data
+    LOG_INFO_STR( logPrefix << "End of stream");
+
+  } catch (SystemCallException &ex) {
+    if (ex.error == EINTR || ex.error == 512 /* ERESTARTSYS, should not be propagated to user space?! */)
+      LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
+    else
+      LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
+  } catch (Exception &ex) {
+    LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
+  }
+}
+
+
+template <typename SampleT>
+void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next )
+{
+  /* real-time */
+
+  /*
+   * 1. We can receive data out-of-order.
+   * 2. We can't receive data from beyond `next', because
+   *    we sync on the wall clock.
+   * 3. We can receive old data from before `current'.
+   */
+
+
+  const BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+  const TimeStamp maxDelay(mode.secondsToSamples(0.5), mode.clockHz());
+
+  const TimeStamp deadline = current.to + maxDelay;
+
+  LOG_INFO_STR("[block " << current.block << "] Waiting until " << deadline << " for " << current.from << " to " << current.to);
+
+  const TimeStamp now = TimeStamp::now(deadline.getClock());
+
+  if (deadline < now) {
+    // We're too late! Don't process data, or we'll get even further behind!
+    LOG_ERROR_STR("[block " << current.block << "] Not running at real time! Deadline was " <<
+      TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
+  } else {
+    SmartPtr<RSPData> rspData;
+
+    while((rspData = rspDataPool.filled.remove(deadline, NULL)) != NULL) {
+      const ssize_t *beamletIndices = &this->beamletIndices[rspData->board][0];
+
+      // Write valid packets to the current and/or next packet
+      for (size_t p = 0; p < rspData->valid.size(); ++p) {
+	if (!rspData->valid[p])
+	  continue;
+
+	if (current.write(rspData->packets[p], beamletIndices)
+	 && next) {
+	  // We have data (potentially) spilling into `next'.
+
+	  next->write(rspData->packets[p], beamletIndices);
+	}
+      }
+    }
+
+    rspDataPool.free.append(rspData);
+    ASSERT(!rspData);
+  }
+}
+
+
+void StationInput::readRSPNonRealTime()
+{
+  vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
+  vector< SmartPtr<PacketReader> > readers(nrBoards);
+
+  for (size_t i = 0; i < nrBoards; ++i)
+    readers[i] = new PacketReader(logPrefix, *inputStreams[i]);
+
+  /* Since the boards will be read at different speeds, we need to
+   * manually keep them in sync. We read a packet from each board,
+   * and let the board providing the youngest packet read again.
+   */
+
+  // Cache for last packets read from each board
+  vector<struct RSP> last_packets(nrBoards);
+
+  // Whether we should refresh last_packets[board]
+  vector<bool> read_next_packet(nrBoards, true);
+
+  for(;;) {
+    for(size_t board = 0; board < nrBoards; board++) {
+      if (!read_next_packet[board] || !readers[board])
+        continue;
+
+      try {
+        // Retry until we have a valid packet
+        while (readers[board]->readPacket(last_packets[board]))
+          ;
+      } catch (Stream::EndOfStreamException &ex) {
+        // Ran out of data
+        LOG_INFO_STR( logPrefix << "End of stream");
+
+        readers[board] = NULL;
+      }
+    }
+
+    // Determine which board provided the youngest packet
+    int youngest = -1;
+
+    for (size_t board = 0; board < nrBoards; board++) {
+      if (!readers[board])
+        continue;
+
+      if (youngest == -1 || last_packets[youngest].timeStamp() > last_packets[board].timeStamp())
+        youngest = board;
+    }
+
+    // Break if all streams turned out to be inactive
+    if (youngest == -1)
+      break;
+
+    // Emit youngest packet
+    SmartPtr<RSPData> data = rspDataPool.free.remove();
+    ASSERT(data);
+    ASSERT(data->valid.size() == 1);
+
+    data->valid[0]   = true;
+    data->packets[0] = last_packets[youngest];
+    data->board      = youngest;
+   
+    rspDataPool.filled.append(data);
+
+    // Next packet should only be read from the stream we
+    // emitted from
+    for(size_t board = 0; board < nrBoards; board++)
+      read_next_packet[board] = (board == (size_t)youngest);
+  }
+
+  // Signal EOD by inserting a packet beyond obs end
+  SmartPtr<RSPData> data = rspDataPool.free.remove();
+  ASSERT(data);
+  ASSERT(data->valid.size() == 1);
 
   const BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
 
-  // Order the subbands by receiving rank
-  const vector<size_t> targetSubbands = values(subbandDistribution);
+  data->valid[0]   = true;
+  data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
+  data->board      = 0;
+
+  rspDataPool.filled.append(data);
+}
+
+
+template <typename SampleT>
+void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next )
+{
+  LOG_INFO_STR("[block " << current.block << "] Waiting for data");
 
   /*
-   * Stream the data.
+   * 1. We'll receive one packet at a time, in-order.
+   * 2. We might receive data beyond what we're processing now.
+   *    In that case, we break and keep rspData around.
    */
-  #pragma omp parallel sections num_threads(3)
-  {
-    /*
-     * METADATA POOL: Adds delays to blocks
-     */
-    #pragma omp section
-    {
-      si.computeMetaData(metaDataPool);
+
+
+  for(;;) {
+    SmartPtr<RSPData> data = rspDataPool.filled.remove();
+    const ssize_t *beamletIndices = &this->beamletIndices[data->board][0];
+
+    // Only packet 0 is used in non-rt mode
+    ASSERT(data->valid.size() == 1);
+    ASSERT(data->valid[0]);
+
+    if (current.write(data->packets[0], beamletIndices)) {
+      // We have data (potentially) spilling into `next'.
+      if (!next || next->write(data->packets[0], beamletIndices)) {
+	// Data is even later than next? Put this data back for a future block.
+        rspDataPool.filled.prepend(data);
+	break;
+      }
     }
 
+    rspDataPool.free.append(data);
+    ASSERT(!data);
+  }
+}
+
+
+template <typename SampleT>
+void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
+{
+  vector<OMPThread> packetReaderThreads(nrBoards);
+
+  #pragma omp parallel sections num_threads(2)
+  {
     /*
      * PACKET READERS: Read input data from station
      *
@@ -366,275 +685,106 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
      */
     #pragma omp section
     {
-      // fetch input streams
-      vector< SmartPtr<Stream> > rspStreams(allocation.inputStreams());
-      vector< SmartPtr<PacketReader> > readers;
-
-      for(size_t i = 0; i < rspStreams.size(); ++i)
-        readers.push_back(new PacketReader(logPrefix, *rspStreams[i]));
-
       LOG_INFO_STR(logPrefix << "Processing packets");
 
       if (ps.realTime()) {
-        /*
-         * In real-time mode, we can't get ahead of the `current'
-         * block of the reader due to clock synchronisation.
-         */
+        vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
 
-        const time_t LOG_INTERVAL = 10;
+        #pragma omp parallel for num_threads(nrBoards)
+        for(size_t board = 0; board < nrBoards; board++) {
+          OMPThread::ScopedRun sr(packetReaderThreads[board]);
 
-        #pragma omp parallel for num_threads(rspStreams.size())
-        for(size_t board = 0; board < rspStreams.size(); board++) {
-          time_t lastlog_timestamp = 0;
-
-          PacketReader &reader = *readers[board];
-
-          try {
-            for(;;) {
-              // Fill rspDataPool elements with RSP packets
-              SmartPtr<RSPData> data = rspDataPool.free.remove();
-
-              reader.readPackets(data->packets, data->valid);
-              data->board = board;
-
-              rspDataPool.filled.append(data);
-
-              // Periodically log progress
-              if (data->valid[0] && data->packets[0].header.timestamp > lastlog_timestamp + LOG_INTERVAL) {
-                lastlog_timestamp = data->packets[0].header.timestamp;
-
-                reader.logStatistics();
-              }
-            }
-          } catch (Stream::EndOfStreamException &ex) {
-            // Ran out of data
-            LOG_INFO_STR( logPrefix << "End of stream");
-
-          } catch (SystemCallException &ex) {
-            if (ex.error == EINTR || ex.error == 512 /* ERESTARTSYS, should not be propagated to user space?! */)
-              LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
-            else
-              LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-          } catch (Exception &ex) {
-            LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
-          }
+          readRSPRealTime(board, *inputStreams[board]);
         }
       } else {
-        /* non-rt */
-
-        /* Since the boards will be read at different speeds, we need to
-         * manually keep them in sync. We read a packet from each board,
-         * and let the board providing the youngest packet read again.
-         */
-
-        // Cache for last packets read from each board
-        vector<struct RSP> last_packets(rspStreams.size());
-
-        // Whether we should refresh last_packets[board]
-        vector<bool> read_next_packet(rspStreams.size(), true);
-
-        // Whether the stream for each board is still available
-        vector<bool> stream_active(rspStreams.size(), true);
-
-        for(;;) {
-          for(size_t board = 0; board < rspStreams.size(); board++) {
-            if (!read_next_packet[board] || !stream_active[board])
-              continue;
-
-            PacketReader &reader = *readers[board];
-
-            try {
-              // Retry until we have a valid packet
-              while (!reader.readPacket(last_packets[board]))
-                ;
-            } catch (Stream::EndOfStreamException &ex) {
-              // Ran out of data
-              LOG_INFO_STR( logPrefix << "End of stream");
-
-              stream_active[board] = false;
-            }
-          }
-
-          // Determine youngest packet
-          int youngest = -1;
-
-          for (size_t board = 0; board < rspStreams.size(); board++) {
-            if (!stream_active[board])
-              continue;
-
-            if (youngest == -1 || last_packets[youngest].timeStamp() > last_packets[board].timeStamp())
-              youngest = board;
-          }
-
-          // Break if all streams turned out to be inactive
-          if (youngest == -1)
-            break;
-
-          // Emit youngest packet
-          SmartPtr<RSPData> data = rspDataPool.free.remove();
-
-          for (size_t i = 0; i < data->valid.size(); ++i)
-            data->valid[i] = false;
-
-          data->valid[0]   = true;
-          data->packets[0] = last_packets[youngest];
-          data->board      = youngest;
-         
-          rspDataPool.filled.append(data);
-
-          // Next packet should only be read from the stream we
-          // emitted from
-          for(size_t board = 0; board < rspStreams.size(); board++)
-            read_next_packet[board] = (board == (size_t)youngest);
-        }
+        readRSPNonRealTime();
       }
-
-      // Signal EOD by inserting a packet beyond obs end
-      SmartPtr<RSPData> data = rspDataPool.free.remove();
-      for (size_t i = 0; i < data->valid.size(); ++i)
-        data->valid[i] = false;
-
-      data->valid[0]   = true;
-      data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
-      data->board      = 0;
- 
-      rspDataPool.filled.append(data);
     }
 
     /*
-     * DATA POOL: Adds samples to block
+     * inputQueue -> outputQueue
      */
     #pragma omp section
     {
       Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-      const TimeStamp maxDelay(mode.secondsToSamples(0.5), mode.clockHz());
-
-      // Determine the beamlet -> targetSubband mapping for THIS station,
-      // allowing us to translate the beamlets from an RSP packet to
-      // offsets into mpiData->data and mpiData->metaData directly.
-      vector< vector<ssize_t> > beamletIndices(
-        4, // support 4 RSP boards
-	vector<ssize_t>(mode.nrBeamletsPerBoard(), -1) // -1 = discard this beamlet
-	);
-
-      for(size_t i = 0; i < ps.nrSubbands(); ++i) {
-        // The subband stored at position i
-        const size_t sb = targetSubbands.at(i);
-
-	// The corresponding (board,slot) combination for that subband
-        const size_t board = ps.settings.stations[stationIdx].rspBoardMap[sb];
-        const size_t slot  = ps.settings.stations[stationIdx].rspSlotMap[sb];
-
-        // The specified (board,slot) is stored at position i
-	ASSERT(beamletIndices.at(board).at(slot) == -1);
-	beamletIndices.at(board).at(slot) = i;
-      }
-
       /*
        * We maintain a `current' and a `next' block,
        * because the offsets between subbands can require
-       * us to write to two blocks alternately.
+       * us to write to two blocks in edge cases.
        *
        * Also, data can arrive slightly out-of-order.
        */
 
       SmartPtr< MPIData<SampleT> > current, next;
 
-      SmartPtr<RSPData> rspData;
-
-      while((current = metaDataPool.filled.remove()) != NULL) {
-        const ssize_t block = current->block;
-
-        next = metaDataPool.filled.remove();
-
-        /*
-         * Wait until we've filled up the current block.
-         * Due to out-of-order arrival, and because we give data
-         * ample time to arrive, we will occasionally
-         * spill into the next block.
-         */
+      while((current = next ? next : inputQueue.remove()) != NULL) {
+        next = inputQueue.remove();
 
         if (ps.realTime()) {
-          /* real-time */
-
-          /*
-           * 1. We can receive data out-of-order.
-           * 2. We can't receive data from beyond `next', because
-           *    we sync on the wall clock.
-           * 3. We can receive old data from before `current'.
-           */
-
-          const TimeStamp deadline = current->to + maxDelay;
-
-          LOG_INFO_STR("[block " << block << "] Waiting until " << deadline << " for " << current->from << " to " << current->to);
-
-          const TimeStamp now = TimeStamp::now(deadline.getClock());
-
-          if (deadline < now) {
-            // We're too late! Don't process data, or we'll get even further behind!
-            LOG_ERROR_STR("[block " << block << "] Not running at real time! Deadline was " <<
-              TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
-          } else {
-            // Whether we have read data beyond `next'. This can happen in non-rt mode after a period of packet loss.
-            // In that case, we retain rspData to be written into future blocks.
-
-            while((rspData = rspDataPool.filled.remove(deadline, NULL)) != NULL) {
-              // Write valid packets to the current and/or next packet
-              for (size_t p = 0; p < rspData->valid.size(); ++p) {
-                if (!rspData->valid[p])
-                  continue;
-
-	        if (current->write(rspData->packets[p], beamletIndices.at(rspData->board))
-                 && next) {
-                  // We have data (potentially) spilling into `next'.
-
-                  next->write(rspData->packets[p], beamletIndices.at(rspData->board));
-                }
-              }
-            }
-
-	    rspDataPool.free.append(rspData);
-	    ASSERT(!rspData);
-          }
+          writeRSPRealTime<SampleT>(*current, next);
         } else {
-          /* non-rt mode */
-
-          LOG_INFO_STR("[block " << block << "] Waiting for data");
-
-          /*
-           * 1. We'll receive one packet at a time, in-order.
-           * 2. We might receive data beyond what we're processing now.
-           *    In that case, we break and keep rspData around.
-           */
-
-          for(;;) {
-            if (!rspData)
-              rspData = rspDataPool.filled.remove();
-
-            // Only packet 0 is used in non-rt mode
-            ASSERT(rspData->valid[0]);
-
-            if (current->write(rspData->packets[0], beamletIndices.at(rspData->board))) {
-              // We have data (potentially) spilling into `next'.
-              if (next && next->write(rspData->packets[0], beamletIndices.at(rspData->board))) {
-                // Even younger data than next? Retain this data for a future block.
-                break;
-              }
-            }
-
-	    rspDataPool.free.append(rspData);
-	    ASSERT(!rspData);
-          }
+          writeRSPNonRealTime<SampleT>(*current, next);
         }
 
-        dataPool.filled.append(current);
+        outputQueue.append(current);
         ASSERT(!current);
-
-        current = next;
       }
 
-      dataPool.filled.append(NULL);
+      outputQueue.append(NULL);
+
+      if (ps.realTime()) {
+        // kill reader threads
+        LOG_INFO_STR( logPrefix << "Stopping all boards" );
+#       pragma omp parallel for num_threads(nrBoards)
+        for (size_t i = 0; i < nrBoards; ++i)
+          packetReaderThreads[i].kill();
+      }
+    }
+  }
+}
+
+
+template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
+{
+  StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
+  StationInput si(ps, stationIdx, subbandDistribution);
+
+  if (sm.nrBlocks == 0 || !si.receivedHere()) {
+    // Station is not sending from this node
+    return;
+  }
+
+  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name));
+  const std::string logPrefix = str(format("[station %s] ") % stationID.name());
+
+  LOG_INFO_STR(logPrefix << "Processing station data");
+
+  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue;
+
+  /*
+   * Stream the data.
+   */
+  #pragma omp parallel sections num_threads(3)
+  {
+    /*
+     * Generate blocks and add delays
+     *
+     * sm.metaDataPool.free -> sm.metaDataPool.filled
+     */
+    #pragma omp section
+    {
+      sm.computeMetaData();
+    }
+
+    /*
+     * Adds samples from the input streams to the blocks
+     *
+     * sm.metaDataPool.filled -> dataPool
+     */
+    #pragma omp section
+    {
+      si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue );
     }
 
     /*
@@ -642,6 +792,8 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
      */
     #pragma omp section
     {
+      const size_t nrSamples = ps.nrSamplesPerSubband();
+
       // All receiver ranks -- we have a dedicated thread for each one
       const vector<int> targetRanks(keys(subbandDistribution));
 
@@ -656,13 +808,20 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
       SmartPtr< MPIData<SampleT> > mpiData;
 
-      // Convert the metaData -> mpi_metaData for transfer over MPI
-      for(size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
-        mpiData->mpi_metaData[sb] = mpiData->metaData[sb];
-      }
-
-      while((mpiData = dataPool.filled.remove()) != NULL) {
+      while((mpiData = mpiQueue.remove()) != NULL) {
         const ssize_t block = mpiData->block;
+
+        LOG_INFO_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
+
+        // Convert the metaData -> mpi_metaData for transfer over MPI
+        for(size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
+          // MPIData::write adds flags for what IS present, but the receiver
+          // needs flags for what IS NOT present. So invert the flags here.
+          mpiData->metaData[sb].flags = mpiData->metaData[sb].flags.invert(0, nrSamples);
+
+          // Write the meta data into the fixed buffer.
+          mpiData->mpi_metaData[sb] = mpiData->metaData[sb];
+        }
 
         // Send to all receivers in PARALLEL for higher performance
 #       pragma omp parallel for num_threads(targetRanks.size())
@@ -674,7 +833,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
           LOG_INFO_STR(logPrefix << str(format("[block %d -> rank %i] Sending data") % block % rank));
 
-          MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), ps.nrSamplesPerSubband());
+          MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
 
           const size_t offset = subbandsOffset[rank];
 
@@ -683,7 +842,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
           LOG_DEBUG_STR(logPrefix << str(format("[block %d -> rank %i] Data sent") % block % rank));
         }
 
-        metaDataPool.free.append(mpiData);
+        sm.metaDataPool.free.append(mpiData);
         ASSERT(!mpiData);
       }
     } 
