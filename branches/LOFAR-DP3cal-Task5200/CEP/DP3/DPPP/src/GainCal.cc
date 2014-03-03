@@ -774,7 +774,7 @@ namespace LOFAR {
       //itsSols.push_back(g);
 
       if (dg > itsTolerance && itsDebugLevel>1) {
-        cout<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<endl;
+        cout<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         cout<<"g="<<iS.g<<endl;
         if (itsThingie>0) {
           THROW(Exception,"Klaar!");
