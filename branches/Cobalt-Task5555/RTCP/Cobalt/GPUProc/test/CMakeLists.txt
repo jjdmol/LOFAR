@@ -53,6 +53,7 @@ endif()
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
   lofar_add_test(tRunningStatistics tRunningStatistics.cc)
+  lofar_add_test(tStationInput tStationInput)
 endif()
 
 add_subdirectory(Kernels)

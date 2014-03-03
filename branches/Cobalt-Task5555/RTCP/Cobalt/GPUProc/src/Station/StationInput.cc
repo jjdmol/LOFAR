@@ -38,26 +38,17 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
-#include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MapUtil.h>
 #endif
 
 #include <Common/LofarLogger.h>
-#include <Common/Thread/Semaphore.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
 
 #include <InputProc/SampleType.h>
-#include <InputProc/Buffer/StationID.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Station/PacketReader.h>
 #include <InputProc/Buffer/BoardMode.h>
-#include <InputProc/Buffer/BlockReader.h>
-#include <InputProc/Buffer/SampleBuffer.h>
-#include <InputProc/Station/PacketsToBuffer.h>
 #include <InputProc/Delays/Delays.h>
 #include <InputProc/OMPThread.h>
-
-#include "StationNodeAllocation.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -66,61 +57,6 @@ using boost::format;
 
 namespace LOFAR {
   namespace Cobalt {
-
-// Data received from an RSP board
-struct RSPData {
-  int board;
-
-  std::vector<struct RSP> packets;
-  std::vector<bool>       valid; 
-
-  RSPData(size_t numPackets):
-    packets(numPackets),
-    valid(numPackets, false)
-  {
-  }
-};
-
-// Data meant to be sent over MPI to the receivers
-template<typename SampleT>
-struct MPIData {
-  ssize_t block;
-  TimeStamp from;
-  TimeStamp to;
-  size_t nrSamples;
-
-  /*
-   * The order of the subbands in the arrays below is
-   * those of the subbands processed by all receiving
-   * ranks concatenated (values(subbandDistribution).
-   *
-   * For example, with 2 ranks and 4 subbands, the
-   * order will likely be:
-   *
-   *   0, 2, 1, 3
-   *
-   * because rank 0 will process [0, 2] and rank 1
-   * will process [1, 3].
-   *
-   */
-
-  MultiDimArray<SampleT, 2> mpi_samples; // [subband][sample]
-  MultiDimArray<MPIProtocol::MetaData, 1> mpi_metaData; // [subband]
-
-  std::vector<struct SubbandMetaData> metaData; // [subband]
-  std::vector<ssize_t> read_offsets; // [subband]
-
-  MPIData(size_t nrSubbands, size_t nrSamples):
-    mpi_samples(boost::extents[nrSubbands][nrSamples], 1, mpiAllocator),
-    mpi_metaData(boost::extents[nrSubbands], 1, mpiAllocator),
-    metaData(nrSubbands),
-    read_offsets(nrSubbands)
-  {
-  }
-
-  // Returns true if we're spilling into the next packet
-  bool write(struct RSP &packet, const ssize_t *beamletIndices);
-};
 
 template<typename SampleT>
 bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) {
@@ -138,9 +74,10 @@ bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) 
     if (absBeamlet == -1)
       continue;
 
+    /* Reading with offset X is the same as writing that data with offset -X */
     const ssize_t offset = read_offsets[absBeamlet];
-    const TimeStamp beamletBegin = packetBegin + offset;
-    const TimeStamp beamletEnd   = packetEnd   + offset;
+    const TimeStamp beamletBegin = packetBegin - offset;
+    const TimeStamp beamletEnd   = packetEnd   - offset;
 
     /* XXXX    = packet data
      * [.....] = this->data
@@ -169,11 +106,12 @@ bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) 
     }
 
     /* [...XX] XX -> cut off end */
-    if (beamletEnd >= to) {
+    if (beamletEnd > to) {
       nrSamplesToCopy -= beamletEnd - to;
+      consider_next = true;
     }
 
-    if (beamletEnd - 1 >= to) {
+    if (beamletEnd == to) {
       // The next packet has at most 1 sample overlap with this packet,
       // due to the speed of light and the earth's rotation speed.
       consider_next = true;
@@ -193,37 +131,6 @@ bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) 
 
   return consider_next;
 }
-
-
-/*
- * Generates MPIData<Sample> blocks, and computes its meta data (delays, etc).
- */
-template <typename SampleT>
-class StationMetaData {
-public:
-  StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
-
-  void computeMetaData();
-
-  Pool< MPIData<SampleT> > metaDataPool;
-
-private:
-  const Parset &ps;
-  const size_t stationIdx;
-  const struct StationID stationID;
-  const std::string logPrefix;
-
-  const TimeStamp startTime;
-  const TimeStamp stopTime;
-
-  const size_t nrSamples;
-public:
-  const size_t nrBlocks;
-private:
-
-  const SubbandDistribution subbandDistribution;
-  const std::vector<size_t> targetSubbands;
-};
 
 template <typename SampleT>
 StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
@@ -318,71 +225,6 @@ void StationMetaData<SampleT>::computeMetaData()
   metaDataPool.filled.append(NULL);
 }
 
-class StationInput {
-public:
-  StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
-
-  bool receivedHere() const;
-
-  template <typename SampleT>
-  void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
-
-  Pool< RSPData > rspDataPool;
-
-private:
-  const Parset &ps;
-
-  const size_t stationIdx;
-  const struct StationID stationID;
-  const StationNodeAllocation allocation;
-
-  const std::string logPrefix;
-
-  const size_t nrBoards;
-
-  const std::vector<size_t> targetSubbands;
-
-  // Mapping of
-  // [board][slot] -> offset of this beamlet in the MPIData struct
-  //                  or: -1 = discard this beamlet (not used in obs)
-  const MultiDimArray<ssize_t, 2> beamletIndices;
-
-  MultiDimArray<ssize_t, 2> generateBeamletIndices();
-
-  /*
-   * Reads data from all the station input streams, and puts their packets in rspDataPool.
-   *
-   * Real-time mode:
-   *   - Packets are collected in batches per board
-   *   - Batches are interleaved as they arrive
-   *
-   * Non-real-time mode:
-   *   - Packets are interleaved between the streams,
-   *     staying as close to in-order as possible.
-   *   - An "+inf" TimeStamp is added at the end to signal
-   *     end-of-data
-   *
-   * Reads:  rspDataPool.free
-   * Writes: rspDataPool.filled
-   *
-   * Read data from one board in real-time mode.
-   */
-  void readRSPRealTime( size_t board, Stream &inputStream );
-
-  /*
-   * Read data from all boards in non-real-time mode.
-   */
-  void readRSPNonRealTime();
-
-  /*
-   * Fills 'current' with RSP data. Potentially spills into 'next'.
-   */
-  template <typename SampleT>
-  void writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
-  template <typename SampleT>
-  void writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<SampleT> *next );
-
-};
 
 StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
 :
@@ -398,8 +240,6 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDi
   targetSubbands(values(subbandDistribution)),
   beamletIndices(generateBeamletIndices())
 {
-  for (size_t i = 0; i < 1024; ++i)
-    rspDataPool.free.append(new RSPData(ps.realTime() ? 256 : 1));
 }
 
 
@@ -452,6 +292,9 @@ bool StationInput::receivedHere() const
 
 void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 {
+  for (size_t i = 0; i < 1024; ++i)
+    rspDataPool.free.append(new RSPData(256));
+
   /*
    * In real-time mode, we can't get ahead of the `current'
    * block of the reader due to clock synchronisation.
@@ -548,6 +391,9 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
 
 void StationInput::readRSPNonRealTime()
 {
+  for (size_t i = 0; i < 1024; ++i)
+    rspDataPool.free.append(new RSPData(1));
+
   vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
   vector< SmartPtr<PacketReader> > readers(nrBoards);
 
@@ -744,6 +590,65 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
   }
 }
 
+MPISender::MPISender( const std::string &logPrefix, size_t stationIdx, const SubbandDistribution &subbandDistribution )
+:
+  logPrefix(logPrefix),
+  stationIdx(stationIdx),
+  subbandDistribution(subbandDistribution),
+  targetRanks(keys(subbandDistribution)),
+  subbandOffsets(targetRanks.size(), 0)
+{
+  // Determine the offset of the set of subbands for each rank within
+  // the members in MPIData<SampleT>.
+  for (size_t rank = 0; rank < targetRanks.size(); ++rank)
+    for(size_t i = 0; i < rank; ++i)
+      subbandOffsets[rank] += subbandDistribution.at(i).size();
+}
+
+template <typename SampleT>
+void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
+{
+  SmartPtr< MPIData<SampleT> > mpiData;
+
+  while((mpiData = inputQueue.remove()) != NULL) {
+    const ssize_t block = mpiData->block;
+    const size_t  nrSamples = mpiData->nrSamples;
+
+    LOG_INFO_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
+
+    // Convert the metaData -> mpi_metaData for transfer over MPI
+    for(size_t sb = 0; sb < mpiData->metaData.size(); ++sb) {
+      // MPIData::write adds flags for what IS present, but the receiver
+      // needs flags for what IS NOT present. So invert the flags here.
+      mpiData->metaData[sb].flags = mpiData->metaData[sb].flags.invert(0, nrSamples);
+
+      // Write the meta data into the fixed buffer.
+      mpiData->mpi_metaData[sb] = mpiData->metaData[sb];
+    }
+
+    // Send to all receivers in PARALLEL for higher performance
+#   pragma omp parallel for num_threads(targetRanks.size())
+    for(size_t i = 0; i < targetRanks.size(); ++i) {
+      const int rank = targetRanks.at(i);
+
+      if (subbandDistribution.at(rank).empty())
+        continue;
+
+      LOG_INFO_STR(logPrefix << str(format("[block %d -> rank %i] Sending data") % block % rank));
+
+      MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
+
+      const size_t offset = subbandOffsets[rank];
+
+      sender.sendBlock<SampleT>(&mpiData->mpi_samples[offset][0], &mpiData->mpi_metaData[offset]);
+
+      LOG_DEBUG_STR(logPrefix << str(format("[block %d -> rank %i] Data sent") % block % rank));
+    }
+
+    outputQueue.append(mpiData);
+    ASSERT(!mpiData);
+  }
+}
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
@@ -761,6 +666,8 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
   LOG_INFO_STR(logPrefix << "Processing station data");
 
   Queue< SmartPtr< MPIData<SampleT> > > mpiQueue;
+
+  MPISender sender(logPrefix, stationIdx, subbandDistribution);
 
   /*
    * Stream the data.
@@ -780,7 +687,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     /*
      * Adds samples from the input streams to the blocks
      *
-     * sm.metaDataPool.filled -> dataPool
+     * sm.metaDataPool.filled -> mpiQueue
      */
     #pragma omp section
     {
@@ -789,62 +696,12 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
     /*
      * MPI POOL: Send block to receivers
+     *
+     * mpiQueue -> sm.metaDataPool.free
      */
     #pragma omp section
     {
-      const size_t nrSamples = ps.nrSamplesPerSubband();
-
-      // All receiver ranks -- we have a dedicated thread for each one
-      const vector<int> targetRanks(keys(subbandDistribution));
-
-      // Determine the offset of the set of subbands for each rank within
-      // the members in MPIData<SampleT>.
-      vector<size_t> subbandsOffset(targetRanks.size());
-
-      for (size_t rank = 0, current_offset = 0; rank < targetRanks.size(); ++rank) {
-        subbandsOffset[rank] = current_offset;
-        current_offset      += subbandDistribution.at(rank).size();
-      }
-
-      SmartPtr< MPIData<SampleT> > mpiData;
-
-      while((mpiData = mpiQueue.remove()) != NULL) {
-        const ssize_t block = mpiData->block;
-
-        LOG_INFO_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
-
-        // Convert the metaData -> mpi_metaData for transfer over MPI
-        for(size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
-          // MPIData::write adds flags for what IS present, but the receiver
-          // needs flags for what IS NOT present. So invert the flags here.
-          mpiData->metaData[sb].flags = mpiData->metaData[sb].flags.invert(0, nrSamples);
-
-          // Write the meta data into the fixed buffer.
-          mpiData->mpi_metaData[sb] = mpiData->metaData[sb];
-        }
-
-        // Send to all receivers in PARALLEL for higher performance
-#       pragma omp parallel for num_threads(targetRanks.size())
-        for(size_t i = 0; i < targetRanks.size(); ++i) {
-          const int rank = targetRanks.at(i);
-
-          if (subbandDistribution.at(rank).empty())
-            continue;
-
-          LOG_INFO_STR(logPrefix << str(format("[block %d -> rank %i] Sending data") % block % rank));
-
-          MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
-
-          const size_t offset = subbandsOffset[rank];
-
-          sender.sendBlock<SampleT>(&mpiData->mpi_samples[offset][0], &mpiData->mpi_metaData[offset]);
-
-          LOG_DEBUG_STR(logPrefix << str(format("[block %d -> rank %i] Data sent") % block % rank));
-        }
-
-        sm.metaDataPool.free.append(mpiData);
-        ASSERT(!mpiData);
-      }
+      sender.sendBlocks<SampleT>( mpiQueue, sm.metaDataPool.free );
     } 
   }
 }
