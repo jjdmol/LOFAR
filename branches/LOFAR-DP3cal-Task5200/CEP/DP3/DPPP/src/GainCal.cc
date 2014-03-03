@@ -634,7 +634,11 @@ namespace LOFAR {
       fronormvis=sqrt(fronormvis);
       fronormmod=sqrt(fronormmod);
 
-      iS.g=sqrt(fronormvis/fronormmod);
+      if (nSt>0 && abs(fronormmod)>1.e-15) {
+        iS.g=sqrt(fronormvis/fronormmod);
+      } else {  // No antennas...
+        iS.g=1;
+      }
 
       iS.gx = iS.g;
       int sstep=0;
