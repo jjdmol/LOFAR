@@ -619,14 +619,28 @@ namespace LOFAR {
 
       double w;
       DComplex t;
+      uint ch=0;
 
       // Initialize all vectors
-      iS.g=1.;
+      double fronormvis=0;
+      double fronormmod=0;
+      for (uint st1=0;st1<2*nSt;++st1) {
+        for (uint st2=0;st2<2*nSt;++st2) {
+          uint crjump=(st2/nSt)+(st1/nSt);
+          fronormvis+=itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))*
+                      itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+          fronormmod+=itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))*
+                      itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+        }
+      }
+      fronormvis=sqrt(fronormvis);
+      fronormmod=sqrt(fronormmod);
+
+      iS.g=sqrt(fronormvis/fronormmod);
 
       iS.gx = iS.g;
       int sstep=0;
 
-      uint ch=0;
       if (itsDebugLevel>10) {
         for (uint st1=0;st1<2*nSt;++st1) {
           for (uint st2=0;st2<2*nSt;++st2) {
@@ -760,13 +774,14 @@ namespace LOFAR {
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
       //itsSols.push_back(g);
-      /*
+
+      if (dg > itsTolerance) {
       cout<<"g="<<iS.g<<endl;
       if (itsThingie>0) {
         THROW(Exception,"Klaar!");
       }
       itsThingie++;
-      */
+      }
     }
 
     void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
