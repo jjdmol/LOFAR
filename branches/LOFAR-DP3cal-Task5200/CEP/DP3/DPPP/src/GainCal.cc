@@ -488,7 +488,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>1) {
+          if (itsDebugLevel>2) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -562,7 +562,7 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>1) {
+      if (itsDebugLevel>2) {
         cout<<"iter:"<<iter<<endl;
       }
 
@@ -583,7 +583,7 @@ namespace LOFAR {
       // Let's save G...
       //itsSols.push_back(g);
 
-      if (itsDebugLevel>1) {
+      if (itsDebugLevel>2) {
         cout<<"g="<<iS.g<<endl;
       }
     }
@@ -686,7 +686,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>1) {
+          if (itsDebugLevel>2) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -754,7 +754,7 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>1) {
+      if (itsDebugLevel>2) {
         cout<<"iter:"<<iter<<endl;
       }
 
@@ -775,7 +775,7 @@ namespace LOFAR {
 
       if (dg > itsTolerance && itsDebugLevel>1) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt;
-          if (itsDebugLevel>2) {
+        if (itsDebugLevel>2) {
           cout<<"g="<<iS.g<<endl;
           if (itsThingie>0) {
             THROW(Exception,"Klaar!");
