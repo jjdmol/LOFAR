@@ -847,6 +847,68 @@ SUITE(beamformer) {
   }
 }
 
+/*
+* ===============================================
+* Test correct creation of tab rings
+* ===============================================
+*/
+TEST(testRing) {
+  string prefix = "Observation.Beam[0]";
+  Parset ps;
+
+  // First add enough coherent names for all the created tabs
+  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[8*localhost:.]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[8*SB000.MS]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+  ps.add("Observation.DataProducts.Output_.enabled", "true");
+
+  ps.add(prefix + ".TiedArrayBeam[0].angle1", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].angle2", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].coherent", "true");
+  ps.add(prefix + ".TiedArrayBeam[0].directionType", "J2000");
+  ps.add(prefix + ".TiedArrayBeam[0].dispersionMeasure", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].specificationType", "manual");
+  ps.add(prefix + ".TiedArrayBeam[0].stationList", "[]");
+  ps.add(prefix + ".nrTiedArrayBeams","1");
+
+    // We have 1 tabring
+  string key = prefix + ".nrTabRings";
+  string value = "1"; 
+  ps.add(key, value);
+
+  // ringwidth == 1
+  key = prefix + ".ringWidth";
+  value = "2";
+  ps.add(key, value);
+
+  // type
+  key = prefix + ".directionType";
+  value = "J2000";
+  ps.add(key, value);
+
+  // location
+  key = prefix + ".angle1";
+  value = "3.0";
+  ps.add(key, value);
+
+  key = prefix + ".angle2";
+  value = "4.0";
+  ps.add(key, value);
+
+  ps.updateSettings();
+
+  // Validate output
+  // number of tabs
+  CHECK_EQUAL((size_t)8, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
+  // take two random pointing and validate ( functionality is checking seperate
+  // test suite)
+  // The manual tabs should be added before the ring tabs. 
+  // test values are for the 3rd value in the ring
+  CHECK_CLOSE(4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
+  CHECK_CLOSE(1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
+  // Full list of value for 1 circle
+  //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
+}
 
 /*
  * ===============================================
