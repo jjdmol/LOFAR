@@ -151,6 +151,7 @@ namespace LOFAR {
       template <typename SampleT>
       void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
 
+    private:
       // Data received from an RSP board
       struct RSPData {
         int board;
@@ -167,7 +168,6 @@ namespace LOFAR {
 
       Pool< RSPData > rspDataPool;
 
-    private:
       const Parset &ps;
 
       const size_t stationIdx;
@@ -176,6 +176,7 @@ namespace LOFAR {
 
       const std::string logPrefix;
 
+      const BoardMode mode;
       const size_t nrBoards;
 
       const std::vector<size_t> targetSubbands;
