@@ -219,5 +219,20 @@ namespace LOFAR
       return itsCoordinates;
     }
 
+    size_t  RingCoordinates::nCoordinates() const
+    {
+      return itsCoordinates.size();
+    }
+
+
+    std::string RingCoordinates::coordTypeAsString()const
+    {
+      if (itsType == RingCoordinates::J2000)
+        return "J2000";
+      else if (itsType == RingCoordinates::B1950)
+        return "JB1950";
+      else
+        return "J2000";
+    }
   }
 }

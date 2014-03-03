@@ -25,6 +25,7 @@
 #include <utility>      // std::pair, std::make_pair
 #include <vector>         
 #include <cstddef>
+#include <string>
 
 namespace LOFAR
 {
@@ -47,6 +48,12 @@ namespace LOFAR
 
       RingCoordinates(size_t nRings, double width, 
         Coordinate const &center, RingCoordinates::COORDTYPES type);
+
+      // Return the number of coordinates calculated
+      size_t nCoordinates() const;
+
+      // Return the type as string
+      std::string coordTypeAsString() const;
 
       const CoordinateVector&  coordinates() const;
 

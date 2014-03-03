@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   {
     cerr << "usage" << endl
       << "RingCoordinates nrrings, width, center_angle1, center_angle2, dirtype" << endl
-      << "                    int, double,         double,         double, [J2000, B1950]"
+      << "                    int, double,         double,         double, [J2000, B1950, OTHER]"
       << endl;
     exit(1);
   }
@@ -68,10 +68,12 @@ int main(int argc, char* argv[])
     type = RingCoordinates::J2000;
   else if (typeString == "B1950")
     type = RingCoordinates::B1950;
+  else if (typeString == "OTHER")
+    type = RingCoordinates::OTHER;
   else
   {    
     cerr << "encountered an unknown dirtype: >" << typeString << "<" << endl
-        << "  please select from : [J2000, B1950]" << endl;
+        << "  please select from : [J2000, B1950, OTHER]" << endl;
     exit(1);
   }
 

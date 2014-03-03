@@ -145,7 +145,7 @@ class RingCoordinates:
 def getCPPValue(nrings, width, center, type="J2000"):
   # Create a array of the executable and the arguments (all string)
   cmd = ["tRingCoordinates", str(nrings),str(width),
-           str(center[0]),str(center[1]),"J2000"]
+           str(center[0]),str(center[1]),type]
   # start
   process = subprocess.Popen(
                         cmd,
@@ -197,22 +197,35 @@ def compareCoordArray(array1, array2):
       exit(1)
 
 if __name__ == "__main__":
-  # test 1
+  ## test 1
   # If zero rings then return empty array!!
   print "Test 1: zero rings return empthy coord list. "
   cppOutput = getCPPValue(0, 2, (3,4), "J2000")  
   referenceOutput = RingCoordinates(0, 2, (3, 4), "J2000" ).coordinates()
-  
+ 
   compareCoordArray(cppOutput, referenceOutput)
-  print "succes"
 
   # test 2
   # Take some values and get the correct results
   print "Test 2: input values: 1, 2, (3,4), J2000"
   cppOutput = getCPPValue(1, 2, (3,4), "J2000")  
   referenceOutput = RingCoordinates(1, 2, (3, 4), "J2000" ).coordinates()
-  print cppOutput
-  print referenceOutput
   compareCoordArray(cppOutput, referenceOutput)
   
+
+  # test 3
+  # Take some values and get the correct results
+  print "Test 3: input values: 2, 3, (4,5), B1950"
+  cppOutput = getCPPValue(2, 3, (4,5), "B1950")  
+  referenceOutput = RingCoordinates(2, 3, (4, 5), "B1950" ).coordinates()
+  compareCoordArray(cppOutput, referenceOutput)
+
+  #  # test 4
+  # Take some values and get the correct results
+  print "Test 4: input values: 3, 4, (5,6), OTHER"
+  cppOutput = getCPPValue(3, 4, (5,6), "OTHER")  
+  referenceOutput = RingCoordinates(3, 4, (5, 6), "OTHER" ).coordinates()
+  compareCoordArray(cppOutput, referenceOutput)
+
+
   
