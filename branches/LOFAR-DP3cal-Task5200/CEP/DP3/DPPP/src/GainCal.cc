@@ -752,20 +752,21 @@ namespace LOFAR {
         iS.g(st,0)*=p;
       }
 
-      for (uint ant2=0;ant2<nSt;++ant2) {
+      //for (uint ant2=0;ant2<nSt;++ant2) {
         //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
         //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-      }
+      //}
 
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
       //itsSols.push_back(g);
-
+      /*
       cout<<"g="<<iS.g<<endl;
       if (itsThingie>0) {
         THROW(Exception,"Klaar!");
       }
       itsThingie++;
+      */
     }
 
     void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
