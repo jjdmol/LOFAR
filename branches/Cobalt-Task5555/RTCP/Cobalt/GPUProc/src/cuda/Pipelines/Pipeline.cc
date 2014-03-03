@@ -310,7 +310,7 @@ namespace LOFAR
       // Keep fetching input objects until end-of-output
       while ((input = mpiPool.filled.remove()) != NULL) {
 #ifdef DO_PROCESSING
-        const size_t block = input->block;
+        const ssize_t block = input->block;
 
         MultiDimArray<SampleT,3> data(
           boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
