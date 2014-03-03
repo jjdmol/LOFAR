@@ -627,10 +627,8 @@ namespace LOFAR {
       for (uint st1=0;st1<2*nSt;++st1) {
         for (uint st2=0;st2<2*nSt;++st2) {
           uint crjump=(st2/nSt)+(st1/nSt);
-          fronormvis+=itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))*
-                      itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
-          fronormmod+=itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))*
-                      itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+          fronormvis+=norm(itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch)));
+          fronormmod+=norm(itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch)));
         }
       }
       fronormvis=sqrt(fronormvis);
