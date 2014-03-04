@@ -20,8 +20,8 @@
 //#
 //#  $Id: PVSSGateway.h 19796 2012-01-17 10:06:03Z overeem $
 
-#ifndef KEYVALUELOGGER_H
-#define KEYVALUELOGGER_H
+#ifndef PVSSGATEWAY_H
+#define PVSSGATEWAY_H
 
 // \file PVSSGateway.h
 // one_line_description
