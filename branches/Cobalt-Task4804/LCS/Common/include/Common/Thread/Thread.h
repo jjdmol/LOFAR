@@ -110,7 +110,7 @@ class Thread
           try {
             throw SystemCallException("pthread_setschedparam", retval, THROW_ARGS);
           } catch (Exception &ex) {
-            LOG_FATAL_STR("Exception in destructor: " << ex);
+            LOG_ERROR_STR("Exception in destructor: " << ex);
           }
       }
 
@@ -237,7 +237,7 @@ inline Thread::~Thread()
     try {
       throw SystemCallException("pthread_join", retval, THROW_ARGS);
     } catch (Exception &ex) {
-      LOG_FATAL_STR("Exception in destructor: " << ex);
+      LOG_ERROR_STR("Exception in destructor: " << ex);
     }
 }
 
@@ -324,14 +324,14 @@ template <typename T> inline void Thread::stub(Args<T> *args)
     std::string		     exstr = exstrs.str();
 
     boost::split(exlines, exstr, boost::is_any_of("\n"));
-    LOG_FATAL_STR(logPrefix << "Caught Exception: " << exlines[0]);
+    LOG_ERROR_STR(logPrefix << "Caught Exception: " << exlines[0]);
 
     for (unsigned i = 1; i < exlines.size(); i ++)
-      LOG_FATAL_STR(logPrefix << exlines[i]);
+      LOG_ERROR_STR(logPrefix << exlines[i]);
 
     caught_exception = true;
   } catch (std::exception &ex) {
-    LOG_FATAL_STR(logPrefix << "Caught std::exception: " << ex.what());
+    LOG_ERROR_STR(logPrefix << "Caught std::exception: " << ex.what());
 
     caught_exception = true;
   } catch (...) {
