@@ -27,12 +27,12 @@ echo "  in directory $(pwd)"
   # run an observation
   runObservation.sh -C -F -l 2 "${PARSET}" || error "Observation failed!"
 
-  # Bail out with an error, if there are no files to compare
-  shopt -s failglob
+  # Expand wildcard pattern to null string, if there no matching files
+  shopt -s nullglob
 
   # create script to accept output (ie. copy it to the source dir for check in)
   echo "#!/bin/sh
-  cp ${PWD}/*.raw ${REFDIR}" > accept_output
+  cp ${PWD}/*.raw-* ${REFDIR}" > accept_output
   chmod a+x accept_output
 
   # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
@@ -44,11 +44,14 @@ echo "  in directory $(pwd)"
   for eps_factor in 1024.0 512.0 256.0 128.0 64.0 32.0 16.0 8.0
   do
     EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
-    for f in *.raw
+    for t in float cfloat
     do
-      cmpfloat --type=float --epsilon=$EPSILON --verbose \
-	"${f}" "${REFDIR}/${f}" || error "Output does not match" \
-	"reference for eps_factor=${eps_factor}"
+      for f in *.raw-${t}
+      do
+        cmpfloat --type=${t} --epsilon=${EPSILON} --verbose \
+          "${f}" "${REFDIR}/${f}" || error "Output does not match" \
+          "reference for eps_factor=${eps_factor}"
+      done
     done
   done
 
