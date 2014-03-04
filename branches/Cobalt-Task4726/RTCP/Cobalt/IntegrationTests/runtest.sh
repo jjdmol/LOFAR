@@ -1,18 +1,16 @@
 #!/bin/bash
 
-# Run a parset and compare the output to that in the reference_output directory.
+# Run a test and compare the output to the reference output.
 # 
-# Syntax: testParset.sh parset [-r reference-output-directory]
+# Syntax: runtest.sh <test-name>
 
 # Include some useful shell functions
-. $srcdir/../testFuncs.sh
+. $(dirname $0)/testFuncs.sh
 
-# Set exit status of piped commands to that of the last failed command.
-set -o pipefail
-
-TESTNAME="$1"
+TESTNAME="${1}"
+OUTDIR="${TESTNAME}.output"
+REFDIR="${srcdir}/${OUTDIR}"
 PARSET="${PWD}/${TESTNAME}.parset"
-#OUTDIR="${TESTNAME}.output"
 
 # Some host info
 echo "Running test ${TESTNAME}"
@@ -20,21 +18,22 @@ echo "  as $(whoami)"
 echo "  on $(hostname)"
 echo "  in directory $(pwd)"
 
-# Check for GPU
-haveGPU || exit 3
-
-# Replace output keys in parset (for now append; TODO: replace)
-echo "Observation.DataProducts.Output_CoherentStokes.filenames=" \
-     "[${TESTNAME}_beam0.raw, ${TESTNAME}_beam1.raw]" >> ${PARSET}
-echo "Observation.DataProducts.Output_CoherentStokes.locations=" \
-     "[2*localhost:${PWD}]" >> ${PARSET}
-
 (
+  # Create directory if it doesn't yet exist; make sure it's empty
+  mkdir -p "${OUTDIR}" || error "Failed to create temporary directory ${OUTDIR}"
+  cd "${OUTDIR}" || error "Failed to change directory to ${OUTDIR}"
+  rm -rf * || error "Failed to cleanup temporary directory ${OUTDIR}"
+
   # run an observation
-  runObservation.sh -C -F -l 2 ${PARSET} || error "Observation failed!"
+  runObservation.sh -C -F -l 2 "${PARSET}" || error "Observation failed!"
 
   # Bail out with an error, if there are no files to compare
   shopt -s failglob
+
+  # create script to accept output (ie. copy it to the source dir for check in)
+  echo "#!/bin/sh
+  cp ${PWD}/*.raw ${REFDIR}" > accept_output
+  chmod a+x accept_output
 
   # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
   numfp32eps=\(1.192092896/10000000\)
@@ -45,10 +44,10 @@ echo "Observation.DataProducts.Output_CoherentStokes.locations=" \
   for eps_factor in 1024.0 512.0 256.0 128.0 64.0 32.0 16.0 8.0
   do
     EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
-    for f in ${TESTNAME}_beam*.raw
+    for f in *.raw
     do
       cmpfloat --type=float --epsilon=$EPSILON --verbose \
-	"${f}" "${srcdir}/${f}" || error "Output does not match " \
+	"${f}" "${REFDIR}/${f}" || error "Output does not match" \
 	"reference for eps_factor=${eps_factor}"
     done
   done

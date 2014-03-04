@@ -9,17 +9,6 @@ error()
   exit 1
 }
 
-# Check if our system has a GPU installed.
-haveGPU()
-{
-  if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA" > /dev/null
-  then
-    echo "No ATI/NVIDIA GPU card detected!"
-    return 1
-  fi
-  return 0
-}
-
 # Make sure LOFARROOT is set, otherwise bail out.
 [ -n "$LOFARROOT" ] || error "Environment variable LOFARROOT is not set!"
 

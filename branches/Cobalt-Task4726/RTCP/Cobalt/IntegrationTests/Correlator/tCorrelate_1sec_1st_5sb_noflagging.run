@@ -1,8 +1,5 @@
 #!/bin/bash
 TESTNAME=`basename "${0%%.run}"`
 
-PARSET=$srcdir/$TESTNAME.parset
-OUTPUT=$srcdir/$TESTNAME.output
-
-$srcdir/testParset.sh -r "$OUTPUT" "$PARSET" || exit $?
+$srcdir/../runtest.sh "$TESTNAME" || exit $?
 
