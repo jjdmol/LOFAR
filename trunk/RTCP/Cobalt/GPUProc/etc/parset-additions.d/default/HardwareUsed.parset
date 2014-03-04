@@ -19,6 +19,8 @@ Cobalt.Nodes = [
   cbt007_0,
   cbt007_1,
   cbt008_0,
-  cbt008_1
+  cbt008_1,
+  cbt009_0,
+  cbt009_1
 ]
 
