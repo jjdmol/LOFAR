@@ -5,4 +5,3 @@ lofar_add_package(OutputProc)  # GPU cluster: Data Storage applications
 lofar_add_package(GPUProc)     # GPU computation applications
 lofar_add_package(OpenCL_FFT)  # Apple's FFT library for OpenCL
 lofar_add_package(CoInterface) # CoInterface code between Cobalt packages
-lofar_add_package(CobaltIntegrationTests IntegrationTests)
