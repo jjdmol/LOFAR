@@ -1,5 +1,5 @@
 //# GPUProcIO.h
-//# Copyright (C) 2009-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2009-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -43,7 +43,7 @@ namespace LOFAR
     //     and send it to all writers.
     //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
     //     and write it to GPUProc.
-    void process(Stream &controlStream, size_t myRank);
+    void process(Stream &controlStream, const std::string& myHostName);
 
   } // namespace Cobalt
 } // namespace LOFAR

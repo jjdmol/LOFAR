@@ -1,5 +1,5 @@
 //# outputProc.cc
-//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -22,10 +22,9 @@
 #include <lofar_config.h>
 
 #include <cstdio> // for setvbuf
-#include <omp.h>
-
 #include <string>
 #include <stdexcept>
+#include <omp.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -33,6 +32,9 @@
 #include <Common/CasaLogSink.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
+#include <MACIO/RTmetadata.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
@@ -41,18 +43,20 @@
 #include "GPUProcIO.h"
 #include "IOPriority.h"
 
+#define STDLOG_BUFFER_SIZE     1024
+
 // install a new handler to produce backtraces for bad_alloc
 LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
-using boost::format;
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
-char stdoutbuf[1024], stderrbuf[1024];
+static char stdoutbuf[STDLOG_BUFFER_SIZE];
+static char stderrbuf[STDLOG_BUFFER_SIZE];
 
 static void usage(const char *argv0)
 {
@@ -67,16 +71,22 @@ static void usage(const char *argv0)
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER("outputProc");
+  INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
+
+  // Send identification string to the MAC Log Processor before other logging
+  string fmtStr(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
+                                      parset.getString("_DPname")));
+  boost::format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  LOG_INFO_STR("MACProcessScope: " << str(prFmt % myRank));
 
   LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
-
-  CasaLogSink::attach();
 
   if (argc != 3)
   {
     usage(argv[0]);
-    return 1;
+    return EXIT_FAILURE;
   }
    
   setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
@@ -99,10 +109,14 @@ int main(int argc, char *argv[])
   string resource = getStorageControlDescription(observationID, myRank);
   PortBroker::ServerStream controlStream(resource);
 
-  process(controlStream, myRank);
+  const vector<string> &hostnames = parset.settings.outputProcHosts;
+  ASSERT(myRank < hostnames.size());
+  string myHostName = hostnames[myRank];
+
+  process(controlStream, myHostName);
 
   LOG_INFO("Program end");
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
