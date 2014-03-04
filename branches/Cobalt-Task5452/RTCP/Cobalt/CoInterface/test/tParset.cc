@@ -871,7 +871,7 @@ TEST(testRing) {
   ps.add(prefix + ".TiedArrayBeam[0].stationList", "[]");
   ps.add(prefix + ".nrTiedArrayBeams","1");
 
-    // We have 1 tabring
+  // We have 1 tabring
   string key = prefix + ".nrTabRings";
   string value = "1"; 
   ps.add(key, value);
@@ -906,7 +906,7 @@ TEST(testRing) {
   // test values are for the 3rd value in the ring
   CHECK_CLOSE(4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
   CHECK_CLOSE(1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
-  // Full list of value for 1 circle
+  // Full list of value for 1 circle:
   //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
 }
 

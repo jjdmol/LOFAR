@@ -29,7 +29,7 @@
 #include <vector>   
 #include <cstdlib>
 
-// output the maximum doubleing point precision in cout
+// Used to control floating point precision in cout
 #include <limits>
 #include <string>
 typedef std::numeric_limits< double > flt;
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
   RingCoordinates::CoordinateVector coords = 
         ringCoords.coordinates();
 
-  // Output the coordinates as a python array!
+  // Output the coordinates as a python array
   // REFACTOR Maybee there is an existing implementation common/streamutils
   cout.precision(flt::digits10);  // set the maximum doubleing point precisionin cout
   cout << "[" ;

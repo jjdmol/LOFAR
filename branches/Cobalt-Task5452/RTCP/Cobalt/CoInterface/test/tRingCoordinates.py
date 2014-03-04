@@ -5,7 +5,13 @@ from math import sqrt, cos, pi
 import subprocess
 import itertools
 
+
+
 class RingCoordinates:
+    """
+    Original RingCOordinates implementation. Taking from parset.py in 
+    RTCP\Run\src\LOFAR\parset
+    """
     def __init__(self, numrings, width, center, dirtype):
         self.numrings = numrings
         self.width    = width
@@ -143,6 +149,9 @@ class RingCoordinates:
         return map(self.cos_adjust, coordinates)
 
 def getCPPValue(nrings, width, center, type="J2000"):
+  """
+  Interface with the cpp implementation
+  """
   # Create a array of the executable and the arguments (all string)
   cmd = ["tRingCoordinates", str(nrings),str(width),
            str(center[0]),str(center[1]),type]
@@ -173,13 +182,20 @@ def getCPPValue(nrings, width, center, type="J2000"):
 
   return outputAsArray
 
+
 def isClose(a,b, rtol=1e-05,atol=1e-08):
+  """
+  Simple helper function to compare floats
+  """
   # Helper function to test float equality
   # Does not support nan, included in numpy from version 1.9
   return abs(a - b) <= rtol * (abs(a) + abs(b)) + atol
 
 
 def compareCoordArray(array1, array2):
+  """
+  Helper function to compare two arrays of pairs
+  """
   # compare the two array
   # on error print the offending value and exit(1)
   if (len(array1) != len(array2)):
@@ -226,6 +242,4 @@ if __name__ == "__main__":
   cppOutput = getCPPValue(3, 4, (5,6), "OTHER")  
   referenceOutput = RingCoordinates(3, 4, (5, 6), "OTHER" ).coordinates()
   compareCoordArray(cppOutput, referenceOutput)
-
-
-  
+    

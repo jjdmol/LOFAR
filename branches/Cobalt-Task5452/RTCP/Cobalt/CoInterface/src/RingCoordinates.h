@@ -35,26 +35,28 @@ namespace LOFAR
     {
     public:
 
+      // Type of coordinate frame
       enum COORDTYPES
       {
         J2000,
         B1950,
         OTHER
-      };
-      
+      };     
       
       typedef std::pair<double, double> Coordinate;
       typedef std::vector<Coordinate > CoordinateVector;
 
+      // Constructor will calculate coordinates 
       RingCoordinates(size_t nRings, double width, 
         Coordinate const &center, RingCoordinates::COORDTYPES type);
 
-      // Return the number of coordinates calculated
+      // Return the number of coordinates 
       size_t nCoordinates() const;
 
       // Return the type as string
       std::string coordTypeAsString() const;
 
+      // Return the coordinates vector
       const CoordinateVector&  coordinates() const;
 
     private:
@@ -101,8 +103,11 @@ namespace LOFAR
       */
       double delta_height();
      
+      // Actual implementation of the coord calculation called in the construtor
       CoordinateVector createPrecompiledCoords();
 
+      // Depending on the coordinate frameset shift the coordinates
+      // used in the constructor
       Coordinate cos_adjust(Coordinate const& offset);
 
       CoordinateVector itsCoordinates;
@@ -110,8 +115,6 @@ namespace LOFAR
       double itsWidth;
       Coordinate itsCenter;
       COORDTYPES itsType;
-      
-
     };
   }
 }

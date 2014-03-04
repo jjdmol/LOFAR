@@ -208,8 +208,7 @@ class Parset(util.Parset.Parset):
 
           nrrings = int(self["Observation.Beam[%s].nrTabRings" % (b,)]) 
           width   = float(self["Observation.Beam[%s].tabRingSize" % (b,)]) 
-          ringcoordinates = RingCoordinates( 
-                nrrings, width, (center_angle1, center_angle2), dirtype )
+          ringcoordinates = RingCoordinates( nrrings, width, (center_angle1, center_angle2), dirtype )
           ringset = [
             { "angle1": angle1,
               "angle2": angle2,
@@ -224,17 +223,19 @@ class Parset(util.Parset.Parset):
           flyseyeset = []
 
           if self.getBool("OLAP.PencilInfo.flysEye"):
-            allStationNames = [st.getName() for st in self.stations]
+	    allStationNames = [st.getName() for st in self.stations]
 
             for s in allStationNames:
-              flyseyeset.append({ "angle1": 0,
+              flyseyeset.append(
+                { "angle1": 0,
                   "angle2": 0,
                   "directionType": dirtype,
                   "dispersionMeasure": dm,
                   "stationList": [s],
                   "specificationType": "flyseye",
                   "coherent": True,
-                })
+                }
+              )
 
           manualset = []
 

@@ -22,7 +22,7 @@
 #include <lofar_config.h>
 
 #include "RingCoordinates.h"
-#include <math.h>       /* sqrt */
+#include <math.h>       // sqrt
 #include <algorithm>    // std::transform
 
 using namespace std;
@@ -44,10 +44,8 @@ namespace LOFAR
       // itsCoordinates will be default constructed empty
       if (nRings == 0)
         return;
-      
-      // *****************************************
-      // create the beams (tabs)
-      
+
+      // create the beams (tabs)     
       CoordinateVector preCompiledCoordDelta = createPrecompiledCoords();
 
       // start with central beam
@@ -213,7 +211,6 @@ namespace LOFAR
         return offset;
     }
 
-
     const RingCoordinates::CoordinateVector&  RingCoordinates::coordinates() const
     {
       return itsCoordinates;
@@ -223,7 +220,6 @@ namespace LOFAR
     {
       return itsCoordinates.size();
     }
-
 
     std::string RingCoordinates::coordTypeAsString()const
     {
