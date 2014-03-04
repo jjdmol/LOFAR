@@ -34,8 +34,8 @@ if [ "$LOGLEVEL" != "DEBUG" ] && [ "$LOGLEVEL" != "INFO"  ] && \
 fi
 
 if [ $# -eq 0 ]; then  # $# is #filename args, i.e. after the shift above
-  if [ "$LOFARROOT" == "" ]; then
-    echo "Error: no filename set AND LOFARROOT not set or empty"
+  if [ "$LOFARROOT" = "" ]; then
+    echo "Error: no filename set and LOFARROOT not set or empty"
     exit 1
   else
     FILENAMES="$LOFARROOT/etc/*.log_prop"  # default, relative to $LOFARROOT

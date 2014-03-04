@@ -4,6 +4,8 @@
 #
 # This script takes care of running all the commands surrounding mpirun.sh,
 # based on the given parset.
+#
+# $Id$
 
 
 ########  Functions  ########
@@ -28,6 +30,16 @@ function getkey {
   fi
 }
 
+function setkey {
+  KEY=$1
+  VAL=$2
+
+  # In case already there, comment all out to avoid stale warnings. Then append.
+  KEYESC=`echo "$KEY" | sed -e "s/\./\\\\\./g"`  # escape '.' in keys with enough '\'
+  sed -i --follow-symlinks -r -e "s/^([[:blank:]]*$KEYESC[[:blank:]]*=)/#\1/g" "$PARSET"
+  echo "$KEY = $VAL" >> "$PARSET"
+}
+
 function usage {
   error \
     "\nUsage: $0 [-A] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
@@ -39,7 +51,7 @@ function usage {
     "LOFAR_CHECKTOOL"\
     "\n    -F: do NOT send feedback to OnlineControl"\
     "\n    -P: create PID file"\
-    "\n    -l: run on localhost using 'nprocs' processes"\
+    "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling\n"
 }
 
@@ -157,14 +169,24 @@ then
       $HOME/.cobalt/override/*.parset \
       > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
 
-  # If we force localhost, we need to remove the node list, or the first one will be used
-  if [ "$FORCE_LOCALHOST" -eq "1" ]
-  then
-    echo "Cobalt.Nodes = []" >> $AUGMENTED_PARSET
-  fi
-
   # Use the new one from now on
   PARSET="$AUGMENTED_PARSET"
+
+  # If we force localhost, we need to remove the node list, or the first one will be used
+  # Also set all other location relevant keys to a localhost value
+  if [ "$FORCE_LOCALHOST" -eq "1" ]
+  then
+    setkey Cobalt.Nodes                               []
+
+    setkey Cobalt.OutputProc.userName                 localhost
+    setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
+    setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
+    setkey Cobalt.FinalMetaDataGatherer.host          localhost
+    setkey Cobalt.FinalMetaDataGatherer.executable    "$LOFARROOT/bin/FinalMetaDataGatherer"
+    setkey Cobalt.FinalMetaDataGatherer.database.host localhost
+    setkey Cobalt.Feedback.host                       localhost
+    setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
+  fi
 fi
 
 # ******************************
