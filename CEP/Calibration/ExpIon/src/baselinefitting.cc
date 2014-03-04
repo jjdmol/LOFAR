@@ -174,12 +174,6 @@ ValueHolder fit(const ValueHolder &phases_vh, const ValueHolder &A_vh, const Val
             lnl[0].merge(lnl[i]);
         }
         
-
-        Float eq[2];
-        eq[0] = 1.0;
-        eq[1] = -1.0;
-        uInt idx[2];
-
         if ((!no_constant_parm) )
         {
             for (int i = 0; i<N_parm; i++) 
