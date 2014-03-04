@@ -661,8 +661,8 @@ namespace LOFAR
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
 
-          // Create ptr to RingCoordinates object
-          // If there are tab rings the object will be created
+          // Create a ptr to RingCoordinates object
+          // If there are tab rings the object will be actuall constructed
           // The actual tabs will be extracted after we added all manual tabs
           // But we need the number of tabs from rings at this location
           std::auto_ptr<RingCoordinates> ptrRingCoords;
@@ -681,11 +681,13 @@ namespace LOFAR
             else if (directionType == "B1950")
               type = RingCoordinates::B1950;
               
-
+            // Create coords object
             ptrRingCoords = std::auto_ptr<RingCoordinates>(
               new RingCoordinates(nrRings, ringWidth,
               RingCoordinates::Coordinate(angle1, angle2), type));
 
+            // Increase the amount of tabs with the number from the coords object
+            // this might be zero
             nrTABs = nrTABSParset + (*ptrRingCoords).nCoordinates();
           }         
           else if (settings.beamFormer.doFlysEye) 
@@ -713,7 +715,7 @@ namespace LOFAR
             // Add manual tabs and then the tab rings.
             else 
             {
-              if (j < nrTABSParset)
+              if (j < nrTABSParset) // If we are working on manual tabs
               {
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
@@ -734,21 +736,19 @@ namespace LOFAR
               }
               else
               {
-                // Get the pointing, start counting at zero
+                // Get the pointing for the tabrings.
+                // substract the number of manual to get index in the ringCoords
                 // TODO What happens if the number does not match?
                 RingCoordinates::Coordinate pointing = 
                     ptrRingCoords->coordinates()[j - nrTABSParset];
-
 
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
                 tab.direction.angle1 = pointing.first;
                 tab.direction.angle2 = pointing.second;
                 // Cannot search for the absolute angle for an entry that does not exist
-                // TODO is this still the correct key?
+                // TODO: is this still the correct key?
                 tab.dispersionMeasure = getInt("OLAP.dispersionMeasure", 0);
                 tab.coherent =  true;  // always coherent
-
-
               }
             }
 
