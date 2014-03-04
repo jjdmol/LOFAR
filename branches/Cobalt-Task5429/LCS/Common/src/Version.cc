@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <Common/Version.h>
 #include <ostream>
 #include <map>

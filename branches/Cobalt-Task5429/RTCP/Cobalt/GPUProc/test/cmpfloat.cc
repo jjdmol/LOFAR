@@ -234,7 +234,8 @@ void printCommonFactorMessage(const complex<T>& maxFactors,
   const T facEps = (T)1e-1; // very loose as values can be of any magnitude
   bool realEq = fpEquals(maxFactors.real(), minFactors.real(), facEps);
   bool imagEq = fpEquals(maxFactors.imag(), minFactors.imag(), facEps);
-  T avgRealFac, avgImagFac;
+  T avgRealFac = 0.0;
+  T avgImagFac = 0.0;
   if (realEq) {
     avgRealFac = (T)0.5 * (maxFactors.real() + minFactors.real());
     cerr << "All errors of real vals for this pair of files are within "
