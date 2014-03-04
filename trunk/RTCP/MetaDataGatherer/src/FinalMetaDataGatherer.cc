@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     logPrefix = str(boost::format("[FinalMetaDataGatherer obs %u] ") % parset.observationID());
 
     string host;
-    if (parset.isDefined("Cobalt.FinalMetaDataGatherer.database.host")
+    if (parset.isDefined("Cobalt.FinalMetaDataGatherer.database.host"))
       host = parset.getString("Cobalt.FinalMetaDataGatherer.database.host");
     else // TODO: remove last OLAP key when BG/P is gone
       host = parset.getString("OLAP.FinalMetaDataGatherer.database.host");
