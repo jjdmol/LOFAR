@@ -32,7 +32,7 @@ echo "  in directory $(pwd)"
 
   # create script to accept output (ie. copy it to the source dir for check in)
   echo "#!/bin/sh
-  cp ${PWD}/*.raw-* ${REFDIR}" > accept_output
+  cp ${PWD}/*.raw ${REFDIR}" > accept_output
   chmod a+x accept_output
 
   # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
@@ -46,7 +46,7 @@ echo "  in directory $(pwd)"
     EPSILON=$(echo $eps_factor \* $numfp32eps | bc -l)
     for t in float cfloat
     do
-      for f in *.raw-${t}
+      for f in *.${t}.raw
       do
         cmpfloat --type=${t} --epsilon=${EPSILON} --verbose \
           "${f}" "${REFDIR}/${f}" || error "Output does not match" \
