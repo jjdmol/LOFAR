@@ -235,6 +235,7 @@ namespace LOFAR {
       const SubbandDistribution subbandDistribution;
       const std::vector<int> targetRanks;
       std::vector<size_t> subbandOffsets;
+      const size_t nrSubbands;
     };
 
 #ifndef HAVE_MPI

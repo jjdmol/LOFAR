@@ -39,9 +39,11 @@
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MapUtil.h>
+#include <InputProc/Transpose/MPIUtil2.h>
 #endif
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <CoInterface/Parset.h>
 
 #include <InputProc/SampleType.h>
@@ -165,7 +167,7 @@ void StationMetaData<SampleT>::computeMetaData()
    */
 
   // Each element represents 1 block of buffer.
-  for (size_t i = 0; i < 5; ++i)
+  for (size_t i = 0; i < 10; ++i)
     metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples));
 
   /*
@@ -574,6 +576,11 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
 
         outputQueue.append(current);
         ASSERT(!current);
+
+        if (!next) {
+          // We pulled the NULL, so we're done
+          break;
+        }
       }
 
       outputQueue.append(NULL);
@@ -595,7 +602,8 @@ MPISender::MPISender( const std::string &logPrefix, size_t stationIdx, const Sub
   stationIdx(stationIdx),
   subbandDistribution(subbandDistribution),
   targetRanks(keys(subbandDistribution)),
-  subbandOffsets(targetRanks.size(), 0)
+  subbandOffsets(targetRanks.size(), 0),
+  nrSubbands(values(subbandDistribution).size())
 {
   // Determine the offset of the set of subbands for each rank within
   // the members in MPIData<SampleT>.
@@ -609,44 +617,74 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 {
   SmartPtr< MPIData<SampleT> > mpiData;
 
+  NSTimer mpiSendTimer(str(format("%s MPI send data") % logPrefix), true, true);
+
+  size_t nrProcessedSamples = 0;
+  size_t nrFlaggedSamples = 0;
+
   while((mpiData = inputQueue.remove()) != NULL) {
     const ssize_t block = mpiData->block;
     const size_t  nrSamples = mpiData->nrSamples;
+
+    nrProcessedSamples += nrSamples * nrSubbands;
 
     LOG_INFO_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
 
     // Convert the metaData -> mpi_metaData for transfer over MPI
     for(size_t sb = 0; sb < mpiData->metaData.size(); ++sb) {
+      SubbandMetaData &md = mpiData->metaData[sb];
+
       // MPIData::write adds flags for what IS present, but the receiver
       // needs flags for what IS NOT present. So invert the flags here.
-      mpiData->metaData[sb].flags = mpiData->metaData[sb].flags.invert(0, nrSamples);
+      mpiData->metaData[sb].flags = md.flags.invert(0, nrSamples);
+
+      nrFlaggedSamples += md.flags.count();
 
       // Write the meta data into the fixed buffer.
-      mpiData->mpi_metaData[sb] = mpiData->metaData[sb];
+      mpiData->mpi_metaData[sb] = md;
     }
 
-    // Send to all receivers in PARALLEL for higher performance
-#   pragma omp parallel for num_threads(targetRanks.size())
-    for(size_t i = 0; i < targetRanks.size(); ++i) {
-      const int rank = targetRanks.at(i);
+    LOG_INFO_STR(logPrefix << str(format("[block %d] Sending data") % block));
 
-      if (subbandDistribution.at(rank).empty())
-        continue;
+    mpiSendTimer.start();
 
-      LOG_INFO_STR(logPrefix << str(format("[block %d -> rank %i] Sending data") % block % rank));
+    std::vector<MPI_Request> requests;
 
-      MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
+    {
+      ScopedLock sl(MPIMutex);
 
-      const size_t offset = subbandOffsets[rank];
+      for(size_t i = 0; i < targetRanks.size(); ++i) {
+        const int rank = targetRanks.at(i);
 
-      sender.sendBlock<SampleT>(&mpiData->mpi_samples[offset][0], &mpiData->mpi_metaData[offset]);
+        if (subbandDistribution.at(rank).empty())
+          continue;
 
-      LOG_DEBUG_STR(logPrefix << str(format("[block %d -> rank %i] Data sent") % block % rank));
+        MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
+
+        const size_t offset = subbandOffsets[rank];
+
+        //requests.push_back(sender.sendData<SampleT>(&mpiData->mpi_samples[offset][0]));
+        requests.push_back(sender.sendMetaData(&mpiData->mpi_metaData[offset]));
+      }
     }
+
+    LOG_INFO_STR(logPrefix << str(format("[block %d] MPI send requests posted") % block));
+
+    RequestSet rs(requests, true, str(format("station %d block %d") % stationIdx % block));
+    rs.waitAll();
+
+    mpiSendTimer.stop();
+
+    LOG_INFO_STR(logPrefix << str(format("[block %d] Data sent") % block));
 
     outputQueue.append(mpiData);
     ASSERT(!mpiData);
   }
+
+  // report average loss
+  const double avgloss = nrProcessedSamples == 0 ? 0.0 : 100.0 * nrFlaggedSamples / nrProcessedSamples;
+
+  LOG_INFO_STR(logPrefix << str(format("Average data loss: %.2f") % avgloss));
 }
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
@@ -681,6 +719,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     #pragma omp section
     {
       sm.computeMetaData();
+      LOG_INFO_STR(logPrefix << "StationMetaData: done");
     }
 
     /*
@@ -691,6 +730,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     #pragma omp section
     {
       si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue );
+      LOG_INFO_STR(logPrefix << "StationInput: done");
     }
 
     /*
@@ -701,8 +741,11 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     #pragma omp section
     {
       sender.sendBlocks<SampleT>( mpiQueue, sm.metaDataPool.free );
+      LOG_INFO_STR(logPrefix << "MPISender: done");
     } 
   }
+
+  LOG_INFO_STR(logPrefix << "Done processing station data");
 }
 
 void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)

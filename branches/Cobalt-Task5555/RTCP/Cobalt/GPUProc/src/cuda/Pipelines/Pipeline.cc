@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
 #include <Stream/Stream.h>
@@ -47,7 +48,7 @@
 
 #include <cmath>
 
-#define NR_WORKQUEUES_PER_DEVICE  2
+#define NR_WORKQUEUES_PER_DEVICE  1
 
 // Actually do any processing.
 //
@@ -103,7 +104,7 @@ namespace LOFAR
 #ifdef HAVE_MPI
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 
-      for (size_t i = 0; i < 3; i++) {
+      for (size_t i = 0; i < 5; i++) {
         SmartPtr<struct MPIData> mpiData = new MPIData;
 
         mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
@@ -123,7 +124,7 @@ namespace LOFAR
         // Receive the samples of all subbands from the stations for this
         // block.
 
-        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
+        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
 
         SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
 
@@ -138,7 +139,7 @@ namespace LOFAR
           (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
         // Receive all subbands from all stations
-        LOG_DEBUG_STR("[block " << block << "] Receive input");
+        LOG_INFO_STR("[block " << block << "] Receive input");
 
         if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(data, metaData);
@@ -147,7 +148,7 @@ namespace LOFAR
         if (processingSubband0)
           LOG_INFO_STR("[block " << block << "] Input received");
         else
-          LOG_DEBUG_STR("[block " << block << "] Input received");
+          LOG_INFO_STR("[block " << block << "] Input received");
 
         mpiPool.filled.append(mpiData);
       }
@@ -307,11 +308,15 @@ namespace LOFAR
     {
       SmartPtr<struct MPIData> input;
 
+      NSTimer copyTimer("transpose input data", true, true);
+
       // Keep fetching input objects until end-of-output
       while ((input = mpiPool.filled.remove()) != NULL) {
-#ifdef DO_PROCESSING
         const ssize_t block = input->block;
 
+        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+
+#ifdef DO_PROCESSING
         MultiDimArray<SampleT,3> data(
           boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
           (SampleT*)input->data.get(), false);
@@ -322,8 +327,6 @@ namespace LOFAR
 
         // The set of InputData objects we're using for this block.
         vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
-
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
 
         for (size_t subbandIdx = 0; subbandIdx < subbandIndices.size(); ++subbandIdx) {
           // Fetch an input object to store this subband.
@@ -340,17 +343,20 @@ namespace LOFAR
           id.subbandProcSubbandIdx = subbandIdx / workQueues.size();
           subbandData->blockID = id;
 
+          copyTimer.start();
           for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
             // Copy the data
+#if 1
             memcpy(&subbandData->inputSamples[stat][0][0][0],
                    &data[stat][subbandIdx][0],
                    ps.nrSamplesPerSubband() * sizeof(SampleT));
-
+#endif
             // Copy the metadata
             subbandData->metaData[stat] = metaData[stat][subbandIdx];
 
             nrFlaggedSamples[stat] += subbandData->metaData[stat].flags.count();
           }
+          copyTimer.stop();
 
           queue.inputPool.filled.append(subbandData);
         }
@@ -412,6 +418,8 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcInputData> input;
 
+      NSTimer preprocessTimer("preprocess", true, true);
+
       // Keep fetching input objects until end-of-output
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
         const struct BlockID &id = input->blockID;
@@ -419,6 +427,7 @@ namespace LOFAR
         LOG_DEBUG_STR("[" << id << "] Pre processing start");
 
         /* PREPROCESS START */
+        preprocessTimer.start();
 
         const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
 
@@ -427,6 +436,7 @@ namespace LOFAR
           input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
         }
 
+        preprocessTimer.stop();
         /* PREPROCESS END */
 
         // Hand off output to processing
@@ -441,6 +451,8 @@ namespace LOFAR
     void Pipeline::processSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
+
+      NSTimer processTimer("process", true, true);
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.processPool.filled.remove()) != NULL) {
@@ -457,9 +469,9 @@ namespace LOFAR
         output->blockID = id;
 
         // Perform calculations
-        // workQueue.timers["CPU - process"]->start();
+        processTimer.start();
         workQueue.processSubband(*input, *output);
-        // workQueue.timers["CPU - process"]->stop();
+        processTimer.stop();
 
         if (id.block < 0) {
           // Ignore block; only used to initialize FIR history samples
@@ -483,6 +495,8 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcOutputData> output;
 
+      NSTimer postprocessTimer("postprocess", true, true);
+
       size_t nrBlocksForwarded = 0;
       size_t nrBlocksDropped = 0;
       time_t lastLogTime = 0;
@@ -493,9 +507,9 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
-        // workQueue.timers["CPU - postprocess"]->start();
+        postprocessTimer.start();
         bool handOffOutput = workQueue.postprocessSubband(*output);
-        // workQueue.timers["CPU - postprocess"]->stop();
+        postprocessTimer.stop();
 
         if (!handOffOutput) {
           workQueue.outputPool.free.append(output);

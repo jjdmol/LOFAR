@@ -101,10 +101,10 @@ namespace LOFAR {
     }
 
     // Track the time spent on lock contention
-    NSTimer MPIMutexTimer("MPIPoll::MPIMutex lock()", true, false);
+    NSTimer MPIMutexTimer("MPIPoll::MPIMutex lock()", true, true);
 
     // Track the time spent in MPI_Testsome
-    NSTimer MPITestsomeTimer("MPIPoll::MPI_Testsome", true, false);
+    NSTimer MPITestsomeTimer("MPIPoll::MPI_Testsome", true, true);
 
     std::vector<int> MPIPoll::testSome( std::vector<handle_t> &handles ) const {
       DEBUG("MPIPoll::testSome on " << handles.size() << " handles");
@@ -247,7 +247,7 @@ namespace LOFAR {
     }
 
     void MPIPoll::pollThread() {
-      //Thread::ScopedPriority sp(SCHED_FIFO, 10);
+      Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
       ScopedLock sl(mutex);
 
@@ -257,9 +257,6 @@ namespace LOFAR {
         // NOTE: MPI is VERY sensitive to this, requiring
         //       often enough polling to keep transfers
         //       running smoothly.
-
-        struct timespec deadline = now();
-        inc(deadline, 0.0001);
 
         if (requests.empty()) {
           // wait for request, with lock released
@@ -271,6 +268,9 @@ namespace LOFAR {
           // if there are still pending requests, release
           // the lock and just wait with a timeout
           if (!requests.empty()) {
+            struct timespec deadline = now();
+            inc(deadline, 0.0001);
+
             newRequest.wait(mutex, deadline);
           }
         }
