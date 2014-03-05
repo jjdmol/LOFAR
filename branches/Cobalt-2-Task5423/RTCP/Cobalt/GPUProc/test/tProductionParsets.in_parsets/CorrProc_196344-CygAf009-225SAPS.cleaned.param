@@ -1177,7 +1177,7 @@ Observation.DataProducts.Output_Correlated.locations = [225*localhost:L196344]
 Observation.DataProducts.Output_CoherentStokes.enabled = false
 Observation.DataProducts.Output_IncoherentStokes.enabled = false
 
-Cobalt.realTime = false
+Cobalt.realTime = true
 Cobalt.correctBandPass = true
 Cobalt.correctClocks = true
 Cobalt.delayCompensation = true
