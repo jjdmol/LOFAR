@@ -21,15 +21,14 @@
 #ifndef LOFAR_COINTERFACE_TABTRANSPOSE_H
 #define LOFAR_COINTERFACE_TABTRANSPOSE_H
 
-#include <iostream>
-#include <map>
 #include <cstring>
-#include <Common/Thread/Mutex.h>
+#include <map>
+#include <iostream>
 #include <Common/Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
-#include <Common/Thread/Condition.h>
-#include <Common/Thread/Mutex.h>
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
