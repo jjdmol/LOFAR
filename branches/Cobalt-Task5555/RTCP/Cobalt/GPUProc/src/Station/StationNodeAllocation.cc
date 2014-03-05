@@ -2,7 +2,7 @@
 #include "StationNodeAllocation.h"
 
 #ifdef HAVE_MPI
-#include <mpi.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 #include <boost/format.hpp>
 #include <sstream>
@@ -34,13 +34,8 @@ StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const 
 
 bool StationNodeAllocation::receivedHere() const
 {
-  int rank = 0;
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
+  int rank = MPI_Rank();
+  int nrHosts = MPI_Size();
 
   int stationRank = receiverRank();
 
