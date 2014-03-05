@@ -41,6 +41,9 @@ template <typename T> class Queue
     // Add an element to the back of the queue
     void     append(T);
 
+    // Put an element back to the front of the queue
+    void     prepend(T);
+
     // Remove the front element; waits for an element to be appended
     T	     remove();
 
@@ -66,6 +69,15 @@ template <typename T> inline void Queue<T>::append(T element)
   ScopedLock scopedLock(itsMutex);
 
   itsQueue.push_back(element);
+  itsNewElementAppended.signal();
+}
+
+
+template <typename T> inline void Queue<T>::prepend(T element)
+{
+  ScopedLock scopedLock(itsMutex);
+
+  itsQueue.push_front(element);
   itsNewElementAppended.signal();
 }
 
