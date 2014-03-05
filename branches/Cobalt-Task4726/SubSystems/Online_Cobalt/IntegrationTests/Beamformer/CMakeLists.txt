@@ -2,9 +2,12 @@
 
 include(LofarCTest)
 
-#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging)
-#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2Sap)
-#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab)
-#lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging)
-lofar_add_test(tCoherentStokes_3sec_2st_3sb)
-lofar_add_test(tIncoherentStokes_3sec_2st_3sb)
+set(_tests
+  tCoherentStokes_3sec_2st_3sb
+  tIncoherentStokes_3sec_2st_3sb
+)
+
+foreach(_test ${_tests})
+  lofar_add_test(${_test})
+  set_tests_properties(${_test} PROPERTIES RUN_SERIAL ON)
+endforeach(_test ${_tests})
