@@ -187,7 +187,7 @@ namespace LOFAR
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** CorrelatorSubbandProc GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(fir)" << fir.stats<< endl <<
+        std::setw(20) << "(fir)" << fir.<< endl <<
         std::setw(20) << "(fft)" << fft.stats << endl <<
         std::setw(20) << "(delayBp)" << delayBp.stats << endl <<
         std::setw(20) << "(correlator)" << correlator.stats << endl <<

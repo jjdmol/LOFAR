@@ -58,7 +58,7 @@ Observation.Beam[1].momID = 0
 Observation.Beam[1].nrTabRings = 0
 Observation.Beam[1].nrTiedArrayBeams = 0
 Observation.Beam[1].startTime = 0
-Observation.Beam[1].subbandList = [24..28]
+Observation.Beam[1].subbandList = [29..33]
 Observation.Beam[1].tabRingSize = 0
 Observation.Beam[1].target = 3c196
 
