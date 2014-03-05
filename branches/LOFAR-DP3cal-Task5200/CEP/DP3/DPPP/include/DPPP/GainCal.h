@@ -109,8 +109,7 @@ namespace {
         casa::Matrix<casa::DComplex> z;
       };
 
-      void exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
-                          const casa::Bool* flag, uint nCr, uint nSt, uint nBl);
+      void exportToMatlab(uint ch);
 
       void initThreadPrivateStorage(ThreadPrivateStorage &storage,
                                     size_t nDirection, size_t nStation,

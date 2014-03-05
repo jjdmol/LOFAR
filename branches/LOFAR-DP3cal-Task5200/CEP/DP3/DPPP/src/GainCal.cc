@@ -62,8 +62,8 @@ namespace LOFAR {
   namespace DPPP {
 
     GainCal::GainCal (DPInput* input,
-                        const ParameterSet& parset,
-                        const string& prefix)
+                      const ParameterSet& parset,
+                      const string& prefix)
       : itsInput         (input),
         itsName          (prefix),
         itsSourceDBName  (parset.getString (prefix + "sourcedb")),
@@ -488,7 +488,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>2) {
+          if (itsDebugLevel>3) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -496,7 +496,7 @@ namespace LOFAR {
             break;
           }
 
-          if (itsDebugLevel>2) {
+          if (itsDebugLevel>3) {
             cout<<"Averaged"<<endl;
           }
           for (uint ant=0;ant<nSt;++ant) {
@@ -508,18 +508,18 @@ namespace LOFAR {
           if (!threestep) {
             threestep = (iter+1 >= nomega) ||
                 ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>2) {
+            if (itsDebugLevel>3) {
               cout<<"Threestep="<<boolalpha<<threestep<<endl;
             }
           }
 
           if (threestep) {
-            if (itsDebugLevel>2) {
+            if (itsDebugLevel>3) {
               cout<<"threestep"<<endl;
             }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
                 for (uint ant=0;ant<nSt;++ant) {
@@ -528,7 +528,7 @@ namespace LOFAR {
                   }
                 }
               } else if (dg <= dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=dgx"<<endl;
                 }
                 for (uint ant=0;ant<nSt;++ant) {
@@ -537,7 +537,7 @@ namespace LOFAR {
                   }
                 }
               } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=c2*dgx"<<endl;
                 }
                 iS.g = iS.gx;
@@ -548,7 +548,7 @@ namespace LOFAR {
                 sstep = 2;
               }
             } else {
-              if (itsDebugLevel>2) {
+              if (itsDebugLevel>3) {
                 cout<<"no sstep"<<endl;
               }
               sstep = sstep - 1;
@@ -562,7 +562,7 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>2) {
+      if (itsDebugLevel>3) {
         cout<<"iter:"<<iter<<endl;
       }
 
@@ -583,7 +583,7 @@ namespace LOFAR {
       // Let's save G...
       //itsSols.push_back(g);
 
-      if (itsDebugLevel>2) {
+      if (itsDebugLevel>3) {
         cout<<"g="<<iS.g<<endl;
       }
     }
@@ -690,7 +690,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>2) {
+          if (itsDebugLevel>3) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -698,7 +698,7 @@ namespace LOFAR {
             break;
           }
 
-          if (itsDebugLevel>2) {
+          if (itsDebugLevel>3) {
             cout<<"Averaged"<<endl;
           }
           for (uint ant=0;ant<2*nSt;++ant) {
@@ -708,32 +708,32 @@ namespace LOFAR {
           if (!threestep) {
             threestep = (iter+1 >= nomega) ||
                 ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>2) {
+            if (itsDebugLevel>3) {
               cout<<"Threestep="<<boolalpha<<threestep<<endl;
             }
           }
 
           if (threestep) {
-            if (itsDebugLevel>2) {
+            if (itsDebugLevel>3) {
               cout<<"threestep"<<endl;
             }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
                 for (uint ant=0;ant<2*nSt;++ant) {
                     iS.g(ant,0) = f1q * iS.g(ant,0) + f2q * iS.gx(ant,0);
                 }
               } else if (dg <= dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=dgx"<<endl;
                 }
                 for (uint ant=0;ant<2*nSt;++ant) {
                   iS.g(ant,0) = f1 * iS.g(ant,0) + f2 * iS.gx(ant,0) + f3 * iS.gxx(ant,0);
                 }
               } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>2) {
+                if (itsDebugLevel>3) {
                   cout<<"dg<=c2*dgx"<<endl;
                 }
                 iS.g = iS.gx;
@@ -744,7 +744,7 @@ namespace LOFAR {
                 sstep = 2;
               }
             } else {
-              if (itsDebugLevel>2) {
+              if (itsDebugLevel>3) {
                 cout<<"no sstep"<<endl;
               }
               sstep = sstep - 1;
@@ -758,7 +758,7 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>2) {
+      if (itsDebugLevel>3) {
         cout<<"iter:"<<iter<<endl;
       }
 
@@ -780,9 +780,10 @@ namespace LOFAR {
       //itsSols.push_back(g);
 
       if (dg > itsTolerance && itsDebugLevel>1) {
-        cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt;
+        cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>2) {
           cout<<"g="<<iS.g<<endl;
+          exportToMatlab(0);
           if (itsThingie>0) {
             THROW(Exception,"Klaar!");
           }
@@ -791,19 +792,25 @@ namespace LOFAR {
       }
     }
 
-    void GainCal::exportToMatlab(dcomplex* model, casa::Complex* data, float* weight,
-                                 const Bool* flag, uint nCr, uint nSt, uint nBl) {
+    void GainCal::exportToMatlab(uint ch) {
       ofstream mFile;
+      uint nSt = itsMVis.shape()[0];
       mFile.open ("debug.txt");
       mFile << "# Created by NDPPP"<<endl;
       mFile << "# name: V"<<endl;
       mFile << "# type: complex matrix"<<endl;
-      mFile << "# rows: "<<nSt*2<<endl;
-      mFile << "# columns: "<<nSt*2<<endl;
+      mFile << "# rows: "<<2*nSt<<endl;
+      mFile << "# columns: "<<2*nSt<<endl;
 
-      for (uint row=0;row<nSt*2;++row) {
-        for (uint col=0;col<nSt*2;++col) {
-          //mFile << itsVis(row,col)<<" ";
+      for (uint row=0;row<nSt;++row) {
+        for (uint col=0;col<nSt;++col) {
+          mFile << itsVis(IPosition(4,row,col,0,ch))<<" ";
+          mFile << itsVis(IPosition(4,row,col,1,ch))<<" ";
+        }
+        mFile << endl;
+        for (uint col=0;col<nSt;++col) {
+          mFile << itsVis(IPosition(4,row,col,2,ch))<<" ";
+          mFile << itsVis(IPosition(4,row,col,3,ch))<<" ";
         }
         mFile << endl;
       }
@@ -814,9 +821,15 @@ namespace LOFAR {
       mFile << "# rows: "<<nSt*2<<endl;
       mFile << "# columns: "<<nSt*2<<endl;
 
-      for (uint row=0;row<nSt*2;++row) {
-        for (uint col=0;col<nSt*2;++col) {
-          //mFile << itsMVis(row,col)<<" ";
+      for (uint row=0;row<nSt;++row) {
+        for (uint col=0;col<nSt;++col) {
+          mFile << itsMVis(IPosition(4,row,col,0,ch))<<" ";
+          mFile << itsMVis(IPosition(4,row,col,1,ch))<<" ";
+        }
+        mFile << endl;
+        for (uint col=0;col<nSt;++col) {
+          mFile << itsMVis(IPosition(4,row,col,2,ch))<<" ";
+          mFile << itsMVis(IPosition(4,row,col,3,ch))<<" ";
         }
         mFile << endl;
       }
