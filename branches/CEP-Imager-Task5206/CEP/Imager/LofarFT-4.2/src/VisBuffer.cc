@@ -27,6 +27,7 @@
 //# $Id$
 #include <lofar_config.h>
 #include <LofarFT/VisBuffer.h>
+#include <casa/Exceptions/Error.h>
 
 namespace LOFAR{
 namespace LofarFT {
@@ -34,10 +35,11 @@ namespace LofarFT {
 void VisBuffer::invalidate() 
 {
   lofarImagingWeightOK_p = casa::False;
+  lofarImagingWeightCubeOK_p = casa::False;
   casa::VisBuffer::invalidate();
 }
 
-VisBuffer::VisBuffer(VisibilityIterator & iter) : casa::VisBuffer(iter), visIter_p(&iter), This(this) {};
+VisBuffer::VisBuffer(VisibilityIterator & iter) : casa::VisBuffer(iter), visIter_p(&iter) {};
  
 VisibilityIterator *
 VisBuffer::getVisibilityIterator () const
@@ -51,6 +53,12 @@ const casa::Matrix<casa::Float>& VisBuffer::imagingWeight () const
 
     return imagingWeight (weightGenerator);
 }
+
+const casa::Cube<casa::Float>& VisBuffer::imagingWeightCube () const
+{
+    const VisImagingWeight & weightGenerator = getVisibilityIterator()->getImagingWeightGenerator ();
+    return imagingWeightCube (weightGenerator);
+}
   
 const casa::Matrix<casa::Float>& VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
 {
@@ -61,9 +69,23 @@ const casa::Matrix<casa::Float>& VisBuffer::imagingWeight (const VisImagingWeigh
     
     weightGenerator.weight (lofarImagingWeight_p, *this);
 
-    This->lofarImagingWeightOK_p = casa::True;
+    this->lofarImagingWeightOK_p = casa::True;
 
     return lofarImagingWeight_p;
+}
+
+const casa::Cube<casa::Float>& VisBuffer::imagingWeightCube (const VisImagingWeight & weightGenerator) const
+{
+  if (lofarImagingWeightCubeOK_p)
+  {
+    return lofarImagingWeightCube_p;
+  }
+    
+  weightGenerator.weight (lofarImagingWeightCube_p, *this);
+
+  this->lofarImagingWeightCubeOK_p = casa::True;
+
+  return lofarImagingWeightCube_p;
 }
 
     

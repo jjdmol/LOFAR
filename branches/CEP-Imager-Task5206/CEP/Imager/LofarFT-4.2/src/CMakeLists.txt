@@ -17,14 +17,22 @@ lofar_add_library(lofarft
   VisibilityIterator.cc
   VisImagingWeight.cc
   VisResampler.cc
+  VisResamplerImagingWeightCube.cc
   CubeSkyEquation.cc
+  ATermPython.cc
 )
 
 lofar_add_bin_program(awimager awimager.cc)
 
+lofar_add_library(atermpython
+    ATermPython.cc
+)
+
 lofar_add_library(ftmachinesimple
   FTMachineSimple.cc
 )
+
+
 
 # set_source_files_properties(
 #   FTMachineSimple.cc
@@ -46,6 +54,13 @@ python_install(
   addImagingInfo.py 
   get_rms_noise.py
   DESTINATION lofar)
+
+python_install(
+  __init__.py 
+  myaterm.py
+  DESTINATION lofar/imager)
+
+  
   
 # Suppress compiler warnings from casarest by disabling them for some sources
 set_source_files_properties(

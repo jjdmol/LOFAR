@@ -105,13 +105,14 @@ ConvolutionFunction::ConvolutionFunction
   const casa::Record& parameters)
   : itsShape(shape),
     itsCoordinates(coordinates),
-    itsATerm(ms, parameters),
+    itsATerm(ATerm::create(ms, parameters)),
     itsMaxW(wmax), //maximum W set by ft machine to flag the w>wmax
     itsNWPlanes(nW),
     itsOversampling(oversample),
     itsVerbose (verbose),
     itsMaxSupport(maxsupport),
     itsImgName(imgName),
+    itsParameters(parameters),
     itsTimeW    (0),
     itsTimeWpar (0),
     itsTimeWfft (0),
@@ -135,6 +136,10 @@ ConvolutionFunction::ConvolutionFunction
   MEpoch start = observationStartTime(ms, 0);
 
   itsRefFrequency = observationReferenceFreq(ms, 0);
+  
+  // Temporary hack to be able to compute a wavelength, 
+  // even though set_frequency has not been called yet.
+  itsFrequencyList = Vector<Double>(1, itsRefFrequency);
 
   // Make OverSampling an odd number
   if (itsOversampling % 2 == 0) 
@@ -142,8 +147,6 @@ ConvolutionFunction::ConvolutionFunction
     itsOversampling++;
   }
 
-  itsFrequencyList = Vector<Double>(1, itsRefFrequency);
-  itsNChannel  = itsFrequencyList.size();
   ROMSAntennaColumns antenna(ms.antenna());
   itsNStations = antenna.nrow();
 
@@ -156,6 +159,36 @@ ConvolutionFunction::ConvolutionFunction
   // Precalculate the Wtwerm fft for all w-planes.
   store_all_W_images();
 }
+
+Vector<Int> ConvolutionFunction::set_frequency(const Vector<Double> &frequency)
+{
+  Int chan_block_size = itsParameters.asInt("ChanBlockSize");
+  Vector<Int> chan_map;
+  
+  Int nfreq = frequency.size();
+  chan_map.resize(nfreq);
+  
+  if (chan_block_size==0) chan_block_size = nfreq;
+  
+  itsNChannel = ((nfreq-1)/chan_block_size)+1;
+    
+  itsFrequencyList.resize(itsNChannel);
+  
+  Int chan = 0;
+  for(Int i = 0; i<itsNChannel; ++i)
+  {
+    Int j;
+    Double f = 0;
+    for(j = 0; ((j<chan_block_size) && (chan<nfreq)); j++)
+    {
+      f += frequency[chan];
+      chan_map[chan++] = i;
+    }
+    itsFrequencyList[i] = f/j;
+  }
+  return chan_map;  
+}
+
 
 // Precalculate all W-terms in the fourier domain
 void ConvolutionFunction::store_all_W_images()
@@ -313,14 +346,14 @@ void ConvolutionFunction::computeAterm (Double time)
       Vector<Double> refpix(2, 0.5*(nPixelsConv-1));
       coordinate.setReferencePixel(refpix);
 
-      itsATerm.setDirection(coordinate, shape);
+      itsATerm->setDirection(coordinate, shape);
       
       MEpoch binEpoch;
       binEpoch.set(Quantity(time, "s"));
       
-      itsATerm.setEpoch(binEpoch);
+      itsATerm->setEpoch(binEpoch);
       
-      vector< Cube<Complex> > aTermA = itsATerm.evaluate(
+      vector< Cube<Complex> > aTermA = itsATerm->evaluate(
         i, 
         itsFrequencyList, 
         itsFrequencyList, 
@@ -428,7 +461,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
     // FFT (backward) the A and W terms
     normalized_fft (timerFFT, wTerm_paddedf, false);
     normalized_fft (timerFFT, spheroid_cut_paddedf, false);
-    if (itsVerbose > 0) 
+    if (itsVerbose > 1) 
     {
       cout << "fft shapes " << wTerm_paddedf.shape() << ' ' << spheroid_cut_paddedf.shape()
             << ' ' << aTermA_padded.shape() << ' ' << aTermB_padded.shape() << endl;
@@ -450,7 +483,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
     // Something I still don't completely understand: for the average PB calculation.
     // The convolution functions padded with a higher value than the minimum one give a
     // better result in the end. If you try Npix_out2=Npix_out, then the average PB shows
-    // structure like aliasing, producing high values in the devided disrty map... This
+    // structure like aliasing, producing high values in the devided dirty map... This
     // is likely to be due to the way fft works?...
     // FIX: I now do the average of the PB by stacking the CF, FFT the result and square 
     // it in the end. This is not the way to do in principle but the result is almost the 
@@ -516,6 +549,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
                                                           itsOversampling);
               if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) 
               {
+                #pragma omp critical
                 store (plane_product_paddedf, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
               }
 

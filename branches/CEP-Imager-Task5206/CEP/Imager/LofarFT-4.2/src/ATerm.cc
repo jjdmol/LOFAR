@@ -36,13 +36,12 @@
 #include <measures/Measures/MCPosition.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 
+#include "helper_functions.tcc"
+
 using namespace casa;
 
-namespace LOFAR {
-namespace LofarFT {
-
-// namespace
-// {
+namespace
+{
   Array<DComplex> computeFieldArrayFactor(const LOFAR::BBS::Station::ConstPtr &station,
     uint idField, const LOFAR::LofarFT::ATerm::ITRFDirectionMap &map,
     const Vector<Double> &freq, const Vector<Double> &reference);
@@ -64,10 +63,24 @@ namespace LofarFT {
 
   vector<Cube<Complex> > asVector(Array<DComplex> &response);
   vector<Matrix<Complex> > asVector(Cube<DComplex> &response);
-// }
+}
 
+namespace
+{
+  bool dummy = LOFAR::LofarFT::ATermFactory::instance().registerClass<LOFAR::LofarFT::ATerm>("ATerm");
+}
+
+namespace LOFAR {
+namespace LofarFT {
+
+ 
+casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, const casa::Record& parameters)
+{
+  return CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parameters.asString("ATerm"), ms, parameters));
+}
   
-ATerm::ATerm(const MeasurementSet& ms, const casa::Record& parameters)
+ATerm::ATerm(const MeasurementSet& ms, const casa::Record& parameters) :
+  itsVerbose(parameters.asInt("verbose"))
 {
   itsInstrument = BBS::readInstrument(ms);
   itsRefDelay = MDirection::Convert(BBS::readDelayReference(ms),
@@ -116,10 +129,10 @@ void ATerm::setDirection(const casa::DirectionCoordinate &coordinates, const IPo
 
 void ATerm::setEpoch( const MEpoch &epoch )
 {
+  itsTime = epoch.get(casa::Unit("s")).getValue();
   if (this->itsDirectionCoordinates) itsITRFDirectionMap = makeDirectionMap(*itsDirectionCoordinates, *itsShape, epoch);    
   if (this->itsApplyIonosphere) 
   {
-    itsTime = epoch.get(casa::Unit("s")).getValue();
 //       cout << "Epoch set to " << this->time << " reading parms..." << flush;
     double freq = 60447692.87109375; // the ionospheric parameters are not frequency dependent, so just pick an arbitrary frequency
                         // this frequency should be within the range specified in the parmdbname
@@ -262,6 +275,8 @@ vector<Cube<Complex> > ATerm::evaluate(uint idStation,
   {
     rescale(E);
   }
+  #pragma omp critical
+  store (Matrix<DComplex>(E[0][0]), "aterm"+String::toString(idStation));
 
   return asVector(E);
 }
@@ -501,8 +516,10 @@ Cube<DComplex> ATerm::evaluateIonosphere(uint station, const Vector<Double> &fre
   return IF;
 }
 
+} // end namespace LofarFT
+} // end namespace LOFAR
 
-// namespace{
+namespace {
   
 vector<Cube<Complex> > asVector(Array<DComplex> &response)
 {
@@ -594,7 +611,7 @@ void rescale(Cube<DComplex> &response)
   }
 }
 
-Array<DComplex> computeFieldArrayFactor(const BBS::Station::ConstPtr &station,
+Array<DComplex> computeFieldArrayFactor(const LOFAR::BBS::Station::ConstPtr &station,
   uint idField, const LOFAR::LofarFT::ATerm::ITRFDirectionMap &map,
   const Vector<Double> &freq, const Vector<Double> &reference)
 {
@@ -604,11 +621,11 @@ Array<DComplex> computeFieldArrayFactor(const BBS::Station::ConstPtr &station,
 
   // Account for the case where the delay reference position is not equal to
   // the field center (only applies to core HBA fields).
-  BBS::AntennaField::ConstPtr field = station->field(idField);
-  const BBS::Vector3 &fieldCenter = field->position();
+  LOFAR::BBS::AntennaField::ConstPtr field = station->field(idField);
+  const LOFAR::BBS::Vector3 &fieldCenter = field->position();
 
   MVPosition delayCenter = station->position().getValue();
-  BBS::Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
+  LOFAR::BBS::Vector3 offsetShift = {{fieldCenter[0] - delayCenter(0),
     fieldCenter[1] - delayCenter(1),
     fieldCenter[2] - delayCenter(2)}};
 
@@ -618,14 +635,14 @@ Array<DComplex> computeFieldArrayFactor(const BBS::Station::ConstPtr &station,
 
   for(uint i = 0; i < field->nElement(); ++i)
   {
-    const BBS::AntennaField::Element &element = field->element(i);
+    const LOFAR::BBS::AntennaField::Element &element = field->element(i);
     if(element.flag[0] && element.flag[1])
     {
       continue;
     }
 
     // Compute the offset relative to the delay center.
-    BBS::Vector3 offset = {{element.offset[0] + offsetShift[0],
+    LOFAR::BBS::Vector3 offset = {{element.offset[0] + offsetShift[0],
       element.offset[1] + offsetShift[1],
       element.offset[2] + offsetShift[2]}};
 
@@ -695,7 +712,7 @@ Array<DComplex> computeFieldArrayFactor(const BBS::Station::ConstPtr &station,
 }
 
 Cube<DComplex>
-computeTileArrayFactor(const BBS::AntennaField::ConstPtr &field,
+computeTileArrayFactor(const LOFAR::BBS::AntennaField::ConstPtr &field,
   const LOFAR::LofarFT::ATerm::ITRFDirectionMap &map, const Vector<Double> &freq)
 {
   const uint nX = map.directions.shape()[1];
@@ -722,7 +739,7 @@ computeTileArrayFactor(const BBS::AntennaField::ConstPtr &field,
         // Compute the effective delay for a plane wave approaching from the
         // direction of interest with respect to the position of element i
         // when beam forming in the reference direction using time delays.
-        const BBS::Vector3 &offset = field->tileElement(l);
+        const LOFAR::BBS::Vector3 &offset = field->tileElement(l);
         double delay = (k[0] * offset[0] + k[1] * offset[1] + k[2]
           * offset[2]) / C::c;
 
@@ -750,7 +767,7 @@ struct ElementLBA
   static void response(double freq, double theta, double phi,
     DComplex (&response)[2][2])
   {
-    element_response_lba(freq, theta, phi, response);
+    LOFAR::element_response_lba(freq, theta, phi, response);
   }
 };
 
@@ -759,18 +776,18 @@ struct ElementHBA
   static void response(double freq, double theta, double phi,
     DComplex (&response)[2][2])
   {
-    element_response_hba(freq, theta, phi, response);
+    LOFAR::element_response_hba(freq, theta, phi, response);
   }
 };
 
 template <typename T_ELEMENT>
 Array<DComplex>
-computeElementResponse(const BBS::AntennaField::ConstPtr &field,
+computeElementResponse(const LOFAR::BBS::AntennaField::ConstPtr &field,
   const LOFAR::LofarFT::ATerm::ITRFDirectionMap &map, const Vector<Double> &freq)
 {
-  const BBS::Vector3 &p = field->axis(BBS::AntennaField::P);
-  const BBS::Vector3 &q = field->axis(BBS::AntennaField::Q);
-  const BBS::Vector3 &r = field->axis(BBS::AntennaField::R);
+  const LOFAR::BBS::Vector3 &p = field->axis(LOFAR::BBS::AntennaField::P);
+  const LOFAR::BBS::Vector3 &q = field->axis(LOFAR::BBS::AntennaField::Q);
+  const LOFAR::BBS::Vector3 &r = field->axis(LOFAR::BBS::AntennaField::R);
 
   const uint nX = map.directions.shape()[1];
   const uint nY = map.directions.shape()[2];
@@ -782,7 +799,7 @@ computeElementResponse(const BBS::AntennaField::ConstPtr &field,
   {
     for(uint i = 0; i < nX; ++i)
     {
-      BBS::Vector3 target = {{map.directions(0, i, j),
+      LOFAR::BBS::Vector3 target = {{map.directions(0, i, j),
         map.directions(1, i, j), map.directions(2, i, j)}};
 
       // Check for non-physical directions (the image is square while the
@@ -797,7 +814,7 @@ computeElementResponse(const BBS::AntennaField::ConstPtr &field,
       // yields a vector tangent to the celestial sphere at the target
       // direction, pointing towards the East (the direction of +Y in the IAU
       // definition, or positive right ascension).
-      BBS::Vector3 v1 = {{-target[1], target[0], 0.0}};
+      LOFAR::BBS::Vector3 v1 = {{-target[1], target[0], 0.0}};
       double normv1 = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
       v1[0] /= normv1;
       v1[1] /= normv1;
@@ -808,7 +825,7 @@ computeElementResponse(const BBS::AntennaField::ConstPtr &field,
       // spherical coordinate system at the target direction, pointing towards
       // the direction of positive phi (which runs East over North around the
       // pseudo zenith).
-      BBS::Vector3 v2 = {{r[1] * target[2] - r[2] * target[1],
+      LOFAR::BBS::Vector3 v2 = {{r[1] * target[2] - r[2] * target[1],
         r[2] * target[0] - r[0] * target[2],
         r[0] * target[1] - r[1] * target[0]}};
       double normv2 = sqrt(v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2]);
@@ -907,7 +924,5 @@ computeElementResponse(const BBS::AntennaField::ConstPtr &field,
 //     const LOFAR::LofarFT::ATerm::ITRFDirectionMap &map, const Vector<Double> &freq);
 // 
 
-// } // end unnamed namespace
+} // end unnamed namespace
   
-} // namespace LofarFT
-} // namespace LOFAR

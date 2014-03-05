@@ -112,52 +112,52 @@ void Imager::makeVisSet(
   Bool mosaicOrder)
 {
 
-if(rvi_p) 
-{
-    delete rvi_p;
-    rvi_p=0;
-    wvi_p=0;
-}
+  if(rvi_p) 
+  {
+      delete rvi_p;
+      rvi_p=0;
+      wvi_p=0;
+  }
 
-Block<Int> sort(0);
-if(mosaicOrder){
-    sort.resize(4);
-    sort[0] = MS::FIELD_ID;
-    sort[1] = MS::ARRAY_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
+  Block<Int> sort(0);
+  if(mosaicOrder){
+      sort.resize(4);
+      sort[0] = MS::FIELD_ID;
+      sort[1] = MS::ARRAY_ID;
+      sort[2] = MS::DATA_DESC_ID;
+      sort[3] = MS::TIME;
 
-}
-//else use default sort order
-else{
-    sort.resize(4);
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-}
-Matrix<Int> noselection;
-Double timeInterval = 0;
-if (itsParameters.asInt("StepApplyElement"))
-{
-    timeInterval = itsParameters.asDouble("TWElement");
-}
+  }
+  //else use default sort order
+  else{
+      sort.resize(4);
+      sort[0] = MS::ARRAY_ID;
+      sort[1] = MS::FIELD_ID;
+      sort[2] = MS::DATA_DESC_ID;
+      sort[3] = MS::TIME;
+  }
+  Matrix<Int> noselection;
+  Double timeInterval = 0;
+  if (itsParameters.asInt("StepApplyElement"))
+  {
+      timeInterval = itsParameters.asDouble("TWElement");
+  }
 
-//if you want to use scratch col...make sure they are there
-if(useModelCol_p)
-    VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
+  //if you want to use scratch col...make sure they are there
+  if(useModelCol_p)
+      VisSet(ms,sort,noselection,useModelCol_p,timeInterval,compress);
 
-if(imwgt_p.getType()=="none"){
-    lofar_imwgt_p = VisImagingWeight("natural");
-    imwgt_p = lofar_imwgt_p;
-}
+  if(imwgt_p.getType()=="none"){
+      lofar_imwgt_p = VisImagingWeight("natural");
+      imwgt_p = lofar_imwgt_p;
+  }
 
-lofar_rvi_p = new VisibilityIterator(ms, sort, timeInterval);
-rvi_p = lofar_rvi_p;
-if(useModelCol_p){
-    wvi_p=lofar_rvi_p;    
-}
-lofar_rvi_p->useImagingWeight(lofar_imwgt_p);
+  lofar_rvi_p = new VisibilityIterator(ms, sort, timeInterval);
+  rvi_p = lofar_rvi_p;
+  if(useModelCol_p){
+      wvi_p=lofar_rvi_p;    
+  }
+  lofar_rvi_p->useImagingWeight(lofar_imwgt_p);
 
 }
 
@@ -284,6 +284,11 @@ Bool Imager::weight(const String& type, const String& rmode,
   } 
 
   return True;
+}
+
+Bool Imager::restoreImages(const Vector<String>& restored, Bool modresiduals)
+{
+  return casa::Imager::restoreImages(restored, modresiduals);
 }
 
 // Show the relative timings of the various steps.

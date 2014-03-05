@@ -73,27 +73,20 @@ class CubeSkyEquation : public casa::SkyEquation {
   
   virtual void gradientsChiSquared(casa::Bool incremental, casa::Bool commitModel=casa::False);
 
-  virtual void initializePutSlice(const casa::VisBuffer& vb, casa::Bool dopsf, casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  virtual void newInitializePutSlice(const casa::VisBuffer& vb, casa::Bool dopsf, casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  virtual void oldInitializePutSlice(const casa::VisBuffer& vb, casa::Bool dopsf, casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  virtual void putSlice(casa::VisBuffer& vb, casa::Bool dopsf, 
+  virtual void initializePutSlice(
+    const VisBuffer& vb, 
+    casa::Bool dopsf, 
+    casa::Int cubeSlice=0, 
+    casa::Int nCubeSlice=1);
+  
+  virtual void putSlice(VisBuffer& vb, casa::Bool dopsf, 
                         casa::FTMachine::Type col, casa::Int cubeSlice=0, 
                         casa::Int nCubeSlice=1);
-  virtual void finalizePutSlice(const casa::VisBuffer& vb,  casa::Bool dopsf,
+  virtual void finalizePutSlice(const VisBuffer& vb,  casa::Bool dopsf,
                                 casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  virtual void newFinalizePutSlice(const casa::VisBuffer& vb,  casa::Bool dopsf,
-                                    casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  virtual void oldFinalizePutSlice(const casa::VisBuffer& vb,  casa::Bool dopsf,
-                                    casa::Int cubeSlice=0, casa::Int nCubeSlice=1);
-  void initializeGetSlice(const casa::VisBuffer& vb, casa::Int row,
+  void initializeGetSlice(const VisBuffer& vb, casa::Int row,
                           casa::Bool incremental, casa::Int cubeSlice=0, 
                           casa::Int nCubeSlice=1);   
-  void newInitializeGetSlice(const casa::VisBuffer& vb, casa::Int row,
-                              casa::Bool incremental, casa::Int cubeSlice=0, 
-                              casa::Int nCubeSlice=1);   
-  void oldInitializeGetSlice(const casa::VisBuffer& vb, casa::Int row,
-                              casa::Bool incremental, casa::Int cubeSlice=0, 
-                              casa::Int nCubeSlice=1);   
   virtual VisBuffer& getSlice(VisBuffer& vb, 
                               casa::Bool incremental, casa::Int cubeSlice=0,
                               casa::Int nCubeSlice=1); 
@@ -109,8 +102,6 @@ class CubeSkyEquation : public casa::SkyEquation {
   //get the weight image from the ftmachines
   virtual void getWeightImage(const casa::Int model, casa::ImageInterface<casa::Float>& weightim);
   void tmpWBNormalizeImage(casa::Bool& dopsf, const casa::Float& pbLimit);
-
-  casa::Bool isNewFTM();
 
   protected:
 

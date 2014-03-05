@@ -1,11 +1,15 @@
 //kate: syntax C++
 
 #include <casa/BasicSL/Constants.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <coordinates/Coordinates/StokesCoordinate.h>
+#include <images/Images/PagedImage.h>
 
 namespace LOFAR {
 namespace LofarFT {
   
-casa::Double spheroidal(casa::Double nu);
+inline casa::Double spheroidal(casa::Double nu);
 
 // Apply a spheroidal taper to the input function.
 template <typename T>

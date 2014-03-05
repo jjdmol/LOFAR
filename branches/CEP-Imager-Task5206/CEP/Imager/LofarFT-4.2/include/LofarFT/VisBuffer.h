@@ -53,17 +53,21 @@ namespace LofarFT {
     virtual void invalidate();
     
     virtual const casa::Matrix<casa::Float>& imagingWeight() const;
+    virtual const casa::Cube<casa::Float>& imagingWeightCube() const;
     
   protected:
     virtual const casa::Matrix<casa::Float>& imagingWeight(const VisImagingWeight & weightGenerator) const;  
+    virtual const casa::Cube<casa::Float>& imagingWeightCube(const VisImagingWeight & weightGenerator) const;  
     virtual VisibilityIterator * getVisibilityIterator () const;
     
   private:
     VisibilityIterator * visIter_p;
     virtual casa::Bool lofarImagingWeightOK () const { return lofarImagingWeightOK_p;}
-    casa::Bool lofarImagingWeightOK_p;
+    virtual casa::Bool lofarImagingWeightCubeOK () const { return lofarImagingWeightCubeOK_p;}
+    mutable casa::Bool lofarImagingWeightOK_p;
+    mutable casa::Bool lofarImagingWeightCubeOK_p;
     mutable casa::Matrix<casa::Float> lofarImagingWeight_p;
-    VisBuffer * This;
+    mutable casa::Cube<casa::Float> lofarImagingWeightCube_p;
 
   };
 

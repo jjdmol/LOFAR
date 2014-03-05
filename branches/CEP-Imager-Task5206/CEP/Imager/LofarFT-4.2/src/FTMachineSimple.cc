@@ -25,6 +25,7 @@
 #include <LofarFT/FTMachineSimple.h>
 #include <LofarFT/VBStore.h>
 #include <LofarFT/CFStore.h>
+#include <LofarFT/VisBuffer.h>
 #include <LofarFT/ConvolutionFunction.h>
 
 // #include <Common/LofarLogger.h>
@@ -47,7 +48,6 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -84,7 +84,9 @@ const String LOFAR::LofarFT::FTMachineSimple::theirName("FTMachineSimple");
 
 namespace
 {
-  bool dummy = LOFAR::LofarFT::FTMachineFactory::instance().registerClass<LOFAR::LofarFT::FTMachineSimple>(LOFAR::LofarFT::FTMachineSimple::theirName);
+  bool dummy = LOFAR::LofarFT::FTMachineFactory::instance().
+    registerClass<LOFAR::LofarFT::FTMachineSimple>(
+      LOFAR::LofarFT::FTMachineSimple::theirName);
 }
 
 namespace LOFAR {
@@ -151,8 +153,14 @@ FTMachineSimple& FTMachineSimple::operator=(const FTMachineSimple& other)
 
 //----------------------------------------------------------------------
 
+void FTMachineSimple::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
+                         FTMachine::Type type) 
+{
+  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
+}
+
 void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
-                         FTMachine::Type type)
+                         FTMachine::Type type) 
 {
   if (itsVerbose > 0) {
     logIO() << LogOrigin(theirName, "put") << LogIO::NORMAL
@@ -160,45 +168,66 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
     logIO() << LogIO::NORMAL << "Padding is " << itsPadding  << LogIO::POST;
   }
 
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())   matchAllSpwChans(vb);
-
-  //Here we redo the match or use previous match
-
-  //Channel matching for the actual spectral window of buffer
-  if (doConversion_p[vb.spectralWindow()]) {
-    matchChannel(vb.spectralWindow(), vb);
-  } else {
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
-  }
-
+  // Match data channels to images channels
+  // chan_map is filled by match_channel with a mapping of the data channels
+  // to the image channels. This mapping changes over time because of changing
+  // Doppler shift due to earth rotation around its axis and the sun.
+  // The channel mapping is determined for the first time sample in vb
+  // It is assumed that within the vb the change in Dopplershift is small .
+  Vector<Int> chan_map;
+//   chan_map = match_channel(vb, itsImage);
+  chan_map.resize();
+  chan_map = Vector<Int>(vb.frequency().size(), 0);
+  
   //No point in reading data if it's not matching in frequency
   if(max(chanMap)==-1) return;
-
-  const Matrix<Float> *imagingweight;
-  imagingweight=&(vb.imagingWeight());
-
-  // dopsf=true;
-
+  
+  itsVisResampler->set_chan_map(chan_map);
+  
+  // Set the frequencies for which the convolution function will be evaluated.
+  // set_frequency groups the frequncies found in vb according to the number of
+  // data channels in a convolution function channel.
+  // chan_map_CF is a mapping of the data channels to the 
+  // convolution function channels
+  Vector<Int> chan_map_CF;
+  chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
+  itsVisResampler->set_chan_map_CF(chan_map_CF);
+  
   if(dopsf) {type=FTMachine::PSF;}
 
+  
   Cube<Complex> data;
-  //Fortran gridder need the flag as ints
-  Cube<Int> flags;
-  Matrix<Float> elWeight;
-  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+  
+  switch(type) 
+  {
+  case FTMachine::MODEL:
+    data.reference(vb.modelVisCube());
+    break;
+  case FTMachine::CORRECTED:
+    data.reference(vb.correctedVisCube());
+    break;
+  case FTMachine::OBSERVED:
+    data.reference(vb.visCube());
+  }
+  
+  Cube<Bool> flag(vb.flag());
+  
+  Cube<Float> imagingWeightCube(vb.imagingWeightCube());
 
 
   Int startRow, endRow, nRow;
-  if (row==-1) { nRow=vb.nRow(); startRow=0; endRow=nRow-1; }
-  else         { nRow=1; startRow=row; endRow=row; }
+  if (row==-1) 
+  {
+    nRow=vb.nRow(); 
+    startRow=0; endRow=nRow-1; 
+  }
+  else
+  { 
+    nRow=1; 
+    startRow=row; 
+    endRow=row; 
+  }
 
-  // Get the uvws in a form that Fortran can use and do that
-  // necessary phase rotation. On a Pentium Pro 200 MHz
-  // when null, this step takes about 50us per uvw point. This
-  // is just barely noticeable for Stokes I continuum and
-  // irrelevant for other cases.
   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
   //NEGATING to correct for an image inversion problem
@@ -212,8 +241,6 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   // Set up VBStore object to point to the relevant info of the VB.
   VBStore vbs;
-  makeCFPolMap(vb, cfStokes_p, itsCFMap);
-  makeConjPolMap(vb, itsCFMap, itsConjCFMap);
 
   // Determine the baselines in the VisBuffer.
   const Vector<Int>& ant1 = vb.antenna1();
@@ -284,27 +311,15 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Vector<Double>& times = vb.timeCentroid();
   double time = 0.5 * (times[times.size()-1] + times[0]);
 
-  vbs.nRow_p = vb.nRow();
-  vbs.uvw_p.reference(uvw);
-  vbs.imagingWeight_p.reference(elWeight);
-  vbs.visCube_p.reference(data);
-  //  vbs.visCube_p.reference(vb.modelVisCube());
-  vbs.freq_p.reference(interpVisFreq_p);
-  vbs.rowFlag_p.reference(vb.flagRow());
+  vbs.nRow(vb.nRow());
+  vbs.uvw(uvw);
+  vbs.imagingWeightCube(imagingWeightCube);
+  vbs.visCube(data);
+  vbs.freq(vb.frequency());
+  vbs.rowFlag(vb.flagRow());
+  vbs.flagCube(vb.flagCube());
 
-  // Really nice way of converting a Cube<Int> to Cube<Bool>.
-  // However the VBS objects should ultimately be references
-  // directly to bool cubes.
-  //**************
-  vbs.flagCube_p.resize(flags.shape());    
-  vbs.flagCube_p = False; 
-  vbs.flagCube_p(flags!=0) = True;
-  //  vbs.flagCube_p.reference(vb.flagCube());
-  //**************
-
-   // Determine the terms of the Mueller matrix that should be calculated
   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
-  itsVisResampler->setMaps(chanMap, polMap);
 
   // First compute the A-terms for all stations (if needed).
   itsConvFunc->computeAterm (time);
@@ -312,7 +327,7 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   uInt Nchannels = vb.nChannel();
 
   itsTotalTimer.start();
-//   #pragma omp parallel 
+  #pragma omp parallel 
   {
     // Thread-private variables.
     PrecTimer gridTimer;
@@ -320,11 +335,15 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary greatly.
 //     #pragma omp for schedule(dynamic)
-    for (int i=0; i<int(blStart.size()); ++i) {
+    
+    for (int i=0; i<int(blStart.size()); ++i) 
+    {
+      int threadNum = OpenMP::threadNum();
+
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
 
-      // compute average weight for baseline for CF averaging
+//       compute average weight for baseline for CF averaging
       double average_weight(0.);
       uInt Nvis(0);
       for(Int j=ist; j<iend; ++j)
@@ -335,7 +354,8 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
           Nvis+=1;
           for(uint k=0; k<Nchannels; ++k) 
           {
-            average_weight=average_weight+vbs.imagingWeight()(k,row);
+            // Temporary hack: should compute weight per polarization
+            average_weight = average_weight + vbs.imagingWeightCube()(0,k,row);
           }
         }
       }
@@ -346,9 +366,8 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
         cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
       }
 
-      int threadNum = OpenMP::threadNum();
 
-      // Get the convolution function.
+//       Get the convolution function.
       if (itsVerbose > 1) 
       {
         cout.precision(20);
@@ -368,11 +387,17 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
         itsSumCFWeight[threadNum]);
       cfTimer.stop();
 
-      if (useDoubleGrid_p) 
+      if (itsUseDoubleGrid) 
       {
-        itsVisResampler->lofarDataToGrid(itsGriddedData2[threadNum], vbs, blIndex,
-                                        blStart[i], blEnd[i],
-                                        itsSumWeight[threadNum], dopsf, cfStore);
+        itsVisResampler->DataToGrid(
+          itsGriddedData2[threadNum], 
+          vbs, 
+          blIndex,
+          blStart[i], 
+          blEnd[i],
+          itsSumWeight[threadNum], 
+          dopsf, 
+          cfStore);
       } 
       else 
       {
@@ -381,7 +406,7 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
           cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
         }
         gridTimer.start();
-        itsVisResampler->lofarDataToGrid(
+        itsVisResampler->DataToGrid(
           itsGriddedData[threadNum], 
           vbs, 
           blIndex, 
@@ -403,6 +428,11 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   itsTotalTimer.stop();
 }
 
+
+void FTMachineSimple::get(casa::VisBuffer& vb, Int row)
+{
+  get(*static_cast<VisBuffer*>(&vb), row);
+}
 
 // Degrid
 void FTMachineSimple::get(VisBuffer& vb, Int row)
@@ -444,30 +474,25 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
   if(max(chanMap)==-1)    return;
 
   Cube<Complex> data;
-  Cube<Int> flags;
+  Cube<Bool> flags;
   getInterpolateArrays(vb, data, flags);
 
   VBStore vbs;
-  vbs.nRow_p = vb.nRow();
-  vbs.beginRow_p = 0;
-  vbs.endRow_p = vbs.nRow_p;
+  vbs.nRow(vb.nRow());
+  vbs.beginRow(0);
+  vbs.endRow(vbs.nRow());
 
-  vbs.uvw_p.reference(uvw);
+  vbs.uvw(uvw);
   //    vbs.imagingWeight.reference(elWeight);
-  vbs.visCube_p.reference(data);
+  vbs.visCube(data);
   
-  vbs.freq_p.reference(interpVisFreq_p);
-  vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();
-  // Really nice way of converting a Cube<Int> to Cube<Bool>.
-  // However these should ultimately be references directly to bool
-  // cubes.
-  vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
-  //    vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+  vbs.freq(interpVisFreq_p);
+  vbs.rowFlag(vb.flagRow());
+  vbs.flagCube(flags);
 
   // Determine the terms of the Mueller matrix that should be calculated
   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
   itsVisResampler->setMaps(chanMap, polMap);
-
 
   // Determine the baselines in the VisBuffer.
   const Vector<Int>& ant1 = vb.antenna1();
@@ -574,7 +599,7 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
       //Double or single precision gridding.
       //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       degridTimer.start();
-      itsVisResampler->lofarGridToData(vbs, itsGriddedData[0],
+      itsVisResampler->GridToData(vbs, itsGriddedData[0],
                                       blIndex, blStart[i], blEnd[i], cfStore);
       degridTimer.stop();
     } // end omp for

@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <LofarFT/FTMachineWsplit.h>
+#include <LofarFT/FTMachineSplitBeam.h>
 
 #include <time.h>
 

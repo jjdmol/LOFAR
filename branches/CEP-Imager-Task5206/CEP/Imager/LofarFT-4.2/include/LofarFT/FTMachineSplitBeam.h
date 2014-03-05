@@ -49,77 +49,6 @@
 
 namespace LOFAR {
 
-// <summary>  An FTMachine for Gridded Fourier transforms </summary>
-
-// <use visibility=export>
-
-// <reviewed reviewer="" date="" tests="" demos="">
-
-// <prerequisite>
-//   <li> <linkto class=FTMachine>FTMachine</linkto> module
-//   <li> <linkto class=SkyEquation>SkyEquation</linkto> module
-//   <li> <linkto class=VisBuffer>VisBuffer</linkto> module
-// </prerequisite>
-//
-// <etymology>
-// FTMachine is a Machine for Fourier Transforms. FTMachineWsplit does
-// Grid-based Fourier transforms.
-// </etymology>
-//
-// <synopsis>
-// The <linkto class=SkyEquation>SkyEquation</linkto> needs to be able
-// to perform Fourier transforms on visibility data. FTMachineWsplit
-// allows efficient Fourier Transform processing using a
-// <linkto class=VisBuffer>VisBuffer</linkto> which encapsulates
-// a chunk of visibility (typically all baselines for one time)
-// together with all the information needed for processing
-// (e.g. UVW coordinates).
-//
-// Gridding and degridding in FTMachineWsplit are performed using a
-// novel sort-less algorithm. In this approach, the gridded plane is
-// divided into small patches, a cache of which is maintained in memory
-// using a general-purpose <linkto class=LatticeCache>LatticeCache</linkto> class. As the (time-sorted)
-// visibility data move around slowly in the Fourier plane, patches are
-// swapped in and out as necessary. Thus, optimally, one would keep at
-// least one patch per baseline.
-//
-// A grid cache is defined on construction. If the gridded uv plane is smaller
-// than this, it is kept entirely in memory and all gridding and
-// degridding is done entirely in memory. Otherwise a cache of tiles is
-// kept an paged in and out as necessary. Optimally the cache should be
-// big enough to hold all polarizations and frequencies for all
-// baselines. The paging rate will then be small. As the cache size is
-// reduced below this critical value, paging increases. The algorithm will
-// work for only one patch but it will be very slow!
-//
-// This scheme works well for arrays having a moderate number of
-// antennas since the saving in space goes as the ratio of
-// baselines to image size. For the ATCA, VLBA and WSRT, this ratio is
-// quite favorable. For the VLA, one requires images of greater than
-// about 200 pixels on a side to make it worthwhile.
-//
-// The FFT step is done plane by plane for images having less than
-// 1024 * 1024 pixels on each plane, and line by line otherwise.
-//
-// The gridding and degridding steps are implemented in Fortran
-// for speed. In gridding, the visibilities are added onto the
-// grid points in the neighborhood using a weighting function.
-// In degridding, the value is derived by a weight summ of the
-// same points, using the same weighting function.
-// </synopsis>
-//
-// <example>
-// See the example for <linkto class=SkyModel>SkyModel</linkto>.
-// </example>
-//
-// <motivation>
-// Define an interface to allow efficient processing of chunks of
-// visibility data
-// </motivation>
-//
-// <todo asof="97/10/01">
-// <ul> Deal with large VLA spectral line case
-// </todo>
 
 class FTMachineWsplit : public casa::FTMachine {
 public:
@@ -670,24 +599,12 @@ protected:
     }
   Map.push_back(MapChunck);
 
-  /* cout.precision(20); */
-  /* for(casa::uInt i=0; i<Map.size();++i) */
-  /*   { */
-  /*     for(casa::uInt j=0; j<Map[i].size();++j) */
-  /* 	{ */
-  /* 	  casa::uInt irow=Map[i][j]; */
-  /* 	  cout<<i<<" "<<j<<" A="<<ant1[irow]<<","<<ant2[irow]<<" w="<<vb.uvw()[irow](2)<<" t="<<times[irow]<<endl; */
-  /* 	} */
-  /*   } */
-
   return Map;
      
   }
 
   vector<casa::Int> WIndexMap;
   vector<casa::uInt> TimesMap;
-  //casa::uInt itsSelAnt0;
-  //casa::uInt itsSelAnt1;
   casa::Double its_t0;
   casa::Double its_tSel0;
   casa::Double its_tSel1;
@@ -792,94 +709,6 @@ protected:
 
   return Map;
      
-
-
-     /* } */
-     /*  else { */
-     /* 	casa::Float dtime(its_TimeWindow); */
-     /* 	casa::Double time0(times[blIndex[blStart[i]]]); */
-
-     /* 	vector<casa::uInt> RowChunckStart; */
-     /* 	vector<casa::uInt> RowChunckEnd; */
-     /* 	vector<vector< casa::Float > > WsChunck; */
-     /* 	vector< casa::Float >          WChunck; */
-     /* 	vector<casa::Float> WCFforChunck; */
-     /* 	casa::Float wmin(1.e6); */
-     /* 	casa::Float wmax(-1.e6); */
-     /* 	casa::uInt NRow(blEnd[i]-blStart[i]+1); */
-     /* 	casa::Int NpixMax=0; */
-     /* 	casa::uInt WindexLast=itsConvFunc->GiveWindex(vbs.uvw()(2,blIndex[blStart[i]]),spw); */
-     /* 	casa::uInt Windex; */
-     /* 	RowChunckStart.push_back(blStart[i]); */
-     /* 	for(casa::uInt Row=0; Row<NRow; ++Row){ */
-     /* 	  casa::uInt irow(blIndex[blStart[i]+Row]); */
-     /* 	  casa::Double timeRow(times[irow]); */
-     /* 	  casa::Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
-     /* 	  NpixMax=std::max(NpixMax,Npix1); */
-     /* 	  casa::Float w(vbs.uvw()(2,irow)); */
-     /* 	  Windex=itsConvFunc->GiveWindex(vbs.uvw()(2,irow),spw); */
-
-     /* 	  //if(WindexLast!=Windex) */
-     /* 	  if((timeRow-time0)>dtime)//((WindexLast!=Windex)| */
-     /* 	    { */
-     /* 	      time0=timeRow; */
-     /* 	      RowChunckEnd.push_back(blStart[i]+Row-1); */
-     /* 	      WsChunck.push_back(WChunck); */
-     /* 	      WChunck.resize(0); */
-     /* 	      WCFforChunck.push_back((itsConvFunc->wScale()).center(WindexLast)); */
-     /* 	      wmin=1.e6; */
-     /* 	      wmax=-1.e6; */
-     /* 	      if(Row!=(NRow-1)){ */
-     /* 		RowChunckStart.push_back(blStart[i]+Row); */
-     /* 	      } */
-     /* 	      WindexLast=Windex; */
-     /* 	    } */
-	  
-     /* 	  WChunck.push_back(w); */
-
-     /* 	} */
-     /* 	WsChunck.push_back(WChunck); */
-     /* 	RowChunckEnd.push_back(blEnd[i]); */
-     /* 	WCFforChunck.push_back((itsConvFunc->wScale()).center(Windex)); */
-     /* 	casa::uInt irow(blIndex[blEnd[i]]); */
-     /* 	casa::Int Npix1=itsConvFunc->GiveWSupport(vbs.uvw()(2,irow),spw); */
-     /* 	NpixMax=std::max(NpixMax,Npix1); */
-     /* 	// for(casa::uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
-     /* 	//   cout<<NRow<<" bl: "<<i<<" || Start("<<RowChunckStart.size()<<"): "<<RowChunckStart[chunk]<<" , End("<<RowChunckEnd.size()<<"): "<<RowChunckEnd[chunk] */
-     /* 	//       <<" w="<< 0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]])) */
-     /* 	//       <<" size="<< WsChunck[chunk].size()<<" wCF="<< WCFforChunck[chunk]<<endl; */
-	  
-     /* 	//   // for(casa::uInt iii=0; iii< WsChunck[chunk].size();++iii){ */
-     /* 	//   //   cout<<WsChunck[chunk][iii]<<" "<<vbs.uvw()(2,blIndex[RowChunckEnd[chunk]]<<endl; */
-     /* 	//   // } */
-
-     /* 	// } */
-
-	
-
-     /* 	for(casa::uInt chunk=0; chunk<RowChunckStart.size();++chunk){ */
-     /* 	  casa::Float WmeanChunk(0.5*(vbs.uvw()(2,blIndex[RowChunckEnd[chunk]])+vbs.uvw()(2,blIndex[RowChunckStart[chunk]]))); */
-     /* 	  cout<<times[blIndex[RowChunckEnd[chunk]]]-times[blIndex[RowChunckStart[chunk]]]<<" "<<WmeanChunk<<endl; */
-     /* 	  cfStore=  itsConvFunc->makeConvolutionFunction (ant1[ist], ant2[ist], timeChunk,//MaxTime, */
-     /* 							  WmeanChunk, */
-     /* 							//vbs.uvw()(2,blIndex[RowChunckEnd[chunk]]), */
-     /* 							itsDegridMuellerMask, */
-     /* 							true, */
-     /* 							0.0, */
-     /* 							itsSumPB[threadNum], */
-     /* 							itsSumCFWeight[threadNum] */
-     /* 							,spw,thisterm_p,itsRefFreq, */
-     /* 							itsStackMuellerNew[threadNum], */
-     /* 							  0);//NpixMax */
-     /* 	//visResamplers_p.lofarGridToData_interp(vbs, itsGridToDegrid, */
-     /* 	//				       blIndex, RowChunckStart[chunk], RowChunckEnd[chunk], cfStore, WsChunck[chunk], */
-     /* 	//				       itsConvFunc->wStep(), WCFforChunck[chunk], itsConvFunc->wCorrGridder()); */
-     /* 	visResamplers_p.lofarGridToData(vbs, itsGridToDegrid, */
-     /* 					       blIndex, RowChunckStart[chunk], RowChunckEnd[chunk], cfStore); */
-     /* 	} */
-
-     /*  } */
-
   }
 
   double  itsSupport_Speroidal;

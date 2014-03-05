@@ -23,6 +23,7 @@
 #ifndef LOFAR_LOFARFT_ATERM_H
 #define LOFAR_LOFARFT_ATERM_H
 
+#include <LofarFT/DynamicObjectFactory.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <BBSKernel/Instrument.h>
@@ -46,7 +47,9 @@ class ATerm
 {
 public:
   ATerm(const casa::MeasurementSet &ms, const casa::Record& parameters);
-
+  
+  static casa::CountedPtr<ATerm> create(const casa::MeasurementSet &ms, const casa::Record& parameters);
+  
   struct ITRFDirectionMap
   {
     casa::MEpoch              epoch;
@@ -75,7 +78,7 @@ public:
   // reference frequencies. The normalize argument, when set to true, causes
   // the response to be multiplied by the inverse of the response at the
   // central pixel.
-  vector<casa::Cube<casa::Complex> > evaluate(uint idStation,
+  virtual vector<casa::Cube<casa::Complex> > evaluate(uint idStation,
     const casa::Vector<casa::Double> &freq,
     const casa::Vector<casa::Double> &reference, bool normalize = false)
     const;
@@ -115,7 +118,7 @@ public:
     const uint station,
     const casa::Vector<casa::Double> &freq) const;
 
-private:
+protected:
   
   void initParmDB(const casa::String &parmdbname);
   double get_parmvalue( casa::Record &parms, std::string parmname );
@@ -140,8 +143,13 @@ private:
   casa::Vector<casa::String>   itsCal_pp_names;
   casa::Matrix<casa::Double> itsCal_pp;
   casa::Vector<casa::Double> itsTec_white;
+  casa::Int itsVerbose;
+  
+  static void make_python_classes();
   
 };
+
+typedef Singleton<DynamicObjectFactory<ATerm*(const casa::MeasurementSet& ms, const casa::Record& parameters)> > ATermFactory;
 
 } // namespace LofarFT
 } // namespace LOFAR

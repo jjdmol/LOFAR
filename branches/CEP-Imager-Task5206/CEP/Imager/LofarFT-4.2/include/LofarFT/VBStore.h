@@ -36,66 +36,79 @@ namespace LofarFT {
   class VBStore
   {
   public:
-    VBStore():dopsf_p(casa::False) {};
+    VBStore() : itsDoPSF(casa::False) {};
     ~VBStore() {};
-    inline casa::Int nRow()              {return nRow_p;};
-    inline casa::Int beginRow()          {return beginRow_p;}
-    inline casa::Int endRow()            {return endRow_p;}
-    inline casa::Bool dopsf()            {return dopsf_p;}
-    inline casa::Bool useCorrected()     {return useCorrected_p;};
-    casa::Vector<casa::uInt>& selection()      {return selection_p;};
-    casa::Matrix<casa::Double>& uvw()          {return uvw_p;};
-    casa::Vector<casa::Bool>& rowFlag()        {return rowFlag_p;};
-    casa::Cube<casa::Bool>& flagCube()         {return flagCube_p;};
-    casa::Matrix<casa::Float>& imagingWeight() {return imagingWeight_p;};
-    casa::Cube<casa::Complex>& visCube()       {return visCube_p;};
-    casa::Vector<casa::Double>& freq()         {return freq_p;};
-    casa::Cube<casa::Complex>& modelCube()     {return modelCube_p;};
-    casa::Cube<casa::Complex>& correctedCube() {return correctedCube_p;};
+    
+    casa::Int nRow() const             {return itsNRow;}
+    void nRow(casa::Int nrow)     {itsNRow = nrow;}
+    
+    casa::Int beginRow()  const        {return itsBeginRow;}
+    void beginRow(casa::Int beginrow) {itsBeginRow = beginrow;}
+    
+    casa::Int endRow() const           {return itsEndRow;}
+    void endRow(casa::Int endrow)  {itsEndRow = endrow;}
+
+    casa::Bool dopsf() const           {return itsDoPSF;}
+    void dopsf(casa::Bool do_psf)       {itsDoPSF = do_psf;}
+
+    const casa::Vector<casa::uInt>& selection() const      {return itsSelection;};
+    
+    const casa::Matrix<casa::Double>& uvw() const          {return itsUVW;}
+    void uvw(const casa::Matrix<casa::Double>& v)     {itsUVW.reference(v);}
+    
+    const casa::Vector<casa::Bool>& rowFlag() const        {return itsRowFlag;}
+    void rowFlag(const casa::Vector<casa::Bool>& v)   {itsRowFlag.reference(v);}
+    
+    const casa::Cube<casa::Bool>& flagCube() const         {return itsFlagCube;}
+    void flagCube(const casa::Cube<casa::Bool>& v)    {itsFlagCube.reference(v);}
+    
+    const casa::Matrix<casa::Float>& imagingWeight() const {return itsImagingWeight;}
+    void imagingWeight(const casa::Matrix<casa::Float>&  v)  {itsImagingWeight.reference(v);}
+    
+    const casa::Cube<casa::Float>& imagingWeightCube() const {return itsImagingWeightCube;}
+    void imagingWeightCube(const casa::Cube<casa::Float>&  v)  {itsImagingWeightCube.reference(v);}
+    
+    casa::Cube<casa::Complex>& visCube()        {return itsVisCube;}
+    void visCube(casa::Cube<casa::Complex>& viscube) {itsVisCube.reference(viscube);}
+
+    casa::Cube<casa::Complex>& modelVisCube() {return itsModelVisCube;}
+    void modelVisCube(casa::Cube<casa::Complex>& modelviscube)    {itsModelVisCube.reference(modelviscube);}
+
+    const casa::Vector<casa::Double>& freq() const         {return itsFreq;}
+    void freq(const casa::Vector<casa::Double>& v)    {itsFreq.reference(v);}
 
     void reference(const VBStore& other)
     {
-      nRow_p=other.nRow_p;  beginRow_p=other.beginRow_p; endRow_p=other.endRow_p;
-      dopsf_p = other.dopsf_p;
-      useCorrected_p = other.useCorrected_p;
+      itsNRow = other.itsNRow;  
+      itsBeginRow = other.itsBeginRow; 
+      itsEndRow = other.itsEndRow;
+      itsDoPSF = other.itsDoPSF;
 
-      selection_p.reference(other.selection_p);
-      uvw_p.reference(other.uvw_p);
-      rowFlag_p.reference(other.rowFlag_p);
-      flagCube_p.reference(other.flagCube_p);
-      imagingWeight_p.reference(other.imagingWeight_p);
-      freq_p.reference(other.freq_p);
-      // if (useCorrected_p) correctedCube_p.reference(other.correctedCube_p);
-      // else visCube_p.reference(other.visCube_p);
-      // if (useCorrected_p) 
-      // 	{
-      // 	  correctedCube_p.reference(other.correctedCube_p);
-      // 	  visCube_p.reference(other.correctedCube_p);
-      // 	}
-      // else visCube_p.reference(other.visCube_p);
-      correctedCube_p.reference(other.correctedCube_p);
-      visCube_p.reference(other.visCube_p);
-      modelCube_p.reference(other.modelCube_p);
-
-      // uvw_p.assign(other.uvw_p);
-      // rowFlag_p.assign(other.rowFlag_p);
-      // flagCube_p.assign(other.flagCube_p);
-      // imagingWeight_p.assign(other.imagingWeight_p);
-      // freq_p.assign(other.freq_p);
-      // visCube_p.assign(other.visCube_p);
-      // modelCube_p.assign(other.modelCube_p);
-      // correctedCube_p.assign(other.correctedCube_p);
+      itsSelection.reference(other.itsSelection);
+      itsUVW.reference(other.itsUVW);
+      itsRowFlag.reference(other.itsRowFlag);
+      itsFlagCube.reference(other.itsFlagCube);
+      itsImagingWeight.reference(other.itsImagingWeight);
+      itsFreq.reference(other.itsFreq);
+      itsVisCube.reference(other.itsVisCube);
+      itsModelVisCube.reference(other.itsModelVisCube);
     }
 
-    casa::Int nRow_p, beginRow_p, endRow_p;
-    casa::Matrix<casa::Double> uvw_p;
-    casa::Vector<casa::uInt> selection_p;
-    casa::Vector<casa::Bool> rowFlag_p;
-    casa::Cube<casa::Bool> flagCube_p;
-    casa::Matrix<casa::Float> imagingWeight_p;
-    casa::Cube<casa::Complex> visCube_p, modelCube_p, correctedCube_p;
-    casa::Vector<casa::Double> freq_p;
-    casa::Bool dopsf_p,useCorrected_p;
+  private:
+    
+    casa::Int itsNRow;
+    casa::Int itsBeginRow;
+    casa::Int itsEndRow;
+    casa::Matrix<casa::Double> itsUVW;
+    casa::Vector<casa::uInt> itsSelection;
+    casa::Vector<casa::Bool> itsRowFlag;
+    casa::Cube<casa::Bool> itsFlagCube;
+    casa::Matrix<casa::Float> itsImagingWeight;
+    casa::Cube<casa::Float> itsImagingWeightCube;
+    casa::Cube<casa::Complex> itsVisCube;
+    casa::Cube<casa::Complex> itsModelVisCube;
+    casa::Vector<casa::Double> itsFreq;
+    casa::Bool itsDoPSF;
   };
 
 } // end namespace LofarFT

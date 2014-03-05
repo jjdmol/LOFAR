@@ -1,4 +1,4 @@
-//# VisImagingWeight.h: Calculate Imaging Weights for a buffer from weight
+//# VisImagingWeightRobust.h: Calculate Imaging Weights for a buffer from weight
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,10 +26,9 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_LOFARFT_VISIMAGINGWEIGHT_H
-#define LOFAR_LOFARFT_VISIMAGINGWEIGHT_H
+#ifndef LOFAR_LOFARFT_VISIMAGINGWEIGHTROBUST_H
+#define LOFAR_LOFARFT_VISIMAGINGWEIGHTROBUST_H
 
-#include <synthesis/MSVis/VisImagingWeight.h>
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/Quanta/Quantum.h>
@@ -73,25 +72,30 @@ namespace LofarFT { //# NAMESPACE LOFAR - BEGIN
 // </todo>
 
 
-class VisImagingWeight : public casa::VisImagingWeight{
+class VisImagingWeightRobust : public VisImagingWeight{
+  
     public:
-     //empty constructor
-     VisImagingWeight();
-     //Constructor to calculate natural and radial weights
-     VisImagingWeight(const casa::String& type);
-     //Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
-     //If multiField=True, the weight density calcution is done on a per field basis, 
-     //else it is all fields combined
-     VisImagingWeight(casa::ROVisibilityIterator& vi, const casa::String& rmode, const casa::Quantity& noise,
-                      const casa::Double robust, const casa::Int nx, const casa::Int ny,
-                      const casa::Quantity& cellx, const casa::Quantity& celly,
-                      const casa::Int uBox, const casa::Int vBox, const casa::Bool multiField=casa::False);
-     virtual void weight(casa::Matrix<casa::Float>& imagingWeight, const casa::VisBuffer& vb) const;
-     virtual void weight(casa::Cube<casa::Float>& imagingWeight, const casa::VisBuffer& vb) const;
+      
+     VisImagingWeightRobust(
+       casa::ROVisibilityIterator& vi, 
+       const casa::String& rmode, 
+       const casa::Quantity& noise,
+       casa::Double robust, 
+       casa::Int nx, 
+       casa::Int ny,
+       const casa::Quantity& cellx, 
+       const casa::Quantity& celly,
+       casa::Int uBox, 
+       casa::Int vBox,
+       casa::Bool multiField = casa::False);
+     
+     virtual void weight(
+       casa::Matrix<casa::Float>& imagingWeight, 
+       const casa::VisBuffer& vb) const;
 
   };
   
 } //end namespace LofarFT
 } //end namespace LOFAR
 
-#endif // LOFAR_LOFARFT_VISIMAGINGWEIGHT_H
+#endif // LOFAR_LOFARFT_VISIMAGINGWEIGHTROBUST_H

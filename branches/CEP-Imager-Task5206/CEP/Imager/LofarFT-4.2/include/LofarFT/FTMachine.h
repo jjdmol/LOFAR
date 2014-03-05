@@ -324,6 +324,23 @@ public:
     const casa::Vector<casa::Int>& cfstokes, 
     casa::Vector<casa::Int>& polM);
 
+  // The flags are Bool instead of Int as in casa::FTMachine
+  // The flags were Int because of the Fortran gridder
+  // That gridder is not used anymore
+  virtual casa::Bool interpolateFrequencyTogrid(
+    const casa::VisBuffer& vb, 
+    const casa::Matrix<casa::Float>& wt,
+    casa::Cube<casa::Complex>& data, 
+    casa::Cube<casa::Bool>& flag,
+    casa::Matrix<casa::Float>& weight,
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED ); 
+
+  // See remark above about Bool versus Int flags  
+  virtual void getInterpolateArrays(
+    const casa::VisBuffer& vb,
+    casa::Cube<casa::Complex>& data, 
+    casa::Cube<casa::Bool>& flags);
+  
 protected:
   
   casa::ImageInterface<casa::Complex>* &itsImage; // reference to casa::FTMachine::image
@@ -429,7 +446,7 @@ protected:
   
 };
 
-// Factory that can be used to generate new Command objects.
+// Factory that can be used to generate new FTMachine objects.
 // The factory is defined as a singleton.
 typedef Singleton<DynamicObjectFactory<FTMachine*(const casa::MeasurementSet& ms, const casa::Record& parameters)> > FTMachineFactory;
 

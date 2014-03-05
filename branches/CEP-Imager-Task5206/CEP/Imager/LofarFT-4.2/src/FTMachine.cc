@@ -25,6 +25,14 @@
 #include <Common/Exception.h>
 #include <Common/OpenMP.h>
 
+#include <LofarFT/FTMachine.h>
+#include <LofarFT/CFStore.h>
+#include <LofarFT/ConvolutionFunction.h>
+#include <LofarFT/VisBuffer.h>
+#include <LofarFT/VisResamplerImagingWeightCube.h>
+#include <LofarFT/VBStore.h>
+
+
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -75,12 +83,6 @@
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisSet.h>
 
-#include <LofarFT/FTMachine.h>
-#include <LofarFT/CFStore.h>
-#include <LofarFT/ConvolutionFunction.h>
-#include <LofarFT/VisResampler.h>
-#include <LofarFT/VBStore.h>
-
 #define DORES True
 
 using namespace casa;
@@ -91,6 +93,36 @@ namespace
   void* dummy = (void*) &LOFAR::LofarFT::FTMachineFactory::instance();
 }
 
+
+namespace
+{
+  template <typename T>
+    void swapyz_(Cube<T>& out, const Cube<T>& in)
+  {
+    IPosition inShape=in.shape();
+    uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
+    //resize breaks  references...so out better have the right shape 
+    //if references is not to be broken
+    if(out.nelements()==0)
+      out.resize(nxx,nyy,nzz);
+    Bool deleteIn,deleteOut;
+    const T* pin = in.getStorage(deleteIn);
+    T* pout = out.getStorage(deleteOut);
+    uInt i=0, zOffset=0;
+    for (uInt iz=0; iz<nzz; ++iz, zOffset+=nxx) {
+      Int yOffset=zOffset;
+      for (uInt iy=0; iy<nyy; ++iy, yOffset+=nxx*nzz) {
+        for (uInt ix=0; ix<nxx; ++ix){ 
+          pout[i++] = pin[ix+yOffset];
+        }
+      }
+    }
+    out.putStorage(pout,deleteOut);
+    in.freeStorage(pin,deleteIn);
+  }
+  
+  template void swapyz_(Cube<Bool>& out, const Cube<Bool>& in);
+}
 
 namespace LOFAR {
 namespace LofarFT {
@@ -115,7 +147,7 @@ FTMachine::FTMachine(
     
   // ================================================  
 //     itsPadding(padding), 
-    itsVisResampler(new VisResampler()),
+    itsVisResampler(new VisResamplerImagingWeightCube()),
     itsMaxAbsData(0.0), 
     itsCenterLoc(IPosition(4,0)),
     itsOffsetLoc(IPosition(4,0)), 
@@ -177,6 +209,9 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     casa::FTMachine::operator=(other);
 
     //private params
+    itsParameters = other.itsParameters;
+    itsVisResampler = other.itsVisResampler;
+    itsNGrid = other.itsNGrid;
     itsUVScale.resize();
     itsUVOffset.resize();
     itsUVScale = other.itsUVScale;
@@ -281,7 +316,7 @@ const Matrix<Float>& FTMachine::getAveragePB() const
 // we grid-correct, and FFT the image
 void FTMachine::initializeToVis(
   ImageInterface<Complex>& iimage,
-  const VisBuffer& vb)
+  const casa::VisBuffer& vb)
 {
   if (itsVerbose > 0) {
     cout<<"---------------------------> initializeToVis"<<endl;
@@ -296,9 +331,7 @@ void FTMachine::initializeToVis(
   initMaps(vb);
 
   itsVisResampler->init(itsUseDoubleGrid);
-  itsVisResampler->setMaps(itsChanMap, itsPolMap);
-  itsVisResampler->setCFMaps(itsCFMap, itsConjCFMap);
-
+  
   // Need to reset nx, ny for padding
 
   IPosition gridShape(4, itsNX, itsNY, itsNPol, itsNChan);
@@ -308,6 +341,7 @@ void FTMachine::initializeToVis(
   itsGriddedData[0] = Complex();
   for (int i=0; i<itsNGrid; ++i) 
   {
+    cout << i << " " << itsSumPB.size() << endl;
     itsSumPB[i].resize (itsPaddedShape[0], itsPaddedShape[1]);
     itsSumPB[i] = Complex();
     itsSumCFWeight[i] = 0.;
@@ -338,6 +372,7 @@ void FTMachine::initializeToVis(
   logIO() << LogIO::DEBUGGING << "Starting grid correction and FFT of image" << LogIO::POST;
 
   const Matrix<Float>& data = getAveragePB();
+  cout << "const Matrix<Float>& data = getAveragePB();" << endl;
   
   IPosition pos(4, itsLattice->shape()[0], itsLattice->shape()[1], 1, 1);
   IPosition pos2(2, itsLattice->shape()[0], itsLattice->shape()[1]);
@@ -390,13 +425,14 @@ void FTMachine::finalizeToVis()
 void FTMachine::initializeToSky(
   ImageInterface<Complex>& iimage,
   Matrix<Float>& weight, 
-  const VisBuffer& vb)
+  const casa::VisBuffer& vb)
 {
   // image always points to the image
   itsImage = &iimage;
   if (itsVerbose > 0) {
     cout<<"---------------------------> initializeToSky"<<endl;
   }
+  
   init();
 
   // Initialize the maps for polarization and channel. These maps
@@ -404,8 +440,18 @@ void FTMachine::initializeToSky(
   initMaps(vb);
 
   itsVisResampler->init(itsUseDoubleGrid);
-  itsVisResampler->setMaps(itsChanMap, itsPolMap);
-  itsVisResampler->setCFMaps(itsCFMap, itsConjCFMap);
+  
+  CoordinateSystem coords = image->coordinates();
+  Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
+  AlwaysAssert(stokesIndex>-1, AipsError);
+  StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
+//   cout << "Image stokes:" << stokesCoord.stokes() << endl;
+  Vector<Int> visPolMap(vb.corrType());
+//   cout << "Data stokes: " << visPolMap << endl;
+  
+  Vector<Int> polmap(4);
+  for (Int i = 0; i<4; i++) polmap[i] = i;
+  itsVisResampler->set_pol_map(polmap);
 
   // Initialize for in memory or to disk gridding. lattice will
   // point to the appropriate Lattice, either the ArrayLattice for
@@ -659,23 +705,46 @@ void FTMachine::makeImage(
   }
 
   // Loop over all visibilities and pixels
-  VisBuffer vb(vi);
+  VisBuffer vb(*static_cast<VisibilityIterator*>(&vi));
 
+  
+  
   // Initialize put (i.e. transform to Sky) for this model
   vi.origin();
-// 
-// /home/vdtol/lofar-casapy-4.1/src/LOFAR/CEP/Imager/LofarFT/src/LofarFTMachine.cc:1502: error: incomplete type ‘casa::SkyModel’ used in nested name specifier
-// /home/vdtol/lofar-casapy-4.1/src/LOFAR/CEP/Imager/LofarFT/src/LofarFTMachine.cc:1505: error: incomplete type ‘casa::SkyModel’ used in nested name specifier
+
+//   cout << "Image shape: " << theImage.shape() << endl;
+  CoordinateSystem coords = theImage.coordinates();
+  Int stokesIndex = coords.findCoordinate(Coordinate::STOKES);
+  AlwaysAssert(stokesIndex>-1, AipsError);
+  StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
+//   cout << "Image stokes:" << stokesCoord.stokes() << endl;
+  theImage.putAt(Complex(1.0,0.0), IPosition(4,0,0,0,0));
+//   cout << "Image data: " << theImage.getAt(IPosition(4,0,0,0,0)) << ", "
+//        << theImage.getAt(IPosition(4,0,0,1,0))  << ", "
+//        << theImage.getAt(IPosition(4,0,0,2,0))  << ", "
+//        << theImage.getAt(IPosition(4,0,0,3,0)) << endl;
+  
   if(vb.polFrame()==MSIter::Linear) {
-//     StokesImageUtil::changeCStokesRep(theImage, SkyModel::LINEAR);
+    StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
   }
   else {
-//     StokesImageUtil::changeCStokesRep(theImage, SkyModel::CIRCULAR);
+    StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
   }
 
+  coords = theImage.coordinates();
+  stokesIndex = coords.findCoordinate(Coordinate::STOKES);
+  AlwaysAssert(stokesIndex>-1, AipsError);
+  stokesCoord = coords.stokesCoordinate(stokesIndex);
+//   cout << "Image stokes:" << stokesCoord.stokes() << endl;
+
+//   cout << "Image data: " << theImage.getAt(IPosition(4,0,0,0,0)) << ", "
+//        << theImage.getAt(IPosition(4,0,0,1,0))  << ", "
+//        << theImage.getAt(IPosition(4,0,0,2,0))  << ", "
+//        << theImage.getAt(IPosition(4,0,0,3,0)) << endl;
+  
   initializeToSky(theImage, weight, vb);
-  cout << "itsSumPB.size() " << itsSumPB.size() << endl;
-  cout << "itsSumPB[0].shape() " << itsSumPB[0].shape() << endl;
+//   cout << "itsSumPB.size() " << itsSumPB.size() << endl;
+//   cout << "itsSumPB[0].shape() " << itsSumPB[0].shape() << endl;
   
 
   // Loop over the visibilities, putting VisBuffers
@@ -719,27 +788,26 @@ void FTMachine::makeImage(
   getImage(weight, True);
 }
 
-void FTMachine::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
+void FTMachine::ComputeResiduals(casa::VisBuffer&vb, Bool useCorrected)
 {
   VBStore vbs;
-  vbs.nRow_p = vb.nRow();
-  vbs.beginRow_p = 0;
-  vbs.endRow_p = vbs.nRow_p;
-  vbs.modelCube_p.reference(vb.modelVisCube());
+  vbs.nRow(vb.nRow());
+  vbs.beginRow(0);
+  vbs.endRow(vbs.endRow());
+  vbs.modelVisCube(vb.modelVisCube());
   if (useCorrected) 
   {
-    vbs.correctedCube_p.reference(vb.correctedVisCube());
+    vbs.visCube(vb.correctedVisCube());
   }
   else
   {
-    vbs.visCube_p.reference(vb.visCube());
+    vbs.visCube(vb.visCube());
   }
-  vbs.useCorrected_p = useCorrected;
-  itsVisResampler->lofarComputeResiduals(vbs);
+  itsVisResampler->ComputeResiduals(vbs);
 }
 
 void FTMachine::makeSensitivityImage(
-  const VisBuffer& vb,
+  const casa::VisBuffer& vb,
   const ImageInterface<Complex>& imageTemplate,
   ImageInterface<Float>& sensitivityImage)
 {
@@ -1077,7 +1145,7 @@ void FTMachine::normalizeImage(
 }
 
 
-void FTMachine::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
+void FTMachine::makeCFPolMap(const casa::VisBuffer& vb, const Vector<Int>& locCfStokes,
                                 Vector<Int>& polM)
 {
   LogIO log_l(LogOrigin("LofarFTMachine", "findPointingOffsets"));
@@ -1101,9 +1169,10 @@ void FTMachine::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes
 // visibilites in order [RR,RL,LR,LL], polMap = [1,-1,-1,0].  The
 // conjugate map will be [0,-1,-1,1].
 //
-void FTMachine::makeConjPolMap(const VisBuffer& vb,
-                                    const Vector<Int> cfPolMap,
-                                    Vector<Int>& conjPolMap)
+void FTMachine::makeConjPolMap(
+  const casa::VisBuffer& vb,
+  const Vector<Int> cfPolMap,
+  Vector<Int>& conjPolMap)
 {
   LogIO log_l(LogOrigin("LofarFTMachine", "makConjPolMap"));
   //
@@ -1163,6 +1232,64 @@ void FTMachine::makeConjPolMap(const VisBuffer& vb,
       }
 }
 
+Bool FTMachine::interpolateFrequencyTogrid(
+  const casa::VisBuffer& vb,
+  const Matrix<Float>& wt,
+  Cube<Complex>& data, 
+  Cube<Bool>& flags, 
+  Matrix<Float>& weight, 
+  casa::FTMachine::Type type)
+{
+  Cube<Complex> origdata;
+  Cube<Bool> modflagCube;
+  Vector<Double> visFreq(vb.frequency().nelements());
+  if(doConversion_p[vb.spectralWindow()]){
+    visFreq.resize(lsrFreq_p.shape());
+    convertArray(visFreq, lsrFreq_p);
+  }
+  else{      
+    convertArray(visFreq, vb.frequency());
+    lsrFreq_p.resize();
+    lsrFreq_p=vb.frequency();
+  }
+  if(type==FTMachine::MODEL){
+    origdata.reference(vb.modelVisCube());
+  }
+  else if(type==FTMachine::CORRECTED){
+    origdata.reference(vb.correctedVisCube());
+  }
+  else if(type==FTMachine::OBSERVED){
+    origdata.reference(vb.visCube());
+  }
+  else if(type==FTMachine::PSF){
+    // make sure its a size 0 data ...psf
+    //so avoid reading any data from disk 
+    origdata.resize();
+    
+  }
+  else
+  {
+    throw(AipsError("Don't know which column is being regridded"));
+  }
+  
+  data.reference(origdata);
+  // do something here for apply flag based on spw chan sels
+  // e.g. 
+  // setSpecFlag(vb, chansels_p) -> newflag cube
+  setSpectralFlag(vb,modflagCube);
+  //flags.resize(vb.flagCube().shape());
+  flags.resize(modflagCube.shape());
+  flags=0;
+  //flags(vb.flagCube())=True;
+  flags(modflagCube)=True;
+  weight.reference(wt);
+  interpVisFreq_p.resize();
+  interpVisFreq_p=lsrFreq_p;
+
+  return False;
+}
+
+
 void FTMachine::showTimings (ostream& os, double duration) const
 {
   // The total time is the real elapsed time.
@@ -1189,6 +1316,24 @@ void FTMachine::showTimings (ostream& os, double duration) const
 //                                           duration);
 //     os << endl;
 //   }
+}
+
+void FTMachine::getInterpolateArrays(
+  const casa::VisBuffer& vb,
+  Cube<Complex>& data, 
+  Cube<Bool>& flags)
+{
+  Cube<Bool> modflagCube;
+  setSpectralFlag(vb,modflagCube);
+  data.reference(vb.modelVisCube());
+  //flags.resize(vb.flagCube().shape());
+  flags.resize(modflagCube.shape());
+  flags=0;
+  //flags(vb.flagCube())=True;
+  flags(modflagCube)=True;
+  interpVisFreq_p.resize();
+  interpVisFreq_p=vb.frequency();
+  return;
 }
 
 } // end namespace LofarFT

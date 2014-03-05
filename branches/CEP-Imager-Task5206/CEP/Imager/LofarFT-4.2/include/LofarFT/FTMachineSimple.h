@@ -106,6 +106,8 @@ namespace LofarFT {
 // <ul> Deal with large VLA spectral line case
 // </todo>
 
+class VisBuffer;  
+  
 class FTMachineSimple : public FTMachine {
 public:
   static const casa::String theirName;
@@ -144,13 +146,21 @@ public:
   virtual casa::String name() const { return theirName;}
   
   // Get actual coherence from grid by degridding
-  void get(casa::VisBuffer& vb, casa::Int row=-1);
+  virtual void get(casa::VisBuffer& vb, casa::Int row=-1);
+  virtual void get(VisBuffer& vb, casa::Int row=-1);
 
 
   // Put coherence to grid by gridding.
   using casa::FTMachine::put;
-  void put(
+
+  virtual void put(
     const casa::VisBuffer& vb, 
+    casa::Int row = -1, 
+    casa::Bool dopsf = casa::False,
+    casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
+  
+  virtual void put(
+    const VisBuffer& vb, 
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);

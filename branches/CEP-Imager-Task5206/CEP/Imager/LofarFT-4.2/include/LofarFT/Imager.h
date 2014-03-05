@@ -85,6 +85,8 @@ namespace LofarFT {
 
     // Show the relative timings of the various steps.
     void showTimings (std::ostream&, double duration) const;
+    
+    casa::Bool restoreImages(const casa::Vector<casa::String>& restored, casa::Bool modresiduals=casa::True);
 
   private:
     //# Data members.

@@ -79,7 +79,7 @@ void VisImagingWeight::weight(
     } 
     else if (getType () == "radial") 
     {
-        weightRadial (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec);
+        weightRadial (imagingWeight, flagmat, uvwmat, vb.frequency(), weightvec);
     }
     else 
     {
@@ -92,14 +92,6 @@ void VisImagingWeight::weight(
     }
 
   
-}
-
-void VisImagingWeight::weight(
-  casa::Cube<casa::Float>& imagingWeight, 
-  const casa::VisBuffer& vb) const
-{
-  imagingWeight.assign(vb.weightSpectrum());
-  imagingWeight(vb.flagCube()) = 0.0;
 }
 
     

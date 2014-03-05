@@ -65,6 +65,9 @@ public:
 
   virtual ~ConvolutionFunction () {};
 
+  // set frequency channels, creates itsChanMap
+  casa::Vector<casa::Int> set_frequency(const casa::Vector<casa::Double> &frequency);
+  
   // Show the relative timings of the various steps.
   void showTimings (std::ostream&, double duration, double timeCF) const;
 
@@ -170,11 +173,12 @@ private:
 
 
   //# Data members.
+  casa::Record              itsParameters;
   casa::IPosition           itsShape;
   casa::DirectionCoordinate itsCoordinates;
   WScale                    itsWScale;
   WTerm                     itsWTerm;
-  ATerm                     itsATerm;
+  casa::CountedPtr<ATerm>   itsATerm;
   casa::Double              itsMaxW;
   casa::Double              itsPixelSizeSpheroidal;
   casa::uInt                itsNWPlanes;
@@ -188,6 +192,7 @@ private:
   casa::Matrix<casa::Float>       itsSpheroid_cut_im;
   //# List of the ferquencies the CF have to be caluclated for
   casa::Vector< casa::Double >    itsFrequencyList;
+  casa::Vector< casa::Int >      itsChanMap;
   vector< casa::Matrix<casa::Complex> > itsWplanesStore;
   //# Aterm_store[double time][antenna][channel]=Cube[Npix,Npix,4]
   map<casa::Double, vector< vector< casa::Cube<casa::Complex> > > > itsAtermStore;

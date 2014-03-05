@@ -29,6 +29,7 @@
 #include <lofar_config.h>
 #include <LofarFT/Imager.h>
 #include <Common/InputParSet.h>
+#include <Common/Exception.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -47,6 +48,9 @@
 #include <casa/sstream.h>
 
 using namespace casa;
+
+// Use a terminate handler that can produce a backtrace.
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
@@ -222,8 +226,10 @@ void correctImages (
   //              restoredImage.shape() == modelImage.shape(), SynthesisError);
 
   // Get average primary beam and spheroidal.
-  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
-  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
+//   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
+//   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
+  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName);
+  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName);
 
   // String nameii("Spheroid_cut_im_element.img");
   // ostringstream nameiii(nameii);
@@ -527,6 +533,19 @@ int main (Int argc, char** argv)
                    "Baseline selection string.",
                    "string");
     
+    inputs.create ("ATerm", "ATerm",
+                   "ATerm class (ATerm, ATermPython)",
+                   "string");
+
+    inputs.create ("ATermPython.module", "",
+                   "Name of python module containing ATerm class",
+                   "string");
+
+    inputs.create ("ATermPython.class", "",
+                   "Name of ATerm Python class",
+                   "string");
+
+    
     // inputs.create ("FillFactor", "1",
     // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
     // 		   "Double");
@@ -763,7 +782,11 @@ int main (Int argc, char** argv)
     params.define ("SingleGridMode", SingleGridMode);
     params.define ("FindNWplanes", FindNWplanes);
     params.define ("ChanBlockSize", ChanBlockSize);
-
+    
+    params.define ("ATerm", inputs.getString("ATerm"));
+    params.define ("ATermPython.module", inputs.getString("ATermPython.module"));
+    params.define ("ATermPython.class", inputs.getString("ATermPython.class"));
+    
     
     //params.define ("FillFactor", FillFactor);
     
@@ -1044,7 +1067,7 @@ int main (Int argc, char** argv)
                          threshold,                     // threshold
                          displayProgress,               // displayProgress
                          Vector<String>(1, modelName),  // model
-                         //  modelNames,
+                           //  modelNames,
                          Vector<Bool>(1, fixed),        // fixed
                          "",                            // complist
                          Vector<String>(1, maskName),   // mask
@@ -1053,6 +1076,7 @@ int main (Int argc, char** argv)
                          Vector<String>(1, psfName));   // psf
 
           }
+          imager.restoreImages(Vector<String>(1, restoName));
           // Do the final correction for primary beam and spheroidal.
           bool ApplyElement = (StepApplyElement>0);
           Bool doRestored = (niter>0);
