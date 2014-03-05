@@ -30,6 +30,9 @@ echo "  in directory $(pwd)"
   # Expand wildcard pattern to null string, if there no matching files
   shopt -s nullglob
 
+  # Make sure that runObservation produced any output files at all.
+  [ -n "$(echo *.raw)" ]  || error "runObservation.sh produced no output files"
+
   # create script to accept output (ie. copy it to the source dir for check in)
   echo "#!/bin/sh
   cp ${PWD}/*.raw ${REFDIR}" > accept_output
