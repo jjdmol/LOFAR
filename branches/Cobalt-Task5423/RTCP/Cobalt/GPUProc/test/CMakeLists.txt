@@ -25,7 +25,6 @@ lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)
 lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
 lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2Sap DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp cmpfloat)
-lofar_add_test(tCorrelate_3sec_1st_5sb_2Sap DEPENDS rtcp cmpfloat)
 lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp cmpfloat)
 lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
 #lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab DEPENDS rtcp cmpfloat)  # Needs to be moved to a subsystem
