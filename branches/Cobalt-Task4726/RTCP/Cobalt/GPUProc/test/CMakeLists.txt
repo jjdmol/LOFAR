@@ -11,34 +11,6 @@ lofar_add_test(tSSH tSSH.cc)
 
 lofar_add_test(tProductionParsets DEPENDS rtcp)
 
-if(0)
-# tests that use testParset.sh
-lofar_add_test(tstartBGL DEPENDS rtcp)
-lofar_add_test(tMACfeedback DEPENDS rtcp)
-lofar_add_test(tProductionParsets DEPENDS rtcp)
-
-lofar_add_test(tBeamform_1sec_1st_5sb_noflagging DEPENDS rtcp)  
-lofar_add_test(tCorrelate_1sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
-lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2Sap DEPENDS rtcp cmpfloat)
-lofar_add_test(tCorrelate_3sec_1st_5sb DEPENDS rtcp cmpfloat)
-lofar_add_test(tCorrelate_3sec_2st_5sb DEPENDS rtcp cmpfloat)
-lofar_add_test(tBeamform_incoherent_2sec_1st_5sb_noflagging DEPENDS rtcp cmpfloat)
-#lofar_add_test(tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab DEPENDS rtcp cmpfloat)  # Needs to be moved to a subsystem
-#lofar_add_test(tGPUPerformance DEPENDS rtcp) # performance measurement and comparison are broken
-set_tests_properties(
-  tCorrelate_1sec_1st_5sb_noflagging
-  tCorrelate_3sec_1st_5sb
-  tCorrelate_3sec_2st_5sb
-  tBeamform_1sec_1st_5sb_noflagging
-  tBeamform_1sec_1st_5sb_noflagging_2Sap
-  tBeamform_incoherent_2sec_1st_5sb_noflagging
-  #tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab # Needs to be moved to a subsystem
-  tstartBGL
-  tMACfeedback
-  PROPERTIES RUN_SERIAL ON
-)
-endif(0)
-
 if(MPI_FOUND)
   lofar_add_test(t_cpu_utils t_cpu_utils.cc)
   set_tests_properties(
