@@ -6,7 +6,6 @@ include(LofarCTest)
 
 set(_tests
   tMACfeedback
-  tProductionParsets
   tstartBGL
 )
 

@@ -9,6 +9,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 lofar_add_test(tBandPass tBandPass.cc)
 lofar_add_test(tSSH tSSH.cc)
 
+lofar_add_test(tProductionParsets DEPENDS rtcp)
+
 if(0)
 # tests that use testParset.sh
 lofar_add_test(tstartBGL DEPENDS rtcp)
