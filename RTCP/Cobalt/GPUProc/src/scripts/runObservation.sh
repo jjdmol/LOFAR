@@ -35,7 +35,7 @@ function setkey {
   VAL=$2
 
   # In case already there, comment all out to avoid stale warnings. Then append.
-  KEYESC=`echo "$KEY" | sed -e "s/\./\\\\\./g"`  # escape '.' in keys with enough '\'
+  KEYESC=`echo "$KEY" | sed -r -e "s/([\.[])/\\\\\\\\\1/g"`  # escape '.' '[' chars in keys with enough '\'
   sed -i --follow-symlinks -r -e "s/^([[:blank:]]*$KEYESC[[:blank:]]*=)/#\1/g" "$PARSET"
   echo "$KEY = $VAL" >> "$PARSET"
 }
