@@ -23,8 +23,7 @@
 #include <iomanip>
 
 #include <Common/LofarLogger.h>
-
-#include "fpequals.h"
+#include <CoInterface/fpequals.h>
 
 using namespace LOFAR::Cobalt;
 

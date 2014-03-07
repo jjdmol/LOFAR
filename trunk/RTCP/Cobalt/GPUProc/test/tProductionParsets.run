@@ -10,16 +10,8 @@
 # Note: production parsets are stored by OnlineControl as
 #       /opt/lofar/var/run/CorrProc_$OBSID.param
 
-. $srcdir/testFuncs.sh
-
-# Check for GPU
-haveGPU || exit 3
-
-# Create and use LOFARROOT environment
-mklofarroot tProductionParsets_tmp.lofarroot
-
 # The directory containing the parsets to test
-PARSETDIR=$testdir/tProductionParsets.in_parsets
+PARSETDIR=tProductionParsets.in_parsets
 
 # Copy extra parsets to test
 cp $srcdir/../etc/default.parset $PARSETDIR
