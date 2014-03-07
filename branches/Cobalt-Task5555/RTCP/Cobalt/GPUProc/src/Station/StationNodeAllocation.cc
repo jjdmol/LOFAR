@@ -8,6 +8,7 @@
 #include <sstream>
 
 #include <Common/LofarLogger.h>
+#include <Stream/NullStream.h>
 #include <CoInterface/Stream.h>
 
 #include <InputProc/RSPTimeStamp.h>
@@ -114,7 +115,13 @@ std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 
       inputStreams[board] = new PacketStream(factory, from, to, board);
     } else {
-      inputStreams[board] = createStream(desc, true);
+      try {
+        inputStreams[board] = createStream(desc, true);
+      } catch(Exception &ex) {
+        LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+
+        inputStreams[board] = new NullStream;
+      }
     }
   }
 
