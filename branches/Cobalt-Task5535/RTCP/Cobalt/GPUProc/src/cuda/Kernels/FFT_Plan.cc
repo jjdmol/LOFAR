@@ -23,29 +23,69 @@
 #include "FFT_Plan.h"
 #include <GPUProc/gpu_wrapper.h>
 
+#include <map>
+#include <utility>      // std::pair, std::make_pair
+#include <Common/Thread/Mutex.h>
+
 namespace LOFAR
 {
   namespace Cobalt
   {
+
+    Mutex planCacheMutex;
+    std::map<pair<unsigned, unsigned>, pair<unsigned, cufftHandle> > planCache;
+
     FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
       :
-      context(context)
+      context(context),
+      itsfftSize(fftSize),
+      itsnrFFTs(nrFFTs)
     {
       gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
 
-      error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
+      // Use the fftplan parameters to create a key to find a possible 
+      // cached fftplan (memory issues if all classes own their own)
+      
+      ScopedLock sl(planCacheMutex);
+      if (planCache.find(make_pair(itsfftSize, itsnrFFTs)) != planCache.end())  // Test if it exists
+      {
+        // get from cache and assign
+        plan = planCache[make_pair(itsfftSize, itsnrFFTs)].second;
+        // Record that we have an aditional entry with these settings
+        planCache[make_pair(itsfftSize, itsnrFFTs)].first++;
+      }
+      else
+      {
+        // Create the itsfftSize
+        error = cufftPlan1d(&plan, itsfftSize, CUFFT_C2C, itsnrFFTs);
 
-      if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
+        if (error != CUFFT_SUCCESS)
+          THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
+        // add to cache
+        planCache[make_pair(itsfftSize, itsnrFFTs)] = make_pair(1, plan);
+       }
     }
 
     FFT_Plan::~FFT_Plan()
     {
       gpu::ScopedCurrentContext scc(context);
+      ScopedLock sl(planCacheMutex);
 
-      cufftDestroy(plan);
+      // test if the amount fftplans with these settings is 1
+      if (planCache[make_pair(itsfftSize, itsnrFFTs)].first == 1)
+      { 
+        // last one. desctruct the plan
+        cufftDestroy(planCache[make_pair(itsfftSize, itsnrFFTs)].second);
+
+        // remove the entry from the map, no need to decrease counter first
+        planCache.erase(make_pair(itsfftSize, itsnrFFTs));
+
+      }
+      else
+        planCache[make_pair(itsfftSize, itsnrFFTs)].first--;
+
     }
 
     void FFT_Plan::setStream(const gpu::Stream &stream) const

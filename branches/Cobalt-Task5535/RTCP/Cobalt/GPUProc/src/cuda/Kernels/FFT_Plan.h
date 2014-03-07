@@ -44,6 +44,9 @@ namespace LOFAR
 
     private:
       gpu::Context context;
+
+      unsigned itsfftSize;
+      unsigned itsnrFFTs;
     };
   }
 }

@@ -225,6 +225,7 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tDelayAndBandPass.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tFFT.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tFFT_leakage.cc" />
+    <ClCompile Include="..\..\GPUProc\test\cuda\tFFT_Plan.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tFIR_Filter.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tGPUWrapper.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tIntToFloat.cc" />
