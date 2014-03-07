@@ -4,6 +4,7 @@ include(LofarCTest)
 
 set(_tests
   tCoherentStokes_3sec_2st_3sb
+  tFlysEye_3sec_2st_3sb
   tIncoherentStokes_3sec_2st_3sb
 )
 
