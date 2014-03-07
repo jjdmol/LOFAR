@@ -10,11 +10,13 @@
 # Note: production parsets are stored by OnlineControl as
 #       /opt/lofar/var/run/CorrProc_$OBSID.param
 
+. $srcdir/testFuncs.sh
+
 # The directory containing the parsets to test
 PARSETDIR=tProductionParsets.in_parsets
 
 # Copy extra parsets to test
-cp $srcdir/../etc/default.parset $PARSETDIR
+cp $srcdir/default.parset $PARSETDIR
 
 for PARSET in $PARSETDIR/*
 do
