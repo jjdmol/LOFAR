@@ -1,7 +1,0 @@
-// \ingroup MAC
-// \defgroup MACIO MAC IO-related functions.
-//
-// The MACIO package contains the minimal set of functionality for
-// not-MAC programs to communicate with MAC-programs. Through the 
-// 'EventPort' a program can send and receive MAC formatted messages.
-
