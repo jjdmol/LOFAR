@@ -15,9 +15,6 @@
 
 . $srcdir/testFuncs.sh
 
-# Create a LOFARROOT environment
-mklofarroot tstartBGL_tmp.lofarroot
-
 echo "***************************"
 echo "Test 0: check environment"
 echo "***************************"
@@ -62,10 +59,10 @@ echo "Test 5: normal run"
 echo "        (expects success)"
 echo "***************************"
 # Add the connection information for this test
-echo "Cobalt.Feedback.host=localhost" >> $testdir/tstartBGL.in_parset
-echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> $testdir/tstartBGL.in_parset
-echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> $testdir/tstartBGL.in_parset
-startBGL.sh 1 2 3 $testdir/tstartBGL.in_parset 1000 || error "startBGL.sh failed"
+echo "Cobalt.Feedback.host=localhost" >> tstartBGL.in_parset
+echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> tstartBGL.in_parset
+echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
+startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
 # PID file must be gone
 [ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
