@@ -84,7 +84,7 @@ namespace LOFAR {
         ScopedLock sl(MPIMutex);
 
         for (size_t stat = 0; stat < nrStations; ++stat) {
-          //requests.push_back(receiveData<T>(stat, &data[stat][0][0]));
+          requests.push_back(receiveData<T>(stat, &data[stat][0][0]));
           requests.push_back(receiveMetaData(stat, &metaData[stat][0]));
         }
       }

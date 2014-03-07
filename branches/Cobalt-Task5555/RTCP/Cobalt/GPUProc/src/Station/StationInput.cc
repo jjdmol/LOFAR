@@ -663,7 +663,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 
         const size_t offset = subbandOffsets[rank];
 
-        //requests.push_back(sender.sendData<SampleT>(&mpiData->mpi_samples[offset][0]));
+        requests.push_back(sender.sendData<SampleT>(&mpiData->mpi_samples[offset][0]));
         requests.push_back(sender.sendMetaData(&mpiData->mpi_metaData[offset]));
       }
     }
