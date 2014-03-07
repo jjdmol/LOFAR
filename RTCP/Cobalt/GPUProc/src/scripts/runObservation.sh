@@ -178,7 +178,7 @@ then
   then
     setkey Cobalt.Nodes                               []
 
-    setkey Cobalt.OutputProc.userName                 localhost
+    setkey Cobalt.OutputProc.userName                 "$USER"
     setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
     setkey Cobalt.FinalMetaDataGatherer.host          localhost
