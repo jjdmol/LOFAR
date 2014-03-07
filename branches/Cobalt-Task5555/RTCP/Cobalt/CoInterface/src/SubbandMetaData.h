@@ -54,7 +54,7 @@ namespace LOFAR
       void read(Stream *str);
       void write(Stream *str) const;
 
-      static const size_t MAXFLAGSIZE = 1024 + 4;
+      static const size_t MAXFLAGSIZE = 8192 + 4;
     };
 
 
