@@ -1,7 +1,5 @@
 # $Id$
 
-lofar_package(CobaltIntegrationTests 1.2 DEPENDS Cobalt)
-
 include(LofarCTest)
 
 set(_tests
