@@ -24,7 +24,7 @@
 #include <GPUProc/gpu_wrapper.h>
 
 #include <map>
-#include <utility>      // std::pair, std::make_pair
+#include <utility>      // std::pair
 #include <Common/Thread/Mutex.h>
 
 namespace LOFAR
@@ -33,13 +33,16 @@ namespace LOFAR
   {
 
     Mutex planCacheMutex;
-    std::map<pair<unsigned, unsigned>, pair<unsigned, cufftHandle> > planCache;
+    std::map<std::pair< CUstream, std::pair<unsigned, unsigned > >, pair<unsigned, cufftHandle> > planCache;
 
-    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
+    FFT_Plan::FFT_Plan(gpu::Context &context,  const gpu::Stream &stream, 
+                       unsigned fftSize, unsigned nrFFTs)
       :
       context(context),
       itsfftSize(fftSize),
-      itsnrFFTs(nrFFTs)
+      itsnrFFTs(nrFFTs),
+      itsStream(stream)
+
     {
       gpu::ScopedCurrentContext scc(context);
 
@@ -49,12 +52,15 @@ namespace LOFAR
       // cached fftplan (memory issues if all classes own their own)
       
       ScopedLock sl(planCacheMutex);
-      if (planCache.find(make_pair(itsfftSize, itsnrFFTs)) != planCache.end())  // Test if it exists
+
+      std::pair< CUstream, std::pair<unsigned, unsigned > >key = make_pair(
+        itsStream.get(), make_pair(itsfftSize, itsnrFFTs));
+      if (planCache.find(key) != planCache.end())  // Test if it exists
       {
         // get from cache and assign
-        plan = planCache[make_pair(itsfftSize, itsnrFFTs)].second;
+        plan = planCache[key].second;
         // Record that we have an aditional entry with these settings
-        planCache[make_pair(itsfftSize, itsnrFFTs)].first++;
+        planCache[key].first++;
       }
       else
       {
@@ -64,8 +70,10 @@ namespace LOFAR
         if (error != CUFFT_SUCCESS)
           THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
         // add to cache
-        planCache[make_pair(itsfftSize, itsnrFFTs)] = make_pair(1, plan);
+        planCache[key] = make_pair(1, plan);
        }
+
+      setStream();
     }
 
     FFT_Plan::~FFT_Plan()
@@ -74,27 +82,32 @@ namespace LOFAR
       ScopedLock sl(planCacheMutex);
 
       // test if the amount fftplans with these settings is 1
-      if (planCache[make_pair(itsfftSize, itsnrFFTs)].first == 1)
+
+      std::pair< CUstream, std::pair<unsigned, unsigned > >key = make_pair(
+        itsStream.get(), make_pair(itsfftSize, itsnrFFTs));
+
+
+      if (planCache[key].first == 1)
       { 
         // last one. desctruct the plan
-        cufftDestroy(planCache[make_pair(itsfftSize, itsnrFFTs)].second);
+        cufftDestroy(planCache[key].second);
 
         // remove the entry from the map, no need to decrease counter first
-        planCache.erase(make_pair(itsfftSize, itsnrFFTs));
+        planCache.erase(key);
 
       }
       else
-        planCache[make_pair(itsfftSize, itsnrFFTs)].first--;
+        planCache[key].first--;
 
     }
 
-    void FFT_Plan::setStream(const gpu::Stream &stream) const
+    void FFT_Plan::setStream() const
     {
       cufftResult error;
 
       gpu::ScopedCurrentContext scc(context);
 
-      error = cufftSetStream(plan, stream.get());
+      error = cufftSetStream(plan, itsStream.get());
 
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftSetStream: " << gpu::cufftErrorMessage(error));

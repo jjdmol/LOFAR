@@ -43,7 +43,8 @@ namespace LOFAR
       nrFFTs(nrFFTs),
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
-      plan(context, fftSize, nrFFTs),
+      plan(context, itsStream,
+           fftSize, nrFFTs),
       buffer(buffer),
       itsStream(stream)
     {
@@ -59,7 +60,7 @@ namespace LOFAR
       gpu::ScopedCurrentContext scc(context);
 
       // Tie our plan to the specified stream
-      plan.setStream(itsStream);
+      //plan.setStream(itsStream);
 
       // Enqueue the FFT execution
       itsStream.recordEvent(itsCounter.start);
