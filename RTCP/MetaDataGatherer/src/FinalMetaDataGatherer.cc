@@ -208,7 +208,9 @@ int main(int argc, char *argv[])
 
     int observationID = boost::lexical_cast<int>(argv[1]);
 
-    PortBroker::createInstance(storageBrokerPort(observationID));
+    // Ugly hack to get a different port than outputProc; needed when both
+    // processes run on localhost.
+    PortBroker::createInstance(storageBrokerPort(observationID + 1));
 
     // retrieve the parset
     string resource = getStorageControlDescription(observationID, -1);
