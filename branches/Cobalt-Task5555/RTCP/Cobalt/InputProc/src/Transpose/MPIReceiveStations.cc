@@ -56,7 +56,7 @@ namespace LOFAR {
       tag.bits.station = station;
       tag.bits.beamlet = beamlets[0];
 
-      return Guarded_MPI_Irecv(buffer, blockSize * sizeof(T), stationSourceRanks[station], tag.value);
+      return Guarded_MPI_Irecv(buffer, beamlets.size() * blockSize * sizeof(T), stationSourceRanks[station], tag.value);
     }
 
 

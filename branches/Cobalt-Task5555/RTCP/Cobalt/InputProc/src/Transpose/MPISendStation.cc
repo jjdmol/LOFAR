@@ -78,7 +78,7 @@ namespace LOFAR {
       tag.bits.station  = stationIdx;
       tag.bits.beamlet  = beamlets[0];
 
-      return Guarded_MPI_Issend(data, nrSamples * sizeof(T), targetRank, tag.value);
+      return Guarded_MPI_Issend(data, beamlets.size() * nrSamples * sizeof(T), targetRank, tag.value);
     }
 
 
