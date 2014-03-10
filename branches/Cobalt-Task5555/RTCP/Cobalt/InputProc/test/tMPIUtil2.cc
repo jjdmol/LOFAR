@@ -47,7 +47,7 @@ SUITE(waitAll)
     requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
     requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
 
-    RequestSet rs(requests, "waitAll::One");
+    RequestSet rs(requests, true, "waitAll::One");
     rs.waitAll();
   }
 
@@ -65,7 +65,7 @@ SUITE(waitAll)
           requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
         }
 
-        RequestSet rs(requests, "waitAll::MultiThreadOne - sender");
+        RequestSet rs(requests, true, "waitAll::MultiThreadOne - sender");
         rs.waitAll();
       }
 
@@ -79,7 +79,7 @@ SUITE(waitAll)
           requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
         }
 
-        RequestSet rs(requests, "waitAll::MultiThreadOne - receiver");
+        RequestSet rs(requests, true, "waitAll::MultiThreadOne - receiver");
         rs.waitAll();
       }
     }
@@ -96,7 +96,7 @@ SUITE(waitAny)
     requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
     requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
 
-    RequestSet rs(requests, "waitAny::One");
+    RequestSet rs(requests, false, "waitAny::One");
 
     size_t sum = 0;
 
@@ -121,7 +121,7 @@ SUITE(waitAny)
     requests.push_back(Guarded_MPI_Irecv(&inbuf1, sizeof inbuf1, rank, 1));
     requests.push_back(Guarded_MPI_Isend(&outbuf1, sizeof outbuf1, rank, 1));
 
-    RequestSet rs(requests, "waitAny::TwoPartial - set 1");
+    RequestSet rs(requests, false, "waitAny::TwoPartial - set 1");
 
     size_t sum = 0;
 
@@ -136,7 +136,7 @@ SUITE(waitAny)
 
     requests2.push_back(Guarded_MPI_Isend(&outbuf2, sizeof outbuf2, rank, 2));
 
-    RequestSet rs2(requests2, "waitAny::TwoPartial - set 2");
+    RequestSet rs2(requests2, false, "waitAny::TwoPartial - set 2");
     CHECK_EQUAL(0UL, rs2.waitAny());
 
     // recv of 2 should be finished now as well
