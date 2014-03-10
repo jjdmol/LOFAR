@@ -70,10 +70,10 @@ unsigned baseline(unsigned major, unsigned minor)
 TEST(DataValidity)
 {
   /*
-   * Test full correlator output for 62 stations.
+   * Test full correlator output for 58 stations.
    */
 
-  size_t NR_STATIONS = 62;
+  size_t NR_STATIONS = 58;
 
   Parset ps;
   ps.add("Observation.VirtualInstrument.stationList",   str(format("[%d*CS001]") % NR_STATIONS));
