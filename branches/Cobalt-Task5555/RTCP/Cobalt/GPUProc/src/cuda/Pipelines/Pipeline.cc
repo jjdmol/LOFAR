@@ -104,7 +104,7 @@ namespace LOFAR
 #ifdef HAVE_MPI
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 
-      for (size_t i = 0; i < 5; i++) {
+      for (size_t i = 0; i < 4; i++) {
         SmartPtr<struct MPIData> mpiData = new MPIData;
 
         mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);

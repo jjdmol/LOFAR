@@ -167,7 +167,7 @@ void StationMetaData<SampleT>::computeMetaData()
    */
 
   // Each element represents 1 block of buffer.
-  for (size_t i = 0; i < 10; ++i)
+  for (size_t i = 0; i < 5; ++i)
     metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples));
 
   /*
@@ -345,7 +345,6 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
    */
 
 
-  const BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
   const TimeStamp maxDelay(mode.secondsToSamples(0.5), mode.clockHz());
 
   const TimeStamp deadline = current.to + maxDelay;
@@ -369,11 +368,15 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
         if (!rspData->valid[p])
           continue;
 
-        if (current.write(rspData->packets[p], beamletIndices)
+        struct RSP &packet = rspData->packets[p];
+
+        ASSERT(packet.header.nrBeamlets <= mode.nrBeamletsPerBoard());
+
+        if (current.write(packet, beamletIndices)
          && next) {
           // We have data (potentially) spilling into `next'.
 
-          next->write(rspData->packets[p], beamletIndices);
+          next->write(packet, beamletIndices);
         }
       }
 
@@ -609,9 +612,12 @@ MPISender::MPISender( const std::string &logPrefix, size_t stationIdx, const Sub
 {
   // Determine the offset of the set of subbands for each rank within
   // the members in MPIData<SampleT>.
-  for (size_t rank = 0; rank < targetRanks.size(); ++rank)
+  for (size_t rank = 0; rank < targetRanks.size(); ++rank) {
     for(size_t i = 0; i < rank; ++i)
       subbandOffsets[rank] += subbandDistribution.at(i).size();
+
+    LOG_INFO_STR(logPrefix << "Target rank " << rank << " receives beamlet indices [" << subbandOffsets[rank] << ", " << (subbandOffsets[rank] + subbandDistribution.at(rank).size()) << ")");
+  }
 }
 
 template <typename SampleT>
@@ -669,8 +675,6 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
         requests.push_back(sender.sendMetaData(&mpiData->mpi_metaData[offset]));
       }
     }
-
-    LOG_INFO_STR(logPrefix << str(format("[block %d] MPI send requests posted") % block));
 
     RequestSet rs(requests, true, str(format("station %d block %d") % stationIdx % block));
     rs.waitAll();

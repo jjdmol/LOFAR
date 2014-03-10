@@ -95,7 +95,7 @@ namespace LOFAR {
         metaData(nrSubbands),
         read_offsets(nrSubbands, 0)
       {
-        memset(mpi_samples.origin(), 0, mpi_samples.num_elements() * sizeof *mpi_samples.origin());
+        //memset(mpi_samples.origin(), 0, mpi_samples.num_elements() * sizeof *mpi_samples.origin());
       }
 
       /*
