@@ -192,17 +192,26 @@ SUITE(MPIData) {
     // Give subbband 3 an offset of -2, causing it to be written
     // 2 samples further.
     ASSERT(3 < nrSubbands);
-    data.read_offsets[3] = -2;
+    const ssize_t timesPerPacket = 16;
+    for (ssize_t offset = - timesPerPacket - 1; offset <= timesPerPacket + 1; ++offset ) {
+      data.read_offsets[3] = offset;
 
-    // Write data, such that only subband 3 spills
-    const size_t timesPerPacket = 16;
-    factory.makePacket(packet, data.from + nrSamples - timesPerPacket - 2, 0);
-    bool spill = data.write(packet, &beamletIndices[0]);
+      // Write data, such that only subband 3 spills
+      if (offset <= 0) {
+        factory.makePacket(packet, data.from + nrSamples - timesPerPacket + offset, 0);
 
-    CHECK_EQUAL(true, spill);
+        bool spill = data.write(packet, &beamletIndices[0]);
+        CHECK_EQUAL(true, spill);
+      } else {
+        factory.makePacket(packet, data.from - offset, 0);
 
-    // Validate result
-    checkAndClearPacketWritten(packet, beamletIndices);
+        bool spill = data.write(packet, &beamletIndices[0]);
+        CHECK_EQUAL(false, spill);
+      }
+
+      // Validate result
+      checkAndClearPacketWritten(packet, beamletIndices);
+    }
   }
 }
 
