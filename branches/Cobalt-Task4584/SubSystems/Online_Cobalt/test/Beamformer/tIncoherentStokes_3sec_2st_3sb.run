@@ -5,5 +5,4 @@ TESTNAME=`basename "${0%%.run}"`
 echo "Observation.DataProducts.Output_IncoherentStokes.locations="\
      "[localhost:${PWD}/${TESTNAME}.output]" >> ${TESTNAME}.parset
 
-$srcdir/../runtest.sh "$TESTNAME" || exit $?
-
+$srcdir/../runtest.sh "$TESTNAME"
