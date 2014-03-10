@@ -1,5 +1,5 @@
 Cobalt.BeamFormer.nrDelayCompensationChannels = 64
-Cobalt.BeamFormer.nrHighResolutionChannels = 4096
+Cobalt.BeamFormer.nrHighResolutionChannels = 64
 ApplCtrl.application=CorrAppl
 ApplCtrl.processes=[CorrProc]
 ApplCtrl.resultfile=/opt/lofar/var/run/ACC_CCU001:OnlineControl[0]{192676}_CorrAppl_result.param

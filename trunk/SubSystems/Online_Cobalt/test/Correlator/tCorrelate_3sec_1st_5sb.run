@@ -1,5 +1,4 @@
 #!/bin/bash
 TESTNAME=`basename "${0%%.run}"`
 
-$srcdir/../runtest.sh "$TESTNAME" || exit $?
-
+$srcdir/../runtest.sh "$TESTNAME"
