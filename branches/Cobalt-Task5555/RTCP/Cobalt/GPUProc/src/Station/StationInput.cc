@@ -294,6 +294,8 @@ bool StationInput::receivedHere() const
 
 void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 {
+  Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
   /*
    * In real-time mode, we can't get ahead of the `current'
    * block of the reader due to clock synchronisation.
@@ -310,7 +312,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
       data->board = board;
 
       // Periodically log progress
-      if (i % 512 == 0) // Each block is ~20ms, so log every ~10s worth of data.
+      if (i % 256 == 0) // Each block is ~40ms, so log every ~10s worth of data.
         reader.logStatistics();
 
       rspDataPool.filled.append(data);
@@ -508,12 +510,12 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
   /*
    * Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
    *
-   * 256 packets will thus represent ~20ms worth of data.
+   * 512 packets will thus represent ~40ms worth of data.
    *
    * In non-rt mode, we just process one packet at a time to keep the code simple.
    */
-  for (size_t i = 0; i < 128; ++i)
-    rspDataPool.free.append(new RSPData(ps.realTime() ? 256 : 1));
+  for (size_t i = 0; i < 64; ++i)
+    rspDataPool.free.append(new RSPData(ps.realTime() ? 512 : 1));
 
   #pragma omp parallel sections num_threads(2)
   {
