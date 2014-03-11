@@ -29,6 +29,7 @@
 #include <Common/Thread/Mutex.h>
 
 #include <list>
+#include <ctime>
 
 
 namespace LOFAR {
@@ -98,6 +99,15 @@ template <typename T> inline T Queue<T>::remove()
 
 template <typename T> inline T Queue<T>::remove(const timespec &deadline, T null)
 {
+#if _POSIX_C_SOURCE >= 199309L
+  // Return null if deadline passed
+  struct timespec now;
+  clock_gettime(CLOCK_REALTIME_COARSE, &now);
+  if (now.tv_sec > deadline.tv_sec
+   || (now.tv_sec == deadline.tv_sec && now.tv_nsec > deadline.tv_nsec))
+    return null;
+#endif
+
   ScopedLock scopedLock(itsMutex);
 
   while (itsQueue.empty())
