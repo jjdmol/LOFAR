@@ -89,7 +89,7 @@ def clear_old_data(lofarroot,pipeline,workdir,host0=None,host1=None,host2=None):
 #         [replace]
 #         ldb002 = juropa02
 
-def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,host2=None,gsmserver=None):
+def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,host2=None,replaceprst=None,gsmserver=None):
 	print 'preparing testdata'
 	if host0 == 'localhost':
 		distutils.dir_util.mkpath(workdir + '/input_data')
@@ -111,12 +111,14 @@ def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,h
 
 	print 'edit parset file'
 	replacelist = None
-	filepath = os.path.dirname(os.path.realpath(__file__)) + '/replace_parset_values.cfg'
-	if os.path.isfile(filepath):
+        replaceparset = replaceprst
+        if replaceparset == None:
+		replaceparset = os.path.dirname(os.path.realpath(__file__)) + '/replace_parset_values.cfg'
+	if os.path.isfile(replaceparset):
 		config = ConfigParser.RawConfigParser()
-		config.read(filepath)
+		config.read(replaceparset)
 		replacelist = config.items('replace')
-		print 'values to repace:\n',replacelist
+		print 'values to replace:\n',replacelist
 
 	for line in fileinput.input([workdir + '/' + pipeline + '.parset'], inplace=True):
 		line = line.replace('host1_placeholder',host1)
@@ -151,18 +153,25 @@ def prepare_testdata(lofarroot,pipeline,workdir,testdata,host0=None,host1=None,h
 #         method = local 
 #         max_per_node = 1
 
-def prepare_pipeline_config(lofarroot,workdir,baseworkdir,username):
-	shutil.copy(lofarroot + '/share/pipeline/pipeline.cfg',workdir)
+def prepare_pipeline_config(lofarroot,workdir,baseworkdir,username,pipelineconfig=None,replaceconfig=None):
+	pipelinecfg = pipelineconfig
+	replacecfg = replaceconfig
+	if pipelinecfg == None:
+		pipelinecfg = lofarroot + '/share/pipeline/pipeline.cfg'
+
+	shutil.copy(pipelinecfg,workdir)
 	print 'edit pipeline.cfg file'
 	replacelist = None
 	addlist = None
-	filepath = os.path.dirname(os.path.realpath(__file__)) + '/replace_config_values.cfg'
-	if os.path.isfile(filepath):
+	if replacecfg == None:
+		replacecfg = os.path.dirname(os.path.realpath(__file__)) + '/replace_config_values.cfg'
+	if os.path.isfile(replacecfg):
 		config = ConfigParser.RawConfigParser()
-		config.read(filepath)
+		config.read(replacecfg)
 		replacelist = config.items('replace')
-		addlist = config.items('add')
-		print 'values to repace:\n',replacelist
+			if config.items('add') != None:
+			addlist = config.items('add')
+		print 'values to replace:\n',replacelist
 
 	for line in fileinput.input([workdir + '/pipeline.cfg'], inplace=True):
 		if replacelist:
@@ -171,19 +180,25 @@ def prepare_pipeline_config(lofarroot,workdir,baseworkdir,username):
 		line = line.replace('/data/scratch/' + username, baseworkdir)
 		sys.stdout.write(line)
 
-	with open(workdir + '/pipeline.cfg', 'a') as myfile:
-		for key,val in addlist:
-			if key == 'section':
-				myfile.write( '\n['+ val + ']')
-			else:
-				myfile.write('\n'+key + ' = ' + val)
+	if addlist != None:
+		with open(workdir + '/pipeline.cfg', 'a') as myfile:
+			for key,val in addlist:
+				if key == 'section':
+					myfile.write( '\n['+ val + ']')
+				else:
+					myfile.write('\n'+key + ' = ' + val)
 
 
 # Run the pipeline with the prepared data and configs
 
-def run_pipeline(lofarroot,pipeline,workdir):
+def run_pipeline(lofarroot,pipeline,workdir,pipelineconfig=None):
+	pipelinecfg = None
+	if pipelineconfig != None:
+		pipelinecfg = pipelineconfig
+	else:
+		pipelinecfg = workdir + '/pipeline.cfg'
 	print 'running the pipeline'
-        command = ['python',lofarroot + '/bin/' + pipeline + '.py',workdir + '/' + pipeline + '.parset','-c',workdir + '/pipeline.cfg','-d']
+        command = ['python',lofarroot + '/bin/' + pipeline + '.py',workdir + '/' + pipeline + '.parset','-c',pipelinecfg,'-d']
         print 'command: ',command
 	subprocess.call(command)
 
@@ -249,7 +264,7 @@ if __name__ == '__main__':
                        "Run the regressions test for pipeline_type. Perform the work on host1 and host2\n" + \
                        "\n" + \
                        "pipeline_type select any one of:\n" + \
-                       "  msss_calibratior_pipeline\n" + \
+                       "  msss_calibrator_pipeline\n" + \
                        "  msss_target_pipeline\n" + \
                        "  msss_imager_pipeline\n" + \
                        "\n" + \
@@ -261,6 +276,8 @@ if __name__ == '__main__':
 	username = os.environ.get('USER')
 	homedir = os.environ.get('HOME')
 	lofarroot = os.environ.get('LOFARROOT')
+	if lofarroot == None:
+		print 'Error: no LOFARROOT environment variable found. Point LOFARROOT to your installation.'
 	print username, ' ',lofarroot,' ',homedir
 	parser = argparse.ArgumentParser(description=descriptiontext, formatter_class=RawTextHelpFormatter)
 	parser.add_argument('pipeline',help='give the name of the pipeline to test')
@@ -270,8 +287,10 @@ if __name__ == '__main__':
 	parser.add_argument('--computehost1',help='name of the host to run the job on',default='localhost')
 	parser.add_argument('--computehost2',help='optional second host for distributed job tests',default='localhost')
 	parser.add_argument('--testdata',help='base directory with the testdata',default='/data/lofar/testdata/regression_test_runner')
-	parser.add_argument('--pipelinecfg',help='name of the pipeline config file',default='pipeline.cfg')
+	parser.add_argument('--pipelinecfg',help='name of the pipeline config file',default=None)
 	parser.add_argument('--gsmserver',help='optional name of the server of the gsm database.')
+	parser.add_argument('--configurepipelinecfg',help='optional path to a config file to alter values in the default pipeline.cfg',default=None)
+	parser.add_argument('--configureparset',help='optional path to a config file to alter values in the default parset',default=None)
 
 	args = parser.parse_args()
 
@@ -281,10 +300,10 @@ if __name__ == '__main__':
 	print 'directory with testdata: ',args.testdata
 
 	# if running in Jenkins environment $Workspace is defined and pointing to LOFARROOT
-	if os.environ.get('WORKSPACE'):
-		print 'Running in Jenkins'
-		lofarexe = os.environ.get('WORKSPACE') + '/installed/bin'
-		lofarroot = os.environ.get('WORKSPACE') + '/installed'
+	#if os.environ.get('WORKSPACE'):
+	#	print 'Running in Jenkins'
+	#	lofarexe = os.environ.get('WORKSPACE') + '/installed/bin'
+	#	lofarroot = os.environ.get('WORKSPACE') + '/installed'
 
 	# Not all pipelines (specifically the imaging pipeline) have all data for two nodes
 	# Therefore we test here if the there is a host2 directory in the data dir. 
@@ -300,7 +319,7 @@ if __name__ == '__main__':
 
 	test_environment(lofarroot,args.pipeline,testdata)
 	clear_old_data(lofarroot,args.pipeline,workdir,'localhost',args.computehost1,args.computehost2)
-	prepare_testdata(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2,args.gsmserver)
-	prepare_pipeline_config(lofarroot,workdir,args.workdir,username)
+	prepare_testdata(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2,args.configureparset,args.gsmserver)
+	prepare_pipeline_config(lofarroot,workdir,args.workdir,username,args.pipelinecfg,args.configurepipelinecfg)
 	run_pipeline(lofarroot,args.pipeline,workdir)
 	validate_output(lofarroot,args.pipeline,workdir,testdata,'localhost',args.computehost1,args.computehost2)
