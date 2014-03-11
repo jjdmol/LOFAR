@@ -47,6 +47,7 @@ lofar_add_bin_program(printDelays Delays/printDelays.cc)
 # install the logprop file
 install(FILES
   Delays/printDelays.log_prop
+  Station/generateRSP.log_prop
   DESTINATION etc)
 
 configure_file(
