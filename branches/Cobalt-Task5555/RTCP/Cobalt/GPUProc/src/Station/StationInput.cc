@@ -63,7 +63,7 @@ namespace LOFAR {
 template<typename SampleT>
 bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices) {
   /* An optimisation as we'll never encounter anything else */
-  ASSERT(packet.header.nrBlocks == 16);
+  ASSERTSTR(packet.header.nrBlocks == 16, "Packet has " << (int)packet.header.nrBlocks << " samples/beamlet, expected 16.");
   const size_t nrSamples = 16;
 
   const TimeStamp packetBegin = packet.timeStamp();
@@ -418,7 +418,7 @@ void StationInput::readRSPNonRealTime()
 
       try {
         // Retry until we have a valid packet
-        while (readers[board]->readPacket(last_packets[board]))
+        while (!readers[board]->readPacket(last_packets[board]))
           ;
       } catch (Stream::EndOfStreamException &ex) {
         // Ran out of data
