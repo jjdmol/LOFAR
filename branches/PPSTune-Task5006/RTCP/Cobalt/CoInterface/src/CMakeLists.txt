@@ -20,4 +20,4 @@ lofar_add_library(cointerface
   TABTranspose.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
-
+lofar_add_sbin_program(cmpfloat cmpfloat.cc)

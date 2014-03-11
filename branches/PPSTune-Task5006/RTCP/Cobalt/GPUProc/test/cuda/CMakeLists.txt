@@ -58,14 +58,13 @@ endif(UNITTEST++_FOUND)
 
 # Tests built by nvcc
 
-# To compile .cu files, invoke CUDA's nvcc, but respect the host C/C++ compiler (variants) selection.
-set(COMPILER_BINDIR_OPT --compiler-bindir ${CMAKE_CXX_COMPILER})
+# CUDA driver API tests need a .ptx file compiled first and passed to the host code compilation.
+# This way we don't need a generated .sh file, nor compile to .ptx from our test code.
+cuda_compile_ptx(tcuda_driver_api_ptx tcuda-driver-api.cu)
+cuda_add_executable(tcuda-driver-api  tcuda-driver-api.cu  OPTIONS "-DPTX_FILE_CSTR=\"${tcuda_driver_api_ptx}\"")
+target_link_libraries(tcuda-driver-api cuda)
+add_test(tcuda-driver-api  "${CMAKE_CURRENT_BINARY_DIR}/tcuda-driver-api")
 
-#cuda_add_executable(tcu-test   cu-test.cu   OPTIONS ${COMPILER_BINDIR_OPT})
-#cuda_add_executable(tcuda-test cuda-test.cu OPTIONS ${COMPILER_BINDIR_OPT})
-
-# The t_cuda_complex test has been disabled, because we no longer need complex.cuh (deleted),
-# but do leave the cmake code to compile .cu files, which we probably will need again.
-#cuda_add_executable(t_cuda_complex t_cuda_complex.cu OPTIONS ${COMPILER_BINDIR_OPT})
-#add_test(t_cuda_complex ${CMAKE_CURRENT_SOURCE_DIR}/t_cuda_complex.sh)
+cuda_add_executable(tcuda-runtime-api tcuda-runtime-api.cu)
+add_test(tcuda-runtime-api "${CMAKE_CURRENT_BINARY_DIR}/tcuda-runtime-api")
 

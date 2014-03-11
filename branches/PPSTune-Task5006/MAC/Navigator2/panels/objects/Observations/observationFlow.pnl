@@ -141,8 +141,11 @@ void updateObservations(dyn_string dps,dyn_string values) {
   int highestChildState=0;
   
   for (int i= 1; i<= dynlen(dps); i++) {
-    if (strpos(dps[i],\"status.state\") >= 0 && values[i] > highestState) highestState=values[i];
-    if (strpos(dps[i],\"status.childState\") >= 0 && values[i] > highestChildState) highestChildState=values[i];
+    if (strpos(dps[i],\"status.state\") >= 0 && values[i] > highestState) {
+      highestState=values[i];
+    } else if (strpos(dps[i],\"status.childState\") >= 0 && values[i] > highestChildState) {
+      highestChildState=values[i];
+    }
   }
   string ttip = \"Observations: <\\n>\";
   for (int i=1; i<= dynlen(observationsList);i++) ttip += observationsList[i]+\"</n>\";

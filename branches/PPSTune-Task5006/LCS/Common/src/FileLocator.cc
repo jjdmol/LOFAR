@@ -314,7 +314,7 @@ string FileLocator::resolveInput(const string&	input)
 			if (!valPtr) {
 				LOG_WARN_STR("Environment variable " << \
 						input.substr(startPos, endPos-startPos) <<  \
-						" can not be solved, excluding it from search path!");
+						" cannot be resolved, excluding it from search path!");
 			}
 			else {
 				result.append(valPtr);

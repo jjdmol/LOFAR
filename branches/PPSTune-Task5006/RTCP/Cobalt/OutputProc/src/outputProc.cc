@@ -99,10 +99,12 @@ int main(int argc, char *argv[])
   string resource = getStorageControlDescription(observationID, myRank);
   PortBroker::ServerStream controlStream(resource);
 
-  process(controlStream, myRank);
-
-  LOG_INFO("Program end");
-
-  return 0;
+  if (process(controlStream, myRank)) {
+    LOG_INFO("Program terminated succesfully");
+    return 0;
+  } else {
+    LOG_ERROR("Program terminated with errors");
+    return 1;
+  }
 }
 

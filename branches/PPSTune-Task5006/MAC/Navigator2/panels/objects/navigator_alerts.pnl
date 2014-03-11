@@ -241,6 +241,7 @@ void redraw_table() {
   LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"DPNAME\"]));
   
   //append  all CAME alarms
+  if (mappinglen(g_alarms) < 1) return;
   for (int j=1; j<=dynlen(g_alarms[\"DPNAME\"])  ; j++) {
     if (g_alarms[\"STATUS\"][j] == CAME ) {
       string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
@@ -454,7 +455,7 @@ LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
 2 16
 "PRIMITIVE_TEXT1"
 ""
-1 1120 -599.6707818930048 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 1280 -1022.784636488342 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 E E E

@@ -2,6 +2,8 @@
 #
 # CobaltControl.sh is the interface for `swlevel' to see
 # which observations are running, and to kill them if requested.
+#
+# $Id$
 
 COMMAND=$1
 
