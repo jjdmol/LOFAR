@@ -57,8 +57,8 @@ namespace LOFAR {
        * is (re)used.
        */
       ssize_t block;
-      TimeStamp from;
-      TimeStamp to;
+      uint64_t from;
+      uint64_t to;
       size_t nrSamples;
 
       /*
@@ -152,21 +152,20 @@ namespace LOFAR {
       void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
 
     private:
+      // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
+      // So 512 packets is ~40 ms of data.
+      static const size_t RT_PACKET_BATCH_SIZE = 512;
+
       // Data received from an RSP board
       struct RSPData {
-        int board;
-
         std::vector<struct RSP> packets;
-        std::vector<bool>       valid; 
+        size_t board; // annotation used in non-rt mode
 
         RSPData(size_t numPackets):
-          packets(numPackets),
-          valid(numPackets, false)
+          packets(numPackets)
         {
         }
       };
-
-      Pool< RSPData > rspDataPool;
 
       const Parset &ps;
 
@@ -178,6 +177,7 @@ namespace LOFAR {
 
       const BoardMode mode;
       const size_t nrBoards;
+      Pool< RSPData > rspDataPool[4]; // [nrboards]
 
       const std::vector<size_t> targetSubbands;
 

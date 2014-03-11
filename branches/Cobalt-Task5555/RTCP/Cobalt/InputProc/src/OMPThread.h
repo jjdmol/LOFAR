@@ -117,6 +117,8 @@ namespace LOFAR
 
     static void init()
     {
+      signal(SIGHUP, sighandler);
+#if 0
       // We avoid cancellation exception for OpenMP threads.
       // Allow signalling them ourselves to interrupt some blocking syscalls.
       struct sigaction sa;
@@ -127,6 +129,7 @@ namespace LOFAR
       if (err != 0) {
         LOG_WARN("Failed to register a handler for SIGHUP: OpenMP threads may not terminate!");
       }
+#endif
     }
 
   private:

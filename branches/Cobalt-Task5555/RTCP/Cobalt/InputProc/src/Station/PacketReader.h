@@ -46,9 +46,9 @@ namespace LOFAR
 
       PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode = MODE_ANY );
 
-      // Reads a set of packets from the input stream. Sets valid[i] to
-      // true for each valid packet i.
-      void readPackets( std::vector<struct RSP> &packets, std::vector<bool> &valid );
+      // Reads a set of packets from the input stream. Sets the payloadError
+      // flag for all invalid packets.
+      void readPackets( std::vector<struct RSP> &packets );
 
       // Reads a packet from the input stream. Returns true if a packet was
       // succesfully read.

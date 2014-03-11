@@ -121,17 +121,17 @@ namespace LOFAR
         for(;;) {
           // Write first, in case we're given packets to write
           for (size_t i = 0; i < packets.size(); ++i) {
-            if (!write[i])
+            if (packets[i].payloadError())
               continue;
 
             writer.writePacket(packets[i]);
             logStatistics(reader, packets[i]);
 
             // mark packet as written
-            write[i] = false;
+            packets[i].payloadError(true);
           }
 
-          reader.readPackets(packets, write);
+          reader.readPackets(packets);
         }
 
       } catch (BadModeException &ex) {

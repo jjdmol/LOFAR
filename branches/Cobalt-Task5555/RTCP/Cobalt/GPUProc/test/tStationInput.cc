@@ -78,7 +78,7 @@ void MPIDataTester::checkAndClearPacketWritten( struct RSP &packet, const vector
     size_t nrWrittenSamples = 0;
 
     for(size_t timeslot = 0; timeslot < packet.header.nrBlocks; timeslot++) {
-      const TimeStamp ts = packet.timeStamp() + timeslot - data.read_offsets[beamletIdx];
+      const uint64_t ts = packet.timeStamp() + timeslot - data.read_offsets[beamletIdx];
       if (ts < data.from || ts >= data.to)
         continue;
 
@@ -143,10 +143,10 @@ SUITE(MPIData) {
       bool spill = data.write(packet, &beamletIndices[0]);
 
       // Validate whether we spill into the next block
-      if (packet.timeStamp() + packet.header.nrBlocks - 1 > data.to - 1) {
+      if ((uint64_t)packet.timeStamp() + packet.header.nrBlocks - 1 > data.to - 1) {
         // last sample is beyond data.to
         CHECK_EQUAL(true, spill);
-      } else if (packet.timeStamp() + packet.header.nrBlocks - 1 == data.to - 1) {
+      } else if ((uint64_t)packet.timeStamp() + packet.header.nrBlocks - 1 == data.to - 1) {
         // last sample is last sample in block
         CHECK_EQUAL(true, spill);
       } else {

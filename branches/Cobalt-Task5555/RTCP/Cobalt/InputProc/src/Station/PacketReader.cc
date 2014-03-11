@@ -65,10 +65,8 @@ namespace LOFAR
     }
 
 
-    void PacketReader::readPackets( std::vector<struct RSP> &packets, std::vector<bool> &valid )
+    void PacketReader::readPackets( std::vector<struct RSP> &packets )
     {
-      ASSERT(valid.size() == packets.size());
-
       if (inputIsUDP) {
         SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
 
@@ -78,22 +76,22 @@ namespace LOFAR
 
         // validate received packets
         for (size_t i = 0; i < numRead; ++i) {
-          valid[i] = validatePacket(packets[i]);
+          packets[i].payloadError(!validatePacket(packets[i]));
         }
 
         // mark not-received packets as invalid
         for (size_t i = numRead; i < packets.size(); ++i) {
-          valid[i] = false;
+          packets[i].payloadError(true);
         }
       } else {
         // fall-back for non-UDP streams, emit packets
         // one at a time to avoid data loss on EndOfStream.
-        valid[0] = readPacket(packets[0]);
+        packets[0].payloadError(!readPacket(packets[0]));
 
         nrReceived++;
 
         for (size_t i = 1; i < packets.size(); ++i) {
-          valid[i] = false;
+          packets[i].payloadError(true);
         }
       }
     }
