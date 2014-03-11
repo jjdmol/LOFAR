@@ -169,7 +169,7 @@ def prepare_pipeline_config(lofarroot,workdir,baseworkdir,username,pipelineconfi
 		config = ConfigParser.RawConfigParser()
 		config.read(replacecfg)
 		replacelist = config.items('replace')
-			if config.items('add') != None:
+		if config.items('add') != None:
 			addlist = config.items('add')
 		print 'values to replace:\n',replacelist
 
