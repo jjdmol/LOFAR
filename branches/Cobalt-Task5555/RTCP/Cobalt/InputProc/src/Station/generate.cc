@@ -58,9 +58,9 @@ int main( int argc, char **argv )
 
   struct StationID stationID(stationName, "LBA");
   struct BufferSettings settings(stationID, false);
-  struct BoardMode mode(16, 200);
+  struct BoardMode mode(8, 200);
 
-  const TimeStamp from(time(0), 0, mode.clockHz());
+  const TimeStamp from(time(0), 3, mode.clockHz());
   const TimeStamp to(0);
 
   PacketFactory factory(mode);
