@@ -298,8 +298,6 @@ bool StationInput::receivedHere() const
 
 void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 {
-  Thread::ScopedPriority sp(SCHED_FIFO, 10);
-
   /*
    * In real-time mode, we can't get ahead of the `current'
    * block of the reader due to clock synchronisation.
@@ -348,7 +346,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
    * 3. We can receive old data from before `current'.
    */
 
-  const TimeStamp maxDelay(mode.secondsToSamples(0.5), mode.clockHz());
+  const TimeStamp maxDelay(mode.secondsToSamples(1.0), mode.clockHz());
 
   const TimeStamp deadline = current.to + maxDelay;
 
@@ -559,6 +557,8 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
         for(size_t board = 0; board < nrBoards; board++) {
           OMPThread::ScopedRun sr(packetReaderThreads[board]);
 
+          Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
           readRSPRealTime(board, *inputStreams[board]);
         }
       } else {
@@ -703,7 +703,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
   // report average loss
   const double avgloss = nrProcessedSamples == 0 ? 0.0 : 100.0 * nrFlaggedSamples / nrProcessedSamples;
 
-  LOG_INFO_STR(logPrefix << str(format("Average data loss: %.2f") % avgloss));
+  LOG_INFO_STR(logPrefix << str(format("Average data loss/flagged: %.2f%%") % avgloss));
 }
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
