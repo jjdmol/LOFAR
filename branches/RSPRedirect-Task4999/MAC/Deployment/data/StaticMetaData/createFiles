@@ -745,16 +745,6 @@ def de601Exceptions(resultDir, stationName, dataDir):
         #print command
         os.system(command)
 
-def rs307Exceptions(resultDir, stationName, dataDir):
-    """
-    Handle exceptions for station rs307. Data of RSP board 03 should use lane4
-    instead of lane3
-    """
-    if (stationName.lower() == "rs307"):
-        srcFile = resultDir + "/RSPDriver.conf"
-        command = "sed -i s/RSPDriver.LANE_03_BLET_OUT=3/RSPDriver.LANE_03_BLET_OUT=4/ " + srcFile
-        os.system(command)
-      
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -839,8 +829,6 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
-                # Temporary corrections
-                rs307Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -897,8 +885,6 @@ else:
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
-        # Temporary corrections
-        rs307Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"
