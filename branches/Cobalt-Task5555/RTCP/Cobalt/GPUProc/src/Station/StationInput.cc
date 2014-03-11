@@ -445,7 +445,11 @@ void StationInput::readRSPNonRealTime()
 
     // Emit youngest packet
     SmartPtr<RSPData> data = rspDataPool.free.remove();
-    ASSERT(data);
+
+    // Abort of writer does not desire any more data
+    if (!data)
+      return;
+
     ASSERT(data->valid.size() == 1);
 
     data->valid[0]   = true;
@@ -462,7 +466,11 @@ void StationInput::readRSPNonRealTime()
 
   // Signal EOD by inserting a packet beyond obs end
   SmartPtr<RSPData> data = rspDataPool.free.remove();
-  ASSERT(data);
+
+  // Abort if writer does not desire any more data
+  if (!data)
+    return;
+
   ASSERT(data->valid.size() == 1);
 
   const BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
@@ -500,7 +508,7 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
       if (!next || next->write(data->packets[0], beamletIndices)) {
 	// Data is even later than next? Put this data back for a future block.
         rspDataPool.filled.prepend(data);
-	break;
+	      break;
       }
     }
 
@@ -601,6 +609,9 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
 #       pragma omp parallel for num_threads(nrBoards)
         for (size_t i = 0; i < nrBoards; ++i)
           packetReaderThreads[i].kill();
+      } else {
+        // signal reader threads
+        rspDataPool.free.append(NULL);
       }
     }
   }
