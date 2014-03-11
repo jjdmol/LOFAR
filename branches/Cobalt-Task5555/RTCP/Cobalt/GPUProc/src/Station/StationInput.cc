@@ -61,9 +61,13 @@ namespace LOFAR {
   namespace Cobalt {
 
 template<typename SampleT>
-bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) {
+bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices) {
+  /* An optimisation as we'll never encounter anything else */
+  ASSERT(packet.header.nrBlocks == 16);
+  const size_t nrSamples = 16;
+
   const TimeStamp packetBegin = packet.timeStamp();
-  const TimeStamp packetEnd   = packetBegin + packet.header.nrBlocks;
+  const TimeStamp packetEnd   = packetBegin + nrSamples;
 
   bool consider_next = false;
 
@@ -96,7 +100,7 @@ bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) 
     }
 
     // number of samples to transfer
-    size_t nrSamplesToCopy   = packet.header.nrBlocks;
+    size_t nrSamplesToCopy  = nrSamples;
 
     // first sample to write
     size_t firstSample = 0;
@@ -124,7 +128,7 @@ bool MPIData<SampleT>::write(struct RSP &packet, const ssize_t *beamletIndices) 
 
     /* Write the remaining data */
     memcpy(&mpi_samples[absBeamlet][absSample],
-	   srcPtr + b * packet.header.nrBlocks + firstSample,
+	   srcPtr + b * nrSamples + firstSample,
 	   nrSamplesToCopy * sizeof(SampleT));
 
     /* Update the flags */
@@ -344,7 +348,6 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
    * 3. We can receive old data from before `current'.
    */
 
-
   const TimeStamp maxDelay(mode.secondsToSamples(0.5), mode.clockHz());
 
   const TimeStamp deadline = current.to + maxDelay;
@@ -358,19 +361,20 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
     LOG_ERROR_STR(logPrefix << "[block " << current.block << "] Not running at real time! Deadline was " <<
       TimeStamp(now - deadline, deadline.getClock()).getSeconds() << " seconds ago");
   } else {
+    NSTimer copyRSPTimer(str(format("%s copy RSP data") % logPrefix), true, true);
+
     SmartPtr<RSPData> rspData;
 
     while((rspData = rspDataPool.filled.remove(deadline, NULL)) != NULL) {
       const ssize_t *beamletIndices = &this->beamletIndices[rspData->board][0];
 
       // Write valid packets to the current and/or next packet
+      copyRSPTimer.start();
       for (size_t p = 0; p < rspData->valid.size(); ++p) {
         if (!rspData->valid[p])
           continue;
 
         struct RSP &packet = rspData->packets[p];
-
-        ASSERT(packet.header.nrBeamlets <= mode.nrBeamletsPerBoard());
 
         if (current.write(packet, beamletIndices)
          && next) {
@@ -379,6 +383,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
           next->write(packet, beamletIndices);
         }
       }
+      copyRSPTimer.stop();
 
       rspDataPool.free.append(rspData);
       ASSERT(!rspData);
@@ -612,12 +617,9 @@ MPISender::MPISender( const std::string &logPrefix, size_t stationIdx, const Sub
 {
   // Determine the offset of the set of subbands for each rank within
   // the members in MPIData<SampleT>.
-  for (size_t rank = 0; rank < targetRanks.size(); ++rank) {
+  for (size_t rank = 0; rank < targetRanks.size(); ++rank)
     for(size_t i = 0; i < rank; ++i)
       subbandOffsets[rank] += subbandDistribution.at(i).size();
-
-    LOG_INFO_STR(logPrefix << "Target rank " << rank << " receives beamlet indices [" << subbandOffsets[rank] << ", " << (subbandOffsets[rank] + subbandDistribution.at(rank).size()) << ")");
-  }
 }
 
 template <typename SampleT>
