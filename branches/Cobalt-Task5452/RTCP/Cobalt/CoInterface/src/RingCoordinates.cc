@@ -51,8 +51,8 @@ namespace LOFAR
       // start with central beam
       itsCoordinates.push_back(pair<double, double>(0., 0.));
 
-      //ring 1-n: create the TAB Beams from the inner ring outwards
-      for (size_t idx_ring = 1; idx_ring < itsNRings + 1; ++idx_ring)
+      // ring 1-n: create the TAB Beams from the inner ring outwards
+      for (size_t idx_ring = 1; idx_ring <= itsNRings; ++idx_ring)
       {
         double l = 0.0;
         double m = len_height() * idx_ring;
@@ -71,11 +71,10 @@ namespace LOFAR
         }
       }
 
-      //// adjust the coordinates depending on the reference frame
+      // adjust the coordinates depending on the reference frame
       for (CoordinateVector::iterator coord = itsCoordinates.begin();
         coord != itsCoordinates.end(); ++coord)
       {
-        // adjest the
         *coord = cos_adjust(*coord);
       }
 

@@ -666,7 +666,7 @@ namespace LOFAR
           // The actual tabs will be extracted after we added all manual tabs
           // But we need the number of tabs from rings at this location
           std::auto_ptr<RingCoordinates> ptrRingCoords;
-          if (nrRings != 0)
+          if (nrRings > 0)
           {
             const string prefix = str(format("Observation.Beam[%u]") % i);
             string directionType = getString(prefix + ".directionType", "J2000");
@@ -688,7 +688,7 @@ namespace LOFAR
 
             // Increase the amount of tabs with the number from the coords object
             // this might be zero
-            nrTABs = nrTABSParset + (*ptrRingCoords).nCoordinates();
+            nrTABs = nrTABSParset + ptrRingCoords->nCoordinates();
           }         
           else if (settings.beamFormer.doFlysEye) 
           // For Fly's Eye mode we have exactly one TAB per station.
