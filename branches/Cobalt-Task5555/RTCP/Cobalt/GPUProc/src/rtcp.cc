@@ -210,7 +210,7 @@ int main(int argc, char **argv)
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
 
-  if (ps.realTime()) {
+  if (ps.realTime() && getenv("COBALT_NO_ALARM") == NULL) {
     // First of all, make sure we can't freeze for too long
     // by scheduling an alarm() some time after the observation
     // ends.
