@@ -447,6 +447,10 @@
 #define PSN_LOG_PROCESSOR	"LOFAR_PermSW_Daemons_LogProcessor"
 #define PST_LOG_PROCESSOR	"LogProcessor"
 
+// PVSSGateway
+#define PSN_PVSS_GATEWAY	"LOFAR_PermSW_Daemons_PVSSGateway"
+#define PST_PVSS_GATEWAY	"PVSSGateway"
+
 // SASGateway
 #define PSN_SAS_GATEWAY	"LOFAR_PermSW_Daemons_SASGateway"
 #define PST_SAS_GATEWAY	"SASGateway"
