@@ -98,21 +98,17 @@ namespace LOFAR
         DelayAndBandPassKernel::PHASE_ZEROS),
         context));
 
-      unsigned sizeKernelBuffers = devInput->inputSamples->size();
-
-      // devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
+      // NOTE: For an explanation of the different buffers being used, please refer
+      // to the document bf-pipeline.txt in the GPUProc/doc directory.
       devA = devInput->inputSamples;
-      // devB.reset( new gpu::DeviceMemory(context, sizeKernelBuffers));
       devB.reset(
         new gpu::DeviceMemory(
           context,
           factories.beamFormer.bufferSize(BeamFormerKernel::INPUT_DATA)));
-
-      devC.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
-      devD.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
-      // devE.reset(new gpu::DeviceMemory(context,
-      //            factories.incoherentStokes.bufferSize(
-      //            IncoherentStokesKernel::OUTPUT_DATA)));
+      devC.reset(
+        new gpu::DeviceMemory(context, devInput->inputSamples->size()));
+      devD.reset(
+        new gpu::DeviceMemory(context, devInput->inputSamples->size()));
       devE = devInput->inputSamples;
 
       // Null buffer for unused parts of the pipeline
