@@ -194,16 +194,19 @@ SUITE(MPIData) {
     ASSERT(3 < nrSubbands);
     const ssize_t timesPerPacket = 16;
     for (ssize_t offset = - timesPerPacket - 1; offset <= timesPerPacket + 1; ++offset ) {
+      LOG_INFO_STR("Trying offset " << offset);
       data.read_offsets[3] = offset;
 
       // Write data, such that only subband 3 spills
       if (offset <= 0) {
-        factory.makePacket(packet, data.from + nrSamples - timesPerPacket + offset, 0);
+        // fall off the right
+        factory.makePacket(packet, TimeStamp(data.from + nrSamples - timesPerPacket + offset, mode.clockHz()), 0);
 
         bool spill = data.write(packet, &beamletIndices[0]);
         CHECK_EQUAL(true, spill);
       } else {
-        factory.makePacket(packet, data.from - offset, 0);
+        // fall off the left
+        factory.makePacket(packet, TimeStamp(data.from - offset, mode.clockHz()), 0);
 
         bool spill = data.write(packet, &beamletIndices[0]);
         CHECK_EQUAL(false, spill);
