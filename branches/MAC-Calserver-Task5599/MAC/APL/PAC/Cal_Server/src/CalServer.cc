@@ -1,7 +1,7 @@
 //#
 //#  CalServer.cc: implementation of CalServer class
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -221,6 +221,10 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			}
 			LOG_INFO_STR("Interim datafile will be stored in " << itsDataDir);
 
+			// get HBA poweroff delay.
+			itsHBAPowerOffDelay = globalParameterSet()->getTime("CalServer.HBAPowerOffDelay", 600);
+			LOG_INFO_STR("HBA PowerOff delay = " << itsHBAPowerOffDelay << " seconds.");
+
 			// Setup calibration algorithm
 			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
 #ifdef USE_CAL_THREAD
@@ -267,6 +271,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		LOG_INFO_STR("nrRSPboards=" << m_n_rspboards << ", nrRCUS=" << m_n_rcus);
 		// resize and clear itsRCUcounters.
 		itsRCUcounts.assign(m_n_rcus, 0);
+		itsHBAPowerOffTime.assign(m_n_rcus, 0);
 
 		// get initial clock setting
 		RSPGetclockEvent getclock;
@@ -423,8 +428,23 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 	break;
 
 	case F_TIMER: {
-		GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+		// first check Poweroff timer
+		SubArray::RCUmask_t		rcus2switchOff;
+		rcus2switchOff.reset();
+		time_t		now(time(0L));
+		for (uint i = 0; i < m_n_rcus; i++) {				// loop over all rcus
+			if (itsHBAPowerOffTime[i] && itsHBAPowerOffTime[i] <= now) {	// elapsed?
+				rcus2switchOff.set(i);
+				itsHBAPowerOffTime[i] = 0;
+			}
+		} // for
+		if (rcus2switchOff.any()) {
+			LOG_INFO ("Delayed power-off of HBA tiles.");
+			_powerdownRCUs(rcus2switchOff);		// Finally shut them down.
+		}
 
+		// swap buffers
+		GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 		const Timestamp t = Timestamp(timer->sec, timer->usec);
 		LOG_DEBUG_STR("updateAll @ " << t);
 
@@ -844,8 +864,9 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	Timestamp timeStamp;
 	for (uint r = 0; r < m_n_rcus; r++) {
 		if (rcuMask.test(r)) {
-			if(++itsRCUcounts[r] == 1) {
+			if (++itsRCUcounts[r] == 1) {
 				rcus2switchOn.set(r);
+				itsHBAPowerOffTime[r] = 0;	// reset poweroff time
 			} // new count is 1
 		} // rcu in mask
 	} // for all rcus
@@ -858,7 +879,7 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		RSPSetrcuEvent	enableCmd;
 		timeStamp.setNow(delay);
 		enableCmd.timestamp = timeStamp;
-		enableCmd.rcumask = rcus2switchOn;
+		enableCmd.rcumask   = rcus2switchOn;
 		enableCmd.settings().resize(1);
 		enableCmd.settings()(0).setEnable(true);
 		sleep (1);
@@ -871,12 +892,11 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 	if (rcumode == 1 || rcumode == 2) {		// LBLinput used?
 		LOG_INFO("LBL inputs are used, swapping X and Y RCU's");
 		RSPSetswapxyEvent	swapCmd;
-		swapCmd.timestamp =timeStamp;
-		swapCmd.swapxy	  = true;
+		swapCmd.timestamp   = timeStamp;
+		swapCmd.swapxy	    = true;
 		swapCmd.antennamask = RCU2AntennaMask(rcuMask);
 		itsRSPDriver->send(swapCmd);
 	}
-
 }
 
 //
@@ -888,13 +908,22 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	bool				allSwitchedOff(true);
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
+	Timestamp 			powerOffTime;
+	powerOffTime.setNow(itsHBAPowerOffDelay);
+	bool				HBAsubarray(false);
+	int					rcumode(0);
 
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
+		rcumode = subarray->getSPW().rcumode();
+		HBAsubarray = (rcumode > 4);
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 		for (uint r = 0; r < m_n_rcus; r++) {
 			if (rcuMask.test(r)) {
 				if (--itsRCUcounts[r] == 0) {
 					rcus2switchOff.set(r);
+					if (HBAsubarray) {
+						itsHBAPowerOffTime[r] = powerOffTime;
+					}
 				} // count reaches 0
 			} // rcu in mask
 
@@ -905,33 +934,44 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 		} // for all rcus
 	}
 
-	if (allSwitchedOff) { 	// all receivers off? force all rcu's to mode 0, disable
+	if (allSwitchedOff) { 	// all receivers off? make mask that addresses them all.
 		rcus2switchOff.reset();
 		for (uint i = 0; i < m_n_rcus; i++) {
 			rcus2switchOff.set(i);
 		}
-		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
+//		LOG_INFO("No active rcu's anymore, forcing all units to mode 0 and disable");
 	}
 
     // when the lbl inputs are selected swap the X and the Y.
 	LOG_INFO("Resetting swap of X and Y");
 	RSPSetswapxyEvent   swapCmd;
-	swapCmd.timestamp =Timestamp(0,0);
-	swapCmd.swapxy    = false;
+	swapCmd.timestamp   = Timestamp(0,0);
+	swapCmd.swapxy      = false;
 	swapCmd.antennamask = RCU2AntennaMask(rcus2switchOff);
 	itsRSPDriver->send(swapCmd);
 
+	_updateDataStream(0); // asap
+
+	if (!subarray || !HBAsubarray) {	// reset at startup of CalServer or stopping LBA's?
+		sleep (1);
+		_powerdownRCUs(rcus2switchOff);
+	}
+	// Note: when NOT in startup mode the poweroff is delayed.
+}
+
+//
+// _powerdownRCUs(rcus2switchOff)
+//
+void CalServer::_powerdownRCUs(SubArray::RCUmask_t	rcus2switchOff)
+{
 	// anything to disable? Tell the RSPDriver.
 	if (rcus2switchOff.any()) {
-		_updateDataStream(0); // asap
-		
 		RSPSetrcuEvent	disableCmd;
 		disableCmd.timestamp = Timestamp(0,0);
-		disableCmd.rcumask = rcus2switchOff;
+		disableCmd.rcumask   = rcus2switchOff;
 		disableCmd.settings().resize(1);
 		disableCmd.settings()(0).setEnable(false);
 		disableCmd.settings()(0).setMode(RCUSettings::Control::MODE_OFF);
-		sleep (1);
 		LOG_INFO_STR("Disabling " << rcus2switchOff.count() << " rcu's because they are not used anymore");
 		itsRSPDriver->send(disableCmd);
 	}
@@ -968,6 +1008,7 @@ void CalServer::_updateDataStream(uint	delay)
 {
 	bool	switchFirstOn  = _dataOnRing(0);
 	bool	switchSecondOn = itsSecondRingActive && _dataOnRing(1);
+
 	if ((itsFirstRingOn != switchFirstOn) || (itsSecondRingOn != switchSecondOn)) {
 		RSPSetdatastreamEvent	dsCmd;
 		dsCmd.timestamp.setNow(delay);

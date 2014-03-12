@@ -94,8 +94,9 @@ public:
 	void write_acc();
 
 	// Helper functions
-	bool _dataOnRing(uint	ringNr)	const;
+	bool _dataOnRing	  (uint	ringNr)	const;
 	void _updateDataStream(uint	delay);
+	void _powerdownRCUs   (SubArray::RCUmask_t	rcus2switchOff);
 
 private:
 	// ----- DATA MEMBERS -----
@@ -124,6 +125,10 @@ private:
 	bool	itsSecondRingOn;
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
+
+	uint			itsHBAPowerOffDelay;// # of seconds to wait before the power of the HBA's is switched off.
+	vector<time_t>	itsHBAPowerOffTime;	// Timestamp the HBA tile may be switched of.
+
 
 	// Ports
 	GCFTCPPort*		itsListener;  // connect point for clients
