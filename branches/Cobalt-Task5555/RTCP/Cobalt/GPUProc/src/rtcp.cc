@@ -85,7 +85,7 @@ using boost::format;
 
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
-const time_t allocationTimeout = 10;
+const time_t allocationTimeout = 15;
 
 // Deadline for the FinalMetaDataGatherer, in seconds
 const time_t finalMetaDataTimeout = 2 * 60;
