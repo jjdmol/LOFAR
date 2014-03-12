@@ -98,16 +98,18 @@ namespace LOFAR
         DelayAndBandPassKernel::PHASE_ZEROS),
         context));
 
-      unsigned sizeKernelBuffers = devInput->inputSamples.size();
+      unsigned sizeKernelBuffers = devInput->inputSamples->size();
 
-      devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
+      // devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
+      devA = devInput->inputSamples;
       devB.reset( new gpu::DeviceMemory(context, sizeKernelBuffers));
 
       devC.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devD.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
-      devE.reset(new gpu::DeviceMemory(context,
-                 factories.incoherentStokes.bufferSize(
-                 IncoherentStokesKernel::OUTPUT_DATA)));
+      // devE.reset(new gpu::DeviceMemory(context,
+      //            factories.incoherentStokes.bufferSize(
+      //            IncoherentStokesKernel::OUTPUT_DATA)));
+      devE = devInput->inputSamples;
 
       // Null buffer for unused parts of the pipeline
       devNull.reset(new gpu::DeviceMemory(context, 1));
@@ -209,7 +211,7 @@ namespace LOFAR
 
       //****************************************
       // Send inputs to GPU
-      queue.writeBuffer(devInput->inputSamples, input.inputSamples,
+      queue.writeBuffer(*devInput->inputSamples, input.inputSamples,
         counters.inputsamples, true);
 
       // Some additional buffers

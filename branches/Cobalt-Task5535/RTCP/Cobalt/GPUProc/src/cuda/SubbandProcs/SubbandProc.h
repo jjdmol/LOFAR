@@ -64,14 +64,14 @@ namespace LOFAR
         // We don't have tabDelays here, as it is only for bf.
         // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
         // similar to the bandpass correction and FIR filter weights (also not here).
-        gpu::DeviceMemory inputSamples;
+        boost::shared_ptr<gpu::DeviceMemory> inputSamples;
 
         DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
                       size_t phase0sSize, gpu::Context &context) :
           delaysAtBegin(context, delaysSize),
           delaysAfterEnd(context, delaysSize),
           phase0s(context, phase0sSize),
-          inputSamples(context, inputSamplesSize)
+          inputSamples(new gpu::DeviceMemory(context, inputSamplesSize))
         {
         }
       };
