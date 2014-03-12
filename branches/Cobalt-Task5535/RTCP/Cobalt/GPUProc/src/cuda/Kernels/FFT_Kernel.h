@@ -40,7 +40,7 @@ namespace LOFAR
       FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrFFTs,
                  bool forward, const gpu::DeviceMemory &buffer);
 
-      void enqueue(const BlockID &blockId) const;
+      void enqueue(const BlockID &blockId);
 
       enum BufferType
       {

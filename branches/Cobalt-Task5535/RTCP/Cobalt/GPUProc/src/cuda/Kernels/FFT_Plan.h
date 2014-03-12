@@ -23,8 +23,11 @@
 
 #include <CoInterface/Parset.h>
 
+#include <boost/scoped_ptr.hpp>
+
 #include <GPUProc/gpu_wrapper.h>
 #include <cufft.h>
+
 
 namespace LOFAR
 {
@@ -34,21 +37,21 @@ namespace LOFAR
     class FFT_Plan
     {
     public:
-      FFT_Plan(gpu::Context &context , const gpu::Stream &stream,
+      FFT_Plan(gpu::Context &context , 
        unsigned fftSize, unsigned nrFFTs);
       ~FFT_Plan();
 
       // Tie the plan to a specific stream
-      void setStream() const;
+      void setStream(gpu::Stream  &stream);
 
-      cufftHandle plan;
+      mutable cufftHandle plan;
 
     private:
       gpu::Context context;
 
       unsigned itsfftSize;
       unsigned itsnrFFTs;
-      gpu::Stream itsStream;
+      CUstream itsStream;
     };
   }
 }

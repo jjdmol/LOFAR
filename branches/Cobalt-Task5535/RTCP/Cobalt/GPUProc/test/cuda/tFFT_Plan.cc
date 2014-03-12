@@ -46,8 +46,11 @@ void testDifferentArgumentsDifferentPlan(gpu::Context ctx, gpu::Stream stream)
   // From docs:
   // cufftHandle is a handle type used to store and access CUFFT plans.
   // typedef int cufftHandle;
-  FFT_Plan plan1(ctx, stream, 20, 20);
-  FFT_Plan plan2(ctx, stream,  20, 40);
+  FFT_Plan plan1(ctx,  20, 20);
+  FFT_Plan plan2(ctx,   20, 40);
+  plan1.setStream(stream);
+  plan2.setStream(stream);
+
   assert(plan1.plan != plan2.plan);
 }
 
@@ -59,8 +62,10 @@ void testSameArgumentsSamePlan(gpu::Context ctx, gpu::Stream stream)
   // From docs:
   // cufftHandle is a handle type used to store and access CUFFT plans.
   // typedef int cufftHandle;
-  FFT_Plan plan1(ctx, stream, 20, 20);
-  FFT_Plan plan2(ctx, stream,  20, 20);
+  FFT_Plan plan1(ctx,  20, 20);
+  FFT_Plan plan2(ctx,   20, 20);
+  plan1.setStream(stream);
+  plan2.setStream(stream);
   assert(plan1.plan == plan2.plan);
 }
 
@@ -71,8 +76,11 @@ void testSameArgumentsPlanValidAfterDestruction(gpu::Context ctx, gpu::Stream st
   // same interal plans 
   // Then delete the internal plan: this should succeed:
   // It should not have been delete with the first delete
-  FFT_Plan plan1(ctx, stream, 20, 20);
-  FFT_Plan*plan2 = new FFT_Plan(ctx, stream, 20, 20); // plan with the same parameters
+  FFT_Plan plan1(ctx,  20, 20);
+  FFT_Plan*plan2 = new FFT_Plan(ctx,  20, 20); // plan with the same parameters
+
+  plan1.setStream(stream);
+  plan2->setStream(stream);
   assert(plan1.plan == plan2->plan);
 
   // now delete the second plan and assert the first is still valid
@@ -93,8 +101,12 @@ void testSameArgumentsPlanAllDestroyedCorrect(gpu::Context ctx, gpu::Stream stre
   // Test 3: Two fft plans with same inputs should result in 
   // same interal plans 
   // Then delete both the plans. The internal cufft plan should be destroyed also
-  FFT_Plan* plan1 = new FFT_Plan(ctx, stream, 20, 20);
-  FFT_Plan* plan2 = new FFT_Plan(ctx, stream, 20, 20); // plan with the same parameters
+  FFT_Plan* plan1 = new FFT_Plan(ctx,  20, 20);
+  FFT_Plan* plan2 = new FFT_Plan(ctx,  20, 20); // plan with the same parameters
+
+  plan1->setStream(stream);
+  plan2->setStream(stream);
+
   assert(plan1->plan == plan2->plan);
   cufftHandle planHandle = plan1->plan;
   // now delete the second plan and assert the first is still valid

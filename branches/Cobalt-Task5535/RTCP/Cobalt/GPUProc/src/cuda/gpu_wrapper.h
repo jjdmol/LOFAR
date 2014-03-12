@@ -581,6 +581,9 @@ namespace LOFAR
         bool force_synchronous;
       };
 
+      bool operator==(Stream const &lhs, Stream const &rhs);
+      bool operator<(Stream const &lhs, Stream const &rhs);
+
     } // namespace gpu
   } // namespace Cobalt
 } // namespace LOFAR

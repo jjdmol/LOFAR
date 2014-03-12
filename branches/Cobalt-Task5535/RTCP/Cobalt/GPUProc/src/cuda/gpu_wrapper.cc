@@ -856,6 +856,7 @@ namespace LOFAR
 
         ~Impl()
         {
+          cout << "debug2" << endl;
           ScopedCurrentContext scc(_context);
 
           checkCuCall(cuStreamDestroy(_stream));
@@ -1115,6 +1116,16 @@ namespace LOFAR
       bool Stream::isSynchronous() const
       {
         return force_synchronous;
+      }
+
+      bool operator==(Stream const &lhs, Stream const &rhs)
+      {
+        return lhs.get() == rhs.get();
+      }
+
+      bool operator<(Stream  const &lhs, Stream const &rhs)
+      {
+        return lhs.get() < rhs.get();
       }
 
 

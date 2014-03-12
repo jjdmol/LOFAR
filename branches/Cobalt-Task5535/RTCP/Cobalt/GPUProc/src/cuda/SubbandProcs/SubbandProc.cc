@@ -47,6 +47,7 @@ namespace LOFAR
 
     SubbandProc::~SubbandProc()
     {
+      cout << "debug1" << endl;
     }
 
     void SubbandProc::addTimer(const std::string &name)

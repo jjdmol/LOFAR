@@ -35,79 +35,86 @@ namespace LOFAR
     Mutex planCacheMutex;
     std::map<std::pair< CUstream, std::pair<unsigned, unsigned > >, pair<unsigned, cufftHandle> > planCache;
 
-    FFT_Plan::FFT_Plan(gpu::Context &context,  const gpu::Stream &stream, 
-                       unsigned fftSize, unsigned nrFFTs)
+    FFT_Plan::FFT_Plan(gpu::Context &context, unsigned fftSize, unsigned nrFFTs)
       :
       context(context),
       itsfftSize(fftSize),
       itsnrFFTs(nrFFTs),
-      itsStream(stream)
-
+      itsStream(0)
     {
       gpu::ScopedCurrentContext scc(context);
-
-      cufftResult error;
-
-      // Use the fftplan parameters to create a key to find a possible 
-      // cached fftplan (memory issues if all classes own their own)
-      
-      ScopedLock sl(planCacheMutex);
-
-      std::pair< CUstream, std::pair<unsigned, unsigned > >key = make_pair(
-        itsStream.get(), make_pair(itsfftSize, itsnrFFTs));
-      if (planCache.find(key) != planCache.end())  // Test if it exists
-      {
-        // get from cache and assign
-        plan = planCache[key].second;
-        // Record that we have an aditional entry with these settings
-        planCache[key].first++;
-      }
-      else
-      {
-        // Create the itsfftSize
-        error = cufftPlan1d(&plan, itsfftSize, CUFFT_C2C, itsnrFFTs);
-
-        if (error != CUFFT_SUCCESS)
-          THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
-        // add to cache
-        planCache[key] = make_pair(1, plan);
-       }
-
-      setStream();
+    
     }
 
     FFT_Plan::~FFT_Plan()
     {
+
       gpu::ScopedCurrentContext scc(context);
       ScopedLock sl(planCacheMutex);
-
       // test if the amount fftplans with these settings is 1
+      
 
       std::pair< CUstream, std::pair<unsigned, unsigned > >key = make_pair(
-        itsStream.get(), make_pair(itsfftSize, itsnrFFTs));
+        itsStream, make_pair(itsfftSize, itsnrFFTs));
 
+      cout << "Number of fftplan shared: " << planCache[key].first << endl;
 
       if (planCache[key].first == 1)
       { 
         // last one. desctruct the plan
-        cufftDestroy(planCache[key].second);
 
+        cufftDestroy(planCache[key].second);
+        
         // remove the entry from the map, no need to decrease counter first
         planCache.erase(key);
 
       }
       else
         planCache[key].first--;
-
     }
 
-    void FFT_Plan::setStream() const
+    void FFT_Plan::setStream(gpu::Stream  &stream) 
     {
       cufftResult error;
 
-      gpu::ScopedCurrentContext scc(context);
+      ScopedLock sl(planCacheMutex);
 
-      error = cufftSetStream(plan, itsStream.get());
+      // Test if this plan has not yet created a stream
+      // or the stream has changed
+      if (itsStream == 0 || itsStream != stream.get()) 
+      {
+        // get the pointer 
+        itsStream = stream.get();
+
+        // Create a key based on the parameters and the pointer
+        std::pair< CUstream, std::pair<unsigned, unsigned > >key = make_pair(
+          itsStream, make_pair(itsfftSize, itsnrFFTs));
+
+        if (planCache.find(key) != planCache.end())  // Test if it exists
+        {
+          // get from cache and assign
+          plan = planCache[key].second;
+          // Record that we have an aditional entry with these settings
+          planCache[key].first++;
+
+        
+          cout << "Reused fftplan:" << planCache[key].first << endl;
+          cout << key.first << " " << key.second.first  << " " << key.second.first << endl;
+        }
+        else
+        {
+          // Create the itsfftSize
+          error = cufftPlan1d(&plan, itsfftSize, CUFFT_C2C, itsnrFFTs);
+
+          if (error != CUFFT_SUCCESS)
+            THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
+          // add to cache
+          planCache[key] = make_pair(1, plan);
+          cout << "Created fftplan:" << planCache[key].first << endl;
+          cout << key.first << " " << key.second.first << " " << key.second.first << endl;
+        }
+      }
+      error = cufftSetStream(plan, stream.get());
 
       if (error != CUFFT_SUCCESS)
         THROW(gpu::CUDAException, "cufftSetStream: " << gpu::cufftErrorMessage(error));
