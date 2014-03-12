@@ -9,16 +9,12 @@ set(_inputproc_sources
   Package__Version.cc
   RSPBoards.cc
   RSPTimeStamp.cc
-  Buffer/BufferSettings.cc
   Buffer/Ranges.cc
-  Buffer/SampleBuffer.cc
-  Buffer/SharedMemory.cc
   Buffer/StationID.cc
   Delays/Delays.cc
   Station/Generator.cc
   Station/PacketFactory.cc
   Station/PacketReader.cc
-  Station/PacketsToBuffer.cc
   Station/RSPPacketFactory.cc
 )
 
@@ -41,7 +37,6 @@ lofar_add_bin_program(printRSP Station/printRSP.cc)
 lofar_add_bin_program(repairRSP Station/repairRSP.cc)
 lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
-lofar_add_bin_program(capture Station/capture.cc)
 lofar_add_bin_program(printDelays Delays/printDelays.cc)
 
 # install the logprop file

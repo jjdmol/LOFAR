@@ -57,14 +57,13 @@ int main( int argc, char **argv )
   }
 
   struct StationID stationID(stationName, "LBA");
-  struct BufferSettings settings(stationID, false);
   struct BoardMode mode(8, 200);
 
   const TimeStamp from(time(0), 3, mode.clockHz());
   const TimeStamp to(0);
 
   PacketFactory factory(mode);
-  Generator g(settings, outputStreams, factory, from, to);
+  Generator g(stationID, outputStreams, factory, from, to);
 
   // Generate packets
   g.process();

@@ -25,7 +25,7 @@
 #include <Common/LofarTypes.h>
 #include <Stream/FixedBufferStream.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/StationID.h>
 
 namespace LOFAR
 {

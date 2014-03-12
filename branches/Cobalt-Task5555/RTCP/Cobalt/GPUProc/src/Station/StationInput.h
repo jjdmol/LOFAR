@@ -33,6 +33,7 @@
 #include <CoInterface/SubbandMetaData.h>
 #include <CoInterface/BestEffortQueue.h>
 #include <InputProc/Buffer/StationID.h>
+#include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/RSPTimeStamp.h>
 #include <InputProc/Station/RSP.h>
 
