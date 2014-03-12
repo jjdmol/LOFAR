@@ -102,7 +102,11 @@ namespace LOFAR
 
       // devA.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devA = devInput->inputSamples;
-      devB.reset( new gpu::DeviceMemory(context, sizeKernelBuffers));
+      // devB.reset( new gpu::DeviceMemory(context, sizeKernelBuffers));
+      devB.reset(
+        new gpu::DeviceMemory(
+          context,
+          factories.beamFormer.bufferSize(BeamFormerKernel::INPUT_DATA)));
 
       devC.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
       devD.reset(new gpu::DeviceMemory(context, sizeKernelBuffers));
