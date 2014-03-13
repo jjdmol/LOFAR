@@ -75,6 +75,7 @@ if(USE_CUDA)
   endif()
 
   lofar_add_bin_program(rtcp rtcp.cc)
+  lofar_add_bin_program(getOutputProcHosts getOutputProcHosts.cc)
 endif()
 
 if(USE_OPENCL)
@@ -135,6 +136,7 @@ install(PROGRAMS
 # install the logprop file
 install(FILES
   rtcp.log_prop
+  getOutputProcHosts.log_prop
   Station/mpi_node_list.log_prop
   Station/station_stream.log_prop
   DESTINATION etc)
