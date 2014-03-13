@@ -107,7 +107,7 @@ namespace LOFAR
         context, 
         factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
       firFilterBuffers(
-        devInput.inputSamples, devFilteredData,
+        *devInput.inputSamples, devFilteredData,
         devFilterWeights, devFilterHistoryData),
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
@@ -120,15 +120,15 @@ namespace LOFAR
         factories.delayAndBandPass.bufferSize(
           DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
       delayAndBandPassBuffers(
-        devFilteredData, devInput.inputSamples,
+        devFilteredData, *devInput.inputSamples,
         devInput.delaysAtBegin, devInput.delaysAfterEnd,
         devInput.phase0s, devBandPassCorrectionWeights),
       delayAndBandPassKernel(
         factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
 
       // Correlator
-      //correlatorBuffers(devInput.inputSamples, devFilteredData),
-      correlatorBuffers(devInput.inputSamples, devFilteredData),
+      //correlatorBuffers(*devInput.inputSamples, devFilteredData),
+      correlatorBuffers(*devInput.inputSamples, devFilteredData),
       correlatorKernel(factories.correlator.create(queue, correlatorBuffers)),
 
       // Buffers for long-time integration
@@ -370,8 +370,9 @@ namespace LOFAR
           devFilteredData, input.inputSamples, counters.samples, true);
       else // #ch/sb > 1
         queue.writeBuffer(
-          devInput.inputSamples, input.inputSamples, counters.samples, true);
+          *devInput.inputSamples, input.inputSamples, counters.samples true);
 #endif
+   
       if (ps.delayCompensation())
       {
         unsigned SAP = ps.settings.subbands[subband].SAP;
