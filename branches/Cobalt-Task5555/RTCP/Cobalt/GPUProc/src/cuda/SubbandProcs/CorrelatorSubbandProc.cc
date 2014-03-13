@@ -370,7 +370,7 @@ namespace LOFAR
           devFilteredData, input.inputSamples, counters.samples, true);
       else // #ch/sb > 1
         queue.writeBuffer(
-          *devInput.inputSamples, input.inputSamples, counters.samples true);
+          *devInput.inputSamples, input.inputSamples, counters.samples, true);
 #endif
    
       if (ps.delayCompensation())
