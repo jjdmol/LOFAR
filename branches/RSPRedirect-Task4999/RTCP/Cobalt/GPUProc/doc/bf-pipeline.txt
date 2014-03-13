@@ -111,7 +111,7 @@ FFT-16 {inplace} (if >1ch)
    |            [station][pol][sample][channel]         [48][2][12288][16]  = 144 MiB               B
    V
 Incoherent Stokes
-   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 E  # Why this additional buffer. We could just reuse A??
+   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 A
    V                                                    (float)
 (output)
 
