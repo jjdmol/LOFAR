@@ -714,7 +714,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
   // report average loss
   const double avgloss = nrProcessedSamples == 0 ? 0.0 : 100.0 * nrFlaggedSamples / nrProcessedSamples;
 
-  LOG_INFO_STR(logPrefix << str(format("Average data loss/flagged: %.2f%%") % avgloss));
+  LOG_INFO_STR(logPrefix << str(format("Average data loss/flagged: %.4f%%") % avgloss));
 }
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
