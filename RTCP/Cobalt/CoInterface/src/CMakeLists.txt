@@ -17,7 +17,8 @@ lofar_add_library(cointerface
   FinalMetaData.cc
   Stream.cc
   Parset.cc
-  TABTranspose.cc)
+  TABTranspose.cc
+  RingCoordinates.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 lofar_add_sbin_program(cmpfloat cmpfloat.cc)
