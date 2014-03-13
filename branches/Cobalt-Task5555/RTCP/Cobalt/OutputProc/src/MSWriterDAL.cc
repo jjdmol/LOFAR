@@ -323,8 +323,13 @@ namespace LOFAR
       beam.create();
       beam.groupType().value = "Beam";
 
-      beam.nofStations().value = parset.settings.stations.size();
-      beam.stationsList().value = parset.allStationNames();
+      if (parset.settings.beamFormer.doFlysEye) {
+        beam.nofStations().value = 1;
+        beam.stationsList().value = vector<string>(1, parset.settings.stations[beamNr].name);
+      } else {
+        beam.nofStations().value = parset.settings.stations.size();
+        beam.stationsList().value = parset.allStationNames();
+      }
 
       const vector<string> beamtargets(1, targets[sapNr]);
 
