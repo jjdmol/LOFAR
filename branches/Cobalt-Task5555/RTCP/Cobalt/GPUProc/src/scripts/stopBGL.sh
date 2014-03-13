@@ -7,6 +7,8 @@
 # This script is called by OnlineControl when either:
 #   - the stop time (plus a grace period) has passed
 #   - the observation is aborted
+#
+# $Id$
 
 if test "$LOFARROOT" == ""; then
   echo "LOFARROOT is not set! Exiting." >&2

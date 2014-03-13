@@ -8,8 +8,9 @@ Cobalt.OutputProc.sshPrivateKey =
 
 # The executable of the process to start.
 # which thus needs to be found in $PATH after login.
-Cobalt.OutputProc.executable = @CMAKE_INSTALL_PREFIX@/bin/outputProc
+#TODO: install outputProc on all CEP2 nodes locally under /data/home/lofarsys/lofar_versions/Cobalt-XYZ/
+Cobalt.OutputProc.executable = /globalhome/lofarsystem/build/gnu_debug/installed/bin/outputProc
 
 # The directory where OutputProc can find the StaticMetaData
-Cobalt.OutputProc.StaticMetaDataDirectory = @CMAKE_INSTALL_PREFIX@/etc
+Cobalt.OutputProc.StaticMetaDataDirectory = /globalhome/lofarsystem/build/gnu_debug/installed/etc
 

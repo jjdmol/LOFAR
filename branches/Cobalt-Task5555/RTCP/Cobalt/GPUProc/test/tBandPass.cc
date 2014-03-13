@@ -24,9 +24,8 @@
 #include <iomanip>
 
 #include <Common/LofarLogger.h>
+#include <CoInterface/fpequals.h>
 #include <GPUProc/BandPass.h>
-
-#include "fpequals.h"
 
 using LOFAR::Cobalt::BandPass::computeCorrectionFactors;
 using LOFAR::Cobalt::fpEquals;
