@@ -222,8 +222,8 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 			LOG_INFO_STR("Interim datafile will be stored in " << itsDataDir);
 
 			// get HBA poweroff delay.
-			itsHBAPowerOffDelay = globalParameterSet()->getTime("CalServer.HBAPowerOffDelay", 600);
-			LOG_INFO_STR("HBA PowerOff delay = " << itsHBAPowerOffDelay << " seconds.");
+			itsPowerOffDelay = globalParameterSet()->getTime("CalServer.PowerOffDelay", 180);
+			LOG_INFO_STR("PowerOff delay = " << itsPowerOffDelay << " seconds.");
 
 			// Setup calibration algorithm
 			m_cal = new RemoteStationCalibration(m_sources, m_dipolemodels, *m_converter);
@@ -271,7 +271,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 		LOG_INFO_STR("nrRSPboards=" << m_n_rspboards << ", nrRCUS=" << m_n_rcus);
 		// resize and clear itsRCUcounters.
 		itsRCUcounts.assign(m_n_rcus, 0);
-		itsHBAPowerOffTime.assign(m_n_rcus, 0);
+		itsPowerOffTime.assign(m_n_rcus, 0);
 
 		// get initial clock setting
 		RSPGetclockEvent getclock;
@@ -433,9 +433,9 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		rcus2switchOff.reset();
 		time_t		now(time(0L));
 		for (uint i = 0; i < m_n_rcus; i++) {				// loop over all rcus
-			if (itsHBAPowerOffTime[i] && itsHBAPowerOffTime[i] <= now) {	// elapsed?
+			if (itsPowerOffTime[i] && itsPowerOffTime[i] <= now) {	// elapsed?
 				rcus2switchOff.set(i);
-				itsHBAPowerOffTime[i] = 0;
+				itsPowerOffTime[i] = 0;
 			}
 		} // for
 		if (rcus2switchOff.any()) {
@@ -643,78 +643,84 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 								GET_CONFIG("CalServer.N_SUBBANDS", i),
 								start.rcumode()(0).getRaw());
 
-			m_subarrays.schedule_add(subarray);
-
-			bitset<MAX_RCUS> validmask;
-
-			for (uint rcu = 0; rcu < m_n_rcus; ++rcu) {
-				validmask.set(rcu);   // select rcu
+			if (m_subarrays.conflicting(subarray)) {
+				// error is already printed
+				ack.status = ERR_NO_PARENT;
 			}
+			else {
+				m_subarrays.schedule_add(subarray);
 
-			// calibration will start within one second
-			// set the spectral inversion right
-			RSPSetbypassEvent	specInvCmd;
-			bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
-			specInvCmd.timestamp = Timestamp(0,0);
-			specInvCmd.rcumask   = start.subset & validmask;
-			specInvCmd.settings().resize(1);
-			specInvCmd.settings()(0).setXSI(SIon);
-			specInvCmd.settings()(0).setYSI(SIon);
-			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
-							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
-			itsRSPDriver->send(specInvCmd);
+				bitset<MAX_RCUS> validmask;
 
-			//
-			// set the control register of the RCU's
-			// if in HBA mode turn on HBAs in groups to prevent resetting of boards
-			//
-
-			RSPSetrcuEvent setrcu;
-			bitset<MAX_RCUS> testmask;
-			Timestamp timeStamp;
-
-//			#define N_PWR_RCUS_PER_STEP 12
-			#define N_PWR_RCUS_PER_STEP 8
-
-			int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
-			int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
-			int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
-
-			if (steps == 0) { steps = 1; }  // limit for test cabinet
-			if (jump < 2) { jump = 2; }     // limit for test cabinet
-
-			// if LBA mode select all rcus in one step
-			if (start.rcumode()(0).getMode() <= 4) {
-				steps = 1;
-				jump = 2;
-			}
-            int delay(0);
-			for (int step = 0; step < steps; ++step) {
-				validmask.reset();
-				// select 12 even(X) rcus and 12 odd(Y) rcus
-				for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
-					validmask.set(rcu);   // select X (HBA power supply)
-					validmask.set(rcu+1); // select Y
+				for (uint rcu = 0; rcu < m_n_rcus; ++rcu) {
+					validmask.set(rcu);   // select rcu
 				}
 
-				// if any rcus in this masker send command
-				testmask = start.subset & validmask;
-				if (testmask.any()) {
-					delay = SCHEDULING_DELAY + step;
-					timeStamp.setNow(delay);
-					setrcu.timestamp = timeStamp; // in steps of 1 second
+				// calibration will start within one second
+				// set the spectral inversion right
+				RSPSetbypassEvent	specInvCmd;
+				bool				SIon(start.rcumode()(0).getNyquistZone() == 2);// on or off?
+				specInvCmd.timestamp = Timestamp(0,0);
+				specInvCmd.rcumask   = start.subset & validmask;
+				specInvCmd.settings().resize(1);
+				specInvCmd.settings()(0).setXSI(SIon);
+				specInvCmd.settings()(0).setYSI(SIon);
+				LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone()
+								<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
+				itsRSPDriver->send(specInvCmd);
 
-					//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+				//
+				// set the control register of the RCU's
+				// if in HBA mode turn on HBAs in groups to prevent resetting of boards
+				//
 
-					setrcu.rcumask = start.subset & validmask;
-					setrcu.settings().resize(1);
-					setrcu.settings()(0) = start.rcumode()(0);
+				RSPSetrcuEvent setrcu;
+				bitset<MAX_RCUS> testmask;
+				Timestamp timeStamp;
 
-					LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
-					itsRSPDriver->send(setrcu);
+	//			#define N_PWR_RCUS_PER_STEP 12
+				#define N_PWR_RCUS_PER_STEP 8
+
+				int nPwrRCUs = m_n_rcus / 2;  // only the even rcus deliver power to the HBAs
+				int steps    = nPwrRCUs / N_PWR_RCUS_PER_STEP;  // 4 steps for NL stations, 8 steps for IS stations
+				int jump     = m_n_rcus / N_PWR_RCUS_PER_STEP;  // jump = 8 for NL stations and 16 for IS stations
+
+				if (steps == 0) { steps = 1; }  // limit for test cabinet
+				if (jump < 2) { jump = 2; }     // limit for test cabinet
+
+				// if LBA mode select all rcus in one step
+				if (start.rcumode()(0).getMode() <= 4) {
+					steps = 1;
+					jump = 2;
 				}
-			}
-			_enableRCUs(subarray, delay + 4);
+				int delay(0);
+				for (int step = 0; step < steps; ++step) {
+					validmask.reset();
+					// select 12 even(X) rcus and 12 odd(Y) rcus
+					for (uint rcu = (step * 2); rcu < m_n_rcus; rcu += jump) {
+						validmask.set(rcu);   // select X (HBA power supply)
+						validmask.set(rcu+1); // select Y
+					}
+
+					// if any rcus in this masker send command
+					testmask = start.subset & validmask;
+					if (testmask.any()) {
+						delay = SCHEDULING_DELAY + step;
+						timeStamp.setNow(delay);
+						setrcu.timestamp = timeStamp; // in steps of 1 second
+
+						//TODO: Step20.2: might have to send 2 settings e.g. when using all X-pols
+
+						setrcu.rcumask = start.subset & validmask;
+						setrcu.settings().resize(1);
+						setrcu.settings()(0) = start.rcumode()(0);
+
+						LOG_DEBUG(formatString("Sending RSP_SETRCU(%08X)", start.rcumode()(0).getRaw()));
+						itsRSPDriver->send(setrcu);
+					} // if in mask
+				} // for steps
+				_enableRCUs(subarray, delay + 4);
+			} // conflict?
 		}
 	}
 	port.send(ack); // send ack
@@ -866,7 +872,7 @@ void CalServer::_enableRCUs(SubArray*	subarray, int delay)
 		if (rcuMask.test(r)) {
 			if (++itsRCUcounts[r] == 1) {
 				rcus2switchOn.set(r);
-				itsHBAPowerOffTime[r] = 0;	// reset poweroff time
+				itsPowerOffTime[r] = 0;	// reset poweroff time
 			} // new count is 1
 		} // rcu in mask
 	} // for all rcus
@@ -909,21 +915,15 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 	SubArray::RCUmask_t	rcus2switchOff;
 	rcus2switchOff.reset();
 	Timestamp 			powerOffTime;
-	powerOffTime.setNow(itsHBAPowerOffDelay);
-	bool				HBAsubarray(false);
-	int					rcumode(0);
+	powerOffTime.setNow(itsPowerOffDelay);
 
 	if (subarray) {		// when no subarray is defined skip this loop: switch all rcus off.
-		rcumode = subarray->getSPW().rcumode();
-		HBAsubarray = (rcumode > 4);
 		SubArray::RCUmask_t	rcuMask = subarray->getRCUMask();
 		for (uint r = 0; r < m_n_rcus; r++) {
 			if (rcuMask.test(r)) {
 				if (--itsRCUcounts[r] == 0) {
 					rcus2switchOff.set(r);
-					if (HBAsubarray) {
-						itsHBAPowerOffTime[r] = powerOffTime;
-					}
+					itsPowerOffTime[r] = powerOffTime;
 				} // count reaches 0
 			} // rcu in mask
 
@@ -952,7 +952,7 @@ void CalServer::_disableRCUs(SubArray*	subarray)
 
 	_updateDataStream(0); // asap
 
-	if (!subarray || !HBAsubarray) {	// reset at startup of CalServer or stopping LBA's?
+	if (!subarray) {	// reset at startup of CalServer or stopping LBA's?
 		sleep (1);
 		_powerdownRCUs(rcus2switchOff);
 	}

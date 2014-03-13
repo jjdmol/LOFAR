@@ -126,8 +126,8 @@ private:
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
 
-	uint			itsHBAPowerOffDelay;// # of seconds to wait before the power of the HBA's is switched off.
-	vector<time_t>	itsHBAPowerOffTime;	// Timestamp the HBA tile may be switched of.
+	uint			itsPowerOffDelay;	// # of seconds to wait before the power of the HBA's is switched off.
+	vector<time_t>	itsPowerOffTime;	// Timestamp the HBA tile may be switched of.
 
 
 	// Ports

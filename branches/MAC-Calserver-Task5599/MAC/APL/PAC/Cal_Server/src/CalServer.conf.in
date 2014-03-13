@@ -13,11 +13,11 @@ CalServer.DipoleModelFile   = DipoleModel.conf
 CalServer.SourceCatalogFile = SourceCatalog.conf
 CalServer.AntennaArraysFile = AntennaArrays.conf
 
-# Period the HBA tile are kept 'on' after they are not claimed anymore.
-# After this period (or when the Calserver is stopped) the HBA are switched of when
-# they are not claimed again.
-# Default value is 10m
-CalServer.HBAPowerOffDelay	= 10m
+# Period the antennas are kept 'on' after they are not claimed anymore.
+# After this period (or when the Calserver is stopped) the antennas are 
+# switched off when they were not claimed again.
+# Default value is 3m
+CalServer.PowerOffDelay	= 3m
 
 # For testing purposes, read ACC from file
 #
