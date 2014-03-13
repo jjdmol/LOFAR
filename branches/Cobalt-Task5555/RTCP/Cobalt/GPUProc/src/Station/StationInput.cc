@@ -665,7 +665,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 
     nrProcessedSamples += nrSamples * nrSubbands;
 
-    LOG_INFO_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
+    LOG_DEBUG_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
 
     // Convert the metaData -> mpi_metaData for transfer over MPI
     for(size_t sb = 0; sb < mpiData->metaData.size(); ++sb) {
@@ -681,7 +681,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
       mpiData->mpi_metaData[sb] = md;
     }
 
-    LOG_INFO_STR(logPrefix << str(format("[block %d] Sending data") % block));
+    LOG_DEBUG_STR(logPrefix << str(format("[block %d] Sending data") % block));
 
     mpiSendTimer.start();
 
@@ -710,7 +710,7 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 
     mpiSendTimer.stop();
 
-    LOG_INFO_STR(logPrefix << str(format("[block %d] Data sent") % block));
+    LOG_DEBUG_STR(logPrefix << str(format("[block %d] Data sent") % block));
 
     outputQueue.append(mpiData);
     ASSERT(!mpiData);
