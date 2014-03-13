@@ -70,7 +70,7 @@ namespace LOFAR
       BeamFormerFactories &factories){
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
-        new IntToFloatKernel::Buffers(devInput->inputSamples, *devB));
+        new IntToFloatKernel::Buffers(*devInput->inputSamples, *devB));
 
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
         factories.intToFloat.create(queue, *intToFloatBuffers));
