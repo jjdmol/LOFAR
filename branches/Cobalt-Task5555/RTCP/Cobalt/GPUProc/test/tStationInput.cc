@@ -140,7 +140,7 @@ SUITE(MPIData) {
       factory.makePacket(packet, data.from + offset, 0);
 
       // Write data
-      bool spill = data.write(packet, &beamletIndices[0]);
+      bool spill = data.write(packet, &beamletIndices[0], beamletIndices.size());
 
       // Validate whether we spill into the next block
       if ((uint64_t)packet.timeStamp() + packet.header.nrBlocks - 1 > data.to - 1) {
@@ -172,7 +172,7 @@ SUITE(MPIData) {
 
     // Write data
     factory.makePacket(packet, data.from, 0);
-    (void)data.write(packet, &beamletIndices[0]);
+    (void)data.write(packet, &beamletIndices[0], beamletIndices.size());
 
     // Validate mapping
     checkAndClearPacketWritten(packet, beamletIndices);
@@ -202,13 +202,13 @@ SUITE(MPIData) {
         // fall off the right
         factory.makePacket(packet, TimeStamp(data.from + nrSamples - timesPerPacket + offset, mode.clockHz()), 0);
 
-        bool spill = data.write(packet, &beamletIndices[0]);
+        bool spill = data.write(packet, &beamletIndices[0], beamletIndices.size());
         CHECK_EQUAL(true, spill);
       } else {
         // fall off the left
         factory.makePacket(packet, TimeStamp(data.from - offset, mode.clockHz()), 0);
 
-        bool spill = data.write(packet, &beamletIndices[0]);
+        bool spill = data.write(packet, &beamletIndices[0], beamletIndices.size());
         CHECK_EQUAL(false, spill);
       }
 

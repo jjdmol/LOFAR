@@ -110,7 +110,7 @@ namespace LOFAR {
        * Returns true if the packet contains data that (might) have to be written
        * to the next MPIData block as well.
        */
-      bool write(const struct RSP &packet, const ssize_t *beamletIndices);
+      bool write(const struct RSP &packet, const ssize_t *beamletIndices, size_t nrBeamletIndices);
     };
 
     /*

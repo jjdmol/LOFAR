@@ -61,10 +61,13 @@ namespace LOFAR {
   namespace Cobalt {
 
 template<typename SampleT>
-bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices) {
+bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices, size_t nrBeamletIndices) {
   /* An optimisation as we'll never encounter anything else */
   ASSERTSTR(packet.header.nrBlocks == 16, "Packet has " << (int)packet.header.nrBlocks << " samples/beamlet, expected 16.");
   const size_t nrSamples = 16;
+
+  /* Prevent accesses beyond beamletIndices */
+  ASSERTSTR(packet.header.nrBeamlets <= nrBeamletIndices, "Packet has " << (int)packet.header.nrBeamlets << " beamlets, expected at most " << nrBeamletIndices);
 
   const uint64_t packetBegin = packet.timeStamp();
   const uint64_t packetEnd   = packetBegin + nrSamples;
@@ -373,6 +376,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
       Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board].free;
 
       const ssize_t *beamletIndices = &this->beamletIndices[board][0];
+      const size_t nrBeamletIndices = mode.nrBeamletsPerBoard();
 
       SmartPtr<RSPData> rspData;
 
@@ -386,11 +390,11 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
           if (packet.payloadError())
             continue;
 
-          if (current.write(packet, beamletIndices)
+          if (current.write(packet, beamletIndices, nrBeamletIndices)
            && next) {
             // We have data (potentially) spilling into `next'.
 
-            if (next->write(packet, beamletIndices)) {
+            if (next->write(packet, beamletIndices, nrBeamletIndices)) {
               LOG_WARN_STR(logPrefix << "Received data for several blocks into the future -- discarding.");
             }
           }
@@ -411,7 +415,7 @@ void StationInput::readRSPNonRealTime()
   vector< SmartPtr<PacketReader> > readers(nrBoards);
 
   for (size_t i = 0; i < nrBoards; ++i)
-    readers[i] = new PacketReader(logPrefix, *inputStreams[i]);
+    readers[i] = new PacketReader(logPrefix, *inputStreams[i], mode);
 
   /* Since the boards will be read at different speeds, we need to
    * manually keep them in sync. We read a packet from each board,
@@ -502,6 +506,7 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
    *    In that case, we break and keep rspData around.
    */
 
+  const size_t nrBeamletIndices = mode.nrBeamletsPerBoard();
 
   for(;;) {
     SmartPtr<RSPData> data = rspDataPool[0].filled.remove();
@@ -510,9 +515,9 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
     // Only packet 0 is used in non-rt mode
     ASSERT(!data->packets[0].payloadError());
 
-    if (current.write(data->packets[0], beamletIndices)) {
+    if (current.write(data->packets[0], beamletIndices, nrBeamletIndices)) {
       // We have data (potentially) spilling into `next'.
-      if (!next || next->write(data->packets[0], beamletIndices)) {
+      if (!next || next->write(data->packets[0], beamletIndices, nrBeamletIndices)) {
 	// Data is even later than next? Put this data back for a future block.
         rspDataPool[0].filled.prepend(data);
 	      break;
