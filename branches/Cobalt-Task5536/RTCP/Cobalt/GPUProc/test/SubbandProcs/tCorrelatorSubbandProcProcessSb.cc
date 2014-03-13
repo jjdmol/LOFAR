@@ -23,11 +23,10 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarTypes.h>
+#include <CoInterface/fpequals.h>
 #include <CoInterface/Parset.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
-
-#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR;

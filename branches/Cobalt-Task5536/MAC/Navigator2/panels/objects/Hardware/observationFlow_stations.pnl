@@ -170,7 +170,7 @@ void updateObservations(dyn_string dps,dyn_dyn_string values) {
   dynSort(stationDPList);
   dynSort(stationList);
   string ttip = \"Stations: <\\n>\";
-  for (int i=1; i<= dynlen(stationList);i++) ttip += stationList[i]+\"</n>\";
+  for (int i=1; i<= dynlen(stationList);i++) ttip += stationList[i]+\"<\\n>\";
   setValue(\"childStateBorder\",\"toolTipText\",ttip);
 
   if (dynlen(stationDPList) < 1) {
@@ -184,7 +184,7 @@ void updateObservations(dyn_string dps,dyn_dyn_string values) {
 }
 
 void updateStationStates(dyn_string dps,dyn_string values) {
-  DebugTN(\"ObservationFlow_stations.pnl:updateStationStates| dps:    \" + \"updateStationStates values: \"+values);
+  LOG_DEBUG(\"observationFlow_stations.pnl:updateStationStates| dps:    \" + \"updateStationStates values: \"+values);
   // determine the highest state and the highest childState, and add those to the observationsObject
   int highestState=0;
   int highestChildState=0;

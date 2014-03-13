@@ -679,16 +679,29 @@ int main (Int argc, char** argv)
     if (psfName.empty()) {
       psfName = imgName + ".psf";
     }
-    if (weight == "robust") {
+    
+    if (weight == "robust") 
+    {
       weight = "briggs";
-    } else if (weight == "robustabs") {
+    } 
+    else if (weight == "robustabs") 
+    {
       weight = "briggsabs";
     }
-    string rmode = "norm";
-    if (weight == "briggsabs") {
+    
+    // rmode for weighting (only valid for weight "uniform" "superuniform" "briggs")
+    // anything but "norm" or "abs" means (super)uniform weighting
+    String rmode; 
+    if (weight == "briggs") 
+    {
+      rmode  = "norm";
+    }
+    else if (weight == "briggsabs") 
+    {
       weight = "briggs";
       rmode  = "abs";
     }
+    
     bool doShift = False;
     MDirection phaseCenter;
     if (! phasectr.empty()) {

@@ -43,7 +43,8 @@ namespace LOFAR
     //     and send it to all writers.
     //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
     //     and write it to GPUProc.
-    void process(Stream &controlStream, size_t myRank);
+    // \return \c true upon success, \c false upon failure.
+    bool process(Stream &controlStream, size_t myRank);
 
   } // namespace Cobalt
 } // namespace LOFAR

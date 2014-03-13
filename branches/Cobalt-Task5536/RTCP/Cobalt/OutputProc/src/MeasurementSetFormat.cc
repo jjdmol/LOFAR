@@ -186,12 +186,6 @@ namespace LOFAR
         try {
           // Use ConfigLocator to locate antenna configuration files.
           ConfigLocator configLocator;
-          // By default, ConfigLocator doesn't add ${LOFARROOT} to its search
-          // path, so we have to do it here :(
-          const char* lofarroot = getenv("LOFARROOT");
-          if (lofarroot) {
-            configLocator.addPathAtFront(lofarroot);
-          }
           // Add static meta data path from parset at the front for regression testing.
           string staticMetaDataDir =
             itsPS.isDefined("Cobalt.OutputProc.StaticMetaDataDirectory")

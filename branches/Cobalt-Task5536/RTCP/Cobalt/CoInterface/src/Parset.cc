@@ -27,6 +27,8 @@
 #include <cmath>
 #include <set>
 #include <algorithm>
+#include <memory>   // auto_ptr
+
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -43,6 +45,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/PrintVector.h>
 #include <CoInterface/SetOperations.h>
+#include <CoInterface/RingCoordinates.h>
 
 using namespace std;
 using boost::format;
@@ -649,30 +652,57 @@ namespace LOFAR
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
 
-        for (unsigned i = 0; i < nrSAPs; ++i) {
+        for (unsigned i = 0; i < nrSAPs; ++i) 
+        {
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
 
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+          size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
 
-          // unused until we support rings
-          (void)nrRings;
-          (void)ringWidth;
+          // Create a ptr to RingCoordinates object
+          // If there are tab rings the object will be actuall constructed
+          // The actual tabs will be extracted after we added all manual tabs
+          // But we need the number of tabs from rings at this location
+          std::auto_ptr<RingCoordinates> ptrRingCoords;
+          if (nrRings > 0)
+          {
+            const string prefix = str(format("Observation.Beam[%u]") % i);
+            string directionType = getString(prefix + ".directionType", "J2000");
+            
+            double angle1 = getDouble(prefix + ".angle1", 0.0);
+            double angle2 = getDouble(prefix + ".angle2", 0.0);
 
-          ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
+            // Convert to COORDTYPE default == OTHER
+            RingCoordinates::COORDTYPES type = RingCoordinates::OTHER;
+            if (directionType == "J2000")
+              type = RingCoordinates::J2000;
+            else if (directionType == "B1950")
+              type = RingCoordinates::B1950;
+              
+            // Create coords object
+            ptrRingCoords = std::auto_ptr<RingCoordinates>(
+              new RingCoordinates(nrRings, ringWidth,
+              RingCoordinates::Coordinate(angle1, angle2), type));
 
+            // Increase the amount of tabs with the number from the coords object
+            // this might be zero
+            nrTABs = nrTABSParset + ptrRingCoords->nCoordinates();
+          }         
+          else if (settings.beamFormer.doFlysEye) 
           // For Fly's Eye mode we have exactly one TAB per station.
-          if (settings.beamFormer.doFlysEye) {
-            nrTABs = nrStations;
+          {
+           nrTABs = nrStations;
           }
 
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
-
-            if (settings.beamFormer.doFlysEye) {
+            // Add flys eye tabs
+            if (settings.beamFormer.doFlysEye) 
+            {
               const string prefix = str(format("Observation.Beam[%u]") % i);
 
               tab.direction.type    = getString(prefix + ".directionType", "J2000");
@@ -681,23 +711,45 @@ namespace LOFAR
 
               tab.dispersionMeasure     = 0.0;
               tab.coherent              = true;
-            } else {
-              const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            } 
+            // Add manual tabs and then the tab rings.
+            else 
+            {
+              if (j < nrTABSParset) // If we are working on manual tabs
+              {
+                const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+                tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              
+                tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
+                                                             prefix + ".angle1"), 0.0);
+                tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
+                                                             prefix + ".angle2"), 0.0);
 
-              tab.direction.type    = getString(prefix + ".directionType", "J2000");
-              tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
-                                                           prefix + ".angle1"), 0.0);
-              tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
-                                                           prefix + ".angle2"), 0.0);
+                // Always store absolute angles. So this is for backwards compat.
+                if (!isDefined(prefix + ".absoluteAngle1"))
+                  tab.direction.angle1 += settings.SAPs[i].direction.angle1;
+                if (!isDefined(prefix + ".absoluteAngle2"))
+                  tab.direction.angle2 += settings.SAPs[i].direction.angle2;
 
-              // Always store absolute angles. So this is for backwards compat.
-              if (!isDefined(prefix + ".absoluteAngle1"))
-                tab.direction.angle1 += settings.SAPs[i].direction.angle1;
-              if (!isDefined(prefix + ".absoluteAngle2"))
-                tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+                tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+                tab.coherent              = getBool(prefix + ".coherent", true);
+              }
+              else
+              {
+                // Get the pointing for the tabrings.
+                // substract the number of manual to get index in the ringCoords
+                // TODO What happens if the number does not match?
+                RingCoordinates::Coordinate pointing = 
+                    ptrRingCoords->coordinates()[j - nrTABSParset];
 
-              tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
-              tab.coherent              = getBool(prefix + ".coherent", true);
+                tab.direction.type = ptrRingCoords->coordTypeAsString();
+                tab.direction.angle1 = pointing.first;
+                tab.direction.angle2 = pointing.second;
+                // Cannot search for the absolute angle for an entry that does not exist
+                // TODO: is this still the correct key?
+                tab.dispersionMeasure = getInt("OLAP.dispersionMeasure", 0);
+                tab.coherent =  true;  // always coherent
+              }
             }
 
             if (tab.coherent)
@@ -711,7 +763,8 @@ namespace LOFAR
 
             // Generate file list
             tab.files.resize(set.nrStokes);
-            for (size_t s = 0; s < set.nrStokes; ++s) {
+            for (size_t s = 0; s < set.nrStokes; ++s) 
+            {
               struct ObservationSettings::BeamFormer::File file;
 
               file.sapNr    = i;
@@ -720,13 +773,16 @@ namespace LOFAR
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
 
-              if (file.coherent) {
+              if (file.coherent) 
+              {
                 file.coherentIdxInSAP = sap.nrCoherent - 1;
 
                 if (coherent_idx >= coherent_locations.size())
                   THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = coherent_locations[coherent_idx++];
-              } else {
+              } 
+              else 
+              {
                 file.incoherentIdxInSAP = sap.nrIncoherent - 1;
 
                 if (incoherent_idx >= incoherent_locations.size())
