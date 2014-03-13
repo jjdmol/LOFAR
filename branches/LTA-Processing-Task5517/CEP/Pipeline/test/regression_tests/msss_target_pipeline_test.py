@@ -1,6 +1,7 @@
 import pyrap.tables as pt
 import numpy
 import sys
+import math
 
 def load_and_compare_data_sets(ms1, ms2):
     # open the two datasets
@@ -8,7 +9,7 @@ def load_and_compare_data_sets(ms1, ms2):
     ms2 = pt.table(ms2)
 
     #get the amount of rows in the dataset
-    n_row = len(ms1.getcol('DATA'))
+    n_row = len(ms1.getcol('CORRECTED_DATA'))
     n_complex_vis = 4
 
     # create a target array with the same length as the datacolumn
@@ -17,6 +18,7 @@ def load_and_compare_data_sets(ms1, ms2):
     ms2_array = ms2.getcol('CORRECTED_DATA')
 
     div_max = 0
+    div_median = 0
     for idx in xrange(n_row):
         for idy  in xrange(n_complex_vis):
 
@@ -25,10 +27,25 @@ def load_and_compare_data_sets(ms1, ms2):
                 div_max = div_value
 
             div_array[idx][0][idy] = div_value
+            div_median += numpy.abs(div_value)
+
+    div_median = div_median / (n_row*n_complex_vis)
+
+    variance = 0
+    for idx in xrange(n_row):
+        for idy  in xrange(n_complex_vis):
+             variance += (div_median - div_array[idx][0][idy])**2
+
+    variance = variance / (n_row*n_complex_vis)
+    standard_deviation = math.sqrt(variance)
+
+    print "median difference between measurement sets: {0}".format(div_median)
+    print "variance between measurement sets: {0}".format(variance)
+    print "standard deviation between measurement sets: {0}".format(standard_deviation)
     print "maximum different value between measurement sets: {0}".format(div_max)
     # Use a delta of about float precision
-    if div_max > 1e-6:
-        print "The measurement sets are contained a different value"
+    if numpy.abs(div_median) > 1e-4:
+        print "The measurement sets contain a different value"
         print "failed delta test!"
         return False
 
