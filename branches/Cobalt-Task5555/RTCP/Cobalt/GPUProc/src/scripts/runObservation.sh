@@ -169,6 +169,8 @@ then
   if [ "$USER" == "lofarsys" ]; then
     ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
       echo -e "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
+
+    cp $PARSET $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
   else
     cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
         $DOT_COBALT_DEFAULT \
