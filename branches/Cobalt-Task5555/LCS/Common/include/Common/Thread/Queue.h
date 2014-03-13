@@ -29,7 +29,7 @@
 #include <Common/Thread/Mutex.h>
 
 #include <list>
-#include <ctime>
+#include <time.h>
 
 
 namespace LOFAR {
@@ -102,7 +102,12 @@ template <typename T> inline T Queue<T>::remove(const timespec &deadline, T null
 #if _POSIX_C_SOURCE >= 199309L
   // Return null if deadline passed
   struct timespec now;
+#ifdef CLOCK_REALTIME_COARSE
   clock_gettime(CLOCK_REALTIME_COARSE, &now);
+#else
+  clock_gettime(CLOCK_REALTIME, &now);
+#endif
+
   if (now.tv_sec > deadline.tv_sec
    || (now.tv_sec == deadline.tv_sec && now.tv_nsec > deadline.tv_nsec))
     return null;
