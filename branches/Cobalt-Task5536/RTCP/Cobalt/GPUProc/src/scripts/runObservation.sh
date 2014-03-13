@@ -228,13 +228,6 @@ done
 # ************************************
 # Start outputProcs on receiving nodes
 # ***********************************
-# validate environment we need this information to save a pid list as a file in the correct dir
-if [ "$LOFARROOT" == "" ] 
-then
-  echo "LOFARROOT not set, cannot save runtime information on the correct location, aborting"
-  exit 1
-fi
-
 # Get parameters from the parset
 SSH_USER_NAME=$(getkey Cobalt.OutputProc.userName $USER)
 SSH_PUBLIC_KEY=$(getkey Cobalt.OutputProc.sshPublicKey)
@@ -258,9 +251,8 @@ ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || { echo "Failed to c
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
 PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
-echo "outputProc processes are appended to the file:"
-touch $PID_LIST_FILE  # assure existance of the file 
-echo $PID_LIST_FILE
+
+
 
 # Function clean_up will clean op all PID in the
 # PID_LIST_FILE and the seperately supplied additional list of PIDs
@@ -272,6 +264,8 @@ function clean_up {
   PID_LIST=$2
   
   echo "Cleaning up child processes. Sending SIGTERM" 
+  # THe kill statements might be called with an empty argument. This will 
+  # result in an exit state 1. But the error is redirected to dev/null.
   kill $(cat $PID_LIST_FILE)  2> /dev/null
   kill $PID_LIST              2> /dev/null 
   
@@ -283,7 +277,7 @@ function clean_up {
   kill -9 $PID_LIST             2> /dev/null
   
   echo "removing Childprocess pid list file"
-  rm $PID_LIST_FILE
+  rm -f $PID_LIST_FILE
   
   exit $EXIT_STATE 
 }
@@ -295,13 +289,16 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 # Start output procs in a seperate function
 # Save file for started child processes
 # Use helper program to get the list of hosts from parset
+echo "outputProc processes are appended to the file: $PID_LIST_FILE"
+touch $PID_LIST_FILE
+
 LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
 RANK=0
 for HOST in $LIST_OF_HOSTS
 do
   COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
   # keep a counter to allow determination of the rank (needed for binding to rtcp)
-  RANK=$(($RANK+1))   
+  RANK=$(($RANK + 1))   
   
   command_retry "$COMMAND" &  # Start retrying function in the background
   PID=$!                      # get the pid 
