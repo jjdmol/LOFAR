@@ -25,7 +25,6 @@
 // LOFAR
 #include <Common/ParameterSet.h>
 #include <Common/LofarLogger.h>
-#include <Common/SystemUtil.h>    // needed for basename
 #include <Common/StringUtil.h>    // needed for split
 #include <Common/Exception.h>     // THROW macro for exceptions
 #include <Common/CasaLogSink.h>
@@ -53,7 +52,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
-#include <libgen.h>
+#include <unistd.h>
 
 // boost
 #include <boost/format.hpp>
@@ -194,6 +193,9 @@ char stdoutbuf[1024], stderrbuf[1024];
 int main(int argc, char *argv[])
 {
   INIT_LOGGER("FinalMetaDataGatherer");
+
+  // Set trigger for self-destruct
+  alarm(300);
 
   CasaLogSink::attach();
 
