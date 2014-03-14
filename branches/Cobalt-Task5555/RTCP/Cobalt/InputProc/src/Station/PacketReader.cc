@@ -35,7 +35,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    const BoardMode PacketReader::MODE_ANY;
+    // Create an 'invalid' mode to make it unique and not match any actually used mode.
+    const BoardMode PacketReader::MODE_ANY(0, 0);
 
     PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode )
       :
