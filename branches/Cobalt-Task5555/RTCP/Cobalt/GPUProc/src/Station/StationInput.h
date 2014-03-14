@@ -62,6 +62,9 @@ namespace LOFAR {
       uint64_t to;
       size_t nrSamples;
 
+      /* Block annotation for logging purposes */
+      StationID stationID;
+
       /*
        * The order of the subbands in the arrays below is
        * those of the subbands processed by all receiving

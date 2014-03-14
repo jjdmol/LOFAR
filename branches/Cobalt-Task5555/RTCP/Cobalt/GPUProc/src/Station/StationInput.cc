@@ -44,6 +44,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
+#include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
 
 #include <InputProc/SampleType.h>
@@ -60,6 +61,8 @@ using boost::format;
 namespace LOFAR {
   namespace Cobalt {
 
+  Mutex savePacketMutex;
+
 template<typename SampleT>
 bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices, size_t nrBeamletIndices) {
   /* An optimisation as we'll never encounter anything else */
@@ -67,7 +70,21 @@ bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletInd
   const size_t nrSamples = 16;
 
   /* Prevent accesses beyond beamletIndices */
-  ASSERTSTR(packet.header.nrBeamlets <= nrBeamletIndices, "Packet has " << (int)packet.header.nrBeamlets << " beamlets, expected at most " << nrBeamletIndices);
+  if (packet.header.nrBeamlets > nrBeamletIndices) {
+    LOG_WARN_STR("Packet has " << (int)packet.header.nrBeamlets << " beamlets, expected at most " << nrBeamletIndices << ". Packet bitmode is " << packet.bitMode() << ". Saving packet to invalid-packet.udp");
+
+    // Save this packet
+    try {
+      ScopedLock sl(savePacketMutex);
+
+      FileStream fs(str(format("invalid-packet-%s.udp") % stationID.name()), 0666);
+      fs.write(&packet, packet.packetSize());
+    } catch (Exception &ex) {
+      LOG_WARN_STR("Could not save invalid packet: " << ex.what());
+    }
+
+    return false;
+  }
 
   const uint64_t packetBegin = packet.timeStamp();
   const uint64_t packetEnd   = packetBegin + nrSamples;
@@ -216,6 +233,7 @@ void StationMetaData<SampleT>::computeMetaData()
       mpiData->block == -1 ? startTime - nrSamples
                            : startTime + mpiData->block * nrSamples;
     mpiData->to    = mpiData->from + nrSamples;
+    mpiData->stationID = stationID;
 
     // Clear flags
     for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
