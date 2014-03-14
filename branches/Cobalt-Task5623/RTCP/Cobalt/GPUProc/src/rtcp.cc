@@ -28,7 +28,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
-#include <iomanip>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -85,7 +84,7 @@ using boost::format;
 
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
-const time_t defaultAllocationTimeout = 10;
+const time_t defaultAllocationTimeout = 15;
 
 // Deadline for the FinalMetaDataGatherer, in seconds
 const time_t defaultFinalMetaDataTimeout = 2 * 60;
@@ -236,10 +235,10 @@ int main(int argc, char **argv)
 
   LOG_DEBUG_STR(
     "Tuning parameters:" <<
-    "\n  allocationTimeout    : " << setw(3) << allocationTimeout << " s" <<
-    "\n  finalMetaDataTimeout : " << setw(3) << finalMetaDataTimeout << " s" <<
-    "\n  outputProcTimeout    : " << setw(3) << outputProcTimeout << " s" <<
-    "\n  rtcpTimeout          : " << setw(3) << rtcpTimeout << " s");
+    "\n  allocationTimeout    : " << allocationTimeout << "s" <<
+    "\n  finalMetaDataTimeout : " << finalMetaDataTimeout << "s" <<
+    "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
+    "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
   if (ps.realTime()) {
     // First of all, make sure we can't freeze for too long
