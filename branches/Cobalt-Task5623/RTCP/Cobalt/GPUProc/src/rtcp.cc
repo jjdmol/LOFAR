@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -84,17 +85,17 @@ using boost::format;
 
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
-const time_t allocationTimeout = 10;
+const time_t defaultAllocationTimeout = 10;
 
 // Deadline for the FinalMetaDataGatherer, in seconds
-const time_t finalMetaDataTimeout = 2 * 60;
+const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
-const time_t outputProcTimeout = 2 * 60;
+const time_t defaultOutputProcTimeout = 2 * 60;
 
 // Amount of seconds to stay alive after Observation.stopTime
 // has passed.
-const time_t rtcpTimeout = 5 * 60;
+const time_t defaultRtcpTimeout = 5 * 60;
 
 static void usage(const char *argv0)
 {
@@ -208,6 +209,37 @@ int main(int argc, char **argv)
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
+
+  /* Tuning parameters */
+
+  // Number of seconds to schedule for the allocation of resources. That is,
+  // we start allocating resources at startTime - allocationTimeout.
+  const time_t allocationTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
+			     defaultAllocationTimeout);
+
+  // Deadline for the FinalMetaDataGatherer, in seconds
+  const time_t finalMetaDataTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.finalMetaDataTimeout",
+			     defaultFinalMetaDataTimeout);
+
+  // Deadline for outputProc, in seconds.
+  const time_t outputProcTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+			     defaultOutputProcTimeout);
+
+  // Amount of seconds to stay alive after Observation.stopTime
+  // has passed.
+  const time_t rtcpTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.rtcpTimeout",
+			     defaultRtcpTimeout);
+
+  LOG_DEBUG_STR(
+    "Tuning parameters:" <<
+    "\n  allocationTimeout    : " << setw(3) << allocationTimeout << " s" <<
+    "\n  finalMetaDataTimeout : " << setw(3) << finalMetaDataTimeout << " s" <<
+    "\n  outputProcTimeout    : " << setw(3) << outputProcTimeout << " s" <<
+    "\n  rtcpTimeout          : " << setw(3) << rtcpTimeout << " s");
 
   if (ps.realTime()) {
     // First of all, make sure we can't freeze for too long
