@@ -54,7 +54,7 @@ namespace LOFAR
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%CoherentStokesTransposeKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_CoherentStokesTransposeKernel.dat") % 
             ps.settings.observationID);
 
     }
