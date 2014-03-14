@@ -121,3 +121,4 @@ Cobalt.Kernels.CorrelatorKernel.dumpOutput = false
 Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput = false
 Cobalt.Kernels.FIR_FilterKernel.dumpOutput = false
 Cobalt.Kernels.IntToFloatKernel.dumpOutput = false
+Cobalt.Tuning.finalMetaDataTimeout = 1
