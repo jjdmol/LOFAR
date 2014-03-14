@@ -37,13 +37,13 @@ node  Output_Pulsar_	4.0.0  development  	'node constraint'  "PulpDataProduct sp
 #--------------------------------------------------------------------------------------------------------
 #    name                  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  size 	                    O    ulng   -      10    0    0      	- 	    'In bytes'
+par  size 	                O    ulng   -      10    0    0      	- 	    'In bytes'
 par  fileFormat                 O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5;AIPS++/CASA|PULP'      -       ''
 par  filename                   O    text   -      10    0    ''      	-       ''
 par  location                   O    text   -      10    0    ''      	-       ''
 par  percentageWritten          O    uint   -      10    0    0      	-       ''
-par  dataType                   O    ptext  -      10    0    'CoherentStokes|IncoherentStokes|ComplexVoltages'        -       ''
+par  datatype                   O    ptext  -      10    0    'CoherentStokes|IncoherentStokes|ComplexVoltages|SummaryCoherentStokes|SummaryIncoherentStokes|SummaryComplexVoltages'        -       ''
 par  TAB                        0    uint   -      10    0    0         -       'Tied Array beam this data is produced from'
 par  SAP                        0    uint   -      10    0    0         -       'Sub-Array Pointing this TAB belonged to'
-par  ObsID                      0    uint   -      10    0    0         -       'Observtion ID in SAS this Sub-Array Pointing belonged to'
+par  ObsID                      0    uint   -      10    0    0         -       'Observation ID in SAS this Sub-Array Pointing belonged to'
 par  fileContent                0    vtext  -      10    0    ''        -       'A list of files in the tar ball'
