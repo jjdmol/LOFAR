@@ -36,27 +36,21 @@ namespace LOFAR
       cufftResult error;
       size_t workSize;
 
-      // Estimate work size
-      error = cufftEstimate1d(fftSize, CUFFT_C2C, nrFFTs, &workSize);
-
-      if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftEstimate1d: " << gpu::cufftErrorMessage(error));
-
-      LOG_INFO_STR("FFT_Plan size for " << nrFFTs << " FFTs of size " << fftSize << ": " << (workSize/1024/1024) << " MByte (estimated)");
-
       // Allocate plan
       error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
 
-      if (error != CUFFT_SUCCESS)
+      if (error != CUFFT_SUCCESS) {
+        // Print estimated work size
+        if (cufftEstimate1d(fftSize, CUFFT_C2C, nrFFTs, &workSize) == CUFFT_SUCCESS)
+          LOG_INFO_STR("FFT_Plan size for " << nrFFTs << " x " << fftSize << " points: " << (workSize/1024/1024) << " MByte (estimated)");
+
         THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
+      }
 
-      // Verify work size
-      error = cufftGetSize(plan, &workSize);
-
-      if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftGetSize: " << gpu::cufftErrorMessage(error));
-
-      LOG_INFO_STR("FFT_Plan size for " << nrFFTs << " FFTs of size " << fftSize << ": " << (workSize/1024/1024) << " MByte (actual)");
+      // Print actual work size
+      if (cufftGetSize(plan, &workSize) == CUFFT_SUCCESS) {
+        LOG_DEBUG_STR("FFT_Plan size for " << nrFFTs << " x " << fftSize << " points: " << (workSize/1024/1024) << " MByte (actual)");
+      }
     }
 
     FFT_Plan::~FFT_Plan()
