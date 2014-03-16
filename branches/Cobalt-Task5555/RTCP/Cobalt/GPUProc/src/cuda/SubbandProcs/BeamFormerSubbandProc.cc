@@ -259,7 +259,7 @@ namespace LOFAR
         output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
 
         // Output in devE, by design
-        queue.readBuffer( output.incoherentData, *devE, 
+        queue.readBuffer(output.incoherentData, incoherentStep->outputBuffer(),
           counters.incoherentOutput, false);
 
         // TODO: Propagate flags

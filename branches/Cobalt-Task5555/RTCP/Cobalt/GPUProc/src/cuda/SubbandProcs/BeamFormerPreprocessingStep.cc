@@ -68,6 +68,7 @@ namespace LOFAR
 
     void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
+
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
         new IntToFloatKernel::Buffers(*devInput->inputSamples, *devB));
@@ -104,6 +105,7 @@ namespace LOFAR
 
       secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
         factories.fftShift.create(queue, *secondFFTShiftBuffers));
+
       // FFT: A -> A
       unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
         ps.nrSamplesPerSubband() /

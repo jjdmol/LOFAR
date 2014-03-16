@@ -83,11 +83,10 @@ namespace LOFAR
     void BeamFormerIncoherentStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories)
     {
-      //incoherent stokes
       incoherentStokesPPF =
         ps.settings.beamFormer.incoherentSettings.nrChannels > 1;
-      // Transpose: B -> A
 
+      // Transpose: B -> A
       incoherentTransposeBuffers =
         std::auto_ptr<IncoherentStokesTransposeKernel::Buffers>(
         new IncoherentStokesTransposeKernel::Buffers(*devB, *devA));
@@ -96,6 +95,7 @@ namespace LOFAR
         factories.incoherentStokesTranspose.create(queue,
         *incoherentTransposeBuffers));
 
+      // inverse FFT: A -> A
       unsigned incInversNrFFTs = ps.nrStations() * NR_POLARIZATIONS *
         ps.nrSamplesPerSubband() /
         ps.settings.beamFormer.nrHighResolutionChannels;
@@ -122,6 +122,7 @@ namespace LOFAR
         factories.incoherentFirFilter.bufferSize(
         FIR_FilterKernel::FILTER_WEIGHTS)));
 
+      // final FIR: A -> B
       incoherentFirFilterBuffers =
         std::auto_ptr<FIR_FilterKernel::Buffers>(
         new FIR_FilterKernel::Buffers(*devA, *devB,
@@ -143,18 +144,23 @@ namespace LOFAR
         queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
         nrFFTs, true, *devB));
 
-      // incoherentstokes kernel: A/B -> E
+      // Incoherent Stokes kernel: A/B -> B/A
       //
-      // 1ch: input comes from incoherentInverseFFT in A
-      // Nch: input comes from incoherentFinalFFT in B
+      // 1ch: input comes from incoherentInverseFFT in A, output in B
+      // Nch: input comes from incoherentFinalFFT in B, output in A
       incoherentStokesBuffers =
         std::auto_ptr<IncoherentStokesKernel::Buffers>(
         new IncoherentStokesKernel::Buffers(
-        incoherentStokesPPF ? *devB : *devA, *devE));
+        incoherentStokesPPF ? *devB : *devA,
+        incoherentStokesPPF ? *devA : *devB));
       incoherentStokesKernel = std::auto_ptr<IncoherentStokesKernel>(
         factories.incoherentStokes.create(queue, *incoherentStokesBuffers));
 
       devIncoherentFilterHistoryData->set(0);
+    }
+
+    gpu::DeviceMemory BeamFormerIncoherentStep::outputBuffer() {
+      return incoherentStokesPPF ? *devA : *devB;
     }
 
     void BeamFormerIncoherentStep::logTime()
