@@ -28,8 +28,8 @@
 #include <CoInterface/SmartPtr.h>
 
 #include <InputProc/RSPBoards.h>
+#include <InputProc/Buffer/StationID.h>
 #include <InputProc/RSPTimeStamp.h>
-#include <InputProc/Buffer/BufferSettings.h>
 
 #include "PacketFactory.h"
 #include "RSP.h"
@@ -44,10 +44,10 @@ namespace LOFAR
     class Generator : public RSPBoards
     {
     public:
-      Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to );
+      Generator( const StationID &stationID, const std::vector< SmartPtr<Stream> > &outputStreams, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to );
 
     protected:
-      const BufferSettings settings;
+      const StationID stationID;
       std::vector<Stream *> outputStreams;
       PacketFactory &packetFactory;
 

@@ -39,10 +39,6 @@ namespace LOFAR
         return nrBeamletsPerBoard(bitMode);
       }
 
-      unsigned nrBeamletsPerBoard() const volatile {
-        return nrBeamletsPerBoard(bitMode);
-      }
-
       static unsigned nrBeamletsPerBoard( unsigned bitMode ) {
         // the number of beamlets scales with the bitmode:
         // 16-bit:  61
@@ -74,21 +70,13 @@ namespace LOFAR
         return beamlet / nrBeamletsPerBoard();
       }
 
-      /*
-       * The functions below deal with comparing the volatile BoardMode as it
-       * is stored in SHM with a non-volatile BoardMode as used in other code.
-       */
-
-      bool operator==(const volatile struct BoardMode &other) const {
+      bool operator==(const struct BoardMode &other) const {
         return bitMode == other.bitMode && clockMHz == other.clockMHz;
       }
 
-      bool operator!=(const volatile struct BoardMode &other) const {
+      bool operator!=(const struct BoardMode &other) const {
         return !(*this == other);
       }
-
-      BoardMode(const volatile BoardMode &other): bitMode(other.bitMode), clockMHz(other.clockMHz) {}
-      void operator=(const BoardMode &other) volatile { bitMode = other.bitMode; clockMHz = other.clockMHz; }
 
     private:
       // number of beamlets per RSP board in 16-bit mode.

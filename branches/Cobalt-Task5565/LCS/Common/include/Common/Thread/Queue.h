@@ -29,6 +29,7 @@
 #include <Common/Thread/Mutex.h>
 
 #include <list>
+#include <time.h>
 
 
 namespace LOFAR {
@@ -38,8 +39,18 @@ template <typename T> class Queue
   public:
     Queue() {}
 
+    // Add an element to the back of the queue
     void     append(T);
+
+    // Put an element back to the front of the queue
+    void     prepend(T);
+
+    // Remove the front element; waits for an element to be appended
     T	     remove();
+
+    // Remove the front element; waits until `deadline' for an element,
+    // and returns `null' if the deadline passed.
+    T	     remove(const timespec &deadline, T null);
 
     unsigned size() const;
     bool     empty() const;
@@ -63,12 +74,50 @@ template <typename T> inline void Queue<T>::append(T element)
 }
 
 
+template <typename T> inline void Queue<T>::prepend(T element)
+{
+  ScopedLock scopedLock(itsMutex);
+
+  itsQueue.push_front(element);
+  itsNewElementAppended.signal();
+}
+
+
 template <typename T> inline T Queue<T>::remove()
 {
   ScopedLock scopedLock(itsMutex);
 
   while (itsQueue.empty())
     itsNewElementAppended.wait(itsMutex);
+
+  T element = itsQueue.front();
+  itsQueue.pop_front();
+
+  return element;
+}
+
+
+template <typename T> inline T Queue<T>::remove(const timespec &deadline, T null)
+{
+#if _POSIX_C_SOURCE >= 199309L
+  // Return null if deadline passed
+  struct timespec now;
+#ifdef CLOCK_REALTIME_COARSE
+  clock_gettime(CLOCK_REALTIME_COARSE, &now);
+#else
+  clock_gettime(CLOCK_REALTIME, &now);
+#endif
+
+  if (now.tv_sec > deadline.tv_sec
+   || (now.tv_sec == deadline.tv_sec && now.tv_nsec > deadline.tv_nsec))
+    return null;
+#endif
+
+  ScopedLock scopedLock(itsMutex);
+
+  while (itsQueue.empty())
+    if (!itsNewElementAppended.wait(itsMutex, deadline))
+      return null;
 
   T element = itsQueue.front();
   itsQueue.pop_front();

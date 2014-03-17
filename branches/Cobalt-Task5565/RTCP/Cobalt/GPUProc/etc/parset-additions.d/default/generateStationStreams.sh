@@ -13,7 +13,7 @@
 
 cat RSPConnections_Cobalt.dat | perl -ne '
 
-/^(\w+) RSP_([01]) (.*)/ || next;
+/^(\w+) RSP_([01]) ([^ \t\n]+)/ || next;
 
 $station = $1;
 $board = $2;
