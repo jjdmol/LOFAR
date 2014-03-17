@@ -109,6 +109,9 @@ if ($board == 1) {
   print "\n";
 }
 
-'
+' | sort | uniq
 
+# Remove duplicate entries, because RSPConnections_Cobalt.dat now can have multiple lines per
+# station (one for each RSP board), which contains information that we already obtain from
+# RSP_IP.dat.
 
