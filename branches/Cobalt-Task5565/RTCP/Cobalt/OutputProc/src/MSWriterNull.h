@@ -36,6 +36,8 @@ namespace LOFAR
       MSWriterNull();
       ~MSWriterNull();
 
+      virtual void augment(const FinalMetaData &finalMetaData);
+
       virtual void write(StreamableData *);
     };
 

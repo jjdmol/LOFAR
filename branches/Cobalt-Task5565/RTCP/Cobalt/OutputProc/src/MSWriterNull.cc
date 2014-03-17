@@ -22,6 +22,11 @@
 
 #include "MSWriterNull.h"
 
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
+using boost::format;
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -40,9 +45,15 @@ namespace LOFAR
 
     void MSWriterNull::write(StreamableData *)
     {
+      // We do not know why the creation of the propper writer failed.
+      // Assume nothing and only report that we did not write anything
+      itsConfiguration.replace("percentageWritten", str(format("%u") % 0));
     }
 
-
+    void MSWriterNull::augment(const FinalMetaData &finalMetaData)
+    {
+      (void)finalMetaData;  // mirror implementation in MSWriter.cc
+    }
   } // namespace Cobalt
 } // namespace LOFAR
 
