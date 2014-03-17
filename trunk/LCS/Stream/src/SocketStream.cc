@@ -24,6 +24,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Cancellation.h>
+#include <Common/Thread/Mutex.h>
 #include <Stream/SocketStream.h>
 
 #include <cstring>
@@ -67,6 +68,10 @@ static struct RandomState {
   unsigned short xsubi[3];
 } randomState;
 
+namespace {
+  Mutex getAddrInfoMutex;
+};
+
 
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
 :
@@ -108,10 +113,14 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
-        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
-          const string errorstr = gai_strerror(retval);
+        {
+          ScopedLock sl(getAddrInfoMutex);
 
-          throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+          if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
+            const string errorstr = gai_strerror(retval);
+
+            throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+          }
         }
 
         // make sure result will be freed
