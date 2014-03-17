@@ -174,14 +174,14 @@ namespace LOFAR
       const std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
       SmartPtr<Stream> stream;
 
-      // FinalMetaDataGatherer has 5 seconds to start and listen on the
+      // FinalMetaDataGatherer has 20 seconds to start and listen on the
       // PortBroker connection. We need this because SSH.cc/libssh2 sometimes
       // keeps connections open even though FinalMetaDataGatherer cannot even
       // be started.
       //
       // TODO: For now, we also need a deadline for non-real-time observations,
       // because FinalMetaDataGather is not necessarily present.
-      const time_t deadline = time(0) + 5;
+      const time_t deadline = time(0) + 20;
 
       // Keep trying to connect to the FinalMetaDataGatherer, but only
       // while the SSH connection is alive. If not, there's no point in waiting
@@ -194,7 +194,7 @@ namespace LOFAR
           return;
 
         try {
-          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 1);
+          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 5);
         } catch (SocketStream::TimeOutException &) {
         }
       }
