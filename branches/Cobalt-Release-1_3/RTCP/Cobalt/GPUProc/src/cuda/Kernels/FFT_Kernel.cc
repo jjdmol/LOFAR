@@ -108,7 +108,9 @@ namespace LOFAR
       }
 
       // Execute the minor FFT
-      executePlan(planMinor.plan, data);
+      if (nrMinorFFTs > 0) {
+        executePlan(planMinor.plan, data);
+      }
 
       // Wrap up
       itsStream.recordEvent(itsCounter.stop);
