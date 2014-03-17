@@ -2,12 +2,13 @@
 #include "StationNodeAllocation.h"
 
 #ifdef HAVE_MPI
-#include <mpi.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 #include <boost/format.hpp>
 #include <sstream>
 
 #include <Common/LofarLogger.h>
+#include <Stream/NullStream.h>
 #include <CoInterface/Stream.h>
 
 #include <InputProc/RSPTimeStamp.h>
@@ -34,13 +35,8 @@ StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const 
 
 bool StationNodeAllocation::receivedHere() const
 {
-  int rank = 0;
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
+  int rank = MPI_Rank();
+  int nrHosts = MPI_Size();
 
   int stationRank = receiverRank();
 
@@ -119,7 +115,13 @@ std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
 
       inputStreams[board] = new PacketStream(factory, from, to, board);
     } else {
-      inputStreams[board] = createStream(desc, true);
+      try {
+        inputStreams[board] = createStream(desc, true);
+      } catch(Exception &ex) {
+        LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+
+        inputStreams[board] = new NullStream;
+      }
     }
   }
 

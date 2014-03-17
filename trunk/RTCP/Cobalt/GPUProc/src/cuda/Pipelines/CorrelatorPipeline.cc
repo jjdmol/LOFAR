@@ -167,7 +167,7 @@ namespace LOFAR
           outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
         }
       } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
+        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex.what());
 
         outputStream = new NullStream;
       }

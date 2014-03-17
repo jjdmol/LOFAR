@@ -48,33 +48,22 @@ namespace LOFAR
       stationIdx(stationIdx),
       from(from),
       increment(increment),
-
-      stop(false),
-      // we need an extra entry for the central beam
-      buffer(bufferSize, AllDelays(parset)),
-      head(0),
-      tail(0),
-      bufferFree(bufferSize),
-      bufferUsed(0),
+      currentTime(from),
       delayTimer("delay producer", true, true)
     {
       ASSERTSTR(test(), "Delay compensation engine is broken");
+
+      init();
     }
 
 
     void Delays::start()
     {
-      thread = new Thread(this, &Delays::mainLoop, "[DelayCompensation] ");
     }
 
 
     Delays::~Delays()
     {
-      ScopedDelayCancellation dc; // Semaphores provide cancellation points
-
-      // trigger mainLoop and force it to stop
-      stop = true;
-      bufferFree.up(nrCalcDelays);
     }
 
 
@@ -147,12 +136,6 @@ namespace LOFAR
     {
       ScopedLock lock(casacoreMutex);
       ScopedDelayCancellation dc;
-
-      // We need bufferSize to be a multiple of batchSize to avoid wraparounds in
-      // the middle of the batch calculations. This makes life a lot easier and there is no
-      // need to support other cases.
-
-      ASSERT(bufferSize % nrCalcDelays == 0);
 
       // Set an initial epoch for the frame
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
@@ -281,80 +264,12 @@ namespace LOFAR
     }
 
 
-    void Delays::mainLoop()
-    {
-      LOG_DEBUG("Delay compensation thread running");
-
-      init();
-
-      // the current time, in samples
-      TimeStamp currentTime = from;
-
-      try {
-        while (!stop) {
-          bufferFree.down(nrCalcDelays);
-
-          delayTimer.start();
-
-          // Calculate nrCalcDelays seconds worth of delays. Technically, we do not have
-          // to calculate that many at the end of the run, but there is no need to
-          // prevent the few excess delays from being calculated.
-
-          {
-            for (size_t i = 0; i < nrCalcDelays; i++) {
-              // Check whether we will store results in a valid place
-              ASSERTSTR(tail < bufferSize, tail << " < " << bufferSize);
-
-              // Calculate the delays and store them in buffer[tail]
-              calcDelays(currentTime, buffer[tail]);
-
-              // Advance time for the next calculation
-              currentTime += increment;
-
-              // Advance to the next result set.
-              // since bufferSize % nrCalcDelays == 0, wrap
-              // around can only occur between runs
-              ++tail;
-            }
-          }
-
-          // check for wrap around for the next run
-          if (tail >= bufferSize)
-            tail = 0;
-
-          delayTimer.stop();
-
-          bufferUsed.up(nrCalcDelays);
-        }
-      } catch (Exception &ex) {
-        // trigger getNextDelays and force it to stop
-        stop = true;
-        bufferUsed.up(1);
-
-        throw;
-      }
-
-      LOG_DEBUG("Delay compensation thread stopped");
-    }
-
-
     void Delays::getNextDelays( AllDelays &result )
     {
-      ASSERT(thread);
+      // Calculate the delays and store them in result
+      calcDelays(currentTime, result);
 
-      bufferUsed.down();
-
-      if (stop)
-        THROW(Exception, "Cannot obtain delays -- delay thread stopped running");
-
-      // copy the directions at buffer[head]
-      result = buffer[head];
-
-      // increment the head pointer
-      if (++head == bufferSize)
-        head = 0;
-
-      bufferFree.up();
+      currentTime += increment;
     }
 
     void Delays::generateMetaData( const AllDelays &delaysAtBegin, const AllDelays &delaysAfterEnd, const vector<size_t> &subbands, vector<SubbandMetaData> &metaDatas, vector<ssize_t> &read_offsets )

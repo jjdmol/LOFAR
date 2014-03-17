@@ -191,17 +191,22 @@ then
   # Note: If you want such an override anyway, do it in your own account.
   DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
   DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
-  if [ "$USER" == "lofarsys" ]; then
-    ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
-      echo -e "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
-  else
+  #if [ "$USER" == "lofarsys" ]; then
+  #  ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
+  #    echo -e "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
+  #
+  #  cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
+  #      $PARSET \
+  #      $LOFARROOT/etc/parset-additions.d/override/*.parset \
+  #      > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+  #else
     cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
         $DOT_COBALT_DEFAULT \
         $PARSET \
         $LOFARROOT/etc/parset-additions.d/override/*.parset \
         $DOT_COBALT_OVERRIDE \
         > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
-  fi
+  #fi
   unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
 
   # Use the new one from now on

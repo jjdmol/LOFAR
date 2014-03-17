@@ -64,28 +64,28 @@ BeamFormer {I/O: weights}
    |            [channel][sample][tab][pol]             [4096][48][tab][2]  = 3 MiB/TAB             A
    V
 Transpose  
-   |            [tab][pol][sample][channel]             [tab][2][48][4096]  = 3 MiB/TAB             1ch: CS: C, CV: D
-   |                                                                                                Nch: CS: D, CV: C
+   |            [tab][pol][sample][channel]             [tab][2][48][4096]  = 3 MiB/TAB             1ch: C
+   |                                                                                                Nch: D
    V
 iFFT-4k {inplace}
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: CS: C, CV: D
-   |                                                                                                Nch: CS: D, CV: C
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: C
+   |                                                                                                Nch: D
    V
 FFT-shift {inplace}
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: CS: C, CV: D
-   |                                                                                                Nch: CS: D, CV: C
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: C
+   |                                                                                                Nch: D
    V
 FIR-16 (if >1ch)
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: CS: -, CV: -
-   |                                                                                                Nch: CS: C, CV: D
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: -
+   |                                                                                                Nch: C
    V
 FFT-16 {inplace} (if >1ch)
-   |            [tab][pol][sample][channel]             [tab][2][12288][16] = 3 MiB/TAB             1ch: CS: -, CV: -
-   |                                                                                                Nch: CS: C, CV: D
+   |            [tab][pol][sample][channel]             [tab][2][12288][16] = 3 MiB/TAB             1ch: -
+   |                                                                                                Nch: C
    V
 Coherent Stokes
-   |            [tab][stokes][sample][channel]          [tab][4][12288][16] = 0.75 MiB/TAB/Stokes   1ch: CS: D, CV: -
-   |                                                    (float)                                     Nch: CS: D, CV: -
+   |            [tab][stokes][sample][channel]          [tab][4][12288][16] = 0.75 MiB/TAB/Stokes   1ch: D
+   |                                                    (float)                                     Nch: D
    V
 (output)
 
@@ -104,15 +104,15 @@ FFT-shift {inplace}
    |            [station][pol][sample]                  [48][2][196608]     = 144 MiB               A
    V
 FIR-16 (if >1ch) 
-   |            [station][pol][sample]                  [48][2][196608]     = 144 MiB               B
+   |            [station][pol][sample]                  [48][2][196608]     = 144 MiB               Nch: B
    |
    V
 FFT-16 {inplace} (if >1ch)
-   |            [station][pol][sample][channel]         [48][2][12288][16]  = 144 MiB               B
+   |            [station][pol][sample][channel]         [48][2][12288][16]  = 144 MiB               Nch: B
    V
 Incoherent Stokes
-   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 A
-   V                                                    (float)
+   |            [stokes][sample][channel]               [4][12288][16]      = 3 MiB                 1ch: B
+   V                                                    (float)                                     Nch: A
 (output)
 
 
