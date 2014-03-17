@@ -162,7 +162,7 @@ namespace LOFAR
                                     );
 
       // Start the remote process
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
                     userName << '@' << hostName << " using key pair filenames " <<
                     pubKey << ", " << privKey << " to execute command '" << commandLine << '\'');
       SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
@@ -200,13 +200,13 @@ namespace LOFAR
       }
 
       // Send parset
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
       itsParset.write(stream);
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
 
       // Receive final meta data
       itsFinalMetaData.read(*stream);
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
 
       // Wait for or end the remote process
       sshconn.wait();
