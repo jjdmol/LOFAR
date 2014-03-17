@@ -1,4 +1,4 @@
-
+# $Id$
 PIC.Core.CS001HBA0.RSP.ports    = [udp:cbt007-10GB01:10010, udp:cbt007-10GB01:10011, udp:cbt007-10GB01:10012, udp:cbt007-10GB01:10013]
 PIC.Core.CS001HBA0.RSP.receiver = cbt007_0
 PIC.Core.CS001HBA1.RSP.ports    = [udp:cbt007-10GB01:10016, udp:cbt007-10GB01:10017, udp:cbt007-10GB01:10018, udp:cbt007-10GB01:10019]

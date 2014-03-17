@@ -1,3 +1,5 @@
+# $Id$
+
 # The host on which to run the FinalMetaDataGatherer
 Cobalt.FinalMetaDataGatherer.host = lhn001
 
