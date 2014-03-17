@@ -194,7 +194,7 @@ namespace LOFAR
           return;
 
         try {
-          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 5);
+          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID() + 1), resource, time(0) + 5);
         } catch (SocketStream::TimeOutException &) {
         }
       }
