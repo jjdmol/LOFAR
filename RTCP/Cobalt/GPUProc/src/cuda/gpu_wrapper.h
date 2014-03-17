@@ -200,7 +200,7 @@ namespace LOFAR
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_AUTO);
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
 
         // Returns the device associated to the _current_ context.
         Device getDevice() const;

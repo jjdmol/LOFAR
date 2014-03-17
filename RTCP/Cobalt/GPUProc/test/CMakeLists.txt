@@ -8,6 +8,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 lofar_add_test(tBandPass tBandPass.cc)
 lofar_add_test(tSSH tSSH.cc)
+lofar_add_test(tPerformanceTest tPerformanceTest)
 
 if(MPI_FOUND)
   lofar_add_test(t_cpu_utils t_cpu_utils.cc)
@@ -20,6 +21,7 @@ endif()
 if(UNITTEST++_FOUND)
   lofar_add_test(t_gpu_utils t_gpu_utils)
   lofar_add_test(tRunningStatistics tRunningStatistics.cc)
+  lofar_add_test(tStationInput tStationInput)
 endif()
 
 add_subdirectory(Kernels)

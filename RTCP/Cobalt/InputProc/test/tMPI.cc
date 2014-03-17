@@ -40,8 +40,8 @@ const size_t nrRuns = 10;
 
 void test()
 {
-  MultiDimArray<char, 2> send_buffers(boost::extents[nrHosts][BUFSIZE]);
-  MultiDimArray<char, 2> receive_buffers(boost::extents[nrHosts][BUFSIZE]);
+  MultiDimArray<char, 2> send_buffers(boost::extents[nrHosts][BUFSIZE], 1, mpiAllocator);
+  MultiDimArray<char, 2> receive_buffers(boost::extents[nrHosts][BUFSIZE], 1, mpiAllocator);
 
   NSTimer timer("MPI I/O", true, false);
 
@@ -51,6 +51,9 @@ void test()
     vector<MPI_Request> requests;
 
     timer.start();
+
+    {
+      ScopedLock sl(MPIMutex);
 
     // post our sends
     for (int n = 0; n < nrHosts; ++n) {
@@ -64,6 +67,8 @@ void test()
       if (n == rank) continue;
 
       requests.push_back(Guarded_MPI_Irecv(&receive_buffers[n][0], BUFSIZE, n, 1000 * n + 200 + rank));
+    }
+
     }
 
     // wait for all to finish
