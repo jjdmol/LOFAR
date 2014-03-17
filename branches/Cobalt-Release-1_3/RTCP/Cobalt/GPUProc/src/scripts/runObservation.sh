@@ -333,7 +333,7 @@ LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
 RANK=0
 for HOST in $LIST_OF_HOSTS
 do
-  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST \"$OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK\""
   # keep a counter to allow determination of the rank (needed for binding to rtcp)
   RANK=$(($RANK + 1))   
   
