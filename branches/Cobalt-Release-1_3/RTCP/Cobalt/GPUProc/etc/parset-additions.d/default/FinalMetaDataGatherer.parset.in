@@ -11,7 +11,7 @@ Cobalt.FinalMetaDataGatherer.sshPrivateKey =
 
 # The executable of the process to start. If no absolute path is given,
 # it needs to be found in $PATH after login.
-Cobalt.FinalMetaDataGatherer.executable = /globalhome/lofarsystem/build/gnu_debug/installed/bin/FinalMetaDataGatherer
+Cobalt.FinalMetaDataGatherer.executable = source /data/home/lofarsys/production/lofar_cobalt/lofarinit.sh; FinalMetaDataGatherer
 
 # The database to connect to:
 #   Development: sasdbtest (do not use here; prefer hostname redirection)
