@@ -1,5 +1,5 @@
 # $Id$
-# The list of Cobalt nodes to use for this observation
+# The list of Cobalt nodes to use for the production system
 # 
 # Node XXXX is configured through the keys in
 #   PIC.Core.Cobalt.XXXX.*

@@ -15,6 +15,7 @@ configure_file(
 install(FILES
   parset-additions.d/default/HardwareList.parset
   parset-additions.d/default/HardwareUsed.parset
+  parset-additions.d/default/HardwareUsed.parset.testsys
   ${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/FinalMetaDataGatherer.parset
   parset-additions.d/default/MAC-feedback.parset
   parset-additions.d/default/NoCascadingFFT.parset
