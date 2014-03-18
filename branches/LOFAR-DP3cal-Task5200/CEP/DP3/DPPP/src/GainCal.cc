@@ -783,12 +783,14 @@ namespace LOFAR {
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
       //itsSols.push_back(g);
-
+      itsThingie++;
       if (dg > itsTolerance && itsDebugLevel>1) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>2) {
           cout<<"g="<<iS.g<<endl;
+          cout<<endl<<endl<<"Timeslot: "<<itsThingie<<endl;
           exportToMatlab(0);
+          THROW(Exception,"Klaar!");
           if (itsThingie>0) {
             THROW(Exception,"Klaar!");
           }
