@@ -71,6 +71,33 @@ SyntaxError()
 	exit 0
 }
 
+# Method to run a command with a specified timeout in seconds
+# First argument is timeout, next arguments are the command and its parameters
+
+run_timeout()
+{
+    timeout=$1 # in seconds
+    interval=1
+    delay=1
+    shift ${argv}
+    (
+        ((t = timeout))
+
+        while ((t > 0)); do
+            sleep $interval
+            kill -0 $$ || exit 0
+            ((t -= interval))
+        done
+
+        # Be nice, post SIGTERM first.
+        # The 'exit 0' below will be executed if any preceeding command fails.
+        kill -s SIGTERM $$ && kill -0 $$ || exit 0
+        sleep $delay
+        kill -s SIGKILL $$
+    ) 2> /dev/null &
+    exec "$@"
+}
+
 # Find which image to load on a given station; uses file 
 # ${ETCDIR}/RSPImage.conf
 #
@@ -109,6 +136,7 @@ selectImage()
 	let board=0
         # Assume no errors with board communication
 	boardError=0
+        errorBoards=""
 	# Make sure we have an image number in parameter $image
         if [ -z $image ] && [ $imageForced -eq 0 ]; then  
             findImage `hostname -s`
@@ -118,7 +146,7 @@ selectImage()
 	do
 		# get major version of active firmware on RSPboard $board
 		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
-		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+		rsu=`run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 
 		# If not a single number, something weird  must have happened
 		if [ ${#rsu} -ne 1 ]; then 
@@ -126,13 +154,17 @@ selectImage()
 		  boardError=1
                 else
   		  echo "Loading image $image on RSPboard $board ..."
-		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+		  run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+                  if [ $? -ne 0 ]; then 
+		      boardError=1
+                      errorBoards=${errorBoards}${board}","
+                  fi
 		fi
 		# Next board
 		let board+=1
 	done
 	if [ $boardError -eq 1 ]; then
-	    echo "One or more boards have a communication problem; try reset the 48V"
+	    echo "Board(s) $errorBoards have a communication problem; try reset the 48V"
 	fi
 }
 
