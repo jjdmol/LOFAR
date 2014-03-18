@@ -98,7 +98,7 @@ namespace LOFAR
 
       ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
       if (size < 0) {
-        LOG_WARN_STR("Error marshalling flags into buffer of size " << MAXFLAGSIZE << ", compressing flags");
+        LOG_DEBUG_STR("Error marshalling flags into buffer of size " << MAXFLAGSIZE << ", compressing flags");
 
         // Span one flag set from the first to the last entry
         const flags_type::Ranges &ranges = flags.getRanges();
