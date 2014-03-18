@@ -232,7 +232,7 @@ SUITE(delayCompensation) {
 }
 
 /*
- * Test station information.
+ * Test station / antenna field information.
  */
 
 TEST(antennaSet) {
@@ -275,7 +275,7 @@ TEST(bandFilter) {
   }
 }
 
-SUITE(antennaFields) {
+SUITE(antennaFieldNames) {
   TEST(LBA) {
     vector<string> stations, expectedFields;
     stations.push_back("CS001");
@@ -287,12 +287,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603LBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "LBA_INNER");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -307,12 +307,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_ZERO");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -327,12 +327,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_ONE");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -349,12 +349,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_DUAL");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -369,12 +369,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_JOINED");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 }
@@ -390,10 +390,10 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(3U, ps.settings.stations[0].phaseCenter.size());
-    CHECK_CLOSE(1.0, ps.settings.stations[0].phaseCenter[0], 0.01);
-    CHECK_CLOSE(2.0, ps.settings.stations[0].phaseCenter[1], 0.01);
-    CHECK_CLOSE(3.0, ps.settings.stations[0].phaseCenter[2], 0.01);
+    CHECK_EQUAL(3U,  ps.settings.antennaFields[0].phaseCenter.size());
+    CHECK_CLOSE(1.0, ps.settings.antennaFields[0].phaseCenter[0], 0.01);
+    CHECK_CLOSE(2.0, ps.settings.antennaFields[0].phaseCenter[1], 0.01);
+    CHECK_CLOSE(3.0, ps.settings.antennaFields[0].phaseCenter[2], 0.01);
   }
 
   TEST(default_map) {
@@ -407,11 +407,11 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(1U, ps.settings.stations.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap[0]);
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspSlotMap.size());
-    CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspSlotMap.size());
+    CHECK_EQUAL(2U, ps.settings.antennaFields[0].rspSlotMap[0]);
   }
 
   TEST(station_map) {
@@ -425,11 +425,11 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(1U, ps.settings.stations.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap[0]);
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspSlotMap.size());
-    CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspSlotMap.size());
+    CHECK_EQUAL(2U, ps.settings.antennaFields[0].rspSlotMap[0]);
   }
 }
 
@@ -936,32 +936,32 @@ SUITE(integration) {
     CHECK_EQUAL("LBA_10_90", ps.settings.bandFilter);
     CHECK_EQUAL(false,       ps.settings.anaBeam.enabled);
 
-    // test station list
-    CHECK_EQUAL(nrStations,  ps.settings.stations.size());
+    // test antenna fields list
+    CHECK_EQUAL(nrStations,  ps.settings.antennaFields.size());
     for (unsigned st = 0; st < nrStations; ++st) {
-      CHECK_EQUAL(nrSubbands, ps.settings.stations[st].rspBoardMap.size());
-      CHECK_ARRAY_EQUAL(zeroes(nrSubbands),   ps.settings.stations[st].rspBoardMap, nrSubbands);
+      CHECK_EQUAL(nrSubbands, ps.settings.antennaFields[st].rspBoardMap.size());
+      CHECK_ARRAY_EQUAL(zeroes(nrSubbands),   ps.settings.antennaFields[st].rspBoardMap, nrSubbands);
 
-      CHECK_EQUAL(nrSubbands, ps.settings.stations[st].rspSlotMap.size());
-      CHECK_ARRAY_EQUAL(sequence(nrSubbands), ps.settings.stations[st].rspSlotMap, nrSubbands);
+      CHECK_EQUAL(nrSubbands, ps.settings.antennaFields[st].rspSlotMap.size());
+      CHECK_ARRAY_EQUAL(sequence(nrSubbands), ps.settings.antennaFields[st].rspSlotMap, nrSubbands);
     }
 
-    // check core stations
+    // check core antenna fields
     for (unsigned st = 0; st < 21; ++st) {
-      CHECK_EQUAL("CS", ps.settings.stations[st].name.substr(0,2));
-      CHECK_CLOSE(3827000.0, ps.settings.stations[st].phaseCenter[0], 2000);
-      CHECK_CLOSE( 460900.0, ps.settings.stations[st].phaseCenter[1], 2000);
-      CHECK_CLOSE(5065000.0, ps.settings.stations[st].phaseCenter[2], 2000);
+      CHECK_EQUAL("CS", ps.settings.antennaFields[st].name.substr(0,2));
+      CHECK_CLOSE(3827000.0, ps.settings.antennaFields[st].phaseCenter[0], 2000);
+      CHECK_CLOSE( 460900.0, ps.settings.antennaFields[st].phaseCenter[1], 2000);
+      CHECK_CLOSE(5065000.0, ps.settings.antennaFields[st].phaseCenter[2], 2000);
     }
 
-    // check remote stations
+    // check remote antenna fields
     for (unsigned st = 21; st < nrStations; ++st) {
-      CHECK_EQUAL("RS", ps.settings.stations[st].name.substr(0,2));
-      CHECK_CLOSE(3827000.0, ps.settings.stations[st].phaseCenter[0], 30000);
-      CHECK_CLOSE( 460900.0, ps.settings.stations[st].phaseCenter[1], 20000);
-      CHECK_CLOSE(5065000.0, ps.settings.stations[st].phaseCenter[2], 20000);
+      CHECK_EQUAL("RS", ps.settings.antennaFields[st].name.substr(0,2));
+      CHECK_CLOSE(3827000.0, ps.settings.antennaFields[st].phaseCenter[0], 30000);
+      CHECK_CLOSE( 460900.0, ps.settings.antennaFields[st].phaseCenter[1], 20000);
+      CHECK_CLOSE(5065000.0, ps.settings.antennaFields[st].phaseCenter[2], 20000);
 
-      CHECK_EQUAL(0.0, ps.settings.stations[st].clockCorrection);
+      CHECK_EQUAL(0.0, ps.settings.antennaFields[st].clockCorrection);
     }
 
     // test subband/sap configuration
@@ -998,7 +998,7 @@ SUITE(integration) {
     CHECK_EQUAL(30U,         ps.settings.correlator.nrBlocksPerIntegration);
     CHECK_EQUAL(nrStations, ps.settings.correlator.stations.size());
     for (unsigned st = 0; st < nrStations; ++st) {
-      CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.correlator.stations[st].name);
+      CHECK_EQUAL(ps.settings.antennaFields[st].name, ps.settings.correlator.stations[st].name);
 
       CHECK_EQUAL(1U, ps.settings.correlator.stations[st].inputStations.size());
       CHECK_EQUAL(st, ps.settings.correlator.stations[st].inputStations[0]);

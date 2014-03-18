@@ -147,7 +147,7 @@ StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, 
 :
   ps(ps),
   stationIdx(stationIdx),
-  stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name)),
+  stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
   logPrefix(str(format("[station %s] ") % stationID.name())),
 
   startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed()),
@@ -241,13 +241,13 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDi
 :
   ps(ps),
   stationIdx(stationIdx),
-  stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name)),
+  stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
   allocation(stationID, ps),
 
   logPrefix(str(format("[station %s] ") % stationID.name())),
 
   mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz),
-  nrBoards(ps.settings.stations.at(stationIdx).inputStreams.size()),
+  nrBoards(ps.settings.antennaFields.at(stationIdx).inputStreams.size()),
 
   targetSubbands(values(subbandDistribution)),
   beamletIndices(generateBeamletIndices())
@@ -280,8 +280,8 @@ MultiDimArray<ssize_t, 2> StationInput::generateBeamletIndices()
 
     // The corresponding (board,slot) combination for that subband,
     // for this station.
-    const size_t board = ps.settings.stations[stationIdx].rspBoardMap[sb];
-    const size_t slot  = ps.settings.stations[stationIdx].rspSlotMap[sb];
+    const size_t board = ps.settings.antennaFields[stationIdx].rspBoardMap[sb];
+    const size_t slot  = ps.settings.antennaFields[stationIdx].rspSlotMap[sb];
 
     ASSERT(board < nrBoards);
     ASSERT(slot < mode.nrBeamletsPerBoard());
@@ -734,7 +734,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
     return;
   }
 
-  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.stations.at(stationIdx).name));
+  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
   const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   LOG_INFO_STR(logPrefix << "Processing station data");
