@@ -76,7 +76,8 @@ namespace LOFAR {
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-9)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsThingie       (0),
-        itsPatchList     ()
+        itsPatchList     (),
+        itsOperation     (parset.getString(prefix + "operation", "solve"))
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -231,7 +232,7 @@ namespace LOFAR {
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
-//      const size_t nSamples = nBl * nCh * nCr;
+      const size_t nSamples = nBl * nCh * nCr;
       // Define various cursors to iterate through arrays.
       const_cursor<double> cr_freq = casa_const_cursor(info().chanFreqs());
       const_cursor<Baseline> cr_baseline(&(itsBaselines[0]));
@@ -283,14 +284,18 @@ namespace LOFAR {
       }
 
       //copy result of model to data
-      //copy(storage.model.begin(),storage.model.begin()+nSamples,data);
+      if (itsOperation=="predict") {
+        copy(storage.model.begin(),storage.model.begin()+nSamples,data);
+      }
 
       //cout<<"storage.model[4]="<<storage.model[4]<<endl;
 
-      if (itsMode=="diaggain") {
-        stefcalunpol(&storage.model[0], data, weight, flag);
-      } else {
-        stefcalpol(&storage.model[0], data, weight, flag);
+      if (itsOperation=="solve") {
+        if (itsMode=="diaggain") {
+          stefcalunpol(&storage.model[0], data, weight, flag);
+        } else {
+          stefcalpol(&storage.model[0], data, weight, flag);
+        }
       }
 
       itsTimer.stop();

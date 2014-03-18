@@ -210,6 +210,8 @@ namespace {
       PatchList        itsPatchList;
       int              itsThingie;
 
+      string           itsOperation;
+
       NSTimer          itsTimer;
     };
 
