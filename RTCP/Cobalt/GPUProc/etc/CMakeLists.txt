@@ -17,6 +17,7 @@ install(FILES
   parset-additions.d/default/HardwareUsed.parset
   ${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/FinalMetaDataGatherer.parset
   parset-additions.d/default/MAC-feedback.parset
+  parset-additions.d/default/NoCascadingFFT.parset
   ${CMAKE_CURRENT_BINARY_DIR}/parset-additions.d/default/OutputProc.parset
   parset-additions.d/default/StationCalibration.parset
   parset-additions.d/default/StationPositions.parset
