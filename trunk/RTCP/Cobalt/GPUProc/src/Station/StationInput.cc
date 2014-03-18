@@ -372,7 +372,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
     // One core can't handle the load, so use multiple
 #   pragma omp parallel for num_threads(nrBoards)
     for (size_t board = 0; board < nrBoards; board++) {
-      NSTimer copyRSPTimer(str(format("%s [board %i] copy RSP -> block") % logPrefix % board), true, true);
+      //NSTimer copyRSPTimer(str(format("%s [board %i] copy RSP -> block") % logPrefix % board), true, true);
 
       Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board].filled;
       Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board].free;
@@ -384,7 +384,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
 
       while ((rspData = inputQueue.remove(deadline, NULL)) != NULL) {
         // Write valid packets to the current and/or next packet
-        copyRSPTimer.start();
+        //copyRSPTimer.start();
 
         for (size_t p = 0; p < RT_PACKET_BATCH_SIZE; ++p) {
           struct RSP &packet = rspData->packets[p];
@@ -401,7 +401,7 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
             }
           }
         }
-        copyRSPTimer.stop();
+        //copyRSPTimer.stop();
 
         outputQueue.append(rspData);
         ASSERT(!rspData);
