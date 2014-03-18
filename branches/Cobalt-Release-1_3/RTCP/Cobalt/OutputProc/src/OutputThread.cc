@@ -131,7 +131,7 @@ namespace LOFAR
       if (droppedBlocks > 0) {
         itsBlocksDropped += droppedBlocks;
 
-        LOG_WARN_STR(itsLogPrefix << "Dropped " << droppedBlocks << (droppedBlocks == 1 ? " block" : " blocks"));
+        LOG_WARN_STR(itsLogPrefix << "Just dropped " << droppedBlocks << " blocks. Dropped " << itsBlocksDropped << " blocks and written " << itsBlocksWritten << " blocks so far.");
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
@@ -141,8 +141,6 @@ namespace LOFAR
 
     template<typename T> void OutputThread<T>::doWork()
     {
-      time_t prevlog = 0;
-
       for (SmartPtr<T> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
         try {
           itsWriter->write(data);
@@ -151,17 +149,8 @@ namespace LOFAR
           LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
         }
 
-        const time_t now = time(0L);
-
-        if (now > prevlog + 5) {
-          // print info every 5 seconds
-          LOG_INFO_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-
-          prevlog = now;
-        } else {
-          // print debug info for the other blocks
-          LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
-        }
+        // print debug info for the other blocks
+        LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
       }
     }
 
