@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: OutputThread.h 27094 2013-10-24 09:45:19Z mol $
+//# $Id$
 
 #ifndef LOFAR_RTCP_STORAGE_GPUPROCIO_H
 #define LOFAR_RTCP_STORAGE_GPUPROCIO_H

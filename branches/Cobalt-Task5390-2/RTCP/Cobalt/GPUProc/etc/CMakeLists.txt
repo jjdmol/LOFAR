@@ -1,4 +1,4 @@
-# $Id: CMakeLists.txt 25878 2013-08-01 02:08:38Z amesfoort $
+# $Id$
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/parset-additions.d/default/OutputProc.parset.in"

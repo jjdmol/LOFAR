@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: t_cpu_utils.cc 25199 2013-06-05 23:46:56Z amesfoort $
+//# $Id$
 
 #include <lofar_config.h>
 

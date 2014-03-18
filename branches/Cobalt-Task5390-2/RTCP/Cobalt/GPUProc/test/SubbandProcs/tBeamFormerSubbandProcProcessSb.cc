@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 

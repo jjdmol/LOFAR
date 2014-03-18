@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 #include "TABTranspose.h"
