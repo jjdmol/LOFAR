@@ -31,6 +31,10 @@ namespace LOFAR
       :
       context(context)
     {
+      // prevent cufftPlan1d from crashing
+      if (nrFFTs == 0)
+        nrFFTs = 1;
+
       gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
