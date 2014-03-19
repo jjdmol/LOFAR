@@ -258,7 +258,7 @@ namespace LOFAR
         if ( !itsParset.realTime())   
           THROW(StorageException, ex); 
 
-        itsWriter = new MSWriterNull;
+        itsWriter = new MSWriterNull(itsParset);
 #if defined HAVE_AIPSPP
       } 
       catch (casa::AipsError &ex)
@@ -268,7 +268,7 @@ namespace LOFAR
         if (!itsParset.realTime())    
           THROW(StorageException, ex.what()); 
 
-        cleanUp();
+        itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 
@@ -323,7 +323,7 @@ namespace LOFAR
         if (!itsParset.realTime())
           THROW(StorageException, ex);
 
-        itsWriter = new MSWriterNull;
+        itsWriter = new MSWriterNull(itsParset);
 #if defined HAVE_AIPSPP
       } 
       catch (casa::AipsError &ex) 
@@ -331,8 +331,8 @@ namespace LOFAR
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
         if ( !itsParset.realTime())       
           THROW(StorageException, ex.what());  
-        cleanUp();
-        itsWriter = new MSWriterNull;
+
+        itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 

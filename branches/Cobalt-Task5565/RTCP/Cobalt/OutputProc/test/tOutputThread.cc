@@ -36,6 +36,7 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
 {
   cout << "testCorrelatorOutputThreadThrowsStorageException" << endl;
   Parset par;
+  par.add("Observation.startTime","2011-03-22 18:16:00");
   par.add("OLAP.CNProc.integrationSteps","256");
   par.add("OLAP.IONProc.integrationSteps", "4");
   par.add("OLAP.correctBandPass", "F");
@@ -108,6 +109,7 @@ TEST(testCorrelatorOutputThreadRealtimeThrowsNoException)
 {
   cout << "testCorrelatorOutputThreadRealtimeThrowsNoException" << endl;
   Parset par;
+  par.add("Observation.startTime", "2011-03-22 18:16:00");
   par.add("OLAP.CNProc.integrationSteps", "256");
   par.add("OLAP.IONProc.integrationSteps", "4");
   par.add("OLAP.correctBandPass", "F");
@@ -157,6 +159,7 @@ TEST(testBeamformerOutputThreadThrowsStorageException)
 {
   cout << "testCorrelatorOutputThreadThrowsStorageException" << endl;
   Parset par;
+  par.add("Observation.startTime", "2011-03-22 18:16:00");
   par.add("OLAP.CNProc.integrationSteps", "256");
   par.add("OLAP.IONProc.integrationSteps", "4");
   par.add("OLAP.correctBandPass", "F");
@@ -231,6 +234,7 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
 {
   cout << "testCorrelatorOutputThreadRealtimeThrowsNoException" << endl;
   Parset par;
+  par.add("Observation.startTime", "2011-03-22 18:16:00");
   par.add("OLAP.CNProc.integrationSteps", "256");
   par.add("OLAP.IONProc.integrationSteps", "4");
   par.add("OLAP.correctBandPass", "F");

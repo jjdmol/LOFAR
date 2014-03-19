@@ -33,8 +33,14 @@ namespace LOFAR
   {
 
 
-    MSWriterNull::MSWriterNull ()
+    MSWriterNull::MSWriterNull(const Parset &parset )
+    :
+      itsParset(parset)
     {
+      itsConfiguration.add("size", "0");
+      itsConfiguration.add("percentageWritten", "0");
+      itsConfiguration.add("startTime", parset.getString("Observation.startTime"));
+      itsConfiguration.add("duration", "0");
     }
 
 
@@ -43,17 +49,17 @@ namespace LOFAR
     }
 
 
-    void MSWriterNull::write(StreamableData *)
+    void MSWriterNull::write(StreamableData *data)
     {
       // We do not know why the creation of the propper writer failed.
       // Assume nothing and only report that we did not write anything
       itsConfiguration.replace("percentageWritten", str(format("%u") % 0));
+      itsConfiguration.replace("size", str(format("%u") % getDataSize()));
+      itsConfiguration.replace("duration", 
+          str(format("%f") % ((data->sequenceNumber() + 1) *
+            itsParset.IONintegrationTime())));
     }
 
-    void MSWriterNull::augment(const FinalMetaData &finalMetaData)
-    {
-      (void)finalMetaData;  // mirror implementation in MSWriter.cc
-    }
   } // namespace Cobalt
 } // namespace LOFAR
 
