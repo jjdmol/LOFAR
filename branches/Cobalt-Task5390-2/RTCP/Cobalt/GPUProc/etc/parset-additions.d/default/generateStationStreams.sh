@@ -1,19 +1,30 @@
 #!/bin/bash
 #
-# Usage: ./generateStationStreams.sh > StationStreams.parset
+# Usage (to commit new StationStreams.parset):
+#   ./generateStationStreams.sh > StationStreams.parset
+#
+# Usage (post-rollout on live test system):
+#   export LOFARROOT=/path/to/lofarroot
+#   "$LOFARROOT/sbin/generateStationStreams.sh" > "$LOFARROOT/etc/parset-additions.d/default/StationStreams.parset"
+#
+# Thus if $LOFARROOT is set, the 3 required files below will be accessed under:
+#   $LOFARROOT/etc/StaticMetaData/
 #
 # Requires:
 #   RSPConnections_Cobalt.dat
 #   MAC+IP.dat
 #   RSP+IP.dat
 #
-# These files can be found in
+# These files are symlinks under GPUProc, but can be found in:
 #   MAC/Deployment/data/StaticMetaData
 #
 # $Id$
 
-cat RSPConnections_Cobalt.dat | perl -ne '
+if [ "$LOFARROOT" != "" ]; then
+  export in_prefix="$LOFARROOT/etc/StaticMetaData/"  # must have trailing slash
+fi
 
+cat "${in_prefix}RSPConnections_Cobalt.dat" | perl -ne '
 /^(\w+) RSP_([01]) ([^ \t\n]+)/ || next;
 
 $station = $1;
@@ -32,8 +43,8 @@ if (not $cached) {
   %ilookup = {};
 
   # MAC+IP.dat resolves hostnames to IPs and MACs
-  open $fh, "MAC+IP.dat"
-    or die "Cannot open MAC+IP.dat";
+  open $fh, "$ENV{in_prefix}MAC+IP.dat"
+    or die "Cannot open \"$ENV{in_prefix}MAC+IP.dat\"";
 
   while($line = <$fh>) {
     next if $line =~ /^#/;
@@ -46,8 +57,8 @@ if (not $cached) {
   close $fh;
 
   # RSP+IP.dat lists the international station IP addresses
-  open $fh, "RSP+IP.dat"
-    or die "Cannot open RSP+IP.dat";
+  open $fh, "$ENV{in_prefix}RSP+IP.dat"
+    or die "Cannot open \"$ENV{in_prefix}RSP+IP.dat\"";
 
   while($line = <$fh>) {
     next if $line =~ /^#/;
@@ -113,7 +124,7 @@ if ($board == 1) {
 
 ' | sort | uniq
 
-# Remove duplicate entries, because RSPConnections_Cobalt.dat now can have multiple lines per
-# station (one for each RSP board), which contains information that we already obtain from
-# RSP_IP.dat.
+# Remove duplicate entries, because RSPConnections_Cobalt.dat now can have
+# multiple lines per station (one for each RSP board), which contains
+# information that we already obtain from RSP+IP.dat
 
