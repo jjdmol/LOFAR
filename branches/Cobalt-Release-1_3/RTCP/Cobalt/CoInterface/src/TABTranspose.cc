@@ -505,9 +505,12 @@ void MultiSender::process()
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
       SmartPtr<struct Subband> subband;
+      NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
 
       while ((subband = queue->remove()) != NULL) {
+        sendTimer.start();
         subband->write(stream);
+        sendTimer.stop();
       }
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");

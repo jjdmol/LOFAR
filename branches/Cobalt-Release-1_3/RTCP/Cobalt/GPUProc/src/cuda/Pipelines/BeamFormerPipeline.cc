@@ -29,6 +29,7 @@
 #include "BeamFormerPipeline.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
@@ -231,6 +232,9 @@ namespace LOFAR
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
     {
+      NSTimer transposeTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
+      NSTimer forwardTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
+
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       SmartPtr<SubbandProcOutputData> outputData;
@@ -296,10 +300,14 @@ namespace LOFAR
               false);
 
           // Copy data to block
+          transposeTimer.start();
           subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
+          transposeTimer.stop();
 
           // Forward block to MultiSender, who takes ownership.
+          forwardTimer.start();
           multiSender.append(subband);
+          forwardTimer.stop();
 
           // If `subband' is still alive, it has been dropped instead of sent.
           ASSERT(ps.realTime() || !subband); 
