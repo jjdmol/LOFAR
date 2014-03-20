@@ -84,7 +84,9 @@ Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
   nrSamples(nrSamples),
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
-  nrSubbandsLeft(nrSubbands)
+  nrSubbandsLeft(nrSubbands),
+  transposeTimer("Block: data transpose/subband", true, true),
+  zeroTimer("Block: data zeroing", true, true)
 {
 }
 
@@ -100,10 +102,12 @@ void Block::addSubband( const Subband &subband ) {
   ASSERT(subbandWritten[subband.id.subband] == false);
 
   // Weave subbands together
+  transposeTimer.start();
   for (size_t t = 0; t < nrSamples; ++t) {
     // Copy all channels for sample t
     memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
   }
+  transposeTimer.stop();
 
   subbandWritten[subband.id.subband] = true;
 
@@ -114,6 +118,7 @@ void Block::addSubband( const Subband &subband ) {
 
 
 void Block::zeroRemainingSubbands() {
+  zeroTimer.start();
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
       LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
@@ -124,6 +129,7 @@ void Block::zeroRemainingSubbands() {
       }
     }
   }
+  zeroTimer.stop();
 }
 
 
@@ -154,13 +160,20 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   nrBlocks(nrBlocks),
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
-  lastEmitted(-1)
+  lastEmitted(-1),
+  addSubbandMutexTimer("BlockCollector::addSubband mutex", true, true),
+  addSubbandTimer("BlockCollector::addSubband", true, true),
+  fetchTimer("BlockCollector: fetch new block", true, true)
 {
 }
 
 
 void BlockCollector::addSubband( const Subband &subband ) {
+  addSubbandMutexTimer.start();
   ScopedLock sl(mutex);
+  addSubbandMutexTimer.stop();
+
+  NSTimer::StartStop ss(addSubbandTimer);
 
   LOG_DEBUG_STR("BlockCollector: Add " << subband.id);
 
@@ -305,7 +318,10 @@ void BlockCollector::fetch(size_t block) {
     // Allow other threads to manipulate older blocks while we're waiting for
     // a new free one.
     ScopedLock sl(mutex, true);
+
+    fetchTimer.start();
     newBlock = outputPool.free.remove();
+    fetchTimer.stop();
   }
   fetching.erase(block);
 

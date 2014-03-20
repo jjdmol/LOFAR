@@ -26,6 +26,7 @@
 #include <cstring>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
+#include <Common/Timer.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
 #include <Common/Thread/Condition.h>
@@ -121,6 +122,9 @@ namespace LOFAR
 
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
+
+        NSTimer transposeTimer;
+        NSTimer zeroTimer;
       };
 
       /*
@@ -187,6 +191,10 @@ namespace LOFAR
         
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
+
+        NSTimer addSubbandMutexTimer;
+        NSTimer addSubbandTimer;
+        NSTimer fetchTimer;
 
         // The oldest block in flight.
         size_t minBlock() const;
