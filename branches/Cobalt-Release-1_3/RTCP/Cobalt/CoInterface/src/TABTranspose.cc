@@ -119,6 +119,7 @@ void Block::addSubband( const Subband &subband ) {
 
 void Block::zeroRemainingSubbands() {
   zeroTimer.start();
+# pragma omp parallel for num_threads(16)
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
       LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
