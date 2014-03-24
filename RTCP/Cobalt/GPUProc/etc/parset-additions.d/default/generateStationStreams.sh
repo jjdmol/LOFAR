@@ -10,11 +10,10 @@
 # These files can be found in
 #   MAC/Deployment/data/StaticMetaData
 #
-# $Id$
 
 cat RSPConnections_Cobalt.dat | perl -ne '
 
-/^(\w+) RSP_([01]) ([^ \t\n]+)/ || next;
+/^(\w+) RSP_([01]) (.*)/ || next;
 
 $station = $1;
 $board = $2;
@@ -89,7 +88,6 @@ $host = $1;
 $ifnr = $2;
 $receiver = sprintf "%s_%u", $host, ($ifnr - 1)/2;
 
-printf "# \$Id\$\n";
 if ($board == 0) {
   printf "PIC.Core.%sLBA.RSP.receiver  = %s\n",$station,$receiver;
   printf "PIC.Core.%sLBA.RSP.ports     = %s\n",$station,$portstr;
@@ -100,20 +98,17 @@ if ($board == 0) {
   if ($station =~ /^CS/) {
     printf "PIC.Core.%sHBA0.RSP.receiver = %s\n",$station,$receiver;
     printf "PIC.Core.%sHBA0.RSP.ports    = %s\n",$station,$portstr;
-#  } else {
-#    print "\n";
+  } else {
+    print "\n";
   }
 }
 
 if ($board == 1) {
   printf "PIC.Core.%sHBA1.RSP.receiver = %s\n",$station,$receiver;
   printf "PIC.Core.%sHBA1.RSP.ports    = %s\n",$station,$portstr;
-#  print "\n";
+  print "\n";
 }
 
-' | sort | uniq
+'
 
-# Remove duplicate entries, because RSPConnections_Cobalt.dat now can have multiple lines per
-# station (one for each RSP board), which contains information that we already obtain from
-# RSP_IP.dat.
 

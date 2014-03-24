@@ -1,5 +1,3 @@
-# $Id$
-
 # The user with which to log into the storage cluster. If empty, is set to $USER.
 Cobalt.OutputProc.userName = 
 

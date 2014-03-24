@@ -1,5 +1,7 @@
-# $Id$
-# Describes the properties of each node known to Cobalt. 
+#
+# HardwareList.parset describes the properties of each node
+# known to Cobalt. 
+#
 
 # A generic configuration for 'localhost'
 
