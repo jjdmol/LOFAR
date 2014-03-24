@@ -433,6 +433,97 @@ SUITE(stations) {
   }
 }
 
+SUITE(StationStreams) {
+
+
+  TEST(restrictNodes) {
+    // optional key Cobalt.restrictNodesToStationStreams
+
+    // By default, all (half-)nodes must be used, because we may need them for
+    // computations, even if not all receive input. We don't have a perf model.
+    Parset ps;
+
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+    ps.add("Observation.antennaSet", "HBA_DUAL_INNER");
+
+    const unsigned nrNodes = 4; // in this test, twice the half-nodes
+    ps.add("Cobalt.Nodes", "[node01_0, node01_1, node02_0, node02_1, node03_0, node03_1, node04_0, node04_1]");
+    ps.add("PIC.Core.Cobalt.node01_0.host", "node01_0");
+    ps.add("PIC.Core.Cobalt.node01_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node01_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node01_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node01_1.host", "node01_1");
+    ps.add("PIC.Core.Cobalt.node01_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node01_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node01_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node02_0.host", "node02_0");
+    ps.add("PIC.Core.Cobalt.node02_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node02_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node02_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node02_1.host", "node02_1");
+    ps.add("PIC.Core.Cobalt.node02_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node02_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node02_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node03_0.host", "node03_0");
+    ps.add("PIC.Core.Cobalt.node03_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node03_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node03_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node03_1.host", "node03_1");
+    ps.add("PIC.Core.Cobalt.node03_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node03_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node03_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node04_0.host", "node04_0");
+    ps.add("PIC.Core.Cobalt.node04_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node04_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node04_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node04_1.host", "node04_1");
+    ps.add("PIC.Core.Cobalt.node04_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node04_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node04_1.gpus", "[2, 3]");
+    ps.updateSettings();
+
+    CHECK_EQUAL(2 * nrNodes, ps.settings.nodes.size());
+
+
+    ps.add("Cobalt.restrictNodesToStationStreams", "true");
+    ps.updateSettings();
+
+    // no stream connections defined, no nodes have input, so need 0 nodes
+    CHECK_EQUAL(0u, ps.settings.nodes.size());
+
+
+    ps.add("PIC.Core.CS001HBA0.RSP.ports", "[udp:node02-10GB01:10010, udp:node02-10GB01:10011, udp:node02-10GB01:10012, udp:node02-10GB01:10013]");
+    ps.add("PIC.Core.CS001HBA0.RSP.receiver", "node02_0");
+    ps.add("PIC.Core.CS001HBA1.RSP.ports", "[udp:node04-10GB01:10016, udp:node04-10GB01:10017, udp:node04-10GB01:10018, udp:node04-10GB01:10019]");
+    ps.add("PIC.Core.CS001HBA1.RSP.receiver", "node04_1");
+    // add some irrelevant streams (see if it takes ant set into account)
+    ps.add("PIC.Core.CS001HBA.RSP.ports", "[udp:node01-10GB01:10010, udp:node01-10GB01:10011, udp:node01-10GB01:10012, udp:node01-10GB01:10013]");
+    ps.add("PIC.Core.CS001HBA.RSP.receiver", "node01_1");
+    ps.add("PIC.Core.CS001LBA.RSP.ports", "[udp:node03-10GB01:10010, udp:node03-10GB01:10011, udp:node03-10GB01:10012, udp:node03-10GB01:10013]");
+    ps.add("PIC.Core.CS001LBA.RSP.receiver", "node03_0");
+    ps.updateSettings();
+
+    // The 2 nodes connected to the 2 ant fields must be the only ones.
+    CHECK_EQUAL(2u, ps.settings.nodes.size());
+    string name1 = ps.settings.nodes[0].name;
+    string name2 = ps.settings.nodes[1].name;
+    // verify order independent
+    if (name1 == "node02_0")
+      CHECK_EQUAL("node04_1", name2);
+    else if (name1 == "node04_1")
+      CHECK_EQUAL("node02_0", name2);
+    else // wrong wrong wrong. Ensure both are printed.
+      CHECK_EQUAL(name1 + "XXX", name2 + "YYY");
+
+
+    // switch off again to have all nodes
+    ps.replace("Cobalt.restrictNodesToStationStreams", "false");
+    ps.updateSettings();
+
+    CHECK_EQUAL(2 * nrNodes, ps.settings.nodes.size());
+  }
+}
+
 SUITE(SAPs) {
   TEST(nr) {
     Parset ps;
