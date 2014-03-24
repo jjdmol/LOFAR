@@ -318,7 +318,7 @@ int main(int argc, char **argv)
   // Just use all gpu's
   if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes[rank].cpu;
+    int cpuId = ps.settings.nodes.at(rank).cpu;
     setProcessorAffinity(cpuId);
 
 #ifdef HAVE_LIBNUMA

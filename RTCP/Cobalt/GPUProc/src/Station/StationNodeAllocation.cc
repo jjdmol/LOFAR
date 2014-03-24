@@ -54,12 +54,12 @@ bool StationNodeAllocation::receivedHere() const
 int StationNodeAllocation::receiverRank() const
 {
   /*
-   * The parset key
+   * The parset keys
    *
-   *   Cobalt.Hardware.Node[rank].stations
+   *   PIC.Code.<antennaFieldName>.RSP.{receiver,ports}
    *
-   * contains the station names that will be received
-   * by the specified MPI rank.
+   * contain the antenna field names (keys) that will be received
+   * by the MPI ranks and interfaces (values). See StationStreams.parset
    */
 
   const string receiver = parset.settings.stations[stationIdx].receiver;
