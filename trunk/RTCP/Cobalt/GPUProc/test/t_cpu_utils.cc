@@ -20,82 +20,66 @@
 
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
 #include <GPUProc/cpu_utils.h>
 
-#include <mpi.h>
-#include <iostream>
-#include <string>
+#include <cstring>
 #include <sched.h>
+#include <mpi.h>
+#include <string>
+#include <iostream>
+
+#include <Common/LofarLogger.h>
+#include <Common/SystemCallException.h>
+#include <Common/SystemUtil.h>
+#include <CoInterface/Parset.h>
 
 using namespace std;
 using namespace LOFAR::Cobalt;
 
-int main(int argc, char **argv)
+static int test(const unsigned nprocs, unsigned cpuId)
 {
-  INIT_LOGGER("t_cpu_utils.cc");
+  int status = 0;
+
+  setProcessorAffinity(cpuId);
+
+  // Validate the correct setting of the affinity
+  cpu_set_t mask;  
+  if (sched_getaffinity(0, sizeof(cpu_set_t), &mask) != 0)
+    THROW_SYSCALL("sched_getaffinity");
+
+  // expect alternating on cbt nodes
+  // (the original test code intended this, but was broken in many ways (still a poor idea to make it so specific))
+  unsigned expect = !cpuId;
+  for (unsigned i = 0; i < nprocs; i++) {
+    if (CPU_ISSET(i, &mask) != expect) {
+      LOG_FATAL_STR("cpuId=" << cpuId << " Found that core " << i << " is" << (!expect ? " " : " NOT ") <<
+                    "in the set while it should" << (expect ? " " : " NOT ") << "be!");
+      status = 1;
+    }
+    expect ^= 1;
+  }
+
+  return status;
+}
+
+int main()
+{
+  INIT_LOGGER("t_cpu_utils");
+
+  string name(LOFAR::myHostname(false));
+  if (strncmp(name.c_str(), "cbt", sizeof("cbt")-1))
+  {
+    cout << "Test is not running on cobalt hardware and therefore skipped: " << name << endl;
+    return 0;
+  }
 
   Parset ps("t_cpu_utils.in_parset");
   
-    // Initialise and query MPI
-  int provided_mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
-  }
+  const unsigned nprocs = sysconf( _SC_NPROCESSORS_ONLN );
 
-  // Get the name of the processor
-  // skip test if we are not on cobalt!!!
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  int name_len;
-  MPI_Get_processor_name(processor_name, &name_len);
-
-  string name(processor_name);
-  
-  if (!(name.find("cbm") == 0))
-  {
-    cout << "Test is not running on cobalt hardware and therefore skipped" << endl;
-    MPI_Finalize();
-    return 0;
-  }
-    
-
-
-  int rank = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  
-  //exercise the set processorAffinity functionality
-  int cpuId = ps.settings.nodes[rank].cpu;
-  setProcessorAffinity(cpuId);
-  unsigned numCPU = sysconf( _SC_NPROCESSORS_ONLN );
-
-
-  // Validate the correct setting of the affinity
-  // Get the cpu of the current thread
-  cpu_set_t mask;  
-  sched_getaffinity(0, sizeof(cpu_set_t), &mask);
-
-  // Test if affinity is set correctly!
-  // The cpu with rank 0 should be all even cpus the rank should have odd cpu's
-  for (unsigned idx_cpu = rank; idx_cpu < numCPU; idx_cpu += 2) 
-  {
-    if (1 != CPU_ISSET(idx_cpu, &mask))
-    {
-      LOG_FATAL_STR("Found a cpu that is NOT set while is should be set!");
-      LOG_FATAL_STR(rank);
-      exit(1);
-    }
-    if (0 != CPU_ISSET(idx_cpu + 1, &mask))
-    {
-      LOG_FATAL_STR("Found a cpu that is set while is should be NOT set!");
-      LOG_FATAL_STR(rank);
-      exit(1);
-    }
-  }
-
-  MPI_Finalize();
-      
-  return 0;
+  int status = 0;
+  status |= test(nprocs, 0);
+  status |= test(nprocs, 1);
+  return status;
 }
 
