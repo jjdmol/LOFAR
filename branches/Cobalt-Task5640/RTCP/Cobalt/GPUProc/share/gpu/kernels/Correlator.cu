@@ -1,28 +1,30 @@
-//# Correlator.cu
-//#
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
-//# modify it under the terms of the GNU General Public License as published
-//# by the Free Software Foundation, either version 3 of the License, or
-//# (at your option) any later version.
-//#
-//# The LOFAR software suite is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
-//#
-//# $Id$
+/*  Correlator.cu
+ * 
+ *  Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+ *  P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
+ * 
+ *  This file is part of the LOFAR software suite.
+ *  The LOFAR software suite is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  The LOFAR software suite is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU General Public License along
+ *  with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
+ * 
+ *  $Id$
+ */
 
-// \file
-// This file contains a CUDA implementation of the GPU kernel for the
-// correlator. It computes correlations between all pairs of stations
-// (baselines) and X,Y polarizations, including auto-correlations.
+/*! \file
+ * This file contains a CUDA implementation of the GPU kernel for the
+ * correlator. It computes correlations between all pairs of stations
+ * (baselines) and X,Y polarizations, including auto-correlations.
+ */
 
 #include "gpu_math.cuh"
 
@@ -54,7 +56,7 @@ typedef float4 fcomplex2;
 typedef fcomplex2 (*CorrectedDataType)[NR_STATIONS][NR_CHANNELS][NR_SAMPLES_PER_CHANNEL];
 typedef fcomplex (*VisibilitiesType)[NR_BASELINES][NR_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
 
-/*
+/*!
  * Return baseline major-minor.
  *
  * Note that major >= minor >= 0 must hold.
@@ -102,6 +104,45 @@ extern "C" {
  *   Each work group loads samples from all stations to do the NxN set of correlations
  *   for one of the channels. Some threads in _NxN kernels do not write off-edge output.
  * - Global size: (>= NR_BASELINES and a multiple of work group size, number of actually processed channels)
+ *
+ * \note When correlating two dual-polarization station data streams for
+ * stations \f$x\f$ (\c ANTENNA1) and \f$y\f$ (\c ANTENNA2), one computes the
+ * coherency matrix
+ * \f[
+ *   \bf E = \left( \begin{array}{cc}
+ *                    x_1 x_2^* & x_1 y_2^* \\
+ *                    y_1 x_2^* & y_1 y_2^*
+ *                  \end{array}
+ *           \right)
+ * \f]
+ * Given the signal column vectors
+ * \f$ \bf s_1 = \left( \begin{array}{c} x_1 \\ y_1 \end{array} \right) \f$, and
+ * \f$ \bf s_2 = \left( \begin{array}{c} x_2 \\ y_2 \end{array} \right) \f$, 
+ * this can also be written as 
+ * \f[
+ *   \bf E = \bf s_1 \cdot \bf s_2^\dagger
+ * \f]
+ * where \f$^\dagger\f$ indicates the hermitian conjugation and transposition.
+ * That is, \f$\bf s_2^\dagger\f$ is a \e row vector with elements
+ * \f$(x_2^*, y_2^*)\f$.
+ * \n\n
+ * In Cobalt, \c ANTENNA1 \c >= \c ANTENNA2 (i.e., \f$x \ge y\f$).
+ * However, in the output Measurement Set, \c ANTENNA1 \c <= \c ANTENNA2
+ * (i.e., \f$x \le y\f$). The relation between the coherency matrices is
+ * \f[
+ *   \bf E_{x \le y} = \bf E_{x \ge y}^\dagger
+ * \f]
+ * The visibilities must therefore be conjugated, \b and the \e xy and \e yx
+ * polarizations must be exchanged. Hence the perhaps somewhat odd indexing in
+ * the part of the code below where the output visibilities are written.
+ * \n
+ * Note that the convention of which stream to conjugate also depends on the
+ * sign of the Fourier transform in the time-to-frequency transform. In Cobalt
+ * this should be an \c FFT_FORWARD transform, which carries a minus sign in its
+ * complex exponential. The conjugation used below is consistent with the
+ * combination of the conjugation required by the Casa Measurement Set (de facto
+ * the casa imager convention), and the \c FFTW_FORWARD time-to-frequency
+ * transform.
  */
 
 __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr) 
@@ -157,21 +198,21 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
    */
   int y = baseline - x * (x + 1) / 2;
 
-  // NOTE: stat0 >= statA holds
+  /* NOTE: stat0 >= statA holds */
   int stat_0 = x;
   int stat_A = y;
 
-  // visR and visI will contain the real and imaginary parts, respectively, of
-  // the four visibilities (i.e., the four correlation products between the two
-  // antennae A and B with polarizations x and y):
-  //   { Ax * Bx, Ax * By, Ay * Bx, Ay * By }
-  // where * denotes complex multiplication of A with the conjugate of B.
-
+  /* visR and visI will contain the real and imaginary parts, respectively, of
+   * the four visibilities (i.e., the four correlation products between the two
+   * antennae A and B with polarizations x and y):
+   *   { Ax * Bx, Ax * By, Ay * Bx, Ay * By }
+   * where * denotes complex multiplication of A with the conjugate of B.
+   */
   float4 visR = {0, 0, 0, 0};
   float4 visI = {0, 0, 0, 0};
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
-    // load data into local memory
+    /* load data into local memory */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x)
       {
         uint time = i % BLOCK_SIZE;
@@ -187,7 +228,7 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 
     __syncthreads();
 
-    // compute correlations
+    /* compute correlations */
     if (baseline < NR_BASELINES) {
       for (uint time = 0; time < BLOCK_SIZE; time++) {
         fcomplex2 sample_0, sample_A;
@@ -201,8 +242,9 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
         sample_A.z = samples[2][time][stat_A]; // sampleA_Y_r
         sample_A.w = samples[3][time][stat_A]; // sampleA_Y_i
 
-        // Interleave calculation of the two parts of the real and imaginary
-        // visibilities to improve performance.
+        /* Interleave calculation of the two parts of the real and imaginary
+         * visibilities to improve performance. 
+         */
         visR += SWIZZLE(sample_0,x,x,z,z) * SWIZZLE(sample_A,x,z,x,z); 
         visI += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,x,z,x,z);
         visR += SWIZZLE(sample_0,y,y,w,w) * SWIZZLE(sample_A,y,w,y,w);
@@ -213,8 +255,8 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
     __syncthreads();
   }
 
-  // write visibilities
-  // XY and YX polarizations have been swapped (see issue #5640)
+  /* write visibilities */
+  /* XY and YX polarizations have been swapped (see issue #5640) */
   if (baseline < NR_BASELINES) {
     (*visibilities)[baseline][channel][0][0] = make_float2(visR.x, visI.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(visR.y, visI.y);
@@ -251,7 +293,7 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
   int y = block - x * (x + 1) / 2;
 
-  // NOTE: stat_0 >= stat_A holds
+  /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 2 * x;
   int stat_A = 2 * y;
 
@@ -267,7 +309,7 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
   float4 vis_1B_r = {0, 0, 0, 0}, vis_1B_i = {0, 0, 0, 0};
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
-    // load data into local memory
+    /* load data into local memory */
 #pragma unroll 1
     /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
@@ -327,8 +369,8 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
     __syncthreads();
   }
 
-  // write visibilities
-  // XY and YX polarizations have been swapped (see issue #5640)
+  /* write visibilities */
+  /* XY and YX polarizations have been swapped (see issue #5640) */
   int stat_1 = stat_0 + 1;
   int stat_B = stat_A + 1;
   bool do_baseline_0A = stat_0 < NR_STATIONS;// stat_0 >= stat_A holds
@@ -400,7 +442,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   uint x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
   uint y = block - x * (x + 1) / 2;
 
-  // NOTE: stat_0 >= stat_A holds
+  /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 3 * x;
   int stat_A = 3 * y;
 
@@ -417,7 +459,7 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
   float4 vis_2C_r = {0, 0, 0, 0}, vis_2C_i = {0, 0, 0, 0};
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
-    // load data into local memory
+    /* load data into local memory */
 #pragma unroll 1
     /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
@@ -519,8 +561,8 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
     __syncthreads();
   }
 
-  // write visibilities
-  // XY and YX polarizations have been swapped (see issue #5640)
+  /* write visibilities */
+  /* XY and YX polarizations have been swapped (see issue #5640) */
   int stat_1 = stat_0 + 1;
   int stat_2 = stat_0 + 2;
   int stat_B = stat_A + 1;
@@ -645,7 +687,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   int x = __float2uint_rz(sqrtf(float(8 * block + 1)) - 0.99999f) / 2;
   int y = block - x * (x + 1) / 2;
 
-  // NOTE: stat_0 >= stat_A holds
+  /* NOTE: stat_0 >= stat_A holds */
   int stat_0 = 4 * x;
   int stat_A = 4 * y;
 
@@ -685,7 +727,7 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   float4 vis_3D_r = {0, 0, 0, 0}, vis_3D_i = {0, 0, 0, 0};
 
   for (uint major = 0; major < NR_SAMPLES_PER_CHANNEL; major += BLOCK_SIZE) {
-    // load data into local memory
+    /* load data into local memory */
 #pragma unroll 1
     /* for (uint i = get_local_id(0); i < BLOCK_SIZE * NR_STATIONS; i += get_local_size(0)) { */
     for (uint i = threadIdx.x; i < BLOCK_SIZE * NR_STATIONS; i += blockDim.x) {
@@ -845,8 +887,8 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
     __syncthreads();
   }
 
-  // write visibilities
-  // XY and YX polarizations have been swapped (see issue #5640)
+  /* write visibilities */
+  /* XY and YX polarizations have been swapped (see issue #5640) */
   int stat_1 = stat_0 + 1;
   int stat_2 = stat_0 + 2;
   int stat_3 = stat_0 + 3;
@@ -1016,4 +1058,4 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
   }
 }
 
-} // extern "C"
+} /* extern "C" */
