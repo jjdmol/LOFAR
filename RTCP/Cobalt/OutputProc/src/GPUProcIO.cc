@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: outputProc.cc 27120 2013-10-29 10:42:21Z mol $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>

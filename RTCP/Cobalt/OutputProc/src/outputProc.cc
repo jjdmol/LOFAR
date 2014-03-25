@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 
 #include <cstdio> // for setvbuf
+#include <unistd.h>
 #include <omp.h>
 
 #include <string>
@@ -61,8 +62,12 @@ static void usage(const char *argv0)
   cerr << "OutputProc provides CASA Measurement Set files with correlated data" << endl;
   cerr << "for the Standard Imaging mode and HDF5 files with beamformed data" << endl;
   cerr << "for the Pulsar mode." << endl; 
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision() << endl;
   cerr << endl;
   cerr << "Usage: " << argv0 << " ObservationID mpi_rank" << endl;
+  cerr << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char *argv[])
@@ -72,6 +77,19 @@ int main(int argc, char *argv[])
   LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
 
   CasaLogSink::attach();
+
+  int opt;
+  while ((opt = getopt(argc, argv, "h")) != -1) {
+    switch (opt) {
+    case 'h':
+      usage(argv[0]);
+      exit(0);
+
+    default: /* '?' */
+      usage(argv[0]);
+      exit(1);
+    }
+  }
 
   if (argc != 3)
   {

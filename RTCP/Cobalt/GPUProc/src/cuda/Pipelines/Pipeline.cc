@@ -121,9 +121,7 @@ namespace LOFAR
       // Start processing from block -1, and don't process anything if the
       // observation is empty.
       for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
-        // Receive the samples of all subbands from the stations for this
-        // block.
-
+        // Receive the samples from all subbands from the ant fields for this block.
         LOG_INFO_STR("[block " << block << "] Collecting input buffers");
 
         SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
@@ -138,7 +136,7 @@ namespace LOFAR
           boost::extents[ps.nrStations()][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
-        // Receive all subbands from all stations
+        // Receive all subbands from all antenna fields
         LOG_INFO_STR("[block " << block << "] Receive input");
 
         if (block > 2) receiveTimer.start();
@@ -365,17 +363,17 @@ namespace LOFAR
         mpiPool.free.append(input);
         ASSERT(!input);
 
-        // Report flags per station
-        stringstream flagStr;  // stations with >0% flags
-        stringstream cleanStr; // stations with  0% flags
+        // Report flags per antenna field
+        stringstream flagStr;  // antenna fields with >0% flags
+        stringstream cleanStr; // antenna fields with  0% flags
 
         for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
           const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.nrSamplesPerSubband();
 
           if (flagPerc == 0.0)
-            cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
+            cleanStr << str(boost::format("%s, ") % ps.settings.antennaFields[stat].name);
           else
-            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
+            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.antennaFields[stat].name % flagPerc);
         }
 
         LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());

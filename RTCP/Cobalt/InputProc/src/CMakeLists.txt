@@ -39,7 +39,7 @@ lofar_add_bin_program(generateRSP Station/generateRSP.cc)
 lofar_add_bin_program(generate Station/generate.cc)
 lofar_add_bin_program(printDelays Delays/printDelays.cc)
 
-# install the logprop file
+# install logprop files
 install(FILES
   Delays/printDelays.log_prop
   Station/generateRSP.log_prop
