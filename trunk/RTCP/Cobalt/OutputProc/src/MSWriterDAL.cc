@@ -325,9 +325,9 @@ namespace LOFAR
 
       if (parset.settings.beamFormer.doFlysEye) {
         beam.nofStations().value = 1;
-        beam.stationsList().value = vector<string>(1, parset.settings.stations[beamNr].name);
+        beam.stationsList().value = vector<string>(1, parset.settings.antennaFields[beamNr].name);
       } else {
-        beam.nofStations().value = parset.settings.stations.size();
+        beam.nofStations().value = parset.settings.antennaFields.size();
         beam.stationsList().value = parset.allStationNames();
       }
 
@@ -574,7 +574,7 @@ namespace LOFAR
         itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % (tabDir.angle2 - beamDir.angle2)));
       }
       if (type == "FlysEyeBeam") {
-        string fullName = parset.settings.stations.at(beamNr).name;
+        string fullName = parset.settings.antennaFields.at(beamNr).name;
         string stationName = fullName.substr(0,5);
         string antennaFieldName = fullName.substr(5);
         itsConfiguration.add(prefix + "stationName", stationName);

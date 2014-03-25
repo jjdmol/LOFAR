@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tCorrelatorSubbandProcProcessSb.cc 26496 2013-09-11 12:58:23Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -79,7 +79,7 @@ int main() {
 
   // Input array sizes
   const size_t nrBeams = ps.settings.SAPs.size();
-  const size_t nrStations = ps.settings.stations.size();
+  const size_t nrStations = ps.settings.antennaFields.size();
   const size_t nrPolarisations = ps.settings.nrPolarisations;
   const size_t nrSamplesPerSubband = ps.settings.blockSize;
   const size_t nrBitsPerSample = ps.settings.nrBitsPerSample;

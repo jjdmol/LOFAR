@@ -4,6 +4,8 @@
 # splits it and copies the file containing the raw data to 
 # the current directory
 # it is only meant to be used for the CDR
+#
+# $Id$
 
 MSNAME=ObservationA.MS
 NEWFILE=vis.dat.`date +%F_%k:%M`

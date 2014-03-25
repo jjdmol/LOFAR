@@ -141,7 +141,7 @@ namespace LOFAR
       frame.set(MEpoch(toUTC(from), MEpoch::UTC));
 
       // Set the position for the frame.
-      const MVPosition phaseCenter(parset.settings.stations[stationIdx].phaseCenter);
+      const MVPosition phaseCenter(parset.settings.antennaFields[stationIdx].phaseCenter);
       frame.set(MPosition(phaseCenter, MPosition::ITRF));
 
       // Cache the difference with CS002LBA
@@ -258,7 +258,7 @@ namespace LOFAR
 
     double Delays::clockCorrection() const
     {
-      double corr = parset.settings.corrections.clock ? parset.settings.stations[stationIdx].clockCorrection : 0.0;
+      double corr = parset.settings.corrections.clock ? parset.settings.antennaFields[stationIdx].clockCorrection : 0.0;
 
       return corr;
     }

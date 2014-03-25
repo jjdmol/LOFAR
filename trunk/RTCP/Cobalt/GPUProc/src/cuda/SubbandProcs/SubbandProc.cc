@@ -81,14 +81,14 @@ namespace LOFAR
       // extract and assign the delays for the station beams
 
       // X polarisation
-      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][0]             = ps.settings.stations[station].phase0.x;
+      delaysAtBegin[SAP][station][0]  = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][0]             = ps.settings.antennaFields[station].phase0.x;
 
       // Y polarisation
-      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][1]             = ps.settings.stations[station].phase0.y;
+      delaysAtBegin[SAP][station][1]  = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][1]             = ps.settings.antennaFields[station].phase0.y;
 
       if (ps.settings.beamFormer.enabled)
       {
