@@ -258,7 +258,6 @@ __global__ void correlate(void *visibilitiesPtr, const void *correctedDataPtr)
 
   /* write visibilities */
   /* NOTE: XY and YX polarizations have been swapped (see issue #5640) */
-  // XY and YX polarizations have been swapped (see issue #5640)
   if (baseline < NR_BASELINES) {
     (*visibilities)[baseline][channel][0][0] = make_float2(visR.x, visI.x);
     (*visibilities)[baseline][channel][1][0] = make_float2(visR.y, visI.y);
@@ -373,7 +372,6 @@ __global__ void correlate_2x2(void *visibilitiesPtr, const void *correctedDataPt
 
   /* write visibilities */
   /* NOTE: XY and YX polarizations have been swapped (see issue #5640) */
-  // XY and YX polarizations have been swapped (see issue #5640)
   int stat_1 = stat_0 + 1;
   int stat_B = stat_A + 1;
   bool do_baseline_0A = stat_0 < NR_STATIONS;// stat_0 >= stat_A holds
@@ -566,7 +564,6 @@ __global__ void correlate_3x3(void *visibilitiesPtr, const void *correctedDataPt
 
   /* write visibilities */
   /* NOTE: XY and YX polarizations have been swapped (see issue #5640) */
-  // XY and YX polarizations have been swapped (see issue #5640)
   int stat_1 = stat_0 + 1;
   int stat_2 = stat_0 + 2;
   int stat_B = stat_A + 1;
@@ -893,7 +890,6 @@ __global__ void correlate_4x4(void *visibilitiesPtr, const void *correctedDataPt
 
   /* write visibilities */
   /* NOTE: XY and YX polarizations have been swapped (see issue #5640) */
-  // XY and YX polarizations have been swapped (see issue #5640)
   int stat_1 = stat_0 + 1;
   int stat_2 = stat_0 + 2;
   int stat_3 = stat_0 + 3;
