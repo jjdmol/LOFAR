@@ -13,17 +13,17 @@ fi
 BRANCH=${RELEASE_NAME}
 
 # Update or check out branch.
-cd /globalhome/lofarbuild/lofar/lofar_versions
-if [ svn info "$BRANCH/LOFAR" 2> /dev/null | grep LOFAR > /dev/null ]; then
+cd /globalhome/lofarbuild/lofar/lofar_versions || exit 1
+if svn info "$BRANCH/LOFAR" 2> /dev/null | grep LOFAR > /dev/null; then
   svn up "$BRANCH/LOFAR" || exit 1
 else
   svn co "https://svn.astron.nl/LOFAR/branches/$BRANCH" "$BRANCH/LOFAR" || exit 1
 fi
 
 # Configure and build.
-cd $BRANCH && rm -rf gnu_opt && mkdir gnu_opt && cd gnu_opt && \
-  cmake -DBUILD_PACKAGES=Online_Cobalt "-DCMAKE_INSTALL_PREFIX=/localhome/lofar/lofar_versions/$BRANCH" ../LOFAR && \
-  make -j 16 && \
+cd $BRANCH && rm -rf gnu_opt && mkdir gnu_opt && cd gnu_opt &&
+  cmake -DBUILD_PACKAGES=Online_Cobalt "-DCMAKE_INSTALL_PREFIX=/localhome/lofar/lofar_versions/$BRANCH" ../LOFAR &&
+  make -j 16 &&
   make install "DESTDIR=/globalhome/lofarbuild/lofar/lofar_versions/$BRANCH" || exit 1
 
 # Tar the localhome directory and upload archive to the NEXUS content server.

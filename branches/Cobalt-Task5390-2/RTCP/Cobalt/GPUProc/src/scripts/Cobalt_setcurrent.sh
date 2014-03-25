@@ -4,8 +4,7 @@
 # $Id$
 
 username=lofarsys
-effective_u=$(whoami)
-if [ "$effective_u" != "$username" ]; then
+if [ "$USER" != "$username" ]; then
   echo "ERROR: script must be run as $username"
   exit 1
 fi
@@ -17,9 +16,9 @@ if [ "${RELEASE_NAME}" = "" ]; then
 fi
 
 # Make indicated release 'current'.
-for ((h = 1; h < 10; h++)); do
-  ssh $(printf cbm%03u $h) "ln -s \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" current_tmp && \
-    mv -Tf current_tmp /localhome/lofarsystem/lofar/current" || exit 1
+nhosts=9
+for ((h = 1; h <= $nhosts; h++)); do
+  ssh $(printf cbm%03u $h) "ln -sfT \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" /localhome/lofarsystem/lofar/current" || exit 1
 done
 
 # Sanity check. Assume $RELEASE_NAME is something like Cobalt-RELTYPE-x_y_z. Check for "x.y".

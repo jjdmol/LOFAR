@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. $srcdir/testFuncs.sh
+
 # See if the generateStationStreams.sh script works as we use it for the
 # live test system, and check if it generates the file we have in the repos.
 
@@ -7,4 +9,4 @@
 
 echo "Generated output. Comparing against installed (reference)."
 
-diff "$LOFARROOT/etc/parset-additions.d/default/StationStreams.parset" StationStreams.parset.out || exit
+diff "$LOFARROOT/etc/parset-additions.d/default/StationStreams.parset" StationStreams.parset.out

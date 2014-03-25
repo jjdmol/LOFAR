@@ -6,8 +6,7 @@
 # $Id$
 
 username=lofarbuild
-effective_u=$(whoami)
-if [ "$effective_u" != "$username" ]; then
+if [ "$USER" != "$username" ]; then
   echo "ERROR: script must be run as $username"
   exit 1
 fi
@@ -41,7 +40,7 @@ for ((h = 1; h <= $nhosts; h++)); do
   cd / && tar -zxvmf \"/localhome/lofarbuild/incoming/${RELEASE_NAME}.ztar\" || exit 1
 
   # Sym link installed var/ to common location.
-  cd \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" && \
+  cd \"/localhome/lofar/lofar_versions/${RELEASE_NAME}\" &&
     ln -sfT /localhome/lofarsystem/lofar/var var
 
   # Set capabilities so our soft real-time programs can elevate prios.
