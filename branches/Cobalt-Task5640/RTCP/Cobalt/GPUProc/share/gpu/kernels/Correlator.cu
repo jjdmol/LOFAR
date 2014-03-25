@@ -106,8 +106,7 @@ extern "C" {
  * - Global size: (>= NR_BASELINES and a multiple of work group size, number of actually processed channels)
  *
  * \note When correlating two dual-polarization station data streams for
- * stations \f$x\f$ (\c ANTENNA1) and \f$y\f$ (\c ANTENNA2), one computes the
- * coherency matrix
+ * stations \c ANTENNA1 and \c ANTENNA2, one computes the coherency matrix
  * \f[
  *   \bf E = \left( \begin{array}{cc}
  *                    x_1 x_2^* & x_1 y_2^* \\
@@ -115,9 +114,10 @@ extern "C" {
  *                  \end{array}
  *           \right)
  * \f]
- * Given the signal column vectors
- * \f$ \bf s_1 = \left( \begin{array}{c} x_1 \\ y_1 \end{array} \right) \f$, and
- * \f$ \bf s_2 = \left( \begin{array}{c} x_2 \\ y_2 \end{array} \right) \f$, 
+ * Given the signal column vector of \c ANTENNA1,
+ * \f$ \bf s_1 = \left( \begin{array}{c} x_1 \\ y_1 \end{array} \right) \f$,
+ * and of \c ANTENNA2,
+ * \f$ \bf s_2 = \left( \begin{array}{c} x_2 \\ y_2 \end{array} \right) \f$,
  * this can also be written as 
  * \f[
  *   \bf E = \bf s_1 \cdot \bf s_2^\dagger
@@ -126,11 +126,12 @@ extern "C" {
  * That is, \f$\bf s_2^\dagger\f$ is a \e row vector with elements
  * \f$(x_2^*, y_2^*)\f$.
  * \n\n
- * In Cobalt, \c ANTENNA1 \c >= \c ANTENNA2 (i.e., \f$x \ge y\f$).
- * However, in the output Measurement Set, \c ANTENNA1 \c <= \c ANTENNA2
- * (i.e., \f$x \le y\f$). The relation between the coherency matrices is
+ * In Cobalt, \c ANTENNA1 \c >= \c ANTENNA2, however, in the output Measurement
+ * Set, \c ANTENNA1 \c <= \c ANTENNA2. The relation between the coherency
+ * matrices is
  * \f[
- *   \bf E_{x \le y} = \bf E_{x \ge y}^\dagger
+ *   \bf E_{\tt ANTENNA1 \le \tt ANTENNA2}^{} = 
+     \bf E_{\tt ANTENNA1 \ge \tt ANTENNA2}^\dagger
  * \f]
  * The visibilities must therefore be conjugated, \b and the \e xy and \e yx
  * polarizations must be exchanged. Hence the perhaps somewhat odd indexing in
