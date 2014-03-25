@@ -59,13 +59,15 @@ namespace LOFAR
     {
       /*
        * Output elements can get stuck in:
+       *   process()                1 element
        *   Best-effort queue:       3 elements
+       *   In flight to BE queue:   1 element
        *   In flight to outputProc: 1 element
        *
-       * which means we'll need at least 5 elements
+       * which means we'll need at least 7 elements
        * in the pool to get a smooth operation.
        */
-      return 5 * nrSubbandsPerSubbandProc;
+      return 7 * nrSubbandsPerSubbandProc;
     }
 
 
