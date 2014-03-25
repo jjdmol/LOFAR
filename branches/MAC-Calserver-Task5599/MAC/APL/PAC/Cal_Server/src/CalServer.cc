@@ -79,6 +79,9 @@ using namespace GCF::TM;
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
+// static pointer used for signal handler.
+static CalServer*	thisCalServer = 0;
+	
 //
 // CalServer constructor
 //
@@ -139,6 +142,60 @@ CalServer::~CalServer()
 #ifdef USE_CAL_THREAD
 	if (m_calthread) delete m_calthread;
 #endif
+}
+
+//
+// sigintHandler(signum)
+//
+void CalServer::sigintHandler(int signum)
+{
+	LOG_WARN (formatString("SIGINT signal detected (%d)",signum));
+
+	// Note we can't call TRAN here because the siginthandler does not know our object.
+	if (thisCalServer) {
+		thisCalServer->finish();
+	}
+}
+
+//
+// finish
+//
+void CalServer::finish()
+{
+	TRAN(CalServer::finishing_state);
+}
+
+//
+// finishing_state(event, port)
+//
+// Powerdown all antenna's for safety.
+//
+GCFEvent::TResult CalServer::finishing_state(GCFEvent& 		event, GCFPortInterface& port)
+{
+	LOG_INFO_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
+
+	switch (event.signal) {
+	case F_ENTRY: {
+		// turn off 'old' timers
+		itsCheckTimer->cancelAllTimers();
+		SubArray::RCUmask_t	rcus2switchOff;
+		rcus2switchOff.reset();
+		for (uint i = 0; i < m_n_rcus; i++) {
+			rcus2switchOff.set(i);
+		}
+		_powerdownRCUs(rcus2switchOff);
+		itsCheckTimer->setTimer(0.2);
+	} break;
+
+	case F_TIMER: {
+		GCFScheduler::instance()->stop();
+	} break;
+  
+	default:
+		LOG_DEBUG("finishing_state, default");
+		break;
+	}    
+	return (GCFEvent::HANDLED);
 }
 
 //
@@ -370,6 +427,13 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		// switch off receivers by default.
 		_disableRCUs(0);
 		itsCheckTimer->setTimer(0.0, 1.0);
+
+		// redirect signalhandler to always powerdown the antenna's when quiting...
+		thisCalServer = this;
+		signal (SIGINT,  CalServer::sigintHandler);	// ctrl-c
+		signal (SIGTERM, CalServer::sigintHandler);	// kill
+		signal (SIGABRT, CalServer::sigintHandler);	// kill -6
+
 	}
 	break;
 
@@ -1121,7 +1185,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD BE A PROBLEM
+	// SOMETIMES CALSERVER IS STARTED BEFORE RSPDRIVER IS ON THE AIR THIS SHOULD NOT BE A PROBLEM
 	// BUT IT SOMETIMES IS. QAD HACK TO AVOID HANGING CalServer
 	sleep(3);
 

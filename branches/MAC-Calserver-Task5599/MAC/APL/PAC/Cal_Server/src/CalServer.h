@@ -78,6 +78,11 @@ public:
 	// States
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
+
+	// Functions for neat shutdown
+	static void 	  sigintHandler(int signum);
+	void 			  finish();
+	GCFEvent::TResult finishing_state(GCFEvent&	event, GCFPortInterface& port);
 		
 	/*@}*/
 
