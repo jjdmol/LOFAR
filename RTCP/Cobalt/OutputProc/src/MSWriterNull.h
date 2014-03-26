@@ -33,10 +33,14 @@ namespace LOFAR
     class MSWriterNull : public MSWriter
     {
     public:
-      MSWriterNull();
+      MSWriterNull(const Parset &parset);
       ~MSWriterNull();
 
       virtual void write(StreamableData *);
+
+    private:
+      const Parset &itsParset;
+
     };
 
 
