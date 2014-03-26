@@ -102,10 +102,13 @@ static void usage(const char *argv0)
   cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
   cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
   cerr << "beam-forming for the Pulsar mode." << endl;
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision() << endl;
   cerr << endl;
   cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
@@ -115,11 +118,15 @@ int main(int argc, char **argv)
    */
 
   int opt;
-  while ((opt = getopt(argc, argv, "p")) != -1) {
+  while ((opt = getopt(argc, argv, "ph")) != -1) {
     switch (opt) {
     case 'p':
       profiling = true;
       break;
+
+    case 'h':
+      usage(argv[0]);
+      exit(0);
 
     default: /* '?' */
       usage(argv[0]);
@@ -318,7 +325,7 @@ int main(int argc, char **argv)
   // Just use all gpu's
   if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes[rank].cpu;
+    int cpuId = ps.settings.nodes.at(rank).cpu;
     setProcessorAffinity(cpuId);
 
 #ifdef HAVE_LIBNUMA

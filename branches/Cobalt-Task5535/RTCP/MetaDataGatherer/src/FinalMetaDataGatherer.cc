@@ -221,15 +221,29 @@ int main(int argc, char *argv[])
     Parset parset(&controlStream);
     logPrefix = str(boost::format("[FinalMetaDataGatherer obs %u] ") % parset.observationID());
 
-    string host;
-    if (parset.isDefined("Cobalt.FinalMetaDataGatherer.database.host"))
-      host = parset.getString("Cobalt.FinalMetaDataGatherer.database.host");
-    else // TODO: remove last OLAP key when BG/P is gone
-      host = parset.getString("OLAP.FinalMetaDataGatherer.database.host");
-    string db       = "LOFAR_4";
-    string user     = "paulus";
-    string password = "boskabouter";
-    string port     = "5432";
+    string host     = parset.getString("Cobalt.FinalMetaDataGatherer.database.host", "");
+    if (host.empty()) {
+      // TODO: remove case with last OLAP key when BG/P is gone
+      host = parset.getString("OLAP.FinalMetaDataGatherer.database.host", "");
+    }
+    if (host.empty())
+      host = "sasdb";
+
+    string db       = parset.getString("Cobalt.FinalMetaDataGatherer.database.name", "");
+    if (db.empty())
+      host = "LOFAR_4";
+
+    string user     = parset.getString("Cobalt.FinalMetaDataGatherer.database.username", "");
+    string password; // in the code is bad enough; don't also put it in a config parset (and thus .MS)
+    if (user.empty()) {
+      // When can we finally get rid of this silliness?!?
+      user     = "paulus";
+      password = "boskabouter";
+    }
+
+    string port     = parset.getString("Cobalt.FinalMetaDataGatherer.database.port", "");
+    if (port.empty())
+      port = "5432";
 
     // TODO: use actual run times
     string timeStart = parset.getString("Observation.startTime");

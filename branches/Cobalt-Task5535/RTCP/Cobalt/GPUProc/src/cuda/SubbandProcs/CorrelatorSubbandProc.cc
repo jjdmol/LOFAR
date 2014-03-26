@@ -425,10 +425,9 @@ namespace LOFAR
 
       // Wait for the GPU to finish.
       queue.synchronize();
-#if 1
+
       // Read data back from the kernel
       queue.readBuffer(output, devFilteredData, counters.visibilities, true);
-#endif
 
       // ************************************************
       // Perform performance statistics if needed

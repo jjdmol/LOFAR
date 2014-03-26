@@ -3,6 +3,7 @@
 include(LofarCTest)
 
 set(_tests
+  tgenerateStationStreams
   tMACfeedback
   tProductionParsets
   tstartBGL

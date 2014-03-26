@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 #include "TABTranspose.h"
@@ -84,7 +84,9 @@ Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
   nrSamples(nrSamples),
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
-  nrSubbandsLeft(nrSubbands)
+  nrSubbandsLeft(nrSubbands),
+  transposeTimer("Block: data transpose/subband", true, true),
+  zeroTimer("Block: data zeroing", true, true)
 {
 }
 
@@ -100,10 +102,12 @@ void Block::addSubband( const Subband &subband ) {
   ASSERT(subbandWritten[subband.id.subband] == false);
 
   // Weave subbands together
+  transposeTimer.start();
   for (size_t t = 0; t < nrSamples; ++t) {
     // Copy all channels for sample t
     memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
   }
+  transposeTimer.stop();
 
   subbandWritten[subband.id.subband] = true;
 
@@ -114,6 +118,8 @@ void Block::addSubband( const Subband &subband ) {
 
 
 void Block::zeroRemainingSubbands() {
+  zeroTimer.start();
+# pragma omp parallel for num_threads(16)
   for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
     if (!subbandWritten[subbandIdx]) {
       LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
@@ -124,6 +130,7 @@ void Block::zeroRemainingSubbands() {
       }
     }
   }
+  zeroTimer.stop();
 }
 
 
@@ -154,13 +161,20 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   nrBlocks(nrBlocks),
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
-  lastEmitted(-1)
+  lastEmitted(-1),
+  addSubbandMutexTimer("BlockCollector::addSubband mutex", true, true),
+  addSubbandTimer("BlockCollector::addSubband", true, true),
+  fetchTimer("BlockCollector: fetch new block", true, true)
 {
 }
 
 
 void BlockCollector::addSubband( const Subband &subband ) {
+  addSubbandMutexTimer.start();
   ScopedLock sl(mutex);
+  addSubbandMutexTimer.stop();
+
+  NSTimer::StartStop ss(addSubbandTimer);
 
   LOG_DEBUG_STR("BlockCollector: Add " << subband.id);
 
@@ -305,7 +319,10 @@ void BlockCollector::fetch(size_t block) {
     // Allow other threads to manipulate older blocks while we're waiting for
     // a new free one.
     ScopedLock sl(mutex, true);
+
+    fetchTimer.start();
     newBlock = outputPool.free.remove();
+    fetchTimer.stop();
   }
   fetching.erase(block);
 
@@ -489,9 +506,12 @@ void MultiSender::process()
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
       SmartPtr<struct Subband> subband;
+      NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
 
       while ((subband = queue->remove()) != NULL) {
+        sendTimer.start();
         subband->write(stream);
+        sendTimer.stop();
       }
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");

@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: outputProc.cc 27120 2013-10-29 10:42:21Z mol $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -107,7 +107,7 @@ bool process(Stream &controlStream, size_t myRank)
         outputPools[fileIdx] = new Pool<TABTranspose::Block>;
 
         // Create and fill an outputPool for this fileIdx
-        for (size_t i = 0; i < 5; ++i) {
+        for (size_t i = 0; i < 10; ++i) {
 	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
              parset.settings.SAPs[file.sapNr].subbands.size(),
              stokes.nrSamples,
@@ -116,7 +116,7 @@ bool process(Stream &controlStream, size_t myRank)
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
+          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 

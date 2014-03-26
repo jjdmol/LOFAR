@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
+//# $Id$
 
 #ifndef LOFAR_COINTERFACE_TABTRANSPOSE_H
 #define LOFAR_COINTERFACE_TABTRANSPOSE_H
@@ -26,6 +26,7 @@
 #include <cstring>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
+#include <Common/Timer.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
 #include <Common/Thread/Condition.h>
@@ -121,6 +122,9 @@ namespace LOFAR
 
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
+
+        NSTimer transposeTimer;
+        NSTimer zeroTimer;
       };
 
       /*
@@ -187,6 +191,10 @@ namespace LOFAR
         
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
+
+        NSTimer addSubbandMutexTimer;
+        NSTimer addSubbandTimer;
+        NSTimer fetchTimer;
 
         // The oldest block in flight.
         size_t minBlock() const;
