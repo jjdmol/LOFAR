@@ -106,9 +106,13 @@ namespace LOFAR
           context,
           factories.beamFormer.bufferSize(BeamFormerKernel::INPUT_DATA)));
       devC.reset(
-        new gpu::DeviceMemory(context, devInput->inputSamples->size()));
+        new gpu::DeviceMemory(
+          context,
+          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)));
       devD.reset(
-        new gpu::DeviceMemory(context, devInput->inputSamples->size()));
+        new gpu::DeviceMemory(
+          context,
+          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)));
       devE = devInput->inputSamples;
 
       // Null buffer for unused parts of the pipeline
