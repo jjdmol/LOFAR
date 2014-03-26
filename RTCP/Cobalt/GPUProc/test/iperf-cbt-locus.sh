@@ -1,4 +1,14 @@
 #!/bin/bash
+#
+# $ rm iperf-all.txt 
+# $ for cbt in `seq -w 001 008`; do ssh -AC cbm${cbt} 'rm iperf-`hostname`.log'; done
+# $ for cbt in `seq -w 001 008`; do ssh -AC cbm${cbt} "/path/to/iperf-cbt-locus.sh" >/dev/null 2>/dev/null & done
+# $ for cbt in `seq -w 001 008`; do ssh -AC cbm${cbt} 'ls -l  iperf-`hostname`.log'; done
+# $ for cbt in `seq -w 001 008`; do ssh -AC cbm${cbt} 'cat   iperf-`hostname`.log'; done >> iperf-all.txt
+# $ wc iperf-all.txt 
+#   80   80 6834 iperf-all.txt
+#
+# $Id$
 
 function iperf_torture()
 {
