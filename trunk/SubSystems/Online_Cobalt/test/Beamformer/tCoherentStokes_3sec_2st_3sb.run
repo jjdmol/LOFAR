@@ -3,6 +3,6 @@ TESTNAME=`basename "${0%%.run}"`
 
 # Replace output keys in parset (for now append; TODO: replace)
 echo "Observation.DataProducts.Output_CoherentStokes.locations="\
-     "[4*localhost:${PWD}/${TESTNAME}.output]" >> ${TESTNAME}.parset
+     "[localhost:${PWD}/${TESTNAME}.output]" >> ${TESTNAME}.parset
 
 $srcdir/../runtest.sh "$TESTNAME"
