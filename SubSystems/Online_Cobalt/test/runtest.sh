@@ -27,7 +27,7 @@ echo "  in directory $(pwd)"
   # run an observation
   runObservation.sh -C -F -l 2 "${PARSET}" || error "Observation failed!"
 
-  # Expand wildcard pattern to null string, if there are no matching files
+  # Expand wildcard pattern to null string, if there no matching files
   shopt -s nullglob
 
   # Make sure that runObservation produced any output files at all.
@@ -35,7 +35,7 @@ echo "  in directory $(pwd)"
 
   # create script to accept output (ie. copy it to the source dir for check in)
   echo "#!/bin/sh
-    cp ${PWD}/*.raw \"${REFDIR}/\"" > accept_output
+  cp ${PWD}/*.raw ${REFDIR}" > accept_output
   chmod a+x accept_output
 
   # GCC on x86_64 has std::numeric_limits<float>::epsilon() = 1.192092896e-07f
