@@ -796,7 +796,9 @@ namespace LOFAR
                 file.coherentIdxInSAP = sap.nrCoherent - 1;
 
                 if (coherent_idx >= coherent_locations.size())
-                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                  THROW(CoInterfaceException, "No CoherentStokes filename or location (cohIdx=" <<
+                        coherent_idx << " #loc=" << coherent_locations.size() <<
+                        ") specified for file " << file.streamNr);
                 file.location = coherent_locations[coherent_idx++];
               } 
               else 
@@ -804,7 +806,9 @@ namespace LOFAR
                 file.incoherentIdxInSAP = sap.nrIncoherent - 1;
 
                 if (incoherent_idx >= incoherent_locations.size())
-                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                  THROW(CoInterfaceException, "No IncoherentStokes filename or location (incohIdx=" <<
+                        incoherent_idx << " #loc=" << incoherent_locations.size() <<
+                        ") specified for file " << file.streamNr);
                 file.location = incoherent_locations[incoherent_idx++];
               }
 
@@ -813,7 +817,7 @@ namespace LOFAR
 
               outputProcHosts.insert(file.location.host);
             }
-          }         
+          }
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
