@@ -3,10 +3,10 @@
 include(LofarCTest)
 
 set(_tests
-  tCoherentStokes_3sec_2st_3sb
-  tComplexVoltages_3sec_2st_3sb
   tFlysEye_3sec_2st_3sb
+  tCoherentStokes_3sec_2st_3sb
   tIncoherentStokes_3sec_2st_3sb
+  tComplexVoltages_3sec_2st_3sb
 )
 
 foreach(_test ${_tests})
