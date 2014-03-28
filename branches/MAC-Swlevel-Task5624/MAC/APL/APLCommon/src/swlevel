@@ -125,6 +125,10 @@ selectImage()
 		# get major version of active firmware on RSPboard $board
                 #boardHex=`echo $board | awk '{ printf "%02x", $1 }'` 
 		boardHex=`echo $board | awk -v firstBoard=$offset '{ printf "%02x", firstBoard+$1 }'`
+		# Uncomment next lines only for testing purposes!
+                #if [ "$boardHex" == "03" ]; then 
+		#   boardHex="1F"
+                #fi
 		rsu=`run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 
 		# If not a single number, something weird  must have happened
@@ -145,7 +149,6 @@ selectImage()
 	done
 	if [ $boardError -eq 1 ]; then
 	    echo "Board(s) $errorBoards have a communication problem; try reset the 48V"
-	    exit 1 # This is needed to prevent RSP/TBB drivers from starting up in case of error!
 	fi
 }
 
@@ -193,12 +196,23 @@ start_prog()
                     fi		    
   		else
 		    if [ -n "$asroot" ]; then
-		       echo Starting $prog
-		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
-		       if [ "$prog" = "RSPDriver" ]; then
+		       	echo Starting $prog
+		       	sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
+		       	if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-		       fi
-		       sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
+			   if [ $boardError -eq 1 ]; then
+	 			exit
+			   fi
+		       	fi
+                        if [ "$prog" = "TBBDriver" ]; then 
+			   # Check if RSPDriver is already running; if not, do not start either!
+			   /sbin/pidof RSPDriver 1>/dev/null 2>&1
+			   if [ $? -ne 0 ]; then
+				echo "RSPDriver not running, so not starting TBBDriver either"
+				exit
+			   fi
+                        fi
+		       	sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
 		    else
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
@@ -507,9 +521,9 @@ goto_level()
 			start_prog $program x$asroot x$withmpi
                         ) <&- # cant have programs reading from stdin
                               # as that would mess up 'while read line'
-			if [ $? -eq 1 ]; then
-			    break
-			fi
+#			if [ $start -eq 1 ]; then
+#			    break
+#			fi
 	       done
 	done
 }
