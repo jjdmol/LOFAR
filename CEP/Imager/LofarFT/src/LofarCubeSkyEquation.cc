@@ -890,6 +890,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	//	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
+        // Always use CORRECTED_DATA if it's there!
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
 	//	Timers tVBInValid=Timers::getTime();
