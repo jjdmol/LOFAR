@@ -26,7 +26,7 @@ release_version_str=$(echo "${RELEASE_NAME}" | cut -f 3 -d -)
 release_version_maj=$(echo "$release_version_str" | cut -f 1 -d _)
 release_version_min=$(echo "$release_version_str" | cut -f 2 -d _)
 release_version="$release_version_maj.$release_version_min"
-source /opt/lofar/lofarinit.sh || exit 1
+. /opt/lofar/lofarinit.sh || exit 1
 rtcp -h | grep "$release_version" > /dev/null && outputProc -h | grep "$release_version" > /dev/null
 if [ $? -ne 0 ]; then
   echo "WARNING: version printed by rtcp -h or outputProc -h does not contain expected version number $release_version"

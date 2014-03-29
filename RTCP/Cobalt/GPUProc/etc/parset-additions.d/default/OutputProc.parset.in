@@ -10,7 +10,6 @@ Cobalt.OutputProc.sshPrivateKey =
 
 # The executable of the process to start.
 # which thus needs to be found in $PATH after login.
-#TODO: install outputProc on all CEP2 nodes locally under /data/home/lofarsys/lofar_versions/Cobalt-XYZ/
 Cobalt.OutputProc.executable = source /data/home/lofarsys/production/lofar_cobalt/lofarinit.sh; outputProc
 
 # The directory where OutputProc can find the StaticMetaData
