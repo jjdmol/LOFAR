@@ -15,7 +15,7 @@
 
 import os
 import sys
-#import pulp
+import pulp
 
 from lofarpipe.support.control import control
 from lofarpipe.support.data_map import DataMap, validate_data_maps
