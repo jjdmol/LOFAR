@@ -80,7 +80,7 @@ class pulsar_pipeline(control):
                     dps.getBoolVector('Input_CoherentStokes.skip'))
         ])
         self.logger.debug("%d Input_CoherentStokes data products specified" %
-                    len(self.input_data['CoherentStokes']))
+                    len(self.input_data['coherent']))
         # Incoherent Stokes input data
         self.incoherentStokesEnabled = dps.getBool('Input_IncoherentStokes.enabled', False)
         self.input_data['incoherent'] = DataMap([
@@ -91,7 +91,7 @@ class pulsar_pipeline(control):
                     dps.getBoolVector('Input_IncoherentStokes.skip'))
         ])
         self.logger.debug("%d Input_IncoherentStokes data products specified" %
-                            len(self.input_data['IncoherentStokes']))
+                            len(self.input_data['incoherent']))
         self.output_data['data'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
@@ -105,7 +105,7 @@ class pulsar_pipeline(control):
         # Sanity checks on input- and output data product specifications
         # the existing validate_data_maps will probably not work for pulsar pipeline,
         # were length of output equals length of input coherent + length of input incoherent arrays
-        in_len = len(self.input_data['CoherentStokes']) + len(self.input_data['IncoherentStokes'])
+        in_len = len(self.input_data['coherent']) + len(self.input_data['incoherent'])
         out_len = len(self.output_data)
         if (in_len != out_len):
             raise DataMapError("number of enabled input data products %s does not match the total number of output files %s" % 
