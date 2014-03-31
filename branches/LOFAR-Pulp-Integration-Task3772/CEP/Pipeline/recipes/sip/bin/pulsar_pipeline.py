@@ -15,7 +15,7 @@
 
 import os
 import sys
-import pulp
+#import pulp
 
 from lofarpipe.support.control import control
 from lofarpipe.support.data_map import DataMap, validate_data_maps
@@ -32,7 +32,7 @@ class pulsar_pipeline(control):
     """
 
     def __init__(self):
-        super(preprocessing_pipeline, self).__init__()
+        super(pulsar_pipeline, self).__init__()
         self.parset = parameterset()
         self.input_data = []
         self.output_data = []
@@ -165,8 +165,8 @@ class pulsar_pipeline(control):
         
        
         # call pulp
-        pulp(self)
-  
+        #pulp(self)
+        print >> sys.stderr, "REACHED THE POINT WHERE PULP SHOULD BE STARTED..."
   
   
     
