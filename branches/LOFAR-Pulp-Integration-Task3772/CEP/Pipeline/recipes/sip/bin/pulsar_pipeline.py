@@ -164,8 +164,8 @@ class pulsar_pipeline(control):
         
        
         # Run the pulsar pipeline
-        #pulp(self)
-        print >> sys.stderr, "REACHED THE POINT WHERE PULP SHOULD BE STARTED..."
+        self.logger.debug("Starting pulp.py with options:" + str(sys.argv))
+        pulp(self)
   
         return 0
 
