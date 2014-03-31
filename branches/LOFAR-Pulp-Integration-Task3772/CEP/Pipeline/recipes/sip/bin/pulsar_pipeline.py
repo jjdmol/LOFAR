@@ -17,6 +17,7 @@ import os
 import sys
 import pulp
 
+from string import join
 from lofarpipe.support.control import control
 from lofarpipe.support.data_map import DataMap, validate_data_maps
 from lofarpipe.support.lofarexceptions import PipelineException
@@ -151,20 +152,21 @@ class pulsar_pipeline(control):
   
         self.logger.debug("Processing: %s" %
           ', '.join(str(f) for f in self.input_data))
-          
-        # set automatic run cmdline option
-        sys.argv.extend(["--auto", "-q"])
         
+        # Rebuilding sys.argv without the options given automatically by framework
+        # --auto = automatic run from framework
+        # -q = quiet mode, no user interaction
+        sys.argv = ['pulp.py','--auto','-q']
+      
         # TODO: translate optional pipeline tuning parameters from the pipeline parset to existing commanf line options
         if (not self.coherentStokesEnabled):
           sys.argv.extend(["--noCS", "--noCV", "--noFE"])
           
         if (not self.incoherentStokesEnabled):
-          sys.argv.append("--noIS")
-        
+          sys.argv.append("--noIS")       
        
         # Run the pulsar pipeline
-        self.logger.debug("Starting pulp.py with options:" + str(sys.argv))
+        self.logger.debug("Starting pulp with cmd-line options:\n" + join(sys.argv))
         pulp(self)
   
         return 0
