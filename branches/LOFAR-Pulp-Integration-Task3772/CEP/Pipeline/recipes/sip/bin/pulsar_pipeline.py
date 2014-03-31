@@ -143,7 +143,7 @@ class pulsar_pipeline(control):
         self.input_data['incoherent'].save(self.input_IS_mapfile)
         # Output data
         self.output_data_mapfile = os.path.join(mapfile_dir, "output_data.mapfile")
-        self.output_data['data'].save(output_data_mapfile)
+        self.output_data['data'].save(self.output_data_mapfile)
 
         if len(self.input_data) == 0:
             self.logger.warn("No input data files to process. Bailing out!")
