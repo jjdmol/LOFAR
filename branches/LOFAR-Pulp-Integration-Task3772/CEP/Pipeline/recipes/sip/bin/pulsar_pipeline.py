@@ -166,7 +166,7 @@ class pulsar_pipeline(control):
           sys.argv.append("--noIS")       
        
         # Run the pulsar pipeline
-        self.logger.debug("Starting pulp with cmd-line options:\n" + join(sys.argv))
+        self.logger.debug("Starting pulp with: " + join(sys.argv))
         pulp(self)
   
         return 0
