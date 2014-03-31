@@ -26,10 +26,10 @@ from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 
 class pulsar_pipeline(control):
-  """
-  This is the main wrapper class around the pulsar pipeline for
-  integration of the pulsar pipelines as a 'black-box'
-  """
+    """
+    This is the main wrapper class around the pulsar pipeline for
+    integration of the pulsar pipelines as a 'black-box'
+    """
 
     def __init__(self):
         super(preprocessing_pipeline, self).__init__()
@@ -64,53 +64,53 @@ class pulsar_pipeline(control):
   
 
     def _get_io_product_specs(self):
-      """
-      Get input- and output-data product specifications from the
-      parset-file, and do some sanity checks.
-      """
-      dps = self.parset.makeSubset(
-          self.parset.fullModuleName('DataProducts') + '.'
-      )
-      # Coherent Stokes input data
-      self.coherentStokesEnabled = dps.getBool('Input_CoherentStokes.enabled', False)
-      self.input_data['CoherentStokes'] = DataMap([
-          tuple(os.path.join(location, filename).split(':')) + (skip,)
-              for location, filename, skip in zip(
-                  dps.getStringVector('Input_CoherentStokes.locations'),
-                  dps.getStringVector('Input_CoherentStokes.filenames'),
-                  dps.getBoolVector('Input_CoherentStokes.skip'))
-      ])
-      self.logger.debug("%d Input_CoherentStokes data products specified" %
-                  len(self.input_data['CoherentStokes']))
-      # Incoherent Stokes input data
-      self.incoherentStokesEnabled = dps.getBool('Input_IncoherentStokes.enabled', False)
-      self.input_data['IncoherentStokes'] = DataMap([
-          tuple(os.path.join(location, filename).split(':')) + (skip,)
-              for location, filename, skip in zip(
-                  dps.getStringVector('Input_IncoherentStokes.locations'),
-                  dps.getStringVector('Input_IncoherentStokes.filenames'),
-                  dps.getBoolVector('Input_IncoherentStokes.skip'))
-      ])
-      self.logger.debug("%d Input_IncoherentStokes data products specified" %
-                        len(self.input_data['IncoherentStokes']))
-      self.output_data = DataMap([
-          tuple(os.path.join(location, filename).split(':')) + (skip,)
-              for location, filename, skip in zip(
-                  dps.getStringVector('Output_Pulsar.locations'),
-                  dps.getStringVector('Output_Pulsar.filenames'),
-                  dps.getBoolVector('Output_Pulsar.skip'))
-      ])
-      self.logger.debug("%d Output_Pulsar data products specified" %
-                        len(self.output_data))
-      
-      # Sanity checks on input- and output data product specifications
-      # the existing validate_data_maps will probably not work for pulsar pipeline,
-      # were length of output equals length of input coherent + length of input incoherent arrays
-      in_len = len(self.input_data['CoherentStokes']) + len(self.input_data['IncoherentStokes'])
-      out_len = len(self.output_data)
-      if (in_len != out_len):
-        raise DataMapError("number of enabled input data products %s does not match the total number of output files %s" % 
-                        (in_len, out_len))
+        """
+        Get input- and output-data product specifications from the
+        parset-file, and do some sanity checks.
+        """
+        dps = self.parset.makeSubset(
+            self.parset.fullModuleName('DataProducts') + '.'
+        )
+        # Coherent Stokes input data
+        self.coherentStokesEnabled = dps.getBool('Input_CoherentStokes.enabled', False)
+        self.input_data['CoherentStokes'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Input_CoherentStokes.locations'),
+                    dps.getStringVector('Input_CoherentStokes.filenames'),
+                    dps.getBoolVector('Input_CoherentStokes.skip'))
+        ])
+        self.logger.debug("%d Input_CoherentStokes data products specified" %
+                    len(self.input_data['CoherentStokes']))
+        # Incoherent Stokes input data
+        self.incoherentStokesEnabled = dps.getBool('Input_IncoherentStokes.enabled', False)
+        self.input_data['IncoherentStokes'] = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Input_IncoherentStokes.locations'),
+                    dps.getStringVector('Input_IncoherentStokes.filenames'),
+                    dps.getBoolVector('Input_IncoherentStokes.skip'))
+        ])
+        self.logger.debug("%d Input_IncoherentStokes data products specified" %
+                            len(self.input_data['IncoherentStokes']))
+        self.output_data = DataMap([
+            tuple(os.path.join(location, filename).split(':')) + (skip,)
+                for location, filename, skip in zip(
+                    dps.getStringVector('Output_Pulsar.locations'),
+                    dps.getStringVector('Output_Pulsar.filenames'),
+                    dps.getBoolVector('Output_Pulsar.skip'))
+        ])
+        self.logger.debug("%d Output_Pulsar data products specified" %
+                            len(self.output_data))
+        
+        # Sanity checks on input- and output data product specifications
+        # the existing validate_data_maps will probably not work for pulsar pipeline,
+        # were length of output equals length of input coherent + length of input incoherent arrays
+        in_len = len(self.input_data['CoherentStokes']) + len(self.input_data['IncoherentStokes'])
+        out_len = len(self.output_data)
+        if (in_len != out_len):
+            raise DataMapError("number of enabled input data products %s does not match the total number of output files %s" % 
+                            (in_len, out_len))
       
   
     @mail_log_on_exception
