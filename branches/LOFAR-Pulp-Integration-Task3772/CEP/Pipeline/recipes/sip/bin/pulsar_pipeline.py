@@ -26,20 +26,20 @@ from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
 
 
 class pulsar_pipeline(control):
-    """
-    This is the main wrapper class around the pulsar pipeline for
-    integration of the pulsar pipelines as a 'black-box'
-    """
+  """
+  This is the main wrapper class around the pulsar pipeline for
+  integration of the pulsar pipelines as a 'black-box'
+  """
 
   def __init__(self):
-  super(preprocessing_pipeline, self).__init__()
-  self.parset = parameterset()
-  self.input_data = []
-  self.output_data = []
-  self.io_data_mask = []
-  self.parset_feedback_file = None
+    super(preprocessing_pipeline, self).__init__()
+    self.parset = parameterset()
+    self.input_data = []
+    self.output_data = []
+    self.io_data_mask = []
+    self.parset_feedback_file = None
 
-  
+
   def go(self):
     """
     Read the parset-file that was given as input argument;
