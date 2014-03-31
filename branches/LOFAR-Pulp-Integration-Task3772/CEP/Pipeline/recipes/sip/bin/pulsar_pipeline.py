@@ -34,9 +34,8 @@ class pulsar_pipeline(control):
     def __init__(self):
         super(pulsar_pipeline, self).__init__()
         self.parset = parameterset()
-        self.input_data = []
-        self.output_data = []
-        self.io_data_mask = []
+        self.input_data = {}
+        self.output_data = {}
         self.parset_feedback_file = None
 
 
@@ -73,7 +72,7 @@ class pulsar_pipeline(control):
         )
         # Coherent Stokes input data
         self.coherentStokesEnabled = dps.getBool('Input_CoherentStokes.enabled', False)
-        self.input_data['CoherentStokes'] = DataMap([
+        self.input_data['coherent'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     dps.getStringVector('Input_CoherentStokes.locations'),
@@ -84,7 +83,7 @@ class pulsar_pipeline(control):
                     len(self.input_data['CoherentStokes']))
         # Incoherent Stokes input data
         self.incoherentStokesEnabled = dps.getBool('Input_IncoherentStokes.enabled', False)
-        self.input_data['IncoherentStokes'] = DataMap([
+        self.input_data['incoherent'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     dps.getStringVector('Input_IncoherentStokes.locations'),
@@ -93,7 +92,7 @@ class pulsar_pipeline(control):
         ])
         self.logger.debug("%d Input_IncoherentStokes data products specified" %
                             len(self.input_data['IncoherentStokes']))
-        self.output_data = DataMap([
+        self.output_data['data'] = DataMap([
             tuple(os.path.join(location, filename).split(':')) + (skip,)
                 for location, filename, skip in zip(
                     dps.getStringVector('Output_Pulsar.locations'),
@@ -138,13 +137,13 @@ class pulsar_pipeline(control):
         # Write input- and output data map-files
         # Coherent Stokes
         self.input_CS_mapfile = os.path.join(mapfile_dir, "input_CS_data.mapfile")
-        self.input_data['CoherentStokes'].save(self.input_CS_mapfile)
+        self.input_data['coherent'].save(self.input_CS_mapfile)
         # Incoherent Stokes
         self.input_IS_mapfile = os.path.join(mapfile_dir, "input_IS_data.mapfile")
-        self.input_data['IncoherentStokes'].save(self.input_IS_mapfile)
+        self.input_data['incoherent'].save(self.input_IS_mapfile)
         # Output data
         self.output_data_mapfile = os.path.join(mapfile_dir, "output_data.mapfile")
-        self.output_data.save(output_data_mapfile)
+        self.output_data['data'].save(output_data_mapfile)
 
         if len(self.input_data) == 0:
             self.logger.warn("No input data files to process. Bailing out!")
@@ -164,10 +163,12 @@ class pulsar_pipeline(control):
           sys.argv.append("--noIS")
         
        
-        # call pulp
+        # Run the pulsar pipeline
         #pulp(self)
         print >> sys.stderr, "REACHED THE POINT WHERE PULP SHOULD BE STARTED..."
   
+        return 0
+
   
     
 if __name__ == '__main__':
