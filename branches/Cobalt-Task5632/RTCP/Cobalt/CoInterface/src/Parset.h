@@ -441,6 +441,7 @@ namespace LOFAR
           size_t sapNr;
           size_t tabNr;
           size_t stokesNr;
+          size_t partNr;
           bool coherent;
 
           // this TAB is the ....th coherent TAB in this SAP
@@ -450,6 +451,11 @@ namespace LOFAR
           size_t incoherentIdxInSAP;
 
           struct FileLocation location;
+
+          // this file stores [firstSubbandIdx, lastSubbandIdx)
+          // interpretation is same as in globalSubbandIdx, i.e. [0, 488)
+          unsigned firstSubbandIdx;
+          unsigned lastSubbandIdx; // exclusive
         };
 
         // The list of files to write, one file

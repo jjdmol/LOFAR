@@ -88,7 +88,7 @@ namespace LOFAR
     */
     double RingCoordinates::len_edge()
     {
-      return itsWidth / sqrt(3);
+      return itsWidth / sqrt(3.0);
     }
 
     /*
@@ -99,7 +99,7 @@ namespace LOFAR
     */
     double RingCoordinates::len_width()
     {
-      return 2 * len_edge();
+      return 2.0 * len_edge();
     } 
 
     /*
@@ -225,9 +225,9 @@ namespace LOFAR
       if (itsType == RingCoordinates::J2000)
         return "J2000";
       else if (itsType == RingCoordinates::B1950)
-        return "JB1950";
+        return "B1950";
       else
-        return "J2000";
+        return "Other";
     }
   }
 }

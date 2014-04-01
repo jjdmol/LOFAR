@@ -572,8 +572,7 @@ namespace LOFAR
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
         itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % (tabDir.angle1 - beamDir.angle1)));
         itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % (tabDir.angle2 - beamDir.angle2)));
-      }
-      if (type == "FlysEyeBeam") {
+      } else if (type == "FlysEyeBeam") {
         string fullName = parset.settings.antennaFields.at(beamNr).name;
         string stationName = fullName.substr(0,5);
         string antennaFieldName = fullName.substr(5);
