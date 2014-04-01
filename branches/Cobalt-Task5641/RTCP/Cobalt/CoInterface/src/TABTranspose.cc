@@ -162,19 +162,19 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
-  signalledEOS(false),
-  addSubbandMutexTimer("BlockCollector::addSubband mutex", true, true),
   addSubbandTimer("BlockCollector::addSubband", true, true),
   fetchTimer("BlockCollector: fetch new block", true, true),
-  thread(this, &BlockCollector::processLoop)
+  inputThread(this, &BlockCollector::inputLoop),
+  outputThread(this, &BlockCollector::outputLoop)
 {
 }
 
 
 BlockCollector::~BlockCollector()
 {
-  // Make SURE the thread can finish, regardless of whether finish() was called
+  // Make SURE the threads can finish, regardless of whether finish() was called
   inputQueue.append(NULL);
+  outputQueue.append(NULL);
 }
 
 
@@ -183,7 +183,7 @@ void BlockCollector::addSubband( SmartPtr<Subband> &subband ) {
 }
 
 
-void BlockCollector::processLoop() {
+void BlockCollector::inputLoop() {
   SmartPtr<Subband> subband;
 
   while ((subband = inputQueue.remove()) != NULL) {
@@ -192,11 +192,20 @@ void BlockCollector::processLoop() {
 }
 
 
-void BlockCollector::_addSubband( const Subband &subband ) {
-  addSubbandMutexTimer.start();
-  ScopedLock sl(mutex);
-  addSubbandMutexTimer.stop();
+void BlockCollector::outputLoop() {
+  SmartPtr<Block> block;
 
+  while ((block = outputQueue.remove()) != NULL) {
+    block->zeroRemainingSubbands();
+
+    outputPool.filled.append(block);
+  }
+
+  outputPool.filled.append(NULL);
+}
+
+
+void BlockCollector::_addSubband( const Subband &subband ) {
   NSTimer::StartStop ss(addSubbandTimer);
 
   LOG_DEBUG_STR("BlockCollector: Add " << subband.id);
@@ -218,8 +227,6 @@ void BlockCollector::_addSubband( const Subband &subband ) {
       ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband.id.fileIdx << " subband " << subband.id.subband);
     }
 
-    // Note: fetch can release the mutex if it has to wait,
-    //       causing any assumptions made earlier to be invalid.
     fetch(blockIdx);
   }
 
@@ -241,8 +248,7 @@ void BlockCollector::_addSubband( const Subband &subband ) {
       ASSERT(blocks.empty());
 
       // Signal end-of-stream
-      outputPool.filled.append(NULL);
-      signalledEOS = true;
+      outputQueue.append(NULL);
     }
   }
 }
@@ -251,27 +257,21 @@ void BlockCollector::_addSubband( const Subband &subband ) {
 void BlockCollector::finish() {
   // Wait for all input to be processed
   inputQueue.append(NULL);
-  thread.wait();
+  inputThread.wait();
 
   // Wrap-up remainder
-  {
-    ScopedLock sl(mutex);
+  if (!blocks.empty()) {
+    emitUpTo(maxBlock());
+  }
 
-    if (!blocks.empty()) {
-      emitUpTo(maxBlock());
-    }
-
-    if (!canDrop) {
-      // Should have received everything
-      ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
-    }
+  if (!canDrop) {
+    // Should have received everything
+    ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
   }
 
   // Signal end-of-stream
-  if (!signalledEOS) {
-    outputPool.filled.append(NULL);
-    signalledEOS = true;
-  }
+  outputQueue.append(NULL);
+  outputThread.wait();
 }
 
 
@@ -301,12 +301,9 @@ void BlockCollector::emit(size_t blockIdx) {
   SmartPtr<Block> &block = blocks.at(blockIdx);
 
   LOG_DEBUG_STR("BlockCollector: emitting block " << blockIdx << " of file " << block->fileIdx);
-
-  block->zeroRemainingSubbands();
   
   // emit to outputPool.filled()
-  ASSERT(!signalledEOS);
-  outputPool.filled.append(block);
+  outputQueue.append(block);
 
   // remove from our administration
   blocks.erase(blockIdx);
@@ -329,37 +326,16 @@ void BlockCollector::fetch(size_t block) {
   ASSERT(!have(block));
 
   // Make sure we don't exceed our maximum cache size
-  if (canDrop && blocks.size() + fetching.size() >= maxBlocksInFlight) {
+  if (canDrop && blocks.size() >= maxBlocksInFlight) {
     // No more room -- force out oldest block
     emit(minBlock());
   }
 
-  if (fetching.find(block) != fetching.end()) {
-    LOG_DEBUG_STR("BlockCollector: some thread is already fetching block " << block);
-
-    // Wait for OUR block to be fetched
-    do {
-      fetchSignal.wait(mutex);
-    } while(!have(block));
-
-    return;
-  }
-
   LOG_DEBUG_STR("BlockCollector: fetching block " << block);
 
-  SmartPtr<Block> newBlock;
-
-  fetching[block] = true;
-  {
-    // Allow other threads to manipulate older blocks while we're waiting for
-    // a new free one.
-    ScopedLock sl(mutex, true);
-
-    fetchTimer.start();
-    newBlock = outputPool.free.remove();
-    fetchTimer.stop();
-  }
-  fetching.erase(block);
+  fetchTimer.start();
+  SmartPtr<Block> newBlock = outputPool.free.remove();
+  fetchTimer.stop();
 
   LOG_DEBUG_STR("BlockCollector: fetched block " << block);
 
@@ -367,9 +343,6 @@ void BlockCollector::fetch(size_t block) {
   ASSERT(!have(block));
   blocks[block] = newBlock;
   blocks[block]->reset(fileIdx, block);
-
-  // Signal other threads that are waiting for this block
-  fetchSignal.broadcast();
 }
 
 

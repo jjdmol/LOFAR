@@ -175,17 +175,22 @@ namespace LOFAR
         void finish();
 
       private:
+        /*
+         * Elements travel along the following path
+         *
+         * Caller:       addSubband() -> inputQueue
+         * inputThread:  inputQueue   -> _addSubband() + outputPool.free -> outputQueue
+         * outputThread: outputQueue  -> outputPool.filled
+         */
+
         std::map<size_t, SmartPtr<Block> > blocks;
-        std::map<size_t, bool> fetching;
 
         Queue< SmartPtr<Subband> > inputQueue;
+        Queue< SmartPtr<Block> >   outputQueue;
         Pool<Block> &outputPool;
 
         const size_t fileIdx;
         const size_t nrBlocks;
-        Mutex mutex; // protects concurrent access to `blocks'
-
-        Condition fetchSignal;
 
         // upper limit for blocks.size(), or 0 if unlimited
         const size_t maxBlocksInFlight;
@@ -203,7 +208,8 @@ namespace LOFAR
         NSTimer addSubbandTimer;
         NSTimer fetchTimer;
 
-        Thread thread;
+        Thread inputThread;
+        Thread outputThread;
 
         // The oldest block in flight.
         size_t minBlock() const;
@@ -232,9 +238,17 @@ namespace LOFAR
          * Fetch a new block.
          */
         void fetch(size_t block);
-         
-        void processLoop();
+        
+        /*
+         * Processes input elements from inputQueue.
+         */
+        void inputLoop();
         void _addSubband( const Subband &subband );
+
+        /*
+         * Processes output elements from outputQueue.
+         */
+        void outputLoop();
       };
 
       /*
