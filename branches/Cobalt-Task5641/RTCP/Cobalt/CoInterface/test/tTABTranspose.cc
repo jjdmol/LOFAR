@@ -122,9 +122,9 @@ struct Fixture_Loss: public Fixture {
         if (subbandIdx == 3)
           continue;
 
-        Subband sb(nrSamples, nrChannels);
-        sb.id.block = blockIdx;
-        sb.id.subband = subbandIdx;
+        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+        sb->id.block = blockIdx;
+        sb->id.subband = subbandIdx;
 
         ctr_loss.addSubband(sb);
       }
@@ -132,6 +132,10 @@ struct Fixture_Loss: public Fixture {
 
     // shouldn't have emitted anything yet
     CHECK_EQUAL(0UL, outputPool.filled.size());
+
+    ctr_loss.finish();
+    // should have emitted all blocks, plus NULL
+    CHECK_EQUAL(maxInFlight + 1, outputPool.filled.size());
   }
 
 };
@@ -140,14 +144,15 @@ SUITE(BlockCollector) {
   TEST_FIXTURE(Fixture, OneBlock) {
     // add all subbands for block 0
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      Subband sb(nrSamples, nrChannels);
-      sb.id.block = 0;
-      sb.id.subband = subbandIdx;
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 0;
+      sb->id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
-    CHECK_EQUAL(1UL,          outputPool.filled.size());
+    ctr.finish();
+    CHECK_EQUAL(2UL,          outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - 1, outputPool.free.size());
   }
 
@@ -155,16 +160,17 @@ SUITE(BlockCollector) {
     // add all subbands for all blocks
     for (size_t blockIdx = 0; blockIdx < nrBlocks; ++blockIdx) {
       for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-        Subband sb(nrSamples, nrChannels);
-        sb.id.block = blockIdx;
-        sb.id.subband = subbandIdx;
+        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+        sb->id.block = blockIdx;
+        sb->id.subband = subbandIdx;
 
         ctr.addSubband(sb);
       }
     }
 
-    CHECK_EQUAL(+nrBlocks, outputPool.filled.size());
-    CHECK_EQUAL(0UL,       outputPool.free.size());
+    ctr.finish();
+    CHECK_EQUAL(nrBlocks + 1, outputPool.filled.size());
+    CHECK_EQUAL(0UL,          outputPool.free.size());
   }
 
   TEST_FIXTURE(Fixture, Loss_OneSubband) {
@@ -174,61 +180,65 @@ SUITE(BlockCollector) {
       if (subbandIdx == 3)
         continue;
 
-      Subband sb(nrSamples, nrChannels);
-      sb.id.block = 0;
-      sb.id.subband = subbandIdx;
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 0;
+      sb->id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
-    // shouldn't have emitted anything yet
-    CHECK_EQUAL(0UL, outputPool.filled.size());
-
+    ctr.finish();
+    CHECK_EQUAL(2UL, outputPool.filled.size());
+/*
     // add all subbands for block 1
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      Subband sb(nrSamples, nrChannels);
-      sb.id.block = 1;
-      sb.id.subband = subbandIdx;
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 1;
+      sb->id.subband = subbandIdx;
 
       ctr.addSubband(sb);
     }
 
     // both blocks are now emitted, because subband 3 of block 0 is
     // considered lost by the arrival of subband 3 of block 1
+    ctr.finish();
     CHECK_EQUAL(2UL,            outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - 2UL, outputPool.free.size());
+*/
   }
 
   TEST_FIXTURE(Fixture_Loss, Loss_MaxBlocksInFlight) {
     // add one subband for a new block, causing block
     // 0 to spill.
     {
-      Subband sb(nrSamples, nrChannels);
-      sb.id.block = maxInFlight;
-      sb.id.subband = 0;
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = maxInFlight;
+      sb->id.subband = 0;
 
       ctr_loss.addSubband(sb);
     }
 
-    // the first block should have been forced out
-    CHECK_EQUAL(1UL,                          outputPool.filled.size());
+    ctr_loss.finish();
 
-    // some blocks are in flight, one has been emitted
-    CHECK_EQUAL(nrBlocks - maxInFlight - 1UL, outputPool.free.size());
-
+    // all blocks should have been forced out
+    CHECK_EQUAL(maxInFlight + 1,        outputPool.filled.size());
+    CHECK_EQUAL(nrBlocks - maxInFlight, outputPool.free.size());
+/*
     // let subband 3 arrive late
     {
-      Subband sb(nrSamples, nrChannels);
-      sb.id.block = 0;
-      sb.id.subband = 3;
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 0;
+      sb->id.subband = 3;
 
       ctr_loss.addSubband(sb);
     }
 
     // there should be no change, even though this would have completed
     // a block, the block was already emitted
+    ctr_loss.finish();
     CHECK_EQUAL(1UL,                          outputPool.filled.size());
     CHECK_EQUAL(nrBlocks - maxInFlight - 1UL, outputPool.free.size());
+*/
   }
 
   TEST_FIXTURE(Fixture, Finish) {
@@ -239,22 +249,17 @@ SUITE(BlockCollector) {
         if (subbandIdx == 3)
           continue;
 
-        Subband sb(nrSamples, nrChannels);
-        sb.id.block = blockIdx;
-        sb.id.subband = subbandIdx;
+        SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+        sb->id.block = blockIdx;
+        sb->id.subband = subbandIdx;
 
         ctr.addSubband(sb);
       }
     }
 
-    // shouldn't have emitted anything yet
-    CHECK_EQUAL(0UL, outputPool.filled.size());
-    CHECK_EQUAL(0UL, outputPool.free.size());
-
-    ctr.finish();
-
     // should have emitted everything, plus
     // the terminating NULL entry
+    ctr.finish();
     CHECK_EQUAL(nrBlocks + 1, outputPool.filled.size());
     CHECK_EQUAL(0UL,          outputPool.free.size());
   }
@@ -493,6 +498,7 @@ SUITE(MultiReceiver) {
               continue;
 
             // Check if all blocks arrived, plus NULL marker.
+            collectors[t]->finish();
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
@@ -511,7 +517,6 @@ SUITE(MultiReceiver) {
       // Senders
 #     pragma omp section
       {
-
 #       pragma omp parallel for num_threads(nrSenders)
         for (int s = 0; s < nrSenders; ++s) {
           LOG_DEBUG_STR("Sender thread " << s);

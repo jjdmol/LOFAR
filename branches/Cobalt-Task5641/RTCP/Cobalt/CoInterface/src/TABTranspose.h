@@ -161,10 +161,12 @@ namespace LOFAR
          */
         BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
-	/*
+        ~BlockCollector();
+
+	      /*
          * Add a subband of any block.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
          * Send all remaining blocks downstream,
@@ -176,7 +178,9 @@ namespace LOFAR
         std::map<size_t, SmartPtr<Block> > blocks;
         std::map<size_t, bool> fetching;
 
+        Queue< SmartPtr<Subband> > inputQueue;
         Pool<Block> &outputPool;
+
         const size_t fileIdx;
         const size_t nrBlocks;
         Mutex mutex; // protects concurrent access to `blocks'
@@ -192,9 +196,14 @@ namespace LOFAR
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
 
+        // send NULL marker to outputPool, signalling the end-of-stream
+        bool signalledEOS;
+
         NSTimer addSubbandMutexTimer;
         NSTimer addSubbandTimer;
         NSTimer fetchTimer;
+
+        Thread thread;
 
         // The oldest block in flight.
         size_t minBlock() const;
@@ -223,6 +232,9 @@ namespace LOFAR
          * Fetch a new block.
          */
         void fetch(size_t block);
+         
+        void processLoop();
+        void _addSubband( const Subband &subband );
       };
 
       /*

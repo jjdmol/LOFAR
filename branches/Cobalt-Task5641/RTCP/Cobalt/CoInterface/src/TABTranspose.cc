@@ -162,14 +162,37 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
+  signalledEOS(false),
   addSubbandMutexTimer("BlockCollector::addSubband mutex", true, true),
   addSubbandTimer("BlockCollector::addSubband", true, true),
-  fetchTimer("BlockCollector: fetch new block", true, true)
+  fetchTimer("BlockCollector: fetch new block", true, true),
+  thread(this, &BlockCollector::processLoop)
 {
 }
 
 
-void BlockCollector::addSubband( const Subband &subband ) {
+BlockCollector::~BlockCollector()
+{
+  // Make SURE the thread can finish, regardless of whether finish() was called
+  inputQueue.append(NULL);
+}
+
+
+void BlockCollector::addSubband( SmartPtr<Subband> &subband ) {
+  inputQueue.append(subband);
+}
+
+
+void BlockCollector::processLoop() {
+  SmartPtr<Subband> subband;
+
+  while ((subband = inputQueue.remove()) != NULL) {
+    _addSubband(*subband);
+  }
+}
+
+
+void BlockCollector::_addSubband( const Subband &subband ) {
   addSubbandMutexTimer.start();
   ScopedLock sl(mutex);
   addSubbandMutexTimer.stop();
@@ -219,25 +242,36 @@ void BlockCollector::addSubband( const Subband &subband ) {
 
       // Signal end-of-stream
       outputPool.filled.append(NULL);
+      signalledEOS = true;
     }
   }
 }
 
 
 void BlockCollector::finish() {
-  ScopedLock sl(mutex);
+  // Wait for all input to be processed
+  inputQueue.append(NULL);
+  thread.wait();
 
-  if (!blocks.empty()) {
-    emitUpTo(maxBlock());
-  }
+  // Wrap-up remainder
+  {
+    ScopedLock sl(mutex);
 
-  if (!canDrop) {
-    // Should have received everything
-    ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
+    if (!blocks.empty()) {
+      emitUpTo(maxBlock());
+    }
+
+    if (!canDrop) {
+      // Should have received everything
+      ASSERT(nrBlocks == 0 || (ssize_t)nrBlocks == lastEmitted + 1);
+    }
   }
 
   // Signal end-of-stream
-  outputPool.filled.append(NULL);
+  if (!signalledEOS) {
+    outputPool.filled.append(NULL);
+    signalledEOS = true;
+  }
 }
 
 
@@ -271,6 +305,7 @@ void BlockCollector::emit(size_t blockIdx) {
   block->zeroRemainingSubbands();
   
   // emit to outputPool.filled()
+  ASSERT(!signalledEOS);
   outputPool.filled.append(block);
 
   // remove from our administration
@@ -370,12 +405,12 @@ bool Receiver::finish()
 void Receiver::receiveLoop()
 {
   try {
-    Subband subband;
-
     for(;;) {
-      subband.read(stream);
+      SmartPtr<Subband> subband = new Subband;
 
-      const size_t fileIdx = subband.id.fileIdx;
+      subband->read(stream);
+
+      const size_t fileIdx = subband->id.fileIdx;
 
       ASSERTSTR(collectors.find(fileIdx) != collectors.end(), "Received a piece of file " << fileIdx << ", which is unknown to me");
 
