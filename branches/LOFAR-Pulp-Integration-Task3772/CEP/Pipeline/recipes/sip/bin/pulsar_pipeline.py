@@ -169,7 +169,7 @@ class pulsar_pipeline(control):
        
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
-        p = pulp()
+        p = pulp.pulp(self)
   
         return 0
 
