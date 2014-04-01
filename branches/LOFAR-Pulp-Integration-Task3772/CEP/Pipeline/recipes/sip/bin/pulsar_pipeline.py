@@ -121,8 +121,6 @@ class pulsar_pipeline(control):
         """
         # *********************************************************************
         # 1. Prepare phase, collect data from parset and input mapfiles.
-        py_parset = self.parset.makeSubset(
-            self.parset.fullModuleName('PythonControl') + '.Pulsar.')
 
         # Get input/output-data products specifications.
         self._get_io_product_specs()
@@ -153,12 +151,16 @@ class pulsar_pipeline(control):
         self.logger.debug("Processing: %s" %
           ', '.join(str(f) for f in self.input_data))
         
+        
         # Rebuilding sys.argv without the options given automatically by framework
         # --auto = automatic run from framework
         # -q = quiet mode, no user interaction
-        sys.argv = ['pulp.py','--auto','-q']
+        sys.argv = ['pulp.py', '--auto','-q']
       
         # TODO: translate optional pipeline tuning parameters from the pipeline parset to existing commanf line options
+        #py_parset = self.parset.makeSubset(
+        #    self.parset.fullModuleName('PythonControl') + '.Pulsar.')
+        
         if (not self.coherentStokesEnabled):
           sys.argv.extend(["--noCS", "--noCV", "--noFE"])
           
