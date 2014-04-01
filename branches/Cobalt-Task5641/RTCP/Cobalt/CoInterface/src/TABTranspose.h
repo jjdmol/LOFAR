@@ -158,8 +158,10 @@ namespace LOFAR
          * nrBlocks:   the number of blocks we expect (or 0 if unknown).
          * maxBlocksInFlight: the maximum number of blocks to process in
          *                    parallel (or 0 for no limit).
+         * maxSubbandsInInput: the number of subbands to cache for the inputQueue
+         *                     before addSubband() starts blocking.
          */
-        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
+        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0, size_t maxSubbandsInInput = 1024 );
 
         ~BlockCollector();
 
@@ -185,8 +187,8 @@ namespace LOFAR
 
         std::map<size_t, SmartPtr<Block> > blocks;
 
-        Queue< SmartPtr<Subband> > inputQueue;
-        Queue< SmartPtr<Block> >   outputQueue;
+        BestEffortQueue< SmartPtr<Subband> > inputQueue;
+        Queue< SmartPtr<Block> >             outputQueue;
         Pool<Block> &outputPool;
 
         const size_t fileIdx;

@@ -154,16 +154,21 @@ void Block::reset( size_t newFileIdx, size_t newBlockIdx ) {
 }
 
 
-BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks, size_t maxBlocksInFlight )
+BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks, size_t maxBlocksInFlight, size_t maxSubbandsInInput )
 :
+  inputQueue(maxSubbandsInInput, false), // we drop at the output, not at the input
   outputPool(outputPool),
+
   fileIdx(fileIdx),
   nrBlocks(nrBlocks),
+
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
+
   addSubbandTimer("BlockCollector::addSubband", true, true),
   fetchTimer("BlockCollector: fetch new block", true, true),
+
   inputThread(this, &BlockCollector::inputLoop),
   outputThread(this, &BlockCollector::outputLoop)
 {
