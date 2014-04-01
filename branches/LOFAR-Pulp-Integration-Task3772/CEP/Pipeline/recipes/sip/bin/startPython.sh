@@ -43,6 +43,9 @@ pythonProgram="${1}"
 parsetFile="${2}"
 controlHost="${3}"
 
+echo "**** $(date) ****" >> ${logFile}
+echo "Executing: $0 ${pythonProgram} ${parsetFile} ${controlHost}" >> ${logFile}
+
 use_pulp="$(getparsetvalue $parsetFile "ObsSW.Observation.processSubtype")"
 if [ "${use_pulp}" == "Pulsar Pipeline" ]; then 
   echo "The processSubtype is Pulsar Pipeline; Initializing Pulp"  >> ${logFile}
@@ -51,7 +54,6 @@ fi
 echo "Initializing Lofar" >> ${logFile}
 use Lofar
 
-echo "**** $(date) ****" >> ${logFile}
 # Try to reset the environment based on a parset software version value
 
 versionString="$(getparsetvalue -d "notFound" $parsetFile "ObsSW.Observation.ObservationControl.PythonControl.softwareVersion")"
