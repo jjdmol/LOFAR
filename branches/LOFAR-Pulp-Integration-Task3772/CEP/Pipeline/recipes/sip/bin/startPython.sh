@@ -57,7 +57,7 @@ use Lofar
 # Try to reset the environment based on a parset software version value
 
 versionString="$(getparsetvalue -d "notFound" $parsetFile "ObsSW.Observation.ObservationControl.PythonControl.softwareVersion")"
-if [ "$versionString" != "notFound" -a "$versionString" != ""]; then
+if [ "$versionString" != "notFound" -a "$versionString" != "" ]; then
   # construct the path from the red value
     versionPath=/opt/cep/lofar/lofar_versions/$versionString/lofar_build/
     echo "Using parset supplied software version: $versionString" >> ${logFile}
