@@ -788,41 +788,34 @@ namespace LOFAR
             {
               for (unsigned part = 0; part < nrParts; ++part)
               {
+                struct ObservationSettings::BeamFormer::File file;
 
-              struct ObservationSettings::BeamFormer::File file;
+                file.streamNr = bfStreamNr++;
+                file.sapNr    = i;
+                file.tabNr    = j;
+                file.stokesNr = s;
+                file.partNr   = part;
+                file.coherent = tab.coherent;
 
-              file.streamNr = bfStreamNr++;
-              file.sapNr    = i;
-              file.tabNr    = j;
-              file.stokesNr = s;
-              file.partNr   = part;
-              file.coherent = tab.coherent;
+                if (file.coherent) {
+                  file.coherentIdxInSAP = sap.nrCoherent - 1;
+                  if (coherent_idx >= coherent_locations.size())
+                    THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                  file.location = coherent_locations[coherent_idx++];
+                } else {
+                  file.incoherentIdxInSAP = sap.nrIncoherent - 1;
+                  if (incoherent_idx >= incoherent_locations.size())
+                    THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                  file.location = incoherent_locations[incoherent_idx++];
+                }
 
-              if (file.coherent) 
-              {
-                file.coherentIdxInSAP = sap.nrCoherent - 1;
+                file.firstSubbandIdx = part * stSettings.nrSubbandsPerFile;
+                file.lastSubbandIdx  = max(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
+                                           settings.subbands.size()); // last file can have fewer subbands
 
-                if (coherent_idx >= coherent_locations.size())
-                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
-                file.location = coherent_locations[coherent_idx++];
-              } 
-              else 
-              {
-                file.incoherentIdxInSAP = sap.nrIncoherent - 1;
-
-                if (incoherent_idx >= incoherent_locations.size())
-                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
-                file.location = incoherent_locations[incoherent_idx++];
-              }
-
-              file.firstSubbandIdx = part * stSettings.nrSubbandsPerFile;
-              file.lastSubbandIdx  = max(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
-                                         settings.subbands.size()); // last file can have fewer subbands
-
-              tab.files[s * nrParts + part] = file;
-              settings.beamFormer.files.push_back(file);
-
-              outputProcHosts.insert(file.location.host);
+                tab.files[s * nrParts + part] = file;
+                settings.beamFormer.files.push_back(file);
+                outputProcHosts.insert(file.location.host);
               }
             }
           }         
