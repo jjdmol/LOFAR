@@ -58,7 +58,7 @@ class pulsar_pipeline(control):
         if not self.inputs.has_key('job_name'):
             self.inputs['job_name'] = (
                 os.path.splitext(os.path.basename(parset_file))[0])
-
+                
         # Call the base-class's `go()` method.
         return super(pulsar_pipeline, self).go()
   
@@ -111,8 +111,7 @@ class pulsar_pipeline(control):
         if (in_len != out_len):
             raise DataMapError("number of enabled input data products %s does not match the total number of output files %s" % 
                             (in_len, out_len))
-      
-  
+        
     @mail_log_on_exception
     def pipeline_logic(self):
         """
@@ -125,9 +124,9 @@ class pulsar_pipeline(control):
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
-        job_dir = self.config.get("layout", "job_directory")
-        parset_dir = os.path.join(job_dir, "parsets")
-        mapfile_dir = os.path.join(job_dir, "mapfiles")
+        self.job_dir = self.config.get("layout", "job_directory")
+        parset_dir = os.path.join(self.job_dir, "parsets")
+        mapfile_dir = os.path.join(self.job_dir, "mapfiles")
 
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
@@ -155,7 +154,7 @@ class pulsar_pipeline(control):
         # Rebuilding sys.argv without the options given automatically by framework
         # --auto = automatic run from framework
         # -q = quiet mode, no user interaction
-        sys.argv = ['pulp.py', '--auto','-q']
+        sys.argv = ['pulp.py', '--auto','-q', '--cobalt']
       
         # TODO: translate optional pipeline tuning parameters from the pipeline parset to existing commanf line options
         #py_parset = self.parset.makeSubset(
