@@ -65,7 +65,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devNull )
       :
       BeamFormerSubbandProcStep(parset, i_queue),
-      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
       coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1)
     {
       devInput = i_devInput;
