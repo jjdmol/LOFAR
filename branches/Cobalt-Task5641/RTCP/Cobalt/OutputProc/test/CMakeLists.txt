@@ -4,6 +4,7 @@ include(LofarCTest)
 
 if(UNITTEST++_FOUND)
   lofar_add_test(tSubbandWriter tSubbandWriter.cc)
+  lofar_add_test(tOutputThread tOutputThread.cc)
 endif()
 
 lofar_add_test(tMeasurementSetFormat tMeasurementSetFormat.cc)
@@ -17,7 +18,6 @@ configure_file(
 lofar_add_test(tMSWriterCorrelated tMSWriterCorrelated.cc)
 lofar_add_test(tDAL tDAL.cc)
 lofar_add_test(tFastFileStream tFastFileStream.cc)
-lofar_add_test(tOutputThread tOutputThread.cc)
 lofar_add_test(tTBB_StaticMapping tTBB_StaticMapping.cc)
 #lofar_add_test(tTBB_Writer)
 
