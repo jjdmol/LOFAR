@@ -40,7 +40,7 @@ SUITE(Block) {
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
 
-    Block block(nrSubbands, nrSamples, nrChannels);
+    Block block(0, 0, nrSubbands, nrSamples, nrChannels);
 
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
       SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
@@ -58,7 +58,7 @@ SUITE(Block) {
     const size_t nrSamples = 1024;
     const size_t nrChannels = 64;
 
-    Block block(nrSubbands, nrSamples, nrChannels);
+    Block block(0, 0, nrSubbands, nrSamples, nrChannels);
 
     // Our increment needs to be co-prime to nrSubbands for
     // the ring to visit all elements.
@@ -90,15 +90,17 @@ struct Fixture {
   static const size_t nrChannels = 64;
   static const size_t nrBlocks = 3;
 
-  Pool<Block> outputPool;
+  Pool<BeamformedData> outputPool;
   BlockCollector ctr;
 
   Fixture()
   :
-    ctr(outputPool, 0)
+    ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
-      outputPool.free.append(new Block(nrSubbands, nrSamples, nrChannels));
+      outputPool.free.append(new BeamformedData(
+        boost::extents[nrSamples][nrSubbands][nrChannels],
+        boost::extents[nrSubbands][nrChannels]));
     }
   }
 };
@@ -110,7 +112,7 @@ struct Fixture_Loss: public Fixture {
 
   Fixture_Loss()
   :
-    ctr_loss(outputPool, 0, 0, maxInFlight)
+    ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, maxInFlight)
   {
     // add some subbands for both blocks
     for (size_t blockIdx = 0; blockIdx < maxInFlight; ++blockIdx) {
@@ -306,16 +308,18 @@ SUITE(SendReceive) {
 
   TEST_FIXTURE(Fixture, OneToOne) {
     const size_t nrTABs = nrBlocks; // we know we have enough outputPool.free for nrBlocks TABs
-    map<size_t, SmartPtr< Pool<Block> > > outputPools;
+    map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<Block>;
+      outputPools[i] = new Pool<BeamformedData>;
       for (size_t b = 0; b < nrBlocks; ++b) {
-        outputPools[i]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
+        outputPools[i]->free.append(new BeamformedData(
+          boost::extents[nrSamples][nrSubbands][nrChannels],
+          boost::extents[nrSubbands][nrChannels]));
       }
 
-      collectors[i] = new BlockCollector(*outputPools[i], i);
+      collectors[i] = new BlockCollector(*outputPools[i], i, nrSubbands, nrChannels, nrSamples);
     }
 
     StringStream str;
@@ -346,12 +350,11 @@ SUITE(SendReceive) {
       // Should have one complete block
       CHECK_EQUAL(1UL, outputPools[i]->filled.size());
 
-      SmartPtr<Block> block = outputPools[i]->filled.remove();
+      SmartPtr<BeamformedData> block = outputPools[i]->filled.remove();
 
       CHECK(block != NULL);
-      CHECK(block->complete());
 
-      CHECK_EQUAL(0UL, block->block);
+      CHECK_EQUAL(0UL, block->sequenceNumber());
 
       /* check data */
       for (size_t sb = 0; sb < nrSubbands; ++sb) {
@@ -359,7 +362,7 @@ SUITE(SendReceive) {
 
         for (size_t s = 0; s < nrSamples; ++s) {
           for (size_t c = 0; c < nrChannels; ++c) {
-            size_t expected = (sb * nrTABs + block->fileIdx + 1) * ++x;
+            size_t expected = (sb * nrTABs + i + 1) * ++x;
             size_t actual = static_cast<size_t>(block->samples[s][sb][c]);
 
             if (expected != actual)
@@ -397,7 +400,7 @@ SUITE(MultiReceiver) {
     // Set up receiver
     Receiver::CollectorMap collectors;
 
-    collectors[0] = new BlockCollector(outputPool, 0);
+    collectors[0] = new BlockCollector(outputPool, 0, nrSubbands, nrChannels, nrSamples);
 
     MultiReceiver mr("foo-", collectors);
 
@@ -468,19 +471,21 @@ SUITE(MultiReceiver) {
           LOG_DEBUG_STR("Populating outputPool");
 
           // collect our TABs
-          std::map<size_t, SmartPtr< Pool<Block> > > outputPools;
+          std::map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
           Receiver::CollectorMap collectors;
 
           for (int t = 0; t < nrTABs; ++t) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<Block>;
+            outputPools[t] = new Pool<BeamformedData>;
 
             for (size_t i = 0; i < nrBlocks; ++i) {
-              outputPools[t]->free.append(new Block(nrSubbands, nrSamples, nrChannels));
+              outputPools[t]->free.append(new BeamformedData(
+                boost::extents[nrSamples][nrSubbands][nrChannels],
+                boost::extents[nrSubbands][nrChannels]));
             }
-            collectors[t] = new BlockCollector(*outputPools[t], t, nrBlocks);
+            collectors[t] = new BlockCollector(*outputPools[t], t, nrSubbands, nrChannels, nrSamples, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -502,13 +507,12 @@ SUITE(MultiReceiver) {
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
-              SmartPtr<Block> block = outputPools[t]->filled.remove();
+              SmartPtr<BeamformedData> block = outputPools[t]->filled.remove();
 
               CHECK(block != NULL);
-              CHECK(block->complete());
 
               // Blocks should have arrived in-order
-              CHECK_EQUAL(b, block->block);
+              CHECK_EQUAL(b, block->sequenceNumber());
             }
           }
         }

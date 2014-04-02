@@ -75,15 +75,14 @@ std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
 }
 
 
-Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
+Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
-  SampleData<float,3>(boost::extents[nrSamples][nrSubbands][nrChannels], boost::extents[nrSubbands][nrChannels]),
-  subbandCache(nrSubbands, NULL),
-  fileIdx(0),
-  block(0),
+  fileIdx(fileIdx),
+  blockIdx(blockIdx),
   nrSamples(nrSamples),
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
+  subbandCache(nrSubbands, NULL),
   nrSubbandsLeft(nrSubbands),
   writeTimer("Block: data transpose/zeroing", true, true)
 {
@@ -93,22 +92,38 @@ Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 void Block::addSubband( SmartPtr<Subband> &subband ) {
   ASSERT(nrSubbandsLeft > 0);
 
+  const Subband::BlockID id = subband->id;
+
   // Only add subbands that match our ID
-  ASSERTSTR(subband->id.fileIdx == fileIdx, "Got fileIdx " << subband->id.fileIdx << ", expected " << fileIdx);
-  ASSERTSTR(subband->id.block   == block, "Got block " << subband->id.block << ", expected " << block);
+  ASSERTSTR(id.fileIdx == fileIdx,  "Got fileIdx " << id.fileIdx << ", expected " << fileIdx);
+  ASSERTSTR(id.block   == blockIdx, "Got block " << id.block << ", expected " << blockIdx);
+
+  ASSERT(id.subband < nrSubbands);
+  ASSERT(subband->data.shape()[0] == nrSamples);
+  ASSERT(subband->data.shape()[1] == nrChannels);
 
   // Subbands should not arrive twice
-  ASSERT(subbandCache[subband->id.subband] == NULL);
+  ASSERT(subbandCache[id.subband] == NULL);
 
-  subbandCache[subband->id.subband] = subband;
+  subbandCache[id.subband] = subband;
+  ASSERT(subband == NULL);
 
   nrSubbandsLeft--;
 
-  LOG_DEBUG_STR("Block: added " << subband->id << ", " << nrSubbandsLeft << " subbands left");
+  LOG_DEBUG_STR("Block: adding " << id << ", " << nrSubbandsLeft << " subbands left");
 }
 
 
-void Block::writeSubbands() {
+void Block::write( BeamformedData &output ) {
+  // Check dimensions
+  ASSERT( output.samples.shape()[0] == nrSamples );
+  ASSERT( output.samples.shape()[1] == nrSubbands );
+  ASSERT( output.samples.shape()[2] == nrChannels );
+
+  // Set annotation
+  output.setSequenceNumber(blockIdx);
+
+  // Set data
   writeTimer.start();
 # pragma omp parallel for num_threads(16)
   for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
@@ -118,13 +133,13 @@ void Block::writeSubbands() {
 
       for (size_t t = 0; t < nrSamples; ++t) {
         // Copy all channels for sample t
-        memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
+        memcpy(&output.samples[t][subbandIdx][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
       }
     } else {
       // Write zeroes
       for (size_t t = 0; t < nrSamples; ++t) {
         // Zero all channels for sample t
-        memset(&samples[t][subbandIdx][0], 0, nrChannels * sizeof *samples.origin());
+        memset(&output.samples[t][subbandIdx][0], 0, nrChannels * sizeof *output.samples.origin());
       }
     }
   }
@@ -144,28 +159,16 @@ bool Block::complete() const {
 }
 
 
-void Block::reset( size_t newFileIdx, size_t newBlockIdx ) {
-  // Apply annotation, also for the super class
-  fileIdx = newFileIdx;
-  block = newBlockIdx;
-
-  setSequenceNumber(newBlockIdx);
-
-  // Mark all subbands as not-written
-  for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
-    subbandCache[subbandIdx] = NULL;
-  }
-  nrSubbandsLeft = nrSubbands;
-}
-
-
-BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks, size_t maxBlocksInFlight, size_t maxSubbandsInInput )
+BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks, size_t maxBlocksInFlight )
 :
-  inputQueue(maxSubbandsInInput, false), // we drop at the output, not at the input
+  inputQueue((1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input
   outputPool(outputPool),
 
   fileIdx(fileIdx),
   nrBlocks(nrBlocks),
+  nrSubbands(nrSubbands),
+  nrChannels(nrChannels),
+  nrSamples(nrSamples),
 
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
@@ -177,13 +180,16 @@ BlockCollector::BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t 
   inputThread(this, &BlockCollector::inputLoop),
   outputThread(this, &BlockCollector::outputLoop)
 {
+  ASSERT(nrSubbands > 0);
+  ASSERT(nrChannels > 0);
+  ASSERT(nrSamples > 0);
 }
 
 
 BlockCollector::~BlockCollector()
 {
   // Make SURE the threads can finish, regardless of whether finish() was called
-  inputQueue.append(NULL);
+  inputQueue.noMore();
   outputQueue.append(NULL);
 }
 
@@ -206,9 +212,11 @@ void BlockCollector::outputLoop() {
   SmartPtr<Block> block;
 
   while ((block = outputQueue.remove()) != NULL) {
-    block->writeSubbands();
+    SmartPtr<BeamformedData> output = outputPool.free.remove();
 
-    outputPool.filled.append(block);
+    block->write(*output);
+
+    outputPool.filled.append(output);
   }
 
   outputPool.filled.append(NULL);
@@ -266,7 +274,7 @@ void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
 
 void BlockCollector::finish() {
   // Wait for all input to be processed
-  inputQueue.append(NULL);
+  inputQueue.noMore();
   inputThread.wait();
 
   // Wrap-up remainder
@@ -310,7 +318,7 @@ void BlockCollector::emit(size_t blockIdx) {
   // clear data we didn't receive
   SmartPtr<Block> &block = blocks.at(blockIdx);
 
-  LOG_DEBUG_STR("BlockCollector: emitting block " << blockIdx << " of file " << block->fileIdx);
+  LOG_DEBUG_STR("BlockCollector: emitting block " << blockIdx << " of file " << fileIdx);
   
   // emit to outputPool.filled()
   outputQueue.append(block);
@@ -341,18 +349,9 @@ void BlockCollector::fetch(size_t block) {
     emit(minBlock());
   }
 
-  LOG_DEBUG_STR("BlockCollector: fetching block " << block);
-
-  fetchTimer.start();
-  SmartPtr<Block> newBlock = outputPool.free.remove();
-  fetchTimer.stop();
-
-  LOG_DEBUG_STR("BlockCollector: fetched block " << block);
-
   // Add and annotate
   ASSERT(!have(block));
-  blocks[block] = newBlock;
-  blocks[block]->reset(fileIdx, block);
+  blocks[block] = new Block(fileIdx, block, nrSubbands, nrSamples, nrChannels);
 }
 
 

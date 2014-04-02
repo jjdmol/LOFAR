@@ -67,6 +67,8 @@ namespace LOFAR
 
       std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id);
 
+      typedef SampleData<float, 3> BeamformedData; // [nrSubbands][nrChannels][nrSamples]
+
       /*
        * A block of data, representing for one time slice all
        * subbands.
@@ -83,14 +85,9 @@ namespace LOFAR
        *
        *   block[samples][subbbands][channels]
        */
-      class Block: public SampleData<float, 3> {
+      class Block {
       public:
-        std::vector< SmartPtr<Subband> > subbandCache;
-
-        size_t fileIdx;
-        size_t block;
-
-        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
+        Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
          * Add data for a single subband to the cache.
@@ -98,10 +95,10 @@ namespace LOFAR
         void addSubband( SmartPtr<Subband> &subband );
 
         /*
-         * Flush the subband cache to our samples array,
+         * Flush the subband cache to a SampleData array,
          * and write zeroes for missing data.
          */
-        void writeSubbands();
+        void write( BeamformedData &output );
 
         /*
          * Return whether the block is complete, that is, all
@@ -109,17 +106,18 @@ namespace LOFAR
          */
         bool complete() const;
 
-        /*
-         * Reset the meta data for this block. NOTE: The dimensions
-         * of the data remain unchanged.
-         */
-        void reset( size_t newFileIdx, size_t newBlockIdx );
-
       private:
+        // Annotation of this block
+        const size_t fileIdx;
+        const size_t blockIdx;
+
         // Dimensions of each block
         const size_t nrSamples;
         const size_t nrSubbands;
         const size_t nrChannels;
+
+        // Cache of subband data for this block
+        std::vector< SmartPtr<Subband> > subbandCache;
 
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
@@ -158,10 +156,8 @@ namespace LOFAR
          * nrBlocks:   the number of blocks we expect (or 0 if unknown).
          * maxBlocksInFlight: the maximum number of blocks to process in
          *                    parallel (or 0 for no limit).
-         * maxSubbandsInInput: the number of subbands to cache for the inputQueue
-         *                     before addSubband() starts blocking.
          */
-        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0, size_t maxSubbandsInInput = 1024 );
+        BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
         ~BlockCollector();
 
@@ -189,10 +185,14 @@ namespace LOFAR
 
         BestEffortQueue< SmartPtr<Subband> > inputQueue;
         Queue< SmartPtr<Block> >             outputQueue;
-        Pool<Block> &outputPool;
+        Pool<BeamformedData> &outputPool;
 
         const size_t fileIdx;
         const size_t nrBlocks;
+
+        const size_t nrSubbands;
+        const size_t nrChannels;
+        const size_t nrSamples;
 
         // upper limit for blocks.size(), or 0 if unlimited
         const size_t maxBlocksInFlight;
@@ -202,9 +202,6 @@ namespace LOFAR
         
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
-
-        // send NULL marker to outputPool, signalling the end-of-stream
-        bool signalledEOS;
 
         NSTimer addSubbandMutexTimer;
         NSTimer addSubbandTimer;
