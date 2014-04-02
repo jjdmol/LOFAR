@@ -233,6 +233,7 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tStreamReadBuffer.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\BeamFormerKernelPerformance.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc" />

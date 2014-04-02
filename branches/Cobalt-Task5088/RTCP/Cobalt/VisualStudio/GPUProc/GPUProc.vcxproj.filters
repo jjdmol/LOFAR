@@ -786,6 +786,9 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc">
       <Filter>test\cuda</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\BeamFormerKernelPerformance.cc">
+      <Filter>test\Kernels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
