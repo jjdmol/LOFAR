@@ -1,0 +1,7 @@
+// \ingroup GCF
+// \defgroup TM Task Management
+//
+// The TM package contains a generic control framework layer on top
+// of which all MAC programs are build. It defines communication ports,
+// timers, task and communication protocols. 
+
