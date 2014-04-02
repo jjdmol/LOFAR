@@ -65,10 +65,14 @@ namespace LOFAR
         // Check whether we really will write to this file
         bool willUse = false;
         for (size_t i = 0; i < subbandIndices.size(); ++i) {
-          // All files to our SAPs will be relevant
-          //
-          // TODO: nrSubbandsPerFile hook here
-          if (file.sapNr != ps.settings.subbands[subbandIndices[i]].SAP)
+          // All files to our SAPs and subbands (parts) will be relevant.
+          const unsigned globalSubbandIdx = subbandIndices[i];
+          const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
+
+          if (file.sapNr != SAP)
+            continue;
+
+          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
             continue;
 
           willUse = true;
@@ -257,10 +261,11 @@ namespace LOFAR
           const struct ObservationSettings::BeamFormer::File &file = 
                 ps.settings.beamFormer.files[fileIdx];
 
-          // Skip what we aren't part of
-          //
-          // TODO: nrSubbandsPerFile hook here
+          // Skip SAPs and subbands (parts) that we are not responsible for.
           if (file.sapNr != SAP)
+            continue;
+
+          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
             continue;
 
           // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
@@ -288,7 +293,7 @@ namespace LOFAR
                 new TABTranspose::Subband(nrSamples, nrChannels);
 
           subband->id.fileIdx = file.streamNr;
-          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
+          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP; // global to local sb idx
           subband->id.block   = id.block;
 
           // Create view of subarray 
