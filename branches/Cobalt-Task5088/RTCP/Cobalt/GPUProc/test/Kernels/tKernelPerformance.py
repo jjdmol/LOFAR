@@ -4,19 +4,16 @@ import sys
 from math import sqrt, cos, pi
 import subprocess
 import itertools
+import re
 
+import matplotlib.pyplot as plt
 
-def getCPPValue():
+def runAndGetCerrCout(cmd):
   """
-  Interface with the cpp implementation
+  System call of cmd
+  Throws exception on non zero exitvalue
+  returns the sterr and stout
   """
-  # Create a array of the executable and the arguments (all string)
-  nTabs = 20
-  nChannels = 20
-  #["nvprof", "./BeamFormerKernelPerformance", "-t", str(nTabs), "-c", str(nChannel)]
-
-  cmd = ["nvprof", "./BeamFormerKernelPerformance", 
-         "-t", str(nTabs), "-c", str(nChannel)]
   # start
   process = subprocess.Popen(
                         cmd,
@@ -30,57 +27,148 @@ def getCPPValue():
   # exit != 0
   if (exit_status != 0):
     print "Encountered an error running the c++ interface to RingCoordinates:"
-    print stderrdata
-    sys.exit(1)
+    raise Exception()
+    
+  return stdoutdata, stderrdata
+  
 
-
-  print stdoutdata
-  # try to cast to an array (floats are created from the numeric values)
-  #try:
-  #  outputAsArray = eval(stdoutdata)
-  #except:
-  #  print "encountered a problem during parsing of the c++ output data."
-  #  print "Not a valid python array: "
-  #  print stdoutdata
-  #  sys.exit(1)
-
-  return outputAsArray
-
-
-def isClose(a,b, rtol=1e-05,atol=1e-08):
+def getCSVLinesFromNVProfOutput(stderr):
   """
-  Simple helper function to compare floats
+  Look for nvprof csv output seperator and return all the csv lines
   """
-  # Helper function to test float equality
-  # Does not support nan, included in numpy from version 1.9
-  return abs(a - b) <= rtol * (abs(a) + abs(b)) + atol
+  # nvprof csv header:
+  pattern = re.compile("==\d+== Profiling result:")
+
+  nv_trace_found = False
+  nv_trace_lines = []
+
+  # split on newlines
+  for line in stderr.split("\n") :
+    # If we have a trace_header add them to the output
+    if nv_trace_found:
+      nv_trace_lines.append(line)
+      continue
+
+    #look for csv header line
+    if pattern.match(line):
+      nv_trace_found = True
+
+  return nv_trace_lines
 
 
-def compareCoordArray(array1, array2):
+class csvData:
   """
-  Helper function to compare two arrays of pairs
+  Contains parsed data as retrieved from nvprof
+  Units are normalized normalized ( to whole seconds)
+  Remove spurious quotes. 
   """
-  # compare the two array
-  # on error print the offending value and exit(1)
-  if (len(array1) != len(array2)):
-    print "Returned arrays not of same size: comparison failed"
-    print array1
-    print "!="
-    print array2
-    exit(1)
+  def __init__(self, CSVLines, normalizeValues=True):
+    # First line contains the name of the entries
+    self.entrieNames = [ x.strip('"') for x in CSVLines[0].split(",")]
 
-  for idx, (entry1, entry2) in enumerate(zip(array1, array2)):
-    if(not (isClose(entry1[0], entry2[0]) and
-       isClose(entry1[1], entry2[1]))):
-      print "encounter incorrect entry index: " + str(idx)
-      print str(entry1) + "!=" + str(entry2)
-      exit(1)
+    # second entry the szie
+    self.entrieUnit = CSVLines[1].split(",")
+
+    self.entrieLines = {}
+    for line in CSVLines[2:]:
+      # skip empty lines
+      if len(line) == 0:
+        continue
+
+      # try parsing as values if fails use string
+      values = []
+      for idx, entrie in enumerate(line.split(",")):
+        try:
+          typedValue = float(entrie)
+          if normalizeValues:
+            # Now do the normalizing
+            if self.entrieUnit[idx] == "ns":
+              typedValue *= 1e-9
+            elif self.entrieUnit[idx] == "us":
+              typedValue *= 1e-6
+            elif self.entrieUnit[idx] == "ms":
+              typedValue *= 1e-3
+            elif self.entrieUnit[idx] == "s":
+              pass
+            elif self.entrieUnit[idx] == "%":
+              pass
+            else:
+              raise ValueError("Could not parset the unit type for entry:" + 
+                              str(entry) + " with type: " + self.entrieUnit[idx])
+
+          values.append(typedValue)
+        except:
+          name = entrie.strip('"')
+          # also insert the name in the values collumn
+          values.append(name)
+      # save the now typed line
+      self.entrieLines[name] = values 
+
+
+
+  def getNamedMetric(self, nameLine, metric):
+    """
+    returns value of the metric at the entry nameline 
+    or exception if either is not found
+    """
+    indexInList =  None
+    if nameLine in self.entrieLines:
+      try:
+        indexInList = self.entrieNames.index(metric)
+      except ValueError:
+        raise ValueError("Could not find metric > " + str(metric) + " < in nvprof output. ")
+
+    else:
+      raise ValueError("Could not find >" + str(nameLine) + " < as an entrie returned by nvprof")
+
+    # return the  value and the unit
+    return self.entrieLines[nameLine][indexInList]
+
+  def __str__(self):
+    return str(self.entrieNames) + "\n" + str(self.entrieUnit) + "\n" + str(self.entrieLines)
+    
+
+def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels):
+
+  # Create the command to run on the command line
+  cmd = ["nvprof", "--csv", "./BeamFormerKernelPerformance", 
+         "-t", str(nTabs), "-c", str(nChannels)]
+  # run
+  stdout, stderr = runAndGetCerrCout(cmd)  
+  # Clean the output
+  CSVLines = getCSVLinesFromNVProfOutput(stderr)
+  # parset and normalize to data
+  data = csvData(CSVLines)
+
+  # return the value of interest
+  return data.getNamedMetric("beamFormer", 'Avg')
+
 
 if __name__ == "__main__":
   ## test 1
   # If zero rings then return empty array!!
-  print "Test 1: zero rings return empthy coord list. "
-  cppOutput = getCPPValue()  
+
+  # Create a array of the executable and the arguments (all string)
+  resultLines = []
+  xrange = range(10, 261, 50)
+  channelsToTest = [1, 16, 64, 256]
+  for nChan in channelsToTest:
+    runningTimes = []
+    for nTab in xrange:
+      runningTimes.append(beamFormerGetAvgTimeForKernelRun(nTab, nChan))
+    resultLines.append(runningTimes)
 
 
-    
+
+  import matplotlib.pyplot as plt
+  plt.plot(xrange, resultLines[0])
+  plt.plot(xrange, resultLines[1])
+  plt.plot(xrange, resultLines[2])
+  plt.plot(xrange, resultLines[3])
+  plt.ylim((0,0.0025))
+
+  plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
+  plt.ylabel('Duration (sec)')
+  plt.xlabel('Number of tabs')
+  plt.show()
+

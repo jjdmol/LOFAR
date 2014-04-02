@@ -1121,6 +1121,9 @@
     <None Include="..\..\GPUProc\test\cuda\tBandPassCorrection.sh">
       <Filter>test\cuda</Filter>
     </None>
+    <None Include="..\..\GPUProc\test\Kernels\tKernelPerformance.py">
+      <Filter>test\Kernels</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\GPUProc\test\CMakeLists.txt">

@@ -329,6 +329,7 @@
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.in_parset" />
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tKernelFunctions.sh" />
+    <None Include="..\..\GPUProc\test\Kernels\tKernelPerformance.py" />
     <None Include="..\..\GPUProc\test\MockOnlineControl.sh" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh" />
