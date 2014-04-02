@@ -126,13 +126,14 @@ namespace LOFAR
 
       //*******************************
 
-      // all subbands in this file
-      // We could have multiple saps with each a specific number of subbands
+      // All subbands in the SAP that we (partly or fully) store in this file.
+      // We could have multiple SAPs and/or have split up the subbands over multiple files (parts).
       vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices();
 
-      unsigned nrSubbands = subbandIndices.size();
+      unsigned firstSubbandIdx = f.firstSubbandIdx;
+      unsigned nrSubbands = f.lastSubbandIdx - f.firstSubbandIdx;
 
-      itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
+      itsNrChannels = stokesSet.nrChannels * nrSubbands; 
       itsNrSamples = parset.settings.nrSamplesPerSubband() /
                      stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
 
@@ -220,6 +221,7 @@ namespace LOFAR
       // contain frequencies from both the top and the bottom half-channel.
       double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
+      // For the whole obs, regardless which SAP and subbands (parts) this file contains.
       vector<double> subbandCenterFrequencies(parset.nrSubbands());
       for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
         subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
@@ -257,7 +259,7 @@ namespace LOFAR
 
       // BF_File specific root group parameters
 
-      file.createOfflineOnline().value = "Online";
+      file.createOfflineOnline().value = parset.settings.realTime ? "Online" : "Offline";
       file.BFFormat().value = "TAB";
       file.BFVersion().value = str(format("Cobalt/OutputProc %s r%s using DAL %s and HDF5 %s") % OutputProcVersion::getVersion() % OutputProcVersion::getRevision() % dal::version().to_string() % dal::version_hdf5().to_string());
 
@@ -367,7 +369,7 @@ namespace LOFAR
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 
-      for (unsigned sb = 0; sb < nrSubbands; sb++)
+      for (unsigned sb = firstSubbandIdx; sb < nrSubbands; sb++)
         beamCenterFrequencies[sb] = subbandCenterFrequencies[subbandIndices[sb]];
 
       double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
@@ -475,7 +477,7 @@ namespace LOFAR
       vector<unsigned> spectralPixels;
       vector<double> spectralWorld;
 
-      for(unsigned sb = 0; sb < nrSubbands; sb++) {
+      for(unsigned sb = firstSubbandIdx; sb < nrSubbands; sb++) {
         const double subbandBeginFreq = parset.channel0Frequency( subbandIndices[sb], stokesSet.nrChannels );
 
         // NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
