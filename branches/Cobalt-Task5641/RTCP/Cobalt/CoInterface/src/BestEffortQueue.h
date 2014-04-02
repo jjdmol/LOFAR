@@ -49,7 +49,7 @@ namespace LOFAR
 
       // Add an element. Returns true if append succeeded, false if element
       // was dropped.
-      bool append(T);
+      bool append(const T&);
 
       // Remove an element -- 0 or NULL signals end-of-stream.
       T remove();

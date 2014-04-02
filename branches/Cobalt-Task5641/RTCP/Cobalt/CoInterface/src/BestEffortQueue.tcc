@@ -37,7 +37,7 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize,
 }
 
 
-template <typename T> inline bool BestEffortQueue<T>::append(T element)
+template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
 {
   bool canAppend;
 
