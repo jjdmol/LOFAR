@@ -85,7 +85,7 @@ namespace LOFAR
        */
       class Block: public SampleData<float, 3> {
       public:
-        std::vector<bool> subbandWritten;
+        std::vector< SmartPtr<Subband> > subbandCache;
 
         size_t fileIdx;
         size_t block;
@@ -93,14 +93,15 @@ namespace LOFAR
         Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
-         * Add data for a single subband.
+         * Add data for a single subband to the cache.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
-         * Zero data of subbands that weren't added.
+         * Flush the subband cache to our samples array,
+         * and write zeroes for missing data.
          */
-        void zeroRemainingSubbands();
+        void writeSubbands();
 
         /*
          * Return whether the block is complete, that is, all
@@ -123,8 +124,7 @@ namespace LOFAR
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
 
-        NSTimer transposeTimer;
-        NSTimer zeroTimer;
+        NSTimer writeTimer;
       };
 
       /*
@@ -245,7 +245,7 @@ namespace LOFAR
          * Processes input elements from inputQueue.
          */
         void inputLoop();
-        void _addSubband( const Subband &subband );
+        void _addSubband( SmartPtr<Subband> &subband );
 
         /*
          * Processes output elements from outputQueue.

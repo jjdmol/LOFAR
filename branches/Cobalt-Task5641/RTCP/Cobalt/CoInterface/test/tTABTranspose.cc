@@ -43,8 +43,8 @@ SUITE(Block) {
     Block block(nrSubbands, nrSamples, nrChannels);
 
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
-      Subband subband(nrSamples, nrChannels);
-      subband.id.subband = subbandIdx;
+      SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
+      subband->id.subband = subbandIdx;
 
       CHECK(!block.complete());
       block.addSubband(subband);
@@ -71,8 +71,8 @@ SUITE(Block) {
       // avoid starting at 0, because the ordered test already does
       size_t subbandIdx = (3 + n * subbandIncrement) % nrSubbands;
 
-      Subband subband(nrSamples, nrChannels);
-      subband.id.subband = subbandIdx;
+      SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
+      subband->id.subband = subbandIdx;
 
       CHECK(!block.complete());
       block.addSubband(subband);

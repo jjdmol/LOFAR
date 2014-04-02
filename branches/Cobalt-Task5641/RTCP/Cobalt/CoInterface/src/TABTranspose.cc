@@ -78,59 +78,64 @@ std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
 Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
   SampleData<float,3>(boost::extents[nrSamples][nrSubbands][nrChannels], boost::extents[nrSubbands][nrChannels]),
-  subbandWritten(nrSubbands, false),
+  subbandCache(nrSubbands, NULL),
   fileIdx(0),
   block(0),
   nrSamples(nrSamples),
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
   nrSubbandsLeft(nrSubbands),
-  transposeTimer("Block: data transpose/subband", true, true),
-  zeroTimer("Block: data zeroing", true, true)
+  writeTimer("Block: data transpose/zeroing", true, true)
 {
 }
 
 
-void Block::addSubband( const Subband &subband ) {
+void Block::addSubband( SmartPtr<Subband> &subband ) {
   ASSERT(nrSubbandsLeft > 0);
 
   // Only add subbands that match our ID
-  ASSERTSTR(subband.id.fileIdx == fileIdx, "Got fileIdx " << subband.id.fileIdx << ", expected " << fileIdx);
-  ASSERTSTR(subband.id.block   == block, "Got block " << subband.id.block << ", expected " << block);
+  ASSERTSTR(subband->id.fileIdx == fileIdx, "Got fileIdx " << subband->id.fileIdx << ", expected " << fileIdx);
+  ASSERTSTR(subband->id.block   == block, "Got block " << subband->id.block << ", expected " << block);
 
   // Subbands should not arrive twice
-  ASSERT(subbandWritten[subband.id.subband] == false);
+  ASSERT(subbandCache[subband->id.subband] == NULL);
 
-  // Weave subbands together
-  transposeTimer.start();
-  for (size_t t = 0; t < nrSamples; ++t) {
-    // Copy all channels for sample t
-    memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
-  }
-  transposeTimer.stop();
-
-  subbandWritten[subband.id.subband] = true;
+  subbandCache[subband->id.subband] = subband;
 
   nrSubbandsLeft--;
 
-  LOG_DEBUG_STR("Block: added " << subband.id << ", " << nrSubbandsLeft << " subbands left");
+  LOG_DEBUG_STR("Block: added " << subband->id << ", " << nrSubbandsLeft << " subbands left");
 }
 
 
-void Block::zeroRemainingSubbands() {
-  zeroTimer.start();
+void Block::writeSubbands() {
+  writeTimer.start();
 # pragma omp parallel for num_threads(16)
-  for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
-    if (!subbandWritten[subbandIdx]) {
-      LOG_INFO_STR("File " << fileIdx << " block " << block << ": zeroing subband " << subbandIdx);
+  for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
+    if (subbandCache[subbandIdx] != NULL) {
+      // Transpose subband
+      Subband &subband = *subbandCache[subbandIdx];
 
+      for (size_t t = 0; t < nrSamples; ++t) {
+        // Copy all channels for sample t
+        memcpy(&samples[t][subband.id.subband][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
+      }
+    } else {
+      // Write zeroes
       for (size_t t = 0; t < nrSamples; ++t) {
         // Zero all channels for sample t
         memset(&samples[t][subbandIdx][0], 0, nrChannels * sizeof *samples.origin());
       }
     }
   }
-  zeroTimer.stop();
+  writeTimer.stop();
+
+  // Report summary
+  Subband *null = NULL;
+
+  size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), null);
+
+  LOG_INFO_STR("Block: written " << (nrSubbands - nrLost) << " subbands, lost " << nrLost << " subbands.");
 }
 
 
@@ -147,8 +152,8 @@ void Block::reset( size_t newFileIdx, size_t newBlockIdx ) {
   setSequenceNumber(newBlockIdx);
 
   // Mark all subbands as not-written
-  for (size_t subbandIdx = 0; subbandIdx < subbandWritten.size(); ++subbandIdx) {
-    subbandWritten[subbandIdx] = false;
+  for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
+    subbandCache[subbandIdx] = NULL;
   }
   nrSubbandsLeft = nrSubbands;
 }
@@ -192,7 +197,7 @@ void BlockCollector::inputLoop() {
   SmartPtr<Subband> subband;
 
   while ((subband = inputQueue.remove()) != NULL) {
-    _addSubband(*subband);
+    _addSubband(subband);
   }
 }
 
@@ -201,7 +206,7 @@ void BlockCollector::outputLoop() {
   SmartPtr<Block> block;
 
   while ((block = outputQueue.remove()) != NULL) {
-    block->zeroRemainingSubbands();
+    block->writeSubbands();
 
     outputPool.filled.append(block);
   }
@@ -210,12 +215,12 @@ void BlockCollector::outputLoop() {
 }
 
 
-void BlockCollector::_addSubband( const Subband &subband ) {
+void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
   NSTimer::StartStop ss(addSubbandTimer);
 
-  LOG_DEBUG_STR("BlockCollector: Add " << subband.id);
+  LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
-  const size_t &blockIdx = subband.id.block;
+  const size_t &blockIdx = subband->id.block;
 
   ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
 
@@ -223,13 +228,13 @@ void BlockCollector::_addSubband( const Subband &subband ) {
     if (canDrop) {
       if ((ssize_t)blockIdx <= lastEmitted) {
 	      // too late -- discard packet
-        LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband.id.subband  << " of file " << subband.id.fileIdx);
+        LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
 	      return;
       }
     } else {
       // if we can't drop, we shouldn't have written
       // this block yet.
-      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband.id.fileIdx << " subband " << subband.id.subband);
+      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
     }
 
     fetch(blockIdx);
