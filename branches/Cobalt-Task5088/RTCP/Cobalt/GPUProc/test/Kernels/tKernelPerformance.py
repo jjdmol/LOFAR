@@ -6,8 +6,14 @@ import subprocess
 import itertools
 import re
 
+import threading
+import time
+import pickle
+
 import matplotlib.pyplot as plt
 
+#*****************************************************************************
+# Code needed to do a nvprof run on the command line
 def runAndGetCerrCout(cmd):
   """
   System call of cmd
@@ -31,7 +37,8 @@ def runAndGetCerrCout(cmd):
     
   return stdoutdata, stderrdata
   
-
+#*****************************************************************************
+# Code needed to do parse the nvprof output
 def getCSVLinesFromNVProfOutput(stderr):
   """
   Look for nvprof csv output seperator and return all the csv lines
@@ -104,7 +111,20 @@ class csvData:
       # save the now typed line
       self.entrieLines[name] = values 
 
+  # helper functions to allow pickeling of data
+  def __getstate__(self):
+    odict = {}
+    odict["entrieNames"] = self.entrieNames
+    odict["entrieUnit"] = self.entrieUnit
+    odict["entrieLines"] = self.entrieLines
 
+    return odict
+
+  def __setstate__(self, dict):
+    self.entrieNames = dict["entrieNames"]
+    self.entrieUnit =  dict["entrieUnit"]
+    self.entrieLines = dict["entrieLines"] 
+ 
 
   def getNamedMetric(self, nameLine, metric):
     """
@@ -126,13 +146,16 @@ class csvData:
 
   def __str__(self):
     return str(self.entrieNames) + "\n" + str(self.entrieUnit) + "\n" + str(self.entrieLines)
-    
 
-def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels):
+#*****************************************************************************
+# Kernel specific interface
+def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels, threadIdx):
+  """
 
+  """
   # Create the command to run on the command line
   cmd = ["nvprof", "--csv", "./BeamFormerKernelPerformance", 
-         "-t", str(nTabs), "-c", str(nChannels)]
+         "-t", str(nTabs), "-c", str(nChannels), "-i", str(threadIdx)]
   # run
   stdout, stderr = runAndGetCerrCout(cmd)  
   # Clean the output
@@ -141,8 +164,36 @@ def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels):
   data = csvData(CSVLines)
 
   # return the value of interest
-  return data.getNamedMetric("beamFormer", 'Avg')
+  return data
 
+
+def gputhread(threadIdx, nTabs, nChannels, sharedVAlue):
+
+  data = beamFormerGetAvgTimeForKernelRun(nTabs, nChannels, threadIdx)
+
+  print "measuring; tab, channel, gpuIdx: " + str(nTabs) + "' " + str(nChannels) + "' " + str(threadIdx)
+                  
+    #Might need a lock..
+  lock.acquire()
+  sharedValue[(nTabs, nChannels)] = data
+  lock.release()
+
+
+class myThread (threading.Thread):
+  def __init__(self, threadID, name, sharedValue, nTabs, nChannels, ):
+    threading.Thread.__init__(self)
+    self.threadID = threadID
+    self.name = name
+    self.nTabs = nTabs
+    self.nChannels = nChannels
+    self.sharedValue = sharedValue
+
+  def run(self):
+    gputhread(self.threadID, self.nTabs, self.nChannels, self.sharedValue)
+
+
+# Define a function for the thread
+lock = threading.Lock()
 
 if __name__ == "__main__":
   ## test 1
@@ -150,25 +201,58 @@ if __name__ == "__main__":
 
   # Create a array of the executable and the arguments (all string)
   resultLines = []
-  xrange = range(10, 261, 50)
+  tabRange = range(10, 261, 50)
   channelsToTest = [1, 16, 64, 256]
-  for nChan in channelsToTest:
-    runningTimes = []
-    for nTab in xrange:
-      runningTimes.append(beamFormerGetAvgTimeForKernelRun(nTab, nChan))
-    resultLines.append(runningTimes)
+  # Entry point for parralellization of the available 4 cobalt nodes
+  # These test should be adapted when running on different systems
+  nrParallelTreads = 4
+  sharedValue = {}
+
+  for tabIdx in tabRange:
+    # not the producer/ consumer model. Bit mheee, it works
+    # Increase the maximum number with at least stepsize. Do not start threads that
+    # have an index that is to large
+    for startChanIdx in range(0, len(channelsToTest) + nrParallelTreads, nrParallelTreads):
+      threads = []
+      for idx in range(4):
+        # skip if this index is equal or larger than available work items
+        if ((startChanIdx + idx) >= len(channelsToTest)):
+          continue
+        thread = myThread(idx, "Thread" + str(idx), sharedValue, tabIdx, channelsToTest[startChanIdx + idx])
+        thread.start()
+        threads.append(thread)
+
+      for thread in threads:
+        thread.join()
+
+  print sharedValue
+
+  output = open('data.pkl', 'wb')
+
+
+  # Pickle the list using the highest protocol available.
+  pickle.dump(sharedValue, output, -1)
+  output.close()
 
 
 
-  import matplotlib.pyplot as plt
-  plt.plot(xrange, resultLines[0])
-  plt.plot(xrange, resultLines[1])
-  plt.plot(xrange, resultLines[2])
-  plt.plot(xrange, resultLines[3])
-  plt.ylim((0,0.0025))
+  pkl_file = open('data.pkl', 'rb')
 
-  plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
-  plt.ylabel('Duration (sec)')
-  plt.xlabel('Number of tabs')
-  plt.show()
+  data1 = pickle.load(pkl_file)
+  print data1 
+
+
+  pkl_file.close()
+
+  #import matplotlib.pyplot as plt
+  #plt.plot(xrange, resultLines[0])
+  #plt.plot(xrange, resultLines[1])
+  #plt.plot(xrange, resultLines[2])
+  #plt.plot(xrange, resultLines[3])
+  #plt.ylim((0,0.0025))
+
+  #plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
+  #plt.ylabel('Duration (sec)')
+  #plt.xlabel('Number of tabs')
+  #plt.show()
 

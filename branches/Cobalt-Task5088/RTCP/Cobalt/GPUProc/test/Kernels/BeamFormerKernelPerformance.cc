@@ -72,6 +72,7 @@ void usage()
   cout << " Performance measurements: ( no output validation)" << endl;
   cout << "-t nrtabs     Number of tabs to create, default == 1" << endl;
   cout << "-c nrchannels Number of channels to create, default == 1" << endl;
+  cout << "-i IdxGPU     GPU index to run kernel on, default == 0" << endl;
   cout << "" << endl; 
   //cout << "If no arguments are provide the kernel with be tested on output validity" << endl;
   cout << "" << endl;
@@ -84,9 +85,9 @@ int main(int argc, char *argv[])
   int opt;
   unsigned nrTabs = 1;
   unsigned nrChannels = 1;
-
+  unsigned idxGPU = 0;
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "t:c:")) != -1) 
+  while ((opt = getopt(argc, argv, "t:c:i:")) != -1) 
   {
     switch (opt) 
     {
@@ -96,6 +97,10 @@ int main(int argc, char *argv[])
 
     case 'c':
       nrChannels = atoi(optarg);
+      break;
+
+    case 'i':
+      idxGPU = atoi(optarg);
       break;
 
     default: /* '?' */
@@ -111,7 +116,7 @@ int main(int argc, char *argv[])
   }
 
   // Boiledplate code: create the environment etc;
-  gpu::Device device(gpu::Platform().devices()[0]);
+  gpu::Device device(gpu::Platform().devices()[idxGPU]);
   gpu::Context context(device);
   gpu::Stream stream(context);
 
