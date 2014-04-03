@@ -125,30 +125,49 @@ void Block::write( BeamformedData &output ) {
 
   // Set data
   writeTimer.start();
-# pragma omp parallel for num_threads(16)
   for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
+    float *dst = &output.samples[0][subbandIdx][0];
+    const ptrdiff_t dst_stride = &output.samples[1][0][0] - &output.samples[0][0][0];
+
     if (subbandCache[subbandIdx] != NULL) {
       // Transpose subband
       Subband &subband = *subbandCache[subbandIdx];
 
-      for (size_t t = 0; t < nrSamples; ++t) {
-        // Copy all channels for sample t
-        memcpy(&output.samples[t][subbandIdx][0], &subband.data[t][0], nrChannels * sizeof *subband.data.origin());
+      const float *src = &subband.data[0][0];
+      const ptrdiff_t src_stride = &subband.data[1][0] - &subband.data[0][0];
+
+      if (src_stride == 1) {
+        for (size_t t = 0; t < nrSamples; ++t) {
+          *dst = *src;
+          src ++;
+          dst += dst_stride;
+        }
+      } else {
+        for (size_t t = 0; t < nrSamples; ++t) {
+          memcpy(dst, src, src_stride * sizeof *src);
+          src += src_stride;
+          dst += dst_stride;
+        }
       }
     } else {
       // Write zeroes
-      for (size_t t = 0; t < nrSamples; ++t) {
-        // Zero all channels for sample t
-        memset(&output.samples[t][subbandIdx][0], 0, nrChannels * sizeof *output.samples.origin());
+      if (nrChannels == 1) {
+        for (size_t t = 0; t < nrSamples; ++t) {
+          *dst = 0.0;
+          dst += dst_stride;
+        }
+      } else {
+        for (size_t t = 0; t < nrSamples; ++t) {
+          memset(dst, 0, nrChannels * sizeof *dst);
+          dst += dst_stride;
+        }
       }
     }
   }
   writeTimer.stop();
 
   // Report summary
-  Subband *null = NULL;
-
-  size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), null);
+  size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), (Subband*)NULL);
 
   LOG_INFO_STR("Block: written " << (nrSubbands - nrLost) << " subbands, lost " << nrLost << " subbands.");
 }
@@ -379,6 +398,9 @@ void Receiver::kill()
 bool Receiver::finish()
 {
   thread.wait();
+
+  for (CollectorMap::iterator i = collectors.begin(); i != collectors.end(); ++i)
+    i->second->finish();
 
   return !thread.caughtException();
 }

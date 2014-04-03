@@ -80,6 +80,43 @@ SUITE(Block) {
 
     CHECK(block.complete());
   }
+
+  TEST(TransposeSpeed) {
+    size_t nrChannelsList[] = { 1, 16, 256 };
+
+    for (size_t c = 0; c < sizeof nrChannelsList / sizeof nrChannelsList[0]; c++) {
+      const size_t nrSubbands = 488;
+      const size_t nrChannels = nrChannelsList[c];
+      const size_t nrSamples = 196608 / nrChannels;
+
+      // Our increment needs to be co-prime to nrSubbands for
+      // the ring to visit all elements.
+      const size_t subbandIncrement = 7;
+
+      CHECK(nrSubbands % subbandIncrement != 0);
+      CHECK(subbandIncrement % nrSubbands != 0);
+
+      Block block(0, 0, nrSubbands, nrSamples, nrChannels);
+
+      for (size_t n = 0; n < nrSubbands; ++n) {
+        size_t subbandIdx = (3 + n * subbandIncrement) % nrSubbands;
+
+        SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
+        subband->id.subband = subbandIdx;
+
+        block.addSubband(subband);
+      }
+
+      BeamformedData output(
+        boost::extents[nrSamples][nrSubbands][nrChannels],
+        boost::extents[nrSubbands][nrChannels]);
+
+      NSTimer transposeTimer(str(format("Block::write for %u subbands, %u channels, %u samples") % nrSubbands % nrChannels % nrSamples), true, true);
+      transposeTimer.start();
+      block.write(output);
+      transposeTimer.stop();
+    }
+  }
 }
 
 
@@ -347,8 +384,8 @@ SUITE(SendReceive) {
     CHECK(receiver.finish());
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      // Should have one complete block
-      CHECK_EQUAL(1UL, outputPools[i]->filled.size());
+      // Should have one complete block, plus NULL
+      CHECK_EQUAL(2UL, outputPools[i]->filled.size());
 
       SmartPtr<BeamformedData> block = outputPools[i]->filled.remove();
 
