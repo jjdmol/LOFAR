@@ -124,10 +124,11 @@ class pulsar_pipeline(control):
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
+        self.pipe_id = self.inputs['job_name'].replace('Observation','')
         self.job_dir = self.config.get("layout", "job_directory")
         parset_dir = os.path.join(self.job_dir, "parsets")
         mapfile_dir = os.path.join(self.job_dir, "mapfiles")
-
+        
         # Create directories for temporary parset- and map files
         create_directory(parset_dir)
         create_directory(mapfile_dir)
@@ -150,11 +151,10 @@ class pulsar_pipeline(control):
         self.logger.debug("Processing: %s" %
           ', '.join(str(f) for f in self.input_data))
         
-        
         # Rebuilding sys.argv without the options given automatically by framework
         # --auto = automatic run from framework
         # -q = quiet mode, no user interaction
-        sys.argv = ['pulp.py', '--auto','-q', '--cobalt']
+        sys.argv = ['pulp.py', '--auto', '-q']
       
         # TODO: translate optional pipeline tuning parameters from the pipeline parset to existing commanf line options
         #py_parset = self.parset.makeSubset(
