@@ -1,5 +1,5 @@
-//# tBeamFormerKernel.cc: test Kernels/BeamFormerKernel class
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tBeamFormerKernel.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,11 +18,24 @@
 //#
 //# $Id$
 
+
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
+#include <boost/shared_ptr.hpp>
 #include <GPUProc/gpu_wrapper.h>
+#include <GPUProc/MultiDimArrayHostBuffer.h>
+
+#include <CoInterface/Parset.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+
+#include <iomanip>
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "../TestUtil.h"
+#include <Common/LofarLogger.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
@@ -37,48 +50,119 @@ using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
 
-int main() {
-  INIT_LOGGER("tBeamFormerKernel");
 
-  // Set up gpu environment
-  try {
-    gpu::Platform pf;
-    cout << "Detected " << pf.size() << " GPU devices" << endl;
-  } catch (gpu::GPUException& e) {
-    cerr << "No GPU device(s) found. Skipping tests." << endl;
-    return 3;
+void usage()
+{
+  cout << "Usage: BeamFormerKernelPerformance [options] " << endl;
+  cout << "" << endl;
+  cout << " Performance measurements: ( no output validation)" << endl;
+  cout << "-t nrtabs     Number of tabs to create, default == 1" << endl;
+  cout << "-c nrchannels Number of channels to create, default == 1" << endl;
+  cout << "-i IdxGPU     GPU index to run kernel on, default == 0" << endl;
+  cout << "" << endl;
+  //cout << "If no arguments are provide the kernel with be tested on output validity" << endl;
+  cout << "" << endl;
+}
+
+int main(int argc, char *argv[])
+{
+  INIT_LOGGER("BeamFormerKernelPerformance");
+
+  int opt;
+  unsigned nrTabs = 180;
+  unsigned nrChannels = 64;
+  unsigned idxGPU = 0;
+  // parse all command-line options
+  while ((opt = getopt(argc, argv, "t:c:i:")) != -1)
+  {
+    switch (opt)
+    {
+    case 't':
+      nrTabs = atoi(optarg);
+      break;
+
+    case 'c':
+      nrChannels = atoi(optarg);
+      break;
+
+    case 'i':
+      idxGPU = atoi(optarg);
+      break;
+
+    default: /* '?' */
+      usage();
+      exit(1);
+    }
   }
-  gpu::Device device(0);
-  vector<gpu::Device> devices(1, device);
-  gpu::Context ctx(device);
-  gpu::Stream stream(ctx);
 
-  Parset ps("tBeamFormerKernel.in_parset");
+  // we expect no further arguments
+  if (optind != argc) {
+    usage();
+    exit(1);
+  }
 
+  // Boiledplate code: create the environment etc;
+  gpu::Device device(gpu::Platform().devices()[idxGPU]);
+  gpu::Context context(device);
+  gpu::Stream stream(context);
+
+  // Create a parset with the correct parameters to run a beamformer kernel
+  Parset ps;
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].directionType", "J2000");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1", "0.0");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2", "0.0");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].coherent", "true");
+  ps.add("Observation.Beam[0].angle1", "5.0690771926813865");
+  ps.add("Observation.Beam[0].angle2", "0.38194688387907605");
+  ps.add("Observation.Beam[0].directionType", "J2000");
+  ps.add("Observation.Beam[0].nrTabRings", "0");
+  ps.add("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(nrTabs));
+
+  string filenames = "[";
+  filenames.append(lexical_cast<string>(nrTabs)).append("*BEAM000.h5]");
+  string hosts = "[";
+  hosts.append(lexical_cast<string>(nrTabs)).append("*localhost:.]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", filenames);
+  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", hosts);
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+
+  //ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", "1");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(nrChannels));
+  ps.add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", "512");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "16");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.which", "I");
+
+  ps.add("Cobalt.BeamFormer.nrDelayCompensationChannels", "64");
+  ps.add("Cobalt.BeamFormer.nrHighResolutionChannels", "64");
+  ps.add("Observation.VirtualInstrument.stationList", "[RS106]");
+  ps.add("Observation.antennaArray", "HBA");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.beamList", "[5 * 0]");
+  ps.updateSettings();
+
+  // Create a beamformer kernel factory  KernelFactory<BeamFormerKernel> factory(ps);
   KernelFactory<BeamFormerKernel> factory(ps);
-
   // Calculate beamformer delays and transfer to the device.
   // *************************************************************
-  size_t lengthDelaysData = 
-    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS) / 
+  size_t lengthDelaysData =
+    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS) /
     sizeof(float);
   size_t lengthBandPassCorrectedData =
     factory.bufferSize(BeamFormerKernel::INPUT_DATA) /
     sizeof(float);
-  size_t lengthComplexVoltagesData = 
-    factory.bufferSize(BeamFormerKernel::OUTPUT_DATA) / 
+  size_t lengthComplexVoltagesData =
+    factory.bufferSize(BeamFormerKernel::OUTPUT_DATA) /
     sizeof(float);
 
   // Define the input and output arrays
   // ************************************************************* 
   float * complexVoltagesData = new float[lengthComplexVoltagesData];
   float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
-  float * delaysData= new float[lengthDelaysData];
+  float * delaysData = new float[lengthDelaysData];
 
   // ***********************************************************
   // Baseline test: If all weight data is zero the output should be zero
   // The output array is initialized with 42s
-  cout << "test 1" << endl;
   for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
   {
     complexVoltagesData[idx * 2] = 42.0f;
@@ -88,37 +172,37 @@ int main() {
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
   {
     bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
+    bandPassCorrectedData[idx * 2 + 1] = 1.0f;
   }
 
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
+  for (unsigned idx = 0; idx < lengthDelaysData / 2; ++idx)
   {
     delaysData[idx * 2] = 0.0f;
     delaysData[idx * 2 + 1] = 0.0f;
   }
 
   size_t sizeDelaysData = lengthDelaysData * sizeof(float);
-  DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
-  HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
+  DeviceMemory devDelaysMemory(context, sizeDelaysData);
+  HostMemory rawDelaysData = getInitializedArray(context, sizeDelaysData, 1.0f);
   float *rawDelaysPtr = rawDelaysData.get<float>();
   for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
     rawDelaysPtr[idx] = delaysData[idx];
   stream.writeBuffer(devDelaysMemory, rawDelaysData);
 
-  size_t sizeBandPassCorrectedData = 
+  size_t sizeBandPassCorrectedData =
     lengthBandPassCorrectedData * sizeof(float);
-  DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
-  HostMemory rawBandPassCorrectedData = 
-    getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
+  DeviceMemory devBandPassCorrectedMemory(context, sizeBandPassCorrectedData);
+  HostMemory rawBandPassCorrectedData =
+    getInitializedArray(context, sizeBandPassCorrectedData, 2.0f);
   float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
   for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
     rawBandPassCorrectedPtr[idx] = bandPassCorrectedData[idx];
   stream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
 
   size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(float);
-  DeviceMemory devComplexVoltagesMemory(ctx, sizeComplexVoltagesData);
-  HostMemory rawComplexVoltagesData = 
-    getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
+  DeviceMemory devComplexVoltagesMemory(context, sizeComplexVoltagesData);
+  HostMemory rawComplexVoltagesData =
+    getInitializedArray(context, sizeComplexVoltagesData, 3.0f);
   float *rawComplexVoltagesPtr = rawComplexVoltagesData.get<float>();
   for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
     rawComplexVoltagesPtr[idx] = complexVoltagesData[idx];
@@ -133,11 +217,11 @@ int main() {
   float subbandFreq = 60e6f;
   unsigned sap = 0;
 
-  PerformanceCounter counter(ctx);
+  PerformanceCounter counter(context);
   BlockID blockId;
   kernel->enqueue(blockId, subbandFreq, sap);
   stream.synchronize();
 
   return 0;
-}
 
+}

@@ -21,20 +21,12 @@
 
 #include <lofar_config.h>
 
-//#include <complex>
-
 #include <Common/LofarLogger.h>
-
 #include <boost/shared_ptr.hpp>
-
 #include <GPUProc/gpu_wrapper.h>
-//#include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-//#include <CoInterface/BlockID.h>
-#include <CoInterface/Parset.h>
 
-//#include "BeamFormerSubbandProcStep.h"
-//#include "BeamFormerCoherentStep.h"
+#include <CoInterface/Parset.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
 #include <iomanip>
@@ -44,8 +36,6 @@
 
 #include "../TestUtil.h"
 #include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
-#include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
@@ -54,10 +44,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <GPUProc/PerformanceCounter.h>
-
-//beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
-//  new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));
-
 
 using namespace std;
 using namespace boost;
@@ -83,8 +69,8 @@ int main(int argc, char *argv[])
   INIT_LOGGER("BeamFormerKernelPerformance");
 
   int opt;
-  unsigned nrTabs = 1;
-  unsigned nrChannels = 1;
+  unsigned nrTabs = 180;
+  unsigned nrChannels = 64;
   unsigned idxGPU = 0;
   // parse all command-line options
   while ((opt = getopt(argc, argv, "t:c:i:")) != -1) 
