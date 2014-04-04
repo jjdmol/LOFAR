@@ -22,7 +22,13 @@ int main(int argc, char **argv) {
 
   gpu::Platform pf;
   vector<gpu::Device> devices = pf.devices();
-  gpu::Context context(devices[1]);
+
+  if (devices.empty()) {
+    LOG_WARN_STR("No GPUs detected -- skipping test.");
+    return 3;
+  }
+
+  gpu::Context context(devices[0]);
   gpu::Stream stream(context);
 
   LOG_INFO_STR("Creating kernel");
