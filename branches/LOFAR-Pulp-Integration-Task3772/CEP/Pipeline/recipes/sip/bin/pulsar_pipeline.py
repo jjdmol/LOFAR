@@ -124,7 +124,6 @@ class pulsar_pipeline(control):
         # Get input/output-data products specifications.
         self._get_io_product_specs()
 
-        self.pipe_id = self.inputs['job_name'].replace('Observation','')
         self.job_dir = self.config.get("layout", "job_directory")
         parset_dir = os.path.join(self.job_dir, "parsets")
         mapfile_dir = os.path.join(self.job_dir, "mapfiles")
