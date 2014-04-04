@@ -125,41 +125,71 @@ void Block::write( BeamformedData &output ) {
 
   // Set data
   writeTimer.start();
-  for (size_t subbandIdx = 0; subbandIdx < subbandCache.size(); ++subbandIdx) {
-    float *dst = &output.samples[0][subbandIdx][0];
-    const ptrdiff_t dst_stride = &output.samples[1][0][0] - &output.samples[0][0][0];
 
-    if (subbandCache[subbandIdx] != NULL) {
-      // Transpose subband
-      Subband &subband = *subbandCache[subbandIdx];
+  /*
+   * Input:
+   *   the set of subbandCache[nrSubbands],
+   *   each of which is either NULL, 
+   *   or (indirectly) a pointer to [nrSamples][nrChannels]
+   * Output:
+   *   output.samples[nrSamples][nrSubbands][nrChannels]
+   *
+   * Which means we're transposing nrChannels * sizeof(float) bytes at a time,
+   * which is especially painful if nrChannels == 1.
+   *
+   * The implemented strategy coalesces the writes in batches, to make sure that entire
+   * cache lines are 
+   *
+   * 
+   */
+  const size_t MAXBATCHSIZE = 4;
 
-      const float *src = &subband.data[0][0];
-      const ptrdiff_t src_stride = &subband.data[1][0] - &subband.data[0][0];
+  // Stride between samples in output
+  const ptrdiff_t dst_sample_stride = &output.samples[1][0][0] - &output.samples[0][0][0];
+  // Stride between subbands in output
+  const ptrdiff_t dst_sb_stride = &output.samples[0][1][0] - &output.samples[0][0][0];
 
-      if (src_stride == 1) {
-        for (size_t t = 0; t < nrSamples; ++t) {
-          *dst = *src;
-          src ++;
-          dst += dst_stride;
-        }
-      } else {
-        for (size_t t = 0; t < nrSamples; ++t) {
-          memcpy(dst, src, src_stride * sizeof *src);
-          src += src_stride;
-          dst += dst_stride;
+  const vector<float> zeroes(nrChannels * nrSamples, 0.0f);
+
+# pragma omp parallel for num_threads(4)
+  for (size_t subbandBase = 0; subbandBase < subbandCache.size(); subbandBase += MAXBATCHSIZE) {
+    // Determine actual batch size
+    const size_t BATCHSIZE = std::min(MAXBATCHSIZE, subbandCache.size() - subbandBase);
+
+    // Collect source pointers for all our subbands, or to our zeroes array if
+    // a subband is not available.
+    const float *subbands[MAXBATCHSIZE];
+
+    for (size_t i = 0; i < BATCHSIZE; ++i) {
+      size_t subbandIdx = subbandBase + i;
+
+      subbands[i] = subbandCache[subbandIdx] ? subbandCache[subbandIdx]->data.origin() : &zeroes[0];
+    }
+
+    float *dst = &output.samples[0][subbandBase][0];
+
+    if (nrChannels == 1) {
+      /* Use assignment to copy/zero data */
+      for (size_t t = 0; t < nrSamples; ++t) {
+        float *dst_sb = dst;
+        dst += dst_sample_stride;
+
+        for (size_t i = 0; i < BATCHSIZE; ++i) {
+          *dst_sb = subbands[i][t];
+
+          dst_sb += dst_sb_stride;
         }
       }
     } else {
-      // Write zeroes
-      if (nrChannels == 1) {
-        for (size_t t = 0; t < nrSamples; ++t) {
-          *dst = 0.0;
-          dst += dst_stride;
-        }
-      } else {
-        for (size_t t = 0; t < nrSamples; ++t) {
-          memset(dst, 0, nrChannels * sizeof *dst);
-          dst += dst_stride;
+      /* Use memcpy/memset to copy/zero data */
+      for (size_t t = 0; t < nrSamples; ++t) {
+        float *dst_sb = dst;
+        dst += dst_sample_stride;
+
+        for (size_t i = 0; i < BATCHSIZE; ++i) {
+          memcpy(dst_sb, &subbands[i][t * nrChannels], nrChannels * sizeof(float));
+
+          dst_sb += dst_sb_stride;
         }
       }
     }
