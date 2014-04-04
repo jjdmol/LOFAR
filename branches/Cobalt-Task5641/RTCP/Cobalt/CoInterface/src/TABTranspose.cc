@@ -137,10 +137,8 @@ void Block::write( BeamformedData &output ) {
    * Which means we're transposing nrChannels * sizeof(float) bytes at a time,
    * which is especially painful if nrChannels == 1.
    *
-   * The implemented strategy coalesces the writes in batches, to make sure that entire
-   * cache lines are 
-   *
-   * 
+   * The implemented strategy coalesces the writes in batches. Large batches
+   * will cause TLB misses due to the larger number of arrays we need to index.
    */
   const size_t MAXBATCHSIZE = 4;
 
@@ -151,45 +149,48 @@ void Block::write( BeamformedData &output ) {
 
   const vector<float> zeroes(nrChannels * nrSamples, 0.0f);
 
+  // Four threads gives the best performance on CEP2, see figures given by 'tTABTranspose | grep write'
 # pragma omp parallel for num_threads(4)
   for (size_t subbandBase = 0; subbandBase < subbandCache.size(); subbandBase += MAXBATCHSIZE) {
     // Determine actual batch size
     const size_t BATCHSIZE = std::min(MAXBATCHSIZE, subbandCache.size() - subbandBase);
 
     // Collect source pointers for all our subbands, or to our zeroes array if
-    // a subband is not available.
-    const float *subbands[MAXBATCHSIZE];
+    // a subband is not available. Each element points to an array of dimensions
+    //   [nrSamples][nrChannels]
+    const float *src[MAXBATCHSIZE];
 
     for (size_t i = 0; i < BATCHSIZE; ++i) {
       size_t subbandIdx = subbandBase + i;
 
-      subbands[i] = subbandCache[subbandIdx] ? subbandCache[subbandIdx]->data.origin() : &zeroes[0];
+      src[i] = subbandCache[subbandIdx] ? subbandCache[subbandIdx]->data.origin() : &zeroes[0];
     }
 
+    // Pointer to walk over all samples
     float *dst = &output.samples[0][subbandBase][0];
 
     if (nrChannels == 1) {
-      /* Use assignment to copy/zero data */
+      /* Use assignment to copy data */
       for (size_t t = 0; t < nrSamples; ++t) {
-        float *dst_sb = dst;
+        float *sample = dst;
         dst += dst_sample_stride;
 
         for (size_t i = 0; i < BATCHSIZE; ++i) {
-          *dst_sb = subbands[i][t];
+          *sample = src[i][t];
 
-          dst_sb += dst_sb_stride;
+          sample += dst_sb_stride;
         }
       }
     } else {
-      /* Use memcpy/memset to copy/zero data */
+      /* Use memcpy to copy data */
       for (size_t t = 0; t < nrSamples; ++t) {
-        float *dst_sb = dst;
+        float *sample = dst;
         dst += dst_sample_stride;
 
         for (size_t i = 0; i < BATCHSIZE; ++i) {
-          memcpy(dst_sb, &subbands[i][t * nrChannels], nrChannels * sizeof(float));
+          memcpy(sample, &src[i][t * nrChannels], nrChannels * sizeof(float));
 
-          dst_sb += dst_sb_stride;
+          sample += dst_sb_stride;
         }
       }
     }
