@@ -88,7 +88,8 @@ foreach $rspNr (0 .. 3) {
 
   if (exists $ilookup{$brdname}) {
     # international station: IP = src IP, ending in .50
-    $ips{$rspNr} = $ilookup{$brdname} =~ s/\.[0-9]+$/.50/g;
+    $ips{$rspNr} = $ilookup{$brdname};
+    $ips{$rspNr} =~ s/\.[0-9]+$/.50/;
   } else {
     $ips{$rspNr} = $iface;
   }
