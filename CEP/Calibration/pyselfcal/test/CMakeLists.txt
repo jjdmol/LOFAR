@@ -2,4 +2,4 @@
 
 include(LofarCTest)
 
-lofar_add_test(tselfcal_import)
+#lofar_add_test(tselfcal_import)
