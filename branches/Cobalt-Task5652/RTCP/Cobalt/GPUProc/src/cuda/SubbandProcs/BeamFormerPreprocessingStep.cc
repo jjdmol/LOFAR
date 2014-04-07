@@ -69,6 +69,10 @@ namespace LOFAR
     void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
 
+      doSecondFFT = 
+        (ps.settings.beamFormer.nrHighResolutionChannels /
+         ps.settings.beamFormer.nrDelayCompensationChannels) > 1;
+
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
         new IntToFloatKernel::Buffers(*devInput->inputSamples, *devB));
@@ -101,8 +105,7 @@ namespace LOFAR
 
 
       // Only perform second FFTshift and FFT if we have to.
-      if (ps.settings.beamFormer.nrHighResolutionChannels /
-          ps.settings.beamFormer.nrDelayCompensationChannels > 1) {
+      if (doSecondFFT) {
 
         // FFTShift: A -> A
         secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
@@ -162,11 +165,13 @@ namespace LOFAR
         ps.settings.subbands[subband].SAP);
       DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
-      secondFFTShiftKernel->enqueue(blockID);
-      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+      if (doSecondFFT) {
+        secondFFTShiftKernel->enqueue(blockID);
+        DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
-      secondFFT->enqueue(blockID);
-      //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+        secondFFT->enqueue(blockID);
+        //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+      }
 
       bandPassCorrectionKernel->enqueue(
         blockID);
@@ -183,7 +188,8 @@ namespace LOFAR
         std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
         std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
         //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
-        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(secondFFT)" << 
+        (doSecondFFT ? secondFFT->itsCounter.stats : RunningStatistics()) << endl <<
         std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
     }
 
@@ -192,7 +198,7 @@ namespace LOFAR
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();
       delayCompensationKernel->itsCounter.logTime();
-      secondFFT->itsCounter.logTime();
+      if (doSecondFFT) secondFFT->itsCounter.logTime();
       bandPassCorrectionKernel->itsCounter.logTime();
     }
   }
