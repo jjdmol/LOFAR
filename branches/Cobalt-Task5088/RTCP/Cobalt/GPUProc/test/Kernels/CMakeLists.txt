@@ -12,7 +12,9 @@ lofar_add_test(tFFTShiftKernel tFFTShiftKernel.cc)
 
 # Compile some shallow wrapper executable to perform runtime compilation
 lofar_add_executable(BeamFormerKernelPerformance BeamFormerKernelPerformance.cc)
-lofar_add_test(tKernelPerformance)
+
+# Test that run for a long time and are use for performance optimalization
+#lofar_add_test(tKernelPerformance)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
