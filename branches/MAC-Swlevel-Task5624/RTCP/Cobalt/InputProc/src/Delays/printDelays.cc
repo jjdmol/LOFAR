@@ -1,5 +1,5 @@
 //# printDelays.cc: Print all delays generated for an observation
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: capture.cc 25540 2013-07-02 13:20:36Z mol $
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -45,17 +45,17 @@ int main( int argc, char **argv )
   INIT_LOGGER( "printDelays" );
 
   if (argc < 3) {
-    cerr << "Syntax: printDelays parset stationname" << endl;
+    cerr << "Syntax: printDelays L1234.parset antenna_field_name" << endl;
     exit(1);
   }
 
   Parset ps(argv[1]);
-  const string stationName = argv[2];
+  const string antennaFieldName = argv[2];
 
-  const ssize_t stationIdx = ps.settings.stationIndex(stationName);
+  const ssize_t antennaFieldIdx = ps.settings.antennaFieldIndex(antennaFieldName);
 
-  if (stationIdx < 0) {
-    LOG_ERROR_STR("Could not find station in parset: " << stationName);
+  if (antennaFieldIdx < 0) {
+    LOG_ERROR_STR("Could not find antenna field name in parset: " << antennaFieldName);
     exit(1);
   }
 
@@ -71,9 +71,9 @@ int main( int argc, char **argv )
   cout << "# Clock corr?:      " << ps.settings.corrections.clock << endl;
   cout << "# Ref Phase center: " << printDouble3Vector(ps.settings.delayCompensation.referencePhaseCenter) << endl;
   cout << "#" << endl;
-  cout << "# Station:          " << stationName << endl;
-  cout << "# Phase center:     " << printDouble3Vector(ps.settings.stations[stationIdx].phaseCenter) << endl;
-  cout << "# Clock correction: " << str(format("%.15f") % ps.settings.stations[stationIdx].clockCorrection) << endl;
+  cout << "# Station:          " << antennaFieldName << endl;
+  cout << "# Phase center:     " << printDouble3Vector(ps.settings.antennaFields[antennaFieldIdx].phaseCenter) << endl;
+  cout << "# Clock correction: " << str(format("%.15f") % ps.settings.antennaFields[antennaFieldIdx].clockCorrection) << endl;
   cout << "# Start:            " << from << endl;
   cout << "# Stop:             " << to << endl;
   cout << "# BlockSize:        " << blockSize << " samples" << endl;
@@ -83,7 +83,7 @@ int main( int argc, char **argv )
   cout.flush();
 
   /* Start delay compensation thread */
-  Delays delays(ps, stationIdx, from, blockSize);
+  Delays delays(ps, antennaFieldIdx, from, blockSize);
   delays.start();
 
   /* Produce and print delays for the whole observation */

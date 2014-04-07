@@ -29,6 +29,7 @@
 #include "BeamFormerPipeline.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
@@ -92,7 +93,12 @@ namespace LOFAR
       :
       Pipeline(ps, subbandIndices, devices),
       factories(ps, nrSubbandsPerSubbandProc),
-      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime())
+      // Each work queue needs an output element for each subband it processes, because the GPU output can
+      // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
+      //
+      // For smooth operations, allocate 2 elements more per work queue, to allow one element to be in transit
+      // on both the receiver and sender side.
+      multiSender(hostMap(ps, subbandIndices, hostID), std::max(3UL, (2 + nrSubbandsPerSubbandProc) * workQueues.size()), ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
     }
@@ -231,6 +237,9 @@ namespace LOFAR
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
     {
+      NSTimer transposeTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) transpose/file") % globalSubbandIdx), true, true);
+      NSTimer forwardTimer(str(format("BeamFormerPipeline::writeOutput(subband %u) forward/file") % globalSubbandIdx), true, true);
+
       const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
 
       SmartPtr<SubbandProcOutputData> outputData;
@@ -296,10 +305,14 @@ namespace LOFAR
               false);
 
           // Copy data to block
+          transposeTimer.start();
           subband->data.assign(srcData.origin(), srcData.origin() + srcData.num_elements());
+          transposeTimer.stop();
 
           // Forward block to MultiSender, who takes ownership.
+          forwardTimer.start();
           multiSender.append(subband);
+          forwardTimer.stop();
 
           // If `subband' is still alive, it has been dropped instead of sent.
           ASSERT(ps.realTime() || !subband); 

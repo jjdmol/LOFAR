@@ -38,6 +38,7 @@
 #include <Common/Thread/Cancellation.h>
 
 #include <CoInterface/OutputTypes.h>
+#include <CoInterface/Exceptions.h>
 
 #if defined HAVE_AIPSPP
 #include <casa/Exceptions/Error.h>
@@ -201,10 +202,12 @@ namespace LOFAR
 
     // Make required instantiations
     template class OutputThread<StreamableData>;
-    template class OutputThread<TABTranspose::Block>;
+    template class OutputThread<TABTranspose::BeamformedData>;
 
 
-    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, 
+        Pool<StreamableData> &outputPool, const std::string &logPrefix, 
+          const std::string &targetDirectory)
       :
       OutputThread<StreamableData>(
           parset,
@@ -230,18 +233,31 @@ namespace LOFAR
 
       const std::string path = directoryName + "/" + fileName;
 
+   try
+      {
       recursiveMakeDir(directoryName, itsLogPrefix);
       LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
-      try {
+
         itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
-      } catch (Exception &ex) {
+      } 
+      catch (Exception &ex) 
+      {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        itsWriter = new MSWriterNull;
+        if ( !itsParset.realTime())   
+          THROW(StorageException, ex); 
+
+        itsWriter = new MSWriterNull(itsParset);
 #if defined HAVE_AIPSPP
-      } catch (casa::AipsError &ex) {
+      } 
+      catch (casa::AipsError &ex)
+      {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
-        cleanUp();
+
+        if (!itsParset.realTime())    
+          THROW(StorageException, ex.what()); 
+
+        itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 
@@ -249,9 +265,11 @@ namespace LOFAR
     }
 
 
-    TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory)
+    TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, 
+    Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix,
+     const std::string &targetDirectory)
       :
-      OutputThread<TABTranspose::Block>(
+      OutputThread<TABTranspose::BeamformedData>(
           parset,
           streamNr,
           outputPool,
@@ -277,22 +295,33 @@ namespace LOFAR
 
       const std::string path = directoryName + "/" + fileName;
 
-      recursiveMakeDir(directoryName, itsLogPrefix);
-      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
+      try
+      {
+        recursiveMakeDir(directoryName, itsLogPrefix);
+        LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
-      try {
 #ifdef HAVE_DAL
         itsWriter = new MSWriterDAL<float,3>(path, itsParset, itsStreamNr);
 #else
         itsWriter = new MSWriterFile(path);
 #endif
-      } catch (Exception &ex) {
+      }
+      catch (Exception &ex)
+      {
         LOG_ERROR_STR(itsLogPrefix << "Cannot open " << path << ": " << ex);
-        itsWriter = new MSWriterNull;
+        if (!itsParset.realTime())
+          THROW(StorageException, ex);
+
+        itsWriter = new MSWriterNull(itsParset);
 #if defined HAVE_AIPSPP
-      } catch (casa::AipsError &ex) {
+      } 
+      catch (casa::AipsError &ex) 
+      {
         LOG_ERROR_STR(itsLogPrefix << "Caught AipsError: " << ex.what());
-        cleanUp();
+        if ( !itsParset.realTime())       
+          THROW(StorageException, ex.what());  
+
+        itsWriter = new MSWriterNull(itsParset);
 #endif
       }
 

@@ -146,9 +146,10 @@ TEST(DataValidity)
       for (size_t ch = 1; ch < ps.nrChannelsPerSubband(); ch++) {
         LOG_INFO_STR("Checking channel " << ch);
 
+	// NOTE: XY and YX polarizations have been swapped (see issue #5640)
         const fcomplex expected00(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][0] * conj(hostInput[st2][ch][0][0]));
-        const fcomplex expected01(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][0] * conj(hostInput[st2][ch][0][1]));
-        const fcomplex expected10(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][1] * conj(hostInput[st2][ch][0][0]));
+        const fcomplex expected10(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][0] * conj(hostInput[st2][ch][0][1]));
+        const fcomplex expected01(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][1] * conj(hostInput[st2][ch][0][0]));
         const fcomplex expected11(fcomplex(nrSamples, 0) * hostInput[st1][ch][0][1] * conj(hostInput[st2][ch][0][1]));
 
         CHECK_CLOSE(real(expected00), real(hostOutput[bl][ch][0][0]), 0.0001);

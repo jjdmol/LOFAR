@@ -38,6 +38,7 @@ Observation.bandFilter=LBA_10_70
 #PIC.Core.CS001.LBA_INNER.LBA_30_90.delayCorrection.Y=0.0
 
 # Retrieved from station_configuration.parset
+#PIC.Core.CS001LBA.RSP.receiver=cbt001_0
 #PIC.Core.CS001LBA.RSP.ports=[udp:0.0.0.0:4346, udp:0.0.0.0:4347, udp:0.0.0.0:4348, udp:0.0.0.0:4349]
 #or e.g. PIC.Core.CS001HBA0.RSP.ports=[file:/input/file1, file:/input/file2, file:/input/file3, file:/input/file4]
 
