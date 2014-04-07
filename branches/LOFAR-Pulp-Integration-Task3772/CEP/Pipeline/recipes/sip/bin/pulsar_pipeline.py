@@ -167,8 +167,9 @@ class pulsar_pipeline(control):
        
         # Run the pulsar pipeline
         self.logger.debug("Starting pulp with: " + join(sys.argv))
-        return pulp.pulp(self)
-  
+        p = pulp.pulp(self)
+        return p.go()
+
     
 if __name__ == '__main__':
     sys.exit(pulsar_pipeline().main())
