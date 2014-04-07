@@ -8,7 +8,6 @@ node	Pulsar  4.0.0	development	'node constraint'	"Pulsar Pipeline tuning paramet
 
 #       name			        dir.	type	unit	prun.	vm	value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
- 
 par 2bf2fits_extra_opts                 I       text    -       10      0       ''      "additional options for 2bf2fits"
 par 8bit_conversion_sigma               I       flt     -       10      0       5.0     "clip raw data above this threshold (in sigmas) for conversion raw data from 32 to 8 bits"
 par decode_nblocks                      I       int     -       10      0       100     "number of blocks to read at once in 2bf2fits"
