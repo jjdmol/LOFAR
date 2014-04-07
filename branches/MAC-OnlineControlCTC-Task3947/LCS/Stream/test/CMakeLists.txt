@@ -1,4 +1,0 @@
-include(LofarCTest)
-
-lofar_add_test(tPortBroker tPortBroker.cc)
-lofar_add_test(tStringStream tStringStream.cc)

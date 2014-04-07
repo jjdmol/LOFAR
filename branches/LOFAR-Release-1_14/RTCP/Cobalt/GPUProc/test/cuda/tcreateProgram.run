@@ -1,3 +1,0 @@
-#!/bin/sh
-
-./tcreateProgram tcreateProgram.parset.in tcreateProgram.in_.cu
