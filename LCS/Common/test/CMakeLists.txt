@@ -4,6 +4,7 @@ include(LofarCTest)
 
 lofar_add_test(tBoostBitset tBoostBitset.cc)
 
+lofar_add_test(arnoLogger arnoLogger.cc)
 lofar_add_test(testLogger testLogger.cc)
 lofar_add_test(tCasaLogSink tCasaLogSink.cc)
 lofar_add_test(tAllocator tAllocator.cc)
