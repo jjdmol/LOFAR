@@ -99,23 +99,29 @@ namespace LOFAR
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));
 
-      // FFTShift: A -> A
-      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devA, *devA));
 
-      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *secondFFTShiftBuffers));
+      // Only perform second FFTshift and FFT if we have to.
+      if (ps.settings.beamFormer.nrHighResolutionChannels /
+          ps.settings.beamFormer.nrDelayCompensationChannels > 1) {
 
-      // FFT: A -> A
-      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        (ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels);
+        // FFTShift: A -> A
+        secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+          new FFTShiftKernel::Buffers(*devA, *devA));
 
-      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-        ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        secondFFTnrFFTs, true, *devA));
+        secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+          factories.fftShift.create(queue, *secondFFTShiftBuffers));
+
+        // FFT: A -> A
+        unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+          ps.nrSamplesPerSubband() /
+           (ps.settings.beamFormer.nrHighResolutionChannels /
+            ps.settings.beamFormer.nrDelayCompensationChannels);
+
+        secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+          ps.settings.beamFormer.nrHighResolutionChannels /
+          ps.settings.beamFormer.nrDelayCompensationChannels,
+          secondFFTnrFFTs, true, *devA));
+      }
 
       // bandPass: A -> B
       devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
