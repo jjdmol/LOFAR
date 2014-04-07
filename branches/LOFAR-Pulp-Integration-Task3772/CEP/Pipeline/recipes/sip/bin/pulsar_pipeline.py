@@ -101,13 +101,13 @@ class pulsar_pipeline(control):
                     dps.getBoolVector('Output_Pulsar.skip'))
         ])
         self.logger.debug("%d Output_Pulsar data products specified" %
-                            len(self.output_data))
+                            len(self.output_data['data']))
         
         # Sanity checks on input- and output data product specifications
         # the existing validate_data_maps will probably not work for pulsar pipeline,
         # were length of output equals length of input coherent + length of input incoherent arrays
         in_len = len(self.input_data['coherent']) + len(self.input_data['incoherent'])
-        out_len = len(self.output_data)
+        out_len = len(self.output_data['data'])
         if (in_len != out_len):
             raise DataMapError("number of enabled input data products %s does not match the total number of output files %s" % 
                             (in_len, out_len))
@@ -155,10 +155,6 @@ class pulsar_pipeline(control):
         # -q = quiet mode, no user interaction
         sys.argv = ['pulp.py', '--auto', '-q']
       
-        # TODO: translate optional pipeline tuning parameters from the pipeline parset to existing commanf line options
-        #py_parset = self.parset.makeSubset(
-        #    self.parset.fullModuleName('PythonControl') + '.Pulsar.')
-        
         if (not self.coherentStokesEnabled):
           sys.argv.extend(["--noCS", "--noCV", "--noFE"])
           
