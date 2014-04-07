@@ -69,11 +69,12 @@ int main(int argc, char *argv[])
   INIT_LOGGER("BeamFormerKernelPerformance");
 
   int opt;
-  unsigned nrTabs = 180;
+  unsigned nrTabs = 127;
   unsigned nrChannels = 64;
   unsigned idxGPU = 0;
+  unsigned nStation = 48;
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "t:c:i:")) != -1)
+  while ((opt = getopt(argc, argv, "t:c:i:s:")) != -1)
   {
     switch (opt)
     {
@@ -87,6 +88,10 @@ int main(int argc, char *argv[])
 
     case 'i':
       idxGPU = atoi(optarg);
+      break;
+
+    case 's':
+      nStation = atoi(optarg);
       break;
 
     default: /* '?' */
@@ -128,13 +133,17 @@ int main(int argc, char *argv[])
 
   //ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", "1");
   ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(nrChannels));
+  
   ps.add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", "512");
   ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "16");
   ps.add("Cobalt.BeamFormer.CoherentStokes.which", "I");
 
   ps.add("Cobalt.BeamFormer.nrDelayCompensationChannels", "64");
   ps.add("Cobalt.BeamFormer.nrHighResolutionChannels", "64");
-  ps.add("Observation.VirtualInstrument.stationList", "[RS106]");
+    
+  string stations = "[";
+  stations.append(lexical_cast<string>(nStation)).append("*RS106]");
+  ps.add("Observation.VirtualInstrument.stationList", stations);
   ps.add("Observation.antennaArray", "HBA");
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.beamList", "[5 * 0]");
