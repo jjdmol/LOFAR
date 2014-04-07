@@ -1,0 +1,60 @@
+#  -- Observation --
+#
+# Component description of an observation
+#
+# $Id$
+#
+# -- Observation--
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  Observation        4.0.2  development 'node constraint'  "Observation"
+
+#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+# timing information
+par  startTime               I    text   -      10    100    ''                                        - 'Start time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
+par  stopTime                I    text   -      10    100    ''                                        - 'Stop time of the observation in GMT (yyyy-mm-dd hh:mm:ss)'
+par  claimPeriod             I    int    -      10    100    50                                        - 'Periodlength in seconds the CLAIM phases will take'
+par  preparePeriod           I    int    -      10    100    30                                        - 'Periodlength in seconds the PREPARE phases will take'
+
+# measurement information
+par  bandFilter  	     I	  ptext	 -   	10    0	     'LBA_10_70|LBA_10_90|LBA_30_70|LBA_30_90|HBA_110_190|HBA_170_230|HBA_210_250;LBA_30_90' - 'one of the seven filters to use'
+par  antennaArray	     I	  ptext	 -   	10    0	     'LBA|HBA;LBA'			                   - 'Name of the antenneArray (AntennaArrays.conf)'
+par  receiverList	     I	  vint	 -   	10    0	     '[]'                                       - 'List of the receivers to use, eg.[0..7,10,11]. Range 0..191.'
+par  channelsPerSubband      I    int    -      10    100    64                                       - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
+par  nrBeams                 I    int    -      10    100    0                                         - 'Number of simultaneous beams in this observation'
+par  nrAnaBeams              I    int    -      10    100    0                                         - 'Number of analog beams in this observation'
+par  nrTBBSettings           I    int    -      10    100    0                                         - 'Number of TBBsettings'
+par  nrBeamformers           I    int    -      10    100    0                                         - 'Number of beamformers in this observation'
+par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
+par  nrBitsPerSample	     I    pint   -	10    0	     '16|8|4;16'                               - 'sample size in bits'
+par  referencePhaseCenter    I    vdbl   -      10    100    '[3826577.110, 461022.900, 5064892.758]'  - 'Constant value: phase center of LOFAR'
+par  existingStations        I    vtext   -      10    100    '["CS001","CS002","CS003","CS004","CS005","CS006","CS007","CS011","CS013","CS017","CS021","CS024","CS026","CS028","CS030","CS031","CS101","CS103","CS201","CS301","CS302","CS401","CS501","RS106","RS205","RS208","RS306","RS307","RS406","RS503","DE601","DE602","DE603","DE604","DE605","FR606","UK608"]'  - 'Constant value: stations that can be used'
+par  existingAntennaFields   I    vtext   -      10    100    '["LBA","HBA","HBA0","HBA1"]'  - 'Constant value: names of all antennafields'
+
+# new way of selection the receivers and the antennaArray at once
+par  antennaSet		     I    ptext  -      10    0      'LBA_INNER|LBA_OUTER|LBA_SPARSE_EVEN|LBA_SPARSE_ODD|LBA_X|LBA_Y|HBA_ZERO|HBA_ONE|HBA_DUAL|HBA_JOINED|HBA_ZERO_INNER|HBA_ONE_INNER|HBA_DUAL_INNER|HBA_JOINED_INNER;LBA_INNER'    - 'Which part of the antennas should be used'
+par  longBaselines           I    pbool  -      10    0      'true|false;false'                               - 'Number of polarisations to use in this observation'
+
+# copy of the characterisation of the (template)
+par  topologyID              I    text   -      10    100    ''                       - 'topology ID for identifying and structuring data products'
+par  KSPType                 O    ptext  -      10    0      'eor|cosmicrays|surveys|transients|magnetism|solar;surveys'          -   'Key science project'
+
+# clock related info
+par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock200'        - 'Mode in which clock is running'
+par  sampleClock             I    dbl    MHz    10    100    '>>Observation.clockMode.systemClock'       - 'SampleClock'
+par  samplesPerSecond        I    int    -      10    100    '>>Observation.clockMode.samplesPerSecond'  - 'Samples per second'
+par  subbandWidth            I    dbl    kHz    10    100    '>>Observation.clockMode.subbandWidth'      - ''
+par  channelWidth            I    dbl    Hz     10    100    '>>Observation.clockMode.channelWidth'      - ''
+
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  VirtualInstrument  4.0.0  development '1'		       "Virtual Instrument"
+uses  Beam		 4.0.0  development '1'		       "Beam specification"
+uses  AnaBeam    	 4.0.0  development '1'                "Analogue beam specification"
+uses  Beamformer	 4.0.0  development '1'		       "Beamformet specifications"	
+uses  TBB		 4.0.0  development '1' 	       "TBB settings"
+uses  Dataslots  	 4.0.0  development '1'		       "Dataslot (beamlet) allocation"
+uses  ObservationControl 4.0.2  development '1'		       "Observation Control"
+uses  Scheduler          4.0.0  development '1'                "Scheduler"
+uses  DataProducts       4.0.2  development '1'                "Place holder for all data products"

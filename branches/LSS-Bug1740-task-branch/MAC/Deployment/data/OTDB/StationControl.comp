@@ -1,0 +1,16 @@
+# -- StationControl --
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  StationControl   4.0.0  development 'node constraint'  "Main controller for a station"
+
+#    name          dir. type   unit   prun. vm   value                     			constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  _hostname     I    vtext   -      10    100  '>>VirtualInstrument.stationList'    -        "Machine(s) the program should run on, eg. [CS010C,CS016C]"
+par  LSSscript     I    vtext   -      10    100  'startLSS.sh'    -        "Optional script for starting the LSS software on FR606"
+
+#      name              vers   qual  constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  TBBControl         4.0.0  development  'node constraint'  "TBBControl settings"

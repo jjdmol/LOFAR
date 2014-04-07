@@ -1,0 +1,8 @@
+set(GNU_COMPILE_DEFINITIONS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS)
+set(ENV{CUDA_LIB_PATH} /usr/lib/nvidia-current)
+
+# NVidia does not support GCC 4.7 and up
+#set(GNU_C         /usr/bin/gcc-4.6 )
+#set(GNU_CXX       /usr/bin/g++-4.6 )
+#set(GNU_Fortran   /usr/bin/gfortran-4.6)
+#set(GNU_ASM       /usr/bin/gcc-4.6 )

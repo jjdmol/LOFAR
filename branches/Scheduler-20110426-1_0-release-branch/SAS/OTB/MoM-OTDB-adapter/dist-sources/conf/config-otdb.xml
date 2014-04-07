@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config:config xmlns:config="http://www.astron.nl/MoM-OTDB-adapter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.astron.nl/MoM-OTDB-adapter ../src/config.xsd ">
+	<!-- Section to configure the communication with MoM -->
+	<config:mom2>
+		<!-- The MoM-OTDB-adapter logs in with this given username/password. -->
+		<config:username>momotdbadapter</config:username>
+		<config:password>momotdbadapter</config:password>
+		<!-- The URL where the MoM-OTDB-adapter logs in. -->
+		<config:authurl>http://momhost:8080/useradministration</config:authurl>
+		<!-- The import XML URL of MoM -->
+		<config:mom2-import-url>http://momhost:8080/mom3/interface/importXML2.do</config:mom2-import-url>
+		<!-- The MoM schema's URL. This is not for validation of xml files in the MoM-OTDB-adapter. 
+			Validation of the xml files are agains the schemas in the jar.  
+			This URL is only used for generating xml files for the MoM import.
+			So if there are errors you can use it in eclipse with validition enabled-->
+		<config:mom2-schemas-url>http://momhost:8080/mom3/schemas/</config:mom2-schemas-url>
+	</config:mom2>
+	<!-- Section to configure the communication with OTDB -->
+	<config:otdb>
+		<!-- Interval in seconds that the MoM-OTDB-adapter checks OTDB for changes. Do not put this lower then 3 seconds. -->
+		<config:interval>5</config:interval>
+		<!-- Template ID for the UV Observation. This ID must be exists in OTDB.  -->
+		<config:uvObservationTemplateId>5001</config:uvObservationTemplateId>
+		<!-- RMI host of OTDB -->
+		<config:rmihost>lofar17.astron.nl</config:rmihost>
+		<!-- RMI port of OTDB -->
+		<config:rmiport>10399</config:rmiport>
+	</config:otdb>
+	<!-- Section to configure the MoM-OTDB-adapter -->
+	<config:adapter>
+		<!-- Port where the HTTP server of MoM-OTDB-adapter should run -->
+		<config:httpport>8082</config:httpport>
+		<!-- Keystore file for MoM-OTDB-adapter. This file should contain the MoM-OTDB-adapter public/private key -->
+		<config:keystore-location>./keystores/mom-otdb-adapter-keystore.jks</config:keystore-location>
+		<!-- Password of the Keystore file for MoM-OTDB-adapter.  -->
+		<config:keystore-password>adapter</config:keystore-password>
+		<!-- Trusted Keystore file for MoM-OTDB-adapter. This file should contain all client public keys -->
+		<config:trusted-keystore-location>./keystores/mom-otdb-adapter-trusted-keystore.jks</config:trusted-keystore-location>
+		<!-- Password of the Trusted Keystore file for MoM-OTDB-adapter.  -->
+		<config:trusted-keystore-password>adapter-trusted</config:trusted-keystore-password>
+	</config:adapter>
+</config:config>

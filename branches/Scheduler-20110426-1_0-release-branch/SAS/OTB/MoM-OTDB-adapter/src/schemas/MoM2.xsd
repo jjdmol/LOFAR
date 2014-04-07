@@ -1,0 +1,703 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xsd:schema xmlns:persistent="http://www.astron.nl/PersistentObjects" xmlns="http://www.astron.nl/MoM2" xmlns:user="http://www.astron.nl/useradmin" targetNamespace="http://www.astron.nl/MoM2" version="1.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import schemaLocation="http://proposal.astron.nl/schemas/UserAdmin.xsd" namespace="http://www.astron.nl/useradmin" />
+  <xsd:import schemaLocation="http://proposal.astron.nl/schemas/PersistentObjects.xsd" namespace="http://www.astron.nl/PersistentObjects" />
+  <xsd:annotation>
+    <xsd:documentation>
+			XML Schema for the MoM2 datamodel
+		</xsd:documentation>
+  </xsd:annotation>
+  <xsd:element name="projects">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="unbounded" ref="project" />
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="project" type="ProjectType" />
+  <xsd:complexType name="ProjectType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="CollectionType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="members" nillable="true" type="IndexedMemberListType" />
+          <xsd:choice minOccurs="0">
+            <xsd:element ref="allocation" />
+          </xsd:choice>
+          <xsd:element minOccurs="0" name="releaseDate" type="xsd:date" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ProjectRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="ProjectType">
+        <!--
+					Project reference is unique if either mom2Id or name is given NB exactly one of these should be provided but no
+					validation in the schema (fundamental schema definition problem)!
+				-->
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+        </xsd:sequence>
+        <xsd:attribute name="mom2Id" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedMemberListType">
+    <xsd:sequence>
+      <xsd:element minOccurs="0" maxOccurs="unbounded" name="item">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="registeredMember" type="RegisteredMemberType" />
+            <xsd:element name="nonRegisteredMember" type="NonRegisteredMemberType" />
+          </xsd:choice>
+          <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="MemberType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="affilliation" type="xsd:string" />
+          <xsd:element minOccurs="0" name="email" type="xsd:string" />
+          <xsd:element minOccurs="0" name="country" type="xsd:string" />
+          <xsd:element minOccurs="0" name="roles">
+            <xsd:complexType>
+              <xsd:sequence maxOccurs="unbounded">
+                <xsd:element ref="anyRole" />
+              </xsd:sequence>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ProjectRoleType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="description" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="ProjectRoleRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="ProjectRoleType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:integer" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyRole" type="ProjectRoleRefType" />
+  <xsd:element name="pi" substitutionGroup="anyRole">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="ProjectRoleRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="Pi" name="name" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="1" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="coi" substitutionGroup="anyRole">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="ProjectRoleRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="Co-I" name="name" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="2" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="friend" substitutionGroup="anyRole">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="ProjectRoleRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="Friend" name="name" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="3" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="contactAuthor" substitutionGroup="anyRole">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="ProjectRoleRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="Contact author" name="name" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="4" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="potentialObserver" substitutionGroup="anyRole">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="ProjectRoleRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="Potential observer" name="name" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="5" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="RegisteredMemberType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="MemberType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="user" type="user:UserRefType" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="NonRegisteredMemberType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="MemberType">
+        <xsd:sequence />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="AllocationType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element ref="anyResource" />
+      </xsd:choice>
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="allocation" type="AllocationType" />
+  <xsd:complexType name="ResourceType" abstract="true">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+        <xsd:attribute name="name" type="xsd:string" />
+        <xsd:attribute name="unit" type="xsd:string" />
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyResource" type="ResourceType" />
+  <xsd:element name="observingTime" substitutionGroup="anyResource">
+    <xsd:complexType>
+      <xsd:simpleContent>
+        <xsd:restriction base="ResourceType">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:double" />
+          </xsd:simpleType>
+          <xsd:attribute fixed="time" name="name" type="xsd:string" />
+          <xsd:attribute fixed="seconds" name="unit" type="xsd:string" />
+        </xsd:restriction>
+      </xsd:simpleContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="CollectionType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="Mom2ObjectType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="children" type="IndexedMom2ObjectListType" />
+          <xsd:element minOccurs="0" name="references" type="IndexedMom2ObjectRefListType" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="CollectionRefType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="CollectionType">
+        <xsd:attribute name="mom2Id" type="xsd:nonNegativeInteger" use="required" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedMom2ObjectListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedMom2ObjectItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedMom2ObjectItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:IndexedListItemType">
+        <xsd:choice>
+          <xsd:element ref="anyMom2Object" />
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyMom2Object" type="Mom2ObjectType" />
+  <xsd:complexType name="IndexedMom2ObjectRefListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedMom2ObjectRefItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedMom2ObjectRefItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:IndexedListItemType">
+        <xsd:choice>
+          <xsd:element ref="anyMom2ObjectRef" />
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyMom2ObjectRef" type="Mom2ObjectRefType" />
+  <xsd:complexType name="Mom2ObjectType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="description" type="xsd:string" />
+          <xsd:element minOccurs="0" name="parent" type="CollectionRefType" />
+          <xsd:element minOccurs="0" name="ownerProject" type="ProjectRefType" />
+          <xsd:element minOccurs="0" name="statusHistory" type="StatusHistoryType" />
+          <xsd:element minOccurs="0" name="currentStatus" type="CurrentStatusType" />
+          <xsd:element minOccurs="0" name="generalRemarks" nillable="true" type="IndexedGeneralRemarkListType" />
+          <xsd:element minOccurs="0" name="inspectionReports" nillable="true" type="IndexedInspectionReportListType" />
+          <xsd:element minOccurs="0" name="specificationRemarks" nillable="true" type="IndexedSpecificationRemarkListType" />
+          <xsd:element minOccurs="0" name="schedulingRemarks" nillable="true" type="IndexedSchedulingRemarkListType" />
+          <xsd:element minOccurs="0" name="usedDataProducts" nillable="true" type="IndexedDataProductListType" />
+          <xsd:element minOccurs="0" name="resultDataProducts" nillable="true" type="IndexedDataProductListType" />
+          <xsd:choice minOccurs="0">
+            <xsd:element ref="specificAttributes" />
+          </xsd:choice>
+        </xsd:sequence>
+        <xsd:attribute name="mom2Id" type="xsd:nonNegativeInteger" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Mom2ObjectRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="Mom2ObjectType">
+        <xsd:attribute name="mom2Id" type="xsd:nonNegativeInteger" use="required" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Mom2ObjectStatusType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:all>
+          <xsd:element minOccurs="0" name="user" type="user:UserRefType" />
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="roles" type="xsd:string" />
+          <xsd:element minOccurs="0" ref="anyStatus" />
+          <xsd:element minOccurs="0" name="timeStamp" type="xsd:dateTime" />
+        </xsd:all>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="Mom2ObjectStatusRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="persistent:PersistentObjectType">
+        <xsd:attribute name="id" type="xsd:integer" use="required" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="StatusType" abstract="true">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:all>
+          <xsd:element minOccurs="0" name="code" type="xsd:string" />
+          <xsd:element minOccurs="0" name="type" type="xsd:string" />
+          <xsd:element minOccurs="0" name="description" type="xsd:string" />
+        </xsd:all>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="StatusRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="StatusType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="code" type="xsd:string" />
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:integer" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyStatus" type="StatusRefType" />
+  <xsd:complexType name="StatusHistoryType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="StatusHistoryItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="StatusHistoryItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedMom2ObjectStatusItemType">
+        <xsd:choice>
+          <xsd:element name="mom2ObjectStatus" type="Mom2ObjectStatusType" />
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedMom2ObjectStatusItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:IndexedListItemType">
+        <xsd:choice>
+          <xsd:element minOccurs="0" name="mom2ObjectStatus" type="Mom2ObjectStatusType" />
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="CurrentStatusType">
+    <xsd:choice>
+      <xsd:element name="mom2ObjectStatus" type="Mom2ObjectStatusRefType" />
+      <xsd:element name="statusHistoryItem" type="StatusHistoryRefType" />
+      <xsd:element ref="anyStatus" />
+    </xsd:choice>
+  </xsd:complexType>
+  <xsd:complexType name="StatusHistoryRefType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedMom2ObjectStatusItemType">
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" use="required" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="openedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="opened" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="1" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="describedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="described" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="2" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="preparedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="prepared" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="3" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="specifiedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="specified" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="4" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="scheduledStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="scheduled" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="5" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="activeStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="active" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="6" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="runningStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="running" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="7" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="holdStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="hold" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="8" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="suspendedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="suspended" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="9" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="finishedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="finished" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="10" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="abortedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="aborted" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="11" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="failedStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="failed" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="12" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="successfulStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="successful" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="13" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="notSchedulableStatus" substitutionGroup="anyStatus">
+    <xsd:complexType>
+      <xsd:complexContent mixed="false">
+        <xsd:restriction base="StatusRefType">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" fixed="not schedulable" name="code" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute fixed="14" name="id" type="xsd:integer" />
+        </xsd:restriction>
+      </xsd:complexContent>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:complexType name="IndexedGeneralRemarkListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedGeneralRemarkItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedGeneralRemarkItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedTextItemType">
+        <xsd:choice>
+          <xsd:element ref="generalRemark" />
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedInspectionReportListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedInspectionReportItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedInspectionReportItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedTextItemType">
+        <xsd:choice>
+          <xsd:element ref="inspectionReport" />
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedSpecificationRemarkListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedSpecificationRemarkItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedSpecificationRemarkItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedTextItemType">
+        <xsd:choice>
+          <xsd:element ref="specificationRemark" />
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedSchedulingRemarkListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedSchedulingRemarkItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedSchedulingRemarkItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:restriction base="IndexedTextItemType">
+        <xsd:choice>
+          <xsd:element ref="schedulingRemark" />
+        </xsd:choice>
+        <xsd:attribute name="index" type="xsd:nonNegativeInteger" />
+      </xsd:restriction>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedTextItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:IndexedListItemType">
+        <xsd:choice>
+          <xsd:element ref="anyText" />
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="TextType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:all>
+          <xsd:element minOccurs="0" name="user" type="user:UserRefType" />
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="roles" type="xsd:string" />
+          <xsd:element minOccurs="0" name="text" type="xsd:string" />
+          <xsd:element minOccurs="0" name="timeStamp" type="xsd:dateTime" />
+        </xsd:all>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="GeneralRemarkType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="TextType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="SchedulingRemarkType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="TextType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="SpecificationRemarkType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="TextType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="InspectionReportType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="TextType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyText" type="TextType" />
+  <xsd:element name="generalRemark" substitutionGroup="anyText" type="GeneralRemarkType" />
+  <xsd:element name="inspectionReport" substitutionGroup="anyText" type="InspectionReportType" />
+  <xsd:element name="specificationRemark" substitutionGroup="anyText" type="SpecificationRemarkType" />
+  <xsd:element name="schedulingRemark" substitutionGroup="anyText" type="SchedulingRemarkType" />
+  <xsd:complexType name="IndexedDataProductListType">
+    <xsd:sequence>
+      <xsd:element maxOccurs="unbounded" name="item" type="IndexedDataProductItemType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  <xsd:complexType name="IndexedDataProductItemType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:IndexedListItemType">
+        <xsd:choice>
+          <xsd:element ref="anyDataProduct" />
+        </xsd:choice>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="DataProductType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="name" type="xsd:string" />
+          <xsd:element minOccurs="0" name="ownerMom2Object" type="Mom2ObjectRefType" />
+          <xsd:choice>
+            <xsd:element minOccurs="0" name="uri" type="xsd:string" />
+            <xsd:element minOccurs="0" name="locations">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="location" type="DataProductLocationType" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:choice>
+          <xsd:element minOccurs="0" name="fileFormat" type="xsd:string" />
+          <xsd:element minOccurs="0" name="type" type="xsd:string" />
+          <xsd:element minOccurs="0" name="timeStamp" type="xsd:dateTime" />
+          <xsd:element minOccurs="0" default="false" name="released" type="xsd:boolean" />
+          <xsd:element minOccurs="0" default="false" name="exported" type="xsd:boolean" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:complexType name="DataProductLocationType">
+    <xsd:complexContent mixed="false">
+      <xsd:extension base="persistent:PersistentObjectType">
+        <xsd:sequence>
+          <xsd:element name="uri" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element abstract="true" name="anyDataProduct" type="DataProductType" />
+  <xsd:element abstract="true" name="specificAttributes" type="SpecificAttributesType" />
+  <xsd:complexType name="SpecificAttributesType" />
+  <xsd:simpleType name="FrequencyUnit">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Hz" />
+      <xsd:enumeration value="kHz" />
+      <xsd:enumeration value="MHz" />
+      <xsd:enumeration value="GHz" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:complexType name="Frequency">
+    <xsd:simpleContent>
+      <xsd:extension base="xsd:double">
+        <xsd:attribute name="unit" type="FrequencyUnit" use="required" />
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+</xsd:schema>

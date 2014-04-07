@@ -1,0 +1,1 @@
+lofar_add_test(newInputSection newInputSection.cc)

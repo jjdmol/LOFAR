@@ -1,0 +1,33 @@
+Bug 1740: Modification for LSS:
+StationControl accepts the optional key 'ObservationControl.LSSscript' in the parameter set. If this key exists and is not empty and the mentioned script exists and is executable and the antennaSet is LBA_OUTER THEN the script is executed with the name of the parset as he first and only argument when an CONTROL_CONNECT events comes by.
+
+The script should scp the parset file to the LSS_LCU and start some LSS specific software on that machine.
+
+ObservationControl is modified to be able to start an observation without the MACScheduler, it (also) accepts 1 argument being the name of the parset in /opt/lofar/share.
+Note: in automatic mode the invocation is with 3 arguments.
+
+rspctl and beamctl have a new option '--remotehost <hostname>' to execute the command on another machine than the current.
+
+M    MAC/Deployment/data/OTDB/StationControl.comp
+M    MAC/APL/PAC/ITRFBeamServer/src/beamctl.cc
+M    MAC/APL/StationCU/src/StationControl/StationControl.cc
+M    MAC/APL/StationCU/src/StationControl/StationControl.h
+M    MAC/APL/PIC/RSP_Driver/src/rspctl.cc
+M    MAC/APL/PIC/RSP_Driver/src/rspctl.h
+M    MAC/APL/MainCU/src/ObservationControl/ObservationControl.cc
+M    MAC/APL/MainCU/src/ObservationControl/ObservationControl.h
+M    MAC/APL/MainCU/src/ObservationControl/ObservationControlMain.cc
+Committed revision 18916.
+
+- - - - -
+
+CalibrationControl is modified to allow mode 1 and 2 if it is running in on international station and if the RemoteStation.conf file contains a key RS.N_FOREIGN_ANTENNAS that has a value > 0.
+
+The low level class stationconfig is aware of this new optional key, the value is available via the variable nrForeignAnts.
+
+M      LCS/ApplCommon/include/ApplCommon/StationConfig.h
+M      LCS/ApplCommon/src/StationConfig.cc
+M      README
+M      MAC/APL/StationCU/src/CalibrationControl/CalibrationControl.cc
+M      MAC/APL/StationCU/src/CalibrationControl/CalibrationControl.h
+Committed revision 19264.

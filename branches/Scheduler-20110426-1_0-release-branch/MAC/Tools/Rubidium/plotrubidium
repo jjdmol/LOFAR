@@ -1,0 +1,6 @@
+#!/usr/bin/gnuplot
+set grid ytics
+plot "/var/log/ntpstats/rubidium_log" using 5; set autoscale; set title "Rubidium clock vs gps ns"
+pause 30
+reread
+

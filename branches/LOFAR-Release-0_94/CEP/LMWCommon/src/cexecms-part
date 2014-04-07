@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+
+# The distributed part of cexecms.
+# It setups the environment and looks for files matching the given glob name.
+# It needs bash to be able to use braces in filenames.
+# It executes the given command for all files found.
+# It reports if no files are found.
+#
+# The following substitutions in the command will be made:
+#   <FILENAME> or <FN>  by the full file name
+#   <BASENAME> or <BN>  by the basename part
+#   <DIRNAME>  or <DN>  by the directory part
+# The first two can be followed by a . meaning that the extension is ignored.
+# If no substitutions are done, the command is executed like
+#     command filename arg1 arg2 ...
+# otherwise like
+#     command arg1 arg2...
+
+showhelp()
+{
+  echo ' run like:   cexecms-part [-d] [-e envfile] [-w workdir] [-s script] command nameglob [arg1 arg2 ...]'
+  echo '     see cexecms for more information'
+}
+
+# Handle possible options.
+envfile=
+script=
+dryrun=0
+workdir=
+while [ $# != 0 ]
+do
+  if test "$1" = "-e"; then
+    shift
+    envfile="$1"
+    shift
+  elif test "$1" = "-s"; then
+    shift
+    script="$1"
+    shift
+  elif test "$1" = "-w"; then
+    shift
+    workdir="$1"
+    shift
+  elif test "$1" = "-d"; then
+    shift
+    dryrun=1
+  else
+    case "$1" in
+    -*)
+      echo "$1 is an unknown cexecms-part option"
+      exit 1
+      ;;
+    *)
+      # A command has been found, so stop parsing options.
+      break
+      ;;
+    esac
+  fi
+done
+
+# Test if at least 2 parameters.
+if test $# -lt 2; then
+    showhelp
+    exit 1
+fi
+command="$1"
+shift
+nameglob="$1"
+shift
+
+# Setup the environment by sourcing the envfile.
+if test "$envfile" != ""; then
+    . "$envfile"
+fi
+# cd if work directory is given.
+if test "$workdir" != ""; then
+    cd "$workdir"  ||  exit 1
+fi
+
+# Find all matching files (first substitute # by [0-9] and substitute special characters back).
+nameg=`echo "$nameglob" | sed \
+    -e 's%#%[0-9]%g' \
+    -e 's%:ASTERISK:%*%g' \
+    -e 's%:QUESTIONMARK:%?%g' \
+    -e 's%:LBRACKET:%[%g' \
+    -e 's%:RBRACKET:%]%g' \
+    -e 's%:LBRACE:%{%g' \
+    -e 's%:RBRACE:%}%g'`
+# Note that the command returns an error status if one of the possible files is not found
+# (e.g. when using something like {uv,xy}).
+# eval is needed to expand braces correctly.
+# Non-found files are reported on stderr, so divert that to /dev/null.
+names=`eval ls -d $nameg 2>/dev/null`
+if test "$names" = ""; then
+    echo "No file matching $nameg found"
+    exit 0
+fi
+
+# cexecms had to substitute special characters, so reverse it.
+command=`echo "$command" | sed \
+    -e 's%:SPACE:% %g' \
+    -e 's%:LT:%<%g' \
+    -e 's%:GT:%>%g' \
+    -e 's%:LPAR:%(%g' \
+    -e 's%:RPAR:%)%g' \
+    -e 's%:LBRACE:%{%g' \
+    -e 's%:RBRACE:%}%g' \
+    -e 's%:LBRACKET:%[%g' \
+    -e 's%:RBRACKET:%]%g' \
+    -e 's%:VBAR:%|%g' \
+    -e 's%:AMPERSAND:%\\&%g' \
+    -e 's%:ASTERIX:%*%g' \
+    -e 's%:NOT:%!%g' \
+    -e 's%:HASH:%#%g' \
+    -e 's%:TILDE:%~%g' \
+    -e 's%:COMMA:%,%g' \
+    -e 's%:QMARK:%?%g' \
+    -e 's%:SEMICOLON:%;%g' \
+    -e 's%:DQUOTE:%"%g' \
+    -e "s%:SQUOTE:%'%g" \
+    -e 's%:DOLLAR:%$%g'`
+
+# Process all files.
+# Substitute placeholders in the command and possible script.
+for fname in $names
+do
+    # Form the various placeholder replacements.
+    dname=`dirname $fname`                          # directory
+    bname=`basename $fname`                         # basename
+    bnamed=`echo $bname | sed -e 's%\..*%%'`        # basename without extension
+    fnamed=$dname/$bnamed                           # full name without extension
+    # Replace the placeholders.
+    commandnew=`echo "$command" | sed \
+	-e "s%<FN>%$fname%g" \
+	-e "s%<DN>%$dname%g" \
+	-e "s%<BN>%$bname%g" \
+	-e "s%<FN\.>%$fnamed%g" \
+	-e "s%<DN\.>%$dnamed%g" \
+	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<FILENAME>%$fname%g" \
+	-e "s%<DIRNAME>%$dname%g" \
+	-e "s%<BASENAME>%$bname%g" \
+	-e "s%<FILENAME\.>%$fnamed%g" \
+	-e "s%<DIRNAME\.>%$dnamed%g" \
+	-e "s%<BASENAME\.>%$bnamed%g"`
+    if test "$script" != ""; then
+        # A script is given, replace placeholders in there as well.
+        psname=$HOME/`basename $script`-$USER-$$
+        sed \
+	-e "s%<FN>%$fname%g" \
+	-e "s%<DN>%$dname%g" \
+	-e "s%<BN>%$bname%g" \
+	-e "s%<FN\.>%$fnamed%g" \
+	-e "s%<DN\.>%$dnamed%g" \
+	-e "s%<BN\.>%$bnamed%g" \
+	-e "s%<FILENAME>%$fname%g" \
+	-e "s%<DIRNAME>%$dname%g" \
+	-e "s%<BASENAME>%$bname%g" \
+	-e "s%<FILENAME\.>%$fnamed%g" \
+	-e "s%<DIRNAME\.>%$dnamed%g" \
+	-e "s%<BASENAME\.>%$bnamed%g" \
+        $script > $psname
+	if test $dryrun = 1; then
+	    echo "Dryrun: " $commandnew $psname "$@"
+	    cat $psname
+        else
+	    eval $commandnew $psname "$@" || echo "Failure in $commandnew $psname $*"
+	fi
+        rm -f $psname
+    else
+        # Execute the command.
+        # If nothing substituted, give the file name to the command.
+        # Use eval to execute the command, otherwise the shell gets confused
+        # by possible quoted parts.
+        if test "$commandnew" = "$command"; then
+	    if test $dryrun = 1; then
+		echo "Dryrun: " $command $fname "$@"
+	    else
+		eval $command $fname "$@" || echo "Failure in $command $fname $*"
+	    fi
+        else
+	    if test $dryrun = 1; then
+		echo "$Dryrun " $commandnew "$@"
+	    else
+		eval $commandnew "$@" || echo "Failure in $commandnew $*"
+            fi
+	fi
+    fi
+done

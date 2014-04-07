@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <actions/>
+  <description>This is a jenkins build to test the imaging pipeline regressions test on task branches.
+It performs a complete build from scratch. Builds the task branche and performs a simple imaging pipeline.
+Produced data products are compared default data. 
+This build will fail if the branche produces output different to the baseline.
+</description>
+  <logRotator>
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>15</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.redmine.RedmineProjectProperty>
+      <redmineWebsite>https://support.astron.nl/lofar_issuetracker/</redmineWebsite>
+      <projectName>lofarsys</projectName>
+      <redmineVersion>true</redmineVersion>
+    </hudson.plugins.redmine.RedmineProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.scm.listtagsparameter.ListSubversionTagsParameterDefinition>
+          <name>BRANCHE</name>
+          <description>Select a Subversion entry</description>
+          <tagsDir>https://svn.astron.nl/LOFAR/branches</tagsDir>
+          <tagsFilter/>
+          <reverseByDate>true</reverseByDate>
+          <reverseByName>false</reverseByName>
+          <defaultValue/>
+          <maxTags/>
+          <uuid>41b88e15-dbbe-4a3b-96b0-4a4b9949e906</uuid>
+        </hudson.scm.listtagsparameter.ListSubversionTagsParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.SubversionSCM">
+    <locations>
+      <hudson.scm.SubversionSCM_-ModuleLocation>
+        <remote>https://svn.astron.nl/LOFAR/branches/$BRANCHE/CEP</remote>
+        <local>LOFAR/CEP</local>
+      </hudson.scm.SubversionSCM_-ModuleLocation>
+      <hudson.scm.SubversionSCM_-ModuleLocation>
+        <remote>https://svn.astron.nl/LOFAR/branches/$BRANCHE/CMake</remote>
+        <local>LOFAR/CMake</local>
+      </hudson.scm.SubversionSCM_-ModuleLocation>
+    </locations>
+    <browser class="hudson.plugins.viewVC.ViewVCRepositoryBrowser">
+      <url>https://svn.astron.nl/</url>
+      <location>LOFAR</location>
+    </browser>
+    <excludedRegions/>
+    <includedRegions/>
+    <excludedUsers/>
+    <excludedRevprop/>
+    <excludedCommitMessages/>
+    <workspaceUpdater class="hudson.scm.subversion.UpdateUpdater"/>
+  </scm>
+  <assignedNode>LCE072</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <jdk>(Default)</jdk>
+  <triggers class="vector"/>
+  <concurrentBuild>true</concurrentBuild>
+  <customWorkspace>/home/lofarbuild/jenkins_builds/imager_branche_test</customWorkspace>
+  <builders>
+    <hudson.tasks.Shell>
+      <command># Perform svn steps needed before building
+echo "This is a test"
+if [ -f $WORKSPACE/LOFAR/CMakeLists.txt ]
+  then  echo "Found a previous checkout: updating"; svn up --depth files LOFAR
+  else  echo "not found a previous checkout: checkingout"; svn checkout --depth files  https://svn.astron.nl/LOFAR/branches/$BRANCHE LOFAR
+fi
+#svn checkout --depth files  https://svn.astron.nl/LOFAR/branches/$BRANCHE LOFAR
+</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.cmake.CmakeBuilder>
+      <sourceDir>LOFAR</sourceDir>
+      <buildDir>gnu_debug</buildDir>
+      <installDir>install</installDir>
+      <buildType>Debug</buildType>
+      <otherBuildType/>
+      <generator>Unix Makefiles</generator>
+      <makeCommand>make -j8</makeCommand>
+      <installCommand>make install</installCommand>
+      <preloadScript/>
+      <cmakeArgs>-Wdev -DBUILD_ASKAPsoft=OFF  -DUSE_OPENMP=ON -DBUILD_PACKAGES=Offline </cmakeArgs>
+      <projectCmakePath/>
+      <cleanBuild>false</cleanBuild>
+      <cleanInstallDir>false</cleanInstallDir>
+      <builderImpl/>
+    </hudson.plugins.cmake.CmakeBuilder>
+    <hudson.tasks.Shell>
+      <command># This command will perform the actual regression test steps
+
+# 1. A unit test
+ctest -R pipeline
+
+# ***************** DANGER: HERE BE DRAGONS!!*************
+# assure existance of a single file in dir
+ssh lce069 "touch /data/scratch/lofarbuild/$BRANCHE/file.txt"
+ssh lce069 "rm -rf /data/scratch/lofarbuild/$BRANCHE/*"
+rm -f $WORKSPACE/install/var/run/pipeline/jobs/$BRANCHE/statefile
+# ***************** DANGER: HERE BE DRAGONS!!*************
+
+# 2. set environment
+. /opt/cep/login/bashrc
+use LofIm
+use Pythonlibs
+export PYTHONPATH=$WORKSPACE/install/lib/python2.6/dist-packages:$PYTHONPATH
+
+# 3. run the pipeline
+mkdir -p $WORKSPACE/install/var/run/pipeline
+cd $WORKSPACE/install/bin
+
+python msss_imager_pipeline.py /data/lofar/testdata/CEP/Pipeline/imager_pipeline/basic_test/out.parset -c $WORKSPACE/install/share/pipeline/pipeline.cfg --job $BRANCHE -d 
+
+# 4. Test correct functioning
+#  a. copy target image data to the scratch directory
+scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/basic_test/image.restored /data/scratch/lofarbuild/pipeline/image.restored.target
+scp -r lce069:/data/scratch/lofarbuild/out/awimage_cycle_0/image.restored /data/scratch/lofarbuild/pipeline/image.restored
+
+#  b. copy target sourcelist to the scratch directory
+scp -r /data/lofar/testdata/CEP/Pipeline/imager_pipeline/basic_test/bdsm_catalog  /data/scratch/lofarbuild/pipeline/bdsm_catalog.target 
+scp -r lce069:/data/scratch/lofarbuild/$BRANCHE/awimage_cycle_0/bdsm_catalog /data/scratch/lofarbuild/pipeline/bdsm_catalog
+
+#  c. Do actual comparison
+cd /data/scratch/lofarbuild/pipeline
+
+python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/imaging_pipeline.py bdsm_catalog bdsm_catalog.target image.restored image.restored.target 0.0002
+
+
+
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.warnings.WarningsPublisher>
+      <healthy/>
+      <unHealthy/>
+      <thresholdLimit>low</thresholdLimit>
+      <pluginName>[WARNINGS] </pluginName>
+      <defaultEncoding/>
+      <canRunOnFailed>true</canRunOnFailed>
+      <useDeltaValues>false</useDeltaValues>
+      <thresholds>
+        <unstableTotalAll/>
+        <unstableTotalHigh/>
+        <unstableTotalNormal/>
+        <unstableTotalLow/>
+        <unstableNewAll/>
+        <unstableNewHigh/>
+        <unstableNewNormal/>
+        <unstableNewLow/>
+        <failedTotalAll/>
+        <failedTotalHigh/>
+        <failedTotalNormal/>
+        <failedTotalLow/>
+        <failedNewAll/>
+        <failedNewHigh/>
+        <failedNewNormal/>
+        <failedNewLow/>
+      </thresholds>
+      <shouldDetectModules>false</shouldDetectModules>
+      <dontComputeNew>false</dontComputeNew>
+      <parserConfigurations/>
+      <consoleLogParsers>
+        <string>GNU compiler 4 (ld)</string>
+        <string>GNU compiler 4 (gcc)</string>
+      </consoleLogParsers>
+    </hudson.plugins.warnings.WarningsPublisher>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper/>
+  </buildWrappers>
+</project>

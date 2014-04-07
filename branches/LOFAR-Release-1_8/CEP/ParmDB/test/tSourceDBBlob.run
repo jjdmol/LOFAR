@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# First make a new SourceDB.
+echo "Creating new file ..."
+../src/makesourcedb in=tSourceDBBlob.in format='<' out=tSourceDBBlob_tmp.src outtype=blob append=false
+./tSourceDBBlob
+
+# Append to the SourceDB.
+echo
+echo "Appending to file ..."
+../src/makesourcedb in=tSourceDBBlob.in format='<' out=tSourceDBBlob_tmp.src outtype=blob append=true
+./tSourceDBBlob

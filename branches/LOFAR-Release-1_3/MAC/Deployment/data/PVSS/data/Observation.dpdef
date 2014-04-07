@@ -1,0 +1,31 @@
+#Observation.dpdef
+claim				:Claim
+
+claimPeriod			int
+preparePeriod		int
+startTime			string
+stopTime			string
+bandFilter			string
+nyquistzone			int
+antennaArray		string
+receiverList		string
+sampleClock			int
+runState			string
+measurementSet		string
+
+stationList			string
+inputNodeList		string
+BGLNodeList			string
+storageNodeList		string
+
+Beams.angle1		doubleArr
+Beams.angle2		doubleArr
+Beams.directionType	stringArr
+Beams.subbandList	stringArr
+
+TiedArrayBeams.beamIndex		intArr
+TiedArrayBeams.angle1			doubleArr
+TiedArrayBeams.angle2			doubleArr
+TiedArrayBeams.directionType 	stringArr
+TiedArrayBeams.dispersion		doubleArr
+TiedArrayBeams.coherent	       	boolArr

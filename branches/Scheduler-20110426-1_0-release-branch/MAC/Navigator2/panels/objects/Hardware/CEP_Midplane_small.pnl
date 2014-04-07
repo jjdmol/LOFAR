@@ -1,0 +1,267 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 453 525 N "_3DFace" 2
+"$BGPMidplaneNr"
+"$BGPRackNr"
+"main()
+{
+  baseDP = g_currentDatapoint;
+ 
+  if (!isRack()) {
+    rNr = $BGPRackNr;
+    mNr = $BGPMidplaneNr;
+  }
+   
+  if (strpos(g_currentDatapoint,\"_BGP\") > -1){
+    baseDP += \"_Midplane\" + mNr;         
+  } else {
+    baseDP += \"_BGP\" + rNr + \"_Midplane\" + mNr;         
+  }
+    
+  string aS = navFunct_DPName2CEPName(baseDP);
+  setValue(\"Midplane_Txt\",\"text\",aS);
+
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}" 0
+ E "main()
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+ 1 0 0 0  17 191
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string     baseDP          = \"\";
+int        rNr             = \"\";
+int        mNr             = \"\";
+bool       bDoubleClicked  = false;
+
+bool isRack() {
+  dyn_string dpAr= strsplit(dpSubStr(baseDP,DPSUB_DP),\"_\");
+  for (int i = 1; i <= dynlen(dpAr);i++ ) {
+    if (strpos(dpAr[i],\"BGP\") > -1) {
+      rNr = substr(dpAr[i],3,strlen(dpAr[i]));
+      int m=$BGPMidplaneNr;
+      mNr = (2 * rNr) + m;
+      return true;
+    }
+  }
+  return false;
+}
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"Midplane\"+mNr,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"CEP_Midplane_small:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"Midplane\"+mNr,\"ChangePanel\"); 
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"Midplane\"+mNr,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"midplane_highLight"
+""
+1 200 20 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"MidplaneCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void MidplaneCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"CEP_Midplane_small:MidplaneCallback| ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"CEP_Midplane_small:MidplaneCallback|Found highlight : \" + highlight + \" Looking for: Midplane\" + mNr);
+  bool bHighlight=false;
+  if (dynContains(highlight,\"Midplane\"+mNr)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"CEP_Midplane_small:MidplaneCallback|Highlight request: \"+bHighlight);
+  midplane_highLight.visible = bHighlight;  
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 19 11 155 198
+6 1
+"childStateBorder"
+""
+1 18 197 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+3
+"hoverfclr" "N \"_Transparent\""
+"hoverbclr" "N \"_Transparent\""
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 3 1 0 1 E U  1 E 24 16 150 193
+6 3
+"RECTANGLE3"
+""
+1 100 250 E E E 1 E 1 E N "_3DFace" E N "_3DText" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_3DText"
+E "main()
+{
+  click();
+}" 0
+ 0 0 1 2 1 E U  3 0 10 0 E 25 19 149 192
+2 4
+"Midplane_Txt"
+""
+1 25 173 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+85 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 0 1 E U  0 E 27 175 86 192
+0 2 0 "0s" 0 0 0 192 0 0  27 175 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 8 Midplane
+1 5 1 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 "selfState"
+"objects\\lofar_self_state.pnl" 363 291 T 87 0.8947368421052632 0 1 -298.7894736842105 -273
+0
+0

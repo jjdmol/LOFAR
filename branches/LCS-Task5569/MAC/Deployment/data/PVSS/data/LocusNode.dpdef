@@ -1,0 +1,4 @@
+free		uint
+total		uint
+claimed		uint
+

@@ -1,0 +1,75 @@
+V 11
+2
+LANG:1 0 
+LANG:6 0 
+PANEL,-1 -1 500 408 N "_3DFace" 0
+"main()
+
+{
+
+  dyn_dyn_string dd_string; 
+
+ 
+
+  dyn_string d_string1=makeDynString(\"c\",\"a\",\"b\"); 
+
+  dyn_string d_string2=makeDynString(\"1\",\"3\",\"2\"); 
+
+  dyn_string d_string3=makeDynString(\"wel\",\"dit\",\"klopt\"); 
+
+ 
+
+  dd_string[1]=d_string1; 
+
+  dd_string[2]=d_string2; 
+
+  dd_string[3]=d_string3; 
+
+  dynSort(d_string1);
+  DebugN(d_string1); 
+
+  dynDynSort(dd_string, 1); // asc 
+
+  DebugN(dd_string);
+
+}" 0
+ E E E E 1 -1 -1 0  50 40
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

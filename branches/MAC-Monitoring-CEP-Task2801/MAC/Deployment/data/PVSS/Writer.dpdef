@@ -1,0 +1,8 @@
+# Writer
+time		stringArr
+count		intArr
+dropped		stringArr
+fileName	string
+dataRate	float
+dataProduktType	string
+observationName	string

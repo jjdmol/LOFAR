@@ -1,0 +1,28 @@
+option(USE_THREADS "Use threads" ON)
+option(USE_OPENMP "Use OpenMP" ON)
+
+set(ENV{HDF5_ROOT} /opt/storage/hdf5)
+
+set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
+set(ENV{HDF5_ROOT} /opt/hdf5)
+set(CMAKE_Fortran_COMPILER gfortran)
+
+if (USE_CASA42)
+  set(PYRAP_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(CASACORE_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(CASA_ROOT_DIR /home/vdtol/lofar-casapy-4.2/install)
+  set(BOOST_ROOT /home/vdtol/lofar-casapy-4.2/install)
+  set(LofarFT_SOURCE_DIR LofarFT-4.2)
+else ()
+  set(CASACORE_ROOT_DIR /opt/cep/casacore)
+  set(CASAREST_ROOT_DIR /opt/cep/casarest)
+  set(PYRAP_ROOT_DIR /opt/cep/pyrap)
+  set(LofarFT_SOURCE_DIR LofarFT)
+endif ()
+
+set(LOG4CXX_ROOT_DIR /opt/cep/LofIm/external/log4cxx)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
+
+set(CMAKE_INSTALL_PREFIX /home/vdtol/lofar-casapy-4.2/install)
+
+set(BUILD_PACKAGES "Offline")

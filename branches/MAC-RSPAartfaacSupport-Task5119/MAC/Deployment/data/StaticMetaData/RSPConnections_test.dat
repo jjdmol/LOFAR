@@ -1,0 +1,20 @@
+# RSPConnections_test.dat
+# 
+# File that gives a list of the RSP Connections that are available when a 
+# station is used in test mode
+#
+# Which are being used, is given on command line when creating the files
+# with createFiles. For example:
+#
+# > Createfiles test test1 test2
+#
+# Will create a RSPDriver.conf which uses connection test1 and test2 for 
+# Lane0 and lane1, resp.
+#
+
+# Alias   DestIP    DestMAC             BGP node
+#-------------------------------------------------
+test1 10.170.1.17   00:14:5E:7D:96:38   R01-M0-N04-J00
+test2 10.170.1.18   00:14:5E:7D:96:39   R01-M0-N04-J01
+test3 10.170.1.21   00:14:5E:7D:94:80   R01-M0-N05-J00   
+test4 10.170.1.22   00:14:5E:7D:94:81   R01-M0-N05-J01
