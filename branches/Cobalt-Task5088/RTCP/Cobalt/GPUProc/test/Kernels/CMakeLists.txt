@@ -11,7 +11,6 @@ lofar_add_test(tCoherentStokesKernel tCoherentStokesKernel.cc)
 lofar_add_test(tFFTShiftKernel tFFTShiftKernel.cc)
 
 # Compile some shallow wrapper executable to perform runtime compilation
-lofar_add_executable(BeamFormerKernelPerformance BeamFormerKernelPerformance.cc)
 
 # Test that run for a long time and are use for performance optimalization
 #lofar_add_test(tKernelPerformance)
