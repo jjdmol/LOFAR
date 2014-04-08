@@ -49,6 +49,7 @@ namespace LOFAR
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
       nrSAPs(ps.settings.SAPs.size()),
+      
       delayCompensation(ps.settings.delayCompensation.enabled),
       correctBandPass(ps.settings.corrections.bandPass),
       transpose(true), // sane for correlator; bf redefines
@@ -88,9 +89,12 @@ namespace LOFAR
       setArg(6, buffers.phase0s);
       setArg(7, buffers.bandPassCorrectionWeights);
 
-      setEnqueueWorkSizes( gpu::Grid(256, params.nrChannelsPerSubband == 1 ? 1 : params.nrChannelsPerSubband / 16, params.nrStations),
+      setEnqueueWorkSizes( gpu::Grid(256,
+                                     params.nrChannelsPerSubband == 1 ?
+                                       1 :
+                                       params.nrChannelsPerSubband / 16, params.nrStations),
                            gpu::Block(256, 1, 1) );
-
+      
       size_t nrSamples = (size_t)params.nrStations * params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
