@@ -104,6 +104,11 @@ namespace LOFAR
                             CorrelatorFactories &factories,
                             size_t nrSubbandsPerSubbandProc = 1);
 
+      virtual ~CorrelatorSubbandProc();
+
+      // Print statistics of all kernels and transfers
+      void printStats();
+
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,
                                   SubbandProcOutputData &output);

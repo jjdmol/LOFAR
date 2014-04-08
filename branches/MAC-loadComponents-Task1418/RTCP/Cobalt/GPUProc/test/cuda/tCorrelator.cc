@@ -255,7 +255,8 @@ int main()
       outputData.origin()[idx] = outputOnHostPtr[idx];
 
     // Target value for correlation channel
-    float targetValues[8] = {36.2332, 0, -7.83033, 3.32368, -7.83033, -3.32368, 42.246, 0};
+    // NOTE: XY and YX polarizations have been swapped (see issue #5640)
+    float targetValues[8] = {36.2332, 0, -7.83033, -3.32368, -7.83033, 3.32368, 42.246, 0};
 
     // print the contents of the output array for debugging purpose
     for (unsigned idx_baseline = 0; idx_baseline < NR_BASELINES; ++idx_baseline)
@@ -343,14 +344,15 @@ int main()
 
           // We need to find 4 specific indexes with values:
           // THe output location of the values does not change with differing input size
+	  // NOTE: XY and YX polarizations have been swapped (see issue #5640)
           if (idx_baseline == baseline00 &&  idx_channels == 5 && idx == 0)
             expected = 13.0f; // XX, real((2+3i)(2-3i))
           
-          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 4)
-            expected = 23.0f; // YX, real((4+5i)(2-3i))
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 2)
+            expected = 23.0f; // XY, real((4+5i)(2-3i))
 
-          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 5)
-            expected = -2.0f; // YX, imag((4+5i)(2-3i))
+          if (idx_baseline == baseline10 &&  idx_channels == 5 && idx == 3)
+            expected = -2.0f; // XY, imag((4+5i)(2-3i))
           
           if (idx_baseline == baseline11 &&  idx_channels == 5 && idx == 6)
             expected = 41.0f; // YY, real((4+5i)(4-5i))
@@ -358,6 +360,7 @@ int main()
           if (sample != expected)
           {
             cerr << "Unexpected number encountered: got " << sample << " but expected " << expected << endl;
+	    return 1;
           }
         }
         cerr << endl;

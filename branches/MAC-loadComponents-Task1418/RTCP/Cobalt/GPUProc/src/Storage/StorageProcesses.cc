@@ -162,7 +162,7 @@ namespace LOFAR
                                     );
 
       // Start the remote process
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] SSHing to " <<
                     userName << '@' << hostName << " using key pair filenames " <<
                     pubKey << ", " << privKey << " to execute command '" << commandLine << '\'');
       SSHconnection sshconn(itsLogPrefix + "[FinalMetaData] ", hostName, commandLine, userName, pubKey, privKey);
@@ -174,14 +174,14 @@ namespace LOFAR
       const std::string resource = getStorageControlDescription(itsParset.observationID(), -1);
       SmartPtr<Stream> stream;
 
-      // FinalMetaDataGatherer has 5 seconds to start and listen on the
+      // FinalMetaDataGatherer has 20 seconds to start and listen on the
       // PortBroker connection. We need this because SSH.cc/libssh2 sometimes
       // keeps connections open even though FinalMetaDataGatherer cannot even
       // be started.
       //
       // TODO: For now, we also need a deadline for non-real-time observations,
       // because FinalMetaDataGather is not necessarily present.
-      const time_t deadline = time(0) + 5;
+      const time_t deadline = time(0) + 20;
 
       // Keep trying to connect to the FinalMetaDataGatherer, but only
       // while the SSH connection is alive. If not, there's no point in waiting
@@ -194,19 +194,19 @@ namespace LOFAR
           return;
 
         try {
-          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID()), resource, time(0) + 1);
+          stream = new PortBroker::ClientStream(hostName, storageBrokerPort(itsParset.observationID() + 1), resource, time(0) + 5);
         } catch (SocketStream::TimeOutException &) {
         }
       }
 
       // Send parset
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] connected -- sending parset");
       itsParset.write(stream);
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] sent parset");
 
       // Receive final meta data
       itsFinalMetaData.read(*stream);
-      LOG_DEBUG_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
+      LOG_INFO_STR(itsLogPrefix << "[FinalMetaData] [ControlThread] obtained final meta data");
 
       // Wait for or end the remote process
       sshconn.wait();

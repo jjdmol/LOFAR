@@ -1,3 +1,4 @@
+# $Id$
 # Define the sizes of both FFTs in the BF pipeline,
 # to prevent a cascade of FFTs
 Cobalt.BeamFormer.nrDelayCompensationChannels = 64

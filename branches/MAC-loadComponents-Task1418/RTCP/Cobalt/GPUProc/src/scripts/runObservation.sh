@@ -55,6 +55,31 @@ function usage {
     "\n    -p: enable profiling\n"
 }
 
+# command_retry expects a string it will execute as a subprocess
+# It wait on the processes finish (using the PID) with a
+# succesfull return value
+# - On signals kill the child process
+# - On non zero return value of the command it will retry
+#   with increasingly larger wait periods between tries
+function command_retry {
+  COMMAND="$1"   
+  SLEEP_DURATION=1                          # Increasing wait duration
+  while :
+  do 
+    $COMMAND &                              # Run the command
+    SSH_PID=$!                              # get the PID
+
+    # Trap 'all' signals and forward to ssh process
+    TRAP_COMMAND="kill $SSH_PID; break"
+    trap "$TRAP_COMMAND" SIGTERM SIGINT SIGQUIT SIGHUP 2> /dev/null
+    wait $SSH_PID && break       # wait while the ssh command is up
+                                 # Break the loop if the command returned with exit value 0
+
+    sleep $SLEEP_DURATION                  # Sleep if ssh failed
+    SLEEP_DURATION=$((SLEEP_DURATION + 1)) # Increase duration   
+  done
+}
+
 #############################
 
 echo "Called as: $0 $@"
@@ -164,19 +189,19 @@ then
   # Add static keys
   # Ignore sneaky .cobalt/ parset overrides in production (lofarsys).
   # Note: If you want such an override anyway, do it in your own account.
-  DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
-  DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   if [ "$USER" == "lofarsys" ]; then
     ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
       echo -e "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
   else
-    cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
-        $DOT_COBALT_DEFAULT \
-        $PARSET \
-        $LOFARROOT/etc/parset-additions.d/override/*.parset \
-        $DOT_COBALT_OVERRIDE \
-        > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
+    DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
+    DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   fi
+  cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
+      $DOT_COBALT_DEFAULT \
+      $PARSET \
+      $LOFARROOT/etc/parset-additions.d/override/*.parset \
+      $DOT_COBALT_OVERRIDE \
+      > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
   unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
 
   # Use the new one from now on
@@ -232,6 +257,91 @@ do
   timeout $KILLOPT 30s scp -Bq $PARSET $h:$PARSET || error "Could not copy parset to $h"
 done
 
+# ************************************
+# Start outputProcs on receiving nodes
+# ***********************************
+# Get parameters from the parset
+SSH_USER_NAME=$(getkey Cobalt.OutputProc.userName $USER)
+SSH_PUBLIC_KEY=$(getkey Cobalt.OutputProc.sshPublicKey)
+SSH_PRIVATE_KEY=$(getkey Cobalt.OutputProc.sshPrivateKey)
+OUTPUT_PROC_EXECUTABLE=$(getkey Cobalt.OutputProc.executable)
+OBSERVATIONID=$(getkey Observation.ObsID 0)
+
+# If parameters are found in the parset create a key_string for ssh command
+if [ "$SSH_PRIVATE_KEY" != "" ] 
+then
+  # Use -i to signal usage of the specific key
+  KEY_STRING="-i $SSH_PRIVATE_KEY"   
+elif [ "$SSH_PUBLIC_KEY" != "" ]
+then
+  KEY_STRING="-i $SSH_PUBLIC_KEY"
+fi
+
+# test the connection with local host: minimal test for valid credentials
+ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || { echo "Failed to create a connection to localhost, ssh error" ; exit 1; }
+
+# Create a helper function for delete child processes and
+# a file containing the PID of these processes
+PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
+
+
+
+# Function clean_up will clean op all PID in the
+# PID_LIST_FILE and the seperately supplied additional list of PIDs
+# in argument $2
+# First using SIGTERM and then with a kill -9
+# It will then exit with the state suplied in argument $1
+function clean_up { 
+  EXIT_STATE=$1
+  PID_LIST=$2
+  
+  echo "Cleaning up child processes. Sending SIGTERM" 
+  # THe kill statements might be called with an empty argument. This will 
+  # result in an exit state 1. But the error is redirected to dev/null.
+  kill $(cat $PID_LIST_FILE)  2> /dev/null
+  kill $PID_LIST              2> /dev/null 
+  
+  echo "Waiting 2 seconds for soft shutdown"
+  sleep 2
+  
+  echo "Sending SIGKILL"
+  kill -9 $(cat $PID_LIST_FILE) 2> /dev/null
+  kill -9 $PID_LIST             2> /dev/null
+  
+  echo "removing Childprocess pid list file"
+  rm -f $PID_LIST_FILE
+  
+  exit $EXIT_STATE 
+}
+
+# We can now create a trap for signals, no arguments so only
+# clean of the PID file list the list of sub shells
+trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
+
+# Start output procs in a seperate function
+# Save file for started child processes
+# Use helper program to get the list of hosts from parset
+echo "outputProc processes are appended to the file: $PID_LIST_FILE"
+touch $PID_LIST_FILE
+
+LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
+RANK=0
+for HOST in $LIST_OF_HOSTS
+do
+  COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
+  # keep a counter to allow determination of the rank (needed for binding to rtcp)
+  RANK=$(($RANK + 1))   
+  
+  command_retry "$COMMAND" &  # Start retrying function in the background
+  PID=$!                      # get the pid 
+  
+  echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
+done
+
+# ************************************
+# Start rtcp 
+# ***********************************
+
 # Run in the background to allow signals to propagate
 #
 # -x LOFARROOT    Propagate $LOFARROOT for rtcp to find GPU kernels, config files, etc.
@@ -244,7 +354,7 @@ mpirun.sh -x LOFARROOT="$LOFARROOT" \
 PID=$!
 
 # Propagate SIGTERM
-trap "echo runObservation.sh: killing $PID; kill $PID" SIGTERM SIGINT SIGQUIT SIGHUP
+trap 'echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID' SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.
@@ -310,6 +420,23 @@ then
 else
   echo "Not communicating back to OnlineControl"
 fi
+
+# clean up outputProc children
+echo "Allowing 120 second for normal end of outputProc"
+#    Set trap to kill the sleep in case of signals                    save the pid of sleep
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP ; sleep 120&  SLEEP_PID=$!; echo "Starting forced cleanup outputProc:"; clean_up 0 ) & 
+KILLER_PID=$!
+
+# Waiting for the child processes to finish
+LIST_OF_PIDS_TO_WAIT_FOR=$(cat $PID_LIST_FILE)
+if [ "$LIST_OF_PIDS_TO_WAIT_FOR" != "" ] # if there are outputProc pid working
+then
+  echo "waiting for output procs"
+  wait $(cat $PID_LIST_FILE)        2> /dev/null
+fi
+
+# All OutputProcs are now killed, cleanup of the killer
+kill $KILLER_PID                  2> /dev/null
 
 # Our exit code is that of the observation
 # In production this script is started in the background, so the exit code is for tests.

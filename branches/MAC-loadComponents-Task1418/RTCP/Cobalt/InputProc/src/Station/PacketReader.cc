@@ -35,15 +35,17 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    // Create an 'invalid' mode to make it unique and not match any actually used mode.
+    const BoardMode PacketReader::MODE_ANY(0, 0);
 
-
-    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream )
+    PacketReader::PacketReader( const std::string &logPrefix, Stream &inputStream, const BoardMode &mode )
       :
       logPrefix(str(boost::format("%s [PacketReader] ") % logPrefix)),
       inputStream(inputStream),
+      mode(mode),
 
       nrReceived(0),
-      nrBadSize(0),
+      nrBadMode(0),
       nrBadTime(0),
       nrBadData(0),
       nrBadOther(0),
@@ -64,10 +66,8 @@ namespace LOFAR
     }
 
 
-    void PacketReader::readPackets( std::vector<struct RSP> &packets, std::vector<bool> &valid )
+    void PacketReader::readPackets( std::vector<struct RSP> &packets )
     {
-      ASSERT(valid.size() == packets.size());
-
       if (inputIsUDP) {
         SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
 
@@ -77,22 +77,22 @@ namespace LOFAR
 
         // validate received packets
         for (size_t i = 0; i < numRead; ++i) {
-          valid[i] = validatePacket(packets[i]);
+          packets[i].payloadError(!validatePacket(packets[i]));
         }
 
         // mark not-received packets as invalid
         for (size_t i = numRead; i < packets.size(); ++i) {
-          valid[i] = false;
+          packets[i].payloadError(true);
         }
       } else {
         // fall-back for non-UDP streams, emit packets
         // one at a time to avoid data loss on EndOfStream.
-        valid[0] = readPacket(packets[0]);
+        packets[0].payloadError(!readPacket(packets[0]));
 
         nrReceived++;
 
         for (size_t i = 1; i < packets.size(); ++i) {
-          valid[i] = false;
+          packets[i].payloadError(true);
         }
       }
     }
@@ -114,7 +114,7 @@ namespace LOFAR
             hadSizeError = true;
           }
 
-          ++nrBadSize;
+          ++nrBadOther;
           return false;
         }
       } else {
@@ -153,6 +153,14 @@ namespace LOFAR
         //return false;
       }
 
+      if (packet.bitMode() != mode.bitMode
+       || packet.clockMHz() != mode.clockMHz) {
+        if (mode != MODE_ANY) {
+          ++nrBadMode;
+          return false;
+        }
+      }
+
       // everything is ok
       return true;
     }
@@ -168,12 +176,12 @@ namespace LOFAR
       const double interval = now - lastLogTime;
 
       // Emit log line
-      LOG_INFO_STR( logPrefix << (nrReceived/interval) << " pps: received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadSize << " bad sizes, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
+      LOG_INFO_STR( logPrefix << (nrReceived/interval) << " pps: received " << nrReceived << " packets: " << nrBadTime << " bad timestamps, " << nrBadMode << " bad clock/bitmode, " << nrBadData << " payload errors, " << nrBadOther << " otherwise bad packets" );
 
       // Reset counters
       nrReceived = 0;
       nrBadTime = 0;
-      nrBadSize = 0;
+      nrBadMode = 0;
       nrBadData = 0;
       nrBadOther = 0;
 

@@ -47,6 +47,7 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
+      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY ? 1 : 0),
       timeIntegrationFactor(
         ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
      {
@@ -117,6 +118,8 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
+      defs["COMPLEX_VOLTAGES"] =
+        lexical_cast<string>(itsParameters.outputComplexVoltages);
       defs["NR_COHERENT_STOKES"] =
         lexical_cast<string>(itsParameters.nrStokes); // TODO: nrStokes and timeIntegrationFactor cannot differentiate between coh and incoh, while there are separate defines for coh and incoh. Correct?
       defs["INTEGRATION_SIZE"] =

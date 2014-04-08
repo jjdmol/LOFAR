@@ -45,6 +45,7 @@ namespace LOFAR
         Parameters(const Parset& ps);
         unsigned nrTABs;
         unsigned nrStokes;
+        unsigned outputComplexVoltages;
         unsigned timeIntegrationFactor;
         unsigned timeParallelFactor;
       };
