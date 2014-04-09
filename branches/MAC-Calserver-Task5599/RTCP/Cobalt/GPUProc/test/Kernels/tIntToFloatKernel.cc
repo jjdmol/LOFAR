@@ -1,4 +1,4 @@
-//# tDelayAndBandPassKernel.cc: test Kernels/DelayAndBandPassKernel class
+//# tIntToFloatKernel.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tDelayAndBandPassKernel.cc 25199 2013-06-05 23:46:56Z amesfoort $
+//# $Id$
 
 #include <lofar_config.h>
 

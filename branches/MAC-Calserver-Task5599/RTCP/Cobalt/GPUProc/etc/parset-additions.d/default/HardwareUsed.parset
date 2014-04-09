@@ -1,4 +1,5 @@
-# The list of Cobalt nodes to use for this observation
+# $Id$
+# The list of Cobalt nodes to use for the production system
 # 
 # Node XXXX is configured through the keys in
 #   PIC.Core.Cobalt.XXXX.*
@@ -19,8 +20,6 @@ Cobalt.Nodes = [
   cbt007_0,
   cbt007_1,
   cbt008_0,
-  cbt008_1,
-  cbt009_0,
-  cbt009_1
+  cbt008_1
 ]
 

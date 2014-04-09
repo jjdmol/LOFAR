@@ -54,7 +54,7 @@ namespace LOFAR
       void read(Stream *str);
       void write(Stream *str) const;
 
-      static const size_t MAXFLAGSIZE = 1024 + 4;
+      static const size_t MAXFLAGSIZE = 8192 + 4;
     };
 
 
@@ -97,7 +97,21 @@ namespace LOFAR
       std::vector<char> flagsBuffer(MAXFLAGSIZE);
 
       ssize_t size = flags.marshall(&flagsBuffer[0], flagsBuffer.size());
-      ASSERTSTR(size >= 0, "Error marshalling flags " << flags << " into a buffer of size " << MAXFLAGSIZE);
+      if (size < 0) {
+        LOG_DEBUG_STR("Error marshalling flags into buffer of size " << MAXFLAGSIZE << ", compressing flags");
+
+        // Span one flag set from the first to the last entry
+        const flags_type::Ranges &ranges = flags.getRanges();
+        const flags_type::range first = ranges[0];
+        const flags_type::range last  = ranges[ranges.size()-1];
+
+        flags_type newFlags;
+        newFlags.include(first.begin,last.end);
+
+        size = newFlags.marshall(&flagsBuffer[0], flagsBuffer.size());
+
+        ASSERTSTR(size >= 0, "Cannot marshall the compressed flags.");
+      }
 
       str->write(&flagsBuffer[0], flagsBuffer.size());
     }

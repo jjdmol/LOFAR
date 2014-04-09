@@ -17,7 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: gpu_math.cuh 25137 2013-05-31 12:53:30Z loose $
+//# $Id$
 
 #ifndef LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH
 #define LOFAR_GPUPROC_CUDA_INTTOFLOAT_CUH

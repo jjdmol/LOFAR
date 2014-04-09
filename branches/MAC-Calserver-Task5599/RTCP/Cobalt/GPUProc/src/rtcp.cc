@@ -43,6 +43,7 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPIUtil2.h>
 #endif
 
 #include <boost/format.hpp>
@@ -84,27 +85,30 @@ using boost::format;
 
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
-const time_t allocationTimeout = 10;
+const time_t defaultAllocationTimeout = 15;
 
 // Deadline for the FinalMetaDataGatherer, in seconds
-const time_t finalMetaDataTimeout = 2 * 60;
+const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
-const time_t outputProcTimeout = 2 * 60;
+const time_t defaultOutputProcTimeout = 2 * 60;
 
 // Amount of seconds to stay alive after Observation.stopTime
 // has passed.
-const time_t rtcpTimeout = 5 * 60;
+const time_t defaultRtcpTimeout = 5 * 60;
 
 static void usage(const char *argv0)
 {
   cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
   cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
   cerr << "beam-forming for the Pulsar mode." << endl;
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision() << endl;
   cerr << endl;
   cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
@@ -114,11 +118,15 @@ int main(int argc, char **argv)
    */
 
   int opt;
-  while ((opt = getopt(argc, argv, "p")) != -1) {
+  while ((opt = getopt(argc, argv, "ph")) != -1) {
     switch (opt) {
     case 'p':
       profiling = true;
       break;
+
+    case 'h':
+      usage(argv[0]);
+      exit(0);
 
     default: /* '?' */
       usage(argv[0]);
@@ -209,7 +217,38 @@ int main(int argc, char **argv)
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
 
-  if (ps.realTime()) {
+  /* Tuning parameters */
+
+  // Number of seconds to schedule for the allocation of resources. That is,
+  // we start allocating resources at startTime - allocationTimeout.
+  const time_t allocationTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
+			     defaultAllocationTimeout);
+
+  // Deadline for the FinalMetaDataGatherer, in seconds
+  const time_t finalMetaDataTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.finalMetaDataTimeout",
+			     defaultFinalMetaDataTimeout);
+
+  // Deadline for outputProc, in seconds.
+  const time_t outputProcTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+			     defaultOutputProcTimeout);
+
+  // Amount of seconds to stay alive after Observation.stopTime
+  // has passed.
+  const time_t rtcpTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.rtcpTimeout",
+			     defaultRtcpTimeout);
+
+  LOG_DEBUG_STR(
+    "Tuning parameters:" <<
+    "\n  allocationTimeout    : " << allocationTimeout << "s" <<
+    "\n  finalMetaDataTimeout : " << finalMetaDataTimeout << "s" <<
+    "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
+    "\n  rtcpTimeout          : " << rtcpTimeout << "s");
+
+  if (ps.realTime() && getenv("COBALT_NO_ALARM") == NULL) {
     // First of all, make sure we can't freeze for too long
     // by scheduling an alarm() some time after the observation
     // ends.
@@ -281,12 +320,12 @@ int main(int argc, char **argv)
 
   // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
-
+#if 1
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
   if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes[rank].cpu;
+    int cpuId = ps.settings.nodes.at(rank).cpu;
     setProcessorAffinity(cpuId);
 
 #ifdef HAVE_LIBNUMA
@@ -342,6 +381,9 @@ int main(int argc, char **argv)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
+#else
+  {
+#endif
     LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
     devices = allDevices;
   }
@@ -351,7 +393,7 @@ int main(int argc, char **argv)
                  devices[i].getComputeCapabilityMajor() << "." <<
                  devices[i].getComputeCapabilityMinor() <<
                  " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
-
+#if 1
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
   {
@@ -362,12 +404,7 @@ int main(int argc, char **argv)
   } else {
     LOG_DEBUG("All memory is now pinned.");
   }
-
-  // Allow usage of nested omp calls
-  omp_set_nested(true);
-
-  // Allow OpenMP thread registration
-  OMPThread::init();
+#endif
 
   LOG_INFO("----- Initialising Pipeline");
 
@@ -438,6 +475,8 @@ int main(int argc, char **argv)
 
   ASSERT(rank    == real_rank);
   ASSERT(nrHosts == real_size);
+
+  MPIPoll::instance().start();
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
@@ -534,6 +573,8 @@ int main(int argc, char **argv)
   SSH_Finalize();
 
 #ifdef HAVE_MPI
+  MPIPoll::instance().stop();
+
   MPI_Finalize();
 #endif
 

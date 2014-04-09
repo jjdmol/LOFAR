@@ -54,8 +54,7 @@ namespace LOFAR
 
       // The set of GPU buffers to link our host buffers to.
       // Device buffers may be reused between different pairs of kernels,
-      // since device memory size is a concern. Use inputSamplesMinSize
-      // to specify a minimum derived from other uses apart from input.
+      // since device memory size is a concern.
       struct DeviceBuffers
       {
         gpu::DeviceMemory delaysAtBegin;
@@ -64,14 +63,14 @@ namespace LOFAR
         // We don't have tabDelays here, as it is only for bf.
         // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
         // similar to the bandpass correction and FIR filter weights (also not here).
-        gpu::DeviceMemory inputSamples;
+        boost::shared_ptr<gpu::DeviceMemory> inputSamples;
 
         DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
                       size_t phase0sSize, gpu::Context &context) :
           delaysAtBegin(context, delaysSize),
           delaysAfterEnd(context, delaysSize),
           phase0s(context, phase0sSize),
-          inputSamples(context, inputSamplesSize)
+          inputSamples(new gpu::DeviceMemory(context, inputSamplesSize))
         {
         }
       };
@@ -131,18 +130,18 @@ namespace LOFAR
                            gpu::Context &context,
                            unsigned int hostBufferFlags = 0)
         :
-        delaysAtBegin(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+        delaysAtBegin(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][NR_POLARIZATIONS],
                        context, hostBufferFlags),
-        delaysAfterEnd(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][NR_POLARIZATIONS],
+        delaysAfterEnd(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][NR_POLARIZATIONS],
                        context, hostBufferFlags),
-        phase0s(boost::extents[ps.settings.stations.size()][NR_POLARIZATIONS],
+        phase0s(boost::extents[ps.settings.antennaFields.size()][NR_POLARIZATIONS],
                        context, hostBufferFlags),
-        tabDelays(boost::extents[ps.settings.SAPs.size()][ps.settings.stations.size()][ps.settings.beamFormer.maxNrCoherentTABsPerSAP()],
+        tabDelays(boost::extents[ps.settings.SAPs.size()][ps.settings.antennaFields.size()][ps.settings.beamFormer.maxNrCoherentTABsPerSAP()],
                        context, hostBufferFlags),
-        inputSamples(boost::extents[ps.settings.stations.size()][ps.settings.blockSize][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
+        inputSamples(boost::extents[ps.settings.antennaFields.size()][ps.settings.blockSize][NR_POLARIZATIONS][ps.nrBytesPerComplexSample()],
                        context, hostBufferFlags), // TODO: The size of the buffer is NOT validated
-        inputFlags(boost::extents[ps.settings.stations.size()]),
-        metaData(ps.settings.stations.size())
+        inputFlags(boost::extents[ps.settings.antennaFields.size()]),
+        metaData(ps.settings.antennaFields.size())
       {
       }
 

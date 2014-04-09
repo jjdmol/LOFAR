@@ -62,7 +62,6 @@ void usage()
 
 struct packetSet {
   vector<struct RSP> packets;
-  vector<bool>       valid;
 };
 
 int main(int argc, char **argv)
@@ -143,7 +142,6 @@ int main(int argc, char **argv)
   for (size_t i = 0; i < 256; ++i) {
     SmartPtr<packetSet> p = new packetSet;
     p->packets.resize(256);
-    p->valid.resize(p->packets.size());
 
     readQueue.append(p);
   }
@@ -170,7 +168,7 @@ int main(int argc, char **argv)
 
         while (!writerDone && (p = readQueue.remove()) != NULL) {
           // Read packets and queue them
-          reader.readPackets(p->packets, p->valid);
+          reader.readPackets(p->packets);
           writeQueue.append(p);
         }
       } catch(Stream::EndOfStreamException&) {
@@ -186,10 +184,10 @@ int main(int argc, char **argv)
       // Keep reading until NULL
       while ((p = writeQueue.remove()) != NULL) {
         for (size_t i = 0; i < p->packets.size(); ++i) {
-          if (!p->valid[i])
-            continue;
-
           struct RSP &packet = p->packets[i];
+
+          if (packet.payloadError())
+            continue;
 
           // **** Apply FROM filter ****
           if (from > 0 && packet.header.timestamp < from)

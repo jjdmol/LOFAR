@@ -27,6 +27,8 @@
 #include <cmath>
 #include <set>
 #include <algorithm>
+#include <memory>   // auto_ptr
+
 #include <boost/format.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/lexical_cast.hpp>
@@ -43,6 +45,7 @@
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/PrintVector.h>
 #include <CoInterface/SetOperations.h>
+#include <CoInterface/RingCoordinates.h>
 
 using namespace std;
 using boost::format;
@@ -203,7 +206,7 @@ namespace LOFAR
     }
 
 
-    vector<struct ObservationSettings::AntennaFieldName> ObservationSettings::antennaFields(const vector<string> &stations, const string &antennaSet) {
+    vector<struct ObservationSettings::AntennaFieldName> ObservationSettings::antennaFieldNames(const vector<string> &stations, const string &antennaSet) {
       vector<struct AntennaFieldName> result;
 
       for (vector<string>::const_iterator i = stations.begin(); i != stations.end(); ++i) {
@@ -213,11 +216,11 @@ namespace LOFAR
 
         if (station.length() != 5) {
           // Backward compatibility: the key
-          // Observation.VirtualInstrument.stationList can contain full
-          // antennafield names such as CS001LBA.
+          // Observation.VirtualInstrument.stationList could contain full
+          // antennafield names in the past, such as "CS001LBA".
           LOG_WARN_STR("Warning: old (preparsed) station name: " << station);
 
-          // Do not assume the standard station name format (sily "S9").
+          // Do not assume the standard station name format (silly "S9" test name).
           string stName;
           string antFieldName;
           if (station.length() <= 1)
@@ -410,66 +413,85 @@ namespace LOFAR
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
 
-      // Sort stations (CS, RS, intl), to get a consistent and predictable
+      // Sort stations (CS, RS, int'l), to get a consistent and predictable
       // order in the MeasurementSets.
       std::sort(stations.begin(), stations.end(), compareStationNames);
 
-      vector<ObservationSettings::AntennaFieldName> fieldNames = ObservationSettings::antennaFields(stations, settings.antennaSet);
+      // Conversion from station names to antenna field names.
+      vector<ObservationSettings::AntennaFieldName> fieldNames =
+        ObservationSettings::antennaFieldNames(stations, settings.antennaSet);
 
-      size_t nrStations = fieldNames.size();
+      settings.antennaFields.resize(fieldNames.size());
+      for (unsigned i = 0; i < settings.antennaFields.size(); ++i) {
+        struct ObservationSettings::AntennaField &antennaField = settings.antennaFields[i];
 
-      settings.stations.resize(nrStations);
-      for (unsigned i = 0; i < nrStations; ++i) {
-        struct ObservationSettings::Station &station = settings.stations[i];
-
-        station.name              = fieldNames[i].fullName();
-        station.inputStreams      = getStringVector(
-            renamedKey(str(format("PIC.Core.%s.RSP.ports") % station.name),
-                       str(format("PIC.Core.Station.%s.RSP.ports") % station.name)),
+        antennaField.name            = fieldNames[i].fullName();
+        antennaField.inputStreams    = getStringVector(
+            renamedKey(str(format("PIC.Core.%s.RSP.ports") % antennaField.name),
+                       str(format("PIC.Core.Station.%s.RSP.ports") % antennaField.name)),
             emptyVectorString, true);
-        station.receiver          = getString(str(format("PIC.Core.%s.RSP.receiver") % station.name), "");
+        antennaField.receiver        = getString(str(format("PIC.Core.%s.RSP.receiver") % antennaField.name), "");
 
         // NOTE: Support for clockCorrectionTime can be phased out when the
         // BG/P is gone. delay.X and delay.Y are superior to it, being
         // polarisation specific.
-        station.clockCorrection   = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % station.name), 0.0);
-        station.phaseCenter = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % station.name), vector<double>(3, 0), true);
-        if (station.phaseCenter == emptyVectorDouble)
-          LOG_WARN_STR("Parset: PIC.Core." << station.name << ".phaseCenter is missing (or (0.0, 0.0, 0.0)).");
-        station.phase0.x = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
-        station.phase0.y = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delay.x = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
-        station.delay.y = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        antennaField.clockCorrection = getDouble(str(format("PIC.Core.%s.clockCorrectionTime") % antennaField.name), 0.0);
+        antennaField.phaseCenter     = getDoubleVector(str(format("PIC.Core.%s.phaseCenter") % antennaField.name), vector<double>(3, 0), true);
+        if (antennaField.phaseCenter == emptyVectorDouble)
+          LOG_WARN_STR("Parset: PIC.Core." << antennaField.name << ".phaseCenter is missing (or (0.0, 0.0, 0.0)).");
+        antennaField.phase0.x        = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.X") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        antennaField.phase0.y        = getDouble(str(format("PIC.Core.%s.%s.%s.phase0.Y") % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        antennaField.delay.x         = getDouble(str(format("PIC.Core.%s.%s.%s.delay.X")  % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
+        antennaField.delay.y         = getDouble(str(format("PIC.Core.%s.%s.%s.delay.Y")  % fieldNames[i].fullName() % settings.antennaSet % settings.bandFilter), 0.0);
 
-        if (station.delay.x > 0.0 || station.delay.y > 0.0) {
-          if (station.clockCorrection != 0.0) {
+        if (antennaField.delay.x > 0.0 || antennaField.delay.y > 0.0) {
+          if (antennaField.clockCorrection != 0.0) {
             // Ignore clockCorrectionTime if delay.X or delay.Y are specified.
-
-            station.clockCorrection = 0.0;
-            LOG_WARN_STR("Ignoring PIC.Core." << station.name << ".clockCorrectionTime in favor of PIC.Core." << fieldNames[i].fullName() << "." << settings.antennaSet << "." << settings.bandFilter << ".delay.{X,Y}");
+            antennaField.clockCorrection = 0.0;
+            LOG_WARN_STR("Ignoring PIC.Core." << antennaField.name <<
+                         ".clockCorrectionTime in favor of PIC.Core." <<
+                         fieldNames[i].fullName() << "." << settings.antennaSet <<
+                         "." << settings.bandFilter << ".delay.{X,Y}");
           }
         }
 
-        string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % station.name));
-        if (!isDefined(key)) key = "Observation.rspBoardList";
-        station.rspBoardMap = getUint32Vector(key, emptyVectorUnsigned, true);
+        string key = std::string(str(format("Observation.Dataslots.%s.RSPBoardList") % antennaField.name));
+        if (!isDefined(key))
+          key = "Observation.rspBoardList";
+        antennaField.rspBoardMap     = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        ASSERTSTR(station.rspBoardMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspBoardMap.size() << " subbands. Please correct either Observation.rspBoardList or Observation.Dataslots." << station.name << ".RSPBoardList" );
+        ASSERTSTR(antennaField.rspBoardMap.size() >= settings.subbands.size(),
+                  "Observation has " << settings.subbands.size() <<
+                  " subbands, but antenna field " << antennaField.name <<
+                  " has only board numbers defined for " << antennaField.rspBoardMap.size() <<
+                  " subbands. Please correct either Observation.rspBoardList or Observation.Dataslots." <<
+                  antennaField.name << ".RSPBoardList" );
 
-        key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % station.name));
-        if (!isDefined(key)) key = "Observation.rspSlotList";
-        station.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
+        key = std::string(str(format("Observation.Dataslots.%s.DataslotList") % antennaField.name));
+        if (!isDefined(key))
+          key = "Observation.rspSlotList";
+        antennaField.rspSlotMap = getUint32Vector(key, emptyVectorUnsigned, true);
 
-        ASSERTSTR(station.rspSlotMap.size() >= settings.subbands.size(), "Observation has " << settings.subbands.size() << " subbands, but station " << station.name << " has only board numbers defined for " << station.rspSlotMap.size() << " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." << station.name << ".DataslotList" );
+        ASSERTSTR(antennaField.rspSlotMap.size() >= settings.subbands.size(),
+                  "Observation has " << settings.subbands.size() <<
+                  " subbands, but antenna field " << antennaField.name <<
+                  " has only board numbers defined for " << antennaField.rspSlotMap.size() <<
+                  " subbands. Please correct either Observation.rspSlotList or Observation.Dataslots." <<
+                  antennaField.name << ".DataslotList" );
       }
+
 
       // Resource information
       vector<string> nodes = getStringVector("Cobalt.Nodes", emptyVectorString, true);
-      settings.nodes.resize(nodes.size());
 
+      // We can restrict cobalt nodes to the set that receives from antenna fields,
+      // but that will break if that set cannot handle the computations.
+      bool receivingNodesOnly = getBool("Cobalt.restrictNodesToStationStreams", false);
       for (size_t i = 0; i < nodes.size(); ++i) {
-        struct ObservationSettings::Node &node = settings.nodes[i];
+        if (receivingNodesOnly && !nodeReadsAntennaFieldData(settings, nodes[i]))
+          continue;
 
+        struct ObservationSettings::Node node;
         node.rank     = i;
         node.name     = nodes[i];
 
@@ -479,6 +501,8 @@ namespace LOFAR
         node.cpu      = getUint32(prefix + "cpu",  0);
         node.nic      = getString(prefix + "nic",  "");
         node.gpus     = getUint32Vector(prefix + "gpus", vector<unsigned>(1,0)); // default to [0]
+
+        settings.nodes.push_back(node);
       }
 
       /* ===============================
@@ -505,16 +529,16 @@ namespace LOFAR
         vector<unsigned> tabList = getUint32Vector("OLAP.CNProc.tabList", emptyVectorUnsigned, true);
 
         // Names for all superstations, including those that are simple copies
-        // of (input) stations.
+        // of (input) antenna fields.
         vector<string> tabNames = getStringVector("OLAP.tiedArrayStationNames", emptyVectorString, true);
 
         if (tabList.empty()) {
           // default: input station list = output station list
-          settings.correlator.stations.resize(settings.stations.size());
+          settings.correlator.stations.resize(settings.antennaFields.size());
           for (size_t i = 0; i < settings.correlator.stations.size(); ++i) {
             struct ObservationSettings::Correlator::Station &station = settings.correlator.stations[i];
 
-            station.name = settings.stations[i].name;
+            station.name = settings.antennaFields[i].name;
             station.inputStations = vector<size_t>(1, i);
           }
         } else {
@@ -649,30 +673,54 @@ namespace LOFAR
         // Parse all TABs
         settings.beamFormer.SAPs.resize(nrSAPs);
 
-        for (unsigned i = 0; i < nrSAPs; ++i) {
+        for (unsigned i = 0; i < nrSAPs; ++i) 
+        {
           struct ObservationSettings::BeamFormer::SAP &sap = settings.beamFormer.SAPs[i];
 
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
+          size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
           double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
 
-          // unused until we support rings
-          (void)nrRings;
-          (void)ringWidth;
+          // Create a ptr to RingCoordinates object
+          // If there are tab rings the object will be actuall constructed
+          // The actual tabs will be extracted after we added all manual tabs
+          // But we need the number of tabs from rings at this location
+          std::auto_ptr<RingCoordinates> ptrRingCoords;
+          if (nrRings > 0) {
+            const string prefix = str(format("Observation.Beam[%u]") % i);
+            string directionType = getString(prefix + ".directionType", "J2000");
+            
+            double angle1 = getDouble(prefix + ".angle1", 0.0);
+            double angle2 = getDouble(prefix + ".angle2", 0.0);
 
-          ASSERTSTR(nrRings == 0, "TAB rings are not supported yet!");
+            // Convert to COORDTYPE default == OTHER
+            RingCoordinates::COORDTYPES type = RingCoordinates::OTHER;
+            if (directionType == "J2000")
+              type = RingCoordinates::J2000;
+            else if (directionType == "B1950")
+              type = RingCoordinates::B1950;
+              
+            // Create coords object
+            ptrRingCoords = std::auto_ptr<RingCoordinates>(
+              new RingCoordinates(nrRings, ringWidth,
+              RingCoordinates::Coordinate(angle1, angle2), type));
 
-          // For Fly's Eye mode we have exactly one TAB per station.
-          if (settings.beamFormer.doFlysEye) {
-            nrTABs = nrStations;
+            // Increase the amount of tabs with the number from the coords object
+            // this might be zero
+            nrTABs = nrTABSParset + ptrRingCoords->nCoordinates();
+          } else if (settings.beamFormer.doFlysEye) {
+            // For Fly's Eye mode we have exactly one TAB per antenna field.
+            nrTABs = settings.antennaFields.size();
           }
 
           sap.TABs.resize(nrTABs);
           for (unsigned j = 0; j < nrTABs; ++j) 
           {
             struct ObservationSettings::BeamFormer::TAB &tab = sap.TABs[j];
-
-            if (settings.beamFormer.doFlysEye) {
+            // Add flys eye tabs
+            if (settings.beamFormer.doFlysEye) 
+            {
               const string prefix = str(format("Observation.Beam[%u]") % i);
 
               tab.direction.type    = getString(prefix + ".directionType", "J2000");
@@ -681,23 +729,45 @@ namespace LOFAR
 
               tab.dispersionMeasure     = 0.0;
               tab.coherent              = true;
-            } else {
-              const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+            } 
+            // Add manual tabs and then the tab rings.
+            else 
+            {
+              if (j < nrTABSParset) // If we are working on manual tabs
+              {
+                const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
+                tab.direction.type    = getString(prefix + ".directionType", "J2000");
+              
+                tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
+                                                             prefix + ".angle1"), 0.0);
+                tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
+                                                             prefix + ".angle2"), 0.0);
 
-              tab.direction.type    = getString(prefix + ".directionType", "J2000");
-              tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
-                                                           prefix + ".angle1"), 0.0);
-              tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
-                                                           prefix + ".angle2"), 0.0);
+                // Always store absolute angles. So this is for backwards compat.
+                if (!isDefined(prefix + ".absoluteAngle1"))
+                  tab.direction.angle1 += settings.SAPs[i].direction.angle1;
+                if (!isDefined(prefix + ".absoluteAngle2"))
+                  tab.direction.angle2 += settings.SAPs[i].direction.angle2;
 
-              // Always store absolute angles. So this is for backwards compat.
-              if (!isDefined(prefix + ".absoluteAngle1"))
-                tab.direction.angle1 += settings.SAPs[i].direction.angle1;
-              if (!isDefined(prefix + ".absoluteAngle2"))
-                tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+                tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
+                tab.coherent              = getBool(prefix + ".coherent", true);
+              }
+              else
+              {
+                // Get the pointing for the tabrings.
+                // substract the number of manual to get index in the ringCoords
+                // TODO What happens if the number does not match?
+                RingCoordinates::Coordinate pointing = 
+                    ptrRingCoords->coordinates()[j - nrTABSParset];
 
-              tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
-              tab.coherent              = getBool(prefix + ".coherent", true);
+                tab.direction.type = ptrRingCoords->coordTypeAsString();
+                tab.direction.angle1 = pointing.first;
+                tab.direction.angle2 = pointing.second;
+                // Cannot search for the absolute angle for an entry that does not exist
+                // TODO: is this still the correct key?
+                tab.dispersionMeasure = getInt("OLAP.dispersionMeasure", 0);
+                tab.coherent =  true;  // always coherent
+              }
             }
 
             if (tab.coherent)
@@ -711,7 +781,8 @@ namespace LOFAR
 
             // Generate file list
             tab.files.resize(set.nrStokes);
-            for (size_t s = 0; s < set.nrStokes; ++s) {
+            for (size_t s = 0; s < set.nrStokes; ++s) 
+            {
               struct ObservationSettings::BeamFormer::File file;
 
               file.sapNr    = i;
@@ -720,13 +791,16 @@ namespace LOFAR
               file.stokesNr = s;
               file.streamNr = bfStreamNr++;
 
-              if (file.coherent) {
+              if (file.coherent) 
+              {
                 file.coherentIdxInSAP = sap.nrCoherent - 1;
 
                 if (coherent_idx >= coherent_locations.size())
                   THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
                 file.location = coherent_locations[coherent_idx++];
-              } else {
+              } 
+              else 
+              {
                 file.incoherentIdxInSAP = sap.nrIncoherent - 1;
 
                 if (incoherent_idx >= incoherent_locations.size())
@@ -758,6 +832,16 @@ namespace LOFAR
       return settings;
     }
 
+    bool Parset::nodeReadsAntennaFieldData(const struct ObservationSettings& settings,
+                                           const string& nodeName) const {
+      for (size_t i = 0; i < settings.antennaFields.size(); ++i) {
+        if (settings.antennaFields[i].receiver == nodeName)
+          return true;
+      }
+
+      return false;
+    }
+
     // pos and ref must each have at least size 3.
     double Parset::distanceVec3(const vector<double>& pos,
                                 const vector<double>& ref) const {
@@ -775,8 +859,8 @@ namespace LOFAR
 
       double maxDelayDistance = 0.0;
 
-      for (unsigned st = 0; st < settings.stations.size(); st++) {
-        vector<double> phaseCenter = settings.stations[st].phaseCenter;
+      for (unsigned af = 0; af < settings.antennaFields.size(); af++) {
+        vector<double> phaseCenter = settings.antennaFields[af].phaseCenter;
         double delayDist = distanceVec3(phaseCenter, refPhaseCenter);
         if (delayDist > maxDelayDistance)
           maxDelayDistance = delayDist;
@@ -863,7 +947,7 @@ namespace LOFAR
     vector<unsigned> ObservationSettings::SAP::subbandIndices() const {
       vector<unsigned> indices;
 
-      for(size_t i = 0; i < subbands.size(); ++i) {
+      for (size_t i = 0; i < subbands.size(); ++i) {
         indices.push_back(subbands[i].idx);
       }
 
@@ -875,7 +959,6 @@ namespace LOFAR
     }
 
     std::vector<struct ObservationSettings::FileLocation> Parset::getFileLocations(const std::string outputType) const {
-      //
       const string prefix = "Observation.DataProducts.Output_" + outputType;
 
       vector<string> empty;
@@ -1125,29 +1208,31 @@ namespace LOFAR
       return static_cast<unsigned>(floor( (stopTime() - startTime()) / CNintegrationTime()));
     }
 
-    ssize_t ObservationSettings::stationIndex(const std::string &name) const
+    ssize_t ObservationSettings::antennaFieldIndex(const std::string &name) const
     {
-      for (size_t station = 0; station < stations.size(); ++station) {
-        if (stations[station].name == name)
-          return station;
+      for (size_t a = 0; a < antennaFields.size(); ++a) {
+        if (antennaFields[a].name == name)
+          return a;
       }
 
       return -1;
     }
 
+    // TODO: rename allStationNames to allAntennaFieldNames
     std::vector<std::string> Parset::allStationNames() const
     {
       vector<string> names(nrStations());
 
-      for (unsigned station = 0; station < names.size(); ++station)
-        names[station] = settings.stations[station].name;
+      for (unsigned af = 0; af < names.size(); ++af)
+        names[af] = settings.antennaFields[af].name;
 
       return names;
     }
 
+    // TODO: rename nrStations to nrAntennaFields
     unsigned Parset::nrStations() const
     {
-      return settings.stations.size();
+      return settings.antennaFields.size();
     }
 
     unsigned Parset::nrTabStations() const

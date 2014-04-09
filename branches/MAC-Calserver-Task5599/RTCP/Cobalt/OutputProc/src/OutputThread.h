@@ -107,10 +107,10 @@ namespace LOFAR
      * TABOutputThread specialises in creating LOFAR HDF5 files corresponding
      * to ICD003.
      */
-    class TABOutputThread: public OutputThread<TABTranspose::Block>
+    class TABOutputThread: public OutputThread<TABTranspose::BeamformedData>
     {
     public:
-      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
+      TABOutputThread(const Parset &, unsigned streamNr, Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "");
 
       void           createMS();
     };

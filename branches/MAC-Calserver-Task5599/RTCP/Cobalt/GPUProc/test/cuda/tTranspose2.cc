@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: tTranspose.cc 25978 2013-08-08 03:26:50Z amesfoort $
+//# $Id$
 
 #include <lofar_config.h>
 

@@ -103,50 +103,6 @@ namespace LOFAR
 
     void StorageProcess::controlThread()
     {
-      // Start Storage
-      std::string userName = itsParset.getString("Cobalt.OutputProc.userName", "");
-      std::string pubKey = itsParset.getString("Cobalt.OutputProc.sshPublicKey", "");
-      std::string privKey = itsParset.getString("Cobalt.OutputProc.sshPrivateKey", "");
-      std::string executable = itsParset.getString("Cobalt.OutputProc.executable", "outputProc");
-
-      if (userName == "") {
-        // No username given -- use $USER
-        const char *USER = getenv("USER");
-
-        ASSERTSTR(USER, "$USER not set.");
-
-        userName = USER;
-      }
-
-      if (pubKey == "" && privKey == "") {
-        // No SSH keys given -- try to discover them
-
-        char discover_pubkey[1024];
-        char discover_privkey[1024];
-
-        if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
-          pubKey = discover_pubkey;
-          privKey = discover_privkey;
-        } else {
-          LOG_ERROR(itsLogPrefix + "[ControlThread] no SSH keys given and discovery failed: failed to send final meta data and read LTA feedback");
-          return;
-        }
-      }
-
-      std::string commandLine = str(boost::format("%s%s %u %d")
-#if defined USE_VALGRIND
-                                    % "valgrind --leak-check=full "
-#else
-                                    % ""
-#endif
-                                    % executable
-                                    % itsParset.observationID()
-                                    % itsRank
-                                    );
-
-      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey);
-      sshconn.start();
-
       // Connect control stream
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
       std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
@@ -169,9 +125,6 @@ namespace LOFAR
       Parset feedbackLTA(&stream);
       itsFeedbackLTA.adoptCollection(feedbackLTA);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
-
-      // Wait for Storage to finish properly
-      sshconn.wait();
     }
 
   }

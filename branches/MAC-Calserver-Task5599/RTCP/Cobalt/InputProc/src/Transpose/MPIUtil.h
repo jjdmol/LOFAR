@@ -28,7 +28,9 @@ namespace LOFAR {
     class MPIAllocator : public Allocator
     {
     public:
+      // NOTE: alignment must be 1!
       virtual void                *allocate(size_t size, size_t alignment = 1);
+
       virtual void                deallocate(void *);
     };
 
