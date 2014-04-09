@@ -376,7 +376,7 @@ namespace LOFAR
 
         // Process the subbands of this SAP
         vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
-        ASSERTSTR(!subbandList.empty(), "SAP " << sapNr << " has no (or an empty) subbandList");
+        ASSERTSTR(!subbandList.empty(), "subband list for SAP " << sapNr << " must be non-empty (Observation.Beam[" << sapNr << "].subbandList)");
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
         for (unsigned sb = 0; sb < subbandList.size(); ++sb)
@@ -413,6 +413,7 @@ namespace LOFAR
 
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+      ASSERTSTR(!stations.empty(), "station list (Observation.VirtualInstrument.stationList) must be non-empty");
 
       // Sort stations (CS, RS, int'l), to get a consistent and predictable
       // order in the MeasurementSets.
@@ -922,7 +923,7 @@ namespace LOFAR
       const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
 
       if (max_n_FFT_pow2 < min_n_ch_pow2) {
-        LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
+        LOG_WARN_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
                       max_n_FFT << " ends up below lower bound " << min_n_ch <<
                       ". Returning " << min_n_ch_pow2 << ". Stations far from"
                       " the core may not be delay compensated optimally.");
