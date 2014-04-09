@@ -1,0 +1,39 @@
+#!/bin/bash
+
+NRTESTS=0
+NRSUCCESS=0
+NRFAILURE=0
+
+for TEST in `find tests -name '*.test' -type f -a -executable`
+do
+  LOGFILE="$TEST.log"
+
+  printf "%40s: " "$TEST"
+  $TEST > $LOGFILE 2>&1
+  RESULT=$?
+
+  NRTESTS=$((NRTESTS + 1))
+
+  if [ $RESULT -eq 0 ]
+  then
+    echo OK
+
+    NRSUCCESS=$((NRSUCCESS + 1))
+  else
+    echo "ERROR (see $LOGFILE)"
+
+    NRFAILURE=$((NRFAILURE + 1))
+  fi
+done
+
+SUCCESSPERCENTAGE=$((100 * NRSUCCESS / NRTESTS))
+echo ""
+echo "${SUCCESSPERCENTAGE}% tests passed, ${NRFAILURE} tests failed out of ${NRTESTS}"
+echo ""
+
+if [ $NRFAILURE -eq 0 ]
+then
+  exit 0
+else
+  exit 1
+fi
