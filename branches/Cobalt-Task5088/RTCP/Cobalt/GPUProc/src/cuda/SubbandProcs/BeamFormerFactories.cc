@@ -46,7 +46,7 @@ namespace LOFAR
       }
 
       DelayAndBandPassKernel::Parameters
-      BeamFormerFactories::delayCompensationParams(const Parset &ps) const
+      BeamFormerFactories::delayCompensationParams(const Parset &ps) 
       {
         DelayAndBandPassKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
@@ -60,7 +60,7 @@ namespace LOFAR
       }
 
       BandPassCorrectionKernel::Parameters
-      BeamFormerFactories::bandPassCorrectionParams(const Parset &ps) const
+      BeamFormerFactories::bandPassCorrectionParams(const Parset &ps) 
       {
         BandPassCorrectionKernel::Parameters params(ps);
         params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
@@ -69,7 +69,7 @@ namespace LOFAR
       }
 
       BeamFormerKernel::Parameters 
-      BeamFormerFactories::beamFormerParams(const Parset &ps) const
+      BeamFormerFactories::beamFormerParams(const Parset &ps) 
       {
         BeamFormerKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
@@ -81,7 +81,7 @@ namespace LOFAR
       }
 
       CoherentStokesTransposeKernel::Parameters
-      BeamFormerFactories::coherentTransposeParams(const Parset &ps) const
+      BeamFormerFactories::coherentTransposeParams(const Parset &ps) 
       {
         CoherentStokesTransposeKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
@@ -95,7 +95,7 @@ namespace LOFAR
       FIR_FilterKernel::Parameters
       BeamFormerFactories::
       firFilterParams(const Parset &ps,
-                      size_t nrSubbandsPerSubbandProc) const
+                      size_t nrSubbandsPerSubbandProc) 
       {
         FIR_FilterKernel::Parameters params(ps);
 
@@ -123,7 +123,7 @@ namespace LOFAR
       }
 
       CoherentStokesKernel::Parameters
-      BeamFormerFactories::coherentStokesParams(const Parset &ps) const
+      BeamFormerFactories::coherentStokesParams(const Parset &ps) 
       {
         CoherentStokesKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
@@ -135,7 +135,7 @@ namespace LOFAR
       }
 
       FFTShiftKernel::Parameters
-      BeamFormerFactories::fftShiftParams(const Parset &ps) const
+      BeamFormerFactories::fftShiftParams(const Parset &ps) 
       {
         FFTShiftKernel::Parameters params(ps);
         // Currently a static in the subband proc
@@ -151,7 +151,7 @@ namespace LOFAR
       FIR_FilterKernel::Parameters 
       BeamFormerFactories::
       incoherentFirFilterParams(const Parset &ps,
-            size_t nrSubbandsPerSubbandProc) const 
+            size_t nrSubbandsPerSubbandProc)  
       {
         FIR_FilterKernel::Parameters params(ps);
 
@@ -178,7 +178,7 @@ namespace LOFAR
 
       IncoherentStokesKernel::Parameters 
       BeamFormerFactories::
-      incoherentStokesParams(const Parset &ps) const 
+      incoherentStokesParams(const Parset &ps)  
       {
         IncoherentStokesKernel::Parameters params(ps);
         params.nrChannelsPerSubband = 
@@ -191,7 +191,7 @@ namespace LOFAR
 
       IncoherentStokesTransposeKernel::Parameters 
       BeamFormerFactories::
-      incoherentStokesTransposeParams(const Parset &ps) const 
+      incoherentStokesTransposeParams(const Parset &ps)  
       {
         IncoherentStokesTransposeKernel::Parameters params(ps);
         params.nrChannelsPerSubband =
