@@ -1,2 +1,2 @@
 #!/bin/sh
-python -c "from lofar.pyselfcal import class_obsparMergedData"
+python -c "from lofar.selfcal import class_obsparMergedData"
