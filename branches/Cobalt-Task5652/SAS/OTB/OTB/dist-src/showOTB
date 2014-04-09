@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# Shop running OTB clients 
+#
+# Usage: showOTB
+#
+# Author: A.P. Schoenmakers
+#
+
+
+echo "Finding OTB clients:"
+
+user_ports=( `ps -eaf | grep "otb\/client\/" | grep java | awk '{print $1":"$2":"$(NF-4)}'` )
+
+if [ "$user_ports" == "" ]; then
+  echo "No OTB clients running"
+  exit
+fi
+
+for user_port in "${user_ports[@]}"
+  do
+    user=`echo $user_port | awk -F: '{print $1}'`
+    pid=`echo $user_port | awk -F: '{print $2}'`
+    port=`echo $user_port | awk -F: '{print $3}'`
+    echo "Found client using port $port started by user $user with PID $pid"
+  done
+
+
+
