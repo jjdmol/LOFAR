@@ -22,6 +22,7 @@ def runAndGetCerrCout(cmd):
   returns the sterr and stout
   """
   # start
+
   process = subprocess.Popen(
                         cmd,
                         stdin=subprocess.PIPE,
@@ -69,13 +70,16 @@ def getCSVLinesFromNVProfOutput(stderr):
 
 #*****************************************************************************
 # Kernel specific interface
-def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels, threadIdx):
+def getDataForRun(threadIdx, testToAnalyze, 
+              var1, var1item,
+              var2, var2item):
   """
 
   """
   # Create the command to run on the command line
-  cmd = ["nvprof", "--csv", "./tBeamFormerKernel", 
-         "-t", str(nTabs), "-c", str(nChannels), "-i", str(threadIdx)]
+
+  cmd = ["nvprof", "--csv", testToAnalyze, 
+         var1, str(var1item), var2, str(var2item), "-i", str(threadIdx)]
   # run
   stdout, stderr = runAndGetCerrCout(cmd)  
   # Clean the output
@@ -87,90 +91,103 @@ def beamFormerGetAvgTimeForKernelRun(nTabs, nChannels, threadIdx):
   return data
 
 
-def gputhread(threadIdx, nTabs, nChannels, sharedVAlue):
-
-  data = beamFormerGetAvgTimeForKernelRun(nTabs, nChannels, threadIdx)
-
-  print "measuring; tab, channel, gpuIdx: " + str(nTabs) + ", " + str(nChannels) + ", " + str(threadIdx)
-                  
-    #Might need a lock..
+def gputhread(sharedValue,
+              threadID, 
+              testToAnalyze,
+              var1, var1item,
+              var2, var2item):
   lock.acquire()
-  sharedValue[(nTabs, nChannels)] = data
+  print "measuring on gpu" + str(threadID) + ": " + testToAnalyze + " "  + \
+     str(var1) + " " +str(var1item) + ", "+ str(var2) + " " +str(var2item)
+  lock.release()
+  data = getDataForRun(threadID, testToAnalyze, 
+              var1, var1item,
+              var2, var2item)
+
+  lock.acquire()
+  sharedValue[(var1item, var2item)] = data
   lock.release()
 
 
-class beamformerThread (threading.Thread):
-  def __init__(self, threadID, name, sharedValue, nTabs, nChannels,  ):
+  
+class MyThread (threading.Thread):
+  def __init__(self,sharedValue,
+               threadID, 
+               testToAnalyze, 
+               var1, var1item,
+               var2, var2item):
     threading.Thread.__init__(self)
-    self.threadID = threadID
-    self.name = name
-    self.nTabs = nTabs
-    self.nChannels = nChannels
     self.sharedValue = sharedValue
+    self.threadID = threadID
+    self.testToAnalyze = testToAnalyze   
+    self.var1 = var1
+    self.var1item = var1item
+    self.var2 = var2
+    self.var2item = var2item
 
   def run(self):
-    gputhread(self.threadID, self.nTabs, self.nChannels, self.sharedValue)
-
+    gputhread(self.sharedValue,
+              self.threadID, 
+              self.testToAnalyze,
+              self.var1, self.var1item,
+              self.var2, self.var2item)
 
 # Define a function for the thread
 lock = threading.Lock()
 
 if __name__ == "__main__":
-  ## test 1
-  # If zero rings then return empty array!!
+  if len(sys.argv) < 6:
+    print "usage: tKernelPerformance.py <path to test> <par1> <range1> <par1> <range1>"
+    print ""
+    print "example:  tKernelPerformance.py ./tBeamFormerKernel -t '[1, 2, 3, 4]' -c 'range(1, 40, 4)'"
+    print "Ranges are evaluated using eval(). NO SANITAZION IS PERFORMED"
+    print "for optimal performance put at least 4 items in the first range"
+    exit(1)
 
+  testToAnalyze = sys.argv[1]
+  var1           = sys.argv[2]
+  var1Range      = eval(sys.argv[3])
+  var2           = sys.argv[4]
+  var2Range      = eval(sys.argv[5])
+
+  
   # Create a array of the executable and the arguments (all string)
   resultLines = []
-  tabRange = range(4, 251, 4)
-  channelsToTest = [1, 16, 64, 256]
+
   # Entry point for parralellization of the available 4 cobalt nodes
   # These test should be adapted when running on different systems
-  nrParallelTreads = 4
+  nrGPUs = 4
+  nrParallel = min(len(var1Range),nrGPUs) # use nrGPUs threads parallel at maximum
   sharedValue = {}
 
-  for tabIdx in tabRange:
+  for var2item in var2Range:
     # not the producer/ consumer model. Bit mheee, it works
     # Increase the maximum number with at least stepsize. Do not start threads that
     # have an index that is to large
-    for startChanIdx in range(0, len(channelsToTest) + nrParallelTreads, nrParallelTreads):
+    for startIdx in range(0, len(var1Range) + nrParallel, nrParallel):
       threads = []
-      for idx in range(4):
+      for idx in range(nrParallel):
         # skip if this index is equal or larger than available work items
-        if ((startChanIdx + idx) >= len(channelsToTest)):
+        if ((startIdx + idx) >= len(var1Range)):
           continue
-        thread = beamformerThread(idx, "Thread" + str(idx), sharedValue, tabIdx, channelsToTest[startChanIdx + idx])
+
+        thread = MyThread(sharedValue, 
+                          idx, 
+                          testToAnalyze,
+                          var1, var1Range[startIdx + idx],
+                          var2, var2item)
         thread.start()
         threads.append(thread)
 
       for thread in threads:
         thread.join()
 
-  print sharedValue
+  header = [testToAnalyze, var1, var1Range, var2, var2Range]
 
-  output = open('beamformerStats.pkl', 'wb')
-
-
-  # Pickle the list using the highest protocol available.
+  output = open('testStats.pkl', 'wb')
   pickle.dump(sharedValue, output, -1)
   output.close()
-  
-  pkl_file = open('beamformerStats.pkl', 'rb')
 
-  data1 = pickle.load(pkl_file)
-  print data1 
-
-
-  pkl_file.close()
-
-  #import matplotlib.pyplot as plt
-  #plt.plot(xrange, resultLines[0])
-  #plt.plot(xrange, resultLines[1])
-  #plt.plot(xrange, resultLines[2])
-  #plt.plot(xrange, resultLines[3])
-  #plt.ylim((0,0.0025))
-
-  #plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
-  #plt.ylabel('Duration (sec)')
-  #plt.xlabel('Number of tabs')
-  #plt.show()
-
+  headerOutput = open('testStatsHeader.pkl', 'wb')
+  pickle.dump(header, headerOutput, -1)
+  headerOutput.close()

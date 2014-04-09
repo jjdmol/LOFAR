@@ -1,42 +1,38 @@
 import pickle
+import sys
 import matplotlib.pyplot as plt
 
 from CsvData import csvData
 
-print "Hello World"
 
+if __name__ == "__main__":
 
-pkl_file = open('beamformerStats.pkl', 'rb')
+  namedValue = sys.argv[1]
+  pkl_file = open('testStats.pkl', 'rb')
+  csvData = pickle.load(pkl_file)
+  pkl_file.close()
 
-csvData = pickle.load(pkl_file)
+  pkl_file_header = open('testStatsHeader.pkl', 'rb')
+  header = pickle.load(pkl_file_header)
+  pkl_file_header.close()
 
-
-
-pkl_file.close()
-
-tabRange = range(16, 240, 8 )
-channelsToTest = [1, 16, 64, 256]
-
-
-
-
-resultLines = []
-for channel in channelsToTest:
-  line = [] 
-  for tab in tabRange:
-    line.append(csvData[(tab,channel)].getNamedMetric("beamFormer","Avg"))
-  resultLines.append(line)
+  resultLines = []
+  for var1 in header[2]:
+    line = [] 
+    for var2 in header[4]:
+      line.append(csvData[(var1,var2)].getNamedMetric(namedValue,"Avg"))
+    resultLines.append(line)
 
 
 
-for idx in range(len(channelsToTest)):
-  plt.plot(tabRange, resultLines[idx])
+  for idx in range(len(header[2])):
+    plt.plot(header[4], resultLines[idx])
 
-#plt.ylim((0,0.0035))
-plt.xlim((4,max(tabRange)))
+  ##plt.ylim((0,0.0035))
+  #plt.xlim((4,max(tabRange)))
 
-plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
-plt.ylabel('Duration (sec)')
-plt.xlabel('Number of tabs')
-plt.show()
+  #plt.legend(['1 channel', '16 channel', '64 channel', '256 channel'], loc='upper left')
+  plt.ylabel('Duration (sec)')
+  #plt.xlabel('Number of tabs')
+  plt.show()
 
