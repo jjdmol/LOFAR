@@ -125,10 +125,11 @@ KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, 
   ps.add("Observation.Beam[0].nrTabRings", "0");
   ps.add("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(params.nrTabs));
   ps.add("Observation.Beam[0].subbandList", "[24..28]");
+  unsigned HBA = 2;
   string filenames = "[";
-  filenames.append(lexical_cast<string>(params.nrTabs)).append("*BEAM000.h5]");
+  filenames.append(lexical_cast<string>(params.nrTabs * HBA * params.nStation)).append("*BEAM000.h5]");
   string hosts = "[";
-  hosts.append(lexical_cast<string>(params.nrTabs)).append("*localhost:.]");
+  hosts.append(lexical_cast<string>(params.nrTabs * HBA * params.nStation)).append("*localhost:.]");
   ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", filenames);
   ps.add("Observation.DataProducts.Output_CoherentStokes.locations", hosts);
   ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
@@ -139,7 +140,7 @@ KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, 
   ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(params.nrChannels));
 
   ps.add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", "512");
-  ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "16");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "1");
   ps.add("Cobalt.BeamFormer.CoherentStokes.which", "XXYY");
 
   ps.add("Cobalt.BeamFormer.nrDelayCompensationChannels", lexical_cast<string>(params.nrChannels));

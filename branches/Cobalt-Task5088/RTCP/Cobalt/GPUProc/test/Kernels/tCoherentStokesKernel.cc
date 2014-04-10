@@ -65,7 +65,7 @@ struct ParsetSUT
 
   Parset parset;
 
-  ParsetSUT(size_t inrChannels =  13,
+  ParsetSUT(size_t inrChannels =  16,
     size_t inrOutputSamples = 1024,
     size_t inrStations =  43,
     size_t inrTabs = 21,
@@ -136,7 +136,7 @@ struct SUTWrapper:  ParsetSUT
   CoherentStokesKernel::Buffers buffers;
   scoped_ptr<CoherentStokesKernel> kernel;
 
-  SUTWrapper(size_t inrChannels = 13,
+  SUTWrapper(size_t inrChannels = 16,
                 size_t inrOutputSamples = 1024,
                 size_t inrStations = 43,
                 size_t inrTabs = 21,
@@ -203,9 +203,11 @@ TEST(ZeroTest)
   // start the test vector at the largest size
   size_t tabs_sizes[] = {33,1,13};
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t) );
-  size_t channel_sizes[] = {41,1,13};
+  size_t channel_sizes[] = {1,16,32}; // only test valid sizes
   std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t) );
-  size_t sample_sizes[] = {1024,16,512};
+  size_t sample_sizes[] = { channel_sizes[0] * 1024,
+                            channel_sizes[1] * 1024, 
+                            channel_sizes[2] * 1024 };
   std::vector<size_t> samples(sample_sizes, sample_sizes + sizeof(sample_sizes) / sizeof(size_t) );
   
   //loop over the three input vectors
