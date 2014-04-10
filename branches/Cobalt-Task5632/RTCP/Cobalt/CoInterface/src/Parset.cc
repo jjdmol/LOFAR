@@ -362,7 +362,7 @@ namespace LOFAR
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
       unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
-      
+
       settings.SAPs.resize(nrSAPs);
       settings.subbands.clear();
       for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) 
@@ -782,8 +782,8 @@ namespace LOFAR
                             : settings.beamFormer.incoherentSettings;
 
             // Generate file list
-            unsigned nrParts = min(1UL, (settings.subbands.size() + stSettings.nrSubbandsPerFile - 1)
-                                      / stSettings.nrSubbandsPerFile);
+            unsigned nrParts = max(1UL, (settings.subbands.size() + stSettings.nrSubbandsPerFile - 1)
+                                        / stSettings.nrSubbandsPerFile);
             tab.files.resize(stSettings.nrStokes * nrParts);
             for (size_t s = 0; s < stSettings.nrStokes; ++s) 
             {
