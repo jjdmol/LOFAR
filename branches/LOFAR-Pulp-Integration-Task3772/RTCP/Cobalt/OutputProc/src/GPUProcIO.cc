@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: outputProc.cc 27120 2013-10-29 10:42:21Z mol $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -88,7 +88,7 @@ bool process(Stream &controlStream, size_t myRank)
       }
     }
 
-    map<size_t, SmartPtr<Pool<TABTranspose::Block> > > outputPools;
+    map<size_t, SmartPtr<Pool<TABTranspose::BeamformedData> > > outputPools;
     TABTranspose::Receiver::CollectorMap collectors;
 
     // Process beam-formed data
@@ -104,19 +104,23 @@ bool process(Stream &controlStream, size_t myRank)
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        outputPools[fileIdx] = new Pool<TABTranspose::Block>;
+        const size_t nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
+        const size_t nrChannels = stokes.nrChannels;
+        const size_t nrSamples = stokes.nrSamples;
+
+        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>;
 
         // Create and fill an outputPool for this fileIdx
-        for (size_t i = 0; i < 5; ++i) {
-	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
-             parset.settings.SAPs[file.sapNr].subbands.size(),
-             stokes.nrSamples,
-             stokes.nrChannels));
+        for (size_t i = 0; i < 10; ++i) {
+	         outputPools[fileIdx]->free.append(new TABTranspose::BeamformedData(
+             boost::extents[nrSamples][nrSubbands][nrChannels],
+             boost::extents[nrSubbands][nrChannels]
+           ));
         }
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
+          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
         string logPrefix = str(format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 

@@ -29,6 +29,7 @@
     <ClInclude Include="..\..\CoInterface\src\Poll.h" />
     <ClInclude Include="..\..\CoInterface\src\Pool.h" />
     <ClInclude Include="..\..\CoInterface\src\PrintVector.h" />
+    <ClInclude Include="..\..\CoInterface\src\RingCoordinates.h" />
     <ClInclude Include="..\..\CoInterface\src\SetOperations.h" />
     <ClInclude Include="..\..\CoInterface\src\SlidingPointer.h" />
     <ClInclude Include="..\..\CoInterface\src\SmartPtr.h" />
@@ -47,14 +48,26 @@
     <ClCompile Include="..\..\CoInterface\src\DataFactory.cc" />
     <ClCompile Include="..\..\CoInterface\src\FinalMetaData.cc" />
     <ClCompile Include="..\..\CoInterface\src\Parset.cc" />
+    <ClCompile Include="..\..\CoInterface\src\RingCoordinates.cc" />
     <ClCompile Include="..\..\CoInterface\src\Stream.cc" />
     <ClCompile Include="..\..\CoInterface\src\TABTranspose.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tBestEffortQueue.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tCorrelatedData.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tMultiDimArray.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tParset.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tpow2.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tRingCoordinates.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tSparseSet.cc" />
+    <ClCompile Include="..\..\CoInterface\test\tTABTranspose.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\CoInterface\src\BestEffortQueue.tcc" />
+    <None Include="..\..\CoInterface\test\tParset.parset_obs99275" />
+    <None Include="..\..\CoInterface\test\tParset.sh" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\CoInterface\src\CMakeLists.txt" />
+    <Text Include="..\..\CoInterface\test\CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0C6B2AFD-61F8-4E27-BDB8-FECDA6DC04CE}</ProjectGuid>

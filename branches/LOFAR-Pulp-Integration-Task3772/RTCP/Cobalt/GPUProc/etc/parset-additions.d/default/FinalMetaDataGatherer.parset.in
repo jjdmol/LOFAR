@@ -1,20 +1,40 @@
-# The host on which to run the FinalMetaDataGatherer
-Cobalt.FinalMetaDataGatherer.host = localhost
+# $Id$
 
-# The user with which to log in. If empty, is set to $USER.
-Cobalt.FinalMetaDataGatherer.userName = 
+# The host on which to run the FinalMetaDataGatherer
+# If empty (or missing), the default is used: localhost
+Cobalt.FinalMetaDataGatherer.host = lhn001
+
+# The user with which to log in to the .host above.
+# If empty (or missing), $USER is used (eval on the cobalt node where we started).
+Cobalt.FinalMetaDataGatherer.userName =
 
 # The public & private keys used for logging in.
-# If empty, ~/.ssh/id_rsa (.pub) and ~/.ssh/id_dsa (.pub) are tried.
+# If empty (or both missing), ~/.ssh/id_rsa (.pub) and ~/.ssh/id_dsa (.pub) are tried.
 Cobalt.FinalMetaDataGatherer.sshPublicKey =
 Cobalt.FinalMetaDataGatherer.sshPrivateKey =
 
 # The executable of the process to start. If no absolute path is given,
 # it needs to be found in $PATH after login.
-Cobalt.FinalMetaDataGatherer.executable = @CMAKE_INSTALL_PREFIX@/bin/FinalMetaDataGatherer
+# If empty (or missing), the default is used: FinalMetaDataGatherer
+Cobalt.FinalMetaDataGatherer.executable = source /data/home/lofarsys/production/lofar_cobalt/lofarinit.sh; FinalMetaDataGatherer
 
-# The database to connect to:
-#   Development: sasdbtest
+# The database hostname to connect to:
 #   Production:  sasdb
-OLAP.FinalMetaDataGatherer.database.host = sasdb
+#   Development: sasdbtest (do not use here; prefer hostname redirection)
+# If empty (or missing), the default is used: sasdb
+Cobalt.FinalMetaDataGatherer.database.host = sasdb
+
+# The database port number to connect to.
+# If empty (or missing), the default used: 5432
+Cobalt.FinalMetaDataGatherer.database.port =
+
+# The database name to access.
+# If empty (or missing), the default is used: LOFAR_4
+Cobalt.FinalMetaDataGatherer.database.name =
+
+# The user with which to log in to the database named above.
+# If empty (or missing), the default user name and password are used.
+# If non-empty, the password is used:
+# NOTE: all of these key/vals may end up all over the place incl the data product!!!
+Cobalt.FinalMetaDataGatherer.database.username =
 

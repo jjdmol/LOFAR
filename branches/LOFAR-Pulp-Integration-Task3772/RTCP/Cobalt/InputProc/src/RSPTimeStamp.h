@@ -78,6 +78,9 @@ namespace LOFAR
       // Give the current time, for the given clock speed.
       static TimeStamp now(unsigned clockSpeed);
 
+      // Give a time we won't reach
+      static TimeStamp universe_heat_death(unsigned clockSpeed);
+
       // Convert from seconds since 1970. This is a separate static
       // function to avoid confusion with the TimeStamp(uint64, unsigned)
       // constructor.

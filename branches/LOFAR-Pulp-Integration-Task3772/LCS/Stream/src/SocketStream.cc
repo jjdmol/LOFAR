@@ -24,6 +24,7 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Thread/Cancellation.h>
+#include <Common/Thread/Mutex.h>
 #include <Stream/SocketStream.h>
 
 #include <cstring>
@@ -67,6 +68,9 @@ static struct RandomState {
   unsigned short xsubi[3];
 } randomState;
 
+namespace {
+  Mutex getAddrInfoMutex;
+};
 
 SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol protocol, Mode mode, time_t deadline, const std::string &nfskey, bool doAccept)
 :
@@ -77,6 +81,11 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
   nfskey(nfskey),
   listen_sk(-1)
 {  
+  const std::string description = str(boost::format("%s:%s:%s")
+      % (protocol == TCP ? "tcp" : "udp")
+      % hostname
+      % _port);
+
   struct addrinfo hints;
   bool            autoPort = (port == 0);
 
@@ -108,10 +117,15 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         snprintf(portStr, sizeof portStr, "%hu", port);
 
-        if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
-          const string errorstr = gai_strerror(retval);
+        {
+          // getaddrinfo does not seem to be thread safe
+          ScopedLock sl(getAddrInfoMutex);
 
-          throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+          if ((retval = getaddrinfo(hostname.c_str(), portStr, &hints, &result)) != 0) {
+            const string errorstr = gai_strerror(retval);
+
+            throw SystemCallException(str(format("getaddrinfo(%s): %s") % hostname % errorstr), 0, THROW_ARGS); // TODO: SystemCallException also adds strerror(0), which is useless here
+          }
         }
 
         // make sure result will be freed
@@ -142,7 +156,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
                 THROW_SYSCALL("sleep");
               }
             } else
-              THROW_SYSCALL("connect");
+              THROW_SYSCALL(str(boost::format("connect [%s]") % description));
         } else {
           int on = 1;
 
@@ -150,7 +164,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
             THROW_SYSCALL("setsockopt(SO_REUSEADDR)");
 
           if (bind(fd, result->ai_addr, result->ai_addrlen) < 0)
-            THROW_SYSCALL("bind");
+            THROW_SYSCALL(str(boost::format("bind [%s]") % description));
 
           if (protocol == TCP) {
             listen_sk = fd;
@@ -158,7 +172,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
             int listenBacklog = 15;
             if (listen(listen_sk, listenBacklog) < 0)
-              THROW_SYSCALL("listen");
+              THROW_SYSCALL(str(boost::format("listen [%s]") % description));
 
             if (doAccept)
               accept(deadline);
@@ -283,7 +297,7 @@ void SocketStream::accept(time_t deadline)
 void SocketStream::setReadBufferSize(size_t size)
 {
   if (fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &size, sizeof size) < 0)
-    perror("setsockopt failed");
+    perror("setsockopt(SO_RCVBUF)");
 }
 
 

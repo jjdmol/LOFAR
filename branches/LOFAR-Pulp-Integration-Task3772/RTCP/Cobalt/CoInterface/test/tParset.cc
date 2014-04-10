@@ -232,7 +232,7 @@ SUITE(delayCompensation) {
 }
 
 /*
- * Test station information.
+ * Test station / antenna field information.
  */
 
 TEST(antennaSet) {
@@ -275,7 +275,7 @@ TEST(bandFilter) {
   }
 }
 
-SUITE(antennaFields) {
+SUITE(antennaFieldNames) {
   TEST(LBA) {
     vector<string> stations, expectedFields;
     stations.push_back("CS001");
@@ -287,12 +287,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603LBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "LBA_INNER");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "LBA_INNER");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -307,12 +307,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ZERO");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_ZERO");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -327,12 +327,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_ONE");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_ONE");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -349,12 +349,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_DUAL");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_DUAL");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 
@@ -369,12 +369,12 @@ SUITE(antennaFields) {
     stations.push_back("DE603");
     expectedFields.push_back("DE603HBA");
 
-    vector<ObservationSettings::AntennaFieldName> antennaFields = ObservationSettings::antennaFields(stations, "HBA_JOINED");
+    vector<ObservationSettings::AntennaFieldName> antennaFieldNames = ObservationSettings::antennaFieldNames(stations, "HBA_JOINED");
 
-    CHECK_EQUAL(expectedFields.size(), antennaFields.size());
+    CHECK_EQUAL(expectedFields.size(), antennaFieldNames.size());
 
-    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFields.size()); ++i) {
-      CHECK_EQUAL(expectedFields[i], antennaFields[i].fullName());
+    for (size_t i = 0; i < std::min(expectedFields.size(), antennaFieldNames.size()); ++i) {
+      CHECK_EQUAL(expectedFields[i], antennaFieldNames[i].fullName());
     }
   }
 }
@@ -390,10 +390,10 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(3U, ps.settings.stations[0].phaseCenter.size());
-    CHECK_CLOSE(1.0, ps.settings.stations[0].phaseCenter[0], 0.01);
-    CHECK_CLOSE(2.0, ps.settings.stations[0].phaseCenter[1], 0.01);
-    CHECK_CLOSE(3.0, ps.settings.stations[0].phaseCenter[2], 0.01);
+    CHECK_EQUAL(3U,  ps.settings.antennaFields[0].phaseCenter.size());
+    CHECK_CLOSE(1.0, ps.settings.antennaFields[0].phaseCenter[0], 0.01);
+    CHECK_CLOSE(2.0, ps.settings.antennaFields[0].phaseCenter[1], 0.01);
+    CHECK_CLOSE(3.0, ps.settings.antennaFields[0].phaseCenter[2], 0.01);
   }
 
   TEST(default_map) {
@@ -407,11 +407,11 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(1U, ps.settings.stations.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap[0]);
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspSlotMap.size());
-    CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspSlotMap.size());
+    CHECK_EQUAL(2U, ps.settings.antennaFields[0].rspSlotMap[0]);
   }
 
   TEST(station_map) {
@@ -425,11 +425,102 @@ SUITE(stations) {
     ps.updateSettings();
 
     // verify settings
-    CHECK_EQUAL(1U, ps.settings.stations.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap.size());
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspBoardMap[0]);
-    CHECK_EQUAL(1U, ps.settings.stations[0].rspSlotMap.size());
-    CHECK_EQUAL(2U, ps.settings.stations[0].rspSlotMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap.size());
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspBoardMap[0]);
+    CHECK_EQUAL(1U, ps.settings.antennaFields[0].rspSlotMap.size());
+    CHECK_EQUAL(2U, ps.settings.antennaFields[0].rspSlotMap[0]);
+  }
+}
+
+SUITE(StationStreams) {
+
+
+  TEST(restrictNodes) {
+    // optional key Cobalt.restrictNodesToStationStreams
+
+    // By default, all (half-)nodes must be used, because we may need them for
+    // computations, even if not all receive input. We don't have a perf model.
+    Parset ps;
+
+    ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+    ps.add("Observation.antennaSet", "HBA_DUAL_INNER");
+
+    const unsigned nrNodes = 4; // in this test, twice the half-nodes
+    ps.add("Cobalt.Nodes", "[node01_0, node01_1, node02_0, node02_1, node03_0, node03_1, node04_0, node04_1]");
+    ps.add("PIC.Core.Cobalt.node01_0.host", "node01_0");
+    ps.add("PIC.Core.Cobalt.node01_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node01_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node01_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node01_1.host", "node01_1");
+    ps.add("PIC.Core.Cobalt.node01_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node01_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node01_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node02_0.host", "node02_0");
+    ps.add("PIC.Core.Cobalt.node02_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node02_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node02_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node02_1.host", "node02_1");
+    ps.add("PIC.Core.Cobalt.node02_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node02_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node02_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node03_0.host", "node03_0");
+    ps.add("PIC.Core.Cobalt.node03_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node03_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node03_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node03_1.host", "node03_1");
+    ps.add("PIC.Core.Cobalt.node03_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node03_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node03_1.gpus", "[2, 3]");
+    ps.add("PIC.Core.Cobalt.node04_0.host", "node04_0");
+    ps.add("PIC.Core.Cobalt.node04_0.cpu", "0");
+    ps.add("PIC.Core.Cobalt.node04_0.nic", "mlx4_0");
+    ps.add("PIC.Core.Cobalt.node04_0.gpus", "[0, 1]");
+    ps.add("PIC.Core.Cobalt.node04_1.host", "node04_1");
+    ps.add("PIC.Core.Cobalt.node04_1.cpu", "1");
+    ps.add("PIC.Core.Cobalt.node04_1.nic", "mlx4_1");
+    ps.add("PIC.Core.Cobalt.node04_1.gpus", "[2, 3]");
+    ps.updateSettings();
+
+    CHECK_EQUAL(2 * nrNodes, ps.settings.nodes.size());
+
+
+    ps.add("Cobalt.restrictNodesToStationStreams", "true");
+    ps.updateSettings();
+
+    // no stream connections defined, no nodes have input, so need 0 nodes
+    CHECK_EQUAL(0u, ps.settings.nodes.size());
+
+
+    ps.add("PIC.Core.CS001HBA0.RSP.ports", "[udp:node02-10GB01:10010, udp:node02-10GB01:10011, udp:node02-10GB01:10012, udp:node02-10GB01:10013]");
+    ps.add("PIC.Core.CS001HBA0.RSP.receiver", "node02_0");
+    ps.add("PIC.Core.CS001HBA1.RSP.ports", "[udp:node04-10GB01:10016, udp:node04-10GB01:10017, udp:node04-10GB01:10018, udp:node04-10GB01:10019]");
+    ps.add("PIC.Core.CS001HBA1.RSP.receiver", "node04_1");
+    // add some irrelevant streams (see if it takes ant set into account)
+    ps.add("PIC.Core.CS001HBA.RSP.ports", "[udp:node01-10GB01:10010, udp:node01-10GB01:10011, udp:node01-10GB01:10012, udp:node01-10GB01:10013]");
+    ps.add("PIC.Core.CS001HBA.RSP.receiver", "node01_1");
+    ps.add("PIC.Core.CS001LBA.RSP.ports", "[udp:node03-10GB01:10010, udp:node03-10GB01:10011, udp:node03-10GB01:10012, udp:node03-10GB01:10013]");
+    ps.add("PIC.Core.CS001LBA.RSP.receiver", "node03_0");
+    ps.updateSettings();
+
+    // The 2 nodes connected to the 2 ant fields must be the only ones.
+    CHECK_EQUAL(2u, ps.settings.nodes.size());
+    string name1 = ps.settings.nodes[0].name;
+    string name2 = ps.settings.nodes[1].name;
+    // verify order independent
+    if (name1 == "node02_0")
+      CHECK_EQUAL("node04_1", name2);
+    else if (name1 == "node04_1")
+      CHECK_EQUAL("node02_0", name2);
+    else // wrong wrong wrong. Ensure both are printed.
+      CHECK_EQUAL(name1 + "XXX", name2 + "YYY");
+
+
+    // switch off again to have all nodes
+    ps.replace("Cobalt.restrictNodesToStationStreams", "false");
+    ps.updateSettings();
+
+    CHECK_EQUAL(2 * nrNodes, ps.settings.nodes.size());
   }
 }
 
@@ -847,6 +938,68 @@ SUITE(beamformer) {
   }
 }
 
+/*
+* ===============================================
+* Test correct creation of tab rings
+* ===============================================
+*/
+TEST(testRing) {
+  string prefix = "Observation.Beam[0]";
+  Parset ps;
+
+  // First add enough coherent names for all the created tabs
+  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[8*localhost:.]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[8*SB000.MS]");
+  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
+  ps.add("Observation.DataProducts.Output_.enabled", "true");
+
+  ps.add(prefix + ".TiedArrayBeam[0].angle1", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].angle2", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].coherent", "true");
+  ps.add(prefix + ".TiedArrayBeam[0].directionType", "J2000");
+  ps.add(prefix + ".TiedArrayBeam[0].dispersionMeasure", "0");
+  ps.add(prefix + ".TiedArrayBeam[0].specificationType", "manual");
+  ps.add(prefix + ".TiedArrayBeam[0].stationList", "[]");
+  ps.add(prefix + ".nrTiedArrayBeams","1");
+
+  // We have 1 tabring
+  string key = prefix + ".nrTabRings";
+  string value = "1"; 
+  ps.add(key, value);
+
+  // ringwidth == 1
+  key = prefix + ".ringWidth";
+  value = "2";
+  ps.add(key, value);
+
+  // type
+  key = prefix + ".directionType";
+  value = "J2000";
+  ps.add(key, value);
+
+  // location
+  key = prefix + ".angle1";
+  value = "3.0";
+  ps.add(key, value);
+
+  key = prefix + ".angle2";
+  value = "4.0";
+  ps.add(key, value);
+
+  ps.updateSettings();
+
+  // Validate output
+  // number of tabs
+  CHECK_EQUAL((size_t)8, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
+  // take two random pointing and validate ( functionality is checking seperate
+  // test suite)
+  // The manual tabs should be added before the ring tabs. 
+  // test values are for the 3rd value in the ring
+  CHECK_CLOSE(4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
+  CHECK_CLOSE(1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
+  // Full list of value for 1 circle:
+  //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
+}
 
 /*
  * ===============================================
@@ -874,32 +1027,32 @@ SUITE(integration) {
     CHECK_EQUAL("LBA_10_90", ps.settings.bandFilter);
     CHECK_EQUAL(false,       ps.settings.anaBeam.enabled);
 
-    // test station list
-    CHECK_EQUAL(nrStations,  ps.settings.stations.size());
+    // test antenna fields list
+    CHECK_EQUAL(nrStations,  ps.settings.antennaFields.size());
     for (unsigned st = 0; st < nrStations; ++st) {
-      CHECK_EQUAL(nrSubbands, ps.settings.stations[st].rspBoardMap.size());
-      CHECK_ARRAY_EQUAL(zeroes(nrSubbands),   ps.settings.stations[st].rspBoardMap, nrSubbands);
+      CHECK_EQUAL(nrSubbands, ps.settings.antennaFields[st].rspBoardMap.size());
+      CHECK_ARRAY_EQUAL(zeroes(nrSubbands),   ps.settings.antennaFields[st].rspBoardMap, nrSubbands);
 
-      CHECK_EQUAL(nrSubbands, ps.settings.stations[st].rspSlotMap.size());
-      CHECK_ARRAY_EQUAL(sequence(nrSubbands), ps.settings.stations[st].rspSlotMap, nrSubbands);
+      CHECK_EQUAL(nrSubbands, ps.settings.antennaFields[st].rspSlotMap.size());
+      CHECK_ARRAY_EQUAL(sequence(nrSubbands), ps.settings.antennaFields[st].rspSlotMap, nrSubbands);
     }
 
-    // check core stations
+    // check core antenna fields
     for (unsigned st = 0; st < 21; ++st) {
-      CHECK_EQUAL("CS", ps.settings.stations[st].name.substr(0,2));
-      CHECK_CLOSE(3827000.0, ps.settings.stations[st].phaseCenter[0], 2000);
-      CHECK_CLOSE( 460900.0, ps.settings.stations[st].phaseCenter[1], 2000);
-      CHECK_CLOSE(5065000.0, ps.settings.stations[st].phaseCenter[2], 2000);
+      CHECK_EQUAL("CS", ps.settings.antennaFields[st].name.substr(0,2));
+      CHECK_CLOSE(3827000.0, ps.settings.antennaFields[st].phaseCenter[0], 2000);
+      CHECK_CLOSE( 460900.0, ps.settings.antennaFields[st].phaseCenter[1], 2000);
+      CHECK_CLOSE(5065000.0, ps.settings.antennaFields[st].phaseCenter[2], 2000);
     }
 
-    // check remote stations
+    // check remote antenna fields
     for (unsigned st = 21; st < nrStations; ++st) {
-      CHECK_EQUAL("RS", ps.settings.stations[st].name.substr(0,2));
-      CHECK_CLOSE(3827000.0, ps.settings.stations[st].phaseCenter[0], 30000);
-      CHECK_CLOSE( 460900.0, ps.settings.stations[st].phaseCenter[1], 20000);
-      CHECK_CLOSE(5065000.0, ps.settings.stations[st].phaseCenter[2], 20000);
+      CHECK_EQUAL("RS", ps.settings.antennaFields[st].name.substr(0,2));
+      CHECK_CLOSE(3827000.0, ps.settings.antennaFields[st].phaseCenter[0], 30000);
+      CHECK_CLOSE( 460900.0, ps.settings.antennaFields[st].phaseCenter[1], 20000);
+      CHECK_CLOSE(5065000.0, ps.settings.antennaFields[st].phaseCenter[2], 20000);
 
-      CHECK_EQUAL(0.0, ps.settings.stations[st].clockCorrection);
+      CHECK_EQUAL(0.0, ps.settings.antennaFields[st].clockCorrection);
     }
 
     // test subband/sap configuration
@@ -936,7 +1089,7 @@ SUITE(integration) {
     CHECK_EQUAL(30U,         ps.settings.correlator.nrBlocksPerIntegration);
     CHECK_EQUAL(nrStations, ps.settings.correlator.stations.size());
     for (unsigned st = 0; st < nrStations; ++st) {
-      CHECK_EQUAL(ps.settings.stations[st].name, ps.settings.correlator.stations[st].name);
+      CHECK_EQUAL(ps.settings.antennaFields[st].name, ps.settings.correlator.stations[st].name);
 
       CHECK_EQUAL(1U, ps.settings.correlator.stations[st].inputStations.size());
       CHECK_EQUAL(st, ps.settings.correlator.stations[st].inputStations[0]);

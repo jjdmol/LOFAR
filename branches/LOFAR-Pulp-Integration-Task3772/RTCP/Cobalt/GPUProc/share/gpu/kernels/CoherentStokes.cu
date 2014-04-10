@@ -30,6 +30,10 @@
 #error Precondition violated: NR_COHERENT_STOKES == 1 || NR_COHERENT_STOKES == 4
 #endif
 
+#if !(COMPLEX_VOLTAGES == 0 || NR_COHERENT_STOKES == 4)
+#error Precondition violated: COMPLEX_VOLTAGES == 0 || NR_COHERENT_STOKES == 4
+#endif
+
 #if !(NR_POLARIZATIONS == 2)
 #error Precondition violated: NR_POLARIZATIONS == 2
 #endif
@@ -144,11 +148,15 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
   {
     //# We are integrating all values in the current stride
     //# local variable
-    float stokesI = 0;
-#   if NR_COHERENT_STOKES == 4
-    float stokesQ = 0;
-    float halfStokesU = 0;
-    float halfStokesV = 0;
+#   if COMPLEX_VOLTAGES == 1
+      float4 stokes = { 0, 0, 0, 0 };
+#   else
+      float stokesI = 0;
+#     if NR_COHERENT_STOKES == 4
+        float stokesQ = 0;
+        float halfStokesU = 0;
+        float halfStokesV = 0;
+#     endif
 #   endif
     
     //# Do the integration
@@ -157,26 +165,40 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
       float2 X = (*input)[tab_idx][0][idx_stride + idx_step][channel_idx];    
       float2 Y = (*input)[tab_idx][1][idx_stride + idx_step][channel_idx];
 
-      //# Calculate the partial solutions
-      float powerX = X.x * X.x + X.y * X.y;
-      float powerY = Y.x * Y.x + Y.y * Y.y;
-      stokesI += powerX + powerY;
-#     if NR_COHERENT_STOKES == 4
-      stokesQ += powerX - powerY;
-      halfStokesU += X.x * Y.x + X.y * Y.y;
-      halfStokesV += X.y * Y.x - X.x * Y.y;
+#     if COMPLEX_VOLTAGES == 1
+        stokes.x += X.x;
+        stokes.y += X.y;
+        stokes.z += Y.x;
+        stokes.w += Y.y;
+#     else
+        //# Calculate the partial solutions
+        float powerX = X.x * X.x + X.y * X.y;
+        float powerY = Y.x * Y.x + Y.y * Y.y;
+        stokesI += powerX + powerY;
+#       if NR_COHERENT_STOKES == 4
+          stokesQ += powerX - powerY;
+          halfStokesU += X.x * Y.x + X.y * Y.y;
+          halfStokesV += X.y * Y.x - X.x * Y.y;
+#       endif
 #     endif
     }
 
     //# We step in the data with INTEGRATION_SIZE
     unsigned write_idx = idx_stride / INTEGRATION_SIZE;
 
-    (*output)[tab_idx][0][write_idx][channel_idx] = stokesI;
-#   if NR_COHERENT_STOKES == 4
-    (*output)[tab_idx][1][write_idx][channel_idx] = stokesQ;
-    (*output)[tab_idx][2][write_idx][channel_idx] = 2 * halfStokesU;
-    (*output)[tab_idx][3][write_idx][channel_idx] = 2 * halfStokesV;
-#   endif  
+#   if COMPLEX_VOLTAGES == 1
+      (*output)[tab_idx][0][write_idx][channel_idx] = stokes.x;
+      (*output)[tab_idx][1][write_idx][channel_idx] = stokes.y;
+      (*output)[tab_idx][2][write_idx][channel_idx] = stokes.z;
+      (*output)[tab_idx][3][write_idx][channel_idx] = stokes.w;
+#   else
+      (*output)[tab_idx][0][write_idx][channel_idx] = stokesI;
+#     if NR_COHERENT_STOKES == 4
+        (*output)[tab_idx][1][write_idx][channel_idx] = stokesQ;
+        (*output)[tab_idx][2][write_idx][channel_idx] = 2 * halfStokesU;
+        (*output)[tab_idx][3][write_idx][channel_idx] = 2 * halfStokesV;
+#     endif  
+#   endif
     //# No baries needed. All computations are fully parallel
   }
 }

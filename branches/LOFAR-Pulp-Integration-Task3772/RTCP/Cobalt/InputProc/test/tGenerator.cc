@@ -67,13 +67,12 @@ int main( int, char **argv )
   }
 
   struct StationID stationID("RS106", "LBA");
-  struct BufferSettings settings(stationID, false);
   struct BoardMode mode(16, 200);
 
   const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
   PacketFactory factory(mode);
-  Generator g(settings, outputStreams, factory, from, to);
+  Generator g(stationID, outputStreams, factory, from, to);
 
   bool error = false;
 

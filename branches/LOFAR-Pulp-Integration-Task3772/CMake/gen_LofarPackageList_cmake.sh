@@ -59,6 +59,9 @@ if(NOT DEFINED LOFAR_PACKAGE_LIST_INCLUDED)
   set(LOFAR_PACKAGE_LIST_INCLUDED TRUE)
 EOF
 
+# Guarantee we always sort the same way by setting the collate order to C.
+export LC_COLLATE="C"
+
 # Set internal field separator (IFS) to newline only.
 IFS='
 '
