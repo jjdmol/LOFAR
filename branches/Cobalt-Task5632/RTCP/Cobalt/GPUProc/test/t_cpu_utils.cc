@@ -24,7 +24,6 @@
 
 #include <cstring>
 #include <sched.h>
-#include <mpi.h>
 #include <string>
 #include <iostream>
 
