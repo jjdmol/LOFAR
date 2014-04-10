@@ -1062,16 +1062,14 @@ TEST(testRing) {
   ps.replace("Observation.DataProducts.Output_CoherentStokes.locations", "[8*localhost:.]");
   ps.replace("Observation.DataProducts.Output_CoherentStokes.filenames", "[8*SB000.MS]");
   ps.replace("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-  ps.replace("Observation.DataProducts.Output_.enabled", "true");
 
-  ps.replace(prefix + ".TiedArrayBeam[0].angle1", "0");
-  ps.replace(prefix + ".TiedArrayBeam[0].angle2", "0");
+  ps.replace(prefix + ".TiedArrayBeam[0].angle1", "0.0");
+  ps.replace(prefix + ".TiedArrayBeam[0].angle2", "0.0");
   ps.replace(prefix + ".TiedArrayBeam[0].coherent", "true");
   ps.replace(prefix + ".TiedArrayBeam[0].directionType", "J2000");
-  ps.replace(prefix + ".TiedArrayBeam[0].dispersionMeasure", "0");
-  ps.replace(prefix + ".TiedArrayBeam[0].specificationType", "manual");
-  ps.replace(prefix + ".TiedArrayBeam[0].stationList", "[]");
-  ps.replace(prefix + ".nrTiedArrayBeams","1");
+  ps.replace(prefix + ".TiedArrayBeam[0].dispersionMeasure", "0.0");
+  ps.replace(prefix + ".TiedArrayBeam[0].specificationType", "manual"); // to clarify; not used by Parset obj
+  ps.replace(prefix + ".nrTiedArrayBeams", "1");
 
   // We have 1 tabring
   string key = prefix + ".nrTabRings";
