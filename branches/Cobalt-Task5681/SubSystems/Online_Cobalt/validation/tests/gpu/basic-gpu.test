@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+cd `dirname $0`
+gcc --std=c99 -I/usr/local/cuda/include -L/usr/local/cuda/lib64 -L/usr/lib/nvidia-current gpu-context.c -o gpu-context -lcuda
+./gpu-context || exit 1
+

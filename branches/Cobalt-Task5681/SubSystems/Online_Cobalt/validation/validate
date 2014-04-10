@@ -4,6 +4,7 @@ NRTESTS=0
 NRSUCCESS=0
 NRFAILURE=0
 
+# Run all tests
 for TEST in `find tests -name '*.test' -type f -a -executable`
 do
   LOGFILE="$TEST.log"
@@ -26,14 +27,12 @@ do
   fi
 done
 
+# Report statistics
 SUCCESSPERCENTAGE=$((100 * NRSUCCESS / NRTESTS))
 echo ""
 echo "${SUCCESSPERCENTAGE}% tests passed, ${NRFAILURE} tests failed out of ${NRTESTS}"
 echo ""
 
-if [ $NRFAILURE -eq 0 ]
-then
-  exit 0
-else
-  exit 1
-fi
+# Base our exit code on the existence of failed tests
+[ $NRFAILURE -eq 0 ]
+
