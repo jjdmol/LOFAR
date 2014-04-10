@@ -33,6 +33,7 @@ struct KernelParameters
   unsigned idxGPU;
   unsigned nStation;
   unsigned nTimeBlocks;
+  bool parameterParsed;
 
   KernelParameters();
   void print();

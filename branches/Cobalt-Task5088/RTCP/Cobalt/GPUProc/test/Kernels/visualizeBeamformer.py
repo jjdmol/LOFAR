@@ -20,7 +20,10 @@ if __name__ == "__main__":
   for var1 in header[2]:
     line = [] 
     for var2 in header[4]:
-      line.append(csvData[(var1,var2)].getNamedMetric(namedValue,"Avg"))
+      try:
+        line.append(csvData[(var1,var2)].getNamedMetric(namedValue,"Avg"))
+      except:
+        line.append(0)
     resultLines.append(line)
 
 

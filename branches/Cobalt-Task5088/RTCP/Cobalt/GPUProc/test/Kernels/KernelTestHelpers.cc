@@ -53,6 +53,7 @@ KernelParameters::KernelParameters()
   idxGPU = 0;
   nStation = 47;
   nTimeBlocks = 48;
+  parameterParsed = false;
 }
 
 void KernelParameters::print()
@@ -78,29 +79,32 @@ KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, 
     {
     case 't':
       params.nrTabs = atoi(optarg);
+      params.parameterParsed = true;
       break;
 
     case 'c':
       params.nrChannels = atoi(optarg);
-
+      params.parameterParsed = true;
       break;
 
     case 'i':
       params.idxGPU = atoi(optarg);
+      params.parameterParsed = true;
       break;
 
     case 's':
       params.nStation = atoi(optarg);
+      params.parameterParsed = true;
       break;
 
     case 'b':
       params.nTimeBlocks = atoi(optarg);
+      params.parameterParsed = true;
       break;
 
     default:
-
       usage(testName);
-      exit(1);
+      params.parameterParsed = false;  // Do not exit on no arguments
     }
   }
 
@@ -136,7 +140,7 @@ KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, 
 
   ps.add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", "512");
   ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "16");
-  ps.add("Cobalt.BeamFormer.CoherentStokes.which", "I");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.which", "XXYY");
 
   ps.add("Cobalt.BeamFormer.nrDelayCompensationChannels", lexical_cast<string>(params.nrChannels));
   ps.add("Cobalt.BeamFormer.nrHighResolutionChannels", lexical_cast<string>(params.nrChannels));
@@ -144,9 +148,10 @@ KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, 
   ps.add("Cobalt.blockSize", lexical_cast<string>(params.nTimeBlocks * 64 * params.nrChannels));
 
   string stations = "[";
-  stations.append(lexical_cast<string>(params.nStation)).append("*RS106HBA]");
+  stations.append(lexical_cast<string>(params.nStation)).append("*RS106]");
   ps.add("Observation.VirtualInstrument.stationList", stations);
   ps.add("Observation.antennaArray", "HBA");
+  ps.add("Observation.antennaSet", "HBA_DUAL");
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.beamList", "[5 * 0]");
   ps.add("Observation.Dataslots.RS106HBA.DataslotList", "[0..4]");

@@ -7,7 +7,7 @@ lofar_add_test(tIntToFloatKernel tIntToFloatKernel.cc)
 lofar_add_test(tDelayAndBandPassKernel tDelayAndBandPassKernel.cc KernelTestHelpers.cc)
 lofar_add_test(tBandPassCorrectionKernel tBandPassCorrectionKernel.cc)
 lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc KernelTestHelpers.cc)
-lofar_add_test(tCoherentStokesKernel tCoherentStokesKernel.cc)
+lofar_add_test(tCoherentStokesKernel tCoherentStokesKernel.cc KernelTestHelpers.cc)
 lofar_add_test(tFFTShiftKernel tFFTShiftKernel.cc)
 
 # Compile some shallow wrapper executable to perform runtime compilation

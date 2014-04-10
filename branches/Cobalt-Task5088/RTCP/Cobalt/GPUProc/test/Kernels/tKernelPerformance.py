@@ -22,7 +22,6 @@ def runAndGetCerrCout(cmd):
   returns the sterr and stout
   """
   # start
-
   process = subprocess.Popen(
                         cmd,
                         stdin=subprocess.PIPE,
@@ -34,8 +33,11 @@ def runAndGetCerrCout(cmd):
 
   # exit != 0
   if (exit_status != 0):
-    print "Encountered an error running the executble:"
-    raise Exception()
+    print "********************************************"
+    print "Encountered an error running the executble"
+    print cmd
+    print stderrdata
+    print "********************************************"
     
   return stdoutdata, stderrdata
 
