@@ -115,7 +115,7 @@ namespace LOFAR
       new FFTShiftKernel::Buffers(coherentStokesPPF ? *devD : *devC, coherentStokesPPF ? *devD : *devC));
 
     inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-      factories.fftShift.create(queue, *inverseFFTShiftBuffers));
+      factories.coherentInverseFFTShift.create(queue, *inverseFFTShiftBuffers));
 
     // FIR filter: D -> C
     //
@@ -128,17 +128,17 @@ namespace LOFAR
     // PPF: C
     devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
       new gpu::DeviceMemory(context,
-      factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
+      factories.coherentFirFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
 
     devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
       new gpu::DeviceMemory(context,
-      factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)));
+      factories.coherentFirFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)));
 
     firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
       new FIR_FilterKernel::Buffers(*devD, *devC, *devFilterWeights, *devFilterHistoryData));
 
     firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-      factories.firFilter.create(queue, *firFilterBuffers));
+      factories.coherentFirFilter.create(queue, *firFilterBuffers));
 
     // final FFT: C -> C (in-place) = firFilterBuffers.output
 
