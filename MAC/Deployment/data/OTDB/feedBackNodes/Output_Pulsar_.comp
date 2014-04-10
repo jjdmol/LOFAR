@@ -1,8 +1,8 @@
-# -- Output_InstrumentModel_ --
+# -- Output_Pulsar_ --
 #
-# Component description of a InstrumentModel Dataproduct
+# Component description of a Pulsar Dataproduct
 #
-# $Id$
+# $Id: Output_Pulsar_.comp 25001 2013-05-22 12:14:41Z jong $
 #
 # name          name of the node
 # version       version of this node specification
@@ -19,10 +19,10 @@
 #
 
 #########################################################################################################
-# -- Output_InstrumentModel_ --
+# -- Output_Pulsar_ --
 #      name       	vers   qual  		constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  Output_InstrumentModel_	4.0.0  development  	'node constraint'  "InstrumentModelDataProduct specification"
+node  Output_Pulsar_	4.0.0  development  	'node constraint'  "PulpDataProduct specification"
 
 #
 # name			name of the parameter
@@ -37,9 +37,19 @@ node  Output_InstrumentModel_	4.0.0  development  	'node constraint'  "Instrumen
 #--------------------------------------------------------------------------------------------------------
 #    name                  dir. type   unit   prun. vm   value	constr.	descr.
 #--------------------------------------------------------------------------------------------------------
-par  size 	                O    ulng   -      10    0    0      	- 	''
-par  fileFormat                 O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5|PULP;AIPS++/CASA'      -       ''
+par  size 	                O    ulng   -      10    0    0      	- 	    'In bytes'
+par  fileFormat                 O    ptext  -      10    0    'FITS|AIPS++/CASA|HDF5|PULP;PULP'      -       ''
 par  filename                   O    text   -      10    0    ''      	-       ''
 par  location                   O    text   -      10    0    ''      	-       ''
 par  percentageWritten          O    uint   -      10    0    0      	-       ''
+par  datatype                   O    ptext  -      10    0    'CoherentStokes|IncoherentStokes|ComplexVoltages|SummaryCoherentStokes|SummaryIncoherentStokes|SummaryComplexVoltages'        -       ''
+par  fileContent                0    vtext  -      10    0    ''        -       'A list of files in the tar ball'
+
+# Note: for summary information no beam will be present below.
+# Depending on the type of TAB, _one_ of the structs below should be present if it's not Summary information.
+#      name              	vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+uses  CoherentStokesBeam     	4.0.0  development '1'		      "CoherentStokesBeam specification"
+uses  IncoherentStokesBeam   	4.0.0  development '1'		      "IncoherentStokesBeam specification"
+uses  FlysEyeBeam     		4.0.0  development '1'		      "FlysEyeBeam specification"
 
