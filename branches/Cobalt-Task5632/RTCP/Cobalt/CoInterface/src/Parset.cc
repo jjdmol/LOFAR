@@ -656,8 +656,9 @@ namespace LOFAR
                 0);
           stSettings->nrSamples = settings.blockSize / stSettings->timeIntegrationFactor / stSettings->nrChannels;
 
-          if (stSettings->nrSubbandsPerFile == 0) {
-            // apply default
+          if (stSettings->nrSubbandsPerFile == 0 ||
+              stSettings->nrSubbandsPerFile > settings.subbands.size()) {
+            // apply default or limit to the nr of subbands we have
             stSettings->nrSubbandsPerFile = settings.subbands.size();
           }
         }
