@@ -22,24 +22,25 @@
 
 #include "CoherentStokesKernel.h"
 
-#include <GPUProc/global_defines.h>
-#include <GPUProc/gpu_utils.h>
-#include <CoInterface/BlockID.h>
-#include <Common/lofar_complex.h>
-#include <Common/LofarLogger.h>
-
+#include <utility>
+#include <fstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
-#include <fstream>
-
-using boost::lexical_cast;
-using boost::format;
+#include <Common/lofar_complex.h>
+#include <Common/LofarLogger.h>
+#include <CoInterface/BlockID.h>
+#include <CoInterface/Align.h>
+#include <GPUProc/global_defines.h>
+#include <GPUProc/gpu_utils.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    using boost::lexical_cast;
+    using boost::format;
+
     string CoherentStokesKernel::theirSourceFile = "CoherentStokes.cu";
     string CoherentStokesKernel::theirFunction = "coherentStokes";
 
@@ -47,15 +48,13 @@ namespace LOFAR
       Kernel::Parameters(ps),
       nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
-      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY ? 1 : 0),
+      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
       timeIntegrationFactor(
         ps.settings.beamFormer.coherentSettings.timeIntegrationFactor)
      {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples;
 
-      // The number of samples should be a multiple of 16
-      timeParallelFactor = 1;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -71,19 +70,66 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      ASSERT(params.nrSamplesPerChannel % params.timeParallelFactor == 0);
-      ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-     
-      unsigned block_size = 16;
-      unsigned time_parallel = module.getContext().getDevice().getMaxThreadsPerBlock() / (16 * 16);
-      // Always a work dim up to 16 and start workloads of 16 * 16. Use the kernel to skip unneed work
-      setEnqueueWorkSizes( gpu::Grid ((params.nrChannelsPerSubband + block_size - 1) / block_size * block_size,
-                                        time_parallel,
-                                       (params.nrTABs + block_size - 1) / block_size * block_size),
-                           gpu::Block( block_size,time_parallel, block_size));
+
+      // Process 16 channels and 16 TABs per block, unless fewer needed. Use kernel checks to skip unneeded work.
+      const unsigned maxNrChannelsPerBlock = 16;
+      const unsigned maxNrTABsPerBlock     = 16;
+
+      // block dims
+      const unsigned nrChannelsPerBlock = std::min(params.nrChannelsPerSubband, maxNrChannelsPerBlock); // 13
+      unsigned nrTABsPerBlock           = std::min(params.nrTABs,               maxNrTABsPerBlock);     // 16
+
+      // grid dims in terms of #threads (OpenCL semantics)
+      const unsigned nrChannelThreads = align(params.nrChannelsPerSubband, nrChannelsPerBlock); // 13
+      unsigned nrTABsThreads          = align(params.nrTABs,               nrTABsPerBlock); // 32
+
+      // With few channels use more time parallellism.
+      // Don't do that with TABs just yet. #TABs may not be a power of 2.
+      // Ensure no time parallel boundary falls within an integration step.
+      const unsigned maxNrIntegrationsMultiple = params.nrSamplesPerChannel / params.timeIntegrationFactor; // 1024
+      const unsigned maxTimeParallelFactor = module.getContext().getDevice().getMaxThreadsPerBlock() /
+                                             (maxNrTABsPerBlock * nrChannelsPerBlock); // 4(.9...)
+      ASSERT(maxNrIntegrationsMultiple > 0);
+      ASSERT(maxTimeParallelFactor > 0);
+      unsigned timeParallelFactor = gcd(maxNrIntegrationsMultiple, maxTimeParallelFactor); // 1
+
+      // 1st order (expected)
+      gpu::Block block(nrChannelsPerBlock, timeParallelFactor, nrTABsPerBlock);
+      gpu::Grid  grid (nrChannelThreads,   timeParallelFactor, nrTABsThreads);
+      setEnqueueWorkSizes(grid, block);
+
+      // If we end up with few (large) blocks, tone down the block size,
+      // preferably in the TAB dim, else in the time dim.
+      // May not be possible with small problem sizes; doesn't matter.
+      const unsigned minBlockSize = 64; // don't go smaller
+      const unsigned expectedBlockSize = block.x * block.y * block.z;
+      const unsigned acceptableFewerBlockSizeFactor = std::min(1U, expectedBlockSize / minBlockSize);
+
+      const unsigned expectedNrBlocks = (grid.x / block.x) * (grid.y / block.y) * (grid.z / block.z);
+      const unsigned desiredExtraNrBlocksFactor = std::min( 1U,
+          (2 * module.getContext().getDevice().getMultiProcessorCount() + expectedNrBlocks - 1) / expectedNrBlocks );
+
+      const unsigned triedTransferFactor        = std::min(acceptableFewerBlockSizeFactor, desiredExtraNrBlocksFactor);
+      const unsigned transferTABsThreadsFactor  = std::min(triedTransferFactor, nrTABsPerBlock);
+      const unsigned remainingTriedTransferFactor = triedTransferFactor / transferTABsThreadsFactor; 
+      const unsigned transferTimeParallelFactor = std::min(remainingTriedTransferFactor, timeParallelFactor);
+
+      // apply transferTABsThreadsFactor and transferTimeParallelFactor (may be 1)
+      nrTABsPerBlock     /= transferTABsThreadsFactor;
+      timeParallelFactor /= transferTimeParallelFactor;
+      nrTABsThreads = align(params.nrTABs, nrTABsPerBlock); // ??
+
+      // 2nd order (final)
+      setEnqueueWorkSizes(grid, block);
+
+      ASSERT(params.nrSamplesPerChannel % timeParallelFactor == 0); // 201 % 64 == 0 ? XXX
+      ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel / timeParallelFactor % params.timeIntegrationFactor == 0);
+
+      setArg(2, timeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
+
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -119,13 +165,11 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["COMPLEX_VOLTAGES"] =
-        lexical_cast<string>(itsParameters.outputComplexVoltages);
+        lexical_cast<string>(itsParameters.outputComplexVoltages ? 1 : 0);
       defs["NR_COHERENT_STOKES"] =
-        lexical_cast<string>(itsParameters.nrStokes); // TODO: nrStokes and timeIntegrationFactor cannot differentiate between coh and incoh, while there are separate defines for coh and incoh. Correct?
-      defs["INTEGRATION_SIZE"] =
+        lexical_cast<string>(itsParameters.nrStokes);
+      defs["TIME_INTEGRATION_FACTOR"] =
         lexical_cast<string>(itsParameters.timeIntegrationFactor);
-      defs["TIME_PARALLEL_FACTOR"] =
-        lexical_cast<string>(itsParameters.timeParallelFactor);
 
       return defs;
     }

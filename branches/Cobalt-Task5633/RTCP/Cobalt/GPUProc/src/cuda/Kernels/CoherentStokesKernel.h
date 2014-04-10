@@ -1,5 +1,5 @@
 //# CoherentStokesKernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -45,9 +45,8 @@ namespace LOFAR
         Parameters(const Parset& ps);
         unsigned nrTABs;
         unsigned nrStokes;
-        unsigned outputComplexVoltages;
+        bool     outputComplexVoltages;
         unsigned timeIntegrationFactor;
-        unsigned timeParallelFactor;
       };
 
       enum BufferType

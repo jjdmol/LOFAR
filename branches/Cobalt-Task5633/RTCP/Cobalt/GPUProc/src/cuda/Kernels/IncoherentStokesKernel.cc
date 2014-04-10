@@ -22,18 +22,18 @@
 
 #include "IncoherentStokesKernel.h"
 
-#include <GPUProc/global_defines.h>
-#include <Common/lofar_complex.h>
-
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
+
+#include <Common/lofar_complex.h>
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    using boost::format;
     using boost::lexical_cast;
+    using boost::format;
 
     string IncoherentStokesKernel::theirSourceFile = "IncoherentStokes.cu";
     string IncoherentStokesKernel::theirFunction = "incoherentStokes";
@@ -106,6 +106,7 @@ namespace LOFAR
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const
     {
+Backtrace();
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["TIME_INTEGRATION_FACTOR"] = 
