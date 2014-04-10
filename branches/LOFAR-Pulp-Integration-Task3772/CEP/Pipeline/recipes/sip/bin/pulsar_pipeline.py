@@ -125,11 +125,11 @@ class pulsar_pipeline(control):
         self._get_io_product_specs()
 
         self.job_dir = self.config.get("layout", "job_directory")
-        parset_dir = os.path.join(self.job_dir, "parsets")
+        #parset_dir = os.path.join(self.job_dir, "parsets")
         mapfile_dir = os.path.join(self.job_dir, "mapfiles")
         
         # Create directories for temporary parset- and map files
-        create_directory(parset_dir)
+        #create_directory(parset_dir)
         create_directory(mapfile_dir)
 
         # Write input- and output data map-files
