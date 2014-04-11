@@ -160,6 +160,9 @@
     <None Include="..\..\CoInterface\test\tParset.sh">
       <Filter>test</Filter>
     </None>
+    <None Include="..\..\CoInterface\test\tRingCoordinates.py">
+      <Filter>test</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\CoInterface\src\CMakeLists.txt">
