@@ -31,17 +31,21 @@ namespace LOFAR
     BeamFormerFactories::BeamFormerFactories(const Parset &ps,
                                              size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
+        fftShift(fftShiftParams(ps)),
         delayCompensation(delayCompensationParams(ps)),
+        bandPassCorrection(bandPassCorrectionParams(ps)),
+
         beamFormer(beamFormerParams(ps)),
         coherentTranspose(coherentTransposeParams(ps)),
-        fftShift(fftShiftParams(ps)),
-        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
+        coherentInverseFFTShift(coherentInverseFFTShiftParams(ps)),
+        coherentFirFilter(coherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
         coherentStokes(coherentStokesParams(ps)),
-        incoherentStokes(incoherentStokesParams(ps)),
+
         incoherentStokesTranspose(incoherentStokesTransposeParams(ps)),
+        incoherentInverseFFTShift(incoherentInverseFFTShiftParams(ps)),
         incoherentFirFilter(
           incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
-        bandPassCorrection(bandPassCorrectionParams(ps))
+        incoherentStokes(incoherentStokesParams(ps))
       {
       }
 
@@ -92,14 +96,47 @@ namespace LOFAR
         return params;
       }
 
+      FFTShiftKernel::Parameters
+      BeamFormerFactories::coherentInverseFFTShiftParams(const Parset &ps)
+      {
+        FFTShiftKernel::Parameters params(ps);
+        // Currently a static in the subband proc
+        params.nrChannelsPerSubband =
+          ps.settings.beamFormer.nrDelayCompensationChannels;
+
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        params.nrSTABs = std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
+
+        return params;
+      }
+
+      FFTShiftKernel::Parameters
+      BeamFormerFactories::incoherentInverseFFTShiftParams(const Parset &ps)
+      {
+        FFTShiftKernel::Parameters params(ps);
+        // Currently a static in the subband proc
+        params.nrChannelsPerSubband =
+          ps.settings.beamFormer.nrDelayCompensationChannels;
+
+        params.nrSamplesPerChannel =
+          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+
+        // params.nrSTABs is the number of stations in the incoherent pipeline,
+        // which happens to be the default.
+
+        return params;
+      }
+
       FIR_FilterKernel::Parameters
       BeamFormerFactories::
-      firFilterParams(const Parset &ps,
+      coherentFirFilterParams(const Parset &ps,
                       size_t nrSubbandsPerSubbandProc) 
       {
         FIR_FilterKernel::Parameters params(ps);
 
-        params.nrSTABs = ps.settings.beamFormer.maxNrTABsPerSAP();
+        params.nrSTABs = std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
 
         // define at least 16 channels to get the FIR_Filter.cu to compile, even
         // if we won't use it.

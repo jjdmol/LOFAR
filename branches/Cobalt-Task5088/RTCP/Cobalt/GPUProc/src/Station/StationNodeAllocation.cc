@@ -138,9 +138,12 @@ std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
       try {
         inputStreams[board] = createStream(desc, true);
       } catch(Exception &ex) {
-        LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
-
-        inputStreams[board] = new NullStream;
+        if (parset.settings.realTime) {
+          LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+          inputStreams[board] = new NullStream;
+        } else {
+          throw;
+        }
       }
     }
   }

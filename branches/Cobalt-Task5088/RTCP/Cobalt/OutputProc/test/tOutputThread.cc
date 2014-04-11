@@ -214,7 +214,7 @@ class TABOutputThreadWrapper : public TABOutputThread
 {
 public:
   TABOutputThreadWrapper(const Parset &parset, unsigned streamNr,
-    Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix,
+    Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix,
     const std::string &targetDirectory)
     :
     TABOutputThread(parset, streamNr,
@@ -265,7 +265,7 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.add("Cobalt.realTime", "true");
   par.updateSettings();
-  Pool<TABTranspose::Block> outputPool;
+  Pool<TABTranspose::BeamformedData> outputPool;
 
 
   // We have a realtime system. We should not throw execptions

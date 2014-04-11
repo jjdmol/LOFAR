@@ -78,6 +78,11 @@ public:
 	// States
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &port);
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &port);
+
+	// Functions for neat shutdown
+	static void 	  sigintHandler(int signum);
+	void 			  finish();
+	GCFEvent::TResult finishing_state(GCFEvent&	event, GCFPortInterface& port);
 		
 	/*@}*/
 
@@ -94,8 +99,9 @@ public:
 	void write_acc();
 
 	// Helper functions
-	bool _dataOnRing(uint	ringNr)	const;
+	bool _dataOnRing	  (uint	ringNr)	const;
 	void _updateDataStream(uint	delay);
+	void _powerdownRCUs   (SubArray::RCUmask_t	rcus2switchOff);
 
 private:
 	// ----- DATA MEMBERS -----
@@ -124,6 +130,10 @@ private:
 	bool	itsSecondRingOn;
 
 	vector<int>		itsRCUcounts;		// in how many observations an RCU participates
+
+	uint			itsPowerOffDelay;	// # of seconds to wait before the power of the HBA's is switched off.
+	vector<time_t>	itsPowerOffTime;	// Timestamp the HBA tile may be switched of.
+
 
 	// Ports
 	GCFTCPPort*		itsListener;  // connect point for clients

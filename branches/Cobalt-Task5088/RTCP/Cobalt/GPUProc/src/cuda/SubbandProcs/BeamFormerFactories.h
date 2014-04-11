@@ -47,16 +47,20 @@ namespace LOFAR
                             size_t nrSubbandsPerSubbandProc = 1);
 
       KernelFactory<IntToFloatKernel> intToFloat;
+      KernelFactory<FFTShiftKernel> fftShift;
       KernelFactory<DelayAndBandPassKernel> delayCompensation;
+      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+
       KernelFactory<BeamFormerKernel> beamFormer;
       KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
-      KernelFactory<FFTShiftKernel> fftShift;
-      KernelFactory<FIR_FilterKernel> firFilter;
+      KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
+      KernelFactory<FIR_FilterKernel> coherentFirFilter;
       KernelFactory<CoherentStokesKernel> coherentStokes;
-      KernelFactory<IncoherentStokesKernel> incoherentStokes;
+
       KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+      KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
       KernelFactory<FIR_FilterKernel> incoherentFirFilter;
-      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+      KernelFactory<IncoherentStokesKernel> incoherentStokes;
 
       static BandPassCorrectionKernel::Parameters
       bandPassCorrectionParams(const Parset &ps);
@@ -76,14 +80,21 @@ namespace LOFAR
       static FFTShiftKernel::Parameters
       fftShiftParams(const Parset &ps);
 
-      static FIR_FilterKernel::Parameters
-      firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc);
+      static FFTShiftKernel::Parameters
+      coherentInverseFFTShiftParams(const Parset &ps);
+
+      FIR_FilterKernel::Parameters
+      coherentFirFilterParams(const Parset &ps, 
+                              size_t nrSubbandsPerSubbandProc);
 
       static FIR_FilterKernel::Parameters
       incoherentFirFilterParams(const Parset &ps,
-            size_t nrSubbandsPerSubbandProc);
+                                size_t nrSubbandsPerSubbandProc);
 
-      static IncoherentStokesKernel::Parameters
+      static FFTShiftKernel::Parameters
+      incoherentInverseFFTShiftParams(const Parset &ps);
+
+      static IncoherentStokesKernel::Parameters 
       incoherentStokesParams(const Parset &ps);
 
       static IncoherentStokesTransposeKernel::Parameters

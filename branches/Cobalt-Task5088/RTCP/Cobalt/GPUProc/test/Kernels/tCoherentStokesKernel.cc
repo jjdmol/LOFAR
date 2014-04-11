@@ -21,9 +21,6 @@
 
 #include <lofar_config.h>
 
-
-#include <lofar_config.h>
-
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>

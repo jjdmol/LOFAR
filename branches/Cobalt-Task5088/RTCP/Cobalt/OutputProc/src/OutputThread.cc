@@ -202,7 +202,7 @@ namespace LOFAR
 
     // Make required instantiations
     template class OutputThread<StreamableData>;
-    template class OutputThread<TABTranspose::Block>;
+    template class OutputThread<TABTranspose::BeamformedData>;
 
 
     SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, 
@@ -266,10 +266,10 @@ namespace LOFAR
 
 
     TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, 
-    Pool<TABTranspose::Block> &outputPool, const std::string &logPrefix,
+    Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix,
      const std::string &targetDirectory)
       :
-      OutputThread<TABTranspose::Block>(
+      OutputThread<TABTranspose::BeamformedData>(
           parset,
           streamNr,
           outputPool,

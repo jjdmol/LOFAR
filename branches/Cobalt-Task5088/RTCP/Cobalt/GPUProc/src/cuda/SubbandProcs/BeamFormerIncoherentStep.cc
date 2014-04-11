@@ -65,7 +65,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devNull )
       :
       BeamFormerSubbandProcStep(parset, i_queue),
-      outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
       coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1)
     {
       devInput = i_devInput;
@@ -110,7 +109,7 @@ namespace LOFAR
         new FFTShiftKernel::Buffers(*devA, *devA));
 
       incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *incoherentInverseFFTShiftBuffers));
+        factories.incoherentInverseFFTShift.create(queue, *incoherentInverseFFTShiftBuffers));
 
       devIncoherentFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
         new gpu::DeviceMemory(context,

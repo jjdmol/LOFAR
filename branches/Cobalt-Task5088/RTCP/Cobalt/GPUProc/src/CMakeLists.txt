@@ -127,6 +127,7 @@ install(PROGRAMS
   scripts/runObservation.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
+  scripts/watchlogs.sh
   DESTINATION bin)
 
 # install support scripts (install, roll-out, debugging) into sbin
@@ -146,4 +147,6 @@ install(FILES
   getOutputProcHosts.log_prop
   Station/mpi_node_list.log_prop
   Station/station_stream.log_prop
+  scripts/watchlogs-multitail.conf
   DESTINATION etc)
+
