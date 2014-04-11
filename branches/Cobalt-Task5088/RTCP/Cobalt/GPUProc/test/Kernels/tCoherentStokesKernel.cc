@@ -416,7 +416,7 @@ TEST(Coherent2DifferentValuesAllDimTest)
 
 int main(int argc, char *argv[])
 {
-  char * testName = "tCoherentStokesKernel";
+  const char * testName = "tCoherentStokesKernel";
   INIT_LOGGER(testName);
 
   Parset ps;
@@ -458,9 +458,6 @@ int main(int argc, char *argv[])
 
   // kernel
   auto_ptr<CoherentStokesKernel> kernel(factory.create(stream, buffers));
-
-  float subbandFreq = 60e6f;
-  unsigned sap = 0;
 
   BlockID blockId;
   // run

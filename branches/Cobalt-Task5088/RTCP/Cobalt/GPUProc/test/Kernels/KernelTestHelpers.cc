@@ -67,7 +67,7 @@ void KernelParameters::print()
 }
 
 
-KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, char *testName)
+KernelParameters parseCommandlineParameters(int argc, char *argv[], Parset &ps, const char *testName)
 {
   KernelParameters params;
   int opt;

@@ -41,11 +41,10 @@ using namespace boost;
 
 int main(int argc, char *argv[])
 {
-  char * testName = "tDelayAndBandPassKernel";
+  const char * testName = "tDelayAndBandPassKernel";
   INIT_LOGGER(testName);
   Parset ps;
-  KernelParameters params = parseCommandlineParameters(argc, argv, ps, testName);
-
+  parseCommandlineParameters(argc, argv, ps, testName);
 
   // Set up gpu environment
   try {

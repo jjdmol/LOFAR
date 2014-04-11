@@ -43,4 +43,4 @@ struct KernelParameters
 // with the parsed arguments. Returns values also as struct.
 KernelParameters parseCommandlineParameters(
       int argc, char *argv[], 
-      LOFAR::Cobalt::Parset &ps, char *testName);
+      LOFAR::Cobalt::Parset &ps, const char *testName);

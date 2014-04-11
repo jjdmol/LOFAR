@@ -54,11 +54,11 @@ using namespace LOFAR::Cobalt;
 
 int main(int argc, char *argv[])
 {
-  char * testName = "tBeamFormerKernel";
+  const char * testName = "tBeamFormerKernel";
   INIT_LOGGER(testName);
   // parse command line arguments to parset
   Parset ps;
-  KernelParameters params = parseCommandlineParameters(argc, argv, ps, testName);
+  parseCommandlineParameters(argc, argv, ps, testName);
   
   // Set up gpu environment
   try {
