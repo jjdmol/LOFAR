@@ -812,7 +812,7 @@ namespace LOFAR
                 }
 
                 file.firstSubbandIdx = part * stSettings.nrSubbandsPerFile;
-                file.lastSubbandIdx  = max(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
+                file.lastSubbandIdx  = min(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
                                            settings.subbands.size()); // last file can have fewer subbands
 
                 tab.files[s * nrParts + part] = file;

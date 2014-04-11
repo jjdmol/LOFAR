@@ -104,9 +104,6 @@ namespace LOFAR
 
       struct Output 
       {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
-
         // output data queue
         SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
       };

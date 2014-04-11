@@ -109,7 +109,7 @@ bool process(Stream &controlStream, size_t myRank)
         // Create and fill an outputPool for this fileIdx
         for (size_t i = 0; i < 10; ++i) {
 	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
-             parset.settings.SAPs[file.sapNr].subbands.size(),
+             file.lastSubbandIdx - file.firstSubbandIdx,
              stokes.nrSamples,
              stokes.nrChannels));
         }
