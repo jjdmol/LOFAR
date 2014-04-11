@@ -1,5 +1,3 @@
 #!/bin/bash
 
-CWD=`dirname $0`
-
-diff <(sort $CWD/routes.`hostname`) <(ip route | sort) || exit 1
+diff <(sort routes.`hostname`) <(ip route | sort) || exit 1

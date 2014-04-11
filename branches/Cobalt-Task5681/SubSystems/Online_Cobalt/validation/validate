@@ -1,5 +1,27 @@
 #!/bin/bash
 
+# Determine whether we can obtain root rights
+sudo -n /bin/true >/dev/null 2>&1
+CAN_SUDO=$?
+
+# runTest TEST
+#
+# Runs TEST, with elevated priviledges if needed.
+#
+function runTest() {
+  TEST=$1
+
+  if [ "${TEST%%.root.test}" == "${TEST}" ]; then
+    $TEST
+  else
+    if [ $CAN_SUDO -eq 0 ]; then
+      sudo -n $TEST
+    else
+      return 2
+    fi
+  fi
+}
+
 NRTESTS=0
 NRSUCCESS=0
 NRFAILURE=0
@@ -10,21 +32,22 @@ do
   LOGFILE="$TEST.log"
 
   printf "%40s: " "$TEST"
-  $TEST > $LOGFILE 2>&1
+  (cd `dirname $TEST` && runTest ./`basename $TEST`) > $LOGFILE 2>&1
   RESULT=$?
 
   NRTESTS=$((NRTESTS + 1))
 
-  if [ $RESULT -eq 0 ]
-  then
-    echo OK
-
-    NRSUCCESS=$((NRSUCCESS + 1))
-  else
-    echo "ERROR (see $LOGFILE)"
-
-    NRFAILURE=$((NRFAILURE + 1))
-  fi
+  case "$RESULT" in
+    0) echo OK
+       NRSUCCESS=$((NRSUCCESS + 1))
+       ;;
+    2) echo "NEED ROOT"
+       NRFAILURE=$((NRFAILURE + 1))
+       ;;
+    *) echo "ERROR (see $LOGFILE)"
+       NRFAILURE=$((NRFAILURE + 1))
+       ;;
+  esac
 done
 
 # Report statistics
