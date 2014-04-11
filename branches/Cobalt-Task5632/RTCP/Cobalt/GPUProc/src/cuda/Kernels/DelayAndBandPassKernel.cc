@@ -158,7 +158,7 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7f") % itsParameters.subbandBandwidth);
+        str(format("%.7ff") % itsParameters.subbandBandwidth);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";

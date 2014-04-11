@@ -192,7 +192,7 @@ namespace LOFAR
      *   SmartPtr<SubbandProcOutputData> output = queue.outputPool.free.remove();
      *
      *   // Process block
-     *   queue.doSubband(input, output);
+     *   queue.processSubband(input, output);
      *
      *   // Give back input and output objects to queue
      *   queue.inputPool.free.append(input);

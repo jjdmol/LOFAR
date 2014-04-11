@@ -1,0 +1,28 @@
+#!/bin/bash -x
+
+. $srcdir/testFuncs.sh
+
+# The code we need to test doesn't use a GPU,
+# but we need to pass a list of gpu devices to create a BF Pipeline obj.
+haveGPU || exit 3
+
+obsID=123881
+rank=0
+"$LOFARROOT/bin/outputProc" $obsID $rank &
+outPid=$!
+
+trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # just in case we die
+
+./tMultiPartTABOutput
+testStatus=$?
+[ $testStatus -eq 0 ] || echo "Error: Test exited with status $testStatus"
+
+# for some reason, outputProc doesn't stop after noMore(). It also doesn't reach its own (risky) kill, regardless of realTime or not.
+sleep 1
+kill $outPid
+
+wait $outPid
+outputProcStatus=$?
+[ $outputProcStatus -eq 0 ] || echo "Error: outputProc exited with status $outputProcStatus"
+
+exit $outputProcStatus && $testStatus

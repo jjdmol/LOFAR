@@ -47,6 +47,7 @@ namespace LOFAR
       virtual void processObservation();
 
       // Send subbands to outputProc
+      using Pipeline::Output; // writeOutput() is public, so this type must be too
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
 
     private:
