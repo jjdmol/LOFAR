@@ -25,9 +25,6 @@
 
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/CorrelatedData.h>
-#include <CoInterface/BeamFormedData.h>
-#include <CoInterface/TriggerData.h>
-
 
 namespace LOFAR
 {
@@ -37,21 +34,10 @@ namespace LOFAR
 
     StreamableData *newStreamableData(const Parset &parset, OutputType outputType, unsigned streamNr, Allocator &allocator)
     {
+      (void)streamNr;
+
       switch (outputType) {
       case CORRELATED_DATA: return new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), allocator, 512); // 512 alignment is needed for writing to MS
-
-      case BEAM_FORMED_DATA: {
-        const struct ObservationSettings::BeamFormer::File &file = parset.settings.beamFormer.files[streamNr];
-        const struct ObservationSettings::BeamFormer::StokesSettings &sset =
-          file.coherent ? parset.settings.beamFormer.coherentSettings
-                        : parset.settings.beamFormer.incoherentSettings;
-
-        unsigned nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
-        unsigned nrChannels = sset.nrChannels;
-        unsigned nrSamples = sset.nrSamples;
-
-        return new FinalBeamFormedData(nrSamples, nrSubbands, nrChannels, allocator);
-      }
 
       default: THROW(CoInterfaceException, "unsupported output type");
       }
