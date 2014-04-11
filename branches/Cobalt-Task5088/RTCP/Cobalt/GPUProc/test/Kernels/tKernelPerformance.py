@@ -142,7 +142,7 @@ if __name__ == "__main__":
     print "usage: tKernelPerformance.py <path to test> <par1> <range1> <par1> <range1>"
     print ""
     print "example:  tKernelPerformance.py ./tBeamFormerKernel -t '[1, 2, 3, 4]' -c 'range(1, 40, 4)'"
-    print "Ranges are evaluated using eval(). NO SANITAZION IS PERFORMED"
+    print "Ranges are evaluated using eval(). NO SANITIZATION IS PERFORMED"
     print "for optimal performance put at least 4 items in the first range"
     exit(1)
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
   # Create a array of the executable and the arguments (all string)
   resultLines = []
 
-  # Entry point for parralellization of the available 4 cobalt nodes
+  # Entry point for parallelization of the available 4 cobalt nodes
   # These test should be adapted when running on different systems
   nrGPUs = 4
   nrParallel = min(len(var1Range),nrGPUs) # use nrGPUs threads parallel at maximum
@@ -165,11 +165,11 @@ if __name__ == "__main__":
   for var2item in var2Range:
     # not the producer/ consumer model. Bit mheee, it works
     # Increase the maximum number with at least stepsize. Do not start threads that
-    # have an index that is to large
+    # have an index that is too large
     for startIdx in range(0, len(var1Range) + nrParallel, nrParallel):
       threads = []
       for idx in range(nrParallel):
-        # skip if this index is equal or larger than available work items
+        # skip if this index is equal to or larger than available work items
         if ((startIdx + idx) >= len(var1Range)):
           continue
 

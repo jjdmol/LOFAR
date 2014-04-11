@@ -21,29 +21,18 @@
 
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <boost/shared_ptr.hpp>
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/MultiDimArrayHostBuffer.h>
-
-#include <CoInterface/Parset.h>
+#include <GPUProc/gpu_utils.h>
+#include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
+#include <CoInterface/BlockID.h>
+#include <CoInterface/Parset.h>
+#include <Common/LofarLogger.h>
 
 #include <iomanip>
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include "../TestUtil.h"
-#include <Common/LofarLogger.h>
-#include <GPUProc/gpu_utils.h>
-#include <GPUProc/BandPass.h>
-#include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <CoInterface/BlockID.h>
-#include "../TestUtil.h"
-
-#include <boost/lexical_cast.hpp>
-#include <GPUProc/PerformanceCounter.h>
 
 #include "KernelTestHelpers.h"
 

@@ -80,6 +80,7 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.timeIntegrationFactor > 0);
+      ASSERT(params.timeParallelFactor > 0);
       // THe time line should contain in the timeline block of sufficient length
       ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * params.timeParallelFactor) == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);

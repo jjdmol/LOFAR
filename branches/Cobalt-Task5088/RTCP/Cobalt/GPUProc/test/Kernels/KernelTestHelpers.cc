@@ -38,7 +38,7 @@ void usage(char const *testName)
   cout << " -c nrchannels      Number of channels to create, default == 64" << endl;
   cout << " -i IdxGPU          GPU index to run kernel on, default == 0" << endl;
   cout << " -s nrStations      Number of stations to create, default == 47" << endl;
-  cout << " -b nrSampleBlocks  Number of 64*64 Samples to create, default = 48 (-> 196608 total samples)" << endl;
+  cout << " -b nrSampleBlocks  Number of 64*nrchannels samples to create, default = 48 (-> 196608 total samples)" << endl;
   cout << " * The kernels might not actually use all these parameters" << endl;
   cout << "" << endl;
   //cout << "If no arguments are provide the kernel with be tested on output validity" << endl;

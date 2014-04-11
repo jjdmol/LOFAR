@@ -20,24 +20,19 @@
 
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
-#include <boost/lexical_cast.hpp>
-
+#include <CoInterface/Parset.h>
+#include <Common/LofarLogger.h>
 
 #include "KernelTestHelpers.h"
 
 using namespace std;
 using namespace LOFAR::Cobalt;
-using namespace boost;
 
 int main(int argc, char *argv[])
 {

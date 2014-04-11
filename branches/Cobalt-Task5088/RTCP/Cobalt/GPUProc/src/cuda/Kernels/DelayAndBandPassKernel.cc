@@ -92,7 +92,8 @@ namespace LOFAR
       setEnqueueWorkSizes( gpu::Grid(256,
                                      params.nrChannelsPerSubband == 1 ?
                                        1 :
-                                       params.nrChannelsPerSubband / 16, params.nrStations),
+                                       params.nrChannelsPerSubband / 16,
+                                     params.nrStations),
                            gpu::Block(256, 1, 1) );
       
       size_t nrSamples = (size_t)params.nrStations * params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;

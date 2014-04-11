@@ -83,7 +83,7 @@ namespace LOFAR
       static FFTShiftKernel::Parameters
       coherentInverseFFTShiftParams(const Parset &ps);
 
-      FIR_FilterKernel::Parameters
+      static FIR_FilterKernel::Parameters
       coherentFirFilterParams(const Parset &ps, 
                               size_t nrSubbandsPerSubbandProc);
 
