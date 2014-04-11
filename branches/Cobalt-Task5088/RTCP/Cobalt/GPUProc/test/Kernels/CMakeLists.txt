@@ -10,10 +10,13 @@ lofar_add_test(tBeamFormerKernel tBeamFormerKernel.cc KernelTestHelpers.cc)
 lofar_add_test(tCoherentStokesKernel tCoherentStokesKernel.cc KernelTestHelpers.cc)
 lofar_add_test(tFFTShiftKernel tFFTShiftKernel.cc)
 
+# This test uses quite a lot of memory, so force it to run serially.
+set_tests_properties(tCoherentStokesKernel PROPERTIES RUN_SERIAL ON)
+
 # Compile some shallow wrapper executable to perform runtime compilation
 
 # Test that run for a long time and are use for performance optimalization
-lofar_add_test(tKernelPerformance)
+# lofar_add_test(tKernelPerformance)
 
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
