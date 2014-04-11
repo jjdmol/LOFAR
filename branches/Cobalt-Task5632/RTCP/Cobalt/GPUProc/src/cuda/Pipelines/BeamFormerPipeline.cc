@@ -96,8 +96,8 @@ namespace LOFAR
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
       :
       Pipeline(ps, subbandIndices, devices),
-      factories(ps, nrSubbandsPerSubbandProc),
-      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime())
+      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime()),
+      factories(ps, nrSubbandsPerSubbandProc)
     {
       ASSERT(ps.settings.beamFormer.enabled);
     }
@@ -232,7 +232,9 @@ namespace LOFAR
       }
     }
 
-    // TODO: Needs more documentation
+    // Write the blocks of rtcp bf output via the MultiSender towards outputProc.
+    // Removes the blocks from a best effort queue (bequeue) out of 'output'.
+    // All output corresponds to the subband indexed by globalSubbandIdx in the list of sb.
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
     {
@@ -254,6 +256,10 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
+        // Try all files until we found the one this block belongs to.
+        // TODO: This could be optimized, either by recognizing that only the Stokes can
+        // change the file idx, or by preparing a better data structure for 1 lookup here.
+        // Idem for the data copying (assign()) below.
         for (size_t fileIdx = 0;
              fileIdx < ps.settings.beamFormer.files.size();
              ++fileIdx) 
@@ -292,8 +298,14 @@ namespace LOFAR
           SmartPtr<struct TABTranspose::Subband> subband = 
                 new TABTranspose::Subband(nrSamples, nrChannels);
 
+          // These 3 values are guarded with ASSERTSTR() on the other side at
+          // outputProc (Block::addSubband()).
           subband->id.fileIdx = file.streamNr;
-          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP; // global to local sb idx
+          // global to local sb idx: here local means to the TAB Transpose,
+          // which only knows about #subbands and #blocks in a file.
+          // It checks per file (part). (i.e. local per SAP is not enough)
+          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP -
+                                file.firstSubbandIdx;
           subband->id.block   = id.block;
 
           // Create view of subarray 
@@ -316,6 +328,8 @@ namespace LOFAR
 
           // If `subband' is still alive, it has been dropped instead of sent.
           ASSERT(ps.realTime() || !subband); 
+
+          break;
         }
 
         // Return outputData back to the workQueue.

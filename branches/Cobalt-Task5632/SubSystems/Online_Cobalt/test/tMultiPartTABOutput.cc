@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <omp.h>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -44,7 +45,7 @@ using boost::str;
 // This covers all multiple output parts specific lines of code.
 // 
 // Assume the startup script of this test has started outputProc. Supply parset.
-// It can also test whether the expected files exist and contain the expected values.
+// It can also test whether the output files contain the expected values.
 int main()
 {
   // Incoh St I: 1 TAB :  2 sb in 2 parts per TAB: 1 * 1 * 2 =  2 files
@@ -70,19 +71,29 @@ int main()
   for (unsigned i = 0; i < nrSubbands; i++) {
     localSbIndices.push_back(i);
   }
+  omp_set_nested(true); // for around and within .multiSender.process()
   BeamFormerPipeline bfpl(ps, localSbIndices, devices);
   bfpl.allocateResources();
 
-  // The data struc. Fill sb with all values equal to its freq nr (see .parset).
+#pragma omp parallel sections num_threads(2)
+  {
+#  pragma omp section
+    {
+      // Set up data connections with outputProc.
+      // Does not return until end of obs, so call from a thread.
+      bfpl.multiSender.process();
+    }
+
+#  pragma omp section
+    {
+  // The data struc. Fill sb with all values equal to its station sb nr (see .parset).
   std::vector<struct BeamFormerPipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
   for (unsigned i = 0; i < writePool.size(); i++) {
-    // Apart from bequeue, there is also a 'sync' member in struct Output,
-    // but it looks like it's unused for bf.
     writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
 
     // BeamFormedData is a sub-class of SubbandProcOutputData.
     BeamFormedData *bfData = new BeamFormedData(ps, ctx);
-    bfData->blockID.block = 0; // we only write 1 block: block 0
+    bfData->blockID.block = 0; // we only write 1 block per sb: block 0
     bfData->blockID.globalSubbandIdx = i;
     bfData->blockID.localSubbandIdx = i;
     bfData->blockID.subbandProcSubbandIdx = i;
@@ -101,6 +112,10 @@ int main()
        globalSubbandIdx++) {
     unsigned localSubbandIdx = globalSubbandIdx;
     bfpl.writeOutput(globalSubbandIdx, writePool[localSubbandIdx]);
+  }
+
+  bfpl.multiSender.finish();
+    }
   }
 
   // Looks good, but the startup script will check the output files.

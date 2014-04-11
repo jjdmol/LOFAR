@@ -50,11 +50,12 @@ namespace LOFAR
       using Pipeline::Output; // writeOutput() is public, so this type must be too
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
 
-    private:
-      BeamFormerFactories factories;
 
       // Output send engine, takes care of the host connections and the multiplexing.
       TABTranspose::MultiSender multiSender;
+
+    private:
+      BeamFormerFactories factories;
     };
   }
 }

@@ -1,6 +1,8 @@
 Observation.ObsID = 123881
+Observation.startTime = 2013-12-05 14:00:00
+Observation.stopTime = 2013-12-05 14:00:02
 Observation.sampleClock = 200
-Cobalt.realTime = true  # doesn't matter for this test, which is rare, so have a test on true too
+Cobalt.realTime = false
 Cobalt.correctBandPass = false
 Cobalt.delayCompensation = false
 Cobalt.BeamFormer.nrDelayCompensationChannels = 16

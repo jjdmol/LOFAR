@@ -6,6 +6,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   # We need at least CMake 2.8 for CUDA support
   cmake_minimum_required(VERSION 2.8)
 
+  lofar_find_package(OpenMP REQUIRED)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
