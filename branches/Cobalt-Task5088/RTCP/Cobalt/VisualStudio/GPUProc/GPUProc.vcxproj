@@ -131,6 +131,7 @@
     <ClInclude Include="..\..\GPUProc\src\Storage\StorageProcesses.h" />
     <ClInclude Include="..\..\GPUProc\test\cuda\tFIR_Filter.h" />
     <ClInclude Include="..\..\GPUProc\test\fpequals.h" />
+    <ClInclude Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.h" />
     <ClInclude Include="..\..\GPUProc\test\TestUtil.h" />
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +235,7 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose.cc" />
     <ClCompile Include="..\..\GPUProc\test\cuda\tTranspose2.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\BeamFormerKernelPerformance.cc" />
+    <ClCompile Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBandPassCorrectionKernel2.cc" />
     <ClCompile Include="..\..\GPUProc\test\Kernels\tBeamFormerKernel.cc" />
@@ -330,6 +332,7 @@
     <None Include="..\..\GPUProc\test\Kernels\tIntToFloatKernel.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tKernelFunctions.sh" />
     <None Include="..\..\GPUProc\test\Kernels\tKernelPerformance.py" />
+    <None Include="..\..\GPUProc\test\Kernels\visualizeBeamformer.py" />
     <None Include="..\..\GPUProc\test\MockOnlineControl.sh" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.parset" />
     <None Include="..\..\GPUProc\test\SubbandProcs\tBeamFormerSubbandProcProcessSb.sh" />
