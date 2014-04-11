@@ -36,7 +36,6 @@
 #include <Common/StringUtil.h>
 #include <Common/StreamUtil.h>
 #include <Stream/Stream.h>
-#include <CoInterface/BeamCoordinates.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/MultiDimArray.h>
 
