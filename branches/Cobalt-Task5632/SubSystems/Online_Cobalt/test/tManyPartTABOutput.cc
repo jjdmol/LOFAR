@@ -1,4 +1,4 @@
-//# tMultiPartTABOutput.cc: test TAB sb range output into multiple files (parts)
+//# tManyPartTABOutput.cc: test TAB sb range output into many files (parts)
 //# Copyright (C) 2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -39,6 +39,26 @@ using namespace LOFAR::Cobalt;
 using boost::format;
 using boost::str;
 
+// Fill sb with all values equal to its station sb nr (see .parset).
+SmartPtr<SubbandProcOutputData> getTestSbData(const Parset& ps, gpu::Context& ctx,
+                                              unsigned blockIdx, unsigned sbIdx)
+{ 
+  // BeamFormedData is a sub-class of SubbandProcOutputData.
+  BeamFormedData *bfData = new BeamFormedData(ps, ctx);
+
+  bfData->blockID.block = blockIdx;
+  bfData->blockID.globalSubbandIdx = sbIdx;
+  bfData->blockID.localSubbandIdx = sbIdx;
+  bfData->blockID.subbandProcSubbandIdx = sbIdx;
+  const unsigned sbFreqNr = ps.settings.subbands[sbIdx].stationIdx;
+  for (size_t v = 0; v < bfData->incoherentData.num_elements(); v++) {
+    bfData->incoherentData.origin()[v] = (float)sbFreqNr;
+  }
+
+  SmartPtr<SubbandProcOutputData> data = bfData;
+  return data;
+}
+
 // Test strategy:
 // Skip all the station input and GPU processing.
 // Create a parset and BF pipeline, prepare data and write it to outputProc.
@@ -48,11 +68,11 @@ using boost::str;
 // It can also test whether the output files contain the expected values.
 int main()
 {
-  // Incoh St I: 1 TAB :  2 sb in 2 parts per TAB: 1 * 1 * 2 =  2 files
+  // CV XXYY   : 2 Beams, 2+3 TABs: 5+11 sb in 2+3 parts per TAB: 2*2 + 3*3 = 13 files
 
-  INIT_LOGGER("tMultiPartTABOutput");
+  INIT_LOGGER("tManyPartTABOutput");
 
-  Parset ps("tMultiPartTABOutput.parset");
+  Parset ps("tManyPartTABOutput.parset");
 
   // GPU devices for BF pipeline constr and context for BF host buffers.
   // The BF Sb Proc compiles kernels, but we don't use GPUs in this test.
@@ -86,23 +106,21 @@ int main()
 
 #  pragma omp section
     {
-  // The data struc. Fill sb with all values equal to its station sb nr (see .parset).
+  // Insert 2 blocks of test data per sb.
   std::vector<struct BeamFormerPipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
   for (unsigned i = 0; i < writePool.size(); i++) {
+    SmartPtr<SubbandProcOutputData> data;
+    unsigned blockIdx;
+
     writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
 
-    // BeamFormedData is a sub-class of SubbandProcOutputData.
-    BeamFormedData *bfData = new BeamFormedData(ps, ctx);
-    bfData->blockID.block = 0; // we only write 1 block per sb: block 0
-    bfData->blockID.globalSubbandIdx = i;
-    bfData->blockID.localSubbandIdx = i;
-    bfData->blockID.subbandProcSubbandIdx = i;
-    const unsigned sbFreqNr = ps.settings.subbands[i].stationIdx;
-    for (size_t v = 0; v < bfData->incoherentData.num_elements(); v++) {
-      bfData->incoherentData.origin()[v] = (float)sbFreqNr;
-    }
-    SmartPtr<SubbandProcOutputData> data = bfData;
+    blockIdx = 0;
+    data = getTestSbData(ps, ctx, blockIdx, i);
     ASSERT(writePool[i].bequeue->append(data));
+    blockIdx = 1;
+    data = getTestSbData(ps, ctx, blockIdx, i);
+    ASSERT(writePool[i].bequeue->append(data));
+
     writePool[i].bequeue->noMore();
   }
 

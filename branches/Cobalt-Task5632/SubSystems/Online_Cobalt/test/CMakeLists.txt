@@ -16,6 +16,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
   lofar_add_test(tMultiPartTABOutput tMultiPartTABOutput.cc)
+  lofar_add_test(tManyPartTABOutput tManyPartTABOutput.cc)
 endif()
 
 set(_tests
