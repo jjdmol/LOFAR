@@ -73,14 +73,17 @@ static double toMJD( double time )
   return 40587.0 + time / (24 * 60 * 60);
 }
 
-static string stripextension( const string filename )
+static string stripextension( const string pathname )
 {
-  return filename.substr(0,filename.rfind('.'));
+  size_t endPos = pathname.rfind('.');
+  if (endPos + 1 < pathname.size() && pathname[endPos + 1] == '/')
+    endPos = string::npos; // don't recognize an extension in ./foo
+  return pathname.substr(0, endPos);
 }
 
-static string forceextension( const string filename, const string extension )
+static string forceextension( const string pathname, const string extension )
 {
-  return stripextension(filename) + extension;
+  return stripextension(pathname) + extension;
 }
 
 namespace LOFAR
