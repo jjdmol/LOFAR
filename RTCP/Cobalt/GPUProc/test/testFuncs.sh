@@ -7,21 +7,23 @@ haveGPU()
 {
   if ! lspci | grep -E "VGA|3D" | grep -E "ATI|NVIDIA" > /dev/null
   then
-    echo "No ATI/NVIDIA GPU card detected."
+    echo "No ATI/NVIDIA GPU card detected." >&2
     return 1
   fi
   return 0
 }
 
-function error {
-  echo "$@"
+error()
+{
+  echo "$@" >&2
   exit 1
 }
 
 # set testdir to mirror srcdir
 testdir=$PWD
 
-function mklofarroot {
+mklofarroot()
+{
   DEST=$1
 
   # Make a fake LOFARROOT to be able to locate:

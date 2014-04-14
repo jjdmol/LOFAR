@@ -3,9 +3,11 @@
 # Run a test and compare the output to the reference output.
 # 
 # Syntax: runtest.sh <test-name>
+#
+# $Id$
 
 # Include some useful shell functions
-. $(dirname $0)/testFuncs.sh
+. ./testFuncs.sh
 
 TESTNAME="${1}"
 OUTDIR="${TESTNAME}.output"
