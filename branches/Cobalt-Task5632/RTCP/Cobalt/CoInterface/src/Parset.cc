@@ -811,16 +811,21 @@ namespace LOFAR
                   file.location = incoherent_locations[incoherent_idx++];
                 }
 
-                file.firstSubbandIdx = part * stSettings.nrSubbandsPerFile;
+                file.firstSubbandIdx = settings.SAPs[i].subbands[0].idx +
+                                       part * stSettings.nrSubbandsPerFile;
                 file.lastSubbandIdx  = min(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
-                                           settings.SAPs[i].subbands.size()); // last file can have fewer subbands
+                                           // last file can have fewer subbands
+                                           settings.SAPs[i].subbands[0].idx +
+                                           settings.SAPs[i].subbands.size());
+                ASSERT(file.firstSubbandIdx < file.lastSubbandIdx);
+                ASSERT(file.lastSubbandIdx <= settings.subbands.size());
 
                 tab.files[s * nrParts + part] = file;
                 settings.beamFormer.files.push_back(file);
                 outputProcHosts.insert(file.location.host);
               }
             }
-          }         
+          }
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);

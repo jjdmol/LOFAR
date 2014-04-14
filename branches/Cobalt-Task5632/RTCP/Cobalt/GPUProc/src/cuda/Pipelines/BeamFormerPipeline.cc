@@ -300,13 +300,12 @@ namespace LOFAR
 
           // These 3 values are guarded with ASSERTSTR() on the other side at
           // outputProc (Block::addSubband()).
-          subband->id.fileIdx = file.streamNr;
+          subband->id.fileIdx  = file.streamNr;
           // global to local sb idx: here local means to the TAB Transpose,
-          // which only knows about #subbands and #blocks in a file.
-          // It checks per file (part). (i.e. local per SAP is not enough)
-          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP -
-                                file.firstSubbandIdx;
-          subband->id.block   = id.block;
+          // which only knows about #subbands and #blocks in a file (part).
+          unsigned sbIdxInFile = globalSubbandIdx - file.firstSubbandIdx;
+          subband->id.subband  = sbIdxInFile;
+          subband->id.block    = id.block;
 
           // Create view of subarray 
           MultiDimArray<float, 2> srcData(

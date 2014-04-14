@@ -68,7 +68,7 @@ SmartPtr<SubbandProcOutputData> getTestSbData(const Parset& ps, gpu::Context& ct
 // It can also test whether the output files contain the expected values.
 int main()
 {
-  // CV XXYY   : 2 Beams, 2+3 TABs: 5+11 sb in 2+3 parts per TAB: 2*2 + 3*3 = 13 files
+  // CV XXYY   : 2 Beams, 4 "Stokes", 2+3 TABs: 5+11 sb in 2+3 parts per TAB: 4 * 2*2 + 3*3 = 52 files
 
   INIT_LOGGER("tManyPartTABOutput");
 
