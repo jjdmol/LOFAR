@@ -7,7 +7,7 @@
 # $Id$
 
 # Include some useful shell functions
-. ./testFuncs.sh
+. "@CMAKE_CURRENT_BINARY_DIR@/testFuncs.sh"
 
 TESTNAME="${1}"
 OUTDIR="${TESTNAME}.output"
