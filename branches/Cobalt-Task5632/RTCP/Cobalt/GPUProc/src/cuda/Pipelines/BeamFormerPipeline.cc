@@ -256,7 +256,7 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        // Try all files until we found the one this block belongs to.
+        // Try all files until we found the file(s) this block belongs to.
         // TODO: This could be optimized, either by recognizing that only the Stokes can
         // change the file idx, or by preparing a better data structure for 1 lookup here.
         // Idem for the data copying (assign()) below.
@@ -328,8 +328,6 @@ namespace LOFAR
 
           // If `subband' is still alive, it has been dropped instead of sent.
           ASSERT(ps.realTime() || !subband); 
-
-          break;
         }
 
         // Return outputData back to the workQueue.
