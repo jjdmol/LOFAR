@@ -13,7 +13,7 @@
 # 1. unused
 # 2. obs id
 
-. ./testFuncs.sh
+. $srcdir/testFuncs.sh
 
 echo "***************************"
 echo "Test 0: check environment"

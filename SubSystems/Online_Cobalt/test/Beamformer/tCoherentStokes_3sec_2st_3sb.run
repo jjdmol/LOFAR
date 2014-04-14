@@ -5,4 +5,4 @@ TESTNAME=`basename "${0%%.run}"`
 echo "Observation.DataProducts.Output_CoherentStokes.locations="\
      "[localhost:${PWD}/${TESTNAME}.output]" >> ${TESTNAME}.parset
 
-../runtest.sh "$TESTNAME"
+$srcdir/../runtest.sh "$TESTNAME"

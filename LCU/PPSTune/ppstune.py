@@ -843,16 +843,16 @@ def set_sync_delay(rsp_boards, edge = 'rising', mode = 'reset', execute = True):
     real use, execute must be ``True``.
 
     >>> set_sync_delay('rsp0,rsp1', edge = 'rising', mode = 'reset', execute = False)
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
+    python2 verify.py --brd rsp0,rsp1 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
 
     >>> set_sync_delay('rsp0,rsp1', edge = 'rising', mode = 'increment', execute = False)
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
 
     >>> set_sync_delay('rsp2,rsp4', edge = 'falling', mode = 'reset', execute = False)
-    python2 /opt/stationtest/verify.py --brd rsp2,rsp4 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge f --pps_delay 0
+    python2 verify.py --brd rsp2,rsp4 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge f --pps_delay 0
 
     >>> set_sync_delay('rsp2,rsp4', edge = 'falling', mode = 'increment', execute = False)
-    python2 /opt/stationtest/verify.py --brd rsp2,rsp4 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge f --pps_delay 1
+    python2 verify.py --brd rsp2,rsp4 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge f --pps_delay 1
 
     >>> set_sync_delay('rsp2,rsp4', edge = 'first', mode = 'increment', execute = False)
     Traceback (most recent call last):
@@ -872,7 +872,7 @@ def set_sync_delay(rsp_boards, edge = 'rising', mode = 'reset', execute = True):
         raise ValueError('mode must be \'reset\' or \'increment\', not %r' %
                          mode)
     
-    command_line = ['python2'    , '/opt/stationtest/verify.py',
+    command_line = ['python2'    , 'verify.py',
                     '--brd'      , rsp_boards,
                     '--fpga'     , 'blp0,blp1,blp2,blp3',
                     '--te'       , 'tc/sync_delay.py',
@@ -1524,15 +1524,15 @@ def measure_all_delays(station, clock_mhz,
     ...                    rspctl_cmd = 'test/rspctl-odd', first_delay_step = 5,
     ...                    one_past_last_delay_step = 7,
     ...                    remote_station_conf='test/CS021-RemoteStation.conf')
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
-    python2 /opt/stationtest/verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 1
+    python2 verify.py --brd rsp0,rsp1,rsp2,rsp3,rsp4,rsp5,rsp6,rsp7,rsp8,rsp9,rsp10,rsp11 --fpga blp0,blp1,blp2,blp3 --te tc/sync_delay.py --pps_edge r --pps_delay 0
     [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
     Of course, one has to take care with the inputs:
