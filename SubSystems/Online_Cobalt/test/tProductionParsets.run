@@ -10,7 +10,7 @@
 # Note: production parsets are stored by OnlineControl as
 #       /opt/lofar/var/run/CorrProc_$OBSID.param
 
-. ./testFuncs.sh
+. $srcdir/testFuncs.sh
 
 # The directory containing the parsets to test
 PARSETDIR=tProductionParsets.in_parsets
