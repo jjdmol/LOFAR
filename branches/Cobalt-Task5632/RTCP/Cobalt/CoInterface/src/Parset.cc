@@ -783,8 +783,8 @@ namespace LOFAR
                             : settings.beamFormer.incoherentSettings;
 
             // Generate file list
-            unsigned nrParts = max(1UL, (settings.subbands.size() + stSettings.nrSubbandsPerFile - 1)
-                                        / stSettings.nrSubbandsPerFile);
+            unsigned nrParts = max(1UL, (settings.SAPs[i].subbands.size() +
+                stSettings.nrSubbandsPerFile - 1) / stSettings.nrSubbandsPerFile);
             tab.files.resize(stSettings.nrStokes * nrParts);
             for (size_t s = 0; s < stSettings.nrStokes; ++s) 
             {
@@ -813,7 +813,7 @@ namespace LOFAR
 
                 file.firstSubbandIdx = part * stSettings.nrSubbandsPerFile;
                 file.lastSubbandIdx  = min(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
-                                           settings.subbands.size()); // last file can have fewer subbands
+                                           settings.SAPs[i].subbands.size()); // last file can have fewer subbands
 
                 tab.files[s * nrParts + part] = file;
                 settings.beamFormer.files.push_back(file);
