@@ -51,8 +51,8 @@ SmartPtr<SubbandProcOutputData> getTestSbData(const Parset& ps, gpu::Context& ct
   bfData->blockID.localSubbandIdx = sbIdx;
   bfData->blockID.subbandProcSubbandIdx = sbIdx;
   const unsigned sbFreqNr = ps.settings.subbands[sbIdx].stationIdx;
-  for (size_t v = 0; v < bfData->incoherentData.num_elements(); v++) {
-    bfData->incoherentData.origin()[v] = (float)sbFreqNr;
+  for (size_t v = 0; v < bfData->coherentData.num_elements(); v++) {
+    bfData->coherentData.origin()[v] = (float)sbFreqNr;
   }
 
   SmartPtr<SubbandProcOutputData> data = bfData;
