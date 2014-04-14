@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for DIR in lofarbuild lofarsystem
+do
+  AUTHKEYS=/localhome/$DIR/.sssh/authorized_keys
+
+  # Specified user should have an authorized_keys file
+  [ -f $AUTHKEYS ] || exit 1
+done
+
