@@ -32,6 +32,8 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
+#include "../Kernels/KernelTestHelpers.h"
+
 using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
@@ -55,8 +57,9 @@ template<typename T> T inputSignal(size_t t)
 #endif
 }
 
-int main() {
-  INIT_LOGGER("tCoherentStokesBeamFormerSubbandProcProcessSb");
+int main(int argc, char *argv[]) {
+  const char *testName = "tCoherentStokesBeamFormerSubbandProcProcessSb";
+  INIT_LOGGER(testName);
 
   try {
     gpu::Platform pf;
@@ -70,7 +73,20 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
+  //Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
+
+  Parset ps;
+  KernelParameters params;
+  // override the faults
+  params.nStation = 5;
+  params.nrChannels = 4096;
+  params.nTimeBlocks = 16;
+  params.nrTabs = 2;
+  params.stokesType = "I";
+  params.nrDelayCompensationChannels = 64;
+  params.nrChannelsPerSubband = 1;
+  
+  parseCommandlineParameters(argc, argv, ps, params, testName);
 
   // Input array sizes
   const size_t nrBeams = ps.nrBeams();

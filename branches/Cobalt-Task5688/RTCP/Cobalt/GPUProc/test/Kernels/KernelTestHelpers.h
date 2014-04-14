@@ -19,7 +19,7 @@
 //# $Id$
 
 #include <CoInterface/Parset.h>
-
+#include <string>
 
 // print usage of the kernel test.
 void usage(char const *testName);
@@ -30,17 +30,21 @@ struct KernelParameters
 {
   unsigned nrTabs;
   unsigned nrChannels;
+  unsigned nrDelayCompensationChannels;
+  unsigned nrChannelsPerSubband;
   unsigned idxGPU;
   unsigned nStation;
   unsigned nTimeBlocks;
   bool parameterParsed;
+  std::string stokesType;  // I, XXYY, IQUV
 
   KernelParameters();
   void print();
 };
 
 // Parse kernelParameters from the commandline and initialize a valid Parset
-// with the parsed arguments. Returns values also as struct.
-KernelParameters parseCommandlineParameters(
+// with the parsed arguments.
+// The parameters struct is used for values not parsed from the command line
+void parseCommandlineParameters(
       int argc, char *argv[], 
-      LOFAR::Cobalt::Parset &ps, const char *testName);
+      LOFAR::Cobalt::Parset &ps, KernelParameters &parameters, const char *testName);
