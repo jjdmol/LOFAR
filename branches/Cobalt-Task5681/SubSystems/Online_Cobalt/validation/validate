@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# The positional parameters are the test sets to run.
+#
+# Default: system
+TESTSETS=${@:-system}
+
 # Determine whether we can obtain root rights
 sudo -n /bin/true >/dev/null 2>&1
 CAN_SUDO=$?
@@ -17,7 +22,7 @@ function runTest() {
     if [ $CAN_SUDO -eq 0 ]; then
       sudo -n $TEST
     else
-      return 2
+      return 42
     fi
   fi
 }
@@ -27,7 +32,7 @@ NRSUCCESS=0
 NRFAILURE=0
 
 # Run all tests
-for TEST in `find tests -name '*.test' -type f -a -executable`
+for TEST in `find $TESTSETS -name '*.test' -type f -a -executable`
 do
   LOGFILE="$TEST.log"
 
@@ -41,7 +46,7 @@ do
     0) echo OK
        NRSUCCESS=$((NRSUCCESS + 1))
        ;;
-    2) echo "NEED ROOT"
+    42) echo "NEED ROOT"
        NRFAILURE=$((NRFAILURE + 1))
        ;;
     *) echo "ERROR (see $LOGFILE)"
@@ -51,7 +56,12 @@ do
 done
 
 # Report statistics
-SUCCESSPERCENTAGE=$((100 * NRSUCCESS / NRTESTS))
+if [ $NRTESTS -eq 0 ]; then
+  SUCCESSPERCENTAGE=100
+else
+  SUCCESSPERCENTAGE=$((100 * NRSUCCESS / NRTESTS))
+fi
+
 echo ""
 echo "${SUCCESSPERCENTAGE}% tests passed, ${NRFAILURE} tests failed out of ${NRTESTS}"
 echo ""
