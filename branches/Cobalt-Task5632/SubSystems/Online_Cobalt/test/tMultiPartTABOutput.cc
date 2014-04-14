@@ -39,6 +39,26 @@ using namespace LOFAR::Cobalt;
 using boost::format;
 using boost::str;
 
+// Fill sb with all values equal to its station sb nr (see .parset).
+SmartPtr<SubbandProcOutputData> getTestSbIncohData(const Parset& ps, gpu::Context& ctx,
+                                                   unsigned blockIdx, unsigned sbIdx)
+{
+  // BeamFormedData is a sub-class of SubbandProcOutputData.
+  BeamFormedData *bfData = new BeamFormedData(ps, ctx);
+
+  bfData->blockID.block = blockIdx;
+  bfData->blockID.globalSubbandIdx = sbIdx;
+  bfData->blockID.localSubbandIdx = sbIdx;
+  bfData->blockID.subbandProcSubbandIdx = sbIdx;
+  const unsigned sbFreqNr = ps.settings.subbands[sbIdx].stationIdx;
+  for (size_t v = 0; v < bfData->incoherentData.num_elements(); v++) {
+    bfData->incoherentData.origin()[v] = (float)sbFreqNr;
+  }
+
+  SmartPtr<SubbandProcOutputData> data = bfData;
+  return data;
+}
+
 // Test strategy:
 // Skip all the station input and GPU processing.
 // Create a parset and BF pipeline, prepare data and write it to outputProc.
@@ -86,23 +106,18 @@ int main()
 
 #  pragma omp section
     {
-  // The data struc. Fill sb with all values equal to its station sb nr (see .parset).
+  // Insert 1 block of test data per sb.
   std::vector<struct BeamFormerPipeline::Output> writePool(nrSubbands); // [localSubbandIdx]
   for (unsigned i = 0; i < writePool.size(); i++) {
+    SmartPtr<SubbandProcOutputData> data;
+    unsigned blockIdx;
+
     writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
 
-    // BeamFormedData is a sub-class of SubbandProcOutputData.
-    BeamFormedData *bfData = new BeamFormedData(ps, ctx);
-    bfData->blockID.block = 0; // we only write 1 block per sb: block 0
-    bfData->blockID.globalSubbandIdx = i;
-    bfData->blockID.localSubbandIdx = i;
-    bfData->blockID.subbandProcSubbandIdx = i;
-    const unsigned sbFreqNr = ps.settings.subbands[i].stationIdx;
-    for (size_t v = 0; v < bfData->incoherentData.num_elements(); v++) {
-      bfData->incoherentData.origin()[v] = (float)sbFreqNr;
-    }
-    SmartPtr<SubbandProcOutputData> data = bfData;
+    blockIdx = 0;
+    data = getTestSbIncohData(ps, ctx, blockIdx, i);
     ASSERT(writePool[i].bequeue->append(data));
+
     writePool[i].bequeue->noMore();
   }
 

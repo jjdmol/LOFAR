@@ -40,8 +40,8 @@ using boost::format;
 using boost::str;
 
 // Fill sb with all values equal to its station sb nr (see .parset).
-SmartPtr<SubbandProcOutputData> getTestSbData(const Parset& ps, gpu::Context& ctx,
-                                              unsigned blockIdx, unsigned sbIdx)
+SmartPtr<SubbandProcOutputData> getTestSbCohData(const Parset& ps, gpu::Context& ctx,
+                                                 unsigned blockIdx, unsigned sbIdx)
 { 
   // BeamFormedData is a sub-class of SubbandProcOutputData.
   BeamFormedData *bfData = new BeamFormedData(ps, ctx);
@@ -115,10 +115,10 @@ int main()
     writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
 
     blockIdx = 0;
-    data = getTestSbData(ps, ctx, blockIdx, i);
+    data = getTestSbCohData(ps, ctx, blockIdx, i);
     ASSERT(writePool[i].bequeue->append(data));
     blockIdx = 1;
-    data = getTestSbData(ps, ctx, blockIdx, i);
+    data = getTestSbCohData(ps, ctx, blockIdx, i);
     ASSERT(writePool[i].bequeue->append(data));
 
     writePool[i].bequeue->noMore();
