@@ -2,6 +2,11 @@
 
 include(LofarCTest)
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/testFuncs.sh.in
+  ${CMAKE_CURRENT_BINARY_DIR}/testFuncs.sh @ONLY
+)
+
 set(_tests
   tgenerateStationStreams
   tMACfeedback
