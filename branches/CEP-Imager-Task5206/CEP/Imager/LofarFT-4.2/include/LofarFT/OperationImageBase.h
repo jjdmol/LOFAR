@@ -1,11 +1,3 @@
-//# ATerm.cc: Compute the LOFAR beam response on the sky.
-//#
-//# Copyright (C) 2011
-//# ASTRON (Netherlands Institute for Radio Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
-//#
-//# This file is part of the LOFAR software suite.
-//# The LOFAR software suite is free software: you can redistribute it and/or
 //# modify it under the terms of the GNU General Public License as published
 //# by the Free Software Foundation, either version 3 of the License, or
 //# (at your option) any later version.
@@ -20,17 +12,30 @@
 //#
 //# $Id: $
 
-#include <lofar_config.h>
-#include <LofarFT/ATerm.h>
+#ifndef LOFAR_LOFARFT_OPERATIONIMAGEBASE_H
+#define LOFAR_LOFARFT_OPERATIONIMAGEBASE_H
+
+// \file
+
+#include <LofarFT/Operation.h>
+#include <LofarFT/OperationParamFTMachine.h>
 
 namespace LOFAR {
 namespace LofarFT {
- 
-casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, const casa::Record& parameters)
-{
-  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parameters.asString("ATerm"), ms, parameters));
-}
 
-}
-}
+  class OperationImageBase : public virtual Operation, OperationParamFTMachine
+  {
+  public:
+    
+    OperationImageBase();
+    
+    virtual void run();
+    
+    void makeEmpty (const casa::String& imgName, casa::Int fieldid);
+    
+  };
 
+} //# namespace LofarFT
+} //# namespace LOFAR
+
+#endif

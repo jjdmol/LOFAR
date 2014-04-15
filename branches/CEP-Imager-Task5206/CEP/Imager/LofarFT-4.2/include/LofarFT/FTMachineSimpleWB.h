@@ -1,4 +1,4 @@
-//# FTMachineSimple.h: Definition for FTMachineSimple
+//# FTMachineSimpleWB.h: Definition for FTMachineSimple
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,12 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: FTMachineSimpleWB.h 28512 2014-03-05 01:07:53Z vdtol $
 
-#ifndef LOFAR_LOFARFT_FTMACHINESIMPLE_H
-#define LOFAR_LOFARFT_FTMACHINESIMPLE_H
+#ifndef LOFAR_LOFARFT_FTMACHINESIMPLEWB_H
+#define LOFAR_LOFARFT_FTMACHINESIMPLEWB_H
 
 #include <LofarFT/FTMachine.h>
+#include <LofarFT/VisResamplerWB.h>
 
 namespace LOFAR {
 namespace LofarFT {
@@ -108,7 +109,7 @@ namespace LofarFT {
 
 class VisBuffer;  
   
-class FTMachineSimple : public FTMachine {
+class FTMachineSimpleWB : public FTMachine {
 public:
   static const casa::String theirName;
 
@@ -124,7 +125,7 @@ public:
   // <group>
 //  LofarFTMachineOld(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
 //	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
-  FTMachineSimple(
+  FTMachineSimpleWB(
     const casa::MeasurementSet& ms, 
 //     casa::Int nwPlanes,
 //     casa::MPosition mLocation, 
@@ -132,16 +133,16 @@ public:
 //     casa::Bool useDoublePrec, 
     const casa::Record& parameters);
 
-  virtual ~FTMachineSimple();
+  virtual ~FTMachineSimpleWB();
   
   // Copy constructor
-  FTMachineSimple(const FTMachineSimple &other);
+  FTMachineSimpleWB(const FTMachineSimpleWB &other);
 
   // Assignment operator
-  FTMachineSimple &operator=(const FTMachineSimple &other);
+  FTMachineSimpleWB &operator=(const FTMachineSimpleWB &other);
 
   // Clone
-  FTMachineSimple* clone() const;
+  FTMachineSimpleWB* clone() const;
 
   virtual casa::String name() const { return theirName;}
   
@@ -164,12 +165,6 @@ public:
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
-  
-  // Finalize transform to Sky plane: flushes the image
-  // cache and shows statistics if it is being used. DOES NOT
-  // DO THE FINAL TRANSFORM!
-  using casa::FTMachine::finalizeToSky;
-  virtual void finalizeToSky() {};
   
 protected:
 
@@ -195,6 +190,11 @@ protected:
   // The average PB for sky image normalization
   //
   int itsNThread;
+  casa::Int itsRefFreq;
+  
+  casa::CountedPtr<VisResamplerWB> itsVisResampler;
+  virtual VisResampler* visresampler() {return &*itsVisResampler;}
+
 
 };
 

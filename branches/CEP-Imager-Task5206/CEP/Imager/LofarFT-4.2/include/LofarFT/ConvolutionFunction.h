@@ -51,6 +51,9 @@ class ConvolutionFunction
 {
 
 public:
+  
+  typedef ATerm::Polarization Polarization; 
+  
   ConvolutionFunction(
     const casa::IPosition& shape,
     const casa::DirectionCoordinate& coordinates,
@@ -64,6 +67,8 @@ public:
     const casa::Record& parameters);
 
   virtual ~ConvolutionFunction () {};
+  
+  Polarization::Type image_polarization() const;
 
   // set frequency channels, creates itsChanMap
   casa::Vector<casa::Int> set_frequency(const casa::Vector<casa::Double> &frequency);

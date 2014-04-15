@@ -44,7 +44,7 @@ namespace LOFAR {
 namespace LofarFT {
  
 ATermPython::ATermPython(const MeasurementSet& ms, const casa::Record& parameters) :
-  ATerm(ms, parameters)
+  ATermLofar(ms, parameters)
 {
   
 
@@ -78,17 +78,17 @@ ATermPython::ATermPython(const MeasurementSet& ms, const casa::Record& parameter
   }
 }
 
-vector<Cube<Complex> > ATermPython::evaluate(
+vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
   uint idStation,
-  const Vector<Double> &freq,
-  const Vector<Double> &reference, 
+  const casa::Vector<casa::Double> &freq,
+  const casa::Vector<casa::Double> &reference, 
   bool normalize) const
 {
   // call the evaluta method of the python ATerm instance
   itsPyaterm.attr("evaluate")(itsTime, itsITRFDirectionMap, idStation, freq, reference, normalize);
   
-  // Ignore the result of the python code and return the result of the evaluate method of out parent
-  return ATerm::evaluate(idStation, freq, reference, normalize);
+  // Ignore the result of the python code and return the result of the evaluate method of our parent
+  return ATermLofar::evaluate(idStation, freq, reference, normalize);
 }
 
 } // end namespace LofarFT

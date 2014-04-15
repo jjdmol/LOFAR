@@ -160,6 +160,13 @@ ConvolutionFunction::ConvolutionFunction
   store_all_W_images();
 }
 
+ConvolutionFunction::Polarization::Type ConvolutionFunction::image_polarization() const
+{
+  return itsATerm->image_polarization();
+}
+
+
+
 Vector<Int> ConvolutionFunction::set_frequency(const Vector<Double> &frequency)
 {
   Int chan_block_size = itsParameters.asInt("ChanBlockSize");
@@ -429,6 +436,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   // Load the Wterm
   uInt w_index = itsWScale.plane(w);
   Matrix<Complex> wTerm;
+//   cout << w_index << "/" << itsWplanesStore.size() << endl;
   wTerm = itsWplanesStore[w_index];
   Int Npix_out = 0;
   Int Npix_out2 = 0;

@@ -1,4 +1,4 @@
-//# FTMachineSimple.cc: Gridder for LOFAR data correcting for DD effects
+//# FTMachineSimpleWB.cc: Gridder for LOFAR data correcting for DD effects
 //#
 //# Copyright (C) 2011
 //# ASTRON (Netherlands Institute for Radio Astronomy)
@@ -18,34 +18,35 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: FTMachineSimpleWB.cc 28512 2014-03-05 01:07:53Z vdtol $
 
 #include <lofar_config.h>
 
-#include <LofarFT/FTMachineSimple.h>
+#include <LofarFT/FTMachineSimpleWB.h>
 #include <LofarFT/VBStore.h>
 #include <LofarFT/CFStore.h>
 #include <LofarFT/VisBuffer.h>
 #include <LofarFT/ConvolutionFunction.h>
-#include <LofarFT/VisResamplerMatrix.h>
+#include <LofarFT/VisResamplerMatrixWB.h>
 #include <Common/OpenMP.h>
+#include <lattices/Lattices/LatticeFFT.h>
 
 
 using namespace casa;
 
-const String LOFAR::LofarFT::FTMachineSimple::theirName("FTMachineSimple");
+const String LOFAR::LofarFT::FTMachineSimpleWB::theirName("FTMachineSimpleWB");
 
 namespace
 {
   bool dummy = LOFAR::LofarFT::FTMachineFactory::instance().
-    registerClass<LOFAR::LofarFT::FTMachineSimple>(
-      LOFAR::LofarFT::FTMachineSimple::theirName);
+    registerClass<LOFAR::LofarFT::FTMachineSimpleWB>(
+      LOFAR::LofarFT::FTMachineSimpleWB::theirName);
 }
 
 namespace LOFAR {
 namespace LofarFT {
 
-FTMachineSimple::FTMachineSimple(
+FTMachineSimpleWB::FTMachineSimpleWB(
   const MeasurementSet& ms,
 //   Int nwPlanes,
 //   MPosition mLocation, 
@@ -53,10 +54,11 @@ FTMachineSimple::FTMachineSimple(
 //   Bool useDoublePrec,
   const Record& parameters)
   : FTMachine( ms, parameters),
-    itsNThread(OpenMP::maxThreads())
+    itsNThread(OpenMP::maxThreads()),
+    itsRefFreq(parameters.asDouble("RefFreq"))
 {
-  cout << "Constructing FTMachineSimple..." << endl;
-  itsMachineName = "LofarFTMachineSimple";
+  cout << "Constructing FTMachineSimpleWB..." << endl;
+  itsMachineName = "LofarFTMachineSimpleWB";
   itsNGrid = itsNThread;
   AlwaysAssert (itsNThread>0, AipsError);
   itsGriddedData.resize (itsNGrid);
@@ -64,16 +66,16 @@ FTMachineSimple::FTMachineSimple(
   itsSumPB.resize (itsNGrid);
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
-  itsVisResampler = new VisResamplerMatrix();
+  itsVisResampler = new VisResamplerMatrixWB();
 }
 
-FTMachineSimple::~FTMachineSimple()
+FTMachineSimpleWB::~FTMachineSimpleWB()
 {
-  cout << "Destructing FTMachineSimple" << endl;
+  cout << "Destructing FTMachineSimpleWB" << endl;
 }
 
   //----------------------------------------------------------------------
-FTMachineSimple& FTMachineSimple::operator=(const FTMachineSimple& other)
+FTMachineSimpleWB& FTMachineSimpleWB::operator=(const FTMachineSimpleWB& other)
 {
   if(this!=&other) 
   {
@@ -92,28 +94,28 @@ FTMachineSimple& FTMachineSimple::operator=(const FTMachineSimple& other)
 }
 
 //----------------------------------------------------------------------
-  FTMachineSimple::FTMachineSimple(const FTMachineSimple& other) : 
+  FTMachineSimpleWB::FTMachineSimpleWB(const FTMachineSimpleWB& other) : 
     FTMachine(other)
   {
     operator=(other);
   }
 
 //----------------------------------------------------------------------
-  FTMachineSimple* FTMachineSimple::clone() const
+  FTMachineSimpleWB* FTMachineSimpleWB::clone() const
   {
-    FTMachineSimple* newftm = new FTMachineSimple(*this);
+    FTMachineSimpleWB* newftm = new FTMachineSimpleWB(*this);
     return newftm;
   }
 
 //----------------------------------------------------------------------
 
-void FTMachineSimple::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
+void FTMachineSimpleWB::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
   put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
 }
 
-void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
+void FTMachineSimpleWB::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
   if (itsVerbose > 0) {
@@ -133,8 +135,16 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   chan_map.resize();
   chan_map = Vector<Int>(vb.frequency().size(), 0);
   
+  Vector<Double> lsr_frequency;
+  
+  Int spwid = 0;
+  Bool convert = True;
+  vb.lsrFrequency(spwid, lsr_frequency, convert);
+  cout << "lsr frequency" << lsr_frequency << endl;
+  
+  
   //No point in reading data if it's not matching in frequency
-  if(max(chanMap)==-1) return;
+  if(max(chan_map)==-1) return;
   
   itsVisResampler->set_chan_map(chan_map);
   
@@ -163,6 +173,8 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
     data.reference(vb.visCube());
   }
   
+  if (not dopsf) cout << "max(abs(data)): " << max(abs(data)) << endl;
+  
   Cube<Bool> flag(vb.flag());
   
   Cube<Float> imagingWeightCube(vb.imagingWeightCube());
@@ -186,14 +198,17 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
+  
+  for (Int i=startRow;i<=endRow;i++) 
+  {
+    for (Int idim = 0; idim<3; idim++) 
+    {
+      uvw(idim,i) = vb.uvw()(i)(idim);
+    }
   }
-
-  rotateUVW(uvw, dphase, vb);
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+  
+//   rotateUVW(uvw, dphase, vb);
+//   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
   // Set up VBStore object to point to the relevant info of the VB.
   VBStore vbs;
@@ -255,7 +270,8 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   // Write the last end index if applicable.
   if (usebl  &&  !allFlagged) {
     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-    if (abs(Wmean) <= itsWMax) {
+    if (abs(Wmean) <= itsWMax) 
+    {
       if (itsVerbose > 1) {
 	cout<<"...using w="<<Wmean<<endl;
       }
@@ -283,115 +299,112 @@ void FTMachineSimple::put(const VisBuffer& vb, Int row, Bool dopsf,
   uInt Nchannels = vb.nChannel();
 
   itsTotalTimer.start();
-  #pragma omp parallel 
+  // Thread-private variables.
+  PrecTimer gridTimer;
+  PrecTimer cfTimer;
+  
+  cout << blStart.size() << endl;
+  for (int i=0; i<int(blStart.size()); ++i) 
   {
-    // Thread-private variables.
-    PrecTimer gridTimer;
-    PrecTimer cfTimer;
-    // The for loop can be parallellized. This must be done dynamically,
-    // because the execution times of iterations can vary greatly.
-//     #pragma omp for schedule(dynamic)
-    cout << blStart.size() << endl;
-    for (int i=0; i<int(blStart.size()); ++i) 
-    {
-      int threadNum = OpenMP::threadNum();
-
-      Int ist  = blIndex[blStart[i]];
-      Int iend = blIndex[blEnd[i]];
+    Int ist  = blIndex[blStart[i]];
+    Int iend = blIndex[blEnd[i]];
 
 //       compute average weight for baseline for CF averaging
-      double average_weight(0.);
-      uInt Nvis(0);
-      for(Int j=ist; j<iend; ++j)
+    double average_weight(0.);
+    uInt Nvis(0);
+    for(Int j=ist; j<iend; ++j)
+    {
+      uInt row=blIndex[j];
+      if(!vbs.rowFlag()[row])
       {
-        uInt row=blIndex[j];
-        if(!vbs.rowFlag()[row])
+        Nvis+=1;
+        for(uint k=0; k<Nchannels; ++k) 
         {
-          Nvis+=1;
-          for(uint k=0; k<Nchannels; ++k) 
-          {
-            // Temporary hack: should compute weight per polarization
-            average_weight = average_weight + vbs.imagingWeightCube()(0,k,row);
-          }
+          // Temporary hack: should compute weight per polarization
+          average_weight = average_weight + vbs.imagingWeightCube()(0,k,row);
         }
       }
-      average_weight=average_weight/Nvis;
-      ///        itsSumWeight += average_weight * average_weight;
-      if (itsVerbose > 1) 
-      {
-        cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
-      }
+    }
+    average_weight=average_weight/Nvis;
+    ///        itsSumWeight += average_weight * average_weight;
+    if (itsVerbose > 1) 
+    {
+      cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
+    }
 
 
 //       Get the convolution function.
-      if (itsVerbose > 1) 
+    if (itsVerbose > 1) 
+    {
+      cout.precision(20);
+      cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
+    }
+    
+    CFStore cfStore;
+    cfTimer.start();
+    cfStore = itsConvFunc->makeConvolutionFunction (
+      ant1[ist], 
+      ant2[ist], 
+      time,
+      0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
+      itsGridMuellerMask, 
+      false,
+      average_weight,
+      itsSumPB[0],
+      itsSumCFWeight[0]);
+    cfTimer.stop();
+    
+    if (itsUseDoubleGrid) 
+    {
+//       TODO: support for double precision grids
+//       itsVisResampler->DataToGrid(
+//         itsGriddedData2[threadNum], 
+//         vbs, 
+//         blIndex,
+//         blStart[i], 
+//         blEnd[i],
+//         itsSumWeight[threadNum], 
+//         dopsf, 
+//         cfStore);
+    } 
+    else 
+    {
+      #pragma omp parallel for num_threads(itsNGrid)
+      for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
       {
-        cout.precision(20);
-        cout<<"A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time="<<fixed<<time<<endl;
-      }
-      CFStore cfStore;
-      cfTimer.start();
-      cfStore = itsConvFunc->makeConvolutionFunction (
-        ant1[ist], 
-        ant2[ist], 
-        time,
-        0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-        itsGridMuellerMask, 
-        false,
-        average_weight,
-        itsSumPB[threadNum],
-        itsSumCFWeight[threadNum]);
-      cfTimer.stop();
-
-      if (itsUseDoubleGrid) 
-      {
-        itsVisResampler->DataToGrid(
-          itsGriddedData2[threadNum], 
-          vbs, 
-          blIndex,
-          blStart[i], 
-          blEnd[i],
-          itsSumWeight[threadNum], 
-          dopsf, 
-          cfStore);
-      } 
-      else 
-      {
-        if (itsVerbose > 1) 
+        Vector<Double> taylor_weights(itsNChan, 1.0);
+        for (int j=0; j<itsNChan; j++)
         {
-          cout<<"  gridding"<<" thread="<<threadNum<<'('<<itsNThread<<"), A1="<<ant1[ist]<<", A2="<<ant2[ist]<<", time=" <<time<<endl;
+          taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
         }
-        gridTimer.start();
         itsVisResampler->DataToGrid(
-          itsGriddedData[threadNum], 
+          itsGriddedData[taylor_idx], 
           vbs, 
           blIndex, 
           blStart[i],
           blEnd[i], 
-          itsSumWeight[threadNum], 
+          itsSumWeight[taylor_idx], 
           dopsf, 
-          cfStore);
-        gridTimer.stop();
+          cfStore,
+          taylor_weights);
       }
-    } // end omp for
-    double cftime = cfTimer.getReal();
-#pragma omp atomic
-    itsCFTime += cftime;
-    double gtime = gridTimer.getReal();
-#pragma omp atomic
-    itsGriddingTime += gtime;
-  } // end omp parallel
+    }
+  } // end omp for
+  double cftime = cfTimer.getReal();
+  itsCFTime += cftime;
+  double gtime = gridTimer.getReal();
+  itsGriddingTime += gtime;
   itsTotalTimer.stop();
 }
 
 
-void FTMachineSimple::get(casa::VisBuffer& vb, Int row)
+void FTMachineSimpleWB::get(casa::VisBuffer& vb, Int row)
 {
   get(*static_cast<VisBuffer*>(&vb), row);
 }
 
 // Degrid
-void FTMachineSimple::get(VisBuffer& vb, Int row)
+void FTMachineSimpleWB::get(VisBuffer& vb, Int row)
 {
   if (itsVerbose > 0) {
     cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
@@ -406,13 +419,14 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
   // Get the uvws in a form that Fortran can use
   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
-  //NEGATING to correct for an image inversion problem
-  for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
+  
+  for (Int i=startRow;i<=endRow;i++) 
+  {
+    for (Int idim=0;idim<3;idim++) 
+    {
+      uvw(idim,i) = vb.uvw()(i)(idim);
+    }
   }
-  rotateUVW(uvw, dphase, vb);
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
   // Match data channels to images channels
   // chan_map is filled by match_channel with a mapping of the data channels
@@ -426,7 +440,7 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
   chan_map = Vector<Int>(vb.frequency().size(), 0);
   
   //No point in reading data if it's not matching in frequency
-  if(max(chanMap)==-1) return;
+  if(max(chan_map)==-1) return;
   
   itsVisResampler->set_chan_map(chan_map);
   
@@ -438,27 +452,28 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
   Vector<Int> chan_map_CF;
   chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
   itsVisResampler->set_chan_map_CF(chan_map_CF);
-
-  Cube<Complex> data;
-  Cube<Bool> flags;
   
-// TODO: getInterpolateArrays(vb, data, flags) has been removed
-// let data, flags reference the correct column in vb
- 
+  Vector<Double> lsr_frequency;
+  
+  Int spwid = 0;
+  Bool convert = True;
+  vb.lsrFrequency(spwid, lsr_frequency, convert);
+  cout << "lsr frequency" << lsr_frequency << endl;
 
+  Cube<Complex> data(vb.modelVisCube());
+  
   VBStore vbs;
   vbs.nRow(vb.nRow());
   vbs.beginRow(0);
   vbs.endRow(vbs.nRow());
 
   vbs.uvw(uvw);
-  //    vbs.imagingWeight.reference(elWeight);
   vbs.visCube(data);
   
-  vbs.freq(interpVisFreq_p);
+  vbs.freq(vb.frequency());
   vbs.rowFlag(vb.flagRow());
-  vbs.flagCube(flags);
-
+  vbs.flagCube(vb.flagCube());
+  
   // Determine the terms of the Mueller matrix that should be calculated
   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
   itsVisResampler->setMaps(chanMap, polMap);
@@ -534,16 +549,14 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
   itsConvFunc->computeAterm (time);
 
   itsTotalTimer.start();
-  #pragma omp parallel
   {
     // Thread-private variables.
     PrecTimer degridTimer;
     PrecTimer cfTimer;
     // The for loop can be parallellized. This must be done dynamically,
     // because the execution times of iterations can vary greatly.
-    #pragma omp for schedule(dynamic)
     for (int i=0; i<int(blStart.size()); ++i) {
-      // #pragma omp critical(FTMachineSimple_lofarGridToData)
+      // #pragma omp critical(FTMachineSimpleWB_lofarGridToData)
       // {
       Int ist  = blIndex[blStart[i]];
       Int iend = blIndex[blEnd[i]];
@@ -565,11 +578,27 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
         itsSumCFWeight[threadNum]);
       cfTimer.stop();
 
-      //Double or single precision gridding.
-      //      cout<<"GRID "<<ant1[ist]<<" "<<ant2[ist]<<endl;
       degridTimer.start();
-      itsVisResampler->GridToData(vbs, itsGriddedData[0],
-                                      blIndex, blStart[i], blEnd[i], cfStore);
+      
+// TODO: Double or single precision gridding.
+      for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
+      {
+        Vector<Double> taylor_weights(itsNChan, 1.0);
+        for (int j=0; j<itsNChan; j++)
+        {
+          taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
+        }
+
+        itsVisResampler->GridToData(
+          vbs, 
+          itsModelGrids[taylor_idx], 
+          blIndex, 
+          blStart[i],
+          blEnd[i], 
+          cfStore,
+          taylor_weights);
+      }
+      
       degridTimer.stop();
     } // end omp for
     double cftime = cfTimer.getReal();
@@ -580,32 +609,8 @@ void FTMachineSimple::get(VisBuffer& vb, Int row)
     itsGriddingTime += gtime;
   } // end omp parallel
   itsTotalTimer.stop();
-  this->interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
-
-void FTMachineSimple::finalizeToSky()
-{
-  // Now we flush the cache and report statistics
-  // For memory based, we don't write anything out yet.
-  if (itsVerbose > 0) 
-  {
-    cout<<"---------------------------> finalizeToSky"<<endl;
-  }
-
-  // Add all buffers into the first one.
-  for (int i=1; i<itsNGrid; ++i) 
-  {
-    itsGriddedData[0] += itsGriddedData[i];
-    itsSumWeight[0]   += itsSumWeight[i];
-    itsSumCFWeight[0] += itsSumCFWeight[i];
-    itsSumPB[0]       += itsSumPB[i];
-  }
-
   
-}
-
-
-
 } //# end namespace LofarFT
 } //# end namespace LOFAR
 

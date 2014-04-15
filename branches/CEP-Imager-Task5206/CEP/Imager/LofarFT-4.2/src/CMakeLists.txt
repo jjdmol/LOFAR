@@ -7,31 +7,41 @@ lofar_add_library(lofarft
   Package__Version.cc
   FFTCMatrix.cc
   ATerm.cc
+  ATermLofar.cc
+  ATermPython.cc
   ConvolutionFunction.cc
   Imager.cc
   CFStore.cc
   FTMachine.cc
-#   FTMachineSimple.cc  # put in separate dynamic library instead
+  FTMachineSimpleWB.cc
   WTerm.cc
   VisBuffer.cc
   VisibilityIterator.cc
   VisImagingWeight.cc
   VisResampler.cc
-  VisResamplerImagingWeightCube.cc
-  CubeSkyEquation.cc
-  ATermPython.cc
+  VisResamplerMatrixWB.cc
+  SkyEquation.cc
 )
 
-lofar_add_bin_program(awimager awimager.cc)
-
-lofar_add_library(atermpython
-    ATermPython.cc
+lofar_add_bin_program(awimager 
+  Package__Version.cc
+  awimager.cc 
+  Operation.cc 
+  OperationParamData.cc
+  OperationParamFTMachine.cc
+  OperationImageBase.cc 
+  OperationImage.cc 
+  OperationClean.cc 
+  OperationEmpty.cc
+  OperationPredict.cc
 )
+  
 
-lofar_add_library(ftmachinesimple
-  FTMachineSimple.cc
-)
+# lofar_add_library(ftmachinesimple
+#   FTMachineSimple.cc
+# )
 
+lofar_add_bin_program(versionlofarft versionlofarft.cc)
 
 
 # set_source_files_properties(

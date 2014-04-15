@@ -22,101 +22,42 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/InitializeCommand.h>
-#include <BBSControl/CommandVisitor.h>
-#include <BBSControl/Strategy.h>
-#include <BBSControl/StreamUtil.h>
+#include <LofarFT/OperationPredict.h>
 
-#include <Common/LofarLogger.h>
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_iomanip.h>
-#include <Common/ParameterSet.h>
+namespace LOFAR {
+namespace LofarFT {
 
-namespace LOFAR
+namespace
 {
-  namespace BBS
-  {
-    using LOFAR::operator<<;
-
-    // Register InitializeCommand with the CommandFactory. Use an anonymous
-    // namespace. This ensures that the variable `dummy' gets its own private
-    // storage area and is only visible in this compilation unit.
-    namespace
-    {
-      bool dummy = CommandFactory::instance().
-        registerClass<InitializeCommand>("initialize");
-    }
+  bool dummy = OperationFactory::instance().
+    registerClass<OperationPredict>("predict");
+}
 
 
-    //##--------   P u b l i c   m e t h o d s   --------##//
+OperationPredict::OperationPredict()
+{
+  itsInputParSet.create (
+    "model", 
+    "",
+    "Model image for the predict",
+    "string");
+}
 
-    InitializeCommand::InitializeCommand()
-      : itsUseSolver(false)
-    {
-    }
+void OperationPredict::run()
+{
+  Operation::run();
+  OperationParamFTMachine::run();
+  OperationParamData::run();
 
-    InitializeCommand::InitializeCommand(const Strategy& strategy)
-    {
-      itsInputColumn = strategy.inputColumn();
-      itsBaselines = strategy.baselines();
-      itsCorrelations = strategy.correlations();
-      itsUseSolver = strategy.useSolver();
-    }
+  itsParameters.define("imagename", "");
+  
+  casa::String model = itsInputParSet.getString("model");
+  
+  cout << "calling itsImager->predict" << endl;
+  
+  itsImager->predict(casa::Vector<casa::String>(1, model));
+}
 
-    CommandResult InitializeCommand::accept(CommandVisitor &visitor) const
-    {
-      return visitor.visit(*this);
-    }
-
-
-    const string& InitializeCommand::type() const
-    {
-      static const string theType("Initialize");
-      return theType;
-    }
-
-
-    void InitializeCommand::print(ostream& os) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      Command::print(os);
-      os << endl << indent << "Input column: " << itsInputColumn
-        << endl << indent << "Baselines: " << itsBaselines
-        << endl << indent << "Correlations: " << itsCorrelations
-        << endl << indent << "Use global solver: " << boolalpha << itsUseSolver
-        << noboolalpha;
-    }
-
-
-    //##--------   P r i v a t e   m e t h o d s   --------##//
-
-    void InitializeCommand::write(ParameterSet& ps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      ps.add("InputColumn", itsInputColumn);
-      ps.add("Baselines", itsBaselines);
-      ps.add("Correlations", toString(itsCorrelations));
-      ps.add("UseSolver", toString(itsUseSolver));
-    }
-
-
-    void InitializeCommand::read(const ParameterSet& ps)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // Read input column.
-      itsInputColumn = ps.getString("InputColumn");
-
-      // Read data selection.
-      itsBaselines = ps.getString("Baselines");
-      itsCorrelations = ps.getStringVector("Correlations");
-
-      // Read flag that controls use of the global solver.
-      itsUseSolver = ps.getBool("UseSolver");
-    }
-
-  } //# namespace BBS
+} //# namespace LofarFT
 
 } //# namespace LOFAR

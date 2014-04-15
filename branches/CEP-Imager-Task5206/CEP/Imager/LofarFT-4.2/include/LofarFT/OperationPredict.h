@@ -27,25 +27,23 @@
 // Concrete "predict" operation
 
 #include <LofarFT/Operation.h>
+#include <LofarFT/OperationParamData.h>
+#include <LofarFT/OperationParamFTMachine.h>
 
-namespace LOFAR
-{
-    class InitializeCommand : public Command
+namespace LOFAR {
+namespace LofarFT {
+  
+    class OperationPredict : public virtual Operation, OperationParamFTMachine, OperationParamData
     {
     public:
       // Default constructor.
       OperationPredict();
 
-      // Destructor.
-      virtual ~OperationPredict() {}
-
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const;
-
-      virtual void run() const;
+      virtual void run();
 
     };
 
+} //# namespace LofarFT
 } //# namespace LOFAR
 
 #endif

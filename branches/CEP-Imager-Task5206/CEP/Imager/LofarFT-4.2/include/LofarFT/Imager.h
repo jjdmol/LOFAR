@@ -88,9 +88,26 @@ namespace LofarFT {
     
     casa::Bool restoreImages(const casa::Vector<casa::String>& restored, casa::Bool modresiduals=casa::True);
 
+  casa::Record clean(
+    const casa::String& algorithm,
+    const casa::Int niter, 
+    const casa::Float gain, 
+    const casa::Quantity& threshold, 
+    const casa::Bool displayProgress, 
+    const casa::Vector<casa::String>& model, 
+    const casa::Vector<casa::Bool>& fixed,
+    const casa::String& complist,
+    const casa::Vector<casa::String>& mask,
+    const casa::Vector<casa::String>& restored,
+    const casa::Vector<casa::String>& residual,
+    const casa::Vector<casa::String>& psf = casa::Vector<casa::String>(0),
+    const casa::Bool firstrun=true);
+    
+  void predict(const casa::Vector<casa::String>& modelNames);
+  
   private:
     //# Data members.
-    casa::Record     itsParameters;
+    const casa::Record     &itsParameters;
     FTMachine*       itsFTMachine;
     vector<casa::Array<casa::Complex> > itsGridsParallel;
     vector<casa::Array<casa::DComplex> > itsGridsParallel2;

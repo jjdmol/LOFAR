@@ -1,6 +1,8 @@
 # $Id$
 
-lofar_package(LofarFT 0.1 DEPENDS BBSKernel Common ParmDB ElementResponse)
+lofar_package(LofarFT 0.1 DEPENDS Common ParmDB StationResponse)
+
+include(LofarFindPackage)
 
 lofar_find_package(Casa REQUIRED COMPONENTS synthesis)
 lofar_find_package(Casacore REQUIRED COMPONENTS images msfits)

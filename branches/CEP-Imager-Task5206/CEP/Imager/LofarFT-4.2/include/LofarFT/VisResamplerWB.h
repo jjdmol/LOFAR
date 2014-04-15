@@ -1,4 +1,4 @@
-//# VisResampler.h: Convolutional AW resampler for LOFAR data
+//# VisResamplerWB.h: Convolutional AW resampler for LOFAR data
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,32 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: VisResampler.h 28512 2014-03-05 01:07:53Z vdtol $
 
-#ifndef LOFAR_LOFARFT_VISRESAMPLER_H
-#define LOFAR_LOFARFT_VISRESAMPLER_H
+#ifndef LOFAR_LOFARFT_VISRESAMPLERWB_H
+#define LOFAR_LOFARFT_VISRESAMPLERWB_H
 
-#include <synthesis/TransformMachines/AWVisResampler.h>
+#include <LofarFT/VisResampler.h>
 #include <LofarFT/CFStore.h>
 #include <LofarFT/VBStore.h>
 
 namespace LOFAR { //# NAMESPACE LOFAR - BEGIN
 namespace LofarFT {
   
-class VisResampler: public casa::AWVisResampler
+class VisResamplerWB: public VisResampler
 {
 public:
-  VisResampler(): AWVisResampler()  {}
-  virtual ~VisResampler()                                    {}
-
-//   virtual VisibilityResamplerBase* clone() = 0;
-// 
-//   void copy(const VisResampler& other)
-//   {AWVisResampler::copy(other); }
-//   
-  void set_chan_map(const casa::Vector<casa::Int> &map);
-
-  void set_chan_map_CF(const casa::Vector<casa::Int> &map);
+  VisResamplerWB(): VisResampler()  {}
+  virtual ~VisResamplerWB()                                    {}
 
   // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
   virtual void DataToGrid (
@@ -59,7 +50,8 @@ public:
     casa::Int rend,
     casa::Matrix<casa::Double>& sumwt,
     const casa::Bool& dopsf, 
-    CFStore& cfs) {};
+    CFStore& cfs,
+    casa::Vector<casa::Double> &taylor_weight) = 0;
   
   virtual void DataToGrid (
     casa::Array<casa::DComplex>& griddedData, 
@@ -69,7 +61,8 @@ public:
     casa::Int rend,
     casa::Matrix<casa::Double>& sumwt,
     const casa::Bool& dopsf, 
-    CFStore& cfs) {};
+    CFStore& cfs,
+    casa::Vector<casa::Double> &taylor_weight) = 0;
 
   virtual void GridToData(
     VBStore& vbs,
@@ -77,27 +70,8 @@ public:
     const casa::Vector<casa::uInt>& rows,
     casa::Int rbeg, 
     casa::Int rend,
-    CFStore& cfs) {};
-
-  void ComputeResiduals(VBStore& vbs);
-
-  void sgrid(
-    casa::Vector<casa::Double>& pos, 
-    casa::Vector<casa::Int>& loc,
-    casa::Vector<casa::Int>& off, 
-    casa::Complex& phasor,
-    const casa::Int& irow, 
-    const casa::Matrix<casa::Double>& uvw,
-    const casa::Double& dphase, 
-    const casa::Double& freq,
-    const casa::Vector<casa::Double>& scale,
-    const casa::Vector<casa::Double>& offset,
-    const casa::Vector<casa::Float>& sampling);
-
-protected:
-  casa::Vector<casa::Int> itsChanMap;
-  casa::Vector<casa::Int> itsChanMapCF;
-    
+    CFStore& cfs,
+    casa::Vector<casa::Double> &taylor_weight) = 0;
 };
 
 } // end namespace LofarFT

@@ -23,7 +23,7 @@
 #ifndef LOFAR_LOFARFT_ATERMPYTHON_H
 #define LOFAR_LOFARFT_ATERMPYTHON_H
 
-#include <LofarFT/ATerm.h>
+#include <LofarFT/ATermLofar.h>
 #include <LofarFT/DynamicObjectFactory.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
@@ -46,14 +46,17 @@ namespace casa
 namespace LOFAR {
 namespace LofarFT {
 
-class ATermPython : public ATerm
+class ATermPython : public ATermLofar
 {
 public:
   ATermPython(const casa::MeasurementSet &ms, const casa::Record& parameters);
   
-  virtual vector<casa::Cube<casa::Complex> > evaluate(uint idStation,
+  virtual vector<casa::Cube<casa::Complex> > evaluate(
+    uint idStation,
     const casa::Vector<casa::Double> &freq,
-    const casa::Vector<casa::Double> &reference, bool normalize = false) const;
+    const casa::Vector<casa::Double> &reference, 
+    bool normalize = false)
+    const;
     
 protected:    
   boost::python::object itsPyaterm;

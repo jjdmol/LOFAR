@@ -1,6 +1,6 @@
-//# Command.h: Base class for commands
+//# Operation.h: Base class for awimager operations
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,37 +18,69 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id$
+//# $Id: $
 
-#ifndef LOFAR_LOFARFT_COMMAND_H
-#define LOFAR_LOFARFT_COMMAND_H
+#ifndef LOFAR_LOFARFT_OPERATION_H
+#define LOFAR_LOFARFT_OPERATION_H
 
-// \file
+#include <LofarFT/Imager.h>
 
 #include <Common/ObjectFactory.h>
 #include <Common/Singleton.h>
 #include <Common/lofar_string.h>
+#include <Common/InputParSet.h>
 
-namespace LOFAR
-{
+#include <casa/BasicSL/String.h>
+#include <casa/Containers/Record.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 
-  class Operation
-  {
-  public:
-    // Destructor.
-    virtual ~Command() {}
+namespace LOFAR { 
+  
+  namespace LofarFT {
 
-    // Return the operation type of \c *this as a string.
-    virtual const string& type() const = 0;
+    class Operation
+    {
+    public:
+      
+      Operation();
+      
+      virtual void run();
+       
+      void readArguments (int argc, char const* const* argv);
+      
+      // Show the help info.
+      void showHelp (ostream& os, const string& name);
+      
+      void setVersion(const string& version);
+      
+      static casa::IPosition readIPosition (const casa::String& in);
+      
+      static casa::Quantity readQuantity (const casa::String& in);
+      
+      static casa::MDirection readDirection (const casa::String& in);
+      
+      static void readFilter (
+        const casa::String& filter,
+        casa::Quantity& bmajor, 
+        casa::Quantity& bminor, 
+        casa::Quantity& bpa);
 
-    virtual CommandResult run() const = 0;
+      
+    protected:
+      InputParSet                itsInputParSet;
+      casa::String               itsMSName;
+      casa::MeasurementSet       itsMS;
+      casa::Record               itsParameters;
+      casa::CountedPtr<Imager>   itsImager;
+      
+    };
 
-  };
+    // Factory that can be used to generate new Operation objects.
+    // The factory is defined as a singleton.
+    typedef Singleton< ObjectFactory< Operation*(), string > > OperationFactory;
+    
 
-  // Factory that can be used to generate new Operation objects.
-  // The factory is defined as a singleton.
-  typedef Singleton< ObjectFactory< Operation*(), String > > OperationFactory;
-
+  } //# namespace LofarFT
 } //# namespace LOFAR
 
 #endif

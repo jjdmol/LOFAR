@@ -1,6 +1,6 @@
-//# ATerm.cc: Compute the LOFAR beam response on the sky.
+//# OperationClean.cc:
 //#
-//# Copyright (C) 2011
+//# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,16 +21,33 @@
 //# $Id: $
 
 #include <lofar_config.h>
-#include <LofarFT/ATerm.h>
+
+#include <Common/lofar_iostream.h>
+#include <LofarFT/OperationImage.h>
 
 namespace LOFAR {
 namespace LofarFT {
- 
-casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, const casa::Record& parameters)
+
+namespace
 {
-  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parameters.asString("ATerm"), ms, parameters));
+  bool dummy = OperationFactory::instance().
+    registerClass<OperationImage>("image");
+}
+  
+OperationImage::OperationImage()
+{
+    
 }
 
-}
+void OperationImage::run()
+{
+  OperationImageBase::run();
+  OperationParamData::run();
+  
+  itsImager->makeimage ("corrected", "testimage");
+  cout << "Hi, I am OperationImage::run" << endl;
 }
 
+
+} //# namespace LofarFT
+} //# namespace LOFAR

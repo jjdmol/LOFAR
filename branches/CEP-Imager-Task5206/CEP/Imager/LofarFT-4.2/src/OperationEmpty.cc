@@ -1,6 +1,6 @@
-//# ATerm.cc: Compute the LOFAR beam response on the sky.
+//# OperationClean.cc:
 //#
-//# Copyright (C) 2011
+//# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -21,16 +21,30 @@
 //# $Id: $
 
 #include <lofar_config.h>
-#include <LofarFT/ATerm.h>
+
+#include <Common/lofar_iostream.h>
+#include <LofarFT/OperationEmpty.h>
 
 namespace LOFAR {
 namespace LofarFT {
- 
-casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, const casa::Record& parameters)
+  
+// Register OperationClean with the OperationFactory. Use an anonymous
+// namespace. This ensures that the variable `dummy' gets its own private
+// storage area and is only visible in this compilation unit.
+namespace
 {
-  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parameters.asString("ATerm"), ms, parameters));
+  bool dummy = OperationFactory::instance().
+    registerClass<OperationEmpty>("empty");
 }
 
-}
+OperationEmpty::OperationEmpty()
+{
 }
 
+void OperationEmpty::run()
+{
+}
+
+} //# namespace LofarFT
+
+} //# namespace LOFAR

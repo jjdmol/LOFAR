@@ -28,8 +28,11 @@
 //# Includes
 #include <lofar_config.h>
 #include <LofarFT/Imager.h>
+#include <LofarFT/Operation.h>
 #include <Common/InputParSet.h>
 #include <Common/Exception.h>
+#include <LofarFT/Package__Version.h>
+#include <Common/Version.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -47,161 +50,16 @@
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 
+#include <boost/algorithm/string/join.hpp>
+
 using namespace casa;
 
 // Use a terminate handler that can produce a backtrace.
 LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
-IPosition handlePos (const IPosition& pos, const IPosition& def)
-{
-  if (pos.nelements() == 0) {
-    return def;
-  }
-  if (pos.nelements() != 2) {
-    throw AipsError("Give 0 or 2 values in maskblc and masktrc");
-  }
-  IPosition npos(def);
-  int n = npos.nelements();
-  npos[n-1] = pos[1];
-  npos[n-2]= pos[0];
-  return npos;
-}
-
-IPosition readIPosition (const String& in)
-{
-  if (in.empty()) {
-    return IPosition();
-  }
-  Vector<String> strs = stringToVector (in);
-  IPosition ipos(strs.nelements());
-  for (uInt i=0; i<strs.nelements(); ++i) {
-    istringstream iss(strs[i]);
-    iss >> ipos[i];
-  }
-  return ipos;
-}
-
-Quantity readQuantity (const String& in)
-{
-  Quantity res;
-  if (!Quantity::read(res, in)) {
-    throw AipsError (in + " is an illegal quantity");
-  }
-  return res;
-}
-
-MDirection readDirection (const String& in)
-{
-  Vector<String> vals = stringToVector(in);
-  if (vals.size() > 3) {
-    throw AipsError ("MDirection value " + in + " is invalid;"
-		     " up to 3 values can be given");
-  }
-  MDirection::Types tp;
-  if (! MDirection::getType (tp, vals[0])) {
-    throw AipsError(vals[0] + " is an invalid MDirection type");
-  }
-  Quantity v0(0, "deg");
-  Quantity v1(90, "deg");     // same default as in measures.g
-  if (vals.size() > 1  &&  !vals[1].empty()) {
-    v0 = readQuantity(vals[1]);
-  }
-  if (vals.size() > 2  &&  !vals[2].empty()) {
-    v1 = readQuantity(vals[2]);
-  }
-  return MDirection(v0, v1, tp);
-}
-
-void readFilter (const String& filter,
-                 Quantity& bmajor, Quantity& bminor, Quantity& bpa)
-{
-  if (filter.empty()) {
-    return;
-  }
-  Vector<String> strs = stringToVector(filter);
-  if (strs.size() != 3) {
-    throw AipsError("Specify gaussian tapering filter as bmajor,bminor,bpa");
-  }
-  if (! strs[0].empty()) {
-    bmajor = readQuantity (strs[0]);
-  }
-  if (! strs[1].empty()) {
-    bminor = readQuantity (strs[1]);
-  }
-  if (! strs[2].empty()) {
-    bpa = readQuantity (strs[2]);
-  }
-}
-
-Matrix<Bool> readMueller (const String& str, String stokes, Bool grid)
-{
-  Matrix<Bool> mat(4,4, True);
-  String s(str);
-  s.upcase();
-  if (s == "FULL") {
-    s = "ALL";
-  }
-  if (s == "DIAGONAL") 
-  {
-    mat = False;
-    mat.diagonal() = True;
-  } 
-  else if (s != "ALL" ) 
-  {
-    mat(0,4) = mat(4,0) = False;
-    if (s == "BAND1") 
-    {
-      mat(0,3) = mat(1,4) = mat(3,0) = mat(4,1) = False;
-    } 
-    else if (s != "BAND2") 
-    {
-      throw AipsError (str + " is an invalid Mueller specification");
-    }
-  }
-  if((stokes=="I")&&(grid)){
-    for(uInt i=0;i<4;++i){
-      mat(1,i)=0;
-      mat(2,i)=0;
-    };
-  }
-  if((stokes=="I")&&(!grid)){
-    for(uInt i=0;i<4;++i){
-      mat(1,i)=0;
-      mat(2,i)=0;
-      // mat(i,1)=0;
-      // mat(i,2)=0;
-    };
-  };
-  return mat;
-}
-
-void makeEmpty (LOFAR::LofarFT::Imager& imager, const String& imgName, Int fieldid)
-{
-  CoordinateSystem coords;
-  AlwaysAssert (imager.imagecoordinates(coords), AipsError);
-  String name(imgName);
-  imager.makeEmptyImage(coords, name, fieldid);
-  imager.unlock();
-}
-
-void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
-{
-  Array<Float> data;
-  image.get (data);
-  ///  cout << "apply factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
-  // Loop over channels
-  for (ArrayIterator<Float> iter1(data, 3); !iter1.pastEnd(); iter1.next()) {
-    // Loop over Stokes.
-    ArrayIterator<Float> iter2(iter1.array(), 2);
-    while (! iter2.pastEnd()) {
-      iter2.array() *= factors;
-      iter2.next();
-    }
-  }
-  image.put (data);
-  ///  cout << "applied factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
-}
-
+IPosition handlePos (const IPosition& pos, const IPosition& def);
+Matrix<Bool> readMueller (const String& str, String stokes, Bool grid);
+void applyFactors (PagedImage<Float>& image, const Array<Float>& factors);
 void correctImages (
   const String& restoName, 
   const String& modelName,
@@ -210,349 +68,76 @@ void correctImages (
   Imager&,
   Bool CorrectElement, 
   Bool CorrectWPlanes, 
-  Bool doRestored)
-{
-  // Copy the images to .corr ones.
-  {
-    Directory modelIn(modelName);
-    modelIn.copy (modelName+".corr");
-    Directory residualIn(residName);
-    residualIn.copy (residName+".corr");
-  }
-  // Open the images.
-  PagedImage<Float> modelImage(modelName+".corr");
-  PagedImage<Float> residualImage(residName+".corr");
-  // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
-  //              restoredImage.shape() == modelImage.shape(), SynthesisError);
-
-  // Get average primary beam and spheroidal.
-//   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
-//   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
-  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName);
-  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName);
-
-  // String nameii("Spheroid_cut_im_element.img");
-  // ostringstream nameiii(nameii);
-  // PagedImage<Float> tmpi(nameiii.str().c_str());
-  // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-  // Array<Float> spheroidCutElement;
-  // tmpi.doGetSlice(spheroidCutElement, slicei);
-
-  // Use the inner part of the beam and spheroidal.
-  Int nximg = residualImage.shape()[0];
-  Int nxpb  = avgPB.shape()[0];
-  Int nxsph = spheroidCut.shape()[0];
-  //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
-  //              avgPB.shape()[1] == nxpb  &&
-  //              spheroidCut.shape()[1] == nxsph  &&
-  //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
-  // Get inner parts of beam and spheroid.
-  Int offpb  = (nxpb  - nximg) / 2;
-  Int offsph = (nxsph - nximg) / 2;
-  Array<Float> pbinner  = avgPB(Slicer(IPosition(2, offpb, offpb),
-                                       IPosition(2, nximg, nximg)));
-  Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
-                                             IPosition(2, nximg, nximg)));
-  Array<Float> ones(IPosition(sphinner.shape()),1.);
-  Array<Float> factors;
-
-  factors = ones / sqrt(pbinner);
-  cout<<"Final normalisation"<<endl;
-  applyFactors (modelImage, factors);
-  applyFactors (residualImage, factors);
-  if(doRestored){
-    cout<<"... restored image too ..."<<endl;
-    Directory restoredIn(restoName);
-    restoredIn.copy (restoName+".corr");
-    PagedImage<Float> restoredImage(restoName+".corr");
-    applyFactors (restoredImage, factors);
-  }
-}
-
+  Bool doRestored);
 
 int main (Int argc, char** argv)
 {
+  vector<string> operations = LOFAR::LofarFT::OperationFactory::instance().registeredClassIds();
+  
+  LOFAR::InputParSet initial_inputs;
+  
+  LOFAR::Version version_info = LOFAR::LofarFTVersion().getInfo();
+  string version = version_info.version() + " revision=" + version_info.packageRevision();
+  if (version_info.nrChangedFiles() != "0") 
+  {
+    if (version_info.nrChangedFiles() == "1") 
+    {
+       version += " (1 locally modified file)";
+    }
+    else
+    {
+      version += " (" + version_info.nrChangedFiles() + " locally modified files)";
+    }
+  }
+     
+  initial_inputs.setVersion(version);
+  initial_inputs.create ("operation", "image",
+              "Operation (" + boost::algorithm::join(operations, ",") + ")",
+              "string");
+  try
+  {
+    initial_inputs.readArguments (argc, argv);
+  }
+  catch (...)
+  {
+  }
+  
+  String operation_name = initial_inputs.getString("operation");
+  LOFAR::LofarFT::Operation *operation = LOFAR::LofarFT::OperationFactory::instance().create(operation_name);
+  if (!operation)
+  {
+    cout << "Unknown operation: " << operation_name << endl;
+    return 1;
+  }
+  
+  operation->setVersion (version);
+    operation->readArguments (argc, argv);
+//   try
+//   {
+//     operation->readArguments (argc, argv);
+//   }
+//   catch (...)
+//   {
+//     operation->showHelp(cout, "You clearly need help.");
+//     return 1;
+//   }
+  
+  try 
+  {
+    operation->run();
+  }
+  
+  catch (AipsError& x) 
+  {
+    cout << x.getMesg() << endl;
+    return 1;
+  }
+  cout << "awimager normally ended" << endl;
+  return 0;
+
   try {
     LOFAR::InputParSet inputs;
     // define the input structure
-    inputs.setVersion("2011Oct05-CT/SvdT/JvZ/GvD");
-    inputs.create ("ms", "",
-		   "Name of input MeasurementSet",
-		   "string");
-    inputs.create ("image", "",
-		   "Name of output image file (default is <msname-stokes-mode-nchan>.img)",
-		   "string");
-    inputs.create ("fits", "no",
-		   "Name of output image fits file ('no' means no fits file) empty is <imagename>.fits",
-		   "string");
-    inputs.create ("hdf5", "no",
-    		   "Name of output image HDF5 file ('no' means no HDF5 file) empty is <imagename>.hdf5",
-    		   "string");
-    inputs.create ("prior", "",
-		   "Name of prior image file (default is <imagename>.prior",
-		   "string");
-    inputs.create ("model", "",
-		   "Name of model image file (default is <imagename>.model",
-		   "string");
-    inputs.create ("restored", "",
-		   "Name of restored image file (default is <imagename>.restored",
-		   "string");
-    inputs.create ("residual", "",
-		   "Name of residual image file (default is <imagename>.residual",
-		   "string");
-    inputs.create ("psf", "",
-		   "Name of psf image file (default is <imagename>.psf",
-		   "string");
-    inputs.create ("data", "DATA",
-		   "Name of DATA column to use",
-		   "string");
-    inputs.create ("mode", "mfs",
-		   "Imaging mode (mfs, channel, or velocity)",
-		   "string");
-    inputs.create ("filter", "",
-                   "Apply gaussian tapering filter; specify as major,minor,pa",
-                   "string");
-    inputs.create ("nscales", "5",
-                   "Number of scales for MultiScale Clean",
-                   "int");
-    inputs.create ("weight", "briggs",
-		   "Weighting scheme (uniform, superuniform, natural, briggs (robust), briggsabs, or radial",
-		   "string");
-    inputs.create ("noise", "1.0",
-		   "Noise (in Jy) for briggsabs weighting",
-		   "float");
-    inputs.create ("robust", "0.0",
-		   "Robust parameter",
-		   "float");
-    inputs.create ("wprojplanes", "0",
-		   "if >0 specifies nr of convolution functions to use in W-projection",
-		   "int");
-    inputs.create ("padding", "1.0",
-		   "padding factor in image plane (>=1.0)",
-		   "float");
-    inputs.create ("timewindow", "300.0",
-                   "width of time window (in sec) where AW-term is constant",
-                   "double");
-    inputs.create ("wmax", "10000.0",
-		   "omit data with w-term > wmax (in meters)",
-		   "float");
-    inputs.create ("muellergrid", "all",
-		   "Mueller elements to use when gridding (all,diagonal,band1,band2)",
-		   "string");
-    inputs.create ("muellerdegrid", "all",
-		   "Mueller elements to use when degridding (all,diagonal,band1,band2)",
-		   "string");
-    inputs.create ("cachesize", "512",
-		   "maximum size of gridding cache (in MBytes)",
-		   "int");
-    inputs.create ("displayprogress", "false",
-		   "show the progress of the imaging process?",
-		   "bool");
-    inputs.create ("stokes", "IQUV",
-		   "Stokes parameters to image (e.g. IQUV)",
-		   "string");
-    inputs.create ("nfacets", "1",
-                   "number of facets in x or y",
-                   "int");
-    inputs.create ("npix", "256",
-		   "number of image pixels in x and y direction",
-		   "int");
-    inputs.create ("cellsize", "1arcsec",
-		   "pixel width in x and y direction",
-		   "quantity string");
-    inputs.create ("phasecenter", "",
-		   "phase center to be used (e.g. 'j2000, 05h30m, -30.2deg')",
-		   "direction string");
-    inputs.create ("field", "0",
-		   "field id to be used",
-		   "int");
-    inputs.create ("spwid", "0",
-		   "spectral window id(s) to be used",
-		   "int vector");
-    inputs.create ("chanmode", "channel",
-		   "frequency channel mode",
-		   "string");
-    inputs.create ("nchan", "1",
-		   "number of frequency channels to select from each spectral window (one number per spw)",
-		   "int vector");
-    inputs.create ("chanstart", "0",
-		   "first frequency channel per each spw (0-relative)",
-		   "int vector");
-    inputs.create ("chanstep", "1",
-		   "frequency channel step per each spw",
-		   "int vector");
-    inputs.create ("img_nchan", "1",
-		   "number of frequency channels in image",
-		   "int");
-    inputs.create ("img_chanstart", "0",
-		   "first frequency channel in image (0-relative)",
-		   "int");
-    inputs.create ("img_chanstep", "1",
-		   "frequency channel step in image",
-		   "int");
-    inputs.create ("select", "",
-		   "TaQL selection string for MS",
-		   "string");
-    inputs.create ("operation", "image",
-                   ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf,mfclark)",
-		   "string");
-    inputs.create ("niter", "1000",
-		   "Number of clean iterations",
-		   "int");
-    inputs.create ("gain", "0.1",
-		   "Loop gain for cleaning",
-		   "float");
-    inputs.create ("threshold", "0Jy",
-		   "Flux level at which to stop cleaning",
-		   "quantity string");
-    inputs.create ("targetflux", "1.0Jy",
-		   "Target flux for maximum entropy",
-		   "quantity string");
-    inputs.create ("sigma", "0.001Jy",
-		   "deviation for maximum entropy",
-		   "quantity string");
-    inputs.create ("fixed", "False",
-		   "Keep clean model fixed",
-		   "bool");
-    inputs.create ("constrainflux", "False",
-		   "Constrain image to match target flux? For max entropy",
-		   "bool");
-    inputs.create ("prefervelocity", "True",
-                   "Should FITS image spectral axis be velocity or frequency",
-                   "bool");
-    inputs.create ("mask", "",
-		   "Name of the mask to use in cleaning",
-		   "string");
-    inputs.create ("maskblc", "0,0",
-		   "bottom-left corner of mask region",
-		   "int vector");
-    inputs.create ("masktrc", "image shape",
-		   "top-right corner of mask region",
-		   "int vector");
-    inputs.create ("uservector", "0",
-		   "user-defined scales for MultiScale clean",
-		   "float vector");
-    inputs.create ("maskvalue", "-1.0",
-		   "Value to store in mask region; if given, mask is created; if mask not exists, defaults to 1.0",
-		   "float");
-    inputs.create ("verbose", "0",
-		   "0=some output, 1=more output, 2=even more output",
-		   "int");
-    inputs.create ("maxsupport", "1024",
-		   "maximum support size for W convolution functions",
-		   "int");
-    inputs.create ("oversample", "8",
-		   "oversampling for convolution functions",
-		   "int");
-    inputs.create ("uvdist", "",
-		   "UV Range",
-		   "string");
-    inputs.create ("RefFreq", "",
-		   "Reference Frequency (Hz)",
-		   "Double");
-    inputs.create ("nterms", "1",
-		   "Number of Taylor terms",
-		   "int");
-    inputs.create ("UseLIG", "false",
-		   "Use gridder using linear interpolation (not working yet, never to be)",
-		   "bool");
-    inputs.create ("UseEJones", "true",
-                   "Use the beam for the calculation of the convolution function (not working yet)",
-                   "bool");
-    inputs.create ("applyIonosphere", "false",
-                   "apply ionospheric correction",
-                   "bool");
-    inputs.create ("parmdbname", "instrument",
-                   "Name of parmdb (default is instrument",
-                   "string");
-    inputs.create ("splitbeam", "true",
-                   "Evaluate station beam and element beam separately (splitbeam = true is faster)",
-                   "bool");
-    inputs.create ("PBCut", "1e-2",
-		   "Level below which the dirty images will be set to zero. Expressed in units of peak primary beam.",
-		   "Double");
-    inputs.create ("cyclefactor", "1.5",
-		   "Cycle Factor. See Casa definition.",
-		   "Double");
-    inputs.create ("cyclespeedup", "-1",
-		   "Cycle Factor. See Casa definition.",
-		   "Double");
-    inputs.create ("ModelImPredict", "",
-		   "Input Model image for the predict",
-		   "string");
-    inputs.create ("PsfImage", "",
-		   "Input PSF image for the cleaning",
-		   "string");
-    inputs.create ("ApplyElement", "0",
-		   "If turned to true, apply the element beam every TWElement.",
-		   "int");
-    inputs.create ("ApplyBeamCode", "0",
-		   "Ask developers.",
-		   "int");
-    inputs.create ("UseMasks", "true",
-		   "When the element beam is applied (StepApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
-		   "bool");
-    inputs.create ("UVmin", "0",
-		   "Minimum UV distance (klambda)",
-		   "Double");
-    inputs.create ("UVmax", "1000",
-		   "Maximum UV distance (klambda)",
-		   "Double");
-    inputs.create ("RowBlock", "1000000",
-		   "Maximum number of rows to process together. If ApplyBeam=1 then the actual time span will not exceed TWElement",
-		   "int");
-    inputs.create ("MakeDirtyCorr", "false",
-		   "Image plane correction.",
-		   "bool");
-    inputs.create ("UseWSplit", "true",
-		   "W split.",
-		   "bool");
-    inputs.create ("TWElement", "3600.",
-		   "Timewindow for applying the element beam in seconds. The actual number of rows will never exceed RowBlock",
-		   "Double");
-    inputs.create ("SpheSupport", "15",
-		   "Spheroidal/Aterm Support.",
-		   "Double");
-    inputs.create ("t0", "-1",
-		   "tmin in minutes since beginning.",
-		   "Double");
-    inputs.create ("t1", "-1",
-		   "tmax in minutes since beginning.",
-		   "Double");
-    inputs.create ("SingleGridMode", "true",
-		   "If set to true, then the FTMachine uses only one grid.",
-		   "bool");
-    inputs.create ("FindNWplanes", "true",
-		   "If set to true, then find the optimal number of W-planes, given spheroid support, wmax and field of view.",
-		   "bool");
-    inputs.create ("ChanBlockSize", "0",
-                   "Channel block size. Use if you want to use a different CF per block of channels.",
-                   "int");
-    inputs.create ("antenna", "",
-                   "Baseline selection string.",
-                   "string");
-    
-    inputs.create ("ATerm", "ATerm",
-                   "ATerm class (ATerm, ATermPython)",
-                   "string");
-
-    inputs.create ("ATermPython.module", "",
-                   "Name of python module containing ATerm class",
-                   "string");
-
-    inputs.create ("ATermPython.class", "",
-                   "Name of ATerm Python class",
-                   "string");
-
-    
-    // inputs.create ("FillFactor", "1",
-    // 		   "Fraction of the data that will be selected from the selected MS. (don't use it yet)",
-    // 		   "Double");
- 
-    // Fill the input structure from the command line.
-    inputs.readArguments (argc, argv);
-
     // Get the input specification.
     Bool fixed          = inputs.getBool("fixed");
     Bool UseLIG         = inputs.getBool("UseLIG");
@@ -593,7 +178,6 @@ int main (Int argc, char** argv)
     Double padding   = inputs.getDouble("padding");
     Double gain      = inputs.getDouble("gain");
     Double maskValue = inputs.getDouble("maskvalue");
-    String mode      = inputs.getString("mode");
     String operation = inputs.getString("operation");
     String weight    = inputs.getString("weight");
     double noise     = inputs.getDouble("noise");
@@ -647,7 +231,6 @@ int main (Int argc, char** argv)
     //Double FillFactor= 1.;//inputs.getDouble("FillFactor");
 
     // Check and interpret input values.
-    Quantity qcellsize = readQuantity (cellsize);
     if (msName.empty()) {
       throw AipsError("An MS name must be given like ms=test.ms");
     }
@@ -666,13 +249,13 @@ int main (Int argc, char** argv)
     } else {
       select = '(' + select + ") && ANTENNA1 != ANTENNA2";
     }
-    if (imgName.empty()) {
-      imgName = msName;
-      imgName.gsub (Regex("\\..*"), "");
-      imgName.gsub (Regex(".*/"), "");
-      imgName += '-' + stokes + '-' + mode + String::toString(img_nchan)
-	+ ".img";
-    }
+//     if (imgName.empty()) {
+//       imgName = msName;
+//       imgName.gsub (Regex("\\..*"), "");
+//       imgName.gsub (Regex(".*/"), "");
+//       imgName += '-' + stokes + '-' + mode + String::toString(img_nchan)
+// 	+ ".img";
+//     }
     if (fitsName == "no") {
       fitsName = String();
     } else if (fitsName.empty()) {
@@ -710,7 +293,7 @@ int main (Int argc, char** argv)
     MDirection phaseCenter;
     if (! phasectr.empty()) {
       doShift = True;
-      phaseCenter = readDirection (phasectr);
+//       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
     ASSERTSTR (operation=="empty" || 
@@ -729,11 +312,11 @@ int main (Int argc, char** argv)
     Quantity targetFlux;
     Bool doClean = (operation != "empty"  &&  operation != "image"&&  operation != "psf");
     if (doClean) {
-      maskBlc = readIPosition (mstrBlc);
-      maskTrc = readIPosition (mstrTrc);
-      threshold = readQuantity (threshStr);
-      sigma = readQuantity (sigmaStr);
-      targetFlux = readQuantity (targetStr);
+//       maskBlc = readIPosition (mstrBlc);
+//       maskTrc = readIPosition (mstrTrc);
+//       threshold = readQuantity (threshStr);
+//       sigma = readQuantity (sigmaStr);
+//       targetFlux = readQuantity (targetStr);
     }
     Bool doPSF =(operation=="psf");
     if(doPSF==true){
@@ -742,7 +325,7 @@ int main (Int argc, char** argv)
     }
     // Get axis specification from filter.
     Quantity bmajor, bminor, bpa;
-    readFilter (filter, bmajor, bminor, bpa);
+//     readFilter (filter, bmajor, bminor, bpa);
 
     // Set the various imager variables.
     // The non-parameterized values used are the defaults in imager.g.
@@ -842,23 +425,6 @@ int main (Int argc, char** argv)
   			Vector<String>(1, ""),      //Vector<String>& fluxscale,
   			true);                      //Bool flatnoise);
 
-    imager.defineImage (npix,                       // nx
-                        npix,                       // ny
-                        qcellsize,                  // cellx
-                        qcellsize,                  // celly
-                        stokes,                     // stokes
-                        phaseCenter,                // phaseCenter
-                        doShift  ?  -1 : fieldid,   // fieldid
-                        mode,                       // mode
-                        img_nchan,                  // nchan
-                        img_start,                  // start
-                        img_step,                   // step
-                        MFrequency(),               // mFreqstart
-                        MRadialVelocity(),          // mStart
-                        Quantity(1,"km/s"),         // qstep, Def=1 km/s
-			wind,//spwid,                      // spectralwindowids
-                        nfacet);                    // facets
-
     if (operation=="predict"){
       String ftmachine("ft");
       if (wplanes > 0) {
@@ -877,7 +443,7 @@ int main (Int argc, char** argv)
 
       // Create empty image?
       if (operation == "empty" ) {
-        makeEmpty (imager, imgName, fieldid);
+//         makeEmpty (imager, imgName, fieldid);
       } else {
 
         // Define weighting.
@@ -996,7 +562,7 @@ int main (Int argc, char** argv)
               scaleMethod = "nscales";
             }
             imager.setscales(scaleMethod, 1, userVector);
-            makeEmpty (imager, imgName, 0);
+//             makeEmpty (imager, imgName, 0);
             Directory filee(imgName);
 
 	  
@@ -1106,4 +672,122 @@ int main (Int argc, char** argv)
   }
   cout << "awimager normally ended" << endl;
   return 0;
+}
+
+
+IPosition handlePos (const IPosition& pos, const IPosition& def)
+{
+  if (pos.nelements() == 0) {
+    return def;
+  }
+  if (pos.nelements() != 2) {
+    throw AipsError("Give 0 or 2 values in maskblc and masktrc");
+  }
+  IPosition npos(def);
+  int n = npos.nelements();
+  npos[n-1] = pos[1];
+  npos[n-2]= pos[0];
+  return npos;
+}
+
+IPosition readIPosition (const String& in)
+{
+  if (in.empty()) {
+    return IPosition();
+  }
+  Vector<String> strs = stringToVector (in);
+  IPosition ipos(strs.nelements());
+  for (uInt i=0; i<strs.nelements(); ++i) {
+    istringstream iss(strs[i]);
+    iss >> ipos[i];
+  }
+  return ipos;
+}
+
+
+
+
+void applyFactors (PagedImage<Float>& image, const Array<Float>& factors)
+{
+  Array<Float> data;
+  image.get (data);
+  ///  cout << "apply factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
+  // Loop over channels
+  for (ArrayIterator<Float> iter1(data, 3); !iter1.pastEnd(); iter1.next()) {
+    // Loop over Stokes.
+    ArrayIterator<Float> iter2(iter1.array(), 2);
+    while (! iter2.pastEnd()) {
+      iter2.array() *= factors;
+      iter2.next();
+    }
+  }
+  image.put (data);
+  ///  cout << "applied factor to " << data.data()[0] << ' ' << factors.data()[0]<<endl;
+}
+
+void correctImages (
+  const String& restoName, 
+  const String& modelName,
+  const String& residName, 
+  const String& imgName,
+  Imager&,
+  Bool CorrectElement, 
+  Bool CorrectWPlanes, 
+  Bool doRestored)
+{
+  // Copy the images to .corr ones.
+  {
+    Directory modelIn(modelName);
+    modelIn.copy (modelName+".corr");
+    Directory residualIn(residName);
+    residualIn.copy (residName+".corr");
+  }
+  // Open the images.
+  PagedImage<Float> modelImage(modelName+".corr");
+  PagedImage<Float> residualImage(residName+".corr");
+  // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
+  //              restoredImage.shape() == modelImage.shape(), SynthesisError);
+
+  // Get average primary beam and spheroidal.
+//   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
+//   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
+  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName);
+  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName);
+
+  // String nameii("Spheroid_cut_im_element.img");
+  // ostringstream nameiii(nameii);
+  // PagedImage<Float> tmpi(nameiii.str().c_str());
+  // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+  // Array<Float> spheroidCutElement;
+  // tmpi.doGetSlice(spheroidCutElement, slicei);
+
+  // Use the inner part of the beam and spheroidal.
+  Int nximg = residualImage.shape()[0];
+  Int nxpb  = avgPB.shape()[0];
+  Int nxsph = spheroidCut.shape()[0];
+  //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
+  //              avgPB.shape()[1] == nxpb  &&
+  //              spheroidCut.shape()[1] == nxsph  &&
+  //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
+  // Get inner parts of beam and spheroid.
+  Int offpb  = (nxpb  - nximg) / 2;
+  Int offsph = (nxsph - nximg) / 2;
+  Array<Float> pbinner  = avgPB(Slicer(IPosition(2, offpb, offpb),
+                                       IPosition(2, nximg, nximg)));
+  Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
+                                             IPosition(2, nximg, nximg)));
+  Array<Float> ones(IPosition(sphinner.shape()),1.);
+  Array<Float> factors;
+
+  factors = ones / sqrt(pbinner);
+  cout<<"Final normalisation"<<endl;
+  applyFactors (modelImage, factors);
+  applyFactors (residualImage, factors);
+  if(doRestored){
+    cout<<"... restored image too ..."<<endl;
+    Directory restoredIn(restoName);
+    restoredIn.copy (restoName+".corr");
+    PagedImage<Float> restoredImage(restoName+".corr");
+    applyFactors (restoredImage, factors);
+  }
 }

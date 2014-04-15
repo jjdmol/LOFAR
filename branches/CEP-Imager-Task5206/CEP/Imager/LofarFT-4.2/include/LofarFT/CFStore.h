@@ -102,10 +102,10 @@ public:
   void resize(casa::IPosition imShape, 
               casa::Bool retainValues=casa::False);
 
-  casa::CountedPtr<CFTypeVec> vdata() {return itsVData;}
-  casa::Vector<casa::Float> sampling() {return itsSampling;}
-  casa::Vector<casa::Int> xSupport() {return itsXSupport;}
-  casa::Vector<casa::Int> ySupport() {return itsYSupport;}
+  CFTypeVec& vdata() {return *itsVData;}
+  casa::Vector<casa::Float>& sampling() {return itsSampling;}
+  casa::Vector<casa::Int>& xSupport() {return itsXSupport;}
+  casa::Vector<casa::Int>& ySupport() {return itsYSupport;}
   
   
   casa::CountedPtr<CFType> itsData;

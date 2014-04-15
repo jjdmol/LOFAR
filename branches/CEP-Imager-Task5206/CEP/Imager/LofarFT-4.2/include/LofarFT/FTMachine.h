@@ -38,6 +38,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <casa/Containers/Block.h>
 #include <casa/OS/Mutex.h>
 #include <casa/OS/PrecTimer.h>
 #include <casa/Arrays/Matrix.h>
@@ -163,27 +164,36 @@ public:
 
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
-  using casa::FTMachine::initializeToVis;
-  void initializeToVis(
-    casa::ImageInterface<casa::Complex>& image,
-    const casa::VisBuffer& vb);
+  virtual void initializeToVis(
+    casa::PtrBlock<casa::ImageInterface<casa::Float>* > &model_images, 
+    casa::Bool normalize);
+  
+  virtual void initializeToVis(casa::ImageInterface<casa::Complex>& image, const casa::VisBuffer& vb) {};
+  virtual void initializeToSky(casa::ImageInterface<casa::Complex>& image, casa::Matrix<casa::Float>& weight, const casa::VisBuffer& vb) {};
 
+
+  
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
 
   // Initialize transform to Sky plane: initializes the image
-  using casa::FTMachine::initializeToSky;
-  void initializeToSky(
-    casa::ImageInterface<casa::Complex>& image,  
-    casa::Matrix<casa::Float>& weight,
-    const casa::VisBuffer& vb);
+  
+  virtual void initializeToSky(
+    casa::PtrBlock<casa::ImageInterface<casa::Float>* > &images,
+    casa::Bool doPSF);
 
   // Finalize transform to Sky plane: flushes the image
-  // cache and shows statistics if it is being used. DOES NOT
-  // DO THE FINAL TRANSFORM!
-  using casa::FTMachine::finalizeToSky;
-  void finalizeToSky();
+  // cache and shows statistics if it is being used. 
+  // DOES *NOT* DO THE FINAL TRANSFORM!
+  virtual void finalizeToSky();
+  
+  virtual void initializeResidual(
+    casa::PtrBlock<casa::ImageInterface<casa::Float>* > model_images,
+    casa::PtrBlock<casa::ImageInterface<casa::Float>* > images,
+    casa::Bool normalize);
+
+  virtual void finalizeResidual();
 
   // Make the entire image
   using casa::FTMachine::makeImage;
@@ -195,10 +205,14 @@ public:
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
-  casa::ImageInterface<casa::Complex>& getImage(
+  virtual casa::ImageInterface<casa::Complex>& getImage(
     casa::Matrix<casa::Float>&, 
     casa::Bool normalize = casa::True);
 
+  virtual void getImages(
+    casa::Matrix<casa::Float>& weights, 
+    casa::Bool normalize);
+  
   // Get the average primary beam.
   const casa::Matrix<casa::Float>& getAveragePB() const;
 
@@ -207,104 +221,40 @@ public:
     { return itsConvFunc->getSpheroidCut(); }
 
 
-  ///  virtual void normalizeImage(Lattice<Complex>& skyImage,
-  ///			      const Matrix<Double>& sumOfWts,
-  ///			      Lattice<Float>& sensitivityImage,
-  ///			      Bool fftNorm)
-  ///    {throw(AipsError("LofarFTMachineOld::normalizeImage() called"));}
 
-  void normalizeAvgPB();
-  void normalizeAvgPB(casa::ImageInterface<casa::Complex>& inImage,
-                      casa::ImageInterface<casa::Float>& outImage);
-    //
-    // Make a sensitivity image (sensitivityImage), given the gridded
-    // weights (wtImage).  These are related to each other by a
-    // Fourier transform and normalization by the sum-of-weights
-    // (sumWt) and normalization by the product of the 2D FFT size
-    // along each axis.  If doFFTNorm=False, normalization by the FFT
-    // size is not done.  If sumWt is not provided, normalization by
-    // the sum of weights is also not done.
-    //
-  
-
-
-    virtual void makeSensitivityImage(
-      casa::Lattice<casa::Complex>&,
-      casa::ImageInterface<casa::Float>&,
-      const casa::Matrix<casa::Float>& = casa::Matrix<casa::Float>(),
-      const casa::Bool& = casa::True) {}
-				      
-    virtual void makeSensitivityImage(
-      const casa::VisBuffer& vb, 
-      const casa::ImageInterface<casa::Complex>& imageTemplate,
-      casa::ImageInterface<casa::Float>& sensitivityImage);
-
-    inline virtual casa::Float pbFunc(
-      const casa::Float& a, 
-      const casa::Float& limit)
+  inline virtual casa::Float pbFunc(
+    const casa::Float& a, 
+    const casa::Float& limit)
+  {
+    if (abs(a) >= limit) 
     {
-      if (abs(a) >= limit) 
-      {
-        return (a);
-      }
-      else
-      {
-        return 1.0;
-      };
+      return (a);
     }
-    
-    inline virtual casa::Complex pbFunc(
-      const casa::Complex& a, 
-      const casa::Float& limit)
+    else
     {
-      if (abs(a)>=limit)
-      {
-        return (a);
-      }
-      else
-      {
-        return casa::Complex(1.0,0.0);
-      };
+      return 1.0;
+    };
+  }
+    
+  inline virtual casa::Complex pbFunc(
+    const casa::Complex& a, 
+    const casa::Float& limit)
+  {
+    if (abs(a)>=limit)
+    {
+      return (a);
     }
+    else
+    {
+      return casa::Complex(1.0,0.0);
+    };
+  }
     
-    //
-    // Given the sky image (Fourier transform of the visibilities),
-    // sum of weights and the sensitivity image, this method replaces
-    // the skyImage with the normalized image of the sky.
-    //
-    using casa::FTMachine::normalizeImage;
-    virtual void normalizeImage(
-      casa::Lattice<casa::Complex>& skyImage,
-      const casa::Matrix<casa::Double>& sumOfWts,
-      casa::Lattice<casa::Float>& sensitivityImage,
-      casa::Bool fftNorm = casa::True);
-    
-    virtual void normalizeImage(
-      casa::Lattice<casa::Complex>& skyImage,
-      const casa::Matrix<casa::Double>& sumOfWts,
-      casa::Lattice<casa::Float>& sensitivityImage,
-      casa::Lattice<casa::Complex>& sensitivitySqImage,
-      casa::Bool fftNorm = casa::True);
-
-    virtual casa::ImageInterface<casa::Float>& getSensitivityImage() {return *itsAvgPBImage;}
-    
-    virtual casa::Matrix<casa::Double>& getSumOfWeights() {return sumWeight;};
-    
-    virtual casa::Matrix<casa::Double>& getSumOfCFWeights() {return sumCFWeight;};
-
-  // Get the final weights image
-  void getWeightImage(casa::ImageInterface<casa::Float>&, casa::Matrix<casa::Float>&);
-
   // Can this FTMachine be represented by Fourier convolutions?
   virtual casa::Bool isFourier() 
   {
     return casa::True;
   }
-
-  virtual void setNoPadding(casa::Bool nopad)
-  {
-    itsNoPadding = nopad;
-  };
 
   virtual void setMiscInfo(const casa::Int qualifier){(void)qualifier;};
   
@@ -312,58 +262,56 @@ public:
     casa::VisBuffer&vb, 
     casa::Bool useCorrected);
 
-  void makeConjPolMap(
-    const casa::VisBuffer& vb, 
-    const casa::Vector<casa::Int> cfPolMap, 
-    casa::Vector<casa::Int>& conjPolMap);
+  void getWeightImage(casa::ImageInterface<casa::Float>& weightImage, casa::Matrix<casa::Float>& weights);
   
-  //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
   
-  void makeCFPolMap(
-    const casa::VisBuffer& vb, 
-    const casa::Vector<casa::Int>& cfstokes, 
-    casa::Vector<casa::Int>& polM);
-
-  // The flags are Bool instead of Int as in casa::FTMachine
-  // The flags were Int because of the Fortran gridder
-  // That gridder is not used anymore
-  virtual casa::Bool interpolateFrequencyTogrid(
-    const casa::VisBuffer& vb, 
-    const casa::Matrix<casa::Float>& wt,
-    casa::Cube<casa::Complex>& data, 
-    casa::Cube<casa::Bool>& flag,
-    casa::Matrix<casa::Float>& weight,
-    casa::FTMachine::Type type = casa::FTMachine::OBSERVED ); 
-
-  // See remark above about Bool versus Int flags  
-  virtual void getInterpolateArrays(
-    const casa::VisBuffer& vb,
-    casa::Cube<casa::Complex>& data, 
-    casa::Cube<casa::Bool>& flags);
   
 protected:
   
-  casa::ImageInterface<casa::Complex>* &itsImage; // reference to casa::FTMachine::image
-  casa::Int &itsNX; // reference to casa::FTMachine::nx
-  casa::Int &itsNY; // reference to casa::FTMachine::ny
-  casa::Int &itsNPol; // reference to casa::FTMachine::npol
-  casa::Int &itsNChan; // reference to casa::FTMachine::nchan
-  casa::Bool &itsUseDoubleGrid; // reference to casa::FTMachine::useDoubleGrid_p
-  casa::Vector<casa::Int> &itsChanMap; // reference to casa::FTMachine::chanMap
-  casa::Vector<casa::Int> &itsPolMap; // reference to casa::FTMachine::polMap
+  void initialize_model_grids(casa::Bool normalize);
+  
+  void finalize_model_grids();
+
+  void initialize_grids();
+
+  void normalize(casa::ImageInterface<casa::Complex> &image, casa::Bool normalize, casa::Bool spheroidal);
+  
+  casa::StokesCoordinate get_stokes_coordinates();
+  
+  // the images and model images are owned by SkyModel
+  // can use a raw pointer here
+  casa::PtrBlock<casa::ImageInterface<casa::Float> *> itsModelImages; 
+  casa::PtrBlock<casa::ImageInterface<casa::Float>*> itsImages;
+
+  // the complex images and complex model images are created locally
+  // use a counted pointer to ensure proper desctruction  
+  casa::Block<casa::CountedPtr<casa::ImageInterface<casa::Complex> > > itsComplexModelImages;
+  casa::Block<casa::CountedPtr<casa::ImageInterface<casa::Complex> > > itsComplexImages;
+
+  casa::Block<casa::Array<casa::Complex> >  itsModelGrids;
+
+  // Arrays for non-tiled gridding (one per thread).
+  vector< casa::Array<casa::Complex> >  itsGriddedData;
+  vector< casa::Array<casa::DComplex> > itsGriddedData2;
+
+  
+  casa::Int itsNX; 
+  casa::Int itsNY; 
+  casa::Int itsPaddedNX; 
+  casa::Int itsPaddedNY; 
+  casa::Int itsNPol; 
+  casa::Int itsNChan; 
+  
+  casa::Bool itsUseDoubleGrid; 
+  casa::Vector<casa::Int> itsChanMap;
+  casa::Vector<casa::Int> itsPolMap;
 
   // Padding in FFT
   casa::Float itsPadding;
 
   void ok();
 
-  void init();
-
-  // Below are references to data members of casa::FTMachine
-  // They function as aliases for the casa::FTMachine data members
-  // The names of the references follow the naming convention of the LOFAR C++ coding standard
-  // The references are initialized in the constructor
-  
+  void init(const casa::ImageInterface<casa::Float> &image);
 
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
@@ -386,18 +334,12 @@ protected:
   casa::Vector<casa::Double> itsUVScale;
   casa::Vector<casa::Double> itsUVOffset;
 
-  // Arrays for non-tiled gridding (one per thread).
-  vector< casa::Array<casa::Complex> >  itsGriddedData;
-  vector< casa::Array<casa::DComplex> > itsGriddedData2;
   vector< casa::Matrix<casa::Complex> > itsSumPB;
   vector< casa::Matrix<casa::Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
   mutable casa::Matrix<casa::Float> itsAvgPB;
 
   casa::Int itsPriorCacheSize;
-
-  //force no padding
-  casa::Bool itsNoPadding;
 
   //Check if using put that avoids non-necessary reads
   casa::Bool itsUsePut2;
@@ -422,6 +364,8 @@ protected:
   casa::CountedPtr<casa::ImageInterface<casa::Complex> > itsAvgPBSqImage;
 
   casa::CountedPtr<VisResampler> itsVisResampler;
+  virtual VisResampler* visresampler() {return &*itsVisResampler;}
+  
 
   casa::MeasurementSet itsMS;
   casa::Int itsNWPlanes;
