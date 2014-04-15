@@ -653,14 +653,8 @@ namespace LOFAR
           ASSERT(stSettings->timeIntegrationFactor > 0);
           stSettings->nrSubbandsPerFile = getUint32(
                 renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
-                0);
+                0); // 0 or a large nr is interpreted below
           stSettings->nrSamples = settings.blockSize / stSettings->timeIntegrationFactor / stSettings->nrChannels;
-
-          if (stSettings->nrSubbandsPerFile == 0 ||
-              stSettings->nrSubbandsPerFile > settings.subbands.size()) {
-            // apply default or limit to the nr of subbands we have
-            stSettings->nrSubbandsPerFile = settings.subbands.size();
-          }
         }
 
         const vector<ObservationSettings::FileLocation> coherent_locations =
@@ -782,9 +776,16 @@ namespace LOFAR
                tab.coherent ? settings.beamFormer.coherentSettings
                             : settings.beamFormer.incoherentSettings;
 
+            // If needed, limit to / apply default: the #subbands in this SAP.
+            size_t nrSubbandsPerFile = stSettings.nrSubbandsPerFile;
+            if (nrSubbandsPerFile == 0 ||
+                nrSubbandsPerFile > settings.SAPs[i].subbands.size()) {
+              nrSubbandsPerFile = settings.SAPs[i].subbands.size();
+            }
+
             // Generate file list
             unsigned nrParts = max(1UL, (settings.SAPs[i].subbands.size() +
-                stSettings.nrSubbandsPerFile - 1) / stSettings.nrSubbandsPerFile);
+                                         nrSubbandsPerFile - 1) / nrSubbandsPerFile);
             tab.files.resize(stSettings.nrStokes * nrParts);
             for (size_t s = 0; s < stSettings.nrStokes; ++s) 
             {
@@ -812,8 +813,8 @@ namespace LOFAR
                 }
 
                 file.firstSubbandIdx = settings.SAPs[i].subbands[0].idx +
-                                       part * stSettings.nrSubbandsPerFile;
-                file.lastSubbandIdx  = min(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
+                                       part * nrSubbandsPerFile;
+                file.lastSubbandIdx  = min(file.firstSubbandIdx + nrSubbandsPerFile,
                                            // last file(s) in part series can have fewer subbands
                                            settings.SAPs[i].subbands[0].idx +
                                            settings.SAPs[i].subbands.size());
