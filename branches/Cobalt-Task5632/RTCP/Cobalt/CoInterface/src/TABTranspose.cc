@@ -154,9 +154,9 @@ void Block::write( BeamformedData &output ) {
   const size_t MAXBATCHSIZE = 4;
 
   // Stride between samples in output
-  const ptrdiff_t dst_sample_stride = &output.samples[1][0][0] - &output.samples[0][0][0];
+  const ptrdiff_t dst_sample_stride = output.samples.strides()[0];
   // Stride between subbands in output
-  const ptrdiff_t dst_sb_stride = &output.samples[0][1][0] - &output.samples[0][0][0];
+  const ptrdiff_t dst_sb_stride = output.samples.strides()[1];
 
   const vector<float> zeroes(nrChannels * nrSamples, 0.0f);
 
