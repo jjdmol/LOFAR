@@ -77,7 +77,7 @@ struct ParsetSUT
     blockSize(timeIntegrationFactor * nrChannels * nrInputSamples),
     nrDelayCompensationChannels(64)
   {
-    size_t nr_files = inrStations * inrChannels * inrTabs * 4; // 4 for number of stokes
+    size_t nr_files = inrTabs * 4; // 4 for number of stokes
     parset.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
     parset.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
@@ -86,8 +86,13 @@ struct ParsetSUT
     parset.add("Cobalt.BeamFormer.CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
+    parset.add("Observation.antennaSet", "LBA_INNER");
+    parset.add("Observation.rspBoardList", "[0]");
+    parset.add("Observation.rspSlotList", "[0]");
     parset.add("Cobalt.blockSize", 
       lexical_cast<string>(blockSize)); 
+    parset.add("Observation.nrBeams", "1");
+    parset.add("Observation.Beam[0].subbandList", "[0]");
     parset.add("Observation.Beam[0].nrTiedArrayBeams",lexical_cast<string>(inrTabs));
     parset.add("Observation.DataProducts.Output_CoherentStokes.filenames",
       str(format("[%d*dummy.raw]") % nr_files));
