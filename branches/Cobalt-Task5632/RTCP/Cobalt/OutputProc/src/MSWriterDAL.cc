@@ -129,10 +129,8 @@ namespace LOFAR
 
       //*******************************
 
-      // All subbands in the SAP that we (partly or fully) store in this file.
+      // All subbands in the SAP that we store in this file.
       // We could have multiple SAPs and/or have split up the subbands over multiple files (parts).
-      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices();
-
       unsigned firstSubbandIdx = f.firstSubbandIdx;
       unsigned nrSubbands = f.lastSubbandIdx - f.firstSubbandIdx;
 
@@ -372,8 +370,8 @@ namespace LOFAR
 
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 
-      for (unsigned sb = firstSubbandIdx; sb < nrSubbands; sb++)
-        beamCenterFrequencies[sb] = subbandCenterFrequencies[subbandIndices[sb]];
+      for (unsigned sb = 0; sb < nrSubbands; sb++)
+        beamCenterFrequencies[sb] = subbandCenterFrequencies[firstSubbandIdx + sb];
 
       double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
@@ -480,8 +478,8 @@ namespace LOFAR
       vector<unsigned> spectralPixels;
       vector<double> spectralWorld;
 
-      for(unsigned sb = firstSubbandIdx; sb < nrSubbands; sb++) {
-        const double subbandBeginFreq = parset.channel0Frequency( subbandIndices[sb], stokesSet.nrChannels );
+      for(unsigned sb = 0; sb < nrSubbands; sb++) {
+        const double subbandBeginFreq = parset.channel0Frequency( firstSubbandIdx + sb, stokesSet.nrChannels );
 
         // NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
         // highest and the lowest frequencies (half a channel each).
