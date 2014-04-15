@@ -27,8 +27,8 @@ outputProcStatus=$?
 
 # check output files (195328 float values per file (1 block))
 dataStatus=0
-diff -q tMultiPartTABOutput.in_P000.raw tMultiPartTABOutput-L123881_SAP000_B000_P000_bf.raw || dataStatus=1
-diff -q tMultiPartTABOutput.in_P001.raw tMultiPartTABOutput-L123881_SAP000_B000_P001_bf.raw || dataStatus=1
+diff tMultiPartTABOutput.in_P000.raw tMultiPartTABOutput-L123881_SAP000_B000_P000_bf.raw || dataStatus=1
+diff tMultiPartTABOutput.in_P001.raw tMultiPartTABOutput-L123881_SAP000_B000_P001_bf.raw || dataStatus=1
 
 # final verdict
 # outputProc crashes on final meta data. Ignore. We checked the output files.

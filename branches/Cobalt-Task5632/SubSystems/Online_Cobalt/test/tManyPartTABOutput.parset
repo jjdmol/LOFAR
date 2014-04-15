@@ -15,10 +15,6 @@ Observation.DataProducts.Output_CoherentStokes.enabled = true
 Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor = 1
 Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband = 1
 Cobalt.BeamFormer.CoherentStokes.which = XXYY
-#Observation.DataProducts.Output_IncoherentStokes.enabled = true
-#Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
-#Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband = 1
-#Cobalt.BeamFormer.IncoherentStokes.which = IQUV
 
 Observation.nrBeams = 2
 Observation.Beam[0].subbandList = [100..104]
@@ -32,8 +28,7 @@ Observation.Beam[1].TiedArrayBeam[1].coherent = true
 Observation.Beam[1].TiedArrayBeam[2].coherent = true
 Observation.rspBoardList = [16*0]
 Observation.rspSlotList = [0..15]
-Cobalt.BeamFormer.CoherentStokes.subbandsPerFile = 4  # last file per TAB will have 1 sb
-#Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile = 3  # last file per TAB will have 2 sb
+Cobalt.BeamFormer.CoherentStokes.subbandsPerFile = 4  # last file(s) per TAB will have 1 sb (Beam[0]) or 3 sb (Beam[1])
 
 Observation.DataProducts.Output_CoherentStokes.filenames = [tManyPartTABOutput-L123882_SAP000_B000_P000_S0_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P001_S0_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P000_S1_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P001_S1_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P000_S2_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P001_S2_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P000_S3_bf.h5, tManyPartTABOutput-L123882_SAP000_B000_P001_S3_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P000_S0_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P001_S0_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P000_S1_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P001_S1_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P000_S2_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P001_S2_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P000_S3_bf.h5, tManyPartTABOutput-L123882_SAP000_B001_P001_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P000_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P001_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P002_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P000_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P001_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P002_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P000_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P001_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P002_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P000_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P001_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B000_P002_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P000_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P001_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P002_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P000_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P001_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P002_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P000_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P001_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P002_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P000_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P001_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B001_P002_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P000_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P001_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P002_S0_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P000_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P001_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P002_S1_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P000_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P001_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P002_S2_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P000_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P001_S3_bf.h5, tManyPartTABOutput-L123882_SAP001_B002_P002_S3_bf.h5]
 Observation.DataProducts.Output_CoherentStokes.locations = [52*localhost:tManyPartTABOutput-data/]

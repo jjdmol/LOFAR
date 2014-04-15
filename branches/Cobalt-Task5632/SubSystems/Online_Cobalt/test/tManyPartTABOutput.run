@@ -7,7 +7,7 @@
 haveGPU || exit 3
 
 # remove any output files from prev runs
-#rm -f tManyPartTABOutput-L123882_SAP000_B000_P00?_bf.{h5,raw}
+rm -rf tManyPartTABOutput-data/
 
 outPid=none
 trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # don't linger on e.g. Ctrl-C
@@ -25,10 +25,39 @@ wait $outPid
 outputProcStatus=$?
 [ $outputProcStatus -eq 0 ] || echo "Error: outputProc exited with status $outputProcStatus"
 
-# check output files (195328 float values per file (1 block))
+# Verify outputs
+# gzipped .raw files contain subband nrs in float. See 'od -f FILE.raw'.
+# Also see the .cc and the .parset.
 dataStatus=0
-#diff -q tManyPartTABOutput.in_P000.raw tManyPartTABOutput-L123882_SAP000_B000_P000_bf.raw || dataStatus=1
-#diff -q tManyPartTABOutput.in_P001.raw tManyPartTABOutput-L123882_SAP000_B000_P001_bf.raw || dataStatus=1
+refout=tManyPartTABOutput.in_SAP0-4sb-P000.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP000_B00?_P000_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP0-1sb-P001.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP000_B00?_P001_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-4sb-P000.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P000_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-4sb-P001.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P001_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-3sb-P002.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P002_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
 
 # final verdict
 # outputProc crashes on final meta data. Ignore. We checked the output files.
