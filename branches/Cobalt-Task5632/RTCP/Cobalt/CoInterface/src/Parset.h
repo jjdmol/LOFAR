@@ -606,6 +606,9 @@ namespace LOFAR
       std::vector<std::string> outputProcHosts;
     }; // struct ObservationSettings
 
+    // Reads a ParameterSet from a Stream
+    void readParameterSet(Stream &, ParameterSet &);
+
 
     // The Parset class is a public struct that can be used as base-class
     // for holding Parset related information.
@@ -615,8 +618,9 @@ namespace LOFAR
     public:
       Parset();
       Parset(const std::string &name);
+      
+      // Read a parset from a Stream
       Parset(Stream *);
-
 
       // Transform the parset into an ObservationSettings object
       struct ObservationSettings observationSettings() const;

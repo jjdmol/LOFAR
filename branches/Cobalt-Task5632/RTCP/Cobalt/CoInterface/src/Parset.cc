@@ -150,11 +150,11 @@ namespace LOFAR
     }
 
 
-    Parset::Parset(Stream *stream)
+    void readParameterSet(Stream &stream, ParameterSet &parameterSet)
     {
       // Read size
       uint64 size;
-      stream->read(&size, sizeof size);
+      stream.read(&size, sizeof size);
 
 #if !defined WORDS_BIGENDIAN
       dataConvert(LittleEndian, &size, 1);
@@ -162,12 +162,18 @@ namespace LOFAR
 
       // Read data
       std::vector<char> tmp(size + 1);
-      stream->read(&tmp[0], size);
+      stream.read(&tmp[0], size);
       tmp[size] = '\0';
 
       // Add data to parset
       std::string buffer(&tmp[0], size);
-      adoptBuffer(buffer);
+      parameterSet.adoptBuffer(buffer);
+    }
+
+
+    Parset::Parset(Stream *stream)
+    {
+      readParameterSet(*stream, *this);
 
       // Update the settings
       updateSettings();
