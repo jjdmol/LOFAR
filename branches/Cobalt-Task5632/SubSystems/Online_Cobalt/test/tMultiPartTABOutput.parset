@@ -5,8 +5,9 @@ Observation.sampleClock = 200
 Cobalt.realTime = false
 Cobalt.correctBandPass = false
 Cobalt.delayCompensation = false
-Cobalt.BeamFormer.nrDelayCompensationChannels = 16
-Cobalt.BeamFormer.nrHighResolutionChannels = 16
+Cobalt.blockSize = 196608
+Cobalt.BeamFormer.nrDelayCompensationChannels = 64
+Cobalt.BeamFormer.nrHighResolutionChannels = 64
 
 Observation.VirtualInstrument.stationList = [CS001, CS002, CS003, CS004]
 Observation.antennaSet = LBA_INNER

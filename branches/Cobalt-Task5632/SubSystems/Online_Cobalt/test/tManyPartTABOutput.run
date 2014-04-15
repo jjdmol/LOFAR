@@ -2,10 +2,6 @@
 
 . testFuncs.sh
 
-# The code we need to test doesn't use a GPU,
-# but we need to pass a list of gpu devices to create a BF Pipeline obj.
-haveGPU || exit 3
-
 # remove any output files from prev runs
 rm -rf tManyPartTABOutput-data/
 
@@ -61,4 +57,4 @@ done
 
 # final verdict
 # outputProc crashes on final meta data. Ignore. We checked the output files.
-exit $testStatus && $dataStatus #&& $outputProcStatus
+[ $testStatus -eq 0 -a $dataStatus -eq 0 ] # -a $outputProcStatus -eq 0 ]
