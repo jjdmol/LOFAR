@@ -189,12 +189,12 @@ then
   # Add static keys
   # Ignore sneaky .cobalt/ parset overrides in production (lofarsys).
   # Note: If you want such an override anyway, do it in your own account.
+  DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
+  DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
   if [ "$USER" == "lofarsys" ]; then
     ls $DOT_COBALT_DEFAULT $DOT_COBALT_OVERRIDE >/dev/null 2>&1 && \
-      echo -e "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
-  else
-    DOT_COBALT_DEFAULT=$HOME/.cobalt/default/*.parset
-    DOT_COBALT_OVERRIDE=$HOME/.cobalt/override/*.parset
+      echo "WARNING: ignoring augmentation parset(s) in $HOME/.cobalt/" >&2
+    unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
   fi
   cat $LOFARROOT/etc/parset-additions.d/default/*.parset \
       $DOT_COBALT_DEFAULT \
@@ -202,7 +202,6 @@ then
       $LOFARROOT/etc/parset-additions.d/override/*.parset \
       $DOT_COBALT_OVERRIDE \
       > $AUGMENTED_PARSET || error "Could not create parset $AUGMENTED_PARSET"
-  unset DOT_COBALT_DEFAULT DOT_COBALT_OVERRIDE
 
   # Use the new one from now on
   PARSET="$AUGMENTED_PARSET"

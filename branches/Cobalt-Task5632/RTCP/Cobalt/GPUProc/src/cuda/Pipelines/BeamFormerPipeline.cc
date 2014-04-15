@@ -96,8 +96,13 @@ namespace LOFAR
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
       :
       Pipeline(ps, subbandIndices, devices),
-      multiSender(hostMap(ps, subbandIndices, hostID), 3, ps.realTime()),
-      factories(ps, nrSubbandsPerSubbandProc)
+      factories(ps, nrSubbandsPerSubbandProc),
+      // Each work queue needs an output element for each subband it processes, because the GPU output can
+      // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
+      //
+      // For smooth operations, allocate 2 elements more per work queue, to allow one element to be in transit
+      // on both the receiver and sender side.
+      multiSender(hostMap(ps, subbandIndices, hostID), std::max(3UL, (2 + nrSubbandsPerSubbandProc) * workQueues.size()), ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
     }

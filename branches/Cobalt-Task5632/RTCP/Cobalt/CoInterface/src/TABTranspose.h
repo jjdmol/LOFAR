@@ -67,6 +67,8 @@ namespace LOFAR
 
       std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id);
 
+      typedef SampleData<float, 3> BeamformedData; // [nrSubbands][nrChannels][nrSamples]
+
       /*
        * A block of data, representing for one time slice all
        * subbands.
@@ -83,24 +85,20 @@ namespace LOFAR
        *
        *   block[samples][subbbands][channels]
        */
-      class Block: public SampleData<float, 3> {
+      class Block {
       public:
-        std::vector<bool> subbandWritten;
-
-        size_t fileIdx;
-        size_t block;
-
-        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
+        Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
-         * Add data for a single subband.
+         * Add data for a single subband to the cache.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
-         * Zero data of subbands that weren't added.
+         * Flush the subband cache to a SampleData array,
+         * and write zeroes for missing data.
          */
-        void zeroRemainingSubbands();
+        void write( BeamformedData &output );
 
         /*
          * Return whether the block is complete, that is, all
@@ -108,23 +106,23 @@ namespace LOFAR
          */
         bool complete() const;
 
-        /*
-         * Reset the meta data for this block. NOTE: The dimensions
-         * of the data remain unchanged.
-         */
-        void reset( size_t newFileIdx, size_t newBlockIdx );
-
       private:
+        // Annotation of this block
+        const size_t fileIdx;
+        const size_t blockIdx;
+
         // Dimensions of each block
         const size_t nrSamples;
         const size_t nrSubbands;
         const size_t nrChannels;
 
+        // Cache of subband data for this block
+        std::vector< SmartPtr<Subband> > subbandCache;
+
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
 
-        NSTimer transposeTimer;
-        NSTimer zeroTimer;
+        NSTimer writeTimer;
       };
 
       /*
@@ -159,12 +157,14 @@ namespace LOFAR
          * maxBlocksInFlight: the maximum number of blocks to process in
          *                    parallel (or 0 for no limit).
          */
-        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
+        BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
-	/*
+        ~BlockCollector();
+
+	      /*
          * Add a subband of any block.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
          * Send all remaining blocks downstream,
@@ -173,15 +173,26 @@ namespace LOFAR
         void finish();
 
       private:
-        std::map<size_t, SmartPtr<Block> > blocks;
-        std::map<size_t, bool> fetching;
+        /*
+         * Elements travel along the following path
+         *
+         * Caller:       addSubband() -> inputQueue
+         * inputThread:  inputQueue   -> _addSubband() + outputPool.free -> outputQueue
+         * outputThread: outputQueue  -> outputPool.filled
+         */
 
-        Pool<Block> &outputPool;
+        std::map<size_t, SmartPtr<Block> > blocks;
+
+        BestEffortQueue< SmartPtr<Subband> > inputQueue;
+        Queue< SmartPtr<Block> >             outputQueue;
+        Pool<BeamformedData> &outputPool;
+
         const size_t fileIdx;
         const size_t nrBlocks;
-        Mutex mutex; // protects concurrent access to `blocks'
 
-        Condition fetchSignal;
+        const size_t nrSubbands;
+        const size_t nrChannels;
+        const size_t nrSamples;
 
         // upper limit for blocks.size(), or 0 if unlimited
         const size_t maxBlocksInFlight;
@@ -195,6 +206,9 @@ namespace LOFAR
         NSTimer addSubbandMutexTimer;
         NSTimer addSubbandTimer;
         NSTimer fetchTimer;
+
+        Thread inputThread;
+        Thread outputThread;
 
         // The oldest block in flight.
         size_t minBlock() const;
@@ -223,6 +237,17 @@ namespace LOFAR
          * Fetch a new block.
          */
         void fetch(size_t block);
+        
+        /*
+         * Processes input elements from inputQueue.
+         */
+        void inputLoop();
+        void _addSubband( SmartPtr<Subband> &subband );
+
+        /*
+         * Processes output elements from outputQueue.
+         */
+        void outputLoop();
       };
 
       /*

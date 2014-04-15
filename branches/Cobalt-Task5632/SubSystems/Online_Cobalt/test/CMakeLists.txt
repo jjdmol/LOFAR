@@ -19,6 +19,12 @@ if(USE_CUDA AND NOT USE_OPENCL)
   lofar_add_test(tManyPartTABOutput tManyPartTABOutput.cc)
 endif()
 
+foreach(_file testFuncs runtest)
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.sh.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${_file}.sh @ONLY)
+endforeach()
+
 set(_tests
   tgenerateStationStreams
   tMACfeedback

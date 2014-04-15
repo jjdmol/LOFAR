@@ -51,10 +51,11 @@ namespace LOFAR
       doFlysEye(ps.settings.beamFormer.doFlysEye)
     {
       // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = 
-        ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples;
+      nrChannelsPerSubband =
+        ps.settings.beamFormer.nrHighResolutionChannels;
+      nrSamplesPerChannel = ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.nrHighResolutionChannels;
+
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 

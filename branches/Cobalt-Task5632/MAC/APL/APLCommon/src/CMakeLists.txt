@@ -29,6 +29,10 @@ install(PROGRAMS
   swlevel
   DESTINATION bin)
 
+install(PROGRAMS
+  run_timeout.sh
+  DESTINATION bin)
+
 install(FILES
   swlevel.conf
   swlevel_int.conf

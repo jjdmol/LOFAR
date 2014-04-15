@@ -1,5 +1,5 @@
-//# TriggerData.h
-//# Copyright (C) 2009-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# KernelTestHelpers.h: test Kernels/DelayAndBandPassKernel class
+//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,42 +18,29 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_INTERFACE_TRIGGER_DATA_H
-#define LOFAR_INTERFACE_TRIGGER_DATA_H
-
-#include <CoInterface/StreamableData.h>
-#include <Stream/Stream.h>
+#include <CoInterface/Parset.h>
 
 
-namespace LOFAR
+// print usage of the kernel test.
+void usage(char const *testName);
+
+// Helper struct to collect some kernel/pipeline parameters collected from the 
+// command line
+struct KernelParameters
 {
-  namespace Cobalt
-  {
+  unsigned nrTabs;
+  unsigned nrChannels;
+  unsigned idxGPU;
+  unsigned nStation;
+  unsigned nTimeBlocks;
+  bool parameterParsed;
 
+  KernelParameters();
+  void print();
+};
 
-    class TriggerData : public StreamableData
-    {
-    public:
-      TriggerData() : trigger(false)
-      {
-      }
-
-      bool trigger;
-
-    protected:
-      virtual void readData(Stream *str, unsigned)
-      {
-        str->read(&trigger, sizeof trigger);
-      }
-      virtual void writeData(Stream *str, unsigned)
-      {
-        str->write(&trigger, sizeof trigger);
-      }
-    };
-
-
-  } // namespace Cobalt
-} // namespace LOFAR
-
-#endif
-
+// Parse kernelParameters from the commandline and initialize a valid Parset
+// with the parsed arguments. Returns values also as struct.
+KernelParameters parseCommandlineParameters(
+      int argc, char *argv[], 
+      LOFAR::Cobalt::Parset &ps, const char *testName);

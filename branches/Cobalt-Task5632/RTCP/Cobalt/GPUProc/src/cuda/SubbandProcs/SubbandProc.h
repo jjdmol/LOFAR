@@ -54,8 +54,7 @@ namespace LOFAR
 
       // The set of GPU buffers to link our host buffers to.
       // Device buffers may be reused between different pairs of kernels,
-      // since device memory size is a concern. Use inputSamplesMinSize
-      // to specify a minimum derived from other uses apart from input.
+      // since device memory size is a concern.
       struct DeviceBuffers
       {
         gpu::DeviceMemory delaysAtBegin;

@@ -1,5 +1,5 @@
-//# tBeamFormerKernel.cc: test Kernels/BeamFormerKernel class
-//# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tBeamFormerKernel.cc
+//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -18,33 +18,43 @@
 //#
 //# $Id$
 
+
 #include <lofar_config.h>
 
-#include <Common/LofarLogger.h>
-#include <CoInterface/Parset.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-#include <GPUProc/BandPass.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
+#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <CoInterface/BlockID.h>
-#include "../TestUtil.h"
+#include <CoInterface/Parset.h>
+#include <Common/LofarLogger.h>
 
-#include <boost/lexical_cast.hpp>
-#include <GPUProc/PerformanceCounter.h>
+#include <iomanip>
+#include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "KernelTestHelpers.h"
 
 using namespace std;
 using namespace boost;
 using namespace LOFAR::Cobalt::gpu;
 using namespace LOFAR::Cobalt;
 
-int main() {
-  INIT_LOGGER("tBeamFormerKernel");
-
+int main(int argc, char *argv[])
+{
+  const char * testName = "tBeamFormerKernel";
+  INIT_LOGGER(testName);
+  // parse command line arguments to parset
+  Parset ps;
+  parseCommandlineParameters(argc, argv, ps, testName);
+  
   // Set up gpu environment
   try {
     gpu::Platform pf;
     cout << "Detected " << pf.size() << " GPU devices" << endl;
-  } catch (gpu::GPUException& e) {
+  }
+  catch (gpu::GPUException& e) {
     cerr << "No GPU device(s) found. Skipping tests." << endl;
     return 3;
   }
@@ -53,91 +63,28 @@ int main() {
   gpu::Context ctx(device);
   gpu::Stream stream(ctx);
 
-  Parset ps("tBeamFormerKernel.in_parset");
+  // Create the factory
+  KernelFactory<BeamFormerKernel> factory(BeamFormerFactories::beamFormerParams(ps));
 
-  KernelFactory<BeamFormerKernel> factory(ps);
+  DeviceMemory devDelaysMemory(ctx, factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
+    devBandPassCorrectedMemory(ctx, factory.bufferSize(BeamFormerKernel::INPUT_DATA)),
+    devComplexVoltagesMemory(ctx, factory.bufferSize(BeamFormerKernel::OUTPUT_DATA));
 
-  // Calculate beamformer delays and transfer to the device.
-  // *************************************************************
-  size_t lengthDelaysData = 
-    factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS) / 
-    sizeof(float);
-  size_t lengthBandPassCorrectedData =
-    factory.bufferSize(BeamFormerKernel::INPUT_DATA) /
-    sizeof(float);
-  size_t lengthComplexVoltagesData = 
-    factory.bufferSize(BeamFormerKernel::OUTPUT_DATA) / 
-    sizeof(float);
 
-  // Define the input and output arrays
-  // ************************************************************* 
-  float * complexVoltagesData = new float[lengthComplexVoltagesData];
-  float * bandPassCorrectedData = new float[lengthBandPassCorrectedData];
-  float * delaysData= new float[lengthDelaysData];
-
-  // ***********************************************************
-  // Baseline test: If all weight data is zero the output should be zero
-  // The output array is initialized with 42s
-  cout << "test 1" << endl;
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData / 2; ++idx)
-  {
-    complexVoltagesData[idx * 2] = 42.0f;
-    complexVoltagesData[idx * 2 + 1] = 42.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData / 2; ++idx)
-  {
-    bandPassCorrectedData[idx * 2] = 1.0f;
-    bandPassCorrectedData[idx * 2+ 1] = 1.0f;
-  }
-
-  for (unsigned idx = 0; idx < lengthDelaysData/2; ++idx)
-  {
-    delaysData[idx * 2] = 0.0f;
-    delaysData[idx * 2 + 1] = 0.0f;
-  }
-
-  size_t sizeDelaysData = lengthDelaysData * sizeof(float);
-  DeviceMemory devDelaysMemory(ctx, sizeDelaysData);
-  HostMemory rawDelaysData = getInitializedArray(ctx, sizeDelaysData, 1.0f);
-  float *rawDelaysPtr = rawDelaysData.get<float>();
-  for (unsigned idx = 0; idx < lengthDelaysData; ++idx)
-    rawDelaysPtr[idx] = delaysData[idx];
-  stream.writeBuffer(devDelaysMemory, rawDelaysData);
-
-  size_t sizeBandPassCorrectedData = 
-    lengthBandPassCorrectedData * sizeof(float);
-  DeviceMemory devBandPassCorrectedMemory(ctx, sizeBandPassCorrectedData);
-  HostMemory rawBandPassCorrectedData = 
-    getInitializedArray(ctx, sizeBandPassCorrectedData, 2.0f);
-  float *rawBandPassCorrectedPtr = rawBandPassCorrectedData.get<float>();
-  for (unsigned idx = 0; idx < lengthBandPassCorrectedData; ++idx)
-    rawBandPassCorrectedPtr[idx] = bandPassCorrectedData[idx];
-  stream.writeBuffer(devBandPassCorrectedMemory, rawBandPassCorrectedData);
-
-  size_t sizeComplexVoltagesData = lengthComplexVoltagesData * sizeof(float);
-  DeviceMemory devComplexVoltagesMemory(ctx, sizeComplexVoltagesData);
-  HostMemory rawComplexVoltagesData = 
-    getInitializedArray(ctx, sizeComplexVoltagesData, 3.0f);
-  float *rawComplexVoltagesPtr = rawComplexVoltagesData.get<float>();
-  for (unsigned idx = 0; idx < lengthComplexVoltagesData; ++idx)
-    rawComplexVoltagesPtr[idx] = complexVoltagesData[idx];
-
-  // Write output content.
-  stream.writeBuffer(devComplexVoltagesMemory, rawComplexVoltagesData);
-
-  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, devComplexVoltagesMemory, devDelaysMemory);
-
+  BeamFormerKernel::Buffers buffers(devBandPassCorrectedMemory, 
+                                    devComplexVoltagesMemory,
+                                     devDelaysMemory);
+  
+  // kernel
   auto_ptr<BeamFormerKernel> kernel(factory.create(stream, buffers));
 
   float subbandFreq = 60e6f;
   unsigned sap = 0;
 
-  PerformanceCounter counter(ctx);
   BlockID blockId;
+  // run
   kernel->enqueue(blockId, subbandFreq, sap);
   stream.synchronize();
 
   return 0;
 }
-

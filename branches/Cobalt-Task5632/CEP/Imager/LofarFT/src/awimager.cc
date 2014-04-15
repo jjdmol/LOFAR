@@ -300,7 +300,7 @@ int main (Int argc, char** argv)
 		   "Name of psf image file (default is <imagename>.psf",
 		   "string");
     inputs.create ("data", "DATA",
-		   "Name of DATA column to use",
+		   "Name of DATA column to use (if operation is not \"image\", CORRECTED_DATA is always used!)",
 		   "string");
     inputs.create ("mode", "mfs",
 		   "Imaging mode (mfs, channel, or velocity)",
@@ -718,6 +718,13 @@ int main (Int argc, char** argv)
                   operation=="mfclark"||
                   operation=="multiscale", 
                   "Unknown operation");
+
+    if (operation!="image") {
+      // Skip assert if imageType=="observed" because it is the default
+      ASSERTSTR (imageType=="corrected" || imageType=="observed",
+                 "When operation is not \"image\", CORRECTED_DATA is used");
+    }
+
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
