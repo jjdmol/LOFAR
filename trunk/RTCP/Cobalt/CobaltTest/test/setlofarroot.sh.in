@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Set LOFARROOT to GPUProc/ to make runtime GPU kernel compilation work
+# without an install tree.
+#
+# This file must be source'd, not executed!
+#
+# $Id$
+
+export LOFARROOT="@GPUProc_SOURCE_DIR@"
