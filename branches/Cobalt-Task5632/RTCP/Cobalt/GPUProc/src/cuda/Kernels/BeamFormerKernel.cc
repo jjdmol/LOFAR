@@ -126,7 +126,7 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["SUBBAND_BANDWIDTH"] =
-        str(format("%.7ff") % itsParameters.subbandBandwidth);
+        str(format("%.7f") % itsParameters.subbandBandwidth);
       if (itsParameters.doFlysEye)
         defs["FLYS_EYE"] = "1";
 
