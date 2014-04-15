@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. testFuncs.sh
+. setlofarroot.sh
 
 # remove any output files from prev runs
 rm -rf tManyPartTABOutput-data/
@@ -10,7 +10,7 @@ trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # don't linger on e.g. Ctr
 
 obsID=123882
 rank=0
-"$LOFARROOT/bin/outputProc" $obsID $rank &
+./outputProc $obsID $rank &
 outPid=$!
 
 ./tManyPartTABOutput
