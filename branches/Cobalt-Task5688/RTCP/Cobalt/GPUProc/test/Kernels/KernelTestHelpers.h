@@ -35,6 +35,7 @@ struct KernelParameters
   unsigned idxGPU;
   unsigned nStation;
   unsigned nTimeBlocks;
+  unsigned timeIntegrationFactor;
   bool parameterParsed;
   std::string stokesType;  // I, XXYY, IQUV
 

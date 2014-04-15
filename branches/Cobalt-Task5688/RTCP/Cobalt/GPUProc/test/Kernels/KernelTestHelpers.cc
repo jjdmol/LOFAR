@@ -38,8 +38,11 @@ void usage(char const *testName)
   cout << " -c nrchannels      Number of channels to create, default == 64" << endl;
   cout << " -i IdxGPU          GPU index to run kernel on, default == 0" << endl;
   cout << " -s nrStations      Number of stations to create, default == 47" << endl;
-  cout << " -b nrSampleBlocks  Number of 64*nrchannels samples to create, default = 48 (-> 196608 total samples)" << endl;
+  cout << " -b nrSampleBlocks  Number of (x) * nrchannels samples to create, default = 48 * 64 (-> 196608 total samples)" << endl;
   cout << " * The kernels might not actually use all these parameters" << endl;
+  cout << " -q stokesType      Stokes type I XXYY or IQUV, default = IQUV" << endl;
+  cout << " -d nrDelayCompensationChannels  Number of delaycompensationchannels default == 1" << endl;
+  cout << " -e nrChannelsPerSubband     Channels per subband, default == 1" << endl;
   cout << "" << endl;
   //cout << "If no arguments are provide the kernel with be tested on output validity" << endl;
   cout << "" << endl;
@@ -57,6 +60,7 @@ KernelParameters::KernelParameters()
   stokesType = "IQUV";
   nrDelayCompensationChannels = 1;
   nrChannelsPerSubband = 1;
+  timeIntegrationFactor = 1;
 }
 
 void KernelParameters::print()
@@ -76,7 +80,7 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
   int opt;
 
   // parse all command-line options
-  while ((opt = getopt(argc, argv, "t:c:i:s:b:q:d:e:")) != -1)
+  while ((opt = getopt(argc, argv, "t:c:i:s:b:q:d:e:f:")) != -1)
   {
     switch (opt)
     {
@@ -120,6 +124,10 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
       params.parameterParsed = true;
       break;
 
+    case 'f':
+      params.timeIntegrationFactor = atoi(optarg);
+      params.parameterParsed = true;
+      break;
 
     default:
       usage(testName);
@@ -159,7 +167,7 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
   ps.add("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(params.nrChannelsPerSubband));
 
   ps.add("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", "512");
-  ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", "1");
+  ps.add("Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor", lexical_cast<string>(params.timeIntegrationFactor));
   ps.add("Cobalt.BeamFormer.CoherentStokes.which", params.stokesType);
 
   ps.add("Cobalt.BeamFormer.nrDelayCompensationChannels", lexical_cast<string>(params.nrDelayCompensationChannels));

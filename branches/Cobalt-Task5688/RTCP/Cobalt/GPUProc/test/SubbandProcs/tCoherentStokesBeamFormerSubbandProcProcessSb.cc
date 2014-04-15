@@ -222,7 +222,11 @@ int main(int argc, char *argv[]) {
     (nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
   cout << "outVal = " << setprecision(12) << outVal << endl;
 
-  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+  // Skip output validation when started with commandline parsed parameters!
+  if (!params.parameterParsed)
+  {
+    cout << "Validating output" << endl;
+    for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
     for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
@@ -231,6 +235,7 @@ int main(int argc, char *argv[]) {
         "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
         out.coherentData[tab][s][t][c] << "; outVal = " << outVal);
     }
+  }
   return 0;
 }
 
