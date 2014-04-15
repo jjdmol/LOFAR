@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. $srcdir/testFuncs.sh
+. testFuncs.sh
 
 # The code we need to test doesn't use a GPU,
 # but we need to pass a list of gpu devices to create a BF Pipeline obj.
