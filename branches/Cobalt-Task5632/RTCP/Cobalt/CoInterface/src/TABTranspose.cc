@@ -83,7 +83,7 @@ std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id)
 
 // A Block here is a block duration (e.g. 1 sec) of data with all the Subbands
 // that should go info a single file (part).
-Block::Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels )
+Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels )
 :
   fileIdx(fileIdx),
   blockIdx(blockIdx),
