@@ -802,23 +802,25 @@ namespace LOFAR
                 if (file.coherent) {
                   file.coherentIdxInSAP = sap.nrCoherent - 1;
                   if (coherent_idx >= coherent_locations.size())
-                    THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
+                    THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file idx " << file.streamNr);
                   file.location = coherent_locations[coherent_idx++];
                 } else {
                   file.incoherentIdxInSAP = sap.nrIncoherent - 1;
                   if (incoherent_idx >= incoherent_locations.size())
-                    THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
+                    THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file idx " << file.streamNr);
                   file.location = incoherent_locations[incoherent_idx++];
                 }
 
                 file.firstSubbandIdx = settings.SAPs[i].subbands[0].idx +
                                        part * stSettings.nrSubbandsPerFile;
                 file.lastSubbandIdx  = min(file.firstSubbandIdx + stSettings.nrSubbandsPerFile,
-                                           // last file can have fewer subbands
+                                           // last file(s) in part series can have fewer subbands
                                            settings.SAPs[i].subbands[0].idx +
                                            settings.SAPs[i].subbands.size());
-                ASSERT(file.firstSubbandIdx < file.lastSubbandIdx);
-                ASSERT(file.lastSubbandIdx <= settings.subbands.size());
+                ASSERTSTR(file.firstSubbandIdx < file.lastSubbandIdx,
+                    "strmNr=" << file.streamNr << " 1stIdx=" << file.firstSubbandIdx << " lstIdx=" << file.lastSubbandIdx);
+                ASSERTSTR(file.lastSubbandIdx <= settings.subbands.size(),
+                    "strmNr=" << file.streamNr << " lstIdx=" << file.lastSubbandIdx << " nSb=" << settings.subbands.size());
 
                 tab.files[s * nrParts + part] = file;
                 settings.beamFormer.files.push_back(file);
