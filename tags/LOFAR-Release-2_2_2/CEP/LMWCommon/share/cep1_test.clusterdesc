@@ -1,9 +1,0 @@
-ClusterName = cep1_test
-
-# Compute nodes
-Compute.Nodes = [ lce068..71]
-Compute.LocalDisks = [ /data ]
-
-# Head nodes
-Head.Nodes = [ lce072 ]
-Head.LocalDisks = [ /data ]
