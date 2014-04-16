@@ -1,0 +1,11 @@
+# $Id$
+# The list of Cobalt nodes to use for the live, integration test system
+# 
+# Node XXXX is configured through the keys in
+#   PIC.Core.Cobalt.XXXX.*
+
+Cobalt.Nodes = [
+  cbt009_0,
+  cbt009_1
+]
+
