@@ -128,21 +128,7 @@ namespace LOFAR {
         //
         // Note that handles that are MPI_REQUEST_NULL on input are ignored.
         MPITestsomeTimer.start();
-#if 1
         MPI_Testsome(handles.size(), &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
-#else
-        outcount = 0;
-        int flag;
-        do {
-          int index;
-
-          MPI_Testany(handles.size(), &handles[0], &index, &flag, MPI_STATUS_IGNORE);
-
-          if (flag && index != MPI_UNDEFINED)
-            doneset[outcount++] = index;
-
-        } while(flag && outcount < handles.size());
-#endif
         MPITestsomeTimer.stop();
       }
 
