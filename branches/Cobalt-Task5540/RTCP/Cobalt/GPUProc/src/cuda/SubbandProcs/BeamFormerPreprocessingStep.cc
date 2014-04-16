@@ -69,6 +69,10 @@ namespace LOFAR
     void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
       BeamFormerFactories &factories){
 
+      doSecondFFT = 
+        (ps.settings.beamFormer.nrHighResolutionChannels /
+         ps.settings.beamFormer.nrDelayCompensationChannels) > 1;
+
       // intToFloat: input -> B
       intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
         new IntToFloatKernel::Buffers(*devInput->inputSamples, *devB));
@@ -99,23 +103,28 @@ namespace LOFAR
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));
 
-      // FFTShift: A -> A
-      secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devA, *devA));
 
-      secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *secondFFTShiftBuffers));
+      // Only perform second FFTshift and FFT if we have to.
+      if (doSecondFFT) {
 
-      // FFT: A -> A
-      unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        (ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels);
+        // FFTShift: A -> A
+        secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
+          new FFTShiftKernel::Buffers(*devA, *devA));
 
-      secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-        ps.settings.beamFormer.nrHighResolutionChannels /
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        secondFFTnrFFTs, true, *devA));
+        secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
+          factories.fftShift.create(queue, *secondFFTShiftBuffers));
+
+        // FFT: A -> A
+        unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+          ps.nrSamplesPerSubband() /
+           (ps.settings.beamFormer.nrHighResolutionChannels /
+            ps.settings.beamFormer.nrDelayCompensationChannels);
+
+        secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
+          ps.settings.beamFormer.nrHighResolutionChannels /
+          ps.settings.beamFormer.nrDelayCompensationChannels,
+          secondFFTnrFFTs, true, *devA));
+      }
 
       // bandPass: A -> B
       devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
@@ -156,11 +165,13 @@ namespace LOFAR
         ps.settings.subbands[subband].SAP);
       DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
 
-      secondFFTShiftKernel->enqueue(blockID);
-      DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+      if (doSecondFFT) {
+        secondFFTShiftKernel->enqueue(blockID);
+        DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
 
-      secondFFT->enqueue(blockID);
-      //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+        secondFFT->enqueue(blockID);
+        //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+      }
 
       bandPassCorrectionKernel->enqueue(
         blockID);
@@ -177,7 +188,8 @@ namespace LOFAR
         std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
         std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
         //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
-        std::setw(20) << "(secondFFT)" << secondFFT->itsCounter.stats << endl <<
+        std::setw(20) << "(secondFFT)" << 
+        (doSecondFFT ? secondFFT->itsCounter.stats : RunningStatistics()) << endl <<
         std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
     }
 
@@ -186,7 +198,7 @@ namespace LOFAR
       intToFloatKernel->itsCounter.logTime();
       firstFFT->itsCounter.logTime();
       delayCompensationKernel->itsCounter.logTime();
-      secondFFT->itsCounter.logTime();
+      if (doSecondFFT) secondFFT->itsCounter.logTime();
       bandPassCorrectionKernel->itsCounter.logTime();
     }
   }

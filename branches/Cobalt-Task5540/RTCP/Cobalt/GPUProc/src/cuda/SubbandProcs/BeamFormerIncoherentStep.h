@@ -88,7 +88,6 @@ namespace LOFAR
 
     private:
 
-      bool outputComplexVoltages;
       bool coherentStokesPPF;
 
       // Data members

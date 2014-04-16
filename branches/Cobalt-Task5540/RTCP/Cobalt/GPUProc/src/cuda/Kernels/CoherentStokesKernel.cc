@@ -53,9 +53,17 @@ namespace LOFAR
      {
       nrChannelsPerSubband = ps.settings.beamFormer.coherentSettings.nrChannels;
       nrSamplesPerChannel  = ps.settings.beamFormer.coherentSettings.nrSamples;
+      gpu::Platform platform;
+      timeParallelFactor = platform.getMaxThreadsPerBlock() / nrChannelsPerSubband;
+
+      
+      // If the number of samples per channel is smaller than the for the kernel
+      // calculate 'optimal' number of parallel samples (very small worksize, eg tests.)
+      // use 1 in the time parallel:
+      timeParallelFactor = nrSamplesPerChannel < timeParallelFactor ? 
+          1 : timeParallelFactor;
 
       // The number of samples should be a multiple of 16
-      timeParallelFactor = 1;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -71,19 +79,18 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
-      ASSERT(params.nrSamplesPerChannel % params.timeParallelFactor == 0);
-      ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
+      ASSERT(params.timeIntegrationFactor > 0);
+      ASSERT(params.timeParallelFactor > 0);
+      // THe time line should contain in the timeline block of sufficient length
+      ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * params.timeParallelFactor) == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
-      setArg(0, buffers.output);
-      setArg(1, buffers.input);
      
-      unsigned block_size = 16;
-      unsigned time_parallel = module.getContext().getDevice().getMaxThreadsPerBlock() / (16 * 16);
-      // Always a work dim up to 16 and start workloads of 16 * 16. Use the kernel to skip unneed work
-      setEnqueueWorkSizes( gpu::Grid ((params.nrChannelsPerSubband + block_size - 1) / block_size * block_size,
-                                        time_parallel,
-                                       (params.nrTABs + block_size - 1) / block_size * block_size),
-                           gpu::Block( block_size,time_parallel, block_size));
+      setArg(0, buffers.output);
+      setArg(1, buffers.input);   
+
+      // (channel_idx, time_idx, tab_idx)
+      setEnqueueWorkSizes(gpu::Grid(params.nrChannelsPerSubband, params.timeParallelFactor, params.nrTABs),
+        gpu::Block(params.nrChannelsPerSubband, params.timeParallelFactor, 1));
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);

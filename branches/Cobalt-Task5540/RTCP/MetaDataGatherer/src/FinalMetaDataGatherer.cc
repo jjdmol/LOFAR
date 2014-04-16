@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
     string db       = parset.getString("Cobalt.FinalMetaDataGatherer.database.name", "");
     if (db.empty())
-      host = "LOFAR_4";
+      db   = "LOFAR_4";
 
     string user     = parset.getString("Cobalt.FinalMetaDataGatherer.database.username", "");
     string password; // in the code is bad enough; don't also put it in a config parset (and thus .MS)

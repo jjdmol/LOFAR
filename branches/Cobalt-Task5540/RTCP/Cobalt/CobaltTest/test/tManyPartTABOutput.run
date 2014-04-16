@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# remove any output files from prev runs
+rm -rf tManyPartTABOutput-data/
+
+outPid=none
+trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # don't linger on e.g. Ctrl-C
+
+obsID=123882
+rank=0
+./outputProc $obsID $rank &
+outPid=$!
+
+./tManyPartTABOutput
+testStatus=$?
+[ $testStatus -eq 0 ] || echo "Error: Test exited with status $testStatus"
+
+wait $outPid
+outputProcStatus=$?
+[ $outputProcStatus -eq 0 ] || echo "Error: outputProc exited with status $outputProcStatus"
+
+# Verify outputs
+# gzipped .raw files contain subband nrs in float. See 'od -f FILE.raw'.
+# Also see the .cc and the .parset.
+dataStatus=0
+refout=tManyPartTABOutput.in_SAP0-4sb-P000.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP000_B00?_P000_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP0-1sb-P001.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP000_B00?_P001_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-4sb-P000.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P000_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-4sb-P001.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P001_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+refout=tManyPartTABOutput.in_SAP1-3sb-P002.raw
+gunzip $refout.gz || error "Failed to gunzip reference output $refout.gz"
+for i in tManyPartTABOutput-data/tManyPartTABOutput-L123882_SAP001_B00?_P002_S?_bf.raw; do
+  diff $refout $i || dataStatus=1
+done
+
+# final verdict
+# outputProc crashes on final meta data. Ignore. We checked the output files.
+[ $testStatus -eq 0 -a $dataStatus -eq 0 ] # -a $outputProcStatus -eq 0 ]

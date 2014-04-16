@@ -39,9 +39,16 @@ TEST(FIR_FilterKernel)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
   ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
   KernelFactory<FIR_FilterKernel> factory(ps);
@@ -110,9 +117,16 @@ TEST(HistoryFlags)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
   ps.add("Observation.channelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
   FIR_FilterKernel::Parameters params(ps);

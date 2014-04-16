@@ -64,6 +64,7 @@
     <None Include="..\..\CoInterface\src\BestEffortQueue.tcc" />
     <None Include="..\..\CoInterface\test\tParset.parset_obs99275" />
     <None Include="..\..\CoInterface\test\tParset.sh" />
+    <None Include="..\..\CoInterface\test\tRingCoordinates.py" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\CoInterface\src\CMakeLists.txt" />

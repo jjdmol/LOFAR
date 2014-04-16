@@ -47,47 +47,58 @@ namespace LOFAR
                             size_t nrSubbandsPerSubbandProc = 1);
 
       KernelFactory<IntToFloatKernel> intToFloat;
-      KernelFactory<DelayAndBandPassKernel> delayCompensation;
-      KernelFactory<BeamFormerKernel> beamFormer;
-      KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
       KernelFactory<FFTShiftKernel> fftShift;
-      KernelFactory<FIR_FilterKernel> firFilter;
-      KernelFactory<CoherentStokesKernel> coherentStokes;
-      KernelFactory<IncoherentStokesKernel> incoherentStokes;
-      KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
-      KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+      KernelFactory<DelayAndBandPassKernel> delayCompensation;
       KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
 
-      BandPassCorrectionKernel::Parameters
-      bandPassCorrectionParams(const Parset &ps) const;
+      KernelFactory<BeamFormerKernel> beamFormer;
+      KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
+      KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
+      KernelFactory<FIR_FilterKernel> coherentFirFilter;
+      KernelFactory<CoherentStokesKernel> coherentStokes;
 
-      BeamFormerKernel::Parameters
-      beamFormerParams(const Parset &ps) const;
+      KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+      KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
+      KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+      KernelFactory<IncoherentStokesKernel> incoherentStokes;
 
-      CoherentStokesTransposeKernel::Parameters
-      coherentTransposeParams(const Parset &ps) const;
+      static BandPassCorrectionKernel::Parameters
+      bandPassCorrectionParams(const Parset &ps);
 
-      CoherentStokesKernel::Parameters
-      coherentStokesParams(const Parset &ps) const;
+      static BeamFormerKernel::Parameters
+      beamFormerParams(const Parset &ps);
 
-      DelayAndBandPassKernel::Parameters
-      delayCompensationParams(const Parset &ps) const;
+      static CoherentStokesTransposeKernel::Parameters
+      coherentTransposeParams(const Parset &ps);
 
-      FFTShiftKernel::Parameters
-      fftShiftParams(const Parset &ps) const;
+      static CoherentStokesKernel::Parameters
+      coherentStokesParams(const Parset &ps);
 
-      FIR_FilterKernel::Parameters
-      firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const;
+      static DelayAndBandPassKernel::Parameters
+      delayCompensationParams(const Parset &ps);
 
-      FIR_FilterKernel::Parameters 
+      static FFTShiftKernel::Parameters
+      fftShiftParams(const Parset &ps);
+
+      static FFTShiftKernel::Parameters
+      coherentInverseFFTShiftParams(const Parset &ps);
+
+      static FIR_FilterKernel::Parameters
+      coherentFirFilterParams(const Parset &ps, 
+                              size_t nrSubbandsPerSubbandProc);
+
+      static FIR_FilterKernel::Parameters
       incoherentFirFilterParams(const Parset &ps,
-            size_t nrSubbandsPerSubbandProc) const ;
+                                size_t nrSubbandsPerSubbandProc);
 
-      IncoherentStokesKernel::Parameters 
-      incoherentStokesParams(const Parset &ps) const;
+      static FFTShiftKernel::Parameters
+      incoherentInverseFFTShiftParams(const Parset &ps);
 
-      IncoherentStokesTransposeKernel::Parameters 
-      incoherentStokesTransposeParams(const Parset &ps) const;
+      static IncoherentStokesKernel::Parameters 
+      incoherentStokesParams(const Parset &ps);
+
+      static IncoherentStokesTransposeKernel::Parameters
+      incoherentStokesTransposeParams(const Parset &ps);
 
 
     };

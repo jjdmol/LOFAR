@@ -52,7 +52,16 @@ RSPDriver.PPSdelayFile = "PPSdelays.conf"
 # NOTE: not used yet!
 RSPDriver.MAC_ADDR_MASK=10:FA:00:00:%02x:00
 
-# old-way of specifying the MAC addresses
+#
+# Specify the absolute backplane index of the first
+# RSP board in hexadecimal
+#
+# MAC address is equal to : 10:FA:00:00:XX:00
+#
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
+
+# old-way of 
+specifying the MAC addresses
 #
 RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
