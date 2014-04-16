@@ -608,9 +608,9 @@ void MultiSender::process()
       NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
 
       while ((subband = queue->remove()) != NULL) {
-        sendTimer.start();
+        NSTimer::StartStop ss(sendTimer);
+
         subband->write(stream);
-        sendTimer.stop();
       }
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");
