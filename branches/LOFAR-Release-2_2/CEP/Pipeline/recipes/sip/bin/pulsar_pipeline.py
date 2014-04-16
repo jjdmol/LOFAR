@@ -148,6 +148,8 @@ class pulsar_pipeline(control):
             return 0
 
         self.pulsar_parms = self.parset.makeSubset(self.parset.fullModuleName('Pulsar') + '.')
+        pulsar_parset = os.path.join(parset_dir, "Pulsar.parset")
+        self.pulsar_parms.writeFile(pulsar_parset)
             
         self.logger.debug("Processing: %s" %
           ', '.join(str(f) for f in self.input_data))
