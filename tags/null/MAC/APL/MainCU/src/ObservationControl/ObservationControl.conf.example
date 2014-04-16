@@ -1,0 +1,30 @@
+# modulename=ObsCtrl
+# pathname=LOFAR.ObsSW.Observation.ObsCtrl.
+# treeID=9
+Observation.MSName=/data2/ObservationA.MS
+Observation.ObsCtrl.heartbeatInterval=10
+Observation.VirtualInstrument.BGLNodeList=[BGL001,BGL002,BGL003]
+Observation.VirtualInstrument.imageNodeList=[IMG005,IMG002,IMG003]
+Observation.VirtualInstrument.inputNodeList=[INP002,INP003,INP004,INP005]
+Observation.VirtualInstrument.stationList=[CS001,CS002,CS003]
+Observation.VirtualInstrument.storageCapacity=760
+Observation.VirtualInstrument.storageNodeList=[STOR005,STOR006]
+Observation.channelsPerSubband=256
+Observation.claimPeriod=0
+Observation.clockMode=<<Clock160
+Observation.nyguistZone=0
+Observation.nyquistZone=0
+Observation.preparePeriod=0
+Observation.sampleClock=160
+Observation.startTime=0
+Observation.stopTime=0
+Observation.subbandList=[0]
+_instanceNr=0
+_treeID=9
+heartbeatInterval=10
+prefix=LOFAR.ObsSW.Observation.ObsCtrl.
+
+# next parameters are optional, defaultvalues are shown
+#ChildControl.StartupRetryInterval = 10s
+#ChildControl.MaxStartupRetry	   = 5
+
