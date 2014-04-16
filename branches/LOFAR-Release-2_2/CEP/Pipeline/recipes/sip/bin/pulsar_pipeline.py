@@ -146,7 +146,9 @@ class pulsar_pipeline(control):
         if len(self.input_data) == 0:
             self.logger.warn("No input data files to process. Bailing out!")
             return 0
-  
+
+        self.pulsar_parms = self.parset.makeSubset(self.parset.fullModuleName('Pulsar') + '.')
+            
         self.logger.debug("Processing: %s" %
           ', '.join(str(f) for f in self.input_data))
         
