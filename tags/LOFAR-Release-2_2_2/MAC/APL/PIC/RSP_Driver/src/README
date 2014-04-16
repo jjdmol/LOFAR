@@ -1,0 +1,59 @@
+
+
+The RSPDriver and EPAStub programs both need access to raw ethernet sockets
+to be able to send and receive raw ethernet packets. This README explains how
+this has been achieved and what system configuration is needed to be able
+to allow these programs raw ethernet access in a safe manner (from the
+sysadmin perspective).
+
+How to run as a normal user and still have access to raw ethernet
+=================================================================
+
+In order to have access to raw ethernet capabilities a Linux proces must:
+
+1. run as root (geteuid()==0 && getuid() == 0), or
+2. run as as setuid root  (geteuid() == 0 && getuid() != 0)
+
+Option 1 is undesirable from a sysadmin point of view, it gives the program
+too much permissions which can be dangerous w.r.t.the integrity of the system.
+
+Option 2 can be cumbersome because during development everytime a new
+binary is created the developer needs root permissions to make the binary
+setuid-root again.
+
+Therefore the following solutions has been implemented:
+
+* RSPDriver and EPAStub run as setuid-root by configuring sudo (man sudo(8)) to
+  allow specific users (e.g. the developers, the operational user) to run
+  those programs as setuid-root. This is simply an alternative way of explicitly
+  changing owner of the binary and making it setuid (chmod +s).
+
+* RSPDriver and EPAStub will set their capabilities to "= cap_net_raw+ep"
+  (man cap_set_proc(3)). And then change their euid (root) back to the
+  uid (the user that invoked the program).
+
+Example /etc/sudoers config:
+
+-------%< cut here
+# Cmnd alias specification
+Cmnd_Alias      MAC=/opt/lofar/bin/RSPDriver,\
+		    /opt/lofar/bin/EPAStub
+
+# Defaults specification
+Defaults:wierenga       stay_setuid # only change euid to 0 (root)
+
+# User privilege specification
+wierenga ALL=NOPASSWD: MAC
+-------%< cut here
+
+This allows user 'wierenga' to run RSPDriver and EPAStub as setuid-root without
+specifying a password like this:
+> sudo /opt/lofar/bin/RSPDriver
+or
+> cd /opt/lofar/bin
+> sudo ./RSPDriver
+or
+> PATH=$PATH:/opt/lofar/bin
+> sudo RSPDriver
+
+
