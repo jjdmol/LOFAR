@@ -1,7 +1,5 @@
 #!/bin/bash
 
-. setlofarroot.sh
-
 # remove any output files from prev runs
 rm -rf tManyPartTABOutput-data/
 
