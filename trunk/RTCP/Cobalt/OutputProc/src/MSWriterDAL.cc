@@ -75,9 +75,14 @@ static double toMJD( double time )
 
 static string stripextension( const string pathname )
 {
-  size_t endPos = pathname.rfind('.');
-  if (endPos + 1 < pathname.size() && pathname[endPos + 1] == '/')
-    endPos = string::npos; // don't recognize an extension in ./foo
+  size_t endPosDot   = pathname.rfind('.');
+  size_t endPosSlash = pathname.rfind('/');
+  size_t endPos = string::npos;
+
+  // only strip if there is a '.' in the last component (filename)
+  if (endPosDot != string::npos &&
+      (endPosSlash == string::npos || endPosSlash < endPosDot))
+    endPos = endPosDot;
   return pathname.substr(0, endPos);
 }
 
