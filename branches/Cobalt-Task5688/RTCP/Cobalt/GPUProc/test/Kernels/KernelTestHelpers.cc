@@ -39,10 +39,12 @@ void usage(char const *testName)
   cout << " -i IdxGPU          GPU index to run kernel on, default == 0" << endl;
   cout << " -s nrStations      Number of stations to create, default == 47" << endl;
   cout << " -b nrSampleBlocks  Number of (x) * nrchannels samples to create, default = 48 * 64 (-> 196608 total samples)" << endl;
-  cout << " * The kernels might not actually use all these parameters" << endl;
+  
   cout << " -q stokesType      Stokes type I XXYY or IQUV, default = IQUV" << endl;
   cout << " -d nrDelayCompensationChannels  Number of delaycompensationchannels default == 1" << endl;
   cout << " -e nrChannelsPerSubband     Channels per subband, default == 1" << endl;
+  cout << " -f timeIntegrationFactor    How many samples to combine in output sample, default ==1 " << endl;
+  cout << " * The kernels might not actually use all these parameters" << endl;
   cout << "" << endl;
   //cout << "If no arguments are provide the kernel with be tested on output validity" << endl;
   cout << "" << endl;
