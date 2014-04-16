@@ -22,7 +22,7 @@
 
 #include "SubbandWriter.h"
 
-#include <CoInterface/DataFactory.h>
+#include <CoInterface/CorrelatedData.h>
 
 namespace LOFAR
 {
@@ -34,7 +34,7 @@ namespace LOFAR
       itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsOutputPool.free.append(newStreamableData(parset, CORRELATED_DATA, streamNr));
+        itsOutputPool.free.append(new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512));
     }
 
     

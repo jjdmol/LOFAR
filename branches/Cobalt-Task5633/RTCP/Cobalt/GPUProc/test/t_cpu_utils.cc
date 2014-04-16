@@ -24,7 +24,6 @@
 
 #include <cstring>
 #include <sched.h>
-#include <mpi.h>
 #include <string>
 #include <iostream>
 
@@ -49,7 +48,7 @@ static int test(const unsigned nprocs, unsigned cpuId)
 
   // expect alternating on cbt nodes
   // (the original test code intended this, but was broken in many ways (still a poor idea to make it so specific))
-  unsigned expect = !cpuId;
+  int expect = !cpuId;
   for (unsigned i = 0; i < nprocs; i++) {
     if (CPU_ISSET(i, &mask) != expect) {
       LOG_FATAL_STR("cpuId=" << cpuId << " Found that core " << i << " is" << (!expect ? " " : " NOT ") <<

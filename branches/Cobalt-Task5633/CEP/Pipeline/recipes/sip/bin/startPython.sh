@@ -37,17 +37,27 @@ usage()
 
 # Initialize the environment. We will assume here that we can use the
 # Lofar Login Environment (LLE).
-use Lofar
+
 
 pythonProgram="${1}"
 parsetFile="${2}"
 controlHost="${3}"
 
 echo "**** $(date) ****" >> ${logFile}
+echo "Executing: $0 ${pythonProgram} ${parsetFile} ${controlHost}" >> ${logFile}
+
+use_pulp="$(getparsetvalue $parsetFile "ObsSW.Observation.processSubtype")"
+if [ "${use_pulp}" == "Pulsar Pipeline" ]; then 
+  echo "The processSubtype is Pulsar Pipeline; Initializing Pulp"  >> ${logFile}
+  use Pulp  
+fi
+echo "Initializing Lofar" >> ${logFile}
+use Lofar
+
 # Try to reset the environment based on a parset software version value
 
-versionString="$(getparsetvalue $parsetFile "ObsSW.Observation.ObservationControl.PythonControl.softwareVersion" -d "notFound")"
-if [ "$versionString" != "notFound" ]; then
+versionString="$(getparsetvalue -d "notFound" $parsetFile "ObsSW.Observation.ObservationControl.PythonControl.softwareVersion")"
+if [ "$versionString" != "notFound" -a "$versionString" != "" ]; then
   # construct the path from the red value
     versionPath=/opt/cep/lofar/lofar_versions/$versionString/lofar_build/
     echo "Using parset supplied software version: $versionString" >> ${logFile}
@@ -55,7 +65,7 @@ if [ "$versionString" != "notFound" ]; then
   # Provide Lofar with the requested lofarversion: correctness is validated there
     use Lofar $versionString 
 else
-    echo "Failed setting software version, using default version" >> ${logFile}
+    echo "No specific software version provided, using default version" >> ${logFile}
 fi
 
 programOptions=" \

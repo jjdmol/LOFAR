@@ -3,6 +3,7 @@
 include(PythonInstall)
 
 python_install(
+  class_obsPreprocessing.py
   class_mergesubbands.py
   class_obsparMergedData.py
   class_obspar.py

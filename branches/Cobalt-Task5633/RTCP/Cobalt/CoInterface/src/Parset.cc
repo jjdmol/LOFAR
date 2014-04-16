@@ -150,11 +150,11 @@ namespace LOFAR
     }
 
 
-    Parset::Parset(Stream *stream)
+    void readParameterSet(Stream &stream, ParameterSet &parameterSet)
     {
       // Read size
       uint64 size;
-      stream->read(&size, sizeof size);
+      stream.read(&size, sizeof size);
 
 #if !defined WORDS_BIGENDIAN
       dataConvert(LittleEndian, &size, 1);
@@ -162,12 +162,18 @@ namespace LOFAR
 
       // Read data
       std::vector<char> tmp(size + 1);
-      stream->read(&tmp[0], size);
+      stream.read(&tmp[0], size);
       tmp[size] = '\0';
 
       // Add data to parset
       std::string buffer(&tmp[0], size);
-      adoptBuffer(buffer);
+      parameterSet.adoptBuffer(buffer);
+    }
+
+
+    Parset::Parset(Stream *stream)
+    {
+      readParameterSet(*stream, *this);
 
       // Update the settings
       updateSettings();
@@ -362,7 +368,7 @@ namespace LOFAR
       // Pointing information
       size_t nrSAPs = getUint32("Observation.nrBeams", 1);
       unsigned subbandOffset = 512 * (settings.nyquistZone() - 1);
-      
+
       settings.SAPs.resize(nrSAPs);
       settings.subbands.clear();
       for (unsigned sapNr = 0; sapNr < nrSAPs; ++sapNr) 
@@ -376,6 +382,7 @@ namespace LOFAR
 
         // Process the subbands of this SAP
         vector<unsigned> subbandList = getUint32Vector(str(format("Observation.Beam[%u].subbandList") % sapNr), emptyVectorUnsigned, true);
+        ASSERTSTR(!subbandList.empty(), "subband list for SAP " << sapNr << " must be non-empty (Observation.Beam[" << sapNr << "].subbandList)");
         vector<double> frequencyList = getDoubleVector(str(format("Observation.Beam[%u].frequencyList") % sapNr), emptyVectorDouble, true);
 
         for (unsigned sb = 0; sb < subbandList.size(); ++sb)
@@ -412,6 +419,7 @@ namespace LOFAR
 
       // Station information (used pointing information to verify settings)
       vector<string> stations = getStringVector("Observation.VirtualInstrument.stationList", emptyVectorString, true);
+      ASSERTSTR(!stations.empty(), "station list (Observation.VirtualInstrument.stationList) must be non-empty");
 
       // Sort stations (CS, RS, int'l), to get a consistent and predictable
       // order in the MeasurementSets.
@@ -613,22 +621,22 @@ namespace LOFAR
 
           string oldprefix = "";
           string newprefix = "";
-          struct ObservationSettings::BeamFormer::StokesSettings *set = 0;
+          struct ObservationSettings::BeamFormer::StokesSettings *stSettings = 0;
           
           // Select coherent or incoherent for this iteration
           switch(i) {
             case 0:
               oldprefix = "OLAP.CNProc_CoherentStokes";
               newprefix = "Cobalt.BeamFormer.CoherentStokes";
-              set = &settings.beamFormer.coherentSettings;
-              set->coherent = true;
+              stSettings = &settings.beamFormer.coherentSettings;
+              stSettings->coherent = true;
               break;
 
             case 1:
               oldprefix = "OLAP.CNProc_IncoherentStokes";
               newprefix = "Cobalt.BeamFormer.IncoherentStokes";
-              set = &settings.beamFormer.incoherentSettings;
-              set->coherent = false;
+              stSettings = &settings.beamFormer.incoherentSettings;
+              stSettings->coherent = false;
               break;
 
             default:
@@ -637,29 +645,22 @@ namespace LOFAR
           }
 
           // Obtain settings of selected stokes
-          set->type = stokesType(getString(
+          stSettings->type = stokesType(getString(
                 renamedKey(newprefix + ".which", oldprefix + ".which"),
                 "I"));
-          set->nrStokes = nrStokes(set->type);
-          set->nrChannels = getUint32(
+          stSettings->nrStokes = nrStokes(stSettings->type);
+          stSettings->nrChannels = getUint32(
                 renamedKey(newprefix + ".nrChannelsPerSubband", oldprefix + ".channelsPerSubband"),
                 1);
-          ASSERT(set->nrChannels > 0);
-          set->timeIntegrationFactor = getUint32(
+          ASSERT(stSettings->nrChannels > 0);
+          stSettings->timeIntegrationFactor = getUint32(
                 renamedKey(newprefix + ".timeIntegrationFactor", oldprefix + ".timeIntegrationFactor"),
                 1);
-          ASSERT(set->timeIntegrationFactor > 0);
-          set->nrSubbandsPerFile = getUint32(
+          ASSERT(stSettings->timeIntegrationFactor > 0);
+          stSettings->nrSubbandsPerFile = getUint32(
                 renamedKey(newprefix + ".subbandsPerFile", oldprefix + ".subbandsPerFile"),
-                0);
-          set->nrSamples = settings.blockSize / set->timeIntegrationFactor / set->nrChannels;
-
-          if (set->nrSubbandsPerFile == 0) {
-            // apply default
-            set->nrSubbandsPerFile = settings.subbands.size();
-          }
-
-          ASSERTSTR(set->nrSubbandsPerFile >= settings.subbands.size(), "Multiple parts/file are not yet supported!");
+                0); // 0 or a large nr is interpreted below
+          stSettings->nrSamples = settings.blockSize / stSettings->timeIntegrationFactor / stSettings->nrChannels;
         }
 
         const vector<ObservationSettings::FileLocation> coherent_locations =
@@ -694,12 +695,14 @@ namespace LOFAR
             double angle1 = getDouble(prefix + ".angle1", 0.0);
             double angle2 = getDouble(prefix + ".angle2", 0.0);
 
-            // Convert to COORDTYPE default == OTHER
-            RingCoordinates::COORDTYPES type = RingCoordinates::OTHER;
+            // Convert to COORDTYPES
+            RingCoordinates::COORDTYPES type;
             if (directionType == "J2000")
               type = RingCoordinates::J2000;
             else if (directionType == "B1950")
               type = RingCoordinates::B1950;
+            else
+              type = RingCoordinates::OTHER;
               
             // Create coords object
             ptrRingCoords = std::auto_ptr<RingCoordinates>(
@@ -755,18 +758,18 @@ namespace LOFAR
               else
               {
                 // Get the pointing for the tabrings.
-                // substract the number of manual to get index in the ringCoords
-                // TODO What happens if the number does not match?
+                // Subtract the number of manual to get index in the ringCoords
                 RingCoordinates::Coordinate pointing = 
-                    ptrRingCoords->coordinates()[j - nrTABSParset];
+                    ptrRingCoords->coordinates().at(j - nrTABSParset);
 
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
                 tab.direction.angle1 = pointing.first;
                 tab.direction.angle2 = pointing.second;
-                // Cannot search for the absolute angle for an entry that does not exist
-                // TODO: is this still the correct key?
-                tab.dispersionMeasure = getInt("OLAP.dispersionMeasure", 0);
-                tab.coherent =  true;  // always coherent
+                // One dispersion measure for all TABs in rings is inconvenient,
+                // but not used anyway. Unclear if setting to 0.0 is better/worse.
+                const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);
+                tab.dispersionMeasure = getDouble(prefix + ".tabRingDispersionMeasure", 0.0);
+                tab.coherent = getBool(prefix + ".tabRingCoherent", true); // in practice, always coherent
               }
             }
 
@@ -775,45 +778,63 @@ namespace LOFAR
             else
               sap.nrIncoherent++;
 
-            struct ObservationSettings::BeamFormer::StokesSettings &set =
+            struct ObservationSettings::BeamFormer::StokesSettings &stSettings =
                tab.coherent ? settings.beamFormer.coherentSettings
                             : settings.beamFormer.incoherentSettings;
 
-            // Generate file list
-            tab.files.resize(set.nrStokes);
-            for (size_t s = 0; s < set.nrStokes; ++s) 
-            {
-              struct ObservationSettings::BeamFormer::File file;
-
-              file.sapNr    = i;
-              file.tabNr    = j;
-              file.coherent = tab.coherent;
-              file.stokesNr = s;
-              file.streamNr = bfStreamNr++;
-
-              if (file.coherent) 
-              {
-                file.coherentIdxInSAP = sap.nrCoherent - 1;
-
-                if (coherent_idx >= coherent_locations.size())
-                  THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file " << file.streamNr);
-                file.location = coherent_locations[coherent_idx++];
-              } 
-              else 
-              {
-                file.incoherentIdxInSAP = sap.nrIncoherent - 1;
-
-                if (incoherent_idx >= incoherent_locations.size())
-                  THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file " << file.streamNr);
-                file.location = incoherent_locations[incoherent_idx++];
-              }
-
-              tab.files[s] = file;
-              settings.beamFormer.files.push_back(file);
-
-              outputProcHosts.insert(file.location.host);
+            // If needed, limit to / apply default: the #subbands in this SAP.
+            size_t nrSubbandsPerFile = stSettings.nrSubbandsPerFile;
+            if (nrSubbandsPerFile == 0 ||
+                nrSubbandsPerFile > settings.SAPs[i].subbands.size()) {
+              nrSubbandsPerFile = settings.SAPs[i].subbands.size();
             }
-          }         
+
+            // Generate file list
+            unsigned nrParts = max(1UL, (settings.SAPs[i].subbands.size() +
+                                         nrSubbandsPerFile - 1) / nrSubbandsPerFile);
+            tab.files.resize(stSettings.nrStokes * nrParts);
+            for (size_t s = 0; s < stSettings.nrStokes; ++s) 
+            {
+              for (unsigned part = 0; part < nrParts; ++part)
+              {
+                struct ObservationSettings::BeamFormer::File file;
+
+                file.streamNr = bfStreamNr++;
+                file.sapNr    = i;
+                file.tabNr    = j;
+                file.stokesNr = s;
+                file.partNr   = part;
+                file.coherent = tab.coherent;
+
+                if (file.coherent) {
+                  file.coherentIdxInSAP = sap.nrCoherent - 1;
+                  if (coherent_idx >= coherent_locations.size())
+                    THROW(CoInterfaceException, "No CoherentStokes filename or location specified for file idx " << file.streamNr);
+                  file.location = coherent_locations[coherent_idx++];
+                } else {
+                  file.incoherentIdxInSAP = sap.nrIncoherent - 1;
+                  if (incoherent_idx >= incoherent_locations.size())
+                    THROW(CoInterfaceException, "No IncoherentStokes filename or location specified for file idx " << file.streamNr);
+                  file.location = incoherent_locations[incoherent_idx++];
+                }
+
+                file.firstSubbandIdx = settings.SAPs[i].subbands[0].idx +
+                                       part * nrSubbandsPerFile;
+                file.lastSubbandIdx  = min(file.firstSubbandIdx + nrSubbandsPerFile,
+                                           // last file(s) in part series can have fewer subbands
+                                           settings.SAPs[i].subbands[0].idx +
+                                           settings.SAPs[i].subbands.size());
+                ASSERTSTR(file.firstSubbandIdx < file.lastSubbandIdx,
+                    "strmNr=" << file.streamNr << " 1stIdx=" << file.firstSubbandIdx << " lstIdx=" << file.lastSubbandIdx);
+                ASSERTSTR(file.lastSubbandIdx <= settings.subbands.size(),
+                    "strmNr=" << file.streamNr << " lstIdx=" << file.lastSubbandIdx << " nSb=" << settings.subbands.size());
+
+                tab.files[s * nrParts + part] = file;
+                settings.beamFormer.files.push_back(file);
+                outputProcHosts.insert(file.location.host);
+              }
+            }
+          }
         }
 
         settings.beamFormer.dedispersionFFTsize = getUint32(renamedKey("Cobalt.BeamFormer.dedispersionFFTsize", "OLAP.CNProc.dedispersionFFTsize"), settings.correlator.nrSamplesPerChannel);
@@ -917,7 +938,7 @@ namespace LOFAR
       const unsigned min_n_ch_pow2 = 32; // rounded up to pow2 for efficient FFT
 
       if (max_n_FFT_pow2 < min_n_ch_pow2) {
-        LOG_ERROR_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
+        LOG_WARN_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
                       max_n_FFT << " ends up below lower bound " << min_n_ch <<
                       ". Returning " << min_n_ch_pow2 << ". Stations far from"
                       " the core may not be delay compensated optimally.");

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. $srcdir/testFuncs.sh
+. ./testFuncs.sh
 
 PARSET=$PWD/tMACfeedback.in_parset
 

@@ -10,10 +10,8 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 lofar_add_library(cointerface
   Package__Version.cc
   Allocator.cc
-  BeamCoordinates.cc
   CorrelatedData.cc
   BlockID.cc
-  DataFactory.cc
   FinalMetaData.cc
   Stream.cc
   Parset.cc

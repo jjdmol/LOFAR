@@ -108,7 +108,7 @@ namespace LOFAR
         new FFTShiftKernel::Buffers(*devA, *devA));
 
       incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *incoherentInverseFFTShiftBuffers));
+        factories.incoherentInverseFFTShift.create(queue, *incoherentInverseFFTShiftBuffers));
 
       devIncoherentFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
         new gpu::DeviceMemory(context,

@@ -1,5 +1,5 @@
 //# CoherentStokesKernel.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -60,7 +60,6 @@ namespace LOFAR
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_CoherentStokesKernel.dat") % 
             ps.settings.observationID);
-
     }
 
 
@@ -70,7 +69,9 @@ namespace LOFAR
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
+      ASSERT(params.timeIntegrationFactor > 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
+     
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
@@ -126,10 +127,10 @@ namespace LOFAR
       setEnqueueWorkSizes(grid, block);
 
       ASSERT(params.nrSamplesPerChannel % timeParallelFactor == 0); // 201 % 64 == 0 ? XXX
-      ASSERT(params.timeIntegrationFactor > 0 && params.nrSamplesPerChannel / timeParallelFactor % params.timeIntegrationFactor == 0);
+      ASSERT(params.nrSamplesPerChannel / timeParallelFactor % params.timeIntegrationFactor == 0);
+      ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * timeParallelFactor) == 0); // TODO: Wouter's. equiv???
 
       setArg(2, timeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
-
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);

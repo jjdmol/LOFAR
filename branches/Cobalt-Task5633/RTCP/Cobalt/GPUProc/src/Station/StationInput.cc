@@ -468,8 +468,10 @@ void StationInput::readRSPNonRealTime()
     SmartPtr<RSPData> data = rspDataPool[0].free.remove();
 
     // Abort of writer does not desire any more data
-    if (!data)
+    if (!data) {
+      LOG_INFO_STR(logPrefix << "readRSPNonRealTime: received EOS");
       return;
+    }
 
     data->packets[0] = last_packets[youngest];
     data->board = youngest;
@@ -486,8 +488,10 @@ void StationInput::readRSPNonRealTime()
   SmartPtr<RSPData> data = rspDataPool[0].free.remove();
 
   // Abort if writer does not desire any more data
-  if (!data)
+  if (!data) {
+    LOG_INFO_STR(logPrefix << "readRSPNonRealTime: received EOS");
     return;
+  }
 
   data->packets[0].payloadError(false);
   data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
@@ -522,7 +526,8 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
       if (!next || next->write(data->packets[0], beamletIndices, nrBeamletIndices)) {
 	// Data is even later than next? Put this data back for a future block.
         rspDataPool[0].filled.prepend(data);
-	      break;
+        ASSERT(!data);
+        return;
       }
     }
 
