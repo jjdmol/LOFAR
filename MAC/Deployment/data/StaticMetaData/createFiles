@@ -340,6 +340,354 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+# Syntax: createFiles localhost [<BG/P partition>] or
+#         createFiles <resultdir> <datadir> [<BG/P partition>] <stationname>
+#         createFiles test <testnode1> [<testnode2>]
+#         createFiles cobalt
+# - localhost will create the files for the current host
+# - resultdir is the root directory for the outputfiles:
+#     <stationname>/etc/<files>
+# - datadir is the root dir for the metadata files (e.g., /opt/lofar/etc)
+# - stationname is the name of the station for which to produce the files.
+#   Using 'all' as stationname will create files for all stations in file
+#   StationInfo.dat
+#
+# The test option is to direct data streams  to the test BG/P partition
+# that is setup in file StaticMetaData/RSPConnections_test.dat
+
+import re, sys, os
+from subprocess import *
+
+warnings = []
+
+#
+# setWarning(message)
+#
+def setWarning(message):
+    """
+    Adds the given warning to the list of warnings.
+    """
+    warnings.append(message)
+
+
+#
+# Find host IP number from DNS
+#
+def findIPNumber(stationName):
+    """
+    Returns the IPnumber for a station LCU.
+    In case the station is not known, it will return -1.
+    """
+    
+    localStationName = Popen("hostname -s",shell=True, stdout=PIPE).stdout.readlines()[0].strip()[0:5].lower()
+    if (localStationName == stationName):
+        command = "hostname -i"
+        output = Popen(command,shell=True, stdout=PIPE).stdout
+        stdout = output.readlines()
+        outline = stdout[0].strip()
+        outwords = outline.split()
+        if (len(outwords) != 1):
+            return "-1"
+        else:
+            return outwords[0]
+    else:
+        command = "host "+stationName+"C"
+        output = Popen(command,shell=True, stdout=PIPE).stdout
+        stdout = output.readlines()
+        outline = stdout[0].strip()
+        outwords = outline.split()
+        if (len(outwords) != 4):
+            return "10.150.1.1"
+#            return "-1"
+        else:
+            return outwords[3]
+        
+
+#
+# Copies a set of fixed test files to the config dir
+# To be used when setting up a LCU for test/validation
+#
+def copyTestFiles(dataDir):
+
+    for file in ["RSPDriver.conf.test","TBBDriver.conf.test",
+                     "RemoteStation.conf.test","HardwareMonitor.conf.test"]:
+        
+        testFile = dataDir+"/"+file
+        # the existence of /opt/lofar/etc has been checked in main() already
+        destFile = "/opt/lofar/etc/"+file.split(".")[0]+"."+file.split(".")[1]
+        command = "cp -f "+testFile+ " " + destFile
+        os.system(command);
+        
+#
+# findRSPDestNodes(stationName)
+#
+def findRSPDestNodes(stationName, dataDir):
+    """
+    Collects the destination nodes from each rspboard of the given station.
+    Expected format of the RSPConnection file is:
+    station		board	destinationnode
+    CS001		RSP_0	BGL001
+    """
+    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-9]+)[ \t]*([^ \t\n]*)", re.IGNORECASE)
+    rspDestNode = {}
+    for match in pattern.finditer(open(dataDir+"/RSPConnections.dat").read()):
+        rspDestNode[match.group(1)] = match.group(2)
+    if len(rspDestNode) == 0:
+        setWarning(stationName+" not found in file 'RSPConnections'")
+    return rspDestNode
+
+#
+# findTBBDestNodes(stationName)
+#
+def findTBBDestNodes(stationName, dataDir):
+    """
+    Collects the destination nodes from each tbbboard of the given station.
+    Expected format of the TBBConnection file is:
+    station  Boeard  node
+    CS001    TBB-0   locus004
+    """
+    # NOTE: for now we always take the first nodename
+    pattern=re.compile("[^#]"+stationName+"[ \t]*TBB_([0-9]+)[ \t]*([a-zA-Z0-9]*)[, ]?.*", re.IGNORECASE)
+    tbbDestNode = {}
+    for match in pattern.finditer(open(dataDir+"/TBBConnections.dat").read()):
+        tbbDestNode[match.group(1)] = match.group(2)
+    if len(tbbDestNode) == 0:
+        setWarning(stationName+" not found in file 'TBBConnections.dat'")
+    return tbbDestNode
+
+#
+# findIPandMAC(node)
+#
+def findIPandMAC(nodeName, dataDir):
+    """
+    Translates the given nodename to an MAC address and and IP address.
+    """
+    pattern=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMac = ()
+    ipAndMac = pattern.search(open(dataDir+"/MAC+IP.dat").read())
+    if not ipAndMac:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'MAC+IP'"
+    return ipAndMac.group(1), ipAndMac.group(2)
+
+#
+# findIPandMAC_local(node)
+#
+def findIPandMAC_local(nodeName, dataDir):
+    """
+    Translates the given nodename to a MAC and IP address + alias name.
+    """
+    pattern=re.compile("^"+nodeName+"_([0-9]*)[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)[ \t]*([\S]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMacAndAlias = pattern.findall(open(dataDir+"/RSPConnections_local.dat").read())
+    if not ipAndMacAndAlias:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'RSPConnections_local.dat'"
+    return ipAndMacAndAlias
+
+#
+# findIPandMAC_test(node)
+#
+def findIPandMAC_test(testName, dataDir):
+    """
+    Translates the given testName to a MAC and IP address + alias name.
+    """
+    print testName
+    pattern=re.compile("^"+testName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)[ \t]*([\S]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMacAndAlias = pattern.findall(open(dataDir+"/RSPConnections_test.dat").read())
+    if not ipAndMacAndAlias:
+        raise "\nFatal error: "+testName+" is not defined in file 'RSPConnections_test.dat'"
+    print ipAndMacAndAlias
+    return ipAndMacAndAlias
+
+def findStorageIPandMAC(nodeName, dataDir):
+    """
+    Translates the given storage nodename to an MAC address and and IP address.
+    """
+    pattern=re.compile("^"+nodeName+"[ \t]*([0-9a-fA-F:]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMac = ()
+    ipAndMac = pattern.search(open(dataDir+"/Storage+MAC.dat").read())
+    if not ipAndMac:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'Storage+MAC.dat'"
+    return ipAndMac.group(2), ipAndMac.group(1)
+
+
+#
+# findRSPIP(node)
+#
+def findRSPIP(nodeName, dataDir):
+    """
+    Translates the given nodename to an MAC address and and IP address.
+    """
+    pattern=re.compile("^"+nodeName+"_([0-9]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
+    RspIp = pattern.findall(open(dataDir+"/RSP+IP.dat").read())
+    if not RspIp:
+        raise Exception("\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'")
+    return RspIp
+#
+# findBlets(stationName)
+#
+def find_Blets(stationName, dataDir):
+    """
+    Collects the RSP Blet outputs of the given station.
+    Expected format of the RSP_Blet file is:
+    #station     LANE_0     LANE_1
+    CS001        0 1 2 3    6 7 8 9
+
+    Note that RS and International have only LANE_0 filled as these stations
+    have no splitter.
+    """
+    pattern=re.compile("[^#]"+stationName+"[ \t].*", re.IGNORECASE)
+    rspBlets = pattern.search(open(dataDir+"/RSPBlet.dat").read())
+
+    if not rspBlets:
+        raise "\nFatal error: "+stationName+" is not defined in file 'RSPBlet.dat'"
+    return rspBlets.group().split()
+
+
+#
+# findAllStations()
+#
+def findAllStations(dataDir):
+    """
+    Return a list of all stationnames that are found in file StationInfo
+    """
+    pattern = re.compile("^[A-Z][A-Z][0-9][0-9][0-9]",re.IGNORECASE | re.MULTILINE)
+    match = pattern.findall(open(dataDir+"/StationInfo.dat").read())
+    if not match:
+        raise "\nFatal error: could not find any stationnames in file 'StationInfo'"
+    return match
+
+#
+# findStationInfo(stationName)
+#
+def findStationInfo(stationName, dataDir):
+    """
+    Return all basic station info (eg. nr RSPboards) from a station.
+    """
+    pattern=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
+    match = pattern.search(open(dataDir+"/StationInfo.dat").read())
+    if not match:
+        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
+    info = match.group().split()
+    if (len(info) != 12):
+        raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
+    return info
+
+def createCCURSPConnectionsFile(resultDir, dataDir):
+   """
+   For now, copy the static file RSPConnections_CCU.dat from StaticMetaData to
+   the /opt/lofar/etc. Can be adapted later for more flexible behaviour
+   """
+   CCU_RSPFile = dataDir + "/RSPConnections_CCU.dat"
+   destFile = resultDir + "/RSPConnections_CCU.dat"
+   command = "cp -f "+ CCU_RSPFile + " " + destFile
+   os.system(command);
+
+def createRSPConnectionsFile_cobalt(resultDir, dataDir):
+    """
+    Copies file RSPConnections_Cobalt.dat to RSPConnections.dat
+    """
+    srcFile = dataDir + "/RSPConnections_Cobalt.dat"
+    if (os.access(srcFile,os.F_OK) == False):
+        print "Cannot find or open file ",srcFile," for creating RSPConnections.dat"
+        return -1
+    else:
+        destFile = resultDir + "/RSPConnections.dat"
+
+    command = "cp -f "+srcFile+ " " + destFile
+    #print command
+    os.system(command)
+    return 
+
+def createRSPConnectionsFile_bg(resultDir, dataDir, partitionName):
+    """
+    Fills in the markers in the RSPConnections_BG.dat.tmpl file to match the values for the given Blue Gene partition.
+    """
+    # Substitute MAC and IP address of destination nodes
+    RSPConnectionsfile = open(dataDir+"/RSPConnections_BG.dat.tmpl")
+    RSPConnectionsConfig = RSPConnectionsfile.read()
+    RSPConnectionsfile.close()
+    RSPConnectionsConfig = RSPConnectionsConfig.replace("@BGP-PARTITION@",   partitionName)
+    outFile = os.open(resultDir+"/RSPConnections.dat", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    os.write(outFile, RSPConnectionsConfig)
+    os.close(outFile)
+    return
+
+def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt):
+    """
+    Fills in the markers in the RSPDriver.dat.tmpl file to match the values for the given station.
+    """
+    # First create RSPConnections.dat with proper BG-P partition filled in.
+    if is_Cobalt:
+        createRSPConnectionsFile_cobalt(resultDir, dataDir)
+    else:
+        createRSPConnectionsFile_bg(resultDir, dataDir, partitionName)
+    # Find connections of the RSPBoards of the station
+    rspDestNode = findRSPDestNodes(stationName, resultDir)
+    print stationName,"matches:",rspDestNode
+
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+
+    # Substitute MAC and IP address of destination nodes
+    RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
+    RSPconfig = RSPfile.read()
+    RSPfile.close()
+    # Find Ip number station
+    ipnumber = findIPNumber(stationName)
+    ip_parts = ipnumber.split('.')
+
+    # Extract station number from its name
+    stationNr = int(name[2:])
+
+    # International stations can be identified by the second part of their IP address
+    is_ilt = (ip_parts[1] != "151")
+
+    if is_Cobalt:
+      # Need globally unique IP port numbers.
+      basePort = 10000 + stationNr * 10
+    else:
+      basePort = 0x10FA
+
+    # International station in local mode takes dest. MAC/IP info from
+    # separate file 
+    if (is_ilt and ilt_local == 1):
+        ip_mac_alias = findIPandMAC_local(stationName,dataDir)
+        for rspNr in range(len(ip_mac_alias)):  
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
+    else:
+        nrNodes = len(rspDestNode) # Number of occurences in file
+        # Core stations have two occurences (these have a splitter), and so
+        # for these we need to fill in LANE0x and LANE1x values.
+        # All other stations have one occurence, so only LANE_0x is relevant.
+        if (nrNodes == 1 or nrNodes == 2):
+            if str(0) in rspDestNode.keys():
+                for rspNr in range(4):
+		  if is_ilt and is_Cobalt:
+                    # Cobalt nodes are part of the international station VLANs,
+                    # allowing routing to x.x.x.50 (with x.x.x.x being the RSP board IPs).
+      		    rspinfo = findRSPIP(stationName, dataDir)
+		    rspip = rspinfo[rspNr][1]
+		    rspip_parts = rspip.split('.')
+                    ip = "%s.%s.%s.50" % (rspip_parts[0], rspip_parts[1], rspip_parts[2])
+
+                    (_, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
+		  else:
+                    (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
+
+                  blet_out = find_Blets(stationName, dataDir)[1+rspNr];
+
+                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
+                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
+                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+                  # The following is only necessary for not crashing the
+                  # RSPDriver during startup.... It makes no sense as RS/Int
+                  # stations have no splitter so there is no LANE_1X
+                  if (nrNodes == 1):
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
             if str(1) in rspDestNode.keys():
                 (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
                 blet_out = find_Blets(stationName, dataDir)[5+rspNr];

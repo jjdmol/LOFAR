@@ -57,10 +57,6 @@ void test_simple()
   p.add("Cobalt.OutputProc.sshPrivateKey", privkey);
   p.add("Cobalt.OutputProc.executable",    "/bin/echo");
 
-  p.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  p.add("Observation.antennaSet", "LBA_INNER");
-  p.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  p.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
   p.add("Observation.nrBeams",             "1");
   p.add("Observation.Beam[0].subbandList", "[0]");
   p.add("Observation.DataProducts.Output_Correlated.enabled", "true");
@@ -101,10 +97,6 @@ void test_protocol()
   p.add("Cobalt.FinalMetaDataGatherer.sshPublicKey",  pubkey);
   p.add("Cobalt.FinalMetaDataGatherer.sshPrivateKey", privkey);
 
-  p.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  p.add("Observation.antennaSet", "LBA_INNER");
-  p.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  p.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
   p.add("Observation.nrBeams",             "1");
   p.add("Observation.Beam[0].subbandList", "[0]");
   p.add("Observation.DataProducts.Output_Correlated.enabled", "true");

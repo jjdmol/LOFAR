@@ -104,7 +104,7 @@ bool process(Stream &controlStream, size_t myRank)
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        const size_t nrSubbands = file.lastSubbandIdx - file.firstSubbandIdx;
+        const size_t nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
         const size_t nrChannels = stokes.nrChannels;
         const size_t nrSamples = stokes.nrSamples;
 

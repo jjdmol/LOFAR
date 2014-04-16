@@ -67,12 +67,6 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       virtual void processObservation();
 
-      struct Output 
-      {
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
-      };
-
     protected:
       const Parset             &ps;
       const std::vector<gpu::Device> devices;
@@ -108,6 +102,14 @@ namespace LOFAR
         Performance(size_t nrGPUs = 1);
       } performance;
 
+      struct Output 
+      {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
+      };
     private:
       struct MPIData
       {
