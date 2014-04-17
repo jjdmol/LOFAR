@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+
+./DummyStorage &                       # Run the command
+PID_ID=$!                              # get the PID
+
+./tStorageProcesses
