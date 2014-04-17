@@ -107,6 +107,7 @@ struct ParsetSUT
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
 {
+  LOG_INFO("Test BufferSizes");
    ParsetSUT sut;
   const ObservationSettings::BeamFormer::StokesSettings &settings = 
     sut.parset.settings.beamFormer.coherentSettings;
@@ -120,6 +121,7 @@ TEST(BufferSizes)
 // Test if we can succesfully create a KernelFactory
 TEST(KernelFactory)
 {
+  LOG_INFO("Test KernelFactory");
   ParsetSUT sut;
   KernelFactory<CoherentStokesKernel> kf(sut.parset);
 }
@@ -202,6 +204,7 @@ struct SUTWrapper:  ParsetSUT
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
+  LOG_INFO("Test ZeroTest");
   // start the test vector at the largest size
   size_t tabs_sizes[] = {33,1,13};
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t) );
@@ -247,6 +250,7 @@ TEST(ZeroTest)
 // V = 2 * (IM(X) * RE(Y) - RE(X) * IM(Y))
 TEST(CoherentNoComplex1SampleTest)
 {
+  LOG_INFO("Test CoherentNoComplex1SampleTest");
   SUTWrapper sut(1,  //channels
                  1,  // inrOutputSamples
                  1,  // inrStations
@@ -276,6 +280,7 @@ TEST(CoherentNoComplex1SampleTest)
 
 TEST(CoherentComplex1SampleTest)
 {
+  LOG_INFO("Test CoherentComplex1SampleTest");
   SUTWrapper sut(1,  //channels
                  1,  // inrOutputSamples
                  1,  // inrStations
@@ -305,6 +310,7 @@ TEST(CoherentComplex1SampleTest)
 
 TEST(Coherent4DifferentValuesSampleTest)
 {
+  LOG_INFO("Test Coherent4DifferentValuesSampleTest");
   SUTWrapper sut(1,  //channels
                  1,  // inrOutputSamples
                  1,  // inrStations
@@ -335,6 +341,7 @@ TEST(Coherent4DifferentValuesSampleTest)
 
 TEST(BasicIntegrationTest)
 {
+  LOG_INFO("Test BasicIntegrationTest");
   // ***********************************************************
   // Test if the integration works by inputting non complex ones 
   // and integrating over the total number of samples
@@ -371,6 +378,7 @@ TEST(BasicIntegrationTest)
 
 TEST(Coherent2DifferentValuesAllDimTest)
 {
+  LOG_INFO("Test Coherent2DifferentValuesAllDimTest");
   // ***********************************************************
   // Full test performing all functionalities and runtime validate that the output
   // is correct.

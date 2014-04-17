@@ -80,22 +80,22 @@ namespace LOFAR
       const unsigned maxNrTABsPerBlock     = 16;
 
       // block dims
-      const unsigned nrChannelsPerBlock = std::min(params.nrChannelsPerSubband, maxNrChannelsPerBlock); // 13
-      unsigned nrTABsPerBlock           = std::min(params.nrTABs,               maxNrTABsPerBlock);     // 16
+      const unsigned nrChannelsPerBlock = std::min(params.nrChannelsPerSubband, maxNrChannelsPerBlock);
+      unsigned nrTABsPerBlock           = std::min(params.nrTABs,               maxNrTABsPerBlock);
 
       // grid dims in terms of #threads (OpenCL semantics)
-      const unsigned nrChannelThreads = align(params.nrChannelsPerSubband, nrChannelsPerBlock); // 13
-      unsigned nrTABsThreads          = align(params.nrTABs,               nrTABsPerBlock); // 32
+      const unsigned nrChannelThreads = align(params.nrChannelsPerSubband, nrChannelsPerBlock);
+      unsigned nrTABsThreads          = align(params.nrTABs,               nrTABsPerBlock);
 
       // With few channels use more time parallellism.
       // Don't do that with TABs just yet. #TABs may not be a power of 2.
       // Ensure no time parallel boundary falls within an integration step.
-      const unsigned maxNrIntegrationsMultiple = params.nrSamplesPerChannel / params.timeIntegrationFactor; // 1024
+      const unsigned maxNrIntegrationsMultiple = params.nrSamplesPerChannel / params.timeIntegrationFactor;
       const unsigned maxTimeParallelFactor = module.getContext().getDevice().getMaxThreadsPerBlock() /
-                                             (maxNrTABsPerBlock * nrChannelsPerBlock); // 4(.9...)
+                                             (maxNrTABsPerBlock * nrChannelsPerBlock);
       ASSERT(maxNrIntegrationsMultiple > 0);
       ASSERT(maxTimeParallelFactor > 0);
-      unsigned timeParallelFactor = gcd(maxNrIntegrationsMultiple, maxTimeParallelFactor); // 1
+      unsigned timeParallelFactor = gcd(maxNrIntegrationsMultiple, maxTimeParallelFactor);
 
       // 1st order (expected)
       gpu::Block block(nrChannelsPerBlock, timeParallelFactor, nrTABsPerBlock);
@@ -107,30 +107,29 @@ namespace LOFAR
       // May not be possible with small problem sizes; doesn't matter.
       const unsigned minBlockSize = 64; // don't go smaller
       const unsigned expectedBlockSize = block.x * block.y * block.z;
-      const unsigned acceptableFewerBlockSizeFactor = std::min(1U, expectedBlockSize / minBlockSize);
+      const unsigned acceptableFewerBlockSizeFactor = std::max(1U, expectedBlockSize / minBlockSize);
 
       const unsigned expectedNrBlocks = (grid.x / block.x) * (grid.y / block.y) * (grid.z / block.z);
-      const unsigned desiredExtraNrBlocksFactor = std::min( 1U,
-          (2 * module.getContext().getDevice().getMultiProcessorCount() + expectedNrBlocks - 1) / expectedNrBlocks );
+      const unsigned desiredExtraNrBlocksFactor = std::max( 1U,
+          (2 * module.getContext().getDevice().getMultiProcessorCount() + expectedNrBlocks - 1) / expectedNrBlocks ); // K10 MPCount=8
 
       const unsigned triedTransferFactor        = std::min(acceptableFewerBlockSizeFactor, desiredExtraNrBlocksFactor);
-      const unsigned transferTABsThreadsFactor  = std::min(triedTransferFactor, nrTABsPerBlock);
-      const unsigned remainingTriedTransferFactor = triedTransferFactor / transferTABsThreadsFactor; 
-      const unsigned transferTimeParallelFactor = std::min(remainingTriedTransferFactor, timeParallelFactor);
+      const unsigned transferTABsThreadsFactor  = gcd(triedTransferFactor, nrTABsPerBlock);
+      const unsigned remainingTriedTransferFactor = triedTransferFactor / transferTABsThreadsFactor;
+      const unsigned transferTimeParallelFactor = gcd(remainingTriedTransferFactor, timeParallelFactor);
 
       // apply transferTABsThreadsFactor and transferTimeParallelFactor (may be 1)
       nrTABsPerBlock     /= transferTABsThreadsFactor;
       timeParallelFactor /= transferTimeParallelFactor;
-      nrTABsThreads = align(params.nrTABs, nrTABsPerBlock); // ??
+      nrTABsThreads = align(params.nrTABs, nrTABsPerBlock);
+
+      ASSERT(params.nrSamplesPerChannel % timeParallelFactor == 0);
+      ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * timeParallelFactor) == 0);
+
+      setArg(2, timeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
 
       // 2nd order (final)
       setEnqueueWorkSizes(grid, block);
-
-      ASSERT(params.nrSamplesPerChannel % timeParallelFactor == 0); // 201 % 64 == 0 ? XXX
-      ASSERT(params.nrSamplesPerChannel / timeParallelFactor % params.timeIntegrationFactor == 0);
-      ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * timeParallelFactor) == 0); // TODO: Wouter's. equiv???
-
-      setArg(2, timeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
