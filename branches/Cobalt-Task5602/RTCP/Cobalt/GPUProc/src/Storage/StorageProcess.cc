@@ -122,7 +122,8 @@ namespace LOFAR
 
       // Wait for LTA feedback
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] reading LTA feedback");
-      Parset feedbackLTA(&stream);
+      ParameterSet feedbackLTA;
+      readParameterSet(stream, feedbackLTA);
       itsFeedbackLTA.adoptCollection(feedbackLTA);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
     }

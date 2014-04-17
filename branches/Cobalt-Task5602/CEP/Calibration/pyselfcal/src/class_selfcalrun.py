@@ -27,7 +27,7 @@ import lofar.bdsm as bdsm
 class selfCalRun:
 
 
-    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX):
+    def __init__(self,i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,thresh_isl,thresh_pix,outerFOVclean,VLSSuse,preprocessIndex):
     
 	self.i				= i
 	self.j				= 0
@@ -43,13 +43,18 @@ class selfCalRun:
 	self.ImagePathDir	= ImagePathDir
 	self.UVmin			= UVmin
 	self.UVmax			= UVmax
-	self.wmax		= wmax
+	self.wmax			= wmax
 	self.pixsize		= pixsize
 	self.nbpixel		= nbpixel
 	self.robust			= robust
 	self.nIteration		= nIteration
 	self.RMS_BOX		= RMS_BOX
-
+	self.thresh_isl		= thresh_isl
+	self.thresh_pix		= thresh_pix
+	
+	self.outerFOVclean	= outerFOVclean
+	self.VLSSuse		= VLSSuse
+	self.preprocessIndex= preprocessIndex
 
 
 	##################################
@@ -67,31 +72,49 @@ class selfCalRun:
 			if os.path.isdir(self.IterDir) != True:
 				cmd="""mkdir %s"""%(self.IterDir)
 				os.system(cmd)									
-				
-			#Copy data from observation directory or from the previous iteration
-			if self.i==0:
-				if os.listdir(self.IterDir) == []:
-						cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
-						os.system(cmd)
-						print cmd
+
+			
+			if self.outerFOVclean =='no':
+					
+					#Copy data from observation directory or from the previous iteration
+					if self.i==0:
+								print ''
+								cmd=""" cp -r %s* %s"""%(self.obsDir,self.IterDir)
+								print cmd
+								print ''
+								os.system(cmd)							
+									
+					if self.i != 0:					
+								cmd=""" cp -r %s %s"""%(self.outputDir+"""Iter%s/*Iter%s"""%(self.i-1,self.i-1),self.IterDir)
+								print ''
+								print cmd
+								print '' 
+								os.system(cmd)
+											
 						
-				else:
-					print ''
-					print """Data for iteration number %s has been copied before, so no need to copy again!\n"""%(self.i)
-					print ''
-								
-							
-			if self.i != 0:
-				if os.listdir(self.IterDir) == []:
-						cmd=""" cp -r %s %s"""%(self.outputDir+"""Iter%s/*Iter%s"""%(self.i-1,self.i-1),self.IterDir)
-						print cmd 
-						os.system(cmd)
-						
-				else:
-					print ''
-					print """Data for iteration number %s has been copied before, so no need to copy again!\n"""%(self.i)
-					print ''					
-						
+			if self.outerFOVclean =='yes':
+
+					#Copy data from observation directory or from the previous iteration
+					if self.i==0:
+								print ''							
+								cmd=""" cp -r %s* %s"""%('%sPreprocessDir/Iter%s/L*sub%s'%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
+								print cmd
+								print ''
+								os.system(cmd)							
+									
+					if self.i != 0:					
+								cmd=""" cp -r %s %s"""%(self.outputDir+"""Iter%s/*Iter%s"""%(self.i-1,self.i-1),self.IterDir)
+								print ''
+								print cmd
+								print '' 
+								os.system(cmd)
+
+
+
+
+
+
+
 
 			# Create NDPPP Iteration Directory
 			self.NDPPPDir	= self.outputDir+"""NDPPP_Iter%s/"""%(self.i)
@@ -209,38 +232,72 @@ class selfCalRun:
 		
 		################
 		#Run calibration & Transfer DATA from  CORRECTED DATA column to DATA column and erase CORRECTED DATA Column					
+
+
+		if self.outerFOVclean =='yes':
 		
-		if self.i ==0:
-			cmd_cal="""calibrate-stand-alone -f %s %s %s"""%(""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
-			print ''
-			print cmd_cal
-			print ''
-			os.system(cmd_cal)
+				if self.i ==0:
+					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%(""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
+					print ''
+					print cmd_cal
+					print ''
+					os.system(cmd_cal)
 
 
-		else:			
-			cmd_cal="""calibrate-stand-alone -f %s %s %s"""%("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
-			print ''
-			print cmd_cal
-			print ''
-			os.system(cmd_cal)
-					
+				else:			
+					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%("""%s%s_sub%s_Iter%s"""%(self.IterDir,files_k,self.preprocessIndex,self.i-1), self.BBSParset , skymodel_k )
+					print ''
+					print cmd_cal
+					print ''
+					os.system(cmd_cal)
 	
+					
+		if self.outerFOVclean =='no':
+		
+				if self.i ==0:
+					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%(""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
+					print ''
+					print cmd_cal
+					print ''
+					os.system(cmd_cal)
+
+
+				else:			
+					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
+					print ''
+					print cmd_cal
+					print ''
+					os.system(cmd_cal)
+					
+						
 									
 		#Create NDPPP parsetFile
 		file = open(param_k,'w')
 		
-		if self.i==0:
-						
-			cmd1 ="""msin = %s%s\n"""%(self.IterDir,files_k)
-			cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)
+		if self.outerFOVclean =='yes':
+		
+				if self.i==0:
+								
+					cmd1 ="""msin = %s%s_sub%s\n"""%(self.IterDir,files_k,self.preprocessIndex)
+					cmd2 ="""msout = %s%s_sub%s_Iter%s\n"""%(self.IterDir,files_k,self.preprocessIndex,self.i)
 
-		if self.i>0:
+				if self.i>0:
+								
+					cmd1 ="""msin = %s%s_sub%s_Iter%s\n"""%(self.IterDir,files_k,self.preprocessIndex,self.i-1)	
+					cmd2 ="""msout = %s%s_sub%s_Iter%s\n"""%(self.IterDir,files_k,self.preprocessIndex,self.i)							
+	
 						
-			cmd1 ="""msin = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i-1)	
-			cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)							
-						
-							
+		if self.outerFOVclean =='no':
+		
+				if self.i==0:
+								
+					cmd1 ="""msin = %s%s\n"""%(self.IterDir,files_k)
+					cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)
+
+				if self.i>0:
+								
+					cmd1 ="""msin = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i-1)	
+					cmd2 ="""msout = %s%s_Iter%s\n"""%(self.IterDir,files_k,self.i)									
 
 		cmd3  ="""msin.autoweight = false\n"""
 		cmd4  ="""msin.forceautoweight = false\n"""
@@ -285,15 +342,15 @@ class selfCalRun:
 		print '##############################################'
 		print """End of the Run BBS & NDPPP on Time chunk %s"""%(k)
 		print '##############################################\n'							
-		
-
-		
-	####################################################################	
-	# Concatenate in Time and Imaging 
-	####################################################################	
+				
 
 		
     def selfCalRunFuncImaging(self):
+
+
+		####################################################################	
+		# Concatenate in Time and Imaging 
+		####################################################################	
 
 		#Concatenate Calibrated Time chunks 
 		listOfFiles	= sorted(glob.glob("""%s*_Iter%s"""%(self.IterDir,self.i)))
@@ -345,7 +402,7 @@ class selfCalRun:
 				self.nbpixel[self.i] = self.nbpixel[self.i]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
+			cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
 			print ''
 			print cmd_image
 			print ''
@@ -361,7 +418,7 @@ class selfCalRun:
 				self.nbpixel[self.i-1] = self.nbpixel[self.i-1]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
+			cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1.18 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
 			print ''
 			print cmd_image
 			print ''
@@ -379,11 +436,11 @@ class selfCalRun:
 		
 				#extract the source model with pybdsm
 				print ''
-				print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=6,thresh_pix=8,rms_box=(%s,%s),blank_limit=1E-4,atrous_do=True'%("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),"""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),self.RMS_BOX[0],self.RMS_BOX[1])
+				print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),blank_limit=1E-4,atrous_do=True'%("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),"""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),self.thresh_isl,self.thresh_pix,self.RMS_BOX[0],self.RMS_BOX[1])
 				print ''		
 		
 				#extract the source model with pybdsm
-				img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl=6,thresh_pix=8,rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),blank_limit=1E-4,atrous_do='True') 
+				img	=  bdsm.process_image("""%sImage_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sImage_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),blank_limit=1E-4,atrous_do='True') 
 				
 				#write bbs catalog
 				img.write_catalog(outfile="""%sSkymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')
@@ -401,12 +458,12 @@ class selfCalRun:
 		  
 				#extract the source model with pybdsm
 				print ''
-				print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=6,thresh_pix=8,rms_box=(%s,%s),blank_limit=1E-4,atrous_do=True'%("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),"""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),self.RMS_BOX[0],self.RMS_BOX[1])
+				print 'extraction by pybdsm: bdsm.process_image %s,adaptive_rms_box=True,advanced_opts=True,detection_image=%s,thresh_isl=%s,thresh_pix=%s,rms_box=(%s,%s),blank_limit=1E-4,atrous_do=True'%("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),"""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),self.thresh_isl,self.thresh_pix,self.RMS_BOX[0],self.RMS_BOX[1])
 				print ''		  
 		  
 
 				#extract the source model with pybdsm
-				img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl=6,thresh_pix=8,rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),blank_limit=1E-4,atrous_do='True') 
+				img	=  bdsm.process_image("""%sFinal_Image_%sarcsec_Iter%s.restored.corr"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),adaptive_rms_box='True',advanced_opts='True',detection_image="""%sFinal_Image_%sarcsec_Iter%s.restored"""%(self.ImagePathDir,self.pixsize[self.i-1],self.i),thresh_isl='%s'%(self.thresh_isl),thresh_pix='%s'%(self.thresh_pix),rms_box=(self.RMS_BOX[0],self.RMS_BOX[1]),blank_limit=1E-4,atrous_do='True') 
 				
 				#write bbs catalog
 				img.write_catalog(outfile="""%sFinal_Skymodel_Iter%s"""%(self.SkymodelPath,self.i+1),catalog_type='gaul',format='bbs',correct_proj='True')

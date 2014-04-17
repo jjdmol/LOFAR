@@ -35,7 +35,6 @@
 #include <Common/DataConvert.h>
 #include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/DataFactory.h>
 #include <CoInterface/CorrelatedData.h>
 
 #include <casa/IO/AipsIO.h>
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
 
     Parset parset(parset_filename);
     FileStream datafile(table_filename);
-    CorrelatedData *data = dynamic_cast<CorrelatedData*>(newStreamableData(parset, CORRELATED_DATA, 0));
+    CorrelatedData *data = new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512);
 
     if (channel == -1)
       channel = parset.nrChannelsPerSubband() == 1 ? 0 : 1;  // default to first useful channel
@@ -222,6 +221,8 @@ int main(int argc, char *argv[])
               power( data->visibilities[baseline][channel][1][1] ) );
 
     }
+
+    delete data;
 
   } catch (LOFAR::Exception &ex) {
     LOG_FATAL_STR("[obs unknown] Caught LOFAR Exception: " << ex);

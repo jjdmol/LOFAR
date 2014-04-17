@@ -49,11 +49,12 @@ namespace LOFAR
       // Send subbands to outputProc
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
 
-    private:
-      BeamFormerFactories factories;
 
       // Output send engine, takes care of the host connections and the multiplexing.
       TABTranspose::MultiSender multiSender;
+
+    private:
+      BeamFormerFactories factories;
     };
   }
 }
