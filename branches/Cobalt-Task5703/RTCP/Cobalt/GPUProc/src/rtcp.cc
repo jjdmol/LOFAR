@@ -54,8 +54,7 @@
 #include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
-
-#include <InputProc/OMPThread.h>
+#include <CoInterface/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>

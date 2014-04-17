@@ -587,12 +587,20 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
 
 // Sets up the connections from an rtcp process to its outputProc processes.
 // Then, keep writing blocks until we see a NULL Block ptr.
-void MultiSender::process()
+void MultiSender::process( OMPThreadSet *threadSet )
 {
+  // We need to register our threads somewhere...
+  OMPThreadSet dummySet;
+
+  if (!threadSet)
+    threadSet = &dummySet;
+
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
     try {
       const struct Host &host = hosts[i];
+
+      OMPThreadSet::ScopedRun sr(*threadSet);
 
       LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 

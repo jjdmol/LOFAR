@@ -55,6 +55,12 @@
 // If not set, station input is received but discarded immediately.
 #define DO_PROCESSING
 
+// The number of seconds to wait for output to flush to outputProc.
+//
+// This timer is required to kill slow connections by aborting the
+// write().
+const double outputFlushTimeout = 30.0;
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -78,6 +84,10 @@ namespace LOFAR
 
     Pipeline::~Pipeline()
     {
+      if (ps.realTime()) {
+        // Ensure all output is stopped, even if we didn't start processing.
+        outputThreads.killAll();
+      }
     }
 
     template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
@@ -276,6 +286,22 @@ namespace LOFAR
           // Signal end of output
           for (size_t i = 0; i < writePool.size(); ++i) {
             writePool[i].bequeue->noMore();
+          }
+
+          // Wait for data to propagate towards outputProc,
+          // and kill lingering outputThreads.
+          if (ps.realTime()) {
+            struct timespec deadline = TimeSpec::now();
+            TimeSpec::inc(deadline, outputFlushTimeout);
+
+            LOG_INFO_STR("Pipeline: Flushing data for at most " << outputFlushTimeout << " seconds.");
+            size_t numKilled = outputThreads.killAll(deadline);
+
+            if (numKilled == 0) {
+              LOG_INFO("Pipeline: Data flushed succesfully.");
+            } else {
+              LOG_WARN_STR("Pipeline: Data flushed, but had to kill " << numKilled << " writer threads.");
+            }
           }
         }
 
