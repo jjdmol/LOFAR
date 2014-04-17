@@ -109,21 +109,31 @@ void test_protocol()
   p.updateSettings();
 
   {
-    StorageProcesses sp(p, "");
-
-    // Give Storage time to log its parset
-    sleep(2);
-
-    // Give 10 seconds to exchange final meta data
-    sp.forwardFinalMetaData(time(0) + 10);
-
-    // Give 10 seconds to wrap up
-    sp.stop(time(0) + 10);
-
-    // Obtain LTA feedback
-    ParameterSet feedbackLTA(sp.feedbackLTA());
-
-    ASSERT(feedbackLTA.getString("foo","") == "bar");
+#   pragma omp parallel sections
+    {
+#     pragma omp section
+      {
+        system("./DummyStorage 12345 0");
+      }
+#     pragma omp section
+      {
+	    StorageProcesses sp(p, "");
+	
+  	    // Give Storage time to log its parset
+	    sleep(2);
+	
+	    // Give 10 seconds to exchange final meta data
+	    sp.forwardFinalMetaData(time(0) + 10);
+	
+	    // Give 10 seconds to wrap up
+	    sp.stop(time(0) + 10);
+	
+	    // Obtain LTA feedback
+	    ParameterSet feedbackLTA(sp.feedbackLTA());
+	
+	    ASSERT(feedbackLTA.getString("foo","") == "bar");
+	  }
+    }
   }
 }
 
