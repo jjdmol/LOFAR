@@ -22,6 +22,7 @@
 #include "TABTranspose.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <boost/format.hpp>
 #include <algorithm>
 
@@ -91,8 +92,7 @@ Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSampl
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
   subbandCache(nrSubbands, NULL),
-  nrSubbandsLeft(nrSubbands),
-  writeTimer("Block: data transpose/zeroing", true, true)
+  nrSubbandsLeft(nrSubbands)
 {
 }
 
@@ -135,7 +135,6 @@ void Block::write( BeamformedData &output ) {
   output.setSequenceNumber(blockIdx);
 
   // Set data
-  writeTimer.start();
 
   /*
    * Input:
@@ -206,7 +205,6 @@ void Block::write( BeamformedData &output ) {
       }
     }
   }
-  writeTimer.stop();
 
   // Report summary
   size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), (Subband*)NULL);
@@ -236,9 +234,6 @@ BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
-
-  addSubbandTimer("BlockCollector::addSubband", true, true),
-  fetchTimer("BlockCollector: fetch new block", true, true),
 
   inputThread(this, &BlockCollector::inputLoop),
   outputThread(this, &BlockCollector::outputLoop)
@@ -274,10 +269,14 @@ void BlockCollector::inputLoop() {
 void BlockCollector::outputLoop() {
   SmartPtr<Block> block;
 
+  NSTimer writeTimer("Block: data transpose/zeroing", true, true);
+
   while ((block = outputQueue.remove()) != NULL) {
     SmartPtr<BeamformedData> output = outputPool.free.remove();
 
+    writeTimer.start();
     block->write(*output);
+    writeTimer.stop();
 
     outputPool.filled.append(output);
   }
@@ -291,8 +290,6 @@ void BlockCollector::outputLoop() {
 // subsequent Blocks are missing something, send it (or them) off into the
 // outputQueue for write-back to storage.
 void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
-  NSTimer::StartStop ss(addSubbandTimer);
-
   LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
   const size_t &blockIdx = subband->id.block;
@@ -587,12 +584,20 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
 
 // Sets up the connections from an rtcp process to its outputProc processes.
 // Then, keep writing blocks until we see a NULL Block ptr.
-void MultiSender::process()
+void MultiSender::process( OMPThreadSet *threadSet )
 {
+  // We need to register our threads somewhere...
+  OMPThreadSet dummySet;
+
+  if (!threadSet)
+    threadSet = &dummySet;
+
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
     try {
       const struct Host &host = hosts[i];
+
+      OMPThreadSet::ScopedRun sr(*threadSet);
 
       LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 
