@@ -22,6 +22,7 @@
 #include "TABTranspose.h"
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <boost/format.hpp>
 #include <algorithm>
 
@@ -91,8 +92,7 @@ Block::Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSampl
   nrSubbands(nrSubbands),
   nrChannels(nrChannels),
   subbandCache(nrSubbands, NULL),
-  nrSubbandsLeft(nrSubbands),
-  writeTimer("Block: data transpose/zeroing", true, true)
+  nrSubbandsLeft(nrSubbands)
 {
 }
 
@@ -135,7 +135,6 @@ void Block::write( BeamformedData &output ) {
   output.setSequenceNumber(blockIdx);
 
   // Set data
-  writeTimer.start();
 
   /*
    * Input:
@@ -206,7 +205,6 @@ void Block::write( BeamformedData &output ) {
       }
     }
   }
-  writeTimer.stop();
 
   // Report summary
   size_t nrLost = std::count(subbandCache.begin(), subbandCache.end(), (Subband*)NULL);
@@ -236,9 +234,6 @@ BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx
   maxBlocksInFlight(maxBlocksInFlight),
   canDrop(maxBlocksInFlight > 0),
   lastEmitted(-1),
-
-  addSubbandTimer("BlockCollector::addSubband", true, true),
-  fetchTimer("BlockCollector: fetch new block", true, true),
 
   inputThread(this, &BlockCollector::inputLoop),
   outputThread(this, &BlockCollector::outputLoop)
@@ -274,10 +269,14 @@ void BlockCollector::inputLoop() {
 void BlockCollector::outputLoop() {
   SmartPtr<Block> block;
 
+  NSTimer writeTimer("Block: data transpose/zeroing", true, true);
+
   while ((block = outputQueue.remove()) != NULL) {
     SmartPtr<BeamformedData> output = outputPool.free.remove();
 
+    writeTimer.start();
     block->write(*output);
+    writeTimer.stop();
 
     outputPool.filled.append(output);
   }
@@ -291,8 +290,6 @@ void BlockCollector::outputLoop() {
 // subsequent Blocks are missing something, send it (or them) off into the
 // outputQueue for write-back to storage.
 void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
-  NSTimer::StartStop ss(addSubbandTimer);
-
   LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
   const size_t &blockIdx = subband->id.block;
