@@ -231,7 +231,7 @@ namespace LOFAR
         // Output processing
 #       pragma omp section
         {
-          multiSender.process();
+          multiSender.process(&outputThreads);
         }
 
       }

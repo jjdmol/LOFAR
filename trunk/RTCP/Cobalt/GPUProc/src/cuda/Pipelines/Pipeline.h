@@ -34,6 +34,7 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
 #include <CoInterface/Pool.h>
+#include <CoInterface/OMPThread.h>
 
 #include <InputProc/Transpose/MPIUtil.h>
 
@@ -107,6 +108,11 @@ namespace LOFAR
 
         Performance(size_t nrGPUs = 1);
       } performance;
+
+    protected:
+      // Threads that write to outputProc, and need to
+      // be killed when they stall at observation end.
+      OMPThreadSet outputThreads;
 
     private:
       struct MPIData
