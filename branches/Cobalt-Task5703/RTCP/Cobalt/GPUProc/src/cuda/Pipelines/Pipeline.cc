@@ -59,7 +59,7 @@
 //
 // This timer is required to kill slow connections by aborting the
 // write().
-const double outputFlushTimeout = 30.0;
+const double outputFlushTimeout = 10.0;
 
 namespace LOFAR
 {
