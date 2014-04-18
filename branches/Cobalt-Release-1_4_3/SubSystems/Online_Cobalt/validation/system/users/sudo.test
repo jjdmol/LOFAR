@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Check whether certain users have sudo rights.
+# For now, we assume that such users simply belong
+# to the `sudo' group.
+
+for U in mol grit
+do
+  grep -E "^sudo:x:[0-9]+:.*\b${U}\b" /etc/group || exit 1
+done
