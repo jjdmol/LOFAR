@@ -203,7 +203,7 @@ struct SUTWrapper:  ParsetSUT
 TEST(ZeroTest)
 {
   // start the test vector at the largest size
-  size_t tabs_sizes[] = {33,1,13};
+  size_t tabs_sizes[] = {1,13};
   std::vector<size_t> tabs(tabs_sizes, tabs_sizes + sizeof(tabs_sizes) / sizeof(size_t) );
   size_t channel_sizes[] = {1,16,32}; // only test valid sizes
   std::vector<size_t> channels(channel_sizes, channel_sizes + sizeof(channel_sizes) / sizeof(size_t) );
