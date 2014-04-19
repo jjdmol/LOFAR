@@ -223,9 +223,6 @@ namespace LOFAR
 #       pragma omp section
         {
           Pipeline::processObservation();
-
-          // Done producing output
-          multiSender.finish();
         }
 
         // Output processing
@@ -233,7 +230,6 @@ namespace LOFAR
         {
           multiSender.process(&outputThreads);
         }
-
       }
     }
 
@@ -345,6 +341,13 @@ namespace LOFAR
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
       }
+    }
+
+
+    void BeamFormerPipeline::doneWritingOutput()
+    {
+      // Done producing output
+      multiSender.finish();
     }
   }
 }
