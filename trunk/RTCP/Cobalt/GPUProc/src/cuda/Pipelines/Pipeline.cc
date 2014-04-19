@@ -314,6 +314,12 @@ namespace LOFAR
           for (size_t i = 0; i < writePool.size(); ++i) {
             writeOutput(subbandIndices[i], writePool[i]);
           }
+
+          // Signal end-of-output (needed by BeamFormerPipeline), to unlock
+          // outputThreads that are waiting for their NULL marker. Because of
+          // the 2nd transpose, the BeamformerPipeline::writeOutput cannot
+          // insert the NULL itself; it needs to be a collective action.
+          doneWritingOutput();
         }
       }
 
@@ -564,6 +570,11 @@ namespace LOFAR
                        " blocks, dropped " << nrBlocksDropped << " blocks");
         }
       }
+    }
+
+
+    void Pipeline::doneWritingOutput()
+    {
     }
 
 

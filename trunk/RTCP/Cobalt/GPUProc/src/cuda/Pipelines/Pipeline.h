@@ -149,6 +149,9 @@ namespace LOFAR
       // Send subbands to Storage
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
 
+      // Signal that all output has been emitted
+      virtual void doneWritingOutput();
+
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };
   }
