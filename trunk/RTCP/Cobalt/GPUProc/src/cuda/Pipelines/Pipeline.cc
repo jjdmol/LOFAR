@@ -76,7 +76,6 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
-      performance(devices.size()),
       writePool(subbandIndices.size())
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
@@ -322,14 +321,6 @@ namespace LOFAR
           doneWritingOutput();
         }
       }
-
-      // gather performance figures
-      for (size_t i = 0; i < workQueues.size(); ++i ) {
-        performance.addQueue(*workQueues[i]);
-      }
-
-      // log performance figures
-      performance.log(workQueues.size());
     }
 
 
@@ -576,92 +567,6 @@ namespace LOFAR
     void Pipeline::doneWritingOutput()
     {
     }
-
-
-    Pipeline::Performance::Performance(size_t nrGPUs):
-      nrGPUs(nrGPUs)
-    {
-    }
-
-
-    void Pipeline::Performance::addQueue(SubbandProc &/*queue*/)
-    {
-      ScopedLock sl(totalsMutex);
-
-      //// add performance counters
-      //for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
-
-      //  const string &name = i->first;
-      //  PerformanceCounter *counter = i->second.get();
-
-      //  counter->waitForAllOperations();
-
-      //  total_counters[name] += counter->getTotal();
-      //}
-
-      //// add timers
-      //for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {
-
-      //  const string &name = i->first;
-      //  NSTimer *timer = i->second.get();
-
-      //  if (!total_timers[name])
-      //    total_timers[name] = new NSTimer(name, false, false);
-
-      //  *total_timers[name] += *timer;
-      //}
-    }
-    
-    void Pipeline::Performance::log(size_t /*nrSubbandProcs*/)
-    {
-      //// Group figures based on their prefix before " - ", so "compute - FIR"
-      //// belongs to group "compute".
-      //map<string, PerformanceCounter::figures> counter_groups;
-
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
-      //  size_t n = i->first.find(" - ");
-
-      //  // discard counters without group
-      //  if (n == string::npos)
-      //    continue;
-
-      //  // determine group name
-      //  string group = i->first.substr(0, n);
-
-      //  // add to group
-      //  counter_groups[group] += i->second;
-      //}
-
-      //// Log all performance totals at DEBUG level
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
-      //  LOG_DEBUG_STR(i->second.log(i->first));
-      //}
-
-      //for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
-      //  LOG_DEBUG_STR(*(i->second));
-      //}
-
-      //// Log all group totals at INFO level
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
-      //  LOG_INFO_STR(i->second.log(i->first));
-      //}
-
-      //// Log specific performance figures for regression tests at INFO level
-      //double wall_seconds = total_timers["CPU - total"]->getAverage();
-      //double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
-      //double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      //double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrSubbandProcs;
-      //double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrSubbandProcs;
-      //double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrSubbandProcs;
-
-      //LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
-      //LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
-      //LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
-      //LOG_INFO_STR("CPU  seconds spent on input,   per SbProc: " << fixed << setw(8) << setprecision(3) << input_seconds);
-      //LOG_INFO_STR("CPU  seconds spent processing, per SbProc: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
-      //LOG_INFO_STR("CPU  seconds spent postprocessing, per SbProc: " << fixed << setw(8) << setprecision(3) << postprocess_seconds);
-    }
-
   }
 }
 
