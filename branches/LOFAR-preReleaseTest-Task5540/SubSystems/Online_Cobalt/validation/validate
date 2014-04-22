@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# The positional parameters are the test sets to run.
+#
+# Default: system
+TESTSETS=${@:-system}
+
+# Determine whether we can obtain root rights
+sudo -n /bin/true >/dev/null 2>&1
+CAN_SUDO=$?
+
+# runTest TEST
+#
+# Runs TEST, with elevated priviledges if needed.
+#
+function runTest() {
+  TEST=$1
+
+  if [ "${TEST%%.root.test}" == "${TEST}" ]; then
+    $TEST
+  else
+    if [ $CAN_SUDO -eq 0 ]; then
+      sudo -n $TEST
+    else
+      return 42
+    fi
+  fi
+}
+
+NRTESTS=0
+NRSUCCESS=0
+NRFAILURE=0
+
+# Run all tests
+for TEST in `find $TESTSETS -name '*.test' -type f -a -executable`
+do
+  LOGFILE="$TEST.log"
+
+  printf "%40s: " "$TEST"
+  (cd `dirname $TEST` && runTest ./`basename $TEST`) > $LOGFILE 2>&1
+  RESULT=$?
+
+  NRTESTS=$((NRTESTS + 1))
+
+  case "$RESULT" in
+    0) echo OK
+       NRSUCCESS=$((NRSUCCESS + 1))
+       ;;
+    42) echo "NEED ROOT"
+       NRFAILURE=$((NRFAILURE + 1))
+       ;;
+    *) echo "ERROR (see $LOGFILE)"
+       NRFAILURE=$((NRFAILURE + 1))
+       ;;
+  esac
+done
+
+# Report statistics
+if [ $NRTESTS -eq 0 ]; then
+  SUCCESSPERCENTAGE=100
+else
+  SUCCESSPERCENTAGE=$((100 * NRSUCCESS / NRTESTS))
+fi
+
+echo ""
+echo "${SUCCESSPERCENTAGE}% tests passed, ${NRFAILURE} tests failed out of ${NRTESTS}"
+echo ""
+
+# Base our exit code on the existence of failed tests
+[ $NRFAILURE -eq 0 ]
+
