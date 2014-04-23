@@ -589,6 +589,7 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
 
 MultiSender::~MultiSender()
 {
+  LOG_INFO_STR("MultiSender: canDrop = " << canDrop << ", maxRetentionTime = " << maxRetentionTime);
   for (size_t i = 0; i < drop_rates.size(); ++i) {
     LOG_INFO_STR("MultiSender: [file " << i << " to " << hostMap.at(i).hostName << "] Dropped " << (drop_rates[i].mean() * 100.0) << "% of the Subbands");
   }
