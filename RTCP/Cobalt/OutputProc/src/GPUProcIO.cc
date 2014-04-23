@@ -104,7 +104,7 @@ bool process(Stream &controlStream, size_t myRank)
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        const size_t nrSubbands = file.lastSubbandIdx - file.firstSubbandIdx;
+        const size_t nrSubbands = parset.settings.SAPs[file.sapNr].subbands.size();
         const size_t nrChannels = stokes.nrChannels;
         const size_t nrSamples = stokes.nrSamples;
 
@@ -192,7 +192,7 @@ bool process(Stream &controlStream, size_t myRank)
 
     // Add final meta data (broken tile information, etc)
     // that is obtained after the end of an observation.
-    LOG_DEBUG_STR("Processing final meta data");
+    LOG_INFO_STR("Processing final meta data");
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
       subbandWriters[i]->augment(finalMetaData);
@@ -203,7 +203,7 @@ bool process(Stream &controlStream, size_t myRank)
      * LTA FEEDBACK
      */
 
-    LOG_DEBUG_STR("Retrieving LTA feedback");
+    LOG_INFO_STR("Retrieving LTA feedback");
     Parset feedbackLTA;
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
@@ -211,7 +211,7 @@ bool process(Stream &controlStream, size_t myRank)
     for (size_t i = 0; i < tabWriters.size(); ++i)
       feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
 
-    LOG_DEBUG_STR("Forwarding LTA feedback");
+    LOG_INFO_STR("Forwarding LTA feedback");
     try {
       feedbackLTA.write(&controlStream);
     } catch (LOFAR::Exception &err) {

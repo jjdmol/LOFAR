@@ -65,14 +65,10 @@ namespace LOFAR
         // Check whether we really will write to this file
         bool willUse = false;
         for (size_t i = 0; i < subbandIndices.size(); ++i) {
-          // All files to our SAPs and subbands (parts) will be relevant.
-          const unsigned globalSubbandIdx = subbandIndices[i];
-          const unsigned SAP = ps.settings.subbands[globalSubbandIdx].SAP;
-
-          if (file.sapNr != SAP)
-            continue;
-
-          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
+          // All files to our SAPs will be relevant
+          //
+          // TODO: nrSubbandsPerFile hook here
+          if (file.sapNr != ps.settings.subbands[subbandIndices[i]].SAP)
             continue;
 
           willUse = true;
@@ -96,13 +92,13 @@ namespace LOFAR
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
       :
       Pipeline(ps, subbandIndices, devices),
+      factories(ps, nrSubbandsPerSubbandProc),
       // Each work queue needs an output element for each subband it processes, because the GPU output can
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // For smooth operations, allocate 2 elements more per work queue, to allow one element to be in transit
       // on both the receiver and sender side.
-      multiSender(hostMap(ps, subbandIndices, hostID), std::max(3UL, (2 + nrSubbandsPerSubbandProc) * workQueues.size()), ps.realTime()),
-      factories(ps, nrSubbandsPerSubbandProc)
+      multiSender(hostMap(ps, subbandIndices, hostID), std::max(3UL, (2 + nrSubbandsPerSubbandProc) * workQueues.size()), ps.realTime())
     {
       ASSERT(ps.settings.beamFormer.enabled);
     }
@@ -223,19 +219,21 @@ namespace LOFAR
 #       pragma omp section
         {
           Pipeline::processObservation();
+
+          // Done producing output
+          multiSender.finish();
         }
 
         // Output processing
 #       pragma omp section
         {
-          multiSender.process(&outputThreads);
+          multiSender.process();
         }
+
       }
     }
 
-    // Write the blocks of rtcp bf output via the MultiSender towards outputProc.
-    // Removes the blocks from a best effort queue (bequeue) out of 'output'.
-    // All output corresponds to the subband indexed by globalSubbandIdx in the list of sb.
+    // TODO: Needs more documentation
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
     {
@@ -257,10 +255,6 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        // Try all files until we found the file(s) this block belongs to.
-        // TODO: This could be optimized, either by recognizing that only the Stokes can
-        // change the file idx, or by preparing a better data structure for 1 lookup here.
-        // Idem for the data copying (assign()) below.
         for (size_t fileIdx = 0;
              fileIdx < ps.settings.beamFormer.files.size();
              ++fileIdx) 
@@ -268,11 +262,10 @@ namespace LOFAR
           const struct ObservationSettings::BeamFormer::File &file = 
                 ps.settings.beamFormer.files[fileIdx];
 
-          // Skip SAPs and subbands (parts) that we are not responsible for.
+          // Skip what we aren't part of
+          //
+          // TODO: nrSubbandsPerFile hook here
           if (file.sapNr != SAP)
-            continue;
-
-          if (globalSubbandIdx < file.firstSubbandIdx || globalSubbandIdx >= file.lastSubbandIdx)
             continue;
 
           // Note that the 'file' encodes 1 Stokes of 1 TAB, so each TAB we've
@@ -299,14 +292,9 @@ namespace LOFAR
           SmartPtr<struct TABTranspose::Subband> subband = 
                 new TABTranspose::Subband(nrSamples, nrChannels);
 
-          // These 3 values are guarded with ASSERTSTR() on the other side at
-          // outputProc (Block::addSubband()).
-          subband->id.fileIdx  = file.streamNr;
-          // global to local sb idx: here local means to the TAB Transpose,
-          // which only knows about #subbands and #blocks in a file (part).
-          unsigned sbIdxInFile = globalSubbandIdx - file.firstSubbandIdx;
-          subband->id.subband  = sbIdxInFile;
-          subband->id.block    = id.block;
+          subband->id.fileIdx = file.streamNr;
+          subband->id.subband = ps.settings.subbands[globalSubbandIdx].idxInSAP;
+          subband->id.block   = id.block;
 
           // Create view of subarray 
           MultiDimArray<float, 2> srcData(
@@ -341,13 +329,6 @@ namespace LOFAR
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
       }
-    }
-
-
-    void BeamFormerPipeline::doneWritingOutput()
-    {
-      // Done producing output
-      multiSender.finish();
     }
   }
 }

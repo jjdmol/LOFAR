@@ -46,13 +46,12 @@
 #include <Common/Timer.h>
 #include <Stream/FileStream.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/OMPThread.h>
-#include <CoInterface/TimeFuncs.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Station/PacketReader.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/Delays/Delays.h>
+#include <InputProc/OMPThread.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -541,7 +540,7 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
 template <typename SampleT>
 void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
 {
-  OMPThreadSet packetReaderThreads;
+  vector<OMPThread> packetReaderThreads(nrBoards);
 
   if (ps.realTime()) {
     // Each board has its own pool to reduce lock contention
@@ -577,7 +576,7 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
 
         #pragma omp parallel for num_threads(nrBoards)
         for(size_t board = 0; board < nrBoards; board++) {
-          OMPThreadSet::ScopedRun sr(packetReaderThreads);
+          OMPThread::ScopedRun sr(packetReaderThreads[board]);
 
           Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
@@ -633,7 +632,9 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
       if (ps.realTime()) {
         // kill reader threads
         LOG_INFO_STR( logPrefix << "Stopping all boards" );
-        packetReaderThreads.killAll();
+#       pragma omp parallel for num_threads(nrBoards)
+        for (size_t i = 0; i < nrBoards; ++i)
+          packetReaderThreads[i].kill();
       }
     }
   }

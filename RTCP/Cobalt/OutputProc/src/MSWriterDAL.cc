@@ -73,22 +73,14 @@ static double toMJD( double time )
   return 40587.0 + time / (24 * 60 * 60);
 }
 
-static string stripextension( const string pathname )
+static string stripextension( const string filename )
 {
-  size_t endPosDot   = pathname.rfind('.');
-  size_t endPosSlash = pathname.rfind('/');
-  size_t endPos = string::npos;
-
-  // only strip if there is a '.' in the last component (filename)
-  if (endPosDot != string::npos &&
-      (endPosSlash == string::npos || endPosSlash < endPosDot))
-    endPos = endPosDot;
-  return pathname.substr(0, endPos);
+  return filename.substr(0,filename.rfind('.'));
 }
 
-static string forceextension( const string pathname, const string extension )
+static string forceextension( const string filename, const string extension )
 {
-  return stripextension(pathname) + extension;
+  return stripextension(filename) + extension;
 }
 
 namespace LOFAR
@@ -134,12 +126,13 @@ namespace LOFAR
 
       //*******************************
 
-      // All subbands in the SAP that we store in this file.
-      // We could have multiple SAPs and/or have split up the subbands over multiple files (parts).
-      unsigned firstSubbandIdx = f.firstSubbandIdx;
-      unsigned nrSubbands = f.lastSubbandIdx - f.firstSubbandIdx;
+      // all subbands in this file
+      // We could have multiple saps with each a specific number of subbands
+      vector<unsigned> subbandIndices = parset.settings.SAPs[sapNr].subbandIndices();
 
-      itsNrChannels = stokesSet.nrChannels * nrSubbands; 
+      unsigned nrSubbands = subbandIndices.size();
+
+      itsNrChannels = stokesSet.nrChannels * nrSubbands  ; 
       itsNrSamples = parset.settings.nrSamplesPerSubband() /
                      stokesSet.nrChannels / stokesSet.timeIntegrationFactor;
 
@@ -227,7 +220,6 @@ namespace LOFAR
       // contain frequencies from both the top and the bottom half-channel.
       double frequencyOffsetPPF = stokesSet.nrChannels > 1 ? 0.5 * channelBandwidth : 0.0; // TODO: cover both CS and IS!
 
-      // For the whole obs, regardless which SAP and subbands (parts) this file contains.
       vector<double> subbandCenterFrequencies(parset.nrSubbands());
       for(size_t sb = 0; sb < parset.nrSubbands(); ++sb)
         subbandCenterFrequencies[sb] = parset.settings.subbands[sb].centralFrequency;
@@ -265,7 +257,7 @@ namespace LOFAR
 
       // BF_File specific root group parameters
 
-      file.createOfflineOnline().value = parset.settings.realTime ? "Online" : "Offline";
+      file.createOfflineOnline().value = "Online";
       file.BFFormat().value = "TAB";
       file.BFVersion().value = str(format("Cobalt/OutputProc %s r%s using DAL %s and HDF5 %s") % OutputProcVersion::getVersion() % OutputProcVersion::getRevision() % dal::version().to_string() % dal::version_hdf5().to_string());
 
@@ -376,7 +368,7 @@ namespace LOFAR
       vector<double> beamCenterFrequencies(nrSubbands, 0.0);
 
       for (unsigned sb = 0; sb < nrSubbands; sb++)
-        beamCenterFrequencies[sb] = subbandCenterFrequencies[firstSubbandIdx + sb];
+        beamCenterFrequencies[sb] = subbandCenterFrequencies[subbandIndices[sb]];
 
       double beamCenterFrequencySum = accumulate(beamCenterFrequencies.begin(), beamCenterFrequencies.end(), 0.0);
 
@@ -484,7 +476,7 @@ namespace LOFAR
       vector<double> spectralWorld;
 
       for(unsigned sb = 0; sb < nrSubbands; sb++) {
-        const double subbandBeginFreq = parset.channel0Frequency( firstSubbandIdx + sb, stokesSet.nrChannels );
+        const double subbandBeginFreq = parset.channel0Frequency( subbandIndices[sb], stokesSet.nrChannels );
 
         // NOTE: channel 0 will be wrongly annotated if nrChannels > 1, because it is a combination of the
         // highest and the lowest frequencies (half a channel each).
@@ -580,7 +572,8 @@ namespace LOFAR
         itsConfiguration.add(prefix + "Offset.coordType",   "RA-DEC");
         itsConfiguration.add(prefix + "Offset.angle1",      str(format("%f") % (tabDir.angle1 - beamDir.angle1)));
         itsConfiguration.add(prefix + "Offset.angle2",      str(format("%f") % (tabDir.angle2 - beamDir.angle2)));
-      } else if (type == "FlysEyeBeam") {
+      }
+      if (type == "FlysEyeBeam") {
         string fullName = parset.settings.antennaFields.at(beamNr).name;
         string stationName = fullName.substr(0,5);
         string antennaFieldName = fullName.substr(5);

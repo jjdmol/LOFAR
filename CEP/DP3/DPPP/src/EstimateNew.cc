@@ -55,11 +55,10 @@ namespace LOFAR {
       itsdI.resize (maxndir*8);
     }
 
-    // Initialize the solution to the defaultGain for sources/stations not to solve.
-    // Set to 0 and diagonal to defaultGaib for solvable ones if no propagation.
+    // Initialize the solution to 1e-8 for sources/stations not to solve.
+    // Set to 0 and diagonal to 1 for solvable ones.
     void EstimateNew::initSolution (const vector<vector<int> >& unknownsIndex,
-                                    const vector<uint>& srcSet,
-				    double defaultGain)
+                                    const vector<uint>& srcSet)
     {
       uint dr=0;
       double* solution = &(itsSolution[0]);
@@ -72,12 +71,12 @@ namespace LOFAR {
                 std::fill (solution, solution+8, 0);
               }
               // Solvable; set diagonal to 1 if it is 0.
-              if (solution[0] == 0) solution[0] = defaultGain;
-              if (solution[6] == 0) solution[6] = defaultGain;
+              if (solution[0] == 0) solution[0] = 1;
+              if (solution[6] == 0) solution[6] = 1;
             } else {
               // Set non-solvable station-source to 0.
               std::fill (solution, solution+8, 0);
-              solution[0] = solution[6] = defaultGain;
+              solution[0] = solution[6] = 1e-8;
             }
             solution += 8;
           }
@@ -91,7 +90,7 @@ namespace LOFAR {
     }
 
     // Clear the solution for unsolvable stations
-    // (essentially changing defaultGain to 0).
+    // (essentially changing 1e-8 to 0).
     void EstimateNew::clearNonSolvable (const vector<vector<int> >& unknownsIndex,
                                         const vector<uint>& srcSet)
     {
@@ -186,11 +185,10 @@ namespace LOFAR {
                                 const_cursor<bool> flag,
                                 const_cursor<float> weight,
                                 const_cursor<dcomplex> mix,
-				double defaultGain,
                                 bool solveBoth,
                                 uint verbose)
     {
-      initSolution (unknownsIndex, srcSet, defaultGain);
+      initSolution (unknownsIndex, srcSet);
       // Determine if a station has to be solved for any source.
       itsSolveStation = false;
       size_t nUnknowns = 0;
@@ -222,6 +220,7 @@ namespace LOFAR {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
           // Only compute if no autocorr and if stations need to be solved.
+          ///if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) { ????
           if (p != q  &&  ((itsSolveStation[p] || itsSolveStation[q])  &&
                            (!solveBoth ||
                             (itsSolveStation[p] && itsSolveStation[q])))) {
@@ -467,7 +466,7 @@ namespace LOFAR {
       }
       bool converged = (solver.isReady() == casa::LSQFit::SOLINCREMENT  ||
                         solver.isReady() == casa::LSQFit::DERIVLEVEL);
-      ///      clearNonSolvable (unknownsIndex, srcSet);
+      clearNonSolvable (unknownsIndex, srcSet);
       return converged;
     }
 

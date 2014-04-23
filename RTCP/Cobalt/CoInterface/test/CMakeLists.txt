@@ -12,7 +12,6 @@ lofar_add_test(tcmpfloat DEPENDS cmpfloat)
 
 
 if(UNITTEST++_FOUND)
-  lofar_add_test(tOMPThread tOMPThread.cc)
   lofar_add_test(tParset tParset.cc)
   lofar_add_test(tTABTranspose tTABTranspose.cc)
   lofar_add_test(tRingCoordinates tRingCoordinates.cc)

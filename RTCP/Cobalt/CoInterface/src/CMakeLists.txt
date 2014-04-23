@@ -16,7 +16,6 @@ lofar_add_library(cointerface
   Stream.cc
   Parset.cc
   TABTranspose.cc
-  TimeFuncs.cc
   RingCoordinates.cc)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)

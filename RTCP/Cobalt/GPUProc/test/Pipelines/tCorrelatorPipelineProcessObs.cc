@@ -28,7 +28,7 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/OMPThread.h>
+#include <InputProc/OMPThread.h>
 #include <GPUProc/Pipelines/CorrelatorPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 

@@ -149,7 +149,8 @@ namespace LOFAR
       // discard packets with errors
       if (packet.payloadError()) {
         ++nrBadData;
-        return false;
+        // only count for now, emulate BGP and let the packets through
+        //return false;
       }
 
       if (packet.bitMode() != mode.bitMode

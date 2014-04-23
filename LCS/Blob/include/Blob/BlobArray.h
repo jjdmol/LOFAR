@@ -203,7 +203,7 @@ namespace LOFAR
   template<typename T>
   inline BlobOStream& operator<< (BlobOStream& bs, const std::vector<T>& vec)
   {
-    return putBlobVector (bs, vec.empty() ? 0 : &(vec[0]), vec.size());
+    return putBlobVector (bs, &(vec[0]), vec.size());
   }
 
   //# Put a C-style vector of values as an array.

@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
   // Make sure DummyStorage always dies, even if the test
   // malfunctions.
-  alarm(10);
+  alarm(2);
 
   observationID = boost::lexical_cast<int>(argv[1]);
   rank = boost::lexical_cast<unsigned>(argv[2]);

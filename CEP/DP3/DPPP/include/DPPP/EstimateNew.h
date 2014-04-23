@@ -87,7 +87,6 @@ namespace LOFAR {
                      const_cursor<bool> flag,
                      const_cursor<float> weight,
                      const_cursor<dcomplex> mix,
-		     double defaultGain,
                      bool solveBoth,
                      uint verbose);
 
@@ -104,8 +103,7 @@ namespace LOFAR {
       // Initialize the solution. Nr must be a multiple of 8.
       // The diagonal is set to (diag,0) or (1e-8,0), off-diagonal to (0,0).
       void initSolution (const vector<vector<int> >& unknownsIndex,
-                         const vector<uint>& srcSet,
-			 double defaultGain);
+                         const vector<uint>& srcSet);
 
       // Clear the solution for unsolvable stations
       // (essentially changing 1e-8 to 0).

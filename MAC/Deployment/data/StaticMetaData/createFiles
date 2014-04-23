@@ -311,6 +311,11 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     if (is_ilt and ilt_local == 1):
         ip_mac_alias = findIPandMAC_local(stationName,dataDir)
         for rspNr in range(len(ip_mac_alias)):  
+            blet_out = find_Blets(stationName, dataDir)[1+rspNr];
+
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+            # Need to fill this in until RSPDriver is fixed...
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
@@ -335,11 +340,18 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                     (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
 
                   blet_out = find_Blets(stationName, dataDir)[1+rspNr];
-
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+                  # The following is only necessary for not crashing the
+                  # RSPDriver during startup.... It makes no sense as RS/Int
+                  # stations have no splitter so there is no LANE_1X
+                  if (nrNodes == 1):
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+
             if str(1) in rspDestNode.keys():
                 (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
                 blet_out = find_Blets(stationName, dataDir)[5+rspNr];

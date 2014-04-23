@@ -54,7 +54,8 @@
 #include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
-#include <CoInterface/OMPThread.h>
+
+#include <InputProc/OMPThread.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
@@ -90,7 +91,7 @@ const time_t defaultAllocationTimeout = 15;
 const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
-const time_t defaultOutputProcTimeout = 60;
+const time_t defaultOutputProcTimeout = 2 * 60;
 
 // Amount of seconds to stay alive after Observation.stopTime
 // has passed.

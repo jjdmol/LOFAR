@@ -26,6 +26,7 @@
 #include <cstring>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
+#include <Common/Timer.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
 #include <Common/Thread/Condition.h>
@@ -35,7 +36,6 @@
 #include "SmartPtr.h"
 #include "Pool.h"
 #include "StreamableData.h"
-#include "OMPThread.h"
 
 namespace LOFAR
 {
@@ -121,6 +121,8 @@ namespace LOFAR
 
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
+
+        NSTimer writeTimer;
       };
 
       /*
@@ -200,6 +202,10 @@ namespace LOFAR
         
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
+
+        NSTimer addSubbandMutexTimer;
+        NSTimer addSubbandTimer;
+        NSTimer fetchTimer;
 
         Thread inputThread;
         Thread outputThread;
@@ -350,10 +356,7 @@ namespace LOFAR
 
         // Send the data from the queues to the receiving hosts. Will run until
         // 'finish()' is called.
-        //
-        // All processing threads are registered in the provided threadSet to
-        // allow early aborts.
-        void process( OMPThreadSet *threadSet = 0 );
+        void process();
 
         // Add a subband for sending. Ownership of the data is taken.
         void append( SmartPtr<struct Subband> &subband );

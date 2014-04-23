@@ -21,7 +21,6 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
-#include <Common/Timer.h>
 #include <Stream/StringStream.h>
 #include <CoInterface/TABTranspose.h>
 
