@@ -24,12 +24,12 @@
 #include <iostream>
 #include <map>
 #include <cstring>
-#include <Common/Thread/Mutex.h>
 #include <Common/Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
-#include <Common/Thread/Condition.h>
-#include <Common/Thread/Mutex.h>
+#include "RunningStatistics.h"
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
@@ -346,7 +346,8 @@ namespace LOFAR
 
         typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
 
-        MultiSender( const HostMap &hostMap, size_t queueSize = 3, bool canDrop = false );
+        MultiSender( const HostMap &hostMap, bool canDrop = false, double maxRetentionTime = 3.0 );
+        ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
         // 'finish()' is called.
@@ -365,11 +366,20 @@ namespace LOFAR
         // fileIdx -> host mapping
         const HostMap hostMap;
 
+        // if we're allowed to drop in the first place
+        const bool canDrop;
+
+        // If the oldest item not written yet is this old, no more items
+        // will be appended for that host.
+        const double maxRetentionTime;
+
+        std::vector<RunningStatistics> drop_rates; // [fileIdx]
+
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;
 
         // A queue for data to be sent to each host
-	      std::map<struct Host, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
+	      std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

@@ -69,6 +69,7 @@ template <typename T> class Queue
 
     unsigned size() const;
     bool     empty() const;
+    struct timespec oldest() const;
 
   private:
     Queue(const Queue&);
@@ -216,6 +217,14 @@ template <typename T> inline bool Queue<T>::empty() const
 
   // Note: list::empty() is O(1)
   return itsQueue.empty();
+}
+
+
+template <typename T> inline struct timespec Queue<T>::oldest() const
+{
+  ScopedLock scopedLock(itsMutex);
+
+  return itsQueue.empty() ? TimeSpec::now() : itsQueue.front().arrival_time;
 }
 
 } // namespace Cobalt

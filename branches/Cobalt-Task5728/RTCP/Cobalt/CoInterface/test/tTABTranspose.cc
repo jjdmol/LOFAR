@@ -473,7 +473,7 @@ SUITE(MultiReceiver) {
 
   TEST(MultiSender) {
     MultiSender::HostMap hostMap;
-    MultiSender msender(hostMap, 3, false);
+    MultiSender msender(hostMap, false);
   }
 
   TEST(Transpose) {
@@ -575,7 +575,7 @@ SUITE(MultiReceiver) {
             hostMap[t] = host;
           }
 
-          MultiSender msender(hostMap, 3, false);
+          MultiSender msender(hostMap, false);
 
 #         pragma omp parallel sections num_threads(2)
           {
