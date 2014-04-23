@@ -222,7 +222,8 @@ bool Block::complete() const {
 // More precisely, we have one BlockCollector per file (i.e. part).
 BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks, size_t maxBlocksInFlight )
 :
-  inputQueue((1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input
+  inputQueue(str(format("BlockCollector::inputQueue [file %u]") % fileIdx), (1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input, but we do want to protect against unbounded growth
+  outputQueue(str(format("BlockCollector::outputQueue [file %u]") % fileIdx)),
   outputPool(outputPool),
 
   fileIdx(fileIdx),
@@ -248,7 +249,7 @@ BlockCollector::~BlockCollector()
 {
   // Make SURE the threads can finish, regardless of whether finish() was called
   inputQueue.noMore();
-  outputQueue.append(NULL);
+  outputQueue.append(NULL, false);
 }
 
 
@@ -352,7 +353,7 @@ void BlockCollector::finish() {
   }
 
   // Signal end-of-stream
-  outputQueue.append(NULL);
+  outputQueue.append(NULL, false);
   outputThread.wait();
 }
 
@@ -577,7 +578,7 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
+    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName),queueSize, canDrop);
   }
 }
 

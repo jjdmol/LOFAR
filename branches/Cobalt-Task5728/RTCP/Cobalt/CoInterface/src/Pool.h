@@ -18,10 +18,10 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_POOL_H
-#define LOFAR_GPUPROC_CUDA_POOL_H
+#ifndef LOFAR_COINTERFACE_POOL_H
+#define LOFAR_COINTERFACE_POOL_H
 
-#include <Common/Thread/Queue.h>
+#include <CoInterface/Queue.h>
 #include <CoInterface/SmartPtr.h>
 
 namespace LOFAR
@@ -38,6 +38,13 @@ namespace LOFAR
 
       Queue< SmartPtr<element_type> > free;
       Queue< SmartPtr<element_type> > filled;
+
+      Pool(const std::string &name)
+      :
+        free(name + " [.free]"),
+        filled(name + " [.filled]")
+      {
+      }
     };
   }
 }

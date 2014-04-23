@@ -36,8 +36,21 @@ namespace LOFAR
       // Returns the current time, as a struct timespec
       struct timespec now();
 
+      // Converts a timespec to double
+      double toDouble(const struct timespec &ts);
+
       // Increment a timespec with a certain number of seconds
       void inc(struct timespec &ts, double seconds);
+
+      // Return end - begin
+      double operator-(const struct timespec &end, const struct timespec &begin);
+
+      // Returns whether a is later than b
+      bool operator>(const struct timespec &a, const struct timespec &b);
+
+      // Provides (in)equality for timespecs
+      bool operator==(const struct timespec &a, const struct timespec &b);
+      bool operator!=(const struct timespec &a, const struct timespec &b);
     }
   }
 }

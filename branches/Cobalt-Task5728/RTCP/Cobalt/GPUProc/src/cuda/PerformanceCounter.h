@@ -23,7 +23,7 @@
 
 
 #include <GPUProc/gpu_wrapper.h>
-#include <GPUProc/RunningStatistics.h>
+#include <CoInterface/RunningStatistics.h>
 
 namespace LOFAR
 {

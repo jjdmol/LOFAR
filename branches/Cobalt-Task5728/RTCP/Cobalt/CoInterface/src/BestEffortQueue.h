@@ -21,7 +21,7 @@
 #ifndef LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 #define LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 
-#include <Common/Thread/Queue.h>
+#include <CoInterface/Queue.h>
 #include <Common/Thread/Semaphore.h>
 
 namespace LOFAR
@@ -45,7 +45,8 @@ namespace LOFAR
       // Create a best-effort queue with room for `maxSize' elements.
       // If `drop' is true, appends are dropped if the queue
       // has reached `maxSize', or if no remove() has been posted yet.
-      BestEffortQueue(size_t maxSize, bool drop);
+      BestEffortQueue(const std::string &name, size_t maxSize, bool drop);
+      ~BestEffortQueue();
 
       // Add an element. Returns true if append succeeded, false if element
       // was dropped.
@@ -61,9 +62,8 @@ namespace LOFAR
       const size_t maxSize;
       const bool drop;
 
-      // true if we're removing elements, that is,
-      // remove() has been called at least once.
-      bool removing;
+      // Fraction of elements that were dropped in append()
+      RunningStatistics dropped_on_append;
 
       // contains the amount of free space in the queue
       Semaphore freeSpace;
