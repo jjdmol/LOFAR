@@ -9,7 +9,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
   ${CMAKE_CURRENT_BINARY_DIR}/outputProc)
 
 foreach(_test tMultiPartTABOutput tManyPartTABOutput)
-  lofar_add_test(${_test} ${_test}.cc)
+  lofar_add_test(${_test} ${_test}.cc DEPENDS outputProc)
   set_tests_properties(${_test} 
     PROPERTIES ENVIRONMENT "LOFARROOT=${GPUProc_SOURCE_DIR}")
 endforeach()
