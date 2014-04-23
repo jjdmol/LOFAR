@@ -107,7 +107,7 @@ template <typename T> Queue<T>::Queue(const std::string &name)
 template <typename T> Queue<T>::~Queue()
 {
   if (itsName != "")
-    LOG_INFO_STR("Queue " << itsName << ": avg #elements @add = " << queue_size_on_add.mean() << ", queue empty @remove = " << remove_on_empty_queue.mean() * 100.0 << "%, element retention time = " << retention_time);
+    LOG_INFO_STR("Queue " << itsName << ": avg #elements @add = " << queue_size_on_add.mean() << ", queue empty @remove = " << remove_on_empty_queue.mean() * 100.0 << "%, element retention time: " << retention_time);
 }
 
 

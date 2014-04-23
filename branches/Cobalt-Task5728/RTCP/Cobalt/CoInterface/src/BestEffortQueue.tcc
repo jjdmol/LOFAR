@@ -39,7 +39,7 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
 
 template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 {
-  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": dropped @add = " << dropped_on_append << "%");
+  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped @add = " << dropped_on_append.mean() * 100.0 << "%");
 }
 
 
