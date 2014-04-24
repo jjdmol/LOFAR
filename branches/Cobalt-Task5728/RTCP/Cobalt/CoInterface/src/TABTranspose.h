@@ -346,6 +346,11 @@ namespace LOFAR
 
         typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
 
+        // Set up a TAB sender to multiple hosts:
+        //
+        // hostMap:          the mapping fileIdx -> Host
+        // canDrop:          whether data dropping is allowed
+        // maxRetentionTime: drop data older than this from the queue
         MultiSender( const HostMap &hostMap, bool canDrop = false, double maxRetentionTime = 3.0 );
         ~MultiSender();
 

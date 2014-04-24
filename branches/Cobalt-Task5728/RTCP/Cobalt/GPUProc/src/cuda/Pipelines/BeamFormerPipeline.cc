@@ -99,7 +99,7 @@ namespace LOFAR
       // Each work queue needs an output element for each subband it processes, because the GPU output can
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
-      // Don'tadd items if the queue hasn't been accessed for 3.0 seconds.
+      // Allow queue to drop items older than 3 seconds.
       multiSender(hostMap(ps, subbandIndices, hostID), ps.realTime(), 3.0),
       factories(ps, nrSubbandsPerSubbandProc)
     {
