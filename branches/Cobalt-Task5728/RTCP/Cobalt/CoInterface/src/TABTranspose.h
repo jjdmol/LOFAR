@@ -369,8 +369,11 @@ namespace LOFAR
         // if we're allowed to drop in the first place
         const bool canDrop;
 
-        // If the oldest item not written yet is this old, no more items
-        // will be appended for that host.
+        // MultiSender has a queue per host it sends to. If it appends an element
+        // to a queue, it will discard the head if it is older than maxRententionTime.
+        //
+        // That way, the queue size remains limited to at most the data produced in
+        // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
 
         std::vector<RunningStatistics> drop_rates; // [fileIdx]
