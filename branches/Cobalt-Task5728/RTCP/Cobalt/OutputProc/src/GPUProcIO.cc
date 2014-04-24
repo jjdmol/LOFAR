@@ -115,7 +115,7 @@ bool process(Stream &controlStream, size_t myRank)
 	         outputPools[fileIdx]->free.append(new TABTranspose::BeamformedData(
              boost::extents[nrSamples][nrSubbands][nrChannels],
              boost::extents[nrSubbands][nrChannels]
-           ));
+           ), false);
         }
 
         // Create a collector for this fileIdx
