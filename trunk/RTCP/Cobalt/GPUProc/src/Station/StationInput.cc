@@ -735,15 +735,23 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
-  StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
-  StationInput si(ps, stationIdx, subbandDistribution);
+  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
+  const StationNodeAllocation allocation(stationID, ps);
 
-  if (sm.nrBlocks == 0 || !si.receivedHere()) {
+  if (!allocation.receivedHere()) {
     // Station is not sending from this node
     return;
   }
 
-  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
+  StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
+
+  if (sm.nrBlocks == 0) {
+    // Nothing to process -- stop
+    return;
+  }
+
+  StationInput si(ps, stationIdx, subbandDistribution);
+
   const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   LOG_INFO_STR(logPrefix << "Processing station data");
