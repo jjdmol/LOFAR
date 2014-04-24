@@ -24,12 +24,16 @@
 
 #include <CoInterface/CorrelatedData.h>
 
+#include <boost/format.hpp>
+using boost::format;
+
 namespace LOFAR
 {
   namespace Cobalt
   {
     SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
     :
+      itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr)),
       itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
       itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
     {

@@ -157,6 +157,8 @@ StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, 
   nrSamples(ps.nrSamplesPerSubband()),
   nrBlocks((stopTime - startTime) / nrSamples),
 
+  metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
+
   subbandDistribution(subbandDistribution),
   targetSubbands(values(subbandDistribution))
 {
@@ -177,7 +179,7 @@ void StationMetaData<SampleT>::computeMetaData()
 
   // Each element represents 1 block of buffer.
   for (size_t i = 0; i < 5; ++i)
-    metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples));
+    metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples), false);
 
   /*
    * Set up delay compensation.
@@ -253,6 +255,9 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDi
   targetSubbands(values(subbandDistribution)),
   beamletIndices(generateBeamletIndices())
 {
+  for (size_t i = 0; i < nrBoards; ++i) {
+    rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name())));
+  }
 }
 
 
@@ -311,8 +316,8 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 
   PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), inputStream, mode);
 
-  Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board].free;
-  Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board].filled;
+  Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
+  Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
 
   try {
     for(size_t i = 0; true; i++) {
@@ -375,8 +380,8 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
     for (size_t board = 0; board < nrBoards; board++) {
       //NSTimer copyRSPTimer(str(format("%s [board %i] copy RSP -> block") % logPrefix % board), true, true);
 
-      Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board].filled;
-      Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board].free;
+      Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->filled;
+      Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->free;
 
       const ssize_t *beamletIndices = &this->beamletIndices[board][0];
       const size_t nrBeamletIndices = mode.nrBeamletsPerBoard();
@@ -466,7 +471,7 @@ void StationInput::readRSPNonRealTime()
       break;
 
     // Emit youngest packet
-    SmartPtr<RSPData> data = rspDataPool[0].free.remove();
+    SmartPtr<RSPData> data = rspDataPool[0]->free.remove();
 
     // Abort of writer does not desire any more data
     if (!data) {
@@ -477,7 +482,7 @@ void StationInput::readRSPNonRealTime()
     data->packets[0] = last_packets[youngest];
     data->board = youngest;
    
-    rspDataPool[0].filled.append(data);
+    rspDataPool[0]->filled.append(data);
 
     // Next packet should only be read from the stream we
     // emitted from
@@ -486,7 +491,7 @@ void StationInput::readRSPNonRealTime()
   }
 
   // Signal EOD by inserting a packet beyond obs end
-  SmartPtr<RSPData> data = rspDataPool[0].free.remove();
+  SmartPtr<RSPData> data = rspDataPool[0]->free.remove();
 
   // Abort if writer does not desire any more data
   if (!data) {
@@ -498,7 +503,7 @@ void StationInput::readRSPNonRealTime()
   data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
   data->board = 0;
 
-  rspDataPool[0].filled.append(data);
+  rspDataPool[0]->filled.append(data);
 }
 
 
@@ -516,7 +521,7 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
   const size_t nrBeamletIndices = mode.nrBeamletsPerBoard();
 
   for(;;) {
-    SmartPtr<RSPData> data = rspDataPool[0].filled.remove();
+    SmartPtr<RSPData> data = rspDataPool[0]->filled.remove();
     const ssize_t *beamletIndices = &this->beamletIndices[data->board][0];
 
     // Only packet 0 is used in non-rt mode
@@ -526,13 +531,13 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
       // We have data (potentially) spilling into `next'.
       if (!next || next->write(data->packets[0], beamletIndices, nrBeamletIndices)) {
 	// Data is even later than next? Put this data back for a future block.
-        rspDataPool[0].filled.prepend(data);
+        rspDataPool[0]->filled.prepend(data);
         ASSERT(!data);
         return;
       }
     }
 
-    rspDataPool[0].free.append(data);
+    rspDataPool[0]->free.append(data);
     ASSERT(!data);
   }
 }
@@ -547,11 +552,11 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
     // Each board has its own pool to reduce lock contention
     for (size_t board = 0; board < nrBoards; ++board)
       for (size_t i = 0; i < 16; ++i)
-        rspDataPool[board].free.append(new RSPData(RT_PACKET_BATCH_SIZE));
+        rspDataPool[board]->free.append(new RSPData(RT_PACKET_BATCH_SIZE), false);
   } else {
     // We just process one packet at a time, merging all the streams into rspDataPool[0].
     for (size_t i = 0; i < 16; ++i)
-      rspDataPool[0].free.append(new RSPData(1));
+      rspDataPool[0]->free.append(new RSPData(1), false);
   }
 
   #pragma omp parallel sections num_threads(2)
@@ -628,7 +633,7 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
 
       // Signal EOD to input
       for (size_t i = 0; i < nrBoards; ++i)
-        rspDataPool[i].free.append(NULL);
+        rspDataPool[i]->free.append(NULL);
 
       if (ps.realTime()) {
         // kill reader threads
@@ -743,7 +748,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
 
   LOG_INFO_STR(logPrefix << "Processing station data");
 
-  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue;
+  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue(str(format("sendInputToPipeline::mpiQueue [station %s]") % stationID.name()));
 
   MPISender sender(logPrefix, stationIdx, subbandDistribution);
 

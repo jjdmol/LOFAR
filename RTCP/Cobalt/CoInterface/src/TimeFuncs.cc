@@ -22,6 +22,7 @@
 #include "TimeFuncs.h"
 
 #include <cmath>
+#include <time.h>
 
 namespace LOFAR
 {
@@ -30,15 +31,30 @@ namespace LOFAR
     namespace TimeSpec
     {
       struct timespec now() {
+        struct timespec ts;
+
+#if _POSIX_C_SOURCE >= 199309L
+#  ifdef CLOCK_REALTIME_COARSE
+        clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+#  else
+        clock_gettime(CLOCK_REALTIME, &ts);
+#  endif
+#else
         struct timeval tv;
         gettimeofday(&tv, NULL);
 
-        struct timespec ts;
         ts.tv_sec  = tv.tv_sec;
         ts.tv_nsec = tv.tv_usec * 1000L;
+#endif
 
         return ts;
       }
+
+
+      double toDouble(const timespec &ts) {
+        return static_cast<double>(ts.tv_sec) + static_cast<double>(ts.tv_nsec) / (1000.0 * 1000.0 * 1000.0);
+      }
+
 
       void inc(struct timespec &ts, double seconds) {
         const long ns_per_second = 1000L * 1000L * 1000L;
@@ -51,6 +67,41 @@ namespace LOFAR
           ts.tv_nsec -= ns_per_second;
           ts.tv_sec++;
         }
+      }
+
+
+      double operator-(const timespec &end, const timespec &begin) {
+        return toDouble(end) - toDouble(begin);
+      }
+
+
+      bool operator>(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec > b.tv_nsec);
+      }
+
+
+      bool operator>=(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec >= b.tv_nsec);
+      }
+
+
+      bool operator<(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
+      }
+
+
+      bool operator<=(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec <= b.tv_nsec);
+      }
+
+
+      bool operator==(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
+      }
+
+
+      bool operator!=(const struct timespec &a, const struct timespec &b) {
+        return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
       }
 
     }
