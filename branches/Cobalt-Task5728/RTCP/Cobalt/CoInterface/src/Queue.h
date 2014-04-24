@@ -88,7 +88,7 @@ template <typename T> class Queue
     RunningStatistics remove_wait_time;
 
     // The average queue size on append() (excluding the inserted element)
-    RunningStatistics queue_size_on_add;
+    RunningStatistics queue_size_on_append;
 
     struct Element {
       T value;
@@ -107,7 +107,7 @@ template <typename T> Queue<T>::Queue(const std::string &name)
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
-  queue_size_on_add("elements")
+  queue_size_on_append("elements")
 {
 }
 
@@ -119,25 +119,25 @@ template <typename T> Queue<T>::~Queue()
    *
    * Explanation and expected/ideal values:
    *
-   * avg #elements @add:  Average size of the queue at append().
+   * avg #elements on append:  Average size of the queue at append().
    *                      Q holding free items:           large
    *                      Q holding items for processing: 0-1
    *
-   * queue empty @remove  Percentage of calls to remove() that block
+   * queue empty on remove:    Percentage of calls to remove() that block
    *                      Q holding free items:           0%
    *                      Q holding items for processing: 100%
    *
-   * remove wait time     If queue wasn't empty on remove(), this is the average time before an item was appended
+   * remove wait time:        If queue wasn't empty on remove(), this is the average time before an item was appended
    *                      Q holding free items:           0
    *                      Q holding items for processing: >0
    *
-   * element retention time The time an element spends between append() and remove()
+   * element retention time:  The time an element spends between append() and remove()
    *                      Q holding free items:           large
    *                      Q holding items for processing: 0
    *
    */
   if (itsName != "")
-    LOG_INFO_STR("Queue " << itsName << ": avg #elements @add = " << queue_size_on_add.mean() << ", queue empty @remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " ms, element retention time: " << retention_time);
+    LOG_INFO_STR("Queue " << itsName << ": avg #elements on append = " << queue_size_on_append.mean() << ", queue empty on remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " ms, element retention time: " << retention_time);
 }
 
 
@@ -154,7 +154,7 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
   e.arrival_time = timed ? TimeSpec::now() : TimeSpec::big_bang;
 
   // Record the queue size
-  queue_size_on_add.push(itsQueue.size());
+  queue_size_on_append.push(itsQueue.size());
 
   itsQueue.push_back(e);
   itsNewElementAppended.signal();
