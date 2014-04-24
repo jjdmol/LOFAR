@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Set the affinity of the IRQs of the following devices to the cores
+# of their respective NUMA node:
+#
+#   eth*
+#   mlx_*
+#
+
+echo CPU0 has cores `cat /sys/devices/system/node/node0/cpulist`
+echo CPU1 has cores `cat /sys/devices/system/node/node1/cpulist`
+
+#
+# irqs_of regexp
+#
+# Lists the irqs matching devices given by regexp.
+#
+function irqs_of {
+  cat /proc/interrupts | grep $1 | perl -ne 'print "$1\n" if /([0-9]+)/;'
+}
+
+#
+# list_eth device
+#
+# Lists the bindings of an Ethernet device
+#
+function list_eth {
+  DEV=$1
+
+  # Round-robin binding of queue interrupts,
+  # f.e. eth0-TxRx-0
+  for IRQ in `irqs_of $DEV-TxRx`; do
+    echo $DEV irq $IRQ bound to core `cat /proc/irq/$IRQ/smp_affinity_list`
+  done
+
+  for IRQ in `irqs_of $DEV'$'`; do
+    echo $DEV irq $IRQ bound to core `cat /proc/irq/$IRQ/smp_affinity_list`
+  done
+}
+
+#
+# list_mlx device
+#
+# Lists the bindings of a Mellanox device
+#
+function list_mlx {
+  DEV=$1
+
+  # Find the PCIBUS (f.e. 0000:06), because that's
+  # the identifier used in /proc/interrupts.
+  source /sys/class/infiniband/$DEV/device/uevent
+  PCIBUS=`echo $PCI_SLOT_NAME | cut -c1-7`
+
+  for IRQ in `irqs_of $PCIBUS`; do
+    echo $DEV irq $IRQ bound to core `cat /proc/irq/$IRQ/smp_affinity_list`
+  done
+}
+
+# ***** LIST BINDINGS *****
+
+shopt -s nullglob # let * return an empty string if it matches nothing
+
+for ETH in /sys/class/net/eth*; do
+  list_eth `basename $ETH`
+done
+
+for MLX in /sys/class/infiniband/mlx*; do
+  list_mlx `basename $MLX`
+done
+
