@@ -372,11 +372,15 @@ void FTMachineSimpleWB::put(const VisBuffer& vb, Int row, Bool dopsf,
       #pragma omp parallel for num_threads(itsNGrid)
       for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
       {
-        Vector<Double> taylor_weights(itsNChan, 1.0);
-        for (int j=0; j<itsNChan; j++)
+        Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
+        for (int j=0; j<lsr_frequency.nelements(); j++)
         {
           taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
         }
+//         #pragma omp critical
+//         cout << taylor_idx << ": " << taylor_weights << endl;
+
+        
         itsVisResampler->DataToGrid(
           itsGriddedData[taylor_idx], 
           vbs, 
@@ -583,11 +587,12 @@ void FTMachineSimpleWB::get(VisBuffer& vb, Int row)
 // TODO: Double or single precision gridding.
       for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
       {
-        Vector<Double> taylor_weights(itsNChan, 1.0);
-        for (int j=0; j<itsNChan; j++)
+        Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
+        for (int j=0; j<lsr_frequency.nelements(); j++)
         {
           taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
         }
+//         cout << taylor_idx << ": " << taylor_weights << endl;
 
         itsVisResampler->GridToData(
           vbs, 

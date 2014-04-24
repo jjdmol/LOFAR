@@ -254,17 +254,20 @@ const Matrix<Float>& FTMachine::getAveragePB() const
   // Read average beam from disk if not present.
   if (itsAvgPB.empty()) {
     
-    // get the 'average beam' from disk
-    PagedImage<Float> pim(itsImageName + ".avgpb");
-    Array<Float> arr = pim.get();
+    IPosition blc(
+      2, 
+      (itsPaddedNX - itsNX + (itsPaddedNX % 2 == 0)) / 2,
+      (itsPaddedNY - itsNY + (itsPaddedNY % 2 == 0)) / 2);
+    IPosition shape(2, itsNX, itsNY);
+    Slicer slicer(blc, shape);
+    
+    Array<Float> avgpb = itsConvFunc->getAveragePB(itsImageName)(slicer);
     
     // get the spheroid
-    IPosition start(2,0,0);
-    IPosition length(2, itsNX-1, itsNY-1);
-    Array<Float> spheroid = itsConvFunc->getSpheroidCut()(start,length);
+    Array<Float> spheroid = itsConvFunc->getSpheroidCut(itsImageName)(slicer);
     
 // TODO: sqrt and spheroid should not be here, but image on disk is (average beam * spheroid)^2
-    itsAvgPB = sqrt(arr.nonDegenerate(2))/spheroid;
+    itsAvgPB = sqrt(avgpb)/spheroid;
     
   }
   return itsAvgPB;
@@ -384,10 +387,10 @@ void FTMachine::initialize_model_grids(Bool normalize_model)
       (itsPaddedNY - itsModelImages[model]->shape()(1) + (itsPaddedNY % 2 == 0)) / 2,
       0, 
       0);
-    IPosition trc(4, itsNX, itsNY, itsNPol, itsNChan);
+    IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
     
-    cout << itsComplexModelImages[model]->shape() << " " << blc << " " << trc << endl;
-    CountedPtr<ImageInterface<Complex> > complex_model_subimage = new SubImage<Complex>(*itsComplexModelImages[model], Slicer(blc, trc), True);
+    cout << itsComplexModelImages[model]->shape() << " " << blc << " " << shape << endl;
+    CountedPtr<ImageInterface<Complex> > complex_model_subimage = new SubImage<Complex>(*itsComplexModelImages[model], Slicer(blc, shape), True);
     
     // convert float IQUV model image to complex image
     StokesImageUtil::From(*complex_model_subimage, *itsModelImages[model]);
@@ -475,7 +478,7 @@ void FTMachine::initialize_grids()
 // return the resulting image
 void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 {
-  cout << "FTMachineSimpleWB::getImage" << endl;
+  cout << "FTMachineSimpleWB::getImages" << endl;
   
   logIO() << LogOrigin("FTMachine", "getImage") << LogIO::NORMAL;
 
@@ -537,9 +540,14 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
   
   if (do_spheroidal)
   {
-    IPosition start(2,0,0);
-    IPosition length(2, itsNX-1, itsNY-1);
-    factor = factor * ArrayLattice<Float>(itsConvFunc->getSpheroidCut()(start,length));
+    IPosition blc(
+      2, 
+      (itsPaddedNX - itsNX + (itsPaddedNX % 2 == 0)) / 2,
+      (itsPaddedNY - itsNY + (itsPaddedNY % 2 == 0)) / 2);
+    IPosition shape(2, itsNX, itsNY, itsNPol, itsNChan);
+    
+    Slicer slicer(blc, shape);
+    factor = factor * ArrayLattice<Float>(itsConvFunc->getSpheroidCut()(slicer));
   }
   
   if (do_beam)
@@ -549,9 +557,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
 
   Array<Complex> slice;
   IPosition start(4,0);
-  IPosition slice_shape = image.shape();
-  slice_shape[2] = 1;
-  slice_shape[3] = 1;
+  IPosition slice_shape(4, itsNX, itsNY, 1, 1);
 
   // Iterate over channels and polarizations
 
@@ -568,97 +574,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     }
   }
 }
-  
-//   itsAvgPB.reference (itsConvFunc->compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]));
-// 
-//   weights.resize(itsSumWeight[0].shape());
-// 
-//   convertArray(weights, itsSumWeight[0]);
-//   // If the weights are all zero then we cannot normalize
-//   // otherwise we don't care.
-//   if(normalize&&max(weights)==0.0) 
-//   {
-//     logIO() << LogIO::SEVERE << "No useful data in LofarFTMachine: weights all zero"
-//             << LogIO::POST;
-//     return *itsImage;
-//   }
-// 
-//   const IPosition latticeShape = itsLattice->shape();
-// 
-//   logIO() << LogIO::DEBUGGING
-//           << "Starting FFT and scaling of image" << LogIO::POST;
-// 
-//   if (itsUseDoubleGrid) 
-//   {
-//     ArrayLattice<DComplex> darrayLattice(itsGriddedData2[0]);
-//     LatticeFFT::cfft2d(darrayLattice,False);
-//     convertArray(itsGriddedData[0], itsGriddedData2[0]);
-//   }
-//   else 
-//   {
-//     LatticeFFT::cfft2d(*itsLattice, False);
-//   }
-// 
-//   if (itsVerbose > 0) 
-//   {
-//     cout<<"POLMAP:::::::  "<< itsPolMap << endl;
-//     cout<<"POLMAP:::::::  "<< itsCFMap << endl;
-//   }
-//   
-//   Int inx = itsLattice->shape()(0);
-//   Int iny = itsLattice->shape()(1);
-//   Vector<Complex> correction(inx);
-//   correction=Complex(1.0, 0.0);
-//   // Do the Grid-correction
-//   IPosition cursorShape(4, inx, 1, 1, 1);
-//   IPosition axisPath(4, 0, 1, 2, 3);
-//   LatticeStepper lsx(itsLattice->shape(), cursorShape, axisPath);
-//   LatticeIterator<Complex> lix(*itsLattice, lsx);
-//   for (lix.reset(); !lix.atEnd(); lix++) 
-//   {
-//     Int pol=lix.position()(2);
-//     Int chan=lix.position()(3);
-//     if (weights(pol, chan) != 0.0) 
-//     {
-//       if (normalize) 
-//       {
-//         Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
-//         lix.rwCursor()*=rnorm;
-//       }
-//       else 
-//       {
-//         Complex rnorm(Float(inx)*Float(iny));
-//         lix.rwCursor()*=rnorm;
-//       }
-//     }
-//     else {
-//       lix.woCursor()=0.0;
-//     }
-//   }
-//   
-//   IPosition pos(4, itsLattice->shape()[0], itsLattice->shape()[1], 1, 1);
-//   uInt shapeout(floor(itsLattice->shape()[0]/itsPadding));
-//   uInt istart(floor((itsLattice->shape()[0] - shapeout)/2.));
-//   Cube<Complex> tempimage(IPosition(3, shapeout, shapeout, itsLattice->shape()[2]));
-// 
-//   pos[3] = 0.;
-//   for(Int k=0; k < itsLattice->shape()[2]; ++k)
-//   {
-//     for(uInt i = 0; i < shapeout; ++i)
-//     {
-//       for(uInt j = 0; j < shapeout; ++j)
-//       {
-//         pos[0] = i + istart;
-//         pos[1] = j + istart;
-//         pos[2] = k;
-//         Complex pixel(itsLattice->getAt(pos));
-//         pixel /= sqrt(itsAvgPB(i + istart, j + istart));
-//         itsLattice->putAt(pixel,pos);
-//       }
-//     }
-//   }
-// 
-
+ 
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
 // return the resulting image
@@ -816,12 +732,6 @@ void FTMachine::makeImage(
   Int stokesIndex = coords.findCoordinate(Coordinate::STOKES);
   AlwaysAssert(stokesIndex>-1, AipsError);
   StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
-//   cout << "Image stokes:" << stokesCoord.stokes() << endl;
-  theImage.putAt(Complex(1.0,0.0), IPosition(4,0,0,0,0));
-//   cout << "Image data: " << theImage.getAt(IPosition(4,0,0,0,0)) << ", "
-//        << theImage.getAt(IPosition(4,0,0,1,0))  << ", "
-//        << theImage.getAt(IPosition(4,0,0,2,0))  << ", "
-//        << theImage.getAt(IPosition(4,0,0,3,0)) << endl;
   
   if(vb.polFrame()==MSIter::Linear) {
     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
@@ -834,17 +744,6 @@ void FTMachine::makeImage(
   stokesIndex = coords.findCoordinate(Coordinate::STOKES);
   AlwaysAssert(stokesIndex>-1, AipsError);
   stokesCoord = coords.stokesCoordinate(stokesIndex);
-//   cout << "Image stokes:" << stokesCoord.stokes() << endl;
-
-//   cout << "Image data: " << theImage.getAt(IPosition(4,0,0,0,0)) << ", "
-//        << theImage.getAt(IPosition(4,0,0,1,0))  << ", "
-//        << theImage.getAt(IPosition(4,0,0,2,0))  << ", "
-//        << theImage.getAt(IPosition(4,0,0,3,0)) << endl;
-
-//   PtrBlock<ImageInterface images  
-//   initializeToSky(theImage, weight, vb);
-//   cout << "itsSumPB.size() " << itsSumPB.size() << endl;
-//   cout << "itsSumPB[0].shape() " << itsSumPB[0].shape() << endl;
   
 
   // Loop over the visibilities, putting VisBuffers

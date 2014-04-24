@@ -174,7 +174,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
                 }
 
               }
-              sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol] * tw;
+              sumWtPtr[ipol+gridChan*4] += imgWtPtr[ipol];
             } // end if !flagPtr
           } // end for ipol
         } // end if ongrid

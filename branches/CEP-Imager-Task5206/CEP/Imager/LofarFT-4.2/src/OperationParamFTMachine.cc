@@ -149,9 +149,9 @@ void OperationParamFTMachine::run()
 
   itsParameters.define("padding", itsInputParSet.getDouble("padding"));
 
-  Int StepApplyElement = itsInputParSet.getInt("ApplyElement");
-  if (StepApplyElement) StepApplyElement |= 1;
-  itsParameters.define("StepApplyElement", StepApplyElement);
+  Int ApplyElement = itsInputParSet.getInt("ApplyElement");
+  if (ApplyElement) ApplyElement |= 1;
+  itsParameters.define("ApplyElement", ApplyElement);
 
   itsParameters.define("TWElement", itsInputParSet.getDouble("TWElement"));
   itsParameters.define("splitbeam", itsInputParSet.getBool("splitbeam"));

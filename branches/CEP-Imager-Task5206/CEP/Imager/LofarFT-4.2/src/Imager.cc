@@ -80,7 +80,8 @@ Bool Imager::createFTMachine()
   } 
   else 
   {
-    itsFTMachine = FTMachineFactory::instance().create("FTMachineSimpleWB", *ms_p, itsParameters);
+//     itsFTMachine = FTMachineFactory::instance().create("FTMachineSimpleWB", *ms_p, itsParameters);
+    itsFTMachine = FTMachineFactory::instance().create("FTMachineSplitBeamWStackWB", *ms_p, itsParameters);
 //     itsFTMachine = new FTMachineSimple(
 //       *ms_p, 
 //       wprojPlanes_p, 
@@ -141,7 +142,7 @@ void Imager::makeVisSet(
   }
   Matrix<Int> noselection;
   Double timeInterval = 0;
-  if (itsParameters.asInt("StepApplyElement"))
+  if (itsParameters.asInt("ApplyElement"))
   {
       timeInterval = itsParameters.asDouble("TWElement");
   }

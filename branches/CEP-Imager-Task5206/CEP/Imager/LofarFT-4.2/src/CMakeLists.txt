@@ -14,6 +14,7 @@ lofar_add_library(lofarft
   CFStore.cc
   FTMachine.cc
   FTMachineSimpleWB.cc
+  FTMachineSplitBeamWStackWB.cc
   WTerm.cc
   VisBuffer.cc
   VisibilityIterator.cc
