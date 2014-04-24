@@ -33,10 +33,10 @@
 #include <Stream/NullStream.h>
 
 #include <CoInterface/Stream.h>
+#include <CoInterface/RunningStatistics.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {

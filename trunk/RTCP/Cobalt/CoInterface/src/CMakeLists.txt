@@ -15,6 +15,7 @@ lofar_add_library(cointerface
   FinalMetaData.cc
   Stream.cc
   Parset.cc
+  RunningStatistics.cc
   TABTranspose.cc
   TimeFuncs.cc
   RingCoordinates.cc)

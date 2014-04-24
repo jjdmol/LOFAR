@@ -27,7 +27,6 @@
 #include <utility>
 #include <memory>
 
-#include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>

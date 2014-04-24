@@ -112,7 +112,7 @@ int main()
     SmartPtr<SubbandProcOutputData> data;
     unsigned blockIdx;
 
-    writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
+    writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(format("writePool [file %u]") % i), 3, ps.realTime());
 
     blockIdx = 0;
     data = getTestSbIncohData(ps, ctx, blockIdx, i);
