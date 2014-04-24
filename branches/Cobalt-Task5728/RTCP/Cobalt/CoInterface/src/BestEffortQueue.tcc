@@ -31,6 +31,7 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
   //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
                      // it causes tests to fail, and even if a thread is remove()ing, objects can still
                      // pile up in the queue.
+  dropped_on_append("%"),
   freeSpace(maxSize),
   flushing(false)
 {
@@ -39,7 +40,7 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
 
 template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 {
-  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped @add = " << dropped_on_append.mean() * 100.0 << "%");
+  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped @add = " << dropped_on_append.mean() << "%");
 }
 
 
@@ -61,7 +62,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
     Queue<T>::append(element);
   }
 
-  dropped_on_append.push(canAppend ? 0.0 : 1.0);
+  dropped_on_append.push(canAppend ? 0.0 : 100.0);
 
   return canAppend;
 }

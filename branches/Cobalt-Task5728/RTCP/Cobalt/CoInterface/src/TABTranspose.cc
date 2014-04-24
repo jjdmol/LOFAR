@@ -573,8 +573,7 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
 :
   hostMap(hostMap),
   canDrop(canDrop),
-  maxRetentionTime(maxRetentionTime),
-  drop_rates(hostMap.size())
+  maxRetentionTime(maxRetentionTime)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
     if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
@@ -584,6 +583,10 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
     queues[*i] = new Queue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName));
   }
+
+  for (size_t i = 0; i < hostMap.size(); ++i) {
+    drop_rates.push_back(RunningStatistics("%"));
+  }
 }
 
 
@@ -591,7 +594,7 @@ MultiSender::~MultiSender()
 {
   LOG_INFO_STR("MultiSender: canDrop = " << canDrop << ", maxRetentionTime = " << maxRetentionTime);
   for (size_t i = 0; i < drop_rates.size(); ++i) {
-    LOG_INFO_STR("MultiSender: [file " << i << " to " << hostMap.at(i).hostName << "] Dropped " << (drop_rates[i].mean() * 100.0) << "% of the Subbands");
+    LOG_INFO_STR("MultiSender: [file " << i << " to " << hostMap.at(i).hostName << "] Dropped " << drop_rates[i].mean() << "% of the data");
   }
 }
 
@@ -654,7 +657,7 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
   // Refuse if all data in queue is old
   if (canDrop && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
-    drop_rates.at(fileIdx).push(1.0);
+    drop_rates.at(fileIdx).push(100.0);
 
     // remove oldest item
     SmartPtr<struct Subband> subband = queue->remove();

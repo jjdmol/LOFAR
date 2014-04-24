@@ -28,7 +28,9 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    RunningStatistics::RunningStatistics() 
+    RunningStatistics::RunningStatistics(const std::string &unit) 
+    :
+      unit(unit)
     {
       reset();
     }
@@ -138,7 +140,7 @@ namespace LOFAR
             << " stDev: " << std::setw(8) << stDev()
             << " min:   " << std::setw(8) << min()    
             << " max:   " << std::setw(8) << max()
-            << " (stats in ms)" ;
+            << " (stats in " << unit << ")" ;
       }
     }
 

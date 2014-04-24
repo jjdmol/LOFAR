@@ -62,7 +62,7 @@ namespace LOFAR
       const size_t maxSize;
       const bool drop;
 
-      // Fraction of elements that were dropped in append()
+      // Percentage of elements that were dropped in append()
       RunningStatistics dropped_on_append;
 
       // contains the amount of free space in the queue

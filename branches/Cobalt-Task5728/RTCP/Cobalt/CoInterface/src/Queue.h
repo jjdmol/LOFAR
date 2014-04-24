@@ -81,8 +81,11 @@ template <typename T> class Queue
     // The time an element spent in a queue
     RunningStatistics retention_time;
 
-    // The fraction of remove() calls on an empty queue
+    // The percentage of remove() calls on an empty queue
     RunningStatistics remove_on_empty_queue;
+
+    // The average waiting time on remove() if the queue was empty
+    RunningStatistics remove_wait_time;
 
     // The average queue size on append() (excluding the inserted element)
     RunningStatistics queue_size_on_add;
@@ -100,15 +103,41 @@ template <typename T> class Queue
 
 template <typename T> Queue<T>::Queue(const std::string &name)
 :
-  itsName(name)
+  itsName(name),
+  retention_time("s"),
+  remove_on_empty_queue("%"),
+  remove_wait_time("s"),
+  queue_size_on_add("elements")
 {
 }
 
 
 template <typename T> Queue<T>::~Queue()
 {
+  /*
+   * Log statistics.
+   *
+   * Explanation and expected/ideal values:
+   *
+   * avg #elements @add:  Average size of the queue at append().
+   *                      Q holding free items:           large
+   *                      Q holding items for processing: 0-1
+   *
+   * queue empty @remove  Percentage of calls to remove() that block
+   *                      Q holding free items:           0%
+   *                      Q holding items for processing: 100%
+   *
+   * remove wait time     If queue wasn't empty on remove(), this is the average time before an item was appended
+   *                      Q holding free items:           0
+   *                      Q holding items for processing: >0
+   *
+   * element retention time The time an element spends between append() and remove()
+   *                      Q holding free items:           large
+   *                      Q holding items for processing: 0
+   *
+   */
   if (itsName != "")
-    LOG_INFO_STR("Queue " << itsName << ": avg #elements @add = " << queue_size_on_add.mean() << ", queue empty @remove = " << remove_on_empty_queue.mean() * 100.0 << "%, element retention time: " << retention_time);
+    LOG_INFO_STR("Queue " << itsName << ": avg #elements @add = " << queue_size_on_add.mean() << ", queue empty @remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " ms, element retention time: " << retention_time);
 }
 
 
@@ -157,8 +186,8 @@ template <typename T> inline T Queue<T>::remove()
 
   ScopedLock scopedLock(itsMutex);
 
-  // Record whether we'll need to wait
-  remove_on_empty_queue.push(itsQueue.empty() ? 1.0 : 0.0);
+  const bool beganEmpty = itsQueue.empty();
+  const struct timespec begin = TimeSpec::now();
 
   while (itsQueue.empty())
     itsNewElementAppended.wait(itsMutex);
@@ -166,9 +195,19 @@ template <typename T> inline T Queue<T>::remove()
   Element e = itsQueue.front();
   itsQueue.pop_front();
 
+  const struct timespec end = TimeSpec::now();
+
+  // Record waiting time if queue was not empty
+  if (beganEmpty) {
+    remove_wait_time.push(end - begin);
+  }
+
+  // Record whether we'll need to wait
+  remove_on_empty_queue.push(beganEmpty ? 100.0 : 0.0);
+
   // Record the time this element spent in this queue
   if (e.arrival_time != TimeSpec::big_bang)
-    retention_time.push(TimeSpec::now() - e.arrival_time);
+    retention_time.push(end - e.arrival_time);
 
   return e.value;
 }
@@ -184,8 +223,8 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
 
   ScopedLock scopedLock(itsMutex);
 
-  // Record whether we'll need to wait
-  remove_on_empty_queue.push(itsQueue.empty() ? 1.0 : 0.0);
+  const bool beganEmpty = itsQueue.empty();
+  const struct timespec begin = TimeSpec::now();
 
   while (itsQueue.empty())
     if (!itsNewElementAppended.wait(itsMutex, deadline))
@@ -194,9 +233,19 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
   Element e = itsQueue.front();
   itsQueue.pop_front();
 
+  const struct timespec end = TimeSpec::now();
+
+  // Record waiting time if queue was not empty
+  if (beganEmpty) {
+    remove_wait_time.push(end - begin);
+  }
+
+  // Record whether we'll need to wait
+  remove_on_empty_queue.push(beganEmpty ? 1.0 : 0.0);
+
   // Record the time this element spent in this queue
   if (e.arrival_time != TimeSpec::big_bang)
-    retention_time.push(TimeSpec::now() - e.arrival_time);
+    retention_time.push(end - e.arrival_time);
 
   return e.value;
 }
