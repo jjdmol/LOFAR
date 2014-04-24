@@ -655,7 +655,7 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
   SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
-  // Refuse if all data in queue is old
+  // If oldest packet in queue is too old, drop it in lieu of this new one
   if (canDrop && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
     drop_rates.at(fileIdx).push(100.0);
 
