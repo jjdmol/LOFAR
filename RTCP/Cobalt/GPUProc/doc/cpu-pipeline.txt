@@ -147,7 +147,7 @@ This pipeline ships the blocks from network to disk.
 -------------------------------------------------------
 
 // ----- Begin Correlator -----
-NEW -> outputPool
+NEW -> outputPool.free
   * actor:          SubbandWriter::SubbandWriter
 
 outputPool.free -> outputPool.filled
