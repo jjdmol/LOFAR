@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 #include "TABTranspose.h"
 
+#include <CoInterface/TimeFuncs.h>
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <boost/format.hpp>
@@ -222,7 +223,8 @@ bool Block::complete() const {
 // More precisely, we have one BlockCollector per file (i.e. part).
 BlockCollector::BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks, size_t maxBlocksInFlight )
 :
-  inputQueue((1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input
+  inputQueue(str(format("BlockCollector::inputQueue [file %u]") % fileIdx), (1 + maxBlocksInFlight) * nrSubbands, false), // drop = false: we drop at the output, not at the input, but we do want to protect against unbounded growth
+  outputQueue(str(format("BlockCollector::outputQueue [file %u]") % fileIdx)),
   outputPool(outputPool),
 
   fileIdx(fileIdx),
@@ -248,7 +250,7 @@ BlockCollector::~BlockCollector()
 {
   // Make SURE the threads can finish, regardless of whether finish() was called
   inputQueue.noMore();
-  outputQueue.append(NULL);
+  outputQueue.append(NULL, false);
 }
 
 
@@ -352,7 +354,7 @@ void BlockCollector::finish() {
   }
 
   // Signal end-of-stream
-  outputQueue.append(NULL);
+  outputQueue.append(NULL, false);
   outputThread.wait();
 }
 
@@ -567,9 +569,11 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 
 // Maintains the connections of an rtcp process with all its outputProc processes
 // it needs to send data to.
-MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop )
+MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetentionTime )
 :
-  hostMap(hostMap)
+  hostMap(hostMap),
+  canDrop(canDrop),
+  maxRetentionTime(maxRetentionTime)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
     if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
@@ -577,7 +581,20 @@ MultiSender::MultiSender( const HostMap &hostMap, size_t queueSize, bool canDrop
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues[*i] = new BestEffortQueue< SmartPtr<struct Subband> >(queueSize, canDrop);
+    queues[*i] = new Queue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName));
+  }
+
+  for (size_t i = 0; i < hostMap.size(); ++i) {
+    drop_rates.push_back(RunningStatistics("%"));
+  }
+}
+
+
+MultiSender::~MultiSender()
+{
+  LOG_INFO_STR("MultiSender: canDrop = " << canDrop << ", maxRetentionTime = " << maxRetentionTime);
+  for (size_t i = 0; i < drop_rates.size(); ++i) {
+    LOG_INFO_STR("MultiSender: [file " << i << " to " << hostMap.at(i).hostName << "] Dropped " << drop_rates[i].mean() << "% of the data");
   }
 }
 
@@ -605,7 +622,7 @@ void MultiSender::process( OMPThreadSet *threadSet )
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
 
-      SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+      SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
       LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
@@ -615,6 +632,7 @@ void MultiSender::process( OMPThreadSet *threadSet )
       while ((subband = queue->remove()) != NULL) {
         NSTimer::StartStop ss(sendTimer);
 
+        // Note: this can take any amount of time, even hours, even in real-time mode
         subband->write(stream);
       }
 
@@ -629,11 +647,29 @@ void MultiSender::process( OMPThreadSet *threadSet )
 // The pipeline calls here to write a block for a single file (part).
 void MultiSender::append( SmartPtr<struct Subband> &subband )
 {
+  using namespace TimeSpec;
+
   // Find the host to send these data to
-  const struct Host &host = hostMap.at(subband->id.fileIdx);
+  const size_t fileIdx = subband->id.fileIdx;
+  const struct Host &host = hostMap.at(fileIdx);
+
+  SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
+
+  // If oldest packet in queue is too old, drop it in lieu of this new one
+  if (canDrop && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
+    drop_rates.at(fileIdx).push(100.0);
+
+    // remove oldest item
+    SmartPtr<struct Subband> subband = queue->remove();
+
+    // would be weird to have NULL in here while we're appending elements
+    ASSERT(subband);
+  } else {
+    drop_rates.at(fileIdx).push(0.0);
+  }
 
   // Append the data to the respective queue
-  queues.at(host)->append(subband);
+  queue->append(subband);
 }
 
 
@@ -642,7 +678,7 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 void MultiSender::finish()
 {
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
-    queues.at(*i)->noMore();
+    queues.at(*i)->append(NULL, false);
   }
 }
 

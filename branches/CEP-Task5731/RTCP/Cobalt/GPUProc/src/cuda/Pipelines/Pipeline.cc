@@ -76,6 +76,7 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      mpiPool("Pipeline::mpiPool"),
       writePool(subbandIndices.size())
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
@@ -118,7 +119,7 @@ namespace LOFAR
 
         mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
 
-        mpiPool.free.append(mpiData);
+        mpiPool.free.append(mpiData, false);
       }
 
 #else
@@ -190,7 +191,7 @@ namespace LOFAR
       for (size_t i = 0; i < writePool.size(); i++) {
         // Allow 10 blocks to be in the best-effort queue.
         // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i), 3, ps.realTime());
       }
     }
 

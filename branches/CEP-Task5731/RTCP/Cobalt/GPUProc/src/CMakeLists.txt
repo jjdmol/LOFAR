@@ -13,7 +13,6 @@ set(_gpuproc_sources
   cpu_utils.cc
   FilterBank.cc
   global_defines.cc
-  RunningStatistics.cc
   Package__Version.cc
   SysInfoLogger.cc
   Station/StationNodeAllocation.cc

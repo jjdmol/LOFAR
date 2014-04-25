@@ -23,7 +23,6 @@
 
 #include <string>
 
-#include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
