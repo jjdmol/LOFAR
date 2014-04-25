@@ -666,11 +666,11 @@ namespace LOFAR
 
           // Coherent Stokes
           if (i == 0 && !doCoherentStokes)
-            break;
+            continue;
 
           // Incoherent Stokes
           if (i == 1 && !doIncoherentStokes)
-            break;
+            continue;
 
           // Obtain settings of selected stokes
           stSettings->type = stokesType(getString(
