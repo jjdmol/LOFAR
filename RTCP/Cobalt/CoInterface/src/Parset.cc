@@ -584,9 +584,13 @@ namespace LOFAR
       // SAP/TAB-crossing counter for the files we generate
       size_t bfStreamNr = 0;
 
-      settings.beamFormer.enabled =
-           getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false)
-        || getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
+      bool doCoherentStokes = getBool(
+        "Observation.DataProducts.Output_CoherentStokes.enabled", false);
+      bool doIncoherentStokes = getBool(
+        "Observation.DataProducts.Output_IncoherentStokes.enabled", false);
+
+      settings.beamFormer.enabled = doCoherentStokes || doIncoherentStokes;
+
       if (settings.beamFormer.enabled) {
         // Parse global settings
 
@@ -618,6 +622,7 @@ namespace LOFAR
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
+          // TODO: This is an ugly way to do this.
 
           string oldprefix = "";
           string newprefix = "";
@@ -643,6 +648,14 @@ namespace LOFAR
               ASSERT(false);
               break;
           }
+
+          // Coherent Stokes
+          if (i == 0 && !doCoherentStokes)
+            break;
+
+          // Incoherent Stokes
+          if (i == 1 && !doIncoherentStokes)
+            break;
 
           // Obtain settings of selected stokes
           stSettings->type = stokesType(getString(
