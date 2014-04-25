@@ -619,6 +619,21 @@ namespace LOFAR
         }
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
 
+        ObservationSettings::BeamFormer::StokesSettings
+          defaultSettings = 
+          {
+            true,     // coherent stokes?
+            STOKES_I, // StokesType
+            1,        // nrStokes
+            1,        // nrChannels
+            1,        // timeIntegrationFactor
+            0,        // nrSamples
+            0         // nrSubbandsPerFile
+          };
+
+        settings.beamFormer.coherentSettings = defaultSettings;
+        settings.beamFormer.incoherentSettings = defaultSettings;
+          
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.

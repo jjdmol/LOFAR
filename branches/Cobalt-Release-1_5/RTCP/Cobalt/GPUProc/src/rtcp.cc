@@ -440,7 +440,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  // Only ONE host should start the Storage processes
+  LOG_INFO("Bailing out now. This was just a test run");
+  exit(0);
+  
+ // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
   LOG_INFO("----- Initialising SSH library");
