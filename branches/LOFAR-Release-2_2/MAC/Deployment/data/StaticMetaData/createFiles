@@ -548,36 +548,20 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     #print stationName," has ",nrTBB," TBBoards"
     
     # Substitute MAC and IP address of destination nodes
-    # For locus (CEP2) nodes, the MAC must be the MAC of a router, not the
+    # For locus (CEP2) nodes, the MAC must be the MAC of a Gateway, not the
     # locus node.
-    # For CEP1, the MAC is the MAC of the storage node. Both situations
-    # require different handling
-    # For CEP2: for each station, the data of TBBs must be distributed over
-    # the three router nodes. Additionally, the data from the first board must
-    # not always be send to the same router node.
-    # We will adopt the algorithm that the stationnumber will be the basis of
-    # which router node will be used by TBB-0.
     TBBfile = open(dataDir+"/TBBDriver.conf.tmpl")
     TBBconfig = TBBfile.read()
     TBBfile.close()
-    # This is for CEP2 nodes
-    mac_router=["00:02:c9:0e:39:1e","00:02:c9:0e:3a:65","00:02:c9:0e:3a:64","00:02:c9:0e:39:26","00:02:c9:0e:39:27","00:02:c9:0e:3a:6c"]
-    start_router_id = int(stationID)%len(mac_router)
     for tbbNr in range(0,int(nrTBB)):
         if (len(tbbDestNode) == 1):
             DestNode=tbbDestNode["0"]
             #print DestNode
             (ip, mac) = findStorageIPandMAC(DestNode, dataDir)
             
-            if (DestNode[0:3] == "lse"):
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@",tbbDestNode["0"]  )
-                #print tbbNr, ip, mac
-            else:
-                router_id = (tbbNr+start_router_id)%len(mac_router)
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac_router[router_id])
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Router"+str(router_id+1)  )
-                #print tbbNr, ip, mac_router[router_id]
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Gateway")
+            #print tbbNr, ip, mac
 
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode["0"]  )
@@ -585,13 +569,8 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
         else:
             if str(tbbNr) in tbbDestNode.keys():
                 (ip, mac) = findStorageIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
-                if (tbbDestNode(str(tbbNr))[0:3] == "lse"):
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@",tbbDestNode["0"]  )
-                else:
-                    router_id = (tbbNr+start_router_id)%len(mac_router)
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Router"+str(router_id+1)  )
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac_router[router_id])
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Gateway")
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
                      
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode[str(tbbNr)]  )
