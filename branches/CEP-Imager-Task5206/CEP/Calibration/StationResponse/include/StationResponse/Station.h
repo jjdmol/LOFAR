@@ -274,6 +274,7 @@ public:
         const vector3r_t &direction, T freq0, const vector3r_t &station0,
         const vector3r_t &tile0, U buffer) const;
 
+    const FieldList& getFields() const {return itsFields;}
     // @}
 
 private:

@@ -29,6 +29,7 @@
 #include <lofar_config.h>
 #include <LofarFT/Imager.h>
 #include <LofarFT/Operation.h>
+#include <Common/ParameterSet.h>
 #include <Common/InputParSet.h>
 #include <Common/Exception.h>
 #include <LofarFT/Package__Version.h>
@@ -101,8 +102,26 @@ int main (Int argc, char** argv)
   catch (...)
   {
   }
+
+  string parsetname;
+  if (argc>1) {
+    parsetname=argv[1];
+  } else {
+    cout<<"Usage should be printed now"<<endl;
+    exit(0);
+  }
+
+  LOFAR::ParameterSet parset(parsetname);
+  parset.adoptArgv(argc,argv);
+
+  vector<string> unused = parset.unusedKeys();
+  if (! unused.empty()) {
+     cout<< "*** WARNING: the following parset keywords were not used ***"<<endl;
+     cout<< "             maybe they are misspelled"<<endl;
+     cout<< "    " << unused << endl;
+  }
   
-  String operation_name = initial_inputs.getString("operation");
+  String operation_name = parset.getString("operation");
   LOFAR::LofarFT::Operation *operation = LOFAR::LofarFT::OperationFactory::instance().create(operation_name);
   if (!operation)
   {

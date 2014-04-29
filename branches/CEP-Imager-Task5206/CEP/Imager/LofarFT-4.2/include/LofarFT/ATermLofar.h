@@ -51,6 +51,8 @@ class ATermLofar : public ATerm
 public:
   ATermLofar(const casa::MeasurementSet &ms, const casa::Record& parameters);
   
+  virtual ~ATermLofar() {};
+
   virtual Polarization::Type image_polarization() const {return Polarization::LINEAR;}
 
   void setDirection(const casa::DirectionCoordinate &coordinates, const casa::IPosition &shape);

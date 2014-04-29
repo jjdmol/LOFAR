@@ -8,7 +8,7 @@ lofar_add_library(lofarft
   FFTCMatrix.cc
   ATerm.cc
   ATermLofar.cc
-  ATermPython.cc
+#  ATermPython.cc
   ConvolutionFunction.cc
   Imager.cc
   CFStore.cc

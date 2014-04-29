@@ -47,6 +47,8 @@ namespace LofarFT {
 class ATerm
 {
 public:
+    virtual ~ATerm() {};
+
     /*!
     *  \brief Map of ITRF directions required to compute an image of the
     *  station beam.

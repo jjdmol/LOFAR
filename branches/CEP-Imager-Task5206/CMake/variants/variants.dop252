@@ -6,3 +6,13 @@ option(USE_SHMEM "No shmem" OFF)
 option(BUILD_DOCUMENTATION "Doxygen" ON)
 option(USE_OPENMP "OpenMP" ON)
 option(USE_THREADS "Threads" ON)
+option(USE_CASA42 "casa 4.2" ON)
+
+
+if (USE_CASA42)
+  set(CASACORE_ROOT_DIR /home/tammo/Prog/casa/4.2.2/installed/casacore)
+  set(CASA_ROOT_DIR /home/tammo/Prog/casa/4.2.2/installed/casa)
+  set(WCSLIB_ROOT_DIR /home/tammo/Prog/wcslib/4.22/installed)
+  set(PYRAP_ROOT_DIR /home/tammo/Prog/pyrap/1.1.0-casacore_casa42/installed)
+  set(LofarFT_SOURCE_DIR LofarFT-4.2)
+endif ()

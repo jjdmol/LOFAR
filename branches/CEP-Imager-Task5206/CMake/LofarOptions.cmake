@@ -79,7 +79,7 @@ if(NOT DEFINED LOFAR_OPTIONS_INCLUDED)
 
   if(USE_CASA42)
     add_definitions(-DUSE_CASA42)
-  endif(NOT USE_CASA42)
+  endif(USE_CASA42)
 
   if(USE_LOG4CPLUS)
     lofar_find_package(Log4Cplus REQUIRED)
