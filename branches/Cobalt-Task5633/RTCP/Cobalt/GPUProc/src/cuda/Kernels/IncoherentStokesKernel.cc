@@ -106,7 +106,6 @@ namespace LOFAR
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const
     {
-Backtrace();
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
       defs["TIME_INTEGRATION_FACTOR"] = 

@@ -203,6 +203,7 @@ namespace LOFAR
 
       if (incoherentStokesPPF)
       {
+        // The subbandIdx immediate kernel arg must outlive kernel runs.
         incoherentFirFilterKernel->enqueue(blockID,
           blockID.subbandProcSubbandIdx);
 

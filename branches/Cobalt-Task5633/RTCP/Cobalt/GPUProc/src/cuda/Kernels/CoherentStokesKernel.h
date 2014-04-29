@@ -60,6 +60,10 @@ namespace LOFAR
                            const Buffers &buffers,
                            const Parameters &param);
 
+    private:
+      // The timeParallelFactor is not a Parameter passed in, but is a kernel
+      // arg, so it must be a member var to outlive kernel launches.
+      unsigned timeParallelFactor;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//

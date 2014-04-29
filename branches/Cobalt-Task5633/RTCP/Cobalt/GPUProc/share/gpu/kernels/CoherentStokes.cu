@@ -55,7 +55,7 @@ typedef float2 (*InputDataType)[NR_TABS][NR_POLARIZATIONS][NR_SAMPLES_PER_CHANNE
 typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR][NR_CHANNELS];
 
 /*!
- * Computes the Stokes I or Stokes IQUV, or all 4 complex voltages (XrXiYrYi).
+ * Computes the Stokes I or IQUV, or outputs the 4 complex voltages (XrXiYrYi).
  * http://www.astron.nl/~romein/papers/EuroPar-11/EuroPar-11.pdf 
  * In case of Stokes:
  * \code
@@ -78,7 +78,7 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * dimension is in time; the third on the tabs.  The thread block size based on
  * these factors could be larger then the hardmare max.  Therefore<tt>
  * NR_CHANNELS * timeParallelFactor * NR_TABS</tt> should not exceed the
- * hardware maximum of threads per block (1024 on a K10).
+ * hardware maximum of threads per block (1024 on an NVIDIA K10).
  *
  * \param[out] output
  *             4D output array of stokes values. Each sample contains 1 or 4
@@ -122,7 +122,7 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  */
 extern "C" __global__ void coherentStokes(OutputDataType output,
                                           const InputDataType input,
-                                          unsigned timeParallelFactor) 
+                                          unsigned timeParallelFactor)
 {
   unsigned channel_idx = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned time_idx = threadIdx.y;     
@@ -134,19 +134,22 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
   if ( tab_idx >= NR_TABS)
     return;
 
-  //# Process samples by reading TIME_INTEGRATION samples and writing one set
-  //# of Stokes. For parallelism over time, split the sample range in
+  //# Process samples by reading TIME_INTEGRATION_FACTOR samples and writing one
+  //# set of Stokes. For parallelism over time, split the sample range in
   //# timeParallelFactor sub-ranges and process these independently.
   //# For complex voltages, we don't compute anything; it's only a transpose.
   //#
-  //# TODO: With few channels, we now have enough parallelism, but still a poor read memory access pattern.
-  //# To solve this, we need to change the input dims, or more likely, use a parallel reduction if NR_CHANNELS < 16. TBD.
-  //# TODO: We always have a poor write memory access pattern (transpose). Do the transpose in shmem. TBD how to combine with above.
-  //# Note that combining shmem barriers with the two conditional returns above is problematic.
-  unsigned read_idx  = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor);
-  unsigned write_idx = read_idx;
-  for ( ; read_idx < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) &&
-          read_idx < NR_SAMPLES_PER_CHANNEL; write_idx++)
+  //# TODO: This kernel must be rewritten as if it is a transpose to get efficient global mem read and write accesses.
+  //#       This reqs shmem. Note that combining shmem barriers with the two conditional returns above is problematic.
+  //# TODO: For very large TIME_INTEGRATION_FACTOR (e.g. 1024), we may need parallel reduction to have enough parallelization. TBD.
+  for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) ;
+                   idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor)
+                && idx_stride < NR_SAMPLES_PER_CHANNEL;
+                idx_stride += TIME_INTEGRATION_FACTOR)
+//  unsigned read_idx  = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor);
+//  unsigned write_idx = read_idx / TIME_INTEGRATION_FACTOR;
+//  for ( ; read_idx < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) &&
+//          read_idx < NR_SAMPLES_PER_CHANNEL; write_idx++)
   {
     //# Integrate all values in the current stride
 #   if COMPLEX_VOLTAGES == 1
@@ -161,11 +164,14 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
 #   endif
     
     //# Do the integration
-    for (unsigned stride_read_idx_end = read_idx + TIME_INTEGRATION_FACTOR;
-         read_idx < stride_read_idx_end; read_idx++)
+    for (unsigned idx_step = 0; idx_step < TIME_INTEGRATION_FACTOR; idx_step++)
+//    for (unsigned stride_read_idx_end = read_idx + TIME_INTEGRATION_FACTOR;
+//         read_idx < stride_read_idx_end; read_idx++)
     {
-      float2 X = (*input)[tab_idx][0][read_idx][channel_idx];    
-      float2 Y = (*input)[tab_idx][1][read_idx][channel_idx];
+      float2 X = (*input)[tab_idx][0][idx_stride + idx_step][channel_idx];
+      float2 Y = (*input)[tab_idx][1][idx_stride + idx_step][channel_idx];
+//      float2 X = (*input)[tab_idx][0][read_idx][channel_idx];
+//      float2 Y = (*input)[tab_idx][1][read_idx][channel_idx];
 
 #     if COMPLEX_VOLTAGES == 1
         stokes.x += X.x;
@@ -183,6 +189,8 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
 #       endif
 #     endif
     }
+
+    unsigned write_idx = idx_stride / TIME_INTEGRATION_FACTOR;
 
 #   if COMPLEX_VOLTAGES == 1
       (*output)[tab_idx][0][write_idx][channel_idx] = stokes.x;

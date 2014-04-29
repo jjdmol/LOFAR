@@ -388,7 +388,7 @@ TEST(Coherent2DifferentValuesAllDimTest)
   // 3. Integrate 
   // 4. Use tabs and channels
   size_t NR_CHANNELS = 1;
-  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 201;
+  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 200;
   size_t NR_TABS =  17;
   size_t INTEGRATION_SIZE = 3;
 

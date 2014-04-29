@@ -71,10 +71,21 @@ namespace LOFAR
     {
       ASSERT(params.timeIntegrationFactor > 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
-     
+
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
+      timeParallelFactor = module.getContext().getDevice().getMaxThreadsPerBlock() / params.nrChannelsPerSubband;
+      if (params.nrSamplesPerChannel < timeParallelFactor)
+        timeParallelFactor = 1;
+
+
+      setEnqueueWorkSizes(gpu::Grid (params.nrChannelsPerSubband, timeParallelFactor, params.nrTABs),
+                          gpu::Block(params.nrChannelsPerSubband, timeParallelFactor, 1));
+
+      // The timeParallelFactor immediate kernel arg must outlive kernel runs.
+      setArg(2, timeParallelFactor);
+#if 0
       // Process 16 channels and 16 TABs per block, unless fewer needed. Use kernel checks to skip unneeded work.
       const unsigned maxNrChannelsPerBlock = 16;
       const unsigned maxNrTABsPerBlock     = 16;
@@ -130,6 +141,7 @@ namespace LOFAR
 
       // 2nd order (final)
       setEnqueueWorkSizes(grid, block);
+#endif
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
@@ -165,7 +177,7 @@ namespace LOFAR
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
       defs["COMPLEX_VOLTAGES"] =
-        lexical_cast<string>(itsParameters.outputComplexVoltages ? 1 : 0);
+        itsParameters.outputComplexVoltages ? "1" : "0";
       defs["NR_COHERENT_STOKES"] =
         lexical_cast<string>(itsParameters.nrStokes);
       defs["TIME_INTEGRATION_FACTOR"] =
