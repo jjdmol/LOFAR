@@ -1,28 +1,31 @@
 #!/bin/bash
 #
-# Test connectivity from Cobalt to Cobalt using ping
+# Test connectivity from Cobalt to Cobalt.
 #
 # $Id$
 
 # Handle common signals
 trap 'exit 1' 1 2 3 15
 
+host=$(hostname)
 status=0
-for((i=1; i<9; i++)) 
+for ((i=1; i<9; i++))
 do
-  host=$(printf cbm%03d $i)
-  cmd='
-    sts=0;\
-    for((j=1; j<9; j++));\
-      do\
-        target=$(printf cbm%03d $j);\
-        if ! ping -c1 $target > /dev/null 2>&1;\
-        then\
-          echo "'$host' --> $target   FAILED!";\
-          sts=1;\
-        fi;\
-      done;\
-    exit $sts'
-  ssh $host "$cmd" || status=1
+  target=$(printf cbm%03d $i)
+  echo -n "$host --> $target   "
+  timeout 1 ssh $target /bin/true > /dev/null 2>&1
+  sts=$?
+  if [[ $sts -ne 0 ]]
+  then
+    status=1
+    if [[ $sts -eq 124 ]]
+    then 
+      echo "TIMEOUT"
+    else
+      echo "FAILED"
+    fi
+  else
+    echo "OK"
+  fi
 done
 exit $status
