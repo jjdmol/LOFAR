@@ -34,9 +34,13 @@ namespace
     registerClass<OperationImage>("image");
 }
   
-OperationImage::OperationImage()
+OperationImage::OperationImage(ParameterSet& parset): Operation(parset), OperationImageBase(parset), OperationParamData(parset)
 {
     
+}
+
+void OperationImage::init()
+{
 }
 
 void OperationImage::run()
@@ -45,8 +49,15 @@ void OperationImage::run()
   OperationParamData::run();
   
   itsImager->makeimage ("corrected", "testimage");
-  cout << "Hi, I am OperationImage::run" << endl;
 }
+
+void OperationImage::showHelp (ostream& os, const string& name)
+{
+  Operation::showHelp(os,name);
+  os<<
+  "Operation \"image\": create a dirty image                         "<<endl<<
+  "  No more parameters for operation\"image\"                       "<<endl;
+};
 
 
 } //# namespace LofarFT

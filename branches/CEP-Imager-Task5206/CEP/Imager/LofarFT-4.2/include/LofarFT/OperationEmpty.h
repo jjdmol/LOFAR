@@ -26,10 +26,13 @@ namespace LofarFT {
   {
   public:
     
-    OperationEmpty();
+    OperationEmpty(ParameterSet& parset);
     
+    virtual void init();
+
     virtual void run();
-    
+
+    virtual void showHelp (ostream& os, const string& name);
   };
 
 } //# namespace LofarFT

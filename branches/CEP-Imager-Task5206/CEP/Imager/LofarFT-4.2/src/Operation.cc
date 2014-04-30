@@ -30,69 +30,35 @@ using namespace casa;
 namespace LOFAR {
 namespace LofarFT {
   
-Operation::Operation()
-{
-  itsInputParSet.create( "ms", "", "Name of input MeasurementSet","string");
-  itsInputParSet.create ("operation", "image", "", "string");
-  
-  itsInputParSet.create ("verbose", "0",
-    "0=some output, 1=more output, 2=even more output",
-    "int");
-   
-  itsInputParSet.create ("ApplyBeamCode", "0",
-                  "Ask developers.",
-                  "int");
-  itsInputParSet.create ("UseMasks", "true",
-                  "When the element beam is applied (ApplyElement), the addictional step of convolving the grid can be made more efficient by computing masks. If true, it will create a directory in which it stores the masks.",
-                  "bool");
-  itsInputParSet.create ("UVmin", "0",
-                  "Minimum UV distance (klambda)",
-                  "Double");
-  itsInputParSet.create ("UVmax", "1000",
-                  "Maximum UV distance (klambda)",
-                  "Double");
-  itsInputParSet.create ("MakeDirtyCorr", "false",
-                  "Image plane correction.",
-                  "bool");
-  itsInputParSet.create ("UseWSplit", "true",
-                  "W split.",
-                  "bool");
-  itsInputParSet.create ("SpheSupport", "15",
-                  "Spheroidal/Aterm Support.",
-                  "Double");
-  itsInputParSet.create ("t0", "-1",
-                  "tmin in minutes since beginning.",
-                  "Double");
-  itsInputParSet.create ("t1", "-1",
-                  "tmax in minutes since beginning.",
-                  "Double");
-  itsInputParSet.create ("SingleGridMode", "true",
-                  "If set to true, then the FTMachine uses only one grid.",
-                  "bool");
-}
+Operation::Operation(ParameterSet& parset):
+    itsParset(parset)
+{}
 
-void Operation::readArguments (int argc, char const* const* argv) 
+void Operation::init()
 {
-  itsInputParSet.readArguments(argc, argv);
-};
+  itsMSName = itsParset.getString("ms");
+  itsMS = MeasurementSet(itsMSName, Table::Update);
+}
 
 // Show the help info.
 void Operation::showHelp (ostream& os, const string& name) 
 {
-  itsInputParSet.showHelp(os, name);
-};
-
-void Operation::setVersion (const string& version) 
-{
-  itsInputParSet.setVersion(version);
+  os<<
+  "General parameters:"
+  "  operation       : operation name                                "<<endl<<
+  "                    (string,  no default   )                      "<<endl<<
+  "  displayprogress : display progress                              "<<endl<<
+  "                    (bool  ,  default false)                      "<<endl<<
+  "  verbose         : verbosity level                               "<<endl<<
+  "                    (int   ,  default 0    )                      "<<endl<<
+  "  chunksize       : amount of data read at once                   "<<endl<<
+  "                    (int   ,  default 0    )                      "<<endl;
 };
 
 void Operation::run()
 {
-  itsMSName = itsInputParSet.getString("ms");
-  itsParameters.define("verbose", itsInputParSet.getInt("verbose"));
-  itsMS = MeasurementSet(itsMSName, Table::Update);
-  itsImager = new Imager(itsMS, itsParameters);
+  init();
+  itsImager = new Imager(itsMS, itsParameters, itsParset);
 }
 
 

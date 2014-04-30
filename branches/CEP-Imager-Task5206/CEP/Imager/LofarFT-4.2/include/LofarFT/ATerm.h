@@ -27,6 +27,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <StationResponse/LofarMetaDataUtil.h>
+#include <Common/ParameterSet.h>
 #include <ParmDB/ParmFacade.h>
 
 #include <casa/Arrays/Array.h>
@@ -97,7 +98,7 @@ public:
     };
   };
 
-  static casa::CountedPtr<ATerm> create(const casa::MeasurementSet &ms, const casa::Record& parameters);
+  static casa::CountedPtr<ATerm> create(const casa::MeasurementSet &ms, ParameterSet& parset);
 
   virtual Polarization::Type image_polarization() const = 0;
 
@@ -173,7 +174,7 @@ public:
     
 };
 
-typedef Singleton<DynamicObjectFactory<ATerm*(const casa::MeasurementSet& ms, const casa::Record& parameters)> > ATermFactory;
+typedef Singleton<DynamicObjectFactory<ATerm*(const casa::MeasurementSet& ms, ParameterSet& parset)> > ATermFactory;
 
 } // namespace LofarFT
 } // namespace LOFAR

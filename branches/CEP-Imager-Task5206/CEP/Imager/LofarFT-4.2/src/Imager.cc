@@ -41,9 +41,10 @@ namespace LofarFT {
   
 // @brief Imager for LOFAR data correcting for DD effects
 
-Imager::Imager (MeasurementSet& ms, const Record& parameters)
+Imager::Imager (MeasurementSet& ms, const Record& parameters, LOFAR::ParameterSet& parset)
   : casa::Imager(ms,false, true),
     itsParameters (parameters),
+    itsParset (parset),
     itsFTMachine    (0)
 {}
 
@@ -57,10 +58,9 @@ Bool Imager::createFTMachine()
   Double RefFreq = 0.0;
   if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
 
-  cout << "splitbeam: " << itsParameters.asBool("splitbeam") << endl;
+  cout << "splitbeam: " << itsParset.getBool("splitbeam",true) << endl;
   
-  
-  if (itsParameters.asBool("splitbeam")) {
+  if (itsParset.getBool("splitbeam",true)) {
 //     cout << itsParameters<<endl;
 //     itsMachine = new FTMachine(
 //       *ms_p, 
@@ -81,7 +81,7 @@ Bool Imager::createFTMachine()
   else 
   {
 //     itsFTMachine = FTMachineFactory::instance().create("FTMachineSimpleWB", *ms_p, itsParameters);
-    itsFTMachine = FTMachineFactory::instance().create("FTMachineSplitBeamWStackWB", *ms_p, itsParameters);
+    itsFTMachine = FTMachineFactory::instance().create("FTMachineSplitBeamWStackWB", *ms_p, itsParameters, itsParset);
 //     itsFTMachine = new FTMachineSimple(
 //       *ms_p, 
 //       wprojPlanes_p, 
@@ -95,8 +95,8 @@ Bool Imager::createFTMachine()
   cft_p = new SimpleComponentFTMachine();
 
   rvi_p->setRowBlocking (1000000);
-  if(itsParameters.asInt("RowBlock")>0){
-    rvi_p->setRowBlocking (itsParameters.asInt("RowBlock"));
+  if (itsParset.getInt("RowBlock",0)>0){
+    rvi_p->setRowBlocking (itsParset.getInt("RowBlock",0));
   };
   
   return True;
@@ -142,9 +142,9 @@ void Imager::makeVisSet(
   }
   Matrix<Int> noselection;
   Double timeInterval = 0;
-  if (itsParameters.asInt("ApplyElement"))
+  if (itsParset.getInt("ApplyElement",0))
   {
-      timeInterval = itsParameters.asDouble("TWElement");
+      timeInterval = itsParset.getDouble("TWElement",20.);
   }
 
   //if you want to use scratch col...make sure they are there
@@ -167,8 +167,8 @@ void Imager::makeVisSet(
 
 // Weight the MeasurementSet
 Bool Imager::weight(const String& type, const String& rmode,
-                const Quantity& noise, const Double robust,
-                const Quantity& fieldofview,
+                    const Quantity& noise, const Double robust,
+                    const Quantity& fieldofview,
                     const Int npixels, const Bool multiField)
 {
   if(!valid()) return False;
@@ -306,17 +306,17 @@ void Imager::showTimings (std::ostream&, double duration) const
 
 // Clean algorithm
 Record Imager::clean(const String& algorithm,
-                   const Int niter, 
-                   const Float gain,
-                   const Quantity& threshold, 
-                   const Bool /*displayProgress*/,
-                   const Vector<String>& model, const Vector<Bool>& fixed,
-                   const String& complist,
-                   const Vector<String>& mask,
-                   const Vector<String>& image,
-                   const Vector<String>& residual,
-                   const Vector<String>& psfnames,
-                   const Bool firstrun)
+                     const Int niter,
+                     const Float gain,
+                     const Quantity& threshold,
+                     const Vector<String>& model,
+                     const Vector<Bool>& fixed,
+                     const String& complist,
+                     const Vector<String>& mask,
+                     const Vector<String>& image,
+                     const Vector<String>& residual,
+                     const Vector<String>& psfnames,
+                     const Bool firstrun)
 {
   Record retval;
   Bool converged=True;

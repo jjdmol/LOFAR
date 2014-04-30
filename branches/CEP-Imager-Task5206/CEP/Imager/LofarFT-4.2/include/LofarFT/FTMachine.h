@@ -32,6 +32,7 @@
 #include <LofarFT/DynamicObjectFactory.h>
 #include <LofarFT/VisResampler.h>
 #include <LofarFT/ConvolutionFunction.h>
+#include <Common/ParameterSet.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
@@ -141,7 +142,8 @@ public:
   
   FTMachine(
     const casa::MeasurementSet& ms, 
-    const casa::Record& parameters);
+    const casa::Record& parameters,
+    LOFAR::ParameterSet& parset);
 
   // Copy constructor
   FTMachine(const FTMachine &other);
@@ -344,6 +346,7 @@ protected:
   //Check if using put that avoids non-necessary reads
   casa::Bool itsUsePut2;
 
+  LOFAR::ParameterSet itsParset;
   casa::Record itsParameters;
   
   //machine name
@@ -381,8 +384,8 @@ protected:
   int itsMaxSupport;
   casa::Int itsOversample;
   casa::String itsImageName;
-  casa::Matrix<casa::Bool> itsGridMuellerMask;
-  casa::Matrix<casa::Bool> itsDegridMuellerMask;
+//  casa::Matrix<casa::Bool> itsGridMuellerMask;
+//  casa::Matrix<casa::Bool> itsDegridMuellerMask;
   double itsGriddingTime;
   double itsDegriddingTime;
   double itsCFTime;
@@ -392,7 +395,7 @@ protected:
 
 // Factory that can be used to generate new FTMachine objects.
 // The factory is defined as a singleton.
-typedef Singleton<DynamicObjectFactory<FTMachine*(const casa::MeasurementSet& ms, const casa::Record& parameters)> > FTMachineFactory;
+typedef Singleton<DynamicObjectFactory<FTMachine*(const casa::MeasurementSet& ms, const casa::Record& parameters, ParameterSet& parset)> > FTMachineFactory;
 
 
 } //# end namespace LofarFT

@@ -26,9 +26,9 @@
 namespace LOFAR {
 namespace LofarFT {
  
-casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, const casa::Record& parameters)
+casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, ParameterSet& parset)
 {
-  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parameters.asString("ATerm"), ms, parameters));
+  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parset.getString("ATerm","ATermLofar"), ms, parset));
 }
 
 }

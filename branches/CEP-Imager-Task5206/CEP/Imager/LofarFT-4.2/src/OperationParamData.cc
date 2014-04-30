@@ -30,68 +30,9 @@ using namespace casa;
 namespace LOFAR {
 namespace LofarFT {
 
-OperationParamData::OperationParamData()
+OperationParamData::OperationParamData(ParameterSet& parset): Operation(parset)
 {
-  itsInputParSet.create (
-    "select",
-    "",
-    "TaQL selection string for MS",
-    "string");
-  
-  itsInputParSet.create (
-    "antenna", "",
-    "Baseline selection string.",
-    "string");
-  
-  itsInputParSet.create (
-    "field", 
-    "0",
-    "field id to be used",
-    "int");
-  
-  itsInputParSet.create (
-    "spwid", 
-    "0",
-    "spectral window id(s) to be used",
-    "int vector");
-
-  itsInputParSet.create (
-    "chanmode", 
-    "channel",
-    "frequency channel mode",
-    "string");
-  
-  itsInputParSet.create (
-    "nchan", 
-    "1",
-    "number of frequency channels to select from each spectral window (one number per spw)",
-    "int vector");
-  
-  itsInputParSet.create (
-    "chanstart", 
-    "0",
-    "first frequency channel per each spw (0-relative)",
-    "int vector");
-  
-  itsInputParSet.create (
-    "chanstep", 
-    "1",
-    "frequency channel step per each spw",
-    "int vector");
-  
-  itsInputParSet.create (
-    "uvdist", 
-    "",
-    "UV Range",
-    "string");
-
-  
-}
-
-
-void OperationParamData::run()
-{
-  String select = itsInputParSet.getString("select");
+  String select = parset.getString("select","");
   if (select.empty()) 
   {
     select = "ANTENNA1 != ANTENNA2";
@@ -101,25 +42,24 @@ void OperationParamData::run()
     select = '(' + select + ") && ANTENNA1 != ANTENNA2";
   }
 
-  
   MSSpWindowColumns window(itsMS.spectralWindow());
   Vector<Int> wind(window.nrow());
   for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
 
   ROArrayColumn<Double> chfreq(window.chanFreq());
 
-  String chanmode  = itsInputParSet.getString("chanmode");
+  String chanmode  = parset.getString("chanmode","channel");
   
   Vector<Int> chansel(1);
   chansel(0)=chfreq(0).shape()[0];
   
-  Vector<Int> chanstart(itsInputParSet.getIntVector("chanstart"));
-  Vector<Int> chanstep(itsInputParSet.getIntVector("chanstep"));
+  Vector<Int> chanstart(parset.getIntVector("chanstart",std::vector<int>(1,0)));
+  Vector<Int> chanstep(parset.getIntVector("chanstep",std::vector<int>(1,1)));
 
-  String antenna = itsInputParSet.getString("antenna");
-  String uvdist = itsInputParSet.getString("uvdist");
+  String antenna = parset.getString("antenna","");
+  String uvdist = parset.getString("uvdist","");
 
-  Int fieldid = itsInputParSet.getInt("field");
+  Int fieldid = parset.getInt("field",0);
   
   itsImager->setdata (
     chanmode,                       // mode
@@ -136,11 +76,11 @@ void OperationParamData::run()
     Vector<Int>(),                  // antIndex
     antenna,                        // antnames
     String(),                       // spwstring
-    uvdist,                       // uvdist
+    uvdist,                         // uvdist
     String(),                       // scan
-    String(),                      // intent
+    String(),                       // intent
     String(),                       // obs
-    True);                         // useModelCol
+    True);                          // useModelCol
   
   String weight("natural");
   String rmode;
@@ -156,6 +96,21 @@ void OperationParamData::run()
     Quantity(0, "rad"),          // fieldofview
     0);                          // npixels
 }
+
+void OperationParamData::init()
+{
+}
+
+
+void OperationParamData::run()
+{
+
+}
+
+void OperationParamData::showHelp (ostream& os, const string& name)
+{
+  //TODO
+};
 
 } //# namespace LofarFT
 } //# namespace LOFAR

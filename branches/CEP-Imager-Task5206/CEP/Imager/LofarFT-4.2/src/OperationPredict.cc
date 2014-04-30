@@ -34,22 +34,17 @@ namespace
 }
 
 
-OperationPredict::OperationPredict()
-{
-  itsInputParSet.create (
-    "model", 
-    "",
-    "Model image for the predict",
-    "string");
-}
+OperationPredict::OperationPredict(ParameterSet& parset): Operation(parset), OperationParamFTMachine(parset), OperationParamData(parset)
+{}
+
+void OperationPredict::init()
+{}
 
 void OperationPredict::run()
 {
   Operation::run();
   OperationParamFTMachine::run();
   OperationParamData::run();
-
-  itsParameters.define("imagename", "");
   
   casa::String model = itsInputParSet.getString("model");
   
@@ -57,6 +52,18 @@ void OperationPredict::run()
   
   itsImager->predict(casa::Vector<casa::String>(1, model));
 }
+
+void OperationPredict::showHelp (ostream& os, const string& name)
+{
+  Operation::showHelp(os,name);
+  os<<
+  "Operation \"predict\": create a predicted image                   "<<endl<<
+  "Parameters:                                                       "<<endl<<
+  "  model           : model to be predicted                         "<<endl<<
+  "                    (string,  ???                 \")             "<<endl<<
+  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
+};
+
 
 } //# namespace LofarFT
 

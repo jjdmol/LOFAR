@@ -28,6 +28,7 @@
 #include <LofarFT/CFStore.h>
 #include <LofarFT/FFTCMatrix.h>
 #include <Common/Timer.h>
+#include <Common/ParameterSet.h>
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -64,7 +65,8 @@ public:
     casa::Int verbose,
     casa::Int maxsupport,
     const casa::String& imgName,
-    const casa::Record& parameters);
+    const casa::Record& parameters,
+    ParameterSet& parset);
 
   virtual ~ConvolutionFunction () {};
   
@@ -108,7 +110,6 @@ public:
     casa::uInt stationB,
     casa::Double time, 
     casa::Double w,
-    const casa::Matrix<bool>& mask_mueller,
     bool degridding_step,
     double append_average_PB_CF,
     casa::Matrix<casa::Complex>& Stack_PB_CF,
@@ -179,6 +180,7 @@ private:
 
   //# Data members.
   casa::Record              itsParameters;
+  ParameterSet&             itsParset;
   casa::IPosition           itsShape;
   casa::DirectionCoordinate itsCoordinates;
   WScale                    itsWScale;

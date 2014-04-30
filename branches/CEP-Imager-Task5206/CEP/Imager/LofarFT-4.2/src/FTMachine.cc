@@ -90,7 +90,8 @@ namespace LofarFT {
 
 FTMachine::FTMachine(
   const MeasurementSet& ms, 
-  const Record& parameters)  
+  const Record& parameters,
+  ParameterSet& parset)
   : casa::FTMachine(), 
    // Aliases for data members of casa::FTMachine
 //     itsImage(0),
@@ -103,21 +104,19 @@ FTMachine::FTMachine(
 //     itsPolMap(casa::FTMachine::polMap),
     
   // ================================================  
-    itsPadding(parameters.asDouble("padding")), 
+    itsPadding(parset.getDouble("padding",1.0)),
     itsMaxAbsData(0.0), 
     itsCenterLoc(IPosition(4,0)),
-    itsOffsetLoc(IPosition(4,0)), 
-    itsParameters(parameters), 
+    itsOffsetLoc(IPosition(4,0)),
+    itsParset(parset),
     itsMS(ms),
     itsNWPlanes(100 /*nwPlanes*/), 
-    itsWMax(parameters.asDouble("wmax")), 
+    itsWMax(parset.getDouble("wmax",10000.0)),
     itsConvFunc(), 
-    itsVerbose(parameters.asInt("verbose")),
-    itsMaxSupport(parameters.asInt("maxsupport")), 
-    itsOversample(parameters.asInt("oversample")), 
-    itsImageName(parameters.asString("imagename")),
-    itsGridMuellerMask(parameters.asArrayBool("mueller.grid")),
-    itsDegridMuellerMask(parameters.asArrayBool("mueller.degrid")),
+    itsVerbose(parset.getInt("verbose",0)),
+    itsMaxSupport(parset.getInt("maxsupport",1024)),
+    itsOversample(parset.getInt("oversample",8)),
+    itsImageName(parset.getString("imagename")),
     itsGriddingTime(0),   // counters to measure time spend per operation (Gridding, Degridding, and Convolution Function computation)
     itsDegriddingTime(0), //
     itsCFTime(0)          //
@@ -186,8 +185,6 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     itsMaxSupport = other.itsMaxSupport;
     itsOversample = other.itsOversample;
     itsImageName = other.itsImageName;
-    itsGridMuellerMask = other.itsGridMuellerMask;
-    itsDegridMuellerMask = other.itsDegridMuellerMask;
     itsGriddingTime = other.itsGriddingTime;
     itsDegriddingTime = other.itsDegriddingTime;
     itsCFTime = other.itsCFTime;
@@ -242,7 +239,8 @@ void FTMachine::init(const ImageInterface<Float> &image) {
     itsVerbose, 
     itsMaxSupport,
     itsImageName,
-    itsParameters);
+    itsParameters,
+    itsParset);
 }
 
 FTMachine::~FTMachine()

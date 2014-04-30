@@ -49,7 +49,7 @@ namespace LofarFT {
 class ATermLofar : public ATerm
 {
 public:
-  ATermLofar(const casa::MeasurementSet &ms, const casa::Record& parameters);
+  ATermLofar(const casa::MeasurementSet &ms, ParameterSet& parset);
   
   virtual ~ATermLofar() {};
 
@@ -138,7 +138,6 @@ protected:
   void initParmDB(const casa::String &parmdbname);
   double get_parmvalue( const casa::Record &parms, const string &parmname );
 
-  casa::Record itsParameters;
   casa::Record itsParmValues;
   
   vector<StationResponse::Station::ConstPtr>  itsStations;

@@ -41,101 +41,13 @@ namespace
     registerClass<OperationClean>("clean");
 }
 
-OperationClean::OperationClean()
+OperationClean::OperationClean(ParameterSet& parset): Operation(parset), OperationImageBase(parset), OperationParamData(parset){}
+
+void OperationClean::init()
 {
-  itsInputParSet.create (
-    "niter", 
-    "1000",
-    "Number of clean iterations",
-    "int");
-  
-  itsInputParSet.create (
-    "gain", 
-    "0.1",
-    "Loop gain for cleaning",
-    "float");
-  
-  itsInputParSet.create (
-    "threshold", 
-    "0Jy",
-    "Flux level at which to stop cleaning",
-    "quantity string");
-  
-  itsInputParSet.create (
-    "fixed", 
-    "False",
-    "Keep clean model fixed",
-    "bool");
-  
-  itsInputParSet.create (
-    "cyclefactor", 
-    "1.5",
-    "Cycle Factor. See Casa definition.",
-    "Double");
-  
-  itsInputParSet.create (
-    "cyclespeedup", 
-    "-1",
-    "Cycle Factor. See Casa definition.",
-    "Double");
-  
-  itsInputParSet.create (
-    "PsfImage", 
-    "",
-    "Input PSF image for the cleaning",
-    "string");
-  
-  itsInputParSet.create (
-    "nscales", 
-    "5",
-    "Number of scales for MultiScale Clean",
-    "int");
-  
-  itsInputParSet.create (
-    "uservector", 
-    "0",
-    "user-defined scales for MultiScale clean",
-    "float vector");
-    
-  itsInputParSet.create (
-    "model", 
-    "", 
-    "Name of model image file (default is <imagename>.model", 
-    "string");
-  
-  itsInputParSet.create (
-    "restored", 
-    "", 
-    "Name of restored image file (default is <imagename>.restored", 
-    "string");
-  
-  itsInputParSet.create (
-    "residual", 
-    "", 
-    "Name of residual image file (default is <imagename>.residual", 
-    "string");
-  
-  itsInputParSet.create (
-    "psf", 
-    "", 
-    "Name of psf image file (default is <imagename>.psf", 
-    "string");
+  Operation::init();
 
-  itsInputParSet.create (
-      "mask", 
-      "",
-      "Name of the mask to use in cleaning",
-      "string");
-}
-
-void OperationClean::run()
-{
-  OperationImageBase::run();
-  OperationParamData::run();
-
-  cout << "Hi, I am OperationClean::run" << endl;
-
-  Vector<Double> userScaleSizes(itsInputParSet.getDoubleVector("uservector"));  
+  Vector<Double> userScaleSizes(itsParset.getDoubleVector("uservector",0));
   String scaleMethod;
   Vector<Float> userVector(1); userVector(0)=0;
 //   convertArray (userVector, userScaleSizes);
@@ -151,9 +63,28 @@ void OperationClean::run()
   
   itsImager->setscales(scaleMethod, 1, userVector);
 
-  String imgName = itsParameters.asString("imagename");  
+}
 
-  Int nterms = itsParameters.asInt("nterms");
+void OperationClean::showHelp (ostream& os, const string& name)
+{
+  Operation::showHelp(os,name);
+  os<<
+  "Operation \"clean\": perform a clean cycle                        "<<endl<<
+  "Parameters:                                                       "<<endl<<
+  "  uservector      : user-defined scales for multi-scale clean     "<<endl<<
+  "                    (string,  default \"uservector\")             "<<endl<<
+  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
+};
+
+void OperationClean::run()
+{
+  Operation::run();
+
+  init();
+
+  String imgName = itsParset.getString("imagename");
+
+  Int nterms = itsParset.getInt("nterms",1);
 
   Vector<String> modelNames(nterms);
   Vector<String> residualNames(nterms);
@@ -178,18 +109,18 @@ void OperationClean::run()
     }
   }
   
-  Int niter = itsInputParSet.getInt("niter");
-  Double gain = itsInputParSet.getDouble("gain");
+  Int niter = itsParset.getInt("niter",1000);
+  Double gain = itsParset.getDouble("gain",0.1);
   
-  String threshStr = itsInputParSet.getString("threshold");
+  String threshStr = itsParset.getString("threshold","0Jy");
   Quantity threshold = readQuantity (threshStr);
 
   Bool displayProgress = False;
   
-  String maskName  = itsInputParSet.getString("mask");
+  String maskName  = itsParset.getString("mask","");
   
-  Double cyclefactor   = itsInputParSet.getDouble("cyclefactor");
-  Double cyclespeedup  = itsInputParSet.getDouble("cyclespeedup");
+  Double cyclefactor   = itsParset.getDouble("cyclefactor",1.5);
+  Double cyclespeedup  = itsParset.getDouble("cyclespeedup",-1);
   
   itsImager->setmfcontrol(
     cyclefactor,          //Float cyclefactor,
@@ -206,17 +137,16 @@ void OperationClean::run()
   
   itsImager->clean(
     "msmfs",                     // algorithm,
-    niter,                         // niter
-    gain,                          // gain
-    threshold,                     // threshold
-    displayProgress,               // displayProgress
+    niter,                       // niter
+    gain,                        // gain
+    threshold,                   // threshold
     modelNames,
-    Vector<Bool>(nterms, False),        // fixed
-    "",                            // complist
-    Vector<String>(1, maskName),   // mask
-    restoredNames,  // restored
-    residualNames,  // residual
-    psfNames);   // psf
+    Vector<Bool>(nterms, False), // fixed
+    "",                          // complist
+    Vector<String>(1, maskName), // mask
+    restoredNames,               // restored
+    residualNames,               // residual
+    psfNames);                   // psf
 
 }
 

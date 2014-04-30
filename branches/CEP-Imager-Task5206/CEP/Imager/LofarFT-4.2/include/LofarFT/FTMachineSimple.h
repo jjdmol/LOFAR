@@ -130,7 +130,8 @@ public:
 //     casa::MPosition mLocation, 
 //     casa::Float padding,
 //     casa::Bool useDoublePrec, 
-    const casa::Record& parameters);
+    const casa::Record& parameters,
+    ParameterSet& parset);
 
   virtual ~FTMachineSimple();
   

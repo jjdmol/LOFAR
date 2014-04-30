@@ -37,13 +37,26 @@ namespace
     registerClass<OperationEmpty>("empty");
 }
 
-OperationEmpty::OperationEmpty()
+OperationEmpty::OperationEmpty(ParameterSet& parset): Operation(parset), OperationImage(parset)
+{
+}
+
+void OperationEmpty::init()
 {
 }
 
 void OperationEmpty::run()
 {
 }
+
+void OperationEmpty::showHelp (ostream& os, const string& name)
+{
+  Operation::showHelp(os,name);
+  os<<
+  "Operation \"empty\": create an empty image                        "<<endl<<
+  "  No more parameters for operation\"empty\"                       "<<endl;
+};
+
 
 } //# namespace LofarFT
 

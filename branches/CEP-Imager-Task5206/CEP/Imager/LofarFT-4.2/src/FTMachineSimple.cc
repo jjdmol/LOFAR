@@ -51,8 +51,10 @@ FTMachineSimple::FTMachineSimple(
 //   MPosition mLocation, 
 //   Float padding, 
 //   Bool useDoublePrec,
-  const Record& parameters)
-  : FTMachine( ms, parameters),
+  const Record& parameters,
+  ParameterSet& parset)
+  : FTMachine( ms, parameters, parset),
+    itsParset(parset),
     itsNThread(OpenMP::maxThreads())
 {
   cout << "Constructing FTMachineSimple..." << endl;

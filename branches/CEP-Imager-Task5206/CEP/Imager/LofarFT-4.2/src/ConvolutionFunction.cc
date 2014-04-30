@@ -102,10 +102,11 @@ ConvolutionFunction::ConvolutionFunction
   Int verbose,
   Int maxsupport,
   const String& imgName,
-  const casa::Record& parameters)
+  const casa::Record& parameters,
+  ParameterSet& parset)
   : itsShape(shape),
     itsCoordinates(coordinates),
-    itsATerm(ATerm::create(ms, parameters)),
+    itsATerm(ATerm::create(ms, parset)),
     itsMaxW(wmax), //maximum W set by ft machine to flag the w>wmax
     itsNWPlanes(nW),
     itsOversampling(oversample),
@@ -113,6 +114,7 @@ ConvolutionFunction::ConvolutionFunction
     itsMaxSupport(maxsupport),
     itsImgName(imgName),
     itsParameters(parameters),
+    itsParset(parset),
     itsTimeW    (0),
     itsTimeWpar (0),
     itsTimeWfft (0),
@@ -154,7 +156,7 @@ ConvolutionFunction::ConvolutionFunction
   Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),0.);
   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
-  if(parameters.asBool("FindNWplanes")) FindNWplanes();
+  if(parset.getBool("FindNWplanes",true)) FindNWplanes();
 
   // Precalculate the Wtwerm fft for all w-planes.
   store_all_W_images();
@@ -406,7 +408,6 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   uInt stationB, 
   Double time, 
   Double w,
-  const Matrix<bool>& mask_mueller, 
   bool degridding_step,
   double Append_average_PB_CF, 
   Matrix<Complex>& Stack_PB_CF,
@@ -541,8 +542,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             ind0 = row0 + 2*row1;
             ind1 = col0 + 2*col1;
             // Compute the convolution function for the given Mueller element
-            if (mask_mueller(ii,jj)) 
-            {
+
               // Padded version for oversampling the convolution function
               Matrix<Complex> plane_product (aTermB_padded.xyPlane(ind0) *
                                               aTermA_padded.xyPlane(ind1));
@@ -572,11 +572,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
                 normalized_fft (timerFFT, plane_productf);
                 row_non_padded[jj].reference (plane_productf);
               }
-            } 
-            else 
-            {
-              allElem = False;
-            }
+
             ++jj;
           }
         }
@@ -597,9 +593,8 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
       {
         for (uInt j=i; j<4; ++j) 
         {
-          ASSERT (mask_mueller(i,j) == mask_mueller(j,i));
-          if (mask_mueller(i,j)) 
-          {
+
+
             if (i!=j) 
             {
               Matrix<Complex> conj_product(conj(kronecker_product[i][j]));
@@ -610,26 +605,11 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
             {
               kronecker_product[i][j].reference (conj(kronecker_product[i][j]));
             }
-          }
+
         }
       }
     }
 
-    // Put similarly shaped matrix with zeroes for missing Mueller elements.
-    if (!allElem) 
-    {
-      Matrix<Complex> zeroCF(cfShape);
-      for (uInt i=0; i<4; ++i) 
-      {
-        for (uInt j=0; j<4; ++j) 
-        {
-          if (! mask_mueller(i,j)) 
-          {
-            kronecker_product[i][j].reference (zeroCF);
-          }
-        }
-      }
-    }
     // Add the conv.func. for this channel to the result.
     result.push_back(kronecker_product);
     if (stack) 
@@ -651,7 +631,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
       for (uInt j=0; j<4; ++j) 
       {
         // Only use diagonal terms for average primary beam.
-        if (i==j  &&  mask_mueller(i,j)) 
+        if (i==j)
         {
           double istart = 0.5 * (itsShape[0] - Npix_out2);
           if (istart-floor(istart) != 0.) 
@@ -695,7 +675,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   itsTimeCFpar += ptime;
 
   return CFStore (res, csys, samp,  xsup, ysup, maxXSup, maxYSup,
-                        pa, mosPointing, mask_mueller);
+                        pa, mosPointing);
 }
 
 //================================================

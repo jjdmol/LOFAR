@@ -27,12 +27,15 @@ namespace LofarFT {
   {
   public:
     
-    OperationImageBase();
+    OperationImageBase(ParameterSet& parset);
     
+    virtual void init();
+
     virtual void run();
-    
+
+    virtual void showHelp (ostream& os, const string& name);
+
     void makeEmpty (const casa::String& imgName, casa::Int fieldid);
-    
   };
 
 } //# namespace LofarFT

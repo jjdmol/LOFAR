@@ -123,8 +123,9 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
 
 FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   const MeasurementSet& ms,
-  const Record& parameters)
-  : FTMachine( ms, parameters),
+  const Record& parameters,
+  ParameterSet& parset)
+  : FTMachine( ms, parameters, parset),
     itsNThread(OpenMP::maxThreads()),
     itsRefFreq(parameters.asDouble("RefFreq"))
 {

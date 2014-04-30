@@ -19,7 +19,7 @@ set(GNU_ASM       /usr/bin/gcc)      # GNU assembler
 set(GNU_C_FLAGS)
 set(GNU_C_FLAGS_DEBUG    "-g")
 set(GNU_C_FLAGS_OPT      "-g -O2")
-set(GNU_CXX_FLAGS        "-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
+set(GNU_CXX_FLAGS        ) #"-W -Wall -Woverloaded-virtual -Wno-unknown-pragmas")
 set(GNU_CXX_FLAGS_DEBUG  "-g")
 set(GNU_CXX_FLAGS_OPT    "-g -O2")
 set(GNU_EXE_LINKER_FLAGS)

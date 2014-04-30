@@ -41,17 +41,13 @@ namespace LOFAR {
     class Operation
     {
     public:
+      Operation(ParameterSet& parset);
       
-      Operation();
-      
+      virtual void init();
+
       virtual void run();
-       
-      void readArguments (int argc, char const* const* argv);
-      
-      // Show the help info.
-      void showHelp (ostream& os, const string& name);
-      
-      void setVersion(const string& version);
+
+      virtual void showHelp (ostream& os, const string& name);
       
       static casa::IPosition readIPosition (const casa::String& in);
       
@@ -68,6 +64,7 @@ namespace LOFAR {
       
     protected:
       InputParSet                itsInputParSet;
+      ParameterSet               &itsParset;
       casa::String               itsMSName;
       casa::MeasurementSet       itsMS;
       casa::Record               itsParameters;
@@ -77,8 +74,7 @@ namespace LOFAR {
 
     // Factory that can be used to generate new Operation objects.
     // The factory is defined as a singleton.
-    typedef Singleton< ObjectFactory< Operation*(), string > > OperationFactory;
-    
+    typedef Singleton< ObjectFactory< Operation*(ParameterSet&), string > > OperationFactory;
 
   } //# namespace LofarFT
 } //# namespace LOFAR

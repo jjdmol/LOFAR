@@ -187,8 +187,8 @@ namespace
   void rescale(Cube<DComplex> &response);
 } //# unnamed namespace
   
-ATermLofar::ATermLofar(const MeasurementSet& ms, const casa::Record& parameters) :
-  itsVerbose(parameters.asInt("verbose"))
+ATermLofar::ATermLofar(const MeasurementSet& ms, ParameterSet& parset) :
+  itsVerbose(parset.getInt("verbose",0))
 {
   // Read station information.
   readStations(ms, std::back_inserter(itsStations));
@@ -201,24 +201,13 @@ ATermLofar::ATermLofar(const MeasurementSet& ms, const casa::Record& parameters)
 
   itsDirectionCoordinates = 0;
 
-  itsApplyBeam = True;
-  if(parameters.fieldNumber("applyBeam") > -1)
-  {
-    itsApplyBeam = parameters.asBool("applyBeam");
-  }
+  itsApplyBeam = parset.getBool("applyBeam",true);
 
-  itsApplyIonosphere = False;
-  if (parameters.fieldNumber("applyIonosphere") > -1)
-  {
-    itsApplyIonosphere = parameters.asBool("applyIonosphere");
-  }
+  itsApplyIonosphere = parset.getBool("applyIonosphere",false);
+
   if (itsApplyIonosphere) 
   {
-    String parmdbname = ms.tableName() + "/instrument";
-    if (itsParameters.fieldNumber("parmdbname") > -1) 
-    {
-      parmdbname = ms.tableName() + "/" + itsParameters.asString("parmdbname");
-    }
+    String parmdbname = parset.getString("parmdbname",ms.tableName() + "/instrument");
     if (itsVerbose) cout << parmdbname << endl;
     initParmDB(parmdbname);
     if (itsVerbose) cout << itsCal_pp_names << endl;

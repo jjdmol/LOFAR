@@ -52,10 +52,11 @@ FTMachineSimpleWB::FTMachineSimpleWB(
 //   MPosition mLocation, 
 //   Float padding, 
 //   Bool useDoublePrec,
-  const Record& parameters)
-  : FTMachine( ms, parameters),
+  const Record& parameters,
+  ParameterSet& parset)
+  : FTMachine( ms, parameters, parset),
     itsNThread(OpenMP::maxThreads()),
-    itsRefFreq(parameters.asDouble("RefFreq"))
+    itsRefFreq(parset.getDouble("RefFreq"))
 {
   cout << "Constructing FTMachineSimpleWB..." << endl;
   itsMachineName = "LofarFTMachineSimpleWB";
@@ -347,7 +348,6 @@ void FTMachineSimpleWB::put(const VisBuffer& vb, Int row, Bool dopsf,
       ant2[ist], 
       time,
       0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-      itsGridMuellerMask, 
       false,
       average_weight,
       itsSumPB[0],
@@ -575,7 +575,6 @@ void FTMachineSimpleWB::get(VisBuffer& vb, Int row)
         ant2[ist], 
         time,
         0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-        itsDegridMuellerMask,
         true,
         0.0,
         itsSumPB[threadNum],

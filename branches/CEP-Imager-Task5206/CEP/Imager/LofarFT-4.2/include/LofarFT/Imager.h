@@ -29,6 +29,7 @@
 #include <LofarFT/VisibilityIterator.h>
 #include <LofarFT/VisImagingWeight.h>
 #include <synthesis/MeasurementEquations/Imager.h>
+#include <Common/ParameterSet.h>
 #include <casa/Containers/Record.h>
 
 
@@ -48,7 +49,8 @@ namespace LofarFT {
 
     // Construct from the Imager object.
     explicit Imager (casa::MeasurementSet&,
-                     const casa::Record& parameters);
+                     const casa::Record& parameters,
+                     LOFAR::ParameterSet& parset);
 
     virtual ~Imager();
 
@@ -93,7 +95,6 @@ namespace LofarFT {
     const casa::Int niter, 
     const casa::Float gain, 
     const casa::Quantity& threshold, 
-    const casa::Bool displayProgress, 
     const casa::Vector<casa::String>& model, 
     const casa::Vector<casa::Bool>& fixed,
     const casa::String& complist,
@@ -108,11 +109,12 @@ namespace LofarFT {
   private:
     //# Data members.
     const casa::Record     &itsParameters;
-    FTMachine*       itsFTMachine;
-    vector<casa::Array<casa::Complex> > itsGridsParallel;
+    ParameterSet    &itsParset;
+    FTMachine*             itsFTMachine;
+    vector<casa::Array<casa::Complex> >  itsGridsParallel;
     vector<casa::Array<casa::DComplex> > itsGridsParallel2;
-    VisibilityIterator* lofar_rvi_p;
-    VisImagingWeight    lofar_imwgt_p;
+    VisibilityIterator*    lofar_rvi_p;
+    VisImagingWeight       lofar_imwgt_p;
 
 };
 

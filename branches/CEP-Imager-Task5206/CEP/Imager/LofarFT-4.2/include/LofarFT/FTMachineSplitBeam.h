@@ -96,7 +96,8 @@ public:
     casa::Double uvMin,
     casa::Double uvMax,
     casa::Bool makeDirtyCorr,
-    const casa::Record& parameters);//,
+    const casa::Record& parameters,
+    LOFAR::ParameterSet& parset);//,
 
   // Copy constructor
   FTMachineWsplit(const FTMachineWsplit &other);

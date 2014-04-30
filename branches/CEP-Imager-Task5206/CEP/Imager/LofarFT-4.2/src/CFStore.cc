@@ -79,8 +79,7 @@ namespace LofarFT{
     casa::Int maxXSup, 
     casa::Int maxYSup,
     casa::Quantity PA, 
-    casa::Int mosPointing, 
-    const casa::Matrix<bool>&)
+    casa::Int mosPointing)
   : itsData(),
     itsRData(),
     itsVData(dataPtr), 

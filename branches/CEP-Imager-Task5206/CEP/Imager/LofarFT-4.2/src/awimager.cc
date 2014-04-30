@@ -31,6 +31,7 @@
 #include <LofarFT/Operation.h>
 #include <Common/ParameterSet.h>
 #include <Common/InputParSet.h>
+#include <Common/SystemUtil.h>
 #include <Common/Exception.h>
 #include <LofarFT/Package__Version.h>
 #include <Common/Version.h>
@@ -60,6 +61,7 @@ LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 IPosition handlePos (const IPosition& pos, const IPosition& def);
 Matrix<Bool> readMueller (const String& str, String stokes, Bool grid);
+void printHelp(Int argc, char** argv);
 void applyFactors (PagedImage<Float>& image, const Array<Float>& factors);
 void correctImages (
   const String& restoName, 
@@ -73,6 +75,7 @@ void correctImages (
 
 int main (Int argc, char** argv)
 {
+  INIT_LOGGER(LOFAR::basename(string(argv[0])));
   vector<string> operations = LOFAR::LofarFT::OperationFactory::instance().registeredClassIds();
   
   LOFAR::InputParSet initial_inputs;
@@ -104,15 +107,26 @@ int main (Int argc, char** argv)
   }
 
   string parsetname;
-  if (argc>1) {
-    parsetname=argv[1];
-  } else {
-    cout<<"Usage should be printed now"<<endl;
+  if (argc<=1 || string(argv[1])=="--help" || string(argv[1])=="-help" || string(argv[1])=="help") {
+    printHelp(argc,argv);
     exit(0);
+  }
+  else {
+    parsetname=argv[1];
   }
 
   LOFAR::ParameterSet parset(parsetname);
   parset.adoptArgv(argc,argv);
+  
+  String operation_name = parset.getString("operation");
+  LOFAR::LofarFT::Operation *operation = LOFAR::LofarFT::OperationFactory::instance().create(operation_name,parset);
+  if (!operation)
+  {
+    cout << "Unknown operation: " << operation_name << endl;
+    return 1;
+  }
+
+  operation->init();
 
   vector<string> unused = parset.unusedKeys();
   if (! unused.empty()) {
@@ -120,26 +134,6 @@ int main (Int argc, char** argv)
      cout<< "             maybe they are misspelled"<<endl;
      cout<< "    " << unused << endl;
   }
-  
-  String operation_name = parset.getString("operation");
-  LOFAR::LofarFT::Operation *operation = LOFAR::LofarFT::OperationFactory::instance().create(operation_name);
-  if (!operation)
-  {
-    cout << "Unknown operation: " << operation_name << endl;
-    return 1;
-  }
-  
-  operation->setVersion (version);
-    operation->readArguments (argc, argv);
-//   try
-//   {
-//     operation->readArguments (argc, argv);
-//   }
-//   catch (...)
-//   {
-//     operation->showHelp(cout, "You clearly need help.");
-//     return 1;
-//   }
   
   try 
   {
@@ -392,7 +386,7 @@ int main (Int argc, char** argv)
     
     //params.define ("FillFactor", FillFactor);
     
-    LOFAR::LofarFT::Imager imager(ms, params);
+    LOFAR::LofarFT::Imager imager(ms, params, parset);
 
     MSSpWindowColumns window(ms.spectralWindow());
     // ROMSObservationColumns timerange(ms.observation());
@@ -602,7 +596,6 @@ int main (Int argc, char** argv)
                          niter,                         // niter
                          gain,                          // gain
                          threshold,                     // threshold
-                         displayProgress,               // displayProgress
                          //Vector<String>(1, modelName),  // model
                          modelNames,
                          Vector<Bool>(1, fixed),        // fixed
@@ -650,7 +643,6 @@ int main (Int argc, char** argv)
                          niter,                         // niter
                          gain,                          // gain
                          threshold,                     // threshold
-                         displayProgress,               // displayProgress
                          Vector<String>(1, modelName),  // model
                            //  modelNames,
                          Vector<Bool>(1, fixed),        // fixed
@@ -693,6 +685,23 @@ int main (Int argc, char** argv)
   return 0;
 }
 
+
+void printHelp(Int argc, char** argv) {
+  cout<<"Usage: awimager file.parset [parsetkeys]"<<endl;
+  if (argc>2) {
+    String operation_name = argv[2];
+    LOFAR::ParameterSet emptyparset;
+    LOFAR::LofarFT::Operation *operation =
+        LOFAR::LofarFT::OperationFactory::instance().create(operation_name,emptyparset);
+    if (!operation)
+    {
+      cout << "Unknown operation: " << operation_name << endl;
+      return;
+    }
+    cout<<"  Additional usage on "<<argv[2]<<endl;
+    operation->showHelp(cout,operation_name);
+  }
+}
 
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
