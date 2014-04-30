@@ -142,14 +142,10 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
   //# TODO: This kernel must be rewritten as if it is a transpose to get efficient global mem read and write accesses.
   //#       This reqs shmem. Note that combining shmem barriers with the two conditional returns above is problematic.
   //# TODO: For very large TIME_INTEGRATION_FACTOR (e.g. 1024), we may need parallel reduction to have enough parallelization. TBD.
-  for (unsigned idx_stride = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) ;
-                   idx_stride < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor)
-                && idx_stride < NR_SAMPLES_PER_CHANNEL;
-                idx_stride += TIME_INTEGRATION_FACTOR)
-//  unsigned read_idx  = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor);
-//  unsigned write_idx = read_idx / TIME_INTEGRATION_FACTOR;
-//  for ( ; read_idx < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) &&
-//          read_idx < NR_SAMPLES_PER_CHANNEL; write_idx++)
+  unsigned read_idx  = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor);
+  unsigned write_idx = read_idx / TIME_INTEGRATION_FACTOR;
+  for ( ; read_idx < (time_idx + 1) * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor) &&
+          read_idx < NR_SAMPLES_PER_CHANNEL; write_idx++)
   {
     //# Integrate all values in the current stride
 #   if COMPLEX_VOLTAGES == 1
@@ -164,14 +160,11 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
 #   endif
     
     //# Do the integration
-    for (unsigned idx_step = 0; idx_step < TIME_INTEGRATION_FACTOR; idx_step++)
-//    for (unsigned stride_read_idx_end = read_idx + TIME_INTEGRATION_FACTOR;
-//         read_idx < stride_read_idx_end; read_idx++)
+    for (unsigned stride_read_idx_end = read_idx + TIME_INTEGRATION_FACTOR;
+         read_idx < stride_read_idx_end; read_idx++)
     {
-      float2 X = (*input)[tab_idx][0][idx_stride + idx_step][channel_idx];
-      float2 Y = (*input)[tab_idx][1][idx_stride + idx_step][channel_idx];
-//      float2 X = (*input)[tab_idx][0][read_idx][channel_idx];
-//      float2 Y = (*input)[tab_idx][1][read_idx][channel_idx];
+      float2 X = (*input)[tab_idx][0][read_idx][channel_idx];
+      float2 Y = (*input)[tab_idx][1][read_idx][channel_idx];
 
 #     if COMPLEX_VOLTAGES == 1
         stokes.x += X.x;
@@ -189,8 +182,6 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
 #       endif
 #     endif
     }
-
-    unsigned write_idx = idx_stride / TIME_INTEGRATION_FACTOR;
 
 #   if COMPLEX_VOLTAGES == 1
       (*output)[tab_idx][0][write_idx][channel_idx] = stokes.x;
