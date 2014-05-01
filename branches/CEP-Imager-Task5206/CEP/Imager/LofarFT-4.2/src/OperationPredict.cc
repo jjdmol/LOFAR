@@ -34,23 +34,22 @@ namespace
 }
 
 
-OperationPredict::OperationPredict(ParameterSet& parset): Operation(parset), OperationParamFTMachine(parset), OperationParamData(parset)
-{}
+OperationPredict::OperationPredict(ParameterSet& parset): Operation(parset)
+{
+  needsData=true;
+  needsImage=true;
+}
 
 void OperationPredict::init()
-{}
+{
+  Operation::init();
+  casa::String model = itsParset.getString("model");
+  itsImager->initPredict(casa::Vector<casa::String>(1, model));
+}
 
 void OperationPredict::run()
 {
-  Operation::run();
-  OperationParamFTMachine::run();
-  OperationParamData::run();
-  
-  casa::String model = itsInputParSet.getString("model");
-  
-  cout << "calling itsImager->predict" << endl;
-  
-  itsImager->predict(casa::Vector<casa::String>(1, model));
+  itsImager->predict();
 }
 
 void OperationPredict::showHelp (ostream& os, const string& name)

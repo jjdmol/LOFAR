@@ -34,26 +34,22 @@ namespace
     registerClass<OperationImage>("image");
 }
   
-OperationImage::OperationImage(ParameterSet& parset): Operation(parset), OperationImageBase(parset), OperationParamData(parset)
+OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 {
-    
-}
-
-void OperationImage::init()
-{
+    needsData=true;
+    needsImage=true;
+    needsFTMachine=true;
 }
 
 void OperationImage::run()
 {
-  OperationImageBase::run();
-  OperationParamData::run();
-  
   itsImager->makeimage ("corrected", "testimage");
 }
 
-void OperationImage::showHelp (ostream& os, const string& name)
+void OperationImage::showHelp (ostream& os, const std::string& name)
 {
   Operation::showHelp(os,name);
+
   os<<
   "Operation \"image\": create a dirty image                         "<<endl<<
   "  No more parameters for operation\"image\"                       "<<endl;

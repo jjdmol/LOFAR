@@ -65,7 +65,6 @@ public:
     casa::Int verbose,
     casa::Int maxsupport,
     const casa::String& imgName,
-    const casa::Record& parameters,
     ParameterSet& parset);
 
   virtual ~ConvolutionFunction () {};
@@ -139,7 +138,7 @@ public:
 
 private:
   
-  casa::Int FindNWplanes();
+  void FindNWplanes();
   
   void normalized_fft (
     casa::Matrix<casa::Complex>&, 
@@ -179,7 +178,6 @@ private:
 
 
   //# Data members.
-  casa::Record              itsParameters;
   ParameterSet&             itsParset;
   casa::IPosition           itsShape;
   casa::DirectionCoordinate itsCoordinates;

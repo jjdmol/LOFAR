@@ -102,7 +102,6 @@ ConvolutionFunction::ConvolutionFunction
   Int verbose,
   Int maxsupport,
   const String& imgName,
-  const casa::Record& parameters,
   ParameterSet& parset)
   : itsShape(shape),
     itsCoordinates(coordinates),
@@ -113,7 +112,6 @@ ConvolutionFunction::ConvolutionFunction
     itsVerbose (verbose),
     itsMaxSupport(maxsupport),
     itsImgName(imgName),
-    itsParameters(parameters),
     itsParset(parset),
     itsTimeW    (0),
     itsTimeWpar (0),
@@ -171,7 +169,7 @@ ConvolutionFunction::Polarization::Type ConvolutionFunction::image_polarization(
 
 Vector<Int> ConvolutionFunction::set_frequency(const Vector<Double> &frequency)
 {
-  Int chan_block_size = itsParameters.asInt("ChanBlockSize");
+  Int chan_block_size = itsParset.getInt("ChanBlockSize",0);
   Vector<Int> chan_map;
   
   Int nfreq = frequency.size();
@@ -265,7 +263,7 @@ void ConvolutionFunction::store_all_W_images()
   itsTimeW = wTimer.getReal();
 }
 
-Int ConvolutionFunction::FindNWplanes()
+void ConvolutionFunction::FindNWplanes()
 {
   Double pixelSize = abs(itsCoordinates.increment()[0]);
   Double imageDiameter = pixelSize * itsShape(0);
@@ -526,7 +524,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
     uInt ind1;
     uInt ii = 0;
     IPosition cfShape;
-    Bool allElem = True;
+
     for (uInt row0=0; row0<=1; ++row0) 
     {
       for (uInt col0=0; col0<=1; ++col0) 

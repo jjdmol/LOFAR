@@ -49,7 +49,6 @@ namespace LofarFT {
 
     // Construct from the Imager object.
     explicit Imager (casa::MeasurementSet&,
-                     const casa::Record& parameters,
                      LOFAR::ParameterSet& parset);
 
     virtual ~Imager();
@@ -104,18 +103,18 @@ namespace LofarFT {
     const casa::Vector<casa::String>& psf = casa::Vector<casa::String>(0),
     const casa::Bool firstrun=true);
     
-  void predict(const casa::Vector<casa::String>& modelNames);
+  void initPredict(const casa::Vector<casa::String>& modelNames);
+  void predict();
   
   private:
     //# Data members.
-    const casa::Record     &itsParameters;
     ParameterSet    &itsParset;
-    FTMachine*             itsFTMachine;
+    FTMachine*       itsFTMachine;
     vector<casa::Array<casa::Complex> >  itsGridsParallel;
     vector<casa::Array<casa::DComplex> > itsGridsParallel2;
     VisibilityIterator*    lofar_rvi_p;
     VisImagingWeight       lofar_imwgt_p;
-
+    
 };
 
 } //# end namespace LofarFT

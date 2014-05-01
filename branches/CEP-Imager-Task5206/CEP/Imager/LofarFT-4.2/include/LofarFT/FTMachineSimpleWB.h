@@ -131,7 +131,6 @@ public:
 //     casa::MPosition mLocation, 
 //     casa::Float padding,
 //     casa::Bool useDoublePrec, 
-    const casa::Record& parameters,
     LOFAR::ParameterSet& parset);
 
   virtual ~FTMachineSimpleWB();

@@ -123,11 +123,10 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
 
 FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   const MeasurementSet& ms,
-  const Record& parameters,
   ParameterSet& parset)
-  : FTMachine( ms, parameters, parset),
+  : FTMachine( ms, parset),
     itsNThread(OpenMP::maxThreads()),
-    itsRefFreq(parameters.asDouble("RefFreq"))
+    itsRefFreq(parset.getDouble("RefFreq"))
 {
   itsMachineName = theirName;
   itsNGrid = itsNThread;

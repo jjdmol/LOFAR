@@ -28,7 +28,6 @@
 #include <Common/ObjectFactory.h>
 #include <Common/Singleton.h>
 #include <Common/lofar_string.h>
-#include <Common/InputParSet.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
@@ -45,7 +44,15 @@ namespace LOFAR {
       
       virtual void init();
 
-      virtual void run();
+      void initData();
+
+      void initImage();
+
+      void initFTMachine();
+
+      void makeEmptyImage(const String& imgName, Int fieldid);
+
+      virtual void run() {}; // Only derived classes will do something useful in run()
 
       virtual void showHelp (ostream& os, const string& name);
       
@@ -63,13 +70,18 @@ namespace LOFAR {
 
       
     protected:
-      InputParSet                itsInputParSet;
       ParameterSet               &itsParset;
       casa::String               itsMSName;
       casa::MeasurementSet       itsMS;
-      casa::Record               itsParameters;
       casa::CountedPtr<Imager>   itsImager;
-      
+      bool                       needsData;
+      bool                       needsImage;
+      bool                       needsFTMachine;
+
+    private:
+      void showHelpData (ostream& os, const string& name);
+      void showHelpImage (ostream& os, const string& name);
+      void showHelpFTMachine (ostream& os, const string& name);
     };
 
     // Factory that can be used to generate new Operation objects.

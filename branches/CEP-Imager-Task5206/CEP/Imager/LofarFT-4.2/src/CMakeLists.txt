@@ -28,9 +28,6 @@ lofar_add_bin_program(awimager
   Package__Version.cc
   awimager.cc 
   Operation.cc 
-  OperationParamData.cc
-  OperationParamFTMachine.cc
-  OperationImageBase.cc 
   OperationImage.cc 
   OperationClean.cc 
   OperationEmpty.cc

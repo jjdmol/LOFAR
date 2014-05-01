@@ -90,7 +90,6 @@ namespace LofarFT {
 
 FTMachine::FTMachine(
   const MeasurementSet& ms, 
-  const Record& parameters,
   ParameterSet& parset)
   : casa::FTMachine(), 
    // Aliases for data members of casa::FTMachine
@@ -116,7 +115,7 @@ FTMachine::FTMachine(
     itsVerbose(parset.getInt("verbose",0)),
     itsMaxSupport(parset.getInt("maxsupport",1024)),
     itsOversample(parset.getInt("oversample",8)),
-    itsImageName(parset.getString("imagename")),
+    itsImageName(parset.getString("image")),
     itsGriddingTime(0),   // counters to measure time spend per operation (Gridding, Degridding, and Convolution Function computation)
     itsDegriddingTime(0), //
     itsCFTime(0)          //
@@ -162,7 +161,6 @@ FTMachine& FTMachine::operator=(const FTMachine& other)
     casa::FTMachine::operator=(other);
 
     //private params
-    itsParameters = other.itsParameters;
     itsVisResampler = other.itsVisResampler;
     itsNGrid = other.itsNGrid;
     itsUVScale.resize();
@@ -239,7 +237,6 @@ void FTMachine::init(const ImageInterface<Float> &image) {
     itsVerbose, 
     itsMaxSupport,
     itsImageName,
-    itsParameters,
     itsParset);
 }
 
@@ -743,6 +740,7 @@ void FTMachine::makeImage(
   AlwaysAssert(stokesIndex>-1, AipsError);
   stokesCoord = coords.stokesCoordinate(stokesIndex);
   
+
 
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 

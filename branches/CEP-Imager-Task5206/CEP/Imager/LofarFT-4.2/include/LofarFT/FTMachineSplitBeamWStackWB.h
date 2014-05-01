@@ -43,7 +43,6 @@ public:
 
   FTMachineSplitBeamWStackWB(
     const casa::MeasurementSet& ms, 
-    const casa::Record& parameters,
     ParameterSet& parset);
 
   virtual ~FTMachineSplitBeamWStackWB();

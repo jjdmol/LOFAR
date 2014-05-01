@@ -27,13 +27,11 @@
 // Concrete "predict" operation
 
 #include <LofarFT/Operation.h>
-#include <LofarFT/OperationParamData.h>
-#include <LofarFT/OperationParamFTMachine.h>
 
 namespace LOFAR {
 namespace LofarFT {
   
-    class OperationPredict : public virtual Operation, OperationParamFTMachine, OperationParamData
+    class OperationPredict : public virtual Operation
     {
     public:
       // Default constructor.
@@ -44,7 +42,6 @@ namespace LofarFT {
       virtual void run();
 
       virtual void showHelp (ostream& os, const string& name);
-
     };
 
 } //# namespace LofarFT

@@ -142,7 +142,6 @@ public:
   
   FTMachine(
     const casa::MeasurementSet& ms, 
-    const casa::Record& parameters,
     LOFAR::ParameterSet& parset);
 
   // Copy constructor
@@ -347,7 +346,6 @@ protected:
   casa::Bool itsUsePut2;
 
   LOFAR::ParameterSet itsParset;
-  casa::Record itsParameters;
   
   //machine name
   casa::String itsMachineName;
@@ -395,7 +393,7 @@ protected:
 
 // Factory that can be used to generate new FTMachine objects.
 // The factory is defined as a singleton.
-typedef Singleton<DynamicObjectFactory<FTMachine*(const casa::MeasurementSet& ms, const casa::Record& parameters, ParameterSet& parset)> > FTMachineFactory;
+typedef Singleton<DynamicObjectFactory<FTMachine*(const casa::MeasurementSet& ms, ParameterSet& parset)> > FTMachineFactory;
 
 
 } //# end namespace LofarFT

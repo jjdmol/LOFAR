@@ -27,10 +27,7 @@ namespace LofarFT {
   public:
     
     OperationEmpty(ParameterSet& parset);
-    
-    virtual void init();
-
-    virtual void run();
+    virtual ~OperationEmpty() {};
 
     virtual void showHelp (ostream& os, const string& name);
   };

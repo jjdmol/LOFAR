@@ -52,9 +52,8 @@ FTMachineSimpleWB::FTMachineSimpleWB(
 //   MPosition mLocation, 
 //   Float padding, 
 //   Bool useDoublePrec,
-  const Record& parameters,
   ParameterSet& parset)
-  : FTMachine( ms, parameters, parset),
+  : FTMachine( ms, parset),
     itsNThread(OpenMP::maxThreads()),
     itsRefFreq(parset.getDouble("RefFreq"))
 {

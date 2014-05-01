@@ -31,13 +31,161 @@ namespace LOFAR {
 namespace LofarFT {
   
 Operation::Operation(ParameterSet& parset):
-    itsParset(parset)
+    itsParset(parset),
+    needsData(false),
+    needsImage(false),
+    needsFTMachine(false)
 {}
 
 void Operation::init()
 {
   itsMSName = itsParset.getString("ms");
   itsMS = MeasurementSet(itsMSName, Table::Update);
+
+  itsImager = new Imager(itsMS, itsParset);
+
+  if (needsData) initData();
+  if (needsImage) initImage();
+  if (needsFTMachine) initFTMachine();
+}
+
+
+void Operation::initData()
+{
+  String select = itsParset.getString("select","");
+  if (select.empty())
+  {
+    select = "ANTENNA1 != ANTENNA2";
+  }
+  else
+  {
+    select = '(' + select + ") && ANTENNA1 != ANTENNA2";
+  }
+
+  MSSpWindowColumns window(itsMS.spectralWindow());
+  Vector<Int> wind(window.nrow());
+  for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
+
+  ROArrayColumn<Double> chfreq(window.chanFreq());
+
+  String chanmode  = itsParset.getString("chanmode","channel");
+
+  Vector<Int> chansel(1);
+  chansel(0)=chfreq(0).shape()[0];
+
+  Vector<Int> chanstart(itsParset.getIntVector("chanstart",std::vector<int>(1,0)));
+  Vector<Int> chanstep(itsParset.getIntVector("chanstep",std::vector<int>(1,1)));
+
+  String antenna = itsParset.getString("antenna","");
+  String uvdist = itsParset.getString("uvdist","");
+
+  Int fieldid = itsParset.getInt("field",0);
+
+  itsImager->setdata (
+    chanmode,                       // mode
+    chansel,//nchan,
+    chanstart,
+    chanstep,
+    MRadialVelocity(),              // mStart
+    MRadialVelocity(),              // mStep
+    wind,//spwid,
+    Vector<Int>(1,fieldid),
+    select,                         // msSelect
+    String(),                       // timerng
+    String(),                       // fieldnames
+    Vector<Int>(),                  // antIndex
+    antenna,                        // antnames
+    String(),                       // spwstring
+    uvdist,                         // uvdist
+    String(),                       // scan
+    String(),                       // intent
+    String(),                       // obs
+    True);                          // useModelCol
+
+  String weight("natural");
+  String rmode;
+  Double robust;
+  Double noise;
+
+  // Define weighting.
+  itsImager->weight (
+    weight,                      // type
+    rmode,                       // rmode
+    Quantity(noise, "Jy"),       // briggsabs noise
+    robust,                      // robust
+    Quantity(0, "rad"),          // fieldofview
+    0);                          // npixels
+}
+
+void Operation::initImage()
+{
+  Quantity qcellsize = readQuantity (itsParset.getString("cellsize","1arcsec"));
+  MDirection phaseCenter;
+  Bool doShift = False;
+  Int fieldid = 0;
+  Int nfacet = 0;
+
+  MSSpWindowColumns window(itsMS.spectralWindow());
+  Vector<Int> wind(window.nrow());
+  for(uInt iii=0;iii<window.nrow();++iii){wind(iii)=iii;};
+
+
+  itsImager->defineImage (
+      itsParset.getInt("npix",256),        // nx
+      itsParset.getInt("npix",256),        // ny
+      qcellsize,                           // cellx
+      qcellsize,                           // celly
+      String("I"),                         // stokes
+      phaseCenter,                         // phaseCenter
+      doShift  ?  -1 : fieldid,            // fieldid
+          itsParset.getString("mode","mfs"),   // mode
+          itsParset.getInt("img_nchan",1),     // nchan
+          itsParset.getInt("img_chanstart",0), // start
+          itsParset.getInt("img_chanstep",1),  // step
+          MFrequency(),                        // mFreqstart
+          MRadialVelocity(),                   // mStart
+          Quantity(1,"km/s"),                  // qstep, Def=1 km/s
+          wind,//spwid,                        // spectralwindowids
+          nfacet);                             // facets
+}
+
+void Operation::initFTMachine()
+{
+  Int nterms = itsParset.getInt("nterms",1);
+  Double RefFreq = itsParset.getDouble("RefFreq");
+  itsImager->settaylorterms(nterms,RefFreq);
+
+  itsImager->createFTMachine();
+}
+
+void Operation::makeEmptyImage(const String& imgName, Int fieldid)
+{
+    CoordinateSystem coords;
+    AlwaysAssert (itsImager->imagecoordinates(coords), AipsError);
+    String name(imgName);
+    itsImager->makeEmptyImage(coords, name, fieldid);
+    itsImager->unlock();
+}
+
+void Operation::showHelpData(ostream& os, const string& name)
+{
+  os<<
+  "Data selection parameters:"
+  "  TODO!;  " << endl;
+}
+
+void Operation::showHelpImage(ostream& os, const string& name)
+{
+  os<<
+  "Image parameters:"
+  "  TODO!;  " << endl;
+}
+
+void Operation::showHelpFTMachine(ostream& os, const string& name)
+{
+  os<<
+  "FTMachine parameters:"
+  "  TODO!;  " << endl;
 }
 
 // Show the help info.
@@ -53,13 +201,11 @@ void Operation::showHelp (ostream& os, const string& name)
   "                    (int   ,  default 0    )                      "<<endl<<
   "  chunksize       : amount of data read at once                   "<<endl<<
   "                    (int   ,  default 0    )                      "<<endl;
-};
 
-void Operation::run()
-{
-  init();
-  itsImager = new Imager(itsMS, itsParameters, itsParset);
-}
+  if (needsData) showHelpData(os,name);
+  if (needsImage) showHelpImage(os,name);
+  if (needsFTMachine) showHelpFTMachine(os,name);
+};
 
 
 Quantity Operation::readQuantity (const String& in)
@@ -113,6 +259,7 @@ void Operation::readFilter (const String& filter,
     bpa = readQuantity (strs[2]);
   }
 }
+
 
 
 } //# namespace LofarFT

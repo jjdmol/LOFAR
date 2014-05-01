@@ -15,25 +15,23 @@
 #ifndef LOFAR_LOFARFT_OPERATIONIMAGE_H
 #define LOFAR_LOFARFT_OPERATIONIMAGE_H
 
-// \file
+#include <LofarFT/Operation.h>
 
-#include <LofarFT/OperationImageBase.h>
-#include <LofarFT/OperationParamData.h>
+// \file
 
 namespace LOFAR {
 namespace LofarFT {
 
-  class OperationImage : public OperationImageBase, OperationParamData
+  class OperationImage : public Operation
   {
   public:
     
     OperationImage(ParameterSet& parset);
-    
-    virtual void init();
+    virtual ~OperationImage() {};
 
     virtual void run();
 
-    virtual void showHelp (ostream& os, const string& name);
+    virtual void showHelp (ostream& os, const std::string& name);
   };
 
 } //# namespace LofarFT

@@ -41,13 +41,18 @@ namespace
     registerClass<OperationClean>("clean");
 }
 
-OperationClean::OperationClean(ParameterSet& parset): Operation(parset), OperationImageBase(parset), OperationParamData(parset){}
+OperationClean::OperationClean(ParameterSet& parset): Operation(parset)
+{
+    needsData=true;
+    needsImage=true;
+    needsFTMachine=true;
+}
 
 void OperationClean::init()
 {
   Operation::init();
 
-  Vector<Double> userScaleSizes(itsParset.getDoubleVector("uservector",0));
+  Vector<Double> userScaleSizes(itsParset.getDoubleVector("uservector",std::vector<double>(1,0.),false));
   String scaleMethod;
   Vector<Float> userVector(1); userVector(0)=0;
 //   convertArray (userVector, userScaleSizes);
@@ -63,26 +68,27 @@ void OperationClean::init()
   
   itsImager->setscales(scaleMethod, 1, userVector);
 
-}
 
-void OperationClean::showHelp (ostream& os, const string& name)
-{
-  Operation::showHelp(os,name);
-  os<<
-  "Operation \"clean\": perform a clean cycle                        "<<endl<<
-  "Parameters:                                                       "<<endl<<
-  "  uservector      : user-defined scales for multi-scale clean     "<<endl<<
-  "                    (string,  default \"uservector\")             "<<endl<<
-  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
-};
+  Double cyclefactor   = itsParset.getDouble("cyclefactor",1.5);
+  Double cyclespeedup  = itsParset.getDouble("cyclespeedup",-1);
+
+
+  itsImager->setmfcontrol(
+    cyclefactor,          //Float cyclefactor,
+    cyclespeedup,         //Float cyclespeedup,
+    0.8,                        //Float cyclemaxpsffraction,
+    2,                          //Int stoplargenegatives,
+    -1,                         //Int stoppointmode,
+    "",                         //String& scaleType,
+    0.1,                        //Float minPB,
+    0.4,                        //loat constPB,
+    Vector<String>(1, ""),      //Vector<String>& fluxscale,
+    true);                      //Bool flatnoise);
+}
 
 void OperationClean::run()
 {
-  Operation::run();
-
-  init();
-
-  String imgName = itsParset.getString("imagename");
+  String imgName = itsParset.getString("image");
 
   Int nterms = itsParset.getInt("nterms",1);
 
@@ -119,22 +125,6 @@ void OperationClean::run()
   
   String maskName  = itsParset.getString("mask","");
   
-  Double cyclefactor   = itsParset.getDouble("cyclefactor",1.5);
-  Double cyclespeedup  = itsParset.getDouble("cyclespeedup",-1);
-  
-  itsImager->setmfcontrol(
-    cyclefactor,          //Float cyclefactor,
-    cyclespeedup,         //Float cyclespeedup,
-    0.8,                        //Float cyclemaxpsffraction, 
-    2,                          //Int stoplargenegatives, 
-    -1,                         //Int stoppointmode,
-    "",                         //String& scaleType,
-    0.1,                        //Float minPB,
-    0.4,                        //loat constPB,
-    Vector<String>(1, ""),      //Vector<String>& fluxscale,
-    true);                      //Bool flatnoise);
-
-  
   itsImager->clean(
     "msmfs",                     // algorithm,
     niter,                       // niter
@@ -147,8 +137,21 @@ void OperationClean::run()
     restoredNames,               // restored
     residualNames,               // residual
     psfNames);                   // psf
-
 }
+
+
+void OperationClean::showHelp (ostream& os, const string& name)
+{
+  Operation::showHelp(os,name);
+
+  os<<
+  "Operation \"clean\": perform a clean cycle                        "<<endl<<
+  "Parameters:                                                       "<<endl<<
+  "  uservector      : user-defined scales for multi-scale clean     "<<endl<<
+  "                    (string,  default \"uservector\")             "<<endl<<
+  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
+};
+
 
 } //# namespace LofarFT
 

@@ -15,19 +15,19 @@
 #ifndef LOFAR_LOFARFT_OPERATIONCLEAN_H
 #define LOFAR_LOFARFT_OPERATIONCLEAN_H
 
-// \file
+#include <LofarFT/Operation.h>
 
-#include <LofarFT/OperationImageBase.h>
-#include <LofarFT/OperationParamData.h>
+// \file
 
 namespace LOFAR {
 namespace LofarFT {
 
-  class OperationClean : public OperationImageBase, OperationParamData
+  class OperationClean: public Operation
   {
   public:
     
     OperationClean(ParameterSet& parset);
+    virtual ~OperationClean() {};
 
     virtual void init();
 

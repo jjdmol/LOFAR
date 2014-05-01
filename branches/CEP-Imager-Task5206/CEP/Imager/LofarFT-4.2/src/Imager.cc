@@ -41,9 +41,8 @@ namespace LofarFT {
   
 // @brief Imager for LOFAR data correcting for DD effects
 
-Imager::Imager (MeasurementSet& ms, const Record& parameters, LOFAR::ParameterSet& parset)
+Imager::Imager (MeasurementSet& ms, LOFAR::ParameterSet& parset)
   : casa::Imager(ms,false, true),
-    itsParameters (parameters),
     itsParset (parset),
     itsFTMachine    (0)
 {}
@@ -60,37 +59,12 @@ Bool Imager::createFTMachine()
 
   cout << "splitbeam: " << itsParset.getBool("splitbeam",true) << endl;
   
-  if (itsParset.getBool("splitbeam",true)) {
-//     cout << itsParameters<<endl;
-//     itsMachine = new FTMachine(
-//       *ms_p, 
-//       wprojPlanes_p, 
-//       mLocation_p,
-//       padding_p, 
-//       false, 
-//       useDoublePrecGrid,
-//       RefFreq,
-//       itsParameters);//,
-//                                     //itsParameters.asDouble("FillFactor"));
-//   
-//     itsMachine->initGridThreads(itsGridsParallel,itsGridsParallel2);
-// 
-// 
-//     ft_p  = itsMachine;
-  } 
-  else 
-  {
-//     itsFTMachine = FTMachineFactory::instance().create("FTMachineSimpleWB", *ms_p, itsParameters);
-    itsFTMachine = FTMachineFactory::instance().create("FTMachineSplitBeamWStackWB", *ms_p, itsParameters, itsParset);
-//     itsFTMachine = new FTMachineSimple(
-//       *ms_p, 
-//       wprojPlanes_p, 
-//       mLocation_p,
-//       padding_p, 
-//       useDoublePrecGrid,
-//       itsParameters);
-    ft_p = itsFTMachine;
-  }
+  string FTMachineName=itsParset.getString("Gridding.FTMachine","FTMachineSimpleWB");
+
+  itsFTMachine = FTMachineFactory::instance().create(FTMachineName, *ms_p, itsParset);
+
+  ft_p = itsFTMachine;
+
 
   cft_p = new SimpleComponentFTMachine();
 
@@ -578,11 +552,12 @@ Record Imager::clean(const String& algorithm,
   return retval;
 }
 
-void Imager::predict(const Vector<String>& modelNames)
-{
-  cout << "I am Imager::predict" << endl;
+void Imager::initPredict(const Vector<String>& modelNames) {
   createSkyEquation(modelNames);
-  cout << "calling se_p->predict" << endl;
+}
+
+void Imager::predict()
+{
   se_p->predict();
 }
 
