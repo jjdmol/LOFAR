@@ -776,7 +776,7 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
             copyTestFiles(dataDir)
         else:
             ilt_local=0
-            is_Cobalt=0
+            is_Cobalt=1
             partitionName = ""
             if (sys.argv[1] == "test"):
                 # station in test mode; get desired RSPconnections from command
@@ -790,6 +790,7 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
             elif (len(sys.argv) == 3):
                 if (sys.argv[2] == "local"):
                     ilt_local=1
+                    is_Cobalt=0
                     partitionName = "R00";
                 else:
                     partitionName = sys.argv[2];
@@ -805,7 +806,10 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                     print "Setting up station "+stationName+" for TEST use"
                 elif (ilt_local == 0):
                     print "Setting up station "+stationName+" for ILT use"
-                    print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
+                    if (is_Cobalt == 1):
+                        print " Using routes to Cobalt"
+                    else:
+                        print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
                 else:
                     print "Setting up station "+stationName+" for LOCAL use"
 
