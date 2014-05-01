@@ -35,14 +35,14 @@ void usage(char const *testName)
   cout << "" << endl;
   cout << " Performance measurements: ( no output validation)" << endl;
   cout << " -t nrtabs          Number of tabs to create, default == 127" << endl;
-  cout << " -c nrchannels      Number of channels to create, default == 64" << endl;
+  cout << " -c nrchannels      Number of channels to create after delay compensation, default == 64 (equal to nrDelayCompensationChannels disables cascaded FFT)" << endl;
   cout << " -i IdxGPU          GPU index to run kernel on, default == 0" << endl;
-  cout << " -s nrStations      Number of stations to create, default == 47" << endl;
+  cout << " -s nrStations      Number of antenna fields to create, default == 47" << endl;
   cout << " -b nrSampleBlocks  Number of (x) * nrchannels samples to create, default = 48 * 64 (-> 196608 total samples)" << endl;
   
   cout << " -q stokesType      Stokes type I XXYY or IQUV, default = IQUV" << endl;
-  cout << " -d nrDelayCompensationChannels  Number of delaycompensationchannels default == 1" << endl;
-  cout << " -e nrChannelsPerSubband     Channels per subband, default == 1" << endl;
+  cout << " -d nrDelayCompensationChannels  Number of delaycompensationchannels default == 64" << endl;
+  cout << " -e nrChannelsPerSubband     Channels per subband in the output, default == 16" << endl;
   cout << " -f timeIntegrationFactor    How many samples to combine in output sample, default ==1 " << endl;
   cout << " * The kernels might not actually use all these parameters" << endl;
   cout << "" << endl;
@@ -60,8 +60,8 @@ KernelParameters::KernelParameters()
   nTimeBlocks = 48 * 64;
   parameterParsed = false;
   stokesType = "IQUV";
-  nrDelayCompensationChannels = 1;
-  nrChannelsPerSubband = 1;
+  nrDelayCompensationChannels = 64;
+  nrChannelsPerSubband = 16;
   timeIntegrationFactor = 1;
 }
 
@@ -154,11 +154,10 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
   ps.add("Observation.Beam[0].nrTabRings", "0");
   ps.add("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(params.nrTabs));
   ps.add("Observation.Beam[0].subbandList", "[24..28]");
-  unsigned HBA = 2;
   string filenames = "[";
-  filenames.append(lexical_cast<string>(params.nrTabs * HBA * params.nStation)).append("*BEAM000.h5]");
+  filenames.append(lexical_cast<string>(params.nrTabs * params.nStation)).append("*BEAM000.h5]");
   string hosts = "[";
-  hosts.append(lexical_cast<string>(params.nrTabs * HBA * params.nStation)).append("*localhost:.]");
+  hosts.append(lexical_cast<string>(params.nrTabs * params.nStation)).append("*localhost:.]");
   ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", filenames);
   ps.add("Observation.DataProducts.Output_CoherentStokes.locations", hosts);
   ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
@@ -180,14 +179,14 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
   string stations = "[";
   stations.append(lexical_cast<string>(params.nStation)).append("*RS106]");
   ps.add("Observation.VirtualInstrument.stationList", stations);
-  ps.add("Observation.antennaArray", "HBA");
-  ps.add("Observation.antennaSet", "HBA_DUAL");
+  ps.add("Observation.antennaArray", "LBA");
+  ps.add("Observation.antennaSet", "LBA_INNER");
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.beamList", "[5 * 0]");
-  ps.add("Observation.Dataslots.RS106HBA.DataslotList", "[0..4]");
-  ps.add("Observation.Dataslots.RS106HBA.RSPBoardList", "[5 * 0]");
-  ps.add("Cobalt.correctBandPass", "F");
-  ps.add("Cobalt.delayCompensation", "F");
+  ps.add("Observation.Dataslots.RS106LBA.DataslotList", "[0..4]");
+  ps.add("Observation.Dataslots.RS106LBA.RSPBoardList", "[5 * 0]");
+  ps.add("Cobalt.correctBandPass", "true");
+  ps.add("Cobalt.delayCompensation", "true");
   ps.updateSettings();
   params.print();
 }
