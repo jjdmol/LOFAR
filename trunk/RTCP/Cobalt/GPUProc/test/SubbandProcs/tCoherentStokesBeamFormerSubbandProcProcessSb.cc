@@ -57,7 +57,7 @@ template<typename T> T inputSignal(size_t t)
 #endif
 }
 
-int main(int argc, char *argv[]) {
+int main(/*int argc, char *argv[]*/) {
   const char *testName = "tCoherentStokesBeamFormerSubbandProcProcessSb";
   INIT_LOGGER(testName);
 
@@ -73,11 +73,12 @@ int main(int argc, char *argv[]) {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  //Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
+  Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
 
-  Parset ps;
+//  Parset ps;
   KernelParameters params;
   // override the faults
+/*
   params.nStation = 5;
   params.nrChannels = 4096;
   params.nTimeBlocks = 16;
@@ -85,8 +86,9 @@ int main(int argc, char *argv[]) {
   params.stokesType = "I";
   params.nrDelayCompensationChannels = 64;
   params.nrChannelsPerSubband = 1;
-  
+
   parseCommandlineParameters(argc, argv, ps, params, testName);
+*/
 
   // Input array sizes
   const size_t nrBeams = ps.nrBeams();
