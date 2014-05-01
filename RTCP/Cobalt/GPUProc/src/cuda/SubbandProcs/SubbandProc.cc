@@ -32,10 +32,6 @@ namespace LOFAR
   {
     SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
-      inputPool("SubbandProc::inputPool"),
-      processPool("SubbandProc::processPool"),
-      outputPool("SubbandProc::outputPool"),
-
       ps(ps),
       nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
       queue(gpu::Stream(context))
@@ -45,7 +41,7 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(ps, context), false);
+        inputPool.free.append(new SubbandProcInputData(ps, context));
       }
     }
 

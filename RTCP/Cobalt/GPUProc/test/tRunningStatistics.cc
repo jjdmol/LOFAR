@@ -22,7 +22,7 @@
 #include <lofar_config.h>
 
 #include <iostream>
-#include <CoInterface/RunningStatistics.h>
+#include <GPUProc/RunningStatistics.h>
 #include <Common/LofarLogger.h>
 
 #include <UnitTest++.h>

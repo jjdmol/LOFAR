@@ -454,9 +454,7 @@ namespace LOFAR
       return -1;
 
     *(uint32_t *) ptr = ranges.size();
-    if (ranges.size() > 0) {
-      std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
-    }
+    std::memcpy((uint32_t *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
 
     return size;
   }
@@ -466,9 +464,7 @@ namespace LOFAR
   void SparseSet<T>::unmarshall(const void *ptr)
   {
     ranges.resize(*(uint32_t *) ptr);
-    if (ranges.size() > 0) {
-      std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
-    }
+    std::memcpy(&ranges[0], (uint32_t *) ptr + 1, ranges.size() * sizeof(range));
   }
 
 

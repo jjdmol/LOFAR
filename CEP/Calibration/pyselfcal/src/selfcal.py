@@ -264,7 +264,6 @@ if __name__=='__main__':
     nb_annulus				= 1000 
     preprocessIndex			= 0
     
-
     if outerFOVclean =='yes':
 
 
@@ -351,9 +350,8 @@ if __name__=='__main__':
 			print '#########################################################'
 			print ''
     
-    
 
-
+ 
     #######################################################################################################################
  
  
@@ -456,7 +454,7 @@ if __name__=='__main__':
     print ''    
     
     i=nbCycle	
-    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX,thresh_isl,thresh_pix,outerFOVclean,VLSSuse,preprocessIndex)
+    selfCalRun_Obj	= class_selfcalrun.selfCalRun(i,obsDir,outputDir,nbCycle,listFiles,Files,NbFiles,BBSParset,SkymodelPath,GSMSkymodel,ImagePathDir,UVmin,UVmax,wmax,pixsize,nbpixel,robust,nIteration,RMS_BOX)
 	
     #Run the BBS-cal on each Time chunks
     selfCalRun_Obj.selfCalRunFuncCalibBBSNDPPP()	

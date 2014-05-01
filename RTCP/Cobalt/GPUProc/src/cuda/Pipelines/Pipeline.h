@@ -34,7 +34,6 @@
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
 #include <CoInterface/Pool.h>
-#include <CoInterface/OMPThread.h>
 
 #include <InputProc/Transpose/MPIUtil.h>
 
@@ -68,12 +67,6 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       virtual void processObservation();
 
-      struct Output 
-      {
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
-      };
-
     protected:
       const Parset             &ps;
       const std::vector<gpu::Device> devices;
@@ -88,11 +81,35 @@ namespace LOFAR
 
       const size_t nrSubbandsPerSubbandProc;
 
-    protected:
-      // Threads that write to outputProc, and need to
-      // be killed when they stall at observation end.
-      OMPThreadSet outputThreads;
+#if defined USE_B7015
+      OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
+#endif
 
+      // Combines all functionality needed for getting the total from a set of
+      // counters
+      struct Performance
+      {
+        std::map<std::string, SmartPtr<NSTimer> > total_timers;
+        // lock on the shared data
+        Mutex totalsMutex;
+        // add the counter in this queue
+        void addQueue(SubbandProc &queue);
+        // Print a logline with results
+        void log(size_t nrSubbandProcs);
+
+        size_t nrGPUs;
+
+        Performance(size_t nrGPUs = 1);
+      } performance;
+
+      struct Output 
+      {
+        // synchronisation to write blocks in-order
+        SlidingPointer<size_t> sync;
+
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
+      };
     private:
       struct MPIData
       {
@@ -127,9 +144,6 @@ namespace LOFAR
 
       // Send subbands to Storage
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
-
-      // Signal that all output has been emitted
-      virtual void doneWritingOutput();
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };

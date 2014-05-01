@@ -2,12 +2,6 @@
 
 include(LofarCTest)
 
-foreach(_file testFuncs runtest)
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/${_file}.sh.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${_file}.sh @ONLY)
-endforeach()
-
 set(_tests
   tgenerateStationStreams
   tMACfeedback

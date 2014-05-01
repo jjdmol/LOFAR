@@ -33,7 +33,7 @@ void test_drop()
 {
   // check if blocks are dropped if queue is full
   size_t queueSize = 10;
-  BestEffortQueue<size_t> queue("test_drop", queueSize, true);
+  BestEffortQueue<size_t> queue(queueSize, true);
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
@@ -59,7 +59,7 @@ void test_drop()
 void test_nondrop()
 {
   size_t queueSize = 10;
-  BestEffortQueue<size_t> queue("test_nondrop", queueSize, false);
+  BestEffortQueue<size_t> queue(queueSize, false);
 
   // queue has free space -- append should succeed
   for (size_t i = 0; i < queueSize; ++i) {
@@ -94,7 +94,7 @@ void test_nondrop()
 void test_nomore()
 {
   size_t queueSize = 10;
-  BestEffortQueue<size_t> queue("test_nomore", queueSize, false);
+  BestEffortQueue<size_t> queue(queueSize, false);
 
   // fill queue
   for (size_t i = 0; i < queueSize; ++i) {

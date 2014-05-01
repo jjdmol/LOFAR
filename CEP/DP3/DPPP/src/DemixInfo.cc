@@ -57,11 +57,10 @@ namespace LOFAR {
                                                   0.)),
         itsAngdistThreshold (parset.getDouble (prefix+"distance.threshold", 60)),
         itsAngdistRefFreq   (parset.getDouble (prefix+"distance.reffreq", 60e6)),
-        itsDefaultGain      (parset.getDouble (prefix+"defaultgain", 1e-3)),
         itsPropagateSolution(parset.getBool   (prefix+"propagatesolutions",
                                                false)),
         itsApplyBeam        (parset.getBool   (prefix+"applybeam", true)),
-        itsSolveBoth        (parset.getBool   (prefix+"solveboth", false)),
+        itsSolveBoth        (parset.getBool   (prefix+"solveboth", true)),
         itsDoSubtract       (parset.getBool   (prefix+"subtract", true)),
         itsTargetHandling   (parset.getUint   (prefix+"targethandling", 0)),
         itsVerbose          (parset.getUint   (prefix+"verbose", 0)),
@@ -323,7 +322,6 @@ namespace LOFAR {
       os << "  minnbaseline:       " << itsMinNBaseline << endl;
       os << "  minnstation:        " << itsMinNStation << endl;
       os << "  maxiter:            " << itsMaxIter << endl;
-      os << "  defaultgain:        " << itsDefaultGain << endl;
       os << "  propagatesolutions: " << (itsPropagateSolution ? "True":"False")
          << endl;
       os << "  applybeam:          " << (itsApplyBeam ? "True":"False") << endl;

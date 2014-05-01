@@ -41,6 +41,37 @@ using namespace LOFAR;
 using namespace Cobalt;
 using namespace std;
 
+void test_simple()
+{
+  // Test whether executing an application works. The
+  // communication protocol after startup is ignored.
+
+  LOG_INFO("**** test_simple() ****");
+
+  const char *USER = getenv("USER");
+  Parset p;
+
+  p.add("Observation.ObsID",               "12345");
+  p.add("Cobalt.OutputProc.userName",      USER);
+  p.add("Cobalt.OutputProc.sshPublicKey",  pubkey);
+  p.add("Cobalt.OutputProc.sshPrivateKey", privkey);
+  p.add("Cobalt.OutputProc.executable",    "/bin/echo");
+
+  p.add("Observation.nrBeams",             "1");
+  p.add("Observation.Beam[0].subbandList", "[0]");
+  p.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  p.add("Observation.DataProducts.Output_Correlated.filenames", "[SB0.MS]");
+  p.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
+  p.updateSettings();
+
+  {
+    StorageProcesses sp(p, "");
+
+    // give 'ssh localhost' time to succeed
+    sleep(2);
+  }
+}
+
 void test_protocol()
 {
   // Test whether we follow the communication protocol
@@ -66,10 +97,6 @@ void test_protocol()
   p.add("Cobalt.FinalMetaDataGatherer.sshPublicKey",  pubkey);
   p.add("Cobalt.FinalMetaDataGatherer.sshPrivateKey", privkey);
 
-  p.add("Observation.VirtualInstrument.stationList", "[RS000]");
-  p.add("Observation.antennaSet", "LBA_INNER");
-  p.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
-  p.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
   p.add("Observation.nrBeams",             "1");
   p.add("Observation.Beam[0].subbandList", "[0]");
   p.add("Observation.DataProducts.Output_Correlated.enabled", "true");
@@ -82,21 +109,21 @@ void test_protocol()
   p.updateSettings();
 
   {
-	    StorageProcesses sp(p, "");
-	
-  	    // Give Storage time to log its parset
-	    sleep(2);
-	
-	    // Give 10 seconds to exchange final meta data
-	    sp.forwardFinalMetaData(time(0) + 10);
-	
-	    // Give 10 seconds to wrap up
-	    sp.stop(time(0) + 10);
-	
-	    // Obtain LTA feedback
-	    ParameterSet feedbackLTA(sp.feedbackLTA());
-	
-	    ASSERT(feedbackLTA.getString("foo","") == "bar");
+    StorageProcesses sp(p, "");
+
+    // Give Storage time to log its parset
+    sleep(2);
+
+    // Give 10 seconds to exchange final meta data
+    sp.forwardFinalMetaData(time(0) + 10);
+
+    // Give 10 seconds to wrap up
+    sp.stop(time(0) + 10);
+
+    // Obtain LTA feedback
+    ParameterSet feedbackLTA(sp.feedbackLTA());
+
+    ASSERT(feedbackLTA.getString("foo","") == "bar");
   }
 }
 
@@ -112,7 +139,7 @@ int main()
   if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
     return 3;
 
- 
+  test_simple();
   test_protocol();
 
   SSH_Finalize();

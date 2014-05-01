@@ -26,7 +26,7 @@
 
 #include <Common/LofarLogger.h>
 
-#include <CoInterface/OMPThread.h>
+#include "OMPThread.h"
 
 
 namespace LOFAR
@@ -45,7 +45,7 @@ namespace LOFAR
     void RSPBoards::process()
     {
       // References to all threads that will need aborting
-      OMPThreadSet threads;
+      std::vector<OMPThread> threads(nrBoards + 1);
 
       ASSERT(nrBoards > 0);
 
@@ -60,9 +60,9 @@ namespace LOFAR
           LOG_DEBUG_STR( logPrefix << "Starting all boards" );
 #     pragma omp parallel for num_threads(nrBoards)
           for (size_t i = 0; i < nrBoards; ++i) {
-            try {
-              OMPThreadSet::ScopedRun sr(threads);
+            OMPThread::ScopedRun sr(threads[i]);
 
+            try {
               processBoard(i);
             } catch(Exception &ex) {
               LOG_ERROR_STR("Caught exception: " << ex);
@@ -79,10 +79,10 @@ namespace LOFAR
           // start log statistics
           LOG_DEBUG_STR( logPrefix << "Starting log statistics" );
 
-          try {
-            OMPThreadSet::ScopedRun sr(threads);
+          OMPThread::ScopedRun sr(threads[0 + nrBoards]);
 
-            for(;;) {
+          try {
+            for(;; ) {
               if (usleep(999999) == -1 && errno == EINTR)
                 // got killed
                 break;
@@ -103,7 +103,13 @@ namespace LOFAR
 
           // kill all boards
           LOG_DEBUG_STR( logPrefix << "Stopping all boards" );
-          threads.killAll();
+#     pragma omp parallel for num_threads(threads.size())
+          for (size_t i = 0; i < threads.size(); ++i)
+            try {
+              threads[i].kill();
+            } catch(Exception &ex) {
+              LOG_ERROR_STR("Caught exception: " << ex);
+            }
         }
       }
 

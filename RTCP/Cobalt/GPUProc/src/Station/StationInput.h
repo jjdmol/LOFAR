@@ -27,10 +27,10 @@
 #include <cstring>
 
 #include <Common/Thread/Semaphore.h>
+#include <Common/Thread/Queue.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <CoInterface/Queue.h>
 #include <CoInterface/BestEffortQueue.h>
 #include <InputProc/Buffer/StationID.h>
 #include <InputProc/Buffer/BoardMode.h>
@@ -126,6 +126,8 @@ namespace LOFAR {
 
       void computeMetaData();
 
+      Pool< MPIData<SampleT> > metaDataPool;
+
     private:
       const Parset &ps;
       const size_t stationIdx;
@@ -138,8 +140,6 @@ namespace LOFAR {
       const size_t nrSamples;
     public:
       const size_t nrBlocks;
-
-      Pool< MPIData<SampleT> > metaDataPool;
     private:
 
       const SubbandDistribution subbandDistribution;
@@ -181,7 +181,7 @@ namespace LOFAR {
 
       const BoardMode mode;
       const size_t nrBoards;
-      std::vector< SmartPtr< Pool< RSPData > > > rspDataPool; // [nrboards]
+      Pool< RSPData > rspDataPool[4]; // [nrboards]
 
       const std::vector<size_t> targetSubbands;
 

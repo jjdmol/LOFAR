@@ -27,8 +27,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/OMPThread.h>
 
+#include <InputProc/OMPThread.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/Generator.h>
 #include <InputProc/Station/PacketReader.h>
@@ -57,7 +57,7 @@ int main( int, char **argv )
   vector< SmartPtr<Stream> > inputStreams(1);
   vector< SmartPtr<Stream> > outputStreams(1);
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections
   {
     #pragma omp section
     inputStreams[0] = createStream(desc, true);
@@ -76,7 +76,7 @@ int main( int, char **argv )
 
   bool error = false;
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections
   {
     #pragma omp section
     {
@@ -106,13 +106,13 @@ int main( int, char **argv )
             ASSERT(false);
           }
         }
+
+        // We received NUMPACKETS packets, kill the generator
+        g.stop();
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
         error = true;
       }
-
-      // We received NUMPACKETS packets, kill the generator
-      g.stop();
     }
   }
 

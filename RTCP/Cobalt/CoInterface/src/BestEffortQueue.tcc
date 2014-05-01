@@ -23,24 +23,17 @@ namespace LOFAR
   namespace Cobalt 
   {
 
-template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool drop)
+template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool drop)
 :
-  Queue<T>(name),
   maxSize(maxSize),
   drop(drop),
   //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
                      // it causes tests to fail, and even if a thread is remove()ing, objects can still
                      // pile up in the queue.
-  dropped_on_append("%"),
+  removing(true),
   freeSpace(maxSize),
   flushing(false)
 {
-}
-
-
-template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
-{
-  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped on append = " << dropped_on_append.mean() << "%");
 }
 
 
@@ -48,10 +41,16 @@ template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
 {
   bool canAppend;
 
-  if (flushing) {
-    // can't append if we're emptying the queue
-    canAppend = false;
-  } else if (drop) {
+  // can't append if we're emptying the queue
+  if (flushing)
+    return false;
+
+  // can't append if we're not removing elements
+  if (!removing && drop)
+    return false;
+
+  // determine whether we can append
+  if (drop) {
     canAppend = freeSpace.tryDown();
   } else {
     canAppend = freeSpace.down();
@@ -62,14 +61,14 @@ template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
     Queue<T>::append(element);
   }
 
-  dropped_on_append.push(canAppend ? 0.0 : 100.0);
-
   return canAppend;
 }
 
 
 template <typename T> inline T BestEffortQueue<T>::remove()
 {
+  removing = true;
+
   T element = Queue<T>::remove();
 
   // freed up one spot
@@ -91,7 +90,7 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
   freeSpace.noMore();
 
   // signal end-of-stream to reader
-  Queue<T>::append(0, false);
+  Queue<T>::append(0);
 }
 
 

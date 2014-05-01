@@ -24,7 +24,6 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <string>
 
 namespace LOFAR
 {
@@ -38,7 +37,7 @@ namespace LOFAR
     {
     public:
       // Constructor
-      RunningStatistics(const std::string &unit = "ms"); 
+      RunningStatistics(); 
         
       // Reset to zero
       void reset();
@@ -74,8 +73,6 @@ namespace LOFAR
       void print(std::ostream& os) const;
 
     private:
-      std::string unit;
-
       size_t counter;
       double _mean;
       double var_base;

@@ -63,7 +63,7 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
 
   par.updateSettings();
-  Pool<StreamableData> outputPool("testCorrelatorOutputThreadThrowsStorageException::outputPool");
+  Pool<StreamableData> outputPool;
   try
   {
     SubbandOutputThread SubbandOutputThread(par, 
@@ -136,7 +136,7 @@ TEST(testCorrelatorOutputThreadRealtimeThrowsNoException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.add("Cobalt.realTime", "true");
     par.updateSettings();
-  Pool<StreamableData> outputPool("testCorrelatorOutputThreadRealtimeThrowsNoException::outputPool");
+  Pool<StreamableData> outputPool;
 
 
   // We have a realtime system. We should not throw execptions
@@ -186,7 +186,7 @@ TEST(testBeamformerOutputThreadThrowsStorageException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
 
   par.updateSettings();
-  Pool<StreamableData> outputPool("testBeamformerOutputThreadThrowsStorageException::outputPool");
+  Pool<StreamableData> outputPool;
   try
   {
     SubbandOutputThread SubbandOutputThread(par,
@@ -265,7 +265,7 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.add("Cobalt.realTime", "true");
   par.updateSettings();
-  Pool<TABTranspose::BeamformedData> outputPool("testBeamformerOutputThreadRealtimeThrowsNoException");
+  Pool<TABTranspose::BeamformedData> outputPool;
 
 
   // We have a realtime system. We should not throw execptions
