@@ -425,7 +425,8 @@ int main(int argc, char *argv[])
   INIT_LOGGER(testName);
 
   Parset ps;
-  KernelParameters params = parseCommandlineParameters(argc, argv, ps, testName);
+  KernelParameters params;
+  parseCommandlineParameters(argc, argv, ps, params, testName);
   //  If no arguments were parsed
   try
   {
