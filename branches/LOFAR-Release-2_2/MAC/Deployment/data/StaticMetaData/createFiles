@@ -325,6 +325,15 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         # for these we need to fill in LANE0x and LANE1x values.
         # All other stations have one occurence, so only LANE_0x is relevant.
         if (nrNodes == 1 or nrNodes == 2):
+            if str(1) in rspDestNode.keys():
+                (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
+                for rspNr in range(4):
+                    blet_out = find_Blets(stationName, dataDir)[5+rspNr];
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
+
             if str(0) in rspDestNode.keys():
                 for rspNr in range(4):
 		  if is_ilt and is_Cobalt:
@@ -341,6 +350,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
 
                   blet_out = find_Blets(stationName, dataDir)[1+rspNr];
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                  # Need to fill this in until RSPDriver is fixed...
+                  RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
@@ -352,15 +363,6 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
                       RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
                       RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
-            if str(1) in rspDestNode.keys():
-                (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
-                blet_out = find_Blets(stationName, dataDir)[5+rspNr];
-                for rspNr in range(4):
-                    blet_out = find_Blets(stationName, dataDir)[5+rspNr];
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address
