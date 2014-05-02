@@ -28,6 +28,7 @@
 
 #include <Common/Timer.h>
 #include <BBSKernel/BaselineMask.h>
+#include <BBSKernel/Interval.h>
 #include <BBSKernel/Types.h>
 #include <BBSKernel/VisBuffer.h>
 

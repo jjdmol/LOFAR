@@ -188,7 +188,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             {
                 exprDDE[j] = compose(exprDDE[j],
                     makeDirectionalGainExpr(itsScope, instrument->station(j),
-                    patch, config.usePhasors()));
+                    patch, config.getDirectionalGainConfig()));
             }
 
             // Elevation cut.
@@ -241,15 +241,10 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
             // Ionosphere.
             if(config.useIonosphere())
             {
-                // Create an AZ, EL expression for the centroid direction of the
-                // patch.
-//                 Expr<Vector<2> >::Ptr exprAzEl =
-//                     makeAzElExpr(instrument->station(j)->position(),
-//                     exprPatch->position());
-
                 exprDDE[j] = compose(exprDDE[j],
                     makeIonosphereExpr(instrument->station(j),
-                    instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                    instrument->position(), exprPatchPositionITRF,
+                    exprIonosphere));
             }
         }
 
@@ -316,7 +311,7 @@ void MeasurementExprLOFAR::makeForwardExpr(SourceDB &sourceDB,
         {
             exprDIE[i] = compose(exprDIE[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.usePhasors()));
+                config.getGainConfig()));
         }
 
         // Create a direction independent TEC expression per station. Note that
@@ -436,7 +431,7 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
         {
             stationExpr[i] = compose(stationExpr[i],
                 makeGainExpr(itsScope, instrument->station(i),
-                config.usePhasors()));
+                config.getGainConfig()));
         }
 
         // Create a direction independent TEC expression per station. Note that
@@ -553,7 +548,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprRefPhaseITRF, exprIonosphere));
+                        instrument->position(), exprRefPhaseITRF,
+                        exprIonosphere));
                 }
             }
         }
@@ -577,7 +573,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeDirectionalGainExpr(itsScope,
-                        instrument->station(i), patch, config.usePhasors()));
+                        instrument->station(i), patch,
+                        config.getDirectionalGainConfig()));
                 }
                 // Beam.
                 if(config.useBeam())
@@ -626,7 +623,8 @@ void MeasurementExprLOFAR::makeInverseExpr(SourceDB &sourceDB,
                 {
                     stationExpr[i] = compose(stationExpr[i],
                         makeIonosphereExpr(instrument->station(i),
-                        instrument->position(), exprPatchPositionITRF, exprIonosphere));
+                        instrument->position(), exprPatchPositionITRF,
+                        exprIonosphere));
                 }
             }
         }

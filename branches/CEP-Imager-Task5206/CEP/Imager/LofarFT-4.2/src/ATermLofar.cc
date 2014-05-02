@@ -472,8 +472,8 @@ vector<Cube<Complex> > ATermLofar::evaluateElementResponse(
   AlwaysAssert(idStation < itsStations.size(), SynthesisError);
   Station::ConstPtr station = itsStations[idStation];
 
-  AlwaysAssert(idField < station->getFields().size(), SynthesisError);
-  AntennaField::ConstPtr field = station->getFields()[idField];
+  AlwaysAssert(idField < station->nFields(), SynthesisError);
+  AntennaField::ConstPtr field = station->field(idField);
 
   const ITRFDirectionMap &map = itsITRFDirectionMap;
   const uint nX = map.directions.shape()[0];
@@ -490,7 +490,7 @@ vector<Cube<Complex> > ATermLofar::evaluateElementResponse(
     {
       for(uint x = 0; x < nX; ++x)
       {
-        matrix22c_t response = field->singleElementResponse(map.time0,
+        matrix22c_t response = field->elementResponse(map.time0,
           freq(idx), map.directions(x, y));
 
         slice(x, y, 0) = response[0][0];

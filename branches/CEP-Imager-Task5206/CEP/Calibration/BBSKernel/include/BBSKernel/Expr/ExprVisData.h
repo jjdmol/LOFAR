@@ -25,6 +25,7 @@
 #define LOFAR_BBSKERNEL_EXPR_EXPRVISDATA_H
 
 #include <BBSKernel/Expr/Expr.h>
+#include <BBSKernel/Interval.h>
 #include <BBSKernel/VisBuffer.h>
 
 // \file
