@@ -170,37 +170,52 @@ void Operation::makeEmptyImage(const String& imgName, Int fieldid)
 void Operation::showHelpData(ostream& os, const string& name)
 {
   os<<
-  "Data selection parameters:"
-  "  TODO!;  " << endl;
+  "Input parameters:"
+  "  input.ms         : name of input measurement set with uv-data    "<<endl<<
+  "                     string,  no default                           "<<endl<<
+  "  input.datacolumn : data column to use                            "<<endl<<
+  "                     string,  default \"DATA\"                     "<<endl<<
+  "  input.select     : TaQL selection string for MS                  "<<endl<<
+  "                     string,  default \"ANTENNA1 != ANTENNA2\"     "<<endl<<
+  "  input.uvdist     : UV range in wavelengths                       "<<endl<<
+  "                     string,  default \"\"                         "<<endl<<endl;
 }
 
 void Operation::showHelpImage(ostream& os, const string& name)
 {
   os<<
-  "Image parameters:"
-  "  TODO!;  " << endl;
+  "Image pameters:"<<endl<<
+  "  image.npix       : number of pixels                              "<<endl<<
+  "                     int   ,  default 256                          "<<endl<<
+  "  image.cellsize   : pixel width                                   "<<endl<<
+  "                     string,  default \"1arcsec\"                  "<<endl<<
+  "  image.nterms     : number of terms for wideband imaging          "<<endl<<
+  "                     int   ,  default 1                            "<<endl<<endl;
 }
 
 void Operation::showHelpFTMachine(ostream& os, const string& name)
 {
   os<<
-  "FTMachine parameters:"
-  "  TODO!;  " << endl;
+  "Gridding pameters:"<<endl<<
+  "  gridding.ftmachine  : FTMachine to use                           "<<endl<<
+  "                        string, default FTMachineSimpleWB          "<<endl<<
+  "  gridding.oversample : oversampling factor                        "<<endl<<
+  "                        int   , default 8                          "<<endl<<endl;
 }
 
 // Show the help info.
 void Operation::showHelp (ostream& os, const string& name) 
 {
   os<<
-  "General parameters:"
-  "  operation       : operation name                                "<<endl<<
-  "                    (string,  no default   )                      "<<endl<<
-  "  displayprogress : display progress                              "<<endl<<
-  "                    (bool  ,  default false)                      "<<endl<<
-  "  verbose         : verbosity level                               "<<endl<<
-  "                    (int   ,  default 0    )                      "<<endl<<
-  "  chunksize       : amount of data read at once                   "<<endl<<
-  "                    (int   ,  default 0    )                      "<<endl;
+  "General parameters:"<<endl<<
+  "  operation        : operation name                                "<<endl<<
+  "                     (string,  no default   )                      "<<endl<<
+  "  displayprogress  : display progress                              "<<endl<<
+  "                     (bool  ,  default false)                      "<<endl<<
+  "  verbose          : verbosity level                               "<<endl<<
+  "                     (int   ,  default 0    )                      "<<endl<<
+  "  chunksize        : amount of data read at once                   "<<endl<<
+  "                     (int   ,  default 0    )                      "<<endl<<endl;
 
   if (needsData) showHelpData(os,name);
   if (needsImage) showHelpImage(os,name);
