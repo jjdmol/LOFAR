@@ -50,7 +50,7 @@ namespace LOFAR {
 
       void initFTMachine();
 
-      void makeEmptyImage(const casa::String& imgName, Int fieldid);
+      void makeEmptyImage(const casa::String& imgName, casa::Int fieldid);
 
       virtual void run() {}; // Only derived classes will do something useful in run()
 

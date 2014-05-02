@@ -171,7 +171,7 @@ void Operation::makeEmptyImage(const String& imgName, Int fieldid)
 void Operation::showHelpData(ostream& os, const string& name)
 {
   os<<
-  "Data parameters:"
+  "Data parameters:"<<endl<<
   "  data.ms          : name of input measurement set with uv-data    "<<endl<<
   "                     string,  no default                           "<<endl<<
   "  data.datacolumn  : data column to use                            "<<endl<<

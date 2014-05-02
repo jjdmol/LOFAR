@@ -66,8 +66,7 @@ FTMachineSimpleWB::FTMachineSimpleWB(
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
   itsVisResampler = new VisResamplerMatrixWB();
-  double msRefFreq=0; //TODO: put some useful reference frequency here
-  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq);
+  itsRefFreq=parset.getDouble("image.refFreq",0);
 }
 
 FTMachineSimpleWB::~FTMachineSimpleWB()
@@ -354,6 +353,10 @@ void FTMachineSimpleWB::put(const VisBuffer& vb, Int row, Bool dopsf,
       itsSumCFWeight[0]);
     cfTimer.stop();
     
+    if (itsRefFreq==0) {
+      itsRefFreq=itsConvFunc->refFrequency();
+    }
+
     if (itsUseDoubleGrid) 
     {
 //       TODO: support for double precision grids

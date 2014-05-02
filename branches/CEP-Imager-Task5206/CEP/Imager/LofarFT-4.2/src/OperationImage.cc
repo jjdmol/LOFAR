@@ -28,18 +28,24 @@
 namespace LOFAR {
 namespace LofarFT {
 
+  /* Tammo Jan: Uncomment this as soon as the class works...
 namespace
 {
   bool dummy = OperationFactory::instance().
     registerClass<OperationImage>("image");
 }
+*/
   
-OperationImage::OperationImage(ParameterSet& parset): Operation(parset),
-    itsImageName(parset.getString("output.imagename"))
+OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 {
     needsData=true;
     needsImage=true;
     needsFTMachine=true;
+}
+
+void OperationImage::init()
+{
+    itsImageName=itsParset.getString("output.imagename");
 }
 
 void OperationImage::run()
@@ -53,7 +59,7 @@ void OperationImage::showHelp (ostream& os, const std::string& name)
 
   os<<
   "Operation \"image\": create a dirty image                         "<<endl<<
-  "  No more parameters for operation\"image\"                       "<<endl;
+  "  No extra parameters for operation \"image\"                     "<<endl;
 };
 
 

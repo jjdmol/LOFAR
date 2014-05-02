@@ -89,7 +89,11 @@ int main (Int argc, char** argv)
     }
   }
 
-  string parsetname;
+  if (argc>1 && (string(argv[1])=="--version" || string(argv[1])=="version")) {
+    cerr<<"awimager version: "<<version<<endl;
+    exit(0);
+  }
+
   if (argc<=1 || string(argv[1])=="--help" || string(argv[1])=="-help" || string(argv[1])=="help") {
     printHelp(argc,argv,operations);
     exit(0);
@@ -97,10 +101,10 @@ int main (Int argc, char** argv)
 
   INIT_LOGGER(LOFAR::basename(string(argv[0])));
 
+  string parsetname=argv[1];
   LOFAR::ParameterSet parset(true);
 
-  parsetname=argv[1];
-  if (parsetname.find("=")!=string::npos) {
+  if (parsetname.find('=')==string::npos) {
     parset.adoptFile(parsetname); //case insensitive
   }
   parset.adoptArgv(argc,argv);
@@ -157,7 +161,7 @@ void printHelp(Int argc, char** argv, vector<string> operations) {
       cerr << "  Valid operations are: \""<<boost::algorithm::join(operations, "\", \"")<<"\""<<endl;
       return;
     }
-    cerr<<"  Additional usage on "<<argv[2]<<endl;
+
     operation->showHelp(cerr,operation_name);
   }
 }

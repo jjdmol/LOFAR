@@ -136,8 +136,7 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
   itsVisResampler = new VisResamplerMatrixWB();
-  double msRefFreq=0; //TODO: put some useful reference frequency here
-  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq);
+  itsRefFreq=parset.getDouble("image.refFreq",0);
 }
 
 FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()

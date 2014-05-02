@@ -30,6 +30,8 @@ namespace LofarFT {
 
     virtual ~OperationImage() {};
 
+    virtual void init();
+
     virtual void run();
 
     virtual void showHelp (ostream& os, const std::string& name);

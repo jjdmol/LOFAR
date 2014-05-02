@@ -136,6 +136,10 @@ public:
   const WScale& wScale() const
     { return itsWScale; }
 
+  // Get the reference frequency
+  const casa::Double refFrequency() const
+  { return itsRefFrequency;}
+
 private:
   
   void FindNWplanes();
