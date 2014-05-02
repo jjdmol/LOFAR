@@ -174,8 +174,6 @@ void Operation::showHelpData(ostream& os, const string& name)
   "Data parameters:"<<endl<<
   "  data.ms          : name of input measurement set with uv-data    "<<endl<<
   "                     string,  no default                           "<<endl<<
-  "  data.datacolumn  : data column to use                            "<<endl<<
-  "                     string,  default \"DATA\"                     "<<endl<<
   "  data.query       : TaQL selection string for MS                  "<<endl<<
   "                     string,  default \"ANTENNA1 != ANTENNA2\"     "<<endl<<
   "  data.uvrange     : UV range in wavelengths                       "<<endl<<
@@ -229,7 +227,7 @@ void Operation::showHelp (ostream& os, const string& name)
   "                     int   ,  default 0                            "<<endl<<endl;
   os<<
   "Output parameters:"<<endl<<
-  "  imagename        : base name for output image                    "<<endl<<
+  "  output.imagename : base name for output image                    "<<endl<<
   "                     string,  no default                           "<<endl<<endl;
 
   if (needsData) showHelpData(os,name);
