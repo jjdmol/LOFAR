@@ -217,7 +217,7 @@ private:
   casa::Double              itsTimeCFpar;
   casa::Double              itsTimeCFfft;
   unsigned long long  itsTimeCFcnt;
-  Int                       itsChan_block_size;
+  casa::Int                 itsChan_block_size;
 };
 
 
