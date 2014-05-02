@@ -84,10 +84,7 @@ void OperationClean::init()
     0.4,                        //loat constPB,
     Vector<String>(1, ""),      //Vector<String>& fluxscale,
     true);                      //Bool flatnoise);
-}
 
-void OperationClean::run()
-{
   String imgName = itsParset.getString("image");
 
   Int nterms = itsParset.getInt("nterms",1);
@@ -117,7 +114,7 @@ void OperationClean::run()
   
   Int niter = itsParset.getInt("niter",1000);
   Double gain = itsParset.getDouble("gain",0.1);
-  
+
   String threshStr = itsParset.getString("threshold","0Jy");
   Quantity threshold = readQuantity (threshStr);
 
@@ -125,7 +122,7 @@ void OperationClean::run()
   
   String maskName  = itsParset.getString("mask","");
   
-  itsImager->clean(
+  itsImager->initClean(
     "msmfs",                     // algorithm,
     niter,                       // niter
     gain,                        // gain
@@ -137,6 +134,11 @@ void OperationClean::run()
     restoredNames,               // restored
     residualNames,               // residual
     psfNames);                   // psf
+}
+
+void OperationClean::run()
+{
+  itsImager->doClean();
 }
 
 

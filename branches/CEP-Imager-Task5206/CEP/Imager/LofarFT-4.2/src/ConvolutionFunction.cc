@@ -151,7 +151,7 @@ ConvolutionFunction::ConvolutionFunction
   itsNStations = antenna.nrow();
 
   itsPixelSizeSpheroidal = makeSpheroidCut();
-  Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),complex(0.));
+  Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
   if (parset.getBool("FindNWplanes",false)) FindNWplanes();
@@ -422,7 +422,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
   // Stack the convolution function if averagepb.img don't exist
-  Matrix<Complex> Stack_PB_CF_fft(IPosition(2,itsShape(0),itsShape(0)),complex(0.));
+  Matrix<Complex> Stack_PB_CF_fft(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
   Bool stack = (Append_average_PB_CF != 0.);
 
   // If the beam is not in memory, compute it
@@ -790,7 +790,7 @@ Matrix<Complex> ConvolutionFunction::zero_padding
     Npixel_Out++;
   }
   IPosition shape_im_out(2, Npixel_Out, Npixel_Out);
-  Matrix<Complex> image_enlarged(shape_im_out, complex(0.));
+  Matrix<Complex> image_enlarged(shape_im_out, Complex(0.));
 
   double ratio=1.;
 
@@ -885,7 +885,7 @@ Double ConvolutionFunction::makeSpheroidCut()
     return itsPixelSizeSpheroidal;
   }
   
-  Matrix<Complex> spheroidal(itsShape[0], itsShape[1], complex(1.));
+  Matrix<Complex> spheroidal(itsShape[0], itsShape[1], Complex(1.));
   taper(spheroidal);
   if (itsVerbose > 0) 
   {
@@ -908,7 +908,7 @@ Double ConvolutionFunction::makeSpheroidCut()
     ++npix;
     pixel_size_spheroidal = diam_image/npix;
   }
-  Matrix<Complex> spheroid_cut0(IPosition(2,npix,npix),complex(0.));
+  Matrix<Complex> spheroid_cut0(IPosition(2,npix,npix),Complex(0.));
   itsSpheroid_cut=spheroid_cut0;
   double istart(itsShape[0]/2.-npix/2.);
   if ((istart-floor(istart))!=0.) 

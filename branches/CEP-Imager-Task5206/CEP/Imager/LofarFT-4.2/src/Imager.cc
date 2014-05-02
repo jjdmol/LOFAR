@@ -279,7 +279,7 @@ void Imager::showTimings (std::ostream&, double duration) const
 }
 
 // Clean algorithm
-Record Imager::clean(const String& algorithm,
+Record Imager::initClean(const String& algorithm,
                      const Int niter,
                      const Float gain,
                      const Quantity& threshold,
@@ -297,6 +297,7 @@ Record Imager::clean(const String& algorithm,
   retval.define("converged", False);
   retval.define("iterations", Int(0));
   retval.define("maxresidual", Float(0.0));
+  itsPSFNames=psfnames;
   
   if(!valid())
     {
@@ -492,33 +493,7 @@ Record Imager::clean(const String& algorithm,
                                                          // logfile than the
                                                          // log window.
     }
-    os << LogIO::NORMAL << (firstrun ? "Start" : "Continu")
-       << "ing deconvolution" << LogIO::POST; // Loglevel PROGRESS
-    if(se_p->solveSkyModel()) 
-    {
-      os << LogIO::NORMAL
-         << (niter == 0 ? "Image OK" : "Successfully deconvolved image")
-         << LogIO::POST; // Loglevel PROGRESS
-    }
-    else 
-    {
-      converged=False;
-      os << LogIO::NORMAL << "Threshhold not reached yet." << LogIO::POST; // Loglevel PROGRESS
-    }
-    printbeam(sm_p, os, firstrun);
-    
-    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-      (residuals_p[k])->copyData(sm_p->getResidual(k));
-    }
-   
-    retval.define("maxresidual", (sm_p->threshold()));
-    retval.define("iterations", (sm_p->numberIterations()));
-    retval.define("converged", converged);
-    savePSF(psfnames);
-    redoSkyModel_p=False;
-    writeFluxScales(fluxscale_p);
-    restoreImages(image);
-    
+
     
     this->unlock();
     return retval;
@@ -526,7 +501,7 @@ Record Imager::clean(const String& algorithm,
   catch (PSFZero&  x)
   {
     //os << LogIO::WARN << x.what() << LogIO::POST;
-    savePSF(psfnames);
+    savePSF(itsPSFNames);
     this->unlock();
     throw(AipsError(String("PSFZero  ")+ x.getMesg() + String(" : Please check that the required data exists and is not flagged.")));
     return retval;
@@ -550,6 +525,85 @@ Record Imager::clean(const String& algorithm,
 
   os << LogIO::NORMAL << "Exiting Imager::clean" << LogIO::POST; // Loglevel PROGRESS
   return retval;
+}
+
+casa::Record Imager::doClean(const casa::Bool firstrun) {
+  Record retval;
+  Bool converged=True;
+  retval.define("converged", False);
+  retval.define("iterations", Int(0));
+  retval.define("maxresidual", Float(0.0));
+
+  if(!valid())
+    {
+      return retval;
+    }
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "clean()"),logSink_p);
+
+  this->lock();
+  try {
+    if(!assertDefinedImageParameters())
+      {
+        return retval;
+      }
+
+    os << LogIO::NORMAL << (firstrun ? "Start" : "Continu")
+       << "ing deconvolution" << LogIO::POST; // Loglevel PROGRESS
+    if(se_p->solveSkyModel())
+    {
+      os << LogIO::NORMAL
+         << (sm_p->numberIterations() == 0 ? "Image OK" : "Successfully deconvolved image")
+         << LogIO::POST; // Loglevel PROGRESS
+    }
+    else
+    {
+      converged=False;
+      os << LogIO::NORMAL << "Threshhold not reached yet." << LogIO::POST; // Loglevel PROGRESS
+    }
+    printbeam(sm_p, os, firstrun);
+
+    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+      (residuals_p[k])->copyData(sm_p->getResidual(k));
+    }
+
+    retval.define("maxresidual", (sm_p->threshold()));
+    retval.define("iterations", (sm_p->numberIterations()));
+    retval.define("converged", converged);
+    savePSF(itsPSFNames);
+    redoSkyModel_p=False;
+    writeFluxScales(fluxscale_p);
+    restoreImages(((WBCleanImageSkyModel*)sm_p)->imageNames);
+
+  }
+    catch (PSFZero&  x)
+    {
+      //os << LogIO::WARN << x.what() << LogIO::POST;
+      savePSF(itsPSFNames);
+      this->unlock();
+      throw(AipsError(String("PSFZero  ")+ x.getMesg() + String(" : Please check that the required data exists and is not flagged.")));
+      return retval;
+    }
+    catch (exception &x)
+    {
+      this->unlock();
+      destroySkyEquation();
+      throw(AipsError(x.what()));
+      return retval;
+    }
+
+    catch(...){
+      cout << "Unknown exception" << endl;
+      this->unlock();
+      destroySkyEquation();
+      //Unknown exception...
+      throw;
+    }
+    this->unlock();
+
+    os << LogIO::NORMAL << "Exiting Imager::clean" << LogIO::POST; // Loglevel PROGRESS
+    return retval;
+
 }
 
 void Imager::initPredict(const Vector<String>& modelNames) {

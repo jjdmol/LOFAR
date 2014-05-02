@@ -89,11 +89,11 @@ namespace LofarFT {
     
     casa::Bool restoreImages(const casa::Vector<casa::String>& restored, casa::Bool modresiduals=casa::True);
 
-  casa::Record clean(
+  casa::Record initClean(
     const casa::String& algorithm,
-    const casa::Int niter, 
-    const casa::Float gain, 
-    const casa::Quantity& threshold, 
+    const casa::Int niter,
+    const casa::Float gain,
+    const casa::Quantity& threshold,
     const casa::Vector<casa::String>& model, 
     const casa::Vector<casa::Bool>& fixed,
     const casa::String& complist,
@@ -102,6 +102,8 @@ namespace LofarFT {
     const casa::Vector<casa::String>& residual,
     const casa::Vector<casa::String>& psf = casa::Vector<casa::String>(0),
     const casa::Bool firstrun=true);
+
+  casa::Record doClean(const casa::Bool firstrun=true);
     
   void initPredict(const casa::Vector<casa::String>& modelNames);
   void predict();
@@ -114,6 +116,8 @@ namespace LofarFT {
     vector<casa::Array<casa::DComplex> > itsGridsParallel2;
     VisibilityIterator*    lofar_rvi_p;
     VisImagingWeight       lofar_imwgt_p;
+    casa::Vector<casa::String> itsPSFNames;
+
     
 };
 
