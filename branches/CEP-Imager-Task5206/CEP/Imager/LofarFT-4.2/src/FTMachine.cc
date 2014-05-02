@@ -103,19 +103,19 @@ FTMachine::FTMachine(
 //     itsPolMap(casa::FTMachine::polMap),
     
   // ================================================  
-    itsPadding(parset.getDouble("padding",1.0)),
+    itsPadding(parset.getDouble("gridding.padding",1.0)),
     itsMaxAbsData(0.0), 
     itsCenterLoc(IPosition(4,0)),
     itsOffsetLoc(IPosition(4,0)),
     itsParset(parset),
     itsMS(ms),
     itsNWPlanes(100 /*nwPlanes*/), 
-    itsWMax(parset.getDouble("wmax",10000.0)),
+    itsWMax(parset.getDouble("data.wmax",10000.0)),
     itsConvFunc(), 
     itsVerbose(parset.getInt("verbose",0)),
-    itsMaxSupport(parset.getInt("maxsupport",1024)),
-    itsOversample(parset.getInt("oversample",8)),
-    itsImageName(parset.getString("image")),
+    itsMaxSupport(parset.getInt("gridding.maxsupport",1024)),
+    itsOversample(parset.getInt("gridding.oversample",8)),
+    itsImageName(parset.getString("output.imagename")),
     itsGriddingTime(0),   // counters to measure time spend per operation (Gridding, Degridding, and Convolution Function computation)
     itsDegriddingTime(0), //
     itsCFTime(0)          //

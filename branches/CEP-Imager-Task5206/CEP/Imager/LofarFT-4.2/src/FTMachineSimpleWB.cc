@@ -54,8 +54,7 @@ FTMachineSimpleWB::FTMachineSimpleWB(
 //   Bool useDoublePrec,
   ParameterSet& parset)
   : FTMachine( ms, parset),
-    itsNThread(OpenMP::maxThreads()),
-    itsRefFreq(parset.getDouble("RefFreq"))
+    itsNThread(OpenMP::maxThreads())
 {
   cout << "Constructing FTMachineSimpleWB..." << endl;
   itsMachineName = "LofarFTMachineSimpleWB";
@@ -67,6 +66,8 @@ FTMachineSimpleWB::FTMachineSimpleWB(
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
   itsVisResampler = new VisResamplerMatrixWB();
+  double msRefFreq=0; //TODO: put some useful reference frequency here
+  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq);
 }
 
 FTMachineSimpleWB::~FTMachineSimpleWB()

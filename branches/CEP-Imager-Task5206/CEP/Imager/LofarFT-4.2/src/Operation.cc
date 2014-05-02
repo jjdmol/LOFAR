@@ -34,12 +34,13 @@ Operation::Operation(ParameterSet& parset):
     itsParset(parset),
     needsData(false),
     needsImage(false),
-    needsFTMachine(false)
+    needsFTMachine(false),
+    needsWeight(false)
 {}
 
 void Operation::init()
 {
-  itsMSName = itsParset.getString("ms");
+  itsMSName = itsParset.getString("data.ms");
   itsMS = MeasurementSet(itsMSName, Table::Update);
 
   itsImager = new Imager(itsMS, itsParset);
@@ -52,7 +53,7 @@ void Operation::init()
 
 void Operation::initData()
 {
-  String select = itsParset.getString("select","");
+  String select = itsParset.getString("data.query","");
   if (select.empty())
   {
     select = "ANTENNA1 != ANTENNA2";
@@ -68,18 +69,18 @@ void Operation::initData()
 
   ROArrayColumn<Double> chfreq(window.chanFreq());
 
-  String chanmode  = itsParset.getString("chanmode","channel");
+  String chanmode  = "channel";//itsParset.getString("chanmode","channel");
 
   Vector<Int> chansel(1);
   chansel(0)=chfreq(0).shape()[0];
 
-  Vector<Int> chanstart(itsParset.getIntVector("chanstart",std::vector<int>(1,0)));
-  Vector<Int> chanstep(itsParset.getIntVector("chanstep",std::vector<int>(1,1)));
+  Vector<Int> chanstart(itsParset.getIntVector("data.chanstart",std::vector<int>(1,0)));
+  Vector<Int> chanstep(itsParset.getIntVector("data.chanstep",std::vector<int>(1,1)));
 
-  String antenna = itsParset.getString("antenna","");
-  String uvdist = itsParset.getString("uvdist","");
+  String antenna = itsParset.getString("data.baselines","");
+  String uvdist = itsParset.getString("data.uvrange","");
 
-  Int fieldid = itsParset.getInt("field",0);
+  Int fieldid = itsParset.getInt("data.field",0);
 
   itsImager->setdata (
     chanmode,                       // mode
@@ -119,7 +120,7 @@ void Operation::initData()
 
 void Operation::initImage()
 {
-  Quantity qcellsize = readQuantity (itsParset.getString("cellsize","1arcsec"));
+  Quantity qcellsize = readQuantity (itsParset.getString("image.cellsize","1arcsec"));
   MDirection phaseCenter;
   Bool doShift = False;
   Int fieldid = 0;
@@ -131,17 +132,17 @@ void Operation::initImage()
 
 
   itsImager->defineImage (
-      itsParset.getInt("npix",256),        // nx
-      itsParset.getInt("npix",256),        // ny
+      itsParset.getInt("image.npix",256),        // nx
+      itsParset.getInt("image.npix",256),        // ny
       qcellsize,                           // cellx
       qcellsize,                           // celly
       String("I"),                         // stokes
       phaseCenter,                         // phaseCenter
       doShift  ?  -1 : fieldid,            // fieldid
-          itsParset.getString("mode","mfs"),   // mode
-          itsParset.getInt("img_nchan",1),     // nchan
-          itsParset.getInt("img_chanstart",0), // start
-          itsParset.getInt("img_chanstep",1),  // step
+          itsParset.getString("image.mode","mfs"),   // mode
+          itsParset.getInt("image.img_nchan",1),     // nchan
+          itsParset.getInt("image.img_chanstart",0), // start
+          itsParset.getInt("image.img_chanstep",1),  // step
           MFrequency(),                        // mFreqstart
           MRadialVelocity(),                   // mStart
           Quantity(1,"km/s"),                  // qstep, Def=1 km/s
@@ -151,8 +152,8 @@ void Operation::initImage()
 
 void Operation::initFTMachine()
 {
-  Int nterms = itsParset.getInt("nterms",1);
-  Double RefFreq = itsParset.getDouble("RefFreq");
+  Int nterms = itsParset.getInt("image.nterms",1);
+  Double RefFreq = itsParset.getDouble("RefFreq",0); // TODO get sensible reference frequency
   itsImager->settaylorterms(nterms,RefFreq);
 
   itsImager->createFTMachine();
@@ -170,14 +171,16 @@ void Operation::makeEmptyImage(const String& imgName, Int fieldid)
 void Operation::showHelpData(ostream& os, const string& name)
 {
   os<<
-  "Input parameters:"
-  "  input.ms         : name of input measurement set with uv-data    "<<endl<<
+  "Data parameters:"
+  "  data.ms          : name of input measurement set with uv-data    "<<endl<<
   "                     string,  no default                           "<<endl<<
-  "  input.datacolumn : data column to use                            "<<endl<<
+  "  data.datacolumn  : data column to use                            "<<endl<<
   "                     string,  default \"DATA\"                     "<<endl<<
-  "  input.select     : TaQL selection string for MS                  "<<endl<<
+  "  data.query       : TaQL selection string for MS                  "<<endl<<
   "                     string,  default \"ANTENNA1 != ANTENNA2\"     "<<endl<<
-  "  input.uvdist     : UV range in wavelengths                       "<<endl<<
+  "  data.uvrange     : UV range in wavelengths                       "<<endl<<
+  "                     string,  default \"\"                         "<<endl<<
+  "  data.baselines   : baseline selection string                     "<<endl<<
   "                     string,  default \"\"                         "<<endl<<endl;
 }
 
@@ -189,6 +192,8 @@ void Operation::showHelpImage(ostream& os, const string& name)
   "                     int   ,  default 256                          "<<endl<<
   "  image.cellsize   : pixel width                                   "<<endl<<
   "                     string,  default \"1arcsec\"                  "<<endl<<
+  "  image.reffreq    : reference frequency (Hz), only used for multi-term images"<<endl<<
+  "                     double,  default is reference frequency from ms"<<endl<<
   "  image.nterms     : number of terms for wideband imaging          "<<endl<<
   "                     int   ,  default 1                            "<<endl<<endl;
 }
@@ -203,23 +208,34 @@ void Operation::showHelpFTMachine(ostream& os, const string& name)
   "                        int   , default 8                          "<<endl<<endl;
 }
 
+void Operation::showHelpWeight(ostream& os, const string& name)
+{
+  os<<
+  "Weight pameters:"<<endl<<
+  "  scheme              : weighting scheme, must be \"natural\"      "<<endl<<
+  "                        string, default natural                    "<<endl<<endl;
+}
+
 // Show the help info.
 void Operation::showHelp (ostream& os, const string& name) 
 {
   os<<
   "General parameters:"<<endl<<
   "  operation        : operation name                                "<<endl<<
-  "                     (string,  no default   )                      "<<endl<<
-  "  displayprogress  : display progress                              "<<endl<<
-  "                     (bool  ,  default false)                      "<<endl<<
+  "                     string,  no default                           "<<endl<<
   "  verbose          : verbosity level                               "<<endl<<
-  "                     (int   ,  default 0    )                      "<<endl<<
-  "  chunksize        : amount of data read at once                   "<<endl<<
-  "                     (int   ,  default 0    )                      "<<endl<<endl;
+  "                     int   ,  default 0                            "<<endl<<
+  "  chunksize        : amount of data read at once (0 means automatic)"<<endl<<
+  "                     int   ,  default 0                            "<<endl<<endl;
+  os<<
+  "Output parameters:"<<endl<<
+  "  imagename        : base name for output image                    "<<endl<<
+  "                     string,  no default                           "<<endl<<endl;
 
   if (needsData) showHelpData(os,name);
   if (needsImage) showHelpImage(os,name);
   if (needsFTMachine) showHelpFTMachine(os,name);
+  if (needsFTMachine) showHelpWeight(os,name);
 };
 
 

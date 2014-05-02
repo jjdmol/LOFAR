@@ -94,13 +94,15 @@ int main (Int argc, char** argv)
     printHelp(argc,argv,operations);
     exit(0);
   }
-  else {
-    parsetname=argv[1];
-  }
 
   INIT_LOGGER(LOFAR::basename(string(argv[0])));
 
-  LOFAR::ParameterSet parset(parsetname, true); //case insensitive
+  LOFAR::ParameterSet parset(true);
+
+  parsetname=argv[1];
+  if (parsetname.find("=")!=string::npos) {
+    parset.adoptFile(parsetname); //case insensitive
+  }
   parset.adoptArgv(argc,argv);
   
   String operation_name = parset.getString("operation");

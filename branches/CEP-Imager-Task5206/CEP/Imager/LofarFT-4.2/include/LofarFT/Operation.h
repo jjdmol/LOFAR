@@ -50,7 +50,7 @@ namespace LOFAR {
 
       void initFTMachine();
 
-      void makeEmptyImage(const String& imgName, Int fieldid);
+      void makeEmptyImage(const casa::String& imgName, Int fieldid);
 
       virtual void run() {}; // Only derived classes will do something useful in run()
 
@@ -77,11 +77,13 @@ namespace LOFAR {
       bool                       needsData;
       bool                       needsImage;
       bool                       needsFTMachine;
+      bool                       needsWeight;
 
     private:
       void showHelpData (ostream& os, const string& name);
       void showHelpImage (ostream& os, const string& name);
       void showHelpFTMachine (ostream& os, const string& name);
+      void showHelpWeight (ostream& os, const string& name);
     };
 
     // Factory that can be used to generate new Operation objects.

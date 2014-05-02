@@ -58,9 +58,8 @@ void OperationPredict::showHelp (ostream& os, const string& name)
   os<<
   "Operation \"predict\": create a predicted image                   "<<endl<<
   "Parameters:                                                       "<<endl<<
-  "  model           : model to be predicted                         "<<endl<<
-  "                    (string,  ???                 \")             "<<endl<<
-  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
+  "  modelimage       : model to be predicted                        "<<endl<<
+  "                     (string,  no default)                        "<<endl<<endl;
 };
 
 

@@ -27,11 +27,15 @@ namespace LofarFT {
   public:
     
     OperationImage(ParameterSet& parset);
+
     virtual ~OperationImage() {};
 
     virtual void run();
 
     virtual void showHelp (ostream& os, const std::string& name);
+
+  private:
+    casa::String itsImageName;
   };
 
 } //# namespace LofarFT

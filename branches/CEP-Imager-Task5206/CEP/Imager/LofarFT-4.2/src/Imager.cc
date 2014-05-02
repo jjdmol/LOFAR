@@ -56,10 +56,8 @@ Bool Imager::createFTMachine()
   Bool useDoublePrecGrid = False;
   Double RefFreq = 0.0;
   if (sm_p) RefFreq = Double((*sm_p).getReferenceFrequency());
-
-  cout << "splitbeam: " << itsParset.getBool("splitbeam",true) << endl;
   
-  string FTMachineName=itsParset.getString("Gridding.FTMachine","FTMachineSimpleWB");
+  string FTMachineName=itsParset.getString("gridding.FTMachine","FTMachineSimpleWB");
 
   itsFTMachine = FTMachineFactory::instance().create(FTMachineName, *ms_p, itsParset);
 
@@ -68,10 +66,7 @@ Bool Imager::createFTMachine()
 
   cft_p = new SimpleComponentFTMachine();
 
-  rvi_p->setRowBlocking (1000000);
-  if (itsParset.getInt("RowBlock",0)>0){
-    rvi_p->setRowBlocking (itsParset.getInt("RowBlock",0));
-  };
+  rvi_p->setRowBlocking (itsParset.getInt("chunksize",1000000));
   
   return True;
 }
@@ -116,9 +111,9 @@ void Imager::makeVisSet(
   }
   Matrix<Int> noselection;
   Double timeInterval = 0;
-  if (itsParset.getInt("ApplyElement",0))
+  if (itsParset.getInt("gridding.aterm.applyElement",0))
   {
-      timeInterval = itsParset.getDouble("TWElement",20.);
+      timeInterval = itsParset.getDouble("gridding.aterm.TWElement",20.);
   }
 
   //if you want to use scratch col...make sure they are there

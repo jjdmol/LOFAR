@@ -178,7 +178,6 @@ private:
 
 
   //# Data members.
-  ParameterSet&             itsParset;
   casa::IPosition           itsShape;
   casa::DirectionCoordinate itsCoordinates;
   WScale                    itsWScale;
@@ -218,6 +217,7 @@ private:
   casa::Double              itsTimeCFpar;
   casa::Double              itsTimeCFfft;
   unsigned long long  itsTimeCFcnt;
+  Int                       itsChan_block_size;
 };
 
 

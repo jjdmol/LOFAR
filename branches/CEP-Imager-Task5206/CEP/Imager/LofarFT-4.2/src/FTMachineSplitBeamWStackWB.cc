@@ -125,8 +125,7 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   const MeasurementSet& ms,
   ParameterSet& parset)
   : FTMachine( ms, parset),
-    itsNThread(OpenMP::maxThreads()),
-    itsRefFreq(parset.getDouble("RefFreq"))
+    itsNThread(OpenMP::maxThreads())
 {
   itsMachineName = theirName;
   itsNGrid = itsNThread;
@@ -137,6 +136,8 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
   itsVisResampler = new VisResamplerMatrixWB();
+  double msRefFreq=0; //TODO: put some useful reference frequency here
+  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq);
 }
 
 FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()

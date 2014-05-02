@@ -112,7 +112,6 @@ ConvolutionFunction::ConvolutionFunction
     itsVerbose (verbose),
     itsMaxSupport(maxsupport),
     itsImgName(imgName),
-    itsParset(parset),
     itsTimeW    (0),
     itsTimeWpar (0),
     itsTimeWfft (0),
@@ -154,7 +153,8 @@ ConvolutionFunction::ConvolutionFunction
   Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
-  if (parset.getBool("FindNWplanes",false)) FindNWplanes();
+  if (parset.getBool("gridding.findNWplanes",false)) FindNWplanes();
+  itsChan_block_size = parset.getInt("gridding.chanBlockSize",0);
 
   // Precalculate the Wtwerm fft for all w-planes.
   store_all_W_images();
@@ -166,18 +166,17 @@ ConvolutionFunction::Polarization::Type ConvolutionFunction::image_polarization(
 }
 
 
-
 Vector<Int> ConvolutionFunction::set_frequency(const Vector<Double> &frequency)
 {
-  Int chan_block_size = itsParset.getInt("ChanBlockSize",0);
+
   Vector<Int> chan_map;
   
   Int nfreq = frequency.size();
   chan_map.resize(nfreq);
   
-  if (chan_block_size==0) chan_block_size = nfreq;
+  if (itsChan_block_size==0) itsChan_block_size = nfreq;
   
-  itsNChannel = ((nfreq-1)/chan_block_size)+1;
+  itsNChannel = ((nfreq-1)/itsChan_block_size)+1;
     
   itsFrequencyList.resize(itsNChannel);
   
@@ -186,7 +185,7 @@ Vector<Int> ConvolutionFunction::set_frequency(const Vector<Double> &frequency)
   {
     Int j;
     Double f = 0;
-    for(j = 0; ((j<chan_block_size) && (chan<nfreq)); j++)
+    for(j = 0; ((j<itsChan_block_size) && (chan<nfreq)); j++)
     {
       f += frequency[chan];
       chan_map[chan++] = i;

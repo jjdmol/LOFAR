@@ -52,7 +52,7 @@ void OperationClean::init()
 {
   Operation::init();
 
-  Vector<Double> userScaleSizes(itsParset.getDoubleVector("uservector",std::vector<double>(1,0.),false));
+  Vector<Double> userScaleSizes(itsParset.getDoubleVector("clean.uservector",std::vector<double>(1,0.),false));
   String scaleMethod;
   Vector<Float> userVector(1); userVector(0)=0;
 //   convertArray (userVector, userScaleSizes);
@@ -69,8 +69,8 @@ void OperationClean::init()
   itsImager->setscales(scaleMethod, 1, userVector);
 
 
-  Double cyclefactor   = itsParset.getDouble("cyclefactor",1.5);
-  Double cyclespeedup  = itsParset.getDouble("cyclespeedup",-1);
+  Double cyclefactor   = itsParset.getDouble("clean.cyclefactor",1.5);
+  Double cyclespeedup  = itsParset.getDouble("clean.cyclespeedup",-1);
 
 
   itsImager->setmfcontrol(
@@ -85,9 +85,9 @@ void OperationClean::init()
     Vector<String>(1, ""),      //Vector<String>& fluxscale,
     true);                      //Bool flatnoise);
 
-  String imgName = itsParset.getString("image");
+  String imgName = itsParset.getString("image.imagename");
 
-  Int nterms = itsParset.getInt("nterms",1);
+  Int nterms = itsParset.getInt("image.nterms",1);
 
   Vector<String> modelNames(nterms);
   Vector<String> residualNames(nterms);
@@ -112,15 +112,15 @@ void OperationClean::init()
     }
   }
   
-  Int niter = itsParset.getInt("niter",1000);
-  Double gain = itsParset.getDouble("gain",0.1);
+  Int niter = itsParset.getInt("clean.niter",1000);
+  Double gain = itsParset.getDouble("clean.gain",0.1);
 
-  String threshStr = itsParset.getString("threshold","0Jy");
+  String threshStr = itsParset.getString("clean.threshold","0Jy");
   Quantity threshold = readQuantity (threshStr);
 
   Bool displayProgress = False;
   
-  String maskName  = itsParset.getString("mask","");
+  String maskName  = itsParset.getString("clean.maskimage","");
   
   itsImager->initClean(
     "msmfs",                     // algorithm,
@@ -147,11 +147,22 @@ void OperationClean::showHelp (ostream& os, const string& name)
   Operation::showHelp(os,name);
 
   os<<
-  "Operation \"clean\": perform a clean cycle                        "<<endl<<
-  "Parameters:                                                       "<<endl<<
-  "  uservector      : user-defined scales for multi-scale clean     "<<endl<<
-  "                    (string,  default \"uservector\")             "<<endl<<
-  "  MORE DOCUMENTATION TO BE ADDED                                  "<<endl;
+  "Operation \"clean\": perform a clean cycle                          "<<endl<<
+  "Parameters:                                                         "<<endl<<
+  "  clean.niter       : number of clean iterations                    "<<endl<<
+  "                      int   ,  default 1000                         "<<endl<<
+  "  clean.threshold   : flux level at which to stop cleaning          "<<endl<<
+  "                      string,  \"0Jy\"                              "<<endl<<
+  "  clean.maskimage   : name of the mask image to use in cleaning     "<<endl<<
+  "                      string,  default \"\"                         "<<endl<<
+  "  clean.cyclefactor : see casa documentation                        "<<endl<<
+  "                      double,  default 1.5                          "<<endl<<
+  "  clean.cyclespeedup: see casa documentation                        "<<endl<<
+  "                      double,  default -1                           "<<endl<<
+  "  clean.nscales     : number of scales for multiscale clean         "<<endl<<
+  "                      int   ,  default 5                            "<<endl<<
+  "  clean.uservector  : user-defined scales for multi-scale clean     "<<endl<<
+  "                      float vector,  default [0.]                   "<<endl<<endl;
 };
 
 

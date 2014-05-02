@@ -28,7 +28,7 @@ namespace LofarFT {
  
 casa::CountedPtr<ATerm> ATerm::create(const casa::MeasurementSet &ms, ParameterSet& parset)
 {
-  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parset.getString("ATerm","ATermLofar"), ms, parset));
+  return casa::CountedPtr<ATerm>(LOFAR::LofarFT::ATermFactory::instance().create(parset.getString("gridding.ATerm.name","ATermLofar"), ms, parset));
 }
 
 }

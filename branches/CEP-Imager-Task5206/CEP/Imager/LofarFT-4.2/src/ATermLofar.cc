@@ -201,13 +201,13 @@ ATermLofar::ATermLofar(const MeasurementSet& ms, ParameterSet& parset) :
 
   itsDirectionCoordinates = 0;
 
-  itsApplyBeam = parset.getBool("applyBeam",true);
+  itsApplyBeam = parset.getBool("gridding.aterm.applyBeam",true);
 
-  itsApplyIonosphere = parset.getBool("applyIonosphere",false);
+  itsApplyIonosphere = parset.getBool("gridding.aterm.applyIonosphere",false);
 
   if (itsApplyIonosphere) 
   {
-    String parmdbname = parset.getString("parmdbname",ms.tableName() + "/instrument");
+    String parmdbname = parset.getString("gridding.aterm.parmdbname",ms.tableName() + "/instrument");
     if (itsVerbose) cout << parmdbname << endl;
     initParmDB(parmdbname);
     if (itsVerbose) cout << itsCal_pp_names << endl;

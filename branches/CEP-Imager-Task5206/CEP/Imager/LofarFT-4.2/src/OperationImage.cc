@@ -34,7 +34,8 @@ namespace
     registerClass<OperationImage>("image");
 }
   
-OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
+OperationImage::OperationImage(ParameterSet& parset): Operation(parset),
+    itsImageName(parset.getString("output.imagename"))
 {
     needsData=true;
     needsImage=true;
@@ -43,7 +44,7 @@ OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 
 void OperationImage::run()
 {
-  itsImager->makeimage ("corrected", "testimage");
+  itsImager->makeimage ("corrected", itsImageName);
 }
 
 void OperationImage::showHelp (ostream& os, const std::string& name)
