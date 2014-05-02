@@ -85,7 +85,7 @@ void OperationClean::init()
     Vector<String>(1, ""),      //Vector<String>& fluxscale,
     true);                      //Bool flatnoise);
 
-  String imgName = itsParset.getString("image.imagename");
+  String imgName = itsParset.getString("output.imagename");
 
   Int nterms = itsParset.getInt("image.nterms",1);
 
