@@ -31,6 +31,9 @@ NRTESTS=0
 NRSUCCESS=0
 NRFAILURE=0
 
+# Change directory to the location of this script
+cd `dirname $0`
+
 # Run all tests
 for TEST in `find $TESTSETS -name '*.test' -type f -a -executable`
 do
