@@ -271,19 +271,10 @@ extern "C" {
       (*outputData)[station][0][time][0] = sampleX;
       (*outputData)[station][0][time][1] = sampleY;
 
-      // No transpose: data order is [station][pol][channel][time]
-#elif NR_CHANNELS > 1
-      __shared__ fcomplex tmp[16][17][2]; // one too wide to avoid bank-conflicts on read
-
-      tmp[major][minor][0] = sampleX;
-      tmp[major][minor][1] = sampleY;
-      __syncthreads();
-      (*outputData)[station][0][channel][time] = tmp[major][minor][0] ;
-      (*outputData)[station][1][channel][time] = tmp[major][minor][1] ;
-      __syncthreads();
 #else
-      (*outputData)[station][0][0][time] = sampleX;
-      (*outputData)[station][1][0][time] = sampleY;
+      // No transpose: data order is [station][pol][channel][time]
+      (*outputData)[station][0][channel][time] = sampleX;
+      (*outputData)[station][1][channel][time] = sampleY;
 #endif
     }
   }
