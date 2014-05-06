@@ -67,10 +67,9 @@ namespace LOFAR
     {
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
-        "\n  max. threads per block: " << 
-        function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK) <<
         "\n  nr. of registers used : " <<
-        function.getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS));
+        getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS)
+      );
     }
 
     void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
@@ -99,7 +98,7 @@ namespace LOFAR
       if (localWorkSize.x == 0 || 
           localWorkSize.y == 0 ||
           localWorkSize.z == 0) {
-        errMsgs << "  - localWorkSize components must be non-zero" << endl;
+        errMsgs << "  - localWorkSize dimensions must be non-zero" << endl;
       } else {
         if (globalWorkSize.x % localWorkSize.x != 0 ||
             globalWorkSize.y % localWorkSize.y != 0 ||
@@ -130,6 +129,80 @@ namespace LOFAR
 
       itsGridDims = grid;
       itsBlockDims = localWorkSize;
+    }
+
+    unsigned Kernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
+    {
+      // See NVIDIA's CUDA_Occupancy_Calculator.xls
+      const gpu::Device device(_context.getDevice());
+      const unsigned computeCapMajor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+      unsigned factor;
+
+      // block size
+      unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
+      const unsigned maxThreadsPerMP = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
+      unsigned threadsFactor = maxThreadsPerMP / nrThreadsPerBlock;
+      factor = threadsFactor;
+
+      // number of registers
+      unsigned nrRegsPerThread = getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS);
+      unsigned nrRegsPerBlock;
+      // sm_1x devices apply the reg gran per block. Newer devices apply it per warp.
+      if (computeCapMajor == 1) {
+        const unsigned computeCapMinor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+        nrRegsPerBlock = nrRegsPerThread * nrThreadsPerBlock;
+        unsigned regsGranularity = computeCapMinor <= 1 ? 256 : 512;
+        nrRegsPerBlock = (nrRegsPerBlock + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
+      } else {
+        const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
+        unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
+        unsigned regsGranularity;
+        switch (computeCapMajor) {
+          case 2:  regsGranularity =  64; break;
+          case 3:  regsGranularity = 256; break;
+          default: regsGranularity = 256; break; // unknown for future hardware
+        }
+        nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
+        unsigned nrWarpsPerBlock = (nrThreadsPerBlock + warpSize - 1) / warpSize;
+        nrRegsPerBlock = nrRegsPerWarp * nrWarpsPerBlock;
+      }
+      const unsigned devNrRegs = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK);
+      unsigned regsFactor = devNrRegs / nrRegsPerBlock;
+      if (regsFactor < factor)
+        factor = regsFactor;
+
+      // shared memory size
+      size_t shMem = getAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES) + dynSharedMemBytes;
+      unsigned shMemGranularity;
+      switch (computeCapMajor) {
+        case 1:  shMemGranularity = 512; break;
+        case 2:  shMemGranularity = 128; break;
+        case 3:  shMemGranularity = 256; break;
+        default: shMemGranularity = 256; break; // unknown for future hardware
+      }
+      shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2
+      const size_t devShMem = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
+      unsigned shMemFactor = devShMem / shMem;
+      if (shMemFactor < factor)
+        factor = shMemFactor;
+
+      return factor;
+    }
+
+    double Kernel::getMultiProcOccupancy(unsigned dynSharedMemBytes) const
+    {
+      const gpu::Device device(_context.getDevice());
+
+      const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
+      unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
+      unsigned nrWarpsPerBlock = (nrThreadsPerBlock + warpSize - 1) / warpSize;
+      unsigned nrBlocksPerMP = getNrBlocksPerMultiProc(dynSharedMemBytes);
+      unsigned nrWarps = nrBlocksPerMP * nrWarpsPerBlock;
+
+      const unsigned maxThreadsPerMP = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
+      unsigned maxNrWarpsPerMP = maxThreadsPerMP / warpSize;
+
+      return static_cast<double>(nrWarps) / maxNrWarpsPerMP;
     }
 
     void Kernel::enqueue(const BlockID &blockId) const

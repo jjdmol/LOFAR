@@ -66,6 +66,8 @@ namespace LOFAR
 
       // Struct representing a CUDA Block, which is similar to the @c dim3 type
       // in the CUDA Runtime API.
+      //
+      // @invariant x > 0, y > 0, z > 0
       struct Block
       {
         Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
@@ -99,7 +101,7 @@ namespace LOFAR
         // \param flags must be 0 (at least up till CUDA 5.0).
         Platform(unsigned int flags = 0);
 
-        // The CUDA version (f.e. 5.0 -> 5000).
+        // The CUDA version (e.g. 5.0 -> 5000).
         int version() const;
 
         // Returns the number of devices in the CUDA platform.
@@ -202,13 +204,13 @@ namespace LOFAR
         // In other words, \c setCurrent() is implied.
         Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
 
-        // Returns the device associated to the _current_ context.
+        // Returns the device associated to this context.
         Device getDevice() const;
 
-        // Set the cache configuration of the _current_ context.
+        // Set the cache configuration for kernel launches in this context.
         void setCacheConfig(CUfunc_cache config) const;
 
-        // Set the shared memory configuration of the _current_ context.
+        // Set the shared memory configuration for kernel launches in this context.
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
@@ -403,9 +405,10 @@ namespace LOFAR
         // documentation of cuFuncSetSharedMemConfig in the CUDA Driver API.
         void setSharedMemConfig(CUsharedconfig config) const;
 
-      private:
+      protected:
         const Context _context;
 
+      private:
         // Keep the Module alive, because Function actually wraps a pointer
         // to a function within the Module.
         const Module _module;

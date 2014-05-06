@@ -208,6 +208,10 @@ namespace LOFAR
       Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
+        // Early exc for easy debugging only (x, y, z are public).
+        if (x == 0 || y == 0 || z == 0)
+          THROW(CUDAException, "Block(): block dims must be non-zero: " <<
+                               x << " " << y << " " << z);
       }
 
       std::ostream& operator<<(std::ostream& os, const Block& block)
@@ -421,19 +425,19 @@ namespace LOFAR
           checkCuCall(cuCtxDestroy(_context));
         }
 
-        CUdevice getDevice() const
+        CUdevice getCurrentDevice() const
         {
           CUdevice dev;
           checkCuCall(cuCtxGetDevice(&dev));
           return dev;
         }
 
-        void setCacheConfig(CUfunc_cache config) const
+        void setCurrentCacheConfig(CUfunc_cache config) const
         {
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
-        void setSharedMemConfig(CUsharedconfig config) const
+        void setCurrentSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
           checkCuCall(cuCtxSetSharedMemConfig(config));
@@ -465,21 +469,21 @@ namespace LOFAR
       {
         ScopedCurrentContext scc(*this);
 
-        return Device(_impl->getDevice());
+        return Device(_impl->getCurrentDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCacheConfig(config);
+        _impl->setCurrentCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setSharedMemConfig(config);
+        _impl->setCurrentSharedMemConfig(config);
       }
 
 

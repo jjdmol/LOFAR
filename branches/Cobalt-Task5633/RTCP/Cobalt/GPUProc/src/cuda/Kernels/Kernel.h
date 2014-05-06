@@ -92,7 +92,19 @@ namespace LOFAR
 
       void setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
                                gpu::Block localWorkSize);
-      
+
+      // Requires call to setEnqueueWorkSizes() first to get meaningful result.
+      // Idem for cache and shared memory configuration in the context.
+      unsigned getNrBlocksPerMultiProc(unsigned dynSharedMemBytes = 0) const;
+
+      // "The multiprocessor occupancy is the ratio of active warps to the
+      // maximum number of warps supported on a multiprocessor of the GPU."
+      //
+      // Requires call to setEnqueueWorkSizes() first to get meaningful result.
+      // Idem for cache and shared memory configuration in the context.
+      // Note: Higher occupancy does not necessarily mean higher performance.
+      double getMultiProcOccupancy(unsigned dynSharedMemBytes = 0) const;
+
 
       const unsigned maxThreadsPerBlock;
       size_t nrOperations, nrBytesRead, nrBytesWritten;
