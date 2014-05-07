@@ -9,9 +9,13 @@ python_install(
   class_obspar.py
   class_selfcalparam.py
   class_selfcalrun.py 
+  old_class_obsparMergedData.py
+  old_class_selfcalparam.py
+  old_class_selfcalrun.py
   DESTINATION lofar/selfcal)
 
 install(PROGRAMS
   selfcal.py
   mergeSB.py 
+  old_selfcal.py
   DESTINATION bin)
