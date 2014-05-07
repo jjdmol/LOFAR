@@ -1,6 +1,4 @@
-//#  -*- mode: c++ -*-
-//#
-//#  BypassRead.h: Synchronize rcu settings with RSP hardware.
+//#  SDOmode.cc: implementation of the SDOmode class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +18,38 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: SDOmode.cc 21314 2012-06-26 14:01:44Z overeem $
 
-#ifndef BYPASSREAD_H_
-#define BYPASSREAD_H_
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-#include <APL/RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/SDOMode.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 
-#include "SyncAction.h"
+using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace RSP_Protocol;
 
-namespace LOFAR {
-  namespace RSP {
-
-class BypassRead : public SyncAction
+size_t SDOModeInfo::getSize() const
 {
-public:
-	// Constructors for a BypassRead object.
-	BypassRead(GCFPortInterface& board_port, int board_id);
+  return MSH_size(itsSDOModeInfo);
+}
 
-	// Destructor for BypassRead.
-	virtual ~BypassRead();
+size_t SDOModeInfo::pack  (char* buffer) const
+{
+  size_t offset = 0;
 
-	// Send the write message.
-	virtual void sendrequest();
+  MSH_pack(buffer, offset, itsSDOModeInfo);
 
-	// Send the read request.
-	virtual void sendrequest_status();
+  return offset;
+}
 
-	// Handle the read result.
-	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+size_t SDOModeInfo::unpack(const char *buffer)
+{
+  size_t offset = 0;
 
-private:
-	EPA_Protocol::MEPHeader m_hdr;
-};
+  MSH_unpack(buffer, offset, itsSDOModeInfo);
 
-  }; // namespace RSP
-}; // namespace LOFAR
-     
-#endif /* BypassREAD_H_ */
+  return offset;
+}

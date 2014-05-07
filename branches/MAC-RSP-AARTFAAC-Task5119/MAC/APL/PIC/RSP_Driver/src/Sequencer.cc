@@ -143,7 +143,7 @@ GCFEvent::TResult Sequencer::RSUpreclear_state(GCFEvent& event, GCFPortInterface
 	switch (event.signal) {
 	case F_ENTRY: {
 		LOG_INFO("Entering Sequencer::RSUpreclear_state");
-
+        
 		// Change the register to set the clear flag
 		RSUSettings::ResetControl 	rsumode;
 		rsumode.setClear(true);
@@ -321,7 +321,7 @@ GCFEvent::TResult Sequencer::RSUclear_state(GCFEvent& event, GCFPortInterface& /
 	case F_ENTRY: {
 		LOG_INFO("Entering Sequencer::RSUclear_state");
 
-		// Change the regsiter to set the clear flag
+		// Change the register to set the clear flag
 		RSUSettings::ResetControl rsumode;
 		rsumode.setClear(true);
 		for (int rsp = 0; rsp < StationSettings::instance()->nrRspBoards(); rsp++) {
@@ -548,6 +548,7 @@ GCFEvent::TResult Sequencer::CDOenable_state(GCFEvent& event, GCFPortInterface& 
 		LOG_INFO("Entering Sequencer::CDOenable_state");
 		Cache::getInstance().getState().cdo().reset();
 		Cache::getInstance().getState().cdo().write();
+        itsTimer = 0;
 		break;
 
 	case F_TIMER:
@@ -556,8 +557,13 @@ GCFEvent::TResult Sequencer::CDOenable_state(GCFEvent& event, GCFPortInterface& 
 			LOG_WARN("Failed to enable receivers. Retrying...");
 			TRAN(Sequencer::RSUclear_state);
 		} else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
-			itsFinalState = true;
-			TRAN(Sequencer::RCUdisable_state);
+            if (StationSettings::instance()->hasAartfaac()) {
+                TRAN(Sequencer::SDObitmode_state);
+            }
+            else {
+                itsFinalState = true;
+                TRAN(Sequencer::RCUdisable_state);
+            }
 		}
 		break;
 
@@ -571,6 +577,223 @@ GCFEvent::TResult Sequencer::CDOenable_state(GCFEvent& event, GCFPortInterface& 
 
 	return (GCFEvent::HANDLED);
 }
+
+//
+// CDOenable_state(event, port)
+//
+GCFEvent::TResult Sequencer::SDObitmode_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	int select;
+    int bits_per_sample;
+    switch (event.signal) {
+	case F_ENTRY:
+		LOG_INFO("Entering Sequencer::SDObitmode_state");
+        select = 0;
+        bits_per_sample = GET_CONFIG("RSPDriver.SDO_MODE", i);
+        if      (bits_per_sample == 8) { select = 1; } 
+        else if (bits_per_sample == 5) { select = 2; } 
+        else if (bits_per_sample == 4) { select = 3; } 
+        RSRSDOMode sdomodeinfo;
+        sdomodeinfo.bm_select = select;
+        sdomodeinfo.bm_max = 3;
+        for (int rsp = 0; rsp < StationSettings::instance()->nrRspBoards(); rsp++) {
+			Cache::getInstance().getBack().getSDOModeInfo()()(rsp) = sdomodeinfo;
+			Cache::getInstance().getFront().getSDOModeInfo()()(rsp) = sdomodeinfo;
+		}
+		Cache::getInstance().getState().sdoState().reset();
+		Cache::getInstance().getState().sdoState().write();
+        
+        itsTimer = 0;
+		break;
+
+	case F_TIMER:
+		if (itsTimer++ > WRITE_TIMEOUT && Cache::getInstance().getState().sdoState().isMatchAll(RegisterState::IDLE)) {
+            //itsFinalState = true;
+			TRAN(Sequencer::SDOselect_state);
+		}
+		break;
+
+	case F_EXIT:
+		LOG_DEBUG("Leaving Sequencer::SDObitmode_state");
+		break;
+
+	default:
+		break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+// default settings
+// sdo_ss=295:330,331:366,367:402,403:438
+blitz::Array<uint16, 2> Sequencer::str2blitz(const char* str, int max)
+{
+	string inputstring(str);
+	char* start  = (char*)inputstring.c_str();
+	char* end  = 0;
+	bool  range  = false;
+	long  prevval = 0;
+    
+    blitz::Array<uint16, 2> ss(4,36); // ss = subband select
+	int bank_nr = 0;
+	int sb_nr = 0;
+    long i;
+	
+    ss = 0;
+	while (start) {
+		long val = strtol(start, &end, 10); // read decimal numbers
+		start = (end ? (*end ? end + 1 : 0) : 0); // advance
+		if (val >= max || val < 0) {
+			LOG_WARN(formatString("Error: value %ld out of range",val));
+			ss = 0;
+			return ss;
+		}
+        LOG_INFO_STR("val=" << val << "  prevval=" << prevval);
+		if (end) {
+			switch (*end) {
+                case ',':
+                case 0: {
+                    if (range) {
+                        if (0 == prevval && 0 == val) {
+                            val = max - 1;
+                        }
+                        if (val < prevval) {
+                            LOG_WARN("Error: invalid range specification");
+                            ss = 0;
+                            return ss;
+                        }
+                        
+                        for (i = prevval; i <= val; i++) {
+                            //LOG_INFO(formatString("add value %ld to ss(%d,%d)", i, bank_nr, sb_nr)); 
+                            ss(bank_nr, sb_nr) = (uint16)i;
+                            sb_nr++;
+                            if (sb_nr >= 36) {
+                                bank_nr++;
+                                sb_nr = 0;
+                            }
+                        }
+					}
+					else {
+						ss(bank_nr, sb_nr) = (uint16)val;
+                        sb_nr++;
+                        if (sb_nr >= 36) {
+                            bank_nr++;
+                            sb_nr = 0;
+                        }
+					}
+					range=false;
+				} break;
+
+                case ':': {
+                    range=true;
+				} break;
+
+                default: {
+                    LOG_WARN(formatString("Error: invalid character %c",*end));
+                    ss = 0;
+                    return ss;
+				} break;
+			} // switch
+		} // if (end)
+        prevval = val;
+	} // while
+        
+	return (ss);
+}
+
+//
+// CDOenable_state(event, port)
+//
+GCFEvent::TResult Sequencer::SDOselect_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+	char select_str[64];
+    int nBanks;
+    int pol;
+    blitz::Array<uint16, 2> select(4,36);
+    
+    switch (event.signal) {
+	case F_ENTRY:
+		LOG_INFO("Entering Sequencer::SDOselect_state");
+        strncpy(select_str, GET_CONFIG_STRING("RSPDriver.SDO_SS"), 64);
+		LOG_DEBUG_STR("select string = " << select_str);
+        select = str2blitz(select_str, 512);
+        LOG_DEBUG_STR("SDO select values = " << select);
+        nBanks = (MAX_BITS_PER_SAMPLE / MIN_BITS_PER_SAMPLE); // fill all banks
+        for (int rcu = 0; rcu < StationSettings::instance()->nrRcus(); rcu++) {
+            pol = rcu%2;
+            for (int bank = 0; bank < nBanks; bank++) {
+                Cache::getInstance().getBack().getSDOSelection().subbands()(rcu, bank, Range::all()) = 0;
+                for (int sb = 0; sb < 36; sb++) {
+                    Cache::getInstance().getBack().getSDOSelection().subbands()(rcu, bank, sb) = (select(bank, sb) * 2) + pol;
+                    Cache::getInstance().getFront().getSDOSelection().subbands()(rcu, bank, sb) = (select(bank, sb) * 2) + pol;
+                } // for each subband
+            } // for each bank
+
+            if (rcu == 0) {
+                LOG_DEBUG_STR("cache->subbands.sdo ss(0) = " << Cache::getInstance().getBack().getSDOSelection().subbands()(0, Range::all(), Range::all()));
+            }
+        } // for each rcu
+        
+        Cache::getInstance().getState().sdoSelectState().reset();
+		Cache::getInstance().getState().sdoSelectState().write();
+		
+        itsTimer = 0;
+        break;
+
+	case F_TIMER:
+		if (itsTimer++ > WRITE_TIMEOUT && Cache::getInstance().getState().sdoSelectState().isMatchAll(RegisterState::IDLE)) {
+            //itsFinalState = true;
+			TRAN(Sequencer::SDOenable_state);
+		}
+		break;
+
+	case F_EXIT:
+		LOG_DEBUG("Leaving Sequencer::SDOselect_state");
+		break;
+
+	default:
+		break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+//
+// CDOenable_state(event, port)
+//
+GCFEvent::TResult Sequencer::SDOenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+    switch (event.signal) {
+	case F_ENTRY:
+		LOG_INFO("Entering Sequencer::SDOenable_state");
+        for (int blp_nr = 0; blp_nr < StationSettings::instance()->nrBlps(); blp_nr += 4) {
+            Cache::getInstance().getBack().getBypassSettings()()(blp_nr).setSDO(1);
+            Cache::getInstance().getFront().getBypassSettings()()(blp_nr).setSDO(1);
+            Cache::getInstance().getState().bypasssettings().reset(blp_nr);
+            Cache::getInstance().getState().bypasssettings().write(blp_nr);
+        }
+        itsTimer = 0;
+		break;
+
+	case F_TIMER:
+		if (itsTimer++ > WRITE_TIMEOUT && Cache::getInstance().getState().bypasssettings().isMatchAll(RegisterState::IDLE)) {
+			itsFinalState = true;
+			TRAN(Sequencer::RCUdisable_state);
+		}
+		break;
+
+	case F_EXIT:
+		LOG_DEBUG("Leaving Sequencer::SDOenable_state");
+		break;
+
+	default:
+		break;
+	}
+
+	return (GCFEvent::HANDLED);
+}
+
+
 
   } // namespace RSP
 } // namespace LOFAR
