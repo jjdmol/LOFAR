@@ -98,7 +98,7 @@ def readStationConfig():
         if key == "RS.N_RSPBOARDS":
             nRSP = int(val)
             continue
-        if key == "RS.N_TBBBOARDS":
+        if key == "RS.N_TBBOARDS":
             nTBB = int(val)
             continue    
         if key == "RS.N_LBAS":
