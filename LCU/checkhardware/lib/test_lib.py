@@ -612,14 +612,14 @@ class cHBA:
             self.db.rcumode = mode
             swapXY(state=0)
             turnoffRCUs()
-            turnonRCUs(mode=mode, rcus=self.hba.selectList(), discharge=False)
+            turnonRCUs(mode=mode, rcus=self.hba.selectList())
             self.hba.resetRcuState()
         
         time.sleep(4.0)
         ctrlstr1 = ('128,'* 16)[:-1] 
         ctrlstr2 = ('253,'* 16)[:-1]
         for ctrl in (ctrlstr1, ctrlstr2):
-            rsp_hba_delay(delay=ctrl, rcus=self.hba.selectList())
+            rsp_hba_delay(delay=ctrl, rcus=self.hba.selectList(), discharge=False)
             data = rspctl('--realdelays', wait=4.0).splitlines()
             
             ctrllist = ctrl.split(',')
