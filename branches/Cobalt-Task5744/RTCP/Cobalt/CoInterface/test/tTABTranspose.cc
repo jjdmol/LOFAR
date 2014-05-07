@@ -477,6 +477,9 @@ SUITE(MultiReceiver) {
   }
 
   TEST(Transpose) {
+    // We use the even fileIdx to simulate a sparse set
+    #define FILEIDX(tabNr) ((tabNr)*2)
+
     LOG_DEBUG_STR("Transpose test started");
 
     const int nrSubbands = 4;
@@ -521,7 +524,7 @@ SUITE(MultiReceiver) {
                 boost::extents[nrSamples][nrSubbands][nrChannels],
                 boost::extents[nrSubbands][nrChannels]), false);
             }
-            collectors[t] = new BlockCollector(*outputPools[t], t, nrSubbands, nrChannels, nrSamples, nrBlocks);
+            collectors[FILEIDX(t)] = new BlockCollector(*outputPools[t], FILEIDX(t), nrSubbands, nrChannels, nrSamples, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -539,7 +542,7 @@ SUITE(MultiReceiver) {
               continue;
 
             // Check if all blocks arrived, plus NULL marker.
-            collectors[t]->finish();
+            collectors[FILEIDX(t)]->finish();
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
@@ -572,7 +575,7 @@ SUITE(MultiReceiver) {
             host.brokerPort = PortBroker::DEFAULT_PORT;
             host.service = str(format("foo-%s-%s") % r % s);
 
-            hostMap[t] = host;
+            hostMap[FILEIDX(t)] = host;
           }
 
           MultiSender msender(hostMap, false);
@@ -596,7 +599,7 @@ SUITE(MultiReceiver) {
                   // Send all TABs
                   for (int t = 0; t < nrTABs; ++t) {
                     SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-                    subband->id.fileIdx = t;
+                    subband->id.fileIdx = FILEIDX(t);
                     subband->id.block = b;
                     subband->id.subband = sb;
 
