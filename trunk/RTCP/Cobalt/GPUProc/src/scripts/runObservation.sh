@@ -10,22 +10,6 @@
 
 ########  Functions  ########
 
-# fd 1 (stdout) will get piped through addlogprefix
-# fd 2 (stderr) will get piped through addlogprefix
-# fd 3 will be redirected to stdout, but without prefix
-#
-# We need this to avoid adding additional prefixes to output of
-# the programs that use the LofarLogger.
-exec 3>&1
-
-function addlogprefix {
-  ME="`basename "$0" .sh`@`hostname`"
-  while read LINE
-  do
-    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
-  done
-}
-
 function error {
   echo -e "$@" >&2
   exit 1
@@ -97,8 +81,6 @@ function command_retry {
 }
 
 #############################
-
-(
 
 echo "Called as: $0 $@"
 
@@ -250,7 +232,7 @@ if [ "$FORCE_LOCALHOST" -eq "1" ]
 then
   HOSTS=localhost
 else
-  HOSTS=`mpi_node_list -n "$PARSET" 1>&3 2>&3`
+  HOSTS=`mpi_node_list -n "$PARSET"`
 fi
 
 echo "Hosts: $HOSTS"
@@ -295,11 +277,12 @@ then
 fi
 
 # test the connection with local host: minimal test for valid credentials
-ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || error "ssh: Failed to create a connection to localhost"
+ssh -l $SSH_USER_NAME $KEY_STRING "localhost" "/bin/true" || { echo "Failed to create a connection to localhost, ssh error" ; exit 1; }
 
 # Create a helper function for delete child processes and
 # a file containing the PID of these processes
 PID_LIST_FILE="$LOFARROOT/var/run/outputProc-$OBSERVATIONID.pids"
+
 
 
 # Function clean_up will clean op all PID in the
@@ -340,17 +323,15 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 echo "outputProc processes are appended to the file: $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
-LIST_OF_HOSTS=$(getOutputProcHosts $PARSET 2>&3)
+LIST_OF_HOSTS=$(getOutputProcHosts $PARSET)
 RANK=0
 for HOST in $LIST_OF_HOSTS
 do
   COMMAND="ssh -tt -l $SSH_USER_NAME $KEY_STRING $SSH_USER_NAME@$HOST $OUTPUT_PROC_EXECUTABLE $OBSERVATIONID $RANK"
   # keep a counter to allow determination of the rank (needed for binding to rtcp)
   RANK=$(($RANK + 1))   
- 
-  # Note that we do not prefix stdout (which is used by outputProc.log_prop),
-  # but do prefix stderr (which is used by bash, ssh, etc)
-  command_retry "$COMMAND" 1>&3 &  # Start retrying function in the background
+  
+  command_retry "$COMMAND" &  # Start retrying function in the background
   PID=$!                      # get the pid 
   
   echo -n "$PID " >> $PID_LIST_FILE  # Save the pid for cleanup
@@ -368,7 +349,7 @@ mpirun.sh -x LOFARROOT="$LOFARROOT" \
           -H "$HOSTS" \
           $MPIRUN_PARAMS \
           $CHECK_TOOL \
-          `which rtcp` $RTCP_PARAMS "$PARSET" 1>&3 2>&3 &
+          `which rtcp` $RTCP_PARAMS "$PARSET" &
 PID=$!
 
 # Propagate SIGTERM
@@ -459,10 +440,4 @@ kill $KILLER_PID                  2> /dev/null
 # Our exit code is that of the observation
 # In production this script is started in the background, so the exit code is for tests.
 exit $OBSRESULT
-
-) 2>&1 | addlogprefix
-
-# Propagate the exit code of the subshell
-exit ${PIPESTATUS[0]}
-
 
