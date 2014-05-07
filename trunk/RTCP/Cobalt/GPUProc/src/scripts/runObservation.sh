@@ -340,7 +340,7 @@ trap 'clean_up 1' SIGTERM SIGINT SIGQUIT SIGHUP
 echo "outputProc processes are appended to the file: $PID_LIST_FILE"
 touch $PID_LIST_FILE
 
-LIST_OF_HOSTS=$(getOutputProcHosts $PARSET 1>&3 2>&3)
+LIST_OF_HOSTS=$(getOutputProcHosts $PARSET 2>&3)
 RANK=0
 for HOST in $LIST_OF_HOSTS
 do
