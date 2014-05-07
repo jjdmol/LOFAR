@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# All GPUs need to be in persistent mode
-nvidia-smi -q | grep 'Persistence Mode *: Disabled' && exit 1
-
-exit 0
