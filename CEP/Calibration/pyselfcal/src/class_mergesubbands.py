@@ -112,7 +112,7 @@ class mergeSubbands:
 		cmd9 ="""preflag.type=preflagger\n"""
 		cmd10 ="""preflag.corrtype=auto\n"""
 		
-		cmd11 ="""flag1.type=madflagger\n"""
+		cmd11 ="""flag1.type=aoflagger\n"""
 		cmd12 ="""flag1.threshold=4\n"""
 		cmd13 ="""flag1.freqwindow=1\n"""
 		cmd13b="""flag1.timewindow=1\n"""
@@ -137,10 +137,10 @@ class mergeSubbands:
 		file.write(cmd10)
 		
 		file.write(cmd11)
-		file.write(cmd12)
-		file.write(cmd13)
-		file.write(cmd13b)
-		file.write(cmd14)
+		#file.write(cmd12)
+		#file.write(cmd13)
+		#file.write(cmd13b)
+		#file.write(cmd14)
 		
 		file.write(cmd15)
 		file.write(cmd16)
