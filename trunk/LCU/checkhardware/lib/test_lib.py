@@ -8,7 +8,7 @@ import os
 import numpy as np
 import logging
 
-test_version = '0214'
+test_version = '0314'
 
 logger = None
 def init_test_lib():
@@ -63,7 +63,7 @@ class cRCUdata:
         return (self.ssData[int(rcu),:,:].mean(axis=0))
     
     def getSubbandX(self):
-        return (self.ssData[0::2,:,self.testSubband_Y].mean(axis=1))
+        return (self.ssData[0::2,:,self.testSubband_X].mean(axis=1))
     
     def getSubbandY(self):
         return (self.ssData[1::2,:,self.testSubband_Y].mean(axis=1))
@@ -97,7 +97,7 @@ class cRCUdata:
                 logger.debug("Test signal on subband %d not strong enough X=%3.1fdB Y=%3.1fdB" %(subband, ssX[subband], ssY[subband]))
                 
         # no subband given or not in requested range, look for better
-        for i in range(1,ssX.shape[0],1):
+        for i in range(0,ssX.shape[0],1):
             if ssX[i] > minsignal  and ssX[i] < maxsignal and ssX[i] > self.testSignal_X:
                 self.testSignal_X = ssX[i]
                 self.testSubband_X = i
@@ -612,15 +612,15 @@ class cHBA:
             self.db.rcumode = mode
             swapXY(state=0)
             turnoffRCUs()
-            turnonRCUs(mode=mode, rcus=self.hba.selectList())
+            turnonRCUs(mode=mode, rcus=self.hba.selectList(), discharge=False)
             self.hba.resetRcuState()
         
-        time.sleep(2.0)
+        time.sleep(4.0)
         ctrlstr1 = ('128,'* 16)[:-1] 
         ctrlstr2 = ('253,'* 16)[:-1]
         for ctrl in (ctrlstr1, ctrlstr2):
             rsp_hba_delay(delay=ctrl, rcus=self.hba.selectList())
-            data = rspctl('--realdelays', wait=0.0).splitlines()
+            data = rspctl('--realdelays', wait=4.0).splitlines()
             
             ctrllist = ctrl.split(',')
             for line in data:
@@ -646,6 +646,7 @@ class cHBA:
         self.hba.modem_check_done = 1
         self.db.addTestDone('M')
         logger.info("=== Done HBA modem test ===")
+        self.db.rcumode = 0
         return
         
     # check for summator noise and turn off RCU
@@ -670,21 +671,19 @@ class cHBA:
         rsp_hba_delay(delay=delay_str, rcus=self.hba.selectList())    
         self.rcudata.record(rec_time=15)
         
-        logger.debug("- test X -")
-        sum_noise, cable_reflectio = search_summator_noise(self.rcudata.getAllX())
-        for n in sum_noise:
-            tile, cnt, n_peaks = n
-            logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].x.rcu, tile, cnt, n_peaks))
-            self.hba.tile[tile].x.summator_noise = 1
-            self.turnOffTile(tile)
-        
-        logger.debug("- test Y -")
-        sum_noise, cable_reflectio = search_summator_noise(self.rcudata.getAllY())
-        for n in sum_noise:
-            tile, cnt, n_peaks = n
-            logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].y.rcu, tile, cnt, n_peaks))
-            self.hba.tile[tile].y.summator_noise = 1
-            self.turnOffTile(tile)
+        check_pol = 0
+        for test_data in (self.rcudata.getAllX(), self.rcudata.getAllY()):
+            sum_noise, cable_reflection = search_summator_noise(data=test_data, min_peak=0.7)
+            for n in sum_noise:
+                bin, cnt, n_peaks = n
+                tile = bin
+                logger.info("RCU %d Tile %d Summator-Noise cnt=%3.1f peaks=%3.1f" %(self.hba.tile[tile].x.rcu, tile, cnt, n_peaks))
+                if check_pol == 0:
+                    self.hba.tile[tile].x.summator_noise = 1
+                else:    
+                    self.hba.tile[tile].y.summator_noise = 1
+                self.turnOffTile(tile)
+            check_pol = 1
 
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down while testing, skip result")
@@ -728,11 +727,22 @@ class cHBA:
             
             # result is a sorted list on maxvalue
             result = search_oscillation(self.rcudata.getAll(), delta=6.0, start_sb=0, stop_sb=511) # start_sb=45, stop_sb=350
-            if len(result) > 1:    
-                clean = False
-                rcu, max_sum, n_peaks, rcu_low = sorted(result[1:], reverse=True)[0] #result[1]
+            if len(result) > 1:
+                if len(result) == 2:
+                    rcu, max_sum, n_peaks, rcu_low = result[1]
+                else:
+                    ref_low = result[0][3]
+                    max_low_rcu = (-1, -1)
+                    max_sum_rcu = (-1, -1)
+                    for i in result[1:]:
+                        rcu, max_sum, n_peaks, rcu_low = i
+                        if max_sum > max_sum_rcu[0]: max_sum_rcu = (max_sum, rcu) 
+                        if (rcu_low - ref_low) > max_low_rcu[0]: max_low_rcu = (rcu_low, rcu)
+                    
+                    rcu_low, rcu = max_low_rcu
+                clean = False        
                 tile = rcu / 2
-                tile_polarity  = rcu % 2
+                tile_polarity  = rcu % 2        
                 logger.info("RCU %d Tile %d Oscillation sum=%3.1f peaks=%d low=%3.1f" %\
                            (rcu, tile, max_sum, n_peaks, rcu_low))
                 self.turnOffTile(tile)
@@ -740,7 +750,7 @@ class cHBA:
                     self.hba.tile[tile].x.osc = 1
                 else:
                     self.hba.tile[tile].y.osc = 1
-        
+               
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down while testing, skip result")
             return
@@ -776,67 +786,72 @@ class cHBA:
         
         self.rcudata.record(rec_time=record_time)
         
-        
-        # result is a sorted list on maxvalue
-        low_noise, high_noise, jitter = search_noise(self.rcudata.getAll(), low_deviation, high_deviation, max_diff)
-        
-        for n in low_noise:
-            rcu, val, bad_secs, ref, diff = n
-            tile = rcu / 2
-            if self.hba.tile[tile].x.rcu_off or self.hba.tile[tile].y.rcu_off:
-                continue
-            logger.info("RCU %d Tile %d Low-Noise value=%3.1f bad=%d(%d) limit=%3.1f diff=%3.3f" %\
-                       (rcu, tile, val, bad_secs, self.rcudata.frames, ref, diff))
+        check_pol = 0
+        for test_data in (self.rcudata.getAllX(), self.rcudata.getAllY()):
+            # result is a sorted list on maxvalue
+            low_noise, high_noise, jitter = search_noise(test_data, low_deviation, high_deviation, max_diff)
             
-            if rcu%2 == 0:
-                tile_polarity = self.hba.tile[tile].x
-            else:
-                tile_polarity = self.hba.tile[tile].y
+            for n in low_noise:
+                bin, val, bad_secs, ref, diff = n
+                tile = bin
+                rcu = (tile * 2) + check_pol
+                if self.hba.tile[tile].x.rcu_off or self.hba.tile[tile].y.rcu_off:
+                    continue
+                logger.info("RCU %d Tile %d Low-Noise value=%3.1f bad=%d(%d) limit=%3.1f diff=%3.3f" %\
+                           (rcu, tile, val, bad_secs, self.rcudata.frames, ref, diff))
+                
+                if check_pol == 0:
+                    tile_polarity = self.hba.tile[tile].x
+                else:
+                    tile_polarity = self.hba.tile[tile].y
 
-            tile_polarity.low_seconds     += self.rcudata.frames
-            tile_polarity.low_bad_seconds += bad_secs
-            if val < tile_polarity.low_val:
-                tile_polarity.low_noise = 1
-                tile_polarity.low_val   = val
-                tile_polarity.low_ref   = ref
-                tile_polarity.low_diff  = diff
+                tile_polarity.low_seconds     += self.rcudata.frames
+                tile_polarity.low_bad_seconds += bad_secs
+                if val < tile_polarity.low_val:
+                    tile_polarity.low_noise = 1
+                    tile_polarity.low_val   = val
+                    tile_polarity.low_ref   = ref
+                    tile_polarity.low_diff  = diff
+                    
+            for n in high_noise:    
+                bin, val, bad_secs, ref, diff = n
+                tile = bin
+                rcu = (tile * 2) + check_pol
+                logger.info("RCU %d Tile %d High-Noise value=%3.1f bad=%d(%d) limit=%3.1f diff=%3.1f" %\
+                           (rcu, tile, val, bad_secs, self.rcudata.frames, ref, diff))
                 
-        for n in high_noise:    
-            rcu, val, bad_secs, ref, diff = n
-            tile = rcu / 2
-            logger.info("RCU %d Tile %d High-Noise value=%3.1f bad=%d(%d) limit=%3.1f diff=%3.1f" %\
-                       (rcu, tile, val, bad_secs, self.rcudata.frames, ref, diff))
+                if check_pol == 0:
+                    tile_polarity = self.hba.tile[tile].x
+                else:
+                    tile_polarity = self.hba.tile[tile].y
+                    
+                tile_polarity.high_seconds     += self.rcudata.frames
+                tile_polarity.high_bad_seconds += bad_secs    
+                if val > tile_polarity.high_val:
+                    tile_polarity.high_noise = 1
+                    tile_polarity.high_val   = val
+                    tile_polarity.high_ref   = ref
+                    tile_polarity.high_diff  = diff
             
-            if rcu%2 == 0:
-                tile_polarity = self.hba.tile[tile].x
-            else:
-                tile_polarity = self.hba.tile[tile].y
+            for n in jitter:
+                bin, val, ref, bad_secs = n
+                tile = bin
+                rcu = (tile * 2) + check_pol
+                logger.info("RCU %d Tile %d Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %(rcu, tile, val, ref))
                 
-            tile_polarity.high_seconds     += self.rcudata.frames
-            tile_polarity.high_bad_seconds += bad_secs    
-            if val > tile_polarity.high_val:
-                tile_polarity.high_noise = 1
-                tile_polarity.high_val   = val
-                tile_polarity.high_ref   = ref
-                tile_polarity.high_diff  = diff
-        
-        for n in jitter:
-            rcu, val, ref, bad_secs = n
-            tile = rcu / 2
-            logger.info("RCU %d Tile %d Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %(rcu, tile, val, ref))
+                if check_pol == 0:
+                    tile_polarity = self.hba.tile[tile].x
+                else:
+                    tile_polarity = self.hba.tile[tile].y
+                
+                tile_polarity.jitter_seconds     += self.rcudata.frames 
+                tile_polarity.jitter_bad_seconds += bad_secs 
+                if val > tile_polarity.jitter_val:
+                    tile_polarity.jitter     = 1
+                    tile_polarity.jitter_val = val
+                    tile_polarity.jitter_ref = ref
+            check_pol = 1
             
-            if rcu%2 == 0:
-                tile_polarity = self.hba.tile[tile].x
-            else:
-                tile_polarity = self.hba.tile[tile].y
-            
-            tile_polarity.jitter_seconds     += self.rcudata.frames 
-            tile_polarity.jitter_bad_seconds += bad_secs 
-            if val > tile_polarity.jitter_val:
-                tile_polarity.jitter     = 1
-                tile_polarity.jitter_val = val
-                tile_polarity.jitter_ref = ref
-        
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down while testing, skip result")
             return
@@ -868,17 +883,20 @@ class cHBA:
             
         self.rcudata.record(rec_time=2)
         
-        # result is a sorted list on maxvalue
-        result = search_spurious(self.rcudata.getAll(), delta=3.0)
-        for rcu in result:
-            tile = rcu / 2
-            tile_polarity  = rcu % 2
-            logger.info("RCU %d Tile %d pol %d Spurious" %(rcu, tile, tile_polarity))
-            if tile_polarity == 0:
-                self.hba.tile[tile].x.spurious = 1
-            else:
-                self.hba.tile[tile].y.spurious = 1
-        
+        check_pol = 0
+        for test_data in (self.rcudata.getAllX(), self.rcudata.getAllY()):
+            # result is a sorted list on maxvalue
+            result = search_spurious(test_data, delta=3.0)
+            for bin in result:
+                tile = bin
+                rcu = (tile * 2) + check_pol
+                logger.info("RCU %d Tile %d pol %d Spurious" %(rcu, tile, check_pol))
+                if check_pol == 0:
+                    self.hba.tile[tile].x.spurious = 1
+                else:
+                    self.hba.tile[tile].y.spurious = 1
+            check_pol = 1
+            
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down while testing, skip result")
             return
