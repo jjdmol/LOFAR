@@ -78,6 +78,10 @@ template <typename T> class Queue
   protected:
     const std::string itsName;
 
+    // The number of elements in the queue. We maintain this info
+    // because itsQueue::size() is O(N), at least until C++11.
+    size_t _size;
+
     // The time an element spent in a queue
     RunningStatistics retention_time;
 
@@ -98,12 +102,16 @@ template <typename T> class Queue
     mutable Mutex              itsMutex;
     Condition	                 itsNewElementAppended;
     std::list<struct Element>  itsQueue;
+
+    // append() without grabbing itsMutex
+    void     _append(const T&, bool timed);
 };
 
 
 template <typename T> Queue<T>::Queue(const std::string &name)
 :
   itsName(name),
+  _size(0),
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
@@ -145,6 +153,12 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
 {
   ScopedLock scopedLock(itsMutex);
 
+  _append(element, timed);
+}
+
+
+template <typename T> inline void Queue<T>::_append(const T& element, bool timed)
+{
   Element e;
 
   // Copy the value to queue
@@ -157,6 +171,8 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
   queue_size_on_append.push(itsQueue.size());
 
   itsQueue.push_back(e);
+  _size++;
+
   itsNewElementAppended.signal();
 }
 
@@ -176,6 +192,8 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
   e.arrival_time = TimeSpec::big_bang;
 
   itsQueue.push_front(e);
+  _size++;
+
   itsNewElementAppended.signal();
 }
 
@@ -194,6 +212,7 @@ template <typename T> inline T Queue<T>::remove()
 
   Element e = itsQueue.front();
   itsQueue.pop_front();
+  _size--;
 
   const struct timespec end = TimeSpec::now();
 
@@ -256,16 +275,13 @@ template <typename T> inline unsigned Queue<T>::size() const
   ScopedLock scopedLock(itsMutex);
 
   // Note: list::size() is O(N)
-  return itsQueue.size();
+  return _size;
 }
 
 
 template <typename T> inline bool Queue<T>::empty() const
 {
-  ScopedLock scopedLock(itsMutex);
-
-  // Note: list::empty() is O(1)
-  return itsQueue.empty();
+  return size() == 0;
 }
 
 

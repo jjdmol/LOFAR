@@ -28,11 +28,7 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
   Queue<T>(name),
   maxSize(maxSize),
   drop(drop),
-  //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
-                     // it causes tests to fail, and even if a thread is remove()ing, objects can still
-                     // pile up in the queue.
-  dropped_on_append("%"),
-  freeSpace(maxSize),
+  dropped("%"),
   flushing(false)
 {
 }
@@ -40,42 +36,42 @@ template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::stri
 
 template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 {
-  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped on append = " << dropped_on_append.mean() << "%");
+  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped = " << dropped.mean() << "%");
 }
 
 
-template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
+template <typename T> inline bool BestEffortQueue<T>::_overflow() const
 {
-  bool canAppend;
+  return this->_size > maxSize;
+}
+
+
+template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool timed)
+{
+  ScopedLock sl(this->itsMutex);
 
   if (flushing) {
-    // can't append if we're emptying the queue
-    canAppend = false;
-  } else if (drop) {
-    canAppend = freeSpace.tryDown();
+    dropped.push(100.0);
+    return false;
+  }
+
+  _append(element, timed);
+
+  if (drop && _overflow()) {
+    // drop the head of the queue:
+    // 1. bypass the statistics kept by Queue<T>
+    // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
+    typename Queue<T>::Element e = this->itsQueue.front();
+    this->itsQueue.pop_front();
+    this->_size--;
+    element = e.value;
+
+    dropped.push(100.0);
+    return false;
   } else {
-    canAppend = freeSpace.down();
+    dropped.push(0.0);
+    return true;
   }
-
-  // append if possible
-  if (canAppend) {
-    Queue<T>::append(element);
-  }
-
-  dropped_on_append.push(canAppend ? 0.0 : 100.0);
-
-  return canAppend;
-}
-
-
-template <typename T> inline T BestEffortQueue<T>::remove()
-{
-  T element = Queue<T>::remove();
-
-  // freed up one spot
-  freeSpace.up();
-
-  return element;
 }
 
 
@@ -86,9 +82,6 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
 
   // mark queue as flushing
   flushing = true;
-
-  // prevent writer from blocking
-  freeSpace.noMore();
 
   // signal end-of-stream to reader
   Queue<T>::append(0, false);
