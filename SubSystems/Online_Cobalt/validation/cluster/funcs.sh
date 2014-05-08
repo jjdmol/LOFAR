@@ -12,9 +12,9 @@ print_status()
     124)
       echo >&2 "TIMEOUT" ;;
     129|13[0-9]|14[0-3])
-      echo >&2 "SIGNALLED  ($STATUS)" ;;
+      echo >&2 "SIGNALLED ($STATUS)" ;;
     *)
-      echo >&2 "ERROR  ($STATUS)" ;;
+      echo >&2 "ERROR     ($STATUS)" ;;
   esac
   return $STATUS
 }
