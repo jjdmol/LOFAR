@@ -175,12 +175,7 @@ public:
 	void rsp_getBitMode(GCFEvent& event, GCFPortInterface &port);
 	void rsp_subBitMode(GCFEvent& event, GCFPortInterface &port);
 	void rsp_unsubBitMode(GCFEvent& event, GCFPortInterface &port);
-	
-    void rsp_setSDOMode(GCFEvent& event, GCFPortInterface &port);
-	void rsp_getSDOMode(GCFEvent& event, GCFPortInterface &port);
-    void rsp_setSDO(GCFEvent& event, GCFPortInterface &port);
-	void rsp_getSDO(GCFEvent& event, GCFPortInterface &port);
-    /*@}*/
+	/*@}*/
 
 private:
 	// define some constants

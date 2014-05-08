@@ -127,8 +127,7 @@ def addToArgs(key, value):
                 args['SN'] = '-'
                 args['SP5'] = '-'
                 args['N5'] = '-'
-                if not args.has_key('S7'):
-                    args['S5'] = '-'
+                args['S5'] = '-'
             else:    
                 args[key] = '-'
         
@@ -520,12 +519,6 @@ def main():
                                                         low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
                                                         high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
                             
-                            # RF test in mode 7 for UK station
-                            if repeat_cnt == 1 and args.has_key('S7'):
-                                hba.checkSignal(mode=7, subband=conf.getInt('hba-test-sb',155),
-                                                        min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
-                                                        low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
-                                                        high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
         
                             runtime = (time.time() - runstart)
                             

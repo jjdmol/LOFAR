@@ -32,8 +32,6 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 
-#include "../Kernels/KernelTestHelpers.h"
-
 using namespace std;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::TYPES;
@@ -57,9 +55,8 @@ template<typename T> T inputSignal(size_t t)
 #endif
 }
 
-int main(/*int argc, char *argv[]*/) {
-  const char *testName = "tCoherentStokesBeamFormerSubbandProcProcessSb";
-  INIT_LOGGER(testName);
+int main() {
+  INIT_LOGGER("tCoherentStokesBeamFormerSubbandProcProcessSb");
 
   try {
     gpu::Platform pf;
@@ -74,21 +71,6 @@ int main(/*int argc, char *argv[]*/) {
   gpu::Context ctx(device);
 
   Parset ps("tCoherentStokesBeamFormerSubbandProcProcessSb.parset");
-
-//  Parset ps;
-  KernelParameters params;
-  // override the faults
-/*
-  params.nStation = 5;
-  params.nrChannels = 4096;
-  params.nTimeBlocks = 16;
-  params.nrTabs = 2;
-  params.stokesType = "I";
-  params.nrDelayCompensationChannels = 64;
-  params.nrChannelsPerSubband = 1;
-
-  parseCommandlineParameters(argc, argv, ps, params, testName);
-*/
 
   // Input array sizes
   const size_t nrBeams = ps.nrBeams();
@@ -224,11 +206,7 @@ int main(/*int argc, char *argv[]*/) {
     (nrStations * amplitude * scaleFactor * fft1Size * fft2Size);
   cout << "outVal = " << setprecision(12) << outVal << endl;
 
-  // Skip output validation when started with commandline parsed parameters!
-  if (!params.parameterParsed)
-  {
-    cout << "Validating output" << endl;
-    for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
+  for (size_t tab = 0; tab < maxNrTABsPerSAP; tab++)
     for (size_t s = 0; s < nrStokes; s++)
     for (size_t t = 0; t < nrSamples; t++)
     for (size_t c = 0; c < nrChannels; c++)
@@ -237,7 +215,6 @@ int main(/*int argc, char *argv[]*/) {
         "out.coherentData[" << tab << "][" << s << "][" << t << "][" << c << "] = " << setprecision(12) <<
         out.coherentData[tab][s][t][c] << "; outVal = " << outVal);
     }
-  }
   return 0;
 }
 

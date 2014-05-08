@@ -98,7 +98,7 @@ def readStationConfig():
         if key == "RS.N_RSPBOARDS":
             nRSP = int(val)
             continue
-        if key == "RS.N_TBBOARDS":
+        if key == "RS.N_TBBBOARDS":
             nTBB = int(val)
             continue    
         if key == "RS.N_LBAS":
@@ -330,7 +330,6 @@ def waitRSPready():
         timeout -= 1
     return (0)
 
-# convert select-list to select-string 
 def selectStr(sel_list):
     last_sel = -2
     set = False
@@ -348,7 +347,6 @@ def selectStr(sel_list):
         select += ':%d' %(last_sel)
     return (select[1:])
 
-    # convert select-string to sel_list
 def extractSelectStr(selectStr):
     selectStr += '.'
     sel_list = list()
@@ -458,7 +456,7 @@ def rsp_rcu_mode(mode, rcus):
         return (-1)
         
 # set hba_delays in steps to avoid power dips, and discharge if needed
-def rsp_hba_delay(delay, rcus, discharge=True):
+def rsp_hba_delay(delay, rcus):
     global logger
     global active_delay_str
     
@@ -466,37 +464,36 @@ def rsp_hba_delay(delay, rcus, discharge=True):
         logger.debug("requested delay already active, skip hbadelay command")
         return (0)
     
-    if discharge == True:
-        # count number of elements off in last command
-        n_hba_off = 0
-        for i in active_delay_str.split(','):
+    # count number of elements off in last command
+    n_hba_off = 0
+    for i in active_delay_str.split(','):
+        if int(i,10) & 0x02:
+            n_hba_off += 1
+    
+    # count number of elements on in new command, and make discharge string
+    n_hba_on = 0
+    if n_hba_off > 0:
+        discharge_str = ''
+        for i in delay.split(','):
             if int(i,10) & 0x02:
-                n_hba_off += 1
-        
-        # count number of elements on in new command, and make discharge string
-        n_hba_on = 0
-        if n_hba_off > 0:
-            discharge_str = ''
-            for i in delay.split(','):
-                if int(i,10) & 0x02:
-                    discharge_str += "2,"
-                else:
-                    discharge_str += "0,"
-                    n_hba_on += 1
-        
-        # discharge if needed
-        if n_hba_off > 0 and n_hba_on > 0:
-            logger.info("set hbadelays to 0 for 1 second")
-            if n_hba_on > 2:
-                steps = int(round(len(rcus) / 24.))
-                logger.debug("send hbadelay command in %d steps" %(steps))
-                for step in range(0,(steps*2),2):
-                    rculist = sorted(rcus[step::(steps*2)]+rcus[step+1::(steps*2)])
-                    select = string.join(list([str(rcu) for rcu in rculist]),',')
-                    rspctl('--hbadelay=%s --select=%s' %(discharge_str[:-1], select), wait=2.0)
-                time.sleep(6.0)
-            else:    
-                rspctl('--hbadelay=%s' %(discharge_str[:-1]), wait=8.0)
+                discharge_str += "2,"
+            else:
+                discharge_str += "0,"
+                n_hba_on += 1
+    
+    # discharge if needed
+    if n_hba_off > 0 and n_hba_on > 0:
+        logger.info("set hbadelays to 0 for 1 second")
+        if n_hba_on > 2:
+            steps = int(round(len(rcus) / 24.))
+            logger.debug("send hbadelay command in %d steps" %(steps))
+            for step in range(0,(steps*2),2):
+                rculist = sorted(rcus[step::(steps*2)]+rcus[step+1::(steps*2)])
+                select = string.join(list([str(rcu) for rcu in rculist]),',')
+                rspctl('--hbadelay=%s --select=%s' %(discharge_str[:-1], select), wait=2.0)
+            time.sleep(6.0)
+        else:    
+            rspctl('--hbadelay=%s' %(discharge_str[:-1]), wait=8.0)
     
     logger.debug("send hbadelay command")
     rspctl('--hbadelay=%s' %(delay), wait=8.0)

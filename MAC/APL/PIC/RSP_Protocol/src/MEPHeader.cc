@@ -34,11 +34,10 @@ using namespace std;
 //
 // header templates
 //
-const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR        = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS     }, 0, RSR_STATUS_SIZE,    0, 0 };
-const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR       = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION    }, 0, RSR_VERSION_SIZE,   0, 0 };
-const MEPHeader::FieldsType MEPHeader::RSR_TIMESTAMP_HDR     = { WRITE, 0, 0, { DST_RSP, RSR, RSR_TIMESTAMP  }, 0, RSR_TIMESTAMP_SIZE, 0, 0 };
-const MEPHeader::FieldsType MEPHeader::RSR_BEAMMODE_HDR      = { WRITE, 0, 0, { DST_RSP, RSR, RSR_BEAMMODE   }, 0, RSR_BEAMMODE_SIZE,   0, 0 };
-const MEPHeader::FieldsType MEPHeader::RSR_SDOMODE_HDR       = { WRITE, 0, 0, { DST_RSP, RSR, RSR_SDOMODE    }, 0, RSR_SDOMODE_SIZE,   0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_STATUS_HDR        = { READ,  0, 0, { DST_RSP, RSR, RSR_STATUS    }, 0, RSR_STATUS_SIZE,    0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_VERSION_HDR       = { READ,  0, 0, { DST_RSP, RSR, RSR_VERSION   }, 0, RSR_VERSION_SIZE,   0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_TIMESTAMP_HDR     = { WRITE, 0, 0, { DST_RSP, RSR, RSR_TIMESTAMP }, 0, RSR_TIMESTAMP_SIZE, 0, 0 };
+const MEPHeader::FieldsType MEPHeader::RSR_BEAMMODE_HDR       = { WRITE, 0, 0, { DST_RSP, RSR, RSR_BEAMMODE   }, 0, RSR_BEAMMODE_SIZE,   0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHRW_HDR       = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHRW     }, 0, RSU_FLASHRW_SIZE,     0, 0 };
 const MEPHeader::FieldsType MEPHeader::RSU_FLASHERASE_HDR    = { WRITE, 0, 0, { DST_RSP, RSU, RSU_FLASHERASE  }, 0, RSU_FLASHERASE_SIZE,  0, 0 };
@@ -54,11 +53,31 @@ const MEPHeader::FieldsType MEPHeader::DIAG_RESULTS_HDR      = { READ,  0, 0, { 
 const MEPHeader::FieldsType MEPHeader::DIAG_SELFTEST_HDR     = { WRITE, 0, 0, { DST_RSP , DIAG, DIAG_SELFTEST }, 0, DIAG_SELFTEST_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR         = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT }  , 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_0       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_0 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_1       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_1 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_2       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_2 }, 0, SS_SELECT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::SS_SELECT_HDR_3       = { WRITE, 0, 0, { DST_BLP0, SS, SS_SELECT_3 }, 0, SS_SELECT_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT   }, 0, BF_XROUT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT   }, 0, BF_XIOUT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT   }, 0, BF_YROUT_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR          = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT   }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_0 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_0 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_0 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_0        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_0 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_1 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_1 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_1 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_1        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_1 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_2 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_2 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_2 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_2        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_2 }, 0, BF_YIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XROUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XROUT_3 }, 0, BF_XROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_XIOUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_XIOUT_3 }, 0, BF_XIOUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YROUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YROUT_3 }, 0, BF_YROUT_SIZE, 0, 0 };
+//const MEPHeader::FieldsType MEPHeader::BF_YIOUT_HDR_3        = { WRITE, 0, 0, { DST_BLP0, BF, BF_YIOUT_3 }, 0, BF_YIOUT_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::BST_POWER_HDR         = { READ,  0, 0, { DST_RSP, BST, BST_POWER_LANE_0 }, 0, BST_POWER_SIZE, 0, 0 };
 
@@ -95,8 +114,6 @@ const MEPHeader::FieldsType MEPHeader::TBB_BANDSELY_HDR      = { WRITE, 0, 0, { 
 
 const MEPHeader::FieldsType MEPHeader::RAD_BP_HDR            = { WRITE, 0, 0, { DST_RSP, RAD, RAD_BP }, 0, RAD_BP_SIZE, 0, 0 };
 const MEPHeader::FieldsType MEPHeader::RAD_LATENCY_HDR       = { READ , 0, 0, { DST_RSP, RAD, RAD_LATENCY }, 0, RAD_LATENCY_SIZE, 0, 0 };
-
-const MEPHeader::FieldsType MEPHeader::SDO_SELECT_HDR        = { WRITE, 0, 0, { DST_BLP0, SDO, SDO_SELECT }  , 0, SDO_SELECT_SIZE, 0, 0 };
 
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_WRITE     = { WRITE, 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };
 const MEPHeader::FieldsType MEPHeader::RSP_RAWDATA_READ      = { READ , 0, 0, { 0xABBA, 0xBB, 0xAA }, 0xEFFE, 0xEBBE, 0x3412, 0 };

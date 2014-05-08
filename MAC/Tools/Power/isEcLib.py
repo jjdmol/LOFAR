@@ -12,11 +12,7 @@ def getIP():
     if ip[0] == '10' and ip[1] == '209':
         # if LCU adress make it EC adress
         return(local_host[:local_host.rfind('.')+1]+'3')
-    elif ip[0] == '192' and ip[1] == '168':
-        # if LCU adress make it EC adress
-        return(local_host[:local_host.rfind('.')+1]+'103')
-    else:
-        return(None)
+    return(None)
 
 class EC:
     # cmdIDs from TCP PROTOCOL ec-controller

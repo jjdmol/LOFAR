@@ -53,8 +53,7 @@ StationSettings::StationSettings() :
 	itsNrRspBoards(0),
 	itsNrBlps(0),
 	itsNrRcus(0),
-	itsHasSplitter(false),
-	itsHasAartfaac(false)
+	itsHasSplitter(false)
 {
 
 }
@@ -93,7 +92,6 @@ ostream& StationSettings::print (ostream& os) const
 	os << "Nr BLPs      : " << itsNrBlps         << endl;
 	os << "Nr RCUs      : " << itsNrRcus         << endl;
 	os << "Splitters    : " << (itsHasSplitter ? "Yes" : "No") << endl;
-	os << "Aartfaac     : " << (itsHasAartfaac ? "Yes" : "No") << endl;
 
 	return (os);
 }
