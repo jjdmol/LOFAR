@@ -48,6 +48,12 @@ template <typename T> inline bool BestEffortQueue<T>::_overflow() const
 
 template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool timed)
 {
+  /*
+   * Note that if the queue overflows, we drop the FRONT of the queue, that is,
+   * the oldest item. That's because the oldest item is less likely to be relevant
+   * anymore in the real-time system.
+   */
+
   ScopedLock sl(this->itsMutex);
 
   if (flushing) {
