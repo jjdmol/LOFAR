@@ -1,6 +1,4 @@
-//#  -*- mode: c++ -*-
-//#
-//#  BypassRead.h: Synchronize rcu settings with RSP hardware.
+//#  SDOSelection.h: implementation of the SDOSelection class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +18,42 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: SDOSelection.cc 22248 2012-10-08 12:34:59Z donker $
 
-#ifndef BYPASSREAD_H_
-#define BYPASSREAD_H_
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-#include <APL/RSP_Protocol/MEPHeader.h>
+#include <APL/RSP_Protocol/SDOSelection.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 
-#include "SyncAction.h"
+#include <blitz/array.h>
 
-namespace LOFAR {
-  namespace RSP {
+using namespace std;
+using namespace blitz;
+using namespace LOFAR;
+using namespace RSP_Protocol;
 
-class BypassRead : public SyncAction
+size_t SDOSelection::getSize() const
 {
-public:
-	// Constructors for a BypassRead object.
-	BypassRead(GCFPortInterface& board_port, int board_id);
+  cout << itsSubbands.dimensions() << "; " << itsSubbands.size() << endl;
+  
+  return MSH_size(itsSubbands)
+         + sizeof(uint16);
+}
 
-	// Destructor for BypassRead.
-	virtual ~BypassRead();
+size_t SDOSelection::pack(char* buffer) const
+{
+  size_t offset = 0;
+  MSH_pack(buffer, offset, itsSubbands);
+  return offset;
+}
 
-	// Send the write message.
-	virtual void sendrequest();
+size_t SDOSelection::unpack(const char *buffer)
+{
+  size_t offset = 0;
+  MSH_unpack(buffer, offset, itsSubbands);
+  return offset;
+}
 
-	// Send the read request.
-	virtual void sendrequest_status();
 
-	// Handle the read result.
-	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-private:
-	EPA_Protocol::MEPHeader m_hdr;
-};
-
-  }; // namespace RSP
-}; // namespace LOFAR
-     
-#endif /* BypassREAD_H_ */

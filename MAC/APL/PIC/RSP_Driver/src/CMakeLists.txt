@@ -73,6 +73,10 @@ lofar_add_bin_program(RSPDriver
   SetBitModeCmd.cc
   GetBitModeCmd.cc
   UpdBitModeCmd.cc
+  SetSDOModeCmd.cc
+  GetSDOModeCmd.cc
+  SetSDOCmd.cc
+  GetSDOCmd.cc
   SyncAction.cc
   WriteReg.cc
   ReadReg.cc
@@ -116,5 +120,9 @@ lofar_add_bin_program(RSPDriver
   LatencyRead.cc
   CRSyncWrite.cc
   BMWrite.cc
-  BMRead.cc)
+  BMRead.cc
+  SDOModeWrite.cc
+  SDOModeRead.cc
+  SDOWrite.cc
+  SDORead.cc)
  

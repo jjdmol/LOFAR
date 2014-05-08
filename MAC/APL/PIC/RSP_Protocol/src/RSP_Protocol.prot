@@ -34,6 +34,8 @@ include = '<APL/RSP_Protocol/WGSettings.h>';
 include = '<APL/RSP_Protocol/XCStatistics.h>';
 include = '<APL/RSP_Protocol/Latency.h>';
 include = '<APL/RSP_Protocol/Bitmode.h>';
+include = '<APL/RSP_Protocol/SDOMode.h>';
+include = '<APL/RSP_Protocol/SDOSelection.h>';
 
 prelude = << PRELUDE_END
 
@@ -197,8 +199,16 @@ static const int RSP_RAW_BLOCK_SIZE = 1480;
 // UPDBITMODE			(timestamp,	status,	handle,	bitmode)
 // UNSUBBITMODE 		(handle)
 // UNSUBBITMODEACK		(timestamp,	status,	handle)
+// SETSDOMODE			(timestamp, bitmode);
+// SETSDOMODEACK		(timestamp, status);
+// GETSDOMODE			(timestamp);
+// GETSDOMODEACK		(timestamp, status, bitmode);
+// SETSDO   			(timestamp,	rcumask,subbands)
+// SETSDOACK		    (timestamp,	status)
+// GETSDO			    (timestamp,	rcumask,cache,	type)
+// GETSDOACK		    (timestamp,	status,	subbands)
 
-// 129 commands
+// 137 commands
 
 PRELUDE_END;
 
@@ -2489,4 +2499,151 @@ event = {
 	};
 };
 
+// bitmode info
+// 16 = 16bit
+// 8 = 8bit
+// 4 = 4bit
+// SETSDOMODE (timestamp, bits_per_sample);
+event = {
+	signal = SETSDOMODE;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+    	name = "rspmask";
+    	type = "bitset<MAX_N_RSPBOARDS>";
+	};
+	param = {
+		name = "bits_per_sample";
+		type = "uint16";
+	};
+};
 
+// SETSDOMODEACK(timestamp, status);
+event = {
+	signal = SETSDOMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+};
+
+// GETSDOMODE(timestamp, cache);
+event = {
+	signal = GETSDOMODE;
+	dir = IN;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "cache";
+		type = "uint8";
+	};
+};
+
+// GETSDOMODEACK(timestamp, status, bitmode_version, bits_per_sample)
+event = {
+	signal = GETSDOMODEACK;
+	dir = OUT;
+	param = {
+		name = "timestamp";
+		type = "RTC::Timestamp";
+		userdefined;
+	};
+	param = {
+		name = "status";
+		type = "int16";
+	};
+	param = {
+		name = "bitmode_version";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+	param = {
+		name = "bits_per_sample";
+		type = "uint16[MAX_N_RSPBOARDS]";
+	};
+};
+
+//
+// SDO Selection
+//
+event = {
+  signal = SETSDO;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "subbands";
+    type = "SDOSelection";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETSDOACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETSDO;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETSDOACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "subbands";
+    type = "SDOSelection";
+    userdefined;
+  };
+};

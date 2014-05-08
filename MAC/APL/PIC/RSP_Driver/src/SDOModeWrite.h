@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  BypassRead.h: Synchronize rcu settings with RSP hardware.
+//#  SDOModeWrite.h: Synchronize Bitmode settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,12 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: SDOModeWrite.h 6853 2005-10-21 10:55:56Z donker $
 
-#ifndef BYPASSREAD_H_
-#define BYPASSREAD_H_
+#ifndef SDOMODEWRITE_H_
+#define SDOMODEWRITE_H_
 
+#include <Common/LofarTypes.h>
 #include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "SyncAction.h"
@@ -32,29 +33,36 @@
 namespace LOFAR {
   namespace RSP {
 
-class BypassRead : public SyncAction
-{
-public:
-	// Constructors for a BypassRead object.
-	BypassRead(GCFPortInterface& board_port, int board_id);
+    class SDOModeWrite : public SyncAction
+    {
+    public:
+      /**
+       * Constructors for a SDOModeWrite object.
+       */
+      SDOModeWrite(GCFPortInterface& board_port, int board_id);
+	  
+      /* Destructor for SDOModeWrite. */
+      virtual ~SDOModeWrite();
 
-	// Destructor for BypassRead.
-	virtual ~BypassRead();
+      /**
+       * Write subband selection info.
+       */
+      virtual void sendrequest();
 
-	// Send the write message.
-	virtual void sendrequest();
+      /**
+       * Read the board status.
+       */
+      virtual void sendrequest_status();
 
-	// Send the read request.
-	virtual void sendrequest_status();
+      /**
+       * Handle the READRES message.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-	// Handle the read result.
-	virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
-
-private:
-	EPA_Protocol::MEPHeader m_hdr;
+    private:
+      EPA_Protocol::MEPHeader itsHdr;
+    };
+  };
 };
-
-  }; // namespace RSP
-}; // namespace LOFAR
      
-#endif /* BypassREAD_H_ */
+#endif /* SDOMODEWRITE_H_ */
