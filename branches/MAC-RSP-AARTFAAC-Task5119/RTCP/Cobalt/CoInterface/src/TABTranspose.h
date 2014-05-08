@@ -381,7 +381,7 @@ namespace LOFAR
         // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
 
-        std::vector<RunningStatistics> drop_rates; // [fileIdx]
+        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
 
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;

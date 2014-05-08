@@ -54,6 +54,15 @@ RSPDriver.MAC_ADDR_MASK=10:FA:00:00:%02x:00
 
 # old-way of specifying the MAC addresses
 #
+# Specify the absolute backplane index of the first
+# RSP board in hexadecimal
+#
+# MAC address is equal to : 10:FA:00:00:XX:00
+#
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
+
+# old-way of specifying the MAC addresses
+#
 RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
@@ -205,14 +214,6 @@ RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 #RSPDriver.CDO_N_BEAMLETS=61
 RSPDriver.FB_ENABLE=1
-
-#
-# Specify the absolute backplane index of the first
-# RSP board in hexadecimal
-#
-# MAC address is equal to : 10:FA:00:00:XX:00
-#
-RSPDriver.XST_FIRST_RSP_BOARD=0x00
 
 #
 # Ethernet interface on which to contact the RSP boards.
