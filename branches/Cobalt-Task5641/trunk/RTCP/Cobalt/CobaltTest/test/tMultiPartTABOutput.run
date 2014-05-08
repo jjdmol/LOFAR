@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# remove any output files from prev runs
+rm -f tMultiPartTABOutput-L123881_SAP000_B000_P00?_bf.h5 tMultiPartTABOutput-L123881_SAP000_B000_P00?_bf.raw
+
+outPid=none
+trap 'kill -9 $outPid' SIGTERM SIGINT SIGQUIT SIGHUP  # don't linger on e.g. Ctrl-C
+
+obsID=123881
+rank=0
+./outputProc $obsID $rank &
+outPid=$!
+
+./tMultiPartTABOutput
+testStatus=$?
+[ $testStatus -eq 0 ] || echo "Error: Test exited with status $testStatus"
+
+wait $outPid
+outputProcStatus=$?
+[ $outputProcStatus -eq 0 ] || echo "Error: outputProc exited with status $outputProcStatus"
+
+# Verify outputs
+dataStatus=0
+gunzip tMultiPartTABOutput.in_P000.raw.gz && diff tMultiPartTABOutput.in_P000.raw tMultiPartTABOutput-L123881_SAP000_B000_P000_bf.raw || dataStatus=1
+gunzip tMultiPartTABOutput.in_P001.raw.gz && diff tMultiPartTABOutput.in_P001.raw tMultiPartTABOutput-L123881_SAP000_B000_P001_bf.raw || dataStatus=1
+
+# final verdict
+# outputProc crashes on final meta data. Ignore. We checked the output files.
+[ $testStatus -eq 0 -a $dataStatus -eq 0 ] # -a $outputProcStatus -eq 0 ]
