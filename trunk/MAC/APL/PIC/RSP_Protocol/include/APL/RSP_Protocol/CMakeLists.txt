@@ -20,7 +20,9 @@ set(inst_HEADERS
   WGSettings.h
   XCStatistics.h
   Latency.h
-  Bitmode.h)
+  Bitmode.h
+  SDOMode.h
+  SDOSelection.h)
 
 # Add definition of include path suffix definition, because the header files
 # reside in a non-standard location. 

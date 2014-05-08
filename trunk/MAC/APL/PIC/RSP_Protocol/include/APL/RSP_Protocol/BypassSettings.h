@@ -49,18 +49,30 @@ public:
 		Control() { 
 			memset(&bypass,0,sizeof(bypass));
 			bypass.raw.dc_disable = 1;
+			bypass.raw.sdo_disable = 1;
+            si_set = false;
+            sdo_set = false;
 		}
 		~Control() {}
 
-		void setXSI(bool	on) { bypass.raw.six_enable = on ? 1 : 0; }
-		void setYSI(bool	on) { bypass.raw.siy_enable = on ? 1 : 0; }
-		bool getXSI() const 	{ return bypass.raw.six_enable; }
-		bool getYSI() const 	{ return bypass.raw.siy_enable; }
+		void setXSI(bool	on)  { bypass.raw.six_enable = on ? 1 : 0; si_set = true;}
+		void setYSI(bool	on)  { bypass.raw.siy_enable = on ? 1 : 0; si_set = true; }
+		void setSDO(bool	on)  { bypass.raw.sdo_disable = on ? 0 : 1; sdo_set = true;}
+		bool getXSI() const 	 { return bypass.raw.six_enable; }
+		bool getYSI() const 	 { return bypass.raw.siy_enable; }
+		bool getSDO() const 	 { return (bypass.raw.sdo_disable ? false : true); }
+        bool isSIset() const     { return si_set; }
+        bool isSDOset() const    { return sdo_set; }
+        void resetSIset()        { si_set = false; }  
+        void resetSDOset()       { sdo_set = false; }
+        
 		uint16	getAsUint16() const	{ return bypass.as_uint; }
 		DIAGBypass	getRaw()  const	{ return bypass.raw; }
 		void setRaw(const DIAGBypass	newBypass) { bypass.raw = newBypass; }
 	private:
-		union {
+		bool si_set;
+		bool sdo_set;
+        union {
 			EPA_Protocol::DIAGBypass	raw;
 			uint16	as_uint;
 		} bypass;
