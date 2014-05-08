@@ -64,8 +64,20 @@ echo "Cobalt.Feedback.remotePath=$LOFARROOT/var/run" >> tstartBGL.in_parset
 echo "Cobalt.FinalMetaDataGatherer.host=localhost" >> tstartBGL.in_parset
 startBGL.sh 1 2 3 tstartBGL.in_parset 1000 || error "startBGL.sh failed"
 
-# PID file must be gone
-[ ! -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
+# PID file is created by runObservation.sh, which is started in the background. Although the PID file
+# is created almost immediately, we may be too fast if we check without waiting.
+sleep 1
+[ -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found no $LOFARROOT/var/run/rtcp-1000.pid"
+
+# PID file must be gone after 30s
+TIMEOUT=30
+while [ "$TIMEOUT" -gt 0 && -e $LOFARROOT/var/run/rtcp-1000.pid ]
+do
+  sleep 1
+  TIMEOUT=$((TIMEOUT - 1))
+done
+
+[ -e $LOFARROOT/var/run/rtcp-1000.pid ] || error "Found lingering $LOFARROOT/var/run/rtcp-1000.pid"
 
 # Log file must be present
 [ -r $LOFARROOT/var/log/rtcp-1000.log ] || error "Cannot read $LOFARROOT/var/log/rtcp-1000.log"
