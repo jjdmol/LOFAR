@@ -13,7 +13,7 @@
 . $(dirname $0)/../funcs.sh
 
 # Path to our local cexec program.
-CEXEC=$(cd $(dirname $0)/../c3 && pwd)/cexec
+CEXEC=$(cd $(dirname $0)/c3 && pwd)/cexec
 
 # Setup cleanup handler.
 trap 'STATUS=$?; rm -rf -- "$TMPDIR"; exit $STATUS' 0 1 2 3 15
