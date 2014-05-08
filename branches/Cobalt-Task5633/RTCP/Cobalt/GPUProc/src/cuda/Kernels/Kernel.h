@@ -99,11 +99,12 @@ namespace LOFAR
 
       // "The multiprocessor occupancy is the ratio of active warps to the
       // maximum number of warps supported on a multiprocessor of the GPU."
+      // This (tries to) mimic what NVIDIA's CUDA_Occupancy_Calculator.xls does.
       //
       // Requires call to setEnqueueWorkSizes() first to get meaningful result.
       // Idem for cache and shared memory configuration in the context.
       // Note: Higher occupancy does not necessarily mean higher performance.
-      double getMultiProcOccupancy(unsigned dynSharedMemBytes = 0) const;
+      double predictMultiProcOccupancy(unsigned dynSharedMemBytes = 0) const;
 
 
       const unsigned maxThreadsPerBlock;

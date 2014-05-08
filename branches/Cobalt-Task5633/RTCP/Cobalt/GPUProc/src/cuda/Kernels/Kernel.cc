@@ -189,7 +189,7 @@ namespace LOFAR
       return factor;
     }
 
-    double Kernel::getMultiProcOccupancy(unsigned dynSharedMemBytes) const
+    double Kernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
     {
       const gpu::Device device(_context.getDevice());
 
