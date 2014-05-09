@@ -363,4 +363,34 @@ void SocketStream::deletekey(const std::string &nfskey)
     THROW_SYSCALL("unlink");
 }
 
+size_t SocketStream::recvfrom(void *buffer, size_t numBytes, struct ::sockaddr &src, bool peek)
+{
+  int flags = peek ? MSG_PEEK : 0;
+
+  socklen_t srcaddr_size = sizeof src;
+
+  ssize_t result = ::recvfrom(fd, buffer, numBytes, flags, &src, &srcaddr_size);
+
+  if (result < 0)
+    THROW_SYSCALL("recvfrom");
+
+  return result;
+}
+
+size_t SocketStream::sendto(const void *buffer, size_t numBytes, const struct ::sockaddr &dest, bool blocking)
+{
+#ifdef MSG_DONTWAIT
+  int flags = blocking ? 0 : MSG_DONTWAIT;
+#else
+  int flags = 0;
+#endif
+
+  ssize_t result = ::sendto(fd, buffer, numBytes, flags, &dest, sizeof dest);
+
+  if (result < 0)
+    THROW_SYSCALL("sendto");
+
+  return result;
+}
+
 } // namespace LOFAR

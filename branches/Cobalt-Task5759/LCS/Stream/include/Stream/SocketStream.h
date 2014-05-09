@@ -28,6 +28,8 @@
 #include <Common/SystemCallException.h>
 #include <Stream/FileDescriptorBasedStream.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <time.h>
 #include <string>
 #include <vector>
@@ -59,6 +61,12 @@ class SocketStream : public FileDescriptorBasedStream
     const Mode mode;
 
     template<typename T> size_t recvmmsg( std::vector<T> &buffers, bool oneIsEnough, struct timespec *timeout = NULL ); // only for UDP server socket
+
+    // wrap ::recvfrom(), using MSG_PEEK if peek == true
+    size_t recvfrom(void *buffer, size_t numBytes, struct ::sockaddr &src, bool peek = false);
+
+    // wrap ::sendto(), using MSG_DONTWAIT if blocking == false
+    size_t sendto(const void *buffer, size_t numBytes, const struct ::sockaddr &dest, bool blocking = true);
 
   private:
     const std::string hostname;
