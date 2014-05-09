@@ -60,12 +60,9 @@ template <typename T> class Queue
     // Put an element back to the front of the queue
     void     prepend(const T&);
 
-    // Remove the front element; waits for an element to be appended
-    T	       remove();
-
     // Remove the front element; waits until `deadline' for an element,
     // and returns `null' if the deadline passed.
-    T	       remove(const struct timespec &deadline, T null);
+    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
 
     unsigned size() const;
     bool     empty() const;
@@ -105,6 +102,9 @@ template <typename T> class Queue
 
     // append() without grabbing itsMutex
     void     unlocked_append(const T&, bool timed);
+
+    // pops the oldest item in the queue and returns it
+    Element  pop_front();
 };
 
 
@@ -198,37 +198,13 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
 }
 
 
-template <typename T> inline T Queue<T>::remove()
+template <typename T> inline typename Queue<T>::Element Queue<T>::pop_front()
 {
-  using namespace LOFAR::Cobalt::TimeSpec;
-
-  ScopedLock scopedLock(itsMutex);
-
-  const bool beganEmpty = itsQueue.empty();
-  const struct timespec begin = TimeSpec::now();
-
-  while (itsQueue.empty())
-    itsNewElementAppended.wait(itsMutex);
-
   Element e = itsQueue.front();
   itsQueue.pop_front();
   itsSize--;
 
-  const struct timespec end = TimeSpec::now();
-
-  // Record waiting time if queue was not empty
-  if (beganEmpty) {
-    remove_wait_time.push(end - begin);
-  }
-
-  // Record whether we'll need to wait
-  remove_on_empty_queue.push(beganEmpty ? 100.0 : 0.0);
-
-  // Record the time this element spent in this queue
-  if (e.arrival_time != TimeSpec::big_bang)
-    retention_time.push(end - e.arrival_time);
-
-  return e.value;
+  return e;
 }
 
 
@@ -249,9 +225,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
     if (!itsNewElementAppended.wait(itsMutex, deadline))
       return null;
 
-  Element e = itsQueue.front();
-  itsQueue.pop_front();
-  itsSize--;
+  Element e = pop_front();
 
   const struct timespec end = TimeSpec::now();
 
@@ -261,7 +235,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
   }
 
   // Record whether we'll need to wait
-  remove_on_empty_queue.push(beganEmpty ? 1.0 : 0.0);
+  remove_on_empty_queue.push(beganEmpty ? 100.0 : 0.0);
 
   // Record the time this element spent in this queue
   if (e.arrival_time != TimeSpec::big_bang)

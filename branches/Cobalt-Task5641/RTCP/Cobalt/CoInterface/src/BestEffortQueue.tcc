@@ -67,10 +67,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
     // drop the head of the queue:
     // 1. bypass the statistics kept by Queue<T>
     // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
-    typename Queue<T>::Element e = this->itsQueue.front();
-    this->itsQueue.pop_front();
-    this->itsSize--;
-    element = e.value;
+    element = this->pop_front().value;
 
     dropped.push(100.0);
     return false;
