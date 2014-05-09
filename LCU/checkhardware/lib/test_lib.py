@@ -8,7 +8,7 @@ import os
 import numpy as np
 import logging
 
-test_version = '0314'
+test_version = '0514'
 
 logger = None
 def init_test_lib():
@@ -29,7 +29,10 @@ class cRCUdata:
         self.n_rcus = n_rcus
         self.frames = 0
         self.minvalue = minvalue
-        self.ssData = np.ones((n_rcus, 1, 512), np.float64)
+        self.reset()
+    
+    def reset(self):
+        self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
         self.testSignal_X = -1.0
         self.testSubband_X = 0
         self.testSignal_Y = -1.0
@@ -37,6 +40,7 @@ class cRCUdata:
     
     def record(self, rec_time=2, read=True):
         removeAllDataFiles()
+        self.reset()
         logger.info("Wait %d seconds while recording data" %(rec_time))
         rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(rec_time, dataDir(), self.n_rcus-1), wait=0.0)
         if read:
@@ -57,7 +61,7 @@ class cRCUdata:
         ssdata = np.array([self.readFile(os.path.join(dataDir(),file_name)) for file_name in files_in_dir])
         # mask zero values and convert to dBm
         self.ssData = np.log10(np.ma.masked_less(ssdata, self.minvalue)) * 10.0
-        self.ssData[:,:,0] = np.ma.masked
+        self.ssData[:,:,0] = np.ma.masked # mask bad subband 0
     
     def getSubbands(self, rcu):
         return (self.ssData[int(rcu),:,:].mean(axis=0))
@@ -616,11 +620,19 @@ class cHBA:
             self.hba.resetRcuState()
         
         time.sleep(4.0)
-        ctrlstr1 = ('128,'* 16)[:-1] 
-        ctrlstr2 = ('253,'* 16)[:-1]
-        for ctrl in (ctrlstr1, ctrlstr2):
+        ctrlstr = list()
+        ctrlstr.append(('129,'* 16)[:-1]) # 0ns
+        ctrlstr.append(('133,'* 16)[:-1]) # 0.5ns
+        ctrlstr.append(('137,'* 16)[:-1]) # 1ns
+        ctrlstr.append(('145,'* 16)[:-1]) # 2ns
+        ctrlstr.append(('161,'* 16)[:-1]) # 4ns
+        ctrlstr.append(('193,'* 16)[:-1]) # 8ns
+        ctrlstr.append(('253,'* 16)[:-1]) # 15.5ns
+        #rsp_hba_delay(delay=ctrlstr[6], rcus=self.hba.selectList(), discharge=False)
+        for ctrl in ctrlstr:
+            
             rsp_hba_delay(delay=ctrl, rcus=self.hba.selectList(), discharge=False)
-            data = rspctl('--realdelays', wait=4.0).splitlines()
+            data = rspctl('--realdelays', wait=1.0).splitlines()
             
             ctrllist = ctrl.split(',')
             for line in data:
@@ -646,7 +658,7 @@ class cHBA:
         self.hba.modem_check_done = 1
         self.db.addTestDone('M')
         logger.info("=== Done HBA modem test ===")
-        self.db.rcumode = 0
+        #self.db.rcumode = 0
         return
         
     # check for summator noise and turn off RCU
@@ -1040,8 +1052,8 @@ class cHBA:
     # bit-1  LNA on/off  1 = off
     # bit-0  LED on/off  1 = on
     #
-    # control = 0 (signal - 30 db)
-    # control = 2 (signal - 40 db)
+    # control word = 0 (signal - 30 db)
+    # control word = 2 (signal - 40 db)
     #
     def checkElements(self, mode, record_time, subband,
                       noise_low_deviation, noise_high_deviation, noise_max_diff,
@@ -1131,8 +1143,8 @@ class cHBA:
         self.hba.resetRcuState()
         
         n_rcus_off  = 0
-        for ctrl in ('128', '253'):
-            if ctrl == '128': ctrl_nr = 0
+        for ctrl in ('129', '253'):
+            if ctrl == '129': ctrl_nr = 0
             elif ctrl == '253': ctrl_nr = 1
             
             for elem in range(self.hba.tile[0].nr_elements):

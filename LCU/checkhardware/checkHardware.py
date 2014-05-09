@@ -50,12 +50,14 @@ def printHelp():
     print "                    default data time = 300 sec for hba and 180 sec for lba"
     print "-ehba[=120]       : do all HBA element tests, optional data time in seconds"
     print "                    default data time = 10 sec"
+    print "-es7              : do element signal check in rcumode 7, and skip rcumode 5 test"
     print "-m                : HBA modem check, automatic selected if other hba check are selected"
     print "-sn               : HBA summator noise check"
     print
     print "-lbl              : do all LBL tests"
     print "-lbh              : do all LBH tests"
     print "-hba              : do all HBA tests"
+    print "-s7               : do S7 test instead of S5, must be places before -hba"
     print
     print "-rv               : RSP version check"
     print "-tv               : TBB version check"

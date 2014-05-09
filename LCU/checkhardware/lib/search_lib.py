@@ -336,6 +336,7 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
     
     n_secs = data.shape[1]
     logger.debug("median-signal=%5.3fdB, median-fluctuation=%5.3fdB, std=%5.3f, high-limit=%5.3fdB" %(ref_value, ref_diff, ref_std, limit))
+    # loop over rcus
     for bin in range(data.shape[0]):
         peaks = cSearchPeak(data[bin,0,:])
         if not peaks.valid_data:
@@ -349,7 +350,7 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
             n_bad_jitter_secs  = 0
             
             bin_max_diff = spec_max[bin] - spec_min[bin]
-            
+            # loop over secs
             for val in spec_median[bin,:]:
                 #logger.debug("bin=%d: high-noise value=%5.3fdB  max-ref-value=%5.3fdB" %(bin, val, ref_val)) 
                 if ((val > limit) and (bin_max_diff > 1.0)) or (val > (ref_value + high_deviation)):
@@ -358,11 +359,11 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
                 if ((val < (ref_value + low_deviation)) and (bin_max_diff > 1.0))  or (val < (ref_value + low_deviation)):
                     n_bad_low_secs += 1
             
-            if n_bad_high_secs > 0:    
+            if n_bad_high_secs > 1:    
                 high_info.append((bin, spec_max[bin], n_bad_high_secs, limit, bin_max_diff))
                 logger.debug("bin=%d: max-noise=%5.3f  %d of %d seconds bad" %(bin, spec_max[bin], n_bad_high_secs, n_secs)) 
 
-            if n_bad_low_secs > 0:    
+            if n_bad_low_secs > 1:    
                 low_info.append((bin, spec_min[bin], n_bad_low_secs , (ref_value+low_deviation), bin_max_diff)) 
                 logger.debug("bin=%d: min-noise=%5.3f %d of %d seconds bad" %(bin, spec_min[bin], n_bad_low_secs, n_secs)) 
             

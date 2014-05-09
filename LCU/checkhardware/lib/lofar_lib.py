@@ -10,7 +10,7 @@ import string
 from general_lib import sendCmd
 
 os.umask(001)
-lofar_version = '0913f'
+lofar_version = '0514'
 
 CoreStations          = ('CS001C','CS002C','CS003C','CS004C','CS005C','CS006C','CS007C','CS011C',\
                          'CS013C','CS017C','CS021C','CS024C','CS026C','CS028C','CS030C','CS031C',\
@@ -27,6 +27,7 @@ StationType = dict( CS=1, RS=2, IS=3 )
 logger           = None
 rcumode          = -1
 active_delay_str = ('2,'*16)[:-1]
+
 
 def init_lofar_lib():
     global logger
@@ -272,7 +273,6 @@ def waitTBBready(n_boards=6):
             continue
         # check if image_nr > 0 for all boards
         if answer.count('V') == (n_boards * 4):
-        #if answer.count('V') == ((self.nr-1) * 4):
             logger.info("All boards in working image")
             return (1)
         time.sleep(1.0)
@@ -493,13 +493,16 @@ def rsp_hba_delay(delay, rcus, discharge=True):
                 for step in range(0,(steps*2),2):
                     rculist = sorted(rcus[step::(steps*2)]+rcus[step+1::(steps*2)])
                     select = string.join(list([str(rcu) for rcu in rculist]),',')
-                    rspctl('--hbadelay=%s --select=%s' %(discharge_str[:-1], select), wait=2.0)
-                time.sleep(6.0)
+                    rspctl('--hbadelay=%s --select=%s' %(discharge_str[:-1], select), wait=1.0)
+                    rspctl('--hbadelay=%s --select=%s' %(discharge_str[:-1], select), wait=1.0)
+                time.sleep(3.0)
             else:    
-                rspctl('--hbadelay=%s' %(discharge_str[:-1]), wait=8.0)
+                rspctl('--hbadelay=%s' %(discharge_str[:-1]), wait=1.0)
+                rspctl('--hbadelay=%s' %(discharge_str[:-1]), wait=4.0)
     
     logger.debug("send hbadelay command")
-    rspctl('--hbadelay=%s' %(delay), wait=8.0)
+    rspctl('--hbadelay=%s' %(delay), wait=1.0)
+    rspctl('--hbadelay=%s' %(delay), wait=4.0)
 
     active_delay_str = delay
     return (0) 
