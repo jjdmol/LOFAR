@@ -61,7 +61,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
     return false;
   }
 
-  unlocked_append(element, timed);
+  this->unlocked_append(element, timed);
 
   if (drop && _overflow()) {
     // drop the head of the queue:
@@ -80,6 +80,8 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
 
 template <typename T> inline void BestEffortQueue<T>::noMore()
 {
+  ScopedLock sl(this->itsMutex);
+
   if (flushing)
     return;
 
@@ -87,7 +89,7 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
   flushing = true;
 
   // signal end-of-stream to reader
-  Queue<T>::append(0, false);
+  this->unlocked_append(0, false);
 }
 
 

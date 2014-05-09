@@ -103,6 +103,12 @@ template <typename T> class Queue
     // append() without grabbing itsMutex
     void     unlocked_append(const T&, bool timed);
 
+    // pushes an item to the front of the queue ("prepend")
+    void     push_front( const Element &e );
+
+    // pushes an item to the back of the queue ("append")
+    void     push_back( const Element &e );
+
     // pops the oldest item in the queue and returns it
     Element  pop_front();
 };
@@ -170,10 +176,7 @@ template <typename T> inline void Queue<T>::unlocked_append(const T& element, bo
   // Record the queue size
   queue_size_on_append.push(itsQueue.size());
 
-  itsQueue.push_back(e);
-  itsSize++;
-
-  itsNewElementAppended.signal();
+  push_back(e);
 }
 
 
@@ -191,7 +194,22 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
   // screw up statistics.
   e.arrival_time = TimeSpec::big_bang;
 
+  push_front(e);
+}
+
+
+template <typename T> inline void Queue<T>::push_front( const Element &e )
+{
   itsQueue.push_front(e);
+  itsSize++;
+
+  itsNewElementAppended.signal();
+}
+
+
+template <typename T> inline void Queue<T>::push_back( const Element &e )
+{
+  itsQueue.push_back(e);
   itsSize++;
 
   itsNewElementAppended.signal();
