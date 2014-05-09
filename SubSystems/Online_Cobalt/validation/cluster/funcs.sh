@@ -26,7 +26,7 @@ print_status()
 # Valid options:
 #   -q (quiet), redirect stdout to /dev/null
 #
-# The timeout period is given in seconds and defaults to 15.
+# The timeout period is given in seconds and defaults to 20.
 run_command()
 {
   while getopts "q" opt
@@ -37,7 +37,7 @@ run_command()
   done
   shift $((OPTIND-1))
   COMMAND="$1"
-  TIMEOUT="${2:-15}"  # default timeout: 15 seconds
+  TIMEOUT="${2:-20}"  # default timeout: 20 seconds
   echo -n "$COMMAND:    " >&2
   timeout -k1 $TIMEOUT $COMMAND 2> /dev/null &
   wait $! 2> /dev/null
