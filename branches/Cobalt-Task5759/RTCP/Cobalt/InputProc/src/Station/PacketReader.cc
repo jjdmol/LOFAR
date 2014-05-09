@@ -23,6 +23,7 @@
 #include "PacketReader.h"
 
 #include <typeinfo>
+#include <cstring>
 #include <sys/time.h>
 #include <boost/format.hpp>
 
@@ -62,6 +63,39 @@ namespace LOFAR
       } catch (std::bad_cast&) {
         // inputStream is not a SocketStream
         inputIsUDP = false;
+      }
+    }
+
+
+    struct ::sockaddr PacketReader::peekSrcAddr()
+    {
+      struct ::sockaddr src;
+
+      memset(&src, 0, sizeof src);
+
+      if (inputIsUDP) {
+        SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
+
+        // Peek in the next packet
+        struct RSP packet;
+        sstream.recvfrom(&packet, sizeof packet, src, true);
+      }
+
+      return src;
+    }
+
+    void PacketReader::pokeSrcAddr( const struct ::sockaddr &dest )
+    {
+      if (inputIsUDP) {
+        SocketStream &sstream = dynamic_cast<SocketStream&>(inputStream);
+
+        // Send back a packet (don't block or throw!)
+        try {
+          struct RSP packet;
+          sstream.sendto(&packet, sizeof packet, dest, false);
+        } catch (SystemCallException &ex) {
+          LOG_WARN_STR(logPrefix << "Could not send back UDP packet: " << ex.what());
+        }
       }
     }
 

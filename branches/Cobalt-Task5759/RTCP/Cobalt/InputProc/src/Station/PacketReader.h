@@ -22,6 +22,8 @@
 #define LOFAR_INPUT_PROC_PACKETREADER_H
 
 #include <string>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
@@ -56,6 +58,17 @@ namespace LOFAR
 
       // Logs (and resets) statistics about the packets read.
       void logStatistics();
+
+      // Retrieve the source address from which UDP data is received, by waiting
+      // for the next UDP packet and (non-destructively) inspecting it.
+      //
+      // If the inputStream is not UDP, zeroes will be returned.
+      struct ::sockaddr peekSrcAddr();
+
+      // Send a random UDP packet to the provided address, without blocking or throwing.
+      //
+      // If the inputStream is not UDP, nothing will happen.
+      void pokeSrcAddr(const struct ::sockaddr &dest);
 
     private:
       const std::string logPrefix;

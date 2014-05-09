@@ -319,7 +319,10 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
   Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
   Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
 
+
   try {
+    const struct sockaddr srcAddr = reader.peekSrcAddr();
+
     for(size_t i = 0; true; i++) {
       // Fill rspDataPool elements with RSP packets
       SmartPtr<RSPData> rspData = inputQueue.remove();
@@ -330,9 +333,13 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 
       reader.readPackets(rspData->packets);
 
-      // Periodically log progress
-      if (i % 256 == 0) // Each block is ~40ms, so log every ~10s worth of data.
+      if (i % 256 == 0) { // Each block is ~40ms, so log every ~10s worth of data.
+        // Periodically log progress
         reader.logStatistics();
+
+        // Periodically send back a packet to keep router tables alive
+        reader.pokeSrcAddr(srcAddr);
+      }
 
       outputQueue.append(rspData);
     }
