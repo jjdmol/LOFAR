@@ -190,8 +190,7 @@ namespace {
       casa::Array<casa::DComplex> itsVis;
       casa::Array<casa::DComplex> itsMVis;
 
-      vector<vector<vector<casa::DComplex> > > itsSols; // for every timeslot, nSt gains with vector of length nCr values
-      vector<vector<casa::DComplex > > itsDiagSols; // for every timeslot, 2*nSt gains
+      vector<casa::Matrix<casa::DComplex> > itsSols; // for every timeslot, nSt gains with vector of length nCr values
       vector<vector<int> > itsAntUseds;
       vector<vector<int> > itsAntMaps;
 
@@ -208,7 +207,6 @@ namespace {
       vector<StationResponse::Station::Ptr> itsAntBeamInfo;
 
       PatchList        itsPatchList;
-      int              itsThingie;
 
       string           itsOperation;
 

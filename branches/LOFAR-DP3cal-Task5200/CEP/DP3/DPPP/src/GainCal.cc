@@ -73,9 +73,8 @@ namespace LOFAR {
         itsBaselines     (),
         itsThreadStorage  (),
         itsMaxIter       (parset.getInt (prefix + "maxiter", 1000)),
-        itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-9)),
+        itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
-        itsThingie       (0),
         itsPatchList     (),
         itsOperation     (parset.getString(prefix + "operation", "solve"))
     {
@@ -170,7 +169,6 @@ namespace LOFAR {
       }
 
       itsSols.reserve(info().ntime());
-      itsDiagSols.reserve(info().ntime());
 
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
@@ -410,6 +408,7 @@ namespace LOFAR {
 
       uint nSt=itsMVis.shape()[0];
       uint nCr=4;
+      uint nCh = info().nchan();
 
       iS.g.resize(nSt,nCr);
       iS.gold.resize(nSt,nCr);
@@ -493,7 +492,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>3) {
+          if (itsDebugLevel>7) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -501,7 +500,7 @@ namespace LOFAR {
             break;
           }
 
-          if (itsDebugLevel>3) {
+          if (itsDebugLevel>7) {
             cout<<"Averaged"<<endl;
           }
           for (uint ant=0;ant<nSt;++ant) {
@@ -513,18 +512,18 @@ namespace LOFAR {
           if (!threestep) {
             threestep = (iter+1 >= nomega) ||
                 ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>3) {
+            if (itsDebugLevel>7) {
               cout<<"Threestep="<<boolalpha<<threestep<<endl;
             }
           }
 
           if (threestep) {
-            if (itsDebugLevel>3) {
+            if (itsDebugLevel>7) {
               cout<<"threestep"<<endl;
             }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
                 for (uint ant=0;ant<nSt;++ant) {
@@ -542,7 +541,7 @@ namespace LOFAR {
                   }
                 }
               } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=c2*dgx"<<endl;
                 }
                 iS.g = iS.gx;
@@ -553,7 +552,7 @@ namespace LOFAR {
                 sstep = 2;
               }
             } else {
-              if (itsDebugLevel>3) {
+              if (itsDebugLevel>7) {
                 cout<<"no sstep"<<endl;
               }
               sstep = sstep - 1;
@@ -567,8 +566,8 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>3) {
-        cout<<"iter:"<<iter<<endl;
+      if (itsDebugLevel>1) {
+        cout<<"iter:"<<iter<<", dg="<<dg<<endl;
       }
 
       DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
@@ -586,9 +585,9 @@ namespace LOFAR {
 
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
-      //itsSols.push_back(g);
+      itsSols.push_back(iS.g.copy());
 
-      if (itsDebugLevel>3) {
+      if (itsDebugLevel>2) {
         cout<<"g="<<iS.g<<endl;
       }
     }
@@ -695,7 +694,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>3) {
+          if (itsDebugLevel>7) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -703,7 +702,7 @@ namespace LOFAR {
             break;
           }
 
-          if (itsDebugLevel>3) {
+          if (itsDebugLevel>7) {
             cout<<"Averaged"<<endl;
           }
           for (uint ant=0;ant<2*nSt;++ant) {
@@ -713,32 +712,32 @@ namespace LOFAR {
           if (!threestep) {
             threestep = (iter+1 >= nomega) ||
                 ( max(dg,max(dgx,dgxx)) <= 1.0e-3 && dg<dgx && dgx<dgxx);
-            if (itsDebugLevel>3) {
+            if (itsDebugLevel>7) {
               cout<<"Threestep="<<boolalpha<<threestep<<endl;
             }
           }
 
           if (threestep) {
-            if (itsDebugLevel>3) {
+            if (itsDebugLevel>7) {
               cout<<"threestep"<<endl;
             }
             if (sstep <= 0) {
               if (dg <= c1 * dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
                 for (uint ant=0;ant<2*nSt;++ant) {
                     iS.g(ant,0) = f1q * iS.g(ant,0) + f2q * iS.gx(ant,0);
                 }
               } else if (dg <= dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=dgx"<<endl;
                 }
                 for (uint ant=0;ant<2*nSt;++ant) {
                   iS.g(ant,0) = f1 * iS.g(ant,0) + f2 * iS.gx(ant,0) + f3 * iS.gxx(ant,0);
                 }
               } else if (dg <= c2 *dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>7) {
                   cout<<"dg<=c2*dgx"<<endl;
                 }
                 iS.g = iS.gx;
@@ -749,7 +748,7 @@ namespace LOFAR {
                 sstep = 2;
               }
             } else {
-              if (itsDebugLevel>3) {
+              if (itsDebugLevel>7) {
                 cout<<"no sstep"<<endl;
               }
               sstep = sstep - 1;
@@ -763,8 +762,8 @@ namespace LOFAR {
         cerr<<"!";
       }
 
-      if (itsDebugLevel>3) {
-        cout<<"iter:"<<iter<<endl;
+      if (itsDebugLevel>1) {
+        cout<<"iter:"<<iter<<", dg="<<dg<<endl;
       }
 
       if (nSt>0) {
@@ -782,19 +781,14 @@ namespace LOFAR {
 
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
-      //itsSols.push_back(g);
-      itsThingie++;
+      itsSols.push_back(iS.g.copy());
+
       if (dg > itsTolerance && itsDebugLevel>1) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>2) {
           cout<<"g="<<iS.g<<endl;
-          cout<<endl<<endl<<"Timeslot: "<<itsThingie<<endl;
           exportToMatlab(0);
           THROW(Exception,"Klaar!");
-          if (itsThingie>0) {
-            THROW(Exception,"Klaar!");
-          }
-          itsThingie++;
         }
       }
     }
@@ -898,16 +892,16 @@ namespace LOFAR {
     void GainCal::finish()
     {
       itsTimer.start();
-      /*
+
       uint nSt=info().antennaUsed().size();
 
-      uint ntime=max(itsSols.size(),itsDiagSols.size());
+      uint ntime=itsSols.size();
 
       // Construct solution grid.
       const Vector<double>& freq      = getInfo().chanFreqs();
       const Vector<double>& freqWidth = getInfo().chanWidths();
       BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
-        * 0.5, freqWidth[0], 1));
+        * 0.5, getInfo().totalBW(), 1));
       BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
                                 (info().startTime(),
                                  info().timeInterval(), ntime));
@@ -951,15 +945,15 @@ namespace LOFAR {
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsMode=="fullgain") {
                 if (seqnr%2==0) {
-                  values(0, ts) = real(itsSols[ts][st][seqnr/2]);
+                  values(0, ts) = real(itsSols[ts](st,seqnr/2));
                 } else {
-                  values(0, ts) = -imag(itsSols[ts][st][seqnr/2]); // Conjugate transpose!
+                  values(0, ts) = -imag(itsSols[ts](st,seqnr/2)); // Conjugate transpose!
                 }
               } else {
                 if (seqnr%2==0) {
-                  values(0, ts) = real(itsDiagSols[ts][i/4*nSt+st]); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                  values(0, ts) = real(itsSols[ts](i/4*nSt+st,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
                 } else {
-                  values(0, ts) = -imag(itsDiagSols[ts][i/4*nSt+st]); // Conjugate transpose!
+                  values(0, ts) = -imag(itsSols[ts](i/4*nSt+st,0)); // Conjugate transpose!
                 }
               }
             }
@@ -983,8 +977,6 @@ namespace LOFAR {
           }
         }
       }
-
-*/
 
       itsTimer.stop();
       // Let the next steps finish.
