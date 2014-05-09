@@ -25,7 +25,10 @@ class cRCUdata:
         self.frames = 0
         self.clock = 200.0
         self.minvalue = minvalue
-        self.ssData = np.ones((n_rcus, 1, 512), np.float64)
+        self.reset()
+
+    def reset(self):
+        self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
         self.testSignal_X = -1.0
         self.testSubband_X = 0
         self.testSignal_Y = -1.0
@@ -33,9 +36,10 @@ class cRCUdata:
         self.mean_spectra = np.zeros((512), float)
         self.mean_spectra_X = np.zeros((512), float)
         self.mean_spectra_Y = np.zeros((512), float)
-
+        
     def record(self, rec_time=2, read=True, slow=False):
         removeAllDataFiles()
+        self.reset()
         if slow == True:
             rcus = selectStr(range(0,self.n_rcus,2))
             logger.debug("Wait %d seconds while recording X data" %(rec_time))
