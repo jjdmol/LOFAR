@@ -35,7 +35,7 @@ namespace LOFAR
       const static struct timespec big_bang = { 0, 0 };
 
       // A timestamp later than any other.
-      const static struct timespec universe_heat_death = { LONG_MAX, LONG_MAX };
+      const static struct timespec universe_heat_death = { LONG_MAX, 999999999 };
 
       // Returns the current time, as a struct timespec
       struct timespec now();
