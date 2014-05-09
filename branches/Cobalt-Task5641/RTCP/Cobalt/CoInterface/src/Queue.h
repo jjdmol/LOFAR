@@ -80,7 +80,7 @@ template <typename T> class Queue
 
     // The number of elements in the queue. We maintain this info
     // because itsQueue::size() is O(N), at least until C++11.
-    size_t _size;
+    size_t itsSize;
 
     // The time an element spent in a queue
     RunningStatistics retention_time;
@@ -104,14 +104,14 @@ template <typename T> class Queue
     std::list<struct Element>  itsQueue;
 
     // append() without grabbing itsMutex
-    void     _append(const T&, bool timed);
+    void     unlocked_append(const T&, bool timed);
 };
 
 
 template <typename T> Queue<T>::Queue(const std::string &name)
 :
   itsName(name),
-  _size(0),
+  itsSize(0),
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
@@ -153,11 +153,11 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
 {
   ScopedLock scopedLock(itsMutex);
 
-  _append(element, timed);
+  unlocked_append(element, timed);
 }
 
 
-template <typename T> inline void Queue<T>::_append(const T& element, bool timed)
+template <typename T> inline void Queue<T>::unlocked_append(const T& element, bool timed)
 {
   Element e;
 
@@ -171,7 +171,7 @@ template <typename T> inline void Queue<T>::_append(const T& element, bool timed
   queue_size_on_append.push(itsQueue.size());
 
   itsQueue.push_back(e);
-  _size++;
+  itsSize++;
 
   itsNewElementAppended.signal();
 }
@@ -192,7 +192,7 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
   e.arrival_time = TimeSpec::big_bang;
 
   itsQueue.push_front(e);
-  _size++;
+  itsSize++;
 
   itsNewElementAppended.signal();
 }
@@ -212,7 +212,7 @@ template <typename T> inline T Queue<T>::remove()
 
   Element e = itsQueue.front();
   itsQueue.pop_front();
-  _size--;
+  itsSize--;
 
   const struct timespec end = TimeSpec::now();
 
@@ -251,6 +251,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
 
   Element e = itsQueue.front();
   itsQueue.pop_front();
+  itsSize--;
 
   const struct timespec end = TimeSpec::now();
 
@@ -275,7 +276,7 @@ template <typename T> inline unsigned Queue<T>::size() const
   ScopedLock scopedLock(itsMutex);
 
   // Note: list::size() is O(N)
-  return _size;
+  return itsSize;
 }
 
 

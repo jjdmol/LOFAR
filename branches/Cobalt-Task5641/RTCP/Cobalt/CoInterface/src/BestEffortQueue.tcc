@@ -42,7 +42,7 @@ template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 
 template <typename T> inline bool BestEffortQueue<T>::_overflow() const
 {
-  return this->_size > maxSize;
+  return this->itsSize > maxSize;
 }
 
 
@@ -61,7 +61,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
     return false;
   }
 
-  _append(element, timed);
+  unlocked_append(element, timed);
 
   if (drop && _overflow()) {
     // drop the head of the queue:
@@ -69,7 +69,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
     // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
     typename Queue<T>::Element e = this->itsQueue.front();
     this->itsQueue.pop_front();
-    this->_size--;
+    this->itsSize--;
     element = e.value;
 
     dropped.push(100.0);
