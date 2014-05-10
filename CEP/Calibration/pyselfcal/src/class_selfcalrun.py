@@ -97,7 +97,7 @@ class selfCalRun:
 					#Copy data from observation directory or from the previous iteration
 					if self.i==0:
 								print ''							
-								cmd=""" cp -r %s* %s"""%('%sPreprocessDir/Iter%s/*sub%s'%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
+								cmd=""" cp -r %s* %s"""%('%sPreprocessDir/Iter%s/L*sub%s'%(self.outputDir,self.preprocessIndex,self.preprocessIndex),self.IterDir)
 								print cmd
 								print ''
 								os.system(cmd)							
@@ -303,7 +303,7 @@ class selfCalRun:
 		cmd4  ="""msin.forceautoweight = false\n"""
 		cmd5  ="""msin.datacolumn = CORRECTED_DATA\n"""
 		cmd6  ="""steps=[flag1]\n"""
-		cmd7  ="""flag1.type=aoflagger\n"""
+		cmd7  ="""flag1.type=madflagger\n"""
 		cmd8  ="""flag1.threshold=1\n"""
 		cmd9  ="""flag1.freqwindow=1\n"""
 		cmd10 ="""flag1.timewindow=1\n"""
@@ -316,10 +316,10 @@ class selfCalRun:
 		file.write(cmd5)				
 		file.write(cmd6)
 		file.write(cmd7)
-		#file.write(cmd8)
-		#file.write(cmd9)
-		#file.write(cmd10)
-		#file.write(cmd11)
+		file.write(cmd8)
+		file.write(cmd9)
+		file.write(cmd10)
+		file.write(cmd11)
 		
 		file.close()			
 		
@@ -331,17 +331,12 @@ class selfCalRun:
 		os.system(cmd_NDPPP)
 		
 		
-		if self.outerFOVclean =='no':
 		
-				# Copy CORRECTED DATA Column to DATA column		
-				self.copy_data("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i))	
+		# Copy CORRECTED DATA Column to DATA column		
+		self.copy_data("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i))	
 		
-		if self.outerFOVclean =='yes':
 		
-				# Copy CORRECTED DATA Column to DATA column		
-				self.copy_data("""%s%s_sub%s_Iter%s"""%(self.IterDir,files_k,self.preprocessIndex,self.i))	
 		
-
 		
 		print ''
 		print '##############################################'

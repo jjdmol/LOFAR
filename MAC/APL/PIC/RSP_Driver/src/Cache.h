@@ -91,8 +91,6 @@ public:
 	SerdesBuffer&			getSdsReadBuffer(int rspBoardNr);
 	Latency&				getLatencys()			{ return (itsLatencys); }
 	BitmodeInfo&            getBitModeInfo()        { return (itsBitModeInfo); }
-	SDOModeInfo&            getSDOModeInfo()        { return (itsSDOModeInfo); }
-	SDOSelection&           getSDOSelection()       { return (itsSDOSelection); }
 		
 	bool isSplitterActive() { return(itsSplitterActive); }
 	void setSplitterActive(bool active) { itsSplitterActive = active; }
@@ -109,9 +107,6 @@ public:
 	
 	int getBitsPerSample() { return itsBitsPerSample; }
 	void setBitsPerSample(int bits) { itsBitsPerSample = bits; }
-    
-    int getSDOBitsPerSample() { return itsSDOBitsPerSample; }
-	void setSDOBitsPerSample(int bits) { itsSDOBitsPerSample = bits; }
 	/*@}*/
     
     
@@ -165,9 +160,6 @@ private:
 	bitset<MAX_ANTENNAS>            itsSwappedXY;
 	RSP_Protocol::BitmodeInfo       itsBitModeInfo;
 	int                             itsBitsPerSample;
-	RSP_Protocol::SDOModeInfo       itsSDOModeInfo;
-	RSP_Protocol::SDOSelection      itsSDOSelection;
-	int                             itsSDOBitsPerSample;
 	 
 	Cache* m_cache;		// pointer to container
 };

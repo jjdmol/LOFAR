@@ -58,7 +58,6 @@ StationConfig::StationConfig()
 	nrLBAs		 = StationInfo.getInt ("RS.N_LBAS");
 	nrHBAs		 = StationInfo.getInt ("RS.N_HBAS");
 	hasSplitters = StationInfo.getBool("RS.HBA_SPLIT");
-	hasAartfaac  = StationInfo.getBool("RS.AARTFAAC");
 	hasWideLBAs	 = StationInfo.getBool("RS.WIDE_LBAS");
 
 	LOG_DEBUG(formatString("Stations has %d LBA and %d HBA antennas and %ssplitters",

@@ -77,18 +77,18 @@ bypass_page_swap_on_system_sync = (1<<12)
 
 # Use RSU alt_sync to cause SDO SS page swap
 bypass = bypass_dc + bypass_page_swap_on_system_sync
-rsp.write_diag_bypass(tc, msg, bypass, blpId, rspId)
-rsp.write_cr_syncoff(tc, msg, blpId, rspId)
+write_diag_bypass(tc, msg, bypass, blpId, rspId)
+write_cr_syncoff(tc, msg, blpId, rspId)
 
 # . first page
 rsp.write_sdo_ss(tc, msg, ss_map, blpId, rspId, banks)
-rsp.write_rsu_altsync(tc, msg, rspId)
+write_rsu_altsync(tc, msg, rspId)
 
 # . other page
 rsp.write_sdo_ss(tc, msg, ss_map, blpId, rspId, banks)
-rsp.write_rsu_altsync(tc, msg, rspId)
+write_rsu_altsync(tc, msg, rspId)
 
 # Restore default sync for dual page swap
 bypass = bypass_dc
-rsp.write_diag_bypass(tc, msg, bypass, blpId, rspId)
-rsp.write_cr_syncon(tc, msg, blpId, rspId)
+write_diag_bypass(tc, msg, bypass, blpId, rspId)
+write_cr_syncon(tc, msg, blpId, rspId)

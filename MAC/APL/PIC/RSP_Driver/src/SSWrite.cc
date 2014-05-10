@@ -57,7 +57,6 @@ void SSWrite::sendrequest()
 	itsActiveBanks = (MAX_BITS_PER_SAMPLE / Cache::getInstance().getBack().getBitsPerSample());
 	if (getCurrentIndex() >= (itsActiveBanks*NR_BLPS_PER_RSPBOARD)) {
 		setContinue(true);
-        setFinished();
 		return;
 	}
 	

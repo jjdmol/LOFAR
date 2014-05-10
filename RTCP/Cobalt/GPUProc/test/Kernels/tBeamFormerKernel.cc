@@ -47,8 +47,7 @@ int main(int argc, char *argv[])
   INIT_LOGGER(testName);
   // parse command line arguments to parset
   Parset ps;
-  KernelParameters params;
-  parseCommandlineParameters(argc, argv, ps, params, testName);
+  parseCommandlineParameters(argc, argv, ps, testName);
   
   // Set up gpu environment
   try {
