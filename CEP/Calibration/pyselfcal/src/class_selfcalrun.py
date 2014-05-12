@@ -227,7 +227,10 @@ class selfCalRun:
 		print """Start the Run BBS & NDPPP on Time chunk %s"""%(k)
 		print '##############################################\n'					
 		
-		
+		if self.NbFiles <=2:
+			core_index=8
+		else: 
+			core_index=1			
 		
 		
 		################
@@ -237,7 +240,7 @@ class selfCalRun:
 		if self.outerFOVclean =='yes':
 		
 				if self.i ==0:
-					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%(""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
+					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s_sub%s"""%(self.IterDir,files_k,self.preprocessIndex),self.BBSParset,self.GSMSkymodel)
 					print ''
 					print cmd_cal
 					print ''
@@ -245,7 +248,7 @@ class selfCalRun:
 
 
 				else:			
-					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%("""%s%s_sub%s_Iter%s"""%(self.IterDir,files_k,self.preprocessIndex,self.i-1), self.BBSParset , skymodel_k )
+					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,"""%s%s_sub%s_Iter%s"""%(self.IterDir,files_k,self.preprocessIndex,self.i-1), self.BBSParset , skymodel_k )
 					print ''
 					print cmd_cal
 					print ''
@@ -255,7 +258,7 @@ class selfCalRun:
 		if self.outerFOVclean =='no':
 		
 				if self.i ==0:
-					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%(""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
+					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
 					print ''
 					print cmd_cal
 					print ''
@@ -263,7 +266,7 @@ class selfCalRun:
 
 
 				else:			
-					cmd_cal="""calibrate-stand-alone -f %s %s %s"""%("""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
+					cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,"""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
 					print ''
 					print cmd_cal
 					print ''
