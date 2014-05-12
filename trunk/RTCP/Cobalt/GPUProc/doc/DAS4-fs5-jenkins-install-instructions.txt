@@ -117,6 +117,7 @@ we use -DDATA_DIR=..., such that others can use our install AND measures tables.
   mkdir casacore/build
   cd casacore/build
   cmake -DCMAKE_INSTALL_PREFIX=$HOME/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=$HOME/casacore/data ..
+# on cobalt, use: cmake -DCMAKE_INSTALL_PREFIX=/localhome/lofar/root -DUSE_HDF5=ON -DUSE_FFTW3=ON -DFFTW3_DISABLE_THREADS=OFF -DUSE_THREADS=ON -DUSE_OPENMP=ON -DDATA_DIR=/localhome/lofar/IERS/data ..
   make -j 8 install
   ctest    # optional
 
