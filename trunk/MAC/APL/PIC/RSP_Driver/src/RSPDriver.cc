@@ -1975,6 +1975,7 @@ void RSPDriver::rsp_getconfig(GCFEvent& event, GCFPortInterface& port)
 	ack.n_rspboards   = StationSettings::instance()->nrRspBoards();
 	ack.max_rspboards = StationSettings::instance()->maxRspBoards();
     ack.hasSplitter   = StationSettings::instance()->hasSplitter();
+    ack.hasAartfaac   = StationSettings::instance()->hasAartfaac();
 	port.send(ack);
 }
 
