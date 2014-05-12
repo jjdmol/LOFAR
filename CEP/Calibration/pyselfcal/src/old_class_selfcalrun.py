@@ -197,6 +197,7 @@ class selfCalRun:
 				
 				
 		k = int(index)				
+		core_index=k%23
 		
 		print ''
 		print '##############################################'
@@ -204,16 +205,13 @@ class selfCalRun:
 		print '##############################################\n'					
 		
 		
-		if self.NbFiles <=2:
-			core_index=8
-		else: 
-			core_index=1		
+		
 		
 		################
 		#Run calibration & Transfer DATA from  CORRECTED DATA column to DATA column and erase CORRECTED DATA Column					
 		
 		if self.i ==0:
-			cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
+			cmd_cal="""taskset -c %s calibrate-stand-alone -f %s %s %s"""%(core_index,""" %s%s"""%(self.IterDir,files_k),self.BBSParset,self.GSMSkymodel)
 			print ''
 			print cmd_cal
 			print ''
@@ -221,7 +219,7 @@ class selfCalRun:
 
 
 		else:			
-			cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,"""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
+			cmd_cal="""taskset -c %s calibrate-stand-alone -f %s %s %s"""%(core_index,"""%s%s_Iter%s"""%(self.IterDir,files_k,self.i-1), self.BBSParset , skymodel_k )
 			print ''
 			print cmd_cal
 			print ''
@@ -269,7 +267,7 @@ class selfCalRun:
 		file.close()			
 		
 		#Run NDPPP
-		cmd_NDPPP = """NDPPP %s"""%(param_k)
+		cmd_NDPPP = """taskset -c NDPPP %s"""%(core_index,param_k)
 		print ''
 		print cmd_NDPPP
 		print ''
@@ -347,7 +345,7 @@ class selfCalRun:
 				self.nbpixel[self.i] = self.nbpixel[self.i]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
+			cmd_image="""taskset -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20  awimager ms=%s image=%sImage_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i],self.i,self.robust[self.i],self.nbpixel[self.i],self.pixsize[self.i],self.nIteration, self.UVmin,self.UVmax[self.i],self.wmax[self.i],threshold) 
 			print ''
 			print cmd_image
 			print ''
@@ -363,7 +361,7 @@ class selfCalRun:
 				self.nbpixel[self.i-1] = self.nbpixel[self.i-1]+1
 					
 			#Imaging now with the image 
-			cmd_image="""awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
+			cmd_image="""taskset -c 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20  awimager ms=%s image=%sFinal_Image_%sarcsec_Iter%s weight=briggs robust=%s npix=%s cellsize=%sarcsec data=CORRECTED_DATA padding=1 niter=%s stokes=I operation=mfclark timewindow=300 UVmin=%s UVmax=%s wmax=%s fits threshold=%sJy"""%("""%sAll_Iteration_number_%s"""%(self.IterDir,self.i),self.ImagePathDir,self.pixsize[self.i-1],self.i,self.robust[self.i-1],self.nbpixel[self.i-1],self.pixsize[self.i-1],self.nIteration, self.UVmin,self.UVmax[self.i-1],self.wmax[self.i-1],threshold) 
 			print ''
 			print cmd_image
 			print ''

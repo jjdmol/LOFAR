@@ -137,7 +137,7 @@ template <typename T> Queue<T>::~Queue()
    *
    */
   if (itsName != "")
-    LOG_INFO_STR("Queue " << itsName << ": avg #elements on append = " << queue_size_on_append.mean() << ", queue empty on remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " s, element retention time: " << retention_time);
+    LOG_INFO_STR("Queue " << itsName << ": avg #elements on append = " << queue_size_on_append.mean() << ", queue empty on remove = " << remove_on_empty_queue.mean() << "%, remove wait time = " << remove_wait_time.mean() << " ms, element retention time: " << retention_time);
 }
 
 
