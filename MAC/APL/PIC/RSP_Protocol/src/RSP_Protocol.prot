@@ -1221,6 +1221,10 @@ event = {
     name = "hasSplitter";
     type = "bool";
   };
+  param = {
+    name = "hasAartfaac";
+    type = "bool";
+  };
 };
 
 event = {

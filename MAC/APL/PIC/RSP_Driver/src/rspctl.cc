@@ -106,6 +106,7 @@ double  gSampleFrequency = DEFAULT_SAMPLE_FREQUENCY;
 bool    g_getclock       = false;
 bool    gSplitterOn      = false;
 bool    gHasSplitter     = false;
+bool    gHasAartfaac     = false;
 bool    gClockChanged    = false;
 bool    gBitmodeChanged  = false;
 bool    gSplitterChanged = false;
@@ -2314,16 +2315,18 @@ GCFEvent::TResult StatusCommand::ack(GCFEvent& event)
 							(rs->brc == 0 ? "OK" : "ERROR"),
 							rs->cnt ));
 			}
-            for (int ap = 0; ap < 4; ap++) {
-				RADStatus* rs = &(board.lane0_subband)+ap;
-				logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
-							boardout, ap,
-							"subbands",
-							(rs->align == 0 ? "OK" : "ERROR"),
-							(rs->sync == 1 ? "OK" : "ERROR"),
-							(rs->brc == 0 ? "OK" : "ERROR"),
-							rs->cnt ));
-			}
+            if (gHasAartfaac) {
+                for (int ap = 0; ap < 4; ap++) {
+                    RADStatus* rs = &(board.lane0_subband)+ap;
+                    logMessage(cout, formatString("RSP[%2d] lane%d %9s:  %5s   %5s   %5s     %9d",
+                                boardout, ap,
+                                "subbands",
+                                (rs->align == 0 ? "OK" : "ERROR"),
+                                (rs->sync == 1 ? "OK" : "ERROR"),
+                                (rs->brc == 0 ? "OK" : "ERROR"),
+                                rs->cnt ));
+                }
+            }
 			BOARD_ITERATOR_NEXT;
 		} BOARD_ITERATOR_END;
 
@@ -3084,6 +3087,7 @@ GCFEvent::TResult RSPCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		m_nrspboards   = ack.n_rspboards;
 		m_maxrspboards = ack.max_rspboards;
 		gHasSplitter   = ack.hasSplitter;
+		gHasAartfaac   = ack.hasAartfaac;
 		LOG_DEBUG_STR(formatString("n_rcus     =%d",m_nrcus));
 		LOG_DEBUG_STR(formatString("n_rspboards=%d of %d",  m_nrspboards, m_maxrspboards));
 		RSPGetbitmodeEvent	getBitmode;
