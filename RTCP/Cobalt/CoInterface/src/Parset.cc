@@ -411,10 +411,10 @@ namespace LOFAR
       }
 
       if (isDefined("Cobalt.blockSize")) {
-        settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
+        settings.blockSize = getUint32("Cobalt.blockSize", 196608);
       } else {
         // Old, fall-back configuration
-        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3072) * getUint32("Observation.channelsPerSubband", 64);
       }
 
       // Station information (used pointing information to verify settings)
