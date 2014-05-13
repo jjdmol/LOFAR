@@ -73,12 +73,17 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      // Beamformer kernel prefers 1 channel in the blockDim.z dimension
+      // Beamformer kernel requires 1 channel in the blockDim.z dimension
       setEnqueueWorkSizes(
         gpu::Grid(params.nrPolarizations, 
-                  params.nrTABs,
+                  16 > params.nrTABs ? 16 : params.nrTABs,  // if < 16 tabs use more to fill out the wave
                   params.nrChannelsPerSubband),
-        gpu::Block(params.nrPolarizations, params.nrTABs, 1));
+        gpu::Block(params.nrPolarizations, 
+                   16 > params.nrTABs ? 16 : params.nrTABs,  // if < 16 tabs use more to fill out the wave
+                   1));
+        // The additional tabs added to fill out the waves are skipped
+        // in the kernel file. Additional threads are used to optimize
+        // memory access
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
