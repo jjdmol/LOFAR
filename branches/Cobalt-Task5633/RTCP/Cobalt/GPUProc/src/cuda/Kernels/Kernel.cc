@@ -136,6 +136,7 @@ namespace LOFAR
     unsigned Kernel::getNrBlocksPerMultiProc(unsigned dynSharedMemBytes) const
     {
       // See NVIDIA's CUDA_Occupancy_Calculator.xls
+      // TODO: Take warp allocation granularity into account. (Or only use a multiple of 32.)
       const gpu::Device device(_context.getDevice());
       const unsigned computeCapMajor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
@@ -173,7 +174,7 @@ namespace LOFAR
           unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
           unsigned regsGranularity;
           switch (computeCapMajor) {
-            case 2:  regsGranularity =  64; break;
+            case 2:  regsGranularity = 128; break;
             case 3:  regsGranularity = 256; break;
             default: regsGranularity = 256; break; // guess; unknown for future hardware
           }
