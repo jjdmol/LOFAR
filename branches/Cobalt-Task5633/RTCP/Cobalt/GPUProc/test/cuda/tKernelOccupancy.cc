@@ -105,20 +105,29 @@ int regsLimit(MyKernel& kernel) {
   double occ = kernel.predictMultiProcOccupancy();
   LOG_INFO_STR("predicted occupancy at blk.x=" << block.x << " is " << occ);
   double maxOcc = occ;
+  int maxOccOccurances = 1;
 
   for (unsigned x = 32; x <= 512; x += 32) {
     block.x = x;
     grid.x = 16 * block.x; // only make sure it divs block.x
-    kernel.setEnqueueWorkSizes(grid, block); // occupancy deps on grid/block, so call this first
+    kernel.setEnqueueWorkSizes(grid, block);
     occ = kernel.predictMultiProcOccupancy();
     LOG_INFO_STR("predicted occupancy at blk.x=" << block.x << " is " << occ);
 
-    if (maxOcc < occ)
+    if (maxOcc < occ) {
       maxOcc = occ;
+      maxOccOccurances = 1;
+    } else if (maxOcc == occ) {
+      maxOccOccurances += 1;
+    }
   }
 
-  if (maxOcc == 1.0) {
-    LOG_ERROR_STR("an occupancy of 1.0 should not be reachable since reg pressure is intended to be too high");
+  // It's hard to do another meaningful and reliable check
+  // without resorting to hardware specifics.
+  // It looks like we always have at least 2 points of some max occ. Check.
+  LOG_INFO_STR("max occupancy is " << maxOcc << "; reached at " << maxOccOccurances << " block size configs (up to 512)");
+  if (maxOccOccurances < 2) {
+    LOG_ERROR("the max occupancy must be reachable at 2 or more block size configs");
     return 1;
   }
 
