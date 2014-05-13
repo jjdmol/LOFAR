@@ -2,6 +2,14 @@
 # Useful functions that can be used by the cluster test scripts
 #
 
+# Print error message and exit.
+error()
+{
+  STATUS=$?
+  echo >&2 "ERROR: $@"
+  exit $STATUS
+}
+
 # Signal handler function. Prints exit status and returns it.
 print_status()
 {
