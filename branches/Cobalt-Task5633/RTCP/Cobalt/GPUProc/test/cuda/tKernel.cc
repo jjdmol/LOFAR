@@ -69,8 +69,7 @@ int main() {
   gpu::DeviceMemory d_out(ctx, size * sizeof(float));
 
   // init buffers
-  for (size_t i = 0; i < size; i++)
-  {
+  for (size_t i = 0; i < size; i++) {
     in.get<float>()[i] = (float)i;
   }
   memset(out.get<void>(), 0, size * sizeof(float));

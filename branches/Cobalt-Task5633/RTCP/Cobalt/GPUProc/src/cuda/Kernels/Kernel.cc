@@ -68,7 +68,9 @@ namespace LOFAR
       LOG_INFO_STR(
         "Function " << function.name() << ":" << 
         "\n  nr. of registers used : " <<
-        getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS)
+        getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS) <<
+        "\n  nr. of bytes of shared memory used (static) : " <<
+        getAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES)
       );
     }
 
@@ -136,55 +138,71 @@ namespace LOFAR
       // See NVIDIA's CUDA_Occupancy_Calculator.xls
       const gpu::Device device(_context.getDevice());
       const unsigned computeCapMajor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+      const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
       unsigned factor;
 
-      // block size
+      // #blocks regardless of kernel
+      /*const */unsigned maxBlocksPerMultiProc; // no device.getAttribute() to retrieve it
+      switch (computeCapMajor) {
+        case 1:
+        case 2:  maxBlocksPerMultiProc =  8; break;
+        case 3:  maxBlocksPerMultiProc = 16; break;
+        default: maxBlocksPerMultiProc = 16; break; // guess; unknown for future hardware
+      }
+      factor = maxBlocksPerMultiProc;
+
+      // take block size into account
       unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
+      nrThreadsPerBlock = (nrThreadsPerBlock + warpSize - 1) & ~(warpSize - 1); // assumes warpSize is a pow of 2
       const unsigned maxThreadsPerMP = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR);
       unsigned threadsFactor = maxThreadsPerMP / nrThreadsPerBlock;
-      factor = threadsFactor;
+      if (threadsFactor < factor)
+        factor = threadsFactor;
 
       // number of registers
       unsigned nrRegsPerThread = getAttribute(CU_FUNC_ATTRIBUTE_NUM_REGS);
-      unsigned nrRegsPerBlock;
-      // sm_1x devices apply the reg gran per block. Newer devices apply it per warp.
-      if (computeCapMajor == 1) {
-        const unsigned computeCapMinor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
-        nrRegsPerBlock = nrRegsPerThread * nrThreadsPerBlock;
-        unsigned regsGranularity = computeCapMinor <= 1 ? 256 : 512;
-        nrRegsPerBlock = (nrRegsPerBlock + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
-      } else {
-        const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
-        unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
-        unsigned regsGranularity;
-        switch (computeCapMajor) {
-          case 2:  regsGranularity =  64; break;
-          case 3:  regsGranularity = 256; break;
-          default: regsGranularity = 256; break; // unknown for future hardware
+      if (nrRegsPerThread > 0) {
+        unsigned nrRegsPerBlock;
+        // sm_1x devices apply the reg gran per block. Newer devices apply it per warp.
+        if (computeCapMajor == 1) {
+          const unsigned computeCapMinor = device.getAttribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
+          nrRegsPerBlock = nrRegsPerThread * nrThreadsPerBlock;
+          unsigned regsGranularity = computeCapMinor <= 1 ? 256 : 512;
+          nrRegsPerBlock = (nrRegsPerBlock + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
+        } else {
+          unsigned nrRegsPerWarp = nrRegsPerThread * warpSize;
+          unsigned regsGranularity;
+          switch (computeCapMajor) {
+            case 2:  regsGranularity =  64; break;
+            case 3:  regsGranularity = 256; break;
+            default: regsGranularity = 256; break; // guess; unknown for future hardware
+          }
+          nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
+          unsigned nrWarpsPerBlock = nrThreadsPerBlock / warpSize;
+          nrRegsPerBlock = nrRegsPerWarp * nrWarpsPerBlock;
         }
-        nrRegsPerWarp = (nrRegsPerWarp + regsGranularity - 1) & ~(regsGranularity - 1); // assumes regsGranularity is a pow of 2
-        unsigned nrWarpsPerBlock = (nrThreadsPerBlock + warpSize - 1) / warpSize;
-        nrRegsPerBlock = nrRegsPerWarp * nrWarpsPerBlock;
+        const unsigned devNrRegs = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK);
+        unsigned regsFactor = devNrRegs / nrRegsPerBlock;
+        if (regsFactor < factor)
+          factor = regsFactor;
       }
-      const unsigned devNrRegs = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK);
-      unsigned regsFactor = devNrRegs / nrRegsPerBlock;
-      if (regsFactor < factor)
-        factor = regsFactor;
 
       // shared memory size
       size_t shMem = getAttribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES) + dynSharedMemBytes;
-      unsigned shMemGranularity;
-      switch (computeCapMajor) {
-        case 1:  shMemGranularity = 512; break;
-        case 2:  shMemGranularity = 128; break;
-        case 3:  shMemGranularity = 256; break;
-        default: shMemGranularity = 256; break; // unknown for future hardware
+      if (shMem > 0) {
+        size_t shMemGranularity;
+        switch (computeCapMajor) {
+          case 1:  shMemGranularity = 512; break;
+          case 2:  shMemGranularity = 128; break;
+          case 3:  shMemGranularity = 256; break;
+          default: shMemGranularity = 256; break; // guess; unknown for future hardware
+        }
+        shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2
+        const size_t devShMem = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
+        unsigned shMemFactor = devShMem / shMem;
+        if (shMemFactor < factor)
+          factor = shMemFactor;
       }
-      shMem = (shMem + shMemGranularity - 1) & ~(shMemGranularity - 1); // assumes shMemGranularity is a pow of 2
-      const size_t devShMem = device.getAttribute(CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK);
-      unsigned shMemFactor = devShMem / shMem;
-      if (shMemFactor < factor)
-        factor = shMemFactor;
 
       return factor;
     }
