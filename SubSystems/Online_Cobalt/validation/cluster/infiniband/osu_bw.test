@@ -12,12 +12,21 @@
 #
 # $Id$
 
+# Change directory to the location of our script
 cd $(dirname $0)
 
-# Set environment variables
+# Source useful functions.
+. ../funcs.sh
+
+# Setup signal handler
+trap exit 1 2 3 15
+
+# Directory containing local OpenMPI installation
 OPENMPI_DIR=/opt/openmpi
-PATH=$OPENMPI_DIR/bin:$PATH
-LD_LIBRARY_PATH=$OPENMPI_DIR/lib:$LD_LIBRARY_PATH
+MPIRUN=$OPENMPI_DIR/bin/mpirun
+
+# List of hosts to test
+HOSTS=$(for i in $(seq 1 9); do printf "cbt%03d " "$i"; done)
 
 # Set absolute and relative thresholds for throughput comparison.
 ABS_THRESHOLD=10
@@ -26,27 +35,28 @@ REL_THRESHOLD=0.9
 # File containing reference performance figures
 REF_FILE=osu_bw.ref
 
-host=$(hostname)
-
 # Build the osu_bw program if needed
 echo -n "Building OSU MPI Bandwidth Test ...   "
-
-OSU_BW=$(./build_osu.sh) || { echo "FAILED"; exit; }
+OSU_BW=$(./build_osu.sh) || exit
 echo "OK"
 
-for i in $(seq 1 9)
+host=$(hostname)
+
+for target in $HOSTS
 do
-  target=$(printf cbm%03d $i)
+  [ "$host" == "$target" ] && continue;
   echo "$host --> $target"
   OUT_FILE=osu_bw.$target.out
-  mpirun --prefix $OPENMPI_DIR -H $host,$target bash -l -c $OSU_BW > $OUT_FILE
+  COMMAND="$MPIRUN --prefix $OPENMPI_DIR -H $host,$target bash -l -c $OSU_BW"
+  run_command "$COMMAND" > "$OUT_FILE" 2> /dev/null || error "$COMMAND  FAILED"
+
   # Compare with reference output
   # - first make sure we used the same version of the OSU benchmark test
   # - next compare numbers, taking threshold into account.
-  diff <(grep '^#' osu_bw.ref) <(grep '^#' $OUT_FILE) > /dev/null || \
+  diff <(grep '^#' $REF_FILE) <(grep '^#' $OUT_FILE) > /dev/null || \
     { echo "- OSU MPI Bandwidth Test: version mismatch"; status=1; continue; }
   paste \
-    <(grep '^[0-9]' osu_bw.ref) <(grep '^[0-9]' $OUT_FILE) | \
+    <(grep '^[0-9]' $REF_FILE) <(grep '^[0-9]' $OUT_FILE) | \
      awk -v ABS_THRESHOLD=$ABS_THRESHOLD \
          -v REL_THRESHOLD=$REL_THRESHOLD '{
       if ($1 != $3) {
