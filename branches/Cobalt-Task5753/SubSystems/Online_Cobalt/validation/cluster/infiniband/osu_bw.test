@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Test script that measures the point-to-point throughput between two nodes
+# using MPI and compares it to reference data. The test is considered
+# successfull if, for every message size, either:
+# - the difference between reference and measured throughput is less than
+#   10 MB/s, or
+# - the ratio between measured output and reference is larger than 90%.
+#
+# NOTE: The osu_bw program is part of the OSU Micro Benchmark, which
+# can be downloaded from http://mvapich.cse.ohio-state.edu/benchmarks/
+#
+# $Id$
+
+cd $(dirname $0)
+
+# Set environment variables
+OPENMPI_DIR=/opt/openmpi
+PATH=$OPENMPI_DIR/bin:$PATH
+LD_LIBRARY_PATH=$OPENMPI_DIR/lib:$LD_LIBRARY_PATH
+
+# Set absolute and relative thresholds for throughput comparison.
+ABS_THRESHOLD=10
+REL_THRESHOLD=0.9
+
+# File containing reference performance figures
+REF_FILE=osu_bw.ref
+
+host=$(hostname)
+
+# Build the osu_bw program if needed
+echo -n "Building OSU MPI Bandwidth Test ...   "
+
+OSU_BW=$(./build_osu.sh) || { echo "FAILED"; exit; }
+echo "OK"
+
+for i in $(seq 1 9)
+do
+  target=$(printf cbm%03d $i)
+  echo "$host --> $target"
+  OUT_FILE=osu_bw.$target.out
+  mpirun --prefix $OPENMPI_DIR -H $host,$target bash -l -c $OSU_BW > $OUT_FILE
+  # Compare with reference output
+  # - first make sure we used the same version of the OSU benchmark test
+  # - next compare numbers, taking threshold into account.
+  diff <(grep '^#' osu_bw.ref) <(grep '^#' $OUT_FILE) > /dev/null || \
+    { echo "- OSU MPI Bandwidth Test: version mismatch"; status=1; continue; }
+  paste \
+    <(grep '^[0-9]' osu_bw.ref) <(grep '^[0-9]' $OUT_FILE) | \
+     awk -v ABS_THRESHOLD=$ABS_THRESHOLD \
+         -v REL_THRESHOLD=$REL_THRESHOLD '{
+      if ($1 != $3) {
+        print "- Alignment error comparing test output: " \
+              "expected size "$1", got "$3;
+        error = 1; 
+      }
+      if (($4 < $2 - ABS_THRESHOLD) && ($4 < $2 * REL_THRESHOLD)) {
+        print "- Bandwidth too low for block size "$1": " \
+              "expected "$2" MB/s, got "$4" MB/s";
+        error = 1;
+      }
+    } END { exit error; }' || status=1
+done
+
+exit $status
