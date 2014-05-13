@@ -60,12 +60,9 @@ template <typename T> class Queue
     // Put an element back to the front of the queue
     void     prepend(const T&);
 
-    // Remove the front element; waits for an element to be appended
-    T	       remove();
-
     // Remove the front element; waits until `deadline' for an element,
     // and returns `null' if the deadline passed.
-    T	       remove(const struct timespec &deadline, T null);
+    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
 
     unsigned size() const;
     bool     empty() const;
@@ -77,6 +74,10 @@ template <typename T> class Queue
 
   protected:
     const std::string itsName;
+
+    // The number of elements in the queue. We maintain this info
+    // because itsQueue::size() is O(N), at least until C++11.
+    size_t itsSize;
 
     // The time an element spent in a queue
     RunningStatistics retention_time;
@@ -98,12 +99,25 @@ template <typename T> class Queue
     mutable Mutex              itsMutex;
     Condition	                 itsNewElementAppended;
     std::list<struct Element>  itsQueue;
+
+    // append() without grabbing itsMutex
+    void     unlocked_append(const T&, bool timed);
+
+    // pushes an item to the front of the queue ("prepend")
+    void     push_front( const Element &e );
+
+    // pushes an item to the back of the queue ("append")
+    void     push_back( const Element &e );
+
+    // pops the oldest item in the queue and returns it
+    Element  pop_front();
 };
 
 
 template <typename T> Queue<T>::Queue(const std::string &name)
 :
   itsName(name),
+  itsSize(0),
   retention_time("s"),
   remove_on_empty_queue("%"),
   remove_wait_time("s"),
@@ -145,6 +159,12 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
 {
   ScopedLock scopedLock(itsMutex);
 
+  unlocked_append(element, timed);
+}
+
+
+template <typename T> inline void Queue<T>::unlocked_append(const T& element, bool timed)
+{
   Element e;
 
   // Copy the value to queue
@@ -156,8 +176,7 @@ template <typename T> inline void Queue<T>::append(const T& element, bool timed)
   // Record the queue size
   queue_size_on_append.push(itsQueue.size());
 
-  itsQueue.push_back(e);
-  itsNewElementAppended.signal();
+  push_back(e);
 }
 
 
@@ -175,41 +194,35 @@ template <typename T> inline void Queue<T>::prepend(const T& element)
   // screw up statistics.
   e.arrival_time = TimeSpec::big_bang;
 
+  push_front(e);
+}
+
+
+template <typename T> inline void Queue<T>::push_front( const Element &e )
+{
   itsQueue.push_front(e);
+  itsSize++;
+
   itsNewElementAppended.signal();
 }
 
 
-template <typename T> inline T Queue<T>::remove()
+template <typename T> inline void Queue<T>::push_back( const Element &e )
 {
-  using namespace LOFAR::Cobalt::TimeSpec;
+  itsQueue.push_back(e);
+  itsSize++;
 
-  ScopedLock scopedLock(itsMutex);
+  itsNewElementAppended.signal();
+}
 
-  const bool beganEmpty = itsQueue.empty();
-  const struct timespec begin = TimeSpec::now();
 
-  while (itsQueue.empty())
-    itsNewElementAppended.wait(itsMutex);
-
+template <typename T> inline typename Queue<T>::Element Queue<T>::pop_front()
+{
   Element e = itsQueue.front();
   itsQueue.pop_front();
+  itsSize--;
 
-  const struct timespec end = TimeSpec::now();
-
-  // Record waiting time if queue was not empty
-  if (beganEmpty) {
-    remove_wait_time.push(end - begin);
-  }
-
-  // Record whether we'll need to wait
-  remove_on_empty_queue.push(beganEmpty ? 100.0 : 0.0);
-
-  // Record the time this element spent in this queue
-  if (e.arrival_time != TimeSpec::big_bang)
-    retention_time.push(end - e.arrival_time);
-
-  return e.value;
+  return e;
 }
 
 
@@ -230,8 +243,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
     if (!itsNewElementAppended.wait(itsMutex, deadline))
       return null;
 
-  Element e = itsQueue.front();
-  itsQueue.pop_front();
+  Element e = pop_front();
 
   const struct timespec end = TimeSpec::now();
 
@@ -241,7 +253,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
   }
 
   // Record whether we'll need to wait
-  remove_on_empty_queue.push(beganEmpty ? 1.0 : 0.0);
+  remove_on_empty_queue.push(beganEmpty ? 100.0 : 0.0);
 
   // Record the time this element spent in this queue
   if (e.arrival_time != TimeSpec::big_bang)
@@ -256,16 +268,13 @@ template <typename T> inline unsigned Queue<T>::size() const
   ScopedLock scopedLock(itsMutex);
 
   // Note: list::size() is O(N)
-  return itsQueue.size();
+  return itsSize;
 }
 
 
 template <typename T> inline bool Queue<T>::empty() const
 {
-  ScopedLock scopedLock(itsMutex);
-
-  // Note: list::empty() is O(1)
-  return itsQueue.empty();
+  return size() == 0;
 }
 
 
