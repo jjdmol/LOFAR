@@ -1,0 +1,146 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 380 26 N "_3DFace" 1
+"$station"
+"main()
+{
+  station = $station;
+}" 0
+ E E E E 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+string station = \"\";
+string baseDP=\"\";" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 16
+"PRIMITIVE_TEXT1"
+""
+1 70 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  0 E 70 80 71 93
+0 2 2 "0s" 0 0 0 192 0 0  70 80 1
+1
+LANG:1 34 MS Shell Dlg 2,8,-1,5,50,0,0,0,0,0
+0 1
+LANG:1 0 
+1 17 1 "" 0
+0
+1 18 1 "" 1
+0
+1 19 2 "" 0
+0
+1 20 4 "" 0
+0
+1 21 5 "" 0
+0
+1 22 6 "" 0
+0
+1 23 7 "" 0
+0
+1 24 8 "" 0
+0
+1 26 9 "" 0
+0
+1 27 10 "" 0
+0
+1 28 11 "" 0
+0
+1 29 12 "" 0
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 1 "PANEL_REF1" -1
+"objects\\Hardware\\Station_TempAndHumidity.pnl" 10 10 T 34 1 0 1 -10 -10
+1
+"$station""$station"
+3 2 "PANEL_REF2" -1
+"objects\\genericOnOffView.pnl" 40 0 T 35 1 0 1 40 0
+2
+"$fullDP""LOFAR_PIC_StationInfo.power48On"
+"$station""$station"
+3 4 "PANEL_REF4" -1
+"objects\\Hardware\\antennaBroken_Small.pnl" 80 0 T 37 1 0 1 42 0
+2
+"$antennaType""HBA"
+"$station""$station"
+3 5 "PANEL_REF5" -1
+"objects\\Hardware\\antennaBroken_Small.pnl" 100 0 T 38 1 0 1 50 0
+2
+"$antennaType""LBA"
+"$station""$station"
+3 6 "PANEL_REF6" -1
+"objects\\Hardware\\TBBmode_small.pnl" 60 0 T 39 1 0 1 40 0
+1
+"$station""$station"
+3 7 "PANEL_REF7" -1
+"objects\\Hardware\\APtemp_small.pnl" 40 0 T 40 U 
+1
+"$station""$station"
+3 8 "PANEL_REF8" -1
+"objects\\Hardware\\BPtemp_small.pnl" 60 0 T 40 U 
+1
+"$station""$station"
+3 9 "PANEL_REF9" -1
+"objects/Processes\\stationStreamView_small.pnl" 250 0 T 41 1 0 1 -20 0
+2
+"$station""$station"
+"$streamNr""0"
+3 10 "PANEL_REF10" -1
+"objects/Processes\\stationStreamView_small.pnl" 270 0 T 42 1 0 1 -20 0
+2
+"$station""$station"
+"$streamNr""1"
+3 11 "PANEL_REF11" -1
+"objects/Processes\\stationStreamView_small.pnl" 290 0 T 43 1 0 1 -20 0
+2
+"$station""$station"
+"$streamNr""2"
+3 12 "PANEL_REF12" -1
+"objects/Processes\\stationStreamView_small.pnl" 310 0 T 44 1 0 1 -20 0
+2
+"$station""$station"
+"$streamNr""3"
+0
