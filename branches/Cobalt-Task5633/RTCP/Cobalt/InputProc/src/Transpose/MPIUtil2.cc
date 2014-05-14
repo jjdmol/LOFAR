@@ -9,6 +9,7 @@
 #include <Common/Thread/Condition.h>
 #include <Common/Thread/Mutex.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/TimeFuncs.h>
 #include <sys/time.h>
 #include <algorithm>
 
@@ -128,21 +129,7 @@ namespace LOFAR {
         //
         // Note that handles that are MPI_REQUEST_NULL on input are ignored.
         MPITestsomeTimer.start();
-#if 1
         MPI_Testsome(handles.size(), &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
-#else
-        outcount = 0;
-        int flag;
-        do {
-          int index;
-
-          MPI_Testany(handles.size(), &handles[0], &index, &flag, MPI_STATUS_IGNORE);
-
-          if (flag && index != MPI_UNDEFINED)
-            doneset[outcount++] = index;
-
-        } while(flag && outcount < handles.size());
-#endif
         MPITestsomeTimer.stop();
       }
 
@@ -218,34 +205,6 @@ namespace LOFAR {
       return !finishedIndices.empty();
     }
 
-    namespace {
-      // Returns the current time, as a struct timespec
-      struct timespec now() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-
-        struct timespec ts;
-        ts.tv_sec  = tv.tv_sec;
-        ts.tv_nsec = tv.tv_usec * 1000L;
-
-        return ts;
-      }
-
-      // Increment a timespec with a certain number of seconds
-      void inc(struct timespec &ts, double seconds) {
-        const long ns_per_second = 1000L * 1000L * 1000L;
-
-        ts.tv_sec  += floor(seconds);
-        ts.tv_nsec += (seconds - floor(seconds)) * ns_per_second;
-
-        // normalize
-        if (ts.tv_nsec >= ns_per_second) {
-          ts.tv_nsec -= ns_per_second;
-          ts.tv_sec++;
-        }
-      }
-    }
-
     void MPIPoll::pollThread() {
       Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
@@ -268,8 +227,8 @@ namespace LOFAR {
           // if there are still pending requests, release
           // the lock and just wait with a timeout
           if (!requests.empty()) {
-            struct timespec deadline = now();
-            inc(deadline, 0.0001);
+            struct timespec deadline = TimeSpec::now();
+            TimeSpec::inc(deadline, 0.0001);
 
             newRequest.wait(mutex, deadline);
           }

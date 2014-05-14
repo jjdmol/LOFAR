@@ -9,7 +9,7 @@ import numpy as np
 import logging
 from time import sleep
 
-test_version = '1113'
+test_version = '0314'
 
 logger = None
 def init_data_lib():
@@ -25,21 +25,39 @@ class cRCUdata:
         self.frames = 0
         self.clock = 200.0
         self.minvalue = minvalue
-        self.ssData = np.ones((n_rcus, 1, 512), np.float64)
+        self.reset()
+
+    def reset(self):
+        self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
         self.testSignal_X = -1.0
         self.testSubband_X = 0
         self.testSignal_Y = -1.0
         self.testSubband_Y = 0
         self.mean_spectra = np.zeros((512), float)
-    # TODO:
-    # lees als record time = 10seconden lees dan iedere keer 1a2 seconden en append aan data matrix. 
-    def record(self, rec_time=2, read=True):
+        self.mean_spectra_X = np.zeros((512), float)
+        self.mean_spectra_Y = np.zeros((512), float)
+        
+    def record(self, rec_time=2, read=True, slow=False):
         removeAllDataFiles()
-        logger.debug("Wait %d seconds while recording data" %(rec_time))
-        rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=0:%d' %(rec_time, dataDir(), self.n_rcus-1), wait=0.0)
+        self.reset()
+        if slow == True:
+            rcus = selectStr(range(0,self.n_rcus,2))
+            logger.debug("Wait %d seconds while recording X data" %(rec_time))
+            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
+            
+            rcus = selectStr(range(1,self.n_rcus,2))
+            logger.debug("Wait %d seconds while recording Y data" %(rec_time))
+            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
+        else:    
+            rcus = selectStr(range(0,self.n_rcus))
+            logger.debug("Wait %d seconds while recording XY data" %(rec_time))
+            rspctl('--statistics --duration=%d --integration=1 --directory=%s --select=%s' %(rec_time, dataDir(), rcus), wait=0.0)
+            
         if read:
             self.readFiles()
-            self.mean_spectra = np.median(np.mean(self.ssData, axis=1), axis=0)
+            self.mean_spectra   = np.median(np.mean(self.ssData, axis=1), axis=0)
+            self.mean_spectra_X = np.median(np.mean(self.ssData[0::2,:,:], axis=1), axis=0)
+            self.mean_spectra_Y = np.median(np.mean(self.ssData[1::2,:,:], axis=1), axis=0)
     
     def readFile(self, full_filename):
         sleep(0.02)
@@ -54,7 +72,13 @@ class cRCUdata:
         
     def readFiles(self):
         files_in_dir = sorted(os.listdir(dataDir()))
-        ssdata = np.array([self.readFile(os.path.join(dataDir(),file_name)) for file_name in files_in_dir])
+        data_shape = self.readFile(os.path.join(dataDir(),files_in_dir[0])).shape
+        ssdata = np.zeros((96,data_shape[0],data_shape[1]), dtype=np.float64)
+        for file_name in files_in_dir:
+            #path, filename = os.split(file_name)
+            rcu = int(file_name.split('.')[0][-3:])
+            ssdata[rcu,:,:] = self.readFile(os.path.join(dataDir(),file_name))
+            #logger.debug("%s  rcu=%d" %(file_name, rcu))
         # mask zero values and convert to dBm
         self.ssData = np.log10(np.ma.masked_less(ssdata, self.minvalue)) * 10.0
         # do not use subband 0
@@ -68,10 +92,18 @@ class cRCUdata:
                 continue
             self.ssData[:,:,sb] = np.ma.masked
         return
-        
-    def getMeanSpectra(self):
-        return (self.mean_spectra)
     
+    def getMeanSpectra(self, pol=None):
+        if pol == None:
+            return (self.mean_spectra)
+        if pol in (0, 'X', 'x'):
+            return (self.mean_spectra_X)
+        if pol in (1, 'Y', 'y'):
+            return (self.mean_spectra_Y)
+            
+    def getSpectra(self, rcu):
+        return(np.mean(self.ssData[rcu,:,:], axis=0))
+        
     def getSubbands(self, rcu):
         return (self.ssData[int(rcu),:,:].mean(axis=0))
     

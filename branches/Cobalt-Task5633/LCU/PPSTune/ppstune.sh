@@ -8,6 +8,6 @@ case `hostname` in
 
     *) 
        cd /opt/stationtest
-       ppstune.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ;;
+       PYTHONPATH="/opt/stationtest/modules:$PYTHONPATH" ppstune.py $1 $2 $3 $4 $5 $6 $7 $8 $9 ;;
 esac
 

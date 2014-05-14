@@ -79,10 +79,6 @@ int main()
   vector<gpu::Device> devices = gpu::Platform().devices();
   gpu::Context ctx(devices[0]);
 
-  // Set up control line to outputProc. This also supplies the parset.
-  string spLogPrefix = "StorageProcesses: ";
-  StorageProcesses stPr(ps, spLogPrefix);
-
   const unsigned nrSubbands = ps.nrSubbands();
 
   // Create BF Pipeline. We're the only rank: do all the subbands.
@@ -94,6 +90,11 @@ int main()
   omp_set_nested(true); // for around and within .multiSender.process()
   BeamFormerPipeline bfpl(ps, localSbIndices, devices);
   bfpl.allocateResources();
+
+  // Set up control line to outputProc. This also supplies the parset.
+  // This must happen after kernel compilation to avoid fork() during PortBroker getaddrinfo().
+  string spLogPrefix = "StorageProcesses: ";
+  StorageProcesses stPr(ps, spLogPrefix);
 
 #pragma omp parallel sections num_threads(2)
   {
@@ -112,7 +113,7 @@ int main()
     SmartPtr<SubbandProcOutputData> data;
     unsigned blockIdx;
 
-    writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
+    writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(format("writePool [file %u]") % i), 3, ps.realTime());
 
     blockIdx = 0;
     data = getTestSbCohData(ps, ctx, blockIdx, i);

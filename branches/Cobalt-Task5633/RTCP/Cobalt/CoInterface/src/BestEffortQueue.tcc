@@ -23,74 +23,73 @@ namespace LOFAR
   namespace Cobalt 
   {
 
-template <typename T> inline BestEffortQueue<T>::BestEffortQueue(size_t maxSize, bool drop)
+template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool drop)
 :
+  Queue<T>(name),
   maxSize(maxSize),
   drop(drop),
-  //removing(false), // <-- this will prevent append() if noone is remove()ing. Disabled for now, because
-                     // it causes tests to fail, and even if a thread is remove()ing, objects can still
-                     // pile up in the queue.
-  removing(true),
-  freeSpace(maxSize),
+  dropped("%"),
   flushing(false)
 {
 }
 
 
-template <typename T> inline bool BestEffortQueue<T>::append(const T& element)
+template <typename T> inline BestEffortQueue<T>::~BestEffortQueue()
 {
-  bool canAppend;
-
-  // can't append if we're emptying the queue
-  if (flushing)
-    return false;
-
-  // can't append if we're not removing elements
-  if (!removing && drop)
-    return false;
-
-  // determine whether we can append
-  if (drop) {
-    canAppend = freeSpace.tryDown();
-  } else {
-    canAppend = freeSpace.down();
-  }
-
-  // append if possible
-  if (canAppend) {
-    Queue<T>::append(element);
-  }
-
-  return canAppend;
+  LOG_INFO_STR("BestEffortQueue " << Queue<T>::itsName << ": maxSize = " << maxSize << ", dropped = " << dropped.mean() << "%");
 }
 
 
-template <typename T> inline T BestEffortQueue<T>::remove()
+template <typename T> inline bool BestEffortQueue<T>::_overflow() const
 {
-  removing = true;
+  return this->itsSize > maxSize;
+}
 
-  T element = Queue<T>::remove();
 
-  // freed up one spot
-  freeSpace.up();
+template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool timed)
+{
+  /*
+   * Note that if the queue overflows, we drop the FRONT of the queue, that is,
+   * the oldest item. That's because the oldest item is less likely to be relevant
+   * anymore in the real-time system.
+   */
 
-  return element;
+  ScopedLock sl(this->itsMutex);
+
+  if (flushing) {
+    dropped.push(100.0);
+    return false;
+  }
+
+  this->unlocked_append(element, timed);
+
+  if (drop && _overflow()) {
+    // drop the head of the queue:
+    // 1. bypass the statistics kept by Queue<T>
+    // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
+    element = this->pop_front().value;
+
+    dropped.push(100.0);
+    return false;
+  } else {
+    dropped.push(0.0);
+    return true;
+  }
 }
 
 
 template <typename T> inline void BestEffortQueue<T>::noMore()
 {
+  ScopedLock sl(this->itsMutex);
+
   if (flushing)
     return;
 
   // mark queue as flushing
   flushing = true;
 
-  // prevent writer from blocking
-  freeSpace.noMore();
-
   // signal end-of-stream to reader
-  Queue<T>::append(0);
+  this->unlocked_append(0, false);
 }
 
 

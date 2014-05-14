@@ -21,6 +21,7 @@
 #include <lofar_config.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <Stream/StringStream.h>
 #include <CoInterface/TABTranspose.h>
 
@@ -132,12 +133,13 @@ struct Fixture {
 
   Fixture()
   :
+    outputPool("Fixture::outputPool"),
     ctr(outputPool, 0, nrSubbands, nrChannels, nrSamples)
   {
     for (size_t i = 0; i < nrBlocks; ++i) {
       outputPool.free.append(new BeamformedData(
         boost::extents[nrSamples][nrSubbands][nrChannels],
-        boost::extents[nrSubbands][nrChannels]));
+        boost::extents[nrSubbands][nrChannels]), false);
     }
   }
 };
@@ -349,11 +351,11 @@ SUITE(SendReceive) {
     Receiver::CollectorMap collectors;
 
     for (size_t i = 0; i < nrTABs; ++i) {
-      outputPools[i] = new Pool<BeamformedData>;
+      outputPools[i] = new Pool<BeamformedData>(str(format("OneToOne::outputPool[%u]") % i));
       for (size_t b = 0; b < nrBlocks; ++b) {
         outputPools[i]->free.append(new BeamformedData(
           boost::extents[nrSamples][nrSubbands][nrChannels],
-          boost::extents[nrSubbands][nrChannels]));
+          boost::extents[nrSubbands][nrChannels]), false);
       }
 
       collectors[i] = new BlockCollector(*outputPools[i], i, nrSubbands, nrChannels, nrSamples);
@@ -471,10 +473,13 @@ SUITE(MultiReceiver) {
 
   TEST(MultiSender) {
     MultiSender::HostMap hostMap;
-    MultiSender msender(hostMap, 3, false);
+    MultiSender msender(hostMap, false);
   }
 
   TEST(Transpose) {
+    // We use the even fileIdx to simulate a sparse set
+    #define FILEIDX(tabNr) ((tabNr)*2)
+
     LOG_DEBUG_STR("Transpose test started");
 
     const int nrSubbands = 4;
@@ -502,10 +507,7 @@ SUITE(MultiReceiver) {
         for (int r = 0; r < nrReceivers; ++r) {
           LOG_DEBUG_STR("Receiver thread " << r);
 
-          // Set up pool where all data ends up
-          Pool<Block> outputPool;
-
-          LOG_DEBUG_STR("Populating outputPool");
+          LOG_DEBUG_STR("Populating outputPools");
 
           // collect our TABs
           std::map<size_t, SmartPtr< Pool<BeamformedData> > > outputPools;
@@ -515,14 +517,14 @@ SUITE(MultiReceiver) {
             if (t % nrReceivers != r)
               continue;
 
-            outputPools[t] = new Pool<BeamformedData>;
+            outputPools[t] = new Pool<BeamformedData>(str(format("MultiReceiver::Transpose::outputPool[%u]") % t));
 
             for (size_t i = 0; i < nrBlocks; ++i) {
               outputPools[t]->free.append(new BeamformedData(
                 boost::extents[nrSamples][nrSubbands][nrChannels],
-                boost::extents[nrSubbands][nrChannels]));
+                boost::extents[nrSubbands][nrChannels]), false);
             }
-            collectors[t] = new BlockCollector(*outputPools[t], t, nrSubbands, nrChannels, nrSamples, nrBlocks);
+            collectors[FILEIDX(t)] = new BlockCollector(*outputPools[t], FILEIDX(t), nrSubbands, nrChannels, nrSamples, nrBlocks);
           }
 
           LOG_DEBUG_STR("Starting receiver " << r);
@@ -540,7 +542,7 @@ SUITE(MultiReceiver) {
               continue;
 
             // Check if all blocks arrived, plus NULL marker.
-            collectors[t]->finish();
+            collectors[FILEIDX(t)]->finish();
             CHECK_EQUAL(nrBlocks + 1UL, outputPools[t]->filled.size());
 
             for (size_t b = 0; b < nrBlocks; ++b) {
@@ -573,10 +575,10 @@ SUITE(MultiReceiver) {
             host.brokerPort = PortBroker::DEFAULT_PORT;
             host.service = str(format("foo-%s-%s") % r % s);
 
-            hostMap[t] = host;
+            hostMap[FILEIDX(t)] = host;
           }
 
-          MultiSender msender(hostMap, 3, false);
+          MultiSender msender(hostMap, false);
 
 #         pragma omp parallel sections num_threads(2)
           {
@@ -597,7 +599,7 @@ SUITE(MultiReceiver) {
                   // Send all TABs
                   for (int t = 0; t < nrTABs; ++t) {
                     SmartPtr<Subband> subband = new Subband(nrSamples, nrChannels);
-                    subband->id.fileIdx = t;
+                    subband->id.fileIdx = FILEIDX(t);
                     subband->id.block = b;
                     subband->id.subband = sb;
 

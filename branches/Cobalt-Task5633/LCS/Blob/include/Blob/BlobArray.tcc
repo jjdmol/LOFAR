@@ -92,7 +92,8 @@ uint64 setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
                           const std::vector<uint64>& shape,
                           bool fortranOrder, uint alignment)
 {
-  return setSpaceBlobArray<T> (bs, useBlobHeader, &shape[0], shape.size(),
+  return setSpaceBlobArray<T> (bs, useBlobHeader,
+                               shape.empty() ? 0 : &shape[0], shape.size(),
 			       fortranOrder, alignment);
 }
 
@@ -164,7 +165,7 @@ BlobOStream& operator<< (BlobOStream& bs, const casa::Array<T>& arr)
   const T* data = arr.getStorage(deleteIt);
   const casa::IPosition& shape = arr.shape();
   vector<uint64> shp(shape.begin(), shape.end());
-  putBlobArray (bs, data, &shp[0], arr.ndim(), true);
+  putBlobArray (bs, data, shp.empty() ? 0 : &shp[0], arr.ndim(), true);
   arr.freeStorage (data, deleteIt);
   return bs;
 }
@@ -177,7 +178,8 @@ BlobIStream& operator>> (BlobIStream& bs, casa::Array<T>& arr)
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   vector<uint64> shp(ndim);
-  getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder, nalign);
+  getBlobArrayShape (bs, ndim==0 ? 0 : &shp[0], ndim,
+                     !fortranOrder, nalign);
   casa::IPosition shape(ndim);
   for (uint i=0; i<ndim; i++) {
     shape[i] = shp[i];
@@ -217,7 +219,7 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  uint64 n = getBlobArrayShape (bs, &shape[0], ndim,
+  uint64 n = getBlobArrayShape (bs, ndim==0 ? 0 : &shape[0], ndim,
                                 fortranOrder!=fortranOrder1, nalign);
   arr = new T[n];
   getBlobArrayData (bs, arr, n);
@@ -237,7 +239,7 @@ uint64 getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
   uint16 ndim;
   uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  uint64 n = getBlobArrayShape (bs, &shape[0], ndim,
+  uint64 n = getBlobArrayShape (bs, ndim==0 ? 0 : &shape[0], ndim,
                                 fortranOrder!=fortranOrder1, nalign);
   uint64 pos = bs.getSpace (n*sizeof(T));
   if (useBlobHeader) {
@@ -257,7 +259,9 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<T>& arr)
   uint64 size;
   getBlobArrayShape (bs, &size, 1, false, nalign);
   arr.resize (size);
-  getBlobArrayData (bs, &(arr[0]), size);
+  if (! arr.empty()) {
+    getBlobArrayData (bs, &(arr[0]), size);
+  }
   bs.getEnd();
   return bs;
 }

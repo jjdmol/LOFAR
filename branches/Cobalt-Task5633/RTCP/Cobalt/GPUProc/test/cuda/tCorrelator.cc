@@ -205,7 +205,7 @@ int main()
     // 1. First create a random channel with a length that is large enough
     // It should be length NR_SAMPLES_PER_CHANNEL plus padding at both side to encompass the delay
     unsigned padding = 7; // We have 15 channels with content 2 * 7 delays + delay 0
-    unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * padding * 4;
+    unsigned lengthRandomData = NR_SAMPLES_PER_CHANNEL * NR_POLARIZATIONS * COMPLEX + 2 * (padding + 1) * 4;
     vector<float> randomInputData(lengthRandomData);
 
     // Create the random signal, seed random generator with zero

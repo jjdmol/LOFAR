@@ -411,10 +411,10 @@ namespace LOFAR
       }
 
       if (isDefined("Cobalt.blockSize")) {
-        settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
+        settings.blockSize = getUint32("Cobalt.blockSize", 196608);
       } else {
         // Old, fall-back configuration
-        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3072) * getUint32("Observation.channelsPerSubband", 64);
       }
 
       // Station information (used pointing information to verify settings)
@@ -584,9 +584,13 @@ namespace LOFAR
       // SAP/TAB-crossing counter for the files we generate
       size_t bfStreamNr = 0;
 
-      settings.beamFormer.enabled =
-           getBool("Observation.DataProducts.Output_CoherentStokes.enabled", false)
-        || getBool("Observation.DataProducts.Output_IncoherentStokes.enabled", false);
+      bool doCoherentStokes = getBool(
+        "Observation.DataProducts.Output_CoherentStokes.enabled", false);
+      bool doIncoherentStokes = getBool(
+        "Observation.DataProducts.Output_IncoherentStokes.enabled", false);
+
+      settings.beamFormer.enabled = doCoherentStokes || doIncoherentStokes;
+
       if (settings.beamFormer.enabled) {
         // Parse global settings
 
@@ -615,9 +619,25 @@ namespace LOFAR
         }
         settings.beamFormer.nrDelayCompensationChannels = nrDelayCompCh;
 
+        ObservationSettings::BeamFormer::StokesSettings
+          defaultSettings = 
+          {
+            true,     // coherent stokes?
+            STOKES_I, // StokesType
+            1,        // nrStokes
+            1,        // nrChannels
+            1,        // timeIntegrationFactor
+            0,        // nrSamples
+            0         // nrSubbandsPerFile
+          };
+
+        settings.beamFormer.coherentSettings = defaultSettings;
+        settings.beamFormer.incoherentSettings = defaultSettings;
+          
         for (unsigned i = 0; i < 2; ++i) {
           // Set coherent and incoherent Stokes settings by
           // iterating twice.
+          // TODO: This is an ugly way to do this.
 
           string oldprefix = "";
           string newprefix = "";
@@ -643,6 +663,14 @@ namespace LOFAR
               ASSERT(false);
               break;
           }
+
+          // Coherent Stokes
+          if (i == 0 && !doCoherentStokes)
+            continue;
+
+          // Incoherent Stokes
+          if (i == 1 && !doIncoherentStokes)
+            continue;
 
           // Obtain settings of selected stokes
           stSettings->type = stokesType(getString(

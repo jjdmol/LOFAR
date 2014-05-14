@@ -99,9 +99,8 @@ namespace LOFAR
       // Each work queue needs an output element for each subband it processes, because the GPU output can
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
-      // For smooth operations, allocate 2 elements more per work queue, to allow one element to be in transit
-      // on both the receiver and sender side.
-      multiSender(hostMap(ps, subbandIndices, hostID), std::max(3UL, (2 + nrSubbandsPerSubbandProc) * workQueues.size()), ps.realTime()),
+      // Allow queue to drop items older than 3 seconds.
+      multiSender(hostMap(ps, subbandIndices, hostID), ps.realTime(), 3.0),
       factories(ps, nrSubbandsPerSubbandProc)
     {
       ASSERT(ps.settings.beamFormer.enabled);
@@ -223,17 +222,13 @@ namespace LOFAR
 #       pragma omp section
         {
           Pipeline::processObservation();
-
-          // Done producing output
-          multiSender.finish();
         }
 
         // Output processing
 #       pragma omp section
         {
-          multiSender.process();
+          multiSender.process(&outputThreads);
         }
-
       }
     }
 
@@ -345,6 +340,13 @@ namespace LOFAR
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
       }
+    }
+
+
+    void BeamFormerPipeline::doneWritingOutput()
+    {
+      // Done producing output
+      multiSender.finish();
     }
   }
 }

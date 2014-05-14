@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 621 91 N "_3DFace" 0
+PANEL,-1 -1 335 91 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PermSW\";
@@ -147,13 +147,13 @@ void connectGPUProcs() {
     // check if the required datapoint for this view is enabled and accessible
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectToGPUProcs)>0 ){
       if (dpConnect(\"gpuprocCB\", connectToGPUProcs) == -1) {
-        setValue(\"GPUProcsObject\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"GPUProcsObject\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_dpOffline\");
     }
   } else {
-      setValue(\"GPUProcsObject\", \"backCol\", \"Lofar_off\");    
+      setValue(\"GPUProcsObject\", \"foreCol\", \"Lofar_off\");    
   }
 }
 
@@ -209,31 +209,31 @@ void connectStationInputStreams() {
     // check if the required datapoint for this view are enabled and accessible
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo0)>0 ){
       if (dpConnect(\"streamCB0\", connectTo0) == -1) {
-        setValue(\"streamObject0\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject0\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject0\", \"foreCol\", \"Lofar_dpOffline\");
     }
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo1)>0 ){
       if (dpConnect(\"streamCB1\", connectTo1) == -1) {
-        setValue(\"streamObject1\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject1\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject1\", \"foreCol\", \"Lofar_dpOffline\");
     }
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo2)>0 ){
       if (dpConnect(\"streamCB2\", connectTo2) == -1) {
-        setValue(\"streamObject2\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject2\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject2\", \"foreCol\", \"Lofar_dpOffline\");
     }
     if (navFunct_dpReachable(CEPDBName) && dynlen(connectTo3)>0 ){
       if (dpConnect(\"streamCB3\", connectTo3) == -1) {
-        setValue(\"streamObject3\", \"backCol\", \"Lofar_dpdoesnotexist\");
+        setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpdoesnotexist\");
       }
     } else {
-      setValue(\"streamObject3\", \"backCol\", \"Lofar_dpOffline\");
+      setValue(\"streamObject3\", \"foreCol\", \"Lofar_dpOffline\");
     }
   }
 }
@@ -369,14 +369,14 @@ void calcValues(int stream,dyn_string dps,dyn_float values)
   }
 
   setValue(\"streamObject\"+stream, \"toolTipText\",toolTipText);
-  setValue(\"streamObject\"+stream, \"backCol\", color);
+  setValue(\"streamObject\"+stream, \"foreCol\", color);
 
 }
 
 void gpuprocCB(dyn_string dps, dyn_bool values)
 {
   // Here we get dropping values. if a station is dropping
-  string toolTipText = observation+\" - dropping GPUProcs<br>\";
+  string toolTipText = \"Dropping GPUProcs<br>\";
   
   string color = \"Lofar_operational\";
   
@@ -397,7 +397,7 @@ void gpuprocCB(dyn_string dps, dyn_bool values)
   }
 
   setValue(\"GPUProcsObject\",\"toolTipText\",toolTipText);
-  setValue(\"GPUProcsObject\", \"backCol\", color);
+  setValue(\"GPUProcsObject\", \"foreCol\", color);
 
  }
 
@@ -451,7 +451,7 @@ LANG:1 0
 E E E
 0
 1
-LANG:1 0 
+LANG:1 69 All CEPNodes involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
@@ -500,7 +500,7 @@ LANG:1 6 Cobalt
 E E E
 0
 1
-LANG:1 0 
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
@@ -514,7 +514,7 @@ E E 0 4 1 2 1 E  20 20 50 20
 E E E
 0
 1
-LANG:1 0 
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
@@ -528,7 +528,7 @@ E E 0 4 1 2 1 E  20 50 50 50
 E E E
 0
 1
-LANG:1 0 
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
@@ -542,7 +542,7 @@ E E 0 4 1 2 1 E  20 30 50 30
 E E E
 0
 1
-LANG:1 0 
+LANG:1 73 All inputbuffers involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
@@ -556,7 +556,7 @@ E E 0 4 1 2 1 E  20 40 50 40
 E E E
 0
 1
-LANG:1 0 
+LANG:1 69 All GPUProcs involved in the  currently(selected) active observations
 
 1
 "dashclr"N "_Transparent"
