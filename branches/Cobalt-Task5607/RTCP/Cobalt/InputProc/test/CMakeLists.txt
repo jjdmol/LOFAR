@@ -15,6 +15,12 @@ lofar_add_test(tPacketFactory tPacketFactory.cc)
 lofar_add_test(tGenerator tGenerator.cc)
 lofar_add_test(t_generateRSP t_generateRSP.cc)
 
+
+lofar_add_executable(stationReceiver stationReceiver.cc)
+lofar_add_executable(stationSender stationSender.cc)
+lofar_add_test(tMPISendReceive DEPENDS stationReceiver stationSender)
+
+
 if(UNITTEST++_FOUND)
   lofar_add_test(tMPIUtil2 tMPIUtil2.cc)
 endif(UNITTEST++_FOUND)
@@ -22,3 +28,4 @@ endif(UNITTEST++_FOUND)
 if(MPI_FOUND)
   lofar_add_test(tMPI tMPI.cc)
 endif(MPI_FOUND)
+
