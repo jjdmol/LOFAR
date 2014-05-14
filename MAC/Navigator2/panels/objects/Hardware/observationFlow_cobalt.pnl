@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 16 childStateBorder
-PANEL,-1 -1 169 91 N "_3DFace" 0
+PANEL,-1 -1 171 91 N "_3DFace" 0
 "main()
 {
   baseDP = \"LOFAR_PIC\";
@@ -101,7 +101,7 @@ void updateActiveObservations(string dp1, dyn_string obs,
     observationsList = activeObservations;
   }
   
-  LOG_DEBUG(\"observationFlow_stations.pnl:updateActiveObservations|observationList: \"+observationsList);
+  DebugN(\"observationList: \"+observationsList);
   connectObservations();
 }
 
@@ -152,7 +152,7 @@ void connectObservations() {
 }
  
 void updateObservations(dyn_string dps,dyn_dyn_string values) {
-  LOG_DEBUG(\"observationFlow_stations.pnl:updateObservations| dps:    \" + \"updateObservations values: \"+values);
+  DebugTN(\"ObservationFlow_stations.pnl:updateObservations| dps:    \" + \"updateObservations values: \"+values);
 
   // collect all stations involved  
   dyn_string stationDPList;
@@ -163,14 +163,14 @@ void updateObservations(dyn_string dps,dyn_dyn_string values) {
       if (!dynContains(stationDPList,MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(aDS[j])+\"_\"+aDS[j]+\".status.state\")) {
         dynAppend(stationList,aDS[j]);
         dynAppend(stationDPList,MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(aDS[j])+\"_\"+aDS[j]+\".status.state\");
-        dynAppend(stationDPList,MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(aDS[j])+\"_\"+aDS[j]+\".status.childState\");
+        dynAppend(stationDPList,MainDBName+\"LOFAR_PIC_\"+navFunct_getRingFromStation(aDS[j])+\"_\"+aDS[j]+\".status.state\");
       }
     }
   }
   dynSort(stationDPList);
   dynSort(stationList);
   string ttip = \"Stations: <\\n>\";
-  for (int i=1; i<= dynlen(stationList);i++) ttip += stationList[i]+\"<\\n>\";
+  for (int i=1; i<= dynlen(stationList);i++) ttip += stationList[i]+\"</n>\";
   setValue(\"childStateBorder\",\"toolTipText\",ttip);
 
   if (dynlen(stationDPList) < 1) {
@@ -184,7 +184,7 @@ void updateObservations(dyn_string dps,dyn_dyn_string values) {
 }
 
 void updateStationStates(dyn_string dps,dyn_string values) {
-  LOG_DEBUG(\"observationFlow_stations.pnl:updateStationStates| dps:    \" + \"updateStationStates values: \"+values);
+  DebugTN(\"ObservationFlow_stations.pnl:updateStationStates| dps:    \" + \"updateStationStates values: \"+values);
   // determine the highest state and the highest childState, and add those to the observationsObject
   int highestState=0;
   int highestChildState=0;
@@ -202,9 +202,11 @@ void setStates(int state, int childState) {
    string SymbolCol;
 
    SymbolCol = getStateColor(childState);
+   DebugN(\"stations child:\"+SymbolCol);
    setValue(\"childStateBorder\", \"foreCol\", SymbolCol);
 
    SymbolCol = getStateColor(state);
+   DebugN(\"stations state:\"+SymbolCol);
    setValue(\"childStateBorder\", \"backCol\", SymbolCol);
 }" 0
  2
@@ -267,7 +269,7 @@ void observationsCallback(string dp1, bool aTrig) {
 2 2
 "PRIMITIVE_TEXT1"
 ""
-1 50 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 60 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();
@@ -289,12 +291,12 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  0 E 50 30 89 43
-0 2 2 "0s" 0 0 0 192 0 0  50 30 1
+ 0 1 1 2 1 E U  0 E 60 30 91 43
+0 2 2 "0s" 0 0 0 192 0 0  60 30 1
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0 1
-LANG:1 8 Stations
+LANG:1 6 Cobalt
 0
 LAYER, 1 
 1

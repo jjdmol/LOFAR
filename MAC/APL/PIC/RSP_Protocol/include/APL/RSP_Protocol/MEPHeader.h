@@ -114,10 +114,9 @@ public:
 	static const uint8 CEP       = 0x10; /* CEP management             [RSP    ] */
 	static const uint8 LCU       = 0x11; /* LCU management             [RSP    ] */
 	static const uint8 RAD       = 0x12; /* RAD management             [RSP    ] */
-	static const uint8 SDO       = 0x13; /* Subband Data Out select    [    BLP] */
 
 	static const int MIN_PID = RSR; /* loops over PID should be from */ 
-	static const int MAX_PID = SDO; /* pid = MIN_PID; pid <= MAX_PID */
+	static const int MAX_PID = RAD; /* pid = MIN_PID; pid <= MAX_PID */
 	/*@}*/
 
 	/*@{*/
@@ -126,7 +125,6 @@ public:
 	static const uint8 RSR_VERSION      = 0x01;
 	static const uint8 RSR_TIMESTAMP    = 0x02;
 	static const uint8 RSR_BEAMMODE     = 0x03;
-	static const uint8 RSR_SDOMODE      = 0x04;
 
 	static const uint8 RSU_FLASHRW      = 0x01;
 	static const uint8 RSU_FLASHERASE   = 0x02;
@@ -142,11 +140,31 @@ public:
 	static const uint8 DIAG_SELFTEST    = 0x06;
 
 	static const uint8 SS_SELECT        = 0x00;
+	//static const uint8 SS_SELECT_0      = 0x00;
+	//static const uint8 SS_SELECT_1      = 0x01;
+	//static const uint8 SS_SELECT_2      = 0x02;
+	//static const uint8 SS_SELECT_3      = 0x03;
 
 	static const uint8 BF_XROUT         = 0x00;
 	static const uint8 BF_XIOUT         = 0x01;
 	static const uint8 BF_YROUT         = 0x02;
 	static const uint8 BF_YIOUT         = 0x03;
+    //static const uint8 BF_XROUT_0       = 0x00;
+	//static const uint8 BF_XIOUT_0       = 0x01;
+	//static const uint8 BF_YROUT_0       = 0x02;
+	//static const uint8 BF_YIOUT_0       = 0x03;
+    //static const uint8 BF_XROUT_1       = 0x04;
+	//static const uint8 BF_XIOUT_1       = 0x05;
+	//static const uint8 BF_YROUT_1       = 0x06;
+	//static const uint8 BF_YIOUT_1       = 0x07;
+    //static const uint8 BF_XROUT_2       = 0x08;
+	//static const uint8 BF_XIOUT_2       = 0x09;
+	//static const uint8 BF_YROUT_2       = 0x0a;
+	//static const uint8 BF_YIOUT_2       = 0x0b;
+    //static const uint8 BF_XROUT_3       = 0x0c;
+	//static const uint8 BF_XIOUT_3       = 0x0d;
+	//static const uint8 BF_YROUT_3       = 0x0e;
+	//static const uint8 BF_YIOUT_3       = 0x0f;
 
 	static const uint8 BST_POWER_LANE_0 = 0x00;
 	static const uint8 BST_POWER_LANE_1 = 0x01;
@@ -199,8 +217,6 @@ public:
 	static const uint8 RAD_BP           = 0x00;
 	static const uint8 RAD_LATENCY      = 0x01;
 
-	static const uint8 SDO_SELECT       = 0x00;
-    
 	static const int MIN_REGID          = 0x00;
 	static const int MAX_REGID          = XST_NR_STATS - 1;
 	/*@}*/
@@ -232,8 +248,6 @@ public:
 	static const uint16 XLET_SIZE        = N_POL * sizeof(std::complex<uint32>);
 	static const uint16 WEIGHT_SIZE      = N_POL * sizeof(std::complex<uint16>);
 	static const uint16 MAX_N_BANKS      = 4;
-	static const uint16 N_SDO_SUBBANDS   = 36;
-    
 
 	// TBB related constants
 	static const uint16 TBB_MAXPAYLOADSIZE     = 1948; // available TBB payload bytes
@@ -248,7 +262,6 @@ public:
 	static const uint16 RSR_VERSION_SIZE      = 2;
 	static const uint16 RSR_TIMESTAMP_SIZE    = 4;
 	static const uint16 RSR_BEAMMODE_SIZE     = 2;
-	static const uint16 RSR_SDOMODE_SIZE      = 2;
 
 	static const uint16 RSU_FLASHRW_SIZE      = 1024;
 	static const uint16 RSU_FLASHERASE_SIZE   = 1;
@@ -298,16 +311,13 @@ public:
 	static const uint16 TDS_RESULT_SIZE       = 1024;
 
 	// Placeholder register for future TBB control via the RSP board.
-	static const uint16 TBB_SETTINGS_SIZE     = 8;
-	static const uint16 TBB_BANDSEL_SIZE      = 64;
-                                              
-	// Size of the RAD_BP register.           
-	static const uint16 RAD_BP_SIZE           = 4; // four bytes = 32 bits, 8 bits per lane
-	static const uint16 RAD_LATENCY_SIZE      = 18; // 2 x 4 lanes (beamlet and crosslet) and 1 ring = 9 x 2bytes = 18 bytes
-	                                          
-    static const uint16 SDO_SELECT_SIZE       = 144; // 9 x 2 polaritys x 4 lanes x uint16 = 144 bytes
+	static const uint16 TBB_SETTINGS_SIZE = 8;
+	static const uint16 TBB_BANDSEL_SIZE  = 64;
 
-    
+	// Size of the RAD_BP register.
+	static const uint16 RAD_BP_SIZE      = 4; // four bytes = 32 bits, 8 bits per lane
+	static const uint16 RAD_LATENCY_SIZE = 18; // 2 x 4 lanes (beamlet and crosslet) and 1 ring = 9 x 2bytes = 18 bytes
+
 	// Registers too large to send in a single ethernet frame
 	// (> 1500 bytes) will be sent in a number of fragments of this size.
 	static const uint16 FRAGMENT_SIZE        = 1024;
@@ -377,7 +387,6 @@ public:
 	static const FieldsType RSR_VERSION_HDR;
 	static const FieldsType RSR_TIMESTAMP_HDR;
 	static const FieldsType RSR_BEAMMODE_HDR;
-    static const FieldsType RSR_SDOMODE_HDR;
 
 	static const FieldsType RSU_FLASHRW_HDR;
 	static const FieldsType RSU_FLASHERASE_HDR;
@@ -393,11 +402,31 @@ public:
 	static const FieldsType DIAG_SELFTEST_HDR;
 
 	static const FieldsType SS_SELECT_HDR;
+	//static const FieldsType SS_SELECT_HDR_0;
+	//static const FieldsType SS_SELECT_HDR_1;
+	//static const FieldsType SS_SELECT_HDR_2;
+	//static const FieldsType SS_SELECT_HDR_3;
 
 	static const FieldsType BF_XROUT_HDR;
 	static const FieldsType BF_XIOUT_HDR;
 	static const FieldsType BF_YROUT_HDR;
 	static const FieldsType BF_YIOUT_HDR;
+    //static const FieldsType BF_XROUT_HDR_0;
+	//static const FieldsType BF_XIOUT_HDR_0;
+	//static const FieldsType BF_YROUT_HDR_0;
+	//static const FieldsType BF_YIOUT_HDR_0;
+	//static const FieldsType BF_XROUT_HDR_1;
+	//static const FieldsType BF_XIOUT_HDR_1;
+	//static const FieldsType BF_YROUT_HDR_1;
+	//static const FieldsType BF_YIOUT_HDR_1;
+	//static const FieldsType BF_XROUT_HDR_2;
+	//static const FieldsType BF_XIOUT_HDR_2;
+	//static const FieldsType BF_YROUT_HDR_2;
+	//static const FieldsType BF_YIOUT_HDR_2;
+	//static const FieldsType BF_XROUT_HDR_3;
+	//static const FieldsType BF_XIOUT_HDR_3;
+	//static const FieldsType BF_YROUT_HDR_3;
+	//static const FieldsType BF_YIOUT_HDR_3;
 	
 	static const FieldsType BST_POWER_HDR;
 
@@ -435,8 +464,6 @@ public:
 	static const FieldsType RAD_BP_HDR;
 	static const FieldsType RAD_LATENCY_HDR;
 	
-    static const FieldsType SDO_SELECT_HDR;
-    
 	static const FieldsType RSP_RAWDATA_WRITE;
 	static const FieldsType RSP_RAWDATA_READ;
 

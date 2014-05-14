@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
   const char * testName = "tDelayAndBandPassKernel";
   INIT_LOGGER(testName);
   Parset ps;
-  KernelParameters params;
-  parseCommandlineParameters(argc, argv, ps, params, testName);
+  parseCommandlineParameters(argc, argv, ps, testName);
 
   // Set up gpu environment
   try {

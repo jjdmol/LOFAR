@@ -411,10 +411,10 @@ namespace LOFAR
       }
 
       if (isDefined("Cobalt.blockSize")) {
-        settings.blockSize = getUint32("Cobalt.blockSize", 196608);
+        settings.blockSize = getUint32("Cobalt.blockSize", static_cast<size_t>(1.0 * settings.subbandWidth()));
       } else {
         // Old, fall-back configuration
-        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3072) * getUint32("Observation.channelsPerSubband", 64);
+        settings.blockSize = getUint32("OLAP.CNProc.integrationSteps", 3052) * getUint32("Observation.channelsPerSubband", 64);
       }
 
       // Station information (used pointing information to verify settings)
@@ -709,7 +709,7 @@ namespace LOFAR
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
-          double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+          double ringWidth = getDouble(str(format("Observation.Beam[%u].tabRingSize") % i), 0.0);
 
           // Create a ptr to RingCoordinates object
           // If there are tab rings the object will be actuall constructed
@@ -797,7 +797,7 @@ namespace LOFAR
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
                 const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);
                 tab.dispersionMeasure = getDouble(prefix + ".tabRingDispersionMeasure", 0.0);
-                tab.coherent = getBool(prefix + ".tabRingCoherent", true); // in practice, always coherent
+                tab.coherent = true; // rings cannot be incoherent, since we use non-(0,0) pointings
               }
             }
 
