@@ -1077,7 +1077,7 @@ TEST(testRing) {
   ps.replace(key, value);
 
   // ringwidth == 1
-  key = prefix + ".ringWidth";
+  key = prefix + ".tabRingSize";
   value = "2";
   ps.replace(key, value);
 
