@@ -36,7 +36,7 @@ class BypassRead : public SyncAction
 {
 public:
 	// Constructors for a BypassRead object.
-	BypassRead(GCFPortInterface& board_port, int board_id, int	bpNr);
+	BypassRead(GCFPortInterface& board_port, int board_id);
 
 	// Destructor for BypassRead.
 	virtual ~BypassRead();
@@ -52,7 +52,6 @@ public:
 
 private:
 	EPA_Protocol::MEPHeader m_hdr;
-	int					  itsBPNr;
 };
 
   }; // namespace RSP

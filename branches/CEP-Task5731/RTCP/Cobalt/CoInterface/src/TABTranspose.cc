@@ -576,16 +576,16 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
   maxRetentionTime(maxRetentionTime)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
+    // keep a list of unique hosts
     if(find(hosts.begin(), hosts.end(), i->second) == hosts.end())
       hosts.push_back(i->second);
+
+    // each file gets a drop_rate counter
+    drop_rates[i->first] = RunningStatistics("%");
   }
 
   for (vector<struct Host>::const_iterator i = hosts.begin(); i != hosts.end(); ++i) {
     queues[*i] = new Queue< SmartPtr<struct Subband> >(str(format("MultiSender::queue [to %s]") % i->hostName));
-  }
-
-  for (size_t i = 0; i < hostMap.size(); ++i) {
-    drop_rates.push_back(RunningStatistics("%"));
   }
 }
 
@@ -593,8 +593,8 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
 MultiSender::~MultiSender()
 {
   LOG_INFO_STR("MultiSender: canDrop = " << canDrop << ", maxRetentionTime = " << maxRetentionTime);
-  for (size_t i = 0; i < drop_rates.size(); ++i) {
-    LOG_INFO_STR("MultiSender: [file " << i << " to " << hostMap.at(i).hostName << "] Dropped " << drop_rates[i].mean() << "% of the data");
+  for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
+    LOG_INFO_STR("MultiSender: [file " << i->first << " to " << i->second.hostName << "] Dropped " << drop_rates.at(i->first).mean() << "% of the data");
   }
 }
 

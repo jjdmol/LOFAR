@@ -16,6 +16,52 @@ This pipeline is executed per antenna field:
 4. transposes both over MPI
 -------------------------------------------------------
 
+   Function
+A ----------> B    a function transporting data from A to B (includes processing)
+
++-------+
+| Queue |          a queue holding elements between functions
++-------+
+
+/----------\
+| Function |       a function processing on an element
+\----------/
+
+
+     SMD::computeMetaData     +------------------------+
+NEW ------------------------> | SMD::metaDataPool.free | <----------+
+                              +------------------------+            |
+                                        |                           |
+                                        | SMD::computeMetaData      |
+                                        V                           | MPISender::sendBlocks
+                              +--------------------------+          |
+                              | SMD::metaDataPool.filled |          |
+                              +--------------------------+          |
+                                        |                           |
+                                        | SI::processInput          |
+                                        V                           |
+                              /---------------------------\         |
+                              | SI::writeRSP[Non]RealTime |         |
+                              \---------------------------/         |
+                                        |                           |
+                                        | SI::processInput          |
+                                        V                           |
+                              +-------------------------------+     |
+                              | sendInputToPipeline::mpiQueue |-----+
+                              +-------------------------------+
+
+
+     SI::processInput         +----------------------+
+NEW ------------------------> | SI::rspDataPool.free | <------------+              
+                              +----------------------+              |
+                                        |                           |
+                                        | SI::readRSP[Non]RealTime  | SI::writeRSP[Non]RealTime
+                                        V                           |
+                              +------------------------+            |
+                              | SI::rspDataPool.filled |------------+
+                              +------------------------+
+
+
 NEW -> StationMetaData::metaDataPool.free
   * actor:  StationMetaData::computeMetaData()
 

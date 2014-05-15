@@ -106,8 +106,8 @@ class obsPreprocessing:
 		#Extra param for preprocessing:
 		
 		
-		self.pixPerBeam	= 3
-		self.pixsize 	= 30
+		self.pixPerBeam	= 4
+		self.pixsize 	= 22.5
 		self.UVmax		= float(fpformat.fix((3E8/self.frequency)/(self.pixPerBeam*self.pixsize/3600.*3.14/180.)/(1E3*3E8/self.frequency),3))
 		self.wmax		= float(fpformat.fix(self.UVmax*(3E8/self.frequency)*1E3,3))
 		self.nbpixel	= int(fov*3600./self.pixsize)
@@ -475,21 +475,25 @@ class obsPreprocessing:
 		print """Start the Run of BBS & NDPPP Annulus Source substraction on Time chunk %s"""%(k)
 		print '##############################################\n'					
 		
-		
+		if self.NbFiles <=2:
+			core_index=8
+		else: 
+			core_index=1	
+				
 		
 		
 		################
 		#Run calibration & Transfer DATA from  CORRECTED DATA column to DATA column and erase CORRECTED DATA Column					
 		
 		if self.i==0:
-			cmd_cal="""calibrate-stand-alone -f %s %s %s"""%('%s%s'%(self.IterDir,files_k),self.BBSParset, skymodel_k)
+			cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,'%s%s'%(self.IterDir,files_k),self.BBSParset, skymodel_k)
 			print ''
 			print cmd_cal
 			print ''
 			os.system(cmd_cal)
 
 		if self.i>0:
-			cmd_cal="""calibrate-stand-alone -f %s %s %s"""%('%s%s_sub%s'%(self.IterDir,files_k,self.i-1),self.BBSParset, skymodel_k)
+			cmd_cal="""calibrate-stand-alone -f -t %s %s %s %s"""%(core_index,'%s%s_sub%s'%(self.IterDir,files_k,self.i-1),self.BBSParset, skymodel_k)
 			print ''
 			print cmd_cal
 			print ''

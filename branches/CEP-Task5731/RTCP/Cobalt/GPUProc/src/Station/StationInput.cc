@@ -341,8 +341,8 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
     LOG_INFO_STR( logPrefix << "End of stream");
 
   } catch (SystemCallException &ex) {
-    if (ex.error == EINTR || ex.error == 512 /* ERESTARTSYS, should not be propagated to user space?! */)
-      LOG_INFO_STR( logPrefix << "Aborted: " << ex.what());
+    if (ex.error == EINTR || ex.error == 512 /* ERESTARTSYS, should not be propagated to user space. */)
+      LOG_INFO_STR( logPrefix << "Stopped");
     else
       LOG_ERROR_STR( logPrefix << "Caught Exception: " << ex);
   } catch (Exception &ex) {

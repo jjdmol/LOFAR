@@ -50,12 +50,14 @@ def printHelp():
     print "                    default data time = 300 sec for hba and 180 sec for lba"
     print "-ehba[=120]       : do all HBA element tests, optional data time in seconds"
     print "                    default data time = 10 sec"
+    print "-es7              : do element signal check in rcumode 7, and skip rcumode 5 test"
     print "-m                : HBA modem check, automatic selected if other hba check are selected"
     print "-sn               : HBA summator noise check"
     print
     print "-lbl              : do all LBL tests"
     print "-lbh              : do all LBH tests"
     print "-hba              : do all HBA tests"
+    print "-s7               : do S7 test instead of S5, must be places before -hba"
     print
     print "-rv               : RSP version check"
     print "-tv               : TBB version check"
@@ -127,7 +129,8 @@ def addToArgs(key, value):
                 args['SN'] = '-'
                 args['SP5'] = '-'
                 args['N5'] = '-'
-                args['S5'] = '-'
+                if not args.has_key('S7'):
+                    args['S5'] = '-'
             else:    
                 args[key] = '-'
         
@@ -519,6 +522,12 @@ def main():
                                                         low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
                                                         high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
                             
+                            # RF test in mode 7 for UK station
+                            if repeat_cnt == 1 and args.has_key('S7'):
+                                hba.checkSignal(mode=7, subband=conf.getInt('hba-test-sb',155),
+                                                        min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
+                                                        low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
+                                                        high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
         
                             runtime = (time.time() - runstart)
                             

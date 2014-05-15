@@ -25,6 +25,14 @@ PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
 # The file we will log the observation output to
 LOGFILE=$LOFARROOT/var/log/rtcp-$OBSID.log
 
+function addlogprefix {
+  ME="`basename "$0" .sh`@`hostname`"
+  while read LINE
+  do
+    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
+  done
+}
+
 (
 # Always print a header, to match errors to observations
 echo "---------------"
@@ -59,7 +67,7 @@ echo "PID: $PID"
 # Done
 echo "Done"
 
-) 2>&1 | tee -a $LOFARROOT/var/log/startBGL.log
+) 2>&1 | addlogprefix | tee -a $LOFARROOT/var/log/startBGL.log
 
 # Return the status of our subshell, not of tee
 exit ${PIPESTATUS[0]}
