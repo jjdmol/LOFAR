@@ -1118,6 +1118,30 @@ TEST(testRing) {
  */
 
 SUITE(integration) {
+  TEST(228591) {
+    // ===== read parset of observation L228591
+    Parset ps("tParset.parset_obs228591");
+
+    // check basic assumptions without which the subsequent
+    // checks will return random crap
+    CHECK(ps.settings.beamFormer.enabled);
+    CHECK_EQUAL(1U, ps.settings.beamFormer.SAPs.size());
+
+    // check the TAB rings: 4 rings = 61 TABs
+    CHECK_EQUAL(61U, ps.settings.beamFormer.SAPs[0].TABs.size());
+
+    // first TAB is (0,0)
+    CHECK_EQUAL(0.0, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle1);
+    CHECK_EQUAL(0.0, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle2);
+
+    // subsequent TABs are NOT (0,0)
+    for (size_t tab = 1; tab < ps.settings.beamFormer.SAPs[0].TABs.size(); tab++) {
+      struct ObservationSettings::Direction dir = ps.settings.beamFormer.SAPs[0].TABs[tab].direction;
+
+      CHECK(dir.angle1 != 0.0 || dir.angle2 != 0.0);
+    }
+  }
+
   TEST(99275) {
     // ===== read parset of observation L99275
     Parset ps("tParset.parset_obs99275");
