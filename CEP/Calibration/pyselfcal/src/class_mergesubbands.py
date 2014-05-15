@@ -107,23 +107,20 @@ class mergeSubbands:
 		cmd3 ="""msin.forceautoweight = false\n"""
 		cmd4 ="""msin.datacolumn = %s\n"""%(self.colum2Merge)
 		
-		cmd8 ="""steps=[preflag,count,avg1,flag1]\n"""
+		cmd8 ="""steps=[preflag,flag1,count,avg1]\n"""
 		
 		cmd9 ="""preflag.type=preflagger\n"""
 		cmd10 ="""preflag.corrtype=auto\n"""
-
+		
+		cmd11 ="""flag1.type=madflagger\n"""
+		cmd12 ="""flag1.threshold=4\n"""
+		cmd13 ="""flag1.freqwindow=1\n"""
+		cmd13b="""flag1.timewindow=1\n"""
+		cmd14 ="""flag1.correlations=[0,1,2,3]   # only flag on XX and YY [0,3]\n"""
+		
 		cmd15 ="""avg1.type=squash\n"""
 		cmd16 ="""avg1.freqstep = %s\n"""%(NbChannelPerSubband)
 		cmd17 ="""avg1.timestep=1\n"""
-		
-		cmd11 ="""flag1.type=aoflagger\n"""
-		
-		#cmd12 ="""flag1.threshold=4\n"""
-		#cmd13 ="""flag1.freqwindow=1\n"""
-		#cmd13b="""flag1.timewindow=1\n"""
-		#cmd14 ="""flag1.correlations=[0,1,2,3]   # only flag on XX and YY [0,3]\n"""
-		
-
 	
 	
 		file.write(cmd1)
@@ -136,17 +133,18 @@ class mergeSubbands:
 		
 		file.write(cmd8)
 		
-		file.write(cmd15)
-		file.write(cmd16)
-		file.write(cmd17)		
 		file.write(cmd9)
 		file.write(cmd10)
 		
 		file.write(cmd11)
-		#file.write(cmd12)
-		#file.write(cmd13)
-		#file.write(cmd13b)
-		#file.write(cmd14)		
+		file.write(cmd12)
+		file.write(cmd13)
+		file.write(cmd13b)
+		file.write(cmd14)
+		
+		file.write(cmd15)
+		file.write(cmd16)
+		file.write(cmd17)		
 			
 		file.close()
 		

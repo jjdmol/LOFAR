@@ -64,7 +64,6 @@ public:
 	int		nrLBAs;
 	int		nrHBAs;
 	bool	hasSplitters;
-	bool	hasAartfaac;
 	bool	hasWideLBAs;
 };
 

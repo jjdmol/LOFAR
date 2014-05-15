@@ -1,10 +1,10 @@
 #!/usr/bin/python
+#!/usr/bin/python
 
-check_version = '0314'
+check_version = '1213'
 
 import sys
 import os
-import numpy as np
 
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
@@ -30,25 +30,20 @@ if not os.access(logPath, os.F_OK):
     os.mkdir(logPath)
 
 logger = None
-stage  = ""
 
-def lbaMode(mode):
-    if mode in (1, 2, 3, 4):
-        return (True)
-    return (False)    
+lba_modes = (1, 2, 3, 4)
+hba_modes = (5, 6, 7)
+rcumode   = 0
+obs_id    = ""
+db = None
+stage = ""
+rec_timestamp = 0
 
-def hbaMode(mode):
-    if mode in (5, 6, 7):
-        return (True)
-    return (False)    
-    
-def checkStr(key):
-    checks = dict({'OSC':"Oscillation", 'HN':"High-noise", 'LN':"Low-noise", 'J':"Jitter", 'SN':"Summator-noise",\
-                  'CR':"Cable-reflection", 'M':"Modem-failure", 'DOWN':"Antenna-fallen", 'SHIFT':"Shifted-band"})
-    return (checks.get(key,'Unknown'))
+Check = dict({'OSC':"Oscillation", 'HN':"High-noise", 'LN':"Low-noise", 'J':"Jitter", 'SN':"Summator-noise",\
+              'CR':"Cable-reflection", 'M':"Modem-failure", 'DOWN':"Antenna-fallen", 'SHIFT':"Shifted-band"})
 
 # PVSS states
-PVSS_states = dict({'OFF':0, 'OPERATIONAL':1, 'MAINTENANCE':2, 'TEST':3, 'SUSPICIOUS':4, 'BROKEN':5})
+State = dict({'OFF':0, 'OPERATIONAL':1, 'MAINTENANCE':2, 'TEST':3, 'SUSPICIOUS':4, 'BROKEN':5})
 
 def printHelp():
     print "----------------------------------------------------------------------------"
@@ -62,9 +57,26 @@ def printHelp():
 
     print "----------------------------------------------------------------------------"
 
+control_keys = ('R','START','STOP')
 
+args = dict()
+
+def addToArgs(key, value):
+    global args
+    
+    if key == '':
+        return
+    global args
+    if key in ('H','LS','LF','U'):
+        if value != '-':
+            args[key] = value
+        else:   
+            args[key] = '-'
+    else:
+        sys.exit("Unknown key %s" %(key))
+    return
+           
 def getArguments():
-    args = dict()
     key   = ''
     value = '-'
     for arg in sys.argv[1:]:
@@ -75,15 +87,8 @@ def getArguments():
                 key, value = opt.strip().split('=')
             else:
                 key, value = opt, '-'
-                
-            if key in ('H','LS','LF','U'):
-                if value != '-':
-                    args[key] = value
-                else:   
-                    args[key] = '-'
-            else:
-                sys.exit("Unknown key %s" %(key))    
-    return (args)
+            addToArgs(key=key, value=value)
+    return
                        
 
 # get and unpack configuration file
@@ -118,7 +123,10 @@ class cConfiguration:
 # setup default python logging system
 # logstream for screen output
 # filestream for program log file
-def init_logging(args):
+def init_logging():
+    global logger
+    global args
+
     log_levels = {'DEBUG'  : logging.DEBUG,
                   'INFO'   : logging.INFO,
                   'WARNING': logging.WARNING,
@@ -146,7 +154,7 @@ def init_logging(args):
     file_handler.setLevel(log_levels[file_log_level])
     logger.addHandler(file_handler)
 
-    if (len(logger.handlers) == 1) and ('LS' in args):
+    if len(logger.handlers) == 1:
         # create console handler
         stream_handler = logging.StreamHandler()
         fmt = '%s %%(levelname)-8s %%(message)s' %(station)
@@ -154,16 +162,24 @@ def init_logging(args):
         stream_handler.setFormatter(formatter)
         stream_handler.setLevel(log_levels[screen_log_level])
         logger.addHandler(stream_handler)
-    return (logger)
+    return
+
+    
     
 # send comment, key and value to PVSS and write to file
 def sendToPVSS(comment, pvss_key, value):
+    global logger, args
+
+    if args.has_key('NO_UPDATE'):
+            return("")
+            
     if len(comment) > 0:
-        comment = 'rtsm::'+comment
+        comment = 'stationtest::'+comment
     else:
-        comment = 'rtsm'
+        comment = 'stationtest'
     arguments = '%s %s %d' %(comment, pvss_key, value)
-    if True:
+    logger.addLine(arguments[11:])
+    if args.has_key('TEST'):
         print arguments
     else:
         response = sendCmd('setObjectState', arguments)
@@ -171,23 +187,66 @@ def sendToPVSS(comment, pvss_key, value):
         return(response)
     return("")
 
+class cCountDB:
+    def __init__(self, n_rcus, n_tests, max_counts):
+        self.max_counts = max_counts
+        self.trig_count = max_counts / 2.0
+        self.counts = max_counts - 1
+        self.n_rcus = n_rcus
+        self.n_tests = n_tests
+        self.bad_list = list()
+        for mode in range(1,8,1):
+            msg_list = list()
+            for tst in range(self.n_tests):
+                rcu_list = list()
+                for rcu in range(self.n_rcus):
+                    rcu_list.append(0)
+                msg_list.append(rcu_list)
+            self.bad_list.append(msg_list)
+    
+    def reset(self):
+        self.counts = self.max_counts - 1
+        for mode in range(0,7,1):
+            for tst in range(self.n_tests):
+                for rcu in range(self.n_rcus):
+                    self.bad_list[mode][tst][rcu] = 0
+    
+    def decCounts(self):
+        self.counts -= 1
+        return (self.counts)
+    
+    def incRcuCount(self, mode, test, rcu):
+        self.bad_list[mode-1][test][rcu] += 1
+        return
+    
+    def getCount(self, mode, test, rcu):
+        return (self.bad_list[mode-1][test][rcu])
+    
+    def isTriggered(self, mode, test, rcu):
+        if self.counts == 0:
+            if self.bad_list[mode-1][test][rcu] > self.trig_count:
+                return (True)
+        return  (False)
+    
 def getRcuMode():
+    global rcumode
     global stage
     stage = "getRcuMode"
-    rcumode = -1
+    
     answer = rspctl("--rcu")
     for mode in range(8):
-        mode_cnt = answer.count("mode:%d" %(mode))
-        if mode == 0:
-            if mode_cnt == 96:
-                logger.debug("Not observing")
-                return (rcumode)
-        elif (mode_cnt > 48) and answer.count("mode:0") == (96 - mode_cnt):
-            logger.debug("Now observing in rcumode %d" %(mode))
-            rcumode = mode
-    return (rcumode)    
+        if answer.count("mode:%d" %(mode)) > 48:
+            if mode != rcumode:
+                if mode == 0:
+                    logger.debug("Not observing")
+                else:
+                    logger.debug("Now observing in rcumode %d" %(mode))
+                rcumode = mode
+                return (False)
+            return (True)    
 
-def getAntPol(rcumode, rcu):
+def getAntPol(rcu):
+    global rcumode
     global stage
     last_stage = stage
     stage = "getAntPol"
@@ -201,260 +260,289 @@ def getAntPol(rcumode, rcu):
     stage = last_stage
     return (ant, pol)
 
-    
-def dumpSpectra(data, metadata, rcu, check):
+def dumpSpectra(data, rcu, check):
+    global rcumode
+    global obs_id
+    global Check
     global stage
+    global rec_timestamp
+    
     last_stage = stage
     stage = "dumpSpectra"
     
-    (station, rcumode, rec_timestamp, obs_id) = metadata
-    logger.debug("start dumping data")
     dumpTime = time.gmtime(rec_timestamp)
-    date_str = time.strftime("%Y%m%d", dumpTime)
+    date_time = time.strftime("%Y%m%dT%H%M%S", dumpTime)
     
-    filename = "%s_%s_open.dat" %(station, obs_id)
+    filename = "%s_%s_%s%d_%d.dat" %(getHostName(), date_time, check, rcumode, rcu)
     full_filename = os.path.join(spectraPath, filename) 
-    f = open(full_filename, 'a')
+    f = open(full_filename, 'w')
     
+    f.write("timestamp=%f\n" %(time.mktime(dumpTime)))
+    f.write("date_time=%s\n" %(time.asctime(dumpTime)))
+    f.write("ObsID=%s\n" %(obs_id))
+    f.write("check=%s\n" %(Check[check]))
+    f.write("rcumode=%d\n" %(rcumode))
+    f.write("rcu=%d\n" %(rcu))
+    
+    """
+    0 = OFF
+    1 = LBL 10MHz HPF 0x00017900
+    2 = LBL 30MHz HPF 0x00057900
+    3 = LBH 10MHz HPF 0x00037A00
+    4 = LBH 30MHz HPF 0x00077A00
+    5 = HB 110-190MHz 0x0007A400
+    6 = HB 170-230MHz 0x00079400
+    7 = HB 210-270MHz 0x00078400
+    """
     if rcumode in (1, 2, 3, 4):
-        freq = (0  , 100)
+        freq = (0.0, 100.0)
     elif rcumode in (5,):
-        freq = (100, 200)
+        freq = (100.0, 200.0)
     elif rcumode in (6,):
-        freq = (160, 240)
+        freq = (160.0, 240.0)
     elif rcumode in (7,):
-        freq = (200, 300)
+        freq = (200.0, 300.0)
+    step = (freq[1] - freq[0]) / 512.0
+    x_val = freq[0]    
     
-    spectra_info = "SPECTRA-INFO=%d,%d,%s,%s,%d,%d,%f\n" %\
-                   (rcu, rcumode, obs_id, check, freq[0], freq[1], rec_timestamp)
-                   
-    mean_spectra = "MEAN-SPECTRA=["
-    for i in data.getMeanSpectra(rcu%2):
-        mean_spectra += "%3.1f " %(i)
-    mean_spectra += "]\n"    
+    f.write("frequency=[")
+    info = ""
+    for i in range(512):
+        info += "%5.3f " %(x_val)
+        x_val += step
+    f.write("%s]\n" %(info[:-1]))   
+    
+    f.write("\n")
+    f.write("mean-spectra=[")
+    info = ""
+    for i in data.getMeanSpectra():
+        info += "%3.1f " %(i)
+    f.write("%s]\n" %(info[:-1]))   
 
-    bad_spectra = "BAD-SPECTRA=["
-    for i in data.getSpectra(rcu):
-        bad_spectra += "%3.1f " %(i)
-    bad_spectra += "]\n\n"    
-    
-    f.write(spectra_info)
-    f.write(mean_spectra)
-    f.write(bad_spectra)
-    
+    f.write("\n")
+    f.write("rcu-spectra=[")
+    info = ""
+    for i in data.getSubbands(rcu):
+        info += "%3.1f " %(i)
+    f.write("%s]\n" %(info[:-1]))
     f.close()
     stage = last_stage
     return
     
     
-def checkForOscillation(data, metadata, delta, pvss=False):
+def checkForOscillation(data, delta=9.0):
+    global logger
+    global args
+    global rcumode
+    global lba_modes
+    global hba_modes
+    global db
     global stage
     stage = "checkForOscillation"
     
-    (station, rcumode, rec_timestamp, obs_id) = metadata
     logger.debug("start oscillation check")
-    check_pol   = 0
-    for test_data in (data.getAllX(), data.getAllY()):
-        #test_data = data.getAll()[:,:1,:]
-        result = search_oscillation(test_data, delta, 0, 511)
+    test_data = data.getAll()[:,:1,:]
+    result = search_oscillation(test_data, delta, 0, 511)
+    if len(result) > 1:
+        # get mean values from all rcu's (rcu = -1)
+        rcu, ref_max_sum, ref_n_peaks, ref_rcu_low = result[0]
+        
+        rcu, max_sum, n_peaks, rcu_low = sorted(result[1:], reverse=True)[0]
+        ant, pol = getAntPol(rcu)
         
         
-        if len(result) > 1:
-            # get mean values from all rcu's (rcu = -1)
-            bin, ref_max_sum, ref_n_peaks, ref_rcu_low = result[0]
+        if rcumode in lba_modes:
+            db.incRcuCount(rcumode, 0, rcu)
+            info = "Mode-%d RCU-%03d Ant-%03d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) ref=()" %\
+                   (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low)
             
-            #rcu, max_sum, n_peaks, rcu_low = sorted(result[1:], reverse=True)[0]
-            if len(result) == 2:
-                bin, max_sum, n_peaks, rcu_low = result[1]
+            if db.isTriggered(rcumode, 0, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "OSC")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm oscillating", "LOFAR_PIC_LBA%03d" %(ant), State['BROKEN'])
             else:
-                ref_low = result[0][3]
-                max_low_rcu = (-1, -1)
-                max_sum_rcu = (-1, -1)
-                for i in result[1:]:
-                    bin, max_sum, n_peaks, rcu_low = i
-                    if max_sum > max_sum_rcu[0]: max_sum_rcu = (max_sum, bin) 
-                    if (rcu_low - ref_low) > max_low_rcu[0]: max_low_rcu = (rcu_low, bin)
-                
-                rcu_low, bin = max_low_rcu    
-            
-            rcu = (bin * 2) + check_pol
-            ant, pol = getAntPol(rcumode, rcu)
-            
-            if lbaMode(rcumode):
-                logger.info("Mode-%d RCU-%03d Ant-%03d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) (=ref)" %\
-                           (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low))
-                dumpSpectra(data, metadata, rcu, "OSC")
-                if pvss:
-                    sendToPVSS("rtsm oscillating", "LOFAR_PIC_LBA%03d" %(ant), PVSS_states['BROKEN'])
-            
-            if hbaMode(rcumode):
-                if ((max_sum > 5000.0) or (n_peaks > 50)):
-                    logger.info("Mode-%d RCU-%03d Tile-%02d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) ref=()" %\
-                               (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low))
-                    dumpSpectra(data, metadata, rcu, "OSC")
-                    if pvss:
-                        sendToPVSS("rtsm oscillating", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
-            check_pol = 1
+                logger.debug(info)
+        
+        if rcumode in hba_modes:
+            if ((max_sum > 5000.0) or (n_peaks > 50)):
+                db.incRcuCount(rcumode, 0, rcu)
+            info = "Mode-%d RCU-%03d Tile-%02d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) ref=()" %\
+                   (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low)
+                   
+            if  db.isTriggered(rcumode, 0, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "OSC")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm oscillating", "LOFAR_PIC_HBA%02d" %(ant), State['BROKEN'])
+            else:
+                logger.debug(info)
     return
 
     
-def checkForNoise(data, metadata, low_deviation, high_deviation, max_diff, pvss=False):
+def checkForNoise(data, low_deviation, high_deviation, max_diff):
+    global logger
+    global args
+    global rcumode
+    global lba_modes
+    global hba_modes
+    global db
     global stage
     stage = "checkForNoise"
     
-    (station, rcumode, rec_timestamp, obs_id) = metadata
-    logger.debug("start noise and jitter check")
-    check_pol = 0
-    for test_data in (data.getAllX(), data.getAllY()):
-        #test_data = data.getAll()
-        # result is a sorted list on maxvalue
-        low_noise, high_noise, jitter = search_noise(test_data, low_deviation, high_deviation, max_diff)
-        
-        n_err = len(high_noise)
-        for err in high_noise:    
-            bin, val, bad_secs, ref, diff = err
-            rcu = (bin * 2) + check_pol
-            ant, pol = getAntPol(rcumode, rcu)
-            if lbaMode(rcumode):
-                if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
-                    logger.info("Mode-%d RCU-%03d Ant-%03d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
-                               (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff))
-                    dumpSpectra(data, metadata, rcu, "HN")
-                    if pvss:
-                        sendToPVSS("rtsm high-noise", "LOFAR_PIC_LBA%03d" %(ant+48), PVSS_states['BROKEN'])
-                    
-            if hbaMode(rcumode):
-                if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
-                    logger.info("Mode-%d RCU-%03d Tile-%02d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
-                               (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff))
-                    dumpSpectra(data, metadata, rcu, "HN")
-                    if pvss:
-                        sendToPVSS("rtsm high-noise", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
-        
-        n_err = len(jitter)
-        for err in jitter:
-            bin, val, ref, bad_secs = err
-            rcu = (bin * 2) + check_pol
-            ant, pol = getAntPol(rcumode, rcu)
-            if lbaMode(rcumode):
-                if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
-                    logger.info("Mode-%d RCU-%03d Ant-%03d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
-                               (rcumode, rcu, ant, pol, val, ref))
-                    dumpSpectra(data, metadata, rcu, "J")
-                    if pvss:
-                        sendToPVSS("rtsm jitter", "LOFAR_PIC_LBA%03d" %(ant+48), PVSS_states['BROKEN'])
-                    
-            if hbaMode(rcumode):
-                if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
-                    logger.info("Mode-%d RCU-%03d Tile-%02d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
-                               (rcumode, rcu, ant, pol, val, ref))
-                    dumpSpectra(data, metadata, rcu, "J")
-                    if pvss:
-                        sendToPVSS("rtsm jitter", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
-        check_pol = 1            
+    logger.debug("start noise/jitter check")
+    test_data = data.getAll()
+    # result is a sorted list on maxvalue
+    low_noise, high_noise, jitter = search_noise(test_data, low_deviation, high_deviation, max_diff)
+    
+    n_err = len(high_noise)
+    for err in high_noise:    
+        rcu, val, bad_secs, ref, diff = err
+        ant, pol = getAntPol(rcu)
+        if rcumode in lba_modes:
+            if (n_err < 12) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
+                db.incRcuCount(rcumode, 1, rcu)
+            info = "Mode-%d RCU-%03d Ant-%03d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
+                   (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff)
+            if db.isTriggered(rcumode, 1, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "HN")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm high-noise", "LOFAR_PIC_LBA%03d" %(ant+48), State['BROKEN'])
+            else:
+                logger.debug(info)
+                
+        if rcumode in hba_modes:
+            if (n_err < 12) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
+                db.incRcuCount(rcumode, 1, rcu)
+            info = "Mode-%d RCU-%03d Tile-%02d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
+                   (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff)
+            if db.isTriggered(rcumode, 1, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "HN")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm high-noise", "LOFAR_PIC_HBA%02d" %(ant), State['BROKEN'])
+            else:
+                logger.debug(info)
+    
+    n_err = len(jitter)
+    for err in jitter:
+        rcu, val, ref, bad_secs = err
+        ant, pol = getAntPol(rcu)
+        if rcumode in lba_modes:
+            if (n_err < 12) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
+                db.incRcuCount(rcumode, 2, rcu)
+            info = "Mode-%d RCU-%03d Ant-%03d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
+                   (rcumode, rcu, ant, pol, val, ref)
+            if db.isTriggered(rcumode, 2, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "J")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm jitter", "LOFAR_PIC_LBA%03d" %(ant+48), State['BROKEN'])
+            else:
+                logger.debug(info)
+                
+        if rcumode in hba_modes:
+            if (n_err < 12) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
+                db.incRcuCount(rcumode, 2, rcu)
+            info = "Mode-%d RCU-%03d Tile-%02d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
+                   (rcumode, rcu, ant, pol, val, ref)
+            if db.isTriggered(rcumode, 2, rcu):
+                logger.info(info)
+                dumpSpectra(data, rcu, "J")
+                if args.has_key('U'):
+                    sendToPVSS("rtsm jitter", "LOFAR_PIC_HBA%02d" %(ant), State['BROKEN'])
+            else:
+                logger.debug(info)
     return
 
 
-def checkForSummatorNoise(data, metadata, pvss=False):
+def checkForSummatorNoise(data):
+    global logger
+    global rcumode
+    global db
     global stage
     stage = "checkForSummatorNoise"
-    
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+
     logger.debug("start summator-noise check")
-    check_pol = 0
-    for test_data in (data.getAllX(), data.getAllY()):
-        # sn=SummatorNoise  cr=CableReflections
-        sn, cr = search_summator_noise(data=test_data, min_peak=2.0)
-        for msg in sn:
-            bin, peaks, max_peaks = msg
-            rcu = (bin * 2) + check_pol
-            tile, pol = getAntPol(rcumode, rcu)
+    # sn=SummatorNoise  cr=CableReflections
+    sn, cr = search_summator_noise(data=data.getAll())
+    for msg in sn:
+        rcu, val, bin = msg
+        db.incRcuCount(rcumode, 3, rcu)
+        if db.isTriggered(rcumode, 3, rcu):
+            tile, pol = getAntPol(rcu)
             logger.info("Mode-%d RCU-%03d Tile-%02d %c Summator-noise, cnt=%d peaks=%d" %\
-                       (rcumode, rcu, tile, pol, peaks, max_peaks))
-            dumpSpectra(data, metadata, rcu, "SN")
-            if pvss:
-                sendToPVSS("rtsm summator-noise", "LOFAR_PIC_HBA%02d" %(tile), PVSS_states['BROKEN'])           
-        for msg in cr:
-            bin, peaks, max_peaks = msg
-            rcu = (bin * 2) + check_pol
-            tile, pol = getAntPol(rcumode, rcu)
+                       (rcumode, rcu, tile, pol, val, bin))
+            dumpSpectra(data, rcu, "SN")
+            if args.has_key('U'):
+                sendToPVSS("rtsm summator-noise", "LOFAR_PIC_HBA%02d" %(tile), State['BROKEN'])           
+    for msg in cr:
+        rcu, val, bin = msg
+        db.incRcuCount(rcumode, 4, rcu)
+        if db.isTriggered(rcumode, 4, rcu):
+            tile, pol = getAntPol(rcu)
             logger.info("Mode-%d RCU-%03d Tile-%02d %c Cable-reflections, cnt=%d peaks=%d" %\
-                       (rcumode, rcu, tile, pol, peaks, max_peaks))
-            #dumpSpectra(data, metadata, rcu, "CR")
-        check_pol = 1
+                       (rcumode, rcu, tile, pol, val, bin))
+            dumpSpectra(data, rcu, "CR")
     return
 
-def checkForDown(data, metadata, subband, pvss=False):
+def checkForDown(data, subband):
+    global logger
+    global rcumode
+    global db
     global stage
     stage = "checkForDown"
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+
     logger.debug("start down check")
     _data = data.getAll()
     down, shifted = searchDown(_data, subband)
     for msg in down:
         ant, max_x_sb, max_y_sb, mean_max_sb = msg
         rcu = ant * 2
-        max_x_offset = max_x_sb - mean_max_sb
-        max_y_offset = max_y_sb - mean_max_sb
-        ant, pol = getAntPol(rcumode, rcu)
-        logger.info("Mode-%d RCU-%02d/%02d Ant-%02d Down, x-offset=%d y-offset=%d" %\
-                   (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
-        dumpSpectra(data, metadata, rcu, "DOWN")
-        if pvss:
-            sendToPVSS("rtsm fallen", "LOFAR_PIC_LBA%02d" %(ant), PVSS_states['BROKEN'])           
+        db.incRcuCount(rcumode, 3, rcu)
+        db.incRcuCount(rcumode, 3, (rcu+1))
+        if db.isTriggered(rcumode, 3, rcu):
+            max_x_offset = max_x_sb - mean_max_sb
+            max_y_offset = max_y_sb - mean_max_sb
+            ant, pol = getAntPol(rcu)
+            logger.info("Mode-%d RCU-%02d/%02d Ant-%02d Down, x-offset=%d y-offset=%d" %\
+                       (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
+            dumpSpectra(data, rcu, "DOWN")
+            if args.has_key('U'):
+                sendToPVSS("rtsm fallen", "LOFAR_PIC_LBA%02d" %(ant), State['BROKEN'])           
                 
     for msg in shifted:
         rcu, max_sb, mean_max_sb = i
-        offset = max_sb - mean_max_sb
-        ant, pol = getAntPol(rcumode, rcu)
-        logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
-                   (rcumode, rcu, ant, offset))
-        dumpSpectra(data, metadata, rcu, "SHIFT")
+        db.incRcuCount(rcumode, 3, rcu)
+        if db.isTriggered(rcumode, 3, rcu):
+            offset = max_sb - mean_max_sb
+            ant, pol = getAntPol(rcu)
+            logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
+                       (rcumode, rcu, ant, offset))
+            dumpSpectra(data, rcu, "SHIFT")
     return    
-
-def full_listdir(dir_name):
-     return sorted([os.path.join(dir_name, file_name) for file_name in os.listdir(dir_name)])
-     
-def getOpenFile():
-    files = os.listdir(spectraPath)
-    for file in files:
-        if file.find("open") > 0:
-            return(file, file.split('_')[1])
-    return ('','')        
-
-def closeOpenFiles(obsid=""):
-    files = os.listdir(spectraPath)
-    for filename in files:
-        if obsid == "" or filename.find("_%s_open" %(obsid)) == -1:
-            if filename.find('open') > -1: 
-                full_filename = os.path.join(spectraPath, filename)
-                filename_new = filename.replace('open','closed')
-                full_filename_new = os.path.join(spectraPath, filename_new)
-                os.rename(full_filename, full_filename_new)
-    return
-
-def closeFile(filename):
-    full_filename = os.path.join(spectraPath, filename)
-    filename_new = filename.replace('open','closed')
-    full_filename_new = os.path.join(spectraPath, filename_new)
-    os.rename(full_filename, full_filename_new)
-    return
     
 def main():
+    global args
     global logger
     global State
-    stage    = "main"
-    filename = ""
-    obs_id   = ""
-    rcumode  = 0
-    station  = getHostName()
+    global rcumode
+    global obs_id
+    global lba_modes
+    global hba_modes
+    global db
+    global stage
+    global rec_timestamp
+    stage = "main"
     
-    args = getArguments()
+    getArguments()
+    #print argsb
     if args.has_key('H'):
         printHelp()
         sys.exit()
         
-    logger = init_logging(args)
+    init_logging()
     init_lofar_lib()
     init_data_lib()
 
@@ -467,20 +555,15 @@ def main():
     removeAllDataFiles()
 
     # Read in RemoteStation.conf
-    ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT = readStationConfig()
+    ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
 
     n_rcus = nRSP * 8
+    n_tests = 5 # oscillation, noise, jitter, summator-noise, cable_reflection
+    n_max_counts = 5
     
-    data = cRCUdata(n_rcus)
+    rcudata = cRCUdata(n_rcus)
+    db = cCountDB(n_rcus, n_tests, n_max_counts) 
     
-    start_time    = 0
-    stop_time     = 0
-    day_samples   = ["",0,0,0,0,0,0,0]
-    obsid_samples = 0
-    last_date     = ""
-    now_date = last_date = time.strftime("%Y%m%d", time.gmtime(time.time()))
-    
-    logger.debug("first filename=%s, obsid=%s" %(filename, obs_id))
     while True:
         try:
             start = time.time()
@@ -488,91 +571,48 @@ def main():
             if answer.find("ObsID") > -1:
                 s1 = answer.find("ObsID:")+6
                 s2 = answer.find("]")
-                id = answer[s1:s2].strip().replace(' ','-')
-                if id != obs_id:
-                    # close last file if exist
-                    if obs_id != "":
-                        stop_time = time.time()
-                        full_filename = os.path.join(spectraPath, filename) 
-                        f = open(full_filename, 'a')
-                        f.write('OBS-ID-INFO=%s,%3.1f,%3.1f,%d\n\n' %(obs_id,start_time,stop_time,obsid_samples))
-                        f.flush()
-                        f.close()
-                        #closeFile(filename)
-                    
-                    # set new obsid
-                    obs_id       = id
-                    obsid_samples = 0
-                    start_time   = time.time() 
-                    filename = "%s_%s_open.dat" %(getHostName(), obs_id)
-                    full_filename = os.path.join(spectraPath, filename) 
-                    if not os.path.exists(full_filename):
-                        f = open(full_filename, 'a')
-                        f.write('# SPECTRA-INFO=rcu,rcumode,obs-id,check,startfreq,stopfreq,rec-timestamp\n')
-                        f.write('# OBS-ID-INFO=obs_id,start_time,stop_time,obsid_samples\n')
-                        f.flush()
-                        f.close()
-                
-                closeOpenFiles(obs_id)
-                now_date = time.strftime("%Y%m%d", time.gmtime(time.time()))    
-                if now_date != last_date:
-                    filename = "%s_%s_dayinfo.dat" %(getHostName(), last_date)
-                    full_filename = os.path.join(spectraPath, filename) 
-                    f = open(full_filename, 'a')
-                    f.write('#samples  date,M1,M2,M3,M4,M5,M6,M7\n')  
-                    f.write('DAY-INFO=%s,%d,%d,%d,%d,%d,%d,%d\n' %\
-                           (last_date, day_samples[1], day_samples[2], day_samples[3], day_samples[4], day_samples[5], day_samples[6], day_samples[7]))
-                    f.close()
-                    day_samples   = ["",0,0,0,0,0,0,0]
-                    last_date = now_date
+                obs_id = answer[s1:s2].strip()  
+            #if True:    
                 # observing, so check mode now
-                rcumode = getRcuMode()
+                getRcuMode()
                 if rcumode == 0:
                     continue
-                rec_timestamp  = time.time()+3.0
-                data.record(rec_time=1, read=True, slow=True)
-                # if rcumode not changed do tests
-                if rcumode == getRcuMode():
-                    day_samples[rcumode] += 1
-                    obsid_samples        += 1
-                    metadata = (station, rcumode, rec_timestamp, obs_id)
-                    if lbaMode(rcumode):
-                        checkForOscillation(data, metadata, 4.0)
-                        #checkForNoise(data, metadata, conf.getFloat('lba-noise-min-deviation', -3.0),
-                        #              conf.getFloat('lba-noise-max-deviation', 2.5),
-                        #              conf.getFloat('lba-noise-max-difference', 1.5))
-                    
-                    if hbaMode(rcumode):
-                        checkForOscillation(data, metadata, 6.0)
-                        #checkForNoise(data, metadata, conf.getFloat('hba-noise-min-deviation', -3.0),
-                        #              conf.getFloat('hba-noise-max-deviation', 2.5),
-                        #              conf.getFloat('hba-noise-max-difference', 2.0))
-                        checkForSummatorNoise(data, metadata)
+                #rcudata.clock = getClock()
+                rec_timestamp  = time.time() + 5.0
+                rcudata.record(rec_time=10)
+                # if rcumode not changed, getRcuMode() returns True
+                if getRcuMode() == True:
+                    if rcumode in lba_modes:
+                        time.sleep(5.0)
+                        checkForOscillation(data=rcudata, delta=4.0)
+                        time.sleep(5.0)
+                        checkForNoise(data           = rcudata,
+                                      low_deviation  = conf.getFloat('lba-noise-min-deviation', -3.0),
+                                      high_deviation = conf.getFloat('lba-noise-max-deviation', 2.5),
+                                      max_diff       = conf.getFloat('lba-noise-max-difference', 1.5))
+                    if rcumode in hba_modes:
+                        time.sleep(5.0)
+                        checkForOscillation(data=rcudata, delta=6.0)
+                        time.sleep(5.0)
+                        checkForNoise(data           = rcudata,
+                                      low_deviation  = conf.getFloat('hba-noise-min-deviation', -3.0),
+                                      high_deviation = conf.getFloat('hba-noise-max-deviation', 2.5),
+                                      max_diff       = conf.getFloat('hba-noise-max-difference', 2.0))
+                        time.sleep(5.0)
+                        checkForSummatorNoise(data=rcudata)
                         
-            else:
-                if len(filename) > 0:
-                    stop_time = time.time()
-                    full_filename = os.path.join(spectraPath, filename) 
-                    f = open(full_filename, 'a')
-                    f.write('OBS-ID-INFO=%s,%3.1f,%3.1f,%d\n\n' %(obs_id,start_time,stop_time,obsid_samples))
-                    f.flush()
-                    f.close()
-                    filename = ""
-                    obs_id   = ""
-                closeOpenFiles()
-                    
+                    logger.debug("counts=%d" %(db.counts))
+                    if db.decCounts() == -1:
+                        db.reset()
             stop = time.time()
             sleeptime = 60.0 - (stop - start)
             logger.debug("sleep %1.3f seconds" %(sleeptime))
             if sleeptime > 0.0:
                 time.sleep(sleeptime) 
-        except KeyboardInterrupt:
-            logger.info("stopped by user")
-            sys.exit()
         except:
-            logger.warn("program error(%s) in stage %s, rcudata shape = %s" %(sys.exc_value, stage, str(data.getAll().shape)))
+            logger.warn("program error in stage %s (%s)" %(stage, sys.exc_value))
         
-    # do test and write result files to log directory
+    # do db test and write result files to log directory
     log_dir = conf.getStr('log-dir-local')
     if os.path.exists(log_dir):
         logger.info("write result data")

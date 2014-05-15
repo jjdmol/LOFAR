@@ -12,7 +12,7 @@ lofar_add_test(tBeamFormerSubbandProcProcessSb
 lofar_add_test(tCorrelatorSubbandProcProcessSb
   tCorrelatorSubbandProcProcessSb.cc)
 lofar_add_test(tCoherentStokesBeamFormerSubbandProcProcessSb
-  tCoherentStokesBeamFormerSubbandProcProcessSb.cc ../Kernels/KernelTestHelpers.cc)
+  tCoherentStokesBeamFormerSubbandProcProcessSb.cc)
 lofar_add_test(tFlysEyeBeamFormerSubbandProcProcessSb
   tFlysEyeBeamFormerSubbandProcProcessSb.cc)
 
