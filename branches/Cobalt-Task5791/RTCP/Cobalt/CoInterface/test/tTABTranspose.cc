@@ -215,6 +215,9 @@ SUITE(BlockCollector) {
   }
 
   TEST_FIXTURE(Fixture, OutOfOrder) {
+    // we add different subbands for each block to allow for any arrival order to be tried.
+    // for each block, we add one subband and consider the rest to be lost, to keep the test simple.
+
     // max of 2 blocks in flight
     BlockCollector ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, 2);
 
