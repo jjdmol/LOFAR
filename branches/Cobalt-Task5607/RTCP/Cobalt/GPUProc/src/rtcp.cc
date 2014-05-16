@@ -509,6 +509,19 @@ int main(int argc, char **argv)
       // Read and forward station data
       #pragma omp parallel for num_threads(ps.nrStations())
       for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+        
+        // Determine if this station should start a pipeline for 
+        // station..
+        const struct StationID stationID(
+          StationID::parseFullFieldName(
+          ps.settings.antennaFields.at(stat).name));
+        const StationNodeAllocation allocation(stationID, ps);
+
+        if (!allocation.receivedHere()) {
+          // Station is not sending from this node
+          continue;
+        }
+
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }

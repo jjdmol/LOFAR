@@ -732,15 +732,10 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
   LOG_INFO_STR(logPrefix << str(format("Average data loss/flagged: %.4f%%") % avgloss));
 }
 
-template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
+template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
+    size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
   const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
-  const StationNodeAllocation allocation(stationID, ps);
-
-  if (!allocation.receivedHere()) {
-    // Station is not sending from this node
-    return;
-  }
 
   StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
 
@@ -801,7 +796,8 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t sta
   LOG_INFO_STR(logPrefix << "Done processing station data");
 }
 
-void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
+void sendInputToPipeline(const Parset &ps, size_t stationIdx, 
+                        const SubbandDistribution &subbandDistribution)
 {
   switch (ps.nrBitsPerSample()) {
     default:
