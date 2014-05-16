@@ -1,0 +1,31 @@
+Observation.ObsID = 123881
+Observation.startTime = 2013-12-05 14:00:00
+Observation.stopTime = 2013-12-05 14:00:02
+Observation.sampleClock = 200
+Cobalt.realTime = false
+Cobalt.correctBandPass = false
+Cobalt.delayCompensation = false
+Cobalt.blockSize = 196608
+Cobalt.BeamFormer.nrDelayCompensationChannels = 64
+Cobalt.BeamFormer.nrHighResolutionChannels = 64
+
+Observation.VirtualInstrument.stationList = [CS001, CS002, CS003, CS004]
+Observation.antennaSet = LBA_INNER
+
+Observation.DataProducts.Output_IncoherentStokes.enabled = true
+Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband = 1
+Cobalt.BeamFormer.IncoherentStokes.which = I
+
+Observation.nrBeams = 1
+Observation.Beam[0].subbandList = [100..101]
+Observation.Beam[0].nrTiedArrayBeams = 1
+Observation.Beam[0].TiedArrayBeam[0].coherent = false
+Observation.rspBoardList = [0, 0]
+Observation.rspSlotList = [0, 1]
+Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile = 1
+
+Observation.DataProducts.Output_IncoherentStokes.filenames = [tMultiPartTABOutput-L123881_SAP000_B000_P000_bf.h5, tMultiPartTABOutput-L123881_SAP000_B000_P001_bf.h5]
+Observation.DataProducts.Output_IncoherentStokes.locations = [2*localhost:.]
+
+_DPname = LOFAR_ObsSW_TempObs0045
