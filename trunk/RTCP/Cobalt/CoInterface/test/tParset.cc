@@ -1104,8 +1104,9 @@ TEST(testRing) {
   // test suite)
   // The manual tabs should be added before the ring tabs. 
   // test values are for the 3rd value in the ring
-  CHECK_CLOSE(4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
-  CHECK_CLOSE(1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
+  struct ObservationSettings::Direction sap = ps.settings.SAPs[0].direction;
+  CHECK_CLOSE(sap.angle1 + 4.04656677402571, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle1, 0.00000001);
+  CHECK_CLOSE(sap.angle2 + 1.15470053837925, ps.settings.beamFormer.SAPs[0].TABs[3].direction.angle2, 0.00000001);
   // Full list of value for 1 circle:
   //[(0, 0), (0, 2.3094010767585), (4.04656677402571, 1.15470053837925), (1.73205080756888, -1.15470053837925), (0, -2.3094010767585), (-1.73205080756888, -1.15470053837925), (-4.04656677402571, 1.15470053837925)]
 }
@@ -1118,6 +1119,31 @@ TEST(testRing) {
  */
 
 SUITE(integration) {
+  TEST(228591) {
+    // ===== read parset of observation L228591
+    Parset ps("tParset.parset_obs228591");
+
+    // check basic assumptions without which the subsequent
+    // checks will return random crap
+    CHECK(ps.settings.beamFormer.enabled);
+    CHECK_EQUAL(1U, ps.settings.beamFormer.SAPs.size());
+
+    // check the TAB rings: 4 rings = 61 TABs
+    CHECK_EQUAL(61U, ps.settings.beamFormer.SAPs[0].TABs.size());
+
+    // first TAB is equal to SAP
+    struct ObservationSettings::Direction sap = ps.settings.SAPs[0].direction;
+    CHECK_EQUAL(sap.angle1, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle1);
+    CHECK_EQUAL(sap.angle2, ps.settings.beamFormer.SAPs[0].TABs[0].direction.angle2);
+
+    // subsequent TABs are NOT (0,0)
+    for (size_t tab = 1; tab < ps.settings.beamFormer.SAPs[0].TABs.size(); tab++) {
+      struct ObservationSettings::Direction dir = ps.settings.beamFormer.SAPs[0].TABs[tab].direction;
+
+      CHECK(dir.angle1 != sap.angle1 || dir.angle2 != sap.angle2);
+    }
+  }
+
   TEST(99275) {
     // ===== read parset of observation L99275
     Parset ps("tParset.parset_obs99275");
