@@ -228,9 +228,10 @@ namespace LOFAR
         bool have(size_t block) const;
 
         /*
-         * Fetch a new block.
+         * Fetch a new block. Returns whether
+         * the fetching succeeded.
          */
-        void fetch(size_t block);
+        bool fetch(size_t block);
         
         /*
          * Processes input elements from inputQueue.

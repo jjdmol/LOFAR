@@ -299,19 +299,16 @@ void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
   ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
 
   if (!have(blockIdx)) {
-    if (canDrop) {
-      if ((ssize_t)blockIdx <= lastEmitted) {
-        // too late -- discard packet
-        LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
-        return;
-      }
-    } else {
+    if (!fetch(blockIdx)) {
+      // too late -- discard packet
+      LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
+
       // if we can't drop, we shouldn't have written
       // this block yet.
-      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
-    }
+      ASSERTSTR(!canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
 
-    fetch(blockIdx);
+      return;
+    }
   }
 
   SmartPtr<Block> &block = blocks.at(blockIdx);
@@ -407,18 +404,29 @@ bool BlockCollector::have(size_t block) const {
 }
 
 
-void BlockCollector::fetch(size_t block) {
-  ASSERT(!have(block));
+bool BlockCollector::fetch(size_t block) {
+  if ((ssize_t)block <= lastEmitted)
+    // too late -- discard packet
+    return false;
 
   // Make sure we don't exceed our maximum cache size
   if (canDrop && blocks.size() >= maxBlocksInFlight) {
     // No more room -- force out oldest block
     emit(minBlock());
+
+    // We emitted blocks, which can have a higher number than the
+    // block we're asked to fetch. This happens under severe data loss,
+    // when we get disjunct sets of subbands for each block. In that case,
+    // the blocks can arrive out-of-order.
+    if ((ssize_t)block <= lastEmitted)
+      return false;
   }
 
   // Add and annotate
   ASSERT(!have(block));
   blocks[block] = new Block(fileIdx, block, nrSubbands, nrSamples, nrChannels);
+
+  return true;
 }
 
 

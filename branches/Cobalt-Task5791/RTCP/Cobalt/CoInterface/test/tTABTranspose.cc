@@ -214,6 +214,48 @@ SUITE(BlockCollector) {
     CHECK_EQUAL(0UL,          outputPool.free.size());
   }
 
+  TEST_FIXTURE(Fixture, OutOfOrder) {
+    // max of 2 blocks in flight
+    BlockCollector ctr_loss(outputPool, 0, nrSubbands, nrChannels, nrSamples, 0, 2);
+
+    // we add blocks [1,3], enough to keep in flight
+    {
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 1;
+      sb->id.subband = 0;
+      ctr_loss.addSubband(sb);
+    }
+    {
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 3;
+      sb->id.subband = 1;
+      ctr_loss.addSubband(sb);
+    }
+
+    // we let block 0 arrive, which could (erroneously) emit block 1
+    // in favour of block 0.
+    {
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 0;
+      sb->id.subband = 2;
+      ctr_loss.addSubband(sb);
+    }
+
+    // if ok, we now have [1,3] still, and should be able to add block 2,
+    // causing block 1 to be emitted.
+    {
+      SmartPtr<Subband> sb = new Subband(nrSamples, nrChannels);
+      sb->id.block = 2;
+      sb->id.subband = 3;
+      ctr_loss.addSubband(sb);
+    }
+
+    ctr_loss.finish();
+
+    // should have emitted blocks 0 and 1, plus terminating NULL
+    CHECK_EQUAL(3UL, outputPool.filled.size());
+  }
+
   TEST_FIXTURE(Fixture, Loss_OneSubband) {
     // add some subbands for block 0
     for (size_t subbandIdx = 0; subbandIdx < nrSubbands; ++subbandIdx) {
