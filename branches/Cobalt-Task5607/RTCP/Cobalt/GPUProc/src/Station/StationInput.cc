@@ -239,7 +239,8 @@ void StationMetaData<SampleT>::computeMetaData()
 }
 
 
-StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
+StationInput::StationInput( const Parset &ps, size_t stationIdx,
+                            const SubbandDistribution &subbandDistribution )
 :
   ps(ps),
   stationIdx(stationIdx),
@@ -735,22 +736,23 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
     size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
-  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
-
+  // sanity check: Find out if we should actual start working here.
   StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
-
-  if (sm.nrBlocks == 0) {
-    // Nothing to process -- stop
+  if (sm.nrBlocks == 0) {  // Nothing to process -- stop
     return;
   }
 
   StationInput si(ps, stationIdx, subbandDistribution);
 
+  const struct StationID stationID(StationID::parseFullFieldName(
+    ps.settings.antennaFields.at(stationIdx).name));
+  
   const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   LOG_INFO_STR(logPrefix << "Processing station data");
 
-  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue(str(format("sendInputToPipeline::mpiQueue [station %s]") % stationID.name()));
+  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue(str(format(
+        "sendInputToPipeline::mpiQueue [station %s]") % stationID.name()));
 
   MPISender sender(logPrefix, stationIdx, subbandDistribution);
 
