@@ -254,6 +254,7 @@
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc" />
     <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tSubbandProc.cc" />
     <ClCompile Include="..\..\GPUProc\test\tfpequals.cc" />
+    <ClCompile Include="..\..\GPUProc\test\tMPISendReceive.cc" />
     <ClCompile Include="..\..\GPUProc\test\tRunningStatistics.cc" />
     <ClCompile Include="..\..\GPUProc\test\tSSH.cc" />
     <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc" />
@@ -368,6 +369,7 @@
     <None Include="..\..\GPUProc\test\tMACfeedback.in_parset" />
     <None Include="..\..\GPUProc\test\tMACfeedback.run" />
     <None Include="..\..\GPUProc\test\tMACfeedback.sh" />
+    <None Include="..\..\GPUProc\test\tMPISendReceive.sh" />
     <None Include="..\..\GPUProc\test\tProductionParsets.run" />
     <None Include="..\..\GPUProc\test\tProductionParsets.sh" />
     <None Include="..\..\GPUProc\test\tstartBGL.in_parset" />

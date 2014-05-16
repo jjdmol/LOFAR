@@ -795,6 +795,9 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\tMPISendReceive.cc">
+      <Filter>test</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1132,6 +1135,9 @@
     </None>
     <None Include="..\..\GPUProc\test\Kernels\visualizeBeamformer.py">
       <Filter>test\Kernels</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\tMPISendReceive.sh">
+      <Filter>test</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
