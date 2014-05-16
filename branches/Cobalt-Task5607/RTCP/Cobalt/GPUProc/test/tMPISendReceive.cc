@@ -23,7 +23,7 @@ main(int argc, char **argv)
   string testname("tMPISendReceive");
   std::cout << "testname" << endl;
 
-  string parsetFile = "tMPISendReceive.in_parset";
+  string parsetFile = "./tMPISendReceive.in_parset";
 
   // ****************************************************
   // Set up the mpi environment
@@ -57,5 +57,7 @@ main(int argc, char **argv)
   cout <<  "MPI rank " << rank << " out of " << nrHosts << " hosts" << endl;
 
   Parset ps(parsetFile);
+
+
   return 0;
 }
