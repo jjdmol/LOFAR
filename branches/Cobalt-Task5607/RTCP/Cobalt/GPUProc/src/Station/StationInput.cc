@@ -159,8 +159,7 @@ StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, 
 
   metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
 
-  subbandDistribution(subbandDistribution),
-  targetSubbands(values(subbandDistribution))
+  subbands(values(subbandDistribution))
 {
 }
 
@@ -211,7 +210,7 @@ void StationMetaData<SampleT>::computeMetaData()
 
     // Compute the next set of metaData and read_offsets from the new
     // delays pair.
-    delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, mpiData->metaData, mpiData->read_offsets);
+    delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, subbands, mpiData->metaData, mpiData->read_offsets);
 
     // Annotate
     mpiData->block = block;

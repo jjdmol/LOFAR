@@ -142,18 +142,20 @@ namespace LOFAR {
       Pool< MPIData<SampleT> > metaDataPool;
     private:
 
-      const SubbandDistribution subbandDistribution;
-      const std::vector<size_t> targetSubbands;
+      const std::vector<size_t> subbands;
     };
+
 
     class StationInput {
     public:
-      StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution );
+      StationInput( const Parset &ps, size_t stationIdx, 
+      const SubbandDistribution &subbandDistribution );
 
       bool receivedHere() const;
 
       template <typename SampleT>
-      void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
+      void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, 
+                Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
 
     private:
       // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
