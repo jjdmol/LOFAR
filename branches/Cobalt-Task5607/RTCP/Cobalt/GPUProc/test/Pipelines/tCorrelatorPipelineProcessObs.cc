@@ -69,11 +69,16 @@ int main(int argc, char *argv[]) {
   {
     subbands.push_back(sb);
   }
+  { // use a skope to force destruction of pool before MPI_Finalize()
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+
 
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
-  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices);
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, 
+  devices, MPI_receive_pool);
 
+  //pipeline->allocateResources();
   int rank = 0;
   int nrHosts = 1;
 #ifdef HAVE_MPI
@@ -96,7 +101,7 @@ int main(int argc, char *argv[]) {
   pipeline->processObservation();
 
   pipeline = 0;
-
+  }
 #ifdef HAVE_MPI
   MPI_Finalize();
 #endif

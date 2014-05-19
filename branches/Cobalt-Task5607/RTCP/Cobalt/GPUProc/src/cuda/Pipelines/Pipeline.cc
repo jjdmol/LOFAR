@@ -67,7 +67,9 @@ namespace LOFAR
   {
 
 
-    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    Pipeline::Pipeline(const Parset &ps, 
+        const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool)
       :
       ps(ps),
       devices(devices),
@@ -76,9 +78,10 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
-      mpiPool("Pipeline::mpiPool"),
+      mpiPool(pool),
       writePool(subbandIndices.size())
     {
+      
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
     }
 

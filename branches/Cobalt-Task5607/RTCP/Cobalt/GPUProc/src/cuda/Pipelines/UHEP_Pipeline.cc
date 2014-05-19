@@ -32,9 +32,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    UHEP_Pipeline::UHEP_Pipeline(const Parset &ps)
+    UHEP_Pipeline::UHEP_Pipeline(const Parset &ps, Pool<struct MPIRecvData> &pool)
       :
-      Pipeline(ps),
+      Pipeline(ps, pool),
       beamFormerCounter("beamformer", profiling),
       transposeCounter("transpose", profiling),
       invFFTcounter("inv. FFT", profiling),

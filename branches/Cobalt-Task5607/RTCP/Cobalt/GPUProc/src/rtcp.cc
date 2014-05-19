@@ -55,6 +55,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
+#include <CoInterface/Pool.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
@@ -74,6 +75,7 @@
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
+#include <GPUProc/MPI_utils.h>
 
 //#include <CoInterface/Pool.h>
 
@@ -426,18 +428,28 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
   SmartPtr<Pipeline> pipeline;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) {
+  if (subbandDistribution[rank].empty()) 
+  {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-  } else if (correlatorEnabled) {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-  } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
-  } else {
+  } 
+  else if (correlatorEnabled) 
+  {
+    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
+          MPI_receive_pool);
+  } 
+  else if (beamFormerEnabled) 
+  {
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank],
+         MPI_receive_pool, devices, rank);
+  } 
+  else 
+  {
     LOG_FATAL("No pipeline selected.");
     exit(1);
   }
@@ -533,6 +545,13 @@ int main(int argc, char **argv)
       // Process station data
       if (!subbandDistribution[rank].empty()) {
         pipeline->processObservation();
+
+        // ik wil hier dus een explicieite ontvangst hebben van de
+        // de eerste stap in process observation is het ontvangen
+
+        // misschien dat de resources eerder moeten worden gepakt.
+         
+
       }
     }
   }

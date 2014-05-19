@@ -53,7 +53,8 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool);
 
       virtual ~Pipeline();
 
@@ -97,7 +98,7 @@ namespace LOFAR
 
     private:
 
-      Pool<struct MPIRecvData> mpiPool;
+      Pool<struct MPIRecvData> &mpiPool;
 
       // For each block, read all data and put it (untransposed) in the mpiPool
       void receiveInput( size_t nrBlocks );
