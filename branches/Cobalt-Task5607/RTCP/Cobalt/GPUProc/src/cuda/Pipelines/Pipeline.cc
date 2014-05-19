@@ -79,7 +79,7 @@ namespace LOFAR
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
       mpiPool(pool),
-      MPI_input(ps, pool, subbandIndices, processingSubband0),
+      //MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())
     {
       
@@ -117,15 +117,6 @@ namespace LOFAR
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections num_threads(6)
       {
-        /*
-         * BLOCK OF SUBBANDS -> MPIQUEUE
-         */
-#       pragma omp section
-        {
-          size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-          MPI_input.receiveInput(nrBlocks);
-        }
 
         /*
          * MPIQUEUE -> WORKQUEUE INPUTPOOL

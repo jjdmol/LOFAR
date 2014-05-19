@@ -77,6 +77,7 @@
 #include <GPUProc/Package__Version.h>
 #include <GPUProc/MPI_utils.h>
 
+
 //#include <CoInterface/Pool.h>
 
 using namespace LOFAR;
@@ -429,6 +430,14 @@ int main(int argc, char **argv)
   }
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+
+  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+
+  MPIInput MPI_input(ps, MPI_receive_pool, 
+                     subbandIndices,
+    std::find(subbandIndices.begin(), 
+              subbandIndices.end(), 0U) != subbandIndices.end());
+      
   SmartPtr<Pipeline> pipeline;
 
   // Creation of pipelines cause fork/exec, which we need to
@@ -516,7 +525,7 @@ int main(int argc, char **argv)
     waiter.waitUntil(deadline);
   }
 
-  #pragma omp parallel sections num_threads(2)
+  #pragma omp parallel sections num_threads(3)
   {
     #pragma omp section
     {
@@ -539,6 +548,19 @@ int main(int argc, char **argv)
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
+
+
+    /*
+    * BLOCK OF SUBBANDS -> MPIQUEUE
+    */
+#   pragma omp section
+    {
+      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+      MPI_input.receiveInput(nrBlocks);
+    }
+
+
 
     #pragma omp section
     {
