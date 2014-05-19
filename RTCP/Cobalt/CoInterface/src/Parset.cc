@@ -709,7 +709,7 @@ namespace LOFAR
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
-          double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+          double ringWidth = getDouble(str(format("Observation.Beam[%u].tabRingSize") % i), 0.0);
           double sapAngle1 = getDouble(str(format("Observation.Beam[%u].angle1") % i), 0.0);
           double sapAngle2 = getDouble(str(format("Observation.Beam[%u].angle2") % i), 0.0);
 
@@ -798,7 +798,7 @@ namespace LOFAR
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
                 const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);
                 tab.dispersionMeasure = getDouble(prefix + ".tabRingDispersionMeasure", 0.0);
-                tab.coherent = getBool(prefix + ".tabRingCoherent", true); // in practice, always coherent
+                tab.coherent = true; // rings cannot be incoherent, since we use non-(0,0) pointings
               }
             }
 
