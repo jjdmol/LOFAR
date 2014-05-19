@@ -19,3 +19,31 @@
 //# $Id$
 
 #include <lofar_config.h>
+
+#include "MPI_utils.h"
+#include <InputProc/Transpose/MPIProtocol.h>
+
+
+
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    template<typename SampleT> void MPIRecvData::allocate(
+        size_t nrStations, size_t nrBeamlets, size_t nrSamples)
+    {
+      data = (char*)mpiAllocator.allocate(
+              nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
+      metaData = (char*)mpiAllocator.allocate(
+            nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
+    }
+
+    template void MPIRecvData::allocate< SampleType<i16complex> >(
+        size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+    template void MPIRecvData::allocate< SampleType<i8complex> >(
+        size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+    template void MPIRecvData::allocate< SampleType<i4complex> >(
+      size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+
+  }
+}

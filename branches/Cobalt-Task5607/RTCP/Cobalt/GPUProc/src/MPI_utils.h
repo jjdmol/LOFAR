@@ -20,3 +20,32 @@
 
 // \file
 // Include for processor optimalizetion functionality
+
+#ifndef LOFAR_GPUPROC_MPI_UTILS_H
+#define LOFAR_GPUPROC_MPI_UTILS_H
+
+#include <InputProc/Transpose/MPIUtil.h>
+#include <InputProc/SampleType.h>
+#include <CoInterface/SmartPtr.h>
+#include <Common/ComplexStdInt.h>
+
+namespace LOFAR
+{
+  namespace Cobalt
+  {
+    // Move to separate class
+    struct MPIRecvData
+    {
+      size_t block;
+
+      SmartPtr<char, SmartPtrMPI<char> > data;
+      SmartPtr<char, SmartPtrMPI<char> > metaData;
+
+      template<typename SampleT>
+      void allocate(size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+    };
+
+  }
+}
+
+#endif

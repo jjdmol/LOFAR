@@ -44,6 +44,8 @@
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 
+#include <GPUProc/MPI_utils.h>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -94,19 +96,8 @@ namespace LOFAR
       OMPThreadSet outputThreads;
 
     private:
-      // Move to separate class
-      struct MPIData
-      {
-        size_t block;
 
-        SmartPtr<char, SmartPtrMPI<char> > data;
-        SmartPtr<char, SmartPtrMPI<char> > metaData;
-
-        template<typename SampleT>
-        void allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-      };
-
-      Pool<struct MPIData> mpiPool;
+      Pool<struct MPIRecvData> mpiPool;
 
       // For each block, read all data and put it (untransposed) in the mpiPool
       void receiveInput( size_t nrBlocks );

@@ -90,16 +90,6 @@ namespace LOFAR
       }
     }
 
-    template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
-    {
-      data     = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
-      metaData = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
-    }
-
-    template void Pipeline::MPIData::allocate< SampleType<i16complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-    template void Pipeline::MPIData::allocate< SampleType<i8complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-    template void Pipeline::MPIData::allocate< SampleType<i4complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
@@ -115,7 +105,7 @@ namespace LOFAR
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
 
       for (size_t i = 0; i < 4; i++) {
-        SmartPtr<struct MPIData> mpiData = new MPIData;
+        SmartPtr<struct MPIRecvData> mpiData = new MPIRecvData;
 
         mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
 
@@ -134,7 +124,7 @@ namespace LOFAR
         // Receive the samples from all subbands from the ant fields for this block.
         LOG_INFO_STR("[block " << block << "] Collecting input buffers");
 
-        SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
+        SmartPtr<struct MPIRecvData> mpiData = mpiPool.free.remove();
 
         mpiData->block = block;
 
@@ -328,7 +318,7 @@ namespace LOFAR
     template<typename SampleT>
     void Pipeline::transposeInput()
     {
-      SmartPtr<struct MPIData> input;
+      SmartPtr<struct MPIRecvData> input;
 
       NSTimer copyTimer("transpose input data", true, true);
 
