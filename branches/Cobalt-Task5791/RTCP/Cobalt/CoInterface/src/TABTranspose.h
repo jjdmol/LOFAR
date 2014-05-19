@@ -175,7 +175,7 @@ namespace LOFAR
          * Elements travel along the following path
          *
          * Caller:       addSubband() -> inputQueue
-         * inputThread:  inputQueue   -> _addSubband() + outputPool.free -> outputQueue
+         * inputThread:  inputQueue   -> addSubband() + outputPool.free -> outputQueue
          * outputThread: outputQueue  -> outputPool.filled
          */
 
@@ -237,7 +237,7 @@ namespace LOFAR
          * Processes input elements from inputQueue.
          */
         void inputLoop();
-        void _addSubband( SmartPtr<Subband> &subband );
+        void processSubband( SmartPtr<Subband> &subband );
 
         /*
          * Processes output elements from outputQueue.

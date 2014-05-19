@@ -263,7 +263,7 @@ void BlockCollector::inputLoop() {
   SmartPtr<Subband> subband;
 
   while ((subband = inputQueue.remove()) != NULL) {
-    _addSubband(subband);
+    processSubband(subband);
   }
 }
 
@@ -287,11 +287,11 @@ void BlockCollector::outputLoop() {
 }
 
 
-// Used by a Receiver inputThread to add a Subband to a Block into a BlockCollector.
+// Used by BlockCollector::inputLoop to add a Subband to a Block into a BlockCollector.
 // If this completes a Block (all Subbands for this Block received) and no
 // subsequent Blocks are missing something, send it (or them) off into the
 // outputQueue for write-back to storage.
-void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
+void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
   const size_t &blockIdx = subband->id.block;
@@ -411,15 +411,17 @@ bool BlockCollector::fetch(size_t block) {
 
   // Make sure we don't exceed our maximum cache size
   if (canDrop && blocks.size() >= maxBlocksInFlight) {
+    // Under severe data loss, we can get disjunct sets
+    // of subbands for each block. In that case,
+    // the blocks can arrive out-of-order.
+    //
+    // We should not accept any blocks that are even earlier
+    // than the one we're about to emit.
+    if (block < minBlock())
+      return false;
+
     // No more room -- force out oldest block
     emit(minBlock());
-
-    // We emitted blocks, which can have a higher number than the
-    // block we're asked to fetch. This happens under severe data loss,
-    // when we get disjunct sets of subbands for each block. In that case,
-    // the blocks can arrive out-of-order.
-    if ((ssize_t)block <= lastEmitted)
-      return false;
   }
 
   // Add and annotate
