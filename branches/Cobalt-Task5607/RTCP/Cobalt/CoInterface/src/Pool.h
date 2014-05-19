@@ -24,6 +24,8 @@
 #include <CoInterface/Queue.h>
 #include <CoInterface/SmartPtr.h>
 
+//#include <InputProc/Transpose/MPIUtil.h>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -46,6 +48,20 @@ namespace LOFAR
       {
       }
     };
+
+
+    //template<typename SampleT>
+    //struct MPIData
+    //{
+    //  size_t block;
+
+    //  SmartPtr<char, SmartPtrMPI<char> > data;
+    //  SmartPtr<char, SmartPtrMPI<char> > metaData;
+
+    //  template<typename SampleT>
+    //  void allocate(size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+   // };
+
   }
 }
 

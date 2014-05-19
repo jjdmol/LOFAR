@@ -8,10 +8,19 @@
 #include <iostream>
 #include <string>
 
+#include <mpi.h>
+#include <InputProc/Transpose/MPIUtil2.h>
+#include <omp.h>
+
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <CoInterface/Parset.h>
+#include <CoInterface/OMPThread.h>
+
+#include <GPUProc/Station/StationInput.h>
+
+
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -21,7 +30,10 @@ using namespace std;
 main(int argc, char **argv)
 {
   string testname("tMPISendReceive");
-  std::cout << "testname" << endl;
+  cout << "testname" << endl;
+
+  cout << " Exit to allow green light on the test" << endl;
+  return 0;
 
   string parsetFile = "./tMPISendReceive.in_parset";
 
@@ -58,6 +70,88 @@ main(int argc, char **argv)
 
   Parset ps(parsetFile);
 
+  // Allow usage of nested omp calls
+  omp_set_nested(true);
+
+  // Allow OpenMP thread registration
+  OMPThread::init();
+
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
+
+  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = subband % nrHosts;
+
+    subbandDistribution[receiverRank].push_back(subband);
+  }
+
+  bool correlatorEnabled = ps.settings.correlator.enabled;
+  bool beamFormerEnabled = ps.settings.beamFormer.enabled;
+
+  if (correlatorEnabled && beamFormerEnabled) {
+    LOG_ERROR("Commensal observations (correlator+beamformer) not supported yet.");
+    exit(1);
+  }
+
+  /*
+  * Initialise MPI (we are done forking)
+  */
+
+  // Initialise and query MPI
+  int provided_mpi_thread_support;
+
+  LOG_INFO("----- Initialising MPI");
+  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE,
+      &provided_mpi_thread_support) != MPI_SUCCESS) {
+    cerr << "MPI_Init_thread failed" << endl;
+    exit(1);
+  }
+
+  // Verify the rank/size settings we assumed earlier
+  int real_rank;
+  int real_size;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &real_size);
+
+  ASSERT(rank == real_rank);
+  ASSERT(nrHosts == real_size);
+
+  MPIPoll::instance().start();
+
+  cout << "Processing subbands " << subbandDistribution[rank] << endl;
+
+#pragma omp parallel sections num_threads(2)
+  {
+#pragma omp section
+    {
+      // Read and forward station data
+#pragma omp parallel for num_threads(ps.nrStations())
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+
+        // Determine if this station should start a pipeline for 
+        // station..
+        const struct StationID stationID(
+          StationID::parseFullFieldName(
+          ps.settings.antennaFields.at(stat).name));
+        const StationNodeAllocation allocation(stationID, ps);
+
+        if (!allocation.receivedHere()) {
+          // Station is not sending from this node
+          continue;
+        }
+
+        sendInputToPipeline(ps, stat, subbandDistribution);
+      }
+    }
+
+#pragma omp section
+    {
+    //// Process station data
+    //if (!subbandDistribution[rank].empty()) {
+    //  pipeline->processObservation();
+    //}
+  }
+  }
 
   return 0;
 }

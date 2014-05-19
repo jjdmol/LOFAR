@@ -75,6 +75,8 @@
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
 
+//#include <CoInterface/Pool.h>
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;

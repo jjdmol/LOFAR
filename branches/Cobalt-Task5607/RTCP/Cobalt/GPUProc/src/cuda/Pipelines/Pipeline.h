@@ -94,6 +94,7 @@ namespace LOFAR
       OMPThreadSet outputThreads;
 
     private:
+      // Move to separate class
       struct MPIData
       {
         size_t block;

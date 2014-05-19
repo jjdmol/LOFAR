@@ -18,7 +18,9 @@ lofar_add_library(cointerface
   RunningStatistics.cc
   TABTranspose.cc
   TimeFuncs.cc
-  RingCoordinates.cc)
+  RingCoordinates.cc
+//  Pool.cc
+)
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 lofar_add_sbin_program(cmpfloat cmpfloat.cc)
