@@ -45,6 +45,7 @@ namespace LOFAR
       void allocate(size_t nrStations, size_t nrBeamlets, size_t nrSamples);
     };
 
+
   }
 }
 

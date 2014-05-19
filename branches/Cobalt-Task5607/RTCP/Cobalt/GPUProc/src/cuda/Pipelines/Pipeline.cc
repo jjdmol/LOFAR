@@ -79,6 +79,7 @@ namespace LOFAR
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
       mpiPool(pool),
+      MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())
     {
       
@@ -93,10 +94,22 @@ namespace LOFAR
       }
     }
 
-    template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
+    Pipeline::MPIInput::MPIInput(const Parset &parset, 
+      Pool<struct MPIRecvData> &pool,
+      const std::vector<size_t> &subbandIndices,
+      const bool processingSubband0
+        )
+    :
+      ps(parset),
+      mpiPool(pool),
+      subbandIndices(subbandIndices),
+      processingSubband0(processingSubband0)
+    {}
+
+    template<typename SampleT> void Pipeline::MPIInput::receiveInput( size_t nrBlocks )
     {
       // Need SubbandProcs to send work to
-      ASSERT(workQueues.size() > 0);
+      //ASSERT(workQueues.size() > 0);
 
       NSTimer receiveTimer("MPI: Receive station data", true, true);
 
@@ -158,11 +171,11 @@ namespace LOFAR
       mpiPool.filled.append(NULL);
     }
 
-    template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
-    template void Pipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
-    template void Pipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
+    template void Pipeline::MPIInput::receiveInput< SampleType<i16complex> >(size_t nrBlocks);
+    template void Pipeline::MPIInput::receiveInput< SampleType<i8complex> >(size_t nrBlocks);
+    template void Pipeline::MPIInput::receiveInput< SampleType<i4complex> >(size_t nrBlocks);
 
-    void Pipeline::receiveInput( size_t nrBlocks )
+    void Pipeline::MPIInput::receiveInput(size_t nrBlocks)
     {
       switch (ps.nrBitsPerSample()) {
       default:
@@ -209,7 +222,7 @@ namespace LOFAR
         {
           size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
 
-          receiveInput(nrBlocks);
+          MPI_input.receiveInput(nrBlocks);
         }
 
         /*
