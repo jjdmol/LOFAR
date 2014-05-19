@@ -37,8 +37,12 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
     msgs[i].msg_hdr.msg_control = NULL; // we're not interested in OoB data
   }
 
-  // receive data (note: the timeout parameter doesn't work as expected: only between datagrams is the
-  // timeout checked, not when waiting for one)
+  // receive data 
+  //
+  // note: the timeout parameter doesn't work as expected: only between datagrams is the
+  // timeout checked, not when waiting for one.
+  //
+  // note 2: recvmmsg() isn't reliably interruptable by SIGHUP! (tested on Linux 3.2.0-61)
   int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, NULL);
 
   if (numRead < 0)
