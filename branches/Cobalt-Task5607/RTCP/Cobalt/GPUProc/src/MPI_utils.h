@@ -29,6 +29,13 @@
 #include <CoInterface/SmartPtr.h>
 #include <Common/ComplexStdInt.h>
 
+// From here MPIInput
+
+#include <CoInterface/Parset.h>
+#include <vector>
+#include <CoInterface/Pool.h>
+#include <Common/Timer.h>
+#include <InputProc/Transpose/MPIReceiveStations.h>
 namespace LOFAR
 {
   namespace Cobalt
@@ -43,6 +50,23 @@ namespace LOFAR
 
       template<typename SampleT>
       void allocate(size_t nrStations, size_t nrBeamlets, size_t nrSamples);
+    };
+
+    struct MPIInput
+    {
+      const Parset &ps;
+      Pool<struct MPIRecvData> &mpiPool;
+      const std::vector<size_t> subbandIndices;
+      const bool processingSubband0;
+
+      // For each block, read all data and put it (untransposed) in the mpiPool
+      MPIInput(const Parset &ps,
+        Pool<struct MPIRecvData> &pool,
+        const std::vector<size_t> &subbandIndices,
+        const bool processingSubband0);
+
+      void receiveInput(size_t nrBlocks);
+      template<typename SampleT> void receiveInput(size_t nrBlocks);
     };
 
 

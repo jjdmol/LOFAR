@@ -45,6 +45,102 @@ namespace LOFAR
     template void MPIRecvData::allocate< SampleType<i4complex> >(
       size_t nrStations, size_t nrBeamlets, size_t nrSamples);
 
+    MPIInput::MPIInput(const Parset &parset,
+      Pool<struct MPIRecvData> &pool,
+      const std::vector<size_t> &subbandIndices,
+      const bool processingSubband0
+      )
+      :
+      ps(parset),
+      mpiPool(pool),
+      subbandIndices(subbandIndices),
+      processingSubband0(processingSubband0)
+    {}
+
+    template<typename SampleT> void MPIInput::receiveInput(size_t nrBlocks)
+    {
+      // Need SubbandProcs to send work to
+      //ASSERT(workQueues.size() > 0);
+
+      NSTimer receiveTimer("MPI: Receive station data", true, true);
+
+      // The length of a block in samples
+      size_t blockSize = ps.nrSamplesPerSubband();
+
+      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
+#ifdef HAVE_MPI
+      MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
+
+      for (size_t i = 0; i < 4; i++) {
+        SmartPtr<struct MPIRecvData> mpiData = new MPIRecvData;
+
+        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
+
+        mpiPool.free.append(mpiData, false);
+      }
+
+#else
+      DirectInput &receiver = DirectInput::instance();
+#endif
+
+      // Receive input from StationInput::sendInputToPipeline.
+      //
+      // Start processing from block -1, and don't process anything if the
+      // observation is empty.
+      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
+        // Receive the samples from all subbands from the ant fields for this block.
+        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
+
+        SmartPtr<struct MPIRecvData> mpiData = mpiPool.free.remove();
+
+        mpiData->block = block;
+
+        MultiDimArray<SampleT, 3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)mpiData->data.get(), false);
+
+        MultiDimArray<struct MPIProtocol::MetaData, 2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
+
+        // Receive all subbands from all antenna fields
+        LOG_INFO_STR("[block " << block << "] Receive input");
+
+        if (block > 2) receiveTimer.start();
+        receiver.receiveBlock<SampleT>(data, metaData);
+        if (block > 2) receiveTimer.stop();
+
+        if (processingSubband0)
+          LOG_INFO_STR("[block " << block << "] Input received");
+        else
+          LOG_INFO_STR("[block " << block << "] Input received");
+
+        mpiPool.filled.append(mpiData);
+      }
+
+      // Signal end of input
+      mpiPool.filled.append(NULL);
+    }
+
+    template void MPIInput::receiveInput< SampleType<i16complex> >(size_t nrBlocks);
+    template void MPIInput::receiveInput< SampleType<i8complex> >(size_t nrBlocks);
+    template void MPIInput::receiveInput< SampleType<i4complex> >(size_t nrBlocks);
+
+    void MPIInput::receiveInput(size_t nrBlocks)
+    {
+      switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        receiveInput< SampleType<i16complex> >(nrBlocks);
+        break;
+      case 8:
+        receiveInput< SampleType<i8complex> >(nrBlocks);
+        break;
+      case 4:
+        receiveInput< SampleType<i4complex> >(nrBlocks);
+        break;
+      }
+    }
 
     
 
