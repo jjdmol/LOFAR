@@ -122,10 +122,13 @@ main(int argc, char **argv)
 
   const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
 
-  MPIInput MPI_input(ps, MPI_receive_pool,
+  MPIInput MPI_input(MPI_receive_pool,
     subbandIndices,
     std::find(subbandIndices.begin(),
-    subbandIndices.end(), 0U) != subbandIndices.end());
+    subbandIndices.end(), 0U) != subbandIndices.end(),
+    ps.nrSamplesPerSubband(),
+    ps.nrStations(),
+    ps.nrBitsPerSample());
 
   cout << "Processing subbands " << subbandDistribution[rank] << endl;
 
@@ -157,7 +160,6 @@ main(int argc, char **argv)
 #pragma omp section
     {
 
-    cout << "Debug 1000" << endl;
     size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
     cout << "N blocks: " << nrBlocks << endl;
     
@@ -172,7 +174,7 @@ main(int argc, char **argv)
       SmartPtr<struct MPIRecvData> input;
       while ((input = MPI_receive_pool.filled.remove()) != NULL) 
       {
-        cout << "Block free"  << endl;
+        cout << "Block freed"  << endl;
         MPI_receive_pool.free.append(input);
 
       }

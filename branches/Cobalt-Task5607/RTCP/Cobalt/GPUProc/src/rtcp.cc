@@ -433,10 +433,13 @@ int main(int argc, char **argv)
 
   const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
 
-  MPIInput MPI_input(ps, MPI_receive_pool, 
+  MPIInput MPI_input( MPI_receive_pool, 
                      subbandIndices,
     std::find(subbandIndices.begin(), 
-              subbandIndices.end(), 0U) != subbandIndices.end());
+              subbandIndices.end(), 0U) != subbandIndices.end(),
+              ps.nrSamplesPerSubband(),
+              ps.nrStations(),
+              ps.nrBitsPerSample());
       
   SmartPtr<Pipeline> pipeline;
 

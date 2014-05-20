@@ -54,19 +54,29 @@ namespace LOFAR
 
     struct MPIInput
     {
-      const Parset &ps;
+
       Pool<struct MPIRecvData> &mpiPool;
       const std::vector<size_t> subbandIndices;
       const bool processingSubband0;
 
+      
+
       // For each block, read all data and put it (untransposed) in the mpiPool
-      MPIInput(const Parset &ps,
+      MPIInput(
         Pool<struct MPIRecvData> &pool,
         const std::vector<size_t> &subbandIndices,
-        const bool processingSubband0);
+        const bool processingSubband0,
+        size_t nrSamplesPerSubband,
+        size_t nrStations,
+        size_t nrBitsPerSample);
 
       void receiveInput(size_t nrBlocks);
       template<typename SampleT> void receiveInput(size_t nrBlocks);
+
+    private:
+      size_t nrSamplesPerSubband;
+      size_t nrStations;
+      size_t nrBitsPerSample;
     };
 
 

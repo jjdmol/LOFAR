@@ -45,16 +45,20 @@ namespace LOFAR
     template void MPIRecvData::allocate< SampleType<i4complex> >(
       size_t nrStations, size_t nrBeamlets, size_t nrSamples);
 
-    MPIInput::MPIInput(const Parset &parset,
+    MPIInput::MPIInput(
       Pool<struct MPIRecvData> &pool,
       const std::vector<size_t> &subbandIndices,
-      const bool processingSubband0
-      )
+      const bool processingSubband0,
+      size_t i_nrSamplesPerSubband,
+      size_t i_nrStations,
+      size_t i_nrBitsPerSample)
       :
-      ps(parset),
       mpiPool(pool),
       subbandIndices(subbandIndices),
-      processingSubband0(processingSubband0)
+      processingSubband0(processingSubband0),
+      nrSamplesPerSubband(i_nrSamplesPerSubband),
+      nrStations(i_nrStations),
+      nrBitsPerSample(i_nrBitsPerSample)
     {}
 
     template<typename SampleT> void MPIInput::receiveInput(size_t nrBlocks)
@@ -65,16 +69,16 @@ namespace LOFAR
       NSTimer receiveTimer("MPI: Receive station data", true, true);
 
       // The length of a block in samples
-      size_t blockSize = ps.nrSamplesPerSubband();
+      size_t blockSize = nrSamplesPerSubband;
 
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
-      MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
+      MPIReceiveStations receiver(nrStations, subbandIndices, blockSize);
 
       for (size_t i = 0; i < 4; i++) {
         SmartPtr<struct MPIRecvData> mpiData = new MPIRecvData;
 
-        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
+        mpiData->allocate<SampleT>(nrStations, subbandIndices.size(), blockSize);
 
         mpiPool.free.append(mpiData, false);
       }
@@ -96,11 +100,12 @@ namespace LOFAR
         mpiData->block = block;
 
         MultiDimArray<SampleT, 3> data(
-          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          boost::extents[nrStations][subbandIndices.size()][
+              nrSamplesPerSubband],
           (SampleT*)mpiData->data.get(), false);
 
         MultiDimArray<struct MPIProtocol::MetaData, 2> metaData(
-          boost::extents[ps.nrStations()][subbandIndices.size()],
+          boost::extents[nrStations][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
         // Receive all subbands from all antenna fields
@@ -128,7 +133,7 @@ namespace LOFAR
 
     void MPIInput::receiveInput(size_t nrBlocks)
     {
-      switch (ps.nrBitsPerSample()) {
+      switch (nrBitsPerSample) {
       default:
       case 16:
         receiveInput< SampleType<i16complex> >(nrBlocks);
