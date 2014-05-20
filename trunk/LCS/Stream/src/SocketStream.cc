@@ -363,4 +363,20 @@ void SocketStream::deletekey(const std::string &nfskey)
     THROW_SYSCALL("unlink");
 }
 
+
+void SocketStream::setTimeout(double timeout)
+{
+  ASSERT(timeout >= 0.0);
+
+  struct timeval tv;
+  tv.tv_sec = static_cast<long>(timeout);
+  tv.tv_usec = static_cast<long>((timeout - floor(timeout)) * 1000.0 * 1000.0);
+
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) < 0)
+    THROW_SYSCALL("setsockopt(SO_RCVTIMEO)");
+
+  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof tv) < 0)
+    THROW_SYSCALL("setsockopt(SO_SNDTIMEO)");
+}
+
 } // namespace LOFAR
