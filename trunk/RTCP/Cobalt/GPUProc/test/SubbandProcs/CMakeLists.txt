@@ -7,8 +7,10 @@ if(UNITTEST++_FOUND)
   lofar_add_test(tSubbandProc tSubbandProc.cc)
 endif()
 
-lofar_add_test(tBeamFormerSubbandProcProcessSb 
-  tBeamFormerSubbandProcProcessSb.cc)
+# This test is instable. Added to issue tracker: https://support.astron.nl/lofar_issuetracker/issues/5807
+# Understand the proble
+#lofar_add_test(tBeamFormerSubbandProcProcessSb tBeamFormerSubbandProcProcessSb.cc)
+
 lofar_add_test(tCorrelatorSubbandProcProcessSb
   tCorrelatorSubbandProcProcessSb.cc)
 lofar_add_test(tCoherentStokesBeamFormerSubbandProcProcessSb
