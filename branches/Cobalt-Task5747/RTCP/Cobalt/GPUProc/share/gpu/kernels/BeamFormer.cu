@@ -26,7 +26,7 @@
 #define NR_PASSES MAX((NR_STATIONS + 6) / 16, 1) // gives best results on GTX 680
 
 #ifndef NR_STATIONS_PER_PASS  // Allow overriding for testing optimalizations 
-  #define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
+#define NR_STATIONS_PER_PASS ((NR_STATIONS + NR_PASSES - 1) / NR_PASSES)
 #endif
 #if NR_STATIONS_PER_PASS > 32
 #error "need more passes to beam for this number of stations"
@@ -88,12 +88,12 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
   unsigned channel = blockDim.z * blockIdx.z + threadIdx.z; // The parallelization in the channel is controllable with extra blocks only, not extra threads per block
 
 #ifdef FLYS_EYE
-  if (tab < NR_TABS)  // Do not do these calculations if we are padding to 
-  // fill the wave
+  if (tab < NR_TABS) {
+    // Do not do these calculations if we are padding to fill the wave
     for (unsigned t = 0; t < NR_SAMPLES_PER_CHANNEL; t++) {
       (*complexVoltages)[channel][t][tab][pol] = (*samples)[tab][channel][t][pol];
     }
-
+  }
 #else
 
   DelaysType delays = (DelaysType) delaysPtr;
@@ -430,245 +430,246 @@ extern "C" __global__ void beamFormer( void *complexVoltagesPtr,
 
       __syncthreads();
 
-       // If this is a thread used to fill out the wave skip computations
-      if (tab >= NR_TABS) 
-        continue;
+      // Some threads are scheduled to fill the wave, so check for actual work.
+      // Note that we can't simply call 'continue' for idle threads, as they still need
+      // to participate in the sync_threads below
+      if (tab < NR_TABS) {
+        for (unsigned t = 0; 
+                      t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time));
+                      t++) 
+        {
+          fcomplex sum = first_station == 0 ? // The first run the sum should be zero, otherwise we need to take the sum of the previous run
+                      make_float2(0,0) :
+                      (*complexVoltages)[channel][time + t][tab][pol];
 
-      for (unsigned t = 0; 
-                    t < (NR_SAMPLES_PER_CHANNEL % 16 == 0 ? 16 : min(16U, NR_SAMPLES_PER_CHANNEL - time));
-                    t++) 
-      {
-        fcomplex sum = first_station == 0 ? // The first run the sum should be zero, otherwise we need to take the sum of the previous run
-                    make_float2(0,0) :
-                    (*complexVoltages)[channel][time + t][tab][pol];
-
-        // Calculate the weighted complex sum of the samples
+          // Calculate the weighted complex sum of the samples
 #if NR_STATIONS_PER_PASS >= 1
-        if (first_station + 1 <= NR_STATIONS) {  // Remember that the number of stations might not be a multiple of 32. Skip if station does not exist
-          fcomplex sample = _local.samples[ 0][t][pol];
-          sum = sum + weight_00 * sample;
-        }
+          if (first_station + 1 <= NR_STATIONS) {  // Remember that the number of stations might not be a multiple of 32. Skip if station does not exist
+            fcomplex sample = _local.samples[ 0][t][pol];
+            sum = sum + weight_00 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 2
-        if (first_station + 2 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 1][t][pol];
-          sum = sum + weight_01 * sample;
-        }
+          if (first_station + 2 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 1][t][pol];
+            sum = sum + weight_01 * sample;
+          }
 #endif
 
 
 #if NR_STATIONS_PER_PASS >= 3
-        if (first_station + 3 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 2][t][pol];
-          sum = sum + weight_02 * sample;
-        }
+          if (first_station + 3 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 2][t][pol];
+            sum = sum + weight_02 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 4
-        if (first_station + 4 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 3][t][pol];
-          sum = sum + weight_03 * sample;
-        }
+          if (first_station + 4 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 3][t][pol];
+            sum = sum + weight_03 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 5
-        if (first_station + 5 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 4][t][pol];
-          sum = sum + weight_04 * sample;
-        }
+          if (first_station + 5 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 4][t][pol];
+            sum = sum + weight_04 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 6
-        if (first_station + 6 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 5][t][pol];
-          sum = sum + weight_05 * sample;
-        }
+          if (first_station + 6 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 5][t][pol];
+            sum = sum + weight_05 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 7
-        if (first_station + 7 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 6][t][pol];
-          sum = sum + weight_06 * sample;
-        }
+          if (first_station + 7 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 6][t][pol];
+            sum = sum + weight_06 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 8
-        if (first_station + 8 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 7][t][pol];
-          sum = sum + weight_07 * sample;
-        }
+          if (first_station + 8 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 7][t][pol];
+            sum = sum + weight_07 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 9
-        if (first_station + 9 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 8][t][pol];
-          sum = sum + weight_08 * sample;
-        }
+          if (first_station + 9 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 8][t][pol];
+            sum = sum + weight_08 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 10
-        if (first_station + 10 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[ 9][t][pol];
-          sum = sum + weight_09 * sample;
-        }
+          if (first_station + 10 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[ 9][t][pol];
+            sum = sum + weight_09 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 11
-        if (first_station + 11 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[10][t][pol];
-          sum = sum + weight_10 * sample;
-        }
+          if (first_station + 11 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[10][t][pol];
+            sum = sum + weight_10 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 12
-        if (first_station + 12 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[11][t][pol];
-          sum = sum + weight_11 * sample;
-        }
+          if (first_station + 12 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[11][t][pol];
+            sum = sum + weight_11 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 13
-        if (first_station + 13 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[12][t][pol];
-          sum = sum + weight_12 * sample;
-        }
+          if (first_station + 13 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[12][t][pol];
+            sum = sum + weight_12 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 14
-        if (first_station + 14 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[13][t][pol];
-          sum = sum + weight_13 * sample;
-        }
+          if (first_station + 14 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[13][t][pol];
+            sum = sum + weight_13 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 15
-        if (first_station + 15 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[14][t][pol];
-          sum = sum + weight_14 * sample;
-        }
+          if (first_station + 15 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[14][t][pol];
+            sum = sum + weight_14 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 16
-        if (first_station + 16 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[15][t][pol];
-          sum = sum + weight_15 * sample;
-        }
+          if (first_station + 16 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[15][t][pol];
+            sum = sum + weight_15 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 17
-        if (first_station + 17 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[16][t][pol];
-          sum = sum + weight_16 * sample;
-        }
+          if (first_station + 17 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[16][t][pol];
+            sum = sum + weight_16 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 18
-        if (first_station + 18 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[17][t][pol];
-          sum = sum + weight_17 * sample;
-        }
+          if (first_station + 18 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[17][t][pol];
+            sum = sum + weight_17 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 19
-        if (first_station + 19 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[18][t][pol];
-          sum = sum + weight_18 * sample;
-        }
+          if (first_station + 19 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[18][t][pol];
+            sum = sum + weight_18 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 20
-        if (first_station + 20 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[19][t][pol];
-          sum = sum + weight_19 * sample;
-        }
+          if (first_station + 20 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[19][t][pol];
+            sum = sum + weight_19 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 21
-        if (first_station + 21 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[20][t][pol];
-          sum = sum + weight_20 * sample;
-        }
+          if (first_station + 21 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[20][t][pol];
+            sum = sum + weight_20 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 22
-        if (first_station + 22 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[21][t][pol];
-          sum = sum + weight_21 * sample;
-        }
+          if (first_station + 22 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[21][t][pol];
+            sum = sum + weight_21 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 23
-        if (first_station + 23 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[22][t][pol];
-          sum = sum + weight_22 * sample;
-        }
+          if (first_station + 23 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[22][t][pol];
+            sum = sum + weight_22 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 24
-        if (first_station + 24 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[23][t][pol];
-          sum = sum + weight_23 * sample;
-        }
+          if (first_station + 24 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[23][t][pol];
+            sum = sum + weight_23 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 25
-        if (first_station + 25 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[24][t][pol];
-          sum = sum + weight_24 * sample;
-        }
+          if (first_station + 25 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[24][t][pol];
+            sum = sum + weight_24 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 26
-        if (first_station + 26 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[25][t][pol];
-          sum = sum + weight_25 * sample;
-        }
+          if (first_station + 26 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[25][t][pol];
+            sum = sum + weight_25 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 27
-        if (first_station + 27 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[26][t][pol];
-          sum = sum + weight_26 * sample;
-        }
+          if (first_station + 27 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[26][t][pol];
+            sum = sum + weight_26 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 28
-        if (first_station + 28 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[27][t][pol];
-          sum = sum + weight_27 * sample;
-        }
+          if (first_station + 28 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[27][t][pol];
+            sum = sum + weight_27 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 29
-        if (first_station + 29 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[28][t][pol];
-          sum = sum + weight_28 * sample;
-        }
+          if (first_station + 29 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[28][t][pol];
+            sum = sum + weight_28 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 30
-        if (first_station + 30 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[29][t][pol];
-          sum = sum + weight_29 * sample;
-        }
+          if (first_station + 30 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[29][t][pol];
+            sum = sum + weight_29 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 31
-        if (first_station + 31 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[30][t][pol];
-          sum = sum + weight_30 * sample;
-        }
+          if (first_station + 31 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[30][t][pol];
+            sum = sum + weight_30 * sample;
+          }
 #endif
 
 #if NR_STATIONS_PER_PASS >= 32
-        if (first_station + 32 <= NR_STATIONS) {
-          fcomplex sample = _local.samples[31][t][pol];
-          sum = sum + weight_31 * sample;
-        }
+          if (first_station + 32 <= NR_STATIONS) {
+            fcomplex sample = _local.samples[31][t][pol];
+            sum = sum + weight_31 * sample;
+          }
 #endif
-        // Write data to global mem
-        (*complexVoltages)[channel][time + t][tab][pol] = sum;
+          // Write data to global mem
+          (*complexVoltages)[channel][time + t][tab][pol] = sum;
+        }
       }
 
       __syncthreads();
