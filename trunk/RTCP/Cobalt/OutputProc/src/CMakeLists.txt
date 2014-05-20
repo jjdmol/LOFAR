@@ -32,7 +32,7 @@ install(FILES
   DESTINATION etc)
 
 lofar_add_bin_program(outputProc outputProc.cc)
-#lofar_add_bin_program(createHeaders createHeaders.cc)
+lofar_add_bin_program(createHeaders createHeaders.cc)
 lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionoutputproc versionoutputproc.cc)
 #lofar_add_bin_program(TBB_Writer TBB_Writer_main.cc TBB_Writer.cc)
