@@ -32,6 +32,7 @@
 #include <CoInterface/BlockID.h>
 
 #include <fstream>
+#include <algorithm>
 
 using boost::lexical_cast;
 using boost::format;
@@ -76,10 +77,10 @@ namespace LOFAR
       // Beamformer kernel requires 1 channel in the blockDim.z dimension
       setEnqueueWorkSizes(
         gpu::Grid(params.nrPolarizations, 
-                  16 > params.nrTABs ? 16 : params.nrTABs,  // if < 16 tabs use more to fill out the wave
+                  std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
                   params.nrChannelsPerSubband),
         gpu::Block(params.nrPolarizations, 
-                   16 > params.nrTABs ? 16 : params.nrTABs,  // if < 16 tabs use more to fill out the wave
+                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
                    1));
         // The additional tabs added to fill out the waves are skipped
         // in the kernel file. Additional threads are used to optimize
