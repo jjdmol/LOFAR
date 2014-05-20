@@ -21,7 +21,7 @@ lofar_add_test(tFlysEyeBeamFormerSubbandProcProcessSb
 # Trick tests that compile kernels that need to be installed into thinking
 # that they can find the kernels using the LOFARROOT environment variable.
 set_tests_properties(
-  tBeamFormerSubbandProcProcessSb
+  #tBeamFormerSubbandProcProcessSb
   tCorrelatorSubbandProcProcessSb
   tCoherentStokesBeamFormerSubbandProcProcessSb
   tFlysEyeBeamFormerSubbandProcProcessSb
