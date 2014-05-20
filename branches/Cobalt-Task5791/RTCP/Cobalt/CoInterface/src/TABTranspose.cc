@@ -318,8 +318,11 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   if (block->complete()) {
     // Block is complete -- send it downstream,
     // and everything before it. We know we won't receive
-    // data from earlier blocks, because all subbands
-    // are sent in-order.
+    // data from earlier blocks, because each subband
+    // is sent in-order.
+    //
+    // Note that blocks can be received out-of-order once
+    // (many) subbands go missing. 
     emitUpTo(blockIdx);
 
     if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {

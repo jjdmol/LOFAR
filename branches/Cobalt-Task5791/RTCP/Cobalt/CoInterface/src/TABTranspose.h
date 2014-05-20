@@ -175,7 +175,7 @@ namespace LOFAR
          * Elements travel along the following path
          *
          * Caller:       addSubband() -> inputQueue
-         * inputThread:  inputQueue   -> addSubband() + outputPool.free -> outputQueue
+         * inputThread:  inputQueue   -> processSubband() + outputPool.free -> outputQueue
          * outputThread: outputQueue  -> outputPool.filled
          */
 
