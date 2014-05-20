@@ -19,7 +19,7 @@
 #include <CoInterface/OMPThread.h>
 
 #include <GPUProc/Station/StationInput.h>
-
+#include <GPUProc/MPI_utils.h>
 
 
 using namespace LOFAR;
@@ -32,8 +32,7 @@ main(int argc, char **argv)
   string testname("tMPISendReceive");
   cout << "testname" << endl;
 
-  cout << " Exit to allow green light on the test" << endl;
-  return 0;
+
 
   string parsetFile = "./tMPISendReceive.in_parset";
 
@@ -115,12 +114,22 @@ main(int argc, char **argv)
 
   ASSERT(rank == real_rank);
   ASSERT(nrHosts == real_size);
-
+  {
   MPIPoll::instance().start();
+
+
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+
+  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+
+  MPIInput MPI_input(ps, MPI_receive_pool,
+    subbandIndices,
+    std::find(subbandIndices.begin(),
+    subbandIndices.end(), 0U) != subbandIndices.end());
 
   cout << "Processing subbands " << subbandDistribution[rank] << endl;
 
-#pragma omp parallel sections num_threads(2)
+#pragma omp parallel sections num_threads(3)
   {
 #pragma omp section
     {
@@ -141,17 +150,42 @@ main(int argc, char **argv)
         }
 
         sendInputToPipeline(ps, stat, subbandDistribution);
+        cout << "First ended" << endl;
       }
     }
 
 #pragma omp section
     {
-    //// Process station data
-    //if (!subbandDistribution[rank].empty()) {
-    //  pipeline->processObservation();
-    //}
+
+    cout << "Debug 1000" << endl;
+    size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+    cout << "N blocks: " << nrBlocks << endl;
+    
+
+    MPI_input.receiveInput(nrBlocks);
+    cout << "second ended" << endl;
   }
+
+
+#pragma omp section
+    {
+      SmartPtr<struct MPIRecvData> input;
+      while ((input = MPI_receive_pool.filled.remove()) != NULL) 
+      {
+        cout << "Block free"  << endl;
+        MPI_receive_pool.free.append(input);
+
+      }
+      cout << "third ended" << endl;
+    }
+
   }
+
+  }
+  MPIPoll::instance().stop();
+
+  MPI_Finalize();
+
 
   return 0;
 }
