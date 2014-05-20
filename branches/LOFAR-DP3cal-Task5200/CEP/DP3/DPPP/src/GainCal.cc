@@ -415,7 +415,7 @@ namespace LOFAR {
       iS.gx.resize(nSt,nCr);
       iS.gxx.resize(nSt,nCr);
       iS.h.resize(nSt,nCr);
-      iS.z.resize(nSt,nCr);
+      iS.z.resize(nSt*nCh,nCr);
 
       Vector<DComplex> w(nCr);
       Vector<DComplex> t(nCr);
@@ -431,7 +431,6 @@ namespace LOFAR {
       iS.gx = iS.g;
       int sstep=0;
 
-      uint ch=0;
       uint iter=0;
       for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
@@ -446,27 +445,42 @@ namespace LOFAR {
 
         for (uint st1=0;st1<nSt;++st1) {
           for (uint st2=0;st2<nSt;++st2) {
-            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,ch));
-            iS.z(st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,ch));
-            iS.z(st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,ch));
-            iS.z(st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,ch));
+            for (uint ch=0;ch<nCh;++ch) {
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,ch));
+              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,ch));
+              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,ch));
+              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,ch));
+            }
           }
 
+/*
+          if (itsDebugLevel>7 && st1==0) {
+            for (uint ch=0;ch<nCh;++ch) {
+              for (uint st2=0; st2<nSt; ++st2) {
+                cout<<"z["<<ch<<","<<st2<<"] = "<<iS.z(ch*nSt+st2,0)<<","<<iS.z(ch*nSt+st2,1)<<","<<iS.z(ch*nSt+st2,2)<<","<<iS.z(ch*nSt+st2,3)<<endl;
+              }
+            }
+          }
+*/
           w=0;
           t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            w(0) += conj(iS.z(st2,0))*iS.z(st2,0) + conj(iS.z(st2,2))*iS.z(st2,2);
-            w(1) += conj(iS.z(st2,0))*iS.z(st2,1) + conj(iS.z(st2,2))*iS.z(st2,3);
-            w(3) += conj(iS.z(st2,1))*iS.z(st2,1) + conj(iS.z(st2,3))*iS.z(st2,3);
+          for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
+            w(0) += conj(iS.z(st2ch,0))*iS.z(st2ch,0) + conj(iS.z(st2ch,2))*iS.z(st2ch,2);
+            w(1) += conj(iS.z(st2ch,0))*iS.z(st2ch,1) + conj(iS.z(st2ch,2))*iS.z(st2ch,3);
+            w(3) += conj(iS.z(st2ch,1))*iS.z(st2ch,1) + conj(iS.z(st2ch,3))*iS.z(st2ch,3);
           }
           w(2)=conj(w(1));
 
+//          cout<<"w="<<w(0)<<","<<w(1)<<","<<w(2)<<","<<w(3)<<endl;
+
           t=0;
           for (uint st2=0;st2<nSt;++st2) {
-            t(0) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,2,ch));
-            t(1) += conj(iS.z(st2,0)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(st2,2)) * itsVis(IPosition(4,st2,st1,3,ch));
-            t(2) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,2,ch));
-            t(3) += conj(iS.z(st2,1)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(st2,3)) * itsVis(IPosition(4,st2,st1,3,ch));
+            for (uint ch=0;ch<nCh;++ch) {
+              t(0) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(4,st2,st1,2,ch));
+              t(1) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(4,st2,st1,3,ch));
+              t(2) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(4,st2,st1,2,ch));
+              t(3) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(4,st2,st1,3,ch));
+            }
           }
           DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
           iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
@@ -492,7 +506,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>7) {
+          if (itsDebugLevel>6) {
             cout<<"dg="<<dg<<endl;
           }
 
