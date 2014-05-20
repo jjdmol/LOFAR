@@ -40,9 +40,15 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    // Move to separate class
+    
+    // Data contained for raw data plus metadata received over the MPI
+    // interface between StationInput and the MPIReceiver
+    // These blocks are typically stored in a pool to be filled be the receiver
+    // and 'emptied' by transpose input. Which converts the data to a
+    // valid multidim array
     struct MPIRecvData
     {
+      // Index of the block current stored in this object
       size_t block;
 
       SmartPtr<char, SmartPtrMPI<char> > data;
@@ -52,17 +58,15 @@ namespace LOFAR
       void allocate(size_t nrStations, size_t nrBeamlets, size_t nrSamples);
     };
 
-    struct MPIInput
+    // MPIReceiver receives MPI input from the StationInput 
+    // receiveInput() creates a set number of MPIRecvData containers
+    // which are filled raw data and inserted into the pool
+    // The pool is shared with a pipeline which will empty the containers
+    class MPIReceiver
     {
-
-      Pool<struct MPIRecvData> &mpiPool;
-      const std::vector<size_t> subbandIndices;
-      const bool processingSubband0;
-
-      
-
-      // For each block, read all data and put it (untransposed) in the mpiPool
-      MPIInput(
+    public:
+      // Simple constructer only responsible for settings data members
+      MPIReceiver(
         Pool<struct MPIRecvData> &pool,
         const std::vector<size_t> &subbandIndices,
         const bool processingSubband0,
@@ -70,16 +74,26 @@ namespace LOFAR
         size_t nrStations,
         size_t nrBitsPerSample);
 
+
+      // Creates a set number of poolitems
+      // Reads nrBlocks from the mpi input filling the pool with
+      // raw MPIRecvData     
+      // This function is typically started in a seperate thread
+      // Internally the type of samples depends on nrBitsPerSample
       void receiveInput(size_t nrBlocks);
+      
+    private:
+      // The templeted receive function.
       template<typename SampleT> void receiveInput(size_t nrBlocks);
 
-    private:
+      Pool<struct MPIRecvData> &mpiPool;
+      const std::vector<size_t> subbandIndices;
+      const bool processingSubband0;
+
       size_t nrSamplesPerSubband;
       size_t nrStations;
       size_t nrBitsPerSample;
     };
-
-
   }
 }
 

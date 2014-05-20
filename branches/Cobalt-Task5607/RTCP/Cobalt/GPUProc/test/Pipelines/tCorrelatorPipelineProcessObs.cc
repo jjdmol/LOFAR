@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
     subbandDistribution[receiverRank].push_back(subband);
   }
   const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
-  MPIInput MPI_input( MPI_receive_pool,
+  MPIReceiver MPI_receiver(MPI_receive_pool,
     subbandDistribution[rank],
     std::find(subbandIndices.begin(),
     subbandIndices.end(), 0U) != subbandIndices.end(),
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     {
       size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
 
-      MPI_input.receiveInput(nrBlocks);
+      MPI_receiver.receiveInput(nrBlocks);
     }
 
 #pragma omp section

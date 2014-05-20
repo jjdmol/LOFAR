@@ -29,6 +29,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+
     template<typename SampleT> void MPIRecvData::allocate(
         size_t nrStations, size_t nrBeamlets, size_t nrSamples)
     {
@@ -45,8 +46,7 @@ namespace LOFAR
     template void MPIRecvData::allocate< SampleType<i4complex> >(
       size_t nrStations, size_t nrBeamlets, size_t nrSamples);
 
-    MPIInput::MPIInput(
-      Pool<struct MPIRecvData> &pool,
+    MPIReceiver::MPIReceiver(Pool<struct MPIRecvData> &pool,
       const std::vector<size_t> &subbandIndices,
       const bool processingSubband0,
       size_t i_nrSamplesPerSubband,
@@ -61,29 +61,31 @@ namespace LOFAR
       nrBitsPerSample(i_nrBitsPerSample)
     {}
 
-    template<typename SampleT> void MPIInput::receiveInput(size_t nrBlocks)
+    template<typename SampleT> void MPIReceiver::receiveInput(size_t nrBlocks)
     {
-      // Need SubbandProcs to send work to
-      //ASSERT(workQueues.size() > 0);
-
       NSTimer receiveTimer("MPI: Receive station data", true, true);
-
-      // The length of a block in samples
-      size_t blockSize = nrSamplesPerSubband;
-
+     
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
-      MPIReceiveStations receiver(nrStations, subbandIndices, blockSize);
+      MPIReceiveStations receiver(nrStations, subbandIndices, 
+                                  nrSamplesPerSubband);
 
-      for (size_t i = 0; i < 4; i++) {
+      //Fill the pool with data items
+      size_t N_PoolItems = 4;
+      for (size_t i = 0; i < N_PoolItems; i++)
+      {
+        // Create a raw + meta datablock
         SmartPtr<struct MPIRecvData> mpiData = new MPIRecvData;
 
-        mpiData->allocate<SampleT>(nrStations, subbandIndices.size(), blockSize);
+        // allocate the data (using mpi allocate)
+        mpiData->allocate<SampleT>(nrStations, subbandIndices.size(),
+         nrSamplesPerSubband);
 
+        // add to the free pool
         mpiPool.free.append(mpiData, false);
       }
 
-#else
+#else // ?
       DirectInput &receiver = DirectInput::instance();
 #endif
 
@@ -91,29 +93,36 @@ namespace LOFAR
       //
       // Start processing from block -1, and don't process anything if the
       // observation is empty.
-      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
+      if (nrBlocks > 0)
+        for (ssize_t block = -1; 
+           block < ssize_t(nrBlocks); block++) 
+      {
         // Receive the samples from all subbands from the ant fields for this block.
         LOG_INFO_STR("[block " << block << "] Collecting input buffers");
 
+        // Get a free data item
         SmartPtr<struct MPIRecvData> mpiData = mpiPool.free.remove();
 
         mpiData->block = block;
 
+        // Lay a multidim array on the raw data
         MultiDimArray<SampleT, 3> data(
           boost::extents[nrStations][subbandIndices.size()][
               nrSamplesPerSubband],
           (SampleT*)mpiData->data.get(), false);
 
+        // Idem for data: map multidim array
         MultiDimArray<struct MPIProtocol::MetaData, 2> metaData(
           boost::extents[nrStations][subbandIndices.size()],
           (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
-        // Receive all subbands from all antenna fields
         LOG_INFO_STR("[block " << block << "] Receive input");
 
-        if (block > 2) receiveTimer.start();
+        if (block > 2) // allow warmup before starting the timers
+          receiveTimer.start();
         receiver.receiveBlock<SampleT>(data, metaData);
-        if (block > 2) receiveTimer.stop();
+        if (block > 2) 
+          receiveTimer.stop();
 
         if (processingSubband0)
           LOG_INFO_STR("[block " << block << "] Input received");
@@ -127,11 +136,11 @@ namespace LOFAR
       mpiPool.filled.append(NULL);
     }
 
-    template void MPIInput::receiveInput< SampleType<i16complex> >(size_t nrBlocks);
-    template void MPIInput::receiveInput< SampleType<i8complex> >(size_t nrBlocks);
-    template void MPIInput::receiveInput< SampleType<i4complex> >(size_t nrBlocks);
+    template void MPIReceiver::receiveInput< SampleType<i16complex> >(size_t nrBlocks);
+    template void MPIReceiver::receiveInput< SampleType<i8complex> >(size_t nrBlocks);
+    template void MPIReceiver::receiveInput< SampleType<i4complex> >(size_t nrBlocks);
 
-    void MPIInput::receiveInput(size_t nrBlocks)
+    void MPIReceiver::receiveInput(size_t nrBlocks)
     {
       switch (nrBitsPerSample) {
       default:
@@ -146,8 +155,5 @@ namespace LOFAR
         break;
       }
     }
-
-    
-
   }
 }

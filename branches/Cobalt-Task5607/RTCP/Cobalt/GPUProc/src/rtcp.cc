@@ -433,7 +433,7 @@ int main(int argc, char **argv)
 
   const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
 
-  MPIInput MPI_input( MPI_receive_pool, 
+  MPIReceiver MPI_receiver(MPI_receive_pool,
                      subbandIndices,
     std::find(subbandIndices.begin(), 
               subbandIndices.end(), 0U) != subbandIndices.end(),
@@ -532,19 +532,18 @@ int main(int argc, char **argv)
   {
     #pragma omp section
     {
-      // Read and forward station data
+      // Read and forward station data over MPI
       #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        
-        // Determine if this station should start a pipeline for 
-        // station..
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
+      {       
+        // Determine if this station should start a pipeline for station..
         const struct StationID stationID(
           StationID::parseFullFieldName(
           ps.settings.antennaFields.at(stat).name));
         const StationNodeAllocation allocation(stationID, ps);
 
-        if (!allocation.receivedHere()) {
-          // Station is not sending from this node
+        if (!allocation.receivedHere()) 
+        {// Station is not sending from this node, skip          
           continue;
         }
 
@@ -552,31 +551,20 @@ int main(int argc, char **argv)
       }
     }
 
-
-    /*
-    * BLOCK OF SUBBANDS -> MPIQUEUE
-    */
+    // receive data over MPI and insert into pool
 #   pragma omp section
     {
       size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
 
-      MPI_input.receiveInput(nrBlocks);
+      MPI_receiver.receiveInput(nrBlocks);
     }
 
-
-
+    // Retrieve items from pool and process further on
     #pragma omp section
     {
       // Process station data
       if (!subbandDistribution[rank].empty()) {
         pipeline->processObservation();
-
-        // ik wil hier dus een explicieite ontvangst hebben van de
-        // de eerste stap in process observation is het ontvangen
-
-        // misschien dat de resources eerder moeten worden gepakt.
-         
-
       }
     }
   }
