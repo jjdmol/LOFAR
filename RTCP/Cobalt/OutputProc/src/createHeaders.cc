@@ -25,95 +25,71 @@
 #include <string>
 #include <iostream>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
-#include <Common/CasaLogSink.h>
-#include <Common/Exceptions.h>
-#include <Common/Thread/Queue.h>
-#include <CoInterface/Exceptions.h>
-#include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/StreamableData.h>
-#include <CoInterface/SmartPtr.h>
-#include <OutputProc/Package__Version.h>
 #include "OutputThread.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 
+using boost::format;
+
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
 
 int main(int argc, char *argv[])
 {
+  INIT_LOGGER("createHeaders");
+
   if (argc != 2) {
-    cout << str(boost::format("usage: %s parset") % argv[0]) << endl;
+    cout << str(format("usage: %s parset") % argv[0]) << endl;
     cout << endl;
-    cout << "parset: the filename of the parset to convert (parset must have been produced by RTCP/Run/src/LOFAR/Parset.py, aka an 'OLAP parset')." << endl;
+    cout << "parset: the filename of the parset to process." << endl;
     return 1;
   }
 
-#if defined HAVE_LOG4CPLUS
-  INIT_LOGGER(string(getenv("LOFARROOT") ? : ".") + "/etc/createHeaders.log_prop");
-#elif defined HAVE_LOG4CXX
-  #error LOG4CXX support is broken (nonsensical?) -- please fix this code if you want to use it
-  Context::initialize();
-  setLevel("Global",8);
-#else
-  INIT_LOGGER_WITH_SYSINFO("createHeaders");
-#endif
+  Parset parset(argv[1]);
 
-  CasaLogSink::attach();
+  Parset feedbackLTA;
 
-  ParameterSet feedbackLTA;
-
-  try {
-    Parset parset(argv[1]);
-    for (OutputType outputType = FIRST_OUTPUT_TYPE; outputType < LAST_OUTPUT_TYPE; outputType++) {
-      const unsigned nrStreams = parset.nrStreams(outputType);
-
-      for (unsigned streamNr = 0; streamNr < nrStreams; streamNr++) {
-        const string logPrefix = str(boost::format("[obs %u type %u stream %3u] ") % parset.observationID() % outputType % streamNr);
-
-        try {
-          // a dummy queue
-          Queue<SmartPtr<StreamableData> > queue;
-
-          OutputThread ot(parset, outputType, streamNr, queue, queue, logPrefix, ".");
-
-          // create measurement set
-          ot.createMS();
-
-          // wrap up
-          ot.cleanUp();
-
-          // obtain LTA feedback
-          feedbackLTA.adoptCollection(ot.feedbackLTA());
-        } catch (Exception &ex) {
-          LOG_WARN_STR(logPrefix << "Could not create header: " << ex);
-        } catch (exception &ex) {
-          LOG_WARN_STR(logPrefix << "Could not create header: " << ex.what());
-        }
-      }
-    }
-
-    // taken from IONProc/src/Job.cc
-    // Augment the LTA feedback logging
+  // Process correlated data
+  if (parset.settings.correlator.enabled) {
+    for (size_t fileIdx = 0; fileIdx < parset.settings.correlator.files.size(); ++fileIdx)
     {
-      feedbackLTA.add("Observation.DataProducts.nrOfOutput_Beamformed_", str(boost::format("%u") % parset.nrStreams(BEAM_FORMED_DATA)));
-      feedbackLTA.add("Observation.DataProducts.nrOfOutput_Correlated_", str(boost::format("%u") % parset.nrStreams(CORRELATED_DATA)));
+      string logPrefix = str(format("[correlated stream %3u] ") % fileIdx);
 
-      for (ParameterSet::const_iterator i = feedbackLTA.begin(); i != feedbackLTA.end(); ++i)
-        LOG_INFO_STR("[obs " << parset.observationID() << "] LTA FEEDBACK: " << i->first << " = " << i->second);
-    }  
-  } catch (Exception &ex) {
-    LOG_FATAL_STR("[obs unknown] Caught Exception: " << ex);
-    return 1;
+      Pool<StreamableData> outputPool(logPrefix);
+
+      SubbandOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      writer.createMS();
+      writer.cleanUp();
+      feedbackLTA.adoptCollection(writer.feedbackLTA());
+    }
   }
 
-  LOG_INFO_STR("[obs unknown] Program end");
+  // Process beam-formed data
+  if (parset.settings.beamFormer.enabled) {
+    for (size_t fileIdx = 0; fileIdx < parset.settings.beamFormer.files.size(); ++fileIdx)
+    {
+      string logPrefix = str(format("[beamformed stream %3u] ") % fileIdx);
+
+      Pool<TABTranspose::BeamformedData> outputPool(logPrefix);
+
+      TABOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      writer.createMS();
+      writer.cleanUp();
+      feedbackLTA.adoptCollection(writer.feedbackLTA());
+    }
+  }
+
+  // Add global parameters
+  feedbackLTA.adoptCollection(parset.getGlobalLTAFeedbackParameters());
+
+  // Write to disk
+  feedbackLTA.writeFile(str(format("Observation%d_feedback") % parset.settings.observationID), false);
+
   return 0;
 }
 
