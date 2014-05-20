@@ -263,7 +263,7 @@ void BlockCollector::inputLoop() {
   SmartPtr<Subband> subband;
 
   while ((subband = inputQueue.remove()) != NULL) {
-    _addSubband(subband);
+    processSubband(subband);
   }
 }
 
@@ -287,11 +287,11 @@ void BlockCollector::outputLoop() {
 }
 
 
-// Used by a Receiver inputThread to add a Subband to a Block into a BlockCollector.
+// Used by BlockCollector::inputLoop to add a Subband to a Block into a BlockCollector.
 // If this completes a Block (all Subbands for this Block received) and no
 // subsequent Blocks are missing something, send it (or them) off into the
 // outputQueue for write-back to storage.
-void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
+void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
   LOG_DEBUG_STR("BlockCollector: Add " << subband->id);
 
   const size_t &blockIdx = subband->id.block;
@@ -299,19 +299,16 @@ void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
   ASSERT(nrBlocks == 0 || blockIdx < nrBlocks);
 
   if (!have(blockIdx)) {
-    if (canDrop) {
-      if ((ssize_t)blockIdx <= lastEmitted) {
-        // too late -- discard packet
-        LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
-        return;
-      }
-    } else {
+    if (!fetch(blockIdx)) {
+      // too late -- discard packet
+      LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
+
       // if we can't drop, we shouldn't have written
       // this block yet.
-      ASSERTSTR((ssize_t)blockIdx > lastEmitted, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
-    }
+      ASSERTSTR(!canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
 
-    fetch(blockIdx);
+      return;
+    }
   }
 
   SmartPtr<Block> &block = blocks.at(blockIdx);
@@ -321,8 +318,11 @@ void BlockCollector::_addSubband( SmartPtr<Subband> &subband ) {
   if (block->complete()) {
     // Block is complete -- send it downstream,
     // and everything before it. We know we won't receive
-    // data from earlier blocks, because all subbands
-    // are sent in-order.
+    // data from earlier blocks, because each subband
+    // is sent in-order.
+    //
+    // Note that blocks can be received out-of-order once
+    // (many) subbands go missing. 
     emitUpTo(blockIdx);
 
     if (nrBlocks > 0 && blockIdx == nrBlocks - 1) {
@@ -407,11 +407,22 @@ bool BlockCollector::have(size_t block) const {
 }
 
 
-void BlockCollector::fetch(size_t block) {
-  ASSERT(!have(block));
+bool BlockCollector::fetch(size_t block) {
+  if ((ssize_t)block <= lastEmitted)
+    // too late -- discard packet
+    return false;
 
   // Make sure we don't exceed our maximum cache size
   if (canDrop && blocks.size() >= maxBlocksInFlight) {
+    // Under severe data loss, we can get disjunct sets
+    // of subbands for each block. In that case,
+    // the blocks can arrive out-of-order.
+    //
+    // We should not accept any blocks that are even earlier
+    // than the one we're about to emit.
+    if (block < minBlock())
+      return false;
+
     // No more room -- force out oldest block
     emit(minBlock());
   }
@@ -419,6 +430,8 @@ void BlockCollector::fetch(size_t block) {
   // Add and annotate
   ASSERT(!have(block));
   blocks[block] = new Block(fileIdx, block, nrSubbands, nrSamples, nrChannels);
+
+  return true;
 }
 
 
