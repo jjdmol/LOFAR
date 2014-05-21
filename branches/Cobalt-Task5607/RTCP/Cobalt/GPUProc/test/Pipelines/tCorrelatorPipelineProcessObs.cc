@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     subbands.push_back(sb);
   }
   { // use a skope to force destruction of pool before MPI_Finalize()
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
 
 
 
