@@ -100,7 +100,6 @@ namespace LOFAR
 
       Pool<struct MPIRecvData> &mpiPool;
 
-      //MPIInput MPI_input;
       // For each block, transpose all subbands from all stations, and divide the
       // work over the workQueues
       void transposeInput();
