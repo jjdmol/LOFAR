@@ -77,9 +77,6 @@
 #include <GPUProc/Package__Version.h>
 #include <GPUProc/MPI_utils.h>
 
-
-//#include <CoInterface/Pool.h>
-
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
