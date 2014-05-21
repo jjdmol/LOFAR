@@ -155,10 +155,6 @@ namespace LOFAR {
       const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
 
-      if (nCh>1) {
-        cout<<"WARNING: for now this code only handles MSs with one channel"<<endl;
-      }
-
       // initialize storage
       const size_t nThread=1;//OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
@@ -285,8 +281,6 @@ namespace LOFAR {
       if (itsOperation=="predict") {
         copy(storage.model.begin(),storage.model.begin()+nSamples,data);
       }
-
-      //cout<<"storage.model[4]="<<storage.model[4]<<endl;
 
       if (itsOperation=="solve") {
         if (itsMode=="diaggain") {
@@ -431,6 +425,9 @@ namespace LOFAR {
       iS.gx = iS.g;
       int sstep=0;
 
+      Vector<DComplex> vis(4);
+      Vector<DComplex> mvis(4);
+
       uint iter=0;
       for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
@@ -446,22 +443,17 @@ namespace LOFAR {
         for (uint st1=0;st1<nSt;++st1) {
           for (uint st2=0;st2<nSt;++st2) {
             for (uint ch=0;ch<nCh;++ch) {
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,2,ch));
-              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,2) * itsMVis(IPosition(4,st2,st1,3,ch));
-              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,0,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,2,ch));
-              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,st2,st1,1,ch)) + iS.h(st2,3) * itsMVis(IPosition(4,st2,st1,3,ch));
+              mvis[0]=itsMVis(IPosition(4,st2,st1,0,ch));
+              mvis[1]=itsMVis(IPosition(4,st2,st1,1,ch));
+              mvis[2]=itsMVis(IPosition(4,st2,st1,2,ch));
+              mvis[3]=itsMVis(IPosition(4,st2,st1,3,ch));
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * mvis[0] + iS.h(st2,2) * mvis[2];
+              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * mvis[1] + iS.h(st2,2) * mvis[3];
+              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * mvis[0] + iS.h(st2,3) * mvis[2];
+              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * mvis[1] + iS.h(st2,3) * mvis[3];
             }
           }
 
-/*
-          if (itsDebugLevel>7 && st1==0) {
-            for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0; st2<nSt; ++st2) {
-                cout<<"z["<<ch<<","<<st2<<"] = "<<iS.z(ch*nSt+st2,0)<<","<<iS.z(ch*nSt+st2,1)<<","<<iS.z(ch*nSt+st2,2)<<","<<iS.z(ch*nSt+st2,3)<<endl;
-              }
-            }
-          }
-*/
           w=0;
           t=0;
           for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
@@ -471,15 +463,17 @@ namespace LOFAR {
           }
           w(2)=conj(w(1));
 
-//          cout<<"w="<<w(0)<<","<<w(1)<<","<<w(2)<<","<<w(3)<<endl;
-
           t=0;
           for (uint st2=0;st2<nSt;++st2) {
             for (uint ch=0;ch<nCh;++ch) {
-              t(0) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(4,st2,st1,2,ch));
-              t(1) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(4,st2,st1,3,ch));
-              t(2) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(4,st2,st1,0,ch)) + conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(4,st2,st1,2,ch));
-              t(3) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(4,st2,st1,1,ch)) + conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(4,st2,st1,3,ch));
+              vis[0]=itsVis(IPosition(4,st2,st1,0,ch));
+              vis[1]=itsVis(IPosition(4,st2,st1,1,ch));
+              vis[2]=itsVis(IPosition(4,st2,st1,2,ch));
+              vis[3]=itsVis(IPosition(4,st2,st1,3,ch));
+              t(0) += conj(iS.z(ch*nSt+st2,0)) * vis[0] + conj(iS.z(ch*nSt+st2,2)) * vis[2];
+              t(1) += conj(iS.z(ch*nSt+st2,0)) * vis[1] + conj(iS.z(ch*nSt+st2,2)) * vis[3];
+              t(2) += conj(iS.z(ch*nSt+st2,1)) * vis[0] + conj(iS.z(ch*nSt+st2,3)) * vis[2];
+              t(3) += conj(iS.z(ch*nSt+st2,1)) * vis[1] + conj(iS.z(ch*nSt+st2,3)) * vis[3];
             }
           }
           DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
@@ -627,26 +621,30 @@ namespace LOFAR {
       bool threestep = false;
 
       uint nSt=itsMVis.shape()[0];
+      uint nCh = info().nchan();
 
       iS.g.resize(2*nSt,1);
       iS.gold.resize(2*nSt,1);
       iS.gx.resize(2*nSt,1);
       iS.gxx.resize(2*nSt,1);
       iS.h.resize(2*nSt,1);
-      iS.z.resize(2*nSt,1);
+      iS.z.resize(2*nSt*nCh,1);
 
       double w;
       DComplex t;
-      uint ch=0;
 
+      uint count=0;
       // Initialize all vectors
       double fronormvis=0;
       double fronormmod=0;
       for (uint st1=0;st1<2*nSt;++st1) {
         for (uint st2=0;st2<2*nSt;++st2) {
-          uint crjump=(st2/nSt)+(st1/nSt);
-          fronormvis+=norm(itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch)));
-          fronormmod+=norm(itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch)));
+          count++;
+          //for (uint ch=0;ch<nCh;++ch) {
+            uint crjump=2*(st2/nSt)+(st1/nSt);
+            fronormvis+=norm( itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,0)));
+            fronormmod+=norm(itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,0)));
+          //}
         }
       }
       fronormvis=sqrt(fronormvis);
@@ -664,8 +662,8 @@ namespace LOFAR {
       if (itsDebugLevel>10) {
         for (uint st1=0;st1<2*nSt;++st1) {
           for (uint st2=0;st2<2*nSt;++st2) {
-            uint crjump=(st2/nSt)+(st1/nSt);
-            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,st1%nSt,st2%nSt,crjump,ch))<<endl;
+            uint crjump=2*(st2/nSt)+(st1/nSt);
+            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,st1%nSt,st2%nSt,crjump,0))<<endl;
           }
         }
       }
@@ -678,16 +676,33 @@ namespace LOFAR {
         for (uint st=0;st<2*nSt;++st) {
           iS.h(st,0)=conj(iS.g(st,0));
         }
+/*
+        cout<<"mvis="<<endl;
+        for (uint i=0;i<nSt;++i) {
+          for (uint j=0;j<nSt;++j) {
+            cout<<itsMVis(IPosition(4,i,j,0,0))<<","<<itsMVis(IPosition(4,i,j,1,0))<<","
+                <<itsMVis(IPosition(4,i,j,2,0))<<","<<itsMVis(IPosition(4,i,j,3,0))<<","<<endl;
+          }
+        }*/
 
         for (uint st1=0;st1<2*nSt;++st1) {
           w=0;
           t=0;
           for (uint st2=0;st2<2*nSt;++st2) {
             uint crjump=2*(st2/nSt)+(st1/nSt);
-            iS.z(st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
-            w+=norm(iS.z(st2,0));
-            t+=conj(iS.z(st2,0)) * itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+            for (uint ch=0;ch<nCh;++ch) {
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+              //cout<<"iS.h("<<st2<<")="<<iS.h(st2,0)<<endl;
+              //cout<<"itsMVis("<<st2%nSt<<","<<st1%nSt<<","<<crjump<<","<<ch<<")="<<itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))<<endl;
+              //cout<<"=="<<endl;
+              w+=norm(iS.z(ch*nSt+st2,0));
+              t+=conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+            }
           }
+          //cout<<"z="<<endl;
+          //for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
+          //  cout<<iS.z(st2ch,0)<<endl;
+          //}
           iS.g(st1,0)=t/w;
           if (itsPhaseOnly) {
             iS.g(st1,0)/=abs(iS.g(st1,0));
@@ -797,9 +812,13 @@ namespace LOFAR {
       // Let's save G...
       itsSols.push_back(iS.g.copy());
 
+      if (itsDebugLevel>2) {
+        cout<<"g="<<iS.g<<endl;
+      }
+
       if (dg > itsTolerance && itsDebugLevel>1) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
-        if (itsDebugLevel>2) {
+        if (itsDebugLevel>12) {
           cout<<"g="<<iS.g<<endl;
           exportToMatlab(0);
           THROW(Exception,"Klaar!");
@@ -850,7 +869,7 @@ namespace LOFAR {
       }
 
       mFile.close();
-      THROW(Exception,"Wrote output to a file, stopping now");
+      THROW(Exception,"Wrote output to debug.txt -- stopping now");
     }
 
     void GainCal::applyBeam (double time, const Position& pos, bool apply,
@@ -944,12 +963,14 @@ namespace LOFAR {
       const char* strri[] = {"Real:","Imag:"};
       Matrix<double> values(1, ntime);
 
+      DComplex sol;
+
       for (size_t st=0; st<nSt; ++st) {
         uint seqnr = 0;
         string suffix(itsAntennaUsedNames[st]);
 
         for (int i=0; i<4; ++i) {
-          if (itsMode=="diaggain" && (i==2||i==3)) {
+          if (itsMode=="diaggain" && (i==1||i==2)) {
             continue;
           }
           for (int k=0; k<2; ++k) {
@@ -957,17 +978,23 @@ namespace LOFAR {
                         str0101[i] + strri[k] + suffix);
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
-              if (itsMode=="fullgain") {
-                if (seqnr%2==0) {
-                  values(0, ts) = real(itsSols[ts](st,seqnr/2));
-                } else {
-                  values(0, ts) = -imag(itsSols[ts](st,seqnr/2)); // Conjugate transpose!
-                }
+              if (itsAntMaps[ts][st]==-1) {
+                values(0, ts) = 0;
               } else {
-                if (seqnr%2==0) {
-                  values(0, ts) = real(itsSols[ts](i/4*nSt+st,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                int rst=itsAntMaps[ts][st];
+                if (itsMode=="fullgain") {
+                  if (seqnr%2==0) {
+                    values(0, ts) = real(itsSols[ts](rst,seqnr/2));
+                  } else {
+                    values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
+                  }
                 } else {
-                  values(0, ts) = -imag(itsSols[ts](i/4*nSt+st,0)); // Conjugate transpose!
+                  uint sSt=itsSols[ts].size()/2;
+                  if (seqnr%2==0) {
+                    values(0, ts) = real(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                  } else {
+                    values(0, ts) = -imag(itsSols[ts](i/3*sSt+rst,0)); // Conjugate transpose!
+                  }
                 }
               }
             }
