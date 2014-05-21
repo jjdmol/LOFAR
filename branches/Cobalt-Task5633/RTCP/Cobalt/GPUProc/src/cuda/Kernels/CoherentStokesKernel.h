@@ -60,6 +60,13 @@ namespace LOFAR
                            const Buffers &buffers,
                            const Parameters &param);
 
+      struct CoherentStokesExecConfig : gpu::ExecConfig
+      {
+        unsigned nrTimeParallelThreads;
+        friend std::ostream& operator<<(std::ostream& os,
+            const CoherentStokesKernel::CoherentStokesExecConfig& execConfig);
+      };
+
     private:
       // The timeParallelFactor is not a Parameter passed in, but is a kernel
       // arg, so it must be a member var to outlive kernel launches.

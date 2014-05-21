@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/fpequals.h>
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 
@@ -96,10 +97,9 @@ namespace LOFAR
       const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
                                                        maxLocalWorkSize.z);
 
-      // Generate possible execution configs and their (predicted) occupancy.
-      // Preferred: >=64 thr/blk, max occupancy, smallest blk size (max #blks).
-      gpu::ExecConfig selectedConfig;
-      double maxOccupancy = 0.0;
+      // Generate valid execution configs.
+      using std::vector;
+      vector<CoherentStokesExecConfig> configs;
       for (unsigned nrTABsPerBlock = minNrTABsPerBlock;
            nrTABsPerBlock <= maxNrTABsPerBlock; 
            nrTABsPerBlock = align(++nrTABsPerBlock, defaultNrTABsPerBlock)) {
@@ -120,19 +120,16 @@ namespace LOFAR
             gpu::Block block(nrChannelsPerBlock, nrTimeParallelThreadsPerBlock, nrTABsPerBlock);
 
             // Filter configs that fall outside device caps (e.g. max threads per block).
-            // Correct by construction is hard and risky.
             string errMsgs;
             setEnqueueWorkSizes(grid, block, &errMsgs);
             if (errMsgs.empty()) {
-              double occupancy = predictMultiProcOccupancy();
-              if (occupancy > maxOccupancy) {
-                selectedConfig.grid  = grid;
-                selectedConfig.block = block;
-                maxOccupancy = occupancy;
-                itsTimeParallelFactor = nrTimeParallelThreads;
-              }
+              CoherentStokesExecConfig ec;
+              ec.grid  = grid;
+              ec.block = block;
+              ec.nrTimeParallelThreads = nrTimeParallelThreads;
+              configs.push_back(ec);
             } else {
-              LOG_DEBUG_STR("Skipping invalid exec config for CoherentStokes: " << errMsgs);
+              LOG_DEBUG_STR("Skipping invalid CoherentStokes exec config: " << errMsgs);
             }
 
           }
@@ -143,13 +140,63 @@ namespace LOFAR
             break;
         }
       }
-      ASSERT(maxOccupancy > 0.0);
+      ASSERT(!configs.empty());
 
+      // Select config to use by narrowing down.
+      // Prefer: >=64 thr/blk, max occupancy, max #blks (= smallest blk size)
+      vector<CoherentStokesExecConfig> configsMinBlockSize;
+      unsigned minThreadsPerBlock = 64;
+      const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
+      while (minThreadsPerBlock >= warpSize) {
+        for (vector<CoherentStokesExecConfig>::const_iterator it = configs.begin();
+             it != configs.end(); ++it) {
+          if (it->block.x * it->block.y * it->block.z >= minThreadsPerBlock) {
+            configsMinBlockSize.push_back(*it);
+          }
+        }
+
+        if (!configsMinBlockSize.empty()) {
+          break;
+        }
+        minThreadsPerBlock /= 2;
+      }
+      if (configsMinBlockSize.empty()) {
+        configsMinBlockSize = configs; // tough luck
+      }
+
+      vector<CoherentStokesExecConfig> configsMaxOccupancy;
+      double maxOccupancy = 0.0;
+      for (vector<CoherentStokesExecConfig>::const_iterator it = configsMinBlockSize.begin();
+           it != configsMinBlockSize.end(); ++it) {
+        setEnqueueWorkSizes(it->grid, it->block);
+        double occupancy = predictMultiProcOccupancy();
+        if (occupancy > maxOccupancy - 0.05) { // 0.05 occ diff is meaningless for sure
+          if (occupancy > maxOccupancy) // avoid slippery slope :) 
+            maxOccupancy = occupancy;
+          configsMaxOccupancy.clear();
+          configsMaxOccupancy.push_back(*it);
+        } else if (fpEquals(occupancy, maxOccupancy, 0.05)) {
+          configsMaxOccupancy.push_back(*it);
+        }
+      }
+
+      CoherentStokesExecConfig selectedConfig;
+      unsigned minBlockSizeSeen = maxLocalWorkSize.x * maxLocalWorkSize.y * maxLocalWorkSize.z + 1;
+      for (vector<CoherentStokesExecConfig>::const_iterator it = configsMaxOccupancy.begin();
+           it != configsMaxOccupancy.end(); ++it) {
+        unsigned blockSize = it->block.x * it->block.y * it->block.z;
+        if (blockSize < minBlockSizeSeen) {
+          minBlockSizeSeen = blockSize;
+          selectedConfig = *it;
+        }
+        LOG_DEBUG_STR("Coherent Stokes exec config candidate (last round): " << *it);
+      }
+
+      itsTimeParallelFactor = selectedConfig.nrTimeParallelThreads;
       ASSERTSTR(params.nrSamplesPerChannel % itsTimeParallelFactor == 0,
              "itsTimeParallelFactor=" << itsTimeParallelFactor);
       ASSERTSTR(params.nrSamplesPerChannel % (params.timeIntegrationFactor * itsTimeParallelFactor) == 0,
              "itsTimeParallelFactor=" << itsTimeParallelFactor);
-
       setEnqueueWorkSizes(selectedConfig.grid, selectedConfig.block);
       LOG_INFO_STR("Exec config for CoherentStokes has a (predicted) occupancy of " << maxOccupancy);
 
@@ -160,6 +207,15 @@ namespace LOFAR
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
+    }
+
+    std::ostream& operator<<(std::ostream& os,
+            const CoherentStokesKernel::CoherentStokesExecConfig& execConfig)
+    {
+      os << "{" << execConfig.grid << ", " << execConfig.block <<
+            ", " << execConfig.dynSharedMemSize <<
+            ", " << execConfig.nrTimeParallelThreads << "}";
+      return os;
     }
 
     unsigned CoherentStokesKernel::nextFactor(unsigned factor, unsigned maxFactor) const
