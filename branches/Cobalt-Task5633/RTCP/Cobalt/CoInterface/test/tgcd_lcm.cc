@@ -121,7 +121,7 @@ bool testAll_gcd() {
 
 bool testAll_lcm() {
   // lcm() is trivially implemented in terms of gcd() (extensively tested above),
-  // don't bother going just as far.
+  // don't bother going just as far. Force some types to verify template instantiation.
 
   bool ok = true;
 
@@ -131,15 +131,15 @@ bool testAll_lcm() {
     ok = false;
   }
 
-  unsigned r2 = lcm(15, 20);
-  if (r2 != 60) {
-    cerr << "Error: lcm(15, 20) gives " << r2 << ". Expected 60" << endl;
+  unsigned r2 = lcm(15U, 20U);
+  if (r2 != 60U) {
+    cerr << "Error: lcm(15U, 20U) gives " << r2 << ". Expected 60" << endl;
     ok = false;
   }
 
-  unsigned char r3 = lcm(23, 8);
-  if (r3 != 184) {
-    cerr << "Error: lcm(23, 8) gives " << r3 << ". Expected 184" << endl;
+  unsigned char r3 = lcm((unsigned char)23, (unsigned char)8);
+  if (r3 != (unsigned char)184) {
+    cerr << "Error: lcm((unsigned char)23, (unsigned char)8) gives " << r3 << ". Expected 184" << endl;
     ok = false;
   }
 
