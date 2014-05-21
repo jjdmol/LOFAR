@@ -303,9 +303,8 @@ void BlockCollector::processSubband( SmartPtr<Subband> &subband ) {
       // too late -- discard packet
       LOG_DEBUG_STR("BlockCollector: Dropped subband " << subband->id.subband  << " of file " << subband->id.fileIdx);
 
-      // if we can't drop, we shouldn't have written
-      // this block yet.
-      ASSERTSTR(!canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
+      // if we can't drop, we shouldn't even be here.
+      ASSERTSTR(canDrop, "Received block " << blockIdx << ", but already emitted up to " << lastEmitted << " for file " << subband->id.fileIdx << " subband " << subband->id.subband);
 
       return;
     }
