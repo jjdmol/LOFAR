@@ -205,6 +205,17 @@ namespace LOFAR
       }
 
 
+      Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
+        x(x_), y(y_), z(z_)
+      {
+      }
+
+      std::ostream& operator<<(std::ostream& os, const Grid& grid)
+      {
+        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
+        return os;
+      }
+
       Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
@@ -220,14 +231,15 @@ namespace LOFAR
         return os;
       }
 
-      Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
-        x(x_), y(y_), z(z_)
+      ExecConfig::ExecConfig(Grid gr, Block bl, size_t dynShMem) :
+        grid(gr), block(bl), dynSharedMemSize(dynShMem)
       {
       }
 
-      std::ostream& operator<<(std::ostream& os, const Grid& grid)
+      std::ostream& operator<<(std::ostream& os, const ExecConfig& execConfig)
       {
-        os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
+        os << "{" << execConfig.grid << ", " << execConfig.block <<
+              ", " << execConfig.dynSharedMemSize << "}";
         return os;
       }
 
@@ -890,13 +902,13 @@ namespace LOFAR
 
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
-                          unsigned blockZ, unsigned sharedMemBytes,
+                          unsigned blockZ, unsigned dynSharedMemSize,
                           void **parameters)
         {
           ScopedCurrentContext scc(_context);
 
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
-                                     blockY, blockZ, sharedMemBytes, _stream,
+                                     blockY, blockZ, dynSharedMemSize, _stream,
                                      parameters, NULL));
         }
 
@@ -1076,9 +1088,9 @@ namespace LOFAR
       {
         LOG_DEBUG_STR("Launching " << function._name);
 
-        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
+        const unsigned dynSharedMemSize = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, dynSharedMemBytes,
+                            block.x, block.y, block.z, dynSharedMemSize,
                             const_cast<void **>(&function._kernelArgs[0]));
 
         if (force_synchronous) {

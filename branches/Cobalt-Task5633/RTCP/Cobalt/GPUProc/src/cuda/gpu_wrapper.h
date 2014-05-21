@@ -64,6 +64,17 @@ namespace LOFAR
       std::string errorMessage(CUresult errcode);
 
 
+      // Struct representing a CUDA Grid, which is similar to the @c dim3 type
+      // in the CUDA Runtime API.
+      struct Grid
+      {
+        Grid(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
+        unsigned int x;
+        unsigned int y;
+        unsigned int z;
+        friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
+      };
+
       // Struct representing a CUDA Block, which is similar to the @c dim3 type
       // in the CUDA Runtime API.
       //
@@ -77,17 +88,17 @@ namespace LOFAR
         friend std::ostream& operator<<(std::ostream& os, const Block& block);
       };
 
-
-      // Struct representing a CUDA Grid, which is similar to the @c dim3 type
-      // in the CUDA Runtime API.
-      struct Grid
+      // Struct containing kernel launch configuration.
+      struct ExecConfig
       {
-        Grid(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
-        unsigned int x;
-        unsigned int y;
-        unsigned int z;
-        friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
+        ExecConfig(Grid gr = Grid(), Block bl = Block(), size_t dynShMem = 0);
+        Grid   grid;
+        Block  block;
+        size_t dynSharedMemSize;
+        friend std::ostream& operator<<(std::ostream& os,
+                                        const ExecConfig& execConfig);
       };
+
 
       // Forward declaration needed by Platform::devices.
       class Device;

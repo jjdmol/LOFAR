@@ -70,82 +70,106 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.timeIntegrationFactor > 0);
+      ASSERT(params.nrSamplesPerChannel % params.timeIntegrationFactor == 0);
       ASSERT(params.nrStokes == 1 || params.nrStokes == 4);
 
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      timeParallelFactor = module.getContext().getDevice().getMaxThreadsPerBlock() / params.nrChannelsPerSubband;
-      if (params.nrSamplesPerChannel < timeParallelFactor)
-        timeParallelFactor = 1;
+      const gpu::Device device(_context.getDevice());
 
+      const unsigned defaultNrChannelsPerBlock = 16;
+      const unsigned defaultNrTABsPerBlock     = 16;
 
-      setEnqueueWorkSizes(gpu::Grid (params.nrChannelsPerSubband, timeParallelFactor, params.nrTABs),
-                          gpu::Block(params.nrChannelsPerSubband, timeParallelFactor, 1));
+      const unsigned minNrChannelsPerBlock  = std::min(params.nrChannelsPerSubband,
+                                                      defaultNrChannelsPerBlock);
+      const unsigned minTimeParallelThreads = 1;
+      const unsigned minNrTABsPerBlock      = std::min(params.nrTABs,
+                                                       defaultNrTABsPerBlock);
 
-      // The timeParallelFactor immediate kernel arg must outlive kernel runs.
-      setArg(2, timeParallelFactor);
-#if 0
-      // Process 16 channels and 16 TABs per block, unless fewer needed. Use kernel checks to skip unneeded work.
-      const unsigned maxNrChannelsPerBlock = 16;
-      const unsigned maxNrTABsPerBlock     = 16;
+      const gpu::Block maxLocalWorkSize     = device.getMaxBlockDims();
+      const unsigned maxNrChannelsPerBlock  = std::min(params.nrChannelsPerSubband,
+                                                       maxLocalWorkSize.x);
+      const unsigned maxTimeParallelThreads = 
+              std::min(params.nrSamplesPerChannel / params.timeIntegrationFactor,
+                                                       maxLocalWorkSize.y);
+      const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
+                                                       maxLocalWorkSize.z);
 
-      // block dims
-      const unsigned nrChannelsPerBlock = std::min(params.nrChannelsPerSubband, maxNrChannelsPerBlock);
-      unsigned nrTABsPerBlock           = std::min(params.nrTABs,               maxNrTABsPerBlock);
+      // Generate possible execution configs and their (predicted) occupancy.
+      // Preferred: >=64 thr/blk, max occupancy, smallest blk size (max #blks).
+      gpu::ExecConfig selectedConfig;
+      double maxOccupancy = 0.0;
+      for (unsigned nrTABsPerBlock = minNrTABsPerBlock;
+           nrTABsPerBlock <= maxNrTABsPerBlock; 
+           nrTABsPerBlock = align(++nrTABsPerBlock, defaultNrTABsPerBlock)) {
+        for (unsigned nrTimeParallelThreadsPerBlock = minTimeParallelThreads, incFactor = 2;
+             nrTimeParallelThreadsPerBlock <= maxTimeParallelThreads;
+             nrTimeParallelThreadsPerBlock *= incFactor = nextFactor(incFactor, maxTimeParallelThreads)) {
+          for (unsigned nrChannelsPerBlock = minNrChannelsPerBlock;
+               nrChannelsPerBlock <= maxNrChannelsPerBlock;
+               nrChannelsPerBlock = align(++nrChannelsPerBlock, defaultNrChannelsPerBlock)) {
 
-      // grid dims in terms of #threads (OpenCL semantics)
-      const unsigned nrChannelThreads = align(params.nrChannelsPerSubband, nrChannelsPerBlock);
-      unsigned nrTABsThreads          = align(params.nrTABs,               nrTABsPerBlock);
+            // Grid dims in terms of #threads (Note: i.e. OpenCL semantics!)
+            unsigned nrChannelThreads      = align(params.nrChannelsPerSubband,
+                                                   nrChannelsPerBlock);
+            unsigned nrTimeParallelThreads = align(maxTimeParallelThreads,
+                                                   nrTimeParallelThreadsPerBlock);
+            unsigned nrTABsThreads         = align(params.nrTABs, nrTABsPerBlock);
+            gpu::Grid  grid (nrChannelThreads,   nrTimeParallelThreads,         nrTABsThreads);
+            gpu::Block block(nrChannelsPerBlock, nrTimeParallelThreadsPerBlock, nrTABsPerBlock);
 
-      // With few channels use more time parallellism.
-      // Don't do that with TABs just yet. #TABs may not be a power of 2.
-      // Ensure no time parallel boundary falls within an integration step.
-      const unsigned maxNrIntegrationsMultiple = params.nrSamplesPerChannel / params.timeIntegrationFactor;
-      const unsigned maxTimeParallelFactor = module.getContext().getDevice().getMaxThreadsPerBlock() /
-                                             (maxNrTABsPerBlock * nrChannelsPerBlock);
-      ASSERT(maxNrIntegrationsMultiple > 0);
-      ASSERT(maxTimeParallelFactor > 0);
-      unsigned timeParallelFactor = gcd(maxNrIntegrationsMultiple, maxTimeParallelFactor);
+            // Filter configs fall outside device caps (e.g. max threads per block).
+            // Correct by construction is hard and risky.
+            string errMsgs = checkEnqueueWorkSizes(grid, block);
+            if (!errMsgs.empty()) {
+              LOG_DEBUG_STR("Skipping invalid exec config for CoherentStokes: " << errMsgs);
+              continue;
+            }
 
-      // 1st order (expected)
-      gpu::Block block(nrChannelsPerBlock, timeParallelFactor, nrTABsPerBlock);
-      gpu::Grid  grid (nrChannelThreads,   timeParallelFactor, nrTABsThreads);
-      setEnqueueWorkSizes(grid, block);
+            double occupancy = predictMultiProcOccupancy();
+            if (occupancy > maxOccupancy) {
+              selectedConfig.grid  = grid;
+              selectedConfig.block = block;
+              maxOccupancy = occupancy;
+              itsTimeParallelFactor = nrTimeParallelThreads;
+            }
 
-      // If we end up with few (large) blocks, tone down the block size,
-      // preferably in the TAB dim, else in the time dim.
-      // May not be possible with small problem sizes; doesn't matter.
-      const unsigned minBlockSize = 64; // don't go smaller
-      const unsigned expectedBlockSize = block.x * block.y * block.z;
-      const unsigned acceptableFewerBlockSizeFactor = std::max(1U, expectedBlockSize / minBlockSize);
+          }
 
-      const unsigned expectedNrBlocks = (grid.x / block.x) * (grid.y / block.y) * (grid.z / block.z);
-      const unsigned desiredExtraNrBlocksFactor = std::max( 1U,
-          (2 * module.getContext().getDevice().getMultiProcessorCount() + expectedNrBlocks - 1) / expectedNrBlocks ); // K10 MPCount=8
+          // The juggle with time par factors cannot be made correct for this corner-case,
+          // as the smallest prime factor is 2. Consider such a config once, not inf times.
+          if (maxTimeParallelThreads == 1)
+            break;
+        }
+      }
+      ASSERT(maxOccupancy > 0.0);
 
-      const unsigned triedTransferFactor        = std::min(acceptableFewerBlockSizeFactor, desiredExtraNrBlocksFactor);
-      const unsigned transferTABsThreadsFactor  = gcd(triedTransferFactor, nrTABsPerBlock);
-      const unsigned remainingTriedTransferFactor = triedTransferFactor / transferTABsThreadsFactor;
-      const unsigned transferTimeParallelFactor = gcd(remainingTriedTransferFactor, timeParallelFactor);
+      ASSERTSTR(params.nrSamplesPerChannel % itsTimeParallelFactor == 0,
+             "itsTimeParallelFactor=" << itsTimeParallelFactor);
+      ASSERTSTR(params.nrSamplesPerChannel % (params.timeIntegrationFactor * itsTimeParallelFactor) == 0,
+             "itsTimeParallelFactor=" << itsTimeParallelFactor);
 
-      // apply transferTABsThreadsFactor and transferTimeParallelFactor (may be 1)
-      nrTABsPerBlock     /= transferTABsThreadsFactor;
-      timeParallelFactor /= transferTimeParallelFactor;
-      nrTABsThreads = align(params.nrTABs, nrTABsPerBlock);
+      setEnqueueWorkSizes(selectedConfig.grid, selectedConfig.block);
+      LOG_INFO_STR("Exec config for CoherentStokes has a (predicted) occupancy of " << maxOccupancy);
 
-      ASSERT(params.nrSamplesPerChannel % timeParallelFactor == 0);
-      ASSERT(params.nrSamplesPerChannel % (params.timeIntegrationFactor * timeParallelFactor) == 0);
+      // The itsTimeParallelFactor immediate kernel arg must outlive kernel runs.
+      setArg(2, itsTimeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
 
-      setArg(2, timeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
-
-      // 2nd order (final)
-      setEnqueueWorkSizes(grid, block);
-#endif
 
       nrOperations = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * (params.nrStokes == 1 ? 8 : 20 + 2.0 / params.timeIntegrationFactor);
       nrBytesRead = (size_t) params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrTABs * NR_POLARIZATIONS * sizeof(std::complex<float>);
       nrBytesWritten = (size_t) params.nrTABs * params.nrStokes * params.nrSamplesPerChannel / params.timeIntegrationFactor * params.nrChannelsPerSubband * sizeof(float);
+    }
+
+    unsigned CoherentStokesKernel::nextFactor(unsigned factor, unsigned maxFactor) const
+    {
+      // find the next factor value of maxFactor
+      while (maxFactor % factor != 0) {
+        factor += 1; // could skip non-primes, but can't gain back the effort
+      }
+
+      return factor;
     }
 
     //--------  Template specializations for KernelFactory  --------//

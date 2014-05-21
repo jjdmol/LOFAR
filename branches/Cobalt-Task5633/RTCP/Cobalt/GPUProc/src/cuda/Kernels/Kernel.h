@@ -90,7 +90,17 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
 
-      void setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+      // Check whether the passed execution configuration is supported
+      // on the hardware in the stream for this kernel.
+      //
+      // Returns an empty string if supported,
+      // otherwise a string with error messages.
+      std::string checkEnqueueWorkSizes(gpu::Grid globalWorkSize,
+                                        gpu::Block localWorkSize) const;
+
+      // Set the passed execution configuration if supported.
+      // If not supported, an exception is thrown and nothing is set.
+      void setEnqueueWorkSizes(gpu::Grid globalWorkSize,
                                gpu::Block localWorkSize);
 
       // Requires call to setEnqueueWorkSizes() first to get meaningful result.

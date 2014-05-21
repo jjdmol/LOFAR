@@ -111,28 +111,25 @@ typedef float (*OutputDataType)[NR_TABS][NR_COHERENT_STOKES][NR_SAMPLES_PER_CHAN
  * 
  * Execution configuration:
  * - LocalWorkSize = 3 dimensional; (\c NR_CHANNELS, \c timeParallelFactor, \c
- *                   NR_TABS).  The product of the three should not be larger
- *                   then max thread size.  The max thread size depends on the
- *                   hardware used: 512 for old hardware, 1024 for K10 and
- *                   higher.
+ *                   NR_TABS).
  * - GlobalWorkSize = 3 dimensional; depends on the size of \c NR_TABS, \c
- *                   NR_CHANNELS and the max thread size. Ideally the work fits
- *                   in a single block. If not the remainder could be computed
- *                   with a second (differently sized) block.
+ *                   timeParallelFactor, \c NR_CHANNELS.
  */
 extern "C" __global__ void coherentStokes(OutputDataType output,
                                           const InputDataType input,
                                           unsigned timeParallelFactor)
 {
   unsigned channel_idx = blockIdx.x * blockDim.x + threadIdx.x;
-  unsigned time_idx = threadIdx.y;     
-  unsigned tab_idx = blockIdx.z * blockDim.z + threadIdx.z;    
+  unsigned time_idx    = blockIdx.y * blockDim.y + threadIdx.y;
+  unsigned tab_idx     = blockIdx.z * blockDim.z + threadIdx.z;    
 
-  // We support all sizes of channels and TABs: skip current thread if not needed.
-  if ( channel_idx >= NR_CHANNELS)
-    return;
+  // We support all sizes of TABs, channels, and integrations:
+  // skip current thread if not needed.
   if ( tab_idx >= NR_TABS)
     return;
+  if ( channel_idx >= NR_CHANNELS)
+    return;
+  // unneeded time_idx threads already skip the for loop below.
 
   //# Process samples by reading TIME_INTEGRATION_FACTOR samples and writing one
   //# set of Stokes. For parallelism over time, split the sample range in
@@ -140,7 +137,7 @@ extern "C" __global__ void coherentStokes(OutputDataType output,
   //# For complex voltages, we don't compute anything; it's only a transpose.
   //#
   //# TODO: This kernel must be rewritten as if it is a transpose to get efficient global mem read and write accesses.
-  //#       This reqs shmem. Note that combining shmem barriers with the two conditional returns above is problematic.
+  //#       This reqs shmem. Note that combining shmem barriers with the conditional returns above is problematic.
   //# TODO: For very large TIME_INTEGRATION_FACTOR (e.g. 1024), we may need parallel reduction to have enough parallelization. TBD.
   unsigned read_idx  = time_idx * (NR_SAMPLES_PER_CHANNEL / timeParallelFactor);
   unsigned write_idx = read_idx / TIME_INTEGRATION_FACTOR;

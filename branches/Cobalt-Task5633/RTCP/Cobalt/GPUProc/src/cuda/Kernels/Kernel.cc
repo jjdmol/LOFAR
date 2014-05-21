@@ -58,9 +58,8 @@ namespace LOFAR
                    const Parameters &params)
       : 
       gpu::Function(function),
-      itsCounter(stream.getContext()),
-      maxThreadsPerBlock(
-        stream.getContext().getDevice().getMaxThreadsPerBlock()),
+      itsCounter(_context),
+      maxThreadsPerBlock(_context.getDevice().getMaxThreadsPerBlock()),
       itsStream(stream),
       itsBuffers(buffers),
       itsParameters(params)
@@ -74,16 +73,15 @@ namespace LOFAR
       );
     }
 
-    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                     gpu::Block localWorkSize)
+    string Kernel::checkEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                                         gpu::Block localWorkSize) const
     {
-      gpu::Grid grid;
+      const gpu::Device device(_context.getDevice());
       ostringstream errMsgs;
 
       // Enforce by the hardware supported work sizes to see errors early
 
-      gpu::Block maxLocalWorkSize = 
-        itsStream.getContext().getDevice().getMaxBlockDims();
+      gpu::Block maxLocalWorkSize = device.getMaxBlockDims();
       if (localWorkSize.x > maxLocalWorkSize.x ||
           localWorkSize.y > maxLocalWorkSize.y ||
           localWorkSize.z > maxLocalWorkSize.z)
@@ -106,12 +104,13 @@ namespace LOFAR
             globalWorkSize.y % localWorkSize.y != 0 ||
             globalWorkSize.z % localWorkSize.z != 0)
           errMsgs << "  - globalWorkSize must divide localWorkSize" << endl;
-        grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
-                         globalWorkSize.y / localWorkSize.y,
-                         globalWorkSize.z / localWorkSize.z);
 
-        gpu::Grid maxGridWorkSize =
-          itsStream.getContext().getDevice().getMaxGridDims();
+        // Translate OpenCL globalWorkSize semantic to CUDA grid.
+        gpu::Grid grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
+                                   globalWorkSize.y / localWorkSize.y,
+                                   globalWorkSize.z / localWorkSize.z);
+
+        gpu::Grid maxGridWorkSize = device.getMaxGridDims();
         if (grid.x > maxGridWorkSize.x ||
             grid.y > maxGridWorkSize.y ||
             grid.z > maxGridWorkSize.z)
@@ -119,17 +118,28 @@ namespace LOFAR
                   << maxGridWorkSize << endl;
       }
 
-      string errStr(errMsgs.str());
+      return errMsgs.str();
+    }
+
+    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                                     gpu::Block localWorkSize)
+    {
+      string errStr = checkEnqueueWorkSizes(globalWorkSize, localWorkSize);
       if (!errStr.empty())
         THROW(gpu::GPUException,
               "setEnqueueWorkSizes(): unsupported globalWorkSize " <<
               globalWorkSize << " and/or localWorkSize " << localWorkSize <<
               " selected:" << endl << errStr);
 
-      LOG_DEBUG_STR("CUDA Grid size: " << grid);
-      LOG_DEBUG_STR("CUDA Block size: " << localWorkSize);
+      // Translate OpenCL globalWorkSize semantic to CUDA grid.
+      gpu::Grid grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
+                                 globalWorkSize.y / localWorkSize.y,
+                                 globalWorkSize.z / localWorkSize.z);
 
-      itsGridDims = grid;
+      LOG_DEBUG_STR("Setting CUDA grid size: "  << grid);
+      LOG_DEBUG_STR("Setting CUDA block size: " << localWorkSize);
+
+      itsGridDims  = grid;
       itsBlockDims = localWorkSize;
     }
 
@@ -211,6 +221,8 @@ namespace LOFAR
     double Kernel::predictMultiProcOccupancy(unsigned dynSharedMemBytes) const
     {
       const gpu::Device device(_context.getDevice());
+      //const unsigned nrMPs = device.getMultiProcessorCount();
+      //const unsigned maxThreadsPerBlock = device.getMaxThreadsPerBlock();
 
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
       unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
