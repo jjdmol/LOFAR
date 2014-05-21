@@ -119,9 +119,10 @@ namespace LOFAR
             gpu::Grid  grid (nrChannelThreads,   nrTimeParallelThreads,         nrTABsThreads);
             gpu::Block block(nrChannelsPerBlock, nrTimeParallelThreadsPerBlock, nrTABsPerBlock);
 
-            // Filter configs fall outside device caps (e.g. max threads per block).
+            // Filter configs that fall outside device caps (e.g. max threads per block).
             // Correct by construction is hard and risky.
-            string errMsgs = checkEnqueueWorkSizes(grid, block);
+            string errMsgs;
+            setEnqueueWorkSizes(grid, block, &errMsgs);
             if (errMsgs.empty()) {
               double occupancy = predictMultiProcOccupancy();
               if (occupancy > maxOccupancy) {

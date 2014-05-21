@@ -73,10 +73,12 @@ namespace LOFAR
       );
     }
 
-    string Kernel::checkEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                         gpu::Block localWorkSize) const
+    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
+                                     gpu::Block localWorkSize,
+                                     string* errorStrings)
     {
       const gpu::Device device(_context.getDevice());
+      gpu::Grid grid;
       ostringstream errMsgs;
 
       // Enforce by the hardware supported work sizes to see errors early
@@ -106,9 +108,9 @@ namespace LOFAR
           errMsgs << "  - globalWorkSize must divide localWorkSize" << endl;
 
         // Translate OpenCL globalWorkSize semantic to CUDA grid.
-        gpu::Grid grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
-                                   globalWorkSize.y / localWorkSize.y,
-                                   globalWorkSize.z / localWorkSize.z);
+        grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
+                         globalWorkSize.y / localWorkSize.y,
+                         globalWorkSize.z / localWorkSize.z);
 
         gpu::Grid maxGridWorkSize = device.getMaxGridDims();
         if (grid.x > maxGridWorkSize.x ||
@@ -118,23 +120,18 @@ namespace LOFAR
                   << maxGridWorkSize << endl;
       }
 
-      return errMsgs.str();
-    }
-
-    void Kernel::setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                                     gpu::Block localWorkSize)
-    {
-      string errStr = checkEnqueueWorkSizes(globalWorkSize, localWorkSize);
-      if (!errStr.empty())
-        THROW(gpu::GPUException,
-              "setEnqueueWorkSizes(): unsupported globalWorkSize " <<
-              globalWorkSize << " and/or localWorkSize " << localWorkSize <<
-              " selected:" << endl << errStr);
-
-      // Translate OpenCL globalWorkSize semantic to CUDA grid.
-      gpu::Grid grid = gpu::Grid(globalWorkSize.x / localWorkSize.x,
-                                 globalWorkSize.y / localWorkSize.y,
-                                 globalWorkSize.z / localWorkSize.z);
+      // On error, store error messages in output parameter, or throw.
+      string errStr(errMsgs.str());
+      if (!errStr.empty()) {
+        if (errorStrings != NULL) {
+          *errorStrings = errStr;
+        } else {
+          THROW(gpu::GPUException,
+                "setEnqueueWorkSizes(): unsupported globalWorkSize " <<
+                globalWorkSize << " and/or localWorkSize " << localWorkSize <<
+                " selected:" << endl << errStr);
+        }
+      }
 
       LOG_DEBUG_STR("Setting CUDA grid size: "  << grid);
       LOG_DEBUG_STR("Setting CUDA block size: " << localWorkSize);
