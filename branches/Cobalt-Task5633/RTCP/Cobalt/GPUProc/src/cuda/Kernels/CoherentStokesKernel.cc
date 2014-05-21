@@ -122,17 +122,16 @@ namespace LOFAR
             // Filter configs fall outside device caps (e.g. max threads per block).
             // Correct by construction is hard and risky.
             string errMsgs = checkEnqueueWorkSizes(grid, block);
-            if (!errMsgs.empty()) {
+            if (errMsgs.empty()) {
+              double occupancy = predictMultiProcOccupancy();
+              if (occupancy > maxOccupancy) {
+                selectedConfig.grid  = grid;
+                selectedConfig.block = block;
+                maxOccupancy = occupancy;
+                itsTimeParallelFactor = nrTimeParallelThreads;
+              }
+            } else {
               LOG_DEBUG_STR("Skipping invalid exec config for CoherentStokes: " << errMsgs);
-              continue;
-            }
-
-            double occupancy = predictMultiProcOccupancy();
-            if (occupancy > maxOccupancy) {
-              selectedConfig.grid  = grid;
-              selectedConfig.block = block;
-              maxOccupancy = occupancy;
-              itsTimeParallelFactor = nrTimeParallelThreads;
             }
 
           }
