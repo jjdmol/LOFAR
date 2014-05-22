@@ -64,8 +64,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devE,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull )
       :
-      BeamFormerSubbandProcStep(parset, i_queue),
-      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1)
+      BeamFormerSubbandProcStep(parset, i_queue)
     {
       devInput = i_devInput;
       devA = i_devA;
@@ -204,6 +203,7 @@ namespace LOFAR
 
       if (incoherentStokesPPF)
       {
+        // The subbandIdx immediate kernel arg must outlive kernel runs.
         incoherentFirFilterKernel->enqueue(blockID,
           blockID.subbandProcSubbandIdx);
 

@@ -25,7 +25,6 @@
 #include <vector>
 #include <boost/lexical_cast.hpp>
 
-#include <CoInterface/Parset.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/global_defines.h>
@@ -49,7 +48,6 @@ int main() {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
   string srcFilename("tKernel.in_.cu");
-  Parset ps("tKernel.parset.in");
 
   // Get default parameters for the compiler
   CompileFlags flags = defaultCompileFlags();
@@ -71,14 +69,15 @@ int main() {
   gpu::DeviceMemory d_out(ctx, size * sizeof(float));
 
   // init buffers
-  for (size_t i = 0; i < size; i++)
-  {
+  for (size_t i = 0; i < size; i++) {
     in.get<float>()[i] = (float)i;
   }
   memset(out.get<void>(), 0, size * sizeof(float));
   const float incVal = 1.5f;
 
   // kernel args
+  // Note: all must outlive kernel execution!
+  // Easy to get wrong by returning after passing local vars as immediate args.
   func.setArg(0, d_out);
   func.setArg(1, d_in);
   func.setArg(2, size);
@@ -95,19 +94,15 @@ int main() {
 
   // check
   size_t nrErrors = 0;
-  for (size_t i = 0; i < size; i++)
-  {
-    if (out.get<float>()[i] != (float)i + incVal)
-    {
+  for (size_t i = 0; i < size; i++) {
+    if (out.get<float>()[i] != (float)i + incVal) {
       nrErrors += 1;
     }
   }
 
-  if (nrErrors > 0)
-  {
+  if (nrErrors > 0) {
     cerr << "Error: " << nrErrors << " unexpected output values; printing a few outputs:" << endl;
-    for (size_t i = 0; i < (nrErrors < 10 ? nrErrors : 10); i++) // might print only correct output vals...
-    {
+    for (size_t i = 0; i < (nrErrors < 10 ? nrErrors : 10); i++) { // might print only correct output vals...
       cerr << "idx " << i << ": " << out.get<float>()[i] << endl;
     }
     return 1;
