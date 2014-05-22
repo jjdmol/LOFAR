@@ -1,0 +1,60 @@
+Release Notes - awimager cittg 0.1
+
+The major change in this release is a re-factored code base.
+That means that a lot of the code has changed, but the functionality has remained mostly the same.
+The purpose of these changes is to make the code more readable and modular. This allows for faster development
+of new features. It also makes it easier for new developers to contribute to the imager.
+
+Not all of the existing functionality has been ported to the new framework yet. So in some respects the functionality of
+this release less then the current LOFAR trunk version (LofIm and Pipeline).
+
+New functionality in this release was introduced by and upgrade of the underlying casa libraries
+from casarest ( = casa v2 from sept 2009) to Casa 4.2.
+
+Improvements in multiscale and wideband imaging
+
+
+Changes to the interface
+
+Parameters have been renamed and grouped together using the dot notation used in parsets, e.g. 
+npix has become image.npix, padding has become gridding.padding
+
+
+Test program
+
+The first goal of the test program is to verify that existing functionality has indeed been ported correctly to
+the new framework.
+
+Testing
+
+* generation of test data
+  - create a ms with makems
+  - add the beam tables
+  - add a WEIGHT_SPECTRUM column
+  - set flags in the beam tables 
+
+The LOFAR beam are fairly symmetric. To make it easier to find errors it help to introduce an artificial phase
+gradient by flagging half of the antennas at one side of a station.
+
+Create an empty image
+
+Set one or more pixels
+
+Create BBS sky model
+
+Run BBS
+
+Run awimager with operation=predict
+
+Compare CORRECTED_DATA and MODEL_DATA
+
+
+TODO:
+
+* User selection of WEIGHT or WEIGHT_SPECTRUM column
+* enable uniform and robust weighting
+* enable split beam mode (potentially ~4 speedup)
+* correct for artifical steeping of the the spectrum of sources at the edge of the FOV
+
+
+
