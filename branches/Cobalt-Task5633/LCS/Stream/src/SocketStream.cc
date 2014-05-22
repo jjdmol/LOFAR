@@ -145,7 +145,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
 
         if (mode == Client) {
           while (connect(fd, result->ai_addr, result->ai_addrlen) < 0)
-            if (errno == ECONNREFUSED) {
+            if (errno == ECONNREFUSED || errno == ETIMEDOUT) {
               if (deadline > 0 && time(0) >= deadline)
                 throw TimeOutException("client socket", THROW_ARGS);
 
@@ -153,7 +153,7 @@ SocketStream::SocketStream(const std::string &hostname, uint16 _port, Protocol p
                 // interrupted by a signal handler -- abort to allow this thread to
                 // be forced to continue after receiving a SIGINT, as with any other
                 // system call in this constructor 
-                THROW_SYSCALL("sleep");
+                THROW_SYSCALL("usleep");
               }
             } else
               THROW_SYSCALL(str(boost::format("connect [%s]") % description));
@@ -361,6 +361,22 @@ void SocketStream::deletekey(const std::string &nfskey)
 
   if (unlink(nfskey.c_str()) < 0)
     THROW_SYSCALL("unlink");
+}
+
+
+void SocketStream::setTimeout(double timeout)
+{
+  ASSERT(timeout >= 0.0);
+
+  struct timeval tv;
+  tv.tv_sec = static_cast<long>(timeout);
+  tv.tv_usec = static_cast<long>((timeout - floor(timeout)) * 1000.0 * 1000.0);
+
+  if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv) < 0)
+    THROW_SYSCALL("setsockopt(SO_RCVTIMEO)");
+
+  if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof tv) < 0)
+    THROW_SYSCALL("setsockopt(SO_SNDTIMEO)");
 }
 
 } // namespace LOFAR

@@ -32,7 +32,6 @@
 #include <map>
 
 #include <Common/LofarTypes.h>
-#include <Common/Timer.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
@@ -186,8 +185,6 @@ namespace LOFAR
       // Station to reference station position difference vector.
       casa::MVPosition phasePositionDiff;
 #endif
-
-      NSTimer delayTimer;
     };
 
   } // namespace Cobalt

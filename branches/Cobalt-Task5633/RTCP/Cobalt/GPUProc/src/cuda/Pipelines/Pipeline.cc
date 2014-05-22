@@ -132,7 +132,7 @@ namespace LOFAR
       // observation is empty.
       for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
         // Receive the samples from all subbands from the ant fields for this block.
-        LOG_INFO_STR("[block " << block << "] Collecting input buffers");
+        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
 
         SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
 
@@ -147,16 +147,13 @@ namespace LOFAR
           (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
         // Receive all subbands from all antenna fields
-        LOG_INFO_STR("[block " << block << "] Receive input");
+        LOG_DEBUG_STR("[block " << block << "] Receive input");
 
         if (block > 2) receiveTimer.start();
         receiver.receiveBlock<SampleT>(data, metaData);
         if (block > 2) receiveTimer.stop();
 
-        if (processingSubband0)
-          LOG_INFO_STR("[block " << block << "] Input received");
-        else
-          LOG_INFO_STR("[block " << block << "] Input received");
+        LOG_INFO_STR("[block " << block << "] Input received");
 
         mpiPool.filled.append(mpiData);
       }

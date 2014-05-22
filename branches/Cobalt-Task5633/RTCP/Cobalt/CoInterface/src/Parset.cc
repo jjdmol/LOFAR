@@ -709,7 +709,9 @@ namespace LOFAR
           size_t nrTABs    = getUint32(str(format("Observation.Beam[%u].nrTiedArrayBeams") % i), 0);
           size_t nrTABSParset = nrTABs;
           size_t nrRings   = getUint32(str(format("Observation.Beam[%u].nrTabRings") % i), 0);
-          double ringWidth = getDouble(str(format("Observation.Beam[%u].ringWidth") % i), 0.0);
+          double ringWidth = getDouble(str(format("Observation.Beam[%u].tabRingSize") % i), 0.0);
+          double sapAngle1 = getDouble(str(format("Observation.Beam[%u].angle1") % i), 0.0);
+          double sapAngle2 = getDouble(str(format("Observation.Beam[%u].angle2") % i), 0.0);
 
           // Create a ptr to RingCoordinates object
           // If there are tab rings the object will be actuall constructed
@@ -720,9 +722,6 @@ namespace LOFAR
             const string prefix = str(format("Observation.Beam[%u]") % i);
             string directionType = getString(prefix + ".directionType", "J2000");
             
-            double angle1 = getDouble(prefix + ".angle1", 0.0);
-            double angle2 = getDouble(prefix + ".angle2", 0.0);
-
             // Convert to COORDTYPES
             RingCoordinates::COORDTYPES type;
             if (directionType == "J2000")
@@ -735,7 +734,7 @@ namespace LOFAR
             // Create coords object
             ptrRingCoords = std::auto_ptr<RingCoordinates>(
               new RingCoordinates(nrRings, ringWidth,
-              RingCoordinates::Coordinate(angle1, angle2), type));
+              RingCoordinates::Coordinate(sapAngle1, sapAngle2), type));
 
             // Increase the amount of tabs with the number from the coords object
             // this might be zero
@@ -790,14 +789,16 @@ namespace LOFAR
                 RingCoordinates::Coordinate pointing = 
                     ptrRingCoords->coordinates().at(j - nrTABSParset);
 
+                // Note that RingCoordinates provide *relative* coordinates, and
+                // we need absolute ones.
                 tab.direction.type = ptrRingCoords->coordTypeAsString();
-                tab.direction.angle1 = pointing.first;
-                tab.direction.angle2 = pointing.second;
+                tab.direction.angle1 = sapAngle1 + pointing.first;
+                tab.direction.angle2 = sapAngle2 + pointing.second;
                 // One dispersion measure for all TABs in rings is inconvenient,
                 // but not used anyway. Unclear if setting to 0.0 is better/worse.
                 const string prefix = str(format("Cobalt.Observation.Beam[%u]") % i);
                 tab.dispersionMeasure = getDouble(prefix + ".tabRingDispersionMeasure", 0.0);
-                tab.coherent = getBool(prefix + ".tabRingCoherent", true); // in practice, always coherent
+                tab.coherent = true; // rings cannot be incoherent, since we use non-(0,0) pointings
               }
             }
 
