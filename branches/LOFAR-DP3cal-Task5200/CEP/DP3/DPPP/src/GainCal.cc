@@ -979,7 +979,11 @@ namespace LOFAR {
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsAntMaps[ts][st]==-1) {
-                values(0, ts) = 0;
+                if (k==0 && (i==0||i==3)) {
+                  values(0, ts) = 1;
+                } else {
+                  values(0, ts) = 0;
+                }
               } else {
                 int rst=itsAntMaps[ts][st];
                 if (itsMode=="fullgain") {
