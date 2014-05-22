@@ -171,12 +171,11 @@ namespace LOFAR
            it != configsMinBlockSize.end(); ++it) {
         setEnqueueWorkSizes(it->grid, it->block);
         double occupancy = predictMultiProcOccupancy();
-        if (occupancy > maxOccupancy - 0.05) { // 0.05 occ diff is meaningless for sure
-          if (occupancy > maxOccupancy) // avoid slippery slope :) 
-            maxOccupancy = occupancy;
-          configsMaxOccupancy.clear();
+        if (fpEquals(occupancy, maxOccupancy, 0.05)) { // 0.05 occ diff is meaningless for sure
           configsMaxOccupancy.push_back(*it);
-        } else if (fpEquals(occupancy, maxOccupancy, 0.05)) {
+        } else if (occupancy > maxOccupancy) {
+          maxOccupancy = occupancy;
+          configsMaxOccupancy.clear();
           configsMaxOccupancy.push_back(*it);
         }
       }
@@ -199,7 +198,7 @@ namespace LOFAR
       ASSERTSTR(params.nrSamplesPerChannel % (params.timeIntegrationFactor * itsTimeParallelFactor) == 0,
              "itsTimeParallelFactor=" << itsTimeParallelFactor);
       setEnqueueWorkSizes(selectedConfig.grid, selectedConfig.block);
-      LOG_INFO_STR("Exec config for CoherentStokes has a (predicted) occupancy of " << maxOccupancy);
+      LOG_INFO_STR("Coherent Stokes exec config has a (predicted) occupancy of " << maxOccupancy); // off by max 0.05...
 
       // The itsTimeParallelFactor immediate kernel arg must outlive kernel runs.
       setArg(2, itsTimeParallelFactor); // could be a kernel define, but not yet known at kernel compilation
