@@ -219,7 +219,8 @@ namespace LOFAR
       Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
-        // Early exc for easy debugging only (x, y, z are public).
+        // Cannot enforce this as an obj invariant (x, y, z public on purpose),
+        // but intended to trigger bugs early.
         if (x == 0 || y == 0 || z == 0)
           THROW(CUDAException, "Block(): block dims must be non-zero: " <<
                                x << " " << y << " " << z);

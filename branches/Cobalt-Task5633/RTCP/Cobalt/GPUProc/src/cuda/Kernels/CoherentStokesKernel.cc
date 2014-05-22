@@ -77,6 +77,15 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
+
+      // The following code paragraphs attempt to determine a reasonable
+      // execution configuration for any #channels, timeParallelFactor, #TABs.
+      //
+      // We first produce viable configs combinatorically (starting with the
+      // max and min parallelization dim constants), and
+      // then filter these configs using some heuristics (no compilation or run).
+      // We end up with 1 "best" config that we then apply after some assertions.
+      // The used heuristics are crude. Lots of room for improvement.
       const gpu::Device device(_context.getDevice());
 
       const unsigned defaultNrChannelsPerBlock = 16;
@@ -97,7 +106,9 @@ namespace LOFAR
       const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
                                                        maxLocalWorkSize.z);
 
-      // Generate valid execution configs.
+      // Generate viable execution configurations.
+      // Step through each of the 3 parallelization dims and verify if supp by hw.
+      // Store candidates along with their timeParallelFactor to be passed as kernel arg.
       using std::vector;
       vector<CoherentStokesExecConfig> configs;
       for (unsigned nrTABsPerBlock = minNrTABsPerBlock;
@@ -143,8 +154,10 @@ namespace LOFAR
       }
       ASSERT(!configs.empty());
 
-      // Select config to use by narrowing down.
-      // Prefer: >=64 thr/blk, max occupancy, max #blks (= smallest blk size)
+      // Select config to use by narrowing down a few times based on some heuristics.
+      // Each time, the surviving exec configs are copied to a new vector.
+      // The first filter prefers >=64 threads per block.
+      // Thereafter, we prefer high occupancy, and max #blks (= smallest blk size).
       vector<CoherentStokesExecConfig> configsMinBlockSize;
       unsigned minThreadsPerBlock = 64;
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
@@ -165,6 +178,7 @@ namespace LOFAR
         configsMinBlockSize = configs; // tough luck
       }
 
+      // High occupancy heuristic.
       vector<CoherentStokesExecConfig> configsMaxOccupancy;
       double maxOccupancy = 0.0;
       for (vector<CoherentStokesExecConfig>::const_iterator it = configsMinBlockSize.begin();
@@ -180,6 +194,7 @@ namespace LOFAR
         }
       }
 
+      // Within earlier constraints, prefer min block size to maximize #blocks.
       CoherentStokesExecConfig selectedConfig;
       unsigned minBlockSizeSeen = maxLocalWorkSize.x * maxLocalWorkSize.y * maxLocalWorkSize.z + 1;
       for (vector<CoherentStokesExecConfig>::const_iterator it = configsMaxOccupancy.begin();
