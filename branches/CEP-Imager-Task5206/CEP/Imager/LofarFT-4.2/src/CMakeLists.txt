@@ -13,7 +13,7 @@ lofar_add_library(lofarft
   Imager.cc
   CFStore.cc
   FTMachine.cc
-  FTMachineSimpleWB.cc
+#   FTMachineSimpleWB.cc
   FTMachineSplitBeamWStackWB.cc
   WTerm.cc
   VisBuffer.cc

@@ -24,6 +24,9 @@
 
 #include <Common/lofar_iostream.h>
 #include <LofarFT/OperationEmpty.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
+
+using namespace casa;
 
 namespace LOFAR {
 namespace LofarFT {
@@ -38,7 +41,18 @@ namespace
 }
 
 OperationEmpty::OperationEmpty(ParameterSet& parset): OperationImage(parset)
-{}
+{
+  needsFTMachine=false;
+}
+
+void OperationEmpty::run()
+{
+  casa::CoordinateSystem coords;
+  AlwaysAssert (itsImager->imagecoordinates(coords), AipsError);
+  int fieldid = 0; // TODO get from parameters
+  itsImager->makeEmptyImage(coords, itsImageName, fieldid);
+  itsImager->unlock();
+}
 
 
 void OperationEmpty::showHelp (ostream& os, const string& name)

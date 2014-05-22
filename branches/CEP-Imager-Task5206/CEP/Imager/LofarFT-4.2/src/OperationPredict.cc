@@ -37,7 +37,6 @@ namespace
 OperationPredict::OperationPredict(ParameterSet& parset): Operation(parset)
 {
   needsData=true;
-  needsImage=true;
 }
 
 void OperationPredict::init()

@@ -140,6 +140,12 @@ public:
 //  LofarFTMachineOld(Long cachesize, Int tilesize, CountedPtr<VisibilityResamplerBase>& visResampler,
 //	  String convType="SF", Float padding=1.0, Bool usezero=True, Bool useDoublePrec=False);
   
+  enum domain 
+  {
+    IMAGE=0,
+    UV
+  };
+  
   FTMachine(
     const casa::MeasurementSet& ms, 
     LOFAR::ParameterSet& parset);
@@ -201,7 +207,7 @@ public:
   void makeImage(
     casa::FTMachine::Type type,
     casa::ROVisibilityIterator& vi,
-    casa::ImageInterface<casa::Complex>& image,
+    casa::ImageInterface<casa::Float>& image,
     casa::Matrix<casa::Float>& weight);
 
   // Get the final image: do the Fourier transform and
@@ -218,8 +224,8 @@ public:
   const casa::Matrix<casa::Float>& getAveragePB() const;
 
   // Get the spheroidal cut.
-  const casa::Matrix<casa::Float>& getSpheroidCut() const
-    { return itsConvFunc->getSpheroidCut(); }
+  const casa::Matrix<casa::Float>& getSpheroidal() const
+    { return itsConvFunc->getSpheroidal(); }
 
 
 
@@ -269,7 +275,7 @@ public:
   
 protected:
   
-  void initialize_model_grids(casa::Bool normalize);
+  virtual void initialize_model_grids(casa::Bool normalize);
   
   void finalize_model_grids();
 
@@ -294,8 +300,9 @@ protected:
   // Arrays for non-tiled gridding (one per thread).
   vector< casa::Array<casa::Complex> >  itsGriddedData;
   vector< casa::Array<casa::DComplex> > itsGriddedData2;
+  domain itsGriddedDataDomain;
 
-  
+  casa::Bool itsNormalizeModel;
   casa::Int itsNX; 
   casa::Int itsNY; 
   casa::Int itsPaddedNX; 
@@ -338,7 +345,7 @@ protected:
   vector< casa::Matrix<casa::Complex> > itsSumPB;
   vector< casa::Matrix<casa::Double> >  itsSumWeight;
   vector< double > itsSumCFWeight;
-  mutable casa::Matrix<casa::Float> itsAvgPB;
+  mutable casa::Matrix<casa::Float> itsAveragePB;
 
   casa::Int itsPriorCacheSize;
 

@@ -81,6 +81,8 @@
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisSet.h>
 
+#include "helper_functions.tcc"
+
 #define DORES True
 
 using namespace casa;
@@ -103,27 +105,24 @@ FTMachine::FTMachine(
 //     itsPolMap(casa::FTMachine::polMap),
     
   // ================================================  
-    itsPadding(parset.getDouble("gridding.padding",1.0)),
+    itsPadding(parset.getDouble("gridding.padding", 1.0)),
     itsMaxAbsData(0.0), 
     itsCenterLoc(IPosition(4,0)),
     itsOffsetLoc(IPosition(4,0)),
     itsParset(parset),
     itsMS(ms),
     itsNWPlanes(100 /*nwPlanes*/), 
-    itsWMax(parset.getDouble("data.wmax",10000.0)),
+    itsWMax(parset.getDouble("data.wmax", 10000.0)),
     itsConvFunc(), 
     itsVerbose(parset.getInt("verbose",0)),
-    itsMaxSupport(parset.getInt("gridding.maxsupport",1024)),
-    itsOversample(parset.getInt("gridding.oversample",8)),
-    itsImageName(parset.getString("output.imagename")),
+    itsMaxSupport(parset.getInt("gridding.maxsupport", 1024)),
+    itsOversample(parset.getInt("gridding.oversample", 9)),
+    itsImageName(parset.getString("output.imagename", "")),
     itsGriddingTime(0),   // counters to measure time spend per operation (Gridding, Degridding, and Convolution Function computation)
     itsDegriddingTime(0), //
-    itsCFTime(0)          //
-    
-//     itsMLocation(mLocation),
-//     itsTangentSpecified(False),
-//     itsUseDoubleGrid(useDoublePrec),
-//     itsCanComputeResiduals(DORES)
+    itsCFTime(0),          //
+    itsGriddedDataDomain(UV),
+    itsAveragePB()
 {
 }
 
@@ -247,7 +246,7 @@ FTMachine::~FTMachine()
 const Matrix<Float>& FTMachine::getAveragePB() const
 {
   // Read average beam from disk if not present.
-  if (itsAvgPB.empty()) {
+  if (itsAveragePB.empty()) {
     
     IPosition blc(
       2, 
@@ -256,16 +255,12 @@ const Matrix<Float>& FTMachine::getAveragePB() const
     IPosition shape(2, itsNX, itsNY);
     Slicer slicer(blc, shape);
     
-    Array<Float> avgpb = itsConvFunc->getAveragePB(itsImageName)(slicer);
-    
-    // get the spheroid
-    Array<Float> spheroid = itsConvFunc->getSpheroidCut(itsImageName)(slicer);
-    
-// TODO: sqrt and spheroid should not be here, but image on disk is (average beam * spheroid)^2
-    itsAvgPB = sqrt(avgpb)/spheroid;
-    
+    itsAveragePB.reference(itsConvFunc->getAveragePB()(slicer));
+
+    // Make it persistent.
+    store(itsAveragePB, itsImageName + ".avgpb");
   }
-  return itsAvgPB;
+  return itsAveragePB;
 }
 
 // Initialize for a transform from the Sky domain. This means that
@@ -286,6 +281,8 @@ void FTMachine::initializeToVis(
   // Create complex model grid
   // Does normalization to true sky brightness, padding, and fft
   initialize_model_grids(normalize);
+  
+  itsNormalizeModel = normalize;
 
 //   itsVisResampler->init(itsUseDoubleGrid);
 }
@@ -410,10 +407,14 @@ void FTMachine::initialize_model_grids(Bool normalize_model)
     
     // Now do the FFT2D in place
     // LatticeFFT::cfft2d takes the 2D FFT over the first two dimensions, and iterates over the rest
+    cout << "fft..." << flush;
     LatticeFFT::cfft2d(*itsComplexModelImages[model]);
+    cout << "done." << endl;
     
     itsModelGrids[model].reference(itsComplexModelImages[model]->get());
-    cout << "**** " << abs(itsModelGrids[model](IPosition(4, 400,400,0,0))) << " ****" << endl;
+    cout << itsComplexModelImages[model]->get().data() << endl;
+    cout << itsModelGrids[model].data() << endl;
+
   }
   
 }
@@ -475,18 +476,16 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
 {
   cout << "FTMachineSimpleWB::getImages" << endl;
   
-  logIO() << LogOrigin("FTMachine", "getImage") << LogIO::NORMAL;
+  logIO() << LogOrigin("FTMachine", "getImages") << LogIO::NORMAL;
 
-  // force computation of average primary beam
-  // the result is stored on disk
-  // and later fetched by getAveragePB
-  itsConvFunc->compute_avg_pb(itsSumPB[0], itsSumCFWeight[0]);
-  
   for(Int i=0; i<itsImages.nelements(); i++)
   {
     
     IPosition start(4,0);
     IPosition end = itsGriddedData[i].shape() - 1; // end index is inclusive, need to subtract 1
+    
+    cout << "itsSumWeight[" << i << "]: " << itsSumWeight[i] << endl;
+    
     
     for(Int chan=0; chan < itsNChan; chan++)
     {
@@ -501,9 +500,7 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
     }
     
     ArrayLattice<Complex> lattice(itsGriddedData[i]);
-    LatticeFFT::cfft2d(lattice, True);
-    
-    cout << "itsSumWeight[" << i << "]: " << itsSumWeight[i] << endl;
+    if (itsGriddedDataDomain == UV) LatticeFFT::cfft2d(lattice, True);
     
     IPosition blc(
       4, 
@@ -514,23 +511,19 @@ void FTMachine::getImages(Matrix<Float>& weights, Bool normalize_image)
     
     IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
 
-    cout << blc << endl;
-    cout << shape << endl;
-    cout << itsComplexImages[i]->shape() << endl;
-    
     CountedPtr<ImageInterface<Complex> > complex_subimage = new SubImage<Complex>(*itsComplexImages[i], Slicer(blc, shape), True);
 
-    cout << "isWritable: " << complex_subimage->isWritable() << endl;
-    
     normalize(*complex_subimage, True, True);
 
-    StokesImageUtil::To(*itsImages[i], *complex_subimage);
     
+    StokesImageUtil::To(*itsImages[i], *complex_subimage);
   }
 }  
 
 void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_spheroidal)
 {
+  cout << "normalize..." << flush;
+  
   LatticeExprNode factor(1.0);
   
   if (do_spheroidal)
@@ -542,7 +535,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     IPosition shape(2, itsNX, itsNY, itsNPol, itsNChan);
     
     Slicer slicer(blc, shape);
-    factor = factor * ArrayLattice<Float>(itsConvFunc->getSpheroidCut()(slicer));
+    factor = factor * ArrayLattice<Float>(itsConvFunc->getSpheroidal()(slicer));
   }
   
   if (do_beam)
@@ -564,10 +557,10 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
       start[2] = j;
       image.getSlice(slice, start, slice_shape, True);
       ArrayLattice<Complex> lattice(slice);
-      cout << lattice.shape() << " " << factor.shape() << endl;
       lattice.copyData(LatticeExpr<Complex>(iif(factor < 1e-2, 0.0, lattice / factor)));
     }
   }
+  cout << "done." << endl;
 }
  
 
@@ -705,7 +698,7 @@ void FTMachine::ok() {
 void FTMachine::makeImage(
   FTMachine::Type type,
   ROVisibilityIterator& vi,
-  ImageInterface<Complex>& theImage,
+  ImageInterface<Float>& theImage,
   Matrix<Float>& weight) 
 {
   logIO() << LogOrigin("LofarFTMachine", "makeImage") << LogIO::NORMAL;
@@ -720,27 +713,32 @@ void FTMachine::makeImage(
   
   
   // Initialize put (i.e. transform to Sky) for this model
+  PtrBlock<ImageInterface<Float> * > images(1);
+  images[0] = &theImage;
+  
+  initializeToSky(images, false);
+  
   vi.origin();
 
 //   cout << "Image shape: " << theImage.shape() << endl;
-  CoordinateSystem coords = theImage.coordinates();
-  Int stokesIndex = coords.findCoordinate(Coordinate::STOKES);
-  AlwaysAssert(stokesIndex>-1, AipsError);
-  StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
-  
-  if(vb.polFrame()==MSIter::Linear) {
-    StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
-  }
-  else {
-    StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
-  }
-
-  coords = theImage.coordinates();
-  stokesIndex = coords.findCoordinate(Coordinate::STOKES);
-  AlwaysAssert(stokesIndex>-1, AipsError);
-  stokesCoord = coords.stokesCoordinate(stokesIndex);
-  
-
+//   CoordinateSystem coords = theImage.coordinates();
+//   Int stokesIndex = coords.findCoordinate(Coordinate::STOKES);
+//   AlwaysAssert(stokesIndex>-1, AipsError);
+//   StokesCoordinate stokesCoord = coords.stokesCoordinate(stokesIndex);
+//   
+//   if(vb.polFrame()==MSIter::Linear) {
+//     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
+//   }
+//   else {
+//     StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
+//   }
+// 
+//   coords = theImage.coordinates();
+//   stokesIndex = coords.findCoordinate(Coordinate::STOKES);
+//   AlwaysAssert(stokesIndex>-1, AipsError);
+//   stokesCoord = coords.stokesCoordinate(stokesIndex);
+//   
+// 
 
   // Loop over the visibilities, putting VisBuffers
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
@@ -779,8 +777,7 @@ void FTMachine::makeImage(
     }
   }
   finalizeToSky();
-  // Normalize by dividing out weights, etc.
-  getImage(weight, True);
+  getImages(weight, True);
 }
 
 void FTMachine::ComputeResiduals(casa::VisBuffer&vb, Bool useCorrected)

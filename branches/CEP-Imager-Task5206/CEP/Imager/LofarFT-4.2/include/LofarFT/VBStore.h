@@ -69,6 +69,7 @@ namespace LofarFT {
     void imagingWeightCube(const casa::Cube<casa::Float>&  v)  {itsImagingWeightCube.reference(v);}
     
     casa::Cube<casa::Complex>& visCube()        {return itsVisCube;}
+    const casa::Cube<casa::Complex>& visCube() const       {return itsVisCube;}
     void visCube(casa::Cube<casa::Complex>& viscube) {itsVisCube.reference(viscube);}
 
     casa::Cube<casa::Complex>& modelVisCube() {return itsModelVisCube;}

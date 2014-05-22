@@ -36,7 +36,7 @@ namespace LofarFT {
 
     virtual void showHelp (ostream& os, const std::string& name);
 
-  private:
+  protected:
     casa::String itsImageName;
   };
 

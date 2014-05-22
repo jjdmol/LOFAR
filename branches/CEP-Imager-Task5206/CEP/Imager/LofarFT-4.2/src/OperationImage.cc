@@ -28,13 +28,12 @@
 namespace LOFAR {
 namespace LofarFT {
 
-  /* Tammo Jan: Uncomment this as soon as the class works...
 namespace
 {
   bool dummy = OperationFactory::instance().
     registerClass<OperationImage>("image");
 }
-*/
+
   
 OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 {
@@ -45,7 +44,8 @@ OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 
 void OperationImage::init()
 {
-    itsImageName=itsParset.getString("output.imagename");
+  Operation::init();
+  itsImageName=itsParset.getString("output.imagename");
 }
 
 void OperationImage::run()

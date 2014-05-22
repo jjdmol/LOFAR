@@ -503,6 +503,7 @@ Record Imager::initClean(const String& algorithm,
   }  
   catch (exception &x) 
   { 
+    savePSF(psfnames);
     this->unlock();
     destroySkyEquation();
     throw(AipsError(x.what()));
@@ -600,6 +601,109 @@ casa::Record Imager::doClean(const casa::Bool firstrun) {
     return retval;
 
 }
+
+// Calculate various sorts of image. Only one image
+// can be calculated at a time.  This does not use
+// the SkyEquation.
+Bool Imager::makeimage(const String& type, const String& image)
+{
+  if(!valid()) 
+  {
+    return False;
+  }
+  LogIO os(LogOrigin("imager", "makeimage()", WHERE));
+  
+  this->lock();
+  try 
+  {
+    if(!assertDefinedImageParameters())
+    {
+      return False;
+    }
+    
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Calculating image (without full skyequation)" << LogIO::POST;
+    
+    FTMachine::Type seType(FTMachine::OBSERVED);
+
+    if(type=="observed") {
+      seType=FTMachine::OBSERVED;
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making dirty image from " << type << " data "
+         << LogIO::POST;
+    }
+    else if (type=="model") {
+      seType=FTMachine::MODEL;
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making dirty image from " << type << " data "
+         << LogIO::POST;
+    }
+    else if (type=="corrected") {
+      seType=FTMachine::CORRECTED;
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making dirty image from " << type << " data "
+         << LogIO::POST;
+    }
+    else if (type=="psf") {
+      seType=FTMachine::PSF;
+      os << "Making point spread function "
+         << LogIO::POST;
+    }
+    else if (type=="residual") {
+      seType=FTMachine::RESIDUAL;
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Making dirty image from " << type << " data "
+         << LogIO::POST;
+    }
+    else 
+    {
+      this->unlock();
+      os << LogIO::SEVERE << "Unknown image type " << type << LogIO::EXCEPTION;
+      return False;
+    }
+
+    // Now make the images. If we didn't specify the names then
+    // delete on exit.
+    String imageName(image);
+    if(image=="") {
+      imageName=Imager::imageName()+".image";
+    }
+    os << LogIO::NORMAL << "Image is : " << imageName << LogIO::POST; // Loglevel INFO
+
+    CoordinateSystem imagecoords;
+    if(!imagecoordinates2(imagecoords, false))
+      {
+        return False;
+      }
+    make(imageName);
+    PagedImage<Float> imageImage(imageName);
+    imageImage.set(0.0);
+    
+    String ftmachine(ftmachine_p);
+    if (!ft_p)
+      createFTMachine();
+    
+    // Now make the required image
+    Matrix<Float> weight;
+    itsFTMachine->makeImage(seType, *rvi_p, imageImage, weight);
+    this->unlock();
+
+    return True;
+  } catch (AipsError x) {
+    this->unlock();
+   
+    throw(x);
+    return False;
+  }
+  catch(...){
+    //Unknown exception...
+    throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
+  }
+  this->unlock();
+
+  return True;
+}  
+
 
 void Imager::initPredict(const Vector<String>& modelNames) {
   createSkyEquation(modelNames);

@@ -27,9 +27,12 @@ namespace LofarFT {
   public:
     
     OperationEmpty(ParameterSet& parset);
+
     virtual ~OperationEmpty() {};
 
-    virtual void showHelp (ostream& os, const string& name);
+    virtual void run();
+
+    virtual void showHelp (ostream& os, const std::string& name);
   };
 
 } //# namespace LofarFT

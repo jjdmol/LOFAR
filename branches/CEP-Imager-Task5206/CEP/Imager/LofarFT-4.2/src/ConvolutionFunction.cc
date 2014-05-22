@@ -122,12 +122,13 @@ ConvolutionFunction::ConvolutionFunction
     itsTimeAcnt (0),
     itsTimeCFpar(0),
     itsTimeCFfft(0),
-    itsTimeCFcnt(0)
+    itsTimeCFcnt(0),
+    itsSumCF(),
+    itsAveragePB(),
+    itsSpheroidal(),
+    itsSpheroidalCF(),
+    itsSupportCF(11)
 {
-  if (itsVerbose > 0) 
-  {
-    cout<<"ConvolutionFunction:shape  "<<shape<<endl;
-  }
   itsFFTMachines.resize (OpenMP::maxThreads());
 
   itsWScale = WScale(itsMaxW, itsNWPlanes);
@@ -138,6 +139,7 @@ ConvolutionFunction::ConvolutionFunction
   
   // Temporary hack to be able to compute a wavelength, 
   // even though set_frequency has not been called yet.
+  // TODO: fix this
   itsFrequencyList = Vector<Double>(1, itsRefFrequency);
 
   // Make OverSampling an odd number
@@ -153,11 +155,11 @@ ConvolutionFunction::ConvolutionFunction
   Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
-  if (parset.getBool("gridding.findNWplanes",false)) FindNWplanes();
+//   if (parset.getBool("gridding.findNWplanes",false)) FindNWplanes();
   itsChan_block_size = parset.getInt("gridding.chanBlockSize",0);
 
   // Precalculate the Wtwerm fft for all w-planes.
-  store_all_W_images();
+//   store_all_W_images();
 }
 
 ConvolutionFunction::Polarization::Type ConvolutionFunction::image_polarization() const
@@ -336,6 +338,7 @@ void ConvolutionFunction::computeAterm (Double time)
       }
       // Make odd and optimal.
       nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+      nPixelsConv = itsSupportCF;
       aPixelAngSize = imageDiameter / nPixelsConv;
       if (itsVerbose > 1) 
       {
@@ -364,18 +367,6 @@ void ConvolutionFunction::computeAterm (Double time)
         itsFrequencyList, 
         itsFrequencyList, 
         true);
-      // Compute the fft on the beam
-      for (uInt ch=0; ch<itsNChannel; ++ch) 
-      {
-        for (uInt pol=0; pol<4; ++pol) 
-        {
-          Matrix<Complex> plane (aTermA[ch].xyPlane(pol));
-          ASSERT (plane.contiguousStorage());
-          normalized_fft (timerFFT, plane);
-        }
-      }
-      // Note that push_back uses the copy constructor, so for the Cubes
-      // in the vector the copy constructor is called too (which is cheap).
       aTermList[i] = aTermA;
       timerPar.stop();
     } // end omp for
@@ -394,268 +385,178 @@ void ConvolutionFunction::computeAterm (Double time)
   itsTimeA = aTimer.getReal();
 }
 
-//================================================
-// Compute the convolution function for all channel, for the polarisations specified in the Mueller_mask matrix
-// Also specify weither to compute the Mueller matrix for the forward or the backward step. A dirty way to calculate
-// the average beam has been implemented, by specifying the beam correcping to the given baseline and timeslot.
-// RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
-
 CFStore ConvolutionFunction::makeConvolutionFunction(
   uInt stationA, 
   uInt stationB, 
   Double time, 
   Double w,
-  bool degridding_step,
-  double Append_average_PB_CF, 
-  Matrix<Complex>& Stack_PB_CF,
-  double& sum_weight_square)
+  const casa::Matrix<casa::Float> &sum_weight,
+  const vector<bool> &channel_selection,
+  double w_offset)
 {
   // Initialize timers.
   PrecTimer timerFFT;
   PrecTimer timerPar;
   timerPar.start();
 
-  // Stack_PB_CF should be called Sum_PB_CF (it is a sum, no stack).
-  CountedPtr<CFTypeVec> res (new vector< vector< vector < Matrix<Complex> > > >());
+
+  CountedPtr<CFTypeVec> res (new CFTypeVec());
   CFTypeVec& result = *res;
-  vector< vector< vector < Matrix<Complex> > > > result_non_padded;
 
-  // Stack the convolution function if averagepb.img don't exist
-  Matrix<Complex> Stack_PB_CF_fft(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
-  Bool stack = (Append_average_PB_CF != 0.);
-
-  // If the beam is not in memory, compute it
-      
+  // Compute the the beam, will be taken from cache if available
   map<Double, vector< vector< Cube<Complex> > > >::const_iterator aiter = itsAtermStore.find(time);
   
   ASSERT (aiter != itsAtermStore.end());
   const vector< vector< Cube<Complex> > >& aterm = aiter->second;
 
-  // Load the Wterm
-  uInt w_index = itsWScale.plane(w);
-  Matrix<Complex> wTerm;
-//   cout << w_index << "/" << itsWplanesStore.size() << endl;
-  wTerm = itsWplanesStore[w_index];
-  Int Npix_out = 0;
   Int Npix_out2 = 0;
 
-  if (w > 0.) 
-  {
-    wTerm.reference (conj(wTerm));
-  }
+  Vector<Int> xsup(itsNChannel,0);
+  Vector<Int> ysup(itsNChannel,0);
 
   for (uInt ch=0; ch<itsNChannel; ++ch) 
   {
+    
+    if (not channel_selection[ch])
+    {
+      // channel has not been selected
+      // insert an empty dummy result in result vector
+      vector< vector < Matrix<Complex> > > kronecker_product;
+      result.push_back(kronecker_product);
+      continue;
+    }
+    
+    double wavelength = casa::C::c/itsFrequencyList[ch];
+    double w_lambda = abs(w)/wavelength - w_offset;
+    // compute wTerm
+
+    Double pixelSize = abs(itsCoordinates.increment()[0]);
+    Double imageDiameter = pixelSize * itsShape(0);
+    Double wPixelAngSize = min(itsPixelSizeSpheroidal,
+                                estimateWResolution(itsShape, pixelSize, abs(w_lambda)));
+    Int nPixelsConv = round(imageDiameter / wPixelAngSize);
+    
+    if (nPixelsConv > itsMaxSupport) 
+    {
+      nPixelsConv = itsMaxSupport;
+    }
+    // Make odd and optimal.
+    nPixelsConv = FFTCMatrix::optimalOddFFTSize (nPixelsConv);
+    wPixelAngSize = imageDiameter / nPixelsConv;
+
+    
+    int nPixelsAterm = aterm[stationA][ch].shape()(1);
+    
+    if (itsSumCF.empty())
+    {
+      itsSumCF.resize(nPixelsAterm, nPixelsAterm);
+      itsSumCF = 0.0;
+      itsSumWeight = 0.0;
+    }
+    
+    IPosition shape(2, nPixelsConv, nPixelsConv);
+    //Careful with the sign of increment!!!! To check!!!!!!!
+    Vector<Double> increment(2, wPixelAngSize);
+    
+    // Note this is the conjugate!
+    Matrix<Complex> wTerm = itsWTerm.evaluate(shape, increment, -w_lambda);
+    
     // Load the Aterm
-    const Cube<Complex>& aTermA(aterm[stationA][ch]);
-    const Cube<Complex>& aTermB(aterm[stationB][ch]);
+    const Cube<Complex>& aTerm1(aterm[stationA][ch]);
+    const Cube<Complex>& aTerm2(aterm[stationB][ch]);
     // Determine maximum support of A, W, and Spheroidal function for zero padding
-    Npix_out = std::max(std::max(aTermA.shape()[0], aTermB.shape()[0]),
-                        std::max(wTerm.shape()[0], itsSpheroid_cut.shape()[0]));
-    if (itsVerbose > 1) 
-    {
-      cout << "Number of pixel in the final conv function for baseline [" << stationA << ", " << stationB << "] = " << Npix_out
-          << " " << aTermA.shape()[0] << " " << aTermB.shape()[0] << " " << wTerm.shape()[0] << endl;
-    }
-
-    // Zero pad to make the image planes of the A1, A2, and W term have the same resolution in the image plane
-    Matrix<Complex> spheroid_cut_paddedf(zero_padding(itsSpheroid_cut,Npix_out));
-    Matrix<Complex> wTerm_paddedf(zero_padding(wTerm, Npix_out));
-    Cube<Complex> aTermA_padded(zero_padding(aTermA, Npix_out));
-    Cube<Complex> aTermB_padded(zero_padding(aTermB, Npix_out));
-
-    // FFT (backward) the A and W terms
-    normalized_fft (timerFFT, wTerm_paddedf, false);
-    normalized_fft (timerFFT, spheroid_cut_paddedf, false);
-    if (itsVerbose > 1) 
-    {
-      cout << "fft shapes " << wTerm_paddedf.shape() << ' ' << spheroid_cut_paddedf.shape()
-            << ' ' << aTermA_padded.shape() << ' ' << aTermB_padded.shape() << endl;
-    }
-    for (uInt i=0; i<4; ++i) 
-    {
-      Matrix<Complex> planeAf(aTermA_padded.xyPlane(i));
-      Matrix<Complex> planeBf(aTermB_padded.xyPlane(i));
-      ASSERT(planeAf.contiguousStorage());
-      normalized_fft (timerFFT, planeAf, false);
-      normalized_fft (timerFFT, planeBf, false);
-    }
-
+    int Npix_out = nPixelsConv;
+    
+    xsup(ch) = Npix_out/2;
+    ysup(ch) = Npix_out/2;
+    
     // Create the vectors of Matrices giving the convolution functions
     // for each Mueller element.
-    vector< vector < Matrix<Complex> > > kronecker_product;
-    kronecker_product.reserve(4);
-
-    // Something I still don't completely understand: for the average PB calculation.
-    // The convolution functions padded with a higher value than the minimum one give a
-    // better result in the end. If you try Npix_out2=Npix_out, then the average PB shows
-    // structure like aliasing, producing high values in the devided dirty map... This
-    // is likely to be due to the way fft works?...
-    // FIX: I now do the average of the PB by stacking the CF, FFT the result and square 
-    // it in the end. This is not the way to do in principle but the result is almost the 
-    // same. It should pose no problem I think.
-    Matrix<Complex> spheroid_cut_padded2f;
-    Cube<Complex> aTermA_padded2;
-    Cube<Complex> aTermB_padded2;
-
-    // Keep the non-padded convolution functions for average PB calculation.
-    vector< vector < Matrix<Complex> > > kronecker_product_non_padded;
-    kronecker_product_non_padded.reserve(4);
-          
-    if (stack) 
+    vector< vector < Matrix<Complex> > > kronecker_product(4, vector < Matrix<Complex> >(4));
+    
+    // Compute the Mueller matrix
+    
+    // Iterate over the row index of the Jones matrices
+    // The row index corresponds to the visibility polarizations
+    #pragma omp parallel for collapse(4)
+    for (uInt row2=0; row2<=1; ++row2) // iterate over the rows of Jones matrix 2
     {
-      Npix_out2 = Npix_out;
-      spheroid_cut_padded2f = zero_padding(itsSpheroid_cut, Npix_out2);
-      aTermA_padded2 = zero_padding(aTermA, Npix_out2);
-      aTermB_padded2 = zero_padding(aTermB, Npix_out2);
-      normalized_fft (timerFFT, spheroid_cut_padded2f, false);
-      for (uInt i=0; i<4; ++i) 
+      for (uInt row1=0; row1<=1; ++row1) // iterate over the rows of Jones matrix 1
       {
-        Matrix<Complex> planeA2f(aTermA_padded2.xyPlane(i));
-        Matrix<Complex> planeB2f(aTermB_padded2.xyPlane(i));
-        normalized_fft (timerFFT, planeA2f, false);
-        normalized_fft (timerFFT, planeB2f, false);
-      }
-    }
-
-    // Compute the Mueller matrix considering the Mueller Mask
-    uInt ind0;
-    uInt ind1;
-    uInt ii = 0;
-    IPosition cfShape;
-
-    for (uInt row0=0; row0<=1; ++row0) 
-    {
-      for (uInt col0=0; col0<=1; ++col0) 
-      {
-        vector < Matrix<Complex> > Row(4);
-        vector < Matrix<Complex> > row_non_padded(4);
-        uInt jj = 0;
-        for (uInt row1=0; row1<=1; ++row1) 
+        // Iterate over the column index of the Jones matrices
+        // The column index corresponds to the image polarizations
+        for (uInt col2=0; col2<=1; ++col2) 
         {
           for (uInt col1=0; col1<=1; ++col1) 
           {
+            uInt ii = row2*2+row1;
+            uInt jj = col2*2+col1;
+            
             // This Mueller ordering is for polarisation given as XX,XY,YX YY
-            ind0 = row0 + 2*row1;
-            ind1 = col0 + 2*col1;
-            // Compute the convolution function for the given Mueller element
-
-              // Padded version for oversampling the convolution function
-              Matrix<Complex> plane_product (aTermB_padded.xyPlane(ind0) *
-                                              aTermA_padded.xyPlane(ind1));
-              plane_product *= wTerm_paddedf;
-              plane_product *= spheroid_cut_paddedf;
-              Matrix<Complex> plane_product_paddedf
-                (zero_padding(plane_product,
-                              plane_product.shape()[0] * itsOversampling));
-              normalized_fft (timerFFT, plane_product_paddedf);
-
-              plane_product_paddedf *= static_cast<Float>(itsOversampling *
-                                                          itsOversampling);
-              if (itsVerbose>3 && row0==0 && col0==0 && row1==0 && col1==0) 
-              {
-                #pragma omp critical
-                store (plane_product_paddedf, "awfft"+String::toString(stationA)+'-'+String::toString(stationB));
-              }
-
-              Row[jj].reference (plane_product_paddedf);
-              cfShape = plane_product_paddedf.shape();
-              // Non padded version for PB calculation (no W-term)
-              if (stack) 
-              {
-                Matrix<Complex> plane_productf(aTermB_padded2.xyPlane(ind0)*
-                                                aTermA_padded2.xyPlane(ind1));
-                plane_productf *= spheroid_cut_padded2f;
-                normalized_fft (timerFFT, plane_productf);
-                row_non_padded[jj].reference (plane_productf);
-              }
-
-            ++jj;
-          }
-        }
-        ++ii;
-        kronecker_product.push_back(Row);
-        if (stack) 
-        {
-          // Keep non-padded for primary beam calculation.
-          kronecker_product_non_padded.push_back(row_non_padded);
-        }
-      }
-    }
-
-    // When degridding, transpose and use conjugate.
-    if (degridding_step) 
-    {
-      for (uInt i=0; i<4; ++i) 
-      {
-        for (uInt j=i; j<4; ++j) 
-        {
-
-
-            if (i!=j) 
+            uInt ind1 = col1 + 2*row1;
+            uInt ind2 = col2 + 2*row2;
+            
+            Matrix<Complex> aTerm;
+            
+            #pragma omp critical
             {
-              Matrix<Complex> conj_product(conj(kronecker_product[i][j]));
-              kronecker_product[i][j].reference (conj(kronecker_product[j][i]));
-              kronecker_product[j][i].reference (conj_product);
-            } 
-            else 
-            {
-              kronecker_product[i][j].reference (conj(kronecker_product[i][j]));
+              // 1. Multiply aTerm1, aTerm2 and spheroidal
+              // Note this is the conjugate!
+              aTerm.reference(aTerm1.xyPlane(ind1) * conj(aTerm2.xyPlane(ind2)) * getSpheroidalCF());
+              if (w<0)
+              {
+                aTerm = conj(aTerm);
+              }
+              
+              // 2a add squared beam to sum, for scalar avarage beam
+              if ((ii == jj) && (not sum_weight.empty()))
+              {
+                Matrix<Float> aTerm_squared(real(abs(aTerm)));
+                aTerm_squared *= aTerm_squared;
+                itsSumCF += aTerm_squared * sum_weight(ii, ch);
+                itsSumWeight += sum_weight(ii, ch);
+              }
+              // 2b. for full matrix average beam
+              // insert in non padded aterm storage to compute squared beam later on
+              // because all cross terms need to be computed
+              
+              // 3. fft to uv domain
+              normalized_fft (timerFFT, aTerm, true);
+              
+              // 4. zero pad to match size of wterm
             }
+            
+            Matrix<Complex> aTerm_padded(zero_padding(aTerm, Npix_out));
+            
+            // 5. fft to image domain
+            normalized_fft (timerFFT, aTerm_padded, false);
+            
+            // 6. multiply with wterm
+            aTerm_padded = aTerm_padded * wTerm;
+            
+            // 7. zero pad with oversampling factor
+            Matrix<Complex> aTerm_oversampled(zero_padding(aTerm_padded, Npix_out * itsOversampling));
+            
+            // 8. fft to uv domain
+            normalized_fft(timerFFT, aTerm_oversampled, true);
+            
+            aTerm_oversampled *= Float(itsOversampling * itsOversampling);
 
+            kronecker_product[ii][jj].reference (aTerm_oversampled);
+          }
         }
       }
     }
 
     // Add the conv.func. for this channel to the result.
     result.push_back(kronecker_product);
-    if (stack) 
-    {
-      result_non_padded.push_back(kronecker_product_non_padded);
-    }
-
   }
-
         
-  // Stacks the weighted quadratic sum of the convolution function of
-  // average PB estimate (!!!!! done for channel 0 only!!!)
-  if (stack) 
-  {
-    Double weight_square = 4. * Append_average_PB_CF * Append_average_PB_CF;
-    Double weight_sqsq = weight_square * weight_square;
-    for (uInt i=0; i<4; ++i) 
-    {
-      for (uInt j=0; j<4; ++j) 
-      {
-        // Only use diagonal terms for average primary beam.
-        if (i==j)
-        {
-          double istart = 0.5 * (itsShape[0] - Npix_out2);
-          if (istart-floor(istart) != 0.) 
-          {
-            istart += 0.5; //If number of pixel odd then 0th order at the center, shifted by one otherwise
-          }
-          for (Int jj=0; jj<Npix_out2; ++jj) 
-          {
-            for (Int ii=0; ii<Npix_out2; ++ii) 
-            {
-              Complex gain = result_non_padded[0][i][j](ii,jj);
-              Stack_PB_CF(istart+ii,istart+jj) += gain*Float(weight_sqsq);
-            }
-          }
-          sum_weight_square += weight_sqsq;
-        }
-      }
-    }
-  }
-//       
   // Put the resulting vec(vec(vec))) in a LofarCFStore object
   CoordinateSystem csys;
   Vector<Float> samp(2, itsOversampling);
-  Vector<Int> xsup(1, Npix_out/2);
-  Vector<Int> ysup(1, Npix_out/2);
-  Int maxXSup(Npix_out);///2);
-  Int maxYSup(Npix_out);///2);
+  Int maxXSup(0);///2);
+  Int maxYSup(0);///2);
   Quantity pa(0., "deg");
   Int mosPointing(0);
 
@@ -674,6 +575,7 @@ CFStore ConvolutionFunction::makeConvolutionFunction(
   return CFStore (res, csys, samp,  xsup, ysup, maxXSup, maxYSup,
                         pa, mosPointing);
 }
+
 
 //================================================
     
@@ -705,37 +607,154 @@ Matrix<Float> ConvolutionFunction::give_avg_pb()
   return itsIm_Stack_PB_CF0;
 }
 
+Matrix<Float> ConvolutionFunction::getSpheroidal()
+{
+  if (itsSpheroidal.empty())
+  {
+    Matrix<Complex> spheroidal(getSpheroidalCF().shape());
+    convertArray(spheroidal, getSpheroidalCF());
+    
+    // fft
+    normalized_fft(spheroidal, true);
+    
+    // zero pad
+    Matrix<Complex> spheroidal_padded(zero_padding(spheroidal, itsShape(0)));
+    
+    // fft
+    normalized_fft(spheroidal_padded, false);
+    
+    itsSpheroidal = real(spheroidal_padded);
+  }
+  return itsSpheroidal;
+}
+
+Matrix<Float> ConvolutionFunction::getSpheroidalCF()
+{
+  if (itsSpheroidalCF.empty())
+  {
+    itsSpheroidalCF.resize(itsSupportCF, itsSupportCF);
+    itsSpheroidalCF = 1.0;
+    taper(itsSpheroidalCF);
+  }
+  return itsSpheroidalCF;
+}
+
+
 // Compute the average Primary Beam from the Stack of convolution functions
-Matrix<Float> ConvolutionFunction::compute_avg_pb(
-  Matrix<Complex>& sum_stack_PB_CF, 
-  double sum_weight_square)
+Matrix<Float> ConvolutionFunction::getAveragePB()
 {
   // Only calculate if not done yet.
-  if (itsIm_Stack_PB_CF0.empty()) 
+  if (itsAveragePB.empty()) 
   {
     if (itsVerbose > 0) 
     {
       cout<<"..... Compute average PB"<<endl;
     }
-    sum_stack_PB_CF /= float(sum_weight_square);
-
-    normalized_fft(sum_stack_PB_CF, false);
-    itsIm_Stack_PB_CF0.resize (IPosition(2, itsShape[0], itsShape[1]));
-      
-    float threshold = 1.e-6;
-    for (Int jj=0; jj<itsShape[1]; ++jj) 
-    {
-      for (Int ii=0; ii<itsShape[0]; ++ii) 
-      {
-        Float absVal = abs(sum_stack_PB_CF(ii,jj));
-        itsIm_Stack_PB_CF0(ii,jj) = std::max (absVal*absVal, threshold);
-      }
-    }
-    // Make it persistent.
-    store(itsIm_Stack_PB_CF0, itsImgName + ".avgpb");
+    
+    // divide out the sum of weights and take square root
+    Matrix<Complex> avgpb(itsSumCF.shape());
+    convertArray(avgpb, sqrt(itsSumCF/itsSumWeight));
+    
+    // fft
+    normalized_fft(avgpb, true);
+    
+    // zero pad
+    Matrix<Complex> avgpb_padded(zero_padding(avgpb, itsShape(0)));
+    
+    // fft
+    normalized_fft(avgpb_padded, false);
+    
+    // divide out the spheroidal
+    itsAveragePB = real(avgpb_padded) / getSpheroidal();
+    
   }
-  return itsIm_Stack_PB_CF0;
+  return itsAveragePB;
 }
+
+//=================================================
+// Estime spheroidal convolution function from the support of the fft of the spheroidal in the image plane
+
+Double ConvolutionFunction::makeSpheroidCut()
+{
+  // Only calculate if not done yet.
+  if (! itsSpheroid_cut_im.empty()) 
+  {
+    return itsPixelSizeSpheroidal;
+  }
+  
+  Matrix<Complex> spheroidal(itsShape[0], itsShape[1], Complex(1.));
+  taper(spheroidal);
+  if (itsVerbose > 0) 
+  {
+    store(spheroidal, itsImgName + ".spheroidal");
+  }
+  normalized_fft(spheroidal);
+  Double support_spheroidal = findSupport(spheroidal, 0.0001);
+  if (itsVerbose > 0) 
+  {
+    store(spheroidal, itsImgName + ".spheroidal_fft");
+  }
+
+  Double res_ini = abs(itsCoordinates.increment()(0));
+  Double diam_image = res_ini*itsShape[0];
+  Double pixel_size_spheroidal = diam_image/support_spheroidal;
+  uInt npix = floor(diam_image/pixel_size_spheroidal);
+  npix = itsSupportCF; // TODO: fix this
+  if (npix%2 != 1) 
+  {
+  // Make the resulting image have an odd number of pixel (to make the zeros padding step easier)
+    ++npix;
+  }
+  pixel_size_spheroidal = diam_image/npix;
+  
+  Matrix<Complex> spheroid_cut0(IPosition(2,npix,npix),Complex(0.));
+  itsSpheroid_cut = spheroid_cut0;
+  double istart(itsShape[0]/2.-npix/2.);
+  if ((istart-floor(istart))!=0.) 
+  {
+    //If number of pixel odd then 0th order at the center, shifted by one otherwise
+    istart += 0.5;
+  }
+  for (uInt j=0; j<npix; ++j) 
+  {
+    for (uInt i=0; i<npix; ++i) 
+    {
+      itsSpheroid_cut(i,j) = spheroidal(istart+i,istart+j);
+    }
+  }
+  Matrix<Complex> spheroid_cut_paddedf = zero_padding(itsSpheroid_cut, itsShape[0]);
+  normalized_fft(spheroid_cut_paddedf, false);
+  itsSpheroid_cut_im.reference (real(spheroid_cut_paddedf));
+  // Only this one is really needed.
+  store(itsSpheroid_cut_im, itsImgName + ".spheroid_cut_im");
+  if (itsVerbose > 0) 
+  {
+    store(itsSpheroid_cut, itsImgName + ".spheroid_cut");
+  }     
+  return pixel_size_spheroidal;
+}
+
+// const Matrix<Float>& ConvolutionFunction::getSpheroidCut()
+// {
+//   if (itsSpheroid_cut_im.empty()) 
+//   {
+//     makeSpheroidCut();
+//   }
+//   return itsSpheroid_cut_im;
+// }
+// 
+// Matrix<Float> ConvolutionFunction::getSpheroidCut (const String& imgName)
+// {
+//   PagedImage<Float> im(imgName+".spheroid_cut_im");
+//   return im.get (True);
+// }
+
+Matrix<Float> ConvolutionFunction::getAveragePB (const String& imgName)
+{
+  PagedImage<Float> im(imgName+".avgpb");
+  return im.get (True);
+}
+
 
 //================================================
 // Does Zeros padding of a Cube
@@ -873,87 +892,6 @@ Double ConvolutionFunction::observationReferenceFreq(
   return window.refFrequency()(idWindow);
 }
 
-//=================================================
-// Estime spheroidal convolution function from the support of the fft of the spheroidal in the image plane
-
-Double ConvolutionFunction::makeSpheroidCut()
-{
-  // Only calculate if not done yet.
-  if (! itsSpheroid_cut_im.empty()) 
-  {
-    return itsPixelSizeSpheroidal;
-  }
-  
-  Matrix<Complex> spheroidal(itsShape[0], itsShape[1], Complex(1.));
-  taper(spheroidal);
-  if (itsVerbose > 0) 
-  {
-    store(spheroidal, itsImgName + ".spheroidal");
-  }
-  normalized_fft(spheroidal);
-  Double support_spheroidal = findSupport(spheroidal, 0.0001);
-  if (itsVerbose > 0) 
-  {
-    store(spheroidal, itsImgName + ".spheroidal_fft");
-  }
-
-  Double res_ini = abs(itsCoordinates.increment()(0));
-  Double diam_image = res_ini*itsShape[0];
-  Double pixel_size_spheroidal = diam_image/support_spheroidal;
-  uInt npix = floor(diam_image/pixel_size_spheroidal);
-  if (npix%2 != 1) 
-  {
-  // Make the resulting image have an even number of pixel (to make the zeros padding step easier)
-    ++npix;
-    pixel_size_spheroidal = diam_image/npix;
-  }
-  Matrix<Complex> spheroid_cut0(IPosition(2,npix,npix),Complex(0.));
-  itsSpheroid_cut=spheroid_cut0;
-  double istart(itsShape[0]/2.-npix/2.);
-  if ((istart-floor(istart))!=0.) 
-  {
-    //If number of pixel odd then 0th order at the center, shifted by one otherwise
-    istart += 0.5;
-  }
-  for (uInt j=0; j<npix; ++j) 
-  {
-    for (uInt i=0; i<npix; ++i) 
-    {
-      itsSpheroid_cut(i,j) = spheroidal(istart+i,istart+j);
-    }
-  }
-  Matrix<Complex> spheroid_cut_paddedf = zero_padding(itsSpheroid_cut, itsShape[0]);
-  normalized_fft(spheroid_cut_paddedf, false);
-  itsSpheroid_cut_im.reference (real(spheroid_cut_paddedf));
-  // Only this one is really needed.
-  store(itsSpheroid_cut_im, itsImgName + ".spheroid_cut_im");
-  if (itsVerbose > 0) 
-  {
-    store(itsSpheroid_cut, itsImgName + ".spheroid_cut");
-  }	
-  return pixel_size_spheroidal;
-}
-
-const Matrix<Float>& ConvolutionFunction::getSpheroidCut()
-{
-  if (itsSpheroid_cut_im.empty()) 
-  {
-    makeSpheroidCut();
-  }
-  return itsSpheroid_cut_im;
-}
-
-Matrix<Float> ConvolutionFunction::getSpheroidCut (const String& imgName)
-{
-  PagedImage<Float> im(imgName+".spheroid_cut_im");
-  return im.get (True);
-}
-
-Matrix<Float> ConvolutionFunction::getAveragePB (const String& imgName)
-{
-  PagedImage<Float> im(imgName+".avgpb");
-  return im.get (True);
-}
 
 //=================================================
 // Return the angular resolution required for making the image of the angular size determined by
@@ -969,7 +907,8 @@ Double ConvolutionFunction::estimateWResolution(
     return diam_image;
   }
   // Get pixel size in W-term image in radian
-  Double Res_w_image = 0.5/(sqrt(2.)*w*(shape[0]/2.)*pixelSize);
+  double fudge = 1.0;
+  Double Res_w_image = 0.5/(sqrt(2.)*w*(shape[0]/2.)*pixelSize)/fudge;
   // Get number of pixel size in W-term image
   uInt Npix=floor(diam_image/Res_w_image);
   Res_w_image = diam_image/Npix;
@@ -1039,6 +978,46 @@ void ConvolutionFunction::showPerc1 (ostream& os,
   int perc = (total==0  ?  0 : int(1000. * value / total + 0.5));
   os << std::setw(3) << perc/10 << '.' << perc%10 << '%';
 }
+
+void ConvolutionFunction::applyWterm(casa::Array<casa::Complex>& grid, double w)
+{
+
+  Double res_ini = abs(itsCoordinates.increment()(0));
+  Vector<Double> resolution(2, res_ini);
+
+  int nx(grid.shape()[0]);
+  int ny(grid.shape()[0]);
+  double radius[2] = {0.5 * (nx), 0.5 * (ny)};
+  double twoPiW = 2.0 * casa::C::pi * w;
+
+  IPosition pos(4,1,1,1,1);
+  Complex pix;
+  uInt jj;
+  Complex wterm;
+  double l, m, phase;
+  for(uInt ch=0; ch<grid.shape()[3]; ++ch)
+  {
+    pos[3]=ch;
+    for(uInt ii=0; ii<grid.shape()[0]; ++ii)
+    {
+      pos[0]=ii;
+      m = resolution[1] * (ii - radius[1]);
+      for(jj=0; jj<grid.shape()[0]; ++jj)
+      {
+        pos[1]=jj;
+        l = resolution[0] * (jj - radius[0]);
+        phase = twoPiW * (sqrt(1.0 - l*l - m*m) - 1.0);
+        wterm=Complex(cos(phase), sin(phase));
+        for(uInt pol=0; pol<grid.shape()[2]; ++pol)
+        {
+          pos[2]=pol;
+          grid(pos) *= wterm;
+        }
+      }
+    }
+  }
+}
+
 
 
 } //# end namespace LofarFT

@@ -1,4 +1,4 @@
-//# OperationClean.cc:
+//# Operation.cc:
 //#
 //# Copyright (C) 2014
 //# ASTRON (Netherlands Institute for Radio Astronomy)

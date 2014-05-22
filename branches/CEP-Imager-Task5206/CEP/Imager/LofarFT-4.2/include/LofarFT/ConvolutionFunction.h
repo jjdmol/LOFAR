@@ -83,8 +83,8 @@ public:
   // Compute and store W-terms and A-terms in the fourier domain
   void store_all_W_images();
 
-  // Get the spheroidal cut.
-  const casa::Matrix<casa::Float>& getSpheroidCut();
+//   // Get the spheroidal cut.
+//   const casa::Matrix<casa::Float>& getSpheroidCut();
 
   // Get the spheroidal cut from the file.
   static casa::Matrix<casa::Float> getSpheroidCut (const casa::String& imgName);
@@ -104,23 +104,25 @@ public:
   // implemented, by specifying the beam correcting to the given baseline
   // and timeslot.
   // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
+
   CFStore makeConvolutionFunction(
     casa::uInt stationA, 
     casa::uInt stationB,
     casa::Double time, 
     casa::Double w,
-    bool degridding_step,
-    double append_average_PB_CF,
-    casa::Matrix<casa::Complex>& Stack_PB_CF,
-    double& sum_weight_square);
+    const casa::Matrix<casa::Float> &sum_weight,
+    const vector<bool> &channel_selection,
+    double w_offset);
 
   // Returns the average Primary Beam from the disk
   casa::Matrix<float> give_avg_pb();
 
   // Compute the average Primary Beam from the Stack of convolution functions
-  casa::Matrix<casa::Float> compute_avg_pb(
-    casa::Matrix<casa::Complex> &Sum_Stack_PB_CF,
-    double sum_weight_square);
+  casa::Matrix<casa::Float> getAveragePB();
+  
+  casa::Matrix<casa::Float> getSpheroidal();
+
+  casa::Matrix<casa::Float> getSpheroidalCF();
 
   // Zero padding of a Cube
   casa::Cube<casa::Complex> zero_padding(
@@ -135,13 +137,26 @@ public:
   // Get the W scale.
   const WScale& wScale() const
     { return itsWScale; }
+    
+  casa::Vector< casa::Double > &get_frequency_list()
+    {return itsFrequencyList;}
 
+  void applyWterm(casa::Array<casa::Complex>& grid, double w);
+  
   // Get the reference frequency
   const casa::Double refFrequency() const
   { return itsRefFrequency;}
 
 private:
   
+  casa::Matrix<casa::Float> itsSumCF;
+  casa::Float itsSumWeight;
+  
+  casa::Int itsSupportCF;
+  casa::Matrix<casa::Float> itsAveragePB;
+  casa::Matrix<casa::Float> itsSpheroidal;
+  casa::Matrix<casa::Float> itsSpheroidalCF;
+
   void FindNWplanes();
   
   void normalized_fft (

@@ -157,7 +157,7 @@ void  SkyEquation::predict(Bool incremental, MS::PredefinedColumns col)
 
 // WBCleanImageSkyModel uses makeApproxPSF in a strange way
 // It ignores the results passed in psfs
-// and assumes that we put the result directly in gS of the SkyModel
+// and assumes that we put the result directly in gS of the SkyModel sm_
 void SkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs) 
 {
     LogIO os(LogOrigin("LOFAR::LofarFT::SkyEquation", "makeApproxPSF"));
@@ -178,8 +178,6 @@ void SkyEquation::makeApproxPSF(PtrBlock<ImageInterface<Float> * >& psfs)
     {
       images[i] = &sm_->gS(i);
     }
-    
-//     ft_->setNoPadding(noModelCol_p);
     
     Bool doPSF = True;
     sm_->initializeGradients();
@@ -294,6 +292,8 @@ void SkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
       {
         //This here forces the modelVisCube shape and prevents reading model column
         vb->setModelVisCube(Complex(0.0,0.0));
+        
+        //TODO: call the residual method of FTMachine instead of get and put
    
         // Get the model visibilities -> degridding
         // Model visibilities are put in the modelVisCube of vb

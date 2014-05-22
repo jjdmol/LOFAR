@@ -73,13 +73,14 @@ public:
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
   
   virtual void put(
-    const VisBuffer& vb, 
+    VisBuffer& vb, 
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
   
 protected:
 
+  virtual void initialize_model_grids(casa::Bool normalize);
   
   // Get the appropriate data pointer
   casa::Array<casa::Complex>* getDataPointer(const casa::IPosition&, casa::Bool);
@@ -101,30 +102,46 @@ protected:
   casa::Float pbLimit_p;
   int itsNThread;
   casa::Int itsRefFreq;
+  casa::Float itsTimeWindow;
   
   casa::CountedPtr<VisResamplerWB> itsVisResampler;
   virtual VisResampler* visresampler() {return &*itsVisResampler;}
 
 private:
   
-  
   struct Chunk
   {
     int start;
     int end;
     double time;
+    double w;
+    casa::Matrix<casa::Float> sum_weight;
     vector<int> wplane_map;
   };
   
   struct VisibilityMap
   {
+    VisibilityMap() : max_w_plane(0) {}
     vector<Chunk> chunks;
     casa::Vector<casa::uInt> baseline_index_map;
+    int max_w_plane;
   };
 
-  VisibilityMap make_mapping(const VisBuffer& vb, double dtime);
+  VisibilityMap make_mapping(
+    const VisBuffer& vb, 
+    const casa::Vector< casa::Double > &frequency_list_CF,
+    double dtime,
+    double w_step);
 
-  void put_on_w_plane();
+  bool put_on_w_plane(
+    const VisBuffer &vb,
+    const VBStore &vbs,
+    const casa::Vector<casa::Double> &lsr_frequency,
+    vector< casa::Array<casa::Complex> >  &w_plane_grids,
+    const VisibilityMap &v,
+    int w_plane,
+    double w_offset, 
+    bool dopsf);
   
 };
 

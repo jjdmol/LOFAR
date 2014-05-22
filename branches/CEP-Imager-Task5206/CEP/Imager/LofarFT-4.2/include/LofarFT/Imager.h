@@ -79,10 +79,13 @@ namespace LofarFT {
     }
 
     // Get the spheroidal cut.
-    const casa::Matrix<casa::Float>& getSpheroidCut() const
+    const casa::Matrix<casa::Float>& getSpheroidal() const
     { 
-      return itsFTMachine->getSpheroidCut();
+      return itsFTMachine->getSpheroidal();
     }
+    
+    casa::Bool makeimage(const casa::String& type, const casa::String& image);
+
 
     // Show the relative timings of the various steps.
     void showTimings (std::ostream&, double duration) const;

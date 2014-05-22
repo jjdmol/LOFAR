@@ -44,7 +44,7 @@ public:
   // Re-sample the griddedData on the VisBuffer (a.k.a gridding).
   virtual void DataToGrid (
     casa::Array<casa::Complex>& griddedData, 
-    VBStore& vbs,
+    const VBStore& vbs,
     const casa::Vector<casa::uInt>& rows,
     casa::Int rbeg, 
     casa::Int rend,
@@ -55,7 +55,7 @@ public:
   
   virtual void DataToGrid (
     casa::Array<casa::DComplex>& griddedData, 
-    VBStore& vbs,
+    const VBStore& vbs,
     const casa::Vector<casa::uInt>& rows,
     casa::Int rbeg, 
     casa::Int rend,

@@ -226,59 +226,59 @@ void correctImages (
   Bool CorrectWPlanes, 
   Bool doRestored)
 {
-  // Copy the images to .corr ones.
-  {
-    Directory modelIn(modelName);
-    modelIn.copy (modelName+".corr");
-    Directory residualIn(residName);
-    residualIn.copy (residName+".corr");
-  }
-  // Open the images.
-  PagedImage<Float> modelImage(modelName+".corr");
-  PagedImage<Float> residualImage(residName+".corr");
-  // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
-  //              restoredImage.shape() == modelImage.shape(), SynthesisError);
-
-  // Get average primary beam and spheroidal.
-//   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
-//   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
-  Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName);
-  Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName);
-
-  // String nameii("Spheroid_cut_im_element.img");
-  // ostringstream nameiii(nameii);
-  // PagedImage<Float> tmpi(nameiii.str().c_str());
-  // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
-  // Array<Float> spheroidCutElement;
-  // tmpi.doGetSlice(spheroidCutElement, slicei);
-
-  // Use the inner part of the beam and spheroidal.
-  Int nximg = residualImage.shape()[0];
-  Int nxpb  = avgPB.shape()[0];
-  Int nxsph = spheroidCut.shape()[0];
-  //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
-  //              avgPB.shape()[1] == nxpb  &&
-  //              spheroidCut.shape()[1] == nxsph  &&
-  //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
-  // Get inner parts of beam and spheroid.
-  Int offpb  = (nxpb  - nximg) / 2;
-  Int offsph = (nxsph - nximg) / 2;
-  Array<Float> pbinner  = avgPB(Slicer(IPosition(2, offpb, offpb),
-                                       IPosition(2, nximg, nximg)));
-  Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
-                                             IPosition(2, nximg, nximg)));
-  Array<Float> ones(IPosition(sphinner.shape()),1.);
-  Array<Float> factors;
-
-  factors = ones / sqrt(pbinner);
-  cout<<"Final normalisation"<<endl;
-  applyFactors (modelImage, factors);
-  applyFactors (residualImage, factors);
-  if(doRestored){
-    cout<<"... restored image too ..."<<endl;
-    Directory restoredIn(restoName);
-    restoredIn.copy (restoName+".corr");
-    PagedImage<Float> restoredImage(restoName+".corr");
-    applyFactors (restoredImage, factors);
-  }
+//   // Copy the images to .corr ones.
+//   {
+//     Directory modelIn(modelName);
+//     modelIn.copy (modelName+".corr");
+//     Directory residualIn(residName);
+//     residualIn.copy (residName+".corr");
+//   }
+//   // Open the images.
+//   PagedImage<Float> modelImage(modelName+".corr");
+//   PagedImage<Float> residualImage(residName+".corr");
+//   // AlwaysAssert (residualImage.shape() == modelImage.shape()  &&
+//   //              restoredImage.shape() == modelImage.shape(), SynthesisError);
+// 
+//   // Get average primary beam and spheroidal.
+// //   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName+"0");
+// //   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName+"0");
+//   Matrix<Float> avgPB = LOFAR::LofarFT::ConvolutionFunction::getAveragePB(imgName);
+//   Matrix<Float> spheroidCut = LOFAR::LofarFT::ConvolutionFunction::getSpheroidCut(imgName);
+// 
+//   // String nameii("Spheroid_cut_im_element.img");
+//   // ostringstream nameiii(nameii);
+//   // PagedImage<Float> tmpi(nameiii.str().c_str());
+//   // Slicer slicei(IPosition(4,0,0,0,0), tmpi.shape(), IPosition(4,1,1,1,1));
+//   // Array<Float> spheroidCutElement;
+//   // tmpi.doGetSlice(spheroidCutElement, slicei);
+// 
+//   // Use the inner part of the beam and spheroidal.
+//   Int nximg = residualImage.shape()[0];
+//   Int nxpb  = avgPB.shape()[0];
+//   Int nxsph = spheroidCut.shape()[0];
+//   //AlwaysAssert (restoredImage.shape()[1] == nximg  &&
+//   //              avgPB.shape()[1] == nxpb  &&
+//   //              spheroidCut.shape()[1] == nxsph  &&
+//   //              nxsph >= nximg  &&  nxpb >= nximg, SynthesisError);
+//   // Get inner parts of beam and spheroid.
+//   Int offpb  = (nxpb  - nximg) / 2;
+//   Int offsph = (nxsph - nximg) / 2;
+//   Array<Float> pbinner  = avgPB(Slicer(IPosition(2, offpb, offpb),
+//                                        IPosition(2, nximg, nximg)));
+//   Array<Float> sphinner = spheroidCut(Slicer(IPosition(2, offsph, offsph),
+//                                              IPosition(2, nximg, nximg)));
+//   Array<Float> ones(IPosition(sphinner.shape()),1.);
+//   Array<Float> factors;
+// 
+//   factors = ones / sqrt(pbinner);
+//   cout<<"Final normalisation"<<endl;
+//   applyFactors (modelImage, factors);
+//   applyFactors (residualImage, factors);
+//   if(doRestored){
+//     cout<<"... restored image too ..."<<endl;
+//     Directory restoredIn(restoName);
+//     restoredIn.copy (restoName+".corr");
+//     PagedImage<Float> restoredImage(restoName+".corr");
+//     applyFactors (restoredImage, factors);
+//   }
 }

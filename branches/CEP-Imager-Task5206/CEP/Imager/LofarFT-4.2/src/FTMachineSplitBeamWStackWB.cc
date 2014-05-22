@@ -47,9 +47,47 @@ namespace LOFAR {
 namespace LofarFT {
 
 
-  // Partition the visbuffer according to baseline number and time
-FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mapping(const VisBuffer& vb, double dtime)
+void FTMachineSplitBeamWStackWB::initialize_model_grids(Bool normalize_model)
 {
+  // Create model grids but do not initialize here
+  // because that will happen in the loop over w-planes
+    
+  uInt nmodels = itsModelImages.nelements();
+  
+  itsNGrid = nmodels;
+
+  itsComplexModelImages.resize(nmodels);
+  itsModelGrids.resize(nmodels);
+
+  CoordinateSystem coords = itsModelImages[0]->coordinates();
+
+  IPosition gridShape(4, itsPaddedNX, itsPaddedNY, itsNPol, itsNChan);
+  
+  StokesCoordinate stokes_coordinate = get_stokes_coordinates();
+  
+  Int stokes_index = coords.findCoordinate(Coordinate::STOKES);
+  coords.replaceCoordinate(stokes_coordinate, stokes_index);
+  
+  for (uInt model = 0; model<nmodels; model++)
+  {
+    // create complex model images
+    // Force in memory, allow 1e6 MB memory usage
+    itsComplexModelImages[model] = new TempImage<Complex> (gridShape, coords, 1e6); 
+    itsModelGrids[model].reference(itsComplexModelImages[model]->get());
+
+  }
+}
+  
+  // Partition the visbuffer according to baseline number and time
+FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mapping(
+  const VisBuffer& vb, 
+  const casa::Vector< casa::Double > &frequency_list_CF,
+  double dtime,
+  double w_step
+)
+{
+  
+  cout << "make map..." << flush;
   
   VisibilityMap v;
   
@@ -57,6 +95,7 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
   const Vector<Int>& ant1 = vb.antenna1();
   const Vector<Int>& ant2 = vb.antenna2();
   const Vector<Double>& times = vb.timeCentroid();
+  const Vector<RigidVector<Double, 3> > &uvw = vb.uvw()  ;
   
   int nrant = 1 + max(max(ant1), max(ant2));
   // Sort on baseline (use a baseline nr which is faster to sort).
@@ -87,21 +126,21 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
         Int end_idx = blIndex[chunk.end];
         
         chunk.time = 0.5 * (times[start_idx] + times[end_idx]);
+        chunk.w = 0.5 * (abs(uvw(start_idx)(2)) + abs(uvw(end_idx)(2)));
         
-        // TODO: pass N_CF_chan as parameters
-        // Filling out dummy value for now
-        int N_CF_chan = 4;
+        int N_CF_chan = frequency_list_CF.nelements();
         chunk.wplane_map.resize(N_CF_chan);
         for (int ch=0; ch<N_CF_chan; ch++)
         {
-          // TODO: do mapping to W plane
-          // Filling out dummy value for now
-          chunk.wplane_map[ch] = 0;
+          double freq = frequency_list_CF(ch);
+          double wavelength = casa::C::c / freq;
+          double w_lambda = chunk.w/wavelength;
+          int w_plane = floor(abs(w_lambda)/w_step);
+          chunk.wplane_map[ch] = w_plane;
+          if (w_plane>v.max_w_plane) v.max_w_plane = w_plane;
         }
-        
         v.chunks.push_back(chunk);
         
-        time0 = times[end_idx];
         allFlagged = true;
       }
       
@@ -109,6 +148,7 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
       
       lastbl = blnr[blIndex[i]];
       lastIndex = i;
+      time0 = times[blIndex[lastIndex]];
     }
     
     // Test if the row is flagged.
@@ -116,10 +156,11 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
       allFlagged = false;
     }
   }
-  
-  // Determine the time center of this data chunk.
-  double time = 0.5 * (times[times.size()-1] + times[0]);
+  cout << "done." << endl;
+  return v;  
 }
+
+ 
 
 FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   const MeasurementSet& ms,
@@ -136,7 +177,10 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   itsSumCFWeight.resize (itsNGrid);
   itsSumWeight.resize (itsNGrid);
   itsVisResampler = new VisResamplerMatrixWB();
-  itsRefFreq=parset.getDouble("image.refFreq",0);
+  itsGriddedDataDomain = IMAGE;
+  double msRefFreq=0; //TODO: put some useful reference frequency here
+  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
+  itsTimeWindow=parset.getDouble("gridding.timewindow",300);
 }
 
 FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()
@@ -181,10 +225,10 @@ FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachin
 void FTMachineSplitBeamWStackWB::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
-  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
+  put( const_cast<VisBuffer&> (*static_cast<const VisBuffer*>(&vb)), row, dopsf, type);
 }
 
-void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
+void FTMachineSplitBeamWStackWB::put(VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
   if (itsVerbose > 0) {
@@ -210,9 +254,6 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int spwid = 0;
   Bool convert = True;
   vb.lsrFrequency(spwid, lsr_frequency, convert);
-  cout << "lsr frequency" << lsr_frequency << endl;
-  
-  
   
   // Set the frequencies for which the convolution function will be evaluated.
   // set_frequency groups the frequncies found in vb according to the number of
@@ -239,16 +280,10 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
     data.reference(vb.visCube());
   }
   
-  if (not dopsf) cout << "max(abs(data)): " << max(abs(data)) << endl;
-  
   Cube<Bool> flag(vb.flag());
   
   Cube<Float> imagingWeightCube(vb.imagingWeightCube());
   
-  cout << "imagingWeightCube shape: " << imagingWeightCube.shape() << endl;
-  cout << "itsSumCFWeight shape: " << itsSumWeight[0].shape() << endl;
-
-
   Int startRow, endRow, nRow;
   if (row==-1) 
   {
@@ -267,9 +302,32 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   
   for (Int i=startRow;i<=endRow;i++) 
   {
-    for (Int idim = 0; idim<3; idim++) 
+    if (vb.uvw()(i)(2)>0) 
     {
-      uvw(idim,i) = vb.uvw()(i)(idim);
+      for (Int idim = 0; idim<3; idim++) 
+      {
+        uvw(idim,i) = vb.uvw()(i)(idim);
+      }
+    }
+    else
+    {
+      for (Int idim = 0; idim<3; idim++) 
+      {
+        uvw(idim,i) = -vb.uvw()(i)(idim);
+      }
+      // swap ANTENNA1 and ANTENNA2
+      int ant = vb.antenna1()(i);
+      vb.antenna1()(i) = vb.antenna2()(i);
+      vb.antenna2()(i) = ant;
+      if (not dopsf) 
+      {
+        // conjugate data and swap XY and YX
+        Array<Complex> d = conj(data[i]);
+        data[i](Slicer(Slice(0), Slice())) = d(Slicer(Slice(0), Slice()));
+        data[i](Slicer(Slice(1), Slice())) = d(Slicer(Slice(2), Slice()));
+        data[i](Slicer(Slice(2), Slice())) = d(Slicer(Slice(1), Slice()));
+        data[i](Slicer(Slice(3), Slice())) = d(Slicer(Slice(3), Slice()));
+      }
     }
   }
   
@@ -289,124 +347,148 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
 
-  // First compute the A-terms for all stations (if needed).
-//   itsConvFunc->computeAterm (time);
+  const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
-  uInt Nchannels = vb.nChannel();
+  //TODO: fill out proper value for w_step and timestep
+  double w_step = 1000;
 
-  itsTotalTimer.start();
-  // Thread-private variables.
-  PrecTimer gridTimer;
-  PrecTimer cfTimer;
+  VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
   
-//   cout << blStart.size() << endl;
-  
-//   for (int w_plane=0; w_plane < itsNWplanes; w_plane++)
-//   {
-//     // TODO:
-//     // init w_plane_grid
-//     // put_on_w_plane
-//     // fft to image domain
-//     // apply element beam correction
-//     // sum to master grid
-//   }
+  // sum weights per chunk
+  // for average beam computation
+  // TODO take care of flags
+  for (std::vector<Chunk>::iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+  {
+    chunk->sum_weight.resize(IPosition(2,4,chan_map_CF.size()));
+    chunk->sum_weight = 0.0;
+    // iterate over time in chunk
+    for(int i=chunk->start; i<=chunk->end; i++)
+    {
+      int idx = v.baseline_index_map[i];
+      // iterate over channels in data
+      for(int ch=0; ch<vb.nChannel(); ch++)
+      {
+        // map to CF channels and sum weight
+        chunk->sum_weight[chan_map_CF[ch]] = chunk->sum_weight[chan_map_CF[ch]] + imagingWeightCube[idx][ch];
+      }
+    }
+  }
   
 
-  double cftime = cfTimer.getReal();
-  itsCFTime += cftime;
-  double gtime = gridTimer.getReal();
-  itsGriddingTime += gtime;
-  itsTotalTimer.stop();
+  // init the grids to zero
+  vector< casa::Array<casa::Complex> >  w_plane_grids(itsNGrid);
+  for (int i=0; i<itsNGrid; i++)
+  {
+    w_plane_grids[i].resize(itsGriddedData[0].shape());
+    w_plane_grids[i] = 0;
+  }
+  
+  for (int w_plane=0; w_plane <= v.max_w_plane; w_plane++)
+  {
+    double w_offset = (w_plane+0.5) * w_step;
+    if (put_on_w_plane(vb, vbs, lsr_frequency, w_plane_grids, v, w_plane, w_offset, dopsf))
+    // returns true if anything was put on this plane
+    {
+      cout << "w_plane: " << w_plane << endl;
+      for (int i=0; i<itsNGrid; i++)
+      {
+        // transform to image domain
+        ArrayLattice<Complex> lattice(w_plane_grids[i]);
+        LatticeFFT::cfft2d(lattice, True);
+        // Apply W term in image domain
+        itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
+        // Add image to master grid
+        itsGriddedData[i] += w_plane_grids[i];
+        // reset the grid
+        w_plane_grids[i].resize(itsGriddedData[0].shape());
+        w_plane_grids[i] = 0;
+      }
+    }
+  }
 }
 
-  void FTMachineSplitBeamWStackWB::put_on_w_plane()
-  {
-// TODO: compute average beam properly
-//   for (int i=0; i<int(blStart.size()); ++i) 
-//   {
-//     Int ist  = blIndex[blStart[i]];
-//     Int iend = blIndex[blEnd[i]];
-// 
-// //       compute average weight for baseline for CF averaging
-//     double average_weight(0.);
-//     uInt Nvis(0);
-//     for(Int j=ist; j<iend; ++j)
-//     {
-//       uInt row=blIndex[j];
-//       if(!vbs.rowFlag()[row])
-//       {
-//         Nvis+=1;
-//         for(uint k=0; k<Nchannels; ++k) 
-//         {
-//           // Temporary hack: should compute weight per polarization
-//           average_weight = average_weight + vbs.imagingWeightCube()(0,k,row);
-//         }
-//       }
-//     }
-//     average_weight=average_weight/Nvis;
-//     ///        itsSumWeight += average_weight * average_weight;
-//     if (itsVerbose > 1) 
-//     {
-//       cout<<"average weights= "<<average_weight<<", Nvis="<<Nvis<<endl;
-//     }
-
-
+bool FTMachineSplitBeamWStackWB::put_on_w_plane(
+  const VisBuffer &vb,
+  const VBStore &vbs,
+  const Vector<Double> &lsr_frequency,
+  vector< casa::Array<casa::Complex> >  &w_plane_grids,
+  const VisibilityMap &v,
+  int w_plane,
+  double w_offset,
+  bool dopsf)
+{
 //       Get the convolution function.
-//     CFStore cfStore;
-//     cfTimer.start();
-//     cfStore = itsConvFunc->makeConvolutionFunction (
-//       ant1[ist], 
-//       ant2[ist], 
-//       time,
-//       0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-//       itsGridMuellerMask, 
-//       false,
-//       average_weight,
-//       itsSumPB[0],
-//       itsSumCFWeight[0]);
-//     cfTimer.stop();
-//     
-//     if (itsUseDoubleGrid) 
-//     {
-// //       TODO: support for double precision grids
-// //       itsVisResampler->DataToGrid(
-// //         itsGriddedData2[threadNum], 
-// //         vbs, 
-// //         blIndex,
-// //         blStart[i], 
-// //         blEnd[i],
-// //         itsSumWeight[threadNum], 
-// //         dopsf, 
-// //         cfStore);
-//     } 
-//     else 
-//     {
-//       #pragma omp parallel for num_threads(itsNGrid)
-//       for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
-//       {
-//         Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
-//         for (int j=0; j<lsr_frequency.nelements(); j++)
-//         {
-//           taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
-//         }
-// //         #pragma omp critical
-// //         cout << taylor_idx << ": " << taylor_weights << endl;
-// 
-//         
-//         itsVisResampler->DataToGrid(
-//           itsGriddedData[taylor_idx], 
-//           vbs, 
-//           blIndex, 
-//           blStart[i],
-//           blEnd[i], 
-//           itsSumWeight[taylor_idx], 
-//           dopsf, 
-//           cfStore,
-//           taylor_weights);
-//       }
-//     }
-//   } // end omp for
+
+  bool any_match = false;
+  int i = 0;
+  for (std::vector<Chunk>::const_iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+  {
+    cout << "\r" << i++ << "/" << v.chunks.size() << flush;
+    bool any_channel_match = false;
+    vector<bool> channel_selection;
+    channel_selection.reserve(chunk->wplane_map.size());
+    for (std::vector<int>::const_iterator w_idx = chunk->wplane_map.begin() ; w_idx != chunk->wplane_map.end(); ++w_idx)
+    {
+      bool match = (*w_idx == w_plane);
+      channel_selection.push_back(match);
+      any_channel_match = any_channel_match || match;
+    }
+    if (any_channel_match)
+    {
+      any_match = true;
+      int idx = v.baseline_index_map[chunk->start];
+      int ant1 = vb.antenna1()[idx];
+      int ant2 = vb.antenna2()[idx];
+      
+      itsConvFunc->computeAterm (chunk->time);
+      CFStore cfStore = itsConvFunc->makeConvolutionFunction (
+        ant1, 
+        ant2, 
+        chunk->time,
+        chunk->w,
+        chunk->sum_weight,
+        channel_selection, 
+        w_offset);
+      
+      if (itsUseDoubleGrid) 
+      {
+    //       TODO: support for double precision grids
+    //       itsVisResampler->DataToGrid(
+    //         itsGriddedData2[threadNum], 
+    //         vbs, 
+    //         blIndex,
+    //         blStart[i], 
+    //         blEnd[i],
+    //         itsSumWeight[threadNum], 
+    //         dopsf, 
+    //         cfStore);
+      } 
+      else 
+      {
+        #pragma omp parallel for num_threads(itsNGrid)
+        for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
+        {
+          Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
+          for (int j=0; j<lsr_frequency.nelements(); j++)
+          {
+            taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
+          }
+          itsVisResampler->DataToGrid(
+            w_plane_grids[taylor_idx], 
+            vbs, 
+            v.baseline_index_map, 
+            chunk->start,
+            chunk->end, 
+            itsSumWeight[taylor_idx], 
+            dopsf, 
+            cfStore,
+            taylor_weights);
+        }
+      }
+    }
   }
+  return any_match;
+}
 
 
 
@@ -418,205 +500,187 @@ void FTMachineSplitBeamWStackWB::get(casa::VisBuffer& vb, Int row)
 // Degrid
 void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
 {
-//   if (itsVerbose > 0) {
-//     cout<<"///////////////////// GET!!!!!!!!!!!!!!!!!!"<<endl;
-//   }
-//   
-// //   gridOk(itsGridder->cSupport()(0));
-//   // If row is -1 then we pass through all rows
-//   Int startRow, endRow, nRow;
-//   if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
-//   else         { nRow=1; startRow=row; endRow=row; }
-// 
-//   // Get the uvws in a form that Fortran can use
-//   Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
-//   Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
-//   
-//   for (Int i=startRow;i<=endRow;i++) 
-//   {
-//     for (Int idim=0;idim<3;idim++) 
-//     {
-//       uvw(idim,i) = vb.uvw()(i)(idim);
-//     }
-//   }
-// 
-//   // Match data channels to images channels
-//   // chan_map is filled by match_channel with a mapping of the data channels
-//   // to the image channels. This mapping changes over time because of changing
-//   // Doppler shift due to earth rotation around its axis and the sun.
-//   // The channel mapping is determined for the first time sample in vb
-//   // It is assumed that within the vb the change in Dopplershift is small .
-//   Vector<Int> chan_map;
-// //   chan_map = match_channel(vb, itsImage);
-//   chan_map.resize();
-//   chan_map = Vector<Int>(vb.frequency().size(), 0);
-//   
-//   //No point in reading data if it's not matching in frequency
-//   if(max(chan_map)==-1) return;
-//   
-//   itsVisResampler->set_chan_map(chan_map);
-//   
-//   // Set the frequencies for which the convolution function will be evaluated.
-//   // set_frequency groups the frequncies found in vb according to the number of
-//   // data channels in a convolution function channel.
-//   // chan_map_CF is a mapping of the data channels to the 
-//   // convolution function channels
-//   Vector<Int> chan_map_CF;
-//   chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
-//   itsVisResampler->set_chan_map_CF(chan_map_CF);
-//   
-//   Vector<Double> lsr_frequency;
-//   
-//   Int spwid = 0;
-//   Bool convert = True;
-//   vb.lsrFrequency(spwid, lsr_frequency, convert);
-//   cout << "lsr frequency" << lsr_frequency << endl;
-// 
-//   Cube<Complex> data(vb.modelVisCube());
-//   
-//   VBStore vbs;
-//   vbs.nRow(vb.nRow());
-//   vbs.beginRow(0);
-//   vbs.endRow(vbs.nRow());
-// 
-//   vbs.uvw(uvw);
-//   vbs.visCube(data);
-//   
-//   vbs.freq(vb.frequency());
-//   vbs.rowFlag(vb.flagRow());
-//   vbs.flagCube(vb.flagCube());
-//   
-//   // Determine the terms of the Mueller matrix that should be calculated
-//   itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
-//   itsVisResampler->setMaps(chanMap, polMap);
-// 
-//   // Determine the baselines in the VisBuffer.
-//   const Vector<Int>& ant1 = vb.antenna1();
-//   const Vector<Int>& ant2 = vb.antenna2();
-//   int nrant = 1 + max(max(ant1), max(ant2));
-//   // Sort on baseline (use a baseline nr which is faster to sort).
-//   Vector<Int> blnr(nrant*ant1);
-//   blnr += ant2;  // This is faster than nrant*ant1+ant2 in a single line
-//   Vector<uInt> blIndex;
-//   GenSortIndirect<Int>::sort (blIndex, blnr);
-//   // Now determine nr of unique baselines and their start index.
-//   vector<int> blStart, blEnd;
-//   blStart.reserve (nrant*(nrant+1)/2);
-//   blEnd.reserve   (nrant*(nrant+1)/2);
-//   Int  lastbl     = -1;
-//   Int  lastIndex  = 0;
-//   bool allFlagged = true;
-//   const Vector<Bool>& flagRow = vb.flagRow();
-//   for (uint i=0; i<blnr.size(); ++i) {
-//     Int inx = blIndex[i];
-//     Int bl = blnr[inx];
-//     if (bl != lastbl) {
-//       // New baseline. Write the previous end index if applicable.
-//       if (!allFlagged) {
-//         double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[i-1]](2)));
-//         if (abs(Wmean) <= itsWMax) {
-// 	  if (itsVerbose > 1) {
-// 	    cout<<"using w="<<Wmean<<endl;
-// 	  }
-// 	  blStart.push_back (lastIndex);
-// 	  blEnd.push_back (i-1);
-//         }
-//       }
-//       // Skip auto-correlations and high W-values.
-//       // All w values are close, so if first w is too high, skip baseline.
-// 
-//       lastbl=bl;
-//       lastIndex=i;
-//     }
-//     // Test if the row is flagged.
-//     if (! flagRow[inx]) 
-//     {
-//       allFlagged = false;
-//     }
-//   }
-//   // Write the last end index if applicable.
-//   if (!allFlagged) 
-//   {
-//     double Wmean(0.5*(vb.uvw()[blIndex[lastIndex]](2) + vb.uvw()[blIndex[blnr.size()-1]](2)));
-//     if (abs(Wmean) <= itsWMax) {
-//       if (itsVerbose > 1) 
-//       {
-//         cout<<"...using w="<<Wmean<<endl;
-//       }
-//       blStart.push_back (lastIndex);
-//       blEnd.push_back (blnr.size()-1);
-//     }
-//   }
-// 
-//   // Determine the time center of this data chunk.
-//   const Vector<Double>& times = vb.timeCentroid();
-//   double time = 0.5 * (times[times.size()-1] + times[0]);
-// 
-//   // First compute the A-terms for all stations (if needed).
-//   itsConvFunc->computeAterm (time);
-// 
-//   itsTotalTimer.start();
-//   {
-//     // Thread-private variables.
-//     PrecTimer degridTimer;
-//     PrecTimer cfTimer;
-//     // The for loop can be parallellized. This must be done dynamically,
-//     // because the execution times of iterations can vary greatly.
-//     for (int i=0; i<int(blStart.size()); ++i) 
-//     {
-//       Int ist  = blIndex[blStart[i]];
-//       Int iend = blIndex[blEnd[i]];
-//       int threadNum = OpenMP::threadNum();
-//       // Get the convolution function for degridding.
-//       if (itsVerbose > 1) 
-//       {
-// 	cout<<"ANTENNA "<<ant1[ist]<<" "<<ant2[ist]<<endl;
-//       }
-//       cfTimer.start();
-//       CFStore cfStore = itsConvFunc->makeConvolutionFunction (
-//         ant1[ist], 
-//         ant2[ist], 
-//         time,
-//         0.5*(vbs.uvw()(2,ist) + vbs.uvw()(2,iend)),
-//         itsDegridMuellerMask,
-//         true,
-//         0.0,
-//         itsSumPB[threadNum],
-//         itsSumCFWeight[threadNum]);
-//       cfTimer.stop();
-// 
-//       degridTimer.start();
-//       
-// // TODO: Double or single precision gridding.
-//       for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
-//       {
-//         Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
-//         for (int j=0; j<lsr_frequency.nelements(); j++)
-//         {
-//           taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
-//         }
-// //         cout << taylor_idx << ": " << taylor_weights << endl;
-// 
-//         itsVisResampler->GridToData(
-//           vbs, 
-//           itsModelGrids[taylor_idx], 
-//           blIndex, 
-//           blStart[i],
-//           blEnd[i], 
-//           cfStore,
-//           taylor_weights);
-//       }
-//       
-//       degridTimer.stop();
-//     } // end omp for
-//     double cftime = cfTimer.getReal();
-//     #pragma omp atomic
-//     itsCFTime += cftime;
-//     double gtime = degridTimer.getReal();
-//     #pragma omp atomic
-//     itsGriddingTime += gtime;
-//   } // end omp parallel
-//   itsTotalTimer.stop();
+//   gridOk(itsGridder->cSupport()(0));
+  // If row is -1 then we pass through all rows
+  Int startRow, endRow, nRow;
+  if (row < 0) { nRow=vb.nRow(); startRow=0; endRow=nRow-1;}
+  else         { nRow=1; startRow=row; endRow=row; }
+
+  // Get the uvws in a form that Fortran can use
+  Matrix<Double> uvw(3, vb.uvw().nelements());  uvw=0.0;
+  Vector<Double> dphase(vb.uvw().nelements());  dphase=0.0;
+  
+  for (Int i=startRow;i<=endRow;i++) 
+  {
+    for (Int idim=0;idim<3;idim++) 
+    {
+      uvw(idim,i) = vb.uvw()(i)(idim);
+    }
+  }
+
+  Vector<Int> chan_map(vb.frequency().size(), 0);
+  itsVisResampler->set_chan_map(chan_map);
+  
+  // Set the frequencies for which the convolution function will be evaluated.
+  // set_frequency groups the frequncies found in vb according to the number of
+  // data channels in a convolution function channel.
+  // chan_map_CF is a mapping of the data channels to the 
+  // convolution function channels
+  Vector<Int> chan_map_CF;
+  chan_map_CF = itsConvFunc->set_frequency(vb.frequency());
+  itsVisResampler->set_chan_map_CF(chan_map_CF);
+  
+  Vector<Double> lsr_frequency;
+  
+  Int spwid = 0;
+  Bool convert = True;
+  vb.lsrFrequency(spwid, lsr_frequency, convert);
+
+  Cube<Complex> data(vb.modelVisCube());
+  
+  VBStore vbs;
+  vbs.nRow(vb.nRow());
+  vbs.beginRow(0);
+  vbs.endRow(vbs.nRow());
+
+  vbs.uvw(uvw);
+  vbs.visCube(data);
+  
+  vbs.freq(vb.frequency());
+  vbs.rowFlag(vb.flagRow());
+  vbs.flagCube(vb.flagCube());
+  
+  itsVisResampler->setParams(itsUVScale, itsUVOffset, dphase);
+  itsVisResampler->setMaps(chanMap, polMap);
+
+  const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
+
+  //TODO: fill out proper value for w_step
+  double w_step = 1000;
+
+  VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
+  
+  for (int w_plane=0; w_plane <= v.max_w_plane; w_plane++)
+  {
+    double w_offset = (w_plane+0.5) * w_step;
+    bool model_grids_initialized = false;
+
+    // disable w-stack
+//     model_grids_initialized = true;
+//     w_offset = 0;
+
+    // get from w_plane
+    
+    for (std::vector<Chunk>::const_iterator chunk = v.chunks.begin() ; chunk != v.chunks.end(); ++chunk)
+    {
+      bool any_channel_match = false;
+      vector<bool> channel_selection;
+      channel_selection.reserve(chunk->wplane_map.size());
+      for (std::vector<int>::const_iterator w_idx = chunk->wplane_map.begin() ; w_idx != chunk->wplane_map.end(); ++w_idx)
+      {
+        bool match = (*w_idx == w_plane);
+        channel_selection.push_back(match);
+        any_channel_match = any_channel_match || match;
+      }
+      if (any_channel_match)
+      {
+        
+        // Make sure the grid for this w-plane is initialized
+        if (not model_grids_initialized)
+        {
+          cout << "w_plane: " << w_plane << endl;
+          for (int i=0; i<itsNGrid; i++)
+          {
+            itsComplexModelImages[i]->set(Complex(0.0));
+
+//             fill complex sub image from model image
+            IPosition blc(
+              4, 
+              (itsPaddedNX - itsModelImages[i]->shape()(0) + (itsPaddedNX % 2 == 0)) / 2,
+              (itsPaddedNY - itsModelImages[i]->shape()(1) + (itsPaddedNY % 2 == 0)) / 2,
+              0, 
+              0);
+            IPosition shape(4, itsNX, itsNY, itsNPol, itsNChan);
+            SubImage<Complex> complex_model_subimage(*itsComplexModelImages[i], Slicer(blc, shape), True);
+            
+            // convert float IQUV model image to complex image
+            StokesImageUtil::From(complex_model_subimage, *itsModelImages[i]);
+            
+            normalize(complex_model_subimage, itsNormalizeModel, True);
+
+            // Apply W term in image domain
+            Array<Complex> complex_model_subimage_data;
+            if (complex_model_subimage.get(complex_model_subimage_data))
+            {
+//               cout << "OK, it is a reference" << endl;
+            }
+            else
+            {
+//               cout << "Not OK, it is not a reference" << endl;
+            }
+              
+            itsConvFunc->applyWterm(complex_model_subimage_data, w_offset);
+            
+            // transform to uv domain
+            LatticeFFT::cfft2d(*itsComplexModelImages[i], True);
+            itsModelGrids[i].reference(itsComplexModelImages[i]->get());
+          }
+          model_grids_initialized = true;
+        }
+          
+        // get visibility from grid
+        
+        int idx = v.baseline_index_map[chunk->start];
+        int ant1 = vb.antenna1()[idx];
+        int ant2 = vb.antenna2()[idx];
+        
+        casa::Matrix<casa::Float> sum_weight;
+
+        itsConvFunc->computeAterm (chunk->time);
+        CFStore cfStore = itsConvFunc->makeConvolutionFunction (
+          ant1, 
+          ant2, 
+          chunk->time,
+          chunk->w,
+          sum_weight,
+          channel_selection, 
+          w_offset);
+        
+        if (itsUseDoubleGrid) 
+        {
+      //       TODO: support for double precision grids
+      //       itsVisResampler->DataToGrid(
+      //         itsGriddedData2[threadNum], 
+      //         vbs, 
+      //         blIndex,
+      //         blStart[i], 
+      //         blEnd[i],
+      //         itsSumWeight[threadNum], 
+      //         dopsf, 
+      //         cfStore);
+        } 
+        else 
+        {
+          for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
+          {
+            Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
+//             for (int j=0; j<lsr_frequency.nelements(); j++)
+//             {
+//               taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
+//             }
+            itsVisResampler->GridToData(
+              vbs, 
+              itsModelGrids[taylor_idx], 
+              v.baseline_index_map, 
+              chunk->start,
+              chunk->end, 
+              cfStore,
+              taylor_weights);
+          }
+        }
+      }
+    }
+  }
 }
   
 } //# end namespace LofarFT
