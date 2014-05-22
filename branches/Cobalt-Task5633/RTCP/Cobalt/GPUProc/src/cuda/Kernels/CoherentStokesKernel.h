@@ -73,7 +73,7 @@ namespace LOFAR
       unsigned itsTimeParallelFactor;
 
 
-      unsigned nextFactor(unsigned factor, unsigned maxFactor) const;
+      unsigned smallestFactorOf(unsigned n) const;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//

@@ -103,9 +103,10 @@ namespace LOFAR
       for (unsigned nrTABsPerBlock = minNrTABsPerBlock;
            nrTABsPerBlock <= maxNrTABsPerBlock; 
            nrTABsPerBlock = align(++nrTABsPerBlock, defaultNrTABsPerBlock)) {
-        for (unsigned nrTimeParallelThreadsPerBlock = minTimeParallelThreads, incFactor = 2;
-             nrTimeParallelThreadsPerBlock <= maxTimeParallelThreads;
-             nrTimeParallelThreadsPerBlock *= incFactor = nextFactor(incFactor, maxTimeParallelThreads)) {
+        for (unsigned nrTimeParallelThreadsPerBlock = minTimeParallelThreads;
+             /* exit cond at the end */ ;
+             nrTimeParallelThreadsPerBlock *= smallestFactorOf(maxTimeParallelThreads /
+                                                               nrTimeParallelThreadsPerBlock)) {
           for (unsigned nrChannelsPerBlock = minNrChannelsPerBlock;
                nrChannelsPerBlock <= maxNrChannelsPerBlock;
                nrChannelsPerBlock = align(++nrChannelsPerBlock, defaultNrChannelsPerBlock)) {
@@ -129,14 +130,14 @@ namespace LOFAR
               ec.nrTimeParallelThreads = nrTimeParallelThreads;
               configs.push_back(ec);
             } else {
-              LOG_DEBUG_STR("Skipping invalid CoherentStokes exec config: " << errMsgs);
+              LOG_DEBUG_STR("Skipping unsupported CoherentStokes exec config: " << errMsgs);
             }
 
           }
 
-          // The juggle with time par factors cannot be made correct for this corner-case,
-          // as the smallest prime factor is 2. Consider such a config once, not inf times.
-          if (maxTimeParallelThreads == 1)
+          // Loop exit check after (not before) considering a config, esp. for
+          // maxTimeParallelThreads == 1 and other cases of smallestFactorOf(1).
+          if (nrTimeParallelThreadsPerBlock == maxTimeParallelThreads)
             break;
         }
       }
@@ -218,14 +219,20 @@ namespace LOFAR
       return os;
     }
 
-    unsigned CoherentStokesKernel::nextFactor(unsigned factor, unsigned maxFactor) const
+    unsigned CoherentStokesKernel::smallestFactorOf(unsigned n) const
     {
-      // find the next factor value of maxFactor
-      while (maxFactor % factor != 0) {
-        factor += 1; // could skip non-primes, but can't gain back the effort
+      if (n % 2 == 0) {
+        return 2;
       }
 
-      return factor;
+      unsigned sqrtn = sqrt(n+1); // +1: avoid e.g. sqrt(25)=4.999...
+      for (unsigned i = 3; i <= sqrtn; i += 2) {
+        if (n % i == 0) {
+          return i;
+        }
+      }
+
+      return n;
     }
 
     //--------  Template specializations for KernelFactory  --------//
