@@ -306,8 +306,8 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
 
-      itsVis.resize (IPosition(4,nSt,nSt,nCr,nCh));
-      itsMVis.resize(IPosition(4,nSt,nSt,nCr,nCh));
+      itsVis.resize (IPosition(4,nCr,nSt,nSt,nCh));
+      itsMVis.resize(IPosition(4,nCr,nSt,nSt,nCh));
 
       itsVis=0;
       itsMVis=0;
@@ -321,16 +321,16 @@ namespace LOFAR {
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(4,ant1,ant2,cr,ch)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,ant1,ant2,cr,ch)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(4,cr,ant1,ant2,ch)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(4,cr,ant1,ant2,ch)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
             // Below is the complex conjugate. tcr is the correlation for the transposed
             uint tcr=cr;
             if (cr==1 || cr==2) {
               tcr=3-cr;
             }
-            itsVis (IPosition(4,ant2,ant1,tcr,ch)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,ant2,ant1,tcr,ch)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(4,tcr,ant2,ant1,ch)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(4,tcr,ant2,ant1,ch)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
@@ -400,7 +400,7 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
 
-      uint nSt=itsMVis.shape()[0];
+      uint nSt=itsMVis.shape()[1];
       uint nCr=4;
       uint nCh = info().nchan();
 
@@ -425,8 +425,8 @@ namespace LOFAR {
       iS.gx = iS.g;
       int sstep=0;
 
-      Vector<DComplex> vis(4);
-      Vector<DComplex> mvis(4);
+      DComplex* vis_p;
+      DComplex* mvis_p;
 
       uint iter=0;
       for (;iter<itsMaxIter;++iter) {
@@ -441,16 +441,14 @@ namespace LOFAR {
         }
 
         for (uint st1=0;st1<nSt;++st1) {
-          for (uint st2=0;st2<nSt;++st2) {
-            for (uint ch=0;ch<nCh;++ch) {
-              mvis[0]=itsMVis(IPosition(4,st2,st1,0,ch));
-              mvis[1]=itsMVis(IPosition(4,st2,st1,1,ch));
-              mvis[2]=itsMVis(IPosition(4,st2,st1,2,ch));
-              mvis[3]=itsMVis(IPosition(4,st2,st1,3,ch));
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * mvis[0] + iS.h(st2,2) * mvis[2];
-              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * mvis[1] + iS.h(st2,2) * mvis[3];
-              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * mvis[0] + iS.h(st2,3) * mvis[2];
-              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * mvis[1] + iS.h(st2,3) * mvis[3];
+          for (uint ch=0;ch<nCh;++ch) {
+            mvis_p=&itsMVis(IPosition(4,0,0,st1,ch));
+            for (uint st2=0;st2<nSt;++st2) {
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * mvis_p[0] + iS.h(st2,2) * mvis_p[2];
+              iS.z(ch*nSt+st2,1) = iS.h(st2,0) * mvis_p[1] + iS.h(st2,2) * mvis_p[3];
+              iS.z(ch*nSt+st2,2) = iS.h(st2,1) * mvis_p[0] + iS.h(st2,3) * mvis_p[2];
+              iS.z(ch*nSt+st2,3) = iS.h(st2,1) * mvis_p[1] + iS.h(st2,3) * mvis_p[3];
+              mvis_p+=4;
             }
           }
 
@@ -464,16 +462,14 @@ namespace LOFAR {
           w(2)=conj(w(1));
 
           t=0;
-          for (uint st2=0;st2<nSt;++st2) {
-            for (uint ch=0;ch<nCh;++ch) {
-              vis[0]=itsVis(IPosition(4,st2,st1,0,ch));
-              vis[1]=itsVis(IPosition(4,st2,st1,1,ch));
-              vis[2]=itsVis(IPosition(4,st2,st1,2,ch));
-              vis[3]=itsVis(IPosition(4,st2,st1,3,ch));
-              t(0) += conj(iS.z(ch*nSt+st2,0)) * vis[0] + conj(iS.z(ch*nSt+st2,2)) * vis[2];
-              t(1) += conj(iS.z(ch*nSt+st2,0)) * vis[1] + conj(iS.z(ch*nSt+st2,2)) * vis[3];
-              t(2) += conj(iS.z(ch*nSt+st2,1)) * vis[0] + conj(iS.z(ch*nSt+st2,3)) * vis[2];
-              t(3) += conj(iS.z(ch*nSt+st2,1)) * vis[1] + conj(iS.z(ch*nSt+st2,3)) * vis[3];
+          for (uint ch=0;ch<nCh;++ch) {
+            vis_p=&itsVis(IPosition(4,0,0,st1,ch));
+            for (uint st2=0;st2<nSt;++st2) {
+              t(0) += conj(iS.z(ch*nSt+st2,0)) * vis_p[0] + conj(iS.z(ch*nSt+st2,2)) * vis_p[2];
+              t(1) += conj(iS.z(ch*nSt+st2,0)) * vis_p[1] + conj(iS.z(ch*nSt+st2,2)) * vis_p[3];
+              t(2) += conj(iS.z(ch*nSt+st2,1)) * vis_p[0] + conj(iS.z(ch*nSt+st2,3)) * vis_p[2];
+              t(3) += conj(iS.z(ch*nSt+st2,1)) * vis_p[1] + conj(iS.z(ch*nSt+st2,3)) * vis_p[3];
+              vis_p+=4;
             }
           }
           DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
@@ -620,7 +616,7 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
 
-      uint nSt=itsMVis.shape()[0];
+      uint nSt=itsMVis.shape()[1];
       uint nCh = info().nchan();
 
       iS.g.resize(2*nSt,1);
@@ -642,8 +638,8 @@ namespace LOFAR {
           count++;
           //for (uint ch=0;ch<nCh;++ch) {
             uint crjump=2*(st2/nSt)+(st1/nSt);
-            fronormvis+=norm( itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,0)));
-            fronormmod+=norm(itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,0)));
+            fronormvis+=norm( itsVis(IPosition(4,crjump,st2%nSt,st1%nSt,0)));
+            fronormmod+=norm(itsMVis(IPosition(4,crjump,st2%nSt,st1%nSt,0)));
           //}
         }
       }
@@ -663,7 +659,7 @@ namespace LOFAR {
         for (uint st1=0;st1<2*nSt;++st1) {
           for (uint st2=0;st2<2*nSt;++st2) {
             uint crjump=2*(st2/nSt)+(st1/nSt);
-            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,st1%nSt,st2%nSt,crjump,0))<<endl;
+            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,crjump,st1%nSt,st2%nSt,0))<<endl;
           }
         }
       }
@@ -688,15 +684,15 @@ namespace LOFAR {
         for (uint st1=0;st1<2*nSt;++st1) {
           w=0;
           t=0;
-          for (uint st2=0;st2<2*nSt;++st2) {
-            uint crjump=2*(st2/nSt)+(st1/nSt);
-            for (uint ch=0;ch<nCh;++ch) {
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+          for (uint ch=0;ch<nCh;++ch) {
+            for (uint st2=0;st2<2*nSt;++st2) {
+              uint crjump=2*(st2/nSt)+(st1/nSt);
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,crjump,st2%nSt,st1%nSt,ch));
               //cout<<"iS.h("<<st2<<")="<<iS.h(st2,0)<<endl;
               //cout<<"itsMVis("<<st2%nSt<<","<<st1%nSt<<","<<crjump<<","<<ch<<")="<<itsMVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch))<<endl;
               //cout<<"=="<<endl;
               w+=norm(iS.z(ch*nSt+st2,0));
-              t+=conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,st2%nSt,st1%nSt,crjump,ch));
+              t+=conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(4,crjump,st2%nSt,st1%nSt,ch));
             }
           }
           //cout<<"z="<<endl;
@@ -828,7 +824,7 @@ namespace LOFAR {
 
     void GainCal::exportToMatlab(uint ch) {
       ofstream mFile;
-      uint nSt = itsMVis.shape()[0];
+      uint nSt = itsMVis.shape()[1];
       mFile.open ("debug.txt");
       mFile << "# Created by NDPPP"<<endl;
       mFile << "# name: V"<<endl;
@@ -838,13 +834,13 @@ namespace LOFAR {
 
       for (uint row=0;row<nSt;++row) {
         for (uint col=0;col<nSt;++col) {
-          mFile << itsVis(IPosition(4,row,col,0,ch))<<" ";
-          mFile << itsVis(IPosition(4,row,col,1,ch))<<" ";
+          mFile << itsVis(IPosition(4,0,row,col,ch))<<" ";
+          mFile << itsVis(IPosition(4,1,row,col,ch))<<" ";
         }
         mFile << endl;
         for (uint col=0;col<nSt;++col) {
-          mFile << itsVis(IPosition(4,row,col,2,ch))<<" ";
-          mFile << itsVis(IPosition(4,row,col,3,ch))<<" ";
+          mFile << itsVis(IPosition(4,2,row,col,ch))<<" ";
+          mFile << itsVis(IPosition(4,3,row,col,ch))<<" ";
         }
         mFile << endl;
       }
@@ -857,13 +853,13 @@ namespace LOFAR {
 
       for (uint row=0;row<nSt;++row) {
         for (uint col=0;col<nSt;++col) {
-          mFile << itsMVis(IPosition(4,row,col,0,ch))<<" ";
-          mFile << itsMVis(IPosition(4,row,col,1,ch))<<" ";
+          mFile << itsMVis(IPosition(4,row,col,ch))<<" ";
+          mFile << itsMVis(IPosition(4,row,col,ch))<<" ";
         }
         mFile << endl;
         for (uint col=0;col<nSt;++col) {
-          mFile << itsMVis(IPosition(4,row,col,2,ch))<<" ";
-          mFile << itsMVis(IPosition(4,row,col,3,ch))<<" ";
+          mFile << itsMVis(IPosition(4,0,row,col,2,ch))<<" ";
+          mFile << itsMVis(IPosition(4,1,row,col,3,ch))<<" ";
         }
         mFile << endl;
       }
