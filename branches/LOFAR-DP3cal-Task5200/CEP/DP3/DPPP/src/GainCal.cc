@@ -70,6 +70,7 @@ namespace LOFAR {
         itsParmDBName    (parset.getString (prefix + "parmdb")),
         itsApplyBeam     (parset.getBool (prefix + "usebeammodel")),
         itsMode          (parset.getString (prefix + "parms")),
+        itsTStep         (0),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
         itsThreadStorage  (),
@@ -295,6 +296,7 @@ namespace LOFAR {
       }
 
       itsTimer.stop();
+      itsTStep++;
       getNextStep()->process(buf);
       return false;
     }
@@ -569,12 +571,12 @@ namespace LOFAR {
           iS.gx = iS.g;
         }
       }
-      if (dg > itsTolerance) {
+      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
         cerr<<"!";
       }
 
       if (itsDebugLevel>1) {
-        cout<<"iter:"<<iter<<", dg="<<dg<<endl;
+        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg="<<dg<<endl;
       }
 
       DComplex p = conj(iS.g(0,0))/abs(iS.g(0,0));
@@ -585,10 +587,10 @@ namespace LOFAR {
         }
       }
 
-      for (uint ant2=0;ant2<nSt;++ant2) {
+      //for (uint ant2=0;ant2<nSt;++ant2) {
         //cout<<"g["<<ant2<<"]={"<<g[ant2][0]<<", "<<g[ant2][1]<<", "<<g[ant2][2]<<", "<<g[ant2][3]<<"}"<<endl;
         //cout<<"w["<<ant2<<"]={"<<w[ant2][0]<<", "<<w[ant2][1]<<", "<<w[ant2][2]<<", "<<w[ant2][3]<<"}"<<endl;
-      }
+      //}
 
       // Stefcal terminated (either by maxiter or by converging)
       // Let's save G...
@@ -673,6 +675,9 @@ namespace LOFAR {
       uint crjump;
 
       uint iter=0;
+      if (nSt==0) {
+        iter=itsMaxIter;
+      }
       for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
@@ -779,12 +784,12 @@ namespace LOFAR {
           iS.gx = iS.g;
         }
       }
-      if (dg > itsTolerance) {
+      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
         cerr<<"!";
       }
 
       if (itsDebugLevel>1) {
-        cout<<"iter:"<<iter<<", dg="<<dg<<endl;
+        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg="<<dg<<endl;
       }
 
       if (nSt>0) {
@@ -808,7 +813,7 @@ namespace LOFAR {
         cout<<"g="<<iS.g<<endl;
       }
 
-      if (dg > itsTolerance && itsDebugLevel>1) {
+      if (dg > itsTolerance && itsDebugLevel>1 && nSt>0) {
         cout<<endl<<"Did not converge: dg="<<dg<<" tolerance="<<itsTolerance<<", nants="<<nSt<<endl;
         if (itsDebugLevel>12) {
           cout<<"g="<<iS.g<<endl;
