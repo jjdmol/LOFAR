@@ -180,7 +180,6 @@ namespace {
       Position         itsPhaseRef;
 
       string           itsMode;
-      bool             itsPhaseOnly;
 
       uint             itsDebugLevel;
 

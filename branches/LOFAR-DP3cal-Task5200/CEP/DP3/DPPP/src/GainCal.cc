@@ -68,7 +68,8 @@ namespace LOFAR {
         itsName          (prefix),
         itsSourceDBName  (parset.getString (prefix + "sourcedb")),
         itsParmDBName    (parset.getString (prefix + "parmdb")),
-        itsApplyBeam     (parset.getBool (prefix + "model.beam")),
+        itsApplyBeam     (parset.getBool (prefix + "usebeammodel")),
+        itsMode          (parset.getString (prefix + "parms")),
         itsDebugLevel    (parset.getInt (prefix + "debuglevel", 0)),
         itsBaselines     (),
         itsThreadStorage  (),
@@ -87,6 +88,9 @@ namespace LOFAR {
               vector<string>());
       patchNames=makePatchList(sourceDB, sourcePatterns);
 
+      ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
+
+      /*
       vector<string> parms = parset.getStringVector(prefix+"parms",vector<string>());
       uint numdiag=0;
       uint numoffdiag=0;
@@ -98,7 +102,7 @@ namespace LOFAR {
         string parmpol=(*parmname).substr(5,3);
         if (parmpol=="0:1" || parmpol=="1:0") {
           numoffdiag++;
-        } else if (parmpol=="0:0" || parmpol=="1:1") {
+       } else if (parmpol=="0:0" || parmpol=="1:1") {
           numdiag++;
         } else {
           THROW (Exception, "Can only solve for gains");
@@ -125,6 +129,7 @@ namespace LOFAR {
       } else {
         THROW (Exception, "Can only handle the modes Phase and Complex");
       }
+      */
 
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
@@ -199,7 +204,6 @@ namespace LOFAR {
       os << "  tolerance:      " << itsTolerance << endl;
       os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
-      os << "  phase only:     " << boolalpha << itsPhaseOnly << endl;
     }
 
     void GainCal::showTimings (std::ostream& os, double duration) const
@@ -283,7 +287,7 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
-        if (itsMode=="diaggain") {
+        if (itsMode=="diagonal" || itsMode=="phaseonly") {
           stefcalunpol(&storage.model[0], data, weight, flag);
         } else {
           stefcalpol(&storage.model[0], data, weight, flag);
@@ -454,6 +458,7 @@ namespace LOFAR {
 
           w=0;
           t=0;
+
           for (uint st2ch=0;st2ch<nSt*nCh;++st2ch) {
             w(0) += conj(iS.z(st2ch,0))*iS.z(st2ch,0) + conj(iS.z(st2ch,2))*iS.z(st2ch,2);
             w(1) += conj(iS.z(st2ch,0))*iS.z(st2ch,1) + conj(iS.z(st2ch,2))*iS.z(st2ch,3);
@@ -691,7 +696,7 @@ namespace LOFAR {
             }
           }
           iS.g(st1,0)=t/w;
-          if (itsPhaseOnly) {
+          if (itsMode=="phaseonly") {
             iS.g(st1,0)/=abs(iS.g(st1,0));
           }
         }
@@ -957,7 +962,7 @@ namespace LOFAR {
         string suffix(itsAntennaUsedNames[st]);
 
         for (int i=0; i<4; ++i) {
-          if (itsMode=="diaggain" && (i==1||i==2)) {
+          if ((itsMode=="diagonal" || itsMode=="phaseonly") && (i==1||i==2)) {
             continue;
           }
           for (int k=0; k<2; ++k) {
@@ -973,7 +978,7 @@ namespace LOFAR {
                 }
               } else {
                 int rst=itsAntMaps[ts][st];
-                if (itsMode=="fullgain") {
+                if (itsMode=="fulljones") {
                   if (seqnr%2==0) {
                     values(0, ts) = real(itsSols[ts](rst,seqnr/2));
                   } else {
