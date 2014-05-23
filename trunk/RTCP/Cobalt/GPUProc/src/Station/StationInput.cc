@@ -324,7 +324,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
     //
     // Wait at most 1 second for data.
     SocketStream* ss = dynamic_cast<SocketStream*>(&inputStream);
-    if (ss) ss->setTimeout(1.0);
+    //if (ss) ss->setTimeout(1.0);
 
     for(size_t i = 1 /* avoid printing statistics immediately */; true; i++) {
       // Fill rspDataPool elements with RSP packets

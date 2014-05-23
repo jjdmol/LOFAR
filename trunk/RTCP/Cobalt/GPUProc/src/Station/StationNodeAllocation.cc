@@ -28,7 +28,7 @@
 #include <sstream>
 
 #include <Common/LofarLogger.h>
-#include <Stream/NullStream.h>
+#include <Stream/FileStream.h>
 #include <CoInterface/Stream.h>
 
 #include <InputProc/RSPTimeStamp.h>
