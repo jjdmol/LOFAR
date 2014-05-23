@@ -45,8 +45,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Stream/FileStream.h>
-#include <Stream/SocketStream.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
 
 #include <InputProc/SampleType.h>
@@ -320,13 +320,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
   Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
 
   try {
-    // Set the socket timeout to prevent readmmsg from blocking.
-    //
-    // Wait at most 1 second for data.
-    SocketStream* ss = dynamic_cast<SocketStream*>(&inputStream);
-    if (ss) ss->setTimeout(1.0);
-
-    for(size_t i = 1 /* avoid printing statistics immediately */; true; i++) {
+    for(size_t i = 0; true; i++) {
       // Fill rspDataPool elements with RSP packets
       SmartPtr<RSPData> rspData = inputQueue.remove();
      
@@ -334,19 +328,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
       if (!rspData)
         break;
 
-      try {
-        reader.readPackets(rspData->packets);
-      } catch (SystemCallException &ex) {
-        if (ex.error != EWOULDBLOCK)
-          throw;
-
-        LOG_DEBUG_STR( logPrefix << "Timed out -- trying again.");
-
-        if (i % 10 == 0) // Each timeout is ~1s, so log every ~10s worth of no data.
-          reader.logStatistics();
-
-        continue;
-      }
+      reader.readPackets(rspData->packets);
 
       // Periodically log progress
       if (i % 256 == 0) // Each block is ~40ms, so log every ~10s worth of data.
@@ -564,6 +546,8 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
 template <typename SampleT>
 void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
 {
+  OMPThreadSet packetReaderThreads;
+
   if (ps.realTime()) {
     // Each board has its own pool to reduce lock contention
     for (size_t board = 0; board < nrBoards; ++board)
@@ -574,9 +558,6 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
     for (size_t i = 0; i < 16; ++i)
       rspDataPool[0]->free.append(new RSPData(1), false);
   }
-
-  LOG_INFO_STR(logPrefix << "Processing packets");
-
 
   #pragma omp parallel sections num_threads(2)
   {
@@ -594,11 +575,15 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
      */
     #pragma omp section
     {
+      LOG_INFO_STR(logPrefix << "Processing packets");
+
       if (ps.realTime()) {
         vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
 
         #pragma omp parallel for num_threads(nrBoards)
         for(size_t board = 0; board < nrBoards; board++) {
+          OMPThreadSet::ScopedRun sr(packetReaderThreads);
+
           Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
           readRSPRealTime(board, *inputStreams[board]);
@@ -606,14 +591,10 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
       } else {
         readRSPNonRealTime();
       }
-
-      LOG_INFO_STR(logPrefix << "Done reading packets.");
     }
 
     /*
      * inputQueue -> outputQueue
-     *
-     * Fill packets with RSP data from rspDataPool.filled.
      */
     #pragma omp section
     {
@@ -647,18 +628,19 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
         }
       }
 
-      LOG_INFO_STR(logPrefix << "Done filling packets.");
-
       // Signal EOD to output
       outputQueue.append(NULL);
 
-      // Signal EOD to input.
-      //
-      // Note: we PREPEND to trigger the stop condition
-      // immediately without readRSPRealTime to have to
-      // exhaust its input queue before hitting NULL.
+      // Signal EOD to input. It's a free queue, so prepend to avoid
+      // having the reader flush the whole queue first.
       for (size_t i = 0; i < nrBoards; ++i)
         rspDataPool[i]->free.prepend(NULL);
+
+      if (ps.realTime()) {
+        // kill reader threads
+        LOG_INFO_STR( logPrefix << "Stopping all boards" );
+        packetReaderThreads.killAll();
+      }
     }
   }
 }
