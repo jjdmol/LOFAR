@@ -63,18 +63,38 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
 
   this->unlocked_append(element, timed);
 
-  if (drop && _overflow()) {
-    // drop the head of the queue:
-    // 1. bypass the statistics kept by Queue<T>
-    // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
-    element = this->pop_front().value;
+  if (_overflow()) {
+    if (drop) {
+      // drop the head of the queue:
+      // 1. bypass the statistics kept by Queue<T>
+      // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
+      element = this->pop_front().value;
 
-    dropped.push(100.0);
-    return false;
-  } else {
-    dropped.push(0.0);
-    return true;
+      dropped.push(100.0);
+      return false;
+    } else {
+      // can't drop -- wait for space to become available
+      do {
+        removeSignal.wait(this->itsMutex);
+      } while(_overflow() && !flushing);
+    }
   }
+
+  dropped.push(0.0);
+  return true;
+}
+
+
+template <typename T> inline T BestEffortQueue<T>::remove(const struct timespec &deadline, T null)
+{
+  T result = Queue<T>::remove(deadline, null);
+
+  if (!drop && result != null) {
+    // if we can't drop, append() can be waiting for us
+    removeSignal.signal();
+  }
+
+  return result;
 }
 
 
@@ -90,6 +110,9 @@ template <typename T> inline void BestEffortQueue<T>::noMore()
 
   // signal end-of-stream to reader
   this->unlocked_append(0, false);
+
+  // signal all append()s that we're flushing
+  removeSignal.broadcast();
 }
 
 

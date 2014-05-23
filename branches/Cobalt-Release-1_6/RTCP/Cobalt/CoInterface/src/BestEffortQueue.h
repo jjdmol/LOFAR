@@ -22,6 +22,7 @@
 #define LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 
 #include <CoInterface/Queue.h>
+#include <Common/Thread/Condition.h>
 
 namespace LOFAR
 {
@@ -51,6 +52,10 @@ namespace LOFAR
       // was dropped. The dropped element is assigned to `element'.
       bool append(T& element, bool timed=true);
 
+    // Remove the front element; waits until `deadline' for an element,
+    // and returns `null' if the deadline passed.
+    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
+
       // Signal end-of-stream.
       void noMore();
 
@@ -67,6 +72,9 @@ namespace LOFAR
 
       // true if the queue is being flushed
       bool flushing;
+
+      // signal that an element has been removed
+      Condition removeSignal;
 
       // whether the queue has overflowed. Cannot grab itsMutex!
       bool _overflow() const;
