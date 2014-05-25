@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
 
       SubbandOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
       writer.createMS();
-      writer.cleanUp();
       feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
   }
@@ -79,7 +78,6 @@ int main(int argc, char *argv[])
 
       TABOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
       writer.createMS();
-      writer.cleanUp();
       feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
   }
