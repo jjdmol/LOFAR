@@ -15,12 +15,17 @@
 # 4. Run this script, and save the output as "record.sh"
 # 5. Run record.sh before the obs starts
 
+# Sane default
+if [ -z "$LOFARROOT" ]; then
+  LOFARROOT=/opt/lofar
+fi
+
 # Raw parameters to filterRSP
 # -q: Quiet, don't spam progress logs
 # -s: Number of subbands to record [SET TO NUMBER OF SUBBANDS]
 # -f: Record from this timestamp [SET TO OBS START TIME - 1SEC]
 # -t: Record until this timestamp [SET TO OBS END TIME]
-FILTERPARAMS="-s 122 -q -f '2014-05-22 13:06:59' -t '2014-02-19 13:12:10'"
+FILTERPARAMS="-s 122 -q -f '2014-05-22 09:24:59' -t '2014-05-22 09:30:01'"
 
 # Identifier for the output files [SET TO SOMETHING UNIQUE]
 NAME="cs-is-scaling"
@@ -84,9 +89,6 @@ PARSET=record_raw_data.parset
 # We'll need a timestamp that won't change during this script
 NOW=`date +%FT%T`
 
-# Add all input specifications
-cat /opt/lofar/etc/parset-additions.d/default/*.parset > $PARSET || exit 1
-
 # Construct the list of all fields (f.e. CS001HBA0 CS001HBA1 RS106HBA)
 FIELDS=""
 for s in $STATIONS
@@ -124,20 +126,32 @@ do
   esac
 done
 
+(
+# Create a basic configuration
+echo "Observation.Beam[0].subbandList = [0]"
+echo "Observation.VirtualInstrument.stationList = [`echo $FIELDS | tr ' ' ','`]"
+echo "Observation.rspBoardList = [0]"
+echo "Observation.rspSlotList  = [0]"
+
+# Add all input specifications
+cat $LOFARROOT/etc/parset-additions.d/default/*.parset
+)> $PARSET
+
 LOCUSIDX=0
 
 # Start recording all fields
 for s in $FIELDS
 do
   # Determine the host for this field
-  HOST=`station_stream -S $s -h $PARSET 2>/dev/null`;
+  HOST=`$LOFARROOT/bin/station_stream -S $s -h $PARSET 2>/dev/null`;
+
   for b in $BOARDS
   do
     # The input stream
-    INSTREAM=`station_stream -S $s -B $b -s $PARSET 2>/dev/null`;
+    INSTREAM=`$LOFARROOT/bin/station_stream -S $s -B $b -s $PARSET 2>/dev/null`;
 
     # The socket to bind to on the node
-    CPU=`station_stream -S $s -B $b -c $PARSET 2>/dev/null`;
+    CPU=`$LOFARROOT/bin/station_stream -S $s -B $b -c $PARSET 2>/dev/null`;
 
     # The output stream
     case "$OUTPUT" in
