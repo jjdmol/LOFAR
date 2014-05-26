@@ -110,6 +110,10 @@ namespace LOFAR
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -
                                          compensatedDelay;
         }
+
+        // Zero padding entries that exist because we always produce maxNrCoherentTABsPerSAP for any subband
+        for (unsigned tab = metaData.TABs.size(); tab < ps.settings.beamFormer.maxNrCoherentTABsPerSAP(); tab++)
+          tabDelays[SAP][station][tab] = 0.0;
       }
     }
 
