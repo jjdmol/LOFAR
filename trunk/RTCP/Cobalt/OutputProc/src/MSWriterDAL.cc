@@ -526,7 +526,7 @@ namespace LOFAR
       itsConfiguration.add("fileFormat",                "HDF5");
       itsConfiguration.add("filename",                  LOFAR::basename(h5filename));
       itsConfiguration.add("size",                      "0");
-      itsConfiguration.add("location",                  f.location.host + ":" + LOFAR::dirname(h5filename));
+      itsConfiguration.add("location",                  f.location.host + ":" + f.location.directory);
       itsConfiguration.add("percentageWritten",         "0");
 
       itsConfiguration.add("nrOfCoherentStokesBeams",   "0");
