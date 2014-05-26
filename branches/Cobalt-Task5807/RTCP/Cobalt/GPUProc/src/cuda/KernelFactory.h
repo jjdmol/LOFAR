@@ -82,6 +82,11 @@ namespace LOFAR
       T* create(const gpu::Stream& stream,
                 const typename T::Buffers& buffers) const
       {
+        // Since we use overlapping input/output buffers, their size
+        // could be wrong.
+        ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
+        ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+
         return new T(
           stream, createModule(stream.getContext(), 
                                T::theirSourceFile,

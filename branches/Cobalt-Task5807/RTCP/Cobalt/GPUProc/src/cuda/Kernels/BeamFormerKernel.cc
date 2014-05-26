@@ -47,7 +47,7 @@ namespace LOFAR
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
+      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
       subbandBandwidth(ps.settings.subbandWidth()),
       doFlysEye(ps.settings.beamFormer.doFlysEye)
     {

@@ -103,7 +103,7 @@ namespace LOFAR
       queue, *coherentTransposeBuffers));
 
     // inverse FFT: C/D -> C/D (in-place)
-    unsigned nrInverFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+    unsigned nrInverFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
       NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
       ps.settings.beamFormer.nrHighResolutionChannels;
     inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
@@ -142,7 +142,7 @@ namespace LOFAR
 
     // final FFT: C -> C (in-place) = firFilterBuffers.output
 
-    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
       NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
       ps.settings.beamFormer.coherentSettings.nrChannels;
     finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
