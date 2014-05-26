@@ -29,7 +29,7 @@ using namespace std;
 
 main(int argc, char **argv)
 {
-  string testname("tMPISendReceive");
+  string testname("tMPIReceive");
   cout << "testname" << endl;
   // ****************************************************
   // Set up the mpi environment
@@ -67,7 +67,7 @@ main(int argc, char **argv)
   // Allow OpenMP thread registration
   OMPThread::init();
 
-  string parsetFile = "./tMPISendReceive.in_parset";
+  string parsetFile = "./tMPIReceive.in_parset";
   Parset ps(parsetFile);
 
   SubbandDistribution subbandDistribution; // rank -> [subbands]
