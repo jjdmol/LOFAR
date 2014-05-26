@@ -85,6 +85,7 @@ namespace LOFAR
         // Since we use overlapping input/output buffers, their size
         // could be wrong.
         ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
+        // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
         //ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
 
         return new T(

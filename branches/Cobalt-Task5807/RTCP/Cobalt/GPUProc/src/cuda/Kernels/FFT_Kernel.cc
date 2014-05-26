@@ -72,6 +72,7 @@ namespace LOFAR
       ASSERT(maxNrFFTpoints % fftSize == 0);
 
       // buffer must be big enough for the job
+      // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
       //ASSERT(buffer.size() >= fftSize * nrFFTs * sizeof(fcomplex));
 
       LOG_DEBUG_STR("FFT_Kernel: " <<

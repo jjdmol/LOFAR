@@ -128,6 +128,8 @@ namespace LOFAR
         new BeamFormerPreprocessingStep(parset, queue, context, factories, 
         devInput, devA, devB, devNull));
 
+      // Only create the parts actually needed prevents possible checks
+      // that are not used anyways
       if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
           new BeamFormerCoherentStep(parset, queue, context, factories,       
