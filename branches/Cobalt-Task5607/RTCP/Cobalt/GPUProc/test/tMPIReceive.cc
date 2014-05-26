@@ -29,7 +29,7 @@ using namespace std;
 
 main(int argc, char **argv)
 {
-  string testname("tMPIReceive");
+  string testname("tMPISendReceive");
   cout << "testname" << endl;
   // ****************************************************
   // Set up the mpi environment
