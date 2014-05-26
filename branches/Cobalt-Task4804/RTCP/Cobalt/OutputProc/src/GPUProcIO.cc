@@ -39,6 +39,7 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
 
 namespace LOFAR {
 namespace Cobalt {
