@@ -53,7 +53,7 @@
 #endif
 
 #if !(NR_TABS >= 1)
-#error Precondition violated: NR_TABS >= 1
+#warning Precondition violated: NR_TABS >= 1
 #endif
 
 #if !(NR_CHANNELS >= 16)

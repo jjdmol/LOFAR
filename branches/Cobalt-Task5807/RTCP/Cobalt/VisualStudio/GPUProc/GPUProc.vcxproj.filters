@@ -776,7 +776,6 @@
     <ClCompile Include="..\..\GPUProc\src\cuda\Kernels\BandPassCorrectionKernel.cc">
       <Filter>src\cuda\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc" />
     <ClCompile Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerPreprocessingStep.cc">
       <Filter>src\cuda\SubbandProcs\steps</Filter>
     </ClCompile>
@@ -794,6 +793,9 @@
     </ClCompile>
     <ClCompile Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.cc">
       <Filter>test\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1119,8 +1121,6 @@
     <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
       <Filter>share</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset" />
-    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run" />
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh" />
@@ -1132,6 +1132,12 @@
     </None>
     <None Include="..\..\GPUProc\test\Kernels\visualizeBeamformer.py">
       <Filter>test\Kernels</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset">
+      <Filter>test\SubbandProcs</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

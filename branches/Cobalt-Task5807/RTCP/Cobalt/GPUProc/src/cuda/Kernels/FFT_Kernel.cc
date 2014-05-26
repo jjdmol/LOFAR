@@ -72,7 +72,7 @@ namespace LOFAR
       ASSERT(maxNrFFTpoints % fftSize == 0);
 
       // buffer must be big enough for the job
-      ASSERT(buffer.size() >= fftSize * nrFFTs * sizeof(fcomplex));
+      //ASSERT(buffer.size() >= fftSize * nrFFTs * sizeof(fcomplex));
 
       LOG_DEBUG_STR("FFT_Kernel: " <<
                     "fftSize=" << fftSize << 

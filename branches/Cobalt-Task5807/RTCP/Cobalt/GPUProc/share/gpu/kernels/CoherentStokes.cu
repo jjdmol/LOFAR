@@ -43,7 +43,7 @@
 #endif
 
 #if !(NR_TABS >= 1)
-#error Precondition violated: NR_TABS >= 1
+#warning Precondition violated: NR_TABS >= 1
 #endif
 
 #if !(TIME_PARALLEL_FACTOR >= 1)

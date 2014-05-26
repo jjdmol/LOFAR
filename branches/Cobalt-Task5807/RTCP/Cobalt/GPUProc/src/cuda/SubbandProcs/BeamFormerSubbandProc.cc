@@ -128,13 +128,14 @@ namespace LOFAR
         new BeamFormerPreprocessingStep(parset, queue, context, factories, 
         devInput, devA, devB, devNull));
 
-      coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
-        new BeamFormerCoherentStep(parset, queue, context, factories,       
-        devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
-
-      incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
-        new BeamFormerIncoherentStep(parset, queue, context, factories, 
-            devInput, devA, devB, devC, devD, devE, devNull));
+      if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+        coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
+          new BeamFormerCoherentStep(parset, queue, context, factories,       
+          devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
+      if (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP())
+        incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
+          new BeamFormerIncoherentStep(parset, queue, context, factories, 
+              devInput, devA, devB, devC, devD, devE, devNull));
 
 
       LOG_INFO_STR("Running coherent pipeline: " 
@@ -175,8 +176,10 @@ namespace LOFAR
     void BeamFormerSubbandProc::printStats()
     {
       preprocessingPart->printStats();
-      coherentStep->printStats();
-      incoherentStep->printStats();
+      if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+        coherentStep->printStats();
+      if (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP())
+        incoherentStep->printStats();
       counters.printStats();
     }
 
