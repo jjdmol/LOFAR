@@ -1,4 +1,4 @@
-//# MPI_utils.cc
+//# MPIReceiver.cc
 //# Copyright (C) 2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -20,7 +20,7 @@
 
 #include <lofar_config.h>
 
-#include "MPI_utils.h"
+#include "MPIReceiver.h"
 #include <InputProc/Transpose/MPIProtocol.h>
 
 

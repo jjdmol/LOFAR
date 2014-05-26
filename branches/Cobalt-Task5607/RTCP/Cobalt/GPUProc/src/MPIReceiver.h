@@ -1,4 +1,4 @@
-//# MPI_utils.h: Helper functions for cpu specific functionality
+//# MPIReceiver.h: Helper functions for cpu specific functionality
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#

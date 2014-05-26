@@ -44,7 +44,7 @@
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 
-#include <GPUProc/MPI_utils.h>
+#include <GPUProc/MPIReceiver.h>
 
 namespace LOFAR
 {

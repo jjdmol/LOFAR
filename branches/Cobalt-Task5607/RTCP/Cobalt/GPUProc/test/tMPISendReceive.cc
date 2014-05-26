@@ -19,7 +19,7 @@
 #include <CoInterface/OMPThread.h>
 
 #include <GPUProc/Station/StationInput.h>
-#include <GPUProc/MPI_utils.h>
+#include <GPUProc/MPIReceiver.h>
 
 
 using namespace LOFAR;

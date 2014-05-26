@@ -75,7 +75,7 @@
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
-#include <GPUProc/MPI_utils.h>
+#include <GPUProc/MPIReceiver.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
