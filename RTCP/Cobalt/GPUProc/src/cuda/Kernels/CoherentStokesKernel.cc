@@ -47,7 +47,7 @@ namespace LOFAR
 
     CoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
+      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
       nrStokes(ps.settings.beamFormer.coherentSettings.nrStokes),
       outputComplexVoltages(ps.settings.beamFormer.coherentSettings.type == STOKES_XXYY),
       timeIntegrationFactor(
