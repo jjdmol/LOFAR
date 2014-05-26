@@ -53,7 +53,7 @@ cleanup()
 {
   local status=$?
   run_command -q "ssh lhn001 cexec locus: pkill -KILL -u $USER iperf"
-#  rm -rf "$TMPDIR"
+  rm -rf "$TMPDIR"
   return $status
 }
 
@@ -194,7 +194,7 @@ check_results()
   }
   END {
     printf "\nmin = %.2f Gb/s,\tmax = %.2f Gb/s," \
-           "\tavg = %.2f Gb/s,\ttot = %.0f Gb/s\n",
+           "\tavg = %.2f Gb/s,\ttot = %.0f Gb/s\n\n",
            min / 1e9, max / 1e9, sum / (count * 1e9), sum / 1e9;
     exit error; 
   }' < $TMPDIR/iperf.log || status=1
