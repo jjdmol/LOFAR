@@ -19,7 +19,6 @@ lofar_add_library(cointerface
   TABTranspose.cc
   TimeFuncs.cc
   RingCoordinates.cc
-//  Pool.cc
 )
 
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
