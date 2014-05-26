@@ -61,22 +61,34 @@ void SetBypassCmd::ack(CacheBuffer& /*cache*/)
 // bit in the SI register is not straight forward.
 void SetBypassCmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-	bool	setSIon = m_event->settings()(0).getXSI();	// note: X and Y are equal
-
+	bool setSIon  = m_event->settings()(0).getXSI();	// note: X and Y are equal
+	bool setSDOon = m_event->settings()(0).getSDO();
+    bool siSet    =  m_event->settings()(0).isSIset();
+    bool sdoSet   =  m_event->settings()(0).isSDOset();
 	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); 
 																	cache_rcu++) {
 		if (m_event->rcumask[cache_rcu]) {	// is this RCU in the mask?
 			// make change
-			if (cache_rcu % 2 == 0) {
-				cache.getBypassSettings()()(cache_rcu/2).setXSI(setSIon);
-			}
-			else {
-				cache.getBypassSettings()()(cache_rcu/2).setYSI(setSIon);
-			}
-			// mark register that it should be written.
-			if (setModFlag) {
-				cache.getCache().getState().bypasssettings().write(cache_rcu/N_POL);
-			}
+            if (siSet) {
+                if (cache_rcu % N_POL == 0) {
+                    cache.getBypassSettings()()(cache_rcu/N_POL).setXSI(setSIon);
+                }
+                else {
+                    cache.getBypassSettings()()(cache_rcu/N_POL).setYSI(setSIon);
+                }
+                // mark register that it should be written.
+                if (setModFlag) {
+                    cache.getCache().getState().bypasssettings().write(cache_rcu/N_POL);
+                }
+            }
+            if (sdoSet) {
+                if ((cache_rcu % 8) == 0) {
+                    cache.getBypassSettings()()(cache_rcu/N_POL).setSDO(setSDOon);
+                    if (setModFlag) {
+                        cache.getCache().getState().bypasssettings().write(cache_rcu/N_POL);
+                    }
+                }
+            }
 		}
 	}
 }
@@ -98,7 +110,12 @@ void SetBypassCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetBypassCmd::validate() const
 {
-	return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
+	
+    if ((m_event->settings()(0).isSDOset() == true) && (StationSettings::instance()->hasAartfaac() == false)) {
+        LOG_DEBUG("No AARTFAAC available");
+        return (false);
+    }    
+    return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 			&& (1 == m_event->settings().dimensions())
 			&& (1 == m_event->settings().extent(firstDim)));
 }

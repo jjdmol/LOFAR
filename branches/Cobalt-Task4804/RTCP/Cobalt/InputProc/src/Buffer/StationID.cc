@@ -59,6 +59,14 @@ namespace LOFAR
       snprintf(this->antennaField, sizeof this->antennaField, "%s", antennaField.c_str());
     }
 
+    StationID StationID::parseFullFieldName( const std::string &fullFieldName )
+    {
+      const string stationName = fullFieldName.substr(0,5); // CS001
+      const string fieldName   = fullFieldName.substr(5);   // HBA0
+
+      return StationID(stationName, fieldName);
+    }
+
     std::string StationID::name() const
     {
       return str(format("%s%s") % stationName % antennaField);

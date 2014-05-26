@@ -7,6 +7,8 @@
 # This script is called by OnlineControl when either:
 #   - the stop time (plus a grace period) has passed
 #   - the observation is aborted
+#
+# $Id$
 
 if test "$LOFARROOT" == ""; then
   echo "LOFARROOT is not set! Exiting." >&2
@@ -21,6 +23,14 @@ PARSET=$LOFARROOT/var/run/rtcp-$OBSID.parset
 
 # The file to store the PID in
 PIDFILE=$LOFARROOT/var/run/rtcp-$OBSID.pid
+
+function addlogprefix {
+  ME="`basename "$0" .sh`@`hostname`"
+  while read LINE
+  do
+    echo "$ME" "`date "+%F %T.%3N"`" "$LINE"
+  done
+}
 
 (
 # Always print a header, to match errors to observations
@@ -57,7 +67,7 @@ ps --no-headers -p "$PID" || error "Process not running: PID $PID"
 # Done
 echo "Done"
 
-) 2>&1 | tee -a $LOFARROOT/var/log/stopBGL.log
+) 2>&1 | addlogprefix | tee -a $LOFARROOT/var/log/stopBGL.log
 
 # Return the status of our subshell, not of tee
 exit ${PIPESTATUS[0]}

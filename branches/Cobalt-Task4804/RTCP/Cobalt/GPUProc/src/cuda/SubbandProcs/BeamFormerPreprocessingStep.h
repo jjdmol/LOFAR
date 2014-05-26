@@ -106,7 +106,6 @@ namespace LOFAR
       std::auto_ptr<DelayAndBandPassKernel::Buffers> delayCompensationBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
 
-
       // Second FFT-shift
       std::auto_ptr<FFTShiftKernel::Buffers> secondFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> secondFFTShiftKernel;
@@ -118,6 +117,9 @@ namespace LOFAR
       std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
       std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
       std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
+
+      // Flag that indicates if we need to perform a second FFT
+      bool doSecondFFT;
     };
   }
 }

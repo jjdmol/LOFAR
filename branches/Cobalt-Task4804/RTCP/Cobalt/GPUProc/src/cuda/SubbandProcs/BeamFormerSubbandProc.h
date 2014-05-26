@@ -120,7 +120,9 @@ namespace LOFAR
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
 
       // @{
-      // Device memory buffers. These buffers are used interleaved.
+      // Device memory buffers. These buffers are used interleaved. For details,
+      // please refer to the document bf-pipeline.txt in the directory
+      // GPUProc/doc.
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devC;

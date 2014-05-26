@@ -218,7 +218,7 @@ SUITE(Subsets) {
     r.include(10, 20);
     r.include(30, 40);
     
-    BufferSettings::flags_type s = r.sparseSet(0, 100);
+    Ranges::flags_type s = r.sparseSet(0, 100);
 
     CHECK_EQUAL(20U, s.count());
     CHECK(!s.test( 9));

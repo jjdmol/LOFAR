@@ -53,14 +53,15 @@ namespace LOFAR
       PerformanceCounter itsCounter;
 
     private:
-
       gpu::Context context;
 
-      const unsigned nrFFTs, fftSize;
+      const unsigned nrMajorFFTs, nrMinorFFTs, fftSize;
       const int direction;
-      FFT_Plan plan;
+      FFT_Plan planMajor, planMinor;
       gpu::DeviceMemory buffer;
       gpu::Stream itsStream;
+
+      void executePlan(const cufftHandle &plan, cufftComplex *data) const;
     };
   }
 }

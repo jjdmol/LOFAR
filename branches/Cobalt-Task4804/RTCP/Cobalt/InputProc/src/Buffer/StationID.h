@@ -37,6 +37,9 @@ namespace LOFAR
 
       StationID( const std::string &stationName = "", const std::string &antennaField = "" );
 
+      // Converts a name such as CS001HBA0 to a StationID
+      static StationID parseFullFieldName( const std::string &fullFieldName );
+
       // The full ('storage') name of the station, f.e.
       // CS001HBA0.
       std::string name() const;

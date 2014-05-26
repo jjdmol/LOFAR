@@ -43,7 +43,8 @@ namespace LOFAR
     string FFTShiftKernel::theirFunction = "FFTShift";
 
     FFTShiftKernel::Parameters::Parameters(const Parset& ps):
-      Kernel::Parameters(ps)
+      Kernel::Parameters(ps),
+      nrSTABs(nrStations)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FFTShiftKernel.dumpOutput", false);
@@ -64,7 +65,7 @@ namespace LOFAR
       ASSERT(params.nrSamplesPerChannel % 2 == 0);
 
       size_t nrSamples = 
-        params.nrStations * params.nrPolarizations *
+        params.nrSTABs * params.nrPolarizations *
         params.nrChannelsPerSubband * params.nrSamplesPerChannel;
 
       // The total number of samples must be divisible by the maximum number of
@@ -85,7 +86,7 @@ namespace LOFAR
       switch (bufferType) {
       case FFTShiftKernel::INPUT_DATA:  // fall tru
       case FFTShiftKernel::OUTPUT_DATA:
-        return (size_t)itsParameters.nrStations * NR_POLARIZATIONS *
+        return (size_t)itsParameters.nrSTABs * NR_POLARIZATIONS *
           itsParameters.nrChannelsPerSubband *
           itsParameters.nrSamplesPerChannel *
             sizeof(std::complex<float>);

@@ -32,6 +32,10 @@ namespace LOFAR
   {
     SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
+      inputPool("SubbandProc::inputPool"),
+      processPool("SubbandProc::processPool"),
+      outputPool("SubbandProc::outputPool"),
+
       ps(ps),
       nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
       queue(gpu::Stream(context))
@@ -41,7 +45,7 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(ps, context));
+        inputPool.free.append(new SubbandProcInputData(ps, context), false);
       }
     }
 
@@ -59,13 +63,15 @@ namespace LOFAR
     {
       /*
        * Output elements can get stuck in:
+       *   process()                1 element
        *   Best-effort queue:       3 elements
+       *   In flight to BE queue:   1 element
        *   In flight to outputProc: 1 element
        *
-       * which means we'll need at least 5 elements
+       * which means we'll need at least 7 elements
        * in the pool to get a smooth operation.
        */
-      return 5 * nrSubbandsPerSubbandProc;
+      return 7 * nrSubbandsPerSubbandProc;
     }
 
 
@@ -81,14 +87,14 @@ namespace LOFAR
       // extract and assign the delays for the station beams
 
       // X polarisation
-      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][0]             = ps.settings.stations[station].phase0.x;
+      delaysAtBegin[SAP][station][0]  = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][0]             = ps.settings.antennaFields[station].phase0.x;
 
       // Y polarisation
-      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][1]             = ps.settings.stations[station].phase0.y;
+      delaysAtBegin[SAP][station][1]  = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][1]             = ps.settings.antennaFields[station].phase0.y;
 
       if (ps.settings.beamFormer.enabled)
       {

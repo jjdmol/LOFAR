@@ -69,7 +69,7 @@ const JonesMatrix::View GaussianCoherence::evaluateImpl(const Grid &grid,
     // Convert orientation from degrees to radians and convert to positive
     // North over East, East is +90 degrees.
     // TODO: Can probably optimize by changing the rotation matrix instead.
-    Matrix phi = orientation() * (-casa::C::pi/180.0) + casa::C::pi_2;
+    Matrix phi = -orientation() * (-casa::C::pi/180.0) + casa::C::pi + casa::C::pi_2;
     Matrix cosPhi(cos(phi));
     Matrix sinPhi(sin(phi));
 

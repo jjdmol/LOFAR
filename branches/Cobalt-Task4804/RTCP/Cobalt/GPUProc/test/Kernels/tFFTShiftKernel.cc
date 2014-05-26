@@ -69,8 +69,13 @@ struct ParsetSUT
     parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
+    parset.add("Observation.antennaSet", "LBA_INNER");
+    parset.add("Observation.rspBoardList", "[0]");
+    parset.add("Observation.rspSlotList", "[0]");
     parset.add("Cobalt.blockSize",
       lexical_cast<string>(nrBlockSize));
+    parset.add("Observation.nrBeams", "1");
+    parset.add("Observation.Beam[0].subbandList", "[0]");
     parset.add("Observation.Beam[0].nrTiedArrayBeams", 
                lexical_cast<string>(inrTabs));
     parset.add("Observation.DataProducts.Output_CoherentStokes.filenames",

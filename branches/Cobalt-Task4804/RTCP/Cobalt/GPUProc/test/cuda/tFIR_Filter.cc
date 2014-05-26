@@ -49,13 +49,13 @@ typedef signed char SampleType;
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/FilterBank.h>
 
 #include "../TestUtil.h"
-#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR;

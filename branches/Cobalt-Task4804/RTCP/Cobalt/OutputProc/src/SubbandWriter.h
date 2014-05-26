@@ -23,7 +23,6 @@
 
 #include <string>
 
-#include <Common/Thread/Queue.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -58,7 +57,7 @@ namespace LOFAR
       ParameterSet feedbackLTA() const;
 
     private:
-      static const unsigned maxReceiveQueueSize = 3;
+      static const unsigned maxReceiveQueueSize = 60;
 
       Pool<StreamableData> itsOutputPool;
 

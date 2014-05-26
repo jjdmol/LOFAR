@@ -44,6 +44,10 @@ TEST(propagateFlags)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS102, RS103, RS104, RS105]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -153,6 +157,10 @@ TEST(calcWeights4Channels)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -200,6 +208,10 @@ TEST(calcWeights1Channels)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -240,6 +252,10 @@ TEST(applyWeights)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");
@@ -295,6 +311,10 @@ TEST(applyWeight)
   
   parset.add("Observation.VirtualInstrument.stationList", "[RS106, RS107]"); // Number of names here sets the number of stations.
   parset.add("Observation.antennaSet", "HBA_ZERO");
+  parset.add("Observation.rspBoardList", "[0]");
+  parset.add("Observation.rspSlotList", "[0]");
+  parset.add("Observation.nrBeams", "1");
+  parset.add("Observation.Beam[0].subbandList", "[0]");
 
   parset.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   parset.add("Observation.DataProducts.Output_Correlated.filenames","[L24523_B000_S0_P000_bf.ms]");

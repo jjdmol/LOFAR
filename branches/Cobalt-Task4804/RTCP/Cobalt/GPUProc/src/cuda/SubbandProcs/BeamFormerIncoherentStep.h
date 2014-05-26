@@ -75,6 +75,8 @@ namespace LOFAR
       void initMembers(gpu::Context &context,
         BeamFormerFactories &factories);
 
+      gpu::DeviceMemory outputBuffer();
+
       void process(BlockID blockID,
         unsigned subband);
 
@@ -85,9 +87,6 @@ namespace LOFAR
       ~BeamFormerIncoherentStep();
 
     private:
-
-      bool outputComplexVoltages;
-      bool coherentStokesPPF;
 
       // Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;

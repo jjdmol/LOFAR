@@ -1,5 +1,5 @@
 //# failedtilesinfo.cc: extract failed tiles info from the SAS database
-//# Copyright (C) 2011
+//# Copyright (C) 2012-2013
 //# ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -17,9 +17,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: failedtilesinfo.cc 18832 2011-09-19 17:22:32Z duscha $
-//#
-//# @author Sven Duscha
+//# $Id$
 
 #include <lofar_config.h>
 
@@ -220,3 +218,4 @@ void getFailedTilesInfo (OTDBconnection& conn,
   }
   outfile.close();
 }
+

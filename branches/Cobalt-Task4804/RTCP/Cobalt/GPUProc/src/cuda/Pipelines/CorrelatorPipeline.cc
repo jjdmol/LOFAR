@@ -33,10 +33,10 @@
 #include <Stream/NullStream.h>
 
 #include <CoInterface/Stream.h>
+#include <CoInterface/RunningStatistics.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
@@ -117,6 +117,9 @@ namespace LOFAR
 
     void CorrelatorPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
     {
+      // Register our thread to be killable at exit
+      OMPThreadSet::ScopedRun sr(outputThreads);
+
       SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
 
       SmartPtr<SubbandProcOutputData> outputData;
@@ -167,7 +170,7 @@ namespace LOFAR
           outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
         }
       } catch (Exception &ex) {
-        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex);
+        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex.what());
 
         outputStream = new NullStream;
       }

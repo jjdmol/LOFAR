@@ -16,7 +16,7 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: outputProc.cc 27120 2013-10-29 10:42:21Z mol $
+//# $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -43,8 +43,9 @@ using namespace std;
 namespace LOFAR {
 namespace Cobalt {
 
-void process(Stream &controlStream, const string& myHostName)
+bool process(Stream &controlStream, const string& myHostName)
 {
+  bool success(true);
   Parset parset(&controlStream);
   {
     // make sure "parset" stays in scope for the lifetime of the SubbandWriters
@@ -71,7 +72,7 @@ void process(Stream &controlStream, const string& myHostName)
       }
     }
 
-    map<size_t, SmartPtr<Pool<TABTranspose::Block> > > outputPools;
+    map<size_t, SmartPtr<Pool<TABTranspose::BeamformedData> > > outputPools;
     TABTranspose::Receiver::CollectorMap collectors;
 
     // Process beam-formed data
@@ -87,19 +88,23 @@ void process(Stream &controlStream, const string& myHostName)
           file.coherent ? parset.settings.beamFormer.coherentSettings
                         : parset.settings.beamFormer.incoherentSettings;
 
-        outputPools[fileIdx] = new Pool<TABTranspose::Block>;
+        const size_t nrSubbands = file.lastSubbandIdx - file.firstSubbandIdx;
+        const size_t nrChannels = stokes.nrChannels;
+        const size_t nrSamples = stokes.nrSamples;
+
+        outputPools[fileIdx] = new Pool<TABTranspose::BeamformedData>(str(format("process::outputPool [file %u]") % fileIdx));
 
         // Create and fill an outputPool for this fileIdx
-        for (size_t i = 0; i < 5; ++i) {
-	         outputPools[fileIdx]->free.append(new TABTranspose::Block(
-             parset.settings.SAPs[file.sapNr].subbands.size(),
-             stokes.nrSamples,
-             stokes.nrChannels));
+        for (size_t i = 0; i < 10; ++i) {
+	         outputPools[fileIdx]->free.append(new TABTranspose::BeamformedData(
+             boost::extents[nrSamples][nrSubbands][nrChannels],
+             boost::extents[nrSubbands][nrChannels]
+           ), false);
         }
 
         // Create a collector for this fileIdx
         collectors[fileIdx] = new TABTranspose::BlockCollector(
-          *outputPools[fileIdx], fileIdx, parset.nrBeamFormedBlocks(), parset.realTime() ? 4 : 0);
+          *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
         string logPrefix = boost::str(boost::format("[obs %u beamformed stream %3u] ")
                                                     % parset.observationID() % fileIdx);
@@ -128,7 +133,12 @@ void process(Stream &controlStream, const string& myHostName)
         // that is obtained after the end of an observation.
         LOG_INFO_STR("Waiting for final meta data");
 
-        finalMetaData.read(controlStream);
+        try {
+          finalMetaData.read(controlStream);
+        } catch (LOFAR::Exception &err) {
+          success = false;
+          LOG_ERROR_STR("Failed to read broken tile information: " << err);
+        }
 
         if (parset.realTime()) {
           // Real-time observations: stop now. MultiReceiver::kill
@@ -167,7 +177,7 @@ void process(Stream &controlStream, const string& myHostName)
 
     // Add final meta data (broken tile information, etc)
     // that is obtained after the end of an observation.
-    LOG_INFO_STR("Processing final meta data");
+    LOG_DEBUG_STR("Processing final meta data");
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
       subbandWriters[i]->augment(finalMetaData);
@@ -178,7 +188,7 @@ void process(Stream &controlStream, const string& myHostName)
      * LTA FEEDBACK
      */
 
-    LOG_INFO_STR("Retrieving LTA feedback");
+    LOG_DEBUG_STR("Retrieving LTA feedback");
     Parset feedbackLTA;
 
     for (size_t i = 0; i < subbandWriters.size(); ++i)
@@ -186,8 +196,15 @@ void process(Stream &controlStream, const string& myHostName)
     for (size_t i = 0; i < tabWriters.size(); ++i)
       feedbackLTA.adoptCollection(tabWriters[i]->feedbackLTA());
 
-    LOG_INFO_STR("Forwarding LTA feedback");
-    feedbackLTA.write(&controlStream);
+    LOG_DEBUG_STR("Forwarding LTA feedback");
+    try {
+      feedbackLTA.write(&controlStream);
+    } catch (LOFAR::Exception &err) {
+      success = false;
+      LOG_ERROR_STR("Failed to forward LTA feedback information: " << err);
+    }
+
+    return success;
   }
 }
 

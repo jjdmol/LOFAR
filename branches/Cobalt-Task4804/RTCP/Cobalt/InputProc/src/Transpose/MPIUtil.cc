@@ -362,6 +362,7 @@ namespace LOFAR {
 
       int idx;
 
+      ASSERT(requests.size() > 0);
       if (MPI_threadSafe()) {
         int error = MPI_Waitany(requests.size(), &requests[0], &idx, MPI_STATUS_IGNORE);
         ASSERT(error == MPI_SUCCESS);

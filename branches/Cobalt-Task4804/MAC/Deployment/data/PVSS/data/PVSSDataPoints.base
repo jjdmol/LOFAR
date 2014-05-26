@@ -79,7 +79,7 @@ BGPAppl				BGPA		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
 BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 CobaltRack			-		C	N	LOFAR_PIC_Cobalt
 CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
-CobaltNIC			-		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
+CobaltNIC			CNI		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
 PSCobaltNode			-		C	N	LOFAR_PermSW_@pscobaltnode@
 CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@pscobaltnode@_CobaltStationInput
 CobaltGPUProc			CGP		C	Y	LOFAR_ObsSW_@observation@_@oscobaltnode@_@cobaltgpuproc@

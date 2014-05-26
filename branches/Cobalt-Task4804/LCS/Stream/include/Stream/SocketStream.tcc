@@ -10,7 +10,7 @@
 
 namespace LOFAR {
 
-template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, bool oneIsEnough, struct timespec *timeout )
+template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, bool oneIsEnough )
 {
   ASSERT(protocol == UDP);
   ASSERT(mode == Server);
@@ -37,8 +37,13 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
     msgs[i].msg_hdr.msg_control = NULL; // we're not interested in OoB data
   }
 
-  // receive data
-  int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, timeout);
+  // receive data 
+  //
+  // note: the timeout parameter doesn't work as expected: only between datagrams is the
+  // timeout checked, not when waiting for one.
+  //
+  // note 2: recvmmsg() isn't reliably interruptable by SIGHUP! (tested on Linux 3.2.0-61)
+  int numRead = ::recvmmsg(fd, &msgs[0], n, oneIsEnough ? MSG_WAITFORONE : 0, NULL);
 
   if (numRead < 0)
     THROW_SYSCALL("recvmmsg");
@@ -60,7 +65,7 @@ template<typename T> size_t SocketStream::recvmmsg( std::vector<T> &buffers, boo
   msg.msg_name    = NULL; // we don't need to know who sent the data
   msg.msg_control = NULL; // we're not interested in OoB data
 
-  if (recvmsg(fd, &msg, timeout) < 0)
+  if (recvmsg(fd, &msg, NULL) < 0)
     THROW_SYSCALL("recvmsg");
 
   /* the recvmsg return value is the number of bytes received */

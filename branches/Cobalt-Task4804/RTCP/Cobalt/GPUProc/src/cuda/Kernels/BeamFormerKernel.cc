@@ -32,6 +32,7 @@
 #include <CoInterface/BlockID.h>
 
 #include <fstream>
+#include <algorithm>
 
 using boost::lexical_cast;
 using boost::format;
@@ -51,10 +52,11 @@ namespace LOFAR
       doFlysEye(ps.settings.beamFormer.doFlysEye)
     {
       // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = 
-        ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples;
+      nrChannelsPerSubband =
+        ps.settings.beamFormer.nrHighResolutionChannels;
+      nrSamplesPerChannel = ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.nrHighResolutionChannels;
+
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -72,12 +74,17 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      // Beamformer kernel prefers 1 channel in the blockDim.z dimension
+      // Beamformer kernel requires 1 channel in the blockDim.z dimension
       setEnqueueWorkSizes(
         gpu::Grid(params.nrPolarizations, 
-                  params.nrTABs,
+                  std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
                   params.nrChannelsPerSubband),
-        gpu::Block(params.nrPolarizations, params.nrTABs, 1));
+        gpu::Block(params.nrPolarizations, 
+                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
+                   1));
+        // The additional tabs added to fill out the waves are skipped
+        // in the kernel file. Additional threads are used to optimize
+        // memory access
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,

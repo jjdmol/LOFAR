@@ -422,6 +422,9 @@
     <ClInclude Include="..\..\GPUProc\src\cuda\SubbandProcs\BeamFormerIncoherentStep.h">
       <Filter>src\cuda\SubbandProcs\steps</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.h">
+      <Filter>test\Kernels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\GPUProc\src\cuda\Pipelines\BeamFormerPipeline.cc">
@@ -786,6 +789,12 @@
     <ClCompile Include="..\..\GPUProc\test\cuda\tBandPassCorrection.cc">
       <Filter>test\cuda</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\BeamFormerKernelPerformance.cc">
+      <Filter>test\Kernels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.cc">
+      <Filter>test\Kernels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\GPUProc\src\cuda\CMakeLists.txt">
@@ -1117,6 +1126,12 @@
     <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh" />
     <None Include="..\..\GPUProc\test\cuda\tBandPassCorrection.sh">
       <Filter>test\cuda</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\Kernels\tKernelPerformance.py">
+      <Filter>test\Kernels</Filter>
+    </None>
+    <None Include="..\..\GPUProc\test\Kernels\visualizeBeamformer.py">
+      <Filter>test\Kernels</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

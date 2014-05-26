@@ -323,9 +323,9 @@ namespace LOFAR
       return false;
     }
 
-    BufferSettings::flags_type Ranges::sparseSet( value_type first, value_type last ) const
+    Ranges::flags_type Ranges::sparseSet( value_type first, value_type last ) const
     {
-      BufferSettings::flags_type result;
+      Ranges::flags_type result;
 
       if (first >= last)
         return result;

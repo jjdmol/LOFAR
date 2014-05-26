@@ -88,7 +88,7 @@ def findRSPDestNodes(stationName, dataDir):
     station		board	destinationnode
     CS001		RSP_0	BGL001
     """
-    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
+    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-9]+)[ \t]*([^ \t\n]*)", re.IGNORECASE)
     rspDestNode = {}
     for match in pattern.finditer(open(dataDir+"/RSPConnections.dat").read()):
         rspDestNode[match.group(1)] = match.group(2)
@@ -181,7 +181,25 @@ def findRSPIP(nodeName, dataDir):
     if not RspIp:
         raise Exception("\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'")
     return RspIp
+#
+# findBlets(stationName)
+#
+def find_Blets(stationName, dataDir):
+    """
+    Collects the RSP Blet outputs of the given station.
+    Expected format of the RSP_Blet file is:
+    #station     LANE_0     LANE_1
+    CS001        0 1 2 3    6 7 8 9
 
+    Note that RS and International have only LANE_0 filled as these stations
+    have no splitter.
+    """
+    pattern=re.compile("[^#]"+stationName+"[ \t].*", re.IGNORECASE)
+    rspBlets = pattern.search(open(dataDir+"/RSPBlet.dat").read())
+
+    if not rspBlets:
+        raise "\nFatal error: "+stationName+" is not defined in file 'RSPBlet.dat'"
+    return rspBlets.group().split()
 
 
 #
@@ -209,7 +227,7 @@ def findStationInfo(stationName, dataDir):
     if not match:
         raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
     info = match.group().split()
-    if (len(info) != 12):
+    if (len(info) != 13):
         raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
     return info
 
@@ -266,7 +284,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -293,6 +311,11 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     if (is_ilt and ilt_local == 1):
         ip_mac_alias = findIPandMAC_local(stationName,dataDir)
         for rspNr in range(len(ip_mac_alias)):  
+            blet_out = find_Blets(stationName, dataDir)[1+rspNr];
+
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+            # Need to fill this in until RSPDriver is fixed...
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", ip_mac_alias[rspNr][2] +"   # "+ip_mac_alias[rspNr][3])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
@@ -302,6 +325,15 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         # for these we need to fill in LANE0x and LANE1x values.
         # All other stations have one occurence, so only LANE_0x is relevant.
         if (nrNodes == 1 or nrNodes == 2):
+            if str(1) in rspDestNode.keys():
+                (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
+                for rspNr in range(4):
+                    blet_out = find_Blets(stationName, dataDir)[5+rspNr];
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
+
             if str(0) in rspDestNode.keys():
                 for rspNr in range(4):
 		  if is_ilt and is_Cobalt:
@@ -316,16 +348,21 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
 		  else:
                     (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
 
+                  blet_out = find_Blets(stationName, dataDir)[1+rspNr];
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                  # Need to fill this in until RSPDriver is fixed...
+                  RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
                   RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
+                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+                  # The following is only necessary for not crashing the
+                  # RSPDriver during startup.... It makes no sense as RS/Int
+                  # stations have no splitter so there is no LANE_1X
+                  if (nrNodes == 1):
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
-            if str(1) in rspDestNode.keys():
-                (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
-                for rspNr in range(4):
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address
@@ -344,6 +381,8 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
             RSPconfig = RSPconfig.replace("@IP_EXTEN_11@",   "8")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_12@",   "9")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_13@",   "10")
+            RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
+ 
         else:
             RSPconfig = RSPconfig.replace("@IP_EXTEN_00@",   "1")
             RSPconfig = RSPconfig.replace("@IP_EXTEN_01@",   "2")
@@ -364,13 +403,14 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         RSPconfig = RSPconfig.replace("@IP_SUBNET_01@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@IP_SUBNET_02@",   ip_parts[2])
         RSPconfig = RSPconfig.replace("@IP_SUBNET_03@",   ip_parts[2])
-        RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "11")
+        RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
     else: # Non-NL station
         hexStationID = str("%02x" % int(stationName[3:6]))
         ringID = '0'+stationName[2]
         RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName.upper())
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
+        RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
         rspinfo = findRSPIP(stationName, dataDir)
         for rspNr in range(len(rspinfo)):        
@@ -401,7 +441,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     #print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -506,40 +546,24 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
     #print stationName,"matches:",tbbDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
     #print stationName," has ",nrTBB," TBBoards"
     
     # Substitute MAC and IP address of destination nodes
-    # For locus (CEP2) nodes, the MAC must be the MAC of a router, not the
+    # For locus (CEP2) nodes, the MAC must be the MAC of a Gateway, not the
     # locus node.
-    # For CEP1, the MAC is the MAC of the storage node. Both situations
-    # require different handling
-    # For CEP2: for each station, the data of TBBs must be distributed over
-    # the three router nodes. Additionally, the data from the first board must
-    # not always be send to the same router node.
-    # We will adopt the algorithm that the stationnumber will be the basis of
-    # which router node will be used by TBB-0.
     TBBfile = open(dataDir+"/TBBDriver.conf.tmpl")
     TBBconfig = TBBfile.read()
     TBBfile.close()
-    # This is for CEP2 nodes
-    mac_router=["00:02:c9:0e:39:1e","00:02:c9:0e:3a:65","00:02:c9:0e:3a:64","00:02:c9:0e:39:26","00:02:c9:0e:39:27","00:02:c9:0e:3a:6c"]
-    start_router_id = int(stationID)%len(mac_router)
     for tbbNr in range(0,int(nrTBB)):
         if (len(tbbDestNode) == 1):
             DestNode=tbbDestNode["0"]
             #print DestNode
             (ip, mac) = findStorageIPandMAC(DestNode, dataDir)
             
-            if (DestNode[0:3] == "lse"):
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@",tbbDestNode["0"]  )
-                #print tbbNr, ip, mac
-            else:
-                router_id = (tbbNr+start_router_id)%len(mac_router)
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac_router[router_id])
-                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Router"+str(router_id+1)  )
-                #print tbbNr, ip, mac_router[router_id]
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Gateway")
+            #print tbbNr, ip, mac
 
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode["0"]  )
@@ -547,13 +571,8 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
         else:
             if str(tbbNr) in tbbDestNode.keys():
                 (ip, mac) = findStorageIPandMAC(tbbDestNode[str(tbbNr)], dataDir)
-                if (tbbDestNode(str(tbbNr))[0:3] == "lse"):
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@",tbbDestNode["0"]  )
-                else:
-                    router_id = (tbbNr+start_router_id)%len(mac_router)
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Router"+str(router_id+1)  )
-                    TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac_router[router_id])
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC_NAME@","Gateway")
+                TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac)
                      
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip)
                 TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_NAME@",tbbDestNode[str(tbbNr)]  )
@@ -589,7 +608,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
     RSconfig = open(dataDir+"/RemoteStation.conf.tmpl").read()
     RSconfig = RSconfig.replace("@STATION_NAME@", stationName.upper())
     RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
@@ -599,6 +618,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     RSconfig = RSconfig.replace("@NR_HBA@",       nrHBA)
     RSconfig = RSconfig.replace("@HBA_SPLIT@",    HBAsplit)
     RSconfig = RSconfig.replace("@LBA_WIDE@",     LBAcal)
+    RSconfig = RSconfig.replace("@AARTFAAC@",     Aartfaac)
 
     outFile = os.open(resultDir+"/RemoteStation.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSconfig)
@@ -719,16 +739,6 @@ def de601Exceptions(resultDir, stationName, dataDir):
         #print command
         os.system(command)
 
-def rs307Exceptions(resultDir, stationName, dataDir):
-    """
-    Handle exceptions for station rs307. Data of RSP board 03 should use lane4
-    instead of lane3
-    """
-    if (stationName.lower() == "rs307"):
-        srcFile = resultDir + "/RSPDriver.conf"
-        command = "sed -i s/RSPDriver.LANE_03_BLET_OUT=3/RSPDriver.LANE_03_BLET_OUT=4/ " + srcFile
-        os.system(command)
-      
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -767,7 +777,7 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
             copyTestFiles(dataDir)
         else:
             ilt_local=0
-            is_Cobalt=0
+            is_Cobalt=1
             partitionName = ""
             if (sys.argv[1] == "test"):
                 # station in test mode; get desired RSPconnections from command
@@ -781,6 +791,7 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
             elif (len(sys.argv) == 3):
                 if (sys.argv[2] == "local"):
                     ilt_local=1
+                    is_Cobalt=0
                     partitionName = "R00";
                 else:
                     partitionName = sys.argv[2];
@@ -796,7 +807,10 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                     print "Setting up station "+stationName+" for TEST use"
                 elif (ilt_local == 0):
                     print "Setting up station "+stationName+" for ILT use"
-                    print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
+                    if (is_Cobalt == 1):
+                        print " Using routes to Cobalt"
+                    else:
+                        print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
                 else:
                     print "Setting up station "+stationName+" for LOCAL use"
 
@@ -813,8 +827,6 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
                 de601Exceptions        (resultDir, stationName, dataDir)
-                # Temporary corrections
-                rs307Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -871,8 +883,6 @@ else:
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
         de601Exceptions        (resultDir, stationName, dataDir)
-        # Temporary corrections
-        rs307Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"

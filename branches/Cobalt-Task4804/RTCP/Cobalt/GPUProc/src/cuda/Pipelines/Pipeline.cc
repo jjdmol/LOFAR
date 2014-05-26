@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
 #include <Stream/Stream.h>
@@ -40,13 +41,25 @@
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIReceiveStations.h>
+#include <InputProc/Transpose/MPIProtocol.h>
 #else
 #include <GPUProc/Station/StationInput.h>
 #endif
 
 #include <cmath>
 
-#define NR_WORKQUEUES_PER_DEVICE  2
+#define NR_WORKQUEUES_PER_DEVICE  1
+
+// Actually do any processing.
+//
+// If not set, station input is received but discarded immediately.
+#define DO_PROCESSING
+
+// The number of seconds to wait for output to flush to outputProc.
+//
+// This timer is required to kill slow connections by aborting the
+// write().
+const double outputFlushTimeout = 10.0;
 
 namespace LOFAR
 {
@@ -63,7 +76,7 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
-      performance(devices.size()),
+      mpiPool("Pipeline::mpiPool"),
       writePool(subbandIndices.size())
     {
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
@@ -71,7 +84,21 @@ namespace LOFAR
 
     Pipeline::~Pipeline()
     {
+      if (ps.realTime()) {
+        // Ensure all output is stopped, even if we didn't start processing.
+        outputThreads.killAll();
+      }
     }
+
+    template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
+    {
+      data     = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
+      metaData = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
+    }
+
+    template void Pipeline::MPIData::allocate< SampleType<i16complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i8complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+    template void Pipeline::MPIData::allocate< SampleType<i4complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
 
     template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
     {
@@ -86,113 +113,53 @@ namespace LOFAR
       // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
 #ifdef HAVE_MPI
       MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
+
+      for (size_t i = 0; i < 4; i++) {
+        SmartPtr<struct MPIData> mpiData = new MPIData;
+
+        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
+
+        mpiPool.free.append(mpiData, false);
+      }
+
 #else
       DirectInput &receiver = DirectInput::instance();
 #endif
-
-      // Create a block object to hold all information for receiving one
-      // block.
-      vector<struct ReceiveStations::Block<SampleT> > blocks(ps.nrStations());
-
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-        blocks[stat].beamlets.resize(subbandIndices.size());
-      }
 
       // Receive input from StationInput::sendInputToPipeline.
       //
       // Start processing from block -1, and don't process anything if the
       // observation is empty.
       for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
-        // Receive the samples of all subbands from the stations for this
-        // block.
-
+        // Receive the samples from all subbands from the ant fields for this block.
         LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
 
-        // The set of InputData objects we're using for this block.
-        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
+        SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
 
-        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          // Fetch an input object to store this inputIdx.
-          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
+        mpiData->block = block;
 
-          // Fetch an input object to fill from the selected queue.
-          // NOTE: We'll put it in a SmartPtr right away!
-          SmartPtr<SubbandProcInputData> data = queue.inputPool.free.remove();
+        MultiDimArray<SampleT,3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)mpiData->data.get(), false);
 
-          // Annotate the block
-          struct BlockID id;
-          id.block                 = block;
-          id.globalSubbandIdx      = subbandIndices[inputIdx];
-          id.localSubbandIdx       = inputIdx;
-          id.subbandProcSubbandIdx = inputIdx / workQueues.size();
-          data->blockID = id;
+        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
 
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            // Incorporate it in the receiver's input set.
-            blocks[stat].beamlets[inputIdx].samples = reinterpret_cast<SampleT*>(&data->inputSamples[stat][0][0][0]);
-          }
-
-          // Record the block (transfers ownership)
-          inputDatas[inputIdx] = data;
-        }
-
-        // Receive all subbands from all stations
+        // Receive all subbands from all antenna fields
         LOG_DEBUG_STR("[block " << block << "] Receive input");
 
         if (block > 2) receiveTimer.start();
-        receiver.receiveBlock<SampleT>(blocks);
+        receiver.receiveBlock<SampleT>(data, metaData);
         if (block > 2) receiveTimer.stop();
 
-        if (processingSubband0)
-          LOG_INFO_STR("[block " << block << "] Input received");
-        else
-          LOG_DEBUG_STR("[block " << block << "] Input received");
+        LOG_INFO_STR("[block " << block << "] Input received");
 
-        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
-
-        // Process and forward the received input to the processing threads
-        for (size_t inputIdx = 0; inputIdx < inputDatas.size(); ++inputIdx) {
-          SubbandProc &queue = *workQueues[inputIdx % workQueues.size()];
-          SmartPtr<SubbandProcInputData> data = inputDatas[inputIdx];
-
-          // Copy the meta data to the SubbandProcInputData struct
-          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-            SubbandMetaData &metaData = blocks[stat].beamlets[inputIdx].metaData;
-
-            data->metaData[stat] = metaData;
-
-            nrFlaggedSamples[stat] += metaData.flags.count();
-          }
-
-          queue.inputPool.filled.append(data);
-        }
-
-        // Report flags per station
-        stringstream flagStr;  // stations with >0% flags
-        stringstream cleanStr; // stations with  0% flags
-
-        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
-          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / inputDatas.size() / blockSize;
-
-          if (flagPerc == 0.0)
-            cleanStr << str(boost::format("%s, ") % ps.settings.stations[stat].name);
-          else
-            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.stations[stat].name % flagPerc);
-        }
-
-        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
-
-        if (!flagStr.str().empty()) {
-          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
-        }
-
-        LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
+        mpiPool.filled.append(mpiData);
       }
 
       // Signal end of input
-      for (size_t i = 0; i < workQueues.size(); ++i) {
-        workQueues[i]->inputPool.filled.append(NULL);
-      }
+      mpiPool.filled.append(NULL);
     }
 
     template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
@@ -218,6 +185,11 @@ namespace LOFAR
 
     void Pipeline::allocateResources()
     {
+      for (size_t i = 0; i < writePool.size(); i++) {
+        // Allow 10 blocks to be in the best-effort queue.
+        // TODO: make this dynamic based on memory or time
+        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i), 3, ps.realTime());
+      }
     }
 
 
@@ -227,26 +199,29 @@ namespace LOFAR
       LOG_INFO("----- Allocating resources");
       allocateResources();
 
-      for (size_t i = 0; i < writePool.size(); i++) {
-        // Allow 10 blocks to be in the best-effort queue.
-        // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(3, ps.realTime());
-      }
 
       //sections = program segments defined by the following omp section directive
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections num_threads(5)
+#     pragma omp parallel sections num_threads(6)
       {
         /*
-         * BLOCK OF SUBBANDS -> WORKQUEUE INPUTPOOL
+         * BLOCK OF SUBBANDS -> MPIQUEUE
          */
 #       pragma omp section
         {
           size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
 
           receiveInput(nrBlocks);
+        }
+
+        /*
+         * MPIQUEUE -> WORKQUEUE INPUTPOOL
+         */
+#       pragma omp section
+        {
+          transposeInput();
         }
 
         /*
@@ -309,6 +284,22 @@ namespace LOFAR
           for (size_t i = 0; i < writePool.size(); ++i) {
             writePool[i].bequeue->noMore();
           }
+
+          // Wait for data to propagate towards outputProc,
+          // and kill lingering outputThreads.
+          if (ps.realTime()) {
+            struct timespec deadline = TimeSpec::now();
+            TimeSpec::inc(deadline, outputFlushTimeout);
+
+            LOG_INFO_STR("Pipeline: Flushing data for at most " << outputFlushTimeout << " seconds.");
+            size_t numKilled = outputThreads.killAll(deadline);
+
+            if (numKilled == 0) {
+              LOG_INFO("Pipeline: Data flushed succesfully.");
+            } else {
+              LOG_WARN_STR("Pipeline: Data flushed, but had to kill " << numKilled << " writer threads.");
+            }
+          }
         }
 
         /*
@@ -320,22 +311,133 @@ namespace LOFAR
           for (size_t i = 0; i < writePool.size(); ++i) {
             writeOutput(subbandIndices[i], writePool[i]);
           }
+
+          // Signal end-of-output (needed by BeamFormerPipeline), to unlock
+          // outputThreads that are waiting for their NULL marker. Because of
+          // the 2nd transpose, the BeamformerPipeline::writeOutput cannot
+          // insert the NULL itself; it needs to be a collective action.
+          doneWritingOutput();
         }
       }
+    }
 
-      // gather performance figures
-      for (size_t i = 0; i < workQueues.size(); ++i ) {
-        performance.addQueue(*workQueues[i]);
+
+    template<typename SampleT>
+    void Pipeline::transposeInput()
+    {
+      SmartPtr<struct MPIData> input;
+
+      NSTimer copyTimer("transpose input data", true, true);
+
+      // Keep fetching input objects until end-of-output
+      while ((input = mpiPool.filled.remove()) != NULL) {
+        const ssize_t block = input->block;
+
+        vector<size_t> nrFlaggedSamples(ps.nrStations(), 0);
+
+#ifdef DO_PROCESSING
+        MultiDimArray<SampleT,3> data(
+          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
+          (SampleT*)input->data.get(), false);
+
+        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
+          boost::extents[ps.nrStations()][subbandIndices.size()],
+          (struct MPIProtocol::MetaData*)input->metaData.get(), false);
+
+        // The set of InputData objects we're using for this block.
+        vector< SmartPtr<SubbandProcInputData> > inputDatas(subbandIndices.size());
+
+        for (size_t subbandIdx = 0; subbandIdx < subbandIndices.size(); ++subbandIdx) {
+          // Fetch an input object to store this subband.
+          SubbandProc &queue = *workQueues[subbandIdx % workQueues.size()];
+
+          // Fetch an input object to fill from the selected queue.
+          SmartPtr<SubbandProcInputData> subbandData = queue.inputPool.free.remove();
+
+          // Annotate the block
+          struct BlockID id;
+          id.block                 = block;
+          id.globalSubbandIdx      = subbandIndices[subbandIdx];
+          id.localSubbandIdx       = subbandIdx;
+          id.subbandProcSubbandIdx = subbandIdx / workQueues.size();
+          subbandData->blockID = id;
+
+          copyTimer.start();
+          for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+            // Copy the data
+#if 1
+            memcpy(&subbandData->inputSamples[stat][0][0][0],
+                   &data[stat][subbandIdx][0],
+                   ps.nrSamplesPerSubband() * sizeof(SampleT));
+#endif
+            // Copy the metadata
+            subbandData->metaData[stat] = metaData[stat][subbandIdx];
+
+            nrFlaggedSamples[stat] += subbandData->metaData[stat].flags.count();
+          }
+          copyTimer.stop();
+
+          queue.inputPool.filled.append(subbandData);
+        }
+#endif
+
+        mpiPool.free.append(input);
+        ASSERT(!input);
+
+        // Report flags per antenna field
+        stringstream flagStr;  // antenna fields with >0% flags
+        stringstream cleanStr; // antenna fields with  0% flags
+
+        for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+          const double flagPerc = 100.0 * nrFlaggedSamples[stat] / subbandIndices.size() / ps.nrSamplesPerSubband();
+
+          if (flagPerc == 0.0)
+            cleanStr << str(boost::format("%s, ") % ps.settings.antennaFields[stat].name);
+          else
+            flagStr << str(boost::format("%s: %.1f%%, ") % ps.settings.antennaFields[stat].name % flagPerc);
+        }
+
+        LOG_DEBUG_STR("[block " << block << "] No flagging: " << cleanStr.str());
+
+        if (!flagStr.str().empty()) {
+          LOG_WARN_STR("[block " << block << "] Flagging:    " << flagStr.str());
+        }
+
+        LOG_DEBUG_STR("[block " << block << "] Forwarded input to pre processing");
       }
 
-      // log performance figures
-      performance.log(workQueues.size());
+      // Signal end of input
+      for (size_t i = 0; i < workQueues.size(); ++i) {
+        workQueues[i]->inputPool.filled.append(NULL);
+      }
+    }
+
+    template void Pipeline::transposeInput< SampleType<i16complex> >();
+    template void Pipeline::transposeInput< SampleType<i8complex> >();
+    template void Pipeline::transposeInput< SampleType<i4complex> >();
+
+    void Pipeline::transposeInput()
+    {
+      switch (ps.nrBitsPerSample()) {
+      default:
+      case 16:
+        transposeInput< SampleType<i16complex> >();
+        break;
+      case 8:
+        transposeInput< SampleType<i8complex> >();
+        break;
+      case 4:
+        transposeInput< SampleType<i4complex> >();
+        break;
+      }
     }
 
 
     void Pipeline::preprocessSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
+
+      NSTimer preprocessTimer("preprocess", true, true);
 
       // Keep fetching input objects until end-of-output
       while ((input = workQueue.inputPool.filled.remove()) != NULL) {
@@ -344,6 +446,7 @@ namespace LOFAR
         LOG_DEBUG_STR("[" << id << "] Pre processing start");
 
         /* PREPROCESS START */
+        preprocessTimer.start();
 
         const unsigned SAP = ps.settings.subbands[id.globalSubbandIdx].SAP;
 
@@ -352,6 +455,7 @@ namespace LOFAR
           input->applyMetaData(ps, stat, SAP, input->metaData[stat]);
         }
 
+        preprocessTimer.stop();
         /* PREPROCESS END */
 
         // Hand off output to processing
@@ -366,6 +470,8 @@ namespace LOFAR
     void Pipeline::processSubbands(SubbandProc &workQueue)
     {
       SmartPtr<SubbandProcInputData> input;
+
+      NSTimer processTimer("process", true, true);
 
       // Keep fetching input objects until end-of-input
       while ((input = workQueue.processPool.filled.remove()) != NULL) {
@@ -382,9 +488,9 @@ namespace LOFAR
         output->blockID = id;
 
         // Perform calculations
-        // workQueue.timers["CPU - process"]->start();
+        processTimer.start();
         workQueue.processSubband(*input, *output);
-        // workQueue.timers["CPU - process"]->stop();
+        processTimer.stop();
 
         if (id.block < 0) {
           // Ignore block; only used to initialize FIR history samples
@@ -408,6 +514,8 @@ namespace LOFAR
     {
       SmartPtr<SubbandProcOutputData> output;
 
+      NSTimer postprocessTimer("postprocess", true, true);
+
       size_t nrBlocksForwarded = 0;
       size_t nrBlocksDropped = 0;
       time_t lastLogTime = 0;
@@ -418,9 +526,9 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Post processing start");
 
-        // workQueue.timers["CPU - postprocess"]->start();
+        postprocessTimer.start();
         bool handOffOutput = workQueue.postprocessSubband(*output);
-        // workQueue.timers["CPU - postprocess"]->stop();
+        postprocessTimer.stop();
 
         if (!handOffOutput) {
           workQueue.outputPool.free.append(output);
@@ -454,90 +562,9 @@ namespace LOFAR
     }
 
 
-    Pipeline::Performance::Performance(size_t nrGPUs):
-      nrGPUs(nrGPUs)
+    void Pipeline::doneWritingOutput()
     {
     }
-
-
-    void Pipeline::Performance::addQueue(SubbandProc &/*queue*/)
-    {
-      ScopedLock sl(totalsMutex);
-
-      //// add performance counters
-      //for (map<string, SmartPtr<PerformanceCounter> >::iterator i = queue.counters.begin(); i != queue.counters.end(); ++i) {
-
-      //  const string &name = i->first;
-      //  PerformanceCounter *counter = i->second.get();
-
-      //  counter->waitForAllOperations();
-
-      //  total_counters[name] += counter->getTotal();
-      //}
-
-      //// add timers
-      //for (map<string, SmartPtr<NSTimer> >::iterator i = queue.timers.begin(); i != queue.timers.end(); ++i) {
-
-      //  const string &name = i->first;
-      //  NSTimer *timer = i->second.get();
-
-      //  if (!total_timers[name])
-      //    total_timers[name] = new NSTimer(name, false, false);
-
-      //  *total_timers[name] += *timer;
-      //}
-    }
-    
-    void Pipeline::Performance::log(size_t /*nrSubbandProcs*/)
-    {
-      //// Group figures based on their prefix before " - ", so "compute - FIR"
-      //// belongs to group "compute".
-      //map<string, PerformanceCounter::figures> counter_groups;
-
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
-      //  size_t n = i->first.find(" - ");
-
-      //  // discard counters without group
-      //  if (n == string::npos)
-      //    continue;
-
-      //  // determine group name
-      //  string group = i->first.substr(0, n);
-
-      //  // add to group
-      //  counter_groups[group] += i->second;
-      //}
-
-      //// Log all performance totals at DEBUG level
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = total_counters.begin(); i != total_counters.end(); ++i) {
-      //  LOG_DEBUG_STR(i->second.log(i->first));
-      //}
-
-      //for (map<string, SmartPtr<NSTimer> >::const_iterator i = total_timers.begin(); i != total_timers.end(); ++i) {
-      //  LOG_DEBUG_STR(*(i->second));
-      //}
-
-      //// Log all group totals at INFO level
-      //for (map<string, PerformanceCounter::figures>::const_iterator i = counter_groups.begin(); i != counter_groups.end(); ++i) {
-      //  LOG_INFO_STR(i->second.log(i->first));
-      //}
-
-      //// Log specific performance figures for regression tests at INFO level
-      //double wall_seconds = total_timers["CPU - total"]->getAverage();
-      //double gpu_seconds = counter_groups["compute"].runtime / nrGPUs;
-      //double spin_seconds = total_timers["GPU - wait"]->getAverage();
-      //double input_seconds = total_timers["CPU - read input"]->getElapsed() / nrSubbandProcs;
-      //double cpu_seconds = total_timers["CPU - process"]->getElapsed() / nrSubbandProcs;
-      //double postprocess_seconds = total_timers["CPU - postprocess"]->getElapsed() / nrSubbandProcs;
-
-      //LOG_INFO_STR("Wall seconds spent processing        : " << fixed << setw(8) << setprecision(3) << wall_seconds);
-      //LOG_INFO_STR("GPU  seconds spent computing, per GPU: " << fixed << setw(8) << setprecision(3) << gpu_seconds);
-      //LOG_INFO_STR("Spin seconds spent polling, per block: " << fixed << setw(8) << setprecision(3) << spin_seconds);
-      //LOG_INFO_STR("CPU  seconds spent on input,   per SbProc: " << fixed << setw(8) << setprecision(3) << input_seconds);
-      //LOG_INFO_STR("CPU  seconds spent processing, per SbProc: " << fixed << setw(8) << setprecision(3) << cpu_seconds);
-      //LOG_INFO_STR("CPU  seconds spent postprocessing, per SbProc: " << fixed << setw(8) << setprecision(3) << postprocess_seconds);
-    }
-
   }
 }
 

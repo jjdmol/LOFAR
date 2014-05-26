@@ -2,4 +2,4 @@
 
 include(LofarCTest)
 
-lofar_add_test(tfailedtilesinfo)
+#lofar_add_test(tfailedtilesinfo)

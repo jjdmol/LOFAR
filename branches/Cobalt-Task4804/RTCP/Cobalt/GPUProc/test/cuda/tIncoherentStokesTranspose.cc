@@ -48,6 +48,15 @@ void runTest( gpu::Context &ctx, gpu::Stream &stream )
 {
   // Use a dummy parset to construct default parameters.
   Parset ps;
+  ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
+  ps.add("Observation.DataProducts.Output_IncoherentStokes.enabled", "true");
+  ps.add("Observation.DataProducts.Output_IncoherentStokes.filenames", "[L12345_SAP000_B000_P000_bf.h5]");
+  ps.add("Observation.DataProducts.Output_IncoherentStokes.locations", "[localhost:.]");
   ps.updateSettings();
 
   IncoherentStokesTransposeKernel::Parameters params(ps);

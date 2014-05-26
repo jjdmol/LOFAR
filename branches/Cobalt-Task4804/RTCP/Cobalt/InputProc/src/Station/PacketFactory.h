@@ -22,8 +22,8 @@
 #ifndef LOFAR_INPUT_PROC_PACKETFACTORY_H
 #define LOFAR_INPUT_PROC_PACKETFACTORY_H
 
-#include <InputProc/Buffer/SampleBuffer.h>
 #include <InputProc/RSPTimeStamp.h>
+#include <InputProc/Buffer/BoardMode.h>
 
 #include "RSP.h"
 

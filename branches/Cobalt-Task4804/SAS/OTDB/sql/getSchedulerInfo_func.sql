@@ -36,7 +36,7 @@ CREATE TYPE schedulerInfo AS (
 	predMaxTimeDif         VARCHAR(10),
 	predMinTimeDif         VARCHAR(10),
 	priority               FLOAT,
-	reason                 VARCHAR(40),
+	reason                 TEXT,
 	referenceFrame         INT4,
 	reservation            INT4,
 	storageSelectionMode   INT4,

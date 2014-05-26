@@ -1,5 +1,7 @@
 # $Id$
 
-# should cover everything that Online_OutputProc has (e.g. for tests on cbt009)
-lofar_package(Online_Cobalt DEPENDS Cobalt Online_OutputProc)
+# Online_OutputProc is needed for tests on cbt nodes
+# APLCommon is needed for the `swlevel' script
+lofar_package(Online_Cobalt DEPENDS Cobalt Online_OutputProc APLCommon)
 
+add_subdirectory(test)

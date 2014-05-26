@@ -27,7 +27,6 @@
 #include <UnitTest++.h>
 #include <boost/format.hpp>
 
-#include <CoInterface/DataFactory.h>
 #include <CoInterface/CorrelatedData.h>
 #include <CoInterface/Stream.h>
 #include <OutputProc/SubbandWriter.h>
@@ -105,13 +104,13 @@ SUITE(SubbandWriter)
 
         SmartPtr<Stream> inputStream = createStream(sendDesc, false, 0);
 
-        SmartPtr<CorrelatedData> data = dynamic_cast<CorrelatedData*>(newStreamableData(ps, CORRELATED_DATA, 0));
+        CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
-        for (size_t i = 0; i < data->visibilities.num_elements(); ++i) {
-          *(data->visibilities.origin() + i) = complex<float>(i, 2*i);
+        for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
+          *(data.visibilities.origin() + i) = complex<float>(i, 2*i);
         }
 
-        data->write(inputStream, true, 1);
+        data.write(inputStream, true, 1);
       }
     }
 
@@ -119,11 +118,12 @@ SUITE(SubbandWriter)
     {
       FileStream f("tWriter.out_raw/table.f0data");
 
-      SmartPtr<CorrelatedData> data = dynamic_cast<CorrelatedData*>(newStreamableData(ps, CORRELATED_DATA, 0));
-      data->read(&f, true, 512);
+      CorrelatedData data(ps.nrMergedStations(), ps.nrChannelsPerSubband(), ps.integrationSteps(), heapAllocator, 512);
 
-      for (size_t i = 0; i < data->visibilities.num_elements(); ++i) {
-        CHECK_EQUAL(complex<float>(i, 2*i), *(data->visibilities.origin() + i));
+      data.read(&f, true, 512);
+
+      for (size_t i = 0; i < data.visibilities.num_elements(); ++i) {
+        CHECK_EQUAL(complex<float>(i, 2*i), *(data.visibilities.origin() + i));
       }
     }
   }

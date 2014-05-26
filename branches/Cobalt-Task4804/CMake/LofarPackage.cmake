@@ -196,6 +196,9 @@ if(NOT LOFAR_PACKAGE_INCLUDED)
       if(BUILD_${_dep})
         get_directory_property(_dirs
           DIRECTORY ${${_dep}_SOURCE_DIR} INCLUDE_DIRECTORIES)
+        # Remove duplicate entries which may be present since
+        # include_directories in cmake >= 2.8.8 does not remove them.
+        list(REMOVE_DUPLICATES _dirs)
         include_directories(${_dirs})
         get_property(_libs GLOBAL PROPERTY ${_dep}_LIBRARIES)
         list(APPEND ${_pkg}_LINK_LIBRARIES ${_libs})

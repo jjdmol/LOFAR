@@ -54,6 +54,15 @@ RSPDriver.MAC_ADDR_MASK=10:FA:00:00:%02x:00
 
 # old-way of specifying the MAC addresses
 #
+# Specify the absolute backplane index of the first
+# RSP board in hexadecimal
+#
+# MAC address is equal to : 10:FA:00:00:XX:00
+#
+RSPDriver.XST_FIRST_RSP_BOARD=0x00
+
+# old-way of specifying the MAC addresses
+#
 RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
@@ -207,14 +216,6 @@ RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.FB_ENABLE=1
 
 #
-# Specify the absolute backplane index of the first
-# RSP board in hexadecimal
-#
-# MAC address is equal to : 10:FA:00:00:XX:00
-#
-RSPDriver.XST_FIRST_RSP_BOARD=0x00
-
-#
 # Ethernet interface on which to contact the RSP boards.
 # This interface would normally be connected to the switch.
 #
@@ -264,6 +265,7 @@ RSPDriver.READ_STATUS=1
 RSPDriver.WRITE_XBF=1
 RSPDriver.WRITE_BF=1
 RSPDriver.WRITE_SS=1
+RSPDriver.WRITE_SDO=1
 RSPDriver.WRITE_RCU_PROTOCOL=1
 RSPDriver.WRITE_HBA_PROTOCOL=1
 RSPDriver.READ_SST=1
@@ -282,6 +284,7 @@ RSPDriver.READ_SI=1
 RSPDriver.SPLITTER=1
 RSPDriver.READ_LATENCY=1
 RSPDriver.READ_BITMODE=1
+RSPDriver.READ_SDOMODE=1
 
 #
 # TDS_CONTROL
@@ -297,6 +300,7 @@ RSPDriver.TDS_CONTROL=0x00111111
 #
 RSPDriver.READ_BF=0
 RSPDriver.READ_SS=0
+RSPDriver.READ_SDO=0
 RSPDriver.READ_RCU=0
 RSPDriver.READ_WG=0
 
@@ -344,5 +348,11 @@ RSPDriver.HBA_SERVER_ADDRESS_OFFSET=1
 # Allow/deny writing raw datablocks. This is only needed for testing!
 RSPDriver.READ_RAW_DATA  = 1
 RSPDriver.WRITE_RAW_DATA = 1
+
+# Default settings for Aartfaac stations 
+RSPDriver.SDO_MODE = 16
+RSPDriver.SDO_SS = 295:330,331:366,367:402,403:438
+
+
 
  

@@ -39,7 +39,7 @@ class BypassWrite : public SyncAction
 {
 public:
 	// Constructors for a BypassWrite object.
-	BypassWrite(GCFPortInterface& board_port, int board_id, int bpNr);
+	BypassWrite(GCFPortInterface& board_port, int board_id);
 
 	// Destructor for BypassWrite
 	virtual ~BypassWrite();
@@ -55,7 +55,6 @@ public:
 
 private:
 	EPA_Protocol::MEPHeader  m_hdr;
-	int						 itsBPNr;
 
 	//      const Scheduler&         m_scheduler; // for getCurrentTime
 //	RTC::Timestamp           m_mark;      // mark time

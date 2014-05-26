@@ -10,7 +10,7 @@ from sys import exit
 import logging
 from time import sleep
 
-search_version = '1013f'
+search_version = '0314'
 
 logger = logging.getLogger()
 
@@ -191,17 +191,17 @@ def searchDown(data, subband):
         ant_x_mean_value = ma.mean(_data[x_rcu,start_sb:stop_sb])
         ant_y_mean_value = ma.mean(_data[y_rcu,start_sb:stop_sb])
             
-        logger.debug("RCU=%d/%d: X-top, sb%d, bw=%d, mean-value-band=%3.1f  Y-top, sb%d, bw=%d, mean-value-band=%3.1f" %\
+        logger.debug("rcu=%d/%d: X-top, sb%d, bw=%d, mean-value-band=%3.1f  Y-top, sb%d, bw=%d, mean-value-band=%3.1f" %\
                     (x_rcu, y_rcu, peaks_array[x_rcu], peaks_bw_array[x_rcu], ant_x_mean_value, peaks_array[y_rcu], peaks_bw_array[y_rcu], ant_y_mean_value))
         
         if (((ant_x_mean_value < (median_value - 3.0)) and (ant_x_mean_value > 66)) and
             ((ant_y_mean_value < (median_value - 3.0)) and (ant_y_mean_value > 66))):
-            logger.debug("RCU=%d/%d: mean signal in test band for X and Y lower than normal" %(x_rcu, y_rcu))
+            logger.debug("bin=%d/%d: mean signal in test band for X and Y lower than normal" %(x_rcu, y_rcu))
             mean_val_trigger = True
             
         if ((((abs(peaks_array[x_rcu] - median_max_sb) > 5) or (abs(peaks_bw_array[x_rcu] - median_bw) > 5)) and (peaks_bw_array[x_rcu] > 3)) or 
             (((abs(peaks_array[y_rcu] - median_max_sb) > 5) or (abs(peaks_bw_array[y_rcu] - median_bw) > 5)) and (peaks_bw_array[y_rcu] > 3))):
-            logger.debug("RCU=%d/%d: antenna probable down" %(x_rcu, y_rcu))
+            logger.debug("rcu=%d/%d: antenna probable down" %(x_rcu, y_rcu))
             down_trigger = True
         
         if mean_val_trigger and down_trigger:    
@@ -209,11 +209,11 @@ def searchDown(data, subband):
         
         if not down_trigger:
             if ((peaks_bw_array[x_rcu] > 3) and (abs(peaks_array[x_rcu] - median_max_sb) > 5)):
-                logger.debug("RCU=%d: X-top shifted normal=%d, now=%d" %(x_rcu, median_max_sb, peaks_array[x_rcu]))
+                logger.debug("rcu=%d: X-top shifted normal=%d, now=%d" %(x_rcu, median_max_sb, peaks_array[x_rcu]))
                 shifted_info.append((x_rcu, peaks_array[x_rcu], median_max_sb))
             
             if ((peaks_bw_array[y_rcu] > 3) and (abs(peaks_array[y_rcu] - median_max_sb) > 5)):
-                logger.debug("RCU=%d: Y-top shifted normal=%d, now=%d" %(y_rcu, median_max_sb, peaks_array[y_rcu]))
+                logger.debug("rcu=%d: Y-top shifted normal=%d, now=%d" %(y_rcu, median_max_sb, peaks_array[y_rcu]))
                 shifted_info.append((y_rcu, peaks_array[y_rcu], median_max_sb))
                 
     return (down_info, shifted_info)
@@ -239,12 +239,12 @@ def search_oscillation(data, delta, start_sb, stop_sb):
     logger.debug("ref.data: used-delta=%3.1f dB, max_peak=%3.1fdB, n_peaks=%d, sum_all_peaks=%5.3f, median_low_value=%3.1fdB" %\
                 (delta, median_max_peak, median_n_peaks, median_sum_peaks, median_low)) 
     
-    for rcu in range(_data.shape[0]):
+    for bin in range(_data.shape[0]):
         max_peak_val  = 0
         max_n_peaks   = 0
         max_sum_peaks = 0
         for sec in range(_data.shape[1]):
-            peaks = cSearchPeak(_data[rcu,sec,:])
+            peaks = cSearchPeak(_data[bin,sec,:])
             if peaks.valid_data:
                 peaks.search(delta=delta)
                 max_peak_val  = max(max_peak_val, peaks.getMaxPeak()[0])
@@ -253,34 +253,43 @@ def search_oscillation(data, delta, start_sb, stop_sb):
             
         #if max_n_peaks > (median_n_peaks + 5):
         if max_sum_peaks > (median_sum_peaks * 2.0):
-            rcu_low = _data[rcu,:,:].min(axis=0).mean()
-            logger.debug("RCU=%d: number-of-peaks=%d  max_value=%3.1f  peaks_sum=%5.3f low_value=%3.1f" %\
-                        (rcu, max_n_peaks, max_peak_val, max_sum_peaks, rcu_low))        
-            if rcu_low > (median_low + 1.5): #peaks.getSumPeaks() > (median_sum_peaks * 2.0):
-                info.append((rcu, max_sum_peaks, max_n_peaks, rcu_low))
+            bin_low = _data[bin,:,:].min(axis=0).mean()
+            logger.debug("bin=%d: number-of-peaks=%d  max_value=%3.1f  peaks_sum=%5.3f low_value=%3.1f" %\
+                        (bin, max_n_peaks, max_peak_val, max_sum_peaks, bin_low))        
+            if bin_low > (median_low + 1.0): #peaks.getSumPeaks() > (median_sum_peaks * 2.0):
+                info.append((bin, max_sum_peaks, max_n_peaks, bin_low))
         
         if max_peak_val > 150.0: # only one high peek
-            info.append((rcu, max_sum_peaks, max_n_peaks, rcu_low))
+            info.append((bin, max_sum_peaks, max_n_peaks, bin_low))
             
     return (info) #(sorted(info,reverse=True))
 
 # find summator noise
-def search_summator_noise(data):
+def search_summator_noise(data, min_peak):
     global logger
     sn_info = list() # summator noise
     cr_info = list() # cable reflection
-    _data = data[:,:,50:100].copy() 
+    _data   = data[:,:,50:100].copy() 
+    _data_ref = data[:,:,280:330].copy() 
     
     secs = _data.shape[1]
-    for rcu in range(_data.shape[0]):
+    for bin in range(_data.shape[0]):
         sum_sn_peaks = 0
         sum_cr_peaks = 0
-        max_peaks = 0          
+        max_peaks    = 0
         for sec in range(secs):
-            peaks = cSearchPeak(_data[rcu,sec,:])
+            peaks = cSearchPeak(_data[bin,sec,:])
+            peaks_ref = cSearchPeak(_data_ref[bin,sec,:])
             
+            if peaks_ref.valid_data:
+                peaks_ref.search(delta=3.0)
+                n_peaks_ref = peaks_ref.nMaxPeaks()
+                if n_peaks_ref > 2:
+                    logger.debug("skip test, found %d peaks in reference spectrum" %(n_peaks_ref))
+                    continue
+                
             if peaks.valid_data:
-                peaks.search(delta=0.7)
+                peaks.search(delta=min_peak)
                 n_peaks = peaks.nMaxPeaks()
     
                 sn_peaks = 0
@@ -297,12 +306,12 @@ def search_summator_noise(data):
                 sum_cr_peaks += cr_peaks
                 max_peaks = max(max_peaks, n_peaks)
 
-        if sum_sn_peaks > (secs * 3.0):
+        if (sum_sn_peaks > (secs * 3.0)):
             sn_peaks = sum_sn_peaks / secs             
-            sn_info.append((rcu, sn_peaks, max_peaks))
+            sn_info.append((bin, sn_peaks, max_peaks))
         if sum_cr_peaks > (secs * 3.0):
             cr_peaks = sum_cr_peaks / secs             
-            cr_info.append((rcu, cr_peaks, max_peaks))  
+            cr_info.append((bin, cr_peaks, max_peaks))  
     return (sn_info, cr_info)
 
     
@@ -327,45 +336,46 @@ def search_noise(data, low_deviation, high_deviation, max_diff):
     
     n_secs = data.shape[1]
     logger.debug("median-signal=%5.3fdB, median-fluctuation=%5.3fdB, std=%5.3f, high-limit=%5.3fdB" %(ref_value, ref_diff, ref_std, limit))
-    for rcu in range(data.shape[0]):
-        peaks = cSearchPeak(data[rcu,0,:])
+    # loop over rcus
+    for bin in range(data.shape[0]):
+        peaks = cSearchPeak(data[bin,0,:])
         if not peaks.valid_data:
             return (low_info, high_info, jitter_info)
         peaks.search(delta=10.0)
         if peaks.nMaxPeaks() >= 30:
-            logger.debug("RCU=%d: found %d peaks, skip noise test" %(rcu, peaks.nMaxPeaks()))
+            logger.debug("bin=%d: found %d peaks, skip noise test" %(bin, peaks.nMaxPeaks()))
         else:
             n_bad_high_secs    = 0
             n_bad_low_secs     = 0
             n_bad_jitter_secs  = 0
             
-            rcu_max_diff = spec_max[rcu] - spec_min[rcu]
-            
-            for val in spec_median[rcu,:]:
-                #logger.debug("RCU=%d: high-noise value=%5.3fdB  max-ref-value=%5.3fdB" %(rcu, val, ref_val)) 
-                if ((val > limit) and (rcu_max_diff > 1.0)) or (val > (ref_value + high_deviation)):
+            bin_max_diff = spec_max[bin] - spec_min[bin]
+            # loop over secs
+            for val in spec_median[bin,:]:
+                #logger.debug("bin=%d: high-noise value=%5.3fdB  max-ref-value=%5.3fdB" %(bin, val, ref_val)) 
+                if ((val > limit) and (bin_max_diff > 1.0)) or (val > (ref_value + high_deviation)):
                     n_bad_high_secs += 1
                 
-                if ((val < (ref_value + low_deviation)) and (rcu_max_diff > 1.0))  or (val < (ref_value + low_deviation)):
+                if ((val < (ref_value + low_deviation)) and (bin_max_diff > 1.0))  or (val < (ref_value + low_deviation)):
                     n_bad_low_secs += 1
             
-            if n_bad_high_secs > 0:    
-                high_info.append((rcu, spec_max[rcu], n_bad_high_secs, limit, rcu_max_diff))
-                logger.debug("RCU=%d: max-noise=%5.3f  %d of %d seconds bad" %(rcu, spec_max[rcu], n_bad_high_secs, n_secs)) 
+            if n_bad_high_secs > 1:    
+                high_info.append((bin, spec_max[bin], n_bad_high_secs, limit, bin_max_diff))
+                logger.debug("bin=%d: max-noise=%5.3f  %d of %d seconds bad" %(bin, spec_max[bin], n_bad_high_secs, n_secs)) 
 
-            if n_bad_low_secs > 0:    
-                low_info.append((rcu, spec_min[rcu], n_bad_low_secs , (ref_value+low_deviation), rcu_max_diff)) 
-                logger.debug("RCU=%d: min-noise=%5.3f %d of %d seconds bad" %(rcu, spec_min[rcu], n_bad_low_secs, n_secs)) 
+            if n_bad_low_secs > 1:    
+                low_info.append((bin, spec_min[bin], n_bad_low_secs , (ref_value+low_deviation), bin_max_diff)) 
+                logger.debug("bin=%d: min-noise=%5.3f %d of %d seconds bad" %(bin, spec_min[bin], n_bad_low_secs, n_secs)) 
             
             if (n_bad_high_secs == 0) and (n_bad_low_secs == 0):
-                if rcu_max_diff > (ref_diff + max_diff):
+                if bin_max_diff > (ref_diff + max_diff):
                     check_high_value = ref_value + (ref_diff / 2.0)
                     check_low_value  = ref_value - (ref_diff / 2.0)
-                    for val in spec_median[rcu,:]:
+                    for val in spec_median[bin,:]:
                         if val > check_high_value or val < check_low_value:
                             n_bad_jitter_secs += 1
-                    jitter_info.append((rcu, rcu_max_diff, ref_diff, n_bad_jitter_secs))
-                    logger.debug("RCU=%d: max spectrum fluctuation %5.3f dB" %(rcu, rcu_max_diff)) 
+                    jitter_info.append((bin, bin_max_diff, ref_diff, n_bad_jitter_secs))
+                    logger.debug("bin=%d: max spectrum fluctuation %5.3f dB" %(bin, bin_max_diff)) 
                 
     return (low_info, high_info, jitter_info)
 
@@ -397,8 +407,8 @@ def search_spurious(data, delta):
             mean_data[:,i] = ma.masked
     
     # search in all data for spurious 
-    for rcu in range(_data.shape[0]):
-        peaks = cSearchPeak(mean_data[rcu,:])
+    for bin in range(_data.shape[0]):
+        peaks = cSearchPeak(mean_data[bin,:])
         if peaks.valid_data:
             peaks.search(delta=delta)
             for peak in peaks.max_peaks:
@@ -407,9 +417,9 @@ def search_spurious(data, delta):
                     continue
                 peak_val = peaks.getPeak(peak)
                 if (max_sb - min_sb) < 100 and peak_val != NaN:
-                    logger.debug("RCU=%d: spurious, subband=%d..%d, peak=%3.1fdB" %(rcu, min_sb, max_sb, peak_val))
+                    logger.debug("bin=%d: spurious, subband=%d..%d, peak=%3.1fdB" %(bin, min_sb, max_sb, peak_val))
             if peaks.nMaxPeaks() > 10:
-                #print rcu, peaks.nMaxPeaks()                    
-                info.append(rcu)
+                #print bin, peaks.nMaxPeaks()                    
+                info.append(bin)
     return(info)
     

@@ -29,7 +29,7 @@ then
     OTDB_HOST=sasdbtest
 
     IONPROC_PARSET="/lofar/lofarsys/parsets/T$OBSID.parset"
-    STORAGE_PARSET="/globalhome/lofartest/log/T$OBSID.parset"
+    STORAGE_PARSET="/globalhome/lofarsystem/log/T$OBSID.parset"
     LOGPARAMS="-s `CEPlogProcessorSettings | awk '/test/ { print $2; }'`"
   else
     ISTESTENV=0

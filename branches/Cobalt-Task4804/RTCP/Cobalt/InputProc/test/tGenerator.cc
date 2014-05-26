@@ -27,8 +27,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/OMPThread.h>
 
-#include <InputProc/OMPThread.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/Station/Generator.h>
 #include <InputProc/Station/PacketReader.h>
@@ -57,7 +57,7 @@ int main( int, char **argv )
   vector< SmartPtr<Stream> > inputStreams(1);
   vector< SmartPtr<Stream> > outputStreams(1);
 
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     inputStreams[0] = createStream(desc, true);
@@ -67,17 +67,16 @@ int main( int, char **argv )
   }
 
   struct StationID stationID("RS106", "LBA");
-  struct BufferSettings settings(stationID, false);
   struct BoardMode mode(16, 200);
 
   const TimeStamp from(time(0), 0, mode.clockHz());
   const TimeStamp to = from + NUMPACKETS * 16; /* 16 timeslots/packet */
   PacketFactory factory(mode);
-  Generator g(settings, outputStreams, factory, from, to);
+  Generator g(stationID, outputStreams, factory, from, to);
 
   bool error = false;
 
-  #pragma omp parallel sections
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
@@ -107,13 +106,13 @@ int main( int, char **argv )
             ASSERT(false);
           }
         }
-
-        // We received NUMPACKETS packets, kill the generator
-        g.stop();
       } catch(Exception &ex) {
         LOG_ERROR_STR("Caught exception: " << ex);
         error = true;
       }
+
+      // We received NUMPACKETS packets, kill the generator
+      g.stop();
     }
   }
 

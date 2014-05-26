@@ -27,6 +27,7 @@
 #define SEQUENCER_H_
 
 #include <GCF/TM/GCF_Control.h>
+#include <blitz/array.h>
 
 namespace LOFAR {
   using GCF::TM::GCFFsm;
@@ -41,6 +42,7 @@ public:
 	  SEQ_NONE = 0,
 	  SEQ_SETCLOCK, // done at initialization
 	  SEQ_RSPCLEAR,
+	  SEQ_SDOPRESET,
 	} Sequence;
 	//
 	// Constructor/destructor
@@ -77,6 +79,9 @@ public:
 	GCFEvent::TResult PPSsync_state     (GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult RCUenable_state   (GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult CDOenable_state   (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult SDObitmode_state  (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult SDOselect_state   (GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult SDOenable_state   (GCFEvent& event, GCFPortInterface& port);
 	/*@}*/
 
 private:
@@ -85,6 +90,8 @@ private:
 	//
 	Sequencer();
 	void enableRCUs(bool);
+    blitz::Array<uint16, 2> str2blitz(const char* str, int max);
+    //std::list<int> strtolist(const char* str, int max);
 
 	static Sequencer* m_instance;
 

@@ -27,7 +27,6 @@
 #include <utility>
 #include <memory>
 
-#include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
@@ -103,6 +102,11 @@ namespace LOFAR
                             gpu::Context &context,
                             CorrelatorFactories &factories,
                             size_t nrSubbandsPerSubbandProc = 1);
+
+      virtual ~CorrelatorSubbandProc();
+
+      // Print statistics of all kernels and transfers
+      void printStats();
 
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,

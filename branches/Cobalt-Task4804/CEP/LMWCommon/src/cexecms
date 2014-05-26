@@ -10,9 +10,13 @@ showhelp()
   echo ' cexecms runs a command or script on cluster nodes for files matching the'
   echo ' given file name glob pattern. Placeholders in the command or script are'
   echo ' replaced by the actual file name parts.'
+  echo ' The current environment (paths, etc.) is written to an env file that is'
+  echo ' sourced on the cluster nodes. So you should have done "use LofIm"'
+  echo ' if you need LofIm in the (remote) command.'
   echo ''
   echo ' usage:'
-  echo '    cexecms [-c cluster] [-d] [-s script] [-w workdir] command nameglob [arg1 arg2 ...]'
+  echo '    cexecms [-c cluster] [-d] [-s script] [-w workdir] [-e envdir]'
+  echo '            command nameglob [arg1 arg2 ...]'
   echo ''
   echo '      -c cluster    Cluster name as defined for cexec.'
   echo '                    default is lce:    if run on an lfe node'
@@ -29,6 +33,8 @@ showhelp()
   echo '                    Placeholders (like <FN>) in the file are replaced.'
   echo '                    It will be used as the first argument in the command.'
   echo '      -w workdir    Working directory in remote process. Default is login directory.'
+  echo '      -e envdir     Directory for the env file. Default is $HOME.'
+  echo '                    It must be visible for all remote nodes.'
   echo '      command       Command to be executed remotely.'
   echo '                    Quotes are needed if it contains spaces, etc.'
   echo '                    Placeholders (like <FN>) in the command are replaced.'
@@ -80,8 +86,6 @@ showhelp()
   echo ' Sometimes a command can be dangerous or take a long time to run.'
   echo ' In such a case it makes sense to first do a dry-run execution with the -d option.'
   echo ''
-  echo ' Note that the current environment (paths, etc.) is copied. You should'
-  echo ' have done "use LofIm" if you need LofIm in the (remote) command.'
   echo ''
 }
 
@@ -98,6 +102,7 @@ script=
 ids=
 dryrun=
 workdir=
+envdir=$HOME
 # Handle possible options.
 while [ $# != 0 ]
 do
@@ -116,6 +121,10 @@ do
   elif test "$1" = "-w"; then
     shift
     workdir="$1"
+    shift
+  elif test "$1" = "-e"; then
+    shift
+    envdir="$1"
     shift
   elif test "$1" = "-d"; then
     shift
@@ -159,7 +168,7 @@ fi
 ids=`$pgmpath/expandparameter "$ids"`
 
 # Find all PATH and ROOT variables and store in a file with the pid in its name.
-envfile=$HOME/${USER}-$$.env
+envfile=${envdir}/${USER}-$$.env
 grex='[^=]*(PATH|ROOT|APS_LOCAL)'
 printenv | egrep "^$grex=" | sed -e "s/^\([^=]*\)=\(.*\)/\1='\2'; export \1/;" > $envfile
 

@@ -33,6 +33,10 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
+#include <CoInterface/Pool.h>
+#include <CoInterface/OMPThread.h>
+
+#include <InputProc/Transpose/MPIUtil.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
@@ -64,6 +68,12 @@ namespace LOFAR
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
       virtual void processObservation();
 
+      struct Output 
+      {
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
+      };
+
     protected:
       const Parset             &ps;
       const std::vector<gpu::Device> devices;
@@ -78,43 +88,33 @@ namespace LOFAR
 
       const size_t nrSubbandsPerSubbandProc;
 
-#if defined USE_B7015
-      OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
-#endif
+    protected:
+      // Threads that write to outputProc, and need to
+      // be killed when they stall at observation end.
+      OMPThreadSet outputThreads;
 
-      // Combines all functionality needed for getting the total from a set of
-      // counters
-      struct Performance
-      {
-        std::map<std::string, SmartPtr<NSTimer> > total_timers;
-        // lock on the shared data
-        Mutex totalsMutex;
-        // add the counter in this queue
-        void addQueue(SubbandProc &queue);
-        // Print a logline with results
-        void log(size_t nrSubbandProcs);
-
-        size_t nrGPUs;
-
-        Performance(size_t nrGPUs = 1);
-      } performance;
-
-      struct Output 
-      {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
-
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
-      };
     private:
-      // For each block, read all subbands from all stations, and divide the
-      // work over the workQueues
-      void receiveInput( size_t nrBlocks );
+      struct MPIData
+      {
+        size_t block;
 
-      // Templated version of receiveInput(), to specialise in receiving
-      // a certain type of input sample.
+        SmartPtr<char, SmartPtrMPI<char> > data;
+        SmartPtr<char, SmartPtrMPI<char> > metaData;
+
+        template<typename SampleT>
+        void allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+      };
+
+      Pool<struct MPIData> mpiPool;
+
+      // For each block, read all data and put it (untransposed) in the mpiPool
+      void receiveInput( size_t nrBlocks );
       template<typename SampleT> void receiveInput( size_t nrBlocks );
+
+      // For each block, transpose all subbands from all stations, and divide the
+      // work over the workQueues
+      void transposeInput();
+      template<typename SampleT> void transposeInput();
 
       // preprocess subbands on the CPU
       void preprocessSubbands(SubbandProc &workQueue);
@@ -127,6 +127,9 @@ namespace LOFAR
 
       // Send subbands to Storage
       virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
+
+      // Signal that all output has been emitted
+      virtual void doneWritingOutput();
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };

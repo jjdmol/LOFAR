@@ -42,7 +42,7 @@ host=`hostname -s`
 
 # set filenames and dirs
 locallogdir="/opt/stationtest/data/"
-globallogdir="/globalhome/log/"
+globallogdir="/globalhome/log/stationtest/"
 
 if [ $LEVEL -ne 0 ]
 then

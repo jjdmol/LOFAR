@@ -43,6 +43,11 @@ namespace LOFAR
       return convert((double)usec / 1000000, clockSpeed);
     }
 
+    TimeStamp TimeStamp::universe_heat_death( unsigned clockSpeed )
+    {
+      return TimeStamp(0x7FFFFFFFFFFFFFFFUL, clockSpeed);
+    }
+
 
     TimeStamp TimeStamp::convert( double seconds, unsigned clockSpeed )
     {
@@ -62,7 +67,8 @@ namespace LOFAR
       size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
       buf[len] = '\0';
 
-      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
+      //return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
+      return os << buf << "." << setfill('0') << setw(3) << ms << " UTC";
     }
 
   } // namespace Cobalt

@@ -8,6 +8,8 @@
 # The name of the executable will be prefixed with the contents of the
 # environment variable EXECUTABLE_PREFIX. This way you can, e.g., run your
 # MPI program through valgrind.
+#
+# $Id$
 
 error()
 {

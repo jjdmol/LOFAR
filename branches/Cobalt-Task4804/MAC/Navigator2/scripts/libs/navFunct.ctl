@@ -52,6 +52,7 @@
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
 // navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
+// navFunct_getGPUProcsForObservation         : Returns all the GPUProcs for a given observation
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
 // navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
 // navFunct_getInputBuffersForStation         : returns all the InputBuffers that are connected to a station
@@ -63,6 +64,7 @@
 // navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
 // navFunct_getRingFromStation                : Returns the ringName from a stationName
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_getStationInputForObservation     : Returns all stationInputs used for this observation
 // navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
@@ -2431,6 +2433,33 @@ bool navFunct_isObservation(string obsName) {
 
 
 // ***************************
+// navFunct_getStationInputForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all StationInput used by this observation
+// ***************************
+// 
+dyn_string navFunct_getStationInputForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string stationInput;
+  dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return stationInput;
+
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_CobaltStationInput*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    dynAppend(stationInput,dp);
+  }
+  dynSort(stationInput);
+  return stationInput;
+}
+
+// ***************************
 // navFunct_getInputBuffersForObservation
 // ***************************
 // obsName : the observation in question
@@ -2507,6 +2536,33 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   }
   dynSort(adders);
   return adders;
+}
+
+// ***************************
+// navFunct_getGPUProcsForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all GPUProcs used by this observation
+// ***************************
+// 
+dyn_string navFunct_getGPUProcsForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string gpuprocs;
+  dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return gpuprocs;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_CobaltGPUProc*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp=dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    // avoid doubles
+    if (!dynContains(gpuprocs,dp) ) dynAppend(gpuprocs,dp);
+  }
+  dynSort(gpuprocs);
+  return gpuprocs;
 }
 
 // ***************************
