@@ -519,6 +519,8 @@ void StationInput::readRSPNonRealTime()
 
   data->packets[0].payloadError(false);
   data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
+  data->packets[0].rspBoard(0);
+  data->packets[0].header.nrBlocks = 16; // MPIData<>::write checks for this
   data->board = 0;
 
   rspDataPool[0]->filled.append(data);
