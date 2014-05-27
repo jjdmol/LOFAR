@@ -5,7 +5,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   # We need at least CMake 2.8 for CUDA support
   cmake_minimum_required(VERSION 2.8)
 
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
@@ -37,7 +37,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc OpenCL_FFT)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()

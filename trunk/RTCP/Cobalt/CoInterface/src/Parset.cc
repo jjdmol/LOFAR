@@ -968,9 +968,9 @@ namespace LOFAR
 
       if (max_n_FFT_pow2 < min_n_ch_pow2) {
         LOG_WARN_STR("Parset: calcNrDelayCompensationChannels(): upper bound " <<
-                      max_n_FFT << " ends up below lower bound " << min_n_ch <<
-                      ". Returning " << min_n_ch_pow2 << ". Stations far from"
-                      " the core may not be delay compensated optimally.");
+                     max_n_FFT << " ends up below lower bound " << min_n_ch <<
+                     ". Returning " << min_n_ch_pow2 << ". Stations far from"
+                     " the core may not be delay compensated optimally.");
         max_n_FFT_pow2 = min_n_ch_pow2;
       }
 
