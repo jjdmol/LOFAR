@@ -1,0 +1,11 @@
+[general]
+pvss_path = "/opt/WinCC_OA/3.10"
+proj_path = "/opt/pvss/pvssproj/Navigator"
+proj_version = "3.10"
+langs = "en_US.iso88591"
+data = "mcu001.control.lofar"
+event = "mcu001.control.lofar"
+userName = "root"
+password = ""
+
+pmonPort = 4999

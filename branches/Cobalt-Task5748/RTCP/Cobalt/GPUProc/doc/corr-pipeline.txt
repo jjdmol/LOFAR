@@ -1,0 +1,49 @@
+------------------------
+Corelator Pipeline
+------------------------
+
+Design decisions:
+-------------------
+
+* The PPF is at the beginning of the pipeline, to introduce the parallellism immediately, and to
+  allow the subsequent processing kernels to operate in the channel space.
+* 1 channel/subband is only used for debugging purposes -- its performance is likely quite bad.
+
+Pipeline
+-------------------
+
+For array dimensions, we assume:
+ - 64 channels
+
+For max size, we assume:
+ - 80 stations
+ - 1 subband
+ - 1 second blocks (195312.5 samples) rounded to next multiple of 4096 (= 196608 samples).
+
+Note:
+  MiB = 2^20 bytes (= 1048576 bytes).
+
+Flow:           Data dimensions:                        Max size (fcomplex):                        Buffer:
+===================================================================================================================
+(input)         [station][sample][pol]                  [80][196608][2]     = 120 MiB               1ch: B
+   |                                                    (i16complex)                                Nch: A
+   V
+  FIR (if >1ch) {IntToFloat} {I/O: history samples}
+   |            [station][pol][sample]                  [80][2][196608]     = 240 MiB               Nch: B
+   V
+  FFT (if >1ch) {inplace}
+   |            [station][pol][sample][channel]         [80][2][3072][64]   = 240 MiB               Nch: B
+   V
+Delay compensation + Band pass + Transpose {I/O: delays}
+   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               A
+   V
+Correlator
+   |            [baseline][channel][pol][pol]           [6480][64][2][2]    =  26 MiB               B
+   V
+(output)
+
+
+    1ch        Nch
+A = 240 MiB    240 MiB
+B = 120 MiB    240 MiB
+
