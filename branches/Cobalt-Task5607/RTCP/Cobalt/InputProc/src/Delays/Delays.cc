@@ -48,8 +48,7 @@ namespace LOFAR
       stationIdx(stationIdx),
       from(from),
       increment(increment),
-      currentTime(from),
-      delayTimer("delay producer", true, true)
+      currentTime(from)
     {
       ASSERTSTR(test(), "Delay compensation engine is broken");
 

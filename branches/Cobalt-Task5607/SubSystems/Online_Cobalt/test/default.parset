@@ -165,7 +165,7 @@ Observation.Beam[0].nrTiedArrayBeams=1
 # Number of rings to create
 Observation.Beam[0].nrTabRings=0
 # Distance between rings
-Observation.Beam[0].ringWidth=0
+Observation.Beam[0].tabRingSize=0
 
 # TAB pointing (absolute). The relative pointings still end up in the metadata,
 # so the directionType must therefor match the directionType of the SAP.

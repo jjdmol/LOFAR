@@ -67,7 +67,38 @@ namespace LOFAR
 
 
     /*
+     * Returns the greatest common divisor of a and b.
+     * T must be an integral type.
+     * a, b > 0.
+     */
+    template <typename T>
+    inline static T gcd(T a, T b)
+    {
+      while (a != 0) {
+        T tmp = a;
+        a = b % a;
+        b = tmp;
+      }
+
+      return b;
+    }
+
+
+    /*
+     * Returns the least common multiple of a and b (may overflow T).
+     * T must be an integral type.
+     * a, b > 0.
+     */
+    template <typename T>
+    inline static T lcm(T a, T b)
+    {
+      return a / gcd(a, b) * b;
+    }
+
+
+    /*
      * Returns `value' rounded up to `alignment'.
+     * T must be an integral type.
      */
     template <typename T>
     inline static T align(T value, size_t alignment)
@@ -83,6 +114,7 @@ namespace LOFAR
 
     /*
      * Returns `value' rounded up to `alignment', in bytes.
+     * T must be an integral type.
      */
     template <typename T>
     inline static T *align(T *value, size_t alignment)
@@ -93,6 +125,7 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment'.
+     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T value, size_t alignment)
@@ -103,6 +136,7 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment', in bytes.
+     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T *value, size_t alignment)

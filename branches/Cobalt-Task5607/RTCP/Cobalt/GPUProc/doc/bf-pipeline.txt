@@ -75,7 +75,7 @@ FFT-shift {inplace}
    |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: C
    |                                                                                                Nch: D
    V
-FIR-16 (if >1ch)
+FIR-16 (if >1ch) {I/O: history samples}
    |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: -
    |                                                                                                Nch: C
    V
@@ -103,7 +103,7 @@ iFFT-4k {inplace}
 FFT-shift {inplace}
    |            [station][pol][sample]                  [48][2][196608]     = 144 MiB               A
    V
-FIR-16 (if >1ch) 
+FIR-16 (if >1ch) {I/O: history samples}
    |            [station][pol][sample]                  [48][2][196608]     = 144 MiB               Nch: B
    |
    V

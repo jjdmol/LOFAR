@@ -1,5 +1,5 @@
 //# CoherentStokesKernel.h
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -45,9 +45,8 @@ namespace LOFAR
         Parameters(const Parset& ps);
         unsigned nrTABs;
         unsigned nrStokes;
-        unsigned outputComplexVoltages;
+        bool     outputComplexVoltages;
         unsigned timeIntegrationFactor;
-        unsigned timeParallelFactor;
       };
 
       enum BufferType
@@ -61,6 +60,20 @@ namespace LOFAR
                            const Buffers &buffers,
                            const Parameters &param);
 
+      struct CoherentStokesExecConfig : gpu::ExecConfig
+      {
+        unsigned nrTimeParallelThreads;
+        friend std::ostream& operator<<(std::ostream& os,
+            const CoherentStokesKernel::CoherentStokesExecConfig& execConfig);
+      };
+
+    private:
+      // The timeParallelFactor is not a Parameter passed in, but is a kernel
+      // arg, so it must be a member var to outlive kernel launches.
+      unsigned itsTimeParallelFactor;
+
+
+      unsigned smallestFactorOf(unsigned n) const;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//

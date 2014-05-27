@@ -396,6 +396,7 @@ namespace LOFAR
       // Run the kernels
 
       if (ps.nrChannelsPerSubband() > 1) {
+        // The subbandIdx immediate kernel arg must outlive kernel runs.
         firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
         fftKernel.enqueue(input.blockID);
@@ -403,6 +404,8 @@ namespace LOFAR
 
       // Even if we skip delay compensation and bandpass correction (rare), run
       // that kernel, as it also reorders the data for the correlator kernel.
+      //
+      // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
       delayAndBandPassKernel->enqueue(
         input.blockID, 
         ps.settings.subbands[subband].centralFrequency,

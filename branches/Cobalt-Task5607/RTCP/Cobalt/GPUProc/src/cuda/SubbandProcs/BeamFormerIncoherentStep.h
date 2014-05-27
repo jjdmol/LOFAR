@@ -88,8 +88,6 @@ namespace LOFAR
 
     private:
 
-      bool coherentStokesPPF;
-
       // Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;

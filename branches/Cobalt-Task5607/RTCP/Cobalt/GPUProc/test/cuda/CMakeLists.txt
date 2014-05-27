@@ -17,6 +17,7 @@ endif(UNITTEST++_FOUND)
 
 # CUDA CPU side unit tests
 lofar_add_test(tKernel tKernel.cc)
+lofar_add_test(tKernelOccupancy tKernelOccupancy.cc)
 lofar_add_test(tStreamReadBuffer tStreamReadBuffer.cc)
 lofar_add_test(tMultiDimArrayHostBuffer tMultiDimArrayHostBuffer.cc)
 

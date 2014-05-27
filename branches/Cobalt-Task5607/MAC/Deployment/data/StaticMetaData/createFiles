@@ -227,7 +227,7 @@ def findStationInfo(stationName, dataDir):
     if not match:
         raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
     info = match.group().split()
-    if (len(info) != 12):
+    if (len(info) != 13):
         raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
     return info
 
@@ -284,7 +284,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -441,7 +441,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     #print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -546,7 +546,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
     #print stationName,"matches:",tbbDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
     #print stationName," has ",nrTBB," TBBoards"
     
     # Substitute MAC and IP address of destination nodes
@@ -608,7 +608,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
     RSconfig = open(dataDir+"/RemoteStation.conf.tmpl").read()
     RSconfig = RSconfig.replace("@STATION_NAME@", stationName.upper())
     RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
@@ -618,6 +618,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     RSconfig = RSconfig.replace("@NR_HBA@",       nrHBA)
     RSconfig = RSconfig.replace("@HBA_SPLIT@",    HBAsplit)
     RSconfig = RSconfig.replace("@LBA_WIDE@",     LBAcal)
+    RSconfig = RSconfig.replace("@AARTFAAC@",     Aartfaac)
 
     outFile = os.open(resultDir+"/RemoteStation.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSconfig)

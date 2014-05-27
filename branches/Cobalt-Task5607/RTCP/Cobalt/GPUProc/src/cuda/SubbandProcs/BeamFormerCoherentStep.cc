@@ -103,7 +103,7 @@ namespace LOFAR
       queue, *coherentTransposeBuffers));
 
     // inverse FFT: C/D -> C/D (in-place)
-    unsigned nrInverFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+    unsigned nrInverFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
       NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
       ps.settings.beamFormer.nrHighResolutionChannels;
     inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
@@ -142,7 +142,7 @@ namespace LOFAR
 
     // final FFT: C -> C (in-place) = firFilterBuffers.output
 
-    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrTABsPerSAP() *
+    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
       NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
       ps.settings.beamFormer.coherentSettings.nrChannels;
     finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
@@ -200,6 +200,7 @@ void BeamFormerCoherentStep::printStats()
 void BeamFormerCoherentStep::process(BlockID blockID,
   unsigned subband)
 {
+  // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
   beamFormerKernel->enqueue(blockID,
     ps.settings.subbands[subband].centralFrequency,
     ps.settings.subbands[subband].SAP);
@@ -215,6 +216,7 @@ void BeamFormerCoherentStep::process(BlockID blockID,
 
   if (coherentStokesPPF)
   {
+    // The subbandIdx immediate kernel arg must outlive kernel runs.
     firFilterKernel->enqueue(blockID,
       blockID.subbandProcSubbandIdx);
     finalFFT->enqueue(blockID);

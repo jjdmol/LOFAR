@@ -776,32 +776,8 @@
     <ClCompile Include="..\..\GPUProc\test\Kernels\KernelTestHelpers.cc">
       <Filter>test\Kernels</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\cmpfloat.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\t_cpu_utils.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\t_gpu_utils.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tBandPass.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tMPISendReceive.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tSSH.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\tStationInput.cc">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\test\Pipelines\tCorrelatorPipelineProcessObs.cc">
-      <Filter>test\Pipelines</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\GPUProc\src\MPI_utils.cc">
-      <Filter>src</Filter>
+    <ClCompile Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.cc">
+      <Filter>test\SubbandProcs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1027,6 +1003,9 @@
     <None Include="..\..\GPUProc\share\gpu\kernels\BandPassCorrection.cu">
       <Filter>share</Filter>
     </None>
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.parset" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.run" />
+    <None Include="..\..\GPUProc\test\tBeamform_1sec_1st_5sb_noflagging_2SapDivNTab.sh" />
     <None Include="..\..\GPUProc\test\cuda\tBandPassCorrection.sh">
       <Filter>test\cuda</Filter>
     </None>
@@ -1036,29 +1015,11 @@
     <None Include="..\..\GPUProc\test\Kernels\visualizeBeamformer.py">
       <Filter>test\Kernels</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\cmpfloat.py">
-      <Filter>test</Filter>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.parset">
+      <Filter>test\SubbandProcs</Filter>
     </None>
-    <None Include="..\..\GPUProc\test\iperf-cbt-locus.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\t_cpu_utils.in_parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\t_cpu_utils.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tMPISendReceive.in_parset">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\tMPISendReceive.sh">
-      <Filter>test</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Pipelines\tCorrelatorPipelineProcessObs.parset">
-      <Filter>test\Pipelines</Filter>
-    </None>
-    <None Include="..\..\GPUProc\test\Pipelines\tCorrelatorPipelineProcessObs.sh">
-      <Filter>test\Pipelines</Filter>
+    <None Include="..\..\GPUProc\test\SubbandProcs\tFlysEyeBeamFormerSubbandProcProcessSb.sh">
+      <Filter>test\SubbandProcs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
