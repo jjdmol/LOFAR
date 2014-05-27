@@ -666,6 +666,7 @@ def createAntennaFieldFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
 
+
 def createCableDelaysFile(resultDir, stationName, dataDir):
     """
     Copies the right CableDelays.conf file for this station
@@ -682,6 +683,17 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
         destFile= resultDir + "/CableDelays.conf"
     else:
         destFile = resultDir + "/CableDelays.conf"
+    
+    command = "cp -f "+srcFile+ " " + destFile
+    #print command
+    os.system(command)
+
+def createAttenuationFile(resultDir, stationName, dataDir):
+    """
+    Copies the Attenuation.conf file for this station to resultDir
+    """
+    srcFile = dataDir + "/Attenuation.conf"
+    destFile = resultDir + "/Attenuation.conf"
     
     command = "cp -f "+srcFile+ " " + destFile
     #print command
@@ -728,12 +740,19 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir):
     os.close(outFile)
     
 
-def de601Exceptions(resultDir, stationName, dataDir):
+
+def stationExceptions(resultDir, stationName, dataDir):
     """
-    Handle exceptions for station de601 (Effelsberg)
+    Handle exceptional files for some stations
     """
     if (stationName.lower() == "de601"):
-        srcFile = dataDir + "/../DE601-Attenuation.conf"
+        srcFile = dataDir + "/DE601-Attenuation.conf"
+        destFile= resultDir + "/Attenuation.conf"
+        command = "cp -f "+srcFile+ " " + destFile
+        #print command
+        os.system(command)
+    elif (stationName.lower() == "fi609"):
+        srcFile = dataDir + "/FI609-Attenuation.conf"
         destFile= resultDir + "/Attenuation.conf"
         command = "cp -f "+srcFile+ " " + destFile
         #print command
@@ -823,10 +842,11 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 createRemoteStationFile(resultDir, stationName, dataDir)
                 createAntennaArraysFile(resultDir, stationName, dataDir)
                 createAntennaFieldFile (resultDir, stationName, dataDir)
+                createAttenuationFile  (resultDir, stationName, dataDir)
                 createCableDelaysFile  (resultDir, stationName, dataDir)
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
-                de601Exceptions        (resultDir, stationName, dataDir)
+                stationExceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -879,10 +899,11 @@ else:
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createAntennaFieldFile (resultDir, stationName, dataDir)
+        createAttenuationFile  (resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-        de601Exceptions        (resultDir, stationName, dataDir)
+        stationExceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"
