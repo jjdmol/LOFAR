@@ -25,7 +25,6 @@
 #include <map>
 #include <iostream>
 #include <Common/Thread/Thread.h>
-#include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
