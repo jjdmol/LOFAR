@@ -323,7 +323,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
     // Set the socket timeout to prevent readmmsg from blocking.
     //
     // Wait at most 1 second for data.
-    SocketStream* ss = dynamic_cast<SocketStream*>(&inputStream);
+    //SocketStream* ss = dynamic_cast<SocketStream*>(&inputStream);
     //if (ss) ss->setTimeout(1.0);
 
     for(size_t i = 1 /* avoid printing statistics immediately */; true; i++) {

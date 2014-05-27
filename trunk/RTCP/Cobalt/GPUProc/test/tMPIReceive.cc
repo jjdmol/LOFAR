@@ -27,7 +27,7 @@ using namespace LOFAR::Cobalt;
 using namespace std;
 
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   string testname("tMPIReceive");
   cout << "testname" << endl;
