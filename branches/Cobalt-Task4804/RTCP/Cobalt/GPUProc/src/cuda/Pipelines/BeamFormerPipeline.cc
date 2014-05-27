@@ -93,9 +93,13 @@ namespace LOFAR
       return hostMap;
     }
 
-    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices, int hostID)
+    BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, 
+         const std::vector<size_t> &subbandIndices, 
+         Pool<struct MPIRecvData> &pool,
+         const std::vector<gpu::Device> &devices, 
+         int hostID)
       :
-      Pipeline(ps, subbandIndices, devices),
+      Pipeline(ps, subbandIndices, devices, pool),
       // Each work queue needs an output element for each subband it processes, because the GPU output can
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //

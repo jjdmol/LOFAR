@@ -35,7 +35,7 @@ namespace LOFAR
     class UHEP_Pipeline : public Pipeline
     {
     public:
-      UHEP_Pipeline(const Parset &);
+      UHEP_Pipeline(const Parset &, Pool<struct MPIRecvData> &pool);
 
       void doWork();
 

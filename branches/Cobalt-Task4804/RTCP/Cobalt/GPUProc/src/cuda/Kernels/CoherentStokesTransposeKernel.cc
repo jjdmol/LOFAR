@@ -45,7 +45,7 @@ namespace LOFAR
 
     CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
       Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
+      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
     {
       nrChannelsPerSubband =
         ps.settings.beamFormer.coherentSettings.nrChannels;
