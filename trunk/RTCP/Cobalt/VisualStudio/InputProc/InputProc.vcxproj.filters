@@ -1,174 +1,247 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="src">
+      <UniqueIdentifier>{c12d8bb3-acd2-4457-9a0a-6959967e3d3a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="test">
+      <UniqueIdentifier>{bde46e8a-a92b-43d4-8641-dd64bb37dd31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="src\Buffer">
+      <UniqueIdentifier>{52deec4f-edc9-4849-bb82-7ce18b3aeb31}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Buffer">
-      <UniqueIdentifier>{e87f37ee-d620-4ebd-a4eb-7fc69c94ba77}</UniqueIdentifier>
+    <Filter Include="src\Delays">
+      <UniqueIdentifier>{8fe086e8-829a-4107-833b-f31242df2f44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="obsolete">
-      <UniqueIdentifier>{2dc8fdf5-72df-4112-adf2-deb9fbe9902f}</UniqueIdentifier>
+    <Filter Include="src\obsolete">
+      <UniqueIdentifier>{f4b8635d-e70e-4830-94f9-2005d091dd8d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Station">
-      <UniqueIdentifier>{835534df-b1f9-4b0e-848d-e81e1cac56ff}</UniqueIdentifier>
+    <Filter Include="src\Station">
+      <UniqueIdentifier>{a60f4598-e2bb-488f-b282-61711a9abf47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Transpose">
-      <UniqueIdentifier>{dcc89141-4b68-482c-a330-4abe30a42161}</UniqueIdentifier>
+    <Filter Include="src\Transpose">
+      <UniqueIdentifier>{f832b4d5-4102-4daf-bdfc-869b3683a70f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\InputProc\src\obsolete\MPI_RMA.h">
-      <Filter>obsolete</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\obsolete\Poll.h">
-      <Filter>obsolete</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\obsolete\TimeSync.h">
-      <Filter>obsolete</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Station\Generator.h">
-      <Filter>Station</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Station\PacketReader.h">
-      <Filter>Station</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Station\PacketsToBuffer.h">
-      <Filter>Station</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Station\PacketWriter.h">
-      <Filter>Station</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Station\RSP.h">
-      <Filter>Station</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MPITransferStations.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\OMPThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\RSPBoards.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\SampleType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\WallClockTime.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\BoardMode.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\BufferSettings.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\Ranges.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\SampleBuffer.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\SharedMemory.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\StationID.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\Block.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Buffer\BlockReader.h">
-      <Filter>Buffer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MPIReceiveStations.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MPISendStation.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MPIUtil.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\ReceiveStations.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MapUtil.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\InputProc\src\Transpose\MPIProtocol.h">
-      <Filter>Transpose</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\InputProc\src\Station\PacketsToBuffer.cc">
-      <Filter>Station</Filter>
+    <ClCompile Include="..\..\InputProc\test\t_generateRSP.cc">
+      <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Station\filterRSP.cc">
-      <Filter>Station</Filter>
+    <ClCompile Include="..\..\InputProc\test\tDelays.cc">
+      <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Station\Generator.cc">
-      <Filter>Station</Filter>
+    <ClCompile Include="..\..\InputProc\test\tGenerator.cc">
+      <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Station\PacketReader.cc">
-      <Filter>Station</Filter>
+    <ClCompile Include="..\..\InputProc\test\tMPI.cc">
+      <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\newInputSection.cc">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\InputProc\test\tMPIUtil2.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\tPacketFactory.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\tPacketReader.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\tRanges.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\tRSP.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\tRSPTimeStamp.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\stationReceiver.cc">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\test\stationSender.cc">
+      <Filter>test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\InputProc\src\RSPBoards.cc">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\BufferSettings.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\Ranges.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\SampleBuffer.cc">
-      <Filter>Buffer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Buffer\SharedMemory.cc">
-      <Filter>Buffer</Filter>
+    <ClCompile Include="..\..\InputProc\src\RSPTimeStamp.cc">
+      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\InputProc\src\Buffer\StationID.cc">
-      <Filter>Buffer</Filter>
+      <Filter>src\Buffer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\InputProc\src\Transpose\MPISendStation.cc">
-      <Filter>Transpose</Filter>
+    <ClCompile Include="..\..\InputProc\src\Buffer\Ranges.cc">
+      <Filter>src\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Delays\printDelays.cc">
+      <Filter>src\Delays</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Delays\Delays.cc">
+      <Filter>src\Delays</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\PacketReader.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\printRSP.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\repairRSP.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\RSPPacketFactory.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\filterRSP.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\generate.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\generateRSP.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\Generator.cc">
+      <Filter>src\Station</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Station\PacketFactory.cc">
+      <Filter>src\Station</Filter>
     </ClCompile>
     <ClCompile Include="..\..\InputProc\src\Transpose\MPIUtil.cc">
-      <Filter>Transpose</Filter>
+      <Filter>src\Transpose</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Transpose\MPIUtil2.cc">
+      <Filter>src\Transpose</Filter>
     </ClCompile>
     <ClCompile Include="..\..\InputProc\src\Transpose\MPIReceiveStations.cc">
-      <Filter>Transpose</Filter>
+      <Filter>src\Transpose</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\InputProc\src\Transpose\MPISendStation.cc">
+      <Filter>src\Transpose</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\InputProc\src\Station\PacketWriter.tcc">
-      <Filter>Station</Filter>
+    <None Include="..\..\InputProc\test\tMPI.run">
+      <Filter>test</Filter>
     </None>
-    <None Include="..\..\InputProc\src\Transpose\MPITransferStations.tcc">
-      <Filter>Transpose</Filter>
+    <None Include="..\..\InputProc\test\tMPI.sh">
+      <Filter>test</Filter>
     </None>
-    <None Include="..\..\InputProc\src\CMakeLists.txt" />
-    <None Include="..\..\InputProc\src\Buffer\BlockReader.tcc">
-      <Filter>Buffer</Filter>
+    <None Include="..\..\InputProc\test\tMPIUtil2.run">
+      <Filter>test</Filter>
     </None>
-    <None Include="..\..\InputProc\src\Buffer\SampleBuffer.tcc">
-      <Filter>Buffer</Filter>
+    <None Include="..\..\InputProc\test\tMPIUtil2.sh">
+      <Filter>test</Filter>
     </None>
-    <None Include="..\..\InputProc\src\Buffer\Block.tcc">
-      <Filter>Buffer</Filter>
+    <None Include="..\..\InputProc\test\tPacketReader.in_8bit">
+      <Filter>test</Filter>
     </None>
+    <None Include="..\..\InputProc\test\tPacketReader.in_16bit">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tPacketReader.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tRSP.in_8bit">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tRSP.in_16bit">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tRSP.sh">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tRSP.stdout">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\test\tMPISendReceive.py">
+      <Filter>test</Filter>
+    </None>
+    <None Include="..\..\InputProc\src\mpirun.sh.in">
+      <Filter>src</Filter>
+    </None>
+    <None Include="..\..\InputProc\src\Delays\printDelays.log_prop">
+      <Filter>src\Delays</Filter>
+    </None>
+    <None Include="..\..\InputProc\src\Station\generateRSP.log_prop">
+      <Filter>src\Station</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\InputProc\test\CMakeLists.txt">
+      <Filter>test</Filter>
+    </Text>
+    <Text Include="..\..\InputProc\src\CMakeLists.txt">
+      <Filter>src</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\InputProc\src\SampleType.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\WallClockTime.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\RSPBoards.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\RSPTimeStamp.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\Ranges.h">
+      <Filter>src\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\StationID.h">
+      <Filter>src\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Buffer\BoardMode.h">
+      <Filter>src\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Delays\Delays.h">
+      <Filter>src\Delays</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\obsolete\TimeSync.h">
+      <Filter>src\obsolete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\obsolete\MPI_RMA.h">
+      <Filter>src\obsolete</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\PacketFactory.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\PacketReader.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\PacketStream.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\RSP.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\RSPPacketFactory.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Station\Generator.h">
+      <Filter>src\Station</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MPISendStation.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MPIUtil.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MPIUtil2.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\ReceiveStations.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MapUtil.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MPIProtocol.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\InputProc\src\Transpose\MPIReceiveStations.h">
+      <Filter>src\Transpose</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

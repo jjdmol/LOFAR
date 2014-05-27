@@ -69,11 +69,17 @@ int main(int argc, char *argv[]) {
   {
     subbands.push_back(sb);
   }
+  { // use a skope to force destruction of pool before MPI_Finalize()
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
+
+
 
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
-  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices);
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, 
+  devices, MPI_receive_pool);
 
+  //pipeline->allocateResources();
   int rank = 0;
   int nrHosts = 1;
 #ifdef HAVE_MPI
@@ -90,13 +96,46 @@ int main(int argc, char *argv[]) {
   DirectInput::instance(&ps); // I don't think this is needed. We didn't have an input instance for MPI in this test; see the comment below. And USE_MPI=OFF broke after the input revamp, which also changed the interface. JD put it in redmine.
 #endif
 
+
+
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
+
+  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = subband % nrHosts;
+
+    subbandDistribution[receiverRank].push_back(subband);
+  }
+  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+  MPIReceiver MPI_receiver(MPI_receive_pool,
+    subbandDistribution[rank],
+    std::find(subbandIndices.begin(),
+    subbandIndices.end(), 0U) != subbandIndices.end(),
+    ps.nrSamplesPerSubband(),
+    ps.nrStations(),
+    ps.nrBitsPerSample());
+
+#pragma omp parallel sections num_threads(3)
+  {
+#pragma omp section
+    {
+      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+      MPI_receiver.receiveInput(nrBlocks);
+    }
+
+#pragma omp section
+    {
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
-  pipeline->processObservation();
+      pipeline->processObservation();
+      pipeline = 0;
+    }
 
-  pipeline = 0;
+  }
 
+
+  }
 #ifdef HAVE_MPI
   MPI_Finalize();
 #endif

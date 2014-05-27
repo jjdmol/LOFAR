@@ -43,9 +43,12 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps,
+     const std::vector<size_t> &subbandIndices, 
+     const std::vector<gpu::Device> &devices,
+     Pool<struct MPIRecvData> &pool)
       :
-      Pipeline(ps, subbandIndices, devices),
+      Pipeline(ps, subbandIndices, devices, pool),
       factories(ps, nrSubbandsPerSubbandProc)
     {
     }

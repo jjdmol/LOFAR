@@ -67,7 +67,9 @@ namespace LOFAR
   {
 
 
-    Pipeline::Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    Pipeline::Pipeline(const Parset &ps, 
+        const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool)
       :
       ps(ps),
       devices(devices),
@@ -76,9 +78,11 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
-      mpiPool("Pipeline::mpiPool"),
+      mpiPool(pool),
+      //MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())
     {
+      
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
     }
 
@@ -89,99 +93,6 @@ namespace LOFAR
         outputThreads.killAll();
       }
     }
-
-    template<typename SampleT> void Pipeline::MPIData::allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples )
-    {
-      data     = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * nrSamples * sizeof(SampleT));
-      metaData = (char*)mpiAllocator.allocate( nrStations * nrBeamlets * sizeof(struct MPIProtocol::MetaData));
-    }
-
-    template void Pipeline::MPIData::allocate< SampleType<i16complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-    template void Pipeline::MPIData::allocate< SampleType<i8complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-    template void Pipeline::MPIData::allocate< SampleType<i4complex> >( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
-
-    template<typename SampleT> void Pipeline::receiveInput( size_t nrBlocks )
-    {
-      // Need SubbandProcs to send work to
-      ASSERT(workQueues.size() > 0);
-
-      NSTimer receiveTimer("MPI: Receive station data", true, true);
-
-      // The length of a block in samples
-      size_t blockSize = ps.nrSamplesPerSubband();
-
-      // RECEIVE: Set up to receive our subbands as indicated by subbandIndices
-#ifdef HAVE_MPI
-      MPIReceiveStations receiver(ps.nrStations(), subbandIndices, blockSize);
-
-      for (size_t i = 0; i < 4; i++) {
-        SmartPtr<struct MPIData> mpiData = new MPIData;
-
-        mpiData->allocate<SampleT>(ps.nrStations(), subbandIndices.size(), blockSize);
-
-        mpiPool.free.append(mpiData, false);
-      }
-
-#else
-      DirectInput &receiver = DirectInput::instance();
-#endif
-
-      // Receive input from StationInput::sendInputToPipeline.
-      //
-      // Start processing from block -1, and don't process anything if the
-      // observation is empty.
-      for (ssize_t block = -1; nrBlocks > 0 && block < ssize_t(nrBlocks); block++) {
-        // Receive the samples from all subbands from the ant fields for this block.
-        LOG_DEBUG_STR("[block " << block << "] Collecting input buffers");
-
-        SmartPtr<struct MPIData> mpiData = mpiPool.free.remove();
-
-        mpiData->block = block;
-
-        MultiDimArray<SampleT,3> data(
-          boost::extents[ps.nrStations()][subbandIndices.size()][ps.nrSamplesPerSubband()],
-          (SampleT*)mpiData->data.get(), false);
-
-        MultiDimArray<struct MPIProtocol::MetaData,2> metaData(
-          boost::extents[ps.nrStations()][subbandIndices.size()],
-          (struct MPIProtocol::MetaData*)mpiData->metaData.get(), false);
-
-        // Receive all subbands from all antenna fields
-        LOG_DEBUG_STR("[block " << block << "] Receive input");
-
-        if (block > 2) receiveTimer.start();
-        receiver.receiveBlock<SampleT>(data, metaData);
-        if (block > 2) receiveTimer.stop();
-
-        LOG_INFO_STR("[block " << block << "] Input received");
-
-        mpiPool.filled.append(mpiData);
-      }
-
-      // Signal end of input
-      mpiPool.filled.append(NULL);
-    }
-
-    template void Pipeline::receiveInput< SampleType<i16complex> >( size_t nrBlocks );
-    template void Pipeline::receiveInput< SampleType<i8complex> >( size_t nrBlocks );
-    template void Pipeline::receiveInput< SampleType<i4complex> >( size_t nrBlocks );
-
-    void Pipeline::receiveInput( size_t nrBlocks )
-    {
-      switch (ps.nrBitsPerSample()) {
-      default:
-      case 16:
-        receiveInput< SampleType<i16complex> >(nrBlocks);
-        break;
-      case 8:
-        receiveInput< SampleType<i8complex> >(nrBlocks);
-        break;
-      case 4:
-        receiveInput< SampleType<i4complex> >(nrBlocks);
-        break;
-      }
-    }
-
 
     void Pipeline::allocateResources()
     {
@@ -206,15 +117,6 @@ namespace LOFAR
       //  The two sections in this function are done in parallel with a seperate set of threads.
 #     pragma omp parallel sections num_threads(6)
       {
-        /*
-         * BLOCK OF SUBBANDS -> MPIQUEUE
-         */
-#       pragma omp section
-        {
-          size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-          receiveInput(nrBlocks);
-        }
 
         /*
          * MPIQUEUE -> WORKQUEUE INPUTPOOL
@@ -325,7 +227,7 @@ namespace LOFAR
     template<typename SampleT>
     void Pipeline::transposeInput()
     {
-      SmartPtr<struct MPIData> input;
+      SmartPtr<struct MPIRecvData> input;
 
       NSTimer copyTimer("transpose input data", true, true);
 
