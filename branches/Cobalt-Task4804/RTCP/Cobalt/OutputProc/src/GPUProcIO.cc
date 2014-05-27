@@ -21,7 +21,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <string>
+#include "GPUProcIO.h"
+
 #include <vector>
 #include <omp.h>
 #include <boost/format.hpp>
@@ -30,9 +31,14 @@
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Stream/PortBroker.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
+#include <MACIO/RTmetadata.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
+#include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/SmartPtr.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
 
@@ -44,10 +50,23 @@ using boost::format;
 namespace LOFAR {
 namespace Cobalt {
 
-bool process(Stream &controlStream, const string& myHostName)
+bool process(Stream &controlStream, unsigned myRank)
 {
   bool success(true);
   Parset parset(&controlStream);
+
+  // Send identification string to the MAC Log Processor
+  string fmtStr(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
+                                      parset.getString("_DPname")));
+  format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  LOG_INFO_STR("MACProcessScope: " << str(prFmt % myRank));
+
+  const vector<string> &hostnames = parset.settings.outputProcHosts;
+  ASSERT(myRank < hostnames.size());
+  string myHostName = hostnames[myRank];
+
   {
     // make sure "parset" stays in scope for the lifetime of the SubbandWriters
 
@@ -65,8 +84,8 @@ bool process(Stream &controlStream, const string& myHostName)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        string logPrefix = boost::str(boost::format("[obs %u correlated stream %3u] ")
-                                      % parset.observationID() % fileIdx);
+        string logPrefix = str(format("[obs %u correlated stream %3u] ")
+                               % parset.observationID() % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
@@ -107,7 +126,7 @@ bool process(Stream &controlStream, const string& myHostName)
         collectors[fileIdx] = new TABTranspose::BlockCollector(
           *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
-        string logPrefix = boost::str(boost::format("[obs %u beamformed stream %3u] ")
+        string logPrefix = str(format("[obs %u beamformed stream %3u] ")
                                                     % parset.observationID() % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], logPrefix);

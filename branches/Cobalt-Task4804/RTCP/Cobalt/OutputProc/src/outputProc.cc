@@ -28,14 +28,10 @@
 #include <omp.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-
 #include <Common/LofarLogger.h>
 #include <Common/CasaLogSink.h>
 #include <Common/Exceptions.h>
 #include <Common/NewHandler.h>
-#include <ApplCommon/PVSSDatapointDefs.h>
-#include <ApplCommon/StationInfo.h>
-#include <MACIO/RTmetadata.h>
 #include <Stream/PortBroker.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
@@ -46,12 +42,13 @@
 
 #define STDLOG_BUFFER_SIZE     1024
 
-// install a new handler to produce backtraces for bad_alloc
-LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
-
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
+using boost::format;
+
+// install a new handler to produce backtraces for bad_alloc
+LOFAR::NewHandler h(LOFAR::BadAllocException::newHandler);
 
 // Use a terminate handler that can produce a backtrace.
 Exception::TerminateHandler t(Exception::terminate);
@@ -76,46 +73,36 @@ static void usage(const char *argv0)
 
 int main(int argc, char *argv[])
 {
-  INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
-
-  // Send identification string to the MAC Log Processor before other logging
-  string fmtStr(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
-                                      parset.getString("_DPname")));
-  boost::format prFmt;
-  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
-  prFmt.parse(fmtStr);
-  LOG_INFO_STR("MACProcessScope: " << str(prFmt % myRank));
-
-  LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
+  setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
+  setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
   int opt;
   while ((opt = getopt(argc, argv, "h")) != -1) {
     switch (opt) {
     case 'h':
       usage(argv[0]);
-      exit(0);
+      exit(EXIT_SUCCESS);
 
     default: /* '?' */
       usage(argv[0]);
-      exit(1);
+      exit(EXIT_FAILURE);
     }
   }
 
-  if (argc != 3)
-  {
+  if (argc != 3) {
     usage(argv[0]);
     return EXIT_FAILURE;
   }
-   
-  setvbuf(stdout, stdoutbuf, _IOLBF, sizeof stdoutbuf);
-  setvbuf(stderr, stderrbuf, _IOLBF, sizeof stderrbuf);
 
-  omp_set_nested(true);
+  INIT_LOGGER("outputProc"); // also attaches to CasaLogSink
 
   LOG_DEBUG_STR("Started: " << argv[0] << ' ' << argv[1] << ' ' << argv[2]);
+  LOG_INFO_STR("OutputProc version " << OutputProcVersion::getVersion() << " r" << OutputProcVersion::getRevision());
 
   int observationID = boost::lexical_cast<int>(argv[1]);
-  size_t myRank = boost::lexical_cast<size_t>(argv[2]);
+  unsigned myRank = boost::lexical_cast<unsigned>(argv[2]);
+
+  omp_set_nested(true);
 
   setIOpriority();
   setRTpriority();
@@ -123,15 +110,11 @@ int main(int argc, char *argv[])
 
   PortBroker::createInstance(storageBrokerPort(observationID));
 
-  // retrieve the parset
+  // retrieve control stream to receive the parset and report back
   string resource = getStorageControlDescription(observationID, myRank);
   PortBroker::ServerStream controlStream(resource);
 
-  const vector<string> &hostnames = parset.settings.outputProcHosts;
-  ASSERT(myRank < hostnames.size());
-  string myHostName = hostnames[myRank];
-
-  if (process(controlStream, myHostName)) {
+  if (process(controlStream, myRank)) {
     LOG_INFO("Program terminated succesfully");
     return EXIT_SUCCESS;
   } else {

@@ -24,11 +24,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <string>
-#include <vector>
-
 #include <Stream/Stream.h>
-#include <CoInterface/SmartPtr.h>
-#include <CoInterface/FinalMetaData.h>
 
 namespace LOFAR
 {
@@ -44,7 +40,7 @@ namespace LOFAR
     //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
     //     and write it to GPUProc.
     // \return \c true upon success, \c false upon failure.
-    bool process(Stream &controlStream, const std::string& myHostName);
+    bool process(Stream &controlStream, unsigned myRank);
 
   } // namespace Cobalt
 } // namespace LOFAR
