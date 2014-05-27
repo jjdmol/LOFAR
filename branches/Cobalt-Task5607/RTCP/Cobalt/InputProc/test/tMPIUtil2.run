@@ -1,3 +1,0 @@
-#!/bin/sh
-EXECUTABLE_PREFIX=${LOFAR_CHECKTOOL} \
-  mpirun.sh -host localhost -np 1 tMPIUtil2
