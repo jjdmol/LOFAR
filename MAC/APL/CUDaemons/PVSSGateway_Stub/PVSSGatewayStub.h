@@ -1,4 +1,4 @@
-//#  PVSSGateway.h: 
+//#  PVSSGatewayStub.h: 
 //#
 //#  Copyright (C) 2013
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,41 +18,36 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: PVSSGateway.h 19796 2012-01-17 10:06:03Z overeem $
+//#  $Id: PVSSGatewayStub.h 19796 2012-01-17 10:06:03Z overeem $
 
-#ifndef PVSSGATEWAY_H
-#define PVSSGATEWAY_H
+#ifndef PVSSGATEWAYSTUB_H
+#define PVSSGATEWAYSTUB_H
 
-// \file PVSSGateway.h
+// \file PVSSGatewayStub.h
 // one_line_description
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <queue>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <Common/lofar_fstream.h>
 #include <Common/KVpair.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
-#include <GCF/PVSS/GCF_Defines.h>
-#include <GCF/PVSS/GCF_PVDynArr.h>
-#include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/RTDB/DPservice.h>
+//#include <GCF/PVSS/GCF_Defines.h>
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  using std::queue;
-  using MACIO::GCFEvent;
   namespace GCF {  
-    namespace RTDBDaemons {
+    namespace CUDaemons {
 
-class PVSSGateway : public TM::GCFTask
+class PVSSGatewayStub : public TM::GCFTask
 {
 public:
-	explicit PVSSGateway (const string&	name);
-	~PVSSGateway ();
+	explicit PVSSGatewayStub (const string&	name);
+	~PVSSGatewayStub ();
 
 private: 
 	struct	LogClient {
@@ -67,7 +62,6 @@ private:
 
 	// state methods
 	GCFEvent::TResult initial      (GCFEvent& e, TM::GCFPortInterface& p);
-	GCFEvent::TResult connect2PVSS (GCFEvent& e, TM::GCFPortInterface& p);
 	GCFEvent::TResult operational  (GCFEvent& e, TM::GCFPortInterface& p);
 	GCFEvent::TResult finish_state (GCFEvent& e, TM::GCFPortInterface& p);
 
@@ -77,25 +71,15 @@ private:
 	// helper methods
 	void	_registerClient 	(TM::GCFPortInterface&	port, const string&	name, uint32 obsID);
 	void    _registerFailure	(TM::GCFPortInterface&	port);
-	bool	_writeKVT			(const KVpair&	kvp);
-	bool	_setIndexedValue	(const string& keyname, uint	index, const string&	value);
-	bool	_add2MsgBuffer		(const KVpair&	kvp);
-	void	_processMsgBuffer	();
-	void	_adoptRequestPool	(const string& DPname);
-	void	_flushValueCache	();
-	void	_cleanValueCache	();
+	void	_writeKVT			(const KVpair&	kvp);
 	void	_garbageCollection	();
-	PVSS::TMACValueType	_KVpairType2PVSStype(int	kvpType);
 
 	// ----- data members -----
 	TM::GCFTCPPort*			itsListener;	// application inpt
-	RTDB::DPservice*		itsDPservice;	// connection to PVSS
 	TM::GCFTimerPort*		itsTimerPort;	// timer
-	RTDB::RTDBPropertySet*	itsPropertySet; // for updating my own state
 	uint					itsMsgBufTimer;	// fast timer for processing the MsgBuffer
-	double					itsRemovalDelay;	// time in s after which cached values are considered obsolete.
-	double					itsFlushInterval;	// time in s between database flushes of modified dynArrays
-	uint					itsMaxExpandSize;	// max size to expand an dynarray to.
+
+	ofstream				itsOutputFile;
 
 	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
 	LogClientMap 	 		itsClients;
@@ -103,25 +87,9 @@ private:
 	// admin members
 	typedef list<TM::GCFPortInterface*> TClients;
 	TClients        		itsClientsGarbage;
-
-	// temp storage
-	queue<KVpair>			itsMsgBuffer;			// mutex protected queue for user delivered KVpairs
-
-	// value cache for caching updates of dynarr changes
-	typedef struct dynArr_t {
-		double					lastModify;
-		double					lastFlush;
-		PVSS::GCFPVDynArr*		valArr;
-		PVSS::TMACValueType		valType;
-		dynArr_t() : lastModify(0.0), lastFlush(0.0),valArr(0) {};
-	} dynArr_t;
-	typedef map<string,dynArr_t>::iterator		VCiter;
-	map<string,dynArr_t>		itsValueCache;			// cache with retrieved dynarray variables
-
-	multimap<string,KVpair>		itsRequestBuffer;		// temp. stack for storing 'get PVSS value' requests
 };
 
-    } // namespace RTDBDaemons
+    } // namespace CUDaemons
   } // namespace GCF
 } // namespace LOFAR
 
