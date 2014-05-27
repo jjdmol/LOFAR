@@ -1,0 +1,6 @@
+# ClockControl
+connected			bool
+requestedClock		int
+actualClock			int
+requestedBitmode	int
+actualBitmode		int

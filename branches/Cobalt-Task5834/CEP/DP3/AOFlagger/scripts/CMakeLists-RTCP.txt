@@ -1,0 +1,3 @@
+# $Id: CMakeLists.txt 14312 2009-10-22 11:46:32Z mol $
+
+lofar_add_package(LofarStMan)# Storage Manager for the main table of a LOFAR MS

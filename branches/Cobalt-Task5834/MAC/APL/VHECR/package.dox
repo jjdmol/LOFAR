@@ -1,0 +1,14 @@
+// \ingroup APL
+// \defgroup VHECR VHECR functions in a library.
+//
+// The VHECR package contains the functions of the VHECR task in the TBBcontroller
+
+// @{
+
+// \defgroup TBBTrigger Datastructure to pass into to the VHECR code
+
+// \defgroup TBBReadCmd Datastructure to pass command out of the VHECR code.
+
+// \defgroup VHECRTask Task containing the VHECR logic.
+
+// @}

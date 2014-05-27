@@ -1,0 +1,5 @@
+HTML_OUTPUT          = "@DOXYGEN_HTML_OUTPUT@/doxygen"
+INPUT                = quick-guide.dox
+EXAMPLE_PATH         = examples
+GENERATE_LATEX       = NO
+GENERATE_TAGFILE     = "@DOXYGEN_HTML_OUTPUT@/quick-guide.tag"
