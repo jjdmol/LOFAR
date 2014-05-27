@@ -1,6 +1,0 @@
-# Second detections - simple
-# RA DEC Total_flux e_Total_flux dc_min dc_maj dc_pa
-
-0.1 0.1  0.08 0.01 0.3 0.4 120.0
-0.20 0.1 0.02 0.02 0.3 0.4 33.0
-
