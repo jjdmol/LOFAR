@@ -24,4 +24,3 @@ lofar_add_library(cointerface
 lofar_add_bin_program(versioncointerface versioncointerface.cc)
 
 lofar_add_sbin_program(cmpfloat cmpfloat.cc)
-lofar_add_sbin_program(write_pvss_dp write_pvss_dp.cc)
