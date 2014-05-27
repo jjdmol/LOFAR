@@ -1,8 +1,0 @@
-# This is test input for tmakesourcedb
- #
-
-#(name,   type, patch,   Ra,   Dec, I, Q, U, V, SpectralIndex, ReferenceFrequency ) = format
-
-cygnus, point, , 23deg, 45deg, 2, '0', '0', '0', 2, 2.5e9
-TauA, point, , 35deg, -12deg, 3
-VirA, point,  , 21deg, 10deg, 9
