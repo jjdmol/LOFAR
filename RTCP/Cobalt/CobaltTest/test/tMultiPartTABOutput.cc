@@ -88,9 +88,7 @@ int main()
     localSbIndices.push_back(i);
   }
   omp_set_nested(true); // for around and within .multiSender.process()
-
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
-  BeamFormerPipeline bfpl(ps, localSbIndices, MPI_receive_pool, devices);
+  BeamFormerPipeline bfpl(ps, localSbIndices, devices);
   bfpl.allocateResources();
 
   // Set up control line to outputProc. This also supplies the parset.

@@ -44,8 +44,6 @@
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
 
-#include <GPUProc/MPIReceiver.h>
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -53,8 +51,7 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
 
       virtual ~Pipeline();
 
@@ -97,8 +94,22 @@ namespace LOFAR
       OMPThreadSet outputThreads;
 
     private:
+      struct MPIData
+      {
+        size_t block;
 
-      Pool<struct MPIRecvData> &mpiPool;
+        SmartPtr<char, SmartPtrMPI<char> > data;
+        SmartPtr<char, SmartPtrMPI<char> > metaData;
+
+        template<typename SampleT>
+        void allocate( size_t nrStations, size_t nrBeamlets, size_t nrSamples );
+      };
+
+      Pool<struct MPIData> mpiPool;
+
+      // For each block, read all data and put it (untransposed) in the mpiPool
+      void receiveInput( size_t nrBlocks );
+      template<typename SampleT> void receiveInput( size_t nrBlocks );
 
       // For each block, transpose all subbands from all stations, and divide the
       // work over the workQueues

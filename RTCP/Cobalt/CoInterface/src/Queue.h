@@ -30,7 +30,7 @@
 #include <CoInterface/TimeFuncs.h>
 #include <CoInterface/RunningStatistics.h>
 
-#include <deque>
+#include <list>
 #include <time.h>
 #include <string>
 
@@ -98,7 +98,7 @@ template <typename T> class Queue
 
     mutable Mutex              itsMutex;
     Condition	                 itsNewElementAppended;
-    std::deque<struct Element> itsQueue;
+    std::list<struct Element>  itsQueue;
 
     // append() without grabbing itsMutex
     void     unlocked_append(const T&, bool timed);

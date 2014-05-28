@@ -159,7 +159,8 @@ StationMetaData<SampleT>::StationMetaData( const Parset &ps, size_t stationIdx, 
 
   metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
 
-  subbands(values(subbandDistribution))
+  subbandDistribution(subbandDistribution),
+  targetSubbands(values(subbandDistribution))
 {
 }
 
@@ -210,7 +211,7 @@ void StationMetaData<SampleT>::computeMetaData()
 
     // Compute the next set of metaData and read_offsets from the new
     // delays pair.
-    delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, subbands, mpiData->metaData, mpiData->read_offsets);
+    delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, targetSubbands, mpiData->metaData, mpiData->read_offsets);
 
     // Annotate
     mpiData->block = block;
@@ -239,8 +240,7 @@ void StationMetaData<SampleT>::computeMetaData()
 }
 
 
-StationInput::StationInput( const Parset &ps, size_t stationIdx,
-                            const SubbandDistribution &subbandDistribution )
+StationInput::StationInput( const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution )
 :
   ps(ps),
   stationIdx(stationIdx),
@@ -320,7 +320,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
   Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
 
   try {
-    for(size_t i = 1 /* avoid printing statistics immediately */; true; i++) {
+    for(size_t i = 0; true; i++) {
       // Fill rspDataPool elements with RSP packets
       SmartPtr<RSPData> rspData = inputQueue.remove();
      
@@ -501,8 +501,6 @@ void StationInput::readRSPNonRealTime()
 
   data->packets[0].payloadError(false);
   data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
-  data->packets[0].rspBoard(0);
-  data->packets[0].header.nrBlocks = 16; // MPIData<>::write checks for this
   data->board = 0;
 
   rspDataPool[0]->filled.append(data);
@@ -736,26 +734,30 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
   LOG_INFO_STR(logPrefix << str(format("Average data loss/flagged: %.4f%%") % avgloss));
 }
 
-template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
-    size_t stationIdx, const SubbandDistribution &subbandDistribution)
+template<typename SampleT> void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
-  // sanity check: Find out if we should actual start working here.
+  const struct StationID stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name));
+  const StationNodeAllocation allocation(stationID, ps);
+
+  if (!allocation.receivedHere()) {
+    // Station is not sending from this node
+    return;
+  }
+
   StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
-  if (sm.nrBlocks == 0) {  // Nothing to process -- stop
+
+  if (sm.nrBlocks == 0) {
+    // Nothing to process -- stop
     return;
   }
 
   StationInput si(ps, stationIdx, subbandDistribution);
 
-  const struct StationID stationID(StationID::parseFullFieldName(
-    ps.settings.antennaFields.at(stationIdx).name));
-  
   const std::string logPrefix = str(format("[station %s] ") % stationID.name());
 
   LOG_INFO_STR(logPrefix << "Processing station data");
 
-  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue(str(format(
-        "sendInputToPipeline::mpiQueue [station %s]") % stationID.name()));
+  Queue< SmartPtr< MPIData<SampleT> > > mpiQueue(str(format("sendInputToPipeline::mpiQueue [station %s]") % stationID.name()));
 
   MPISender sender(logPrefix, stationIdx, subbandDistribution);
 
@@ -801,8 +803,7 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps,
   LOG_INFO_STR(logPrefix << "Done processing station data");
 }
 
-void sendInputToPipeline(const Parset &ps, size_t stationIdx, 
-                        const SubbandDistribution &subbandDistribution)
+void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution)
 {
   switch (ps.nrBitsPerSample()) {
     default:

@@ -1,5 +1,5 @@
 //# GPUProcIO.h
-//# Copyright (C) 2009-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2009-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -24,7 +24,11 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #include <string>
+#include <vector>
+
 #include <Stream/Stream.h>
+#include <CoInterface/SmartPtr.h>
+#include <CoInterface/FinalMetaData.h>
 
 namespace LOFAR
 {
@@ -40,7 +44,7 @@ namespace LOFAR
     //   * Call writeFeedbackLTA to obtain the LTA feedback from all writers,
     //     and write it to GPUProc.
     // \return \c true upon success, \c false upon failure.
-    bool process(Stream &controlStream, unsigned myRank);
+    bool process(Stream &controlStream, size_t myRank);
 
   } // namespace Cobalt
 } // namespace LOFAR

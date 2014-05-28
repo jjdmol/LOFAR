@@ -227,7 +227,7 @@ def findStationInfo(stationName, dataDir):
     if not match:
         raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
     info = match.group().split()
-    if (len(info) != 13):
+    if (len(info) != 12):
         raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
     return info
 
@@ -284,7 +284,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -441,7 +441,7 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
     rspDestNode = findRSPDestNodes(stationName, resultDir)
     #print stationName,"matches:",rspDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open(dataDir+"/RSPDriver.conf.tmpl")
@@ -546,7 +546,7 @@ def createTBBDriverFile(resultDir, stationName, dataDir):
     tbbDestNode = findTBBDestNodes(stationName, dataDir)
     #print stationName,"matches:",tbbDestNode
 
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     #print stationName," has ",nrTBB," TBBoards"
     
     # Substitute MAC and IP address of destination nodes
@@ -608,7 +608,7 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
-    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName, dataDir)
     RSconfig = open(dataDir+"/RemoteStation.conf.tmpl").read()
     RSconfig = RSconfig.replace("@STATION_NAME@", stationName.upper())
     RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
@@ -618,7 +618,6 @@ def createRemoteStationFile(resultDir, stationName, dataDir):
     RSconfig = RSconfig.replace("@NR_HBA@",       nrHBA)
     RSconfig = RSconfig.replace("@HBA_SPLIT@",    HBAsplit)
     RSconfig = RSconfig.replace("@LBA_WIDE@",     LBAcal)
-    RSconfig = RSconfig.replace("@AARTFAAC@",     Aartfaac)
 
     outFile = os.open(resultDir+"/RemoteStation.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSconfig)
@@ -666,7 +665,6 @@ def createAntennaFieldFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
 
-
 def createCableDelaysFile(resultDir, stationName, dataDir):
     """
     Copies the right CableDelays.conf file for this station
@@ -683,17 +681,6 @@ def createCableDelaysFile(resultDir, stationName, dataDir):
         destFile= resultDir + "/CableDelays.conf"
     else:
         destFile = resultDir + "/CableDelays.conf"
-    
-    command = "cp -f "+srcFile+ " " + destFile
-    #print command
-    os.system(command)
-
-def createAttenuationFile(resultDir, stationName, dataDir):
-    """
-    Copies the Attenuation.conf file for this station to resultDir
-    """
-    srcFile = dataDir + "/Attenuation.conf"
-    destFile = resultDir + "/Attenuation.conf"
     
     command = "cp -f "+srcFile+ " " + destFile
     #print command
@@ -720,7 +707,7 @@ def createiHBADeltasFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
     
-def createHardwareMonitorFile(resultDir, stationName, dataDir, last_ip="3"):
+def createHardwareMonitorFile(resultDir, stationName, dataDir):
     """
     Creates the right HardwareMonitor.conf file for this station
 
@@ -728,7 +715,7 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir, last_ip="3"):
     # Find Ip number station
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
-    ip_parts[3] = last_ip
+    ip_parts[3] = "3"
     HWMip = ip_parts[0]+"."+ip_parts[1]+"."+ip_parts[2]+"."+ip_parts[3]
     HWMfile = open(dataDir+"/HardwareMonitor.conf.tmpl")
     HWMconfig = HWMfile.read()
@@ -740,27 +727,17 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir, last_ip="3"):
     os.close(outFile)
     
 
-def stationExceptions(resultDir, stationName, dataDir):
+def de601Exceptions(resultDir, stationName, dataDir):
     """
-    Handle exceptional files for some stations
+    Handle exceptions for station de601 (Effelsberg)
     """
     if (stationName.lower() == "de601"):
-        srcFile = dataDir + "/DE601-Attenuation.conf"
-        destFile= resultDir + "/Attenuation.conf"
-        command = "cp -f "+srcFile+ " " + destFile
-        #print command
-        os.system(command)
-    elif (stationName.lower() == "fi609"):
-        # Reinstall Attenuation.conf
-        srcFile = dataDir + "/FI609-Attenuation.conf"
+        srcFile = dataDir + "/../DE601-Attenuation.conf"
         destFile= resultDir + "/Attenuation.conf"
         command = "cp -f "+srcFile+ " " + destFile
         #print command
         os.system(command)
 
-        # Reinstall HardwareMonitor.conf with FI609 specific IP for EC
-        createHardwareMonitorFile(resultDir, stationName, dataDir, "103")
-        
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -845,11 +822,10 @@ if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobal
                 createRemoteStationFile(resultDir, stationName, dataDir)
                 createAntennaArraysFile(resultDir, stationName, dataDir)
                 createAntennaFieldFile (resultDir, stationName, dataDir)
-                createAttenuationFile  (resultDir, stationName, dataDir)
                 createCableDelaysFile  (resultDir, stationName, dataDir)
                 createiHBADeltasFile   (resultDir, stationName, dataDir)
                 createHardwareMonitorFile(resultDir, stationName, dataDir)
-                stationExceptions        (resultDir, stationName, dataDir)
+                de601Exceptions        (resultDir, stationName, dataDir)
     else:
         print "Cannot determine stationname"
         sys.exit(1)
@@ -864,7 +840,7 @@ else:
     resultRoot = sys.argv[1]
     dataDir = sys.argv[2]
     stationList = []
-    is_Cobalt=1
+    is_Cobalt=0
     # Find BG/P partition to use (if one is provided; looks like R0x)
     if (re.match("R0",sys.argv[3])):
         partitionName = sys.argv[3];
@@ -874,7 +850,7 @@ else:
         is_Cobalt=1
         next_argn = 4
     else:
-        partitionName = "cobalt"
+        partitionName = "R00"
         next_argn = 3
         
     print "Using " + partitionName + " for creating RSPConnections.dat file"
@@ -902,11 +878,10 @@ else:
         createRemoteStationFile(resultDir, stationName, dataDir)
         createAntennaArraysFile(resultDir, stationName, dataDir)
         createAntennaFieldFile (resultDir, stationName, dataDir)
-        createAttenuationFile  (resultDir, stationName, dataDir)
         createCableDelaysFile  (resultDir, stationName, dataDir)
         createiHBADeltasFile   (resultDir, stationName, dataDir)
         createHardwareMonitorFile(resultDir, stationName, dataDir)
-        stationExceptions        (resultDir, stationName, dataDir)
+        de601Exceptions        (resultDir, stationName, dataDir)
         
 if len(warnings) > 0:
     print "The following warnings occured:"

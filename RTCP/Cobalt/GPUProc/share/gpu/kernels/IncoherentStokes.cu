@@ -95,9 +95,9 @@ extern "C" __global__ void incoherentStokes(OutputDataType output,
   if (time >= NR_SAMPLES_PER_CHANNEL / TIME_INTEGRATION_FACTOR)
     return;
 
-  float stokesI = 0.0f;
+  float stokesI = 0;
 #if NR_INCOHERENT_STOKES == 4
-  float stokesQ = 0.0f, halfStokesU = 0.0f, halfStokesV = 0.0f;
+  float stokesQ = 0, halfStokesU = 0, halfStokesV = 0;
 #endif
 
   for (uint station = 0; station < NR_STATIONS; station++) {
@@ -122,8 +122,8 @@ extern "C" __global__ void incoherentStokes(OutputDataType output,
   (*output)[0][time][channel] = stokesI;
 #if NR_INCOHERENT_STOKES == 4
   (*output)[1][time][channel] = stokesQ;
-  (*output)[2][time][channel] = 2.0f * halfStokesU;
-  (*output)[3][time][channel] = 2.0f * halfStokesV;
+  (*output)[2][time][channel] = 2 * halfStokesU;
+  (*output)[3][time][channel] = 2 * halfStokesV;
 #endif
 }
 
