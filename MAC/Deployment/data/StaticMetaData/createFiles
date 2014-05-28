@@ -720,7 +720,7 @@ def createiHBADeltasFile(resultDir, stationName, dataDir):
     #print command
     os.system(command)
     
-def createHardwareMonitorFile(resultDir, stationName, dataDir):
+def createHardwareMonitorFile(resultDir, stationName, dataDir, last_ip="3"):
     """
     Creates the right HardwareMonitor.conf file for this station
 
@@ -728,7 +728,7 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir):
     # Find Ip number station
     ipnumber = findIPNumber(stationName)
     ip_parts = ipnumber.split('.')
-    ip_parts[3] = "3"
+    ip_parts[3] = last_ip
     HWMip = ip_parts[0]+"."+ip_parts[1]+"."+ip_parts[2]+"."+ip_parts[3]
     HWMfile = open(dataDir+"/HardwareMonitor.conf.tmpl")
     HWMconfig = HWMfile.read()
@@ -739,7 +739,6 @@ def createHardwareMonitorFile(resultDir, stationName, dataDir):
     os.write(outFile, HWMconfig)
     os.close(outFile)
     
-
 
 def stationExceptions(resultDir, stationName, dataDir):
     """
@@ -752,12 +751,16 @@ def stationExceptions(resultDir, stationName, dataDir):
         #print command
         os.system(command)
     elif (stationName.lower() == "fi609"):
+        # Reinstall Attenuation.conf
         srcFile = dataDir + "/FI609-Attenuation.conf"
         destFile= resultDir + "/Attenuation.conf"
         command = "cp -f "+srcFile+ " " + destFile
         #print command
         os.system(command)
 
+        # Reinstall HardwareMonitor.conf with FI609 specific IP for EC
+        createHardwareMonitorFile(resultDir, stationName, dataDir, "103")
+        
 # MAIN
 
 if (len(sys.argv) == 1):
@@ -861,7 +864,7 @@ else:
     resultRoot = sys.argv[1]
     dataDir = sys.argv[2]
     stationList = []
-    is_Cobalt=0
+    is_Cobalt=1
     # Find BG/P partition to use (if one is provided; looks like R0x)
     if (re.match("R0",sys.argv[3])):
         partitionName = sys.argv[3];
@@ -871,7 +874,7 @@ else:
         is_Cobalt=1
         next_argn = 4
     else:
-        partitionName = "R00"
+        partitionName = "cobalt"
         next_argn = 3
         
     print "Using " + partitionName + " for creating RSPConnections.dat file"
