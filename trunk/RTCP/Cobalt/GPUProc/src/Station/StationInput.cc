@@ -499,13 +499,8 @@ void StationInput::readRSPNonRealTime()
     return;
   }
 
-  data->packets[0].payloadError(false);
-  data->packets[0].timeStamp(TimeStamp::universe_heat_death(mode.clockHz()));
-  data->packets[0].rspBoard(0);
-  data->packets[0].header.nrBlocks = 16; // MPIData<>::write checks for this
-  data->board = 0;
-
-  rspDataPool[0]->filled.append(data);
+  LOG_INFO_STR(logPrefix << "readRSPNonRealTime: sending EOS");
+  rspDataPool[0]->filled.append(NULL);
 }
 
 
@@ -524,15 +519,23 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
 
   for(;;) {
     SmartPtr<RSPData> data = rspDataPool[0]->filled.remove();
+
+    if (!data) {
+      LOG_DEBUG_STR(logPrefix << "writeRSPNonRealTime: received EOS");
+
+      // reinsert EOS for next call to writeRSPNonRealTime
+      rspDataPool[0]->filled.prepend(NULL);
+      return;
+    }
+
     const ssize_t *beamletIndices = &this->beamletIndices[data->board][0];
 
     // Only packet 0 is used in non-rt mode
-    ASSERT(!data->packets[0].payloadError());
 
     if (current.write(data->packets[0], beamletIndices, nrBeamletIndices)) {
       // We have data (potentially) spilling into `next'.
       if (!next || next->write(data->packets[0], beamletIndices, nrBeamletIndices)) {
-	// Data is even later than next? Put this data back for a future block.
+	      // Data is even later than next? Put this data back for a future block.
         rspDataPool[0]->filled.prepend(data);
         ASSERT(!data);
         return;
