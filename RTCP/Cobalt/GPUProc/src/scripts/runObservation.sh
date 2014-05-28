@@ -220,6 +220,10 @@ then
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
+
+    # Redirect UDP/TCP input streams to any interface on the local machine
+    sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
+    sed 's/tcp:[^:]*:/tcp:0:/g' -i $PARSET
   fi
 fi
 
