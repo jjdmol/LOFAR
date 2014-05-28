@@ -23,11 +23,11 @@ namespace LOFAR
   namespace Cobalt 
   {
 
-template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool drop)
+template <typename T> inline BestEffortQueue<T>::BestEffortQueue(const std::string &name, size_t maxSize, bool canDrop)
 :
   Queue<T>(name),
   maxSize(maxSize),
-  drop(drop),
+  canDrop(canDrop),
   dropped("%"),
   flushing(false)
 {
@@ -64,7 +64,7 @@ template <typename T> inline bool BestEffortQueue<T>::append(T& element, bool ti
   this->unlocked_append(element, timed);
 
   if (_overflow()) {
-    if (drop) {
+    if (canDrop) {
       // drop the head of the queue:
       // 1. bypass the statistics kept by Queue<T>
       // 2. retrieve its value and assign it to `element' to prevent it from being deallocated
@@ -89,7 +89,7 @@ template <typename T> inline T BestEffortQueue<T>::remove(const struct timespec 
 {
   T result = Queue<T>::remove(deadline, null);
 
-  if (!drop && result != null) {
+  if (!canDrop && result != null) {
     // if we can't drop, append() can be waiting for us
     removeSignal.signal();
   }
