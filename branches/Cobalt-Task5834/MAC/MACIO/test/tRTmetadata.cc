@@ -1,6 +1,6 @@
 //#  tRTmetadata.cc
 //#
-//#  Copyright (C) 2011
+//#  Copyright (C) 2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: tProtocol.cc 15266 2010-03-18 08:52:04Z overeem $
+//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -30,35 +30,45 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 
-
-
 using namespace LOFAR;
 using namespace LOFAR::MACIO;
+
+void test()
+{
+	RTmetadata myLogger(3125, "ObservationControl", "localhost");
+
+	KVpair pair;
+	pair.first  = "pietjepuk";
+	pair.second = "0521";
+	myLogger.log(pair);
+	pair.second = "521";
+	myLogger.log(pair);
+	pair.first  = "ExampleDP_Arg1";
+	pair.second = "521.0";
+	myLogger.log(pair);
+
+	myLogger.start(); // start thread
+
+	vector<KVpair> pairs;
+	pair.first  = "Eucalypta";
+	pair.second = "Witch";
+	pairs.push_back(pair);
+	pair.first  = "Oehoeboeroe";
+	pair.second = "Owl";
+	pairs.push_back(pair);
+	pair.first  = "Reintje";
+	pair.second = "Fox";
+	pairs.push_back(pair);
+	myLogger.log(pairs);
+
+	usleep(600000); // give started thread some time before cancelling in destructor
+}
 
 int main (int	/*argc*/, char* argv[]) 
 {
 	INIT_LOGGER(argv[0]);
 
-	RTmetadata	myLogger(3125, "ObservationControl", "localhost");
-	myLogger.log("pietjepuk", "0521", 393939393.004567);
-	myLogger.log("pietjepuk", 521,    393939393.004567);
-	myLogger.log("ExampleDP_Arg1", 521.0, 393939393.004567);
+	test();
 
-	vector<string>	keys;
-	vector<string>	values;
-	vector<double>	times;
-	keys.push_back  ("Eucalypta");
-	values.push_back("Witch");
-	times.push_back (987654321.12345);
-	keys.push_back  ("Oehoeboeroe");
-	values.push_back("Owl");
-	times.push_back (987654322.23456);
-	keys.push_back  ("Reintje");
-	values.push_back("Fox");
-	times.push_back (987654323.34567);
-
-	myLogger.log(keys, values, times);
-
-	return (0);
+	return 0;
 }
-
