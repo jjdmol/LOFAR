@@ -56,16 +56,17 @@ public:
   typedef ATerm::Polarization Polarization; 
   
   ConvolutionFunction(
-    const casa::IPosition& shape,
-    const casa::DirectionCoordinate& coordinates,
     const casa::MeasurementSet& ms,
-    casa::uInt nW, 
     double wmax,
     casa::uInt oversample,
     casa::Int verbose,
     casa::Int maxsupport,
-    const casa::String& imgName,
     ParameterSet& parset);
+
+  void init(
+    const casa::IPosition& shape,
+    const casa::DirectionCoordinate& coordinates,
+    const casa::String& imgName);
 
   virtual ~ConvolutionFunction () {};
   
@@ -146,6 +147,9 @@ public:
   // Get the reference frequency
   const casa::Double refFrequency() const
   { return itsRefFrequency;}
+  
+  casa::Double get_w_from_support(casa::Int support = 11) const;
+
 
 private:
   

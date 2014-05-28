@@ -93,25 +93,17 @@ namespace LOFAR {
 namespace LofarFT {
 
 ConvolutionFunction::ConvolutionFunction
-(const IPosition& shape,
-  const DirectionCoordinate& coordinates,
-  const MeasurementSet& ms,
-  uInt nW, 
+( const MeasurementSet& ms,
   double wmax,
   uInt oversample,
   Int verbose,
   Int maxsupport,
-  const String& imgName,
   ParameterSet& parset)
-  : itsShape(shape),
-    itsCoordinates(coordinates),
-    itsATerm(ATerm::create(ms, parset)),
+  : itsATerm(ATerm::create(ms, parset)),
     itsMaxW(wmax), //maximum W set by ft machine to flag the w>wmax
-    itsNWPlanes(nW),
     itsOversampling(oversample),
     itsVerbose (verbose),
     itsMaxSupport(maxsupport),
-    itsImgName(imgName),
     itsTimeW    (0),
     itsTimeWpar (0),
     itsTimeWfft (0),
@@ -151,7 +143,6 @@ ConvolutionFunction::ConvolutionFunction
   ROMSAntennaColumns antenna(ms.antenna());
   itsNStations = antenna.nrow();
 
-  itsPixelSizeSpheroidal = makeSpheroidCut();
   Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
@@ -160,6 +151,18 @@ ConvolutionFunction::ConvolutionFunction
 
   // Precalculate the Wtwerm fft for all w-planes.
 //   store_all_W_images();
+}
+
+void ConvolutionFunction::init
+(const IPosition& shape,
+  const DirectionCoordinate& coordinates,
+  const String& imgName)
+{
+  itsShape = shape;
+  itsCoordinates = coordinates;
+  itsImgName = imgName;
+
+  itsPixelSizeSpheroidal = makeSpheroidCut();
 }
 
 ConvolutionFunction::Polarization::Type ConvolutionFunction::image_polarization() const
@@ -914,12 +917,20 @@ Double ConvolutionFunction::estimateWResolution(
   Res_w_image = diam_image/Npix;
   if (Npix%2 != 1) 
   {
-    // Make the resulting image have an even number of pixel
-    // (to make the zeros padding step easier)
+    // Make the resulting image have an odd number of pixels
+    // (to make the zero padding step easier)
     ++Npix;
     Res_w_image = diam_image/Npix;
   }
   return Res_w_image;
+}
+
+Double ConvolutionFunction::get_w_from_support(Int support) const
+{
+  Double pixelSize = abs(itsCoordinates.increment()[0]);
+  Double diam_image = pixelSize*itsShape[0];         // image diameter in radian
+
+  return support/(diam_image*diam_image);
 }
 
 //=================================================

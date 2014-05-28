@@ -225,10 +225,10 @@ FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachin
 void FTMachineSplitBeamWStackWB::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
-  put( const_cast<VisBuffer&> (*static_cast<const VisBuffer*>(&vb)), row, dopsf, type);
+  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
 }
 
-void FTMachineSplitBeamWStackWB::put(VisBuffer& vb, Int row, Bool dopsf,
+void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
   if (itsVerbose > 0) {
@@ -302,32 +302,9 @@ void FTMachineSplitBeamWStackWB::put(VisBuffer& vb, Int row, Bool dopsf,
   
   for (Int i=startRow;i<=endRow;i++) 
   {
-    if (vb.uvw()(i)(2)>0) 
+    for (Int idim = 0; idim<3; idim++) 
     {
-      for (Int idim = 0; idim<3; idim++) 
-      {
-        uvw(idim,i) = vb.uvw()(i)(idim);
-      }
-    }
-    else
-    {
-      for (Int idim = 0; idim<3; idim++) 
-      {
-        uvw(idim,i) = -vb.uvw()(i)(idim);
-      }
-      // swap ANTENNA1 and ANTENNA2
-      int ant = vb.antenna1()(i);
-      vb.antenna1()(i) = vb.antenna2()(i);
-      vb.antenna2()(i) = ant;
-      if (not dopsf) 
-      {
-        // conjugate data and swap XY and YX
-        Array<Complex> d = conj(data[i]);
-        data[i](Slicer(Slice(0), Slice())) = d(Slicer(Slice(0), Slice()));
-        data[i](Slicer(Slice(1), Slice())) = d(Slicer(Slice(2), Slice()));
-        data[i](Slicer(Slice(2), Slice())) = d(Slicer(Slice(1), Slice()));
-        data[i](Slicer(Slice(3), Slice())) = d(Slicer(Slice(3), Slice()));
-      }
+      uvw(idim,i) = vb.uvw()(i)(idim);
     }
   }
   
@@ -349,8 +326,8 @@ void FTMachineSplitBeamWStackWB::put(VisBuffer& vb, Int row, Bool dopsf,
 
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
-  //TODO: fill out proper value for w_step and timestep
-  double w_step = 1000;
+  double w_step = itsConvFunc->get_w_from_support();
+  cout << "w_step: " << w_step << endl;
 
   VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
   
@@ -555,8 +532,8 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
 
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
-  //TODO: fill out proper value for w_step
-  double w_step = 1000;
+  double w_step = itsConvFunc->get_w_from_support();
+  cout << "w_step: " << w_step << endl;
 
   VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
   
@@ -663,11 +640,11 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
         {
           for (int taylor_idx = 0; taylor_idx<itsNGrid; taylor_idx++)
           {
-            Vector<Double> taylor_weights(lsr_frequency.nelements(), 1.0);
-//             for (int j=0; j<lsr_frequency.nelements(); j++)
-//             {
-//               taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
-//             }
+            Vector<Double> taylor_weights(lsr_frequency.nelements());
+            for (int j=0; j<lsr_frequency.nelements(); j++)
+            {
+              taylor_weights(j) = pow((lsr_frequency(j) - itsRefFreq)/itsRefFreq, taylor_idx);
+            }
             itsVisResampler->GridToData(
               vbs, 
               itsModelGrids[taylor_idx], 

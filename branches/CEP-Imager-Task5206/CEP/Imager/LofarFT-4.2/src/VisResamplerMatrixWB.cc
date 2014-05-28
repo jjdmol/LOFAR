@@ -93,7 +93,11 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
   for (Int inx=rbeg; inx<=rend; ++inx) 
   {
     Int irow = rows[inx];
+
     const Double*  __restrict__ uvwPtr   = vbs.uvw().data() + irow*3;
+    Int sign_w = sign(uvwPtr[2]);
+    
+    
     // Loop over all channels in the visibility data.
     // Map the visibility channel to the grid channel.
     // Skip channel if data are not needed.
@@ -119,8 +123,8 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
 
       // Determine the grid position from the UV coordinates in wavelengths.
       Double recipWvl = vbs.freq()[visChan] / C::c;
-      Double posx = uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
-      Double posy = uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
+      Double posx = sign_w * uvwScale_p[0] * uvwPtr[0] * recipWvl + offset_p[0];
+      Double posy = sign_w * uvwScale_p[1] * uvwPtr[1] * recipWvl + offset_p[1];
       Int locx = SynthesisUtils::nint (posx);    // location in grid
       Int locy = SynthesisUtils::nint (posy);
       Double diffx = locx - posx;
@@ -182,7 +186,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
             Complex polSum(0,0);
             for (Int i=0; i<4; ++i) // i runs over data polarizations
             {
-              polSum += visPtr[i] * conj(*cf[i]);
+              polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * conj(*cf[i]);
               cf[i] += fsampx;
             }
             polSum *= *imgWtPtr * tw;
@@ -211,9 +215,6 @@ void VisResamplerMatrixWB::GridToData(
   CFStore& cfs,
   Vector<Double> &taylor_weight)
 {
-  // Get size of convolution functions.
-  Int nConvX = (cfs.vdata())[0][0][0].shape()[0];
-  Int nConvY = (cfs.vdata())[0][0][0].shape()[1];
   // Get size of grid.
   Int nGridX    = grid.shape()[0];
   Int nGridY    = grid.shape()[1];
@@ -226,17 +227,12 @@ void VisResamplerMatrixWB::GridToData(
   Int sampx = SynthesisUtils::nint (cfs.sampling()[0]);
   Int sampy = SynthesisUtils::nint (cfs.sampling()[1]);
 
-  Int supx = cfs.xSupport()[0];
-  Int supy = cfs.ySupport()[0];
-
-
   // Loop over all visibility rows to process.
   #pragma omp parallel for
   for (Int inx=rbeg; inx<=rend; ++inx) {
     Int irow = rows[inx];
     const Double*  __restrict__ uvwPtr   = vbs.uvw().data() + irow*3;
     
-
     Int sign_w = sign(uvwPtr[2]);
     
     // Loop over all channels in the visibility data.
@@ -252,6 +248,13 @@ void VisResamplerMatrixWB::GridToData(
       
       // Skip if convolution function store contains no data for this channel
       if (cfs.vdata()[CFChan].size() == 0) continue;
+      
+      // Get size of convolution functions.
+      Int nConvX = (cfs.vdata())[CFChan][0][0].shape()[0];
+      Int nConvY = (cfs.vdata())[CFChan][0][0].shape()[1];
+
+      Int supx = cfs.xSupport()[CFChan];
+      Int supy = cfs.ySupport()[CFChan];
       
       // Determine the grid position from the UV coordinates in wavelengths.
       Double recipWvl = vbs.freq()[visChan] / C::c;
@@ -315,17 +318,15 @@ void VisResamplerMatrixWB::GridToData(
           {
             for (Int i=0; i<4; ++i) 
             {
-              visPtr[i] += *gridPtr * conj(*cf[i]) * tw;
+              Complex v = *gridPtr * conj(*cf[i]) * tw;
+              v = Complex(v.real(), v.imag() * sign_w);
+              visPtr[i] += v;
               cf[i] += sampx;
             }
             gridPtr++;
           }
         }
       } // end for ipol
-      for (Int i=0; i<4; ++i) 
-      {
-        visPtr[i] = Complex(visPtr[i].real(), visPtr[i].imag() * sign_w);
-      }
     } // end for visChan
   } // end for inx
 }

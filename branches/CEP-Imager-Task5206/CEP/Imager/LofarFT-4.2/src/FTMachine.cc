@@ -113,7 +113,13 @@ FTMachine::FTMachine(
     itsMS(ms),
     itsNWPlanes(100 /*nwPlanes*/), 
     itsWMax(parset.getDouble("data.wmax", 10000.0)),
-    itsConvFunc(), 
+    itsConvFunc(new ConvolutionFunction(
+      itsMS, 
+      itsWMax,
+      itsOversample, 
+      itsVerbose, 
+      itsMaxSupport,
+      itsParset)),
     itsVerbose(parset.getInt("verbose",0)),
     itsMaxSupport(parset.getInt("gridding.maxsupport", 1024)),
     itsOversample(parset.getInt("gridding.oversample", 9)),
@@ -226,17 +232,10 @@ void FTMachine::init(const ImageInterface<Float> &image) {
          << itsPaddedShape(1) << endl;
   }
   
-  itsConvFunc = new ConvolutionFunction(
+  itsConvFunc->init(
     itsPaddedShape,
     image.coordinates().directionCoordinate (image.coordinates().findCoordinate(Coordinate::DIRECTION)),
-    itsMS, 
-    itsNWPlanes, 
-    itsWMax,
-    itsOversample, 
-    itsVerbose, 
-    itsMaxSupport,
-    itsImageName,
-    itsParset);
+    itsImageName);
 }
 
 FTMachine::~FTMachine()
@@ -524,7 +523,7 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
 {
   cout << "normalize..." << flush;
   
-  LatticeExprNode factor(1.0);
+  Array<Float> spheroidal;
   
   if (do_spheroidal)
   {
@@ -535,33 +534,51 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
     IPosition shape(2, itsNX, itsNY, itsNPol, itsNChan);
     
     Slicer slicer(blc, shape);
-    factor = factor * ArrayLattice<Float>(itsConvFunc->getSpheroidal()(slicer));
+    spheroidal.reference(itsConvFunc->getSpheroidal()(slicer));
+    cout << "spheroidal shape: " << spheroidal.shape() << endl;
   }
+  
+  Array<Float> beam;
   
   if (do_beam)
   {
-    factor = factor * ArrayLattice<Float>(getAveragePB()); 
+    beam.reference(getAveragePB());
+    cout << "beam shape: " << beam.shape() << endl;
   }
 
-  Array<Complex> slice;
-  IPosition start(4,0);
   IPosition slice_shape(4, itsNX, itsNY, 1, 1);
 
   // Iterate over channels and polarizations
 
+  #pragma omp parallel for collapse(4)
   for(Int i = 0; i < image.shape()[3]; ++i)
   {
-    start[3] = i;
     for(Int j = 0; j < image.shape()[2]; ++j)
     {
-      start[2] = j;
-      image.getSlice(slice, start, slice_shape, True);
-      ArrayLattice<Complex> lattice(slice);
-      lattice.copyData(LatticeExpr<Complex>(iif(factor < 1e-2, 0.0, lattice / factor)));
+      for(Int k = 0; k < image.shape()[1]; ++k)
+      {
+        for(Int l = 0; l < image.shape()[0]; ++l)
+        {
+          IPosition pos(4,l,k,j,i);
+          
+          Complex v = image.getAt(pos);
+          Float f = 1.0;
+          if (do_spheroidal) f *= spheroidal(IPosition(2,l,k));
+          if (do_beam) f *= beam(IPosition(2,l,k));
+          image.putAt((f>0.02) * (v/f), pos);
+        }
+      }
     }
   }
   cout << "done." << endl;
 }
+//           Array<Complex> slice;
+//           IPosition pos(4,0);
+//           start[3] = i;
+//           start[2] = j;
+//           image.getSlice(slice, start, slice_shape, True);
+//           ArrayLattice<Complex> lattice(slice);
+//             lattice.copyData(LatticeExpr<Complex>(iif(factor < 1e-2, 0.0, lattice / factor)));
  
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and

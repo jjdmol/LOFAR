@@ -1,3 +1,10 @@
+\documentclass[a4paper]{article}
+
+\title{CITT Release Notes}
+
+\begin{document}
+\maketitle
+
 Release Notes - awimager cittg 0.1
 
 The major change in this release is a re-factored code base.
@@ -30,7 +37,7 @@ Testing
 * generation of test data
   - create a ms with makems
   - add the beam tables
-  - add a WEIGHT_SPECTRUM column
+  - add a WEIGHT\_SPECTRUM column
   - set flags in the beam tables 
 
 The LOFAR beam are fairly symmetric. To make it easier to find errors it help to introduce an artificial phase
@@ -46,15 +53,16 @@ Run BBS
 
 Run awimager with operation=predict
 
-Compare CORRECTED_DATA and MODEL_DATA
+Compare CORRECTED\_DATA and MODEL\_DATA
 
 
 TODO:
 
-* User selection of WEIGHT or WEIGHT_SPECTRUM column
+* User selection of WEIGHT or WEIGHT\_SPECTRUM column
 * enable uniform and robust weighting
 * enable split beam mode (potentially ~4 speedup)
 * correct for artifical steeping of the the spectrum of sources at the edge of the FOV
 
 
 
+\end{document}

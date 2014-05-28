@@ -73,7 +73,7 @@ public:
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
   
   virtual void put(
-    VisBuffer& vb, 
+    const VisBuffer& vb, 
     casa::Int row = -1, 
     casa::Bool dopsf = casa::False,
     casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
