@@ -180,6 +180,7 @@ namespace {
       Position         itsPhaseRef;
 
       string           itsMode;
+      uint             itsTStep;
 
       uint             itsDebugLevel;
 
