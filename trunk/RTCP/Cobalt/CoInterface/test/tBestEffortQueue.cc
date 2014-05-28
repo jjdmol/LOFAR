@@ -79,6 +79,9 @@ void test_nondrop()
       for (size_t i = 0; i < queueSize; ++i) {
         size_t e = 100 + i;
         ASSERT(queue.append(e));
+
+        // limit on queue size should be honoured
+        ASSERT(queue.size() <= queueSize);
       }
     }
 

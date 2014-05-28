@@ -123,19 +123,21 @@ namespace LOFAR
 
     static void init()
     {
-      signal(SIGHUP, sighandler);
-#if 0
-      // We avoid cancellation exception for OpenMP threads.
-      // Allow signalling them ourselves to interrupt some blocking syscalls.
+      // Defer SIGHUP to our empty signal handler
+      if (signal(SIGHUP, sighandler) == SIG_ERR)
+        THROW_SYSCALL("signal");
+
+      // Unset SA_RESTART to avoid system calls being restarted on SIGHUP,
+      // making them effectively uninterruptable.
       struct sigaction sa;
       sa.sa_handler = sighandler;
-      ::sigemptyset(&sa.sa_mask);
-      sa.sa_flags = 0;
-      int err = ::sigaction(SIGHUP, &sa, NULL);
-      if (err != 0) {
-        LOG_WARN("Failed to register a handler for SIGHUP: OpenMP threads may not terminate!");
-      }
-#endif
+      if (::sigaction(SIGHUP, NULL, &sa) < 0)
+        THROW_SYSCALL("sigaction(SIGHUP, NULL, &sa)");
+
+      sa.sa_flags &= ~SA_RESTART;
+
+      if (::sigaction(SIGHUP, &sa, NULL) < 0)
+        THROW_SYSCALL("sigaction(SIGHUP, &sa, NULL)");
     }
 
   private:
