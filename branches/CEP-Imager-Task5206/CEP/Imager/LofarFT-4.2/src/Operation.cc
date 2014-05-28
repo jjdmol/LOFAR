@@ -210,7 +210,7 @@ void Operation::showHelpWeight(ostream& os, const string& name)
 {
   os<<
   "Weight pameters:"<<endl<<
-  "  scheme              : weighting scheme, must be \"natural\"      "<<endl<<
+  "  weight.scheme       : weighting scheme, must be \"natural\"      "<<endl<<
   "                        string, default natural                    "<<endl<<endl;
 }
 

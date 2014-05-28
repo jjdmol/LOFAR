@@ -120,6 +120,8 @@ int main (Int argc, char** argv)
 
   operation->init();
 
+  ASSERTSTR(parset.getString("weight.operation","natural")=="natural", "Only natural weighting is supported for now");
+
   vector<string> unused = parset.unusedKeys();
   if (! unused.empty()) {
      cout<< "*** WARNING: the following parset keywords were not used ***"<<endl;
