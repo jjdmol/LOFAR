@@ -1,4 +1,0 @@
-ClusterName = Production
-
-# Directory is the same as the parent.
-SubClusters = [sub1.clusterdesc]
