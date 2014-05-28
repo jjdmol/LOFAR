@@ -1,0 +1,192 @@
+V 11
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 1075 795 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint;
+  
+  // if needed connect to the objects representation in de PVSS database to trigger them when the values in the databse change
+  if(dpExists(baseDP + \".element\")) {
+    dpConnect(\"controlAnObject\", baseDP + \".element:_online.._value\",
+                                   baseDP + \".anotherElement:_online.._value\",                               
+                                   baseDP + \".element:_online.._invalid\");
+    if (!navFunct_dpReachable(baseDP)) {
+      controlThisObject(\"\",\"\",\"\",\"\",true);
+    }
+  }
+  
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP); 
+   
+  // connect for selfUpdates
+  showSelfState(baseDP);
+   
+  reload();  
+}
+
+void controlAnObject(string dp1, string  element,
+                     string dp2, string  anotherElement,
+                     string dp3, bool invalid) {
+  
+    if (!invalid) {  
+      // this means that the object invalid in the database (offline?)
+    } else{
+    // Do whatever is needed with the altered values and the object
+    }
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  
+  
+  // prepare the hardwareglobals that need to contain the hardwareobjects that are visible on this screen  
+  // dynAppend empties the copied dynArray after the append, we don't want that for available global lists, 
+  // so when you use one of those make a local copy first
+  // dyn_string temp = remoteStations;
+  // dynAppend(g_stationList,temp);
+  // global hardwareLists that need to be filled (when objects are on this panel) are:
+  //   g_stationList;       // holds valid stations for choices in the viewBox
+  // Station based globals
+  //   g_cabinetList;       // holds valid cabinets for choices in the viewBox
+  //   g_subrackList;       // holds valid subracks for choices in the viewBox
+  //   g_RSPList;           // holds valid RSP's for choices in the viewBox
+  //   g_TBBList;           // holds valid TBB's for choices in the viewBox
+  //   g_RCUList;           // holds valid RCU's for choices in the viewBox
+  //   g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
+  //   g_LBAList;           // holds valid LBAAntenna's for choices in the viewBox
+  // CEP based globals
+  //   g_BGPRackList;       // holds valid bgpracks for choices in viewBox
+  //   g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
+  //   g_IONodeList;        // holds valid ionodes for choices in viewBox
+  //   g_OSRackList;        // holds valid Offline/Storageracks for choices in view
+  //   g_locusNodeList;     // holds valid storagenodes for choices in view
+
+  
+}
+
+//
+// Callback for dpConnect to action point.
+// If there is an action required this point will tell so
+//
+void doAction(string aDP, string anAction) {
+  LOG_DEBUG(\"PanelName.pnl:doAction| Action required. found: \" + anAction);
+  // split action into essentials
+  dyn_string actionString;
+  if (!navFunct_splitAction(anAction,actionString)) {
+    return;
+  }
+  
+  LOG_DEBUG(\"PanelName.pnl:doAction|found actionString: \" + actionString);
+  
+  // Reload (or DistChanged, or Update or any of the other possible state changes)
+  if (actionString[1] == \"Reload\") {
+    reload();
+  }
+}
+
+void reload() {
+  
+  navFunct_clearGlobalLists();
+  
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+  // set panel to ready
+  g_objectReady=true;
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"PanelName.pnl\",\"Update\");
+
+}" 0
+ E E E E 1 -1 -1 0  20 740
+""0  1
+E "#uses \"navPanel.ctl\"
+string      baseDP   = \"\";
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+  // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent(\"What is clicked\",\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  // indicate this is a doubleClick
+  bDoubleClicked = true;   
+  
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"PanelName.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent(\"What is dblClicked\",\"ChangePanel\"); 
+  }
+
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent(\"What is rClicked\",\"EventRightClick\");
+}
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 6
+"Border3"
+""
+1 30 0 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1 0 1 -10 0 1 E 0 0 1008 744
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

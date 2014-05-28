@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+# This test aims to determine the bandwith available from the Cobalt cluster to
+# the Locus cluster using iperf. Traffic will be distributed in a way that is
+# similar to that being used in operations. The cobalt nodes are pair-wise
+# connected to one of four router PC's, which in turn are connected to
+# twenty-five locus nodes. So, cbt001..002 and locus001..025 are connected to
+# the first router PC; cbt003..004 and locus025..050 to the second; etc.
+#
+# $Id$
+
+# Source useful functions.
+. $(dirname $0)/../funcs.sh
+
+# Setup cleanup handler.
+trap teardown 0 1 2 3 15
+
+locus_cmd()
+{
+  run_command "ssh lhn001 cexec locus: $@"
+}
+
+# Start a iperf server daemon process on every locus node
+# Return a list of locus nodes that actually run the iperf server
+setup()
+{
+  rm -f iperf-*.log
+  # The daemonize option (-D) of iperf is utterly broken; do it another way
+  run_command "ssh lhn001 cexec locus: iperf -s > /dev/null 2>&1 &"
+  # Check on which nodes iperf actually runs. Sometimes, more than one
+  # iperf instance appears to be running (a glitch?), so remove it.
+  local nodes
+  nodes=$(run_command "ssh lhn001 cexec -p locus: pgrep -u $USER iperf") || exit
+  echo "$nodes" | sed -n 's,^locus \(locus[0-9]\+\): [0-9]\+$,\1,p' | uniq
+}
+
+# Stop the iperf server deamon process on every locus node
+teardown()
+{
+  local STATUS=$?
+  run_command -q "ssh lhn001 cexec locus: pkill -KILL -u $USER iperf"
+  return $STATUS
+}
+
+iperf_torture()
+{
+  for host in $@
+  do
+    echo "iperf -t 15 -y c -c ${host} >>  iperf-$(hostname).log &"
+  done
+}
+
+# List of Cobalt nodes used in this test
+CBT_NODES=($(for i in $(seq 1 8); do printf "cbt%03d " $i; done))
+
+# List of locus nodes reachable from lhn001 as returned by setup()
+LOCUS_NODES=$(setup) || exit
+#LOCUS_NODES=$(for i in \
+#  $(seq 3 12) $(seq 14 29) $(seq 32 46) \
+#  $(seq 49 67) $(seq 69 83) $(seq 85 100); do \
+#  printf "locus%03d%b\n" $i; done)
+
+# Number of ethernet devices per Cobalt node
+n_eth=4
+
+# Number of connection to be created per ethernet device
+n_conn=2
+
+# Determine list of available locus nodes per ethernet device. 
+for ((eth=0; eth<$n_eth; eth++))
+do
+  first=$(printf "locus%03d" $(expr 25 '*' $eth + 1))
+  last=$(printf "locus%03d" $(expr 25 '*' $eth + 25))
+  for node in $LOCUS_NODES
+  do
+    [[ "$node" < "$first" ]] || [[ "$node" > "$last" ]] && continue;
+    ETH_DEV[$eth]+="$node "
+  done
+done
+
+# associative array 
+# (key is name of the Cobalt node, value is an array of Locus nodes)
+declare -A IPERF_NODES
+
+for eth in ${!ETH_DEV[*]}
+do
+  eth_nodes=(${ETH_DEV[$eth]})
+  # Are there enough locus nodes available for the current ethernet device?
+  [[ ${#eth_nodes[*]} -ge $(expr $n_eth '*' $n_conn) ]] || \
+    error "Too few locus nodes available to run test"
+  for cbt in ${!CBT_NODES[*]}
+  do
+    for ((conn = 0; conn < $n_conn; conn++))
+    do
+      idx=$(expr $n_conn '*' $cbt + $conn)
+      IPERF_NODES[${CBT_NODES[$cbt]}]+="${eth_nodes[$idx]} "
+    done
+  done
+done
+
+for cbt in ${CBT_NODES[*]}
+do
+  targets=(${IPERF_NODES[$cbt]})
+  for target in ${targets[*]}
+  do
+    echo "iperf -t 15 -y c -c ${target} >> iperf-$cbt.log &"
+  done
+#  echo "IPERF_NODES[$cbt] = ${IPERF_NODES[$cbt]}"
+done
