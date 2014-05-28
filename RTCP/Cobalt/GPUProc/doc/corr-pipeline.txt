@@ -38,7 +38,7 @@ Delay compensation + Band pass + Transpose {I/O: delays}
    |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               A
    V
 Correlator
-   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   7 MiB               B
+   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               B
    V
 (output)
 
