@@ -116,24 +116,29 @@ namespace BBS {
                                double ra, double dec,
                                bool)
   {
+    // Write at the end of the file.
     ASSERTSTR (itsCanWrite, "SourceDBBlob: file is not writable");
     itsFile.seekp (0, ios::end);
-    int16 cType = catType;
-    itsBlobOut->putStart ("patch", 1);
-    *itsBlobOut << patchName << cType << apparentBrightness << ra << dec;
-    itsBlobOut->putEnd();
+    uint filePos = itsFile.tellp();
+    *itsBlobOut << PatchInfo(patchName, ra, dec, catType, apparentBrightness);
     itsEndPos = itsFile.tellp();
-    return 0;
+    return filePos;
   }
 
-  void SourceDBBlob::skipPatch()
+  void SourceDBBlob::updatePatch (uint filePos,
+                                  double apparentBrightness,
+                                  double ra, double dec)
   {
-    string patchName;
-    int16 cType;
-    double apparentBrightness, ra, dec;
-    itsBlobIn->getStart ("patch");
-    *itsBlobIn >> patchName >> cType >> apparentBrightness >> ra >> dec;
-    itsBlobIn->getEnd();
+    // First read the blob to get name and category.
+    itsFile.seekp (filePos, ios::beg);
+    PatchInfo info;
+    *itsBlobIn >> info;
+    // Write the calculated position and flux of the patches.
+    info.setRa (ra);
+    info.setDec (dec);
+    info.setApparentBrightness (apparentBrightness);
+    itsFile.seekp (filePos, ios::beg);
+    *itsBlobOut << info;
   }
 
   void SourceDBBlob::addSource (const SourceInfo& sourceInfo,
@@ -233,6 +238,8 @@ namespace BBS {
 
   vector<SourceInfo> SourceDBBlob::getPatchSources (const string& patchName)
   {
+    // If not done yet, read all data from the file.
+    readAll();
     vector<SourceInfo> info;
     map<string,vector<SourceData> >::const_iterator iter =
       itsSources.find(patchName);
@@ -249,6 +256,8 @@ namespace BBS {
 
   vector<SourceData> SourceDBBlob::getPatchSourceData (const string& patchName)
   {
+    // If not done yet, read all data from the file.
+    readAll();
     return itsSources[patchName];
   }
 
@@ -281,20 +290,10 @@ namespace BBS {
         break;
       }
       // Skip the patch info.
-      skipPatch();
+      PatchInfo info;
+      *itsBlobIn >> info;
     }
     src.readSource (*itsBlobIn);
-  }
-
-  PatchInfo SourceDBBlob::readPatch()
-  {
-    double ra, dec, brightness;
-    string name;
-    int16 catType;
-    ASSERT (itsBlobIn->getStart ("patch") == 1);   // version must be 1
-    *itsBlobIn >> name >> catType >> brightness >> ra >> dec;
-    itsBlobIn->getEnd();
-    return PatchInfo (name, ra, dec, catType, brightness);
   }
 
   void SourceDBBlob::readAll()
@@ -309,7 +308,8 @@ namespace BBS {
     rewind();
     while (itsFile.tellg() < itsEndPos) {
       if (itsBlobIn->getNextType() == "patch") {
-        PatchInfo info (readPatch());
+        PatchInfo info;
+        *itsBlobIn >> info;
         itsPatches.insert (make_pair(info.getName(), info));
       } else {
         SourceData info;

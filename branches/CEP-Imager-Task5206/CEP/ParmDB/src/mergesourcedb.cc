@@ -77,6 +77,7 @@ void writePatch (SourceDB& out, SourceDB& in, const PatchInfo& patch)
 }
 
 void merge (const string& name1, const string& name2,
+            const string& patt1, const string& patt2,
             const string& outName, const string& outType, bool append,
             const string& mode, double radius)
 {
@@ -87,8 +88,9 @@ void merge (const string& name1, const string& name2,
   // Open/create the output.
   SourceDB out(ParmDBMeta(outType, outName), !append);
   // Read all patches from both SourceDBs.
-  vector<PatchInfo> patch1 (in1.getPatchInfo());
-  vector<PatchInfo> patch2 (in2.getPatchInfo());
+  vector<PatchInfo> patch1 (in1.getPatchInfo(-1, patt1));
+  vector<PatchInfo> patch2 (in2.getPatchInfo(-1, patt2));
+  // Only take the 
   vector<int> match1(patch1.size(), -1);
   vector<int> match2(patch2.size(), -1);
   // Loop through all in1 patches and see if a match in in2 is found.
@@ -147,7 +149,7 @@ void merge (const string& name1, const string& name2,
 }
 
 
-void copy (const string& name1,
+void copy (const string& name1, const string& patt1,
            const string& outName, const string& outType, bool append)
 {
   // Open the input SourceDB.
@@ -155,7 +157,7 @@ void copy (const string& name1,
   // Open/create the output.
   SourceDB out(ParmDBMeta(outType, outName), !append);
   // Read all patches from the SourceDB and write them.
-  vector<PatchInfo> patch1 (in1.getPatchInfo());
+  vector<PatchInfo> patch1 (in1.getPatchInfo(-1, patt1));
   for (size_t i1=0; i1<patch1.size(); ++i1) {
     writePatch (out, in1, patch1[i1]);
   }
@@ -182,12 +184,16 @@ int main (int argc, char* argv[])
                    "Output type (casa or blob)", "string");
     inputs.create ("append", "false",
                    "Append to possibly existing SourceDB?", "bool");
-    inputs.create ("radius", "10arcsec",
-                   "Uncertainty radius for finding duplicate patch positions",
+    inputs.create ("in1.patches", "*",
+                   "Pattern for names of patches from in1 to select", "string");
+    inputs.create ("in2.patches", "*",
+                   "Pattern for names of patches from in2 to select", "string");
+    inputs.create ("mode", "all",
+                   "all=use all selected in2 patches, "
+                   "match=only use in2 patches matching an in1 patch position",
                    "string");
-    inputs.create ("mode", "match",
-                   "all=use all in2 patches, "
-                   "match=only use matching in2 patches"
+    inputs.create ("radius", "10arcsec",
+                   "Uncertainty radius for finding matching patch positions",
                    "string");
     // Read and check the input parameters.
     inputs.readArguments(argc, argv);
@@ -198,6 +204,8 @@ int main (int argc, char* argv[])
     ASSERTSTR (!out.empty(), "no output sourcedb name given");
     string outType = toLower(inputs.getString("outtype"));
     bool   append  = inputs.getBool("append");
+    string patch1  = inputs.getString("in1.patches");
+    string patch2  = inputs.getString("in2.patches");
     string radStr  = inputs.getString("radius");
     string mode    = toLower(inputs.getString("mode"));
     Quantity q;
@@ -207,9 +215,9 @@ int main (int argc, char* argv[])
     ASSERTSTR (mode=="match" || mode=="all", "incorrect mode given");
     // Do the copy or merge.
     if (in2.empty()) {
-      copy (in1, out, outType, append);
+      copy (in1, patch1, out, outType, append);
     } else {
-      merge (in1, in2, out, outType, append, mode, radius);
+      merge (in1, in2, patch1, patch2, out, outType, append, mode, radius);
     }
   } catch (Exception& x) {
     cerr << "Caught LOFAR exception: " << x << endl;

@@ -28,6 +28,7 @@
 #include <ParmDB/SourceDB.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
+#include <set>
 
 namespace LOFAR
 {
@@ -126,13 +127,49 @@ vector<Patch::ConstPtr> makePatches(SourceDB &sourceDB,
   for (uint i=0; i<componentsList.size(); ++i) {
     ASSERTSTR (!componentsList[i].empty(), "No sources found for patch "
                << patchNames[i]);
-    patchList.push_back (Patch::Ptr (new Patch(patchNames[i],
-                                               componentsList[i].begin(),
-                                               componentsList[i].end())));
+    Patch::Ptr ppatch(new Patch(patchNames[i],
+                                componentsList[i].begin(),
+                                componentsList[i].end()));
+    vector<BBS::PatchInfo> patchInfo(sourceDB.getPatchInfo(-1, patchNames[i]));
+    ASSERT (patchInfo.size() == 1);
+    // Set the position and apparent flux of the patch.
+    Position patchPosition;
+    patchPosition[0] = patchInfo[0].getRa();
+    patchPosition[1] = patchInfo[0].getDec();
+    ppatch->setPosition (patchPosition);
+    ppatch->setBrightness (patchInfo[0].apparentBrightness());
+    ///    ppatch->computePosition();
+    patchList.push_back (ppatch);
   }
   return patchList;
 }
 
+vector<string> makePatchList(SourceDB &sourceDB, vector<string> patterns)
+{
+    if(patterns.empty())
+    {
+        patterns.push_back("*");
+    }
+
+    std::set<string> patches;
+    vector<string>::iterator it = patterns.begin();
+    while(it != patterns.end())
+    {
+        if(!it->empty() && (*it)[0] == '@')
+        {
+            patches.insert(*it);
+            it = patterns.erase(it);
+        }
+        else
+        {
+            vector<string> match(sourceDB.getPatches(-1, *it));
+            patches.insert(match.begin(), match.end());
+            ++it;
+        }
+    }
+
+    return vector<string>(patches.begin(), patches.end());
+}
 
 } //# namespace DPPP
 } //# namespace LOFAR

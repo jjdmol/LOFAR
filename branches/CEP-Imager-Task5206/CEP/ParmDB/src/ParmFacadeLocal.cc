@@ -66,13 +66,28 @@ namespace LOFAR {
     }
 
     // Get all parameter names in the table.
-    vector<string> ParmFacadeLocal::getNames (const string& parmNamePattern) const
+    vector<string> ParmFacadeLocal::getNames (const string& parmNamePattern,
+                                              Bool includeDefaults) const
     {
       string pp = parmNamePattern;
       if (pp.empty()) {
 	pp = "*";
       }
-      return itsPDB.getNames(pp);
+      vector<string> names (itsPDB.getNames(pp));
+      if (!includeDefaults) {
+        return names;
+      }
+      // Get possible unused names of default values.
+      ParmMap parmset;
+      itsPDB.getDefValues (parmset, pp);
+      set<string> nameSet(names.begin(), names.end());
+      for (ParmMap::const_iterator iter = parmset.begin();
+           iter != parmset.end(); ++iter) {
+        if (nameSet.find(iter->first) == nameSet.end()) {
+          names.push_back (iter->first);
+        }
+      }
+      return names;
     }
 
     vector<string> ParmFacadeLocal::getDefNames (const string& parmNamePattern) const
@@ -171,7 +186,8 @@ namespace LOFAR {
                                        double freqStep,
                                        double timev1, double timev2,
                                        double timeStep,
-                                       bool asStartEnd)
+                                       bool asStartEnd,
+                                       bool includeDefaults)
     {
       // Use default step values if needed.
       if (freqStep <= 0) {
@@ -191,7 +207,7 @@ namespace LOFAR {
       // Create the predict grid.
       Axis::ShPtr axisx (new RegularAxis(freqv1, freqv2, nfreq, asStartEnd));
       Axis::ShPtr axisy (new RegularAxis(timev1, timev2, ntime, asStartEnd));
-      return doGetValues (parmNamePattern, Grid(axisx, axisy));
+      return doGetValues (parmNamePattern, Grid(axisx, axisy), includeDefaults);
     }
 
     Record ParmFacadeLocal::getValues (const string& parmNamePattern,
@@ -199,12 +215,13 @@ namespace LOFAR {
                                        const vector<double>& freqv2,
                                        const vector<double>& timev1,
                                        const vector<double>& timev2,
-                                       bool asStartEnd)
+                                       bool asStartEnd,
+                                       bool includeDefaults)
     {
       // Create the predict grid.
       Axis::ShPtr axisx (new OrderedAxis(freqv1, freqv2, asStartEnd));
       Axis::ShPtr axisy (new OrderedAxis(timev1, timev2, asStartEnd));
-      return doGetValues (parmNamePattern, Grid(axisx, axisy));
+      return doGetValues (parmNamePattern, Grid(axisx, axisy), includeDefaults);
     }
 
     void ParmFacadeLocal::clearTables()
@@ -360,10 +377,11 @@ namespace LOFAR {
     }
 
     Record ParmFacadeLocal::doGetValues (const string& parmNamePattern,
-                                         const Grid& predictGrid)
+                                         const Grid& predictGrid,
+                                         Bool includeDefaults)
     {
       // Get all matching parm names.
-      vector<string> names = getNames (parmNamePattern);
+      vector<string> names = getNames (parmNamePattern, includeDefaults);
       // The output is returned in a record.
       Record out;
       // Form the names to get.
@@ -384,7 +402,7 @@ namespace LOFAR {
       Array<double> result;
       for (uint i=0; i<names.size(); ++i) {
         Parm parm(parmCache, i);
-        parm.getResult (result, predictGrid, true);
+        parm.getResult (result, predictGrid, !includeDefaults);
         if (result.size() > 0) {
           // There is data in this domain.
           Record rec;
@@ -413,7 +431,7 @@ namespace LOFAR {
     {
       Box domain (freqv1, freqv2, timev1, timev2, asStartEnd);
       // Get all matching parm names.
-      vector<string> names = getNames (parmNamePattern);
+      vector<string> names = getNames (parmNamePattern, false);
       // The output is returned in a record.
       Record out;
       // Form the names to get.

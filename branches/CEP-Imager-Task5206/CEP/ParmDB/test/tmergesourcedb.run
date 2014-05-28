@@ -22,7 +22,7 @@
 #
 # $Id$
 
-rm -rf tmergesourcedb_tmp.*
+rm -rf tmergesourcedb_tmp.sdb*
 
 # Remove the Version line from the output because it is system dependent.
 echo "create sourcedb-s ..."

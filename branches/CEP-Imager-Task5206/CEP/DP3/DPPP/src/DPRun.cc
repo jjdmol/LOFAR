@@ -36,9 +36,11 @@
 #include <DPPP/UVWFlagger.h>
 #include <DPPP/PhaseShift.h>
 #include <DPPP/Demixer.h>
+#include <DPPP/DemixerNew.h>
 #include <DPPP/StationAdder.h>
 #include <DPPP/ScaleData.h>
 #include <DPPP/ApplyCal.h>
+#include <DPPP/GainCal.h>
 #include <DPPP/Filter.h>
 #include <DPPP/Counter.h>
 #include <DPPP/ProgressMeter.h>
@@ -53,12 +55,14 @@
 namespace LOFAR {
   namespace DPPP {
 
-    void DPRun::execute (const string& parsetName)
+    void DPRun::execute (const string& parsetName, int argc, char* argv[])
     {
       casa::Timer timer;
       NSTimer nstimer;
       nstimer.start();
       ParameterSet parset (parsetName);
+      // Adopt possible parameters given at the command line.
+      parset.adoptArgv (argc, argv); //# works fine if argc==0 and argv==0
       DPLogger::useLogger = parset.getBool ("uselogger", false);
       bool showProgress   = parset.getBool ("showprogress", true);
       bool showTimings    = parset.getBool ("showtimings", true);
@@ -258,6 +262,8 @@ namespace LOFAR {
           step = DPStep::ShPtr(new PhaseShift (reader, parset, prefix));
         } else if (type == "demixer"  ||  type == "demix") {
           step = DPStep::ShPtr(new Demixer (reader, parset, prefix));
+        } else if (type == "smartdemixer"  ||  type == "smartdemix") {
+          step = DPStep::ShPtr(new DemixerNew (reader, parset, prefix));
         } else if (type == "stationadder"  ||  type == "stationadd") {
           step = DPStep::ShPtr(new StationAdder (reader, parset, prefix));
         } else if (type == "scaledata") {
@@ -266,6 +272,8 @@ namespace LOFAR {
           step = DPStep::ShPtr(new Filter (reader, parset, prefix));
         } else if (type == "applycal"  ||  type == "correct") {
           step = DPStep::ShPtr(new ApplyCal (reader, parset, prefix));
+        } else if (type == "gaincal"  ||  type == "calibrate") {
+          step = DPStep::ShPtr(new GainCal (reader, parset, prefix));
         } else {
           THROW (LOFAR::Exception, "DPPP step type " << type << " is unknown");
         }

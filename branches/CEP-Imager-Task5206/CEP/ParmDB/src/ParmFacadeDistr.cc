@@ -23,7 +23,6 @@
 #include <lofar_config.h>
 #include <ParmDB/ParmFacadeDistr.h>
 #include <LMWCommon/VdsDesc.h>
-#include <LMWCommon/MWBlobIO.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobAipsIO.h>
 #include <Common/LofarLogger.h>
@@ -53,11 +52,9 @@ namespace LOFAR {
       // Get info from VDS. It is automatically closed thereafter.
       int nparts;
       string cdescName;
-      {
-        VdsDesc vds(tableName);
-        nparts    = vds.getParts().size();
-        cdescName = vds.getDesc().getClusterDescName();
-      }
+      VdsDesc vds(tableName);
+      nparts    = vds.getParts().size();
+      cdescName = vds.getDesc().getClusterDescName();
       // Start all remote processes.
       string command("startparmdbdistr " + itsPort + ' ' +
                      cdescName + ' ' + tableName);
@@ -65,6 +62,9 @@ namespace LOFAR {
       // Accept a connection from the clients and check if they are
       // initialized correctly.
       itsConn.addConnections (nparts);
+      itsPartNames.reserve (nparts);
+      itsStartFreqs.reserve (nparts);
+      itsEndFreqs.reserve (nparts);
       BlobString buf;
       string fname;
       for (int i=0; i<itsConn.size(); ++i) {
@@ -88,6 +88,8 @@ namespace LOFAR {
           }
         }
         bbi.finish();
+        itsStartFreqs.push_back (vds.getParts()[i].getStartFreqs()[0]);
+        itsEndFreqs.push_back   (vds.getParts()[i].getEndFreqs().back());
       }
     }
 
@@ -124,10 +126,32 @@ namespace LOFAR {
       theirFreePorts.push_back (itsPort);
     }
 
+    bool ParmFacadeDistr::checkStatus (MWBlobIn& bbi, int i) const
+    {
+      if (bbi.getOperation() != 1) {
+        string msg;
+        bbi.blobStream() >> msg;
+        LOG_WARN_STR ("Error '" << msg << "' in part " << itsPartNames[i]);
+        return false;
+      }
+      return true;
+    }
+
+    void ParmFacadeDistr::checkStatusAll() const
+    {
+      BlobString buf;
+      for (int i=0; i<itsConn.size(); ++i) {
+        itsConn.read (i, buf);
+        MWBlobIn bbi(buf);
+        checkStatus (bbi, i);
+        bbi.finish();
+      }
+    }
+
     vector<double> ParmFacadeDistr::getRange (const string& parmNamePattern) const
     {
       BlobString buf;
-      MWBlobOut bbo(buf, 1, 0);
+      MWBlobOut bbo(buf, GetRange, 0);
       bbo.blobStream() << parmNamePattern;
       bbo.finish();
       itsConn.writeAll (buf);
@@ -135,15 +159,16 @@ namespace LOFAR {
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
-        ASSERT (bbi.getOperation() == 1);    // ensure success
-        if (i == 0) {
-          bbi.blobStream() >> result;
-        } else {
+        if (checkStatus (bbi, i)) {
           bbi.blobStream() >> range;
-          if (range[0] < result[0]) result[0] = range[0];
-          if (range[1] > result[1]) result[1] = range[1];
-          if (range[2] < result[2]) result[2] = range[2];
-          if (range[3] > result[3]) result[3] = range[3];
+          if (result.empty()) {
+            result = range;
+          } else {
+            if (range[0] < result[0]) result[0] = range[0];
+            if (range[1] > result[1]) result[1] = range[1];
+            if (range[2] < result[2]) result[2] = range[2];
+            if (range[3] > result[3]) result[3] = range[3];
+          }
         }
         bbi.finish();
       }
@@ -151,18 +176,28 @@ namespace LOFAR {
     }
 
     // Get all parameter names in the table.
-    vector<string> ParmFacadeDistr::getNames (const string& parmNamePattern) const
+    vector<string> ParmFacadeDistr::getNames (const string& parmNamePattern,
+                                              bool includeDefaults) const
     {
-      if (parmNamePattern.empty()  ||  parmNamePattern == "*") {
-        return itsParmNames;
-      }
-      Regex regex(Regex::fromPattern(parmNamePattern));
       vector<string> result;
-      for (vector<string>::const_iterator iter=itsParmNames.begin();
-           iter!=itsParmNames.end(); ++iter) {
-        if (String(*iter).matches (regex)) {
-          result.push_back (*iter);
+      if (parmNamePattern.empty()  ||  parmNamePattern == "*") {
+        if (!includeDefaults) {
+          return itsParmNames;
+        } else {
+          result = itsParmNames;
         }
+      } else {
+        Regex regex(Regex::fromPattern(parmNamePattern));
+        for (vector<string>::const_iterator iter=itsParmNames.begin();
+             iter!=itsParmNames.end(); ++iter) {
+          if (String(*iter).matches (regex)) {
+            result.push_back (*iter);
+          }
+        }
+      }
+      if (includeDefaults) {
+        vector<string> defNames (getDefNames (parmNamePattern));
+        result.insert (result.end(), defNames.begin(), defNames.end());
       }
       return result;
     }
@@ -209,6 +244,7 @@ namespace LOFAR {
       bbo.blobStream() << check;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::deleteDefValues (const string& parmNamePattern)
@@ -218,6 +254,7 @@ namespace LOFAR {
       bbo.blobStream() << parmNamePattern;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::checkNames (const vector<string>& firstNames,
@@ -241,10 +278,9 @@ namespace LOFAR {
                                        double freqStep,
                                        double timev1, double timev2,
                                        double timeStep,
-                                       bool asStartEnd)
+                                       bool asStartEnd,
+                                       bool includeDefaults)
     {
-      BlobString buf;
-      MWBlobOut bbo(buf, GetValues, 0);
       if (!asStartEnd) {
         double width = freqv2;
         freqv1 -= width/2;
@@ -253,20 +289,38 @@ namespace LOFAR {
         timev1 -= width/2;
         timev2 = timev1 + width;
       }
-      bbo.blobStream() << parmNamePattern
-                       << freqv1 << freqv2 << freqStep
-                       << timev1 << timev2 << timeStep;
-      bbo.finish();
-      itsConn.writeAll (buf);
-      vector<Record> recs(itsConn.size());
-      string msg;
+      // Only send command to a part if within the frequency range.
+      vector<bool> used(itsConn.size(), false);
       for (int i=0; i<itsConn.size(); ++i) {
-        itsConn.read (i, buf);
-        MWBlobIn bbi(buf);
-        ASSERT (bbi.getOperation() == 1);    // ensure success
-        getRecord (bbi.blobStream(), recs[i]);
-        bbi.blobStream() >> msg;
-        bbi.finish();
+        if (freqv1 <= itsEndFreqs[i]  &&  freqv2 >= itsStartFreqs[i]) {
+          BlobString buf;
+          MWBlobOut bbo(buf, GetValues, 0);
+          bbo.blobStream() << parmNamePattern
+                           << std::max(freqv1, itsStartFreqs[i])
+                           << std::min(freqv2, itsEndFreqs[i])
+                           << freqStep
+                           << timev1 << timev2 << timeStep
+                           << includeDefaults;
+          bbo.finish();
+          itsConn.write (i, buf);
+          used[i] = true;
+        }
+      }
+      // Read the replies.
+      vector<Record> recs;
+      recs.reserve (itsConn.size());
+      BlobString buf;
+      for (int i=0; i<itsConn.size(); ++i) {
+        if (used[i]) {
+          Record rec;
+          itsConn.read (i, buf);
+          MWBlobIn bbi(buf);
+          if (checkStatus (bbi, i)) {
+            getRecord (bbi.blobStream(), rec);
+            bbi.finish();
+            recs.push_back (rec);
+          }
+        }
       }
       return combineRemote (recs);
     }
@@ -276,23 +330,24 @@ namespace LOFAR {
                                        const vector<double>& freqv2,
                                        const vector<double>& timev1,
                                        const vector<double>& timev2,
-                                       bool asStartEnd)
+                                       bool asStartEnd,
+                                       bool includeDefaults)
     {
       BlobString buf;
       MWBlobOut bbo(buf, GetValuesVec, 0);
       bbo.blobStream() << parmNamePattern
-                       << freqv1 << freqv2 << timev1 << timev2 << asStartEnd;
+                       << freqv1 << freqv2 << timev1 << timev2
+                       << asStartEnd << includeDefaults;
       bbo.finish();
       itsConn.writeAll (buf);
       vector<Record> recs(itsConn.size());
-      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
-        ASSERT (bbi.getOperation() == 1);    // ensure success
-        getRecord (bbi.blobStream(), recs[i]);
-        bbi.blobStream() >> msg;
-        bbi.finish();
+        if (checkStatus (bbi, i)) {
+          getRecord (bbi.blobStream(), recs[i]);
+          bbi.finish();
+        }
       }
       return combineRemote (recs);
     }
@@ -311,14 +366,13 @@ namespace LOFAR {
       bbo.finish();
       itsConn.writeAll (buf);
       vector<Record> recs(itsConn.size());
-      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
-        ASSERT (bbi.getOperation() == 1);    // ensure success
-        getRecord (bbi.blobStream(), recs[i]);
-        bbi.blobStream() >> msg;
-        bbi.finish();
+        if (checkStatus (bbi, i)) {
+          getRecord (bbi.blobStream(), recs[i]);
+          bbi.finish();
+        }
       }
       return combineRemote (recs);
     }
@@ -337,20 +391,56 @@ namespace LOFAR {
       bbo.finish();
       itsConn.writeAll (buf);
       vector<Record> recs(itsConn.size());
-      string msg;
       for (int i=0; i<itsConn.size(); ++i) {
         itsConn.read (i, buf);
         MWBlobIn bbi(buf);
-        ASSERT (bbi.getOperation() == 1);    // ensure success
-        getRecord (bbi.blobStream(), recs[i]);
-        bbi.blobStream() >> msg;
-        bbi.finish();
+        if (checkStatus (bbi, i)) {
+          getRecord (bbi.blobStream(), recs[i]);
+          bbi.finish();
+        }
       }
       return combineRemote (recs);
     }
 
     vector<double> ParmFacadeDistr::getDefaultSteps() const
-      { throw Exception ("ParmFacadeDistr::getDefaultSteps not implemented"); }
+    {
+      BlobString buf;
+      MWBlobOut bbo(buf, GetDefaultSteps, 0);
+      bbo.finish();
+      itsConn.writeAll (buf);
+      vector<double> steps, defSteps;
+      for (int i=0; i<itsConn.size(); ++i) {
+        itsConn.read (i, buf);
+        MWBlobIn bbi(buf);
+        if (checkStatus (bbi, i)) {
+          bbi.blobStream() >> steps;
+          bbi.finish();
+          if (! steps.empty()) {
+            if (defSteps.empty()) {
+              defSteps = steps;
+            } else {
+              // The default steps of all parts should match.
+              bool ok = true;
+              if (steps.size() != defSteps.size()) {
+                ok = false;
+              } else {
+                for (size_t i=0; i<steps.size(); ++i) {
+                  if (steps[i] != defSteps[i]) {
+                    ok = false;
+                    break;
+                  }
+                }
+              }
+              if (!ok) {
+                LOG_WARN_STR ("Default step values of part " << itsPartNames[i]
+                              << " differ from the other parts");
+              }
+            }
+          }
+        }
+      }
+      return defSteps;
+    }
 
     void ParmFacadeDistr::flush (bool fsync)
     {
@@ -359,6 +449,7 @@ namespace LOFAR {
       bbo.blobStream() << fsync;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::lock (bool lockForWrite)
@@ -368,6 +459,7 @@ namespace LOFAR {
       bbo.blobStream() << lockForWrite;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::unlock()
@@ -376,6 +468,7 @@ namespace LOFAR {
       MWBlobOut bbo(buf, Unlock, 0);
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::clearTables()
@@ -384,19 +477,21 @@ namespace LOFAR {
       MWBlobOut bbo(buf, ClearTables, 0);
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::setDefaultSteps (const vector<double>& steps)
     {
       BlobString buf;
-      MWBlobOut bbo(buf, Unlock, 0);
+      MWBlobOut bbo(buf, SetDefaultSteps, 0);
       bbo.blobStream() << steps;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
     void ParmFacadeDistr::addValues (const Record&)
-      { throw Exception ("ParmFacadeDistr::putValues not implemented"); }
+      { throw Exception ("ParmFacadeDistr::addValues not implemented"); }
 
     void ParmFacadeDistr::deleteValues (const string& parmNamePattern,
                                         double freqv1, double freqv2,
@@ -404,11 +499,12 @@ namespace LOFAR {
                                         bool asStartEnd)
     {
       BlobString buf;
-      MWBlobOut bbo(buf, Unlock, 0);
+      MWBlobOut bbo(buf, DeleteValues, 0);
       bbo.blobStream() << parmNamePattern
                        << freqv1 << freqv2 << timev1 << timev2 << asStartEnd;
       bbo.finish();
       itsConn.writeAll (buf);
+      checkStatusAll();
     }
 
 

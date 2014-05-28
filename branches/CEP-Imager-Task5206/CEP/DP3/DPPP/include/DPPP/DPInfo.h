@@ -31,10 +31,15 @@
 #include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
+#include <measures/Measures/MeasureHolder.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 
 namespace LOFAR {
   namespace DPPP {
+
+    //# Forward declarations.
+    class DPInput;
 
     // @ingroup NDPPP
 
@@ -94,14 +99,18 @@ namespace LOFAR {
       uint update (uint chanAvg, uint timeAvg);
 
       // Update the info from the given selection parameters.
-      // Optionally the stations are really removed from the antenna lists.
+      // Optionally unused stations are really removed from the antenna lists.
       void update (uint startChan, uint nchan,
                    const vector<uint>& baselines, bool remove);
+
+      // Remove unused stations from the antenna lists.
+      void removeUnusedAnt();
 
       // Set the phase center.
       // If original=true, it is set to the original phase center.
       void setPhaseCenter (const casa::MDirection& phaseCenter, bool original)
         { itsPhaseCenter=phaseCenter; itsPhaseCenterIsOriginal = original; }
+
 
       // Get the info.
       const string& msName() const
@@ -114,10 +123,12 @@ namespace LOFAR {
         { return itsNChan; }
       uint startchan() const
         { return itsStartChan; }
-        uint origNChan() const
+      uint origNChan() const
         { return itsOrigNChan; }
       uint nchanAvg() const
         { return itsChanAvg; }
+      uint nantenna() const
+        { return itsAntNames.size(); }
       uint nbaselines() const
         { return itsAnt1.size(); }
       uint ntime() const
@@ -140,14 +151,22 @@ namespace LOFAR {
         { return itsAntPos; }
       const casa::MPosition& arrayPos() const
         { return itsArrayPos; }
+      const casa::MPosition arrayPosCopy() const
+        {  return copyMeasure(casa::MeasureHolder(itsArrayPos)).asMPosition(); }
       const casa::MDirection& phaseCenter() const
         { return itsPhaseCenter; }
+      const casa::MDirection phaseCenterCopy() const
+      {  return copyMeasure(casa::MeasureHolder(itsPhaseCenter)).asMDirection(); }
       bool phaseCenterIsOriginal() const
         { return itsPhaseCenterIsOriginal; }
       const casa::MDirection& delayCenter() const
         { return itsDelayCenter; }
+      const casa::MDirection delayCenterCopy() const
+        { return copyMeasure(casa::MeasureHolder(itsDelayCenter)).asMDirection(); }
       const casa::MDirection& tileBeamDir() const
         { return itsTileBeamDir; }
+      const casa::MDirection tileBeamDirCopy() const
+        { return copyMeasure(casa::MeasureHolder(itsTileBeamDir)).asMDirection(); }
       const casa::Vector<double>& chanFreqs() const
         { return itsChanFreqs; }
       const casa::Vector<double>& chanWidths() const
@@ -197,6 +216,9 @@ namespace LOFAR {
       // Set which antennae are actually used.
       void setAntUsed();
 
+      // Creates a real copy of a casa::Measure by exporting to a Record
+      static casa::MeasureHolder copyMeasure(const casa::MeasureHolder fromMeas);
+
       //# Data members.
       bool   itsNeedVisData;    //# Are the visibility data needed?
       int    itsNeedWrite;      //# Does the last step need to write data/flags?
@@ -225,8 +247,8 @@ namespace LOFAR {
       casa::Vector<casa::String> itsAntNames;
       casa::Vector<casa::Double> itsAntDiam;
       vector<casa::MPosition>    itsAntPos;
-      vector<int>                itsAntUsed;       //# tells which ant are used
-      vector<int>                itsAntMap;        //# reverse of itsAntUsed
+      vector<int>                itsAntUsed;
+      vector<int>                itsAntMap;
       casa::Vector<casa::Int>    itsAnt1;          //# ant1 of all baselines
       casa::Vector<casa::Int>    itsAnt2;          //# ant2 of all baselines
       mutable vector<double>     itsBLength;       //# baseline lengths
