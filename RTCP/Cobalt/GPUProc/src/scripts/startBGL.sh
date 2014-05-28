@@ -36,7 +36,6 @@ function addlogprefix {
 (
 # Always print a header, to match errors to observations
 echo "---------------"
-echo "now:      " `date +"%F %T"`
 echo "called as: $0 $@"
 echo "pwd:       $PWD"
 echo "LOFARROOT: $LOFARROOT"
