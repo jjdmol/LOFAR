@@ -1,6 +1,6 @@
 //#  RTmetadata.cc: store metadata in PVSS
 //#
-//#  Copyright (C) 2014
+//#  Copyright (C) 2013-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: RTmetadata.cc 14961 2010-02-10 15:51:20Z overeem $
+//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -184,6 +184,8 @@ void RTmetadata::setupConnection()
 //
 void RTmetadata::sendEventsLoop()
 {
+	itsLogEvents.seqnr = 0;
+
 	while (true) {
 		{
 			ScopedLock lock(itsQueuedEventsMutex);

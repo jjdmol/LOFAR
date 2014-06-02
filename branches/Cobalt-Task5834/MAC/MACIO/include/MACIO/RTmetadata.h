@@ -1,6 +1,6 @@
 //#  RTmetadata.h: LCS-Common-Socket based impl to store metadata in PVSS.
 //#
-//#  Copyright (C) 2014
+//#  Copyright (C) 2013-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: RTmetadata.h 11220 2008-05-14 10:04:13Z overeem $
+//#  $Id$
 
 #ifndef LOFAR_MACIO_RTMETADATA_H
 #define LOFAR_MACIO_RTMETADATA_H
