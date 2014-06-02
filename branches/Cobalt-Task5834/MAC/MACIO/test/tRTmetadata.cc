@@ -60,8 +60,6 @@ void test()
 	pair.second = "Fox";
 	pairs.push_back(pair);
 	myLogger.log(pairs);
-
-	usleep(600000); // give started thread some time before cancelling in destructor
 }
 
 int main (int	/*argc*/, char* argv[]) 

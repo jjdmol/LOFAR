@@ -37,6 +37,7 @@
 #include <Common/KVpair.h>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -82,6 +83,8 @@ private:
 	void sendEventsLoop();
 
 	//# --- Datamembers ---
+	static const unsigned	MAX_QUEUED_EVENTS = 100;
+
 	uint32			itsObsID;
 	string			itsRegisterName;
 	string			itsHostName;
@@ -91,11 +94,12 @@ private:
 	KVTSendMsgPoolEvent     itsLogEvents;
 
 	// For users to log() to.
-	vector<KVpair>		itsQueuedEvents; // for users that log()
+	vector<KVpair>		itsQueuedEvents;
 
 	// Protect itsQueuedEvents from concurrent adds,
 	// and from add while swapping with itsLogEvents.
 	Mutex			itsQueuedEventsMutex;
+	Condition		itsQueuedEventsCond;
 
 
 	// Always have itsThread as the last declaration to guarantee

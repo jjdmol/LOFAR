@@ -31,8 +31,6 @@
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/RTmetadata.h>
 
-#define MAX_QUEUED_EVENTS 100
-
 namespace LOFAR {
   namespace MACIO {
 
@@ -56,7 +54,12 @@ RTmetadata::RTmetadata(uint32		observationID,
 //
 RTmetadata::~RTmetadata()
 {
-	if (itsThread != NULL) {
+	if (itsThread) {
+		// Give itsThread time to send the last events (best effort).
+		// We cannot do that while a cancellation exc is already in
+		// progress in case the connection hangs.
+		::usleep(50000); // 50 ms
+
 		itsThread->cancel();
 
 		// joins in ~Thread()
@@ -76,7 +79,7 @@ void RTmetadata::start()
 		return;
 	}
 
-	if (itsThread == NULL) {
+	if (itsThread) {
 		itsThread.reset(new Thread(this, &RTmetadata::rtmLoop, "RTMetadata (PVSS) thread: "));
 	}
 }
@@ -88,13 +91,14 @@ void RTmetadata::log(const KVpair& pair)
 {
 	ScopedLock lock(itsQueuedEventsMutex);
 
-	// /*If the events are not being sent, */limit the queued number.
+	// Limit the queue size, possibly losing events.
 	//
-	// We could replace old events by new events, but we'd have to ensure
-	// somehow that we don't drop e.g. observationName events we send once
+	// We could replace old events by new ones, but then we'd have to ensure
+	// somehow that we don't drop e.g. the observationID event we send once
 	// at the start that PVSS needs to interpret the context of all events.
-	if (/*itsKVTport != NULL || */itsQueuedEvents.size() < MAX_QUEUED_EVENTS) {
+	if (itsQueuedEvents.size() < MAX_QUEUED_EVENTS) {
 		itsQueuedEvents.push_back(pair);
+		itsQueuedEventsCond.signal();
 	}
 }
 
@@ -112,6 +116,7 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 	if (count > 0) {
 		itsQueuedEvents.insert(itsQueuedEvents.end(),
 				       pairs.begin(), pairs.begin() + count);
+		itsQueuedEventsCond.signal();
 	}
 }
 
@@ -132,9 +137,10 @@ void RTmetadata::rtmLoop()
 			setupConnection();
 
 			sendEventsLoop();
-
+			// not reached
 		} catch (LOFAR::AssertError& exc) {
-			LOG_WARN_STR("Connection failure to PVSS Gateway. Re-connecting after timeout... Error: " << exc.what());
+			LOG_WARN_STR("Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in a moment.");
+			itsLogEvents.kvps.clear(); // trash possibly half-sent events
 			delete itsKVTport;
 		} catch (...) {
 			LOG_DEBUG("Caught cancellation (or unknown) exception. Stopping...");
@@ -142,6 +148,7 @@ void RTmetadata::rtmLoop()
 			throw; // cancellation exc must be re-thrown
 		}
 
+		// capped, binary back-off in case of connection trouble
 		::usleep(sleepTime);
 		if (sleepTime <= 16000000) { // 16 sec
 			sleepTime *= 2;
@@ -176,6 +183,7 @@ void RTmetadata::setupConnection()
 	ASSERTSTR(ack.obsID == itsObsID && ack.name == itsRegisterName,
 		  "PVSSGateway identity error");
 
+	itsLogEvents.seqnr = 0;
 	LOG_DEBUG("Connected to and registered at the PVSSGateway");
 }
 
@@ -184,11 +192,13 @@ void RTmetadata::setupConnection()
 //
 void RTmetadata::sendEventsLoop()
 {
-	itsLogEvents.seqnr = 0;
-
 	while (true) {
 		{
 			ScopedLock lock(itsQueuedEventsMutex);
+
+			if (itsQueuedEvents.empty()) {
+				itsQueuedEventsCond.wait(itsQueuedEventsMutex);
+			}
 			itsQueuedEvents.swap(itsLogEvents.kvps);
 		}
 
@@ -196,9 +206,6 @@ void RTmetadata::sendEventsLoop()
 		itsLogEvents.seqnr -= 1;
 		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
 		itsLogEvents.kvps.clear();
-
-		// Lazy way to send buffered PVSS events. No need to hurry.
-		::usleep(100000); // 100 ms
 	}
 }
 
