@@ -102,9 +102,9 @@ namespace LOFAR
         double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
                                    metaData.stationBeam.delayAtBegin) * 0.5;
 
-        size_t nrTABs = ps.settings.beamFormer.SAPs[SAP].TABs.size();
+        size_t nrTABs = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
 
-        ASSERTSTR(metaData.TABs.size() == nrTABs, "Need delays for " << nrTABs << " TABs, but got delays for " << metaData.TABs.size() << " TABs");
+        ASSERTSTR(metaData.TABs.size() == nrTABs, "Need delays for " << nrTABs << " coherent TABs, but got delays for " << metaData.TABs.size() << " TABs");
 
         // Note: We only get delays for the coherent TABs
         for (unsigned tab = 0; tab < nrTABs; tab++)
