@@ -89,7 +89,7 @@ private:
 	void sendEventsLoop();
 
 	//# --- Datamembers ---
-	static const unsigned	MAX_QUEUED_EVENTS = 100;
+	static const unsigned	MAX_QUEUED_EVENTS = 1024;
 
 	uint32			itsObsID;
 	string			itsRegisterName;
