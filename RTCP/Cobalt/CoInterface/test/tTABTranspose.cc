@@ -253,10 +253,11 @@ SUITE(BlockCollector) {
       ctr_loss.addSubband(sb);
     }
 
+    // emit remaining blocks: [2,3]
     ctr_loss.finish();
 
-    // should have emitted blocks 0 and 1, plus terminating NULL
-    CHECK_EQUAL(3UL, outputPool.filled.size());
+    // should have emitted blocks [1,2,3], plus terminating NULL
+    CHECK_EQUAL(4UL, outputPool.filled.size());
   }
 
   TEST_FIXTURE(Fixture, Loss_OneSubband) {
