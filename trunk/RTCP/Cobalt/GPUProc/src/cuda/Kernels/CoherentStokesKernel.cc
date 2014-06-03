@@ -101,8 +101,10 @@ namespace LOFAR
       const unsigned maxNrChannelsPerBlock  = std::min(params.nrChannelsPerSubband,
                                                        maxLocalWorkSize.x);
       const unsigned maxTimeParallelThreads = 
-              std::min(params.nrSamplesPerChannel / params.timeIntegrationFactor,
+//              std::min(params.nrSamplesPerChannel / params.timeIntegrationFactor,
+                gcd(params.nrSamplesPerChannel / params.timeIntegrationFactor,
                                                        maxLocalWorkSize.y);
+LOG_DEBUG_STR("ALX: params.nrSamplesPerChannel=" << params.nrSamplesPerChannel << " params.timeIntegrationFactor=" << params.timeIntegrationFactor << " maxLocalWorkSize.y=" << maxLocalWorkSize.y << " maxTimeParallelThreads=" << maxTimeParallelThreads);
       const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
                                                        maxLocalWorkSize.z);
 
@@ -135,6 +137,9 @@ namespace LOFAR
             string errMsgs;
             setEnqueueWorkSizes(grid, block, &errMsgs);
             if (errMsgs.empty()) {
+LOG_DEBUG_STR("ALX: nrTABSPerBlock=" << nrTABsPerBlock << " nrTimeParallelThreadsPerBlock=" << nrTimeParallelThreadsPerBlock <<
+              " nrChannelsPerBlock=" << nrChannelsPerBlock);
+LOG_DEBUG_STR("ALX: nrChannelThreads=" << nrChannelThreads << " *nrTimeParallelThreads*=" << nrTimeParallelThreads << " nrTABsThreads=" << nrTABsThreads);
               CoherentStokesExecConfig ec;
               ec.grid  = grid;
               ec.block = block;
@@ -236,16 +241,19 @@ namespace LOFAR
     unsigned CoherentStokesKernel::smallestFactorOf(unsigned n) const
     {
       if (n % 2 == 0) {
+LOG_DEBUG_STR("ALX: smallestFactorOf(" << n << ")=2");
         return 2;
       }
 
       unsigned sqrtn = sqrt(n+1); // +1: avoid e.g. sqrt(25)=4.999...
       for (unsigned i = 3; i <= sqrtn; i += 2) {
         if (n % i == 0) {
+LOG_DEBUG_STR("ALX: smallestFactorOf(" << n << ")=i");
           return i;
         }
       }
 
+LOG_DEBUG_STR("ALX: smallestFactorOf(" << n << ")=n");
       return n;
     }
 

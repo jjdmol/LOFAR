@@ -69,7 +69,14 @@ public:
 	// log()
 	// Note that events are buffered up to a maximum, then silently dropped.
 	void log(const KVpair& pair); // prefer this overload
+
 	void log(const vector<KVpair>& pairs);
+
+	template <typename T> 
+	inline void log(const string& key, const T& value)
+	{
+		return log(KVpair(key, value));
+	}
 
 private:
 	RTmetadata();
