@@ -74,7 +74,7 @@ struct ParsetSUT
     nrOutputSamples(inrOutputSamples),
     nrStations(inrStations),
     nrInputSamples(nrOutputSamples * timeIntegrationFactor), 
-    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples),
+    blockSize(/*timeIntegrationFactor * nrChannels * nrInputSamples*/196608),
     nrDelayCompensationChannels(64)
   {
     size_t nr_files = inrTabs * 4; // 4 for number of stokes
@@ -102,7 +102,6 @@ struct ParsetSUT
     parset.updateSettings();
   }
 };
-
 
 // Test correctness of reported buffer sizes
 TEST(BufferSizes)
@@ -201,6 +200,7 @@ struct SUTWrapper:  ParsetSUT
 
 };
 
+#if 0
 // An input of all zeros should result in an output of all zeros.
 TEST(ZeroTest)
 {
@@ -425,7 +425,53 @@ TEST(Coherent2DifferentValuesAllDimTest)
                     sut.hOutput.data(),
                     sut.hOutput.num_elements()); 
 }
+#endif
 
+TEST(NSAMPLES_196608)
+{
+  LOG_INFO("Test NSAMPLES_196608");
+
+  size_t NR_CHANNELS = 16;
+  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 12288;
+  size_t NR_STATIONS = 1; // TODO: 46
+  size_t NR_TABS = 1;
+  size_t INTEGRATION_SIZE = 8;
+
+  SUTWrapper sut(NR_CHANNELS,
+                 NR_SAMPLES_PER_OUTPUT_CHANNEL,
+                 NR_STATIONS,
+                 NR_TABS,
+                 INTEGRATION_SIZE);
+
+  // Set the input
+  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
+    sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+/*
+  // Expected output
+  size_t value_repeat = NR_SAMPLES_PER_OUTPUT_CHANNEL;
+  // For stokes parameters
+  size_t size_tab = value_repeat * 4;
+  for (size_t idx_tab = 0; idx_tab < NR_TABS; ++idx_tab)
+  {
+    // I
+    for (size_t idx_value_repeat = 0 ; idx_value_repeat < value_repeat; ++idx_value_repeat)
+    {
+      sut.hRefOutput.data()[idx_tab * size_tab + idx_value_repeat]                    = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat + idx_value_repeat]     = 0.0f;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 2 + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 3 +idx_value_repeat]  = 0.0f;
+    }
+  }
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+*/
+}
 
 int main(int argc, char *argv[])
 {

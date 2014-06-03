@@ -60,6 +60,8 @@ void test()
 	pair.second = "Fox";
 	pairs.push_back(pair);
 	myLogger.log(pairs);
+
+	myLogger.log("foo", 1.2);
 }
 
 int main (int	/*argc*/, char* argv[]) 
