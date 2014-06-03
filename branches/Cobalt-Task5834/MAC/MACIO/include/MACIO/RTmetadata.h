@@ -64,7 +64,6 @@ public:
 	//
 	// Does not necessarily have to be called before log()
 	// (or at all (e.g. for unrelated tests)).
-	// Not thread-safe.
 	void start();
 
 	// log()

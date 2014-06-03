@@ -79,7 +79,8 @@ void RTmetadata::start()
 		return;
 	}
 
-	if (itsThread) {
+	ScopedLock lock(itsQueuedEventsMutex);
+	if (!itsThread) {
 		itsThread.reset(new Thread(this, &RTmetadata::rtmLoop, "RTMetadata (PVSS) thread: "));
 	}
 }
