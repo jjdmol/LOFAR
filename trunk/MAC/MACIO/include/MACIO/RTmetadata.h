@@ -1,6 +1,6 @@
 //#  RTmetadata.h: LCS-Common-Socket based impl to store metadata in PVSS.
 //#
-//#  Copyright (C) 2013
+//#  Copyright (C) 2013-2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: RTmetadata.h 11220 2008-05-14 10:04:13Z overeem $
+//#  $Id$
 
 #ifndef LOFAR_MACIO_RTMETADATA_H
 #define LOFAR_MACIO_RTMETADATA_H
@@ -28,11 +28,16 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <boost/scoped_ptr.hpp>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/EventPort.h>
-#include <Common/KVpair.h>
+#include <MACIO/KVT_Protocol.ph>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
+#include <Common/KVpair.h>
+#include <Common/Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -48,39 +53,57 @@ namespace LOFAR {
 class RTmetadata
 {
 public:
-	// RTmetadata (obsID, uniqID_name_in_SAS_tree)
-	RTmetadata(uint32			observationID,
-			   const string&	registerName, 
-			   const string&	hostname = "");
+	RTmetadata(uint32		observationID,
+		   const string&	registerName, 
+		   const string&	hostname = "");
 
-	// ~RTmetadata
 	~RTmetadata();
 
-	// log()
-	// KVpair based functions.
-	bool log(const KVpair& aPair);
-	bool log(const vector<KVpair> pairs);
+	// Start a thread (if not running) to connect and
+	// send logged (queued) key-value pairs to a PVSS gateway.
+	//
+	// Does not necessarily have to be called before log()
+	// (or at all (e.g. for unrelated tests)).
+	void start();
 
-	// string based functions
-	template <typename T> 
-		inline bool log(const string& key, const T& value, double secsEpoch1970=0.0)
-		{ return (log(KVpair(key, value, secsEpoch1970))); }
-	bool log(const vector<string> key, const vector<string> value, const vector<double> times);
+	// log()
+	// Note that events are buffered up to a maximum, then silently dropped.
+	void log(const KVpair& pair); // prefer this overload
+	void log(const vector<KVpair>& pairs);
 
 private:
 	RTmetadata();
 	// Copying is not allowed
-	RTmetadata(const RTmetadata&	that);
+	RTmetadata(const RTmetadata& that);
 	RTmetadata& operator=(const RTmetadata& that);
 
-	bool _setupConnection();
+        void rtmLoop();
+	void setupConnection();
+	void sendEventsLoop();
 
 	//# --- Datamembers ---
+	static const unsigned	MAX_QUEUED_EVENTS = 100;
+
 	uint32			itsObsID;
 	string			itsRegisterName;
-	bool			itsLoggingEnabled;
-	int32			itsSeqnr;
+	string			itsHostName;
 	EventPort*		itsKVTport;
+
+	// For itsThread to send from. Contains vector<KVpair> kvps.
+	KVTSendMsgPoolEvent     itsLogEvents;
+
+	// For users to log() to.
+	vector<KVpair>		itsQueuedEvents;
+
+	// Protect itsQueuedEvents from concurrent adds,
+	// and from add while swapping with itsLogEvents.
+	Mutex			itsQueuedEventsMutex;
+	Condition		itsQueuedEventsCond;
+
+
+	// Always have itsThread as the last declaration to guarantee
+	// it is destructed before the data it touches.
+	boost::scoped_ptr<Thread> itsThread;
 };
 
 

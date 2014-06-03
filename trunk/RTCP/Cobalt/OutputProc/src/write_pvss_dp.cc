@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+#if 0 // TODO: port to new interface once purpose of this is clear
   unsigned obsId = 12345;
   string registerName("OnlineControl"); // see table in LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
   string defaultHostname("ccu099.control.lofar");
@@ -90,6 +91,7 @@ int main(int argc, char *argv[]) {
     LOG_WARN("Failed to write data point");
   }
 */
+#endif
   return 0;
 }
 
