@@ -9,4 +9,5 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 lofar_add_library(brokenantennainfo 
   Package__Version.cc
+  FinalMetaData.cc
   FinalMetaDataGatherer.cc)
