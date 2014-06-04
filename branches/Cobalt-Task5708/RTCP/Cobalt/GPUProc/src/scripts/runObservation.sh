@@ -368,11 +368,18 @@ OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
 
-if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
+# Return codes of rtcp:
+#  0 = success
+#  1 = rtcp detected failure
+# >1 = crash, but possibly at teardown after a succesful observation
+if [ $OBSRESULT -gt 1 -a -s $FEEDBACK_FILE ]
 then
   # There is a feedback file! Consider the observation as succesful,
   # to prevent crashes in the tear down from ruining an otherwise
-  # perfectly good observation
+  # perfectly good observation.
+  #
+  # Note that we might miss failures detected by rtcp, such as
+  # missing final meta data!
   echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
 
   OBSRESULT=0
