@@ -28,7 +28,7 @@
 #include <Common/Thread/Trigger.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
-#include <BrokenAntennaInfo/FinalMetaData.h>
+#include <CoInterface/FinalMetaData.h>
 
 namespace LOFAR
 {
