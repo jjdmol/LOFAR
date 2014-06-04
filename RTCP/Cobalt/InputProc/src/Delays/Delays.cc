@@ -313,7 +313,11 @@ namespace LOFAR
         metaDatas[i].stationBeam.delayAtBegin  = delaysAtBegin.SAPs[sap].SAP.totalDelay() - coarseDelay;
         metaDatas[i].stationBeam.delayAfterEnd = delaysAfterEnd.SAPs[sap].SAP.totalDelay() - coarseDelay;
 
-        for (size_t tab = 0; tab < metaDatas[i].TABs.size(); ++tab) {
+        size_t nrTABs = delaysAtBegin.SAPs[sap].TABs.size();
+
+        metaDatas[i].TABs.resize(nrTABs);
+
+        for (size_t tab = 0; tab < nrTABs; ++tab) {
           metaDatas[i].TABs[tab].delayAtBegin  = delaysAtBegin.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
           metaDatas[i].TABs[tab].delayAfterEnd = delaysAfterEnd.SAPs[sap].TABs[tab].totalDelay() - coarseDelay;
         }

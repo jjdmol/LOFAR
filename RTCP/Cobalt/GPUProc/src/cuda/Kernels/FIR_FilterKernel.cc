@@ -178,7 +178,7 @@ namespace LOFAR
             itsParameters.nrPolarizations *
             (itsParameters.inputIsStationData
              ? itsParameters.nrBytesPerComplexSample
-             : sizeof(float));
+             : sizeof(std::complex<float>));
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

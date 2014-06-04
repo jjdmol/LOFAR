@@ -102,8 +102,12 @@ namespace LOFAR
         double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
                                    metaData.stationBeam.delayAtBegin) * 0.5;
 
+        size_t nrTABs = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
+
+        ASSERTSTR(metaData.TABs.size() == nrTABs, "Need delays for " << nrTABs << " coherent TABs, but got delays for " << metaData.TABs.size() << " TABs");
+
         // Note: We only get delays for the coherent TABs
-        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
+        for (unsigned tab = 0; tab < nrTABs; tab++)
         {
           // subtract the delay that was already compensated for
           tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
@@ -112,7 +116,7 @@ namespace LOFAR
         }
 
         // Zero padding entries that exist because we always produce maxNrCoherentTABsPerSAP for any subband
-        for (unsigned tab = metaData.TABs.size(); tab < ps.settings.beamFormer.maxNrCoherentTABsPerSAP(); tab++)
+        for (unsigned tab = nrTABs; tab < ps.settings.beamFormer.maxNrCoherentTABsPerSAP(); tab++)
           tabDelays[SAP][station][tab] = 0.0;
       }
     }
