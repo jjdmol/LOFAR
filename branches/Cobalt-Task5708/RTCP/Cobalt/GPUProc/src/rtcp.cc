@@ -70,7 +70,6 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
@@ -466,9 +465,6 @@ int main(int argc, char **argv)
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
-  LOG_INFO("----- Initialising SSH library");
-  SSH_Init();
-
   if (rank == 0) {
     LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
@@ -612,8 +608,6 @@ int main(int argc, char **argv)
     storageProcesses = 0;
   }
   LOG_INFO("===== SUCCESS =====");
-
-  SSH_Finalize();
 
 #ifdef HAVE_MPI
   MPIPoll::instance().stop();

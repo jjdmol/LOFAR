@@ -32,7 +32,6 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Storage/StorageProcesses.h>
-#include <GPUProc/Storage/SSH.h>
 
 char pubkey[1024];
 char privkey[1024];
@@ -106,16 +105,8 @@ int main()
 
   // prevent stalls
   alarm(60);
-
-  SSH_Init();
-
-  if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
-    return 3;
-
  
   test_protocol();
-
-  SSH_Finalize();
 
   return 0;
 }

@@ -31,8 +31,6 @@
 #include <Stream/PortBroker.h>
 #include <CoInterface/Stream.h>
 
-#include "SSH.h"
-
 namespace LOFAR
 {
   namespace Cobalt
