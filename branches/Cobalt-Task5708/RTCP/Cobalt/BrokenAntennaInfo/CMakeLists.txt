@@ -1,6 +1,6 @@
 # $Id: CMakeLists.txt 22563 2012-10-30 18:50:15Z mol $
 
-lofar_package(MetaDataGatherer 1.0 DEPENDS Common OTDB CoInterface)
+lofar_package(BrokenAntennaInfo 1.0 DEPENDS Common OTDB CoInterface)
 
 include(LofarFindPackage)
 lofar_find_package(Casacore COMPONENTS casa measures REQUIRED)
