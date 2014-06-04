@@ -1,0 +1,46 @@
+default via 10.151.255.254 dev eth0  metric 100 
+10.135.252.0/24 via 10.175.255.201 dev eth2 
+10.135.253.0/24 via 10.175.255.202 dev eth3 
+10.135.254.0/24 via 10.175.255.203 dev eth4 
+10.135.255.0/24 via 10.175.255.204 dev eth5 
+10.144.0.0/13 dev eth0  proto kernel  scope link  src 10.149.128.1 
+10.168.0.0/13 dev eth2  proto kernel  scope link  src 10.168.96.1 
+10.168.0.0/13 dev eth5  proto kernel  scope link  src 10.168.96.4 
+10.168.0.0/13 dev eth4  proto kernel  scope link  src 10.168.96.3 
+10.168.0.0/13 dev eth3  proto kernel  scope link  src 10.168.96.2 
+10.175.5.1 dev eth2  scope link 
+10.175.5.2 dev eth2  scope link 
+10.175.5.3 dev eth2  scope link 
+10.175.5.4 dev eth2  scope link 
+10.175.5.7 dev eth2  scope link 
+10.175.5.8 dev eth2  scope link 
+10.175.5.9 dev eth2  scope link 
+10.175.5.10 dev eth2  scope link 
+10.175.39.1 dev eth3  scope link 
+10.175.39.2 dev eth3  scope link 
+10.175.39.3 dev eth3  scope link 
+10.175.39.4 dev eth3  scope link 
+10.175.39.7 dev eth3  scope link 
+10.175.39.8 dev eth3  scope link 
+10.175.39.9 dev eth3  scope link 
+10.175.39.10 dev eth3  scope link 
+10.175.129.1 dev eth4  scope link 
+10.175.129.2 dev eth4  scope link 
+10.175.129.3 dev eth4  scope link 
+10.175.129.4 dev eth4  scope link 
+10.175.129.7 dev eth4  scope link 
+10.175.129.8 dev eth4  scope link 
+10.175.129.9 dev eth4  scope link 
+10.175.129.10 dev eth4  scope link 
+10.175.152.1 dev eth5  scope link 
+10.175.152.2 dev eth5  scope link 
+10.175.152.3 dev eth5  scope link 
+10.175.152.4 dev eth5  scope link 
+10.175.183.1 dev eth5  scope link 
+10.175.183.2 dev eth5  scope link 
+10.175.183.3 dev eth5  scope link 
+10.175.183.4 dev eth5  scope link 
+10.175.255.201 dev eth2  scope link 
+10.175.255.202 dev eth3  scope link 
+10.175.255.203 dev eth4  scope link 
+10.175.255.204 dev eth5  scope link 

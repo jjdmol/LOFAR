@@ -1,0 +1,20 @@
+set(CASACORE_ROOT_DIR /opt/cep/LofIm/daily/casacore)
+set(CASAREST_ROOT_DIR /opt/cep/LofIm/daily/casarest)
+set(DAL_ROOT_DIR /opt/cep/dal/testing)
+set(ENV{HDF5_ROOT} /opt/cep/hdf5)
+
+set(PYRAP_ROOT_DIR /opt/cep/LofIm/daily/pyrap)
+
+set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
+
+set(LOG4CXX_ROOT_DIR /opt/cep/lofar/external/log4cxx)
+set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
+
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
+)
+
+# Drop the now default C++ debug compile flag -D_GLIBCXX_DEBUG, because Python
+# (or Boost.Python) barfs on it (glibc detected: python free(): invalid pointer)
+set(GNU_CXX_FLAGS_DEBUG  "-g")

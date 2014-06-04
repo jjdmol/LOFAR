@@ -1,0 +1,21 @@
+# These keys contain statistics about the output of GPUProc, i.e. the data that
+# is ready to be sent to outputProc. These keys must be written _per_ subband. 
+
+# Observation ID as string
+observationName		string
+
+# Type of data (Correlated/Beamformed)
+dataProductType		string
+
+# Subband index number (usually in the range [0..488>)
+subband			int
+
+# Are we dropping output at the moment?
+dropping		bool
+
+# The number of seconds that data was successfully written
+written			float
+
+# The number of seconds that data was (partially) dropped
+dropped			float
+
