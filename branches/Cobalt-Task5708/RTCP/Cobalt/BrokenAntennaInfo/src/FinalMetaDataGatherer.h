@@ -27,6 +27,11 @@
 
 namespace LOFAR {
   namespace Cobalt {
+    /* Obtain and return FinalMetaData, as obtained through OTDB.
+       
+       The parset provides the start- and stop-time for which broken
+       atenna info is obtained.
+     */
     FinalMetaData getFinalMetaData( const Parset &parset );
   }
 }
