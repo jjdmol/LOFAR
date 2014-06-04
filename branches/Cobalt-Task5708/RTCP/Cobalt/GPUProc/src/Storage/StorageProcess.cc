@@ -40,14 +40,12 @@ namespace LOFAR
     using boost::format;
 
 
-    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable )
+    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
       :
       itsParset(parset),
       itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
       itsRank(rank),
-      itsHostname(hostname),
-      itsFinalMetaData(finalMetaData),
-      itsFinalMetaDataAvailable(finalMetaDataAvailable)
+      itsHostname(hostname)
     {
     }
 
@@ -90,6 +88,13 @@ namespace LOFAR
     }
 
 
+    void StorageProcess::setFinalMetaData( const FinalMetaData &finalMetaData )
+    {
+      itsFinalMetaData = finalMetaData;
+      itsFinalMetaDataAvailable.up();
+    }
+
+
     ParameterSet StorageProcess::feedbackLTA() const
     {
       // Prevent read/write conflicts
@@ -112,7 +117,7 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 
       // Send final meta data once it is available
-      itsFinalMetaDataAvailable.wait();
+      itsFinalMetaDataAvailable.down();
 
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
       itsFinalMetaData.write(stream);

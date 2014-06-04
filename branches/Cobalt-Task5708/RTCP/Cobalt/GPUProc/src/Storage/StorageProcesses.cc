@@ -31,6 +31,7 @@
 #include <Stream/PortBroker.h>
 #include <Stream/SocketStream.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/FinalMetaData.h>
 #include <BrokenAntennaInfo/FinalMetaDataGatherer.h>
 
 namespace LOFAR
@@ -73,7 +74,7 @@ namespace LOFAR
 
       // Start all processes
       for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++) {
-        itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank], itsFinalMetaData, itsFinalMetaDataAvailable);
+        itsStorageProcesses[rank] = new StorageProcess(itsParset, itsLogPrefix, rank, hostnames[rank]);
         itsStorageProcesses[rank]->start();
       }
     }
@@ -103,12 +104,24 @@ namespace LOFAR
     }
 
 
-    void StorageProcesses::forwardFinalMetaData( time_t deadline )
+    bool StorageProcesses::forwardFinalMetaData()
     {
-      itsFinalMetaData = getFinalMetaData(itsParset);
+      bool success = true;
+      FinalMetaData finalMetaData;
+      
+      try {
+        finalMetaData = getFinalMetaData(itsParset);
+      } catch(Exception &ex) {
+        // Not having FinalMetaData is FATAL!
+        LOG_FATAL_STR("Cannot obtain FinalMetaData: " << ex.what());
 
-      // Notify clients
-      itsFinalMetaDataAvailable.trigger();
+        success = false;
+      }
+
+      for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++)
+        itsStorageProcesses[rank]->setFinalMetaData(finalMetaData);
+
+      return success;
     }
   }
 }

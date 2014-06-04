@@ -26,10 +26,8 @@
 #include <vector>
 
 #include <Common/Thread/Thread.h>
-#include <Common/Thread/Trigger.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
-#include <CoInterface/FinalMetaData.h>
 
 #include "StorageProcess.h"
 
@@ -74,9 +72,10 @@ namespace LOFAR
       // calls stop(0)
       ~StorageProcesses();
 
-      // start the FinalMetaDataGatherer process and forward the obtained
-      // meta data to the Storage processes. The deadline is an absolute time out.
-      void forwardFinalMetaData( time_t deadline );
+      // Query OTDB for the FinalMetaData, and forward it to the Storage processes.
+      //
+      // Returns false if the FinalMetaData could not be obtained.
+      bool forwardFinalMetaData();
 
       // stop the processes and control threads, given an absolute time out.
       void stop( time_t deadline );
@@ -88,8 +87,6 @@ namespace LOFAR
       const std::string itsLogPrefix;
 
       std::vector<SmartPtr<StorageProcess> > itsStorageProcesses;
-      FinalMetaData itsFinalMetaData;
-      Trigger itsFinalMetaDataAvailable;
 
       // All feedback for the LTA obtained by the storage processes
       ParameterSet itsFeedbackLTA;

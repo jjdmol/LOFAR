@@ -86,8 +86,7 @@ void test_protocol()
   	    // Give Storage time to log its parset
 	    sleep(2);
 	
-	    // Give 10 seconds to exchange final meta data
-	    sp.forwardFinalMetaData(time(0) + 10);
+	    sp.forwardFinalMetaData();
 	
 	    // Give 10 seconds to wrap up
 	    sp.stop(time(0) + 10);
