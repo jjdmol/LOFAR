@@ -1,0 +1,136 @@
+V 11
+1
+LANG:1 0 
+PANEL,-1 -1 855 180 N "_3DFace" 0
+"main()
+{
+  dyn_string dps = makeDynString();
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0001.claim.name\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0001.claim.claimDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0001.claim.freeDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0002.claim.name\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0002.claim.claimDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0002.claim.freeDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0003.claim.name\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0003.claim.claimDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0003.claim.freeDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0004.claim.name\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0004.claim.claimDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0004.claim.freeDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0005.claim.name\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0005.claim.claimDate\");
+  dynAppend(dps, \"LOFAR_ObsSW_TempObs0005.claim.freeDate\");
+
+
+  dpConnect(\"update\",true,dps);
+}
+
+void update(string dp1, string name1,
+            string dp2, string claim1,
+            string dp3, string free1,
+            string dp4, string name2,
+            string dp5, string claim2,
+            string dp6, string free2,
+            string dp7, string name3,
+            string dp8, string claim3,
+            string dp9, string free3,
+            string dp10, string name4,
+            string dp11, string claim4,
+            string dp12, string free4,
+            string dp13, string name5,
+            string dp14, string claim5,
+            string dp15, string free5)
+{
+  claimtable.deleteAllLines();
+  claimtable.appendLine(\"temp\",\"LOFAR_ObsSW_TempObs0001\",\"name\",name1,\"claim\",claim1,\"free\",free1);
+  claimtable.appendLine(\"temp\",\"LOFAR_ObsSW_TempObs0002\",\"name\",name2,\"claim\",claim2,\"free\",free2);
+  claimtable.appendLine(\"temp\",\"LOFAR_ObsSW_TempObs0003\",\"name\",name3,\"claim\",claim3,\"free\",free3);
+  claimtable.appendLine(\"temp\",\"LOFAR_ObsSW_TempObs0004\",\"name\",name4,\"claim\",claim4,\"free\",free4);
+  claimtable.appendLine(\"temp\",\"LOFAR_ObsSW_TempObs0005\",\"name\",name5,\"claim\",claim5,\"free\",free5);
+}
+    " 0
+ E E E E 1 -1 -1 0  300 200
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+25 0
+"claimtable"
+""
+1 9.999999999999911 19.99999999999998 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 30 Sans Serif,9,-1,5,50,0,0,0,0,0
+0  8 18 832 162
+EE 1 0 1 4 0 "temp" 21 1 0 "s" 1
+LANG:1 4 temp
+E
+1
+LANG:1 0 
+
+200 "name" 21 1 0 "s" 1
+LANG:1 4 name
+E
+1
+LANG:1 0 
+
+200 "claim" 21 1 0 "s" 1
+LANG:1 5 claim
+E
+1
+LANG:1 0 
+
+200 "free" 21 1 0 "s" 1
+LANG:1 4 free
+E
+1
+LANG:1 0 
+
+200 
+14 14 10 10
+1
+LANG:1 30 Sans Serif,9,-1,5,50,0,0,0,0,0
+0 0 1 1 1 7
+1 0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0

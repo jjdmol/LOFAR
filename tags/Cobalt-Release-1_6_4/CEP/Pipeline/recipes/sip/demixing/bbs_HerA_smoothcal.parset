@@ -1,0 +1,30 @@
+Strategy.Stations = []
+
+Strategy.InputColumn = DATA
+Strategy.TimeWindow = []
+Strategy.ChunkSize = 100
+Strategy.UseSolver = F
+Strategy.Correlation.Selection = CROSS
+Strategy.Correlation.Type = []
+Strategy.Steps = [predict]
+
+Step.correct.Operation = CORRECT
+Step.correct.Model.Sources = []
+Step.correct.Model.Gain.Enable = T
+Step.correct.Output.Column = CORRECTED_DATA
+Step.correct.Output.WriteCovariance = T
+
+Step.predict.Operation = PREDICT
+Step.predict.Model.Sources = [HerA]
+Step.predict.Model.Gain.Enable = T
+Step.predict.Output.Column = MODEL_DATA
+
+
+
+
+
+
+
+
+
+
