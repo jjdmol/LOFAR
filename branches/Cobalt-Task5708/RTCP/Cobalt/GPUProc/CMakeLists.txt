@@ -45,7 +45,7 @@ else()
     "Either CUDA or OpenCL must be enabled to build GPUProc.")
 endif()
 
-lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
+lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps} BrokenAntennaInfo OTDB)
 
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(Boost REQUIRED)
