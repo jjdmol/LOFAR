@@ -200,7 +200,6 @@ void BeamFormerCoherentStep::printStats()
 void BeamFormerCoherentStep::process(BlockID blockID,
   unsigned subband)
 {
-  // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
   beamFormerKernel->enqueue(blockID,
     ps.settings.subbands[subband].centralFrequency,
     ps.settings.subbands[subband].SAP);
@@ -216,7 +215,6 @@ void BeamFormerCoherentStep::process(BlockID blockID,
 
   if (coherentStokesPPF)
   {
-    // The subbandIdx immediate kernel arg must outlive kernel runs.
     firFilterKernel->enqueue(blockID,
       blockID.subbandProcSubbandIdx);
     finalFFT->enqueue(blockID);

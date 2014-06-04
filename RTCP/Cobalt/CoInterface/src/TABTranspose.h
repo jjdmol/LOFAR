@@ -21,9 +21,9 @@
 #ifndef LOFAR_COINTERFACE_TABTRANSPOSE_H
 #define LOFAR_COINTERFACE_TABTRANSPOSE_H
 
-#include <cstring>
-#include <map>
 #include <iostream>
+#include <map>
+#include <cstring>
 #include <Common/Thread/Thread.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Condition.h>

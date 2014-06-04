@@ -55,7 +55,6 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
-#include <CoInterface/Pool.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
@@ -75,7 +74,6 @@
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
-#include <GPUProc/MPIReceiver.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -426,39 +424,18 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
-
-  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
-
-  MPIReceiver MPI_receiver(MPI_receive_pool,
-                     subbandIndices,
-    std::find(subbandIndices.begin(), 
-              subbandIndices.end(), 0U) != subbandIndices.end(),
-              ps.nrSamplesPerSubband(),
-              ps.nrStations(),
-              ps.nrBitsPerSample());
-      
   SmartPtr<Pipeline> pipeline;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) 
-  {
+  if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-  } 
-  else if (correlatorEnabled) 
-  {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
-          MPI_receive_pool);
-  } 
-  else if (beamFormerEnabled) 
-  {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank],
-         MPI_receive_pool, devices, rank);
-  } 
-  else 
-  {
+  } else if (correlatorEnabled) {
+    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+  } else if (beamFormerEnabled) {
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
+  } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
   }
@@ -525,38 +502,17 @@ int main(int argc, char **argv)
     waiter.waitUntil(deadline);
   }
 
-  #pragma omp parallel sections num_threads(3)
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
-      // Read and forward station data over MPI
+      // Read and forward station data
       #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
-      {       
-        // Determine if this station should start a pipeline for station..
-        const struct StationID stationID(
-          StationID::parseFullFieldName(
-          ps.settings.antennaFields.at(stat).name));
-        const StationNodeAllocation allocation(stationID, ps);
-
-        if (!allocation.receivedHere()) 
-        {// Station is not sending from this node, skip          
-          continue;
-        }
-
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
-    // receive data over MPI and insert into pool
-#   pragma omp section
-    {
-      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-      MPI_receiver.receiveInput(nrBlocks);
-    }
-
-    // Retrieve items from pool and process further on
     #pragma omp section
     {
       // Process station data

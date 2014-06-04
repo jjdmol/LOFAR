@@ -3,11 +3,10 @@ Cobalt system validation
 
 To validate a Cobalt node, do the following:
 
-1. Obtain sudo or root privileges, f.e. run:
+1. Obtain sudo or root priviledges, f.e. run:
      sudo true
 2. Run the validation sequence:
-     ./validate [subsystem]
-     subsystem = cluster | cobalt | system 
+     ./validate
 3. Verify that all tests passed.
 
 System validation sequence
@@ -15,9 +14,5 @@ System validation sequence
 
 The system validation runs all tests in `./tests' in their own directory.
 A test is an executable ending in `.test', the output of which will be put
-in `.test.log'. For tests ending in `.root.test', elevated privileges are
+in `.test.log'. For tests ending in `.root.test', elevated priviledges are
 needed. Such tests are run using `sudo -n'.
-
-The cluster validations are not run by default for they influence a possible
-running observation. To run the cluster validation (ensure a available 
-cluster!!) : ./validate cluster
