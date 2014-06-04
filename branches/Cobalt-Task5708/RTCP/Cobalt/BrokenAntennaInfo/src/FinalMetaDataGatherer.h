@@ -22,7 +22,7 @@
 #ifndef LOFAR_BROKENANTENNNAINFO_FINALMETADATAGATHERER_H
 #define LOFAR_BROKENANTENNNAINFO_FINALMETADATAGATHERER_H
 
-#include <CoInterface/FinalMetaData.h>
+#include "FinalMetaData.h"
 #include <CoInterface/Parset.h>
 
 namespace LOFAR {
