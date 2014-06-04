@@ -215,8 +215,6 @@ then
     setkey Cobalt.OutputProc.userName                 "$USER"
     setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
-    setkey Cobalt.FinalMetaDataGatherer.host          localhost
-    setkey Cobalt.FinalMetaDataGatherer.executable    "$LOFARROOT/bin/FinalMetaDataGatherer"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
