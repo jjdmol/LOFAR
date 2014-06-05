@@ -79,12 +79,9 @@ namespace LOFAR
       setArg(2, buffers.filterWeights);
       setArg(3, buffers.historySamples);
 
-      unsigned maxNrThreads = 
-        getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-
       unsigned totalNrThreads = 
         params.nrChannelsPerSubband * params.nrPolarizations * 2;
-      unsigned nrPasses = (totalNrThreads + maxNrThreads - 1) / maxNrThreads;
+      unsigned nrPasses = (totalNrThreads + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
 
       setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
                            gpu::Block(totalNrThreads / nrPasses, 1) );
