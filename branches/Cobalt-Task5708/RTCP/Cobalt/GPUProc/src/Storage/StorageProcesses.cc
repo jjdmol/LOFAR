@@ -118,6 +118,9 @@ namespace LOFAR
         success = false;
       }
 
+      // Unblock Storage threads, even if we don't have finalMetaData,
+      // in order to complete as much of the operational sequence as possible.
+
       for (unsigned rank = 0; rank < itsStorageProcesses.size(); rank++)
         itsStorageProcesses[rank]->setFinalMetaData(finalMetaData);
 

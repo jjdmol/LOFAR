@@ -32,6 +32,7 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
+#include <CoInterface/Exceptions.h>
 
 // SAS
 #include <OTDB/OTDBconstants.h>
@@ -215,7 +216,7 @@ namespace LOFAR {
 
       try {
         if (!conn.connect())
-          THROW(Exception, "OTDBconnection failed to " << db << " on " << host);
+          THROW(BrokenAntennaInfoException, "OTDBconnection failed to " << db << " on " << host);
 
         LOG_INFO_STR("Retrieving hardware broken at observation start");
         vector<OTDBvalue> hardwareBrokenAtBegin = getHardwareTree(conn, timeStart);
@@ -227,7 +228,7 @@ namespace LOFAR {
 
         conn.disconnect();
       } catch (pqxx::pqxx_exception &ex) {
-        THROW(Exception, "PostGreSQL error: " << ex.base().what());
+        THROW(BrokenAntennaInfoException, "PostGreSQL error: " << ex.base().what());
       }
 
       return finalMetaData;
