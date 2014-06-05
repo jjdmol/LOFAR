@@ -42,7 +42,7 @@ namespace LOFAR
      * 1. StorageProcess() creates and starts the StorageProcess objects from the
      *    parset.
      * 2. ... process observation ...
-     * 3. forwardFinalMetaData(deadline) starts the FinalMetaDataGatherer, reads the
+     * 3. forwardFinalMetaData() starts the FinalMetaDataGatherer, reads the
      *    final meta data and forwards it to the StorageProcess objects.
      * 4. stop(deadline) stops the StorageProcesses with a termination period.
      *
