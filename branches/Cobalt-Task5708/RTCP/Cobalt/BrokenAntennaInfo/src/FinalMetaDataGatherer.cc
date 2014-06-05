@@ -184,10 +184,6 @@ namespace LOFAR {
     FinalMetaData getFinalMetaData( const Parset &parset )
     {
       string host     = parset.getString("Cobalt.FinalMetaDataGatherer.database.host", "");
-      if (host.empty()) {
-        // TODO: remove case with last OLAP key when BG/P is gone
-        host = parset.getString("OLAP.FinalMetaDataGatherer.database.host", "");
-      }
       if (host.empty())
         host = "sasdb";
 
