@@ -13,11 +13,11 @@ set(_gpuproc_sources
   cpu_utils.cc
   FilterBank.cc
   global_defines.cc
-  MPIReceiver.cc
   Package__Version.cc
   SysInfoLogger.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
+  Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
 )

@@ -55,7 +55,6 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
-#include <CoInterface/Pool.h>
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
@@ -70,11 +69,11 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
+#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
 #include <GPUProc/Package__Version.h>
-#include <GPUProc/MPIReceiver.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -86,6 +85,9 @@ using boost::format;
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
 const time_t defaultAllocationTimeout = 15;
+
+// Deadline for the FinalMetaDataGatherer, in seconds
+const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
 const time_t defaultOutputProcTimeout = 60;
@@ -136,12 +138,6 @@ int main(int argc, char **argv)
     usage(argv[0]);
     exit(1);
   }
-
-  /*
-   * Whether we've encountered an error; observation will
-   * be set to ABORTED by OnlineControl if so.
-   */
-  int abortObservation = 0;
 
   /*
    * Extract rank/size from environment, because we need
@@ -228,6 +224,11 @@ int main(int argc, char **argv)
     ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
 			     defaultAllocationTimeout);
 
+  // Deadline for the FinalMetaDataGatherer, in seconds
+  const time_t finalMetaDataTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.finalMetaDataTimeout",
+			     defaultFinalMetaDataTimeout);
+
   // Deadline for outputProc, in seconds.
   const time_t outputProcTimeout = 
     ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
@@ -242,6 +243,7 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR(
     "Tuning parameters:" <<
     "\n  allocationTimeout    : " << allocationTimeout << "s" <<
+    "\n  finalMetaDataTimeout : " << finalMetaDataTimeout << "s" <<
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
@@ -422,45 +424,27 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
-
-  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
-
-  MPIReceiver MPI_receiver(MPI_receive_pool,
-                     subbandIndices,
-    std::find(subbandIndices.begin(), 
-              subbandIndices.end(), 0U) != subbandIndices.end(),
-              ps.nrSamplesPerSubband(),
-              ps.nrStations(),
-              ps.nrBitsPerSample());
-      
   SmartPtr<Pipeline> pipeline;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) 
-  {
+  if (subbandDistribution[rank].empty()) {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-  } 
-  else if (correlatorEnabled) 
-  {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
-          MPI_receive_pool);
-  } 
-  else if (beamFormerEnabled) 
-  {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank],
-         MPI_receive_pool, devices, rank);
-  } 
-  else 
-  {
+  } else if (correlatorEnabled) {
+    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
+  } else if (beamFormerEnabled) {
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices, rank);
+  } else {
     LOG_FATAL("No pipeline selected.");
     exit(1);
   }
 
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
+
+  LOG_INFO("----- Initialising SSH library");
+  SSH_Init();
 
   if (rank == 0) {
     LOG_INFO("----- Starting OutputProc");
@@ -518,38 +502,17 @@ int main(int argc, char **argv)
     waiter.waitUntil(deadline);
   }
 
-  #pragma omp parallel sections num_threads(3)
+  #pragma omp parallel sections num_threads(2)
   {
     #pragma omp section
     {
-      // Read and forward station data over MPI
+      // Read and forward station data
       #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
-      {       
-        // Determine if this station should start a pipeline for station..
-        const struct StationID stationID(
-          StationID::parseFullFieldName(
-          ps.settings.antennaFields.at(stat).name));
-        const StationNodeAllocation allocation(stationID, ps);
-
-        if (!allocation.receivedHere()) 
-        {// Station is not sending from this node, skip          
-          continue;
-        }
-
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
-    // receive data over MPI and insert into pool
-#   pragma omp section
-    {
-      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
-
-      MPI_receiver.receiveInput(nrBlocks);
-    }
-
-    // Retrieve items from pool and process further on
     #pragma omp section
     {
       // Process station data
@@ -570,13 +533,13 @@ int main(int argc, char **argv)
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    if (!storageProcesses->forwardFinalMetaData())
-      abortObservation = 1;
+    time_t completing_start = time(0);
+    storageProcesses->forwardFinalMetaData(completing_start + finalMetaDataTimeout);
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(time(0) + outputProcTimeout);
+    storageProcesses->stop(completing_start + finalMetaDataTimeout + outputProcTimeout);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -606,12 +569,14 @@ int main(int argc, char **argv)
   }
   LOG_INFO("===== SUCCESS =====");
 
+  SSH_Finalize();
+
 #ifdef HAVE_MPI
   MPIPoll::instance().stop();
 
   MPI_Finalize();
 #endif
 
-  return abortObservation ? 1 : 0;
+  return 0;
 }
 

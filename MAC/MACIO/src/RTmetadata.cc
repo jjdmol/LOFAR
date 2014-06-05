@@ -1,6 +1,6 @@
-//#  RTmetadata.cc: store metadata in PVSS
+//#  RTmetadata.cc: (raw) socket based implementation to exchange Events
 //#
-//#  Copyright (C) 2013-2014
+//#  Copyright (C) 2013
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,197 +18,141 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: RTmetadata.cc 14961 2010-02-10 15:51:20Z overeem $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
 //# Includes
-#include <unistd.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/hexdump.h>
 #include <MACIO/MACServiceInfo.h>
 #include <MACIO/RTmetadata.h>
+#include <KVT_Protocol.ph>
 
 namespace LOFAR {
   namespace MACIO {
 
 //
-// RTmetadata (observationID, registrationName, hostName)
+// RTmetadata (name, type, protocol)
 //
-RTmetadata::RTmetadata(uint32		observationID,
-		       const string&	registrationName,
-		       const string&	hostName) :
+RTmetadata::RTmetadata(uint32			observationID,
+					   const string&	registrationName,
+					   const string&	hostName) :
 	itsObsID		 (observationID),
-	itsRegisterName	 	 (registrationName),
-	itsHostName		 (hostName),
-	itsKVTport		 (NULL)
+	itsRegisterName	 (registrationName),
+	itsLoggingEnabled(false),
+	itsSeqnr		 (-1),
+	itsKVTport		 (0)
 {
-	itsLogEvents.kvps.reserve(MAX_QUEUED_EVENTS);
-	itsQueuedEvents.reserve(MAX_QUEUED_EVENTS);
+	// Try to setup a connection with the PVSSGateway
+	itsKVTport = new EventPort(MAC_SVCMASK_PVSSGATEWAY, false, KVT_PROTOCOL, hostName, true);
+	ASSERTSTR(itsKVTport, "can't allocate socket to serviceBroker");
+
+	itsLoggingEnabled = _setupConnection();
 }
 
 //
-// ~RTmetadata()
+// ~RTmetadata
 //
 RTmetadata::~RTmetadata()
 {
-	if (itsThread) {
-		// Give itsThread time to send the last events (best effort).
-		// We cannot do that while a cancellation exc is already in
-		// progress in case the connection hangs.
-		::usleep(50000); // 50 ms
-
-		itsThread->cancel();
-
-		// joins in ~Thread()
-	}
+	if (itsKVTport) {
+		delete itsKVTport;
+	};
 }
 
-
-//
-// start()
-//
-void RTmetadata::start()
-{
-	// Some tests clear the supplied hostname (don't use PVSSGatewayStub).
-	// Code under test may still log(), but that will be lost as intended.
-	if (itsHostName.empty()) {
-		LOG_WARN("Empty hostname, so written PVSS data points will be dropped.");
-		return;
-	}
-
-	ScopedLock lock(itsQueuedEventsMutex);
-	if (!itsThread) {
-		itsThread.reset(new Thread(this, &RTmetadata::rtmLoop, "RTMetadata (PVSS) thread: "));
-	}
-}
 
 //
 // log(KVpair)
 //
-void RTmetadata::log(const KVpair& pair)
+bool RTmetadata::log(const KVpair&	kvp)
 {
-	ScopedLock lock(itsQueuedEventsMutex);
-
-	// Limit the queue size, possibly losing events.
-	//
-	// We could replace old events by new ones, but then we'd have to ensure
-	// somehow that we don't drop e.g. the observationID event we send once
-	// at the start that PVSS needs to interpret the context of all events.
-	if (itsQueuedEvents.size() < MAX_QUEUED_EVENTS) {
-		itsQueuedEvents.push_back(pair);
-		itsQueuedEventsCond.signal();
+	if (!itsLoggingEnabled) {
+		return (false);
 	}
-}
 
+	KVTSendMsgEvent		logEvent;
+	logEvent.seqnr = --itsSeqnr;	// use negative seqnrs to avoid ack messages
+	logEvent.kvp   = kvp;
+	itsKVTport->send(&logEvent);
+	return (true);
+}
 
 //
 // log(vector<KVpair>)
 //
-void RTmetadata::log(const vector<KVpair>& pairs)
+bool RTmetadata::log(const vector<KVpair> pairs)
 {
-	ScopedLock lock(itsQueuedEventsMutex);
-
-	// comments in log() above apply here too
-	size_t nfree = MAX_QUEUED_EVENTS - itsQueuedEvents.size();
-	size_t count = std::min(pairs.size(), nfree);
-	if (count > 0) {
-		itsQueuedEvents.insert(itsQueuedEvents.end(),
-				       pairs.begin(), pairs.begin() + count);
-		itsQueuedEventsCond.signal();
+	if (!itsLoggingEnabled) {
+		return (false);
 	}
+
+	KVTSendMsgPoolEvent		logEvent;
+	logEvent.seqnr = --itsSeqnr;	// use negative seqnrs to avoid ack messages
+	logEvent.kvps  = pairs;
+	itsKVTport->send(&logEvent);
+	return (true);
 }
 
+//
+// log(vector<key>, vector<value>, vector<timestamp>)
+//
+bool RTmetadata::log(const vector<string> keys, const vector<string> values, const vector<double> times)
+{
+	if (!itsLoggingEnabled) {
+		return (false);
+	}
+
+	size_t	nrElements = keys.size();
+	if (values.size() != nrElements || times.size() != nrElements) {
+		LOG_FATAL(formatString("Trying to send unequal length of vectors: k=%d, v=%d, t=%d",nrElements, values.size(), times.size()));
+		return (false);
+	}
+
+	KVTSendMsgPoolEvent		logEvent;
+	logEvent.seqnr     = --itsSeqnr;	// use negative seqnrs to avoid ack messages
+	for (size_t i = 0; i < nrElements; i++) {
+		logEvent.kvps.push_back(KVpair(keys[i],values[i],times[i]));
+	}
+	itsKVTport->send(&logEvent);
+	return (true);
+}
 
 // -------------------- Internal routines --------------------
 
 //
-// rtmLoop()
+// _setupConnection()
 //
-void RTmetadata::rtmLoop()
+bool RTmetadata::_setupConnection()
 {
-	useconds_t sleepTime = 250000; // 250 ms
-
-	// Keep trying to set up a connection to the PVSSGateway,
-	// and then to send events. Until we get cancelled.
-	while (true) {
-		try {
-			setupConnection();
-
-			sendEventsLoop();
-			// not reached
-		} catch (LOFAR::AssertError& exc) {
-			LOG_WARN_STR("Connection failure to PVSS Gateway: " << exc.what() << ". Will attempt to reconnect in a moment.");
-			itsLogEvents.kvps.clear(); // trash possibly half-sent events
-			delete itsKVTport;
-		} catch (...) {
-			LOG_DEBUG("Caught cancellation (or unknown) exception. Stopping...");
-			delete itsKVTport;
-			throw; // cancellation exc must be re-thrown
-		}
-
-		// capped, binary back-off in case of connection trouble
-		::usleep(sleepTime);
-		if (sleepTime <= 16000000) { // 16 sec
-			sleepTime *= 2;
-		}
+	if (!itsKVTport->connect()) {
+		LOG_FATAL_STR("CONNECT ERROR: LOGGING OF KEY-VALUE PAIRS IS NOT POSSIBLE!");
+		return (false);
 	}
-}
 
-//
-// setupConnection()
-//
-void RTmetadata::setupConnection()
-{
-	// Use synchronous socket (last arg), since we already have a thread
-	// to provide full async (and thread-safety on log()).
-	itsKVTport = new EventPort(MAC_SVCMASK_PVSSGATEWAY, false, KVT_PROTOCOL,
-				   itsHostName, true); // may throw AssertError exc
-
-	ASSERTSTR(itsKVTport->connect(), "failed to connect to PVSSGateway");
-
-	LOG_DEBUG("Registering at PVSSGateway");
-	KVTRegisterEvent regEvent;
+	LOG_INFO("Registering at PVSSGateway");
+	KVTRegisterEvent	regEvent;
 	regEvent.obsID = itsObsID;
 	regEvent.name  = itsRegisterName;
-	ASSERTSTR(itsKVTport->send(&regEvent),
-		  "failed to send registration to PVSSGateway"); // send() may throw AssertError exc
+	itsKVTport->send(&regEvent);
 
-	LOG_DEBUG("Waiting for PVSSGateway register acknowledgement");
-	GCFEvent* ackPtr;
-	ASSERTSTR((ackPtr = itsKVTport->receive()) != NULL,
-		  "bad registration ack from PVSSGateway"); // receive may throw AssertError exc
-	KVTRegisterAckEvent ack(*ackPtr);
-	ASSERTSTR(ack.obsID == itsObsID && ack.name == itsRegisterName,
-		  "PVSSGateway identity error");
-
-	itsLogEvents.seqnr = 0;
-	LOG_DEBUG("Connected to and registered at the PVSSGateway");
-}
-
-//
-// sendEventsLoop()
-//
-void RTmetadata::sendEventsLoop()
-{
-	while (true) {
-		{
-			ScopedLock lock(itsQueuedEventsMutex);
-
-			if (itsQueuedEvents.empty()) {
-				itsQueuedEventsCond.wait(itsQueuedEventsMutex);
-			}
-			itsQueuedEvents.swap(itsLogEvents.kvps);
-		}
-
-		// use negative seqnrs to avoid ack messages
-		itsLogEvents.seqnr -= 1;
-		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
-		itsLogEvents.kvps.clear();
+	LOG_INFO("Waiting for register acknowledgement");
+	GCFEvent*	ackPtr;
+	while ((ackPtr = itsKVTport->receive()) == 0) {		// may be a async socket.
+		usleep(10);
 	}
-}
+	KVTRegisterAckEvent	ack(*ackPtr);
+	if (ack.obsID != itsObsID || ack.name != itsRegisterName) {
+		LOG_FATAL_STR("IDENTITY ERROR: LOGGING OF KEY-VALUE PAIRS IS NOT POSSIBLE!");
+		return (false);
+	}
 
+	LOG_INFO_STR("Connected to and registered at the PVSSGateway");
+	return (true);
+}
+ 
   } // namespace MACIO
 } // namespace LOFAR

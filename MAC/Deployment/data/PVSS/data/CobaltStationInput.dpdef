@@ -1,12 +1,10 @@
-# These keys must be set _per_ antenna field.
-
-# Name of the antenna field (e.g., CS001HBA0).
+# InputBuffer
 stationName		string
 
-# Observation ID as string.
+# Observation that is using this station
 observationName		string
 
-# Number of UDP frames per second for each of the 4 RSP boards
+# statistics of the 4 input streams of each RSP board, per second
 stream0.blocksIn	int
 stream0.rejected	int
 stream1.blocksIn	int

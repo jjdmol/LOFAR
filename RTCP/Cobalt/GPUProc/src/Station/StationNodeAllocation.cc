@@ -28,7 +28,7 @@
 #include <sstream>
 
 #include <Common/LofarLogger.h>
-#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
 #include <CoInterface/Stream.h>
 
 #include <InputProc/RSPTimeStamp.h>
@@ -140,7 +140,7 @@ std::vector< SmartPtr<Stream> > StationNodeAllocation::inputStreams() const
       } catch(Exception &ex) {
         if (parset.settings.realTime) {
           LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
-          inputStreams[board] = new FileStream("/dev/null"); /* block on read to avoid spamming illegal packets */
+          inputStreams[board] = new NullStream;
         } else {
           throw;
         }

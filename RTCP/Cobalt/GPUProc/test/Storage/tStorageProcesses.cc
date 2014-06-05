@@ -32,6 +32,7 @@
 #include <CoInterface/Parset.h>
 
 #include <GPUProc/Storage/StorageProcesses.h>
+#include <GPUProc/Storage/SSH.h>
 
 char pubkey[1024];
 char privkey[1024];
@@ -86,7 +87,8 @@ void test_protocol()
   	    // Give Storage time to log its parset
 	    sleep(2);
 	
-	    sp.forwardFinalMetaData();
+	    // Give 10 seconds to exchange final meta data
+	    sp.forwardFinalMetaData(time(0) + 10);
 	
 	    // Give 10 seconds to wrap up
 	    sp.stop(time(0) + 10);
@@ -104,8 +106,16 @@ int main()
 
   // prevent stalls
   alarm(60);
+
+  SSH_Init();
+
+  if (!discover_ssh_keys(pubkey, sizeof pubkey, privkey, sizeof privkey))
+    return 3;
+
  
   test_protocol();
+
+  SSH_Finalize();
 
   return 0;
 }

@@ -215,13 +215,11 @@ then
     setkey Cobalt.OutputProc.userName                 "$USER"
     setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
+    setkey Cobalt.FinalMetaDataGatherer.host          localhost
+    setkey Cobalt.FinalMetaDataGatherer.executable    "$LOFARROOT/bin/FinalMetaDataGatherer"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
-
-    # Redirect UDP/TCP input streams to any interface on the local machine
-    sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
-    sed 's/tcp:[^:]*:/tcp:0:/g' -i $PARSET
   fi
 fi
 
@@ -368,18 +366,11 @@ OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
 
-# Return codes of rtcp:
-#  0 = success
-#  1 = rtcp detected failure
-# >1 = crash, but possibly at teardown after a succesful observation
-if [ $OBSRESULT -gt 1 -a -s $FEEDBACK_FILE ]
+if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
 then
   # There is a feedback file! Consider the observation as succesful,
   # to prevent crashes in the tear down from ruining an otherwise
-  # perfectly good observation.
-  #
-  # Note that we might miss failures detected by rtcp, such as
-  # missing final meta data!
+  # perfectly good observation
   echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
 
   OBSRESULT=0
