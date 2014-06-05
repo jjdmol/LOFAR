@@ -1,0 +1,230 @@
+V 10
+2
+LANG:1 8 (NoName)
+LANG:0 8 (NoName)
+PANEL,250 108 118 61 N "_3DFace" 6
+"$1"
+"$2"
+"$3"
+"$panelName"
+"$panelNumber"
+"$refNumber"
+EEE E E 1 -1 -1 0  10 10
+"objects_parampanels/STD_PANELS/PTSumAlert_para.pnl" 0 1
+EE 2
+"CBRef""0"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 10
+"txtPanelOn"
+""
+1 35 16 E E E 1 E 0 E N "_3DText" E N "STD_ptSum4Back" E E
+ "main()
+{
+  int refNr = $refNumber;
+
+  if (icon.enabled() == TRUE)
+    pt_sumParaAtRightClick(refNr, false);
+}
+" 0
+ E
+9 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+"dyn_bool   ptAlertDone;
+dyn_string ptOldFileName;
+dyn_int    ptOldPanelNumber;
+
+main()
+{
+  pt_init_PT_sum4();
+}
+" 0
+ "main()
+{
+  if (icon.enabled() == TRUE)
+    pt_panelOn2(myModuleName());
+}" 0
+ 0 1 1 0 1 E U  1 E 37 18 41 34
+1 2 0 "s" 0 0 0 192 0 0  37 18
+ 1
+2
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+2
+LANG:1 1  
+LANG:0 1  
+7 8
+"sum2"
+""
+1 22 22 E E E 1 E 1 E N "_3DText" E N "STD_ptSum4Back" E "// SimpleCtrlScriptStart {valid}
+main(int iType)
+{
+  std_quittScript(pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$2,iType);
+}
+// SimpleCtrlScript {EP_confirm}
+// dpCount {1}
+// dp1 {pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$2}
+// SimpleCtrlScriptEnd {EP_confirm}
+" 0
+
+ "main()
+{
+  int refNr = $refNumber;
+
+  pt_sumParaAtRightClick(refNr, false);
+}
+" 0
+ E
+7 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  pt_panelOn2(myModuleName());
+
+}" 0
+ 0 1 1 0 1 E U  1 E 25 25 5 5
+7 7
+"sum1"
+""
+1 25 25 E E E 1 E 1 E N "_3DText" E N "STD_ptSum4Back" E "// SimpleCtrlScriptStart {valid}
+main(int iType)
+{
+  std_quittScript(pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$1,iType);
+}
+// SimpleCtrlScript {EP_confirm}
+// dpCount {1}
+// dp1 {pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$1}
+// SimpleCtrlScriptEnd {EP_confirm}
+" 0
+
+ "main()
+{
+  int refNr = $refNumber;
+
+  pt_sumParaAtRightClick(refNr, false);
+}
+" 0
+ E
+6 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  pt_panelOn2(myModuleName());
+
+}" 0
+ 0 1 1 0 1 E U  1 E 25 25 5 5
+7 11
+"icon"
+""
+1 20 8 E E E 1 E 1 E N "_3DText" E N "STD_ptSum4Back" E E
+ "main()
+{
+  int refNr = $refNumber;
+
+  pt_sumParaAtRightClick(refNr, false);
+}
+" 0
+ E
+10 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  pt_panelOn2(myModuleName());
+
+}" 0
+ 0 1 1 0 1 E U  1 E 25 25 5 5
+7 9
+"sum3"
+""
+1 25 25 E E E 1 E 1 E N "_3DText" E N "STD_ptSum4Back" E "// SimpleCtrlScriptStart {valid}
+main(int iType)
+{
+  std_quittScript(pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$3,iType);
+}
+// SimpleCtrlScript {EP_confirm}
+// dpCount {1}
+// dp1 {pt_fileNameToDpName($panelName,$panelNumber)+\".\"+$3}
+// SimpleCtrlScriptEnd {EP_confirm}
+" 0
+
+ "main()
+{
+  int refNr = $refNumber;
+
+  pt_sumParaAtRightClick(refNr, false);
+}
+" 0
+ E
+8 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  pt_panelOn2(myModuleName());
+
+}" 0
+ 0 1 1 0 1 E U  1 E 25 25 5 5
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
