@@ -1,5 +1,5 @@
 //# GPUProcIO.cc: Routines for communicating with GPUProc
-//# Copyright (C) 2008-2014  ASTRON (Netherlands Institute for Radio Astronomy)
+//# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -21,24 +21,21 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include "GPUProcIO.h"
-
-#include <vector>
 #include <omp.h>
+
+#include <string>
+#include <vector>
 #include <boost/format.hpp>
 
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
 #include <Common/Exceptions.h>
 #include <Stream/PortBroker.h>
-#include <ApplCommon/PVSSDatapointDefs.h>
-#include <ApplCommon/StationInfo.h>
-#include <MACIO/RTmetadata.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Stream.h>
-#include <CoInterface/SmartPtr.h>
 #include "SubbandWriter.h"
 #include "OutputThread.h"
 
@@ -50,7 +47,7 @@ using boost::format;
 namespace LOFAR {
 namespace Cobalt {
 
-bool process(Stream &controlStream, unsigned myRank)
+bool process(Stream &controlStream, size_t myRank)
 {
   bool success(true);
   Parset parset(&controlStream);
@@ -84,8 +81,7 @@ bool process(Stream &controlStream, unsigned myRank)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
-        string logPrefix = str(format("[obs %u correlated stream %3u] ")
-                               % parset.observationID() % fileIdx);
+        string logPrefix = str(format("[obs %u correlated stream %3u] ") % parset.observationID() % fileIdx);
 
         SubbandWriter *writer = new SubbandWriter(parset, fileIdx, logPrefix);
         subbandWriters.push_back(writer);
@@ -126,8 +122,7 @@ bool process(Stream &controlStream, unsigned myRank)
         collectors[fileIdx] = new TABTranspose::BlockCollector(
           *outputPools[fileIdx], fileIdx, nrSubbands, nrChannels, nrSamples, parset.nrBeamFormedBlocks(), parset.realTime() ? 5 : 0);
 
-        string logPrefix = str(format("[obs %u beamformed stream %3u] ")
-                                                    % parset.observationID() % fileIdx);
+        string logPrefix = str(format("[obs %u beamformed stream %3u] ") % parset.observationID() % fileIdx);
 
         TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], logPrefix);
         tabWriters.push_back(writer);

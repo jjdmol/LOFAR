@@ -142,7 +142,8 @@ namespace LOFAR
 
     }
 
-    void BeamFormerPreprocessingStep::process(BlockID blockID, unsigned subband)
+    void BeamFormerPreprocessingStep::process(BlockID blockID,
+      unsigned subband)
     {
 
       //****************************************
@@ -158,7 +159,6 @@ namespace LOFAR
       firstFFT->enqueue(blockID);
       DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
 
-      // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
       delayCompensationKernel->enqueue(
         blockID,
         ps.settings.subbands[subband].centralFrequency,

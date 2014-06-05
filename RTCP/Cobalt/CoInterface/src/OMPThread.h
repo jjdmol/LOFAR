@@ -123,13 +123,19 @@ namespace LOFAR
 
     static void init()
     {
-      // Defer SIGHUP to our empty signal handler.
-      // Avoid setting SA_RESTART (default BSD behavior),
-      // as we use SIGHUP to cancel blocking syscalls.
+      // Defer SIGHUP to our empty signal handler
+      if (signal(SIGHUP, sighandler) == SIG_ERR)
+        THROW_SYSCALL("signal");
+
+      // Unset SA_RESTART to avoid system calls being restarted on SIGHUP,
+      // making them effectively uninterruptable.
       struct sigaction sa;
       sa.sa_handler = sighandler;
-      ::sigemptyset(&sa.sa_mask);
-      sa.sa_flags = 0;
+      if (::sigaction(SIGHUP, NULL, &sa) < 0)
+        THROW_SYSCALL("sigaction(SIGHUP, NULL, &sa)");
+
+      sa.sa_flags &= ~SA_RESTART;
+
       if (::sigaction(SIGHUP, &sa, NULL) < 0)
         THROW_SYSCALL("sigaction(SIGHUP, &sa, NULL)");
     }
