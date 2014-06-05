@@ -5,7 +5,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   # We need at least CMake 2.8 for CUDA support
   cmake_minimum_required(VERSION 2.8)
 
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo)
   lofar_find_package(CUDA 4.1 REQUIRED)
   lofar_find_package(CUDADriver REQUIRED)
 
@@ -37,7 +37,7 @@ if(USE_CUDA AND NOT USE_OPENCL)
   endif()
 
 elseif(USE_OPENCL AND NOT USE_CUDA)
-  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO OpenCL_FFT)
+  set(_gpuproc_deps Common Stream ApplCommon CoInterface InputProc MACIO BrokenAntennaInfo OpenCL_FFT)
   lofar_find_package(OpenCL REQUIRED)
   add_definitions(-DUSE_OPENCL)
 else()
@@ -45,7 +45,7 @@ else()
     "Either CUDA or OpenCL must be enabled to build GPUProc.")
 endif()
 
-lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps} BrokenAntennaInfo)
+lofar_package(GPUProc 1.0 DEPENDS ${_gpuproc_deps})
 
 lofar_find_package(OpenMP REQUIRED)
 lofar_find_package(Boost REQUIRED)
