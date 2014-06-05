@@ -62,8 +62,8 @@ namespace LOFAR
       };
 
       struct MetaData {
-        // The metaData blob
-        char blob[10240];
+        // The metaData blob.
+        char blob[SubbandMetaData::MAXMARSHALLSIZE];
 
         struct MetaData &operator=(const SubbandMetaData &metaData) {
           FixedBufferStream str(blob, sizeof blob);
