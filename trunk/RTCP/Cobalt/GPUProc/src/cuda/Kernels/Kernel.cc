@@ -59,7 +59,7 @@ namespace LOFAR
       : 
       gpu::Function(function),
       itsCounter(_context),
-      maxThreadsPerBlock(_context.getDevice().getMaxThreadsPerBlock()),
+      maxThreadsPerBlock(function.getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK)),
       itsStream(stream),
       itsBuffers(buffers),
       itsParameters(params)
