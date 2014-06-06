@@ -623,10 +623,10 @@ void MultiSender::process( OMPThreadSet *threadSet )
 
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
+    const struct Host &host = hosts[i];
     const string logPrefix = str(format("[MultiSender -> %s] ") % host.hostName);
-    try {
-      const struct Host &host = hosts[i];
 
+    try {
       OMPThreadSet::ScopedRun sr(*threadSet);
 
       LOG_DEBUG_STR(logPrefix << "MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
