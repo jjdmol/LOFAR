@@ -49,13 +49,23 @@ namespace LOFAR {
 
 
 // The RTmetadata class is a LCS/Common Socket based TCP port to make it
-// possible for CEP applications to store Key-Value_Timestamp values in PVSS
+// possible for CEP applications to store Key-Value(_Timestamp) values in PVSS
 class RTmetadata
 {
 public:
+	// After construction, you must call start() to have already or to be
+	// log()ed key-value pairs written to a PVSS Gateway.
+	//
+	// Pairs are buffered up to some fixed maximum. If more pairs are
+	// log()ed than can be submitted by the start()ed thread, those pairs
+	// are silently dropped. 
+	//
+	// If hostname is "", data points logged through log() will not be
+	// written, since then start() does not start a thread (and LOGs this).
+	// This is useful for pipeline tests that don't care about this stuff.
 	RTmetadata(uint32		observationID,
 		   const string&	registerName, 
-		   const string&	hostname = "");
+		   const string&	hostname);
 
 	~RTmetadata();
 
@@ -68,7 +78,7 @@ public:
 
 	// log()
 	// Note that events are buffered up to a maximum, then silently dropped.
-	void log(const KVpair& pair); // prefer this overload
+	void log(const KVpair& pair);
 
 	void log(const vector<KVpair>& pairs);
 

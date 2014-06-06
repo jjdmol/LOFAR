@@ -75,7 +75,7 @@ void RTmetadata::start()
 	// Some tests clear the supplied hostname (don't use PVSSGatewayStub).
 	// Code under test may still log(), but that will be lost as intended.
 	if (itsHostName.empty()) {
-		LOG_WARN("Empty hostname, so written PVSS data points will be dropped.");
+		LOG_WARN("Empty hostname, so logged PVSS data points will be dropped.");
 		return;
 	}
 
@@ -206,6 +206,7 @@ void RTmetadata::sendEventsLoop()
 		// use negative seqnrs to avoid ack messages
 		itsLogEvents.seqnr -= 1;
 		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
+		LOG_DEBUG_STR("Sent " << itsLogEvents.kvps.size() << " PVSS data point events");
 		itsLogEvents.kvps.clear();
 	}
 }
