@@ -729,13 +729,6 @@ namespace LOFAR
       double                      maxObservationFrequency(const struct ObservationSettings& settings,
                                                           double subbandWidth) const;
       unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
-
-      // If a parset key is renamed, this function allows the old
-      // name to be used as a fall-back.
-      //
-      // Returns the name of the key in the parset, or `newname' if
-      // neither key is defined.
-      std::string renamedKey(const std::string &newname, const std::string &oldname) const;
     };
   } // namespace Cobalt
 } // namespace LOFAR
