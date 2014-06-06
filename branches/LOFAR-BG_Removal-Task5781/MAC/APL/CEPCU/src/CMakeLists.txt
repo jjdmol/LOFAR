@@ -12,6 +12,5 @@ lofar_add_bin_program(versioncepcu versioncepcu.cc)
 
 add_subdirectory(OnlineControl)
 add_subdirectory(PythonControl)
-add_subdirectory(CEPlogProcessor)
 add_subdirectory(CEPHardwareMonitor)
 #  add_subdirectory(OfflineControl)
