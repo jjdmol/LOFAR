@@ -127,18 +127,18 @@ int main(int argc, char **argv)
 
     case 'h':
       usage(argv[0]);
-      exit(0);
+      return EXIT_SUCCESS;
 
     default: /* '?' */
       usage(argv[0]);
-      exit(1);
+      return EXIT_FAILURE;
     }
   }
 
   // we expect a parset filename as an additional parameter
   if (optind >= argc) {
     usage(argv[0]);
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   /*
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
   if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
   {
     perror("error setting MPIRANK");
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   INIT_LOGGER("rtcp");
@@ -263,8 +263,8 @@ int main(int argc, char **argv)
       LOG_INFO_STR("RTCP will self-destruct in " << maxRunTime << " seconds");
       alarm(maxRunTime);
     } else {
-      LOG_ERROR_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
-      return 0;
+      LOG_FATAL_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
+      return EXIT_FAILURE;
     }
   }
 
@@ -422,8 +422,8 @@ int main(int argc, char **argv)
   bool beamFormerEnabled = ps.settings.beamFormer.enabled;
 
   if (correlatorEnabled && beamFormerEnabled) {
-    LOG_ERROR("Commensal observations (correlator+beamformer) not supported yet.");
-    exit(1);
+    LOG_FATAL("Commensal observations (correlator+beamformer) not supported yet.");
+    return EXIT_FAILURE;
   }
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
@@ -460,7 +460,7 @@ int main(int argc, char **argv)
   else 
   {
     LOG_FATAL("No pipeline selected.");
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   // Only ONE host should start the Storage processes
@@ -484,8 +484,8 @@ int main(int argc, char **argv)
 
   LOG_INFO("----- Initialising MPI");
   if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
+    LOG_FATAL("MPI_Init_thread failed");
+    return EXIT_FAILURE;
   }
 
   // Verify the rank/size settings we assumed earlier
@@ -621,6 +621,6 @@ int main(int argc, char **argv)
   MPI_Finalize();
 #endif
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 

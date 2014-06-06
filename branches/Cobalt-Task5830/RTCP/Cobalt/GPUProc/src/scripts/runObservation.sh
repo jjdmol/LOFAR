@@ -49,7 +49,7 @@ function usage {
     "\n    -A: do NOT augment parset"\
     "\n    -C: run with check tool specified in environment variable"\
     "LOFAR_CHECKTOOL"\
-    "\n    -F: do NOT send feedback to OnlineControl"\
+    "\n    -F: do NOT send feedback to OnlineControl and do NOT send data points to a PVSS gateway"\
     "\n    -P: create PID file"\
     "\n    -l: run solely on localhost using 'nprocs' MPI processes (isolated test)"\
     "\n    -p: enable profiling\n"
@@ -88,7 +88,7 @@ echo "Called as: $0 $@"
 # Set default options
 # ******************************
 
-# Provide feedback to OnlineControl?
+# Provide feedback to OnlineControl and data points to PVSS?
 ONLINECONTROL_FEEDBACK=1
 
 # Augment the parset with etc/parset-additions.d/* ?
@@ -220,6 +220,7 @@ then
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
+    setkey Cobalt.PVSSGateway.host                    ""
 
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
