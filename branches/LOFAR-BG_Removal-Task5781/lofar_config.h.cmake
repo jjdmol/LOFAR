@@ -90,9 +90,6 @@
 /* Define if libbfd is available */
 #cmakedefine HAVE_BFD 1
 
-/* Define if BG/L MPICH is installed */
-#cmakedefine HAVE_BGLMPICH 1
-
 /* Define if Blitz is installed */
 #cmakedefine HAVE_BLITZ 1
 
