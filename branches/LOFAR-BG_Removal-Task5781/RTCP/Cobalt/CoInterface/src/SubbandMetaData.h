@@ -54,7 +54,17 @@ namespace LOFAR
       void read(Stream *str);
       void write(Stream *str) const;
 
-      static const size_t MAXFLAGSIZE = 8192 + 4;
+      // Maximum size of the buffer to marshall flags
+      static const size_t MAXFLAGSIZE     = 8192 + 4;
+
+      // Maximum number of TABs we'll support when marshalling
+      static const size_t MAXNRTABS       = 512;
+
+      // Maximum number of bytes write() will produce
+      static const size_t MAXMARSHALLSIZE = MAXFLAGSIZE
+                                          + sizeof(struct beamInfo)
+                                          + sizeof(size_t)
+                                          + MAXNRTABS * sizeof(struct beamInfo);
     };
 
 
@@ -94,6 +104,8 @@ namespace LOFAR
       size_t nrTABs = TABs.size();
       str->write(&nrTABs, sizeof nrTABs);
       if (nrTABs > 0) {
+        ASSERTSTR(nrTABs < MAXNRTABS, "Metadata buffers support up to " << MAXNRTABS << " TABs, but specification contains " << nrTABs);
+
         str->write(&TABs[0], nrTABs * sizeof TABs[0]);
       }
 

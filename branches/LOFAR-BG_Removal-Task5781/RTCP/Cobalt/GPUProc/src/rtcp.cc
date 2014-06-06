@@ -70,7 +70,6 @@
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
@@ -87,9 +86,6 @@ using boost::format;
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
 const time_t defaultAllocationTimeout = 15;
-
-// Deadline for the FinalMetaDataGatherer, in seconds
-const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
 const time_t defaultOutputProcTimeout = 60;
@@ -140,6 +136,12 @@ int main(int argc, char **argv)
     usage(argv[0]);
     exit(1);
   }
+
+  /*
+   * Whether we've encountered an error; observation will
+   * be set to ABORTED by OnlineControl if so.
+   */
+  int abortObservation = 0;
 
   /*
    * Extract rank/size from environment, because we need
@@ -226,11 +228,6 @@ int main(int argc, char **argv)
     ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
 			     defaultAllocationTimeout);
 
-  // Deadline for the FinalMetaDataGatherer, in seconds
-  const time_t finalMetaDataTimeout = 
-    ps.ParameterSet::getTime("Cobalt.Tuning.finalMetaDataTimeout",
-			     defaultFinalMetaDataTimeout);
-
   // Deadline for outputProc, in seconds.
   const time_t outputProcTimeout = 
     ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
@@ -245,7 +242,6 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR(
     "Tuning parameters:" <<
     "\n  allocationTimeout    : " << allocationTimeout << "s" <<
-    "\n  finalMetaDataTimeout : " << finalMetaDataTimeout << "s" <<
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
@@ -466,9 +462,6 @@ int main(int argc, char **argv)
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
-  LOG_INFO("----- Initialising SSH library");
-  SSH_Init();
-
   if (rank == 0) {
     LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
@@ -577,13 +570,13 @@ int main(int argc, char **argv)
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    time_t completing_start = time(0);
-    storageProcesses->forwardFinalMetaData(completing_start + finalMetaDataTimeout);
+    if (!storageProcesses->forwardFinalMetaData())
+      abortObservation = 1;
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + finalMetaDataTimeout + outputProcTimeout);
+    storageProcesses->stop(time(0) + outputProcTimeout);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -613,14 +606,12 @@ int main(int argc, char **argv)
   }
   LOG_INFO("===== SUCCESS =====");
 
-  SSH_Finalize();
-
 #ifdef HAVE_MPI
   MPIPoll::instance().stop();
 
   MPI_Finalize();
 #endif
 
-  return 0;
+  return abortObservation ? 1 : 0;
 }
 
