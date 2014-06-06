@@ -156,10 +156,6 @@ namespace LOFAR
       uint64 size;
       stream.read(&size, sizeof size);
 
-#if !defined WORDS_BIGENDIAN
-      dataConvert(LittleEndian, &size, 1);
-#endif
-
       // Read data
       std::vector<char> tmp(size + 1);
       stream.read(&tmp[0], size);
@@ -199,15 +195,7 @@ namespace LOFAR
       }
 
       uint64 size = buffer.size();
-
-#if !defined WORDS_BIGENDIAN
-      uint64 size_be = size;
-      dataConvert(BigEndian, &size_be, 1);
-      stream->write(&size_be, sizeof size_be);
-#else
       stream->write(&size, sizeof size);
-#endif
-
       stream->write(buffer.data(), size);
     }
 
