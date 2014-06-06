@@ -1,4 +1,0 @@
-# $Id: CMakeLists.txt 15531 2010-04-23 09:08:18Z romein $
-
-lofar_add_package(Common)         # Common stuff
-lofar_add_package(Blob)           # Binary Large Objects
