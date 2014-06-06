@@ -1,0 +1,76 @@
+Expected exception: Assertion: !patchExists(patchName); Patch patch1 already exists
+Expected exception: Assertion: table.nrow() == 1; Patch patch20 does not exist
+Expected exception: Assertion: !sourceExists(sourceInfo.getName()); Source src1 already exists
+Expected exception: Assertion: tabs.nrow() == itsSourceTable.nrow(); The SOURCES table has 1 duplicate source names
+
+Source name:    sun
+Patch name:     patch1a
+Source type:    0
+Reftype:        SUN
+RA:             0
+DEC:            0
+I:              2
+Q:              0
+U:              0.2
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+
+Source name:    src2
+Patch name:     src2
+Source type:    0
+Reftype:        J2000
+RA:             1.1
+DEC:            -1.1
+I:              2
+Q:              0
+U:              0.2
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
+
+Source name:    src2a
+Patch name:     src2
+Source type:    2
+Reftype:        J2000
+RA:             1.101
+DEC:            -1.101
+I:              2
+Q:              0
+U:              0.2
+V:              0
+Major axis:     0
+Minor axis:     0
+Orientation:    0
+Spectral index: 0  []
+SpInx RefFreq:  0
+Use RM:         0
+PolAngle:       0
+PolFrac:        0
+RM:             0
+Shapelet I:     []
+Shapelet Q:     []
+Shapelet U:     []
+Shapelet V:     []
