@@ -281,10 +281,7 @@ namespace LOFAR
       if (isDefined(newname))
         return newname;
 
-      if (isDefined(oldname)) {
-        LOG_WARN_STR("Parset: key " << oldname << " is deprecated. Please use " << newname << " instead.");
-        return oldname;
-      }
+      ASSERTSTR(!isDefined(oldname), "Parset: key " << oldname << " is deprecated. Please use " << newname << " instead.");
 
       return newname;
     }

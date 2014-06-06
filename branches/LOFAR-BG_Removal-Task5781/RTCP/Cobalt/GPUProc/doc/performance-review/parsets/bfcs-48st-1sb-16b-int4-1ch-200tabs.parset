@@ -147,20 +147,20 @@ Cobalt.Beamformer.coherentDedisperseChannels=false
 
 # Which stokes to create [I, IQUV, XXYY]
 # XXYY is not supported for incoherent beams
-OLAP.CNProc_CoherentStokes.which=I
-OLAP.CNProc_IncoherentStokes.which=I
+Cobalt.BeamFormer.CoherentStokes.which=I
+Cobalt.BeamFormer.IncoherentStokes.which=I
 
 # Number of channels to create in the output
-OLAP.CNProc_CoherentStokes.channelsPerSubband=1
-OLAP.CNProc_IncoherentStokes.channelsPerSubband=1
+Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband=1
+Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband=1
 
 # Temporal data reduction
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor=4
-OLAP.CNProc_IncoherentStokes.timeIntegrationFactor=4
+Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor=4
+Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor=4
 
 # Maximum number of subbands to store in each file
-OLAP.CNProc_CoherentStokes.subbandsPerFile=488
-OLAP.CNProc_IncoherentStokes.subbandsPerFile=488
+Cobalt.BeamFormer.CoherentStokes.subbandsPerFile=488
+Cobalt.BeamFormer.IncoherentStokes.subbandsPerFile=488
 
 Observation.Beam[0].nrTiedArrayBeams=200
 
@@ -199,52 +199,52 @@ Cobalt.Beamformer.dedispersionFFTsize=2048
 
 
 # Read from /dev/null which blocks, so all "data" is flagged. This is fine for the intended test.
-PIC.Core.Station.CS001HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS001HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS002HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS002HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS003HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS003HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS004HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS004HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS005HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS005HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS006HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS006HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS007HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS007HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS011HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS011HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS013HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS013HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS017HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS017HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS021HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS021HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS024HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS024HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS026HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS026HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS028HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS028HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS030HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS030HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS031HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS031HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS032HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS032HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS101HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS101HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS103HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS103HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS201HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS201HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS301HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS301HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS302HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS302HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS401HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS401HBA1.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS501HBA0.RSP.ports=[file:/dev/null]
-PIC.Core.Station.CS501HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS001HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS001HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS002HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS002HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS003HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS003HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS004HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS004HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS005HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS005HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS006HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS006HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS007HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS007HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS011HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS011HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS013HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS013HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS017HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS017HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS021HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS021HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS024HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS024HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS026HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS026HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS028HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS028HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS030HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS030HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS031HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS031HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS032HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS032HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS101HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS101HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS103HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS103HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS201HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS201HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS301HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS301HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS302HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS302HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS401HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS401HBA1.RSP.ports=[file:/dev/null]
+PIC.Core.CS501HBA0.RSP.ports=[file:/dev/null]
+PIC.Core.CS501HBA1.RSP.ports=[file:/dev/null]
 

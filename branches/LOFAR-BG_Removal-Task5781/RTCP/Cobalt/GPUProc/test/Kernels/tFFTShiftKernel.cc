@@ -66,7 +66,7 @@ struct ParsetSUT
     // 4 for number of stokes
     size_t nr_files =  inrTabs * 4; 
     parset.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-    parset.add("OLAP.CNProc_CoherentStokes.which", stokes);
+    parset.add("Cobalt.BeamFormer.CoherentStokes.which", stokes);
     parset.add("Observation.VirtualInstrument.stationList",
       str(format("[%d*RS000]") % nrStations));
     parset.add("Observation.antennaSet", "LBA_INNER");
