@@ -634,13 +634,11 @@ namespace LOFAR {
       double w;
       DComplex t;
 
-      uint count=0;
       // Initialize all vectors
       double fronormvis=0;
       double fronormmod=0;
       for (uint st1=0;st1<2*nSt;++st1) {
         for (uint st2=0;st2<2*nSt;++st2) {
-          count++;
           //for (uint ch=0;ch<nCh;++ch) {
             uint crjump=2*(st2/nSt)+(st1/nSt);
             fronormvis+=norm( itsVis(IPosition(4,crjump,st2%nSt,0,st1%nSt)));
@@ -885,6 +883,7 @@ namespace LOFAR {
       // Get the beam values for each station.
       uint nchan = chanFreqs.size();
       uint nSt   = info().antennaUsed().size();
+      uint nBl   = info().nbaselines();
 
       for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
@@ -893,7 +892,7 @@ namespace LOFAR {
       }
       // Apply the beam values of both stations to the predicted data.
       dcomplex tmp[4];
-      for (size_t bl=0; bl<info().nbaselines(); ++bl) {
+      for (size_t bl=0; bl<nBl; ++bl) {
         const StationResponse::matrix22c_t* left =
           &(beamvalues[nchan * info().getAnt1()[bl]]);
         const StationResponse::matrix22c_t* right =
@@ -963,20 +962,26 @@ namespace LOFAR {
       DComplex sol;
 
       for (size_t st=0; st<nSt; ++st) {
-        uint seqnr = 0;
+        uint seqnr = 0; // To take care of real and imaginary part
         string suffix(itsAntennaUsedNames[st]);
 
         for (int i=0; i<4; ++i) {
           if ((itsMode=="diagonal" || itsMode=="phaseonly") && (i==1||i==2)) {
             continue;
           }
-          for (int k=0; k<2; ++k) {
+          int kmax;
+          if (itsMode=="phaseonly") {
+            kmax=1;
+          } else {
+            kmax=2;
+          }
+          for (int k=0; k<kmax; ++k) {
             string name(string("Gain:") +
-                        str0101[i] + strri[k] + suffix);
+                        str0101[i] + (itsMode=="phaseonly"?"Phase:":strri[k]) + suffix);
             // Collect its solutions for all times in a single array.
             for (uint ts=0; ts<ntime; ++ts) {
               if (itsAntMaps[ts][st]==-1) {
-                if (k==0 && (i==0||i==3)) {
+                if (itsMode!="phaseonly" && k==0 && (i==0||i==3)) {
                   values(0, ts) = 1;
                 } else {
                   values(0, ts) = 0;
@@ -989,13 +994,16 @@ namespace LOFAR {
                   } else {
                     values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
                   }
-                } else {
+                } else if (itsMode=="diagonal") {
                   uint sSt=itsSols[ts].size()/2;
                   if (seqnr%2==0) {
                     values(0, ts) = real(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
                   } else {
                     values(0, ts) = -imag(itsSols[ts](i/3*sSt+rst,0)); // Conjugate transpose!
                   }
+                } else {
+                  uint sSt=itsSols[ts].size()/2;
+                  values(0, ts) = -arg(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1 // Transpose!
                 }
               }
             }
