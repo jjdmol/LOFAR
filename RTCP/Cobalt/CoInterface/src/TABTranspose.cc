@@ -623,20 +623,19 @@ void MultiSender::process( OMPThreadSet *threadSet )
 
 #pragma omp parallel for num_threads(hosts.size())
   for (int i = 0; i < (ssize_t)hosts.size(); ++i) {
+    const string logPrefix = str(format("[MultiSender -> %s] ") % host.hostName);
     try {
       const struct Host &host = hosts[i];
 
       OMPThreadSet::ScopedRun sr(*threadSet);
 
-      LOG_DEBUG_STR("MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
+      LOG_DEBUG_STR(logPrefix << "MultiSender: Connecting to " << host.hostName << ":" << host.brokerPort << ":" << host.service);
 
       PortBroker::ClientStream stream(host.hostName, host.brokerPort, host.service);
 
-      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": connected");
+      LOG_DEBUG_STR(logPrefix << "Connected");
 
       SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
-
-      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": processing queue");
 
       SmartPtr<struct Subband> subband;
       NSTimer sendTimer(str(format("Send Subband to %s") % host.hostName), true, true);
@@ -648,9 +647,11 @@ void MultiSender::process( OMPThreadSet *threadSet )
         subband->write(stream);
       }
 
-      LOG_DEBUG_STR("MultiSender->" << host.hostName << ": done");
+      LOG_DEBUG_STR(logPrefix << "Done");
+    } catch (SystemCallException &ex) {
+      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
     } catch (Exception &ex) {
-      LOG_ERROR_STR("Caught exception: " << ex);
+      LOG_ERROR_STR(logPrefix << "Caught exception: " << ex);
     }
   }
 }
