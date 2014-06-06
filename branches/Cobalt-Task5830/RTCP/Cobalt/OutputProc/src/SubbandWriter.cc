@@ -31,11 +31,13 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
+    SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+        const std::string &logPrefix)
     :
       itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr)),
       itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
-      itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
+      itsOutputThread(parset, streamNr, itsOutputPool, mdLogger, mdKeyPrefix, logPrefix)
     {
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
         itsOutputPool.free.append(new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512));

@@ -25,7 +25,7 @@ lofar_add_library(outputproc
 
 install(PROGRAMS
   gnuplotMS.sh
-  DESTINATION bin)
+  DESTINATION sbin)
 
 install(FILES
   outputProc.log_prop
@@ -37,5 +37,4 @@ lofar_add_bin_program(versionoutputproc versionoutputproc.cc)
 
 lofar_add_sbin_program(createHeaders createHeaders.cc)
 lofar_add_sbin_program(plotMS plotMS.cc)
-lofar_add_sbin_program(write_pvss_dp write_pvss_dp.cc)
 

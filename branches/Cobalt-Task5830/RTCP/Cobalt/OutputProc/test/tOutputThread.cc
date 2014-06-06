@@ -29,7 +29,8 @@
 #include <UnitTest++.h>
 
 using namespace std;
-using namespace LOFAR::Cobalt;
+using namespace LOFAR;
+using namespace Cobalt;
 
 
 TEST(testCorrelatorOutputThreadThrowsStorageException)
@@ -59,27 +60,29 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
   par.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   par.add("Observation.DataProducts.Output_Correlated.filenames", "[2*L173014_SAP000_SB000_uv.MS]");
   par.add("Observation.DataProducts.Output_Correlated.locations", "[.:./, .:./]");
-  // MIssing key: This will lead to an exception triggering the new code 
+  // Missing key: This will lead to an exception triggering the new code 
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
-
   par.updateSettings();
+
   Pool<StreamableData> outputPool("testCorrelatorOutputThreadThrowsStorageException::outputPool");
+  MACIO::RTmetadata rtmd(12345, "", "");
+
   try
   {
     SubbandOutputThread SubbandOutputThread(par, 
-                (unsigned) 0, outputPool, "Log prefix", "./");
+                (unsigned) 0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
     SubbandOutputThread.createMS();
   }
   catch (StorageException &ex)  // Catch the correct exception
   {
-    cout << "Got the correct exeption. " << endl;
+    cout << "Got the correct exception. " << endl;
     cout << ex.what() << endl;
 
   }
   //else  Let the exception fall tru
   
-  cout << "Succes" << endl;
+  cout << "Success" << endl;
 }
 
 
@@ -90,15 +93,18 @@ TEST(testCorrelatorOutputThreadThrowsStorageException)
  class OutputThreadWrapper: public SubbandOutputThread
 {
   public: 
-    OutputThreadWrapper(const Parset &parset, unsigned streamNr, Pool<StreamableData> &outputPool, const std::string &logPrefix, const std::string &targetDirectory = "")
+    OutputThreadWrapper(const Parset &parset, unsigned streamNr,
+        Pool<StreamableData> &outputPool,
+        MACIO::RTmetadata& rtmd, const std::string &rtmdKeyPrefix,
+        const std::string &logPrefix, const std::string &targetDirectory = "")
   :
-  SubbandOutputThread(parset, streamNr,
-  outputPool, logPrefix,
-  targetDirectory)
+    SubbandOutputThread(parset, streamNr, outputPool,
+                        rtmd, rtmdKeyPrefix,
+                        logPrefix, targetDirectory)
   {
   }
 
-    MSWriter*   getMSWriter()
+  MSWriter* getMSWriter()
   {
     return itsWriter.get();
   }
@@ -135,20 +141,21 @@ TEST(testCorrelatorOutputThreadRealtimeThrowsNoException)
   // MIssing key: This will lead to an exception triggering the new code 
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.add("Cobalt.realTime", "true");
-    par.updateSettings();
+  par.updateSettings();
+
   Pool<StreamableData> outputPool("testCorrelatorOutputThreadRealtimeThrowsNoException::outputPool");
+  MACIO::RTmetadata rtmd(12345, "", "");
 
-
-  // We have a realtime system. We should not throw execptions
+  // We have a realtime system. We should not throw exceptions
   OutputThreadWrapper SubbandOutputThread(par,
-      (unsigned)0, outputPool, "Log prefix", "./");
+      (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
   SubbandOutputThread.createMS();
 
-  // asure null writer
+  // ensure null writer
   ASSERT( (dynamic_cast<MSWriterNull*> (SubbandOutputThread.getMSWriter()) != 0));
 
-  cout << "Succes" << endl;
+  cout << "Success" << endl;
 }
 
 /***************************************************
@@ -184,25 +191,26 @@ TEST(testBeamformerOutputThreadThrowsStorageException)
   par.add("Observation.DataProducts.Output_Correlated.locations", "[.:./, .:./]");
   // MIssing key: This will lead to an exception triggering the new code 
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
-
   par.updateSettings();
+
   Pool<StreamableData> outputPool("testBeamformerOutputThreadThrowsStorageException::outputPool");
+  MACIO::RTmetadata rtmd(12345, "", "");
+
   try
   {
     SubbandOutputThread SubbandOutputThread(par,
-      (unsigned)0, outputPool, "Log prefix", "./");
+      (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "./");
 
     SubbandOutputThread.createMS();
   }
   catch (StorageException &ex)  // Catch the correct exception
   {
-    cout << "Got the correct exeption. " << endl;
+    cout << "Got the correct exception. " << endl;
     cout << ex.what() << endl;
-
   }
   //else  Let the exception fall tru
 
-  cout << "Succes" << endl;
+  cout << "Success" << endl;
 }
 
 
@@ -214,16 +222,17 @@ class TABOutputThreadWrapper : public TABOutputThread
 {
 public:
   TABOutputThreadWrapper(const Parset &parset, unsigned streamNr,
-    Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix,
-    const std::string &targetDirectory)
-    :
-    TABOutputThread(parset, streamNr,
-    outputPool, logPrefix,
-    targetDirectory)
+      Pool<TABTranspose::BeamformedData> &outputPool,
+      MACIO::RTmetadata& rtmd, const std::string &rtmdKeyPrefix,
+      const std::string &logPrefix, const std::string &targetDirectory)
+  :
+    TABOutputThread(parset, streamNr, outputPool,
+                    rtmd, rtmdKeyPrefix,
+                    logPrefix, targetDirectory)
   {
   }
 
-  MSWriter*   getMSWriter()
+  MSWriter* getMSWriter()
   {
     return itsWriter.get();
   }
@@ -261,30 +270,29 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
   par.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
   par.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[tab1.raw]");
   par.add("Observation.DataProducts.Output_CoherentStokes.locations", "[1 * :/NonExisting]");
-  // MIssing key: This will lead to an exception triggering the new code 
+  // Missing key: This will lead to an exception triggering the new code 
   //par.add("PIC.Core.CS002HBA0.phaseCenter", "0.0")
   par.add("Cobalt.realTime", "true");
   par.updateSettings();
+
   Pool<TABTranspose::BeamformedData> outputPool("testBeamformerOutputThreadRealtimeThrowsNoException");
+  MACIO::RTmetadata rtmd(12345, "", "");
 
-
-  // We have a realtime system. We should not throw execptions
+  // We have a realtime system. We should not throw exceptions
   TABOutputThreadWrapper BeamOutputThread(par,
-    (unsigned)0, outputPool, "Log prefix", "/NonExisting");
+    (unsigned)0, outputPool, rtmd, "rtmd key prefix", "Log prefix", "/NonExisting");
 
   BeamOutputThread.createMS();
 
-  //// asure null writer
+  //// ensure null writer
   ASSERT((dynamic_cast<MSWriterNull*> (BeamOutputThread.getMSWriter()) != 0));
   
-  cout << "Succes" << endl;
+  cout << "Success" << endl;
 }
 
 
 int main()
 {
-
   return UnitTest::RunAllTests() > 0;
-  return 0;
 }
 
