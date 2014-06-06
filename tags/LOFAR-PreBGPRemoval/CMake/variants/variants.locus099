@@ -1,0 +1,4 @@
+set(CTEST_CUSTOM_WARNING_EXCEPTION
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
+  "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
+)
