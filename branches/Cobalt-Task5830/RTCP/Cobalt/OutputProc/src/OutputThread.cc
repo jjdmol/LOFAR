@@ -150,9 +150,9 @@ namespace LOFAR
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + '[' + lexical_cast<string>(itsStreamNr) + ']',
                       droppedBlocks > 0 ? "1" : "0"); // logged too late?
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + '[' + lexical_cast<string>(itsStreamNr) + ']',
-                      itsBlocksWritten * itsParset.settings.blockDuration());
+                      itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + '[' + lexical_cast<string>(itsStreamNr) + ']',
-                      itsBlocksDropped * itsParset.settings.blockDuration());
+                      itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
     }
 
 
