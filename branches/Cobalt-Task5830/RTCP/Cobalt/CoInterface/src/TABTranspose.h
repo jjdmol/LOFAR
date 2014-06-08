@@ -159,7 +159,7 @@ namespace LOFAR
 
         ~BlockCollector();
 
-	      /*
+        /*
          * Add a subband of any block.
          */
         void addSubband( SmartPtr<Subband> &subband );
@@ -321,7 +321,6 @@ namespace LOFAR
       /*
        * MultiSender sends data to various receivers.
        */
-
       class MultiSender {
       public:
         // A host to send data to, that is, enough information
@@ -388,7 +387,7 @@ namespace LOFAR
         std::vector<struct Host> hosts;
 
         // A queue for data to be sent to each host
-	      std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
+        std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose
