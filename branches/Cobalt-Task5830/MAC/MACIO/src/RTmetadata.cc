@@ -97,9 +97,12 @@ void RTmetadata::log(const KVpair& pair)
 	// We could replace old events by new ones, but then we'd have to ensure
 	// somehow that we don't drop e.g. the observationID event we send once
 	// at the start that PVSS needs to interpret the context of all events.
-	if (itsQueuedEvents.size() < MAX_QUEUED_EVENTS) {
+	size_t queueSize = itsQueuedEvents.size();
+	if (queueSize < MAX_QUEUED_EVENTS) {
 		itsQueuedEvents.push_back(pair);
-		itsQueuedEventsCond.signal();
+		if (queueSize == 0) {
+			itsQueuedEventsCond.signal();
+		}
 	}
 }
 
@@ -117,7 +120,9 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 	if (count > 0) {
 		itsQueuedEvents.insert(itsQueuedEvents.end(),
 				       pairs.begin(), pairs.begin() + count);
-		itsQueuedEventsCond.signal();
+		if (nfree == MAX_QUEUED_EVENTS) {
+			itsQueuedEventsCond.signal();
+		}
 	}
 }
 
