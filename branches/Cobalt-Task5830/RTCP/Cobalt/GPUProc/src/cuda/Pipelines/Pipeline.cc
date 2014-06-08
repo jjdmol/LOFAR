@@ -115,7 +115,7 @@ namespace LOFAR
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections num_threads(6)
+#     pragma omp parallel sections num_threads(5)
       {
 
         /*
