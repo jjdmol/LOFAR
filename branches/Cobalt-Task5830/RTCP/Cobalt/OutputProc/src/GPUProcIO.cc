@@ -76,15 +76,13 @@ bool process(Stream &controlStream, unsigned myRank)
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];
 
-  // Send identification string to the MAC Log Processor
-  string fmtStr(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
-                                      parset.getString("_DPname")));
-  format prFmt;
-  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
-  prFmt.parse(fmtStr);
-  string mdKeyPrefix = str(prFmt % myRank);
+  // Send id string to the MAC Log Processor as context for further LOGs.
+  // Also use it for MAC/PVSS data point logging as a key name prefix.
+  // For outputProc there are no conv specifications (%xx) to be filled in.
+  string mdKeyPrefix(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
+      parset.getString("_DPname", "LOFAR_ObsSW_TempObs_Unk")));
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
-  mdKeyPrefix.push_back('.');
+  mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
   const string mdRegisterName = PST_COBALT_OUTPUT_PROC;
   const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
