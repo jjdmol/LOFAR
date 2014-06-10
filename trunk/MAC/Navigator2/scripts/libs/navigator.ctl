@@ -67,13 +67,10 @@ global dyn_int    g_RCUList;           // holds valid RCU's for choices in the v
 global dyn_int    g_HBAList;           // holds valid HBAAntenna's for choices in the viewBox
 global dyn_int    g_LBAList;           // holds valid LBAAntenna's for choices in the viewBox
 // CEP based globals
-global dyn_int    g_BGPRackList;       // holds valid bgpracks for choices in viewBox
-global dyn_int    g_BGPMidplaneList;   // holds valid bgpmidplanes for choices in viewBox
-global dyn_int    g_IONodeList;        // holds valid ionodes for choices in viewBox
 global dyn_int    g_OSRackList;        // holds valid Offline/Storageracks for choices in view
 global dyn_int    g_locusNodeList;     // holds valid storagenodes for choices in view
 global dyn_int    g_cobaltRackList;    // holds valid cobaltracks for choices in viewBox
-global dyn_int    g_cobaltNodeList;    // holds valid cobaltnodesplanes for choices in viewBox
+global dyn_int    g_cobaltNodeList;    // holds valid cobaltnodes for choices in viewBox
 global dyn_int    g_cobaltNICList;     // holds valid cobaltNICs for choices in viewBox
 
 

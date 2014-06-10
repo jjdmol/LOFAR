@@ -129,8 +129,8 @@ bool CEP_Processes_UpdateCEPControllers() {
     // get the real name from the selected Observation
     CEP_obsBaseDP=claimManager_nameToRealName("LOFAR_ObsSW_"+CEP_selectedObservation);   
     
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
-        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
+//    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineControl_BGPApplPanel",
+//        DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","PythonControlPanel",
         DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(CEP_obsBaseDP));
   
