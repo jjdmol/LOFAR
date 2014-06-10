@@ -985,16 +985,6 @@ void checkAndCreateDPs() {
               dpCreate("LOFAR_ObsSW_TempObs"+pre+"_PythonControl","PythonControl");
               changed = true;
             }
-            //BGPAppl
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl","BGPAppl");
-              changed = true;
-            }
-            //BGPProc
-            if (!dpExists("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc")) {
-              dpCreate("LOFAR_ObsSW_TempObs"+pre+"_OnlineControl_BGPAppl_BGPProc","BGPProc");
-              changed = true;
-            }
             //CobaltGPUProc
             for (int k=1; k < 10; k++) {
               for (int l=0; l < 2; l++) {

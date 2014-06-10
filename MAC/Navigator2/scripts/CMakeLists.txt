@@ -10,6 +10,6 @@ install(FILES
   monitorStateChanges.ctl
   monitorStateReset.ctl
   readStationConfigs.ctl
-  readStationBGPconnections.ctl
+  readStationConnections.ctl
   transferMPs.ctl
   DESTINATION pvss/scripts)
