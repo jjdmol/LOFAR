@@ -1,9 +1,9 @@
-set(CASACORE_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/casacore_build/trunk/)
-set(CASAREST_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/casarest_build/trunk/build/)
+set(CASACORE_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_1_lfe001/casacore_build/trunk/)
+set(CASAREST_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_1_lfe001/casarest_build/trunk/build/)
 set(LDA_ROOT_DIR /opt/cep/lda)
 set(ENV{HDF5_ROOT} /opt/cep/storage/hdf5)
 
-set(PYRAP_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/pyrap_build/trunk)
+set(PYRAP_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_1_lfe001/pyrap_build/trunk)
 
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
 
