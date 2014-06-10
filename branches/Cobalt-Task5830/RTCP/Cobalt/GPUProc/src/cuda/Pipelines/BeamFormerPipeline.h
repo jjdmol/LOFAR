@@ -38,8 +38,9 @@ namespace LOFAR
     {
     public:
       BeamFormerPipeline(const Parset &, const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices,
         Pool<struct MPIRecvData> &pool,
-        const std::vector<gpu::Device> &devices = gpu::Platform().devices(),
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
         int hostID = 0);
 
       // When gpuProfiling isenabled will print the kernel statistics

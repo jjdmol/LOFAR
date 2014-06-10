@@ -47,8 +47,9 @@ namespace LOFAR
       // pipeline, out of the range [0, ps.nrSubbands()).
       CorrelatorPipeline(const Parset &ps, 
         const std::vector<size_t> &subbandIndices,
-         const std::vector<gpu::Device> &devices,
-         Pool<struct MPIRecvData> &pool);
+        const std::vector<gpu::Device> &devices,
+        Pool<struct MPIRecvData> &pool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix);
 
       // Destructor, when profiling is enabled prints the gpu performance counters
       virtual ~CorrelatorPipeline();

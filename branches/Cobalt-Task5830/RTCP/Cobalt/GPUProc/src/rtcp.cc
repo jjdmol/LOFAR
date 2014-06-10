@@ -52,6 +52,9 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <Common/StringUtil.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <ApplCommon/StationInfo.h>
+#include <MACIO/RTmetadata.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/OMPThread.h>
@@ -59,9 +62,6 @@
 #include <InputProc/SampleType.h>
 #include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
-
-#include <ApplCommon/PVSSDatapointDefs.h>
-#include <ApplCommon/StationInfo.h>
 
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
@@ -186,12 +186,39 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   INIT_LOGGER("rtcp");
 #else
   INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
 #endif
+  LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
-  // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
+  // Create a parameters set object based on the inputs
+  LOG_INFO("----- Reading Parset");
+  Parset ps(argv[optind]);
+
+  // Send id string to the MAC Log Processor as context for further LOGs.
+  // Also use it for MAC/PVSS data point logging as a key name prefix.
+  // For GPUProc use boost::format to fill in the two conv specifications (%xx).
+  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "", ps.PVSS_TempObsName()));
+  format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  string hostName = myHostname(false);
+  int cbtNodeNr = hostName.compare(0, sizeof("cbt") - 1, "cbt") == 0 ?
+                  atoi(hostName.c_str() + sizeof("cbt") - 1) : 0; // default 0 like atoi()
+  int gpuprocNr = ps.settings.nodes.size() > size_t(rank) ?
+                  ps.settings.nodes[rank].cpu : 0; 
+  string mdKeyPrefix = str(prFmt % cbtNodeNr % gpuprocNr);
+  LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
+  mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
+
+  // Create mdLogger for monitoring (PVSS). We can already log(), but start() the event send thread
+  // much later, after the pipeline creation (post-fork()), so we don't crash.
+  const string mdRegisterName = PST_COBALTGPU_PROC;
+  const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
+  MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
+
   LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
@@ -199,8 +226,6 @@ int main(int argc, char **argv)
 #else
   LOG_WARN("Running without MPI!");
 #endif
-
-  LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
   /*
    * Initialise the system environment
@@ -214,9 +239,6 @@ int main(int argc, char **argv)
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
 
-  // Create a parameters set object based on the inputs
-  LOG_INFO("----- Reading Parset");
-  Parset ps(argv[optind]);
 
   /* Tuning parameters */
 
@@ -263,8 +285,8 @@ int main(int argc, char **argv)
       LOG_INFO_STR("RTCP will self-destruct in " << maxRunTime << " seconds");
       alarm(maxRunTime);
     } else {
-      LOG_FATAL_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
-      return EXIT_FAILURE;
+      LOG_WARN_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
+      return EXIT_SUCCESS;
     }
   }
 
@@ -293,17 +315,6 @@ int main(int argc, char **argv)
   /*
    * INIT stage
    */
-
-  // Send identification string to the MAC Log Processor
-  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "",
-                                      ps.getString("_DPname")));
-  format prFmt;
-  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
-  prFmt.parse(fmtStr);
-  LOG_INFO_STR("MACProcessScope: " << str(prFmt
-                   % toUpper(myHostname(false))
-                   % (ps.settings.nodes.size() > size_t(rank) ? 
-                      ps.settings.nodes[rank].cpu : 0)));
 
   if (rank == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
@@ -450,18 +461,22 @@ int main(int argc, char **argv)
   else if (correlatorEnabled) 
   {
     pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
-          MPI_receive_pool);
+                                      MPI_receive_pool, mdLogger, mdKeyPrefix);
   } 
   else if (beamFormerEnabled) 
   {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank],
-         MPI_receive_pool, devices, rank);
+    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices,
+                                      MPI_receive_pool, mdLogger, mdKeyPrefix, rank);
   } 
   else 
   {
     LOG_FATAL("No pipeline selected.");
     return EXIT_FAILURE;
   }
+
+  // After pipeline creation (post-fork()), allow creation of a thread to send
+  // data points for monitoring (PVSS).
+  mdLogger.start();
 
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;

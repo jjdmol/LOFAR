@@ -47,6 +47,15 @@ int main (int, char*	argv[])
 	KVpair	KV3("IntegerValue", 125000);
 	cout << "KV3: " << KV3 << endl;
 
+	KVpair	KV3u("UIntegerValue", 125000U);
+	cout << "KV3u: " << KV3u << endl;
+
+	KVpair	KV3l("LongValue", 1250000000000L);
+	cout << "KV3l: " << KV3l << endl;
+
+	KVpair	KV3ul("ULongValue", 1250000000000UL);
+	cout << "KV3ul: " << KV3ul << endl;
+
 	double d = 57566757.000125;
 	KVpair	KV4("DoubleValue", d);
 	cout << "KV4: " << KV4 << endl;
@@ -80,6 +89,15 @@ int main (int, char*	argv[])
 
 	KVpair	KVT3("IntegerValue", 125000, true, true);
 	cout << ">>>KVT3: " << KVT3 << "<<<" << endl;
+
+	KVpair	KVT3u("UIntegerValue", 125000U, true, true);
+	cout << ">>>KVT3u: " << KVT3u << "<<<" << endl;
+
+	KVpair	KVT3l("LongValue", 1250000000000L, true, true);
+	cout << ">>>KVT3l: " << KVT3l << "<<<" << endl;
+
+	KVpair	KVT3ul("ULongValue", 1250000000000UL, true, true);
+	cout << ">>>KVT3ul: " << KVT3ul << "<<<" << endl;
 
 	KVpair	KVT4("DoubleValue", d, true, true);
 	cout << ">>>KVT4: " << KVT4 << "<<<" << endl;

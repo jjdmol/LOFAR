@@ -85,7 +85,7 @@ public:
 	template <typename T> 
 	inline void log(const string& key, const T& value)
 	{
-		return log(KVpair(key, value));
+		log(KVpair(key, value));
 	}
 
 private:

@@ -26,8 +26,10 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -42,15 +44,26 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    using boost::lexical_cast;
 
     CorrelatorPipeline::CorrelatorPipeline(const Parset &ps,
      const std::vector<size_t> &subbandIndices, 
      const std::vector<gpu::Device> &devices,
-     Pool<struct MPIRecvData> &pool)
+     Pool<struct MPIRecvData> &pool,
+     RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
-      Pipeline(ps, subbandIndices, devices, pool),
+      Pipeline(ps, subbandIndices, devices, pool, mdLogger, mdKeyPrefix),
       factories(ps, nrSubbandsPerSubbandProc)
     {
+      // Write data points for monitoring (PVSS).
+      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME  + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
+                        ps.observationID());
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
+                        "Correlated");
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND           + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
+                        subbandIndices[i]);
+      }
     }
 
     void CorrelatorPipeline::allocateResources()

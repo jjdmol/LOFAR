@@ -69,7 +69,8 @@ namespace LOFAR
 
     Pipeline::Pipeline(const Parset &ps, 
         const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool)
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
       ps(ps),
       devices(devices),
@@ -78,6 +79,8 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      itsMdLogger(mdLogger),
+      itsMdKeyPrefix(mdKeyPrefix),
       mpiPool(pool),
       //MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())

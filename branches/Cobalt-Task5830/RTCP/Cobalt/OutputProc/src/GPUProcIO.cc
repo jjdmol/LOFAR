@@ -79,8 +79,7 @@ bool process(Stream &controlStream, unsigned myRank)
   // Send id string to the MAC Log Processor as context for further LOGs.
   // Also use it for MAC/PVSS data point logging as a key name prefix.
   // For outputProc there are no conv specifications (%xx) to be filled in.
-  string mdKeyPrefix(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
-      parset.getString("_DPname", "LOFAR_ObsSW_TempObs_Unk")));
+  string mdKeyPrefix(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "", parset.PVSS_TempObsName()));
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 

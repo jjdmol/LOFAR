@@ -19,16 +19,21 @@
 //# $Id$
 
 #include <lofar_config.h>
+
 #include "TABTranspose.h"
 
-#include <CoInterface/TimeFuncs.h>
+#include <algorithm>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
-#include <boost/format.hpp>
-#include <algorithm>
+#include <ApplCommon/PVSSDatapointDefs.h>
+#include <CoInterface/TimeFuncs.h>
 
 using namespace std;
 using boost::format;
+using boost::lexical_cast;
 
 namespace LOFAR {
 namespace Cobalt {
@@ -581,10 +586,16 @@ void MultiReceiver::dispatch( PortBroker::ServerStream *stream )
 
 // Maintains the connections of an rtcp process with all its outputProc processes
 // it needs to send data to.
-MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetentionTime )
+MultiSender::MultiSender( const HostMap &hostMap, const Parset &parset,
+                          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+                          double maxRetentionTime )
 :
   hostMap(hostMap),
-  canDrop(canDrop),
+  itsParset(parset),
+  itsMdLogger(mdLogger),
+  itsMdKeyPrefix(mdKeyPrefix),
+  itsBlocksWritten(0),
+  itsBlocksDropped(0),
   maxRetentionTime(maxRetentionTime)
 {
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
@@ -604,7 +615,7 @@ MultiSender::MultiSender( const HostMap &hostMap, bool canDrop, double maxRetent
 
 MultiSender::~MultiSender()
 {
-  LOG_INFO_STR("MultiSender: canDrop = " << canDrop << ", maxRetentionTime = " << maxRetentionTime);
+  LOG_INFO_STR("MultiSender: realTime = " << itsParset.realTime() << ", maxRetentionTime = " << maxRetentionTime);
   for (HostMap::const_iterator i = hostMap.begin(); i != hostMap.end(); ++i) {
     LOG_INFO_STR("MultiSender: [file " << i->first << " to " << i->second.hostName << "] Dropped " << drop_rates.at(i->first).mean() << "% of the data");
   }
@@ -667,8 +678,12 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
   SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
+  const string globalSubbandNr = lexical_cast<string>(subband->id.subband +
+      itsParset.settings.beamFormer.files[fileIdx].firstSubbandIdx);
+  bool dropping;
+
   // If oldest packet in queue is too old, drop it in lieu of this new one
-  if (canDrop && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
+  if (itsParset.realTime() && TimeSpec::now() - queue->oldest() > maxRetentionTime) {
     drop_rates.at(fileIdx).push(100.0);
 
     // remove oldest item
@@ -676,9 +691,22 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
     // would be weird to have NULL in here while we're appending elements
     ASSERT(subband);
+
+    dropping = true;
+    itsBlocksDropped += 1;
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED + '[' + globalSubbandNr + ']',
+        itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
   } else {
     drop_rates.at(fileIdx).push(0.0);
+
+    dropping = false;
+    itsBlocksWritten += 1;
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN + '[' + globalSubbandNr + ']',
+        itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
   }
+
+  itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + globalSubbandNr + ']',
+                  dropping ? "1" : "0");
 
   // Append the data to the respective queue
   queue->append(subband);
