@@ -3,7 +3,7 @@ set(CASAREST_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/casarest
 set(LDA_ROOT_DIR /opt/cep/lda)
 set(ENV{HDF5_ROOT} /opt/cep/storage/hdf5)
 
-set(PYRAP_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/pyrap_build/trunk/lib)
+set(PYRAP_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_0/pyrap_build/trunk)
 
 set(WCSLIB_ROOT_DIR /opt/cep/wcslib)
 
