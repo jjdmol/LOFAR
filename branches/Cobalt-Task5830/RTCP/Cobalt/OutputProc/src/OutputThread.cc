@@ -142,6 +142,9 @@ namespace LOFAR
         itsBlocksDropped += droppedBlocks;
 
         LOG_WARN_STR(itsLogPrefix << "Just dropped " << droppedBlocks << " blocks. Dropped " << itsBlocksDropped << " blocks and written " << itsBlocksWritten << " blocks so far.");
+
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + '[' + lexical_cast<string>(itsStreamNr) + ']',
+                        itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
@@ -151,8 +154,6 @@ namespace LOFAR
                       droppedBlocks > 0 ? "1" : "0"); // logged too late?
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + '[' + lexical_cast<string>(itsStreamNr) + ']',
                       itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
-      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + '[' + lexical_cast<string>(itsStreamNr) + ']',
-                      itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
     }
 
 
