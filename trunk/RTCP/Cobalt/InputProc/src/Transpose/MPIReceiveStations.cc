@@ -37,9 +37,18 @@ using namespace LOFAR::Cobalt::MPIProtocol;
 namespace LOFAR {
   namespace Cobalt {
 
+    namespace {
+      ssize_t first(const std::vector<size_t> &v) {
+        return v.empty() ? -1 : v.at(0);
+      }
+      ssize_t last(const std::vector<size_t> &v) {
+        return v.empty() ? -1 : v.at(v.size()-1);
+      }
+    };
+
     MPIReceiveStations::MPIReceiveStations( size_t nrStations, const std::vector<size_t> &beamlets, size_t blockSize )
     :
-      logPrefix(str(boost::format("[beamlets %u..%u (%u)] [MPIReceiveStations] ") % beamlets[0] % beamlets[beamlets.size()-1] % beamlets.size())),
+      logPrefix(str(boost::format("[beamlets %d..%d (%u)] [MPIReceiveStations] ") % first(beamlets) % last(beamlets) % beamlets.size())),
       nrStations(nrStations),
       beamlets(beamlets),
       blockSize(blockSize),
@@ -74,6 +83,9 @@ namespace LOFAR {
     template<typename T>
     void MPIReceiveStations::receiveBlock( MultiDimArray<T, 3> &data, MultiDimArray<struct MPIProtocol::MetaData, 2> &metaData )
     {
+      if (beamlets.empty())
+        return;
+
       ASSERT(data.num_elements() == nrStations * beamlets.size() * blockSize);
       ASSERT(metaData.num_elements() == nrStations * beamlets.size());
 
