@@ -4,7 +4,7 @@ set(LDA_ROOT_DIR /opt/cep/lda)
 
 set(PYRAP_ROOT_DIR /opt/cep/lofar/lofar_versions/LOFAR-Release-2_3_1_lfe001/pyrap_build/trunk)
 
-set(WCSLIB_ROOT_DIR /opt/cep/wcslib)   #set(WCSLIB_ROOT_DIR /opt/cep/lofar/external/wcslib)
+set(WCSLIB_ROOT_DIR /opt/cep/lofar/external/wcslib) #set(WCSLIB_ROOT_DIR /opt/cep/wcslib) 
 
 set(LOG4CXX_ROOT_DIR /opt/cep/LofIm/external/log4cxx)
 set(LOG4CPLUS_ROOT_DIR /opt/cep/lofar/external/log4cplus)
