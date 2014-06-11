@@ -92,6 +92,8 @@ int main( int, char **argv )
 
     #pragma omp section
     {
+      MACIO::RTmetadata rtmd(12345, "", "");
+
       // Read and verify the generated packets
 
       try {
@@ -101,7 +103,8 @@ int main( int, char **argv )
           struct RSP packet;
 
           if (!reader.readPacket(packet)) {
-            reader.logStatistics();
+            const unsigned boardNr = 0; // irrel, for logStats only
+            reader.logStatistics(boardNr, rtmd, "rtmd key prefix", stationID.name());
 
             ASSERT(false);
           }

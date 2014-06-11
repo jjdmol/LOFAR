@@ -27,6 +27,7 @@
 #include <cstring>
 
 #include <Common/Thread/Semaphore.h>
+#include <MACIO/RTmetadata.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
 #include <CoInterface/SubbandMetaData.h>
@@ -155,7 +156,8 @@ namespace LOFAR {
 
       template <typename SampleT>
       void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, 
-                Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
+                         Queue< SmartPtr< MPIData<SampleT> > > &outputQueue,
+                         MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix );
 
     private:
       // Each packet is expected to have 16 samples per subband, i.e. ~80 us worth of data @ 200 MHz.
@@ -212,7 +214,9 @@ namespace LOFAR {
        *
        * Read data from one board in real-time mode.
        */
-      void readRSPRealTime( size_t board, Stream &inputStream );
+      void readRSPRealTime( size_t board, Stream &inputStream,
+                            MACIO::RTmetadata &mdLogger,
+                            const std::string &mdKeyPrefix );
 
       /*
        * Read data from all boards in non-real-time mode.
@@ -269,7 +273,10 @@ namespace LOFAR {
     };
 #endif
 
-    void sendInputToPipeline(const Parset &ps, size_t stationIdx, const SubbandDistribution &subbandDistribution);
+    void sendInputToPipeline(const Parset &ps, size_t stationIdx,
+                             const SubbandDistribution &subbandDistribution,
+                             MACIO::RTmetadata &mdLogger,
+                             const std::string &mdKeyPrefix);
   }
 }
 

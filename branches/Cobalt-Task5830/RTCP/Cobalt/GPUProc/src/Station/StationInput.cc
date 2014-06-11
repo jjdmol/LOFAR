@@ -307,7 +307,9 @@ bool StationInput::receivedHere() const
 }
 
 
-void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
+void StationInput::readRSPRealTime( size_t board, Stream &inputStream,
+                                    MACIO::RTmetadata &mdLogger,
+                                    const string &mdKeyPrefix )
 {
   /*
    * In real-time mode, we can't get ahead of the `current'
@@ -330,9 +332,9 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
 
       reader.readPackets(rspData->packets);
 
-      // Periodically log progress
+      // Periodically LOG() and log() (for monitoring (PVSS)) progress
       if (i % 256 == 0) // Each block is ~40ms, so log every ~10s worth of data.
-        reader.logStatistics();
+        reader.logStatistics(board, mdLogger, mdKeyPrefix, stationID.name());
 
       outputQueue.append(rspData);
     }
@@ -549,7 +551,9 @@ void StationInput::writeRSPNonRealTime( MPIData<SampleT> &current, MPIData<Sampl
 
 
 template <typename SampleT>
-void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
+void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue,
+                                 Queue< SmartPtr< MPIData<SampleT> > > &outputQueue,
+                                 MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix )
 {
   OMPThreadSet packetReaderThreads;
 
@@ -591,7 +595,7 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
 
           Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-          readRSPRealTime(board, *inputStreams[board]);
+          readRSPRealTime(board, *inputStreams[board], mdLogger, mdKeyPrefix);
         }
       } else {
         readRSPNonRealTime();
@@ -740,7 +744,8 @@ void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Q
 }
 
 template<typename SampleT> void sendInputToPipeline(const Parset &ps, 
-    size_t stationIdx, const SubbandDistribution &subbandDistribution)
+        size_t stationIdx, const SubbandDistribution &subbandDistribution,
+        MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
 {
   // sanity check: Find out if we should actual start working here.
   StationMetaData<SampleT> sm(ps, stationIdx, subbandDistribution);
@@ -785,7 +790,8 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps,
      */
     #pragma omp section
     {
-      si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue );
+      si.processInput<SampleT>( sm.metaDataPool.filled, mpiQueue,
+                                mdLogger, mdKeyPrefix );
       LOG_INFO_STR(logPrefix << "StationInput: done");
     }
 
@@ -805,20 +811,27 @@ template<typename SampleT> void sendInputToPipeline(const Parset &ps,
 }
 
 void sendInputToPipeline(const Parset &ps, size_t stationIdx, 
-                        const SubbandDistribution &subbandDistribution)
+                         const SubbandDistribution &subbandDistribution,
+                         MACIO::RTmetadata &mdLogger, const string &mdKeyPrefix)
 {
   switch (ps.nrBitsPerSample()) {
     default:
     case 16: 
-      sendInputToPipeline< SampleType<i16complex> >(ps, stationIdx, subbandDistribution);
+      sendInputToPipeline< SampleType<i16complex> >(ps, stationIdx,
+                                                    subbandDistribution,
+                                                    mdLogger, mdKeyPrefix);
       break;
 
     case 8: 
-      sendInputToPipeline< SampleType<i8complex> >(ps, stationIdx, subbandDistribution);
+      sendInputToPipeline< SampleType< i8complex> >(ps, stationIdx,
+                                                    subbandDistribution,
+                                                    mdLogger, mdKeyPrefix);
       break;
 
     case 4: 
-      sendInputToPipeline< SampleType<i4complex> >(ps, stationIdx, subbandDistribution);
+      sendInputToPipeline< SampleType< i4complex> >(ps, stationIdx,
+                                                    subbandDistribution,
+                                                    mdLogger, mdKeyPrefix);
       break;
   }
 }

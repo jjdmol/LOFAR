@@ -25,6 +25,7 @@
 
 #include <Common/Exception.h>
 #include <Stream/Stream.h>
+#include <MACIO/RTmetadata.h>
 #include <InputProc/Buffer/BoardMode.h>
 
 #include "RSP.h"
@@ -55,7 +56,10 @@ namespace LOFAR
       bool readPacket( struct RSP &packet );
 
       // Logs (and resets) statistics about the packets read.
-      void logStatistics();
+      void logStatistics(unsigned boardNr,
+                         MACIO::RTmetadata &mdLogger,
+                         const std::string &mdKeyPrefix,
+                         const std::string &antFieldName);
 
     private:
       const std::string logPrefix;
@@ -67,7 +71,7 @@ namespace LOFAR
       const BoardMode mode;
 
       // Whether inputStream is an UDP stream
-      // (UDP streams allow partial reads, and recvmmsg).
+      // UDP streams do not allow partial reads and can use recvmmsg(2) (Linux).
       bool inputIsUDP;
 
       // Statistics covering the packets read so far
