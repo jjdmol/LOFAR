@@ -42,6 +42,7 @@ set(common_PROGRAMS
   getparsetvalue
   versioncommon
   logperf
+  mergeparsets
 )
 
 if(HAVE_LOG4CPLUS)

@@ -7,6 +7,7 @@ lofar_find_package(Casacore COMPONENTS casa)
 lofar_find_package(Boost REQUIRED)
 lofar_find_package(Readline)
 
+add_subdirectory(etc)
 add_subdirectory(include/Common)
 add_subdirectory(src)
 add_subdirectory(test)
