@@ -326,7 +326,7 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,int_local
                 ip = IPandMAC[0][1]
                 mac = IPandMAC[0][2]
 
-            print node, ip, mac
+            #print node, ip, mac
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+node)
             # Need to fill this in until RSPDriver is fixed...
