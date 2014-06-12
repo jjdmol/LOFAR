@@ -358,7 +358,7 @@ mpirun.sh -x LOFARROOT="$LOFARROOT" \
 PID=$!
 
 # Propagate SIGTERM
-trap 'echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID' SIGTERM SIGINT SIGQUIT SIGHUP
+trap "echo runObservation.sh: Received signal cleaning up child processes; clean_up 1 $PID" SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Wait for $COMMAND to finish. We use 'wait' because it will exit immediately if it
 # receives a signal.
@@ -428,7 +428,7 @@ fi
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP ; sleep 120&  SLEEP_PID=$!; echo "Starting forced cleanup outputProc:"; clean_up 0 ) & 
+( trap "kill $SLEEP_PID" SIGTERM SIGINT SIGQUIT SIGHUP ; sleep 120&  SLEEP_PID=$!; echo "Starting forced cleanup outputProc:"; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish
