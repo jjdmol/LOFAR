@@ -8,14 +8,14 @@ observationName		string
 dataProductType		string
 
 # Subband index number (usually in the range [0..488>)
-subband			int
+subband			intArr
 
 # Are we dropping output at the moment?
-dropping		bool
+dropping		boolArr
 
 # The number of seconds that data was successfully written
-written			float
+written			floatArr
 
 # The number of seconds that data was (partially) dropped
-dropped			float
+dropped			floatArr
 
