@@ -115,23 +115,14 @@ NavPanelConfig.NavPanelConfig	1#
 	LOFAR_Reports	9#
 	CEPLOFAR_Processes	9#
 	CEPPIC_Hardware	9#
-	BGPRack_Hardware	9#
 	OSRack_Hardware	9#
-	BGPMidplane_Hardware	9#
-	BGPAppl_Processes	9#
 	CEPHardwareMonitor_Processes	9#
-	BGPProc_Processes	9#
 	StnLOFAR_Observations	9#
 	StnLOFAR_Reports	9#
 	StnLOFAR_Alerts	9#
 	HBAAntenna_Hardware	9#
-	IONode_Hardware	9#
-	IONode_Processes	9#
 	CEPLogProcessor_Processes	9#
 	PythonControl_Processes	9#
-	InputBuffer_Processes	9#
-	Adder_Processes	9#
-	Writer_Processes	9#
 	CobaltRack_Hardware	9#
 	CobaltNode_Hardware	9#
 	CobaltNIC_Hardware	9#
@@ -221,20 +212,11 @@ root.Ring_Hardware	NavPanelConfig	"main.pnl:LOFAR_PIC_Europe", "Hardware/LOFAR_E
 root.LOFAR_Reports	NavPanelConfig	"Reports/LOFAR_Reports_main.pnl"
 root.CEPLOFAR_Processes	NavPanelConfig	"Processes/CEP_Processes.pnl"
 root.CEPPIC_Hardware	NavPanelConfig	"Hardware/CEP.pnl"
-root.BGPRack_Hardware	NavPanelConfig	"Hardware/CEP_BGPRack_detailed.pnl"
 root.OSRack_Hardware	NavPanelConfig	"Hardware/CEP_OSRack_detailed.pnl"
-root.BGPMidplane_Hardware	NavPanelConfig	"Hardware/CEP_Midplane.pnl"
-root.BGPAppl_Processes	NavPanelConfig	"Processes/BGPAppl.pnl"
 root.CEPHardwareMonitor_Processes	NavPanelConfig	"Processes/CEPHardwareMonitor.pnl"
-root.BGPProc_Processes	NavPanelConfig	"Processes/BGPProc.pnl"
 root.HBAAntenna_Hardware	NavPanelConfig	"Hardware/HBAAntenna.pnl"
-root.IONode_Hardware	NavPanelConfig	"Hardware/CEP_IONode.pnl"
-root.IONode_Processes	NavPanelConfig	"Processes/CEP_IONodeProcesses.pnl"
 root.CEPlogProcessor_Processes	NavPanelConfig	"Processes/CEPlogProcessor.pnl"
 root.PythonControl_Processes	NavPanelConfig	"Processes/PythonControl.pnl"
-root.InputBuffer_Processes	NavPanelConfig	"Processes/ObservationIBEmbedded.pnl"
-root.Adder_Processes	NavPanelConfig	"Processes/ObservationAEmbedded.pnl"
-root.Writer_Processes	NavPanelConfig	"Processes/ObservationWEmbedded.pnl"
 root.CobaltRack_Hardware	NavPanelConfig	"Hardware/CEP_CobaltRack_detailed.pnl"
 root.CobaltNode_Hardware	NavPanelConfig	"Hardware/CEP_CobaltNode_detailed.pnl"
 root.CobaltNIC_Hardware	NavPanelConfig	"Hardware/CEP_CobaltNIC.pnl"

@@ -113,12 +113,8 @@ NavPanelConfig.NavPanelConfig	1#
 	LOFAR_Reports	9#
 	CEPLOFAR_Processes	9#
 	CEPPIC_Hardware	9#
-	BGPRack_Hardware	9#
 	OSRack_Hardware	9#
-	BGPMidplane_Hardware	9#
-	BGPAppl_Processes	9#
 	CEPHardwareMonitor_Processes	9#
-	BGPProc_Processes	9#
 	StnLOFAR_Observations	9#
 	StnLOFAR_Reports	9#
 	StnLOFAR_Alerts	9#

@@ -46,18 +46,10 @@ ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 #Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
 #Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
-PSIONode			-		C	N	LOFAR_PermSW_@psionode@
-InputBuffer			IPB		C	Y	LOFAR_PermSW_@psionode@_InputBuffer
-OSIONode			-		C	N	LOFAR_ObsSW_@osionode@
-Adder				ADD		C	Y	LOFAR_ObsSW_@osionode@_@adder@
 PSLocusNode			-		C	Y	LOFAR_PermSW_@pslocusnode@
 OSLocusNode			-		C	N	LOFAR_ObsSW_@oslocusnode@
-Writer				WTR		C	Y	LOFAR_ObsSW_@oslocusnode@_@writer@
 CEPLOFAR			-		C	N	LOFAR
 CEPPIC				-		C	N	LOFAR_PIC
-BGPRack				-		C	N	LOFAR_PIC_BGP
-BGPMidplane			-		C	N	LOFAR_PIC_BGP_@midplane@
-IONode				ION		C	Y	LOFAR_PIC_BGP_@midplane@_@ionode@
 OSRack				-		C	N	LOFAR_PIC_@osrack@
 LocusNode			LCN		C	Y	LOFAR_PIC_@osrack@_@locusnode@
 CEPPermSW			-		C	N	LOFAR_PermSW
@@ -75,8 +67,6 @@ CEPObsSW			-		C	N	LOFAR_ObsSW
 CEPObservation			-		C	N	LOFAR_ObsSW_@observation@
 OnlineControl			OLC		C	Y	LOFAR_ObsSW_@observation@_OnlineControl
 PythonControl			-		C	Y	LOFAR_ObsSW_@observation@_PythonControl
-BGPAppl				BGPA		C	N	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl
-BGPProc				-		C	Y	LOFAR_ObsSW_@observation@_OnlineControl_BGPAppl_BGPProc
 CobaltRack			-		C	N	LOFAR_PIC_Cobalt
 CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
 CobaltNIC			CNI		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@

@@ -106,7 +106,7 @@ ScriptInfo.ScriptInfo	1#
 		debug	23#
 	monitorStationAlarms	1#
 		debug	23#
-	readStationBGPconnections	1#
+	readStationConnections	1#
 		debug	23#
 		runDone	23#
 	readStationConfigs	1#

@@ -135,28 +135,6 @@ labelize()
 		awk '{ print toupper($1) }'
 }
 
-#
-# substitute_adder
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_adder()
-{
-	awk '
-	{
-		hasAdder=index($1,"@adder@");
-		if (hasAdder > 0) {
-			for (adder=0; adder<10; adder++) {
-				dpname=$1;
-				sub("@adder@", "Adder"adder, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
 # substitute_cobaltgpuproc
@@ -230,77 +208,6 @@ substitute_oslocusnode()
 	} '
 }
 
-#
-# substitute_writer
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_writer()
-{
-	awk '
-	{
-		hasWriter=index($1,"@writer@");
-		if (hasWriter > 0) {
-			for (wNr = 0; wNr < 20; wNr++) {  
-				dpname=$1;
-                                newname = sprintf("Writer%02d",wNr);
-                                sub("@writer@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-
-#
-# substitute_midplane
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_midplane()
-{
-	awk '
-	{
-		hasMid=index($1,"@midplane@");
-		if (hasMid > 0) {
-			for (midplane=0; midplane<2; midplane++) {
-				dpname=$1;
-				sub("@midplane@", "Midplane"midplane, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-#
-# substitutemidplane_ionode
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_midplane_ionode()
-{
-	awk  '
-	{
-		hasMidIONode=index($1,"@midplane@_@ionode@");
-		if (hasMidIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
-				dpname=$1;
-				midplane=int(ionode/32)
-                                newname = sprintf("Midplane%d_IONode%02d",midplane,ionode);
-                                sub("@midplane@_@ionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
 # substitute_cobaltnode_nic
@@ -324,30 +231,6 @@ substitute_cobaltnode_cobaltnic()
                             newname = sprintf("CBT%03d_CobaltNIC%02d",cnode,cnic);
                             sub("@cobaltnode@_@cobaltnic@", newname, dpname);
 			    print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-#
-# substitute_psionode\
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_psionode()
-{
-	awk '
-	{
-		hasIONode=index($1,"@psionode@");
-		if (hasIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
-				dpname=$1;
-                                newname = sprintf("PSIONode%02d",ionode);
-                                sub("@psionode@", newname, dpname);
-				print dpname"	"$2;
 			}
 		}
 		else {
@@ -403,31 +286,6 @@ substitute_oscobaltnode()
 		}
 	} '
 }
-
-#
-# substitute_osionode\
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_osionode()
-{
-	awk '
-	{
-		hasIONode=index($1,"@osionode@");
-		if (hasIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
-				dpname=$1;
-                                newname = sprintf("OSIONode%02d",ionode);
-                                sub("@osionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
 #
 # substitute_osrack
 #
@@ -1141,21 +999,15 @@ create_dp_file()
 				substitute_instancenr | \
 				substitute_lbaantenna | \
 				substitute_hbaantenna | \
-				substitute_midplane_ionode | \
-				substitute_midplane | \
 				substitute_osrack_locusnode | \
 				substitute_osrack | \
-				substitute_osionode | \
 				substitute_cobaltnode_cobaltnic | \
 				substitute_cobaltnode | \
-				substitute_psionode | \
 				substitute_oscobaltnode | \
 				substitute_pscobaltnode | \
 			        substitute_oslocusnode | \
 			        substitute_pslocusnode | \
-				substitute_adder | \
 				substitute_cobaltgpuproc | \
-				substitute_writer | \
 				sort -k1,1 >>${DESTDIR}/${DP_FILE}
 
 #				number_dps >>${DESTDIR}/${DP_FILE}
