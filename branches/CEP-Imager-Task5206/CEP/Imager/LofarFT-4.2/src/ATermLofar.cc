@@ -366,7 +366,7 @@ vector<Cube<Complex> > ATermLofar::evaluate(
   return asVector(result);
 }
 
-Cube<DComplex> ATermLofar::evaluateStationScalarFactor(
+vector<Matrix<Complex> > ATermLofar::evaluateStationScalarFactor(
   const uint idStation,
   const uint idPolarization, 
   const Vector<Double> &freq,
@@ -383,7 +383,7 @@ Cube<DComplex> ATermLofar::evaluateStationScalarFactor(
 
   // Allocate space for the result and initialize to 1.0. Initialization is
   // important when itsApplyBeam == itsApplyIonosphere == false.
-  Cube<DComplex> result(nX, nY, nFreq, DComplex(1.0, 0.0));
+  Cube<DComplex> result(nX, nY, nFreq, Complex(1.0, 0.0));
 
   if (itsApplyBeam)
   {
@@ -417,7 +417,7 @@ Cube<DComplex> ATermLofar::evaluateStationScalarFactor(
     rescale(result);
   }
 
-  return result;
+  return asVector(result);
 }
 
 vector<Matrix<Complex> > ATermLofar::evaluateArrayFactor(

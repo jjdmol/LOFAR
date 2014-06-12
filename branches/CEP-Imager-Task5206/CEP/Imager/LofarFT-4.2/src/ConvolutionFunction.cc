@@ -143,8 +143,8 @@ ConvolutionFunction::ConvolutionFunction
   ROMSAntennaColumns antenna(ms.antenna());
   itsNStations = antenna.nrow();
 
-  Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
-  Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
+//   Matrix<Complex> Stack_pb_cf0(IPosition(2,itsShape(0),itsShape(0)),Complex(0.));
+//   Matrix<float> Stack_pb_cf1(IPosition(2,itsShape(0),itsShape(0)),0.);
 
 //   if (parset.getBool("gridding.findNWplanes",false)) FindNWplanes();
   itsChan_block_size = parset.getInt("gridding.chanBlockSize",0);
@@ -346,7 +346,7 @@ void ConvolutionFunction::computeAterm (Double time)
       if (itsVerbose > 1) 
       {
         cout.precision(20);
-        cout<<"Number of pixel in the Aplane of "<<i<<": "<<nPixelsConv
+        cout<<"Number of pixels in the Aplane of "<<i<<": "<<nPixelsConv
             <<", time="<<fixed<<time<<endl;
       }
       IPosition shape(2, nPixelsConv, nPixelsConv);

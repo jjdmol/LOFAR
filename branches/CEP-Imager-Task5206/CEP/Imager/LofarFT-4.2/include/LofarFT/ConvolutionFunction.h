@@ -106,7 +106,7 @@ public:
   // and timeslot.
   // RETURNS in a LofarCFStore: result[channel][Mueller row][Mueller column]
 
-  CFStore makeConvolutionFunction(
+  virtual CFStore makeConvolutionFunction(
     casa::uInt stationA, 
     casa::uInt stationB,
     casa::Double time, 
@@ -151,7 +151,7 @@ public:
   casa::Double get_w_from_support(casa::Int support = 11) const;
 
 
-private:
+protected:
   
   casa::Matrix<casa::Float> itsSumCF;
   casa::Float itsSumWeight;

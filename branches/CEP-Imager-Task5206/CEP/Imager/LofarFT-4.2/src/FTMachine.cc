@@ -113,16 +113,9 @@ FTMachine::FTMachine(
     itsMS(ms),
     itsNWPlanes(100 /*nwPlanes*/), 
     itsWMax(parset.getDouble("data.wmax", 10000.0)),
-    itsConvFunc(new ConvolutionFunction(
-      itsMS, 
-      itsWMax,
-      itsOversample, 
-      itsVerbose, 
-      itsMaxSupport,
-      itsParset)),
+    itsOversample(parset.getInt("gridding.oversample", 9)),
     itsVerbose(parset.getInt("verbose",0)),
     itsMaxSupport(parset.getInt("gridding.maxsupport", 1024)),
-    itsOversample(parset.getInt("gridding.oversample", 9)),
     itsImageName(parset.getString("output.imagename", "")),
     itsGriddingTime(0),   // counters to measure time spend per operation (Gridding, Degridding, and Convolution Function computation)
     itsDegriddingTime(0), //
@@ -130,6 +123,13 @@ FTMachine::FTMachine(
     itsGriddedDataDomain(UV),
     itsAveragePB()
 {
+  itsConvFunc = new ConvolutionFunction(
+    itsMS, 
+    itsWMax,
+    itsOversample, 
+    itsVerbose, 
+    itsMaxSupport,
+    itsParset);
 }
 
 //----------------------------------------------------------------------

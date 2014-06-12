@@ -100,6 +100,7 @@ protected:
 
   casa::Int convSampling;
   casa::Float pbLimit_p;
+  casa::Bool itsSplitBeam;
   int itsNThread;
   casa::Int itsRefFreq;
   casa::Float itsTimeWindow;

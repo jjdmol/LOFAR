@@ -10,9 +10,11 @@ lofar_add_library(lofarft
   ATermLofar.cc
 #  ATermPython.cc
   ConvolutionFunction.cc
+  ConvolutionFunctionDiagonal.cc
   Imager.cc
   CFStore.cc
   FTMachine.cc
+#   FTMachineSimple.cc
 #   FTMachineSimpleWB.cc
   FTMachineSplitBeamWStackWB.cc
   WTerm.cc
@@ -21,6 +23,7 @@ lofar_add_library(lofarft
   VisImagingWeight.cc
   VisResampler.cc
   VisResamplerMatrixWB.cc
+  VisResamplerDiagonalWB.cc
   SkyEquation.cc
 )
 

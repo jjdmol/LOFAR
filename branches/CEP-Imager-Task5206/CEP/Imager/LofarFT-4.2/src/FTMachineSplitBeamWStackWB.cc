@@ -23,11 +23,14 @@
 #include <lofar_config.h>
 
 #include <LofarFT/FTMachineSplitBeamWStackWB.h>
+#include <LofarFT/FFTCMatrix.h>
 #include <LofarFT/VBStore.h>
 #include <LofarFT/CFStore.h>
 #include <LofarFT/VisBuffer.h>
 #include <LofarFT/ConvolutionFunction.h>
+#include <LofarFT/ConvolutionFunctionDiagonal.h>
 #include <LofarFT/VisResamplerMatrixWB.h>
+#include <LofarFT/VisResamplerDiagonalWB.h>
 #include <Common/OpenMP.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
@@ -46,7 +49,84 @@ namespace
 namespace LOFAR {
 namespace LofarFT {
 
+FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
+  const MeasurementSet& ms,
+  ParameterSet& parset)
+  : FTMachine( ms, parset),
+    itsSplitBeam(parset.getBool("gridding.splitbeam", False)),
+    itsNThread(OpenMP::maxThreads())
+{
+  itsMachineName = theirName;
+  itsNGrid = itsNThread;
+  AlwaysAssert (itsNThread>0, AipsError);
+  itsGriddedData.resize (itsNGrid);
+  itsGriddedData2.resize (itsNGrid);
+  itsSumPB.resize (itsNGrid);
+  itsSumCFWeight.resize (itsNGrid);
+  itsSumWeight.resize (itsNGrid);
+  itsGriddedDataDomain = IMAGE;
+  double msRefFreq=0; //TODO: put some useful reference frequency here
+  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
+  itsTimeWindow=parset.getDouble("gridding.timewindow",300);
+  if (itsSplitBeam)
+  {
+    cout << "SplitBeam is True" << endl;
+    itsConvFunc = new ConvolutionFunctionDiagonal(
+      itsMS, 
+      itsWMax,
+      itsOversample, 
+      itsVerbose, 
+      itsMaxSupport,
+      itsParset);
+    itsVisResampler = new VisResamplerDiagonalWB();
+  }
+  else
+  {
+    itsVisResampler = new VisResamplerMatrixWB();
+  }
+  
+}
 
+FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()
+{
+}
+
+  //----------------------------------------------------------------------
+FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachineSplitBeamWStackWB& other)
+{
+  if(this!=&other) 
+  {
+    //Do the base parameters
+    FTMachine::operator=(other);
+
+    itsLattice = 0;
+    itsNThread = other.itsNThread;
+    itsGriddedData.resize (itsNThread);
+    itsGriddedData2.resize (itsNThread);
+    itsSumPB.resize (itsNThread);
+    itsSumCFWeight.resize (itsNThread);
+    itsSumWeight.resize (itsNThread);
+  }
+  return *this;
+}
+
+//----------------------------------------------------------------------
+  FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(const FTMachineSplitBeamWStackWB& other) : 
+    FTMachine(other)
+  {
+    operator=(other);
+  }
+
+//----------------------------------------------------------------------
+  FTMachineSplitBeamWStackWB* FTMachineSplitBeamWStackWB::clone() const
+  {
+    FTMachineSplitBeamWStackWB* newftm = new FTMachineSplitBeamWStackWB(*this);
+    return newftm;
+  }
+
+//----------------------------------------------------------------------
+
+  
 void FTMachineSplitBeamWStackWB::initialize_model_grids(Bool normalize_model)
 {
   // Create model grids but do not initialize here
@@ -162,65 +242,6 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
 
  
 
-FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
-  const MeasurementSet& ms,
-  ParameterSet& parset)
-  : FTMachine( ms, parset),
-    itsNThread(OpenMP::maxThreads())
-{
-  itsMachineName = theirName;
-  itsNGrid = itsNThread;
-  AlwaysAssert (itsNThread>0, AipsError);
-  itsGriddedData.resize (itsNGrid);
-  itsGriddedData2.resize (itsNGrid);
-  itsSumPB.resize (itsNGrid);
-  itsSumCFWeight.resize (itsNGrid);
-  itsSumWeight.resize (itsNGrid);
-  itsVisResampler = new VisResamplerMatrixWB();
-  itsGriddedDataDomain = IMAGE;
-  double msRefFreq=0; //TODO: put some useful reference frequency here
-  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
-  itsTimeWindow=parset.getDouble("gridding.timewindow",300);
-}
-
-FTMachineSplitBeamWStackWB::~FTMachineSplitBeamWStackWB()
-{
-}
-
-  //----------------------------------------------------------------------
-FTMachineSplitBeamWStackWB& FTMachineSplitBeamWStackWB::operator=(const FTMachineSplitBeamWStackWB& other)
-{
-  if(this!=&other) 
-  {
-    //Do the base parameters
-    FTMachine::operator=(other);
-
-    itsLattice = 0;
-    itsNThread = other.itsNThread;
-    itsGriddedData.resize (itsNThread);
-    itsGriddedData2.resize (itsNThread);
-    itsSumPB.resize (itsNThread);
-    itsSumCFWeight.resize (itsNThread);
-    itsSumWeight.resize (itsNThread);
-  }
-  return *this;
-}
-
-//----------------------------------------------------------------------
-  FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(const FTMachineSplitBeamWStackWB& other) : 
-    FTMachine(other)
-  {
-    operator=(other);
-  }
-
-//----------------------------------------------------------------------
-  FTMachineSplitBeamWStackWB* FTMachineSplitBeamWStackWB::clone() const
-  {
-    FTMachineSplitBeamWStackWB* newftm = new FTMachineSplitBeamWStackWB(*this);
-    return newftm;
-  }
-
-//----------------------------------------------------------------------
 
 void FTMachineSplitBeamWStackWB::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
@@ -326,7 +347,7 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
-  double w_step = itsConvFunc->get_w_from_support();
+  double w_step = 2*itsConvFunc->get_w_from_support();
   cout << "w_step: " << w_step << endl;
 
   VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
@@ -372,6 +393,7 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
         // transform to image domain
         ArrayLattice<Complex> lattice(w_plane_grids[i]);
         LatticeFFT::cfft2d(lattice, True);
+        
         // Apply W term in image domain
         itsConvFunc->applyWterm(w_plane_grids[i], -w_offset);
         // Add image to master grid
@@ -532,7 +554,7 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
 
   const casa::Vector< casa::Double > &frequency_list_CF = itsConvFunc->get_frequency_list();
 
-  double w_step = itsConvFunc->get_w_from_support();
+  double w_step = 2*itsConvFunc->get_w_from_support();
   cout << "w_step: " << w_step << endl;
 
   VisibilityMap v = make_mapping(vb, frequency_list_CF, itsTimeWindow, w_step);
@@ -599,8 +621,17 @@ void FTMachineSplitBeamWStackWB::get(VisBuffer& vb, Int row)
             itsConvFunc->applyWterm(complex_model_subimage_data, w_offset);
             
             // transform to uv domain
-            LatticeFFT::cfft2d(*itsComplexModelImages[i], True);
+//             LatticeFFT::cfft2d(*itsComplexModelImages[i], True);
+            
             itsModelGrids[i].reference(itsComplexModelImages[i]->get());
+            
+            FFTCMatrix f;
+            for(Int pol=0; pol<itsNPol; ++pol)
+            {
+              Complex* ptr = itsModelGrids[i].data() + pol*itsPaddedNX*itsPaddedNY;
+              f.forward(itsPaddedNX, ptr, OpenMP::maxThreads());
+            }
+            
           }
           model_grids_initialized = true;
         }

@@ -100,7 +100,7 @@ public:
   // the response to be multiplied by the inverse of the array factor at the
   // central pixel.
     
-  virtual casa::Cube<casa::DComplex> evaluateStationScalarFactor(
+  virtual vector<casa::Matrix<casa::Complex> > evaluateStationScalarFactor(
     uint idStation,
     uint idPolarization,
     const casa::Vector<casa::Double> &freq,
