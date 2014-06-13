@@ -90,10 +90,14 @@ namespace LOFAR {
     void MPIPoll::stop() {
       DEBUG("MPIPoll::stop");
 
-      done = true;
+      {
+        ScopedLock sl(mutex);
 
-      // Unlock thread if it is waiting for a new request
-      newRequest.signal();
+        done = true;
+
+        // Unlock thread if it is waiting for a new request
+        newRequest.signal();
+      }
 
       // Wait for thread to finish
       thread = 0;
