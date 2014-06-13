@@ -21,7 +21,6 @@
 
 #include <lofar_config.h>
 
-#include <InputProc/Transpose/MPIUtil2.h>
 #include <InputProc/Transpose/MPIUtil.h>
 
 #include <vector>

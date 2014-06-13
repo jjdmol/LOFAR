@@ -39,7 +39,7 @@
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MapUtil.h>
-#include <InputProc/Transpose/MPIUtil2.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 
 #include <Common/LofarLogger.h>

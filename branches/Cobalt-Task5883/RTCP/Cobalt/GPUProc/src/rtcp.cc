@@ -44,7 +44,6 @@
 #ifdef HAVE_MPI
 #include <mpi.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#include <InputProc/Transpose/MPIUtil2.h>
 #endif
 
 #include <boost/format.hpp>

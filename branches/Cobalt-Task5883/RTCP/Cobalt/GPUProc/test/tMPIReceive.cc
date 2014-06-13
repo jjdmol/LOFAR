@@ -10,7 +10,6 @@
 
 #include <mpi.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#include <InputProc/Transpose/MPIUtil2.h>
 #include <omp.h>
 
 #include <boost/format.hpp>

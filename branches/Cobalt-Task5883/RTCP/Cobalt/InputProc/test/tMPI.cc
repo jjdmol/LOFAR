@@ -26,7 +26,6 @@
 #include <Common/Timer.h>
 #include <CoInterface/MultiDimArray.h>
 #include <InputProc/Transpose/MPIUtil.h>
-#include <InputProc/Transpose/MPIUtil2.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
