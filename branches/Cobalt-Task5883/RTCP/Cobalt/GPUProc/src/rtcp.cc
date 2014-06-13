@@ -43,6 +43,7 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #include <InputProc/Transpose/MPIUtil2.h>
 #endif
 
@@ -150,39 +151,13 @@ int main(int argc, char **argv)
    * forking can lead to crashes.
    */
 
-  // Rank in MPI set of hosts, or 0 if no MPI is used
-  int rank = 0;
-
-  // Number of MPI hosts, or 1 if no MPI is used
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  const char *rankstr, *sizestr;
-
-  // OpenMPI rank
-  if ((rankstr = getenv("OMPI_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // MVAPICH2 rank
-  if ((rankstr = getenv("MV2_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // OpenMPI size
-  if ((sizestr = getenv("OMPI_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-
-  // MVAPICH2 size
-  if ((sizestr = getenv("MV2_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-#endif
-
   /*
    * Initialise logger.
    */
 
 #ifdef HAVE_LOG4CPLUS
   // Set ${MPIRANK}, which is used by our log_prop file.
-  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
+  if (setenv("MPIRANK", str(format("%02d") % mpi.rank()).c_str(), 1) < 0)
   {
     perror("error setting MPIRANK");
     exit(1);
@@ -190,14 +165,14 @@ int main(int argc, char **argv)
 
   INIT_LOGGER("rtcp");
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % mpi.rank()));
 #endif
 
   // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
-  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+  LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 #else
   LOG_WARN("Running without MPI!");
 #endif
@@ -298,10 +273,10 @@ int main(int argc, char **argv)
   prFmt.parse(fmtStr);
   LOG_INFO_STR("MACProcessScope: " << str(prFmt
                    % toUpper(myHostname(false))
-                   % (ps.settings.nodes.size() > size_t(rank) ? 
-                      ps.settings.nodes[rank].cpu : 0)));
+                   % (ps.settings.nodes.size() > size_t(mpi.rank()) ? 
+                      ps.settings.nodes[mpi.rank()].cpu : 0)));
 
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
     LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
@@ -320,17 +295,18 @@ int main(int argc, char **argv)
 #if 1
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
-  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
+  if(mpi.rank() >= 0 && (size_t)mpi.rank() < ps.settings.nodes.size()) {
+    struct ObservationSettings::Node mynode = ps.settings.nodes.at(mpi.rank());
+
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes.at(rank).cpu;
-    setProcessorAffinity(cpuId);
+    setProcessorAffinity(mynode.cpu);
 
 #ifdef HAVE_LIBNUMA
     if (numa_available() != -1) {
       // force node + memory binding for future allocations
       struct bitmask *numa_node = numa_allocate_nodemask();
       numa_bitmask_clearall(numa_node);
-      numa_bitmask_setbit(numa_node, cpuId);
+      numa_bitmask_setbit(numa_node, mynode.cpu);
       numa_bind(numa_node);
       numa_bitmask_free(numa_node);
 
@@ -359,29 +335,26 @@ int main(int argc, char **argv)
 #endif
 
     // derive the set of gpus we're allowed to use
-    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-    for (size_t i = 0; i < gpuIds.size(); ++i) {
-      ASSERTSTR(gpuIds[i] < allDevices.size(), "Request to use GPU #" << gpuIds[i] << ", but found only " << allDevices.size() << " GPUs");
+    for (size_t i = 0; i < mynode.gpus.size(); ++i) {
+      ASSERTSTR(mynode.gpus[i] < allDevices.size(), "Request to use GPU #" << mynode.gpus[i] << ", but found only " << allDevices.size() << " GPUs");
 
-      gpu::Device &d = allDevices[gpuIds[i]];
+      gpu::Device &d = allDevices[mynode.gpus[i]];
 
       devices.push_back(d);
     }
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
-    const string nic = ps.settings.nodes[rank].nic;
+    if (mynode.nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << mynode.nic);
 
-    if (nic != "") {
-      LOG_DEBUG_STR("Binding to interface " << nic);
-
-      if (setenv("OMPI_MCA_btl_openib_if_include", nic.c_str(), 1) < 0)
+      if (setenv("OMPI_MCA_btl_openib_if_include", mynode.nic.c_str(), 1) < 0)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
 #else
   {
 #endif
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
+    LOG_WARN_STR("Rank " << mpi.rank() << " not present in node list -- using full machine");
     devices = allDevices;
   }
 
@@ -409,7 +382,7 @@ int main(int argc, char **argv)
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = subband % nrHosts;
+    int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
   }
@@ -424,7 +397,7 @@ int main(int argc, char **argv)
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
 
-  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
 
   MPIReceiver MPI_receiver(MPI_receive_pool,
                      subbandIndices,
@@ -438,20 +411,20 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) 
+  if (subbandIndices.empty()) 
   {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
   } 
   else if (correlatorEnabled) 
   {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
+    pipeline = new CorrelatorPipeline(ps, subbandIndices, devices,
           MPI_receive_pool);
   } 
   else if (beamFormerEnabled) 
   {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank],
-         MPI_receive_pool, devices, rank);
+    pipeline = new BeamFormerPipeline(ps, subbandIndices,
+         MPI_receive_pool, devices, mpi.rank());
   } 
   else 
   {
@@ -462,7 +435,7 @@ int main(int argc, char **argv)
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
@@ -471,27 +444,7 @@ int main(int argc, char **argv)
   /*
    * Initialise MPI (we are done forking)
    */
-
-  // Initialise and query MPI
-  int provided_mpi_thread_support;
-
-  LOG_INFO("----- Initialising MPI");
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
-  }
-
-  // Verify the rank/size settings we assumed earlier
-  int real_rank;
-  int real_size;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &real_size);
-
-  ASSERT(rank    == real_rank);
-  ASSERT(nrHosts == real_size);
-
-  MPIPoll::instance().start();
+  mpi.init(argc, argv);
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
@@ -506,7 +459,7 @@ int main(int argc, char **argv)
 
   LOG_INFO("===== LAUNCH =====");
 
-  LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+  LOG_INFO_STR("Processing subbands " << subbandDistribution[mpi.rank()]);
 
   if (ps.realTime()) {
     // Wait just before the obs starts to allocate resources,
@@ -553,7 +506,7 @@ int main(int argc, char **argv)
     #pragma omp section
     {
       // Process station data
-      if (!subbandDistribution[rank].empty()) {
+      if (!subbandDistribution[mpi.rank()].empty()) {
         pipeline->processObservation();
       }
     }
@@ -605,12 +558,6 @@ int main(int argc, char **argv)
     storageProcesses = 0;
   }
   LOG_INFO("===== SUCCESS =====");
-
-#ifdef HAVE_MPI
-  MPIPoll::instance().stop();
-
-  MPI_Finalize();
-#endif
 
   return abortObservation ? 1 : 0;
 }

@@ -55,20 +55,17 @@ StationNodeAllocation::StationNodeAllocation( const StationID &stationID, const 
 
 bool StationNodeAllocation::receivedHere() const
 {
-  int rank = MPI_Rank();
-  int nrHosts = MPI_Size();
-
   int stationRank = receiverRank();
 
   if (stationRank == -1) {
     // allocate stations not mentioned in Cobalt.Hardware round-robin
-    stationRank = parset.settings.antennaFieldIndex(stationID.name()) % nrHosts;
+    stationRank = parset.settings.antennaFieldIndex(stationID.name()) % mpi.size();
 
-    if (stationRank == rank)
+    if (stationRank == mpi.rank())
       LOG_WARN_STR("Receiving station " << stationID << " due to round-robin allocation across nodes.");
   }
 
-  return stationRank == rank;
+  return stationRank == mpi.rank();
 }
 
 int StationNodeAllocation::receiverRank() const

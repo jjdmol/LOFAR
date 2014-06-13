@@ -15,14 +15,42 @@ namespace LOFAR {
     // MPI routines lock this mutex, unless annotated with "NOT LOCKED"
     extern Mutex MPIMutex;
 
-    // Return the MPI rank of this process
-    int MPI_Rank();
+    /*
+     * Wrapper for the MPI Engine:
+     *
+     * - wraps MPI_Init
+     * - makes sure MPI_Finalise is called
+     * - manages rank & size both before and after MPI_Init
+     *
+     * We'll create a static MPI object, which makes sure that
+     * MPI_Finalize is called after all buffers are freed with
+     * MPI_Free_mem.
+     */
+    class MPI {
+    public:
+      MPI();
+      ~MPI();
 
-    // Return the number of MPI ranks in this run
-    int MPI_Size();
+      // Call MPI_Init_thread to initialise the MPI engine
+      void init(int argc, char **argv);
 
-    // Return whether MPI is initialised
-    bool MPI_Initialised();
+      bool initialised() const { return itsIsInitialised; }
+      int rank() const { return itsRank; }
+      int size() const { return itsSize; }
+
+    public:
+      // Rank in MPI set of hosts, or 0 if no MPI is used
+      int itsRank;
+
+      // Number of MPI hosts, or 1 if no MPI is used
+      int itsSize;
+
+    private:
+      // Whether MPI_Init has been called
+      bool itsIsInitialised;
+    };
+
+    extern MPI mpi;
 
     // An allocator using MPI_Alloc_mem/MPI_Free_mem
     class MPIAllocator : public Allocator
@@ -46,25 +74,6 @@ namespace LOFAR {
         mpiAllocator.deallocate(ptr);
       }
     };
-
-    // Wait for any request to finish. Returns the index of the request that
-    // finished. Finished requests are set to MPI_REQUEST_NULL and ignored in
-    // subsequent calls.
-    int waitAny( std::vector<MPI_Request> &requests );
-
-    // Wait for all given requests to finish. Finished requests are set to
-    // MPI_REQUEST_NULL and ignored in subsequent calls.
-    void waitAll( std::vector<MPI_Request> &requests );
-
-    // Free an MPI request (do not wait for it to finish).
-    //
-    // NOT LOCKED
-    void freeRequest(MPI_Request &request);
-
-    // Wait for any number of given requests to finish. Returns the indices of
-    // the requests that finished. Finished requests are set to
-    // MPI_REQUEST_NULL and ignored in subsequent calls.
-    std::vector<int> waitSome( std::vector<MPI_Request> &requests );
 
     /*
      * A guarded version of MPI_Issend with fewer parameters.

@@ -451,6 +451,7 @@ void StationInput::readRSPNonRealTime()
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
+        readers[board]->logStatistics();
         readers[board] = NULL;
       }
     }
