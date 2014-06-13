@@ -5,7 +5,7 @@
 
 #include <Common/LofarLogger.h>
 
-//#define DEBUG_MPI
+#define DEBUG_MPI
 
 #ifdef DEBUG_MPI
 #define DEBUG(str)  LOG_DEBUG_STR(str)
@@ -424,8 +424,12 @@ namespace LOFAR {
        ASSERT(handles[i] != MPI_REQUEST_NULL);
      }
 
-     // register ourselves
-     mpiPoller.add(this);
+     ASSERT(!handles.empty() || willWaitAll);
+
+     if (!handles.empty()) {
+       // register ourselves
+       mpiPoller.add(this);
+     }
    }
 
    RequestSet::~RequestSet()
