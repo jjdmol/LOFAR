@@ -29,6 +29,7 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #include <GPUProc/Pipelines/CorrelatorPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 
@@ -69,7 +70,7 @@ int main(int argc, char *argv[]) {
   {
     subbands.push_back(sb);
   }
-  { // use a skope to force destruction of pool before MPI_Finalize()
+
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
 
 
@@ -80,41 +81,25 @@ int main(int argc, char *argv[]) {
   devices, MPI_receive_pool);
 
   //pipeline->allocateResources();
-  int rank = 0;
-  int nrHosts = 1;
-#ifdef HAVE_MPI
-  // Initialize and query MPI
-  int mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init failed" << endl;
-    exit(1);
-  }
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#else
-  DirectInput::instance(&ps); // I don't think this is needed. We didn't have an input instance for MPI in this test; see the comment below. And USE_MPI=OFF broke after the input revamp, which also changed the interface. JD put it in redmine.
-#endif
-
-
+  mpi.init(argc, argv);
 
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
   for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = subband % nrHosts;
+    int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
   }
-  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
   MPIReceiver MPI_receiver(MPI_receive_pool,
-    subbandDistribution[rank],
+    subbandDistribution[mpi.rank()],
     std::find(subbandIndices.begin(),
     subbandIndices.end(), 0U) != subbandIndices.end(),
     ps.nrSamplesPerSubband(),
     ps.nrStations(),
     ps.nrBitsPerSample());
 
-#pragma omp parallel sections num_threads(3)
+#pragma omp parallel sections num_threads(2)
   {
 #pragma omp section
     {
@@ -133,12 +118,6 @@ int main(int argc, char *argv[]) {
     }
 
   }
-
-
-  }
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
 
   return 0;
 }
