@@ -85,9 +85,10 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
 . /opt/cep/login/bashrc # source the login of use commands
-use LofIm               # this is a weak point in the script we should be able to run without
-use Pythonlibs
-. $"$WORKSPACE/lofarinit.sh"  
+use Lofar               # for pyrap/casacore (see remark below!)
+#use Pythonlibs
+. $"$WORKSPACE/lofarinit.sh"  # setup lofarenv to run with. NOTE: the build
+                              # should have used the same casacore/pyrap!
 
 # *****************************************************
 # 3) Clear old data:
@@ -98,8 +99,13 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh lce072 $"mkdir $WORKING_DIR -p" 
-ssh lce072 $"rm $WORKING_DIR/* -rf" 
+if [ "$HOST" == "locus102" ]; then 
+  mkdir $WORKING_DIR -p 
+  rm $WORKING_DIR/* -rf
+else
+  ssh locus102 $"mkdir $WORKING_DIR -p" 
+  ssh locus102 $"rm $WORKING_DIR/* -rf" 
+fi
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 

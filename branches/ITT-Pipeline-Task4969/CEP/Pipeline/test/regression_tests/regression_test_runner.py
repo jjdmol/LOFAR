@@ -60,8 +60,8 @@ def clear_old_data(lofarroot,pipeline,workdir,host0=None,host1=None,host2=None):
 		shutil.rmtree(workdir,True)
 		os.makedirs(workdir)
 	# special code, relic from the shell script. TODO: necessary?
-	if host0 == 'lce072':
-		print "clear lce072"
+	if host0 == 'locus102':
+		print "clear locus102"
 		subprocess.call(['ssh',host0,'rm','-rf',workdir])
 		subprocess.call(['ssh',host0,'mkdir','-p',workdir])
 
