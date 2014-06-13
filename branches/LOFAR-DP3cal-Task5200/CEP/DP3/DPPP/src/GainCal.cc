@@ -320,9 +320,9 @@ namespace LOFAR {
 
       for (uint ch=0;ch<nCh;++ch) {
         for (uint bl=0;bl<nBl;++bl) {
-          uint ant1=(*antMap)[info().getAnt1()[bl]];
-          uint ant2=(*antMap)[info().getAnt2()[bl]];
-          if (ant1==ant2 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
+          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
             continue;
           }
 
