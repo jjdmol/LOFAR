@@ -185,7 +185,6 @@ void StationMetaData<SampleT>::computeMetaData()
    */
 
   Delays delays(ps, stationIdx, startTime, nrSamples);
-  delays.start();
 
   // We keep track of the delays at the beginning and end of each block.
   // After each block, we'll swap the afterEnd delays into atBegin.

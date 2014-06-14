@@ -56,11 +56,6 @@ namespace LOFAR
     }
 
 
-    void Delays::start()
-    {
-    }
-
-
     Delays::~Delays()
     {
     }
