@@ -5,7 +5,7 @@
 
 #include <Common/LofarLogger.h>
 
-#define DEBUG_MPI
+//#define DEBUG_MPI
 
 #ifdef DEBUG_MPI
 #define DEBUG(str)  LOG_DEBUG_STR(str)
