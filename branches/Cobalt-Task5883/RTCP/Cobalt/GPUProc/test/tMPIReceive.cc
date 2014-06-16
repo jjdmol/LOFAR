@@ -19,6 +19,7 @@
 #include <CoInterface/OMPThread.h>
 
 #include <GPUProc/Station/StationInput.h>
+#include <GPUProc/Station/StationNodeAllocation.h>
 #include <GPUProc/MPIReceiver.h>
 
 
@@ -29,8 +30,9 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  string testname("tMPIReceive");
-  cout << "testname" << endl;
+  INIT_LOGGER("tMPIReceive");
+
+  LOFAR::Cobalt::MPI mpi;
 
   // ****************************************************
   cout <<  "MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts" << endl;
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
   // to the receiver to be filled
   // In this test it is simply emptied without doing anything with the data.
   // normally the pool is emptied by transpose input 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
   // Who received what subband?
   const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
   bool isThisSubbandZero = std::find(subbandIndices.begin(),
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
           StationID::parseFullFieldName(
           ps.settings.antennaFields.at(stat).name));
 
-        const StationNodeAllocation allocation(stationID, ps);
+        const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
 
         if (!allocation.receivedHere()) {
           // Station is not sending from this node

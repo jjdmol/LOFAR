@@ -6,7 +6,6 @@
 #include <InputProc/Transpose/MPIUtil.h>
 
 #include <UnitTest++.h>
-#include <mpi.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -272,6 +271,7 @@ SUITE(StationMetaData) {
 int main(int argc, char **argv) {
   INIT_LOGGER("tStationInput");
 
+  LOFAR::Cobalt::MPI mpi;
   mpi.init(argc, argv);
 
   return UnitTest::RunAllTests() > 0;

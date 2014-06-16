@@ -35,6 +35,8 @@ const size_t BUFSIZE = 128 * 1024 * 1024;
 
 const size_t nrRuns = 10;
 
+LOFAR::Cobalt::MPI mpi;
+
 void test()
 {
   MultiDimArray<char, 2> send_buffers(boost::extents[mpi.size()][BUFSIZE], 1, mpiAllocator);

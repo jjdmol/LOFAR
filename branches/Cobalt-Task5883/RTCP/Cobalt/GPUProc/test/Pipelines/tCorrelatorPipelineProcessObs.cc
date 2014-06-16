@@ -40,6 +40,8 @@ using namespace LOFAR::Cobalt;
 int main(int argc, char *argv[]) {
   INIT_LOGGER("tCorrelatorPipelineProcessObs");
 
+  LOFAR::Cobalt::MPI mpi;
+
   // Note: we just need to test the Pipeline part (processObservation()),
   // not the SubbandProc and other logic below it, as that is already covered
   // in other tests. (This is not a feature or integration test.)
@@ -71,7 +73,7 @@ int main(int argc, char *argv[]) {
     subbands.push_back(sb);
   }
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
 
 
 

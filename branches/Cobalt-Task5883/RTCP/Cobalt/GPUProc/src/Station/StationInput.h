@@ -26,6 +26,7 @@
 #include <vector>
 #include <cstring>
 
+#include <Stream/Stream.h>
 #include <Common/Thread/Semaphore.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/Pool.h>
@@ -41,8 +42,6 @@
 #include <InputProc/Transpose/MPIProtocol.h>
 #include <InputProc/Transpose/MPIUtil.h>
 #endif
-
-#include "StationNodeAllocation.h"
 
 namespace LOFAR {
   namespace Cobalt {
@@ -151,8 +150,6 @@ namespace LOFAR {
       StationInput( const Parset &ps, size_t stationIdx, 
       const SubbandDistribution &subbandDistribution );
 
-      bool receivedHere() const;
-
       template <typename SampleT>
       void processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, 
                 Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
@@ -177,7 +174,6 @@ namespace LOFAR {
 
       const size_t stationIdx;
       const struct StationID stationID;
-      const StationNodeAllocation allocation;
 
       const std::string logPrefix;
 
@@ -193,6 +189,8 @@ namespace LOFAR {
       const MultiDimArray<ssize_t, 2> beamletIndices;
 
       MultiDimArray<ssize_t, 2> generateBeamletIndices();
+
+      SmartPtr<Stream> inputStream(size_t board) const;
 
       /*
        * Reads data from all the station input streams, and puts their packets in rspDataPool.
@@ -212,7 +210,7 @@ namespace LOFAR {
        *
        * Read data from one board in real-time mode.
        */
-      void readRSPRealTime( size_t board, Stream &inputStream );
+      void readRSPRealTime( size_t board );
 
       /*
        * Read data from all boards in non-real-time mode.

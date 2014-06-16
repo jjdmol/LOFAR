@@ -25,12 +25,8 @@ using namespace std;
 namespace LOFAR {
 
   namespace Cobalt {
-    // 'mpi' uses both MPIMutex and mpiPoller,
-    // so those need to be initialised first
-    // to avoid crashes at destruction.
     Mutex MPIMutex;
     static MPIPoll mpiPoller;
-    MPI mpi;
 
     MPI::MPI()
     :
@@ -110,7 +106,6 @@ namespace LOFAR {
       ScopedLock sl(MPIMutex);
 
       ASSERT(alignment == 1); // Don't support anything else yet, although MPI likely aligns for us
-      ASSERT(mpi.initialised());
 
       void *ptr;
 

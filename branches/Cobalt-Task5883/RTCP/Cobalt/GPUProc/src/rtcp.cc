@@ -66,6 +66,7 @@
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
+#include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
@@ -110,6 +111,8 @@ static void usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
+  LOFAR::Cobalt::MPI mpi;
+
   /*
    * Parse command-line options
    */
@@ -142,13 +145,6 @@ int main(int argc, char **argv)
    * be set to ABORTED by OnlineControl if so.
    */
   int abortObservation = 0;
-
-  /*
-   * Extract rank/size from environment, because we need
-   * to fork during initialisation, which we want to do
-   * BEFORE calling MPI_Init_thread. Once MPI is initialised,
-   * forking can lead to crashes.
-   */
 
   /*
    * Initialise logger.
@@ -482,7 +478,7 @@ int main(int argc, char **argv)
         const struct StationID stationID(
           StationID::parseFullFieldName(
           ps.settings.antennaFields.at(stat).name));
-        const StationNodeAllocation allocation(stationID, ps);
+        const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
 
         if (!allocation.receivedHere()) 
         {// Station is not sending from this node, skip          

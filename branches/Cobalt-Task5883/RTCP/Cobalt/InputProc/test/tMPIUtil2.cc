@@ -33,6 +33,8 @@ using namespace std;
 
 const size_t BUFSIZE = 1024;
 
+LOFAR::Cobalt::MPI mpi;
+
 SUITE(waitAll)
 {
   TEST(One)

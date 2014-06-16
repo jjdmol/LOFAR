@@ -41,6 +41,9 @@ namespace LOFAR {
       int size() const { return itsSize; }
 
     public:
+      // Non-copyable!
+      MPI(const MPI &);
+
       // Rank in MPI set of hosts, or 0 if no MPI is used
       int itsRank;
 
@@ -51,8 +54,6 @@ namespace LOFAR {
       // Whether MPI_Init has been called
       bool itsIsInitialised;
     };
-
-    extern MPI mpi;
 
     // An allocator using MPI_Alloc_mem/MPI_Free_mem
     class MPIAllocator : public Allocator
