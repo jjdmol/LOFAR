@@ -32,7 +32,7 @@ CorrAppl.processes=["CorrProc"]
 OLAP.Correlator.integrationTime=1
 OLAP.Correlator.nrBlocksPerIntegration=1
 OLAP.Correlator.nrChannelsPerSubband=1
-OLAP.PencilInfo.flysEye=false
+Cobalt.BeamFormer.flysEye=false
 Cobalt.BeamFormer.coherentDedisperseChannels=false
 Observation.AnaBeam[0].angle1=5.0690771926813865
 Observation.AnaBeam[0].angle2=0.38194688387907605
@@ -211,7 +211,7 @@ Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.IncoherentStokes.
 Observation.ObservationControl.OnlineControl.OLAP.Correlator.integrationTime=1
 Observation.ObservationControl.OnlineControl.OLAP.Correlator.nrBlocksPerIntegration=1
 Observation.ObservationControl.OnlineControl.OLAP.Correlator.nrChannelsPerSubband=1
-Observation.ObservationControl.OnlineControl.OLAP.PencilInfo.flysEye=false
+Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.flysEye=false
 Observation.ObservationControl.OnlineControl.Cobalt.BeamFormer.coherentDedisperseChannels=false
 Observation.ObservationControl.OnlineControl.Cobalt.correctBandPass=true
 Observation.ObservationControl.OnlineControl.Cobalt.delayCompensation=true

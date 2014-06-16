@@ -23,7 +23,7 @@ Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband = 1
 Cobalt.BeamFormer.IncoherentStokes.which	 = I # IQUV
 Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
 Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband = 1
-OLAP.PencilInfo.flysEye = T
+Cobalt.BeamFormer.flysEye = T
 Observation.rspBoardList                 = [0]
 Observation.rspSlotList                  = [0]
 
