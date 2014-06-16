@@ -120,7 +120,7 @@ create_stationfield_list()
 			print $1"HBA0"
 			print $1"HBA1"
 			print $1"HBA"
-			print $1"LBA"
+       		print $1"LBA"
 		}
 		else {
 			print $1"HBA"
@@ -269,12 +269,15 @@ substitute_cobaltnode_cobaltnic()
 substitute_stationfield()
 {
 	awk -v STATIONFIELDLIST=${STATIONFIELDLIST} '
+	BEGIN {
+		nrstations=split(STATIONFIELDLIST, stationfields, ":");
+	};
 	{
 		hasStationField=index($1,"@stationfield@");
 		if (hasStationField > 0) {
-			for (stationfield in STATIONFIELDLIST) {
+			for (stationfield in stationfields) {
 				dpname=$1;
-				sub("@stationfield@", dpname);
+				sub("@stationfield@", stationfields[stationfield], dpname);
 				print dpname"	"$2;
 			}
 		}
