@@ -187,7 +187,7 @@ namespace LOFAR {
       bool enabled    = parset.getBool("Cobalt.FinalMetaDataGatherer.enabled", true);
 
       if (!enabled) {
-        LOG_INFO_STR("No broken-antenna information requested.");
+        LOG_INFO_STR("Retrieval of broken-antenna information was disabled in the parset!");
         return FinalMetaData();
       }
 
