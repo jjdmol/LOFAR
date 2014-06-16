@@ -248,6 +248,8 @@ CEP_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
   string oldSelection=activeObs.selectedItem();
   CEP_selectedObservation=oldSelection;
   LOG_DEBUG("CEP_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection);
+  dynSortAsc(activeObservations);      
+  activeObservations = dynUnique(activeObservations);
   for (int i=1; i<= dynlen(activeObservations);i++) {
     string realName=claimManager_nameToRealName("LOFAR_ObsSW_"+activeObservations[i]);
     activeObs.appendItem("",realName,activeObservations[i]);

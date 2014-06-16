@@ -536,181 +536,10 @@ E E 0 1 1 2 1 E U  0 E 789 10 836 23
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
 LANG:1 7 HBA LBA
-2 65
-"PRIMITIVE_TEXT21"
-""
-1 144 616 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-35 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 144 616 192 629
-0 2 2 "0s" 0 0 0 192 0 0  144 616 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 7 Streams
-2 66
-"PRIMITIVE_TEXT22"
-""
-1 127 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-36 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 127 630 134 643
-0 2 2 "0s" 0 0 0 192 0 0  127 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 0
-2 67
-"PRIMITIVE_TEXT23"
-""
-1 157 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-37 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 157 630 164 643
-0 2 2 "0s" 0 0 0 192 0 0  157 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 1
-2 68
-"PRIMITIVE_TEXT24"
-""
-1 187 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-38 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 187 630 194 643
-0 2 2 "0s" 0 0 0 192 0 0  187 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 2
-2 69
-"PRIMITIVE_TEXT25"
-""
-1 217 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-39 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 217 630 224 643
-0 2 2 "0s" 0 0 0 192 0 0  217 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 1 3
-2 70
-"PRIMITIVE_TEXT26"
-""
-1 241 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-40 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 241 630 291 643
-0 2 2 "0s" 0 0 0 192 0 0  241 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 8 dropping
-2 71
-"PRIMITIVE_TEXT27"
-""
-1 242 616 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-41 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 242 616 282 629
-0 2 2 "0s" 0 0 0 192 0 0  242 616 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 6 Adders
-2 72
-"PRIMITIVE_TEXT28"
-""
-1 309 616 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-42 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 309 616 351 629
-0 2 2 "0s" 0 0 0 192 0 0  309 616 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 7 Writers
-2 73
-"PRIMITIVE_TEXT29"
-""
-1 310 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-43 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 310 630 357 643
-0 2 2 "0s" 0 0 0 192 0 0  310 630 1
-1
-LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
-0 1
-LANG:1 7 dropped
 2 74
 "PRIMITIVE_TEXT30"
 ""
-1 530 616 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 292 616 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 44 0 0 0 0 0
 E E E
@@ -720,8 +549,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 530 616 599 629
-0 2 2 "0s" 0 0 0 192 0 0  530 616 1
+E E 0 1 1 2 1 E U  0 E 292 616 361 629
+0 2 2 "0s" 0 0 0 192 0 0  292 616 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -729,7 +558,7 @@ LANG:1 11 Observation
 2 75
 "PRIMITIVE_TEXT31"
 ""
-1 370 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 131.9999999999999 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 45 0 0 0 0 0
 E E E
@@ -739,8 +568,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 370 630 426 643
-0 2 2 "0s" 0 0 0 192 0 0  370 630 1
+E E 0 1 1 2 1 E U  0 E 131.9999999999999 630 187.9999999999999 643
+0 2 2 "0s" 0 0 0 192 0 0  131.9999999999999 630 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -748,7 +577,7 @@ LANG:1 9 startTime
 2 76
 "PRIMITIVE_TEXT32"
 ""
-1 720 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 482 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 46 0 0 0 0 0
 E E E
@@ -758,8 +587,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 720 630 773 643
-0 2 2 "0s" 0 0 0 192 0 0  720 630 1
+E E 0 1 1 2 1 E U  0 E 482 630 535 643
+0 2 2 "0s" 0 0 0 192 0 0  482 630 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -767,7 +596,7 @@ LANG:1 8 stopTime
 2 77
 "PRIMITIVE_TEXT33"
 ""
-1 550 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 310 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 47 0 0 0 0 0
 E E E
@@ -777,8 +606,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 550 630 600 643
-0 2 2 "0s" 0 0 0 192 0 0  550 630 1
+E E 0 1 1 2 1 E U  0 E 310 630 360 643
+0 2 2 "0s" 0 0 0 192 0 0  310 630 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -786,7 +615,7 @@ LANG:1 8 progress
 2 78
 "PRIMITIVE_TEXT34"
 ""
-1 660 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 422 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 48 0 0 0 0 0
 E E E
@@ -796,8 +625,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 660 630 707 643
-0 2 2 "0s" 0 0 0 192 0 0  660 630 1
+E E 0 1 1 2 1 E U  0 E 422 630 469 643
+0 2 2 "0s" 0 0 0 192 0 0  422 630 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1
@@ -862,7 +691,7 @@ LANG:1 13 ObservationNr
 2 116
 "PRIMITIVE_TEXT38"
 ""
-1 852 630 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 614 626 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 53 0 0 0 0 0
 E E E
@@ -872,8 +701,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  0 E 852 630 943 643
-0 2 2 "0s" 0 0 0 192 0 0  852 630 1
+E E 0 1 1 2 1 E U  0 E 614 626 705 639
+0 2 2 "0s" 0 0 0 192 0 0  614 626 1
 1
 LANG:1 34 MS Shell Dlg 2,8,-1,5,75,0,0,0,0,0
 0 1

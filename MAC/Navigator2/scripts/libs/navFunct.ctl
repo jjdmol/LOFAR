@@ -1213,8 +1213,6 @@ void navFunct_fillObservationsList() {
             }
           }
         }
-      } else {
-        LOG_ERROR("navFunct.ctl:navFunct_fillObservationsLists| ERROR: illegal DP in processList: "+process);
       }
     }
   // otherwise hardware  
