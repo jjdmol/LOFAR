@@ -10,7 +10,7 @@
 # Datapoint	Name of datapoint or placeholder for multiple points.
 #
 # !!!!! ATTENTION !!!!!
-# When adding a new @name@ to this list, you also need to add it to: LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
+# When adding a new @name@ to this list, you also need to add it to: LOFAR/LCS/APLCommon/src/StationInfo.cc
 # and the handling of the point also needs to be added to create_db_files
 #
 #
@@ -44,7 +44,7 @@ ObsSW				-		M	N	LOFAR_ObsSW
 Observation			OBS		M	N	LOFAR_ObsSW_@observation@
 ObservationControl		OBSCTRL		M	Y	LOFAR_ObsSW_@observation@_ObservationControl
 #Ring				-		M	N	LOFAR_ObsSW_@observation@_@ring@
-#Station				-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
+#Station			-		M	N	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
 PSLocusNode			-		C	Y	LOFAR_PermSW_@pslocusnode@
 OSLocusNode			-		C	N	LOFAR_ObsSW_@oslocusnode@
@@ -70,8 +70,9 @@ PythonControl			-		C	Y	LOFAR_ObsSW_@observation@_PythonControl
 CobaltRack			-		C	N	LOFAR_PIC_Cobalt
 CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
 CobaltNIC			CNI		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
-PSCobaltNode			-		C	N	LOFAR_PermSW_@pscobaltnode@
-CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@pscobaltnode@_CobaltStationInput
+CobaltStationField		-		C	N	LOFAR_PermSW_@stationfield@
+OSCobaltNode			-		C	N	LOFAR_PermSW_@oscobaltnoded@
+CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@stationfield@_CobaltStationInput
 CobaltGPUProc			CGP		C	Y	LOFAR_ObsSW_@observation@_@oscobaltnode@_@cobaltgpuproc@
 CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
 #
