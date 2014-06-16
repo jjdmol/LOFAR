@@ -53,17 +53,12 @@ namespace LOFAR
      RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
       Pipeline(ps, subbandIndices, devices, pool, mdLogger, mdKeyPrefix),
-      factories(ps, nrSubbandsPerSubbandProc)
+      factories(ps, nrSubbandsPerSubbandProc),
+      itsBlocksWritten(0),
+      itsBlocksDropped(0)
     {
-      // Write data points for monitoring (PVSS).
-      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME  + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        ps.observationID());
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        "Correlated");
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND           + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        subbandIndices[i]);
-      }
+      // Write data point(s) for monitoring (PVSS).
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, "Correlated");
     }
 
     void CorrelatorPipeline::allocateResources()
@@ -138,6 +133,9 @@ namespace LOFAR
 
       SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
 
+      bool dropping = false;
+      size_t written = 0, dropped = 0;
+
       SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
@@ -152,10 +150,18 @@ namespace LOFAR
         // Write block to disk 
         try {
           correlatedData.write(outputStream.get(), true);
+
+          if (!dropping)
+            written += 1;
+          else
+            dropped += 1;
+
         } catch (Exception &ex) {
           LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
 
           outputStream = new NullStream;
+
+          dropping = true;
         }
 
         SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
@@ -168,6 +174,15 @@ namespace LOFAR
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
       }
+
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                      dropping ? "1" : "0");
+      itsBlocksWritten += written;
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                      itsBlocksWritten * static_cast<float>(ps.settings.blockDuration()));
+      itsBlocksDropped += dropped;
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                      itsBlocksDropped * static_cast<float>(ps.settings.blockDuration()));
     }
 
 

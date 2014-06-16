@@ -263,7 +263,7 @@ string	createPropertySetName(const string&		propSetMask,
 		psName.replace(pos, 15, string("CobaltGPUProc%02d"));
 	}
 	if ((pos = psName.find("@stationfield@")) != string::npos) {
-	  psName.replace(pos, 14, string("%s"));
+		psName.replace(pos, 14, string("%s"));
 	}
 		
 	return (psName);

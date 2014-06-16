@@ -207,24 +207,17 @@ int main(int argc, char **argv)
   string hostName = myHostname(false);
   int cbtNodeNr = hostName.compare(0, sizeof("cbt") - 1, "cbt") == 0 ?
                   atoi(hostName.c_str() + sizeof("cbt") - 1) : 0; // default 0 like atoi()
-  int gpuprocNr = ps.settings.nodes.size() > size_t(rank) ?
+  int cpuNr     = ps.settings.nodes.size() > size_t(rank) ?
                   ps.settings.nodes[rank].cpu : 0; 
-  string mdKeyPrefix = str(prFmt % cbtNodeNr % gpuprocNr);
+  string mdKeyPrefix = str(prFmt % cbtNodeNr % cpuNr);
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
-  mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
+  mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName", some with a "[x]" appended.
 
   // Create mdLogger for monitoring (PVSS). We can already log(), but start() the event send thread
   // much later, after the pipeline creation (post-fork()), so we don't crash.
   const string mdRegisterName = PST_COBALTGPU_PROC;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
   MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
-
-  // For InputProc use boost::format to fill in one conv specifications (%xx).
-  // Since InputProc is inside GPUProc, don't inform the MAC Log Processor.
-  string fmtStrInp(createPropertySetName(PSN_COBALT_STATION_INPUT, "", ps.PVSS_TempObsName()));
-  prFmt.parse(fmtStrInp);
-  string mdKeyPrefixInputProc = str(prFmt % cbtNodeNr);
-  mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
 
   LOG_INFO("===== INIT =====");
 
@@ -547,11 +540,6 @@ int main(int argc, char **argv)
     waiter.waitUntil(deadline);
   }
 
-  // Log obsID once for InputProc monitoring (PVSS).
-  if (rank == 0) {
-    mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME, ps.observationID());
-  }
-
   #pragma omp parallel sections num_threads(3)
   {
     #pragma omp section
@@ -571,8 +559,23 @@ int main(int argc, char **argv)
           continue;
         }
 
-        // Log _antenna_ _field_ name for monitoring (PVSS).
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_STATION_NAME, stationID.name());
+        const string antennaFieldName = stationID.name();
+
+        // For InputProc use the GPUProc mdLogger (same process), but our own key prefix.
+        // For InputProc use boost::format to fill in one conv specifications (%xx).
+        // Since InputProc is inside GPUProc, don't inform the MAC Log Processor.
+        string fmtStrInputProc(createPropertySetName(PSN_COBALT_STATION_INPUT,
+                                                     "", ps.PVSS_TempObsName()));
+        format prFmtInputProc;
+        prFmtInputProc.exceptions(boost::io::no_error_bits); // avoid throw
+        prFmtInputProc.parse(fmtStrInputProc);
+        string mdKeyPrefixInputProc = str(prFmtInputProc % antennaFieldName);
+        mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
+
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME, ps.observationID());
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE,             hostName);
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,              cpuNr);
+
 
         sendInputToPipeline(ps, stat, subbandDistribution,
                             mdLogger, mdKeyPrefixInputProc);

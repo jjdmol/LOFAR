@@ -23,11 +23,13 @@
 #include "Pipeline.h"
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -85,8 +87,14 @@ namespace LOFAR
       //MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())
     {
-      
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
+
+      // Write data point(s) for monitoring (PVSS).
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, ps.observationID());
+      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(subbandIndices[i]) + ']',
+                        subbandIndices[i]);
+      }
     }
 
     Pipeline::~Pipeline()

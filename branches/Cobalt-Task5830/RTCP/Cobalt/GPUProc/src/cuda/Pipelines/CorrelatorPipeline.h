@@ -65,6 +65,9 @@ namespace LOFAR
 
     private:
       CorrelatorFactories factories;
+
+      // For monitoring (PVSS). The beamformer has these in TABTranspose.
+      size_t itsBlocksWritten, itsBlocksDropped;
     };
   }
 }

@@ -678,8 +678,8 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
   SmartPtr< Queue< SmartPtr<struct Subband> > > &queue = queues.at(host);
 
-  const string globalSubbandNr = lexical_cast<string>(subband->id.subband +
-      itsParset.settings.beamFormer.files[fileIdx].firstSubbandIdx);
+  const size_t globalSubbandIdx = subband->id.subband +
+      itsParset.settings.beamFormer.files[fileIdx].firstSubbandIdx;
   bool dropping;
 
   // If oldest packet in queue is too old, drop it in lieu of this new one
@@ -694,18 +694,18 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
 
     dropping = true;
     itsBlocksDropped += 1;
-    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED + '[' + globalSubbandNr + ']',
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
         itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
   } else {
     drop_rates.at(fileIdx).push(0.0);
 
     dropping = false;
     itsBlocksWritten += 1;
-    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN + '[' + globalSubbandNr + ']',
+    itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
         itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
   }
 
-  itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + globalSubbandNr + ']',
+  itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
                   dropping ? "1" : "0");
 
   // Append the data to the respective queue

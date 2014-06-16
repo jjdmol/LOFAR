@@ -114,15 +114,8 @@ namespace LOFAR
     {
       ASSERT(ps.settings.beamFormer.enabled);
 
-      // Write data points for monitoring (PVSS).
-      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME  + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        ps.observationID());
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        "Beamformed");
-        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND           + '[' + lexical_cast<string>(subbandIndices[i]) + ']',
-                        subbandIndices[i]);
-      }
+      // Write data point(s) for monitoring (PVSS).
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, "Beamformed");
     }
 
     void BeamFormerPipeline::allocateResources()
