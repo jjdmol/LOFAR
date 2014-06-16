@@ -519,8 +519,7 @@ int main(int argc, char **argv)
 
     // retrieve and forward final meta data
     if (!storageProcesses->forwardFinalMetaData()) {
-      // this screws up our tests, as we can't obtain FMD in tests yet
-      //abortObservation = 1;
+      abortObservation = 1;
     }
 
     LOG_INFO("Stopping Storage processes");
