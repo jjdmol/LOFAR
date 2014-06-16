@@ -42,11 +42,12 @@ function setkey {
 
 function usage {
   error \
-    "\nUsage: $0 [-A] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
     "\n    -A: do NOT augment parset"\
+    "\n    -B: do NOT add broken antenna information"\
     "\n    -C: run with check tool specified in environment variable"\
     "LOFAR_CHECKTOOL"\
     "\n    -F: do NOT send feedback to OnlineControl"\
@@ -102,6 +103,9 @@ PIDFILE=""
 FORCE_LOCALHOST=0
 NRPROCS_LOCALHOST=0
 
+# Add broken antenna information?
+ADD_BROKENANTENNAINFO=1
+
 # Parameters to pass to mpirun
 MPIRUN_PARAMS=""
 
@@ -114,9 +118,11 @@ shopt -s nullglob
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ACFP:l:p" opt; do
+while getopts ":ABCFP:l:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
+          ;;
+      B)  ADD_BROKENANTENNAINFO=0
           ;;
       C)  CHECK_TOOL="$LOFAR_CHECKTOOL"
           ;;
@@ -222,6 +228,11 @@ then
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
     sed 's/tcp:[^:]*:/tcp:0:/g' -i $PARSET
+  fi
+
+  if [ "$ADD_BROKENANTENNAINFO" -eq "0" ]
+  then
+    setkey Cobalt.FinalMetaDataGatherer.enabled       false
   fi
 fi
 

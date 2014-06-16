@@ -21,7 +21,6 @@
 
 #include <lofar_config.h>
 
-#include <InputProc/Transpose/MPIUtil2.h>
 #include <InputProc/Transpose/MPIUtil.h>
 
 #include <vector>
@@ -32,10 +31,9 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 
-int rank;
-int nrHosts;
-
 const size_t BUFSIZE = 1024;
+
+LOFAR::Cobalt::MPI mpi;
 
 SUITE(waitAll)
 {
@@ -44,8 +42,8 @@ SUITE(waitAll)
     char inbuf[BUFSIZE], outbuf[BUFSIZE];
     vector<MPI_Request> requests;
 
-    requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
-    requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
+    requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, mpi.rank(), 1));
+    requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, mpi.rank(), 1));
 
     RequestSet rs(requests, true, "waitAll::One");
     rs.waitAll();
@@ -62,7 +60,7 @@ SUITE(waitAll)
         vector<MPI_Request> requests;
         {
           ScopedLock sl(MPIMutex);
-          requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
+          requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, mpi.rank(), 1));
         }
 
         RequestSet rs(requests, true, "waitAll::MultiThreadOne - sender");
@@ -76,7 +74,7 @@ SUITE(waitAll)
         vector<MPI_Request> requests;
         {
           ScopedLock sl(MPIMutex);
-          requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
+          requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, mpi.rank(), 1));
         }
 
         RequestSet rs(requests, true, "waitAll::MultiThreadOne - receiver");
@@ -93,8 +91,8 @@ SUITE(waitAny)
     char inbuf[BUFSIZE], outbuf[BUFSIZE];
     vector<MPI_Request> requests;
 
-    requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, rank, 1));
-    requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, rank, 1));
+    requests.push_back(Guarded_MPI_Irecv(&inbuf, sizeof inbuf, mpi.rank(), 1));
+    requests.push_back(Guarded_MPI_Isend(&outbuf, sizeof outbuf, mpi.rank(), 1));
 
     RequestSet rs(requests, false, "waitAny::One");
 
@@ -115,11 +113,11 @@ SUITE(waitAny)
     vector<MPI_Request> requests;
 
     // start 2 but don't finish it
-    requests.push_back(Guarded_MPI_Irecv(&inbuf2, sizeof inbuf2, rank, 2));
+    requests.push_back(Guarded_MPI_Irecv(&inbuf2, sizeof inbuf2, mpi.rank(), 2));
 
     // start and finish 1
-    requests.push_back(Guarded_MPI_Irecv(&inbuf1, sizeof inbuf1, rank, 1));
-    requests.push_back(Guarded_MPI_Isend(&outbuf1, sizeof outbuf1, rank, 1));
+    requests.push_back(Guarded_MPI_Irecv(&inbuf1, sizeof inbuf1, mpi.rank(), 1));
+    requests.push_back(Guarded_MPI_Isend(&outbuf1, sizeof outbuf1, mpi.rank(), 1));
 
     RequestSet rs(requests, false, "waitAny::TwoPartial - set 1");
 
@@ -134,7 +132,7 @@ SUITE(waitAny)
     // finish 2
     vector<MPI_Request> requests2;
 
-    requests2.push_back(Guarded_MPI_Isend(&outbuf2, sizeof outbuf2, rank, 2));
+    requests2.push_back(Guarded_MPI_Isend(&outbuf2, sizeof outbuf2, mpi.rank(), 2));
 
     RequestSet rs2(requests2, false, "waitAny::TwoPartial - set 2");
     CHECK_EQUAL(0UL, rs2.waitAny());
@@ -146,27 +144,9 @@ SUITE(waitAny)
 
 int main( int argc, char **argv )
 {
-  INIT_LOGGER( "tMPI" );
+  INIT_LOGGER("tMPIUtil2");
 
-  int provided_threading_support;
+  mpi.init(argc, argv);
 
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_threading_support) != MPI_SUCCESS) {
-    LOG_ERROR_STR("MPI_Init failed");
-    return 1;
-  }
-
-  LOG_INFO_STR("Threading support level : " << provided_threading_support << ", and MPI_THREAD_MULTIPLE = " << MPI_THREAD_MULTIPLE);
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-
-  MPIPoll::instance().start();
-
-  int result = UnitTest::RunAllTests() > 0;
-
-  MPIPoll::instance().stop();
-
-  MPI_Finalize();
-
-  return result;
+  return UnitTest::RunAllTests() > 0;
 }

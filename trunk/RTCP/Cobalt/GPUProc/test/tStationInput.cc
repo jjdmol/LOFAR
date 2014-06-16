@@ -3,9 +3,9 @@
 #include <GPUProc/Station/StationInput.h>
 #include <InputProc/Station/PacketFactory.h>
 #include <InputProc/SampleType.h>
+#include <InputProc/Transpose/MPIUtil.h>
 
 #include <UnitTest++.h>
-#include <mpi.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -271,11 +271,8 @@ SUITE(StationMetaData) {
 int main(int argc, char **argv) {
   INIT_LOGGER("tStationInput");
 
-  MPI_Init(&argc, &argv);
+  LOFAR::Cobalt::MPI mpi;
+  mpi.init(argc, argv);
 
-  int result = UnitTest::RunAllTests() > 0;
-
-  MPI_Finalize();
-
-  return result;
+  return UnitTest::RunAllTests() > 0;
 }

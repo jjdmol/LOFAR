@@ -22,7 +22,6 @@
 #include <lofar_config.h>
 #include "MPIReceiveStations.h"
 #include "MPIUtil.h"
-#include "MPIUtil2.h"
 
 #include <InputProc/SampleType.h>
 

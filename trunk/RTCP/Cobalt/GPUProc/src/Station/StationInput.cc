@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <vector>
 #include <string>
@@ -39,7 +40,7 @@
 #include <mpi.h>
 #include <InputProc/Transpose/MPISendStation.h>
 #include <InputProc/Transpose/MapUtil.h>
-#include <InputProc/Transpose/MPIUtil2.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 
 #include <Common/LofarLogger.h>
@@ -48,11 +49,15 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
+#include <CoInterface/Stream.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Station/PacketReader.h>
+#include <InputProc/Station/PacketFactory.h>
+#include <InputProc/Station/PacketStream.h>
 #include <InputProc/Buffer/BoardMode.h>
 #include <InputProc/Delays/Delays.h>
+#include <InputProc/RSPTimeStamp.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -244,7 +249,6 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx,
   ps(ps),
   stationIdx(stationIdx),
   stationID(StationID::parseFullFieldName(ps.settings.antennaFields.at(stationIdx).name)),
-  allocation(stationID, ps),
 
   logPrefix(str(format("[station %s] ") % stationID.name())),
 
@@ -257,6 +261,23 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx,
   for (size_t i = 0; i < nrBoards; ++i) {
     rspDataPool.push_back(new Pool<RSPData>(str(format("StationInput::rspDataPool[%u] [station %s]") % i % stationID.name())));
   }
+
+  // Log all input descriptions
+  vector<string> inputStreamDescs = ps.settings.antennaFields[stationIdx].inputStreams;
+
+  stringstream inputDescription;
+
+  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
+    const string &desc = inputStreamDescs[board];
+
+    if (board > 0)
+      inputDescription << ", ";
+    inputDescription << desc;
+  }
+
+  LOG_INFO_STR(logPrefix << "Input streams: " << inputDescription.str());
+
+  ASSERTSTR(nrBoards > 0, logPrefix << "No input streams");
 }
 
 
@@ -300,25 +321,61 @@ MultiDimArray<ssize_t, 2> StationInput::generateBeamletIndices()
 }
 
 
-bool StationInput::receivedHere() const
+SmartPtr<Stream> StationInput::inputStream(size_t board) const
 {
-  return allocation.receivedHere();
+  SmartPtr<Stream> stream;
+
+  // Connect to specified input stream
+  const string &desc = ps.settings.antennaFields.at(stationIdx).inputStreams.at(board);
+
+  LOG_DEBUG_STR(logPrefix << "Connecting input stream for board " << board << ": " << desc);
+
+  // Sanity checks
+  if (ps.settings.realTime) {
+    ASSERTSTR(desc.find("udp:") == 0, logPrefix << "Real-time observations should read input from UDP, not " << desc);
+  } else {
+    ASSERTSTR(desc.find("udp:") != 0, logPrefix << "Non-real-time observations should NOT read input from UDP, got " << desc);
+  }
+
+  if (desc == "factory:") {
+    const TimeStamp from(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed());
+    const TimeStamp to(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed());
+
+    const struct BoardMode mode(ps.settings.nrBitsPerSample, ps.settings.clockMHz);
+    PacketFactory factory(mode);
+
+    stream = new PacketStream(factory, from, to, board);
+  } else {
+    try {
+      stream = createStream(desc, true);
+    } catch(Exception &ex) {
+      if (ps.settings.realTime) {
+        LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
+        stream = new FileStream("/dev/null"); /* block on read to avoid spamming illegal packets */
+      } else {
+        throw;
+      }
+    }
+  }
+
+  return stream;
 }
 
 
-void StationInput::readRSPRealTime( size_t board, Stream &inputStream )
+void StationInput::readRSPRealTime( size_t board )
 {
   /*
    * In real-time mode, we can't get ahead of the `current'
    * block of the reader due to clock synchronisation.
    */
 
-  PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), inputStream, mode);
-
-  Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
-  Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
-
   try {
+    SmartPtr<Stream> stream = inputStream(board);
+    PacketReader reader(str(format("%s[board %s] ") % logPrefix % board), *stream, mode);
+
+    Queue< SmartPtr<RSPData> > &inputQueue = rspDataPool[board]->free;
+    Queue< SmartPtr<RSPData> > &outputQueue = rspDataPool[board]->filled;
+
     for(size_t i = 1 /* avoid printing statistics immediately */; true; i++) {
       // Fill rspDataPool elements with RSP packets
       SmartPtr<RSPData> rspData = inputQueue.remove();
@@ -418,11 +475,13 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
 
 void StationInput::readRSPNonRealTime()
 {
-  vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
+  vector< SmartPtr<Stream> > streams(nrBoards);
   vector< SmartPtr<PacketReader> > readers(nrBoards);
 
-  for (size_t i = 0; i < nrBoards; ++i)
-    readers[i] = new PacketReader(logPrefix, *inputStreams[i], mode);
+  for (size_t i = 0; i < nrBoards; ++i) {
+    streams[i] = inputStream(i);
+    readers[i] = new PacketReader(logPrefix, *streams[i], mode);
+  }
 
   /* Since the boards will be read at different speeds, we need to
    * manually keep them in sync. We read a packet from each board,
@@ -450,6 +509,7 @@ void StationInput::readRSPNonRealTime()
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
+        readers[board]->logStatistics();
         readers[board] = NULL;
       }
     }
@@ -582,15 +642,13 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
       LOG_INFO_STR(logPrefix << "Processing packets");
 
       if (ps.realTime()) {
-        vector< SmartPtr<Stream> > inputStreams(allocation.inputStreams());
-
         #pragma omp parallel for num_threads(nrBoards)
         for(size_t board = 0; board < nrBoards; board++) {
           OMPThreadSet::ScopedRun sr(packetReaderThreads);
 
           Thread::ScopedPriority sp(SCHED_FIFO, 10);
 
-          readRSPRealTime(board, *inputStreams[board]);
+          readRSPRealTime(board);
         }
       } else {
         readRSPNonRealTime();
