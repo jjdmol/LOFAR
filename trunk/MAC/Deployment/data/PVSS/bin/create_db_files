@@ -32,7 +32,7 @@ VERSION="v2.0"
 
 #======================================================================================================
 # Attention !!!!!
-# If you add new @name@ resolves here theey also should be added to the function: createPropertySetName
+# If you add new @name@ resolves here they also should be added to the function: createPropertySetName
 # in LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
 #======================================================================================================
 #
@@ -107,6 +107,28 @@ create_ring_station_list()
 	} ' >>/tmp/rslist
 	concatfile /tmp/rslist
 	rm -f /tmp/rslist
+}
+
+#
+# create_ring_station_list
+#
+create_stationfield_list()
+{
+	# stationname ID stationType ...
+	cleanlist ${STATIONINFOFILE} | awk '{ 
+		if ($3 == "C") {
+			print $1"HBA0"
+			print $1"HBA1"
+			print $1"HBA"
+			print $1"LBA"
+		}
+		else {
+			print $1"HBA"
+			print $1"LBA"
+		}
+	} ' >>/tmp/sflist
+	concatfile /tmp/sflist
+	rm -f /tmp/sflist
 }
 
 #
@@ -240,20 +262,19 @@ substitute_cobaltnode_cobaltnic()
 }
 
 #
-# substitute_pscobaltnode\
+# substitute_stationfield
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_pscobaltnode()
+substitute_stationfield()
 {
-	awk '
+	awk -v STATIONFIELDLIST=${STATIONFIELDLIST} '
 	{
-		hasCobaltNode=index($1,"@pscobaltnode@");
-		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<10; cnode++) {
+		hasStationField=index($1,"@stationfield@");
+		if (hasStationField > 0) {
+			for (stationfield in STATIONFIELDLIST) {
 				dpname=$1;
-                                newname = sprintf("PSCBT%03d",cnode);
-                                sub("@pscobaltnode@", newname, dpname);
+				sub("@stationfield@", dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -1004,7 +1025,7 @@ create_dp_file()
 				substitute_cobaltnode_cobaltnic | \
 				substitute_cobaltnode | \
 				substitute_oscobaltnode | \
-				substitute_pscobaltnode | \
+				substitute_stationfield | \
 			        substitute_oslocusnode | \
 			        substitute_pslocusnode | \
 				substitute_cobaltgpuproc | \
@@ -1365,6 +1386,7 @@ TMP_FILE=/tmp/dpts$$.dpl
 CLUSTERLIST=`concatfile $CLUSTERFILE`
 RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
+STATIONFIELDLIST=`create_stationfield_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
 
