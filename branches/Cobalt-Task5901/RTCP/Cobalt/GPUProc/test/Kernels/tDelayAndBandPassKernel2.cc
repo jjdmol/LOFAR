@@ -30,7 +30,7 @@ using namespace LOFAR::Cobalt;
 
 struct TestFixture
 {
-  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset"), factory(ps) {}
+  TestFixture() : ps("tDelayAndBandPassKernel2.in_parset"), factory(DelayAndBandPassKernel::Parameters(ps, true)) {}
   ~TestFixture() {}
 
   Parset ps;

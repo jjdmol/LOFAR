@@ -45,18 +45,16 @@ namespace LOFAR
     string BeamFormerKernel::theirFunction = "beamFormer";
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrStations(ps.settings.antennaFields.size()),
+
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
+
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
       subbandBandwidth(ps.settings.subbandWidth()),
       doFlysEye(ps.settings.beamFormer.doFlysEye)
     {
-      // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband =
-        ps.settings.beamFormer.nrHighResolutionChannels;
-      nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.nrHighResolutionChannels;
-
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -76,10 +74,10 @@ namespace LOFAR
 
       // Beamformer kernel requires 1 channel in the blockDim.z dimension
       setEnqueueWorkSizes(
-        gpu::Grid(params.nrPolarizations, 
+        gpu::Grid(NR_POLARIZATIONS,
                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
-                  params.nrChannelsPerSubband),
-        gpu::Block(params.nrPolarizations, 
+                  params.nrChannels),
+        gpu::Block(NR_POLARIZATIONS,
                    std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
                    1));
         // The additional tabs added to fill out the waves are skipped
@@ -103,13 +101,13 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrChannelsPerSubband *
-          itsParameters.nrSamplesPerChannel * itsParameters.nrPolarizations *
+          (size_t) itsParameters.nrChannels *
+          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
           itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * 
-          itsParameters.nrSamplesPerChannel * itsParameters.nrPolarizations *
+          (size_t) itsParameters.nrChannels * 
+          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
           itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
@@ -127,6 +125,13 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =

@@ -63,7 +63,7 @@ void runTest( Context &ctx, Stream &stream )
   ps.updateSettings();
 
   BeamFormerTransposeKernel::Parameters params(ps);
-  params.nrChannelsPerSubband = NR_CHANNELS;
+  params.nrChannels = NR_CHANNELS;
   params.nrSamplesPerChannel = NR_SAMPLES_PER_CHANNEL;
   params.nrTABs = NR_TABS;
 

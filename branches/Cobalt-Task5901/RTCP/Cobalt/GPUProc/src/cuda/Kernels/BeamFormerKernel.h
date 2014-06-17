@@ -42,6 +42,10 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        unsigned nrStations;
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+
         unsigned nrSAPs;
         unsigned nrTABs;
         double subbandBandwidth;

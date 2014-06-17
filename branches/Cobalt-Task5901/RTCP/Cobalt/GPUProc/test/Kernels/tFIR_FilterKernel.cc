@@ -51,7 +51,9 @@ TEST(FIR_FilterKernel)
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  FIR_FilterKernel::Parameters params(ps, ps.settings.correlator.nrChannels);
+
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -129,7 +131,7 @@ TEST(HistoryFlags)
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  FIR_FilterKernel::Parameters params(ps);
+  FIR_FilterKernel::Parameters params(ps, ps.settings.correlator.nrChannels);
 
   KernelFactory<FIR_FilterKernel> factory(params);
 

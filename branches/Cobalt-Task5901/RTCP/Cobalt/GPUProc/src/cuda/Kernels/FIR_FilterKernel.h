@@ -43,13 +43,19 @@ namespace LOFAR
       // FIR_FilterKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps);
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample;
+        Parameters(const Parset& ps, unsigned nrChannels);
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.
         unsigned nrSTABs;
+
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample() const;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+        unsigned nrSamplesPerSubband() const;
+
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
