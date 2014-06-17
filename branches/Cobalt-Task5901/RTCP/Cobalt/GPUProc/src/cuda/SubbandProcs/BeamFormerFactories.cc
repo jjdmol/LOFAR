@@ -85,7 +85,7 @@ namespace LOFAR
       BeamFormerFactories::coherentInverseFFTShiftParams(const Parset &ps)
       {
         FFTShiftKernel::Parameters params(ps,
-          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
+          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
           ps.settings.beamFormer.nrHighResolutionChannels);
 
         return params;
@@ -106,17 +106,12 @@ namespace LOFAR
       coherentFirFilterParams(const Parset &ps,
                       size_t nrSubbandsPerSubbandProc) 
       {
-        FIR_FilterKernel::Parameters params(ps, ps.settings.beamFormer.coherentSettings.nrChannels);
-
-        params.nrSTABs = std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
-
-        params.nrSubbands = nrSubbandsPerSubbandProc;
-
-        // Normalize flux output for number of channels.
-        // See the correlator variant for more detail.
-        params.scaleFactor = params.nrChannels;
-
-        params.inputIsStationData = false;
+        FIR_FilterKernel::Parameters params(ps,
+          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+          false,
+          nrSubbandsPerSubbandProc,
+          ps.settings.beamFormer.coherentSettings.nrChannels,
+          static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels));
 
         return params;
       }
@@ -144,17 +139,12 @@ namespace LOFAR
       incoherentFirFilterParams(const Parset &ps,
             size_t nrSubbandsPerSubbandProc)  
       {
-        FIR_FilterKernel::Parameters params(ps, ps.settings.beamFormer.incoherentSettings.nrChannels);
-
-        params.nrSTABs = ps.nrStations();
-
-        params.nrSubbands = nrSubbandsPerSubbandProc;
-
-        // Normalize flux output for number of channels.
-        // See the correlator variant for more detail.
-        params.scaleFactor = params.nrChannels;
-
-        params.inputIsStationData = false;
+        FIR_FilterKernel::Parameters params(ps,
+          ps.settings.antennaFields.size(),
+          false,
+          nrSubbandsPerSubbandProc,
+          ps.settings.beamFormer.incoherentSettings.nrChannels,
+          static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels));
 
         return params;
       }

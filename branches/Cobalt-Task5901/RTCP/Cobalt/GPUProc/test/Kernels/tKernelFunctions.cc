@@ -53,7 +53,12 @@ TEST(tKernelFunctions)
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
   
-  FIR_FilterKernel::Parameters params(ps, ps.settings.correlator.nrChannels);
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f);
 
   KernelFactory<FIR_FilterKernel> factory(params);
 

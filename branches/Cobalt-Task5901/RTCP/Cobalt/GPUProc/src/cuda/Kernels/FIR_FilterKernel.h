@@ -43,7 +43,7 @@ namespace LOFAR
       // FIR_FilterKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps, unsigned nrChannels);
+        Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor);
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.

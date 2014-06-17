@@ -42,16 +42,16 @@ namespace LOFAR
     string FIR_FilterKernel::theirSourceFile = "FIR_Filter.cu";
     string FIR_FilterKernel::theirFunction = "FIR_filter";
 
-    FIR_FilterKernel::Parameters::Parameters(const Parset& ps, unsigned nrChannels) :
-      nrSTABs(ps.settings.antennaFields.size()), // default to filter station data
+    FIR_FilterKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor) :
+      nrSTABs(nrSTABs),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
 
       nrChannels(nrChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
 
-      nrSubbands(1),
-      scaleFactor(1.0f),
-      inputIsStationData(true)
+      nrSubbands(nrSubbands),
+      scaleFactor(scaleFactor),
+      inputIsStationData(inputIsStationData)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);

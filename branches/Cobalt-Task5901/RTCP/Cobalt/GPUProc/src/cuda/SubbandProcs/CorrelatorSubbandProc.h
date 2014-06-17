@@ -88,17 +88,19 @@ namespace LOFAR
       FIR_FilterKernel::Parameters
       firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const 
       {
-        FIR_FilterKernel::Parameters params(ps, ps.settings.correlator.nrChannels);
+        FIR_FilterKernel::Parameters params(ps,
+          ps.settings.antennaFields.size(),
+          true,
+          nrSubbandsPerSubbandProc,
+          ps.settings.correlator.nrChannels,
 
-        params.nrSubbands = nrSubbandsPerSubbandProc;
-
-        // Scale to always output visibilities or stokes with the same flux scale.
-        // With the same bandwidth, twice the (narrower) channels _average_ (not
-        // sum) to the same fluxes (and same noise). Twice the channels (twice the
-        // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
-        // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
-        // effectively squares, integr on fewer channels averages over more values.
-        params.scaleFactor = std::sqrt((double)params.nrChannels);
+          // Scale to always output visibilities or stokes with the same flux scale.
+          // With the same bandwidth, twice the (narrower) channels _average_ (not
+          // sum) to the same fluxes (and same noise). Twice the channels (twice the
+          // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
+          // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
+          // effectively squares, integr on fewer channels averages over more values.
+          std::sqrt((double)params.nrChannels));
 
         return params;
       }
