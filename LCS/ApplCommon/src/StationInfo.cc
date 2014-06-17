@@ -176,6 +176,8 @@ uint16	getInstanceNr (const string&	controllerName)
 //      @ossubcluster@
 //      @storagenode@
 //      @offlinenode@
+//	@fpga@
+//	@uriboard@
 //  @cobaltnode@
 //  @cobaltnic@
 //  @oscobaltnode@
@@ -264,6 +266,12 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@stationfield@")) != string::npos) {
 	  psName.replace(pos, 14, string("%s"));
+	}
+	if ((pos = psName.find("@fpga@")) != string::npos) {
+		psName.replace(pos, 6, string("FPGA%d"));
+	}
+	if ((pos = psName.find("@uriboard@")) != string::npos) {
+		psName.replace(pos, 10, string("Cabinet%d_URIboard%d"));
 	}
 		
 	return (psName);
