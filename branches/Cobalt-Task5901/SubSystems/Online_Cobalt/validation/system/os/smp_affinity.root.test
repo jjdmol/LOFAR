@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+diff get_smp_affinity.reference <(./get_smp_affinity) || exit 1
