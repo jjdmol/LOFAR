@@ -29,10 +29,12 @@
 #include <Common/LofarLogger.h>
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <fstream>
 
 using boost::format;
+using boost::lexical_cast;
 
 // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
 // performance.
@@ -55,7 +57,9 @@ namespace LOFAR
 # endif
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps)
+      nrStations(ps.settings.antennaFields.size()),
+      nrChannels(ps.settings.correlator.nrChannels),
+      nrSamplesPerChannel(ps.settings.correlator.nrSamplesPerChannel)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CorrelatorKernel.dumpOutput", false);
@@ -102,7 +106,7 @@ namespace LOFAR
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
-      unsigned nrUsableChannels = std::max(params.nrChannelsPerSubband - 1, 1U);
+      unsigned nrUsableChannels = std::max(params.nrChannels - 1, 1U);
       setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
                            gpu::Block(nrThreads, 1) );
 
@@ -121,15 +125,31 @@ namespace LOFAR
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
-          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrStations * 
+          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * itsParameters.nrStations * 
             NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          (size_t) nrBaselines * itsParameters.nrChannelsPerSubband * 
+          (size_t) nrBaselines * itsParameters.nrChannels * 
             NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
+    }
+
+
+    template<> CompileDefinitions
+    KernelFactory<CorrelatorKernel>::compileDefinitions() const
+    {
+      CompileDefinitions defs =
+        KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
+      return defs;
     }
   }
 }

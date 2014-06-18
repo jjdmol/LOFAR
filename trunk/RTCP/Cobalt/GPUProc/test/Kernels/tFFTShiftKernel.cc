@@ -146,14 +146,7 @@ struct SUTWrapper : ParsetSUT
   // These values are normaly added in the SubbandProc (compile time default).
   FFTShiftKernel::Parameters FFTShiftParams(Parset parset)
   {
-    FFTShiftKernel::Parameters params(parset);
-
-    // time integration has not taken place yet, so calculate the nrSamples
-    // manually
-    params.nrChannelsPerSubband = nrChannels;
-
-    params.nrSamplesPerChannel =
-      parset.nrSamplesPerSubband() / params.nrChannelsPerSubband;
+    FFTShiftKernel::Parameters params(parset, nrStations, nrChannels);
 
     return params;
   }

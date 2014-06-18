@@ -43,14 +43,22 @@ namespace LOFAR
       // DelayAndBandPassKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps);
+        Parameters(const Parset& ps, bool correlator);
+        unsigned nrStations;
         unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+        double subbandBandwidth;
+
         unsigned nrSAPs;
+
         bool delayCompensation;
         bool correctBandPass;
         bool transpose;
-        double subbandBandwidth;
+
+        unsigned nrSamplesPerSubband() const;
+        unsigned nrBytesPerComplexSample() const;
       };
 
       enum BufferType

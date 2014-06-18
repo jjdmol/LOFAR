@@ -39,15 +39,13 @@ namespace LOFAR
     string IncoherentStokesKernel::theirFunction = "incoherentStokes";
 
     IncoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrStations(ps.settings.antennaFields.size()),
+      nrChannels(ps.settings.beamFormer.incoherentSettings.nrChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
       nrStokes(ps.settings.beamFormer.incoherentSettings.nrStokes),
-      timeIntegrationFactor(
-        ps.settings.beamFormer.incoherentSettings.timeIntegrationFactor)
+      timeIntegrationFactor(ps.settings.beamFormer.incoherentSettings.timeIntegrationFactor)
     {
-      nrChannelsPerSubband = 
-        ps.settings.beamFormer.incoherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.incoherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IncoherentStokesKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -76,7 +74,7 @@ namespace LOFAR
       LOG_DEBUG_STR("nrTimesPerPass = " << nrTimesPerPass);
 
       setEnqueueWorkSizes(
-        gpu::Grid(params.nrChannelsPerSubband, nrTimesPerPass * nrPasses),
+        gpu::Grid(params.nrChannels, nrTimesPerPass * nrPasses),
         gpu::Block(1, nrTimesPerPass));
 
     }
@@ -92,12 +90,12 @@ namespace LOFAR
         return 
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
           itsParameters.nrSamplesPerChannel * 
-          itsParameters.nrChannelsPerSubband * sizeof(std::complex<float>);
+          itsParameters.nrChannels * sizeof(std::complex<float>);
       case IncoherentStokesKernel::OUTPUT_DATA:
         return 
           (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
           itsParameters.timeIntegrationFactor * 
-          itsParameters.nrChannelsPerSubband * sizeof(float);
+          itsParameters.nrChannels * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -108,16 +106,19 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
-      defs["TIME_INTEGRATION_FACTOR"] = 
-        lexical_cast<string>(itsParameters.timeIntegrationFactor);
-      defs["NR_CHANNELS"] = 
-        lexical_cast<string>(itsParameters.nrChannelsPerSubband);
-      defs["NR_INCOHERENT_STOKES"] = 
-        lexical_cast<string>(itsParameters.nrStokes);
-      defs["NR_SAMPLES_PER_CHANNEL"] = 
-        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_STATIONS"] = 
         lexical_cast<string>(itsParameters.nrStations);
+
+      defs["NR_CHANNELS"] = 
+        lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
+      defs["NR_INCOHERENT_STOKES"] = 
+        lexical_cast<string>(itsParameters.nrStokes);
+      defs["TIME_INTEGRATION_FACTOR"] = 
+        lexical_cast<string>(itsParameters.timeIntegrationFactor);
       return defs;
     }
 

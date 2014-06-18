@@ -42,14 +42,16 @@ namespace LOFAR
     string FIR_FilterKernel::theirSourceFile = "FIR_Filter.cu";
     string FIR_FilterKernel::theirFunction = "FIR_filter";
 
-    FIR_FilterKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
-      nrBitsPerSample(ps.nrBitsPerSample()),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
-      nrSTABs(nrStations), // default to filter station data
-      nrSubbands(1),
-      scaleFactor(1.0f),
-      inputIsStationData(true)
+    FIR_FilterKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor) :
+      nrSTABs(nrSTABs),
+      nrBitsPerSample(ps.settings.nrBitsPerSample),
+
+      nrChannels(nrChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
+      nrSubbands(nrSubbands),
+      scaleFactor(scaleFactor),
+      inputIsStationData(inputIsStationData)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FIR_FilterKernel.dumpOutput", false);
@@ -61,9 +63,19 @@ namespace LOFAR
 
     const unsigned FIR_FilterKernel::Parameters::nrTaps;
 
+    unsigned FIR_FilterKernel::Parameters::nrSamplesPerSubband() const
+    {
+      return nrChannels * nrSamplesPerChannel;
+    }
+
+    unsigned FIR_FilterKernel::Parameters::nrBytesPerComplexSample() const
+    {
+      return 2 * nrBitsPerSample / 8;
+    }
+
     unsigned FIR_FilterKernel::Parameters::nrHistorySamples() const
     {
-      return (nrTaps - 1) * nrChannelsPerSubband;
+      return (nrTaps - 1) * nrChannels;
     }
 
     FIR_FilterKernel::FIR_FilterKernel(const gpu::Stream& stream,
@@ -79,23 +91,22 @@ namespace LOFAR
       setArg(2, buffers.filterWeights);
       setArg(3, buffers.historySamples);
 
-      unsigned totalNrThreads = 
-        params.nrChannelsPerSubband * params.nrPolarizations * 2;
+      unsigned totalNrThreads = params.nrChannels * NR_POLARIZATIONS * 2;
       unsigned nrPasses = (totalNrThreads + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
 
       setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
                            gpu::Block(totalNrThreads / nrPasses, 1) );
 
       unsigned nrSamples = 
-        params.nrSTABs * params.nrChannelsPerSubband * 
-        params.nrPolarizations;
+        params.nrSTABs * params.nrChannels * 
+        NR_POLARIZATIONS;
 
       nrOperations = 
         (size_t) nrSamples * params.nrSamplesPerChannel * params.nrTaps * 2 * 2;
 
       nrBytesRead = 
         (size_t) nrSamples * (params.nrTaps - 1 + params.nrSamplesPerChannel) * 
-          params.nrBytesPerComplexSample;
+          params.nrBytesPerComplexSample();
 
       nrBytesWritten = 
         (size_t) nrSamples * params.nrSamplesPerChannel * sizeof(std::complex<float>);
@@ -104,7 +115,7 @@ namespace LOFAR
       // device for every workqueue. A single copy per device could be used, but
       // first verify that the device platform still allows workqueue overlap.
       FilterBank filterBank(true, params.nrTaps, 
-                            params.nrChannelsPerSubband, KAISER);
+                            params.nrChannels, KAISER);
       filterBank.negateWeights();
       filterBank.scaleWeights(params.scaleFactor);
 
@@ -142,10 +153,10 @@ namespace LOFAR
         // WITHOUT history samples, but we've also just shifted everything
         // by nrHistorySamples.
         historyFlags[subbandIdx][stationIdx] =
-          inputFlags[stationIdx].subset(params.nrSamplesPerSubband, params.nrSamplesPerSubband + params.nrHistorySamples());
+          inputFlags[stationIdx].subset(params.nrSamplesPerSubband(), params.nrSamplesPerSubband() + params.nrHistorySamples());
 
         // Shift the flags to index 0
-        historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband;
+        historyFlags[subbandIdx][stationIdx] -= params.nrSamplesPerSubband();
       }
     }
 
@@ -157,24 +168,24 @@ namespace LOFAR
       switch (bufferType) {
       case FIR_FilterKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrSamplesPerSubband *
-            itsParameters.nrSTABs * itsParameters.nrPolarizations * 
-            itsParameters.nrBytesPerComplexSample;
+          (size_t) itsParameters.nrSamplesPerSubband() *
+            itsParameters.nrSTABs * NR_POLARIZATIONS * 
+            itsParameters.nrBytesPerComplexSample();
       case FIR_FilterKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrSamplesPerSubband * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrSamplesPerSubband() * itsParameters.nrSTABs * 
+            NR_POLARIZATIONS * sizeof(std::complex<float>);
       case FIR_FilterKernel::FILTER_WEIGHTS:
         return 
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrTaps *
+          (size_t) itsParameters.nrChannels * itsParameters.nrTaps *
             sizeof(float);
       case FIR_FilterKernel::HISTORY_DATA:
         return
           (size_t) itsParameters.nrSubbands *
             itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            itsParameters.nrPolarizations *
+            NR_POLARIZATIONS *
             (itsParameters.inputIsStationData
-             ? itsParameters.nrBytesPerComplexSample
+             ? itsParameters.nrBytesPerComplexSample()
              : sizeof(std::complex<float>));
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -187,14 +198,20 @@ namespace LOFAR
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
 
-      defs["NR_BITS_PER_SAMPLE"] =
-        lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_TAPS"] = 
-        lexical_cast<string>(itsParameters.nrTaps);
       defs["NR_STABS"] = 
         lexical_cast<string>(itsParameters.nrSTABs);
+      defs["NR_BITS_PER_SAMPLE"] =
+        lexical_cast<string>(itsParameters.nrBitsPerSample);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
+      defs["NR_TAPS"] = 
+        lexical_cast<string>(itsParameters.nrTaps);
       defs["NR_SUBBANDS"] = 
         lexical_cast<string>(itsParameters.nrSubbands);
+
       if (itsParameters.inputIsStationData)
         defs["INPUT_IS_STATIONDATA"] = "1";
 

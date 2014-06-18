@@ -44,16 +44,22 @@ namespace LOFAR
     string DelayAndBandPassKernel::theirSourceFile = "DelayAndBandPass.cu";
     string DelayAndBandPassKernel::theirFunction = "applyDelaysAndCorrectBandPass";
 
-    DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+    DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps, bool correlator) :
+      nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample()),
+
+      nrChannels(correlator ? ps.settings.correlator.nrChannels
+                            : ps.settings.beamFormer.nrDelayCompensationChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+      subbandBandwidth(ps.settings.subbandWidth()),
+
       nrSAPs(ps.settings.SAPs.size()),
       
       delayCompensation(ps.settings.delayCompensation.enabled),
-      correctBandPass(ps.settings.corrections.bandPass),
-      transpose(true), // sane for correlator; bf redefines
-      subbandBandwidth(ps.settings.subbandWidth())
+      correctBandPass(correlator ? ps.settings.corrections.bandPass
+                                 : false),
+      transpose(correlator ? true
+                           : false)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.DelayAndBandPassKernel.dumpOutput", false);
@@ -65,6 +71,17 @@ namespace LOFAR
             (transpose ? "T" : "t"));
     }
 
+
+    unsigned DelayAndBandPassKernel::Parameters::nrSamplesPerSubband() const {
+      return nrChannels * nrSamplesPerChannel;
+    }
+
+
+    unsigned DelayAndBandPassKernel::Parameters::nrBytesPerComplexSample() const {
+      return 2 * nrBitsPerSample / 8;
+    }
+
+
     DelayAndBandPassKernel::DelayAndBandPassKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
@@ -74,12 +91,12 @@ namespace LOFAR
       LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
                     " delayCompensation=" <<
                     (params.delayCompensation ? "true" : "false") <<
-                    " #channels/sb=" << params.nrChannelsPerSubband <<
+                    " #channels/sb=" << params.nrChannels <<
                     " correctBandPass=" << 
                     (params.correctBandPass ? "true" : "false") <<
                     " transpose=" << (params.transpose ? "true" : "false"));
 
-      ASSERT(params.nrChannelsPerSubband % 16 == 0 || params.nrChannelsPerSubband == 1);
+      ASSERT(params.nrChannels % 16 == 0 || params.nrChannels == 1);
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
 
       setArg(0, buffers.output);
@@ -90,13 +107,13 @@ namespace LOFAR
       setArg(7, buffers.bandPassCorrectionWeights);
 
       setEnqueueWorkSizes( gpu::Grid(256,
-                                     params.nrChannelsPerSubband == 1 ?
+                                     params.nrChannels == 1 ?
                                        1 :
-                                       params.nrChannelsPerSubband / 16,
+                                       params.nrChannels / 16,
                                      params.nrStations),
                            gpu::Block(256, 1, 1) );
       
-      size_t nrSamples = (size_t)params.nrStations * params.nrChannelsPerSubband * params.nrSamplesPerChannel * NR_POLARIZATIONS;
+      size_t nrSamples = (size_t)params.nrStations * params.nrChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
@@ -104,7 +121,7 @@ namespace LOFAR
       if (params.correctBandPass)
       {
         gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
-        BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannelsPerSubband);
+        BandPass::computeCorrectionFactors(bpWeights.get<float>(), params.nrChannels);
         stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
       }
     }
@@ -125,19 +142,19 @@ namespace LOFAR
     {
       switch (bufferType) {
       case DelayAndBandPassKernel::INPUT_DATA: 
-        if (itsParameters.nrChannelsPerSubband == 1)
+        if (itsParameters.nrChannels == 1)
           return 
             (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-              itsParameters.nrSamplesPerSubband *
-              itsParameters.nrBytesPerComplexSample;
+              itsParameters.nrSamplesPerSubband() *
+              itsParameters.nrBytesPerComplexSample();
         else
           return 
             (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-              itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+              itsParameters.nrSamplesPerSubband() * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::OUTPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
+            itsParameters.nrSamplesPerSubband() * sizeof(std::complex<float>);
       case DelayAndBandPassKernel::DELAYS:
         return 
           (size_t) itsParameters.nrSAPs * itsParameters.nrStations * 
@@ -147,7 +164,7 @@ namespace LOFAR
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * sizeof(double);
       case DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * sizeof(float);
+          (size_t) itsParameters.nrChannels * sizeof(float);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -158,12 +175,21 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
-      defs["NR_SAPS"] =
-        lexical_cast<string>(itsParameters.nrSAPs);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+      defs["NR_SAMPLES_PER_SUBBAND"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerSubband());
       defs["SUBBAND_BANDWIDTH"] =
         str(format("%.7f") % itsParameters.subbandBandwidth);
+
+      defs["NR_SAPS"] =
+        lexical_cast<string>(itsParameters.nrSAPs);
 
       if (itsParameters.delayCompensation) {
         defs["DELAY_COMPENSATION"] = "1";

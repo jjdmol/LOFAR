@@ -47,6 +47,11 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+
+        unsigned nrStations;
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+
         // Size of the square shared memory tile to be used.
         const unsigned tileSize;
       };
