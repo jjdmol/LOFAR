@@ -56,7 +56,7 @@ struct ParsetFixture
     nrChannels = 37,
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
-    blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
+    blockSize = nrChannels * nrInputSamples,
     nrStations = 43,
     nrDelayCompensationChannels = 64;
 
@@ -105,7 +105,7 @@ TEST_FIXTURE(ParsetFixture, BufferSizes)
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
   CHECK_EQUAL(nrStations, parset.nrStations());
-  CHECK_EQUAL(nrInputSamples, settings.nrSamples);
+  CHECK_EQUAL(nrOutputSamples, settings.nrSamples);
 }
 
 
