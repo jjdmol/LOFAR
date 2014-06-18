@@ -242,8 +242,8 @@ TEST(testBeamformerOutputThreadRealtimeThrowsNoException)
   par.add("Observation.nrBeams", "1");
   par.add("Observation.Beam[0].subbandList", "[300]");
   par.add("Observation.Beam[0].nrTiedArrayBeams", "1");
-  par.add("Observation.Beam[1].TiedArrayBeam[0].absoluteAngle1", "0");
-  par.add("Observation.Beam[1].TiedArrayBeam[0].absoluteAngle2", "0");
+  par.add("Observation.Beam[1].TiedArrayBeam[0].angle1", "0");
+  par.add("Observation.Beam[1].TiedArrayBeam[0].angle2", "0");
   par.add("Observation.Beam[1].TiedArrayBeam[0].coherent", "T");
   par.add("Observation.rspBoardList", "[0, 0]");
   par.add("Observation.rspSlotList", "[0, 1]");

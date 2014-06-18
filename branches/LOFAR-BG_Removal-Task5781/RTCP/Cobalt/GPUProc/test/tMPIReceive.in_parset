@@ -26,10 +26,10 @@ Observation.AnaBeam[0].duration=300
 Observation.AnaBeam[0].rank=1
 Observation.AnaBeam[0].startTime=
 Observation.AnaBeam[0].target=
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1=5.06907719268139
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2=0.381946883879076
-Observation.Beam[0].TiedArrayBeam[0].angle1=0.0
-Observation.Beam[0].TiedArrayBeam[0].angle2=0.0
+Observation.Beam[0].TiedArrayBeam[0].angle1=5.06907719268139
+Observation.Beam[0].TiedArrayBeam[0].angle2=0.381946883879076
+
+
 Observation.Beam[0].TiedArrayBeam[0].coherent=true
 Observation.Beam[0].TiedArrayBeam[0].directionType=J2000
 Observation.Beam[0].TiedArrayBeam[0].dispersionMeasure=0

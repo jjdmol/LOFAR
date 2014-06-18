@@ -43,10 +43,10 @@ Observation.AnaBeam[0].startTime=
 Observation.AnaBeam[0].target=
 
 # off-center TAB to test whether delays are actually applied
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1=5.16907719268139
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2=0.281946883879076
-Observation.Beam[0].TiedArrayBeam[0].angle1=0.1
-Observation.Beam[0].TiedArrayBeam[0].angle2=-0.1
+Observation.Beam[0].TiedArrayBeam[0].angle1=5.16907719268139
+Observation.Beam[0].TiedArrayBeam[0].angle2=0.281946883879076
+
+
 
 Observation.Beam[0].TiedArrayBeam[0].coherent=true
 Observation.Beam[0].TiedArrayBeam[0].directionType=J2000

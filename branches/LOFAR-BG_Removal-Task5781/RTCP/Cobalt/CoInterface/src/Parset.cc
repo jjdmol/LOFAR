@@ -725,8 +725,8 @@ namespace LOFAR
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
               
-                tab.direction.angle1  = getDouble(prefix + ".absoluteAngle1", 0.0);
-                tab.direction.angle2  = getDouble(prefix + ".absoluteAngle2", 0.0);
+                tab.direction.angle1  = getDouble(prefix + ".angle1", 0.0);
+                tab.direction.angle2  = getDouble(prefix + ".angle2", 0.0);
 
                 tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
                 tab.coherent              = getBool(prefix + ".coherent", true);

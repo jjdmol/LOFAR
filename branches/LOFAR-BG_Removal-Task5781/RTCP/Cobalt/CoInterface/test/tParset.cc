@@ -1045,8 +1045,8 @@ TEST(testRing) {
   ps.replace("Observation.DataProducts.Output_CoherentStokes.filenames", "[8*SB000.MS]");
   ps.replace("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
 
-  ps.replace(prefix + ".TiedArrayBeam[0].absoluteAngle1", "0.0");
-  ps.replace(prefix + ".TiedArrayBeam[0].absoluteAngle2", "0.0");
+  ps.replace(prefix + ".TiedArrayBeam[0].angle1", "0.0");
+  ps.replace(prefix + ".TiedArrayBeam[0].angle2", "0.0");
   ps.replace(prefix + ".TiedArrayBeam[0].coherent", "true");
   ps.replace(prefix + ".TiedArrayBeam[0].directionType", "J2000");
   ps.replace(prefix + ".TiedArrayBeam[0].dispersionMeasure", "0.0");

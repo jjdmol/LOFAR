@@ -300,8 +300,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.absoluteAngle1
-        // key: *.absoluteAngle2
+        // key: *.angle1
+        // key: *.angle2
         double angle1;
         double angle2;
       };
