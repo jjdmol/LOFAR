@@ -61,46 +61,6 @@ namespace LOFAR
       KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
       KernelFactory<FIR_FilterKernel> incoherentFirFilter;
       KernelFactory<IncoherentStokesKernel> incoherentStokes;
-
-      static BandPassCorrectionKernel::Parameters
-      bandPassCorrectionParams(const Parset &ps);
-
-      static BeamFormerKernel::Parameters
-      beamFormerParams(const Parset &ps);
-
-      static CoherentStokesTransposeKernel::Parameters
-      coherentTransposeParams(const Parset &ps);
-
-      static CoherentStokesKernel::Parameters
-      coherentStokesParams(const Parset &ps);
-
-      static DelayAndBandPassKernel::Parameters
-      delayCompensationParams(const Parset &ps);
-
-      static FFTShiftKernel::Parameters
-      fftShiftParams(const Parset &ps);
-
-      static FFTShiftKernel::Parameters
-      coherentInverseFFTShiftParams(const Parset &ps);
-
-      static FIR_FilterKernel::Parameters
-      coherentFirFilterParams(const Parset &ps, 
-                              size_t nrSubbandsPerSubbandProc);
-
-      static FIR_FilterKernel::Parameters
-      incoherentFirFilterParams(const Parset &ps,
-                                size_t nrSubbandsPerSubbandProc);
-
-      static FFTShiftKernel::Parameters
-      incoherentInverseFFTShiftParams(const Parset &ps);
-
-      static IncoherentStokesKernel::Parameters 
-      incoherentStokesParams(const Parset &ps);
-
-      static IncoherentStokesTransposeKernel::Parameters
-      incoherentStokesTransposeParams(const Parset &ps);
-
-
     };
 
   }

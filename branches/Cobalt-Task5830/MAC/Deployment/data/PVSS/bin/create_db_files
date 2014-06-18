@@ -110,7 +110,7 @@ create_ring_station_list()
 }
 
 #
-# create_ring_station_list
+# create_stationfield_list
 #
 create_stationfield_list()
 {
@@ -403,6 +403,56 @@ substitute_CtrlDebug()
 			      printf "_CtrlDebug_%d	%s\n", debugNr, $2;
 			}
 		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_uriboard
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_uriboard()
+{
+	awk -v nrURIs=$NRURIS '
+	{
+		hasuri=index($1,"@furiboard@");
+		if (hasfpga > 0) {
+			for (uriNr = 0; uriNr < nrURIs; uriNr++) {
+				dpname=$1;
+				cNr=0;
+				if (uriNr > 1) cNr = 1
+				newname = sprintf("Cabinet%1d_URIboard%1d",cNr,uriNr);
+				sub("@uriboard@", newname, dpname);
+				print dpname"	"$2;
+				}
+			}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_fpga
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_fpga()
+{
+	awk -v nrFPGAs=$NRFPGAS '
+	{
+		hasfpga=index($1,"@fpga@");
+		if (hasfpga > 0) {
+			for (fpgaNr = 0; fpgaNr < nrFPGAs; fpgaNr++) {
+				dpname=$1;
+				newname = sprintf("FPGA%1d",fpgaNr);
+				sub("@fpga@", newname, dpname);
+				print dpname"	"$2;
+				}
+			}
 		else {
 			print $1"	"$2;
 		}
@@ -1017,6 +1067,8 @@ create_dp_file()
 				substitute_Cabinet_SubRack_RSPBoard | \
 				substitute_Cabinet_SubRack_TBBoard | \
 				substitute_Cabinet_SubRack | \
+				substitute_fpga | \
+				substitute_uriboard | \
 				substitute_Cabinet | \
 				substitute_cluster_node | \
 				substitute_cluster | \
@@ -1392,6 +1444,10 @@ RINGSTATIONLIST=`create_ring_station_list`
 STATIONFIELDLIST=`create_stationfield_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
+
+# FPGA and URIboard numbers
+let NRFPGAS = 8
+let NRURI = 3
 
 let NRRSPBOARDS=0
 let NRLBAS=0

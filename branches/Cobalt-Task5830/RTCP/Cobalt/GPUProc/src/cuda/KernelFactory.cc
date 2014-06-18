@@ -26,6 +26,8 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 
+#include <CoInterface/Config.h>
+
 using namespace std;
 using boost::lexical_cast;
 
@@ -38,18 +40,20 @@ namespace LOFAR
     }
 
     CompileDefinitions
-    KernelFactoryBase::compileDefinitions(const Kernel::Parameters& param) const
+    KernelFactoryBase::compileDefinitions(const Kernel::Parameters& /*param*/) const
     {
       CompileDefinitions defs;
-      // TODO: These defines are (nearly) always needed for the correlator kernels. Investigate defaults for all bf kernels. E.g. NR_STATIONS "becomes" NR_TABS after the beamformer kernel.
       defs["COMPLEX"] = "2"; // TODO: get rid of this: replace with proper complex type names
-      defs["NR_CHANNELS"] = lexical_cast<string>(param.nrChannelsPerSubband);
-      defs["NR_POLARIZATIONS"] = lexical_cast<string>(param.nrPolarizations);
+      defs["NR_POLARIZATIONS"] = lexical_cast<string>(NR_POLARIZATIONS);
+
+      /*
+      defs["NR_CHANNELS"] = lexical_cast<string>(param.nrChannels);
       defs["NR_SAMPLES_PER_CHANNEL"] = 
         lexical_cast<string>(param.nrSamplesPerChannel);
       defs["NR_SAMPLES_PER_SUBBAND"] = 
         lexical_cast<string>(param.nrSamplesPerSubband);
       defs["NR_STATIONS"] = lexical_cast<string>(param.nrStations);
+      */
       return defs;
     }
 

@@ -31,212 +31,37 @@ namespace LOFAR
     BeamFormerFactories::BeamFormerFactories(const Parset &ps,
                                              size_t nrSubbandsPerSubbandProc) :
         intToFloat(ps),
-        fftShift(fftShiftParams(ps)),
-        delayCompensation(delayCompensationParams(ps)),
-        bandPassCorrection(bandPassCorrectionParams(ps)),
+        fftShift(FFTShiftKernel::Parameters(ps,
+          ps.settings.antennaFields.size(),
+          ps.settings.beamFormer.nrDelayCompensationChannels)),
+        delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
+        bandPassCorrection(BandPassCorrectionKernel::Parameters(ps)),
+        beamFormer(BeamFormerKernel::Parameters(ps)),
 
-        beamFormer(beamFormerParams(ps)),
-        coherentTranspose(coherentTransposeParams(ps)),
-        coherentInverseFFTShift(coherentInverseFFTShiftParams(ps)),
-        coherentFirFilter(coherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
-        coherentStokes(coherentStokesParams(ps)),
+        coherentTranspose(CoherentStokesTransposeKernel::Parameters(ps)),
+        coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
+          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+          ps.settings.beamFormer.nrHighResolutionChannels)),
+        coherentFirFilter(FIR_FilterKernel::Parameters(ps,
+          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+          false,
+          nrSubbandsPerSubbandProc,
+          ps.settings.beamFormer.coherentSettings.nrChannels,
+          static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels))),
+        coherentStokes(CoherentStokesKernel::Parameters(ps)),
 
-        incoherentStokesTranspose(incoherentStokesTransposeParams(ps)),
-        incoherentInverseFFTShift(incoherentInverseFFTShiftParams(ps)),
-        incoherentFirFilter(
-          incoherentFirFilterParams(ps, nrSubbandsPerSubbandProc)),
-        incoherentStokes(incoherentStokesParams(ps))
+        incoherentStokesTranspose(IncoherentStokesTransposeKernel::Parameters(ps)),
+        incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
+          ps.settings.antennaFields.size(),
+          ps.settings.beamFormer.nrHighResolutionChannels)),
+        incoherentFirFilter(FIR_FilterKernel::Parameters(ps,
+          ps.settings.antennaFields.size(),
+          false,
+          nrSubbandsPerSubbandProc,
+          ps.settings.beamFormer.incoherentSettings.nrChannels,
+          static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels))),
+        incoherentStokes(IncoherentStokesKernel::Parameters(ps))
       {
-      }
-
-      DelayAndBandPassKernel::Parameters
-      BeamFormerFactories::delayCompensationParams(const Parset &ps) 
-      {
-        DelayAndBandPassKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrDelayCompensationChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-          ps.settings.beamFormer.nrDelayCompensationChannels;
-        params.correctBandPass = false;
-        params.transpose = false;
-
-        return params;
-      }
-
-      BandPassCorrectionKernel::Parameters
-      BeamFormerFactories::bandPassCorrectionParams(const Parset &ps) 
-      {
-        BandPassCorrectionKernel::Parameters params(ps);
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-          ps.settings.beamFormer.nrHighResolutionChannels;
-        return params;
-      }
-
-      BeamFormerKernel::Parameters 
-      BeamFormerFactories::beamFormerParams(const Parset &ps) 
-      {
-        BeamFormerKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrHighResolutionChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-          ps.settings.beamFormer.nrHighResolutionChannels;
-
-        return params;
-      }
-
-      CoherentStokesTransposeKernel::Parameters
-      BeamFormerFactories::coherentTransposeParams(const Parset &ps) 
-      {
-        CoherentStokesTransposeKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrHighResolutionChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-          ps.settings.beamFormer.nrHighResolutionChannels;
-
-        return params;
-      }
-
-      FFTShiftKernel::Parameters
-      BeamFormerFactories::coherentInverseFFTShiftParams(const Parset &ps)
-      {
-        FFTShiftKernel::Parameters params(ps);
-        // Currently a static in the subband proc
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrDelayCompensationChannels;
-
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        params.nrSTABs = std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
-
-        return params;
-      }
-
-      FFTShiftKernel::Parameters
-      BeamFormerFactories::incoherentInverseFFTShiftParams(const Parset &ps)
-      {
-        FFTShiftKernel::Parameters params(ps);
-        // Currently a static in the subband proc
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrDelayCompensationChannels;
-
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        // params.nrSTABs is the number of stations in the incoherent pipeline,
-        // which happens to be the default.
-
-        return params;
-      }
-
-      FIR_FilterKernel::Parameters
-      BeamFormerFactories::
-      coherentFirFilterParams(const Parset &ps,
-                      size_t nrSubbandsPerSubbandProc) 
-      {
-        FIR_FilterKernel::Parameters params(ps);
-
-        params.nrSTABs = std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP());
-
-        // define at least 16 channels to get the FIR_Filter.cu to compile, even
-        // if we won't use it.
-        params.nrChannelsPerSubband =
-          std::max(16U, ps.settings.beamFormer.coherentSettings.nrChannels);
-
-        // time integration has not taken place yet, so calculate the nrSamples
-        // manually
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        params.nrSubbands = nrSubbandsPerSubbandProc;
-
-        // Normalize flux output for number of channels.
-        // See the correlator variant for more detail.
-        params.scaleFactor = params.nrChannelsPerSubband;
-
-        params.inputIsStationData = false;
-
-        return params;
-      }
-
-      CoherentStokesKernel::Parameters
-      BeamFormerFactories::coherentStokesParams(const Parset &ps) 
-      {
-        CoherentStokesKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.coherentSettings.nrChannels;
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        return params;
-      }
-
-      FFTShiftKernel::Parameters
-      BeamFormerFactories::fftShiftParams(const Parset &ps) 
-      {
-        FFTShiftKernel::Parameters params(ps);
-        // Currently a static in the subband proc
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrDelayCompensationChannels;
-
-        params.nrSamplesPerChannel =
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        return params;
-      }
-
-      FIR_FilterKernel::Parameters 
-      BeamFormerFactories::
-      incoherentFirFilterParams(const Parset &ps,
-            size_t nrSubbandsPerSubbandProc)  
-      {
-        FIR_FilterKernel::Parameters params(ps);
-
-        params.nrSTABs = ps.nrStations();
-
-        params.nrChannelsPerSubband = 
-          ps.settings.beamFormer.incoherentSettings.nrChannels;
-
-        // time integration has not taken place yet, so calculate the nrSamples
-        // manually
-        params.nrSamplesPerChannel = 
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        params.nrSubbands = nrSubbandsPerSubbandProc;
-
-        // Normalize flux output for number of channels.
-        // See the correlator variant for more detail.
-        params.scaleFactor = params.nrChannelsPerSubband;
-
-        params.inputIsStationData = false;
-
-        return params;
-      }
-
-      IncoherentStokesKernel::Parameters 
-      BeamFormerFactories::
-      incoherentStokesParams(const Parset &ps)  
-      {
-        IncoherentStokesKernel::Parameters params(ps);
-        params.nrChannelsPerSubband = 
-          ps.settings.beamFormer.incoherentSettings.nrChannels;
-        params.nrSamplesPerChannel = 
-          ps.nrSamplesPerSubband() / params.nrChannelsPerSubband;
-
-        return params;
-      }
-
-      IncoherentStokesTransposeKernel::Parameters 
-      BeamFormerFactories::
-      incoherentStokesTransposeParams(const Parset &ps)  
-      {
-        IncoherentStokesTransposeKernel::Parameters params(ps);
-        params.nrChannelsPerSubband =
-          ps.settings.beamFormer.nrHighResolutionChannels;
-        params.nrSamplesPerChannel = ps.nrSamplesPerSubband() /
-          ps.settings.beamFormer.nrHighResolutionChannels;
-
-        return params;
       }
   }
 }

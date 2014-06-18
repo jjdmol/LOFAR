@@ -42,9 +42,11 @@ namespace LOFAR
     string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
     string FFTShiftKernel::theirFunction = "FFTShift";
 
-    FFTShiftKernel::Parameters::Parameters(const Parset& ps):
-      Kernel::Parameters(ps),
-      nrSTABs(nrStations)
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels):
+      nrSTABs(nrSTABs),
+
+      nrChannels(nrChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.FFTShiftKernel.dumpOutput", false);
@@ -65,8 +67,8 @@ namespace LOFAR
       ASSERT(params.nrSamplesPerChannel % 2 == 0);
 
       size_t nrSamples = 
-        params.nrSTABs * params.nrPolarizations *
-        params.nrChannelsPerSubband * params.nrSamplesPerChannel;
+        params.nrSTABs * NR_POLARIZATIONS *
+        params.nrChannels * params.nrSamplesPerChannel;
 
       // The total number of samples must be divisible by the maximum number of
       // threads per block (typically 1024).
@@ -87,7 +89,7 @@ namespace LOFAR
       case FFTShiftKernel::INPUT_DATA:  // fall tru
       case FFTShiftKernel::OUTPUT_DATA:
         return (size_t)itsParameters.nrSTABs * NR_POLARIZATIONS *
-          itsParameters.nrChannelsPerSubband *
+          itsParameters.nrChannels *
           itsParameters.nrSamplesPerChannel *
             sizeof(std::complex<float>);
           
@@ -101,6 +103,10 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
 
       return defs;
     }
