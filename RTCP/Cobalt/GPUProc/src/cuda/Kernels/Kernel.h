@@ -46,12 +46,8 @@ namespace LOFAR
       // or drop opt)
       struct Parameters
       {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrChannelsPerSubband;
-        unsigned nrSamplesPerChannel;
-        unsigned nrSamplesPerSubband;
-        unsigned nrPolarizations;
+        Parameters();
+
         bool dumpBuffers;
         std::string dumpFilePattern;
       };

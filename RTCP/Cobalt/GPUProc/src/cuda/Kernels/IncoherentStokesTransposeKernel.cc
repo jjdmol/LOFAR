@@ -42,7 +42,10 @@ namespace LOFAR
       "transpose";
 
     IncoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrStations(ps.settings.antennaFields.size()),
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
       tileSize(16)
     {
       dumpBuffers = 
@@ -67,14 +70,14 @@ namespace LOFAR
       //               << "align(" << params.nrSamplesPerChannel
       //               << ", " << params.tileSize << ") = " 
       //               << align(params.nrSamplesPerChannel, params.tileSize));
-      // LOG_DEBUG_STR("align(params.nrChannelsPerSubband, params.tileSize)) = "
-      //               << "align(" << params.nrChannelsPerSubband 
+      // LOG_DEBUG_STR("align(params.nrChannels, params.tileSize)) = "
+      //               << "align(" << params.nrChannels 
       //               << ", " << params.tileSize << ") = "
-      //               << align(params.nrChannelsPerSubband, params.tileSize));
+      //               << align(params.nrChannels, params.tileSize));
 
       setEnqueueWorkSizes(
         gpu::Grid(align(params.nrSamplesPerChannel, params.tileSize), 
-                  align(params.nrChannelsPerSubband, params.tileSize)),
+                  align(params.nrChannels, params.tileSize)),
         gpu::Block(params.tileSize, params.tileSize));
     }
 
@@ -89,7 +92,7 @@ namespace LOFAR
       case IncoherentStokesTransposeKernel::OUTPUT_DATA:
         return 
           (size_t) itsParameters.nrStations * 
-          itsParameters.nrChannelsPerSubband *
+          itsParameters.nrChannels *
           itsParameters.nrSamplesPerChannel * 
           NR_POLARIZATIONS * sizeof(std::complex<float>);
       default:
@@ -102,6 +105,14 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = 
+        lexical_cast<string>(itsParameters.nrStations);
+      defs["NR_CHANNELS"] = 
+        lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["TILE_SIZE"] = lexical_cast<string>(itsParameters.tileSize);
       return defs;
     }

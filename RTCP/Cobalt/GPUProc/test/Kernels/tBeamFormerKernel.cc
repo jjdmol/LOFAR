@@ -24,7 +24,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
@@ -65,7 +64,8 @@ int main(int argc, char *argv[])
   gpu::Stream stream(ctx);
 
   // Create the factory
-  KernelFactory<BeamFormerKernel> factory(BeamFormerFactories::beamFormerParams(ps));
+  BeamFormerKernel::Parameters bfparams(ps);
+  KernelFactory<BeamFormerKernel> factory(bfparams);
 
   DeviceMemory devDelaysMemory(ctx, factory.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)),
     devBandPassCorrectedMemory(ctx, factory.bufferSize(BeamFormerKernel::INPUT_DATA)),

@@ -44,13 +44,10 @@ namespace LOFAR
     string BeamFormerTransposeKernel::theirFunction = "transpose";
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
     {
-      nrChannelsPerSubband =
-        ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples;
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -75,7 +72,7 @@ namespace LOFAR
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =
-        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannelsPerSubband * 
+        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannels * 
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
     }
 
@@ -88,7 +85,7 @@ namespace LOFAR
       case BeamFormerTransposeKernel::INPUT_DATA: 
       case BeamFormerTransposeKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * 
             NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -100,6 +97,11 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
 

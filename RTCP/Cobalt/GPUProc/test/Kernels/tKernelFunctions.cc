@@ -52,8 +52,15 @@ TEST(tKernelFunctions)
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
+  
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f);
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
