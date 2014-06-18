@@ -334,7 +334,7 @@ void StationInput::readRSPRealTime( size_t board, Stream &inputStream,
 
       // Periodically LOG() and log() (for monitoring (PVSS)) progress
       if (i % 256 == 0) // Each block is ~40ms, so log every ~10s worth of data.
-        reader.logStatistics(board, mdLogger, mdKeyPrefix, stationID.name());
+        reader.logStatistics(board, mdLogger, mdKeyPrefix);
 
       outputQueue.append(rspData);
     }

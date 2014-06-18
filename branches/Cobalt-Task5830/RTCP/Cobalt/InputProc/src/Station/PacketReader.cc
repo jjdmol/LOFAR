@@ -168,8 +168,7 @@ namespace LOFAR
 
     void PacketReader::logStatistics(unsigned boardNr,
                                      MACIO::RTmetadata &mdLogger,
-                                     const string &mdKeyPrefix,
-                                     const string &antFieldName)
+                                     const string &mdKeyPrefix)
     {
       // Determine time since last log
       struct timeval tv;
@@ -187,10 +186,10 @@ namespace LOFAR
       // Emit data points for monitoring (PVSS)
       // Reproduce PN_CSI_STREAM0_BLOCKS_IN or PN_CSI_STREAM0_REJECTED, but with the right nr.
       string streamStr = str(boost::format("stream%u") % boardNr);
-      mdLogger.log(mdKeyPrefix + streamStr + ".blocksIn[" + antFieldName + ']',
+      mdLogger.log(mdKeyPrefix + streamStr + ".blocksIn",
                    (unsigned)round(nrReceived / interval));
       size_t nrBad = nrBadTime + nrBadMode + nrBadData + nrBadOther;
-      mdLogger.log(mdKeyPrefix + streamStr + ".rejected[" + antFieldName + ']',
+      mdLogger.log(mdKeyPrefix + streamStr + ".rejected",
                    (unsigned)round(nrBad / interval));
 
       // Reset counters

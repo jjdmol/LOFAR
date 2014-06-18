@@ -58,8 +58,7 @@ namespace LOFAR
       // Logs (and resets) statistics about the packets read.
       void logStatistics(unsigned boardNr,
                          MACIO::RTmetadata &mdLogger,
-                         const std::string &mdKeyPrefix,
-                         const std::string &antFieldName);
+                         const std::string &mdKeyPrefix);
 
     private:
       const std::string logPrefix;

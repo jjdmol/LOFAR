@@ -572,7 +572,8 @@ int main(int argc, char **argv)
         string mdKeyPrefixInputProc = str(prFmtInputProc % antennaFieldName);
         mdKeyPrefixInputProc.push_back('.'); // keys look like: "keyPrefix.subKeyName"
 
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME, ps.observationID());
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
+                     boost::lexical_cast<string>(ps.observationID()));
         mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE,             hostName);
         mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,              cpuNr);
 

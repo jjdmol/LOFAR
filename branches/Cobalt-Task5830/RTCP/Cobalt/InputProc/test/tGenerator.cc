@@ -104,7 +104,7 @@ int main( int, char **argv )
 
           if (!reader.readPacket(packet)) {
             const unsigned boardNr = 0; // irrel, for logStats only
-            reader.logStatistics(boardNr, rtmd, "rtmd key prefix", stationID.name());
+            reader.logStatistics(boardNr, rtmd, "rtmd key prefix");
 
             ASSERT(false);
           }
