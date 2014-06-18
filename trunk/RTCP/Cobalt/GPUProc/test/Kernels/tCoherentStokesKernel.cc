@@ -73,7 +73,7 @@ struct ParsetSUT
     nrOutputSamples(inrOutputSamples),
     nrStations(inrStations),
     nrInputSamples(nrOutputSamples * timeIntegrationFactor), 
-    blockSize(timeIntegrationFactor * nrChannels * nrInputSamples),
+    blockSize(nrChannels * nrInputSamples),
     nrDelayCompensationChannels(64)
   {
     size_t nr_files = inrTabs * 4; // 4 for number of stokes
