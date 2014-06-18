@@ -10,7 +10,7 @@ echo "outputFile = /dev/stdout" >> "$LOFARROOT/etc/PVSSGatewayStub.conf"
 
 gwPid=none
 sbPid=none
-trap "kill -9 $gwPid $sbPid; mv $LOFARROOT/etc/PVSSGatewayStub.conf.backup $LOFARROOT/etc/PVSSGatewayStub.conf" \
+trap 'kill -9 $gwPid $sbPid; mv "$LOFARROOT/etc/PVSSGatewayStub.conf.backup" "$LOFARROOT/etc/PVSSGatewayStub.conf"' \
   SIGTERM SIGINT SIGQUIT SIGHUP
 
 # Start ServiceBroker and PVSSGatewayStub.

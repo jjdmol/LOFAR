@@ -428,7 +428,7 @@ fi
 # clean up outputProc children
 echo "Allowing 120 second for normal end of outputProc"
 #    Set trap to kill the sleep in case of signals                    save the pid of sleep
-( trap "kill $SLEEP_PID" SIGTERM SIGINT SIGQUIT SIGHUP ; sleep 120&  SLEEP_PID=$!; echo "Starting forced cleanup outputProc:"; clean_up 0 ) & 
+( trap 'kill $SLEEP_PID' SIGTERM SIGINT SIGQUIT SIGHUP; sleep 120&  SLEEP_PID=$!; echo 'Starting forced cleanup outputProc:'; clean_up 0 ) & 
 KILLER_PID=$!
 
 # Waiting for the child processes to finish
