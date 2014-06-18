@@ -23,7 +23,6 @@
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
@@ -56,9 +55,8 @@ int main(int argc, char *argv[])
   gpu::Context ctx(device);
   gpu::Stream stream(ctx);
 
-  
-  KernelFactory<DelayAndBandPassKernel> factory(BeamFormerFactories::delayCompensationParams(ps));
-  stream.synchronize();
+  DelayAndBandPassKernel::Parameters dbpparams(ps, false);
+  KernelFactory<DelayAndBandPassKernel> factory(dbpparams);
 
   gpu::DeviceMemory
     inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),

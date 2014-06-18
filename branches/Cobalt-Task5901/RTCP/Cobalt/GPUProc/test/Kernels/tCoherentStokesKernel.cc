@@ -24,7 +24,6 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/SubbandProcs/BeamFormerFactories.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Parset.h>
@@ -123,7 +122,7 @@ TEST(KernelFactory)
 {
   LOG_INFO("Test KernelFactory");
   ParsetSUT sut;
-  KernelFactory<CoherentStokesKernel> kf(sut.parset);
+  KernelFactory<CoherentStokesKernel> kf(CoherentStokesKernel::Parameters(sut.parset));
 }
 
 struct SUTWrapper:  ParsetSUT
@@ -458,8 +457,8 @@ int main(int argc, char *argv[])
   gpu::Stream stream(ctx);
 
   // Create the factory
-  KernelFactory<CoherentStokesKernel> factory(
-          BeamFormerFactories::coherentStokesParams(ps));
+  CoherentStokesKernel::Parameters csparams(ps);
+  KernelFactory<CoherentStokesKernel> factory(csparams);
 
   DeviceMemory  coherentStokesInputMem(ctx, 
                   factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
