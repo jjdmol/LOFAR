@@ -119,8 +119,8 @@ ringStations = []
 stations = []
 for line in filledLine.findall(open(StationFile).read()):
 #    print "line: =",line
-    if (line.strip() and len(line.split()) == 12):
-        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+    if (line.strip() and len(line.split()) == 13):
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, AartFaac ) = line.split()
         if (height != "0"):
             ringStations.append(ringDict[stnType]+"_"+name)
             stations.append(name)
@@ -198,8 +198,8 @@ for line in software.findall(open(PVSSbasefile).read()):
 # generate the hardware on each station
 for line in filledLine.findall(open(StationFile).read()):
 #    print "line: =",line
-    if (line.strip() and len(line.split()) == 12):
-        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+    if (line.strip() and len(line.split()) == 13):
+        (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, AartFaac ) = line.split()
         if ( height == "0" ):
             continue
 
