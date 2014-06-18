@@ -105,6 +105,7 @@ private:
 	string			itsRegisterName;
 	string			itsHostName;
 	EventPort*		itsKVTport;
+	unsigned		itsNrEventsDropped;
 
 	// For itsThread to send from. Contains vector<KVpair> kvps.
 	KVTSendMsgPoolEvent     itsLogEvents;

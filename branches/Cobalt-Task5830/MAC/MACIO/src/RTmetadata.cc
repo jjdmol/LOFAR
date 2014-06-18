@@ -43,7 +43,8 @@ RTmetadata::RTmetadata(uint32		observationID,
 	itsObsID		 (observationID),
 	itsRegisterName	 	 (registrationName),
 	itsHostName		 (hostName),
-	itsKVTport		 (NULL)
+	itsKVTport		 (NULL),
+	itsNrEventsDropped	 (0)
 {
 	itsLogEvents.kvps.reserve(MAX_QUEUED_EVENTS);
 	itsQueuedEvents.reserve(MAX_QUEUED_EVENTS);
@@ -66,8 +67,11 @@ RTmetadata::~RTmetadata()
 
 		// joins in ~Thread()
 	}
-}
 
+	if (itsNrEventsDropped > 0) {
+		LOG_WARN_STR("RTmetadata object dropped " << itsNrEventsDropped << " event(s) for PVSS");
+	}
+}
 
 //
 // start()
@@ -105,9 +109,10 @@ void RTmetadata::log(const KVpair& pair)
 		if (queueSize == 0) {
 			itsQueuedEventsCond.signal();
 		}
+	} else {
+		itsNrEventsDropped += 1;
 	}
 }
-
 
 //
 // log(vector<KVpair>)
@@ -125,6 +130,8 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 		if (nfree == MAX_QUEUED_EVENTS) {
 			itsQueuedEventsCond.signal();
 		}
+	} else {
+		itsNrEventsDropped += pairs.size() - nfree;
 	}
 }
 
