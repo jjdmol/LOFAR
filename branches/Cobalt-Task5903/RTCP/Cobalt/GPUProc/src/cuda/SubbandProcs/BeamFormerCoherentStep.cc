@@ -50,12 +50,28 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+
+    BeamFormerCoherentStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
+      beamFormer(BeamFormerKernel::Parameters(ps)),
+      coherentTranspose(CoherentStokesTransposeKernel::Parameters(ps)),
+      coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
+        std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+        ps.settings.beamFormer.nrHighResolutionChannels)),
+      coherentFirFilter(FIR_FilterKernel::Parameters(ps,
+        std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+        false,
+        nrSubbandsPerSubbandProc,
+        ps.settings.beamFormer.coherentSettings.nrChannels,
+        static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels))),
+      coherentStokes(CoherentStokesKernel::Parameters(ps))
+    {
+    }
   
     BeamFormerCoherentStep::BeamFormerCoherentStep(
       const Parset &parset,
       gpu::Stream &i_queue,
       gpu::Context &context,
-      BeamFormerFactories &factories,
+      Factories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -81,7 +97,7 @@ namespace LOFAR
     {}
 
     void BeamFormerCoherentStep::initMembers(gpu::Context &context,
-      BeamFormerFactories &factories)
+      Factories &factories)
     {
     beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
       new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));

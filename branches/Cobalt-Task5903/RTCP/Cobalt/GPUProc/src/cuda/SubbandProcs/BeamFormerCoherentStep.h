@@ -54,11 +54,21 @@ namespace LOFAR
     class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
     {
     public:
+      struct Factories
+      {
+        Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
+
+        KernelFactory<BeamFormerKernel> beamFormer;
+        KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
+        KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
+        KernelFactory<FIR_FilterKernel> coherentFirFilter;
+        KernelFactory<CoherentStokesKernel> coherentStokes;
+      };
 
       BeamFormerCoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         gpu::Context &context,
-        BeamFormerFactories &factories,
+        Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -70,7 +80,7 @@ namespace LOFAR
 
 
       void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+        Factories &factories);
 
       void process(BlockID blockID,
         unsigned subband);

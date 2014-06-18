@@ -36,13 +36,9 @@
 #include "SubbandProc.h"
 #include "BeamFormerSubbandProcStep.h"
 
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-
-
 #include <GPUProc/Kernels/FFTShiftKernel.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 
@@ -51,17 +47,23 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    struct BeamFormerFactories;
-
     class BeamFormerIncoherentStep : public BeamFormerSubbandProcStep
     {
     public:
+      struct Factories
+      {
+        Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
+
+        KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+        KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
+        KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+        KernelFactory<IncoherentStokesKernel> incoherentStokes;
+      };
 
       BeamFormerIncoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         gpu::Context &context,
-        BeamFormerFactories &factories,
+        Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -73,7 +75,7 @@ namespace LOFAR
 
 
       void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+        Factories &factories);
 
       gpu::DeviceMemory outputBuffer();
 

@@ -40,10 +40,6 @@ namespace LOFAR
     class BeamFormerSubbandProcStep
     {
     public:
-
-      virtual void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories) = 0;
-
       virtual void process(BlockID blockID,
         unsigned subband) = 0;
 

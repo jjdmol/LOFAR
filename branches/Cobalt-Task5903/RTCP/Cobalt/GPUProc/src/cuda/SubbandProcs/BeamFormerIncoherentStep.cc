@@ -50,12 +50,26 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    BeamFormerIncoherentStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
+      incoherentStokesTranspose(IncoherentStokesTransposeKernel::Parameters(ps)),
+      incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
+        ps.settings.antennaFields.size(),
+        ps.settings.beamFormer.nrHighResolutionChannels)),
+      incoherentFirFilter(FIR_FilterKernel::Parameters(ps,
+        ps.settings.antennaFields.size(),
+        false,
+        nrSubbandsPerSubbandProc,
+        ps.settings.beamFormer.incoherentSettings.nrChannels,
+        static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels))),
+      incoherentStokes(IncoherentStokesKernel::Parameters(ps))
+    {
+    }
 
     BeamFormerIncoherentStep::BeamFormerIncoherentStep(
       const Parset &parset,
       gpu::Stream &i_queue,
       gpu::Context &context,
-      BeamFormerFactories &factories,
+      Factories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -79,7 +93,7 @@ namespace LOFAR
 
 
     void BeamFormerIncoherentStep::initMembers(gpu::Context &context,
-      BeamFormerFactories &factories)
+      Factories &factories)
     {
       incoherentStokesPPF =
         ps.settings.beamFormer.incoherentSettings.nrChannels > 1;
