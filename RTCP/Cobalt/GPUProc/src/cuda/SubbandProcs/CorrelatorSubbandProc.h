@@ -100,7 +100,7 @@ namespace LOFAR
           // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
           // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
           // effectively squares, integr on fewer channels averages over more values.
-          std::sqrt((double)params.nrChannels));
+          std::sqrt((double)ps.settings.correlator.nrChannels));
 
         return params;
       }
