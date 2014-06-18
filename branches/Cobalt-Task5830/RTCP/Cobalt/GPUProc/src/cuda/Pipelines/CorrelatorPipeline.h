@@ -68,6 +68,8 @@ namespace LOFAR
 
       // For monitoring (PVSS). The beamformer has these in TABTranspose.
       size_t itsBlocksWritten, itsBlocksDropped;
+
+      size_t itsNextSequenceNumber;
     };
   }
 }

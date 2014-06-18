@@ -193,6 +193,8 @@ int main(int argc, char **argv)
 #endif
   LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
+  LOG_INFO("===== INIT =====");
+
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
@@ -218,8 +220,6 @@ int main(int argc, char **argv)
   const string mdRegisterName = PST_COBALTGPU_PROC;
   const string mdHostName = ps.getString("Cobalt.PVSSGateway.host", "");
   MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
-
-  LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
   LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");

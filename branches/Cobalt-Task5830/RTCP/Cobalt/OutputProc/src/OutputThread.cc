@@ -134,7 +134,7 @@ namespace LOFAR
     {
       // TODO: check for dropped data at end of observation
 
-      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
+      size_t droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
       ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
 
@@ -151,7 +151,7 @@ namespace LOFAR
       itsBlocksWritten++;
 
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + '[' + lexical_cast<string>(itsStreamNr) + ']',
-                      droppedBlocks > 0 ? "1" : "0"); // logged too late?
+                      droppedBlocks > 0 ? "1" : "0"); // logged too late if dropping: not anymore...
       itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + '[' + lexical_cast<string>(itsStreamNr) + ']',
                       itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
     }

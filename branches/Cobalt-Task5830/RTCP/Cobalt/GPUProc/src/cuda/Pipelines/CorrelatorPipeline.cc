@@ -55,7 +55,8 @@ namespace LOFAR
       Pipeline(ps, subbandIndices, devices, pool, mdLogger, mdKeyPrefix),
       factories(ps, nrSubbandsPerSubbandProc),
       itsBlocksWritten(0),
-      itsBlocksDropped(0)
+      itsBlocksDropped(0),
+      itsNextSequenceNumber(0)
     {
       // Write data point(s) for monitoring (PVSS).
       itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, "Correlated");
@@ -133,9 +134,6 @@ namespace LOFAR
 
       SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
 
-      bool dropping = false;
-      size_t written = 0, dropped = 0;
-
       SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
@@ -147,21 +145,22 @@ namespace LOFAR
 
         LOG_DEBUG_STR("[" << id << "] Writing start");
 
-        // Write block to disk 
+        size_t droppedBlocks = correlatedData.sequenceNumber() - itsNextSequenceNumber;
+        itsNextSequenceNumber = correlatedData.sequenceNumber() + 1;
+
+        // Write block to outputProc 
         try {
           correlatedData.write(outputStream.get(), true);
 
-          if (!dropping)
-            written += 1;
-          else
-            dropped += 1;
+          itsBlocksWritten += 1;
 
         } catch (Exception &ex) {
+          // No reconnect, as outputProc doesn't yet re-listen when the conn drops.
           LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
 
           outputStream = new NullStream;
 
-          dropping = true;
+          droppedBlocks += 1;
         }
 
         SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
@@ -173,16 +172,15 @@ namespace LOFAR
           LOG_INFO_STR("[" << id << "] Done"); 
         else
           LOG_DEBUG_STR("[" << id << "] Done"); 
-      }
 
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                      dropping ? "1" : "0");
-      itsBlocksWritten += written;
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                      itsBlocksWritten * static_cast<float>(ps.settings.blockDuration()));
-      itsBlocksDropped += dropped;
-      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                      itsBlocksDropped * static_cast<float>(ps.settings.blockDuration()));
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        droppedBlocks > 0 ? "1" : "0");
+        itsBlocksDropped += droppedBlocks;
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        itsBlocksWritten * static_cast<float>(ps.settings.blockDuration()));
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPED  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
+                        itsBlocksDropped * static_cast<float>(ps.settings.blockDuration()));
+      }
     }
 
 
