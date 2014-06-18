@@ -42,11 +42,12 @@ function setkey {
 
 function usage {
   error \
-    "\nUsage: $0 [-A] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
+    "\nUsage: $0 [-A] [-B] [-C] [-F] [-P pidfile] [-l nprocs] [-p] PARSET"\
     "\n"\
     "\n  Run the observation specified by PARSET"\
     "\n"\
     "\n    -A: do NOT augment parset"\
+    "\n    -B: do NOT add broken antenna information"\
     "\n    -C: run with check tool specified in environment variable"\
     "LOFAR_CHECKTOOL"\
     "\n    -F: do NOT send feedback to OnlineControl and do NOT send data points to a PVSS gateway"\
@@ -102,6 +103,9 @@ PIDFILE=""
 FORCE_LOCALHOST=0
 NRPROCS_LOCALHOST=0
 
+# Add broken antenna information?
+ADD_BROKENANTENNAINFO=1
+
 # Parameters to pass to mpirun
 MPIRUN_PARAMS=""
 
@@ -114,9 +118,11 @@ shopt -s nullglob
 # ******************************
 # Parse command-line options
 # ******************************
-while getopts ":ACFP:l:p" opt; do
+while getopts ":ABCFP:l:p" opt; do
   case $opt in
       A)  AUGMENT_PARSET=0
+          ;;
+      B)  ADD_BROKENANTENNAINFO=0
           ;;
       C)  CHECK_TOOL="$LOFAR_CHECKTOOL"
           ;;
@@ -215,8 +221,6 @@ then
     setkey Cobalt.OutputProc.userName                 "$USER"
     setkey Cobalt.OutputProc.executable               "$LOFARROOT/bin/outputProc"
     setkey Cobalt.OutputProc.StaticMetaDataDirectory  "$LOFARROOT/etc"
-    setkey Cobalt.FinalMetaDataGatherer.host          localhost
-    setkey Cobalt.FinalMetaDataGatherer.executable    "$LOFARROOT/bin/FinalMetaDataGatherer"
     setkey Cobalt.FinalMetaDataGatherer.database.host localhost
     setkey Cobalt.Feedback.host                       localhost
     setkey Cobalt.Feedback.remotePath                 "$LOFARROOT/var/run"
@@ -225,6 +229,11 @@ then
     # Redirect UDP/TCP input streams to any interface on the local machine
     sed 's/udp:[^:]*:/udp:0:/g' -i $PARSET
     sed 's/tcp:[^:]*:/tcp:0:/g' -i $PARSET
+  fi
+
+  if [ "$ADD_BROKENANTENNAINFO" -eq "0" ]
+  then
+    setkey Cobalt.FinalMetaDataGatherer.enabled       false
   fi
 fi
 
@@ -371,11 +380,18 @@ OBSRESULT=$?
 
 echo "Result code of observation: $OBSRESULT"
 
-if [ $OBSRESULT -ne 0 -a -s $FEEDBACK_FILE ]
+# Return codes of rtcp:
+#  0 = success
+#  1 = rtcp detected failure
+# >1 = crash, but possibly at teardown after a succesful observation
+if [ $OBSRESULT -gt 1 -a -s $FEEDBACK_FILE ]
 then
   # There is a feedback file! Consider the observation as succesful,
   # to prevent crashes in the tear down from ruining an otherwise
-  # perfectly good observation
+  # perfectly good observation.
+  #
+  # Note that we might miss failures detected by rtcp, such as
+  # missing final meta data!
   echo "Found feed-back file $FEEDBACK_FILE, considering the observation succesful."
 
   OBSRESULT=0

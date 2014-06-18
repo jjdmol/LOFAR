@@ -1468,39 +1468,41 @@ namespace LOFAR
       }
 
       if (settings.beamFormer.enabled) {
-        // For Cobalt, we do not collapse channels. There's no need to do so,
-        // because we can do the final PPF/FFT on the desired number of output
-        // channels. The BlueGene, on the other hand, uses a fixed PPF/FFT size,
-        // so that the number of channels has to be reduced in the final step.
-        // As a result, `rawSamplingTime` is identical to `samplingTime`,
-        // `nrOfCollapsedChannels` is equal to the number of output channels per
-        // subband, and `frequencyDownsamplingFactor` is always 1.
         const ObservationSettings::BeamFormer::StokesSettings&
           coherentStokes = settings.beamFormer.coherentSettings;
         const ObservationSettings::BeamFormer::StokesSettings&
           incoherentStokes = settings.beamFormer.incoherentSettings;
+
+        // The 'rawSamplingTime' is the duration of a sample right after the PPF
         ps.add("Observation.CoherentStokes.rawSamplingTime",
                str(format("%.16g") % 
                    (sampleDuration() * coherentStokes.nrChannels)));
         ps.add("Observation.IncoherentStokes.rawSamplingTime",
                str(format("%.16g") % 
                    (sampleDuration() * incoherentStokes.nrChannels)));
+
+        // The 'samplingTime' is the duration of a sample in the output
         ps.add("Observation.CoherentStokes.samplingTime",
                str(format("%.16g") % 
-                   (sampleDuration() * coherentStokes.nrChannels)));
+                   (sampleDuration() * coherentStokes.nrChannels * coherentStokes.timeIntegrationFactor)));
         ps.add("Observation.IncoherentStokes.samplingTime",
                str(format("%.16g") % 
-                   (sampleDuration() * incoherentStokes.nrChannels)));
+                   (sampleDuration() * incoherentStokes.nrChannels * incoherentStokes.timeIntegrationFactor)));
+
         ps.add("Observation.CoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % coherentStokes.timeIntegrationFactor));
         ps.add("Observation.IncoherentStokes.timeDownsamplingFactor",
                str(format("%.16g") % incoherentStokes.timeIntegrationFactor));
+
+        // The BG/P could 'collapse channels'. Cobalt does not need that, so we
+        // put fixed/trivial values here.
         ps.add("Observation.CoherentStokes.nrOfCollapsedChannels",
                str(format("%u") % coherentStokes.nrChannels));
         ps.add("Observation.IncoherentStokes.nrOfCollapsedChannels",
                str(format("%u") % incoherentStokes.nrChannels));
         ps.add("Observation.CoherentStokes.frequencyDownsamplingFactor", "1");
         ps.add("Observation.IncoherentStokes.frequencyDownsamplingFactor", "1");
+
         ps.add("Observation.CoherentStokes.stokes",
                stokesType(coherentStokes.type));
         ps.add("Observation.IncoherentStokes.stokes",

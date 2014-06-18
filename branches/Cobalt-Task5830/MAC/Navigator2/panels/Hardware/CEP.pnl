@@ -20,39 +20,10 @@ void prepareHardwareList() {
   // For this panel CEP should be selectable so we get them for the treelist
   dynAppend(g_stationList,navFunct_bareDBName(sysName));
   
-  // BGP
-  // For this panel BGPRacks and BGPMidplanes should be selectable so we get them for the treelist
-  // BGPRacks first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"BGPRack\\\" OR _DPT=\\\"BGPMidplane\\\" \", tab);
-  LOG_TRACE(\"CEP.pnl:prepareHardwareList|tab: \"+tab);
-  
-  dyn_string aDS=navFunct_getDynString(tab, 2,1);
-  dynSortAsc(aDS);
-  for(z=1;z<=dynlen(aDS);z++){
-    
-    // strip .status.state from result
-    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
-
-    // strip all b4 BGP out of the string
-    strreplace(aS,baseDP+\"_\",\"\");
-    
-    // Remainder should be BGP?_Midplane? combinations, split on _ 
-    dyn_string spl=strsplit(aS,\"_\");
-    if (dynlen(spl) > 1) { // Midplane
-      string midplane = spl[2];
-      strreplace(midplane,\"Midplane\",\"\");
-      int m = midplane;
-      dynAppend(g_BGPMidplaneList,m);
-    } else {   // BGPRack
-      int b = 0;
-      if (navFunct_isBGPSwitch()) b=1;
-      dynAppend(g_BGPRackList,b);
-    }
-  }
   
   // Cobalt
   // For this panel CobaltRacks and CobaltNodes should be selectable so we get them for the treelist
-  // BGPRacks first
+  // CobaltRacks first
   dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"CobaltRack\\\" OR _DPT=\\\"CobaltNode\\\" \", tab);
   LOG_TRACE(\"CEP.pnl:prepareHardwareList|tab: \"+tab);
   
@@ -172,33 +143,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-1 246 0 "" 2190
-0
-1 247 0 "" 2188
-0
-1 248 0 "86" 1
-0
-1 249 0 "" 2187
-0
-2 9
-"PRIMITIVE_TEXT1"
-""
-1 50 82 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-2 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 50 82 92 102
-0 2 2 "0s" 0 0 0 192 0 0  50 82 1
-1
-LANG:1 33 MS Shell Dlg,-1,16,5,75,0,0,0,0,0
-0 1
-LANG:1 4 BG/P
 2 10
 "PRIMITIVE_TEXT2"
 ""
@@ -218,26 +162,6 @@ E E 0 1 1 2 1 E U  1 E 320 10 542 35
 LANG:1 33 MS Shell Dlg,-1,21,5,75,0,0,0,0,0
 0 1
 LANG:1 18 LOFAR CEP Clusters
-1 250 6 "" 0
-0
-1 251 6 "" 1
-0
-1 252 6 "" 3
-0
-1 253 6 "" 4
-0
-1 254 6 "1" 1
-0
-1 255 7 "" 0
-0
-1 256 7 "" 1
-0
-1 257 7 "" 3
-0
-1 258 7 "" 4
-0
-1 259 7 "1" 1
-0
 1 277 11 "" 2190
 0
 1 278 11 "" 2188
@@ -619,17 +543,6 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 0 "PANEL_REF1" -1
-"objects\\Hardware\\CEP_BGPRack.pnl" 488 288 T 1 1 0 1 -310 -60
-0
-3 6 "PANEL_REF7" -1
-"objects\\Hardware\\CEP_Midplane_small.pnl" 18 460 T 8 1 0 1 -15 41
-1
-"$BGPMidplaneNr""0"
-3 7 "PANEL_REF8" -1
-"objects\\Hardware\\CEP_Midplane_small.pnl" 18 290 T 9 1 0 1 -15 27
-1
-"$BGPMidplaneNr""1"
 3 10 "PANEL_REF11" -1
 "objects\\Hardware\\CEP_OSRack.pnl" 588 198 T 12 1 0 1 90 32
 1

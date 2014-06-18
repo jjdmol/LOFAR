@@ -192,7 +192,7 @@ int test()
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
   hKernel.setArg(3, devHistoryData);
-  size_t subbandIdx = 0;
+  unsigned subbandIdx = 0;
   hKernel.setArg(4, subbandIdx);
 
   // Run the kernel

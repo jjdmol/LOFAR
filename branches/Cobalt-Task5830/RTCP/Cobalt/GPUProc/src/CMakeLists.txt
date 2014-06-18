@@ -18,7 +18,6 @@ set(_gpuproc_sources
   SysInfoLogger.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
-  Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
 )

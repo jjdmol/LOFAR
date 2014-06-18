@@ -174,7 +174,7 @@ template <typename T> inline void Queue<T>::unlocked_append(const T& element, bo
   e.arrival_time = timed ? TimeSpec::now() : TimeSpec::big_bang;
 
   // Record the queue size
-  queue_size_on_append.push(itsQueue.size());
+  queue_size_on_append.push(itsSize);
 
   push_back(e);
 }
@@ -236,7 +236,7 @@ template <typename T> inline T Queue<T>::remove(const struct timespec &deadline,
 
   ScopedLock scopedLock(itsMutex);
 
-  const bool beganEmpty = itsQueue.empty();
+  const bool beganEmpty = itsSize == 0;
   const struct timespec begin = TimeSpec::now();
 
   while (itsQueue.empty())

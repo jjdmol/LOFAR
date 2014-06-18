@@ -43,7 +43,7 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
-#include <InputProc/Transpose/MPIUtil2.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 
 #include <boost/format.hpp>
@@ -66,11 +66,11 @@
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
+#include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
@@ -87,9 +87,6 @@ using boost::format;
 // Number of seconds to schedule for the allocation of resources. That is,
 // we start allocating resources at startTime - allocationTimeout.
 const time_t defaultAllocationTimeout = 15;
-
-// Deadline for the FinalMetaDataGatherer, in seconds
-const time_t defaultFinalMetaDataTimeout = 2 * 60;
 
 // Deadline for outputProc, in seconds.
 const time_t defaultOutputProcTimeout = 60;
@@ -114,6 +111,8 @@ static void usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
+  LOFAR::Cobalt::MPI mpi;
+
   /*
    * Parse command-line options
    */
@@ -142,37 +141,10 @@ int main(int argc, char **argv)
   }
 
   /*
-   * Extract rank/size from environment, because we need
-   * to fork during initialisation, which we want to do
-   * BEFORE calling MPI_Init_thread. Once MPI is initialised,
-   * forking can lead to crashes.
+   * Whether we've encountered an error; observation will
+   * be set to ABORTED by OnlineControl if so.
    */
-
-  // Rank in MPI set of hosts, or 0 if no MPI is used
-  int rank = 0;
-
-  // Number of MPI hosts, or 1 if no MPI is used
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  const char *rankstr, *sizestr;
-
-  // OpenMPI rank
-  if ((rankstr = getenv("OMPI_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // MVAPICH2 rank
-  if ((rankstr = getenv("MV2_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // OpenMPI size
-  if ((sizestr = getenv("OMPI_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-
-  // MVAPICH2 size
-  if ((sizestr = getenv("MV2_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-#endif
+  int abortObservation = 0;
 
   /*
    * Initialise logger.
@@ -180,7 +152,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_LOG4CPLUS
   // Set ${MPIRANK}, which is used by our log_prop file.
-  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
+  if (setenv("MPIRANK", str(format("%02d") % mpi.rank()).c_str(), 1) < 0)
   {
     perror("error setting MPIRANK");
     return EXIT_FAILURE;
@@ -189,7 +161,7 @@ int main(int argc, char **argv)
   // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   INIT_LOGGER("rtcp");
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % mpi.rank()));
 #endif
   LOG_INFO_STR("GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision());
 
@@ -209,8 +181,8 @@ int main(int argc, char **argv)
   string hostName = myHostname(false);
   int cbtNodeNr = hostName.compare(0, sizeof("cbt") - 1, "cbt") == 0 ?
                   atoi(hostName.c_str() + sizeof("cbt") - 1) : 0; // default 0 like atoi()
-  int cpuNr     = ps.settings.nodes.size() > size_t(rank) ?
-                  ps.settings.nodes[rank].cpu : 0; 
+  int cpuNr     = ps.settings.nodes.size() > size_t(mpi.rank()) ?
+                  ps.settings.nodes[mpi.rank()].cpu : 0; 
   string mdKeyPrefix = str(prFmt % cbtNodeNr % cpuNr);
   LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
   mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName", some with a "[x]" appended.
@@ -222,7 +194,7 @@ int main(int argc, char **argv)
   MACIO::RTmetadata mdLogger(ps.observationID(), mdRegisterName, mdHostName);
 
 #ifdef HAVE_MPI
-  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+  LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 #else
   LOG_WARN("Running without MPI!");
 #endif
@@ -248,11 +220,6 @@ int main(int argc, char **argv)
     ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
 			     defaultAllocationTimeout);
 
-  // Deadline for the FinalMetaDataGatherer, in seconds
-  const time_t finalMetaDataTimeout = 
-    ps.ParameterSet::getTime("Cobalt.Tuning.finalMetaDataTimeout",
-			     defaultFinalMetaDataTimeout);
-
   // Deadline for outputProc, in seconds.
   const time_t outputProcTimeout = 
     ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
@@ -267,7 +234,6 @@ int main(int argc, char **argv)
   LOG_DEBUG_STR(
     "Tuning parameters:" <<
     "\n  allocationTimeout    : " << allocationTimeout << "s" <<
-    "\n  finalMetaDataTimeout : " << finalMetaDataTimeout << "s" <<
     "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
     "\n  rtcpTimeout          : " << rtcpTimeout << "s");
 
@@ -316,7 +282,7 @@ int main(int argc, char **argv)
    * INIT stage
    */
 
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
     LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
@@ -335,17 +301,18 @@ int main(int argc, char **argv)
 #if 1
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
-  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
+  if(mpi.rank() >= 0 && (size_t)mpi.rank() < ps.settings.nodes.size()) {
+    struct ObservationSettings::Node mynode = ps.settings.nodes.at(mpi.rank());
+
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes.at(rank).cpu;
-    setProcessorAffinity(cpuId);
+    setProcessorAffinity(mynode.cpu);
 
 #ifdef HAVE_LIBNUMA
     if (numa_available() != -1) {
       // force node + memory binding for future allocations
       struct bitmask *numa_node = numa_allocate_nodemask();
       numa_bitmask_clearall(numa_node);
-      numa_bitmask_setbit(numa_node, cpuId);
+      numa_bitmask_setbit(numa_node, mynode.cpu);
       numa_bind(numa_node);
       numa_bitmask_free(numa_node);
 
@@ -374,29 +341,26 @@ int main(int argc, char **argv)
 #endif
 
     // derive the set of gpus we're allowed to use
-    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-    for (size_t i = 0; i < gpuIds.size(); ++i) {
-      ASSERTSTR(gpuIds[i] < allDevices.size(), "Request to use GPU #" << gpuIds[i] << ", but found only " << allDevices.size() << " GPUs");
+    for (size_t i = 0; i < mynode.gpus.size(); ++i) {
+      ASSERTSTR(mynode.gpus[i] < allDevices.size(), "Request to use GPU #" << mynode.gpus[i] << ", but found only " << allDevices.size() << " GPUs");
 
-      gpu::Device &d = allDevices[gpuIds[i]];
+      gpu::Device &d = allDevices[mynode.gpus[i]];
 
       devices.push_back(d);
     }
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
-    const string nic = ps.settings.nodes[rank].nic;
+    if (mynode.nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << mynode.nic);
 
-    if (nic != "") {
-      LOG_DEBUG_STR("Binding to interface " << nic);
-
-      if (setenv("OMPI_MCA_btl_openib_if_include", nic.c_str(), 1) < 0)
+      if (setenv("OMPI_MCA_btl_openib_if_include", mynode.nic.c_str(), 1) < 0)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
 #else
   {
 #endif
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
+    LOG_WARN_STR("Rank " << mpi.rank() << " not present in node list -- using full machine");
     devices = allDevices;
   }
 
@@ -424,7 +388,7 @@ int main(int argc, char **argv)
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = subband % nrHosts;
+    int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
   }
@@ -439,7 +403,7 @@ int main(int argc, char **argv)
 
   Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
 
-  const std::vector<size_t>  subbandIndices(subbandDistribution[rank]);
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
 
   MPIReceiver MPI_receiver(MPI_receive_pool,
                      subbandIndices,
@@ -453,20 +417,20 @@ int main(int argc, char **argv)
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) 
+  if (subbandIndices.empty()) 
   {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
   } 
   else if (correlatorEnabled) 
   {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices,
+    pipeline = new CorrelatorPipeline(ps, subbandIndices, devices,
                                       MPI_receive_pool, mdLogger, mdKeyPrefix);
   } 
   else if (beamFormerEnabled) 
   {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices,
-                                      MPI_receive_pool, mdLogger, mdKeyPrefix, rank);
+    pipeline = new BeamFormerPipeline(ps, subbandIndices, devices,
+                                      MPI_receive_pool, mdLogger, mdKeyPrefix, mpi.rank());
   } 
   else 
   {
@@ -481,10 +445,7 @@ int main(int argc, char **argv)
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
-  LOG_INFO("----- Initialising SSH library");
-  SSH_Init();
-
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
@@ -493,27 +454,7 @@ int main(int argc, char **argv)
   /*
    * Initialise MPI (we are done forking)
    */
-
-  // Initialise and query MPI
-  int provided_mpi_thread_support;
-
-  LOG_INFO("----- Initialising MPI");
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    LOG_FATAL("MPI_Init_thread failed");
-    return EXIT_FAILURE;
-  }
-
-  // Verify the rank/size settings we assumed earlier
-  int real_rank;
-  int real_size;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &real_size);
-
-  ASSERT(rank    == real_rank);
-  ASSERT(nrHosts == real_size);
-
-  MPIPoll::instance().start();
+  mpi.init(argc, argv);
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
@@ -528,7 +469,7 @@ int main(int argc, char **argv)
 
   LOG_INFO("===== LAUNCH =====");
 
-  LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+  LOG_INFO_STR("Processing subbands " << subbandDistribution[mpi.rank()]);
 
   if (ps.realTime()) {
     // Wait just before the obs starts to allocate resources,
@@ -552,7 +493,7 @@ int main(int argc, char **argv)
         const struct StationID stationID(
           StationID::parseFullFieldName(
           ps.settings.antennaFields.at(stat).name));
-        const StationNodeAllocation allocation(stationID, ps);
+        const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
 
         if (!allocation.receivedHere()) 
         {// Station is not sending from this node, skip          
@@ -595,7 +536,7 @@ int main(int argc, char **argv)
     #pragma omp section
     {
       // Process station data
-      if (!subbandDistribution[rank].empty()) {
+      if (!subbandDistribution[mpi.rank()].empty()) {
         pipeline->processObservation();
       }
     }
@@ -612,13 +553,14 @@ int main(int argc, char **argv)
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    time_t completing_start = time(0);
-    storageProcesses->forwardFinalMetaData(completing_start + finalMetaDataTimeout);
+    if (!storageProcesses->forwardFinalMetaData()) {
+      abortObservation = 1;
+    }
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + finalMetaDataTimeout + outputProcTimeout);
+    storageProcesses->stop(time(0) + outputProcTimeout);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -648,14 +590,6 @@ int main(int argc, char **argv)
   }
   LOG_INFO("===== SUCCESS =====");
 
-  SSH_Finalize();
-
-#ifdef HAVE_MPI
-  MPIPoll::instance().stop();
-
-  MPI_Finalize();
-#endif
-
-  return EXIT_SUCCESS;
+  return abortObservation ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
