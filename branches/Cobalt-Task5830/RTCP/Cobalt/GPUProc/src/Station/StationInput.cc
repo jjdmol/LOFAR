@@ -474,7 +474,8 @@ void StationInput::writeRSPRealTime( MPIData<SampleT> &current, MPIData<SampleT>
 }
 
 
-void StationInput::readRSPNonRealTime()
+void StationInput::readRSPNonRealTime( MACIO::RTmetadata &mdLogger,
+                                       const string &mdKeyPrefix )
 {
   vector< SmartPtr<Stream> > streams(nrBoards);
   vector< SmartPtr<PacketReader> > readers(nrBoards);
@@ -510,7 +511,7 @@ void StationInput::readRSPNonRealTime()
         // Ran out of data
         LOG_INFO_STR( logPrefix << "End of stream");
 
-        readers[board]->logStatistics();
+        readers[board]->logStatistics(board, mdLogger, mdKeyPrefix);
         readers[board] = NULL;
       }
     }
@@ -654,7 +655,7 @@ void StationInput::processInput( Queue< SmartPtr< MPIData<SampleT> > > &inputQue
           readRSPRealTime(board, mdLogger, mdKeyPrefix);
         }
       } else {
-        readRSPNonRealTime();
+        readRSPNonRealTime(mdLogger, mdKeyPrefix);
       }
     }
 

@@ -218,7 +218,8 @@ namespace LOFAR {
       /*
        * Read data from all boards in non-real-time mode.
        */
-      void readRSPNonRealTime();
+      void readRSPNonRealTime( MACIO::RTmetadata &mdLogger,
+                               const std::string &mdKeyPrefix );
 
       /*
        * Fills 'current' with RSP data. Potentially spills into 'next'.
