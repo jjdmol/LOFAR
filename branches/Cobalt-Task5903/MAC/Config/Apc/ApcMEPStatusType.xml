@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<MEPStatusType>
+  <seqnr>
+    <MACType>MACUnsigned</MACType>
+  </seqnr>
+  <error>
+    <MACType>MACUnsigned</MACType>
+  </error>
+  <ffi>
+    <MACType>MACUnsigned</MACType>
+  </ffi>
+</MEPStatusType>
