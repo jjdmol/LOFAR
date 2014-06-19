@@ -214,11 +214,18 @@ namespace LOFAR {
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
       os << " GainCal " << itsName << endl;
 
+      os << "          ";
       FlagCounter::showPerc1 (os, itsTimerPredict.getElapsed(), totaltime);
       os << " of it spent in predict" << endl;
+
+      os << "          ";
+      FlagCounter::showPerc1 (os, itsTimerFill.getElapsed(), totaltime);
+      os << " of it spent in reordering visibility data" << endl;
+
       os << "          ";
       FlagCounter::showPerc1 (os, itsTimerSolve.getElapsed(), totaltime);
       os << " of it spent in estimating gains and computing residuals" << endl;
+
       os << "          ";
       FlagCounter::showPerc1 (os, itsTimerWrite.getElapsed(), totaltime);
       os << " of it spent in writing gain solutions to disk" << endl;
@@ -726,7 +733,6 @@ namespace LOFAR {
 
       DComplex* vis_p;
       DComplex* mvis_p;
-      uint p_index;
 
       uint iter=0;
       if (nSt==0) {
