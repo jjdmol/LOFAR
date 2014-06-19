@@ -515,8 +515,8 @@ int main(int argc, char **argv)
 
         mdLogger.log(mdKeyPrefixInputProc + PN_CSI_OBSERVATION_NAME,
                      boost::lexical_cast<string>(ps.observationID()));
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE,             hostName);
-        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,              cpuNr);
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_NODE, hostName);
+        mdLogger.log(mdKeyPrefixInputProc + PN_CSI_CPU,  cpuNr);
 
 
         sendInputToPipeline(ps, stat, subbandDistribution,
