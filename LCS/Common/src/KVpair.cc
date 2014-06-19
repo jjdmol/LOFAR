@@ -77,30 +77,6 @@ KVpair::KVpair(const string& aKey, int			  aValue, bool genTimestamp, bool times
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, unsigned int		  aValue, bool genTimestamp, bool timestampInKeyname) :
-	pair<string, string> (aKey, formatString("%u", aValue)),
-	timestamp(0.0),
-	valueType(VT_UINT)
-{
-	OPTIONAL_TIMESTAMP
-}
-
-KVpair::KVpair(const string& aKey, long			  aValue, bool genTimestamp, bool timestampInKeyname) :
-	pair<string, string> (aKey, formatString("%ld", aValue)),
-	timestamp(0.0),
-	valueType(VT_LONG)
-{
-	OPTIONAL_TIMESTAMP
-}
-
-KVpair::KVpair(const string& aKey, unsigned long	  aValue, bool genTimestamp, bool timestampInKeyname) :
-	pair<string, string> (aKey, formatString("%lu", aValue)),
-	timestamp(0.0),
-	valueType(VT_ULONG)
-{
-	OPTIONAL_TIMESTAMP
-}
-
 KVpair::KVpair(const string& aKey, double		  aValue, bool genTimestamp, bool timestampInKeyname) :
 	pair<string, string> (aKey, formatString("%.20lg", aValue)),
 	timestamp(0.0),
@@ -117,24 +93,13 @@ KVpair::KVpair(const string& aKey, float		  aValue, bool genTimestamp, bool time
 	OPTIONAL_TIMESTAMP
 }
 
-KVpair::KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp, bool timestampInKeyname) :
+KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp, bool timestampInKeyname) :
+	pair<string, string> (aKey, formatString("%ld", aValue)),
 	timestamp(0.0),
-	valueType(VT_STRING | VT_INT)
+	valueType(VT_TIME_T)
 {
-	uint max = aValue.size();
-   	string strValue = "[";
-   	for (uint i = 0; i < max; i++) {
-		strValue += formatString("%d", aValue[i]);
-		if (i < max-1) {
-			strValue += ",";
-		}
-	} 
-	strValue += "]";
-	first = aKey;
-	second = strValue;
-
 	OPTIONAL_TIMESTAMP
-} 
+}
 
 KVpair::~KVpair()
 {}

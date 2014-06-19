@@ -187,10 +187,10 @@ namespace LOFAR
       // Reproduce PN_CSI_STREAM0_BLOCKS_IN or PN_CSI_STREAM0_REJECTED, but with the right nr.
       string streamStr = str(boost::format("stream%u") % boardNr);
       mdLogger.log(mdKeyPrefix + streamStr + ".blocksIn",
-                   (unsigned)round(nrReceived / interval));
+                   (int)round(nrReceived / interval));
       size_t nrBad = nrBadTime + nrBadMode + nrBadData + nrBadOther;
       mdLogger.log(mdKeyPrefix + streamStr + ".rejected",
-                   (unsigned)round(nrBad / interval));
+                   (int)round(nrBad / interval));
 
       // Reset counters
       nrReceived = 0;
