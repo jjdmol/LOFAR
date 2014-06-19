@@ -219,7 +219,7 @@ def init_logging():
                   'ERROR'  : logging.ERROR}
 
     try:
-        screen_log_level = args.get('LS', 'INFO')
+        screen_log_level = args.get('LS', 'WARNING')
         file_log_level   = args.get('LF', 'DEBUG')
     except:
         print "Not a legal log level, try again"
@@ -575,7 +575,7 @@ def main():
                             
 
                         except:
-                            logger.warn("Program fault, RSP test (%s)" %(sys.exc_value))
+                            logger.error("Program fault, RSP test (%s)" %(sys.exc_value))
                             #raise
                             break
                             
@@ -597,7 +597,7 @@ def main():
                         db.addTestDone('TM')
                         tbb.checkMemory()
                 except:
-                    logger.warn("Program fault, TBB test (%s)" %(sys.exc_value))
+                    logger.error("Program fault, TBB test (%s)" %(sys.exc_value))
     db.check_stop_time = time.gmtime()
 
     # do db test and write result files to log directory
@@ -608,7 +608,8 @@ def main():
     else:
         logger.warn("not a valid log directory")
     if not db.rsp_driver_down:
-        swlevel(6)
+        logger.info("Going back to swlevel %d" %(start_level))
+        swlevel(start_level)
     logger.info("Test ready.")
     writeMessage('!!!     The test is ready and the station can be used again!               !!!')
 
