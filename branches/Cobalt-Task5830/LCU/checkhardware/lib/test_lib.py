@@ -26,16 +26,16 @@ def init_test_lib():
 class cRCUdata:
     global logger
     def __init__(self, n_rcus, minvalue=1):
-        self.n_rcus = n_rcus
-        self.frames = 0
+        self.n_rcus   = n_rcus
+        self.frames   = 0
         self.minvalue = minvalue
         self.reset()
     
     def reset(self):
         self.ssData = np.ones((self.n_rcus, 1, 512), np.float64)
-        self.testSignal_X = -1.0
+        self.testSignal_X  = -1.0
         self.testSubband_X = 0
-        self.testSignal_Y = -1.0
+        self.testSignal_Y  = -1.0
         self.testSubband_Y = 0
     
     def record(self, rec_time=2, read=True):
@@ -90,6 +90,7 @@ class cRCUdata:
         ssX = np.ma.median(self.ssData[::2,:,:].mean(axis=1),axis=0)
         ssY = np.ma.median(self.ssData[1::2,:,:].mean(axis=1),axis=0)
         
+        # test requested test subband
         if subband != -1:
             if ssX[subband] > minsignal and ssY[subband] > minsignal:
                 self.testSignal_X = ssX[subband]
@@ -961,7 +962,13 @@ class cHBA:
             logger.info("HBA, X used test subband=%d  avg_signal=%3.1f" %(self.rcudata.testSubband_X, self.rcudata.testSignal_X))
             logger.info("HBA, Y used test subband=%d  avg_signal=%3.1f" %(self.rcudata.testSubband_Y, self.rcudata.testSignal_Y))
             
-            if (self.rcudata.testSubband_X != 0) and (self.rcudata.testSubband_Y != 0):
+            if (self.rcudata.testSignal_X != -1) and (self.rcudata.testSignal_Y != -1):
+                
+                self.hba.ref_signal[ctrl_nr]   = self.rcudata.testSignal_X
+                self.hba.ref_signal[ctrl_nr]   = self.rcudata.testSignal_Y
+                self.hba.test_subband[ctrl_nr] = self.rcudata.testSubband_X
+                self.hba.test_subband[ctrl_nr] = self.rcudata.testSubband_Y
+                
                 ssdataX = self.rcudata.getSubbandX()
                 ssdataY = self.rcudata.getSubbandY()
                 avgX = self.rcudata.testSignal_X
@@ -976,15 +983,6 @@ class cHBA:
                 logger.debug("X data:  min=%5.3f  max=%5.3f  avg=%5.3f" %(minX, ssdataX.max(), avgX))
                 logger.debug("Y data:  min=%5.3f  max=%5.3f  avg=%5.3f" %(minY, ssdataY.max(), avgY))
                                 
-                if self.rcudata.testSubband_X == 0 or self.rcudata.testSubband_X == 0:
-                    logger.warn("HBA, No valid test signal")
-                    for tile in self.hba.tile:
-                        tile.x.ref_signal[ctrl_nr] = 0
-                        tile.y.ref_signal[ctrl_nr] = 0
-                    self.hba.signal_check_done = 1
-                    self.db.addTestDone('S%d' %(mode))
-                    return
-                
                 for tile in self.hba.tile:
                     if tile.x.rcu_off or tile.y.rcu_off:
                         continue
@@ -992,10 +990,6 @@ class cHBA:
                     logger.debug("HBA Tile=%d :  X=%3.1fdB  Y=%3.1fdB" %\
                                 (tile.nr, ssdataX[tile.nr], ssdataY[tile.nr]))
                                     
-                    tile.x.ref_signal[ctrl_nr] = avgX
-                    tile.y.ref_signal[ctrl_nr] = avgY
-                    tile.x.test_subband[ctrl_nr] = self.rcudata.testSubband_X
-                    tile.y.test_subband[ctrl_nr] = self.rcudata.testSubband_Y
                     tile.x.test_signal[ctrl_nr] = ssdataX[tile.nr]
                     tile.y.test_signal[ctrl_nr] = ssdataY[tile.nr]
                     
@@ -1029,7 +1023,9 @@ class cHBA:
                     if loginfo:    
                         logger.info("HBA Tile=%d  Error:  X=%3.1fdB  Y=%3.1fdB" %\
                                      (tile.nr, ssdataX[tile.nr], ssdataY[tile.nr]))
-                        
+            else:
+                logger.warn("HBA, No valid test signal")
+                
         if not checkActiveRSPDriver():
             logger.warn("RSPDriver down while testing, skip result")
             return
