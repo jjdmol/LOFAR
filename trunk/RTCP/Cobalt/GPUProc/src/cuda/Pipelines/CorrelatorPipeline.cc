@@ -174,7 +174,7 @@ namespace LOFAR
           LOG_DEBUG_STR("[" << id << "] Done"); 
 
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                        droppedBlocks > 0 ? "1" : "0");
+                        droppedBlocks > 0);
         itsBlocksDropped += droppedBlocks;
         itsMdLogger.log(itsMdKeyPrefix + PN_CGP_WRITTEN  + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
                         itsBlocksWritten * static_cast<float>(ps.settings.blockDuration()));

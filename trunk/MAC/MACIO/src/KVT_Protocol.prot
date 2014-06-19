@@ -31,11 +31,11 @@ include = '<Common/KVpair.h>';
 
 prelude = << PRELUDE_END
 
-//	REGISTER 	  	 (uint obsID, string	name);
-//	REGISTER_ACK	 (uint obsID, string	name);
+//	REGISTER 	  	 (uint obsID, std::string	name);
+//	REGISTER_ACK	 (uint obsID, std::string	name);
 //	SEND_MSG		 (int seqnr, KVpair		kvp;
 //	SEND_MSG_ACK	 (int seqnr, uint result);
-//	SEND_MSG_POOL	 (int seqnr, vector<KVpair> kvps);
+//	SEND_MSG_POOL	 (int seqnr, std::vector<KVpair> kvps);
 //	SEND_MSG_POOL_ACK(int seqnr, uint result);
 
 using LOFAR::operator<<;
@@ -57,7 +57,7 @@ event = {
 	};
 	param = {
 		name = "name";
-		type = "string";
+		type = "std::string";
 	};
 };
 
@@ -70,7 +70,7 @@ event = {
 	};
 	param = {
 		name = "name";
-		type = "string";
+		type = "std::string";
 	};
 };
 
@@ -109,7 +109,7 @@ event = {
 	};
 	param = {
 		name = "kvps";
-		type = "vector<KVpair>";
+		type = "std::vector<KVpair>";
 	};
 };
 

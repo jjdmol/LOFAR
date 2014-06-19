@@ -1,6 +1,6 @@
 //#  tKVpair.cc: test KVpair class
 //#
-//#  Copyright (C) 2011
+//#  Copyright (C) 2011, 2014
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -47,15 +47,6 @@ int main (int, char*	argv[])
 	KVpair	KV3("IntegerValue", 125000);
 	cout << "KV3: " << KV3 << endl;
 
-	KVpair	KV3u("UIntegerValue", 125000U);
-	cout << "KV3u: " << KV3u << endl;
-
-	KVpair	KV3l("LongValue", 1250000000000L);
-	cout << "KV3l: " << KV3l << endl;
-
-	KVpair	KV3ul("ULongValue", 1250000000000UL);
-	cout << "KV3ul: " << KV3ul << endl;
-
 	double d = 57566757.000125;
 	KVpair	KV4("DoubleValue", d);
 	cout << "KV4: " << KV4 << endl;
@@ -68,14 +59,6 @@ int main (int, char*	argv[])
 	KVpair	KV6("TimeTValue", t);
 	cout << "KV6: " << KV6 << endl;
 
-	vector<int>		vi;
-	vi.push_back( 5);
-	vi.push_back(78);
-	vi.push_back(32);
-	vi.push_back(39);
-	vi.push_back(5003);
-	KVpair	KV7("IntVectorValue", vi);
-	cout << "KV7: " << KV7 << endl;
 
 	cout << "\n--- Testing constructors with timestamp ---" << endl;
 	KVpair	KVT0("stringValue", string("aap noot mies"), true, true);
@@ -90,15 +73,6 @@ int main (int, char*	argv[])
 	KVpair	KVT3("IntegerValue", 125000, true, true);
 	cout << ">>>KVT3: " << KVT3 << "<<<" << endl;
 
-	KVpair	KVT3u("UIntegerValue", 125000U, true, true);
-	cout << ">>>KVT3u: " << KVT3u << "<<<" << endl;
-
-	KVpair	KVT3l("LongValue", 1250000000000L, true, true);
-	cout << ">>>KVT3l: " << KVT3l << "<<<" << endl;
-
-	KVpair	KVT3ul("ULongValue", 1250000000000UL, true, true);
-	cout << ">>>KVT3ul: " << KVT3ul << "<<<" << endl;
-
 	KVpair	KVT4("DoubleValue", d, true, true);
 	cout << ">>>KVT4: " << KVT4 << "<<<" << endl;
 
@@ -107,9 +81,6 @@ int main (int, char*	argv[])
 
 	KVpair	KVT6("TimeTValue", t, true, true);
 	cout << ">>>KVT6: " << KVT6 << "<<<" << endl;
-
-	KVpair	KVT7("IntVectorValue", vi, true, true);
-	cout << ">>>KVT7: " << KVT7 << "<<<" << endl;
 
 	cout << "\n--- Testing copy and assignment operators ---" << endl;
 	KVpair	KVT1D(KVT1);

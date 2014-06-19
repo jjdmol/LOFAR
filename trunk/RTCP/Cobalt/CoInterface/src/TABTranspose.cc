@@ -707,7 +707,7 @@ void MultiSender::append( SmartPtr<struct Subband> &subband )
   }
 
   itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DROPPING + '[' + lexical_cast<string>(globalSubbandIdx) + ']',
-                  dropping ? "1" : "0");
+                  dropping);
 
   // Append the data to the respective queue
   queue->append(subband);
