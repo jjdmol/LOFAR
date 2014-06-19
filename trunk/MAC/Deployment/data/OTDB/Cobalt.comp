@@ -23,7 +23,7 @@ node   CoherentStokes     4.0.0  development 'node constraint'  "Coherent Stokes
 # name   	        dir.    type    unit    prun.   vm      value    constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par  which                   I    ptext  -      10    0      "I|IQUV|XXYY;I"                           - "Which Stokes values to compute"
-par  nrChannelsPerSubband    I    int    -      10    0      ">>Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  nrChannelsPerSubband    I    int    -      10    0      1                                         - "Number of channels for Stokes data"
 par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
 par  subbandsPerFile         I	  int    -	10    0      512                                       - "the number of subbands each Stokes file will hold"
 
@@ -36,7 +36,7 @@ node   IncoherentStokes   4.0.0  development 'node constraint'  "Incoherent Stok
 # name   	        dir.    type    unit    prun.   vm      value    constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par  which                   I    ptext  -      10    0      "I|IQUV;I"                                - "Which Stokes values to compute"
-par  nrChannelsPerSubband    I    int    -      10    0      ">>Observation.channelsPerSubband"        - "Number of channels for Stokes data"
+par  nrChannelsPerSubband    I    int    -      10    0      1                                         - "Number of channels for Stokes data"
 par  timeIntegrationFactor   I    int    -      10    0      1                                         - "Time-wise integration of Stokes data (in samples)"
 par  subbandsPerFile         I    int    -      10    0      512                                       - "the number of subbands each Stokes file will hold"
 
@@ -44,10 +44,13 @@ par  subbandsPerFile         I    int    -      10    0      512                
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 node  BeamFormer 4.0.0        development 'node constraint'  "Settings for beam former (time series) calculations"
-uses  CoherentStokes 4.0.0    development '1'  "Settings for all coherent beams"
-uses  IncoherentStokes 4.0.0  development '1'  "Settings for all incoherent beams"
-par coherentDedisperseChannels  I    bool    -  10      0       false           -               "apply coherent dedispersion"
+# name                         dir.    type    unit    prun.   vm      value    constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par  coherentDedisperseChannels I      bool      -      10      0      false       -    "Apply coherent dedispersion"
+par  flysEye                    I      bool      -      10      0      false       -    "Fly's Eye mode: every station is transformed into its own beam"
 
+uses  CoherentStokes   4.0.0    development '1'  "Settings for all coherent beams"
+uses  IncoherentStokes 4.0.0    development '1'  "Settings for all incoherent beams"
 
 # -- Cobalt--
 #      name        vers   qual        constr.            descr.

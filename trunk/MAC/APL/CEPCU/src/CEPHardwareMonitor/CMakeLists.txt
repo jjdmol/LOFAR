@@ -2,7 +2,6 @@
 
 lofar_add_bin_program(CEPHardwareMonitor 
   CEPHardwareMonitorMain.cc
-  BlueGeneMonitor.cc
   ClusterMonitor.cc)
 
 install(FILES

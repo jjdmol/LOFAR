@@ -90,9 +90,6 @@
 /* Define if libbfd is available */
 #cmakedefine HAVE_BFD 1
 
-/* Define if BG/L MPICH is installed */
-#cmakedefine HAVE_BGLMPICH 1
-
 /* Define if Blitz is installed */
 #cmakedefine HAVE_BLITZ 1
 
@@ -140,9 +137,6 @@
 
 /* Define if we have an MPI implementation installed */
 #cmakedefine HAVE_MPI 1
-
-/* Define if MASS is installed */ 
-#cmakedefine HAVE_MASS 1
 
 /* Define if MPICH is installed */
 #cmakedefine HAVE_MPICH 1

@@ -11,20 +11,20 @@ Observation.antennaSet = HBA_ZERO
 Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300]
 Observation.Beam[0].nrTiedArrayBeams     = 2
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1 = 0
-Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2 = 0
+Observation.Beam[0].TiedArrayBeam[0].angle1 = 0
+Observation.Beam[0].TiedArrayBeam[0].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[0].coherent = T
-Observation.Beam[0].TiedArrayBeam[1].absoluteAngle1 = 0
-Observation.Beam[0].TiedArrayBeam[1].absoluteAngle2 = 0
+Observation.Beam[0].TiedArrayBeam[1].angle1 = 0
+Observation.Beam[0].TiedArrayBeam[1].angle2 = 0
 Observation.Beam[0].TiedArrayBeam[1].coherent = T
 Observation.Beam[0].nrTiedArrayBeams = 2
 
-OLAP.CNProc_CoherentStokes.which	 = I # IQUV / XXYY
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.channelsPerSubband = 1  # if > 1 the coherentStokesPPF == true
-OLAP.CNProc_IncoherentStokes.which	 = I # IQUV 
-OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_IncoherentStokes.channelsPerSubband = 1
+Cobalt.BeamFormer.CoherentStokes.which	 = I # IQUV / XXYY
+Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband = 1  # if > 1 the coherentStokesPPF == true
+Cobalt.BeamFormer.IncoherentStokes.which	 = I # IQUV 
+Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband = 1
 Observation.rspBoardList                 = [0]
 Observation.rspSlotList                  = [0]
 

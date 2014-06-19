@@ -51,6 +51,7 @@ def findIPNumber(stationName):
         else:
             return outwords[0]
     else:
+        # Use UNix 'host' command and catch output
         command = "host "+stationName+"C"
         output = Popen(command,shell=True, stdout=PIPE).stdout
         stdout = output.readlines()
@@ -58,7 +59,6 @@ def findIPNumber(stationName):
         outwords = outline.split()
         if (len(outwords) != 4):
             return "10.150.1.1"
-#            return "-1"
         else:
             return outwords[3]
         
@@ -85,16 +85,17 @@ def findRSPDestNodes(stationName, dataDir):
     """
     Collects the destination nodes from each rspboard of the given station.
     Expected format of the RSPConnection file is:
-    station		board	destinationnode
-    CS001		RSP_0	BGL001
+    station  board  destinationnode  destIP       destMAC
+    CS001    RSP_0  cbt007-10GB01    10.168.102.1 A0:36:9F:1F:79:04
     """
-    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-9]+)[ \t]*([^ \t\n]*)", re.IGNORECASE)
+    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([01]+)[ \t]*([^ \t\n]*)", re.IGNORECASE)
     rspDestNode = {}
-    for match in pattern.finditer(open(dataDir+"/RSPConnections.dat").read()):
+    for match in pattern.finditer(open(dataDir+"/RSPConnections_Cobalt.dat").read()):
         rspDestNode[match.group(1)] = match.group(2)
     if len(rspDestNode) == 0:
         setWarning(stationName+" not found in file 'RSPConnections'")
     return rspDestNode
+
 
 #
 # findTBBDestNodes(stationName)
@@ -115,19 +116,22 @@ def findTBBDestNodes(stationName, dataDir):
         setWarning(stationName+" not found in file 'TBBConnections.dat'")
     return tbbDestNode
 
-#
-# findIPandMAC(node)
-#
-def findIPandMAC(nodeName, dataDir):
+def findIPandMAC_station(stationName, dataDir):
     """
-    Translates the given nodename to an MAC address and and IP address.
+    Based on stationname, find destination node, IP and MAC address for all RSP boards of
+    that station. Use file RSPConnections_Cobalt.dat for that.
+    Expected format of the RSPConnections_Coobalt file is:
+    station		board	destinationnode
+    CS001		RSP_0	cbt001
     """
-    pattern=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
-    ipAndMac = ()
-    ipAndMac = pattern.search(open(dataDir+"/MAC+IP.dat").read())
-    if not ipAndMac:
-        raise "\nFatal error: "+nodeName+" is not defined in file 'MAC+IP'"
-    return ipAndMac.group(1), ipAndMac.group(2)
+    pattern=re.compile("[^#]"+stationName+"[ \t]*RSP_([0-1]+)[ \t]*([^ \t\n]*)[ \t]*([^ \t\n]*)[ \t]*([^ \t\n]*)", re.IGNORECASE)
+    IPandMAC = []
+    for match in pattern.finditer(open(dataDir+"/RSPConnections_Cobalt.dat").read()):
+        IPandMAC.append([match.group(2),match.group(3),match.group(4)])
+
+    if len(IPandMAC) == 0:
+       raise "\nFatal error: "+stationName+" is not defined in file 'RSPConnections_Cobalt.dat'" 
+    return IPandMAC 
 
 #
 # findIPandMAC_local(node)
@@ -168,19 +172,6 @@ def findStorageIPandMAC(nodeName, dataDir):
         raise "\nFatal error: "+nodeName+" is not defined in file 'Storage+MAC.dat'"
     return ipAndMac.group(2), ipAndMac.group(1)
 
-
-#
-# findRSPIP(node)
-#
-def findRSPIP(nodeName, dataDir):
-    """
-    Translates the given nodename to an MAC address and and IP address.
-    """
-    pattern=re.compile("^"+nodeName+"_([0-9]*)[ \t]*([0-9\.]*)", re.IGNORECASE | re.MULTILINE)
-    RspIp = pattern.findall(open(dataDir+"/RSP+IP.dat").read())
-    if not RspIp:
-        raise Exception("\nFatal error: "+nodeName+" is not defined in file 'RSP+IP'")
-    return RspIp
 #
 # findBlets(stationName)
 #
@@ -212,7 +203,7 @@ def findAllStations(dataDir):
     pattern = re.compile("^[A-Z][A-Z][0-9][0-9][0-9]",re.IGNORECASE | re.MULTILINE)
     match = pattern.findall(open(dataDir+"/StationInfo.dat").read())
     if not match:
-        raise "\nFatal error: could not find any stationnames in file 'StationInfo'"
+        raise "\nFatal error: could not find any stationnames in file 'StationInfo.dat'"
     return match
 
 #
@@ -225,10 +216,10 @@ def findStationInfo(stationName, dataDir):
     pattern=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
     match = pattern.search(open(dataDir+"/StationInfo.dat").read())
     if not match:
-        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
+        raise "\nFatal error: "+stationName+" is not defined in file StationInfo.dat"
     info = match.group().split()
     if (len(info) != 13):
-        raise "\nFatal error: Data of "+stationName+" is not complete in file 'StationInfo'"
+        raise "\nFatal error: Data of "+stationName+" is not complete in file StationInfo.dat"
     return info
 
 def createCCURSPConnectionsFile(resultDir, dataDir):
@@ -253,35 +244,19 @@ def createRSPConnectionsFile_cobalt(resultDir, dataDir):
         destFile = resultDir + "/RSPConnections.dat"
 
     command = "cp -f "+srcFile+ " " + destFile
-    #print command
     os.system(command)
     return 
 
-def createRSPConnectionsFile_bg(resultDir, dataDir, partitionName):
-    """
-    Fills in the markers in the RSPConnections_BG.dat.tmpl file to match the values for the given Blue Gene partition.
-    """
-    # Substitute MAC and IP address of destination nodes
-    RSPConnectionsfile = open(dataDir+"/RSPConnections_BG.dat.tmpl")
-    RSPConnectionsConfig = RSPConnectionsfile.read()
-    RSPConnectionsfile.close()
-    RSPConnectionsConfig = RSPConnectionsConfig.replace("@BGP-PARTITION@",   partitionName)
-    outFile = os.open(resultDir+"/RSPConnections.dat", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
-    os.write(outFile, RSPConnectionsConfig)
-    os.close(outFile)
-    return
 
-def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt):
+def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,int_local,is_Cobalt):
     """
     Fills in the markers in the RSPDriver.dat.tmpl file to match the values for the given station.
     """
-    # First create RSPConnections.dat with proper BG-P partition filled in.
-    if is_Cobalt:
-        createRSPConnectionsFile_cobalt(resultDir, dataDir)
-    else:
-        createRSPConnectionsFile_bg(resultDir, dataDir, partitionName)
+    # First create RSPConnections.dat with Cobalt filled in.
+    createRSPConnectionsFile_cobalt(resultDir, dataDir)
+    
     # Find connections of the RSPBoards of the station
-    rspDestNode = findRSPDestNodes(stationName, resultDir)
+    rspDestNode = findRSPDestNodes(stationName, dataDir)
     print stationName,"matches:",rspDestNode
 
     (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal, Aartfaac ) = findStationInfo(stationName, dataDir)
@@ -298,17 +273,14 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
     stationNr = int(name[2:])
 
     # International stations can be identified by the second part of their IP address
-    is_ilt = (ip_parts[1] != "151")
+    is_int_station = (ip_parts[1] != "151")
 
-    if is_Cobalt:
-      # Need globally unique IP port numbers.
-      basePort = 10000 + stationNr * 10
-    else:
-      basePort = 0x10FA
-
-    # International station in local mode takes dest. MAC/IP info from
-    # separate file 
-    if (is_ilt and ilt_local == 1):
+    # Need globally unique IP port numbers.
+    basePort = 10000 + stationNr * 10
+    
+    if (is_int_station and int_local == 1):
+        # International station in local mode takes dest. MAC/IP info from
+        # separate file 
         ip_mac_alias = findIPandMAC_local(stationName,dataDir)
         for rspNr in range(len(ip_mac_alias)):  
             blet_out = find_Blets(stationName, dataDir)[1+rspNr];
@@ -320,55 +292,61 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip_mac_alias[rspNr][1])
             RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
     else:
-        nrNodes = len(rspDestNode) # Number of occurences in file
+        # NL and Int. stations in ILT mode
+        IPandMAC = findIPandMAC_station(stationName, dataDir)
+        nrNodes = len(IPandMAC) # Number of occurences in file
         # Core stations have two occurences (these have a splitter), and so
         # for these we need to fill in LANE0x and LANE1x values.
         # All other stations have one occurence, so only LANE_0x is relevant.
-        if (nrNodes == 1 or nrNodes == 2):
-            if str(1) in rspDestNode.keys():
-                (ip, mac) = findIPandMAC(rspDestNode[str(1)],dataDir)
-                for rspNr in range(4):
-                    blet_out = find_Blets(stationName, dataDir)[5+rspNr];
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(1)])
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
-                    RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
+        # International stations can have up to four entries
+        if (nrNodes == 2):
+            node = IPandMAC[1][0]
+            ip = IPandMAC[1][1]
+            mac = IPandMAC[1][2]
+            for rspNr in range(4):
+                blet_out = find_Blets(stationName, dataDir)[5+rspNr];
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+ node)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out) 
 
-            if str(0) in rspDestNode.keys():
-                for rspNr in range(4):
-		  if is_ilt and is_Cobalt:
-                    # Cobalt nodes are part of the international station VLANs,
-                    # allowing routing to x.x.x.50 (with x.x.x.x being the RSP board IPs).
-      		    rspinfo = findRSPIP(stationName, dataDir)
-		    rspip = rspinfo[rspNr][1]
-		    rspip_parts = rspip.split('.')
-                    ip = "%s.%s.%s.50" % (rspip_parts[0], rspip_parts[1], rspip_parts[2])
+        
+        for rspNr in range(4):
+            if is_int_station and is_Cobalt:
+                # Cobalt nodes are part of the international station VLANs,
+                # allowing routing to x.x.x.50 (with x.x.x.x being the RSP board IPs).
+                if nrNodes == 4:
+                    ip = IPandMAC[rspNr][1]
+                else:
+                    ip = IPandMAC[0][1]
+                node = IPandMAC[0][0]
+                mac = IPandMAC[0][2]
+            else:
+                node = IPandMAC[0][0]
+                ip = IPandMAC[0][1]
+                mac = IPandMAC[0][2]
 
-                    (_, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
-		  else:
-                    (ip, mac) = findIPandMAC(rspDestNode[str(0)],dataDir)
-
-                  blet_out = find_Blets(stationName, dataDir)[1+rspNr];
-                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
-                  # Need to fill this in until RSPDriver is fixed...
-                  RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
-                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
-                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
-                  RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
-                  # The following is only necessary for not crashing the
-                  # RSPDriver during startup.... It makes no sense as RS/Int
-                  # stations have no splitter so there is no LANE_1X
-                  if (nrNodes == 1):
-                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+rspDestNode[str(0)])
-                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
-                      RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
+            #print node, ip, mac
+            blet_out = find_Blets(stationName, dataDir)[1+rspNr];
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_MAC@", mac +"   # "+node)
+            # Need to fill this in until RSPDriver is fixed...
+            RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_BLET@", blet_out)
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_IP@",  ip)
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_PORT@", str(basePort + rspNr))
+            RSPconfig = RSPconfig.replace("@LANE_0"+str(rspNr)+"_BLET@", blet_out) 
+            # The following is only necessary for not crashing the
+            # RSPDriver during startup.... It makes no sense as RS/Int
+            # stations have no splitter so there is no LANE_1X
+            if (nrNodes == 1):
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_MAC@", mac +"   # "+node)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_IP@",  ip)
+                RSPconfig = RSPconfig.replace("@LANE_1"+str(rspNr)+"_PORT@", str(basePort + 6 + rspNr))
 
 
 
     # Find IP address for RSP board ethernet. All NL stations have RSP address
     # like 10.175.x.x, Non-NL station must be looked up 
-    print ip_parts
-    if not is_ilt:
+    if not is_int_station:
         ip_prefix = "175" # NL stations; FIXED!
 
         # Core stations should have Splitter set to 1; others to 0.
@@ -412,15 +390,22 @@ def createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
         RSPconfig = RSPconfig.replace("@FIRST_XLET_OUT@",  "5")
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
-        rspinfo = findRSPIP(stationName, dataDir)
-        for rspNr in range(len(rspinfo)):        
-            rspip = rspinfo[rspNr][1]
-            rspip_parts = rspip.split('.')
-            repl_str = "@IP_EXTEN_"+rspinfo[rspNr][0]+"@"
-            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[3])
-            repl_str = "@IP_PREFIX_"+rspinfo[rspNr][0]+"@"
+        IPandMAC = findIPandMAC_station(stationName, dataDir)
+        nrNodes = len(IPandMAC) # Number of occurences in file
+        for rspNr in range(4):        
+            if nrNodes == 4:
+                ip = IPandMAC[rspNr][1]
+            else:
+                ip = IPandMAC[0][1]
+            rspip_parts = ip.split('.')                
+            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
+            if nrNodes == 4:
+                RSPconfig = RSPconfig.replace(repl_str, "1")
+            else:
+                RSPconfig = RSPconfig.replace(repl_str, str(rspNr+1))
+            repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
-            repl_str = "@IP_SUBNET_"+rspinfo[rspNr][0]+"@"
+            repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
                        
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
@@ -503,17 +488,24 @@ def createRSPDriverFile_Test(resultDir, stationName, dataDir, alias):
         RSPconfig = RSPconfig.replace("@RING_ID@",   ringID)
         RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
         RSPconfig = RSPconfig.replace("@LAST_XLET_OUT@",  "23")
-        rspinfo = findRSPIP(stationName, dataDir)
-        for rspNr in range(len(rspinfo)):        
-            rspip = rspinfo[rspNr][1]
-            rspip_parts = rspip.split('.')
-            repl_str = "@IP_EXTEN_"+rspinfo[rspNr][0]+"@"
-            RSPconfig = RSPconfig.replace(repl_str, rspip_parts[3])
-            repl_str = "@IP_PREFIX_"+rspinfo[rspNr][0]+"@"
+        IPandMAC = findIPandMAC_station(stationName, dataDir)
+        nrNodes = len(IPandMAC) # Number of occurences in file
+        for rspNr in range(4):        
+            if nrNodes == 4:
+                ip = IPandMAC[rspNr][1]
+            else:
+                ip = IPandMAC[0][1]
+            rspip_parts = ip.split('.')                
+            repl_str = "@IP_EXTEN_0"+str(rspNr)+"@"
+            if nrNodes == 4:
+                RSPconfig = RSPconfig.replace(repl_str, "1")
+            else:
+                RSPconfig = RSPconfig.replace(repl_str, str(rspNr+1))
+            repl_str = "@IP_PREFIX_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[1])
-            repl_str = "@IP_SUBNET_"+rspinfo[rspNr][0]+"@"
+            repl_str = "@IP_SUBNET_0"+str(rspNr)+"@"
             RSPconfig = RSPconfig.replace(repl_str, rspip_parts[2])
-                       
+                        
     outFile = os.open(dataDir+"/RSPDriver.conf.tmp", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
     os.write(outFile, RSPconfig)
     os.close(outFile)
@@ -761,156 +753,154 @@ def stationExceptions(resultDir, stationName, dataDir):
         # Reinstall HardwareMonitor.conf with FI609 specific IP for EC
         createHardwareMonitorFile(resultDir, stationName, dataDir, "103")
         
-# MAIN
+if __name__ == "__main__":
 
-if (len(sys.argv) == 1):
-    print "Provide arguments:"
-    print sys.argv[0]+" localhost [<BG/P partition>] [local] or"
-    print sys.argv[0]+" <resultdir> <datadir>  [<BG/P partition>] <stationname>  [local] or"
-    print sys.argv[0]+" cobalt"
-    print " - <BG/P partition> is optional and can be R00, R01, R02; default is R00"
-    print " - For setting up station-based LCU use option 'localhost'"
-    print " - <stationame(s)> can be the name of one or more stations, or 'all'"
-    print " - local is for setup of local usage of International Stations"
-    sys.exit(1)
+    if (len(sys.argv) == 1):
+        print "Provide arguments:"
+        print sys.argv[0]+" localhost [<BG/P partition>] [local] or"
+        print sys.argv[0]+" <resultdir> <datadir>  [<BG/P partition>] <stationname>  [local] or"
+        print sys.argv[0]+" cobalt"
+        print " - <BG/P partition> is optional and can be R00, R01, R02; default is R00"
+        print " - For setting up station-based LCU use option 'localhost'"
+        print " - <stationame(s)> can be the name of one or more stations, or 'all'"
+        print " - local is for setup of local usage of International Stations"
+        sys.exit(1)
     
 
-# If argument is localhost, we can safely assume we are running on a station
-# LCU and we need to create the config files for this station. They must be
-# put in /opt/lofar/etc; the required datafiles will be in directory
-# /opt/lofar/etc/StaticMetaData
+    # If argument is localhost, we can safely assume we are running on a station
+    # LCU and we need to create the config files for this station. They must be
+    # put in /opt/lofar/etc; the required datafiles will be in directory
+    # /opt/lofar/etc/StaticMetaData
 
-if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobalt"):
-    # Find out stationname from command 'hostname -s'
-    stationName = Popen("hostname -s",shell=True, stdout=PIPE).stdout.readlines()[0].strip()[0:5].lower()
-    if (len(stationName) > 0) :
-        if (os.path.exists("/opt/lofar/etc")):
-            resultDir = "/opt/lofar/etc"
-            dataDir = resultDir + "/StaticMetaData"
-        else:
-            print "Cannot find output directory /opt/lofar/etc"
-            sys.exit(1)
+    if (sys.argv[1] == "localhost" or sys.argv[1] == "test" or sys.argv[1] == "cobalt"):
+        # Find out stationname from command 'hostname -s'
+        stationName = Popen("hostname -s",shell=True, stdout=PIPE).stdout.readlines()[0].strip()[0:5].lower()
+        if (len(stationName) > 0) :
+            if (os.path.exists("/opt/lofar/etc")):
+                resultDir = "/opt/lofar/etc"
+                dataDir = resultDir + "/StaticMetaData"
+            else:
+                print "Cannot find output directory /opt/lofar/etc"
+                sys.exit(1)
 
-        # If the hostname is like 'lcu001', this lcu is set up to be tested
-        # in the lab before a station is assigned. We can then use a set of
-        # fixed test configuration files.
-        alias = []
-        if (stationName[0:3] == "lcu"):
-            copyTestFiles(dataDir)
-        else:
-            ilt_local=0
-            is_Cobalt=1
-            partitionName = ""
-            if (sys.argv[1] == "test"):
-                # station in test mode; get desired RSPconnections from command
-                # line (using aliasnames in file RSPConnections_test.dat)
-                if (len(sys.argv) == 4):
-                    alias=[sys.argv[2],sys.argv[3]]
-                else:
-                    alias=[sys.argv[2]]
-            elif(sys.argv[1] == "cobalt"):
+            # If the hostname is like 'lcu001', this lcu is set up to be tested
+            # in the lab before a station is assigned. We can then use a set of
+            # fixed test configuration files.
+            alias = []
+            if (stationName[0:3] == "lcu"):
+                copyTestFiles(dataDir)
+            else:
+                int_local=0
                 is_Cobalt=1
-            elif (len(sys.argv) == 3):
-                if (sys.argv[2] == "local"):
-                    ilt_local=1
-                    is_Cobalt=0
-                    partitionName = "R00";
-                else:
-                    partitionName = sys.argv[2];
-            else:
-                partitionName = "R00";
-            if (stationName[0:3].upper() == "CCU"):
-                # CCU needs RSPConnections.dat for CEP in PVSS
-                createCCURSPConnectionsFile(resultDir, dataDir)
-                if (stationName.upper() == "CCU09"):
-                    print "Please manually adapt /opt/lofar/etc/RSPConnections_CCU.dat for test stations and used test BG/P nodes!!"
-            else:
+                partitionName = ""
                 if (sys.argv[1] == "test"):
-                    print "Setting up station "+stationName+" for TEST use"
-                elif (ilt_local == 0):
-                    print "Setting up station "+stationName+" for ILT use"
-                    if (is_Cobalt == 1):
+                    # station in test mode; get desired RSPconnections from command
+                    # line (using aliasnames in file RSPConnections_test.dat)
+                    if (len(sys.argv) == 4):
+                        alias=[sys.argv[2],sys.argv[3]]
+                    else:
+                        alias=[sys.argv[2]]
+                elif(sys.argv[1] == "cobalt"):
+                    is_Cobalt=1
+                elif (len(sys.argv) == 3):
+                    if (sys.argv[2] == "local"):
+                        int_local=1
+                        is_Cobalt=0
+                        partitionName = "R00";
+                    else:
+                        partitionName = sys.argv[2];
+                else:
+                    partitionName = "R00";
+
+                if (stationName[0:3].upper() == "CCU"):
+                    # CCU needs RSPConnections.dat for CEP in PVSS
+                    createCCURSPConnectionsFile(resultDir, dataDir)
+                    if (stationName.upper() == "CCU09"):
+                        print "Please manually adapt /opt/lofar/etc/RSPConnections_CCU.dat for test stations and used test BG/P nodes!!"
+                else:
+                    if (sys.argv[1] == "test"):
+                        print "Setting up station "+stationName+" for TEST use"
+                    elif (int_local == 0):
+                        print "Setting up station "+stationName+" for ILT use"
                         print " Using routes to Cobalt"
                     else:
-                        print "Using BG/P partition " + partitionName + " for creating destination MAC addresses"
-                else:
-                    print "Setting up station "+stationName+" for LOCAL use"
+                        print "Setting up station "+stationName+" for LOCAL use"
 
-                if (sys.argv[1] == "test"):
-                    createRSPDriverFile_Test(resultDir, stationName, dataDir, alias)
-                else:
-                    createRSPDriverFile(resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt)
+                    if (sys.argv[1] == "test"):
+                        createRSPDriverFile_Test(resultDir, stationName, dataDir, alias)
+                    else:
+                        createRSPDriverFile(resultDir, stationName, dataDir, partitionName,int_local,is_Cobalt)
                     
-                createTBBDriverFile    (resultDir, stationName, dataDir)
-                createRemoteStationFile(resultDir, stationName, dataDir)
-                createAntennaArraysFile(resultDir, stationName, dataDir)
-                createAntennaFieldFile (resultDir, stationName, dataDir)
-                createAttenuationFile  (resultDir, stationName, dataDir)
-                createCableDelaysFile  (resultDir, stationName, dataDir)
-                createiHBADeltasFile   (resultDir, stationName, dataDir)
-                createHardwareMonitorFile(resultDir, stationName, dataDir)
-                stationExceptions        (resultDir, stationName, dataDir)
-    else:
-        print "Cannot determine stationname"
-        sys.exit(1)
-else:
-    # We are not running on a station LCU. The user needs to provide
-    # where we can find and put files, and for which station.
-    
-    if (len(sys.argv) < 4):
-        print "Provide rootdir for output files, dir for datafiles, stationname(s) (or 'all')."
-        sys.exit(1)
-    
-    resultRoot = sys.argv[1]
-    dataDir = sys.argv[2]
-    stationList = []
-    is_Cobalt=1
-    # Find BG/P partition to use (if one is provided; looks like R0x)
-    if (re.match("R0",sys.argv[3])):
-        partitionName = sys.argv[3];
-        next_argn = 4;
-    elif (sys.argv[3] == "cobalt"):
-        partitionName = ""
-        is_Cobalt=1
-        next_argn = 4
-    else:
-        partitionName = "cobalt"
-        next_argn = 3
-        
-    print "Using " + partitionName + " for creating RSPConnections.dat file"
-            
-    if sys.argv[next_argn] == "all":
-        stationList = findAllStations(dataDir)
-    else:
-        stationList = [sys.argv[next_argn]]
-        
-    next_argn = next_argn + 1
-    ilt_local=0
-    if (next_argn < len(sys.argv)):
-        if sys.argv[next_argn] == "local":
-            ilt_local=1       
-    for stationName in stationList:
-        resultDir = resultRoot+"/"+stationName+"/"
-        if os.path.exists(resultDir):
-            for oldfile in os.listdir(resultDir):
-                os.remove(resultDir+"/"+oldfile)
+                    createTBBDriverFile    (resultDir, stationName, dataDir)
+                    createRemoteStationFile(resultDir, stationName, dataDir)
+                    createAntennaArraysFile(resultDir, stationName, dataDir)
+                    createAntennaFieldFile (resultDir, stationName, dataDir)
+                    createAttenuationFile  (resultDir, stationName, dataDir)
+                    createCableDelaysFile  (resultDir, stationName, dataDir)
+                    createiHBADeltasFile   (resultDir, stationName, dataDir)
+                    createHardwareMonitorFile(resultDir, stationName, dataDir)
+                    stationExceptions        (resultDir, stationName, dataDir)
         else:
-            os.makedirs(resultDir)
-
-        createRSPDriverFile    (resultDir, stationName, dataDir, partitionName,ilt_local,is_Cobalt) 
-        createTBBDriverFile    (resultDir, stationName, dataDir)
-        createRemoteStationFile(resultDir, stationName, dataDir)
-        createAntennaArraysFile(resultDir, stationName, dataDir)
-        createAntennaFieldFile (resultDir, stationName, dataDir)
-        createAttenuationFile  (resultDir, stationName, dataDir)
-        createCableDelaysFile  (resultDir, stationName, dataDir)
-        createiHBADeltasFile   (resultDir, stationName, dataDir)
-        createHardwareMonitorFile(resultDir, stationName, dataDir)
-        stationExceptions        (resultDir, stationName, dataDir)
+            print "Cannot determine stationname"
+            sys.exit(1)
+    else:
+        # We are not running on a station LCU. The user needs to provide
+        # where we can find and put files, and for which station.
+    
+        if (len(sys.argv) < 4):
+            print "Provide rootdir for output files, dir for datafiles, stationname(s) (or 'all')."
+            sys.exit(1)
+    
+        resultRoot = sys.argv[1]
+        dataDir = sys.argv[2]
+        stationList = []
+        is_Cobalt=1
+        # Find BG/P partition to use (if one is provided; looks like R0x)
+        if (re.match("R0",sys.argv[3])):
+            partitionName = sys.argv[3];
+            next_argn = 4;
+        elif (sys.argv[3] == "cobalt"):
+            partitionName = ""
+            is_Cobalt=1
+            next_argn = 4
+        else:
+            partitionName = "cobalt"
+            next_argn = 3
         
-if len(warnings) > 0:
-    print "The following warnings occured:"
-    print warnings
+        print "Using " + partitionName + " for creating RSPConnections.dat file"
+            
+        if sys.argv[next_argn] == "all":
+            stationList = findAllStations(dataDir)
+        else:
+            stationList = [sys.argv[next_argn]]
+        
+        next_argn = next_argn + 1
+        int_local=0
+        if (next_argn < len(sys.argv)):
+            if sys.argv[next_argn] == "local":
+                int_local=1       
+        for stationName in stationList:
+            resultDir = resultRoot+"/"+stationName+"/"
+            if os.path.exists(resultDir):
+                for oldfile in os.listdir(resultDir):
+                    os.remove(resultDir+"/"+oldfile)
+            else:
+                os.makedirs(resultDir)
+
+            createRSPDriverFile    (resultDir, stationName, dataDir, partitionName,int_local,is_Cobalt) 
+            createTBBDriverFile    (resultDir, stationName, dataDir)
+            createRemoteStationFile(resultDir, stationName, dataDir)
+            createAntennaArraysFile(resultDir, stationName, dataDir)
+            createAntennaFieldFile (resultDir, stationName, dataDir)
+            createAttenuationFile  (resultDir, stationName, dataDir)
+            createCableDelaysFile  (resultDir, stationName, dataDir)
+            createiHBADeltasFile   (resultDir, stationName, dataDir)
+            createHardwareMonitorFile(resultDir, stationName, dataDir)
+            stationExceptions        (resultDir, stationName, dataDir)
+        
+    if len(warnings) > 0:
+        print "The following warnings occured:"
+        print warnings
 
 
 
