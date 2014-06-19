@@ -35,6 +35,7 @@
 #include <GPUProc/Storage/StorageProcesses.h>
 
 using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using boost::format;
 using boost::str;
@@ -89,8 +90,10 @@ int main()
   }
   omp_set_nested(true); // for around and within .multiSender.process()
 
-  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
-  BeamFormerPipeline bfpl(ps, localSbIndices, MPI_receive_pool, devices);
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_receive_pool");
+  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+  BeamFormerPipeline bfpl(ps, localSbIndices, devices, MPI_receive_pool,
+                          rtmd, "rtmd key prefix");
   bfpl.allocateResources();
 
   // Set up control line to outputProc. This also supplies the parset.

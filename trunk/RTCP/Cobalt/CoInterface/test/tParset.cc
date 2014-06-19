@@ -29,6 +29,8 @@
 #include <sstream>
 #include <boost/format.hpp>
 
+#include "tParsetDefault.h"
+
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
@@ -62,61 +64,6 @@ template<typename T> string toStr( const vector<T> &v )
   sstr << v;
 
   return sstr.str();
-}
-
-Parset makeDefaultTestParset() {
-  Parset ps;
-
-  // Required keys to pass basic parset checks.
-  ps.add("Observation.ObsID", "12345");
-  // Use a valid station name (CS001) that is not in any tests below,
-  // so we don't have to remove board and slot list keys in some tests.
-  ps.add("Observation.VirtualInstrument.stationList", "[CS001]");
-  ps.add("Observation.antennaSet", "LBA_INNER");
-  ps.add("Observation.bandFilter", "LBA_30_70");
-  ps.add("Observation.nrBeams", "1");
-  ps.add("Observation.Beam[0].subbandList", "[21..23]");
-  ps.add("Observation.Dataslots.CS001LBA.RSPBoardList", "[3*0]");
-  ps.add("Observation.Dataslots.CS001LBA.DataslotList", "[0..2]");
-
-  ps.add("Observation.Beam[0].nrTiedArrayBeams", "1");
-  ps.add("Observation.Beam[0].TiedArrayBeam[0].coherent", "true");
-
-  // for tests that use HBA
-  ps.add("Observation.Dataslots.CS001HBA.RSPBoardList", "[3*0]");
-  ps.add("Observation.Dataslots.CS001HBA.DataslotList", "[0..2]");
-  ps.add("Observation.Dataslots.CS001HBA0.RSPBoardList", "[3*0]");
-  ps.add("Observation.Dataslots.CS001HBA0.DataslotList", "[0..2]");
-  ps.add("Observation.Dataslots.CS001HBA1.RSPBoardList", "[3*0]");
-  ps.add("Observation.Dataslots.CS001HBA1.DataslotList", "[0..2]");
-
-  // basic correlation output keys
-  ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
-  ps.add("Observation.DataProducts.Output_Correlated.filenames",
-         "[L12345_SAP000_SB000_uv.MS, L12345_SAP000_SB001_uv.MS, L12345_SAP000_SB002_uv.MS]");
-  ps.add("Observation.DataProducts.Output_Correlated.locations", "[3*localhost:tParset-data/]");
-
-  // basic beamforming output keys
-  ps.add("Observation.DataProducts.Output_CoherentStokes.enabled", "true");
-  ps.add("Cobalt.BeamFormer.CoherentStokes.which", "I");
-  ps.add("Observation.DataProducts.Output_CoherentStokes.filenames", "[L12345_SAP000_B000_S000_P000_bf.h5]");
-  ps.add("Observation.DataProducts.Output_CoherentStokes.locations", "[4*localhost:tParset-data/]");
-
-  ps.updateSettings();
-
-  return ps;
-}
-
-// Create a Parset out of one key/value pair in addition to
-// minimally required key/value pairs.
-Parset makeDefaultTestParset(const string& key, const string& value) {
-  Parset ps = makeDefaultTestParset();
-
-  // use replace() instead of set() in case one of the default keys is specified
-  ps.replace(key, value);
-  ps.updateSettings();
-
-  return ps;
 }
 
 

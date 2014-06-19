@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <iomanip>
+#include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -36,6 +37,7 @@
 #include <Common/SystemCallException.h>
 #include <Common/Thread/Mutex.h>
 #include <Common/Thread/Cancellation.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
 
 #include <CoInterface/OutputTypes.h>
 #include <CoInterface/Exceptions.h>
@@ -58,6 +60,7 @@ namespace LOFAR
     static Mutex casacoreMutex;
 
     using namespace std;
+    using boost::lexical_cast;
 
     static void makeDir(const string &dirname, const string &logPrefix)
     {
@@ -100,10 +103,16 @@ namespace LOFAR
     }
 
 
-    template<typename T> OutputThread<T>::OutputThread(const Parset &parset, unsigned streamNr, Pool<T> &outputPool, const std::string &logPrefix, const std::string &targetDirectory, const std::string &LTAfeedbackPrefix)
+    template<typename T> OutputThread<T>::OutputThread(const Parset &parset,
+          unsigned streamNr, Pool<T> &outputPool,
+          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+          const std::string &logPrefix, const std::string &targetDirectory,
+          const std::string &LTAfeedbackPrefix)
       :
       itsParset(parset),
       itsStreamNr(streamNr),
+      itsMdLogger(mdLogger),
+      itsMdKeyPrefix(mdKeyPrefix),
       itsLogPrefix(logPrefix),
       itsTargetDirectory(targetDirectory),
       itsLTAfeedbackPrefix(LTAfeedbackPrefix),
@@ -125,7 +134,7 @@ namespace LOFAR
     {
       // TODO: check for dropped data at end of observation
 
-      unsigned droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
+      size_t droppedBlocks = data->sequenceNumber() - itsNextSequenceNumber;
 
       ASSERTSTR(data->sequenceNumber() >= itsNextSequenceNumber, "Received block nr " << data->sequenceNumber() << " out of order! I expected nothing before " << itsNextSequenceNumber);
 
@@ -133,10 +142,18 @@ namespace LOFAR
         itsBlocksDropped += droppedBlocks;
 
         LOG_WARN_STR(itsLogPrefix << "Just dropped " << droppedBlocks << " blocks. Dropped " << itsBlocksDropped << " blocks and written " << itsBlocksWritten << " blocks so far.");
+
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPED  + '[' + lexical_cast<string>(itsStreamNr) + ']',
+                        itsBlocksDropped * static_cast<float>(itsParset.settings.blockDuration()));
       }
 
       itsNextSequenceNumber = data->sequenceNumber() + 1;
       itsBlocksWritten++;
+
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_DROPPING + '[' + lexical_cast<string>(itsStreamNr) + ']',
+                      droppedBlocks > 0 ? "1" : "0"); // logged too late if dropping: not anymore...
+      itsMdLogger.log(itsMdKeyPrefix + PN_COP_WRITTEN  + '[' + lexical_cast<string>(itsStreamNr) + ']',
+                      itsBlocksWritten * static_cast<float>(itsParset.settings.blockDuration()));
     }
 
 
@@ -205,14 +222,17 @@ namespace LOFAR
     template class OutputThread<TABTranspose::BeamformedData>;
 
 
-    SubbandOutputThread::SubbandOutputThread(const Parset &parset, unsigned streamNr, 
-        Pool<StreamableData> &outputPool, const std::string &logPrefix, 
-          const std::string &targetDirectory)
+    SubbandOutputThread::SubbandOutputThread(const Parset &parset,
+          unsigned streamNr, Pool<StreamableData> &outputPool,
+          RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+          const std::string &logPrefix, const std::string &targetDirectory)
       :
       OutputThread<StreamableData>(
           parset,
           streamNr,
           outputPool,
+          mdLogger,
+          mdKeyPrefix,
           logPrefix + "[SubbandOutputThread] ",
           targetDirectory,
           formatString("Observation.DataProducts.Output_Correlated_[%u].", streamNr))
@@ -235,11 +255,16 @@ namespace LOFAR
 
    try
       {
-      recursiveMakeDir(directoryName, itsLogPrefix);
-      LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
-
+        recursiveMakeDir(directoryName, itsLogPrefix);
+        LOG_INFO_STR(itsLogPrefix << "Writing to " << path);
 
         itsWriter = new MSWriterCorrelated(itsLogPrefix, path, itsParset, itsStreamNr);
+
+        // Write data points wrt correlated output file for monitoring (PVSS)
+        // once we know the file could at least be created.
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(itsStreamNr) + ']', "Correlated");
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_FILE_NAME         + '[' + lexical_cast<string>(itsStreamNr) + ']', fileName);
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DIRECTORY         + '[' + lexical_cast<string>(itsStreamNr) + ']', directoryName);
       } 
       catch (Exception &ex) 
       {
@@ -265,14 +290,18 @@ namespace LOFAR
     }
 
 
-    TABOutputThread::TABOutputThread(const Parset &parset, unsigned streamNr, 
-    Pool<TABTranspose::BeamformedData> &outputPool, const std::string &logPrefix,
-     const std::string &targetDirectory)
+    TABOutputThread::TABOutputThread(const Parset &parset,
+        unsigned streamNr, Pool<TABTranspose::BeamformedData> &outputPool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+        const std::string &logPrefix,
+        const std::string &targetDirectory)
       :
       OutputThread<TABTranspose::BeamformedData>(
           parset,
           streamNr,
           outputPool,
+          mdLogger,
+          mdKeyPrefix,
           logPrefix + "[TABOutputThread] ",
           targetDirectory,
           formatString("Observation.DataProducts.Output_Beamformed_[%u].", streamNr)
@@ -305,6 +334,12 @@ namespace LOFAR
 #else
         itsWriter = new MSWriterFile(path);
 #endif
+
+        // Write data points for beamformed output file for monitoring (PVSS)
+        // once we know the file could at least be created.
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DATA_PRODUCT_TYPE + '[' + lexical_cast<string>(itsStreamNr) + ']', "Beamformed");
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_FILE_NAME         + '[' + lexical_cast<string>(itsStreamNr) + ']', fileName);
+        itsMdLogger.log(itsMdKeyPrefix + PN_COP_DIRECTORY         + '[' + lexical_cast<string>(itsStreamNr) + ']', directoryName);
       }
       catch (Exception &ex)
       {

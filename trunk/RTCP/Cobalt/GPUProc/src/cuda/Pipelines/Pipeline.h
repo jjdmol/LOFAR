@@ -29,6 +29,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
 #include <Common/Thread/Mutex.h>
+#include <MACIO/RTmetadata.h>
 #include <CoInterface/BestEffortQueue.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
@@ -50,11 +51,14 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    using MACIO::RTmetadata;
+
     class Pipeline
     {
     public:
       Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool);
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix);
 
       virtual ~Pipeline();
 
@@ -90,6 +94,9 @@ namespace LOFAR
       std::vector< SmartPtr<SubbandProc> > workQueues;
 
       const size_t nrSubbandsPerSubbandProc;
+
+      RTmetadata &itsMdLogger; // non-const to be able to use its log()
+      const std::string itsMdKeyPrefix;
 
     protected:
       // Threads that write to outputProc, and need to

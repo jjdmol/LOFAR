@@ -43,7 +43,8 @@ RTmetadata::RTmetadata(uint32		observationID,
 	itsObsID		 (observationID),
 	itsRegisterName	 	 (registrationName),
 	itsHostName		 (hostName),
-	itsKVTport		 (NULL)
+	itsKVTport		 (NULL),
+	itsNrEventsDropped	 (0)
 {
 	itsLogEvents.kvps.reserve(MAX_QUEUED_EVENTS);
 	itsQueuedEvents.reserve(MAX_QUEUED_EVENTS);
@@ -58,14 +59,19 @@ RTmetadata::~RTmetadata()
 		// Give itsThread time to send the last events (best effort).
 		// We cannot do that while a cancellation exc is already in
 		// progress in case the connection hangs.
-		::usleep(50000); // 50 ms
+		// For localhost tests, wait long enough to allow this obj,
+		// PVSSGateway(Stub) and ServiceBroker to (re)connect.
+		::usleep(2000000); // 2 sec (1.5 sec can fail for local tests)
 
 		itsThread->cancel();
 
 		// joins in ~Thread()
 	}
-}
 
+	if (itsNrEventsDropped > 0) {
+		LOG_WARN_STR("RTmetadata object dropped " << itsNrEventsDropped << " event(s) for PVSS");
+	}
+}
 
 //
 // start()
@@ -75,7 +81,7 @@ void RTmetadata::start()
 	// Some tests clear the supplied hostname (don't use PVSSGatewayStub).
 	// Code under test may still log(), but that will be lost as intended.
 	if (itsHostName.empty()) {
-		LOG_WARN("Empty hostname, so written PVSS data points will be dropped.");
+		LOG_WARN("Empty hostname, so logged PVSS data points will be dropped.");
 		return;
 	}
 
@@ -97,12 +103,16 @@ void RTmetadata::log(const KVpair& pair)
 	// We could replace old events by new ones, but then we'd have to ensure
 	// somehow that we don't drop e.g. the observationID event we send once
 	// at the start that PVSS needs to interpret the context of all events.
-	if (itsQueuedEvents.size() < MAX_QUEUED_EVENTS) {
+	size_t queueSize = itsQueuedEvents.size();
+	if (queueSize < MAX_QUEUED_EVENTS) {
 		itsQueuedEvents.push_back(pair);
-		itsQueuedEventsCond.signal();
+		if (queueSize == 0) {
+			itsQueuedEventsCond.signal();
+		}
+	} else {
+		itsNrEventsDropped += 1;
 	}
 }
-
 
 //
 // log(vector<KVpair>)
@@ -117,7 +127,11 @@ void RTmetadata::log(const vector<KVpair>& pairs)
 	if (count > 0) {
 		itsQueuedEvents.insert(itsQueuedEvents.end(),
 				       pairs.begin(), pairs.begin() + count);
-		itsQueuedEventsCond.signal();
+		if (nfree == MAX_QUEUED_EVENTS) {
+			itsQueuedEventsCond.signal();
+		}
+	} else {
+		itsNrEventsDropped += pairs.size() - nfree;
 	}
 }
 
@@ -206,6 +220,7 @@ void RTmetadata::sendEventsLoop()
 		// use negative seqnrs to avoid ack messages
 		itsLogEvents.seqnr -= 1;
 		itsKVTport->send(&itsLogEvents); // may throw AssertError exc
+		LOG_DEBUG_STR("Sent " << itsLogEvents.kvps.size() << " PVSS data point events");
 		itsLogEvents.kvps.clear();
 	}
 }

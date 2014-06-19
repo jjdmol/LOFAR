@@ -23,11 +23,13 @@
 #include "Pipeline.h"
 
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <ApplCommon/PosixTime.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
 #include <Stream/Stream.h>
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
@@ -69,7 +71,8 @@ namespace LOFAR
 
     Pipeline::Pipeline(const Parset &ps, 
         const std::vector<size_t> &subbandIndices, 
-        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool)
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool,
+        RTmetadata &mdLogger, const std::string &mdKeyPrefix)
       :
       ps(ps),
       devices(devices),
@@ -78,12 +81,20 @@ namespace LOFAR
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
       nrSubbandsPerSubbandProc(
         (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      itsMdLogger(mdLogger),
+      itsMdKeyPrefix(mdKeyPrefix),
       mpiPool(pool),
       //MPI_input(ps, pool, subbandIndices, processingSubband0),
       writePool(subbandIndices.size())
     {
-      
       ASSERTSTR(!devices.empty(), "Not bound to any GPU!");
+
+      // Write data point(s) for monitoring (PVSS).
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_OBSERVATION_NAME, boost::lexical_cast<string>(ps.observationID()));
+      for (unsigned i = 0; i < subbandIndices.size(); ++i) {
+        itsMdLogger.log(itsMdKeyPrefix + PN_CGP_SUBBAND + '[' + boost::lexical_cast<string>(subbandIndices[i]) + ']',
+                        subbandIndices[i]);
+      }
     }
 
     Pipeline::~Pipeline()
@@ -115,7 +126,7 @@ namespace LOFAR
       //           are distributed for parallel execution among available threads
       //parallel = directive explicitly instructs the compiler to parallelize the chosen block of code.
       //  The two sections in this function are done in parallel with a seperate set of threads.
-#     pragma omp parallel sections num_threads(6)
+#     pragma omp parallel sections num_threads(5)
       {
 
         /*

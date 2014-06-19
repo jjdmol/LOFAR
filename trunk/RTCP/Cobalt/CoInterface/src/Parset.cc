@@ -1395,7 +1395,7 @@ namespace LOFAR
 
     string Parset::PVSS_TempObsName() const
     {
-      return getString("_DPname","");
+      return getString("_DPname", "LOFAR_ObsSW_TempObs_Unk");
     }
 
 

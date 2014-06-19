@@ -46,9 +46,11 @@ public:
 	KVpair(const string& aKey, const char*   aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, int			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, unsigned int		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, long			 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
+	KVpair(const string& aKey, unsigned long	 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
-	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false, bool timestampInKeyname = false);
 	KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp = false, bool timestampInKeyname = false); 
 
 	KVpair();
@@ -66,7 +68,7 @@ public:
 	int16	valueType;	
 
 	enum {
-		VT_UNKNOWN = 0, VT_STRING, VT_BOOL, VT_INT, VT_DOUBLE, VT_FLOAT, VT_TIME_T,
+		VT_UNKNOWN = 0, VT_STRING, VT_BOOL, VT_INT, VT_UINT, VT_LONG, VT_ULONG, VT_DOUBLE, VT_FLOAT,
 		VT_VECTOR = 0x100
 	};
 };

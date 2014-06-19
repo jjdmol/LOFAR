@@ -23,8 +23,10 @@
 
 #include "GPUProcIO.h"
 
+#include <cstring>
 #include <vector>
 #include <omp.h>
+#include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
 #include <Common/LofarLogger.h>
@@ -46,29 +48,48 @@ using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
+using boost::lexical_cast;
 
 namespace LOFAR {
-namespace Cobalt {
+  namespace Cobalt {
+
+static string formatDataPointLocusName(const string& hostname)
+{
+  // For node name, strip a "locus" prefix and '0's if any (avoid remote octal interp).
+  string nodeValue(hostname);
+  const char* nvstr = nodeValue.c_str();
+  if (strncmp(nvstr, "locus", sizeof("locus") - 1) == 0) {
+    unsigned stripLen = sizeof("locus") - 1;
+    while (nvstr[stripLen] == '0')
+      stripLen += 1;
+    nodeValue.erase(0, stripLen);
+  }
+  return nodeValue;
+}
 
 bool process(Stream &controlStream, unsigned myRank)
 {
   bool success(true);
   Parset parset(&controlStream);
 
-  // Send identification string to the MAC Log Processor
-  string fmtStr(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "",
-                                      parset.getString("_DPname")));
-  format prFmt;
-  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
-  prFmt.parse(fmtStr);
-  LOG_INFO_STR("MACProcessScope: " << str(prFmt % myRank));
-
   const vector<string> &hostnames = parset.settings.outputProcHosts;
   ASSERT(myRank < hostnames.size());
   string myHostName = hostnames[myRank];
 
+  // Send id string to the MAC Log Processor as context for further LOGs.
+  // Also use it for MAC/PVSS data point logging as a key name prefix.
+  // For outputProc there are no conv specifications (%xx) to be filled in.
+  string mdKeyPrefix(createPropertySetName(PSN_COBALT_OUTPUT_PROC, "", parset.PVSS_TempObsName()));
+  LOG_INFO_STR("MACProcessScope: " << mdKeyPrefix);
+  mdKeyPrefix.push_back('.'); // keys look like: "keyPrefix.subKeyName[x]"
+
+  const string mdRegisterName = PST_COBALT_OUTPUT_PROC;
+  const string mdHostName = parset.getString("Cobalt.PVSSGateway.host", "");
+  MACIO::RTmetadata mdLogger(parset.observationID(), mdRegisterName, mdHostName);
+  mdLogger.start();
+
   {
-    // make sure "parset" stays in scope for the lifetime of the SubbandWriters
+    // make sure "parset" and "mdLogger" stay in scope for the lifetime of the SubbandWriters
 
     vector<SmartPtr<SubbandWriter> > subbandWriters;
     vector<SmartPtr<TABOutputThread> > tabWriters;
@@ -84,10 +105,13 @@ bool process(Stream &controlStream, unsigned myRank)
         if (parset.settings.correlator.files[fileIdx].location.host != myHostName) 
           continue;
 
+        mdLogger.log(mdKeyPrefix + PN_COP_LOCUS_NODE + '[' + lexical_cast<string>(fileIdx) + ']',
+                     formatDataPointLocusName(myHostName));
+
         string logPrefix = str(format("[obs %u correlated stream %3u] ")
                                % parset.observationID() % fileIdx);
 
-        SubbandWriter *writer = new SubbandWriter(parset, fileIdx, logPrefix);
+        SubbandWriter *writer = new SubbandWriter(parset, fileIdx, mdLogger, mdKeyPrefix, logPrefix);
         subbandWriters.push_back(writer);
       }
     }
@@ -103,6 +127,10 @@ bool process(Stream &controlStream, unsigned myRank)
 
         if (file.location.host != myHostName) 
           continue;
+
+        const unsigned allFileIdx = fileIdx + parset.settings.correlator.files.size();
+        mdLogger.log(mdKeyPrefix + PN_COP_LOCUS_NODE + '[' + lexical_cast<string>(allFileIdx) + ']',
+                     formatDataPointLocusName(myHostName));
 
         struct ObservationSettings::BeamFormer::StokesSettings &stokes =
           file.coherent ? parset.settings.beamFormer.coherentSettings
@@ -129,7 +157,7 @@ bool process(Stream &controlStream, unsigned myRank)
         string logPrefix = str(format("[obs %u beamformed stream %3u] ")
                                                     % parset.observationID() % fileIdx);
 
-        TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], logPrefix);
+        TABOutputThread *writer = new TABOutputThread(parset, fileIdx, *outputPools[fileIdx], mdLogger, mdKeyPrefix, logPrefix);
         tabWriters.push_back(writer);
       }
     }
@@ -228,6 +256,6 @@ bool process(Stream &controlStream, unsigned myRank)
   }
 }
 
-}
-}
+  } // namespace Cobalt
+} // namespace LOFAR
 
