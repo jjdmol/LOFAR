@@ -1,6 +1,6 @@
 OLAP.CNProc.integrationSteps		 = 256
-OLAP.IONProc.integrationSteps		 = 4
-OLAP.correctBandPass			 = F
+Cobalt.Correlator.nrBlocksPerIntegration		 = 4
+Cobalt.correctBandPass			 = F
 Observation.nrBitsPerSample              = 8
 OLAP.CNProc.nrPPFTaps			 = 16
 Observation.VirtualInstrument.stationList = [CS002]
@@ -9,13 +9,13 @@ Observation.nrBeams                      = 1
 Observation.Beam[0].subbandList	         = [300..301]
 Observation.rspBoardList                 = [0, 0]
 Observation.rspSlotList                  = [0, 1]
-OLAP.CNProc_CoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_IncoherentStokes.timeIntegrationFactor = 1
-OLAP.CNProc_CoherentStokes.which	 = I # IQUV
-OLAP.CNProc_IncoherentStokes.which	 = I # IQUV
-OLAP.delayCompensation			 = F
+Cobalt.BeamFormer.CoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor = 1
+Cobalt.BeamFormer.CoherentStokes.which	 = I # IQUV
+Cobalt.BeamFormer.IncoherentStokes.which	 = I # IQUV
+Cobalt.delayCompensation			 = F
 Observation.nrPolarisations		 = 2
-Observation.channelsPerSubband		 = 1
+Cobalt.Correlator.nrChannelsPerSubband		 = 1
 Observation.sampleClock			 = 200
 
 

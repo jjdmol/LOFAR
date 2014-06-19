@@ -58,7 +58,7 @@ namespace LOFAR
       // Whether the observation runs at real time. Non-real time
       // observations are not allowed to lose data.
       //
-      // key: OLAP.realTime
+      // key: Cobalt.realTime
       bool realTime;
 
       // The SAS/MAC observation number
@@ -112,17 +112,17 @@ namespace LOFAR
       struct Corrections {
         // Whether the station band pass should be corrected for
         //
-        // key: OLAP.correctBandPass
+        // key: Cobalt.correctBandPass
         bool bandPass;
 
         // Whether the station clock offsets should be corrected for
         //
-        // key: OLAP.correctClocks
+        // key: Cobalt.correctClocks
         bool clock;
 
         // Whether to dedisperse tied-array beams
         //
-        // key: OLAP.coherentDedisperseChannels
+        // key: Cobalt.BeamFormer.coherentDedisperseChannels
         bool dedisperse;
       };
       
@@ -131,7 +131,7 @@ namespace LOFAR
       struct DelayCompensation {
         // Whether geometric delays should be compensated for
         //
-        // key: OLAP.delayCompensation
+        // key: Cobalt.delayCompensation
         bool enabled;
 
         // The ITRF position to compensate delays to
@@ -300,8 +300,8 @@ namespace LOFAR
 
         // Two angles within the coordinate type (RA/DEC, etc)
         //
-        // key: *.absoluteAngle1
-        // key: *.absoluteAngle2
+        // key: *.angle1
+        // key: *.angle2
         double angle1;
         double angle2;
       };
@@ -366,7 +366,7 @@ namespace LOFAR
 
         // Number of requested frequency channels per subband
         //
-        // key: Observation.channelsPerSubband
+        // key: Cobalt.Correlator.nrChannelsPerSubband
         unsigned nrChannels;
 
         // The bandwidth of a single channel, in Hz
@@ -382,7 +382,7 @@ namespace LOFAR
         // The number of blocks to integrate to obtain the final
         // integration time.
         //
-        // key: OLAP.IONProc.integrationSteps
+        // key: Cobalt.Correlator.nrBlocksPerIntegration
         size_t nrBlocksPerIntegration;
 
         // The total integration time of all blocks, in seconds.
@@ -562,18 +562,18 @@ namespace LOFAR
 
         // Settings for Coherent Stokes output
         //
-        // key: OLAP.CNProc_CoherentStokes.*
+        // key: Cobalt.BeamFormer.CoherentStokes.*
         struct StokesSettings coherentSettings;
 
         // Settings for Incoherent Stokes output
         //
-        // key: OLAP.CNProc_IncoherentStokes.*
+        // key: Cobalt.BeamFormer.IncoherentStokes.*
         struct StokesSettings incoherentSettings;
 
 
         // Size of FFT for coherent dedispersion
         //
-        // key: OLAP.CNProc.dedispersionFFTsize
+        // key: Cobalt.BeamFormer.dedispersionFFTsize
         size_t dedispersionFFTsize;
       };
 
@@ -729,13 +729,6 @@ namespace LOFAR
       double                      maxObservationFrequency(const struct ObservationSettings& settings,
                                                           double subbandWidth) const;
       unsigned                    calcNrDelayCompensationChannels(const struct ObservationSettings& settings) const;
-
-      // If a parset key is renamed, this function allows the old
-      // name to be used as a fall-back.
-      //
-      // Returns the name of the key in the parset, or `newname' if
-      // neither key is defined.
-      std::string renamedKey(const std::string &newname, const std::string &oldname) const;
     };
   } // namespace Cobalt
 } // namespace LOFAR

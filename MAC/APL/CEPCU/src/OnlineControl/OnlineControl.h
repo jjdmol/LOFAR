@@ -88,7 +88,6 @@ private:
 
 	uint32	_startApplications();
 	void	_stopApplications();
-	void	_setupBGPmappingTables();
 	void   	_finishController	 (uint16_t 				result);
    	void	_handleDisconnect	 (GCFPortInterface& 	port);
    	void	_handleAcceptRequest (GCFPortInterface& 	port);
@@ -100,7 +99,6 @@ private:
 	// ----- datamembers -----
 	string						itsMyName;
    	RTDBPropertySet*           	itsPropertySet;
-   	RTDBPropertySet*           	itsBGPApplPropSet;
 	bool					  	itsPropertySetInitialized;
 	PVSSservice*				itsPVSSService;
 	PVSSresponse*				itsPVSSResponse;

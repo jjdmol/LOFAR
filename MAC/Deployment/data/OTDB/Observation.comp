@@ -20,7 +20,6 @@ par  preparePeriod           I    int    -      10    100    30                 
 # measurement information
 par  bandFilter  	     I	  ptext	 -   	10    0	     'LBA_10_70|LBA_10_90|LBA_30_70|LBA_30_90|HBA_110_190|HBA_170_230|HBA_210_250;LBA_30_90' - 'LBA/HBA antenna filters and their frequency band in MHz'
 par  antennaArray	     I	  ptext	 -   	10    0	     'LBA|HBA;LBA'                              - 'Name of the antenneArray (AntennaArrays.conf)'
-par  channelsPerSubband      I    int    -      10    100    64                                         - 'Number of channels per subband, preferred values:16,32,64,128,192,256'
 par  nrBeams                 I    int    -      10    100    0                                          - 'Number of simultaneous beams in this observation'
 par  nrAnaBeams              I    int    -      10    100    0                                          - 'Number of analog beams in this observation'
 par  nrTBBSettings           I    int    -      10    100    0                                          - 'Number of TBBsettings'
