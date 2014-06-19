@@ -292,8 +292,33 @@ class cDB:
         
         
         # hba
+        if self.hba.signal_check_done:
+            valstr = ''
+            if self.hba.ref_signal_x[0] == 0 and self.hba.ref_signal_x[1] == 0:
+                valstr += ",X"
+            if self.hba.ref_signal_y[0] == 0 and self.hba.ref_signal_y[1] == 0:
+                valstr += ",Y"    
+            if len(valstr):
+                log.addLine("%s,HBA,---,NOSIGNAL%s" %(date, valstr))
+                        
         for tile in self.hba.tile:
             if tile.x.error or tile.y.error:
+                # check for broken summators
+                if self.hba.modem_check_done:
+                    valstr = ''
+                    if tile.c_summator_error:
+                        log.addLine("%s,HBA,%03d,C_SUMMATOR" %(date, tile.nr))
+                    else:
+                        for elem in tile.element:
+                            if (elem.no_modem or elem.modem_error):
+                                if elem.no_modem:
+                                    valstr += ",E%02d=??" %(elem.nr)
+                                
+                                elif elem.modem_error:
+                                    valstr += ",E%02d=error" %(elem.nr)
+                        if len(valstr):
+                            log.addLine("%s,HBA,%03d,MODEM%s" %(date, tile.nr, valstr))
+                    
                 if self.hba.noise_check_done:
                     valstr = ''
                     noise = False
@@ -339,9 +364,7 @@ class cDB:
                 if tile.p_summator_error:
                     log.addLine("%s,HBA,%03d,P_SUMMATOR" %(date, tile.nr))     
                 
-                # check for broken summators
-                if self.hba.modem_check_done and tile.c_summator_error:
-                    log.addLine("%s,HBA,%03d,C_SUMMATOR" %(date, tile.nr))
+                
                 
                 if self.hba.summatornoise_check_done:
                     valstr = ''    
@@ -375,13 +398,13 @@ class cDB:
                     for elem in tile.element:
                         #if tile.x.rcu_off or tile.y.rcu_off:
                         #    continue
-                        
-                        if elem.no_modem or elem.modem_error:
-                            if elem.no_modem:
-                                valstr += ",M%d=??" %(elem.nr)
-                            
-                            elif elem.modem_error:
-                                valstr += ",M%d=error" %(elem.nr)
+                        if self.hba.modem_check_done and (elem.no_modem or elem.modem_error):
+                            if not tile.c_summator_error:
+                                if elem.no_modem:
+                                    valstr += ",M%d=??" %(elem.nr)
+                                
+                                elif elem.modem_error:
+                                    valstr += ",M%d=error" %(elem.nr)
                         else:
                             if elem.x.osc or elem.y.osc:
                                 if elem.x.osc:
@@ -413,19 +436,24 @@ class cDB:
                                 
                                 if (not elem.y.low_noise) and (not elem.y.high_noise) and (elem.y.jitter > 0.0):
                                     valstr += ",JY%d=%5.3f" %(elem.nr, elem.y.jitter)
-                            
-                            elif elem.x.ref_signal[0] == 0 or elem.y.ref_signal[0] == 0:
-                                log.addLine("%s,HBA,%03d,NOSIGNAL" %(date, tile.nr))
                             else:
-                                if elem.x.error:
-                                    valstr += ",X%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                              (elem.nr, elem.x.test_signal[0], elem.x.test_subband[0], elem.x.ref_signal[0],\
-                                                          elem.x.test_signal[1], elem.x.test_subband[1], elem.x.ref_signal[1])
+                                if elem.x.ref_signal[0] == 0 and elem.x.ref_signal[1] == 0:
+                                    log.addLine("%s,HBA,%03d,NOSIGNAL,E%02dX" %(date, tile.nr, elem.nr))
+                                else:
+                                    if elem.x.error:
+                                        valstr += ",X%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
+                                                  (elem.nr,\
+                                                   elem.x.test_signal[0], elem.x.test_subband[0], elem.x.ref_signal[0],\
+                                                   elem.x.test_signal[1], elem.x.test_subband[1], elem.x.ref_signal[1])
                                 
-                                if elem.y.error:
-                                    valstr += ",Y%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                              (elem.nr, elem.y.test_signal[0], elem.y.test_subband[0], elem.y.ref_signal[0],\
-                                                          elem.y.test_signal[1], elem.y.test_subband[1], elem.y.ref_signal[1])
+                                if elem.y.ref_signal[0] == 0 and elem.y.ref_signal[1] == 0:
+                                    log.addLine("%s,HBA,%03d,NOSIGNAL,E%02dY" %(date, tile.nr, elem.nr))
+                                else:
+                                    if elem.y.error:
+                                        valstr += ",Y%d=%3.1f %d %3.1f %3.1f %d %3.1f" %\
+                                                  (elem.nr,\
+                                                   elem.y.test_signal[0], elem.y.test_subband[0], elem.y.ref_signal[0],\
+                                                   elem.y.test_signal[1], elem.y.test_subband[1], elem.y.ref_signal[1])
                 
                     if len(valstr):
                         log.addLine("%s,HBA,%03d,E_FAIL%s" %(date, tile.nr, valstr))
@@ -469,8 +497,7 @@ class cDB:
             self.spurious       = 0    #
 
             # test result of signal test, 
-            # if HBA test firt value ctrl=128 second value ctrl=253
-            # if LBA test only first values are used
+            # only for HBA element test, firt value ctrl=129 second value ctrl=253
             self.test_subband   = [0, 0]
             self.ref_signal     = [-1, -1]
             self.test_signal    = [0.0, 0.0]
@@ -591,6 +618,12 @@ class cDB:
             self.nr_tiles                  = nr_tiles
             self.error                     = 0
             self.avg_2_low                 = 0
+            # only used for tile RF test
+            # first value ctrl=129 second value ctrl=253
+            self.test_subband_x            = [0, 0]
+            self.test_subband_y            = [0, 0]
+            self.ref_signal_x              = [0.0, 0.0]
+            self.ref_signal_y              = [0.0, 0.0]
             self.tile                      = list()
             self.nr_bad_tiles              = -1
             self.nr_bad_tiles_0            = -1
