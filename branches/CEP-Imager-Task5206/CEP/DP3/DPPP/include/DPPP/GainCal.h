@@ -148,7 +148,11 @@ namespace {
       void setAntUsedNotFlagged (const casa::Bool* flag);
 
       // Fills the matrices itsVis and itsMVis
-      void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
+      void fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag);
+
+      // Fills the matrices itsVis and itsMVis
+      void fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
       void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
@@ -211,6 +215,10 @@ namespace {
       string           itsOperation;
 
       NSTimer          itsTimer;
+      NSTimer          itsTimerPredict;
+      NSTimer          itsTimerSolve;
+      NSTimer          itsTimerWrite;
+      NSTimer          itsTimerFill;
     };
 
   } //# end namespace
