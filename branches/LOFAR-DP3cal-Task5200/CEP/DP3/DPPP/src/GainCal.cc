@@ -209,9 +209,20 @@ namespace LOFAR {
 
     void GainCal::showTimings (std::ostream& os, double duration) const
     {
+      double totaltime=itsTimer.getElapsed();
       os << "  ";
       FlagCounter::showPerc1 (os, itsTimer.getElapsed(), duration);
       os << " GainCal " << itsName << endl;
+
+      FlagCounter::showPerc1 (os, itsTimerPredict.getElapsed(), totaltime);
+      os << " of it spent in predict" << endl;
+      os << "          ";
+      FlagCounter::showPerc1 (os, itsTimerSolve.getElapsed(), totaltime);
+      os << " of it spent in estimating gains and computing residuals" << endl;
+      os << "          ";
+      FlagCounter::showPerc1 (os, itsTimerWrite.getElapsed(), totaltime);
+      os << " of it spent in writing gain solutions to disk" << endl;
+
     }
 
     bool GainCal::process (const DPBuffer& bufin)
@@ -265,6 +276,7 @@ namespace LOFAR {
       // Convert the directions to ITRF for the given time.
       storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
 
+      itsTimerPredict.start();
       for(size_t dr = 0; dr < nDr; ++dr)
       {
         fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
@@ -282,6 +294,7 @@ namespace LOFAR {
         }
       }
 
+      itsTimerPredict.stop();
       //copy result of model to data
       if (itsOperation=="predict") {
         copy(storage.model.begin(),storage.model.begin()+nSamples,data);
@@ -302,8 +315,50 @@ namespace LOFAR {
     }
 
 
-    void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
+    // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
+    // top left, all 11 polarizations in the bottom right, etc.
+    void GainCal::fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
+      itsTimerFill.start();
+      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
+      uint nSt=(*antUsed).size();
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
+
+      const size_t nBl = info().nbaselines();
+      const size_t nCh = info().nchan();
+      const size_t nCr = 4;
+
+      itsVis.resize (IPosition(3,nSt*2,nCh,nSt*2));
+      itsMVis.resize(IPosition(3,nSt*2,nCh,nSt*2));
+
+      itsVis=0;
+      itsMVis=0;
+
+      for (uint ch=0;ch<nCh;++ch) {
+        for (uint bl=0;bl<nBl;++bl) {
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
+          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
+            continue;
+          }
+
+          for (uint cr=0;cr<nCr;++cr) {
+            itsVis (IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+
+            // Below is the complex conjugate. tcr is the correlation for the transposed
+            itsVis (IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+          }
+        }
+      }
+      itsTimerFill.stop();
+    }
+
+
+    void GainCal::fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
+                                const casa::Bool* flag) {
+      itsTimerFill.start();
       vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
       uint nSt=(*antUsed).size();
       vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
@@ -340,6 +395,7 @@ namespace LOFAR {
           }
         }
       }
+      itsTimerFill.stop();
     }
 
     void GainCal::setAntUsedNotFlagged (const Bool* flag) {
@@ -390,8 +446,9 @@ namespace LOFAR {
     void GainCal::stefcalpol (dcomplex* model, casa::Complex* data, float* weight,
                               const Bool* flag) {
       setAntUsedNotFlagged(flag);
-      fillMatrices(model,data,weight,flag);
+      fillMatricesPol(model,data,weight,flag);
 
+      itsTimerSolve.start();
       double f2 = -1.0;
       double f3 = -0.5;
       double f1 = 1 - f2 - f3;
@@ -599,14 +656,16 @@ namespace LOFAR {
       if (itsDebugLevel>2) {
         cout<<"g="<<iS.g<<endl;
       }
+      itsTimerSolve.stop();
     }
 
 
     void GainCal::stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
                                 const Bool* flag) {
       setAntUsedNotFlagged(flag);
-      fillMatrices(model,data,weight,flag);
+      fillMatricesUnpol(model,data,weight,flag);
 
+      itsTimerSolve.start();
       double f2 = -1.0;
       double f3 = -0.5;
       double f1 = 1 - f2 - f3;
@@ -621,7 +680,7 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
 
-      uint nSt=itsMVis.shape()[1];
+      uint nSt=itsMVis.shape()[0]/2;
       uint nCh = info().nchan();
 
       iS.g.resize(2*nSt,1);
@@ -640,9 +699,8 @@ namespace LOFAR {
       for (uint st1=0;st1<2*nSt;++st1) {
         for (uint st2=0;st2<2*nSt;++st2) {
           //for (uint ch=0;ch<nCh;++ch) {
-            uint crjump=2*(st2/nSt)+(st1/nSt);
-            fronormvis+=norm( itsVis(IPosition(4,crjump,st2%nSt,0,st1%nSt)));
-            fronormmod+=norm(itsMVis(IPosition(4,crjump,st2%nSt,0,st1%nSt)));
+            fronormvis+=norm( itsVis(IPosition(3,st2,0,st1)));
+            fronormmod+=norm(itsMVis(IPosition(3,st2,0,st1)));
           //}
         }
       }
@@ -661,8 +719,7 @@ namespace LOFAR {
       if (itsDebugLevel>10) {
         for (uint st1=0;st1<2*nSt;++st1) {
           for (uint st2=0;st2<2*nSt;++st2) {
-            uint crjump=2*(st2/nSt)+(st1/nSt);
-            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(4,crjump,st1%nSt,0,st2%nSt))<<endl;
+            cout<<"st1="<<st1<<", st2="<<st2<<", mvis="<<itsMVis(IPosition(3,st1,0,st2))<<endl;
           }
         }
       }
@@ -670,7 +727,6 @@ namespace LOFAR {
       DComplex* vis_p;
       DComplex* mvis_p;
       uint p_index;
-      uint crjump;
 
       uint iter=0;
       if (nSt==0) {
@@ -688,14 +744,12 @@ namespace LOFAR {
           w=0;
           t=0;
           for (uint ch=0;ch<nCh;++ch) {
-            mvis_p=&itsMVis(IPosition(4,0,0,ch,st1%nSt));
-            vis_p = &itsVis(IPosition(4,0,0,ch,st1%nSt));
+            mvis_p=&itsMVis(IPosition(3,0,ch,st1));
+            vis_p = &itsVis(IPosition(3,0,ch,st1));
             for (uint st2=0;st2<2*nSt;++st2) {
-              crjump=2*(st2/nSt)+(st1/nSt);
-              p_index=crjump+(st2%nSt)*4;
-              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * mvis_p[p_index];
+              iS.z(ch*nSt+st2,0) = iS.h(st2,0) * (*mvis_p++);//itsMVis(IPosition(3,st2,ch,st1));
               w+=norm(iS.z(ch*nSt+st2,0));
-              t+=conj(iS.z(ch*nSt+st2,0)) * vis_p[p_index];
+              t+=conj(iS.z(ch*nSt+st2,0)) * (*vis_p++);//itsVis(IPosition(3,st2,ch,st1));
             }
           }
           iS.g(st1,0)=t/w;
@@ -819,6 +873,7 @@ namespace LOFAR {
           THROW(Exception,"Klaar!");
         }
       }
+      itsTimerSolve.stop();
     }
 
     void GainCal::exportToMatlab(uint ch) {
@@ -921,6 +976,7 @@ namespace LOFAR {
     void GainCal::finish()
     {
       itsTimer.start();
+      itsTimerWrite.start();
 
       uint nSt=info().antennaUsed().size();
 
@@ -1028,6 +1084,7 @@ namespace LOFAR {
         }
       }
 
+      itsTimerWrite.stop();
       itsTimer.stop();
       // Let the next steps finish.
       getNextStep()->finish();
