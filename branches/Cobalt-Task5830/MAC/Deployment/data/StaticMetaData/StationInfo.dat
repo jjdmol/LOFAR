@@ -3,6 +3,11 @@
 #
 # $Id:$
 #
+# IMPORTANT NOTE: Adding a column means that you'll have to change the
+# createPICtree script as well. That script has the number of columns
+# hardcoded in the code at two places!!!! If not adapted, no PIC tree
+# can be (re)created anymore!!
+#
 # ID: Unique station identifier (used for PVSS, SAS, etc)
 # ring: Location C=Core, R=Remote, E=European
 # Long, lat and height are in WGS84 and are for initial position guess 
@@ -47,7 +52,7 @@ CS030	30    C    6.8609850    52.9225878      58.01   12     6    96    48    Ye
 CS031	31    C    6.8597219    52.9177706      53.61   12     6    96    48    Yes      Yes    No
 CS032	32    C    6.8603878    52.9121611      59.31   12     6    96    48    Yes      Yes    No
 
-# Remote stations with core station layout (i.e., with HBASplit set to 'yes')
+# The Remote stations with core station layout (i.e., with HBASplit set to 'yes')
 CS101	101   C    6.8805014    52.9223181      57.78   12     6    96    48    Yes      Yes    No
 CS102	102   C    0.0          0.0             0       12     6    96    48    Yes      Yes    No
 CS103	103   C    6.8963725    52.9160403      56.52   12     6    96    48    Yes      Yes    No

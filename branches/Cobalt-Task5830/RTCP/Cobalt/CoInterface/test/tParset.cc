@@ -37,7 +37,6 @@ using namespace std;
 using boost::format;
 
 // macros for testing true/false keys
-#define TESTKEYS(new, old) for ( string k = "x", keystr = new; k != "xxx"; k += "x", keystr = old)
 #define TESTBOOL for( unsigned val = 0; val < 2; ++val )
 #define valstr ((val) ? "true" : "false")
 
@@ -84,13 +83,11 @@ TEST(defaultTestParset) {
  */
 
 TEST(realTime) {
-  TESTKEYS("Cobalt.realTime", "OLAP.realTime") {
-    TESTBOOL {
-      Parset ps = makeDefaultTestParset(keystr, valstr);
+  TESTBOOL {
+    Parset ps = makeDefaultTestParset("Cobalt.realTime", valstr);
 
-      CHECK_EQUAL(val, ps.settings.realTime);
-      CHECK_EQUAL(val, ps.realTime());
-    }
+    CHECK_EQUAL(val, ps.settings.realTime);
+    CHECK_EQUAL(val, ps.realTime());
   }
 }
 
@@ -177,47 +174,39 @@ TEST(nrPolarisations) {
 
 SUITE(corrections) {
   TEST(bandPass) {
-    TESTKEYS("Cobalt.correctBandPass", "OLAP.correctBandPass") {
-      TESTBOOL {
-        Parset ps = makeDefaultTestParset(keystr, valstr);
+    TESTBOOL {
+      Parset ps = makeDefaultTestParset("Cobalt.correctBandPass", valstr);
 
-        CHECK_EQUAL(val, ps.settings.corrections.bandPass);
-        CHECK_EQUAL(val, ps.correctBandPass());
-      }
+      CHECK_EQUAL(val, ps.settings.corrections.bandPass);
+      CHECK_EQUAL(val, ps.correctBandPass());
     }
   }
 
   TEST(clock) {
-    TESTKEYS("Cobalt.correctClocks", "OLAP.correctClocks") {
-      TESTBOOL {
-        Parset ps = makeDefaultTestParset(keystr, valstr);
+    TESTBOOL {
+      Parset ps = makeDefaultTestParset("Cobalt.correctClocks", valstr);
 
-        CHECK_EQUAL(val, ps.settings.corrections.clock);
-        CHECK_EQUAL(val, ps.correctClocks());
-      }
+      CHECK_EQUAL(val, ps.settings.corrections.clock);
+      CHECK_EQUAL(val, ps.correctClocks());
     }
   }
 
   TEST(dedisperse) {
-    TESTKEYS("Cobalt.BeamFormer.coherentDedisperseChannels", "OLAP.coherentDedisperseChannels") {
-      TESTBOOL {
-        Parset ps = makeDefaultTestParset(keystr, valstr);
+    TESTBOOL {
+      Parset ps = makeDefaultTestParset("Cobalt.BeamFormer.coherentDedisperseChannels", valstr);
 
-        CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
-      }
+      CHECK_EQUAL(val, ps.settings.corrections.dedisperse);
     }
   }
 }
 
 SUITE(delayCompensation) {
   TEST(enabled) {
-    TESTKEYS("Cobalt.delayCompensation", "OLAP.delayCompensation") {
-      TESTBOOL {
-        Parset ps = makeDefaultTestParset(keystr, valstr);
+    TESTBOOL {
+      Parset ps = makeDefaultTestParset("Cobalt.delayCompensation", valstr);
 
-        CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
-        CHECK_EQUAL(val, ps.delayCompensation());
-      }
+      CHECK_EQUAL(val, ps.settings.delayCompensation.enabled);
+      CHECK_EQUAL(val, ps.delayCompensation());
     }
   }
 
@@ -745,17 +734,14 @@ SUITE(correlator) {
   }
 
   TEST(nrChannels) {
-    // for now, nrChannels is also defined if the correlator is disabled
-    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.channelsPerSubband") {
-      Parset ps = makeDefaultTestParset();
+    Parset ps = makeDefaultTestParset();
 
-      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.replace(keystr, "256");
-      ps.updateSettings();
+    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.replace("Cobalt.Correlator.nrChannelsPerSubband", "256");
+    ps.updateSettings();
 
-      CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
-      CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
-    }
+    CHECK_EQUAL(256U, ps.settings.correlator.nrChannels);
+    CHECK_EQUAL(256U, ps.nrChannelsPerSubband());
   }
 
   TEST(channelWidth) {
@@ -764,7 +750,7 @@ SUITE(correlator) {
       Parset ps = makeDefaultTestParset();
 
       ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.replace("Observation.channelsPerSubband", str(format("%u") % nrChannels));
+      ps.replace("Cobalt.Correlator.nrChannelsPerSubband", str(format("%u") % nrChannels));
       ps.updateSettings();
 
       CHECK_CLOSE(ps.settings.subbandWidth() / nrChannels, ps.settings.correlator.channelWidth, 0.00001);
@@ -773,35 +759,31 @@ SUITE(correlator) {
   }
 
   TEST(nrSamplesPerChannel) {
-    TESTKEYS("Cobalt.Correlator.nrChannelsPerSubband", "Observation.nrChannelsPerSubband") {
-      Parset ps = makeDefaultTestParset();
-      
-      // set
-      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.replace("Cobalt.blockSize", "256");
-      ps.replace(keystr, "64");
-      ps.updateSettings();
+    Parset ps = makeDefaultTestParset();
+    
+    // set
+    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.replace("Cobalt.blockSize", "256");
+    ps.replace("Cobalt.Correlator.nrChannelsPerSubband", "64");
+    ps.updateSettings();
 
-      // verify settings
-      CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerChannel);
-      CHECK_EQUAL(4U, ps.CNintegrationSteps());
-      CHECK_EQUAL(4U, ps.nrSamplesPerChannel());
-    }
+    // verify settings
+    CHECK_EQUAL(4U, ps.settings.correlator.nrSamplesPerChannel);
+    CHECK_EQUAL(4U, ps.CNintegrationSteps());
+    CHECK_EQUAL(4U, ps.nrSamplesPerChannel());
   }
 
   TEST(nrBlocksPerIntegration) {
-    TESTKEYS("Cobalt.Correlator.nrBlocksPerIntegration", "OLAP.IONProc.integrationSteps") {
-      Parset ps = makeDefaultTestParset();
-      
-      // set
-      ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
-      ps.replace(keystr, "42");
-      ps.updateSettings();
+    Parset ps = makeDefaultTestParset();
+    
+    // set
+    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "true");
+    ps.replace("Cobalt.Correlator.nrBlocksPerIntegration", "42");
+    ps.updateSettings();
 
-      // verify settings
-      CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
-      CHECK_EQUAL(42U, ps.IONintegrationSteps());
-    }
+    // verify settings
+    CHECK_EQUAL(42U, ps.settings.correlator.nrBlocksPerIntegration);
+    CHECK_EQUAL(42U, ps.IONintegrationSteps());
   }
 
   /* TODO: test super-station beam former */

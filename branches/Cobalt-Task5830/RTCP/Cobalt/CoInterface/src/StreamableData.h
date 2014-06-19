@@ -118,9 +118,6 @@ namespace LOFAR
     protected:
       virtual void readData(Stream *, unsigned);
       virtual void writeData(Stream *, unsigned);
-
-    private:
-      //bool	 itsHaveWarnedLittleEndian;
     };
 
 
@@ -169,8 +166,6 @@ namespace LOFAR
       :
       samples(extents, alignment, allocator),
       flags(flagsExtents) // e.g., for FilteredData [nrChannels][nrStations], sparse dimension [nrSamplesPerIntegration]
-
-      //itsHaveWarnedLittleEndian(false)
     {
     }
 

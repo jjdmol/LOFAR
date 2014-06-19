@@ -45,7 +45,7 @@ TEST(FIR_FilterKernel)
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
@@ -131,7 +131,7 @@ TEST(HistoryFlags)
   ps.add("Observation.nrBeams", "1");
   ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
   ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
   ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");

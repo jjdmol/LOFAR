@@ -145,8 +145,8 @@ void  parseCommandlineParameters(int argc, char *argv[], Parset &ps, KernelParam
 
   // Create a parset with the correct parameters to run a beamformer kernel
   ps.add("Observation.Beam[0].TiedArrayBeam[0].directionType", "J2000");
-  ps.add("Observation.Beam[0].TiedArrayBeam[0].absoluteAngle1", "0.0");
-  ps.add("Observation.Beam[0].TiedArrayBeam[0].absoluteAngle2", "0.0");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].angle1", "0.0");
+  ps.add("Observation.Beam[0].TiedArrayBeam[0].angle2", "0.0");
   ps.add("Observation.Beam[0].TiedArrayBeam[0].coherent", "true");
   ps.add("Observation.Beam[0].angle1", "5.0690771926813865");
   ps.add("Observation.Beam[0].angle2", "0.38194688387907605");
