@@ -36,15 +36,17 @@ cat "${in_prefix}RSPConnections_Cobalt.dat" | sort | awk '
 
 BEGIN {
   prevstat = "";
+  prevboard = "";
   prevline = "";
   rsp_seen = 0;
 }
 
 /RSP/ {
   stat = $1;
+  board = $2;
   line = $0;
   
-  if (stat == prevstat) {
+  if (stat == prevstat && board == prevboard) {
     rsp_seen++;
   } else {
     for (i = 0; i < 4 - rsp_seen; ++i)
@@ -57,6 +59,7 @@ BEGIN {
 
   prevline = line;
   prevstat = stat;
+  prevboard = board;
 }' | perl -ne '
 /^(\w+) RSP_([01])\s+([^ \t\n]+)\s+([^ \t\n]+)/ || next;
 
