@@ -143,6 +143,9 @@ public:
   uint getNRow() const
     { return itsNrRows; }
   
+  // The storage manager is not a regular one.
+  virtual casa::Bool isRegular() const;
+  
   // The storage manager cannot add rows.
   virtual casa::Bool canAddRow() const;
   

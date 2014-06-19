@@ -55,7 +55,6 @@ TEST(Tracking) {
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
-  delays.start();
 
   Delays::AllDelays delaySet(ps), prevDelaySet(ps);
 
@@ -111,7 +110,6 @@ TEST(TiedArrayBeam) {
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
-  delays.start();
 
   Delays::AllDelays delaySet(ps);
 
@@ -132,9 +130,6 @@ TEST(TiedArrayBeam) {
 int main()
 {
   INIT_LOGGER( "tDelays" );
-
-  // Don't run forever if communication fails for some reason
-  alarm(10);
 
   return UnitTest::RunAllTests() > 0;
 }

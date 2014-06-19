@@ -84,7 +84,6 @@ int main( int argc, char **argv )
 
   /* Start delay compensation thread */
   Delays delays(ps, antennaFieldIdx, from, blockSize);
-  delays.start();
 
   /* Produce and print delays for the whole observation */
   for (TimeStamp current = from + block * blockSize; current + blockSize < to; current += blockSize, ++block) 

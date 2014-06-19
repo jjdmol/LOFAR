@@ -38,12 +38,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Parameters::Parameters(const Parset& ps) :
-      nrStations(ps.nrStations()),
-      nrChannelsPerSubband(ps.nrChannelsPerSubband()),
-      nrSamplesPerChannel(ps.nrSamplesPerChannel()),
-      nrSamplesPerSubband(ps.nrSamplesPerSubband()),
-      nrPolarizations(NR_POLARIZATIONS),
+    Kernel::Parameters::Parameters() :
       dumpBuffers(false)
     {
     }

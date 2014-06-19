@@ -30,8 +30,25 @@ if not os.access(logPath, os.F_OK):
     os.mkdir(logPath)
 
 logger = None
-stage  = ""
 
+# class holding active function (stage)
+class ERR:
+    stage = ""
+    last_stage = ""
+    @staticmethod
+    def setStage(stage):
+        ERR.last_stage = ERR.stage
+        ERR.stage = stage
+        return
+    @staticmethod
+    def setLastStage():
+        ERR.stage = ERR.last_stage 
+        return
+    @staticmethod
+    def log():
+        logger.warn("program error(%s) in stage %s" %(sys.exc_value, ERR.stage))
+        return
+        
 def lbaMode(mode):
     if mode in (1, 2, 3, 4):
         return (True)
@@ -47,13 +64,9 @@ def checkStr(key):
                   'CR':"Cable-reflection", 'M':"Modem-failure", 'DOWN':"Antenna-fallen", 'SHIFT':"Shifted-band"})
     return (checks.get(key,'Unknown'))
 
-# PVSS states
-PVSS_states = dict({'OFF':0, 'OPERATIONAL':1, 'MAINTENANCE':2, 'TEST':3, 'SUSPICIOUS':4, 'BROKEN':5})
-
 def printHelp():
     print "----------------------------------------------------------------------------"
     print "Usage of arguments"
-    print "-u          : update pvss"
     print
     print "Set logging level, can be: debug|info|warning|error"
     print "-ls=debug   : print all information on screen, default=info"
@@ -76,7 +89,7 @@ def getArguments():
             else:
                 key, value = opt, '-'
                 
-            if key in ('H','LS','LF','U'):
+            if key in ('H','LS','LF'):
                 if value != '-':
                     args[key] = value
                 else:   
@@ -156,24 +169,8 @@ def init_logging(args):
         logger.addHandler(stream_handler)
     return (logger)
     
-# send comment, key and value to PVSS and write to file
-def sendToPVSS(comment, pvss_key, value):
-    if len(comment) > 0:
-        comment = 'rtsm::'+comment
-    else:
-        comment = 'rtsm'
-    arguments = '%s %s %d' %(comment, pvss_key, value)
-    if True:
-        print arguments
-    else:
-        response = sendCmd('setObjectState', arguments)
-        sleep(0.2)
-        return(response)
-    return("")
-
 def getRcuMode():
-    global stage
-    stage = "getRcuMode"
+    ERR.setStage("getRcuMode")
     rcumode = -1
     answer = rspctl("--rcu")
     for mode in range(8):
@@ -188,70 +185,106 @@ def getRcuMode():
     return (rcumode)    
 
 def getAntPol(rcumode, rcu):
-    global stage
-    last_stage = stage
-    stage = "getAntPol"
-    
+    ERR.setStage("getAntPol")
     pol_str = ('X','Y')
     ant = rcu / 2
     if rcumode == 1:
         pol_str = ('Y','X')
         ant += 48
     pol = pol_str[rcu % 2]
-    stage = last_stage
+    ERR.setLastStage()
     return (ant, pol)
 
-    
-def dumpSpectra(data, metadata, rcu, check):
-    global stage
-    last_stage = stage
-    stage = "dumpSpectra"
-    
-    (station, rcumode, rec_timestamp, obs_id) = metadata
-    logger.debug("start dumping data")
-    dumpTime = time.gmtime(rec_timestamp)
-    date_str = time.strftime("%Y%m%d", dumpTime)
-    
-    filename = "%s_%s_open.dat" %(station, obs_id)
-    full_filename = os.path.join(spectraPath, filename) 
-    f = open(full_filename, 'a')
-    
-    if rcumode in (1, 2, 3, 4):
-        freq = (0  , 100)
-    elif rcumode in (5,):
-        freq = (100, 200)
-    elif rcumode in (6,):
-        freq = (160, 240)
-    elif rcumode in (7,):
-        freq = (200, 300)
-    
-    spectra_info = "SPECTRA-INFO=%d,%d,%s,%s,%d,%d,%f\n" %\
-                   (rcu, rcumode, obs_id, check, freq[0], freq[1], rec_timestamp)
-                   
-    mean_spectra = "MEAN-SPECTRA=["
-    for i in data.getMeanSpectra(rcu%2):
-        mean_spectra += "%3.1f " %(i)
-    mean_spectra += "]\n"    
+class CSV:
+    filename = ""
+    obs_id   = ""
+    rcu_mode = 0
+    station  = ""
+    record_timestamp = 0 
+    @staticmethod    
+    def setObsID(obs_id, rcu_mode):
+        CSV.station  = getHostName()
+        CSV.obs_id   = obs_id
+        CSV.filename = "%s_%s_open.dat" %(CSV.station, obs_id)
+        CSV.writeHeader()
+        return
+    @staticmethod    
+    def setRcuMode(rcu_mode):
+        CSV.rcu_mode = rcu_mode
+        return    
+    @staticmethod    
+    def setRecordTimestamp(timestamp):
+        CSV.record_timestamp = timestamp
+        return
+    @staticmethod    
+    def writeHeader():        
+        full_filename = os.path.join(spectraPath, CSV.filename) 
+        if not os.path.exists(full_filename):
+            f = open(full_filename, 'w')
+            f.write('# SPECTRA-INFO=rcu,rcumode,obs-id,check,startfreq,stopfreq,rec-timestamp\n')
+            f.write('# OBS-ID-INFO=obs_id,start_time,stop_time,obsid_samples\n')
+            f.flush()
+            f.close()
+        return
+    @staticmethod    
+    def writeSpectra(data, rcu, check):
+        ERR.setStage("CSV.writeSpectra")
+        logger.debug("start dumping data")
+        dumpTime = time.gmtime(CSV.record_timestamp)
+        date_str = time.strftime("%Y%m%d", dumpTime)
+        
+        full_filename = os.path.join(spectraPath, CSV.filename) 
+        f = open(full_filename, 'a')
+        
+        if rcumode in (1, 2, 3, 4):
+            freq = (0  , 100)
+        elif rcumode in (5,):
+            freq = (100, 200)
+        elif rcumode in (6,):
+            freq = (160, 240)
+        elif rcumode in (7,):
+            freq = (200, 300)
+        
+        spectra_info = "SPECTRA-INFO=%d,%d,%s,%s,%d,%d,%f\n" %\
+                       (rcu, CSV.rcu_mode, CSV.obs_id, check, freq[0], freq[1], CSV.record_timestamp)
+                       
+        mean_spectra = "MEAN-SPECTRA=["
+        for i in data.getMeanSpectra(rcu%2):
+            mean_spectra += "%3.1f " %(i)
+        mean_spectra += "]\n"    
 
-    bad_spectra = "BAD-SPECTRA=["
-    for i in data.getSpectra(rcu):
-        bad_spectra += "%3.1f " %(i)
-    bad_spectra += "]\n\n"    
+        bad_spectra = "BAD-SPECTRA=["
+        for i in data.getSpectra(rcu):
+            bad_spectra += "%3.1f " %(i)
+        bad_spectra += "]\n\n"    
+        
+        f.write(spectra_info)
+        f.write(mean_spectra)
+        f.write(bad_spectra)
+        
+        f.close()
+        ERR.setLastStage()
+        return
+    @staticmethod    
+    def writeInfo(start_time, stop_time, obsid_samples):
+        full_filename = os.path.join(spectraPath, CSV.filename) 
+        f = open(full_filename, 'a')
+        f.write('OBS-ID-INFO=%s,%3.1f,%3.1f,%d\n\n' %(CSV.obs_id, start_time, stop_time, obsid_samples))
+        f.flush()
+        f.close()
+        return
+    @staticmethod    
+    def closeFile():
+        full_filename = os.path.join(spectraPath, CSV.filename)
+        filename_new = CSV.filename.replace('open','closed')
+        full_filename_new = os.path.join(spectraPath, filename_new)
+        os.rename(full_filename, full_filename_new)
+        CSV.obs_id = ""
+        CSV.filename = ""
+        return
     
-    f.write(spectra_info)
-    f.write(mean_spectra)
-    f.write(bad_spectra)
-    
-    f.close()
-    stage = last_stage
-    return
-    
-    
-def checkForOscillation(data, metadata, delta, pvss=False):
-    global stage
-    stage = "checkForOscillation"
-    
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+def checkForOscillation(data, rcumode, delta):
+    ERR.setStage("checkForOscillation")
     logger.debug("start oscillation check")
     check_pol   = 0
     for test_data in (data.getAllX(), data.getAllY()):
@@ -283,26 +316,19 @@ def checkForOscillation(data, metadata, delta, pvss=False):
             if lbaMode(rcumode):
                 logger.info("Mode-%d RCU-%03d Ant-%03d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) (=ref)" %\
                            (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low))
-                dumpSpectra(data, metadata, rcu, "OSC")
-                if pvss:
-                    sendToPVSS("rtsm oscillating", "LOFAR_PIC_LBA%03d" %(ant), PVSS_states['BROKEN'])
+                CSV.writeSpectra(data, metadata, rcu, "OSC")
             
             if hbaMode(rcumode):
                 if ((max_sum > 5000.0) or (n_peaks > 50)):
                     logger.info("Mode-%d RCU-%03d Tile-%02d %c Oscillation, sum=%3.1f(%3.1f) peaks=%d(%d) low=%3.1fdB(%3.1f) ref=()" %\
                                (rcumode, rcu, ant, pol, max_sum, ref_max_sum, n_peaks, ref_n_peaks, rcu_low, ref_rcu_low))
-                    dumpSpectra(data, metadata, rcu, "OSC")
-                    if pvss:
-                        sendToPVSS("rtsm oscillating", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
+                    CSV.writeSpectra(data, metadata, rcu, "OSC")
             check_pol = 1
     return
 
     
-def checkForNoise(data, metadata, low_deviation, high_deviation, max_diff, pvss=False):
-    global stage
-    stage = "checkForNoise"
-    
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+def checkForNoise(data, rcumode, low_deviation, high_deviation, max_diff):
+    ERR.setStage("checkForNoise")
     logger.debug("start noise and jitter check")
     check_pol = 0
     for test_data in (data.getAllX(), data.getAllY()):
@@ -319,17 +345,13 @@ def checkForNoise(data, metadata, low_deviation, high_deviation, max_diff, pvss=
                 if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
                     logger.info("Mode-%d RCU-%03d Ant-%03d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
                                (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff))
-                    dumpSpectra(data, metadata, rcu, "HN")
-                    if pvss:
-                        sendToPVSS("rtsm high-noise", "LOFAR_PIC_LBA%03d" %(ant+48), PVSS_states['BROKEN'])
+                    CSV.writeSpectra(data, metadata, rcu, "HN")
                     
             if hbaMode(rcumode):
                 if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (diff >= 3.0)) or (diff >= 5.0):
                     logger.info("Mode-%d RCU-%03d Tile-%02d %c High-noise, value=%3.1fdB bad=%d(%d) limit=%3.1fdB diff=%3.1fdB" %\
                                (rcumode, rcu, ant, pol, val, bad_secs, data.frames, ref, diff))
-                    dumpSpectra(data, metadata, rcu, "HN")
-                    if pvss:
-                        sendToPVSS("rtsm high-noise", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
+                    CSV.writeSpectra(data, metadata, rcu, "HN")
         
         n_err = len(jitter)
         for err in jitter:
@@ -340,26 +362,19 @@ def checkForNoise(data, metadata, low_deviation, high_deviation, max_diff, pvss=
                 if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
                     logger.info("Mode-%d RCU-%03d Ant-%03d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
                                (rcumode, rcu, ant, pol, val, ref))
-                    dumpSpectra(data, metadata, rcu, "J")
-                    if pvss:
-                        sendToPVSS("rtsm jitter", "LOFAR_PIC_LBA%03d" %(ant+48), PVSS_states['BROKEN'])
+                    CSV.writeSpectra(data, metadata, rcu, "J")
                     
             if hbaMode(rcumode):
                 if (n_err < 6) and (bad_secs >= (data.frames / 2.0) and (val >= 3.0)) or (val >= 5.0):
                     logger.info("Mode-%d RCU-%03d Tile-%02d %c Jitter, fluctuation=%3.1fdB  normal=%3.1fdB" %\
                                (rcumode, rcu, ant, pol, val, ref))
-                    dumpSpectra(data, metadata, rcu, "J")
-                    if pvss:
-                        sendToPVSS("rtsm jitter", "LOFAR_PIC_HBA%02d" %(ant), PVSS_states['BROKEN'])
+                    CSV.writeSpectra(data, metadata, rcu, "J")
         check_pol = 1            
     return
 
 
-def checkForSummatorNoise(data, metadata, pvss=False):
-    global stage
-    stage = "checkForSummatorNoise"
-    
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+def checkForSummatorNoise(data, rcumode):
+    ERR.setStage("checkForSummatorNoise")
     logger.debug("start summator-noise check")
     check_pol = 0
     for test_data in (data.getAllX(), data.getAllY()):
@@ -371,23 +386,19 @@ def checkForSummatorNoise(data, metadata, pvss=False):
             tile, pol = getAntPol(rcumode, rcu)
             logger.info("Mode-%d RCU-%03d Tile-%02d %c Summator-noise, cnt=%d peaks=%d" %\
                        (rcumode, rcu, tile, pol, peaks, max_peaks))
-            dumpSpectra(data, metadata, rcu, "SN")
-            if pvss:
-                sendToPVSS("rtsm summator-noise", "LOFAR_PIC_HBA%02d" %(tile), PVSS_states['BROKEN'])           
+            CSV.writeSpectra(data, metadata, rcu, "SN")
         for msg in cr:
             bin, peaks, max_peaks = msg
             rcu = (bin * 2) + check_pol
             tile, pol = getAntPol(rcumode, rcu)
             logger.info("Mode-%d RCU-%03d Tile-%02d %c Cable-reflections, cnt=%d peaks=%d" %\
                        (rcumode, rcu, tile, pol, peaks, max_peaks))
-            #dumpSpectra(data, metadata, rcu, "CR")
+            #CSV.writeSpectra(data, metadata, rcu, "CR")
         check_pol = 1
     return
 
-def checkForDown(data, metadata, subband, pvss=False):
-    global stage
-    stage = "checkForDown"
-    (station, rcumode, rec_timestamp, obs_id) = metadata
+def checkForDown(data, rcumode, subband):
+    ERR.setStage("checkForDown")
     logger.debug("start down check")
     _data = data.getAll()
     down, shifted = searchDown(_data, subband)
@@ -399,9 +410,7 @@ def checkForDown(data, metadata, subband, pvss=False):
         ant, pol = getAntPol(rcumode, rcu)
         logger.info("Mode-%d RCU-%02d/%02d Ant-%02d Down, x-offset=%d y-offset=%d" %\
                    (rcumode, rcu, (rcu+1), ant, max_x_offset, max_y_offset))
-        dumpSpectra(data, metadata, rcu, "DOWN")
-        if pvss:
-            sendToPVSS("rtsm fallen", "LOFAR_PIC_LBA%02d" %(ant), PVSS_states['BROKEN'])           
+        CSV.writeSpectra(data, metadata, rcu, "DOWN")
                 
     for msg in shifted:
         rcu, max_sb, mean_max_sb = i
@@ -409,45 +418,80 @@ def checkForDown(data, metadata, subband, pvss=False):
         ant, pol = getAntPol(rcumode, rcu)
         logger.info("Mode-%d RCU-%02d Ant-%02d Shifted, offset=%d" %\
                    (rcumode, rcu, ant, offset))
-        dumpSpectra(data, metadata, rcu, "SHIFT")
+        CSV.writeSpectra(data, metadata, rcu, "SHIFT")
     return    
 
-def full_listdir(dir_name):
-     return sorted([os.path.join(dir_name, file_name) for file_name in os.listdir(dir_name)])
+#def full_listdir(dir_name):
+#     return sorted([os.path.join(dir_name, file_name) for file_name in os.listdir(dir_name)])
      
-def getOpenFile():
-    files = os.listdir(spectraPath)
-    for file in files:
-        if file.find("open") > 0:
-            return(file, file.split('_')[1])
-    return ('','')        
+#def getOpenFile():
+#    files = os.listdir(spectraPath)
+#    for file in files:
+#        if file.find("open") > 0:
+#            return(file, file.split('_')[1])
+#    return ('','')        
 
-def closeOpenFiles(obsid=""):
+def closeAllOpenFiles():
     files = os.listdir(spectraPath)
     for filename in files:
-        if obsid == "" or filename.find("_%s_open" %(obsid)) == -1:
-            if filename.find('open') > -1: 
-                full_filename = os.path.join(spectraPath, filename)
-                filename_new = filename.replace('open','closed')
-                full_filename_new = os.path.join(spectraPath, filename_new)
-                os.rename(full_filename, full_filename_new)
+        if filename.find('open') > -1: 
+            full_filename = os.path.join(spectraPath, filename)
+            filename_new = filename.replace('open','closed')
+            full_filename_new = os.path.join(spectraPath, filename_new)
+            os.rename(full_filename, full_filename_new)
     return
 
-def closeFile(filename):
-    full_filename = os.path.join(spectraPath, filename)
-    filename_new = filename.replace('open','closed')
-    full_filename_new = os.path.join(spectraPath, filename_new)
-    os.rename(full_filename, full_filename_new)
-    return
+#def closeFile(filename):
+#    full_filename = os.path.join(spectraPath, filename)
+#    filename_new = filename.replace('open','closed')
+#    full_filename_new = os.path.join(spectraPath, filename_new)
+#    os.rename(full_filename, full_filename_new)
+#    return
+
+class cDayInfo:
+    def __init__(self):
+        self.date = ""
+        self.samples = [0,0,0,0,0,0,0] # RCU-mode 1..7
+        self.obs_info = list()
+        
+    def addSample(self, rcumode=-1):
+        date = time.strftime("%Y%m%d", time.gmtime(time.time()))
+        if self.date == "":
+            self.date = date
+        if self.date != date:
+            self.writeToFile()
+            self.reset()
+            self.date = date
+        if rcumode in range(1,8,1):
+            self.samples[rcumode-1] += 1
     
+    def addObsInfo(self, obs_id, start_time, stop_time, rcu_mode, samples):
+        self.obs_id.append((obs_id, start_time, stop_time, rcu_mode, samples))
+    
+    def reset(self):
+        self.samples = [0,0,0,0,0,0,0] # RCU-mode 1..7
+        self.obs_info = list()
+    
+    def writeToFile(self):
+        filename = "%s_%s_dayinfo.dat" %(getHostName(), last_date)
+        full_filename = os.path.join(spectraPath, filename) 
+        f = open(full_filename, 'w')
+        f.write('#DAY-INFO date,M1,M2,M3,M4,M5,M6,M7\n')  
+        f.write('DAY-INFO=%s,%d,%d,%d,%d,%d,%d,%d\n' %\
+               (self.date, self.samples[0], self.samples[1], self.samples[2], self.samples[3], self.samples[4], self.samples[5], self.samples[6]))
+        f.write('#OBS_INFO obs_id, start_time, stop_time, rcu_mode, samples\n')  
+        for i in self.obs_info:
+            f.write('OBSID-INFO=%s,%d,%d,%d,%d\n' %\
+                   (i[0],i[1],i[2],i[3],i[4])
+        f.close()
+
 def main():
-    global logger
-    global State
-    stage    = "main"
+    ERR.setStage("main")
     filename = ""
     obs_id   = ""
     rcumode  = 0
     station  = getHostName()
+    DI       = cDayInfo()
     
     args = getArguments()
     if args.has_key('H'):
@@ -475,102 +519,82 @@ def main():
     
     start_time    = 0
     stop_time     = 0
-    day_samples   = ["",0,0,0,0,0,0,0]
     obsid_samples = 0
     last_date     = ""
-    now_date = last_date = time.strftime("%Y%m%d", time.gmtime(time.time()))
     
     logger.debug("first filename=%s, obsid=%s" %(filename, obs_id))
     while True:
         try:
-            start = time.time()
+            check_start = time.time()
             answer = sendCmd('swlevel')
             if answer.find("ObsID") > -1:
                 s1 = answer.find("ObsID:")+6
                 s2 = answer.find("]")
                 id = answer[s1:s2].strip().replace(' ','-')
+                
                 if id != obs_id:
                     # close last file if exist
                     if obs_id != "":
                         stop_time = time.time()
-                        full_filename = os.path.join(spectraPath, filename) 
-                        f = open(full_filename, 'a')
-                        f.write('OBS-ID-INFO=%s,%3.1f,%3.1f,%d\n\n' %(obs_id,start_time,stop_time,obsid_samples))
-                        f.flush()
-                        f.close()
-                        #closeFile(filename)
-                    
-                    # set new obsid
+                        DI.addObsInfo(obs_id, start_time, stop_time, rcu_mode, obsid_samples)
+                        CSV.writeInfo(start_time, stop_time, obsid_samples)
+                        CSV.closeFile()
+                        
+                    # start new file and set new obsid
                     obs_id       = id
                     obsid_samples = 0
-                    start_time   = time.time() 
-                    filename = "%s_%s_open.dat" %(getHostName(), obs_id)
-                    full_filename = os.path.join(spectraPath, filename) 
-                    if not os.path.exists(full_filename):
-                        f = open(full_filename, 'a')
-                        f.write('# SPECTRA-INFO=rcu,rcumode,obs-id,check,startfreq,stopfreq,rec-timestamp\n')
-                        f.write('# OBS-ID-INFO=obs_id,start_time,stop_time,obsid_samples\n')
-                        f.flush()
-                        f.close()
+                    start_time   = time.time()
+                    CSV.setObsID(obs_id)
+                #TODO:
+                #closeOpenFiles(obs_id)
                 
-                closeOpenFiles(obs_id)
-                now_date = time.strftime("%Y%m%d", time.gmtime(time.time()))    
-                if now_date != last_date:
-                    filename = "%s_%s_dayinfo.dat" %(getHostName(), last_date)
-                    full_filename = os.path.join(spectraPath, filename) 
-                    f = open(full_filename, 'a')
-                    f.write('#samples  date,M1,M2,M3,M4,M5,M6,M7\n')  
-                    f.write('DAY-INFO=%s,%d,%d,%d,%d,%d,%d,%d\n' %\
-                           (last_date, day_samples[1], day_samples[2], day_samples[3], day_samples[4], day_samples[5], day_samples[6], day_samples[7]))
-                    f.close()
-                    day_samples   = ["",0,0,0,0,0,0,0]
-                    last_date = now_date
                 # observing, so check mode now
                 rcumode = getRcuMode()
                 if rcumode == 0:
                     continue
                 rec_timestamp  = time.time()+3.0
-                data.record(rec_time=1, read=True, slow=True)
+                #data.record(rec_time=1, read=True, slow=True)
+                data.fetch()
                 # if rcumode not changed do tests
                 if rcumode == getRcuMode():
-                    day_samples[rcumode] += 1
+                    CSV.setRcuMode(rcumode)
+                    DI.addSample(rcumode)
                     obsid_samples        += 1
                     metadata = (station, rcumode, rec_timestamp, obs_id)
                     if lbaMode(rcumode):
-                        checkForOscillation(data, metadata, 4.0)
-                        #checkForNoise(data, metadata, conf.getFloat('lba-noise-min-deviation', -3.0),
+                        checkForOscillation(data, rcumode, 4.0)
+                        #checkForNoise(data, rcumode, conf.getFloat('lba-noise-min-deviation', -3.0),
                         #              conf.getFloat('lba-noise-max-deviation', 2.5),
                         #              conf.getFloat('lba-noise-max-difference', 1.5))
                     
                     if hbaMode(rcumode):
-                        checkForOscillation(data, metadata, 6.0)
-                        #checkForNoise(data, metadata, conf.getFloat('hba-noise-min-deviation', -3.0),
+                        checkForOscillation(data, rcumode, 6.0)
+                        #checkForNoise(data, rcumode, conf.getFloat('hba-noise-min-deviation', -3.0),
                         #              conf.getFloat('hba-noise-max-deviation', 2.5),
                         #              conf.getFloat('hba-noise-max-difference', 2.0))
-                        checkForSummatorNoise(data, metadata)
+                        checkForSummatorNoise(data, rcumode)
                         
             else:
-                if len(filename) > 0:
+                if obs_id != "":
                     stop_time = time.time()
-                    full_filename = os.path.join(spectraPath, filename) 
-                    f = open(full_filename, 'a')
-                    f.write('OBS-ID-INFO=%s,%3.1f,%3.1f,%d\n\n' %(obs_id,start_time,stop_time,obsid_samples))
-                    f.flush()
-                    f.close()
-                    filename = ""
+                    CSV.writeInfo(start_time, stop_time, obsid_samples)
+                    CSV.closeFile()
                     obs_id   = ""
-                closeOpenFiles()
+                    obsid_samples = 0
+                closeAllOpenFiles()
                     
-            stop = time.time()
-            sleeptime = 60.0 - (stop - start)
+            # do check every 60 seconds
+            check_stop = time.time()
+            sleeptime = 60.0 - (check_stop - check_start)
             logger.debug("sleep %1.3f seconds" %(sleeptime))
             if sleeptime > 0.0:
-                time.sleep(sleeptime) 
+                time.sleep(sleeptime)
+                
         except KeyboardInterrupt:
             logger.info("stopped by user")
             sys.exit()
         except:
-            logger.warn("program error(%s) in stage %s, rcudata shape = %s" %(sys.exc_value, stage, str(data.getAll().shape)))
+            ERR.log()
         
     # do test and write result files to log directory
     log_dir = conf.getStr('log-dir-local')

@@ -12,7 +12,10 @@
 #      c. STATIONS, FIELD, and BOARDS
 #      d. OUTPUT (to route to Cobalt disk (< ~2min obs) or to locus nodes)
 #      e. LOCUS_NODES, if routing to locus
-# 4. Run this script, and save the output as "record.sh"
+# 4. Run this script, which produces:
+#       record.sh:     the script to run to record station data
+#       replay.sh:     the script to run to replay the recorded station data
+#       replay.parset: parset keys needed to replay the recorded station data
 # 5. Run record.sh before the obs starts
 
 # Sane default
@@ -25,7 +28,7 @@ fi
 # -s: Number of subbands to record [SET TO NUMBER OF SUBBANDS]
 # -f: Record from this timestamp [SET TO OBS START TIME - 1SEC]
 # -t: Record until this timestamp [SET TO OBS END TIME]
-FILTERPARAMS="-s 122 -q -f '2014-05-22 09:24:59' -t '2014-05-22 09:30:01'"
+FILTERPARAMS="-s 122 -q -f '2014-05-22 13:34:59' -t '2014-05-22 13:40:01'"
 
 # Identifier for the output files [SET TO SOMETHING UNIQUE]
 NAME="cs-is-scaling"
@@ -139,16 +142,25 @@ cat $LOFARROOT/etc/parset-additions.d/default/*.parset
 
 LOCUSIDX=0
 
+# Reset replay scripts
+rm -f record.sh replay.sh replay.parset
+
 # Start recording all fields
 for s in $FIELDS
 do
   # Determine the host for this field
   HOST=`$LOFARROOT/bin/station_stream -S $s -h $PARSET 2>/dev/null`;
 
+  # List of input streams for the observation that is going to process this data
+  OBS_INSTREAMS=""
+
   for b in $BOARDS
   do
     # The input stream
     INSTREAM=`$LOFARROOT/bin/station_stream -S $s -B $b -s $PARSET 2>/dev/null`;
+
+    # The interface on which the stream is received
+    IFACE=`echo $INSTREAM | cut -d: -f 2`
 
     # The socket to bind to on the node
     CPU=`$LOFARROOT/bin/station_stream -S $s -B $b -c $PARSET 2>/dev/null`;
@@ -157,26 +169,40 @@ do
     case "$OUTPUT" in
       file)
         OUTSTREAM="file:/localhome/mol/raw-$NAME-$NOW-$s-$b.udp"
+        OBS_INSTREAM="$OUTSTREAM"
         ;;
       locus)
         NR=${#LOCUS_NODES[@]}
         DESTNODENR=`echo "$LOCUSIDX % $NR" | bc`
         DESTNODE="locus${LOCUS_NODES[$DESTNODENR]}"
         DESTPORT=$((LOCUS_FIRST_PORT + LOCUSIDX))
-
-        OUTSTREAM="tcp:$DESTNODE:$DESTPORT"
-
         LOCUSIDX=$((LOCUSIDX + 1))
 
-        echo ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy tcp:0:$DESTPORT file:/data/raw-$NAME-$NOW-$s-$b.udp\" "&"
+        OUTSTREAM="tcp:$DESTNODE:$DESTPORT"
+        FILESTREAM="file:/data/raw-$NAME-$NOW-$s-$b.udp"
+
+        echo "# stream $s board $b [$OUTSTREAM -> $FILESTREAM]" >> record.sh
+        echo ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy tcp:0:$DESTPORT $FILESTREAM\" "&" >> record.sh
+
+        OBS_INSTREAM="tcp:$IFACE:$DESTPORT"
+        echo "ssh $DESTNODE \"/globalhome/romein/bin.x86_64/udp-copy $FILESTREAM $INSTREAM \"" "&" >> replay.sh
         ;;
     esac
 
+    if [ -z "$OBS_INSTREAMS" ]; then
+      OBS_INSTREAMS="$OBS_INSTREAM"
+    else
+      OBS_INSTREAMS="$OBS_INSTREAMS,$OBS_INSTREAM"
+    fi
+
     # The command to execute to record this field
-    echo ssh $HOST \"nice -n -20 numactl --cpunodebind=$CPU --membind=$CPU filterRSP -i $INSTREAM -o $OUTSTREAM "$FILTERPARAMS" \" "&"
+    echo "# stream $s board $b [$INSTREAM -> $OUTSTREAM]" >> record.sh
+    echo ssh $HOST \"nice -n -20 numactl --cpunodebind=$CPU --membind=$CPU $LOFARROOT/filterRSP -i $INSTREAM -o $OUTSTREAM "$FILTERPARAMS" \" "&" >> record.sh
   done
+
+  echo "PIC.Core.$s.RSP.ports = [$OBS_INSTREAMS]" >> replay.parset
 done
 
 # At the end of all ssh commands, wait for all of them to finish
-echo wait
-
+echo wait >> record.sh
+echo wait >> replay.sh

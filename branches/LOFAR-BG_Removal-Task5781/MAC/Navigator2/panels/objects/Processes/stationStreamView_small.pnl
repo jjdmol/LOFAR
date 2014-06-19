@@ -55,6 +55,9 @@ void updateStreamCB(string dp1, bool s0,
   
 private void reload() {
   
+  /////////// this needs to be changed for COBALT //////////////////////
+ 
+  /*
   // get all the InputBuffers used by this station
   inputBuffers = navFunct_getInputBuffersForStation(station);
   
@@ -100,6 +103,7 @@ private void reload() {
   }
   connectToSave=connectTo;
   dynClear(connectTo);
+  */
 }
 
 

@@ -67,3 +67,5 @@ _DPname = LOFAR_ObsSW_TempObs0024
 _parsetPrefix = CorrAppl.CorrProc.
 _processName = CorrProc
 Cobalt.Nodes = [localhost]
+Cobalt.FinalMetaDataGatherer.enabled = false
+

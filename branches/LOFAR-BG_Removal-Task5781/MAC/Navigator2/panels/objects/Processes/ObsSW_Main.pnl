@@ -112,14 +112,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"resizeMode" "enum 0"
-"hScrollBarMode" "enum 0"
-"vScrollBarMode" "enum 0"
-"frameShape" "enum 6"
-"defaultRenameAction" "enum 0"
-"backgroundOrigin" "enum 0"
-"selectionMode" "enum 0"
 "frameShadow" "enum 48"
+"selectionMode" "enum 0"
+"backgroundOrigin" "enum 0"
+"defaultRenameAction" "enum 0"
+"frameShape" "enum 6"
+"vScrollBarMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"resizeMode" "enum 0"
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0  820 20 989 375
@@ -276,16 +276,6 @@ LANG:1 6 logMsg
 1 150 14 "" 6
 0
 1 149 14 "" 2
-0
-1 151 15 "" 4
-0
-1 152 15 "" 3
-0
-1 153 15 "0" 1
-0
-1 155 15 "" 6
-0
-1 154 15 "" 2
 0
 1 156 17 "" 4
 0
@@ -465,11 +455,6 @@ LANG:1 0
 2
 "$databaselevel""main"
 "$name""ObservationControl"
-3 15 "PANEL_REF16" -1
-"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 27 1 0 1 3 14
-2
-"$databaselevel""ccu"
-"$name""OnlineControl_BGPAppl"
 3 17 "PANEL_REF18" -1
 "objects\\Processes\\interactive_controller_small.pnl" 180 200 T 29 1 0 1 -7 23
 2

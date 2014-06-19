@@ -340,6 +340,12 @@ def main():
             if msg == 'NOSIGNAL':
                 print "   NO test signal found"
                 
+            if msg == 'MODEM':
+                for i in range(1,17,1):
+                    key = "E%02d" %(i)
+                    if key in kv:
+                        print "   E%02d modem fault (%s)" %(i, kv[key]) 
+            
             if msg == 'OSCILLATION':
                 if kv.has_key('X') or kv.has_key('Xbands'):
                     print "   X Oscillation"

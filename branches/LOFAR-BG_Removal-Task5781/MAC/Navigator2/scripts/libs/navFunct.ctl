@@ -28,14 +28,11 @@
 //
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
 // navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
-// navFunct_BGPMidplane2BGPRack               : Returns the BGPRackNr for a given BGPMidplane
-// navFunct_CEPName2DPName                    : Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
 // navFunct_CEPName2inputBuf                  : returns ionr from CEPname
 // navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 // navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
 // navFunct_dpGetLastElement                  : Returns last element from DP 
 // navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
-// navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
 // navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
 // navFunct_dpStripLastElement                : Returns DP string without last element 
 // navFunct_dynToString                       : Returns a dynArray as a , seperated string
@@ -68,10 +65,7 @@
 // navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
-// navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
-// navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
-// navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
 // navFunct_isCoreStation                     : returns TRUE if the station is part of the Core stations
 // navFunct_isHBA                             : returns true if the antenna is an International HBA antenna
 // navFunct_isHBAZero                         : returns true if the antenna is a Core HBA Zero antenna
@@ -551,39 +545,6 @@ int navFunct_receiver2Subrack(int receiverNr) {
 }
 
 // ****************************************
-// Name : navFunct_IONode2Midplane
-// ****************************************
-// Description:
-//    Returns the midplaneNr to which a IONode is connected 
-//
-// Returns:
-//    The midplanenr
-// ***************************************
-
-int navFunct_IONode2Midplane(int nodeNr) {
-  return floor(nodeNr/32);
-}
-
-// ****************************************
-// Name : navFunct_IONode2BGPRack
-// ****************************************
-// Description:
-//    Returns the rackNr to which a IONode is connected 
-//
-//  For now we only show the active rack, so all ionodes 
-//  automaticly belong to the active rack
-//
-// Returns:
-//    The bgpracknr
-// ***************************************
-
-int navFunct_IONode2BGPRack(int nodeNr) {
-  int r = 0;
-  if (navFunct_isBGPSwitch()) r = 1;
-  return r;
-}
-
-// ****************************************
 // Name : navFunct_receiver2RSP
 // ****************************************
 // Description:
@@ -678,24 +639,6 @@ int navFunct_TBB2Subrack(int tbbNr) {
 int navFunct_subrack2Cabinet(int subrackNr) {
   return floor(subrackNr/2);
 }
-
-
-
-// ****************************************
-// Name : navFunct_BGPMidplane2BGPRack
-// ****************************************
-// Description:
-//    Returns the rackNr to which a midplane is connected 
-//
-// Returns:
-//    The racknr
-// ***************************************
-
-int navFunct_BGPMidplane2BGPRack(int midplaneNr) {
-  return floor(midplaneNr/2);
-}
-
-
 
 // ****************************************
 // Name : navFunct_dpStripLastElement
@@ -1270,8 +1213,6 @@ void navFunct_fillObservationsList() {
             }
           }
         }
-      } else {
-        LOG_ERROR("navFunct.ctl:navFunct_fillObservationsLists| ERROR: illegal DP in processList: "+process);
       }
     }
   // otherwise hardware  
@@ -1525,62 +1466,21 @@ void navFunct_fillHardwareTree() {
     if (g_stationList[1]+":" == CEPDBName) {
       string baseConnect=connectTo;
       
-      // add BGPRacks
-      if (dynlen(g_BGPRackList) > 0) {
-        for (int i = 1; i <= dynlen(g_BGPRackList); i++) {
-          dp = station+":LOFAR_PIC_BGP";
-          dynAppend(result,baseConnect+",BGP"+","+dp);
-        }
-        lvl="BGPRack";
-      }
-      
-      // add midplanes
-      if (dynlen(g_BGPMidplaneList) > 0) {
-        for (int i = 1; i <= dynlen(g_BGPMidplaneList); i++) {
-          int bgprackNr=navFunct_BGPMidplane2BGPRack(g_BGPMidplaneList[i]);
-          if (lvl == "BGPRack") {
-            connectTo = station+":LOFAR_PIC_BGP";
-          }
-          dp = station+":LOFAR_PIC_BGP_Midplane"+g_BGPMidplaneList[i];
-          dynAppend(result,connectTo+",Midplane"+g_BGPMidplaneList[i]+","+dp);
-        }
-        lvl="BGPMidplane";
-      }
-
-      //add Ionodes
-      if (dynlen(g_IONodeList) > 0) {
-        for (int i = 1; i <= dynlen(g_IONodeList); i++) {
-          int BGPRackNr=navFunct_IONode2BGPRack(g_IONodeList[i]);
-          int midplaneNr=navFunct_IONode2Midplane(g_IONodeList[i]);
-          if (lvl == "BGPRack") {
-            connectTo = station+":LOFAR_PIC_BGP";
-          } else if (lvl == "BGPMidplane") {
-            connectTo = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr;
-          }
-          dp = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr+"_IONode"+g_IONodeList[i];
-          dynAppend(result,connectTo+",IONode"+g_IONodeList[i]+","+dp);
-        }
-      }
-
-      //add CobaltRacks
+      // add CobaltRacks
       if (dynlen(g_cobaltRackList) > 0) {
         for (int i = 1; i <= dynlen(g_cobaltRackList); i++) {
           dp = station+":LOFAR_PIC_Cobalt";
           dynAppend(result,baseConnect+",Cobalt"+","+dp);
         }
-        lvl="CobaltRack";
       }
-      
+
       //add CobaltNodes
       if (dynlen(g_cobaltNodeList) > 0) {
         for (int i = 1; i <= dynlen(g_cobaltNodeList); i++) {
-          if (lvl == "CobaltRack") {
-            connectTo = station+":LOFAR_PIC_Cobalt";
-          }
+          connectTo = station+":LOFAR_PIC_Cobalt";
           dp = station+":LOFAR_PIC_Cobalt_CBT"+navFunct_formatInt(g_cobaltNodeList[i],999);
           dynAppend(result,connectTo+",CBT"+navFunct_formatInt(g_cobaltNodeList[i],999)+","+dp);
         }
-        lvl="CobaltNode";
       }
 
       // add OSRacks
@@ -1815,9 +1715,6 @@ void navFunct_clearGlobalLists() {
   dynClear(g_RCUList);
   dynClear(g_HBAList);
   dynClear(g_LBAList);
-  dynClear(g_BGPRackList);
-  dynClear(g_BGPMidplaneList);
-  dynClear(g_IONodeList);
   dynClear(g_OSRackList);
   dynClear(g_locusNodeList);
   dynClear(g_cobaltRackList);
@@ -1985,197 +1882,7 @@ void navFunct_waitObjectReady(int timer,string name) {
   return;
 } 
 
-// ****************************************
-// Name: navFunct_CEPName2DPName
-// ****************************************
-// Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
-//
-// returns the DPName for the CEPName representation
-// ****************************************
-string navFunct_CEPName2DPName(string CEPName) {
-  string name = "";
-  bool foundRack     = false;
-  bool foundMidplane = false;
-  bool foundNodecard = false;
-  bool foundIONode   = false;
-  int rack     = -1;
-  int midplane = -1;
-  int nodecard = -1;
-  int ionode   = -1;
-  
-  if (CEPName == "") return name;
 
-  dyn_string names = strsplit(CEPName,"-");
-  
-  for (int i=1; i<= dynlen(names); i++) {
-
-    if (strpos(names[i],"R") > -1) {
-      foundRack=true;
-      rack = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"M") > -1) {
-      foundMidplane=true;
-      midplane = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"N") > -1) {
-      foundNodecard=true;
-      nodecard = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"J") > -1) {
-      foundIONode=true;
-      ionode = substr(names[i],1,strlen(names[i]));
-    } else {
-      return name;
-    }
-  }
-  
-  int midnr=0;
-  int nodenr=0;
-  int ionr=0;
-  
-  
-  if (foundRack) {
-    name += "BGP";
-  }
-  if (foundRack && foundMidplane) {
-    name += "_Midplane" + midplane;
-    midnr=midplane;
-  }
-  if (foundRack && foundMidplane && foundNodecard && foundIONode) {
-    nodenr = nodecard + (16*midnr);
-    ionr = ionode + (2*nodenr);
-    if (ionr < 10) { 
-      name += "_IONode0" + ionr;
-    } else if (ionr >= 10 && ionr < 64) {
-    name += "_IONode" + ionr;
-  }
-  }
-
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_DPName2CEPName
-// ****************************************
-// Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
-//
-// returns the CEPName from the DPName representation
-// ****************************************
-string navFunct_DPName2CEPName(string DPName) {
-  bool foundRack     = false;
-  bool foundMidplane = false;
-  bool foundIONode   = false;
-  int rack     = -1;
-  int midplane = -1;
-  int ionode   = -1;
-  string name = "";
-  
-  if (DPName == "") return name;
-
-  // strip all b4 BGP if part of the name
-  if (strpos(DPName,"BGP") >= 0) {
-    string dp = substr(DPName,strpos(DPName,"BGP"));
-    DPName = dp;
-  }
-    
-  dyn_string names = strsplit(DPName,"_");
-      
-  for (int i=1; i<= dynlen(names); i++) {
-    if (strpos(names[i],"BGP") > -1) {
-      foundRack=true;
-      rack=0;
-      if (navFunct_isBGPSwitch()) rack=1;
-    } else if (strpos(names[i],"Midplane") > -1) {
-      foundMidplane=true;
-      midplane = substr(names[i],8,strlen(names[i]));
-    } else if (strpos(names[i],"IONode") > -1) {
-      foundIONode=true;
-      ionode = substr(names[i],6,strlen(names[i]));
-    } else {
-      LOG_ERROR("navFunct.ctl:navFunct_DPName2CEPName|Non DPName part in string: "+ names[i]);
-      return name;
-    }
-  }
-  
-  int racknr=0;
-  int midnr=0;
-  int nodenr=0;
-  int ionr=0;
-  
-  if (foundRack){
-    name += "R0" + rack;
-  }
-  
-  if (foundMidplane) {
-    if (foundRack) name+="-";
-    midnr = midplane;
-    name += "M" + midnr;
-  }
-  
-  if (foundIONode) {
-    if (foundMidplane) name+="-";
-    midnr = floor(ionode/32);
-    nodenr = floor(ionode/2)-(midnr*16);
-    float nr = fmod(ionode,2);
-    ionr=nr;
-    if (nodenr < 10) {
-      name += "N0" + nodenr + "-J0" + ionr;
-    } else {
-      name += "N" + nodenr + "-J0" + ionr;
-    }
-  }
-
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_inputBuf2CEPName
-// ****************************************
-// Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
-//
-// returns the CEPName 
-// ****************************************
-string navFunct_inputBuf2CEPName(int buf) {
-  int racknr = 0;
-  if (navFunct_isBGPSwitch()) racknr=1;
-  int midnr = floor(buf/32);
-  buf=buf-midnr*32;
-  int nodenr = floor(buf/2);
-  buf=buf-nodenr*2;
-  int ionr = buf;
-  
-  string name = "R0"+racknr+"-M"+midnr;
-  if (nodenr < 10) {
-    name += "-N0" + nodenr + "-J0" + ionr;
-  } else {
-    name += "-N" + nodenr + "-J0" + ionr;
-  }
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_CEPName2InputBuf
-// ****************************************
-// Translates Rxx-Mx-Nxx-Jxx name 2 inputBufferNr 
-//
-// returns the IONode  
-// ****************************************
-int navFunct_CEPName2inputBuf(string name) {
-  
-  dyn_string spl_name = strsplit(name,"-");
-  
-//  DebugN("name :", name);
-//  DebugN("spl_name :", spl_name);
-
-  if (dynlen(spl_name) < 4) return -1;
-  int nr=0;
-  int r = (int) substr(spl_name[1],3,1);
-  int m = (int) substr(spl_name[2],2,1);
-  int n = (int) substr(spl_name[3],3,1);
-  int j = (int) substr(spl_name[4],3,1);
-  
-  nr = (r*64)+(m*32)+(n*2)+j;
-  if (nr > 63) nr-=64;
-  
-  return nr;
-}
 
 string navFunct_ObsToTemp(string dp){
   int pos=strpos(dp,"Observation");
@@ -2253,36 +1960,6 @@ bool navFunct_isOnline(int syst) {
     LOG_ERROR("navFunct.ctl:navFunct_isOnline|System not found in g_connections "+ syst);
     return false;
   }
-}
-  
-// Searchs all ionodes.usedStation names for  match with the given name
-string navFunct_stationNameToIONode(string name) {
- 
-  dyn_dyn_anytype tab;
-  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PIC_BGP_Midplane*_IONode*.usedStation' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"IONode\"",tab);
-  
-  for(int z=2;z<=dynlen(tab);z++) {
-    if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
-  }
-  return "not found";
-}
-
-// returns if the 2nd rack is used (true) or not (false)
-bool navFunct_isBGPSwitch() {
-  // get BGPSwitch to see if rack 0 or rack 1 in use
-  bool BGPSwitch=false;
-  dpGet(CEPDBName+"LOFAR_PIC_BGP.BGPSwitch",BGPSwitch);
-  return BGPSwitch;
-}
-
-//returns the name of the DataPoint for a given ionr
-string navFunct_IONode2DPName(int ionode) {
-  string ext="";
-  if (ionode < 10) ext = "0";
-  string dp = CEPDBName+"LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
-
-  return dp;  
-  
 }
 
 // ****************************************

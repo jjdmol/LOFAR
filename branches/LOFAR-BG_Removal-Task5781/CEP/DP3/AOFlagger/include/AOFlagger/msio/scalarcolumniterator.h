@@ -58,14 +58,16 @@ class ScalarColumnIterator {
 		bool operator==(const ScalarColumnIterator<T> &other) const {
 			return _row==other._row;
 		}
-		static ScalarColumnIterator First(casa::ScalarColumn<T> &column)
-		{
-			return ScalarColumnIterator<T>(column, 0);
-		}
 		static ScalarColumnIterator First(casa::ROScalarColumn<T> &column)
 		{
 			return ScalarColumnIterator<T>(column, 0);
 		}
+  /*///
+		static ScalarColumnIterator First(casa::ScalarColumn<T> &column)
+		{
+			return ScalarColumnIterator<T>(column, 0);
+		}
+  */
 	private:
 		casa::ROScalarColumn<T> *_column;
 		unsigned _row;
