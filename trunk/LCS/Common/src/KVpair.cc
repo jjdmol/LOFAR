@@ -32,6 +32,8 @@
 
 namespace LOFAR {
 
+using std::pair;
+
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
 		timestamp = (double)NsTimestamp::now(); \
