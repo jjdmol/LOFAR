@@ -19,7 +19,6 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <GPUProc/Package__Version.h>
 
 #include <cstdlib>
 #include <cstdio>
@@ -28,10 +27,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <omp.h>
+#include <time.h>
 #include <sys/resource.h>
 #include <sys/mman.h>
 
@@ -42,6 +43,7 @@
 
 #ifdef HAVE_MPI
 #include <mpi.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #endif
 
 #include <boost/format.hpp>
@@ -52,9 +54,10 @@
 #include <Common/StringUtil.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/OutputTypes.h>
-
-#include <InputProc/OMPThread.h>
+#include <CoInterface/OMPThread.h>
+#include <CoInterface/Pool.h>
 #include <InputProc/SampleType.h>
+#include <InputProc/WallClockTime.h>
 #include <InputProc/Buffer/StationID.h>
 
 #include <ApplCommon/PVSSDatapointDefs.h>
@@ -63,88 +66,85 @@
 #include "global_defines.h"
 #include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
+#include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/CorrelatorPipeline.h"
 #include "Pipelines/BeamFormerPipeline.h"
 //#include "Pipelines/UHEP_Pipeline.h"
 #include "Storage/StorageProcesses.h"
-#include "Storage/SSH.h"
 
 #include <GPUProc/cpu_utils.h>
 #include <GPUProc/SysInfoLogger.h>
+#include <GPUProc/Package__Version.h>
+#include <GPUProc/MPIReceiver.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace std;
 using boost::format;
 
-void usage(char **argv)
+/* Tuning parameters */
+
+// Number of seconds to schedule for the allocation of resources. That is,
+// we start allocating resources at startTime - allocationTimeout.
+const time_t defaultAllocationTimeout = 15;
+
+// Deadline for outputProc, in seconds.
+const time_t defaultOutputProcTimeout = 60;
+
+// Amount of seconds to stay alive after Observation.stopTime
+// has passed.
+const time_t defaultRtcpTimeout = 5 * 60;
+
+static void usage(const char *argv0)
 {
-  cerr << "RTCP: Real-Time Central Processing for the LOFAR radio telescope." << endl;
+  cerr << "RTCP: Real-Time Central Processing of the LOFAR radio telescope." << endl;
   cerr << "RTCP provides correlation for the Standard Imaging mode and" << endl;
   cerr << "beam-forming for the Pulsar mode." << endl;
+  // one of the roll-out scripts greps for the version x.y
+  cerr << "GPUProc version " << GPUProcVersion::getVersion() << " r" << GPUProcVersion::getRevision() << endl;
   cerr << endl;
-  cerr << "Usage: " << argv[0] << " parset" << " [-p]" << endl;
+  cerr << "Usage: " << argv0 << " parset" << " [-p]" << endl;
   cerr << endl;
   cerr << "  -p: enable profiling" << endl;
+  cerr << "  -h: print this message" << endl;
 }
 
 int main(int argc, char **argv)
 {
+  LOFAR::Cobalt::MPI mpi;
+
   /*
    * Parse command-line options
    */
 
   int opt;
-  while ((opt = getopt(argc, argv, "p")) != -1) {
+  while ((opt = getopt(argc, argv, "ph")) != -1) {
     switch (opt) {
     case 'p':
       profiling = true;
       break;
 
+    case 'h':
+      usage(argv[0]);
+      exit(0);
+
     default: /* '?' */
-      usage(argv);
+      usage(argv[0]);
       exit(1);
     }
   }
 
   // we expect a parset filename as an additional parameter
   if (optind >= argc) {
-    usage(argv);
+    usage(argv[0]);
     exit(1);
   }
 
   /*
-   * Extract rank/size from environment, because we need
-   * to fork during initialisation, which we want to do
-   * BEFORE calling MPI_Init_thread. Once MPI is initialised,
-   * forking can lead to crashes.
+   * Whether we've encountered an error; observation will
+   * be set to ABORTED by OnlineControl if so.
    */
-
-  // Rank in MPI set of hosts, or 0 if no MPI is used
-  int rank = 0;
-
-  // Number of MPI hosts, or 1 if no MPI is used
-  int nrHosts = 1;
-
-#ifdef HAVE_MPI
-  const char *rankstr, *sizestr;
-
-  // OpenMPI rank
-  if ((rankstr = getenv("OMPI_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // MVAPICH2 rank
-  if ((rankstr = getenv("MV2_COMM_WORLD_RANK")) != NULL)
-    rank = boost::lexical_cast<int>(rankstr);
-
-  // OpenMPI size
-  if ((sizestr = getenv("OMPI_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-
-  // MVAPICH2 size
-  if ((sizestr = getenv("MV2_COMM_WORLD_SIZE")) != NULL)
-    nrHosts = boost::lexical_cast<int>(sizestr);
-#endif
+  int abortObservation = 0;
 
   /*
    * Initialise logger.
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
 #ifdef HAVE_LOG4CPLUS
   // Set ${MPIRANK}, which is used by our log_prop file.
-  if (setenv("MPIRANK", str(format("%02d") % rank).c_str(), 1) < 0)
+  if (setenv("MPIRANK", str(format("%02d") % mpi.rank()).c_str(), 1) < 0)
   {
     perror("error setting MPIRANK");
     exit(1);
@@ -160,14 +160,14 @@ int main(int argc, char **argv)
 
   INIT_LOGGER("rtcp");
 #else
-  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % rank));
+  INIT_LOGGER_WITH_SYSINFO(str(format("rtcp@%02d") % mpi.rank()));
 #endif
 
   // Use LOG_*() for c-strings (incl cppstr.c_str()), and LOG_*_STR() for std::string.
   LOG_INFO("===== INIT =====");
 
 #ifdef HAVE_MPI
-  LOG_INFO_STR("MPI rank " << rank << " out of " << nrHosts << " hosts");
+  LOG_INFO_STR("MPI rank " << mpi.rank() << " out of " << mpi.size() << " hosts");
 #else
   LOG_WARN("Running without MPI!");
 #endif
@@ -178,18 +178,61 @@ int main(int argc, char **argv)
    * Initialise the system environment
    */
 
+  // Ignore SIGPIPE, as we handle disconnects ourselves
+  if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+    THROW_SYSCALL("signal(SIGPIPE)");
+
   // Make sure all time is dealt with and reported in UTC
   if (setenv("TZ", "UTC", 1) < 0)
     THROW_SYSCALL("setenv(TZ)");
 
-  // Restrict access to (tmp build) files we create to owner
-  // JD: Don't do that! We want to be able to clean up each other's
-  // mess.
-  // umask(S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-
   // Create a parameters set object based on the inputs
   LOG_INFO("----- Reading Parset");
   Parset ps(argv[optind]);
+
+  /* Tuning parameters */
+
+  // Number of seconds to schedule for the allocation of resources. That is,
+  // we start allocating resources at startTime - allocationTimeout.
+  const time_t allocationTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.allocationTimeout", 
+			     defaultAllocationTimeout);
+
+  // Deadline for outputProc, in seconds.
+  const time_t outputProcTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.outputProcTimeout",
+			     defaultOutputProcTimeout);
+
+  // Amount of seconds to stay alive after Observation.stopTime
+  // has passed.
+  const time_t rtcpTimeout = 
+    ps.ParameterSet::getTime("Cobalt.Tuning.rtcpTimeout",
+			     defaultRtcpTimeout);
+
+  LOG_DEBUG_STR(
+    "Tuning parameters:" <<
+    "\n  allocationTimeout    : " << allocationTimeout << "s" <<
+    "\n  outputProcTimeout    : " << outputProcTimeout << "s" <<
+    "\n  rtcpTimeout          : " << rtcpTimeout << "s");
+
+  if (ps.realTime() && getenv("COBALT_NO_ALARM") == NULL) {
+    // First of all, make sure we can't freeze for too long
+    // by scheduling an alarm() some time after the observation
+    // ends.
+
+    const time_t now = time(0);
+    const double stopTime = ps.stopTime();
+
+    if (now < stopTime + rtcpTimeout) {
+      size_t maxRunTime = stopTime + rtcpTimeout - now;
+
+      LOG_INFO_STR("RTCP will self-destruct in " << maxRunTime << " seconds");
+      alarm(maxRunTime);
+    } else {
+      LOG_ERROR_STR("Observation.stopTime has passed more than " << rtcpTimeout << " seconds ago, but observation is real time. Nothing to do. Bye bye.");
+      return 0;
+    }
+  }
 
   // Remove limits on pinned (locked) memory
   struct rlimit unlimited = { RLIM_INFINITY, RLIM_INFINITY };
@@ -218,14 +261,17 @@ int main(int argc, char **argv)
    */
 
   // Send identification string to the MAC Log Processor
-  LOG_INFO_STR("MACProcessScope: " << 
-               str(format(createPropertySetName(
-                            PSN_COBALTGPU_PROC, "", ps.getString("_DPname")))
+  string fmtStr(createPropertySetName(PSN_COBALTGPU_PROC, "",
+                                      ps.getString("_DPname")));
+  format prFmt;
+  prFmt.exceptions(boost::io::no_error_bits); // avoid throw
+  prFmt.parse(fmtStr);
+  LOG_INFO_STR("MACProcessScope: " << str(prFmt
                    % toUpper(myHostname(false))
-                   % (ps.settings.nodes.size() > size_t(rank) ? 
-                      ps.settings.nodes[rank].cpu : 0)));
+                   % (ps.settings.nodes.size() > size_t(mpi.rank()) ? 
+                      ps.settings.nodes[mpi.rank()].cpu : 0)));
 
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO_STR("nr stations = " << ps.nrStations());
     LOG_INFO_STR("nr subbands = " << ps.nrSubbands());
     LOG_INFO_STR("bitmode     = " << ps.nrBitsPerSample());
@@ -241,20 +287,21 @@ int main(int argc, char **argv)
 
   // The set of GPUs we're allowed to use
   vector<gpu::Device> devices;
-
+#if 1
   // If we are testing we do not want dependency on hardware specific cpu configuration
   // Just use all gpu's
-  if(rank >= 0 && (size_t)rank < ps.settings.nodes.size()) {
+  if(mpi.rank() >= 0 && (size_t)mpi.rank() < ps.settings.nodes.size()) {
+    struct ObservationSettings::Node mynode = ps.settings.nodes.at(mpi.rank());
+
     // set the processor affinity before any threads are created
-    int cpuId = ps.settings.nodes[rank].cpu;
-    setProcessorAffinity(cpuId);
+    setProcessorAffinity(mynode.cpu);
 
 #ifdef HAVE_LIBNUMA
     if (numa_available() != -1) {
       // force node + memory binding for future allocations
       struct bitmask *numa_node = numa_allocate_nodemask();
       numa_bitmask_clearall(numa_node);
-      numa_bitmask_setbit(numa_node, cpuId);
+      numa_bitmask_setbit(numa_node, mynode.cpu);
       numa_bind(numa_node);
       numa_bitmask_free(numa_node);
 
@@ -283,24 +330,26 @@ int main(int argc, char **argv)
 #endif
 
     // derive the set of gpus we're allowed to use
-    const vector<unsigned> &gpuIds = ps.settings.nodes[rank].gpus;
-    for (size_t i = 0; i < gpuIds.size(); ++i) {
-      gpu::Device &d = allDevices[gpuIds[i]];
+    for (size_t i = 0; i < mynode.gpus.size(); ++i) {
+      ASSERTSTR(mynode.gpus[i] < allDevices.size(), "Request to use GPU #" << mynode.gpus[i] << ", but found only " << allDevices.size() << " GPUs");
+
+      gpu::Device &d = allDevices[mynode.gpus[i]];
 
       devices.push_back(d);
     }
 
     // Select on the local NUMA InfiniBand interface (OpenMPI only, for now)
-    const string nic = ps.settings.nodes[rank].nic;
+    if (mynode.nic != "") {
+      LOG_DEBUG_STR("Binding to interface " << mynode.nic);
 
-    if (nic != "") {
-      LOG_DEBUG_STR("Binding to interface " << nic);
-
-      if (setenv("OMPI_MCA_btl_openib_if_include", nic.c_str(), 1) < 0)
+      if (setenv("OMPI_MCA_btl_openib_if_include", mynode.nic.c_str(), 1) < 0)
         THROW_SYSCALL("setenv(OMPI_MCA_btl_openib_if_include)");
     }
   } else {
-    LOG_WARN_STR("Rank " << rank << " not present in node list -- using full machine");
+#else
+  {
+#endif
+    LOG_WARN_STR("Rank " << mpi.rank() << " not present in node list -- using full machine");
     devices = allDevices;
   }
 
@@ -309,7 +358,7 @@ int main(int argc, char **argv)
                  devices[i].getComputeCapabilityMajor() << "." <<
                  devices[i].getComputeCapabilityMinor() <<
                  " global memory: " << (devices[i].getTotalGlobalMem() / 1024 / 1024) << " Mbyte");
-
+#if 1
   // Bindings are done -- Lock everything in memory
   if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0)
   {
@@ -320,12 +369,7 @@ int main(int argc, char **argv)
   } else {
     LOG_DEBUG("All memory is now pinned.");
   }
-
-  // Allow usage of nested omp calls
-  omp_set_nested(true);
-
-  // Allow OpenMP thread registration
-  OMPThread::init();
+#endif
 
   LOG_INFO("----- Initialising Pipeline");
 
@@ -333,7 +377,7 @@ int main(int argc, char **argv)
   SubbandDistribution subbandDistribution; // rank -> [subbands]
 
   for( size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
-    int receiverRank = subband % nrHosts;
+    int receiverRank = subband % mpi.size();
 
     subbandDistribution[receiverRank].push_back(subband);
   }
@@ -346,22 +390,39 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  Pool<struct MPIRecvData> MPI_receive_pool("rtcp::MPI_recieve_pool");
+
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
+
+  MPIReceiver MPI_receiver(MPI_receive_pool,
+                     subbandIndices,
+    std::find(subbandIndices.begin(), 
+              subbandIndices.end(), 0U) != subbandIndices.end(),
+              ps.nrSamplesPerSubband(),
+              ps.nrStations(),
+              ps.nrBitsPerSample());
+      
   SmartPtr<Pipeline> pipeline;
-  OutputType outputType;
 
   // Creation of pipelines cause fork/exec, which we need to
   // do before we start doing anything fancy with libraries and threads.
-  if (subbandDistribution[rank].empty()) {
+  if (subbandIndices.empty()) 
+  {
     // no operation -- don't even create a pipeline!
     pipeline = NULL;
-    outputType = CORRELATED_DATA;
-  } else if (correlatorEnabled) {
-    pipeline = new CorrelatorPipeline(ps, subbandDistribution[rank], devices);
-    outputType = CORRELATED_DATA;
-  } else if (beamFormerEnabled) {
-    pipeline = new BeamFormerPipeline(ps, subbandDistribution[rank], devices);
-    outputType = BEAM_FORMED_DATA;
-  } else {
+  } 
+  else if (correlatorEnabled) 
+  {
+    pipeline = new CorrelatorPipeline(ps, subbandIndices, devices,
+          MPI_receive_pool);
+  } 
+  else if (beamFormerEnabled) 
+  {
+    pipeline = new BeamFormerPipeline(ps, subbandIndices,
+         MPI_receive_pool, devices, mpi.rank());
+  } 
+  else 
+  {
     LOG_FATAL("No pipeline selected.");
     exit(1);
   }
@@ -369,10 +430,7 @@ int main(int argc, char **argv)
   // Only ONE host should start the Storage processes
   SmartPtr<StorageProcesses> storageProcesses;
 
-  LOG_INFO("----- Initialising SSH library");
-  SSH_Init();
-
-  if (rank == 0) {
+  if (mpi.rank() == 0) {
     LOG_INFO("----- Starting OutputProc");
     storageProcesses = new StorageProcesses(ps, "");
   }
@@ -381,25 +439,7 @@ int main(int argc, char **argv)
   /*
    * Initialise MPI (we are done forking)
    */
-
-  // Initialise and query MPI
-  int provided_mpi_thread_support;
-
-  LOG_INFO("----- Initialising MPI");
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init_thread failed" << endl;
-    exit(1);
-  }
-
-  // Verify the rank/size settings we assumed earlier
-  int real_rank;
-  int real_size;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &real_size);
-
-  ASSERT(rank    == real_rank);
-  ASSERT(nrHosts == real_size);
+  mpi.init(argc, argv);
 #else
   // Create the DirectInput instance
   DirectInput::instance(&ps);
@@ -414,24 +454,55 @@ int main(int argc, char **argv)
 
   LOG_INFO("===== LAUNCH =====");
 
-  LOG_INFO_STR("Processing subbands " << subbandDistribution[rank]);
+  LOG_INFO_STR("Processing subbands " << subbandDistribution[mpi.rank()]);
 
-  #pragma omp parallel sections num_threads(2)
+  if (ps.realTime()) {
+    // Wait just before the obs starts to allocate resources,
+    // both the UDP sockets and the GPU buffers!
+    LOG_INFO_STR("Waiting to start obs running from " << TimeStamp::convert(ps.settings.startTime, ps.settings.clockHz()) << " to " << TimeStamp::convert(ps.settings.stopTime, ps.settings.clockHz()));
+
+    const time_t deadline = floor(ps.settings.startTime) - allocationTimeout;
+    WallClockTime waiter;
+    waiter.waitUntil(deadline);
+  }
+
+  #pragma omp parallel sections num_threads(3)
   {
     #pragma omp section
     {
-      // Read and forward station data
+      // Read and forward station data over MPI
       #pragma omp parallel for num_threads(ps.nrStations())
-      for (size_t stat = 0; stat < ps.nrStations(); ++stat) {
+      for (size_t stat = 0; stat < ps.nrStations(); ++stat) 
+      {       
+        // Determine if this station should start a pipeline for station..
+        const struct StationID stationID(
+          StationID::parseFullFieldName(
+          ps.settings.antennaFields.at(stat).name));
+        const StationNodeAllocation allocation(stationID, ps, mpi.rank(), mpi.size());
+
+        if (!allocation.receivedHere()) 
+        {// Station is not sending from this node, skip          
+          continue;
+        }
+
         sendInputToPipeline(ps, stat, subbandDistribution);
       }
     }
 
+    // receive data over MPI and insert into pool
+#   pragma omp section
+    {
+      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+      MPI_receiver.receiveInput(nrBlocks);
+    }
+
+    // Retrieve items from pool and process further on
     #pragma omp section
     {
       // Process station data
-      if (!subbandDistribution[rank].empty()) {
-        pipeline->processObservation(outputType);
+      if (!subbandDistribution[mpi.rank()].empty()) {
+        pipeline->processObservation();
       }
     }
   }
@@ -444,17 +515,17 @@ int main(int argc, char **argv)
   LOG_INFO("===== FINALISE =====");
 
   if (storageProcesses) {
-    time_t completing_start = time(0);
-
     LOG_INFO("----- Processing final metadata (broken antenna information)");
 
     // retrieve and forward final meta data
-    storageProcesses->forwardFinalMetaData(completing_start + 300);
+    if (!storageProcesses->forwardFinalMetaData()) {
+      abortObservation = 1;
+    }
 
     LOG_INFO("Stopping Storage processes");
 
     // graceful exit
-    storageProcesses->stop(completing_start + 600);
+    storageProcesses->stop(time(0) + outputProcTimeout);
 
     LOG_INFO("Writing LTA feedback to disk");
 
@@ -463,9 +534,7 @@ int main(int argc, char **argv)
     feedbackLTA.adoptCollection(storageProcesses->feedbackLTA());
 
     // augment LTA feedback with global information
-    feedbackLTA.add("_isCobalt", "T"); // for MoM, to discriminate between Cobalt and BG/P observations
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Beamformed_", str(format("%u") % ps.nrStreams(BEAM_FORMED_DATA)));
-    feedbackLTA.add("LOFAR.ObsSW.Observation.DataProducts.nrOfOutput_Correlated_", str(format("%u") % ps.nrStreams(CORRELATED_DATA)));
+    feedbackLTA.adoptCollection(ps.getGlobalLTAFeedbackParameters());
 
     // write LTA feedback to disk
     const char *LOFARROOT = getenv("LOFARROOT");
@@ -486,12 +555,6 @@ int main(int argc, char **argv)
   }
   LOG_INFO("===== SUCCESS =====");
 
-  SSH_Finalize();
-
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
-
-  return 0;
+  return abortObservation ? 1 : 0;
 }
 

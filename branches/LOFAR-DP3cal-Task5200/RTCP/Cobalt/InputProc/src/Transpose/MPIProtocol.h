@@ -25,7 +25,7 @@
 #include <Common/LofarTypes.h>
 #include <Stream/FixedBufferStream.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <InputProc/Buffer/BufferSettings.h>
+#include <InputProc/Buffer/StationID.h>
 
 namespace LOFAR
 {
@@ -62,8 +62,8 @@ namespace LOFAR
       };
 
       struct MetaData {
-        // The metaData blob
-        char blob[4096];
+        // The metaData blob.
+        char blob[SubbandMetaData::MAXMARSHALLSIZE];
 
         struct MetaData &operator=(const SubbandMetaData &metaData) {
           FixedBufferStream str(blob, sizeof blob);

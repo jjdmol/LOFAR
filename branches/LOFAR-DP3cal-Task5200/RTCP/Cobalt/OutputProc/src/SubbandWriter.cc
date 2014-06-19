@@ -1,4 +1,4 @@
-//# SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
+//# SubbandWriter.cc: Writes visibilities and beam-formed data
 //# Copyright (C) 2008-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -22,43 +22,49 @@
 
 #include "SubbandWriter.h"
 
-#include <CoInterface/DataFactory.h>
+#include <CoInterface/CorrelatedData.h>
+
+#include <boost/format.hpp>
+using boost::format;
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-
-
-    SubbandWriter::SubbandWriter(const Parset &parset, OutputType outputType, unsigned streamNr, bool isBigEndian, const std::string &logPrefix)
+    SubbandWriter::SubbandWriter(const Parset &parset, unsigned streamNr, const std::string &logPrefix)
+    :
+      itsOutputPool(str(format("SubbandWriter::itsOutputPool [stream %u]") % streamNr)),
+      itsInputThread(parset, streamNr, itsOutputPool, logPrefix),
+      itsOutputThread(parset, streamNr, itsOutputPool, logPrefix)
     {
-      itsInputThread = new InputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix);
-      itsInputThread->start();
-
-      try {
-        itsOutputThread = new OutputThread(parset, outputType, streamNr, itsFreeQueue, itsReceiveQueue, logPrefix, isBigEndian);
-        itsOutputThread->start();
-      } catch (...) {
-        itsInputThread->cancel();
-        throw;
-      }
-
       for (unsigned i = 0; i < maxReceiveQueueSize; i++)
-        itsFreeQueue.append(newStreamableData(parset, outputType, streamNr));
-
+        itsOutputPool.free.append(new CorrelatedData(parset.nrMergedStations(), parset.nrChannelsPerSubband(), parset.integrationSteps(), heapAllocator, 512));
     }
+
+    
+    void SubbandWriter::process()
+    {
+#     pragma omp parallel sections num_threads(2)
+      {
+#       pragma omp section
+        itsInputThread.process();
+
+#       pragma omp section
+        itsOutputThread.process();
+      }
+    }
+
 
     void SubbandWriter::augment( const FinalMetaData &finalMetaData )
     {
-      itsOutputThread->augment(finalMetaData);
+      itsOutputThread.augment(finalMetaData);
     }
+
 
     ParameterSet SubbandWriter::feedbackLTA() const
     {
-      return itsOutputThread->feedbackLTA();
+      return itsOutputThread.feedbackLTA();
     }
-
-
   } // namespace Cobalt
 } // namespace LOFAR
 

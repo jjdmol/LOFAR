@@ -44,19 +44,16 @@ namespace LOFAR
     string CoherentStokesTransposeKernel::theirFunction = "coherentStokesTranspose";
 
     CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP())
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
+
+      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
     {
-      nrChannelsPerSubband =
-        ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.CoherentStokesTransposeKernel.dumpOutput", false);
       dumpFilePattern = 
-        str(format("L%d_SB%%03d_BL%%CoherentStokesTransposeKernel.dat") % 
+        str(format("L%d_SB%%03d_BL%%03d_CoherentStokesTransposeKernel.dat") % 
             ps.settings.observationID);
-
     }
 
     CoherentStokesTransposeKernel::
@@ -68,17 +65,18 @@ namespace LOFAR
     {
       ASSERT(params.nrSamplesPerChannel > 0);
       ASSERT(params.nrTABs >  0);
-      ASSERT(params.nrChannelsPerSubband  % 16 == 0);
+      ASSERT(params.nrChannels  % 16 == 0);
+
       setArg(0, buffers.output);
       setArg(1, buffers.input);
       setEnqueueWorkSizes( gpu::Grid((( params.nrTABs + 16 - 1) / 16) * 16 ,  // Get multiple of 16  in the grid size
-                                     params.nrChannelsPerSubband,
+                                     params.nrChannels,
                                      params.nrSamplesPerChannel),
                            gpu::Block(16, 16, 1) );
 
       nrOperations = 0;
       nrBytesRead = nrBytesWritten =
-        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannelsPerSubband * 
+        (size_t) params.nrTABs * NR_POLARIZATIONS * params.nrChannels * 
         params.nrSamplesPerChannel * sizeof(std::complex<float>);
     }
 
@@ -91,7 +89,7 @@ namespace LOFAR
       case CoherentStokesTransposeKernel::INPUT_DATA: 
       case CoherentStokesTransposeKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel * 
+          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * 
             NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -103,6 +101,11 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
 

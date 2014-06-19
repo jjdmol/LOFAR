@@ -98,8 +98,8 @@ void ProcessGroup::appendReducerProcess(const ProcessId &id,
 void ProcessGroup::appendSharedEstimatorProcess(const ProcessId &id,
   unsigned int port)
 {
-  ProcessDescriptor descriptor = {SHARED_ESTIMATOR, port,
-    {Interval<double>(), Interval<double>()}};
+  ProcessDescriptor descriptor = {SHARED_ESTIMATOR, port, {Interval<double>(),
+    Interval<double>()}};
   appendProcess(SHARED_ESTIMATOR, id, descriptor);
 }
 

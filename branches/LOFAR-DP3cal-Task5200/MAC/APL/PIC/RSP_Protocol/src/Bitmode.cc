@@ -1,4 +1,4 @@
-//#  Bitmode.h: implementation of the Bitmode class
+//#  Bitmode.cc: implementation of the Bitmode class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)

@@ -22,26 +22,20 @@
 #define LOFAR_GPUPROC_CUDA_BEAM_FORMER_SUBBAND_PROC_H
 
 #include <complex>
+#include <memory>
 
+#include <boost/shared_ptr.hpp>
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <CoInterface/StreamableData.h>
 
 #include <GPUProc/gpu_wrapper.h>
 
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Pipelines/BeamFormerPipeline.h>
 
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/BeamFormerTransposeKernel.h>
-#include <GPUProc/Kernels/CoherentStokesKernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
+#include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
+#include "BeamFormerIncoherentStep.h"
 
 #include "SubbandProc.h"
 
@@ -53,15 +47,26 @@ namespace LOFAR
     struct BeamFormerFactories;
 
     // Our output data type
-    class BeamFormedData : public MultiDimArrayHostBuffer<float, 3>,
-                           public StreamableData
+    class BeamFormedData: public SubbandProcOutputData
     {
     public:
-      BeamFormedData(unsigned nrStokes, unsigned nrChannels,
-                     size_t nrSamples, gpu::Context &context);
-    private:
-      virtual void readData(Stream *str, unsigned);
-      virtual void writeData(Stream *str, unsigned);
+      MultiDimArrayHostBuffer<float, 4> coherentData;
+      MultiDimArrayHostBuffer<float, 4> incoherentData;
+     
+      BeamFormedData(unsigned nrCoherentTABs,
+                     unsigned nrCoherentStokes,
+                     size_t nrCoherentSamples,
+                     unsigned nrCoherentChannels,
+                     unsigned nrIncoherentTABs,
+                     unsigned nrIncoherentStokes,
+                     size_t nrIncoherentSamples,
+                     unsigned nrIncoherentChannels,
+                     gpu::Context &context);
+
+      /* Short-hand constructor to fetch all dimensions
+       * from a Parset */
+      BeamFormedData(const Parset &ps,
+                     gpu::Context &context);
     };
 
     class BeamFormerSubbandProc : public SubbandProc
@@ -73,16 +78,14 @@ namespace LOFAR
 
       // Beam form the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,
-                                  StreamableData &output);
+                                  SubbandProcOutputData &output);
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(SubbandProcOutputData &output);
 
-      // first FFT
-      static const size_t DELAY_COMPENSATION_NR_CHANNELS = 64;
+      void printStats();
 
-      // second FFT
-      static const size_t BEAM_FORMER_NR_CHANNELS = 4096;
+      void logTime(unsigned nrCoherent, unsigned nrIncoherent);
 
       // Beamformer specific collection of PerformanceCounters
       class Counters
@@ -90,32 +93,17 @@ namespace LOFAR
       public:
         Counters(gpu::Context &context);
 
-        // gpu kernel counters
-        PerformanceCounter intToFloat;
-        PerformanceCounter firstFFT;
-        PerformanceCounter delayBp;
-        PerformanceCounter secondFFT;
-        PerformanceCounter correctBandpass;
-        PerformanceCounter beamformer;
-        PerformanceCounter transpose;
-        PerformanceCounter inverseFFT;
-        PerformanceCounter firFilterKernel;
-        PerformanceCounter finalFFT;
-        PerformanceCounter coherentStokes;
-
-        PerformanceCounter incoherentInverseFFT;
-        PerformanceCounter incoherentFirFilterKernel;
-        PerformanceCounter incoherentFinalFFT;
-        PerformanceCounter incoherentStokes;
-        PerformanceCounter incoherentStokesTranspose;
-
-
         // gpu transfer counters
-        PerformanceCounter samples;
-        PerformanceCounter visibilities;
+        PerformanceCounter inputsamples;
+
+        PerformanceCounter coherentOutput;
+
         PerformanceCounter incoherentOutput;
+
         // Print the mean and std of each performance counter on the logger
         void printStats();
+
+        void logTime(unsigned nrCoherent, unsigned nrIncoherent);
       };
 
       Counters counters;
@@ -129,96 +117,28 @@ namespace LOFAR
 
       // Raw buffers, these are mapped with boost multiarrays 
       // in the InputData class
-      SubbandProcInputData::DeviceBuffers devInput;
+      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
 
       // @{
-      // Device memory buffers. These buffers are used interleaved.
-      gpu::DeviceMemory devA;
-      gpu::DeviceMemory devB;
-      gpu::DeviceMemory devC;
-      gpu::DeviceMemory devD;
-      gpu::DeviceMemory devE;
+      // Device memory buffers. These buffers are used interleaved. For details,
+      // please refer to the document bf-pipeline.txt in the directory
+      // GPUProc/doc.
+      boost::shared_ptr<gpu::DeviceMemory> devA;
+      boost::shared_ptr<gpu::DeviceMemory> devB;
+      boost::shared_ptr<gpu::DeviceMemory> devC;
+      boost::shared_ptr<gpu::DeviceMemory> devD;
+      boost::shared_ptr<gpu::DeviceMemory> devE;
       // @}
 
       // NULL placeholder for unused DeviceMemory parameters
-      gpu::DeviceMemory devNull;
+      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
-      /*
-       * Kernels
-       */
+      boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
+      boost::shared_ptr<gpu::DeviceMemory> IncoherentFilterHistoryData;
 
-      // Int -> Float conversion
-      IntToFloatKernel::Buffers intToFloatBuffers;
-      std::auto_ptr<IntToFloatKernel> intToFloatKernel;
-
-      // First (64 points) FFT
-      FFT_Kernel firstFFT;
-
-      // Delay compensation
-      DelayAndBandPassKernel::Buffers delayCompensationBuffers;
-      std::auto_ptr<DelayAndBandPassKernel> delayCompensationKernel;
-
-      // Second (64 points) FFT
-      FFT_Kernel secondFFT;
-
-      // Bandpass correction and tranpose
-      gpu::DeviceMemory devBandPassCorrectionWeights;
-      BandPassCorrectionKernel::Buffers bandPassCorrectionBuffers;
-      std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
-
-      // *****************************************************************
-      //  Objects needed to produce Coherent stokes output
-      // beam former
-
-      const bool outputComplexVoltages;
-      const bool coherentStokesPPF;
-
-      gpu::DeviceMemory devBeamFormerDelays;
-      BeamFormerKernel::Buffers beamFormerBuffers;
-      std::auto_ptr<BeamFormerKernel> beamFormerKernel;
-
-      // Transpose 
-      BeamFormerTransposeKernel::Buffers transposeBuffers;
-      std::auto_ptr<BeamFormerTransposeKernel> transposeKernel;
-
-      // inverse (4k points) FFT
-      FFT_Kernel inverseFFT;
-
-      // Poly-phase filter (FIR + FFT)
-      gpu::DeviceMemory devFilterWeights;
-      gpu::DeviceMemory devFilterHistoryData;
-      FIR_FilterKernel::Buffers firFilterBuffers;
-      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
-      FFT_Kernel finalFFT;
-
-      // Coherent Stokes
-      CoherentStokesKernel::Buffers coherentStokesBuffers;
-      std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
-
-      // *****************************************************************
-      //  Objects needed to produce incoherent stokes output
-
-      const bool incoherentStokesPPF;
-
-      // Transpose 
-      IncoherentStokesTransposeKernel::Buffers incoherentTransposeBuffers;
-      std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
-
-      // Inverse (4k points) FFT
-      FFT_Kernel incoherentInverseFFT;
-
-      // Poly-phase filter (FIR + FFT)
-      gpu::DeviceMemory devIncoherentFilterWeights;
-      gpu::DeviceMemory devIncoherentFilterHistoryData;
-      FIR_FilterKernel::Buffers incoherentFirFilterBuffers;
-      std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
-      FFT_Kernel incoherentFinalFFT;
-
-      // Incoherent Stokes
-      IncoherentStokesKernel::Buffers incoherentStokesBuffers;
-      std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
-
-      bool coherentBeamformer; // TODO temporary hack to allow typing of subband proc
+      std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
+      std::auto_ptr<BeamFormerCoherentStep> coherentStep;
+      std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
     };
 
   }

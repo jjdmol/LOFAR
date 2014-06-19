@@ -94,6 +94,7 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	// write value to it.
 	if (valueObj->setValue(value) != GCF_NO_ERROR) {
 		LOG_WARN_STR("Could not set value for DP " << DPname);
+		delete valueObj;
 		if (wantAnswer) {
 			itsExtResponse->dpeValueSet(DPname, SA_SETPROP_FAILED);
 		}
@@ -101,7 +102,9 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	}
 
 	// finally write value to the database.
-	return (itsService->dpeSet(DPname, *valueObj, timestamp, wantAnswer));
+	PVSSresult	result = itsService->dpeSet(DPname, *valueObj, timestamp, wantAnswer);
+	delete valueObj;
+	return (result);
 }
 
 PVSSresult DPservice::setValue (const string&		DPname, 

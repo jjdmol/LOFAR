@@ -59,7 +59,7 @@ namespace LOFAR
 
 
     if (itsParameters.asBool("splitbeam")) {
-      cout << itsParameters<<endl;
+      if (itsParameters.asInt("verbose")) cout << itsParameters<<endl;
       itsMachine = new LofarFTMachine(cache_p/2, tile_p,
                                       visResampler, gridfunction_p,
                                       *ms_p, wprojPlanes_p, mLocation_p,

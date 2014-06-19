@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <time.h>
 
 #include <Common/LofarTypes.h>
 #include <Common/Thread/Queue.h>
@@ -32,12 +33,18 @@
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/SlidingPointer.h>
+#include <CoInterface/Pool.h>
+#include <CoInterface/OMPThread.h>
+
+#include <InputProc/Transpose/MPIUtil.h>
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/OpenMP_Lock.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/PerformanceCounter.h>
 #include <GPUProc/SubbandProcs/SubbandProc.h>
+
+#include <GPUProc/MPIReceiver.h>
 
 namespace LOFAR
 {
@@ -46,12 +53,29 @@ namespace LOFAR
     class Pipeline
     {
     public:
-      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices);
+      Pipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, 
+        const std::vector<gpu::Device> &devices, Pool<struct MPIRecvData> &pool);
 
       virtual ~Pipeline();
 
+      // allocate resources, such as GPU buffers.
+      //
+      // Pipeline deploys delayed construction, because the resources may still
+      // be occupied by a previous observation at the time of construction.
+      //
+      // An alternative to delayed allocation could be to retry the GPU malloc
+      // with a timeout, but that could potentially dead-lock two concurrent
+      // observations.
+      virtual void allocateResources();
+
       // for each subband get data from input stream, sync, start the kernels to process all data, write output in parallel
-      void processObservation(OutputType outputType);
+      virtual void processObservation();
+
+      struct Output 
+      {
+        // output data queue
+        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
+      };
 
     protected:
       const Parset             &ps;
@@ -67,43 +91,19 @@ namespace LOFAR
 
       const size_t nrSubbandsPerSubbandProc;
 
-#if defined USE_B7015
-      OMP_Lock hostToDeviceLock[4], deviceToHostLock[4];
-#endif
-
-      // Combines all functionality needed for getting the total from a set of
-      // counters
-      struct Performance
-      {
-        std::map<std::string, SmartPtr<NSTimer> > total_timers;
-        // lock on the shared data
-        Mutex totalsMutex;
-        // add the counter in this queue
-        void addQueue(SubbandProc &queue);
-        // Print a logline with results
-        void log(size_t nrSubbandProcs);
-
-        size_t nrGPUs;
-
-        Performance(size_t nrGPUs = 1);
-      } performance;
+    protected:
+      // Threads that write to outputProc, and need to
+      // be killed when they stall at observation end.
+      OMPThreadSet outputThreads;
 
     private:
-      struct Output {
-        // synchronisation to write blocks in-order
-        SlidingPointer<size_t> sync;
 
-        // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<StreamableData> > > bequeue;
-      };
+      Pool<struct MPIRecvData> &mpiPool;
 
-      // For each block, read all subbands from all stations, and divide the
+      // For each block, transpose all subbands from all stations, and divide the
       // work over the workQueues
-      void receiveInput( size_t nrBlocks );
-
-      // Templated version of receiveInput(), to specialise in receiving
-      // a certain type of input sample.
-      template<typename SampleT> void receiveInput( size_t nrBlocks );
+      void transposeInput();
+      template<typename SampleT> void transposeInput();
 
       // preprocess subbands on the CPU
       void preprocessSubbands(SubbandProc &workQueue);
@@ -115,12 +115,10 @@ namespace LOFAR
       void postprocessSubbands(SubbandProc &workQueue);
 
       // Send subbands to Storage
-      void writeSubband(unsigned globalSubbandIdx, struct Output &output,
-                        SmartPtr<Stream> outputStream);
+      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output) = 0;
 
-      // Create Stream to Storage
-      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx,
-                                       OutputType outputType) const;
+      // Signal that all output has been emitted
+      virtual void doneWritingOutput();
 
       std::vector<struct Output> writePool; // [localSubbandIdx]
     };

@@ -99,7 +99,12 @@ def doRepair(globaldbpath,
         print "error:",globaldbpath,"does not exist"
         return
     if os.path.isfile(globaldbpath+'/ionmodel.hdf5'):
-        myion=iono.IonosphericModel([globaldbpath])
+        try:
+            myion=iono.IonosphericModel([globaldbpath])
+        except (RuntimeError, TypeError, NameError):
+            myion=dummyion()
+            myion.hdf5=tables.openFile(globaldbpath+'/ionmodel.hdf5','w')
+
     else:
         myion=dummyion()
         myion.hdf5=tables.openFile(globaldbpath+'/ionmodel.hdf5','w')
@@ -162,15 +167,16 @@ def doRepair(globaldbpath,
             else:
                 if myion.CommonScalarPhaseEnable:
                     parmname0 = ':'.join(['CommonScalarPhase', myion.stations[0]])
-                
+    
+    parmname_check=parmname0
     myion.freqs = []
     myion.freqwidths = []
     newdblist=[]
     for instrumentdb_name in myion.instrument_db_list:
-        print "opening",instrumentdb_name,parmname0
+        print "opening",instrumentdb_name,parmname_check
         try:
             instrumentdb = lofar.parmdb.parmdb( instrumentdb_name )
-            v0 = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]
+            v0 = instrumentdb.getValuesGrid( parmname_check )[ parmname_check ]
             freqs = v0['freqs']
         except:
             print "Error opening " + instrumentdb_name,"removing from list"
@@ -237,7 +243,7 @@ def doRepair(globaldbpath,
     for instrumentdb_name in myion.instrument_db_list:
         print "processing",instrumentdb_name
         instrumentdb = lofar.parmdb.parmdb( instrumentdb_name )
-        v0 = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]
+        v0 = instrumentdb.getValuesGrid( parmname_check )[ parmname_check ]
         freqs = v0['freqs']
         N_freqs = len(freqs)
         sorted_freq_selection = inverse_sorted_freq_idx[freq_idx:freq_idx+N_freqs]
@@ -247,15 +253,25 @@ def doRepair(globaldbpath,
                 if GainEnable:
                     parmname0 = ':'.join(['Gain', str(pol), str(pol), infix[0], station])
                     parmname1 = ':'.join(['Gain', str(pol), str(pol), infix[1], station])
+                    hasAmpl=False
+                    hasPhase=False
+                    #print " checking",parmname0,parmname0 in instrumentdb.getNames()
+                    if parmname0 in instrumentdb.getNames():
+                        hasAmpl=True
+                    if parmname1 in instrumentdb.getNames():
+                        hasPhase=True
                     if PhasorsEnable:
+                      if hasPhase:
                         gain_phase = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
                         if gain_phase.shape != ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0, pol_idx].shape:
                             print "wrong shape",gain_phase.shape,parmname1
                             continue;
                         
                         ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0, pol_idx] = gain_phase
+                      if hasAmpl:
+
                         gain_amplitude = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
-                        amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0, pol_idx] = gain_ampitude
+                        amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, 0, pol_idx] = gain_amplitude
                     else:
                         gain_real = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
                         gain_imag = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']
@@ -291,7 +307,7 @@ def doRepair(globaldbpath,
                                 ph[:, sorted_freq_selection[0]:sorted_freq_selection[-1]+1, station_idx, source_idx, pol_idx] = gain_phase
                             if hasAmpl:
                                 gain_amplitude = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
-                                amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1 , station_idx, source_idx, pol_idx] = gain_ampitude
+                                amp[:,sorted_freq_selection[0]:sorted_freq_selection[-1]+1 , station_idx, source_idx, pol_idx] = gain_amplitude
                         else:
                             gain_real = instrumentdb.getValuesGrid( parmname0 )[ parmname0 ]['values']
                             gain_imag = instrumentdb.getValuesGrid( parmname1 )[ parmname1 ]['values']

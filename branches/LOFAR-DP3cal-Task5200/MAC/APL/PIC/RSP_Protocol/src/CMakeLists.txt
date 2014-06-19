@@ -32,7 +32,9 @@ lofar_add_library(rsp_protocol
   Versions.cc
   WGSettings.cc
   XCStatistics.cc
-  Bitmode.cc)
+  Bitmode.cc
+  SDOMode.cc
+  SDOSelection.cc)
 
 add_dependencies(rsp_protocol 
   RSP_Protocol-EPA_Protocol

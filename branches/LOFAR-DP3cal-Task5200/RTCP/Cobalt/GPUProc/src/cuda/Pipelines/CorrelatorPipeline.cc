@@ -28,23 +28,34 @@
 #include <iomanip>
 
 #include <Common/LofarLogger.h>
+#include <Stream/Stream.h>
+#include <Stream/FileStream.h>
+#include <Stream/NullStream.h>
 
-#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
+#include <CoInterface/Stream.h>
+#include <CoInterface/RunningStatistics.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/PerformanceCounter.h>
-#include <GPUProc/RunningStatistics.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
 
-    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices)
+    CorrelatorPipeline::CorrelatorPipeline(const Parset &ps,
+     const std::vector<size_t> &subbandIndices, 
+     const std::vector<gpu::Device> &devices,
+     Pool<struct MPIRecvData> &pool)
       :
-      Pipeline(ps, subbandIndices, devices)
+      Pipeline(ps, subbandIndices, devices, pool),
+      factories(ps, nrSubbandsPerSubbandProc)
     {
-      CorrelatorFactories factories(ps, nrSubbandsPerSubbandProc);
+    }
+
+    void CorrelatorPipeline::allocateResources()
+    {
+      Pipeline::allocateResources();
 
       // Create the SubbandProcs
       for (size_t i = 0; i < workQueues.size(); ++i) 
@@ -104,6 +115,70 @@ namespace LOFAR
       {
         LOG_ERROR_STR("Received an Exception desctructing CorrelatorPipline, while print performance");
       }
+    }
+
+
+    void CorrelatorPipeline::writeOutput( unsigned globalSubbandIdx, struct Output &output )
+    {
+      // Register our thread to be killable at exit
+      OMPThreadSet::ScopedRun sr(outputThreads);
+
+      SmartPtr<Stream> outputStream = connectToOutput(globalSubbandIdx);
+
+      SmartPtr<SubbandProcOutputData> outputData;
+
+      // Process pool elements until end-of-output
+      while ((outputData = output.bequeue->remove()) != NULL) {
+        CorrelatedData &correlatedData = dynamic_cast<CorrelatedData&>(*outputData);
+
+        const struct BlockID id = outputData->blockID;
+        ASSERT( globalSubbandIdx == id.globalSubbandIdx );
+
+        LOG_DEBUG_STR("[" << id << "] Writing start");
+
+        // Write block to disk 
+        try {
+          correlatedData.write(outputStream.get(), true);
+        } catch (Exception &ex) {
+          LOG_ERROR_STR("Error writing subband " << id.globalSubbandIdx << ", dropping all subsequent blocks: " << ex.what());
+
+          outputStream = new NullStream;
+        }
+
+        SubbandProc &workQueue = *workQueues[id.localSubbandIdx % workQueues.size()];
+        workQueue.outputPool.free.append(outputData);
+
+        ASSERT(!outputData);
+
+        if (id.localSubbandIdx == 0 || id.localSubbandIdx == subbandIndices.size() - 1)
+          LOG_INFO_STR("[" << id << "] Done"); 
+        else
+          LOG_DEBUG_STR("[" << id << "] Done"); 
+      }
+    }
+
+
+    SmartPtr<Stream> CorrelatorPipeline::connectToOutput(unsigned globalSubbandIdx) const
+    {
+      SmartPtr<Stream> outputStream;
+
+      try {
+        if (ps.getHostName(CORRELATED_DATA, globalSubbandIdx) == "") {
+          // an empty host name means 'write to disk directly', to
+          // make debugging easier for now
+          outputStream = new FileStream(ps.getFileName(CORRELATED_DATA, globalSubbandIdx), 0666);
+        } else {
+          // connect to the output process for this output
+          const std::string desc = getStreamDescriptorBetweenIONandStorage(ps, CORRELATED_DATA, globalSubbandIdx);
+          outputStream = createStream(desc, false, ps.realTime() ? ps.stopTime() : 0);
+        }
+      } catch (Exception &ex) {
+        LOG_ERROR_STR("Failed to connect to output proc; dropping rest of subband " << globalSubbandIdx << ": " << ex.what());
+
+        outputStream = new NullStream;
+      }
+
+      return outputStream;
     }
   }
 }

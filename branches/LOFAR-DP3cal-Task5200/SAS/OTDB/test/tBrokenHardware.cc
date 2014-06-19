@@ -117,15 +117,33 @@ int main (int	argc, char*	argv[]) {
 	INIT_LOGGER(basename(argv[0]));
 	LOG_INFO_STR("Starting " << argv[0]);
 
-	if (argc != 1) {
-		cout << "Usage: tBrokenHardware " << endl;
+	if (argc > 3) {
+		cout << "Usage: tBrokenHardware [starttime [endtime]]" << endl;
 		return (1);
 	}
 
 	// try to resolve the database name
 	string 		dbName("TESTLOFAR_4");
 	string		hostName("rs005.astron.nl");
+	char		line[64];
 	int32		sleeptime = 1;
+	ifstream	inFile;
+	inFile.open("DATABASENAME");
+	if (!inFile || !inFile.getline(line, 40)) {
+		sleeptime	= 4;
+	}
+	else {
+		char*	pos = strchr(line, ' ');
+		if (pos) {
+			hostName = pos+1;
+			*pos = '\0';		// place new EOL in 'line'
+			dbName = line;	
+		}
+		else {
+			dbName = line;
+		}
+	}
+	inFile.close();
 	LOG_INFO_STR("### Using database " << dbName << " on host " << hostName << " ###");
 	sleep (sleeptime);
 
@@ -140,7 +158,6 @@ int main (int	argc, char*	argv[]) {
 	ClassifConv		CTconv(&conn);
 
 	try {
-
 		LOG_INFO("Trying to connect to the database");
 		ASSERTSTR(conn.connect(), "Connnection failed");
 		LOG_INFO_STR("Connection succesful: " << conn);
@@ -159,37 +176,52 @@ int main (int	argc, char*	argv[]) {
 		LOG_INFO("Trying to construct a TreeValue object");
 		TreeValue	tv(&conn, treeID);
 
-		{
-		LOG_INFO ("getBrokenHardware()");
-		vector<OTDBvalue>	valueList=tv.getBrokenHardware();
-		showValueList(valueList);
+		if (argc > 1) {
+			if (argc == 2) {	// startTime only?
+				LOG_INFO_STR ("getBrokenHardware(" << argv[1] << ")");
+				vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string(argv[1]));
+				showValueList(valueList);
+			}
+			else {	// both times specified
+				LOG_INFO_STR ("getBrokenHardware(" << argv[1] << ", " << argv[2] << ")");
+				vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string(argv[1]),
+																   time_from_string(argv[2]));
+				showValueList(valueList);
+			}
 		}
+		else { // do default tests
+			{
+			LOG_INFO ("getBrokenHardware()");
+			vector<OTDBvalue>	valueList=tv.getBrokenHardware();
+			showValueList(valueList);
+			}
 
-		{
-		LOG_INFO ("getBrokenHardware('2012-10-15 09:00:00')");
-		vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 09:00:00"));
-		showValueList(valueList);
-		}
+			{
+			LOG_INFO ("getBrokenHardware('2012-10-15 09:00:00')");
+			vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 09:00:00"));
+			showValueList(valueList);
+			}
 
-		{
-		LOG_INFO ("getBrokenHardware('2012-10-15 12:00:00')");
-		vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 12:00:00"));
-		showValueList(valueList);
-		}
+			{
+			LOG_INFO ("getBrokenHardware('2012-10-15 12:00:00')");
+			vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 12:00:00"));
+			showValueList(valueList);
+			}
 
-		{
-		LOG_INFO ("getBrokenHardware('2012-10-15 12:00:00', '2012-10-16 12:00:00')");
-		vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 12:00:00"), 
-														   time_from_string("2012-10-16 12:00:00"));
-		showValueList(valueList);
-		}
+			{
+			LOG_INFO ("getBrokenHardware('2012-10-15 12:00:00', '2012-10-16 12:00:00')");
+			vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-15 12:00:00"), 
+															   time_from_string("2012-10-16 12:00:00"));
+			showValueList(valueList);
+			}
 
-		{
-		LOG_INFO ("getBrokenHardware('2012-10-14 12:00:00', '2012-10-15 12:00:00')");
-		vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-14 12:00:00"), 
-														   time_from_string("2012-10-15 12:00:00"));
-		showValueList(valueList);
-		}
+			{
+			LOG_INFO ("getBrokenHardware('2012-10-14 12:00:00', '2012-10-15 12:00:00')");
+			vector<OTDBvalue>	valueList=tv.getBrokenHardware(time_from_string("2012-10-14 12:00:00"), 
+															   time_from_string("2012-10-15 12:00:00"));
+			showValueList(valueList);
+			}
+		} // default tests
 	}
 	catch (std::exception&	ex) {
 		LOG_FATAL_STR("Unexpected exception: " << ex.what());

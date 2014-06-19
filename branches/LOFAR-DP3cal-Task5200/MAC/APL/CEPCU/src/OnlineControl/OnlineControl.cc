@@ -70,7 +70,6 @@ static OnlineControl*	thisOnlineControl = 0;
 OnlineControl::OnlineControl(const string&	cntlrName) :
 	GCFTask 			((State)&OnlineControl::initial_state,cntlrName),
 	itsPropertySet		(0),
-	itsBGPApplPropSet	(0),
 	itsPropertySetInitialized (false),
 	itsPVSSService		(0),
 	itsPVSSResponse		(0),
@@ -258,58 +257,6 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, GCFPortInterface
 		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("initial"));
 		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 
-   		LOG_DEBUG ("Going to create BGPAppl datapoint");
-		TRAN(OnlineControl::propset_state);				// go to next state.
-	} break;
-
-	case F_CONNECTED:
-		break;
-
-	case F_DISCONNECTED:
-		_handleDisconnect(port);
-		break;
-	
-	default:
-		LOG_DEBUG_STR ("initial, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
-//
-// propset_state(event, port)
-//
-// Connect to BGPAppl DP and start rest of tasks
-//
-GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface& port)
-{
-	LOG_INFO_STR ("propset:" << eventName(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-	switch (event.signal) {
-	case F_ENTRY: {
-		// Get access to my own propertyset.
-		string obsDPname = globalParameterSet()->getString("_DPname");
-		string	propSetName(createPropertySetName(PSN_BGP_APPL, getName(), obsDPname));
-		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
-		itsBGPApplPropSet = new RTDBPropertySet(propSetName,
-											 PST_BGP_APPL,
-											 PSAT_RW,
-											 this);
-	} break;
-
-	case DP_CREATED: {
-		// NOTE: this function may be called DURING the construction of the PropertySet.
-		// Always exit this event in a way that GCF can end the construction.
-		DPCreatedEvent  dpEvent(event);
-		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.1);
-	} break;
-
-	case F_TIMER: {	// must be timer that PropSet is online.
 		// start StopTimer for safety.
 		LOG_INFO("Starting QUIT timer that expires 5 seconds after end of observation");
 		ptime	now(second_clock::universal_time());
@@ -338,7 +285,7 @@ GCFEvent::TResult OnlineControl::propset_state(GCFEvent& event, GCFPortInterface
 		break;
 	
 	default:
-		LOG_DEBUG_STR ("propset, default");
+		LOG_DEBUG_STR ("initial, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -418,7 +365,6 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		itsLogControlPort->send(announce);
 		// execute this state
 		_setState(CTState::CONNECT);
-		_setupBGPmappingTables();
 		uint32 result = _startApplications();			// prep parset and call startBGP.sh
 		// respond to parent
 		sendControlResult(port, event.signal, msg.cntlrName, result);
@@ -573,76 +519,6 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 		return (GCFEvent::NOT_HANDLED);
 	}
 	return (GCFEvent::HANDLED);
-}
-
-//
-// _setupBGPmappingTables
-//
-void OnlineControl::_setupBGPmappingTables()
-{
-	Observation		theObs(globalParameterSet(), false);
-	int	nrStreams = theObs.streamsToStorage.size();
-	LOG_INFO_STR("_setupBGPmapping: " << nrStreams << " streams found.");
-
-	// Which IOnodes and Adders are used is collected in arrays and written to BGPAppl datapoints.
-	// e.g. BGPAppl.IONodelist = {0,1,2,3} ; BGPAppl.AdderList = {[0,2,3],[0,1,2],[3,6,2],[6,6,6]}
-	// The dataproduct, writer and locus information is written to datapoint in the related adder.
-	// eg. IONode99.Adder0.dataProductType=Correlated, IONode99.Adder0.dataProduct=L55522_SAP000_SB000_uv.MS, 
-	//     IONode99.Adder0.locusnode=2, IONode99.Adder0.writer=0
-	// BGPAppl vectors
-	GCFPValueArray	ionodeArr;
-	GCFPValueArray	adderArr;
-	// Adder vector
-	vector<string>		fields;
-	fields.push_back("dataProductType");
-	fields.push_back("dataProduct");
-	fields.push_back("locusNode");
-	fields.push_back("writer");
-
-	uint	prevPset = (nrStreams ? theObs.streamsToStorage[0].sourcePset : -1);
-	vector<int>		adderVector;
-	for (int i = 0; i < nrStreams; i++) {
-		// BGPAppl information
-		if (theObs.streamsToStorage[i].sourcePset != prevPset) {	// other Pset? write current vector to the database.
-			ionodeArr.push_back(new GCFPVInteger(prevPset));
-			{	stringstream	os;
-				writeVector(os, adderVector);
-				adderArr.push_back (new GCFPVString(os.str()));
-			}
-			// clear the collecting vectors
-			adderVector.clear();
-			prevPset = theObs.streamsToStorage[i].sourcePset;
-		}
-		// extend vector with info
-		adderVector.push_back (theObs.streamsToStorage[i].adderNr);
-
-		// Adder information
-		string	propSetMask(createPropertySetName(PSN_ADDER, "", ""));
-		string	adderDPname(formatString(propSetMask.c_str(), theObs.streamsToStorage[i].sourcePset, 
-							theObs.streamsToStorage[i].adderNr));
-		vector<GCFPValue*>	values;
-		values.push_back(new GCFPVString (theObs.streamsToStorage[i].dataProduct));
-		values.push_back(new GCFPVString (theObs.streamsToStorage[i].filename));
-		int	locusNodeNr(0);
-		if (sscanf(theObs.streamsToStorage[i].destStorageNode.c_str(), "locus%d", &locusNodeNr) != 1) {
-			LOG_ERROR_STR("Cannot determine number in '" << theObs.streamsToStorage[i].destStorageNode <<"'");
-		}
-		values.push_back(new GCFPVInteger(locusNodeNr));
-		values.push_back(new GCFPVInteger(theObs.streamsToStorage[i].writerNr));
-		itsPVSSService->dpeSetMultiple(adderDPname, fields, values, 0.0, false); // ignore answer
-		// release claimed memory for Adder
-		for (int i = values.size()-1; i>=0; i--) {
-			delete values[i];
-		}
-	}
-	itsBGPApplPropSet->setValue(PN_BGPA_IO_NODE_LIST, GCFPVDynArr(LPT_DYNINTEGER, ionodeArr));
-	itsBGPApplPropSet->setValue(PN_BGPA_ADDER_LIST,   GCFPVDynArr(LPT_DYNSTRING,  adderArr));
-
-	// release claimed memory for BGPAppl.
-	for (int i = ionodeArr.size()-1; i>=0; i--) {
-		delete ionodeArr[i];
-		delete adderArr[i];
-	}
 }
 
 //

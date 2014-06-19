@@ -1,14 +1,12 @@
-#
-# HardwareList.parset describes the properties of each node
-# known to Cobalt. 
-#
+# $Id$
+# Describes the properties of each node known to Cobalt. 
 
 # A generic configuration for 'localhost'
 
 PIC.Core.Cobalt.localhost.host=localhost
 PIC.Core.Cobalt.localhost.cpu=0
 PIC.Core.Cobalt.localhost.nic=
-PIC.Core.Cobalt.localhost.gpus=
+PIC.Core.Cobalt.localhost.gpus=[0]
 
 # DAS-4 nodes
 

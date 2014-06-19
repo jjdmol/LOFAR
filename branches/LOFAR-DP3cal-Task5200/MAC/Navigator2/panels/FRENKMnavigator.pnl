@@ -1,9 +1,8 @@
-V 10
+V 11
 1
 LANG:1 9 Navigator
-PANEL,-1 -1 1229 846 N "_3DFace" 2
-"$baseDP"
-"$progressBarDPE"
+PANEL,-1 -1 1229 846 N "_3DFace" 1
+"$name"
 "main()
 {
   LOG_TRACE(\"Navigator Panel: init start\");
@@ -153,91 +152,55 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-1 67 5 "" 0
+1 63 5 "" 0
 0
-1 69 9 "" 2
+1 65 9 "" 2
 0
-1 70 9 "" 3
+1 66 9 "" 3
 0
-1 71 9 "" 0
+1 67 9 "" 0
 0
-1 72 9 "" 1
+1 68 9 "" 1
 0
-1 55 3 "" 0
+1 69 9 "" 5
 0
-1 56 3 "" 1
+1 70 9 "" 6
 0
-1 57 3 "" 2
+1 55 3 "" 6
 0
-1 58 3 "" 4
+1 56 3 "" 7
 0
-1 59 3 "" 5
+1 57 3 "" 11
 0
-1 60 3 "" 3
+1 58 3 "" 5
 0
-1 61 4 "" 0
+1 59 4 "" 6
 0
-1 62 4 "" 1
+1 60 4 "" 7
 0
-1 63 4 "" 2
+1 61 4 "" 11
 0
-1 64 4 "" 4
+1 62 4 "" 5
 0
-1 65 4 "" 5
+1 64 6 "" 2
 0
-1 66 4 "" 3
+1 71 12 "" 18
 0
-1 68 6 "" 1
+1 72 12 "" 13
 0
-1 73 12 "" 0
-1 "selectionChanged" 1 1 "main()
-{
-  string aS;
-  getValue (\"\", \"namedActiveRegister\", aS);
-
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\") ){
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".fw_currentTab\",aS);
-  }
-
-  setEvent(aS,\"TabChanged\");
-}" 0
- 
+1 73 12 "" 14
 0
-1 74 13 "" 78
+1 74 12 "0" 1
 0
-1 75 13 "19" 18
+1 75 12 "1" 1
 0
-1 76 13 "19" 19
+1 76 12 "2" 1
 0
-1 77 13 "19" 24
+1 77 13 "" 9
 0
-1 78 13 "19" 8
+1 78 13 "" 11
 0
-1 79 13 "19" 9
-0
-1 80 13 "19" 16
-0
-1 81 13 "19" 12
-0
-1 82 13 "19" 14
-0
-1 83 13 "19" 17
-0
-1 84 13 "19" 25
-0
-1 85 13 "19" 11
-0
-1 86 13 "19" 15
-0
-1 87 13 "19" 21
-0
-1 88 13 "19" 22
-0
-1 89 13 "19" 0
-0
-1 90 13 "19" 1
-0
-1 91 13 "" 114
+1 79 13 "" 16
 0
 2 38
 "PRIMITIVE_TEXT1"
@@ -255,9 +218,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 24 24 104 48
 0 2 2 "0s" 0 0 0 64 0 0  24 24 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 10 Type name:
 2 39
 "PRIMITIVE_TEXT2"
@@ -275,9 +237,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 24 48 104 72
 0 2 2 "0s" 0 0 0 64 0 0  24 48 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 16 New object name:
 13 40
 "PUSH_BUTTON1"
@@ -292,9 +253,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 246 14 330 74
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  246 14 330 74
 
 T 
 1
@@ -370,9 +330,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 158 14 242 42
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  158 14 242 42
 3 "0s" 0 0 0 0 0 -1  E "main()
 {
   this.text = \"Observation\";
@@ -391,9 +350,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 158 46 242 74
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  158 46 242 74
 3 "0s" 0 0 0 0 0 -1  E E E
 30 43
 "FRAME1"
@@ -410,9 +368,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 1 0 0.88888888888889 -4 -5.33333333333334 0 E 8 6 409 97
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 5 Claim
 30 44
 "FRAME2"
@@ -429,9 +386,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 0 1 0 1 E 0.78 0 0.88888888888889 409.76 -5.33333333333334 0 E 8 6 409 97
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 8 Response
 2 45
 "PRIMITIVE_TEXT3"
@@ -449,9 +405,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 432 24 512 48
 0 2 2 "0s" 0 0 0 64 0 0  432 24 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 3 DP:
 14 46
 "txt_response"
@@ -466,9 +421,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 478 22 706 50
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  478 22 706 50
 3 "0s" 0 0 0 0 0 -1  E E E
 30 48
 "FRAME4"
@@ -483,11 +437,10 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E 2.44 0 0.622222222222223 -11.52 76.2666666666667 0 E 8 6 409 97
+E E 0 0 1 0 1 E 2.44 0 0.622222222222223 -11.52 76.26666666666669 0 E 8 6 409 97
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 48 Translate object name into DP name or CLAIM name
 2 49
 "PRIMITIVE_TEXT4"
@@ -505,9 +458,8 @@ LANG:1 0
 E E 2 1 1 2 1 E U  1 E 18 106 98 130
 0 2 2 "0s" 0 0 0 64 0 0  18 106 1
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
-1
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0 1
 LANG:1 12 Object name:
 14 50
 "OBJECTNAME_IN"
@@ -522,9 +474,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 150 102 418 130
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  150 102 418 130
 3 "0s" 0 0 0 0 0 -1  E E "main()
 {
   OBJECTNAME_OUT.text = claimManager_nameToRealName( this.text );
@@ -543,9 +494,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 422 102 978 130
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  422 102 978 130
 3 "0s" 0 0 0 0 0 -1  E E E
 13 53
 "PUSH_BUTTON2"
@@ -560,9 +510,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 734 6 898 58
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  734 6 898 58
 
 T 
 1
@@ -598,9 +547,8 @@ LANG:1 0
 
 0
 1
-LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
-0 ""
- 902 6 1018 58
+LANG:1 26 Arial,-1,17,5,50,0,0,0,0,0
+0  902 6 1018 58
 
 T 
 1
@@ -651,35 +599,34 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 3 "fw_topDetailSelection"
+3 3 "fw_topDetailSelection" -1
 "objects\\navigator_typeSelector.pnl" 1002 89 T 16 1 0 1 -260 -123
 2
 "$name""fw_topDetailSelection"
 "$selection""Hardware"
-3 4 "fw_bottomDetailSelection"
+3 4 "fw_bottomDetailSelection" -1
 "objects\\navigator_typeSelector.pnl" 1084 468 T 17 1 0 1 -342 -120
 2
 "$name""fw_bottomDetailSelection"
 "$selection""Processes"
-3 5 "fw_headLines"
+3 5 "fw_headLines" -1
 "objects\\navigator_headlines.pnl" 87 765 T 19 1 0 1 -84 -5
 1
 "$name""fw_headLines"
-3 6 "fw_locator"
+3 6 "fw_locator" -1
 "objects\\navigator_locator.pnl" 1065 798 T 20 1.00104275286757 0 1 -43.1094890510946 -39
 1
 "$name""fw_locator"
-3 9 "fw_progressBar"
+3 9 "fw_progressBar" -1
 "objects\\navigator_progressBar.pnl" 815 767 T 23 1.305 0 1 -47.5749999999999 -6
-2
+1
 "$name""fw_progressBar"
-"$progressBarDPE""$progressBarDPE"
-3 12 "fw_viewSelection"
+3 12 "fw_viewSelection" -1
 "objects\\navigator_viewSelection.pnl" -6 -6.99999999999989 T 25 0.985236220472441 0 0.795244385733157 18.9557086614173 152.795244385733
-2
-"$baseDP""$baseDP"
+1
 "$name""fw_viewSelection"
-3 13 "fw_alerts"
-"objects\\navigator_alerts.pnl" 727 845 T 26 1 0 0.89 -384 74.35
-0
+3 13 "fw_alerts" -1
+"objects\\navigator_alerts.pnl" 727 845 T 26 1 0 0.89 -384 74.34999999999999
+1
+"$name""$name"
 0

@@ -16,24 +16,26 @@
 //# You should have received a copy of the GNU General Public License along
 //# with the LOFAR software suite. If not, see <http://www.gnu.org/licenses/>.
 //#
-//# $Id: BlockID.h 26419 2013-09-09 11:19:56Z mol $
+//# $Id$
 
 #ifndef LOFAR_COINTERFACE_TABTRANSPOSE_H
 #define LOFAR_COINTERFACE_TABTRANSPOSE_H
 
-#include <iostream>
-#include <map>
 #include <cstring>
-#include <Common/Thread/Mutex.h>
+#include <map>
+#include <iostream>
 #include <Common/Thread/Thread.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
-#include <Common/Thread/Condition.h>
-#include <Common/Thread/Mutex.h>
+#include "RunningStatistics.h"
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
 #include "SmartPtr.h"
 #include "Pool.h"
+#include "StreamableData.h"
+#include "OMPThread.h"
 
 namespace LOFAR
 {
@@ -53,7 +55,7 @@ namespace LOFAR
 
         Subband( size_t nrSamples = 0, size_t nrChannels = 0 );
 
-        struct {
+        struct BlockID {
           size_t fileIdx;
           size_t subband;
           size_t block;
@@ -63,6 +65,10 @@ namespace LOFAR
         void read(Stream &stream);
       };
 
+      std::ostream &operator<<(std::ostream &str, const Subband::BlockID &id);
+
+      typedef SampleData<float, 3> BeamformedData; // [nrSubbands][nrChannels][nrSamples]
+
       /*
        * A block of data, representing for one time slice all
        * subbands.
@@ -70,26 +76,29 @@ namespace LOFAR
        * The constructor fixes the size of the data and the number
        * of subbands per block, but other fields are left to the
        * caller to fill.
+       *
+       * The subbands are weaved together: each subband has dimensions
+       *
+       *   subband[samples][channels]
+       *
+       * and each block has dimensions
+       *
+       *   block[samples][subbbands][channels]
        */
       class Block {
       public:
-        MultiDimArray<float, 3> data; // [subband][samples][channels]
-        std::vector<bool> subbandWritten;
-
-        size_t fileIdx;
-        size_t block;
-
-        Block( size_t nrSubbands, size_t nrSamples, size_t nrChannels );
+        Block( size_t fileIdx, size_t blockIdx, size_t nrSubbands, size_t nrSamples, size_t nrChannels );
 
         /*
-         * Add data for a single subband.
+         * Add data for a single subband to the cache.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
-         * Zero data of subbands that weren't added.
+         * Flush the subband cache to a SampleData array,
+         * and write zeroes for missing data.
          */
-        void zeroRemainingSubbands();
+        void write( BeamformedData &output );
 
         /*
          * Return whether the block is complete, that is, all
@@ -98,6 +107,18 @@ namespace LOFAR
         bool complete() const;
 
       private:
+        // Annotation of this block
+        const size_t fileIdx;
+        const size_t blockIdx;
+
+        // Dimensions of each block
+        const size_t nrSamples;
+        const size_t nrSubbands;
+        const size_t nrChannels;
+
+        // Cache of subband data for this block
+        std::vector< SmartPtr<Subband> > subbandCache;
+
         // The number of subbands left to receive.
         size_t nrSubbandsLeft;
       };
@@ -127,12 +148,21 @@ namespace LOFAR
        */
       class BlockCollector {
       public:
-        BlockCollector( Pool<Block> &outputPool, size_t fileIdx, size_t maxBlocksInFlight = 0 );
+        /*
+         * outputPool: the pool to pull/push complete blocks from/to.
+         * fileIdx:    the file index for which we collect blocks.
+         * nrBlocks:   the number of blocks we expect (or 0 if unknown).
+         * maxBlocksInFlight: the maximum number of blocks to process in
+         *                    parallel (or 0 for no limit).
+         */
+        BlockCollector( Pool<BeamformedData> &outputPool, size_t fileIdx, size_t nrSubbands, size_t nrChannels, size_t nrSamples, size_t nrBlocks = 0, size_t maxBlocksInFlight = 0 );
 
-	/*
+        ~BlockCollector();
+
+	      /*
          * Add a subband of any block.
          */
-        void addSubband( const Subband &subband );
+        void addSubband( SmartPtr<Subband> &subband );
 
         /*
          * Send all remaining blocks downstream,
@@ -141,10 +171,26 @@ namespace LOFAR
         void finish();
 
       private:
+        /*
+         * Elements travel along the following path
+         *
+         * Caller:       addSubband() -> inputQueue
+         * inputThread:  inputQueue   -> processSubband() + outputPool.free -> outputQueue
+         * outputThread: outputQueue  -> outputPool.filled
+         */
+
         std::map<size_t, SmartPtr<Block> > blocks;
-        Pool<Block> &outputPool;
+
+        BestEffortQueue< SmartPtr<Subband> > inputQueue;
+        Queue< SmartPtr<Block> >             outputQueue;
+        Pool<BeamformedData> &outputPool;
+
         const size_t fileIdx;
-        Mutex mutex;
+        const size_t nrBlocks;
+
+        const size_t nrSubbands;
+        const size_t nrChannels;
+        const size_t nrSamples;
 
         // upper limit for blocks.size(), or 0 if unlimited
         const size_t maxBlocksInFlight;
@@ -154,6 +200,9 @@ namespace LOFAR
         
         // nr of last emitted block, or -1 if no block has been emitted
         ssize_t lastEmitted;
+
+        Thread inputThread;
+        Thread outputThread;
 
         // The oldest block in flight.
         size_t minBlock() const;
@@ -179,9 +228,21 @@ namespace LOFAR
         bool have(size_t block) const;
 
         /*
-         * Fetch a new block.
+         * Fetch a new block. Returns whether
+         * the fetching succeeded.
          */
-        void fetch(size_t block);
+        bool fetch(size_t block);
+        
+        /*
+         * Processes input elements from inputQueue.
+         */
+        void inputLoop();
+        void processSubband( SmartPtr<Subband> &subband );
+
+        /*
+         * Processes output elements from outputQueue.
+         */
+        void outputLoop();
       };
 
       /*
@@ -286,11 +347,20 @@ namespace LOFAR
 
         typedef std::map<size_t,struct Host> HostMap; // fileIdx -> host
 
-        MultiSender( const HostMap &hostMap, size_t queueSize = 3, bool canDrop = false );
+        // Set up a TAB sender to multiple hosts:
+        //
+        // hostMap:          the mapping fileIdx -> Host
+        // canDrop:          whether data dropping is allowed
+        // maxRetentionTime: drop data older than this from the queue
+        MultiSender( const HostMap &hostMap, bool canDrop = false, double maxRetentionTime = 3.0 );
+        ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
         // 'finish()' is called.
-        void process();
+        //
+        // All processing threads are registered in the provided threadSet to
+        // allow early aborts.
+        void process( OMPThreadSet *threadSet = 0 );
 
         // Add a subband for sending. Ownership of the data is taken.
         void append( SmartPtr<struct Subband> &subband );
@@ -302,11 +372,23 @@ namespace LOFAR
         // fileIdx -> host mapping
         const HostMap hostMap;
 
+        // if we're allowed to drop in the first place
+        const bool canDrop;
+
+        // MultiSender has a queue per host it sends to. If it appends an element
+        // to a queue, it will discard the head if it is older than maxRententionTime.
+        //
+        // That way, the queue size remains limited to at most the data produced in
+        // 'maxRetentionTime' seconds.
+        const double maxRetentionTime;
+
+        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
+
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;
 
         // A queue for data to be sent to each host
-	      std::map<struct Host, SmartPtr< BestEffortQueue< SmartPtr<struct Subband> > > > queues;
+	      std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

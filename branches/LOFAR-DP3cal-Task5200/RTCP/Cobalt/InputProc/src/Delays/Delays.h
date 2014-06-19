@@ -32,9 +32,6 @@
 #include <map>
 
 #include <Common/LofarTypes.h>
-#include <Common/Timer.h>
-#include <Common/Thread/Thread.h>
-#include <Common/Thread/Semaphore.h>
 #include <CoInterface/MultiDimArray.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SubbandMetaData.h>
@@ -56,7 +53,7 @@ namespace LOFAR
   {
 
     // Speed of light in vacuum, in m/s.
-    const double speedOfLight = 299792458;
+    const double speedOfLight = 299792458.0;
 
     // Workholder for calculating the delay compensation that must be applied
     // per beam per station. We start by calculating the path length
@@ -91,8 +88,6 @@ namespace LOFAR
       Delays(const Parset &ps, size_t stationIdx, const TimeStamp &from, size_t increment);
       ~Delays();
 
-      void start();
-
       // Output structures for adjusted directions and delays
       struct Delay {
         double  direction[3];
@@ -114,6 +109,8 @@ namespace LOFAR
 
       struct BeamDelays {
         struct Delay              SAP;
+
+        // Delays for all coherent (!) TABs
         std::vector<struct Delay> TABs;
 
         bool operator==(const BeamDelays &other) const {
@@ -157,30 +154,7 @@ namespace LOFAR
       const size_t stationIdx;
       const TimeStamp from;
       const size_t increment;
-
-      // do the delay compensation calculations in a separate thread to allow bulk
-      // calculations and to avoid blocking other threads
-      void                                mainLoop();
-
-      volatile bool stop;
-
-      // the number of seconds to maintain in the buffer, must be a multiple of
-      // nrCalcDelays.
-      static const size_t bufferSize = 128;
-
-      // the number of delays to calculate in a single run
-      static const size_t nrCalcDelays = 16;
-
-      // the circular buffer to hold the moving beam directions for every second of data
-      std::vector<AllDelays> buffer;
-      size_t head, tail;
-
-      // two semaphores are used: one to trigger the producer that free space is available,
-      // another to trigger the consumer that data is available.
-      Semaphore bufferFree, bufferUsed;
-
-      // Resize the given delay set to the right proportions.
-      void setAllDelaysSize( AllDelays &result ) const;
+      TimeStamp currentTime;
 
       // Test whether the conversion engine actually works.
       bool test();
@@ -209,10 +183,6 @@ namespace LOFAR
       // Station to reference station position difference vector.
       casa::MVPosition phasePositionDiff;
 #endif
-
-      NSTimer delayTimer;
-
-      SmartPtr<Thread>                    thread;
     };
 
   } // namespace Cobalt

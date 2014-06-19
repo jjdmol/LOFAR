@@ -26,6 +26,8 @@
 // \file
 // Macro interface to the lofar logging package.
 
+#include <Common/compiler.h>
+
 //# Include the correct set of macros, depending on the availability of the
 //# log4cplus or log4cxx packages.
 #if defined(HAVE_LOG4CPLUS)
@@ -80,27 +82,27 @@ namespace LOFAR
 // If the condition of assert is NOT met a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
 #define ASSERT(cond) do { \
-	if (!(cond)) THROW(::LOFAR::AssertError, "Assertion: " #cond); \
+	if (UNLIKELY(!(cond))) THROW(::LOFAR::AssertError, "Assertion: " #cond); \
 	} while(0)
 
 
 // If the condition of assert is NOT met, a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
 #define ASSERTSTR(cond,stream) do { \
-	if (!(cond)) THROW(::LOFAR::AssertError, \
+	if (UNLIKELY(!(cond))) THROW(::LOFAR::AssertError, \
 			   "Assertion: " #cond "; " << stream); \
 	} while(0)
 
 // If the condition of failwhen is met, a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
 #define FAILWHEN(cond) do { \
-	if (cond) THROW(::LOFAR::AssertError, "Failtest: " #cond); \
+	if (UNLIKELY(cond)) THROW(::LOFAR::AssertError, "Failtest: " #cond); \
 	} while(0)
 
 // If the condition of failwhen is met, a logrequest is sent to the logger
 // <tt>\<module\>.EXCEPTION</tt> and an AssertError exception is thrown.
 #define FAILWHENSTR(cond,stream) do { \
-	if (cond) THROW(::LOFAR::AssertError, "Failtest: " #cond "; " << stream); \
+	if (UNLIKELY(cond)) THROW(::LOFAR::AssertError, "Failtest: " #cond "; " << stream); \
 	} while(0)
 
 #ifdef ENABLE_DBGASSERT

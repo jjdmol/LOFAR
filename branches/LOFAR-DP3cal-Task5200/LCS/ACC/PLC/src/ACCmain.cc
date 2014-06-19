@@ -26,7 +26,6 @@
 //# Includes
 #include <libgen.h>
 #include <Common/LofarLogger.h>
-#include <Common/LofarLocators.h>
 #include <Common/ParameterSet.h>
 #include <Common/Exceptions.h>
 #include <PLC/ProcControlServer.h>
@@ -103,15 +102,11 @@ namespace LOFAR {
 	}
 
 	// Read in the parameterset.
-	ConfigLocator	CL;
 	string ParsetFile;
 	int argpsf = 1 + (ACCmode ? 1 : 0);
 	string parsetFile = (argc > argpsf) ? argv[argpsf] : programName + ".parset";
-	string locatedParsetFile = CL.locate(parsetFile);
-
-	ASSERTSTR(!locatedParsetFile.empty(), "Could not find parameterset " << parsetFile);
-        LOG_INFO_STR("Using parameterset " << locatedParsetFile);
-        globalParameterSet()->adoptFile(locatedParsetFile);
+        LOG_INFO_STR("Using parameterset " << parsetFile);
+        globalParameterSet()->adoptFile(parsetFile);
 
         // Use a local parameterset to pass arguments.
         ParameterSet arg;

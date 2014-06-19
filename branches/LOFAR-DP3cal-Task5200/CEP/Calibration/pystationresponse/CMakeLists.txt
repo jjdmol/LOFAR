@@ -1,6 +1,6 @@
 # $Id$
 
-lofar_package(pystationresponse 1.0 DEPENDS BBSKernel)
+lofar_package(pystationresponse 1.0 DEPENDS StationResponse)
 
 include(LofarFindPackage)
 lofar_find_package(Boost REQUIRED COMPONENTS python)

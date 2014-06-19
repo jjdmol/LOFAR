@@ -26,6 +26,7 @@
 #include <CoInterface/Parset.h>
 
 #include "Pipeline.h"
+#include <GPUProc/SubbandProcs/CorrelatorSubbandProc.h>
 
 namespace LOFAR
 {
@@ -44,10 +45,25 @@ namespace LOFAR
     public:
       // subbandIndices is the list of subbands that are processed by this
       // pipeline, out of the range [0, ps.nrSubbands()).
-      CorrelatorPipeline(const Parset &ps, const std::vector<size_t> &subbandIndices, const std::vector<gpu::Device> &devices = gpu::Platform().devices());
+      CorrelatorPipeline(const Parset &ps, 
+        const std::vector<size_t> &subbandIndices,
+         const std::vector<gpu::Device> &devices,
+         Pool<struct MPIRecvData> &pool);
 
       // Destructor, when profiling is enabled prints the gpu performance counters
-      ~CorrelatorPipeline();
+      virtual ~CorrelatorPipeline();
+
+      // Create the SubbandProcs
+      virtual void allocateResources();
+
+      // Send subbands to outputProc
+      virtual void writeOutput(unsigned globalSubbandIdx, struct Output &output);
+
+      // Create Stream to outputProc
+      SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx) const;
+
+    private:
+      CorrelatorFactories factories;
     };
   }
 }

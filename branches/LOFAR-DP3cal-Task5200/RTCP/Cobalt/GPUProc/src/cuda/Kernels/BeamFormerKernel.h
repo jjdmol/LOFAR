@@ -42,10 +42,14 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        unsigned nrStations;
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+
         unsigned nrSAPs;
         unsigned nrTABs;
-        float weightCorrection; // constant weight applied to all weights
         double subbandBandwidth;
+        bool doFlysEye;
       };
 
       enum BufferType
@@ -73,7 +77,7 @@ namespace LOFAR
                              const Buffers &buffers,
                              const Parameters &param);
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter,
+      void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
 
     };

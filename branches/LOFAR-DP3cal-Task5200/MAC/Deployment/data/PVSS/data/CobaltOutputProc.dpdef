@@ -1,21 +1,30 @@
-# locusnode number
+# All the keys in this file represent a vector. There must be one element in
+# each vector for _every_ file that will be written. For correlated data, the
+# number of files is the same as the number of subbands. For 
+# beamformed data, there can be more or fewer files than subbands.
+#
+# NOTE: All vectors _must_ be equal in length. All values for a given index
+# are related. Ideally, a vector of struct should be used, but that's not
+# feasible.
+
+# Number of the locus node, i.e. the node name with 'locus' stripped off.
 locusNode	intArr
 
 # Data type: Correlated/Beamformed
 dataProductType	stringArr
 
-# Filename
+# Name of the output file
 fileName	stringArr
 
-# Directory
-directory stringArr
+# Directory where the output file will be written
+directory	stringArr
 
-# Dropping output?
-dropping  boolArr
+# Are we dropping output at the moment?
+dropping	boolArr
 
-# Data written (seconds)
+# The number of seconds that data was successfully written
 written		floatArr
 
-# Data dropped (seconds)
+# The number of seconds that data was (partially) dropped
 dropped		floatArr
 

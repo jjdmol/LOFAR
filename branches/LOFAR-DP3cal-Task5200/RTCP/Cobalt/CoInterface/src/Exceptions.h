@@ -59,6 +59,11 @@ namespace LOFAR
     //
     EXCEPTION_CLASS(StorageException, RTCPException);
 
+    //
+    // This exception will be thrown when an error occurs in the BrokenAntennaInfo.
+    //
+    EXCEPTION_CLASS(BrokenAntennaInfoException, RTCPException);
+
   } // namespace Cobalt
 } // namespace LOFAR
 

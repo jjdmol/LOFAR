@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 1
+PANEL,-1 -1 1242 823 N "_3DFace" 1
 "$choice"
 "main()
 {
@@ -166,38 +166,39 @@ void rClick(int row) {
 // *******************************************
 void redraw_table() {
   // clear table
+  mapping g_alarmscopy = g_alarms;
   LOG_DEBUG(\"alarms.pnl:redraw_table|deleting all entries from alarms\");
   alarmTable.deleteAllLines();
-  if (g_alarms[\"DPNAME\"] == \"\" ) return;
+  if (g_alarmscopy[\"DPNAME\"] == \"\" ) return;
 
-  if (mappinglen(g_alarms)) {
-    LOG_DEBUG(\"alarms.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"DPNAME\"]));
+  if (mappinglen(g_alarmscopy)) {
+    LOG_DEBUG(\"alarms.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarmscopy[\"DPNAME\"]));
     
     //append  all CAME and WENT alarms
-    for (int j=1; j<=dynlen(g_alarms[\"DPNAME\"])  ; j++) {
+    for (int j=1; j<=dynlen(g_alarmscopy[\"DPNAME\"])  ; j++) {
       // sometimes the table alters during the loop, if so redraw it
-      if (j > dynlen(g_alarms[\"DPNAME\"])) {
+      if (j > dynlen(g_alarmscopy[\"DPNAME\"])) {
         LOG_WARN(\"alarms.pnl:redraw_table|table update while in loop, rerun loop \");
         redraw_table();
       }
-        
-      if (g_alarms[\"STATUS\"][j] != ACK  && choice == \"New\") {
-        string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
-        alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
-                              \"Message\",g_alarms[\"MESSAGE\"][j],
-                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
-                              \"State\",g_alarms[\"STATE\"][j]);
+      if (j >dynlen(g_alarmscopy[\"DPNAME\"]) ) return;  // if reset during loop, then escape  
+      if (g_alarmscopy[\"STATUS\"][j] != ACK  && choice == \"New\") {
+        string dp = navFunct_TempToObs(substr(g_alarmscopy[\"DPNAME\"][j],0,strpos(g_alarmscopy[\"DPNAME\"][j],\".status.state\")));
+        alarmTable.appendLine(\"Time\",g_alarmscopy[\"TIME\"][j],\"Datapoint\",dp,
+                              \"Message\",g_alarmscopy[\"MESSAGE\"][j],
+                              \"Status\",getAlarmStatus(g_alarmscopy[\"STATUS\"][j]),
+                              \"State\",g_alarmscopy[\"STATE\"][j]);
 
-        string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+        string aColor=getStateColor(g_alarmscopy[\"STATE\"][j]);
         alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
-      } else if (g_alarms[\"STATUS\"][j] == ACK  && choice == \"Old\") {
-        string dp = navFunct_TempToObs(substr(g_alarms[\"DPNAME\"][j],0,strpos(g_alarms[\"DPNAME\"][j],\".status.state\")));
-        alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][j],\"Datapoint\",dp,
-                              \"Message\",g_alarms[\"MESSAGE\"][j],
-                              \"Status\",getAlarmStatus(g_alarms[\"STATUS\"][j]),
-                              \"State\",g_alarms[\"STATE\"][j]);
+      } else if (g_alarmscopy[\"STATUS\"][j] == ACK  && choice == \"Old\") {
+        string dp = navFunct_TempToObs(substr(g_alarmscopy[\"DPNAME\"][j],0,strpos(g_alarmscopy[\"DPNAME\"][j],\".status.state\")));
+        alarmTable.appendLine(\"Time\",g_alarmscopy[\"TIME\"][j],\"Datapoint\",dp,
+                              \"Message\",g_alarmscopy[\"MESSAGE\"][j],
+                              \"Status\",getAlarmStatus(g_alarmscopy[\"STATUS\"][j]),
+                              \"State\",g_alarmscopy[\"STATE\"][j]);
 
-        string aColor=getStateColor(g_alarms[\"STATE\"][j]);
+        string aColor=getStateColor(g_alarmscopy[\"STATE\"][j]);
         alarmTable.cellBackColRC(alarmTable.lineCount()-1,\"State\",aColor);
       }
     } 
@@ -374,7 +375,7 @@ LANG:1 0
 25 1
 "alarmTable"
 ""
-1 9.100101112234581 39.92779182749901 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 8.576408888094308 39.41867429788368 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main(int row, string column)
 {
   rClick(row);
@@ -393,7 +394,7 @@ LANG:1 0
 0
 1
 LANG:1 32 Arial Black,-1,11,5,50,0,0,0,0,0
-0  -2 28 1201 812
+0  -2 28 1132 772
 "main()
 {
   this.tableMode(TABLE_SELECT_MULTIPLE);
@@ -414,13 +415,13 @@ E
 1
 LANG:1 34 datapoint that triggered the alarm
 
-400 "Message" 28 1 0 "s" 1
+400 "Message" 41 1 0 "s" 1
 LANG:1 7 Message
 E
 1
 LANG:1 39 extra AlarmMessage set by the Software 
 
-290 "Status" 6 1 0 "s" 1
+425 "Status" 6 1 0 "s" 1
 LANG:1 6 Status
 E
 1

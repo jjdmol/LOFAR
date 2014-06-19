@@ -21,8 +21,8 @@
 #ifndef LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 #define LOFAR_GPUPROC_BEST_EFFORT_QUEUE_H
 
-#include <Common/Thread/Queue.h>
-#include <Common/Thread/Semaphore.h>
+#include <CoInterface/Queue.h>
+#include <Common/Thread/Condition.h>
 
 namespace LOFAR
 {
@@ -43,33 +43,41 @@ namespace LOFAR
     {
     public:
       // Create a best-effort queue with room for `maxSize' elements.
-      // If `drop' is true, appends are dropped if the queue
+      // If `canDrop' is true, appends are dropped if the queue
       // has reached `maxSize', or if no remove() has been posted yet.
-      BestEffortQueue(size_t maxSize, bool drop);
+      BestEffortQueue(const std::string &name, size_t maxSize, bool canDrop);
+      ~BestEffortQueue();
 
       // Add an element. Returns true if append succeeded, false if element
-      // was dropped.
-      bool append(T&);
+      // was dropped. The dropped element is assigned to `element'.
+      bool append(T& element, bool timed=true);
 
-      // Remove an element -- 0 or NULL signals end-of-stream.
-      T remove();
+    // Remove the front element; waits until `deadline' for an element,
+    // and returns `null' if the deadline passed.
+    T	       remove(const struct timespec &deadline = TimeSpec::universe_heat_death, T null = 0);
 
       // Signal end-of-stream.
       void noMore();
 
     private:
       const size_t maxSize;
-      const bool drop;
 
-      // true if we're removing elements, that is,
-      // remove() has been called at least once.
-      bool removing;
+      // Whether dropping is allowed due to the queue overflowing.
+      // Note that even if drop=false, elements can still be dropped
+      // on append() if the queue is being flushed.
+      const bool canDrop;
 
-      // contains the amount of free space in the queue
-      Semaphore freeSpace;
+      // Percentage of elements that were dropped
+      RunningStatistics dropped;
 
       // true if the queue is being flushed
       bool flushing;
+
+      // signal that an element has been removed
+      Condition removeSignal;
+
+      // whether the queue has overflowed. Cannot grab itsMutex!
+      bool _overflow() const;
     };
   }
 }

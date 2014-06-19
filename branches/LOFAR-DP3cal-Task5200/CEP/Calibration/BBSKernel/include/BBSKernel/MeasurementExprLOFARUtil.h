@@ -28,16 +28,16 @@
 // Utility functions to construct sub-expressions for the LOFAR measurement
 // expression.
 
-#include <BBSKernel/ModelConfig.h>
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/IonosphereExpr.h>
+#include <BBSKernel/ModelConfig.h>
 #include <BBSKernel/Expr/Expr.h>
 #include <BBSKernel/Expr/Scope.h>
 #include <BBSKernel/Expr/Source.h>
-#include <BBSKernel/Instrument.h>
-#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-#include <measures/Measures/MPosition.h>
+#include <Common/lofar_vector.h>
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
 
 namespace LOFAR
 {
@@ -82,7 +82,7 @@ makeClockExpr(Scope &scope, const Station::ConstPtr &station,
 Expr<JonesMatrix>::Ptr
 makeGainExpr(Scope &scope,
     const Station::ConstPtr &station,
-    bool phasors);
+    const GainConfig &config);
 
 Expr<JonesMatrix>::Ptr
 makeTECExpr(Scope &scope,
@@ -101,7 +101,7 @@ Expr<JonesMatrix>::Ptr
 makeDirectionalGainExpr(Scope &scope,
     const Station::ConstPtr &station,
     const string &patch,
-    bool phasors);
+    const DirectionalGainConfig &config);
 
 Expr<JonesMatrix>::Ptr
 makeElevationCutExpr(const Expr<Vector<2> >::Ptr &exprAzEl,

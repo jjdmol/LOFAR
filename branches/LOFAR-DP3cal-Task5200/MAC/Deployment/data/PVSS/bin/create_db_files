@@ -32,7 +32,7 @@ VERSION="v2.0"
 
 #======================================================================================================
 # Attention !!!!!
-# If you add new @name@ resolves here theey also should be added to the function: createPropertySetName
+# If you add new @name@ resolves here they also should be added to the function: createPropertySetName
 # in LOFAR/MAC/APL/APLCommon/src/ControllerDefines.cc
 #======================================================================================================
 #
@@ -110,6 +110,28 @@ create_ring_station_list()
 }
 
 #
+# create_stationfield_list
+#
+create_stationfield_list()
+{
+	# stationname ID stationType ...
+	cleanlist ${STATIONINFOFILE} | awk '{ 
+		if ($3 == "C") {
+			print $1"HBA0"
+			print $1"HBA1"
+			print $1"HBA"
+       		print $1"LBA"
+		}
+		else {
+			print $1"HBA"
+			print $1"LBA"
+		}
+	} ' >>/tmp/sflist
+	concatfile /tmp/sflist
+	rm -f /tmp/sflist
+}
+
+#
 # create_wan_switch_list
 #
 create_wan_switch_list()
@@ -135,28 +157,6 @@ labelize()
 		awk '{ print toupper($1) }'
 }
 
-#
-# substitute_adder
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_adder()
-{
-	awk '
-	{
-		hasAdder=index($1,"@adder@");
-		if (hasAdder > 0) {
-			for (adder=0; adder<10; adder++) {
-				dpname=$1;
-				sub("@adder@", "Adder"adder, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
 # substitute_cobaltgpuproc
@@ -230,77 +230,6 @@ substitute_oslocusnode()
 	} '
 }
 
-#
-# substitute_writer
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_writer()
-{
-	awk '
-	{
-		hasWriter=index($1,"@writer@");
-		if (hasWriter > 0) {
-			for (wNr = 0; wNr < 20; wNr++) {  
-				dpname=$1;
-                                newname = sprintf("Writer%02d",wNr);
-                                sub("@writer@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-
-#
-# substitute_midplane
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_midplane()
-{
-	awk '
-	{
-		hasMid=index($1,"@midplane@");
-		if (hasMid > 0) {
-			for (midplane=0; midplane<2; midplane++) {
-				dpname=$1;
-				sub("@midplane@", "Midplane"midplane, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-#
-# substitutemidplane_ionode
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_midplane_ionode()
-{
-	awk  '
-	{
-		hasMidIONode=index($1,"@midplane@_@ionode@");
-		if (hasMidIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
-				dpname=$1;
-				midplane=int(ionode/32)
-                                newname = sprintf("Midplane%d_IONode%02d",midplane,ionode);
-                                sub("@midplane@_@ionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
 
 #
 # substitute_cobaltnode_nic
@@ -333,44 +262,22 @@ substitute_cobaltnode_cobaltnic()
 }
 
 #
-# substitute_psionode\
+# substitute_stationfield
 #
 # syntax of the lines must be: dp dpt
 #
-substitute_psionode()
+substitute_stationfield()
 {
-	awk '
+	awk -v STATIONFIELDLIST=${STATIONFIELDLIST} '
+	BEGIN {
+		nrstations=split(STATIONFIELDLIST, stationfields, ":");
+	};
 	{
-		hasIONode=index($1,"@psionode@");
-		if (hasIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
+		hasStationField=index($1,"@stationfield@");
+		if (hasStationField > 0) {
+			for (stationfield in stationfields) {
 				dpname=$1;
-                                newname = sprintf("PSIONode%02d",ionode);
-                                sub("@psionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
-#
-# substitute_pscobaltnode\
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_pscobaltnode()
-{
-	awk '
-	{
-		hasCobaltNode=index($1,"@pscobaltnode@");
-		if (hasCobaltNode > 0) {
-			for (cnode=1; cnode<10; cnode++) {
-				dpname=$1;
-                                newname = sprintf("PSCBT%03d",cnode);
-                                sub("@pscobaltnode@", newname, dpname);
+				sub("@stationfield@", stationfields[stationfield], dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -403,31 +310,6 @@ substitute_oscobaltnode()
 		}
 	} '
 }
-
-#
-# substitute_osionode\
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_osionode()
-{
-	awk '
-	{
-		hasIONode=index($1,"@osionode@");
-		if (hasIONode > 0) {
-			for (ionode=0; ionode<64; ionode++) {
-				dpname=$1;
-                                newname = sprintf("OSIONode%02d",ionode);
-                                sub("@osionode@", newname, dpname);
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
-}
-
 #
 # substitute_osrack
 #
@@ -466,7 +348,7 @@ substitute_cobaltnode()
 		if (hasCobaltNode > 0) {
 			for (cnode=1; cnode<10; cnode++) {
 				dpname=$1;
-				sub("@cobaltnode@", "Cobalt_CBT00"cnode, dpname);
+				sub("@cobaltnode@", "CBT00"cnode, dpname);
 				print dpname"	"$2;
 			}
 		}
@@ -521,6 +403,56 @@ substitute_CtrlDebug()
 			      printf "_CtrlDebug_%d	%s\n", debugNr, $2;
 			}
 		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_uriboard
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_uriboard()
+{
+	awk -v nrURIs=$NRURIS '
+	{
+		hasuri=index($1,"@furiboard@");
+		if (hasfpga > 0) {
+			for (uriNr = 0; uriNr < nrURIs; uriNr++) {
+				dpname=$1;
+				cNr=0;
+				if (uriNr > 1) cNr = 1
+				newname = sprintf("Cabinet%1d_URIboard%1d",cNr,uriNr);
+				sub("@uriboard@", newname, dpname);
+				print dpname"	"$2;
+				}
+			}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
+# substitute_fpga
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_fpga()
+{
+	awk -v nrFPGAs=$NRFPGAS '
+	{
+		hasfpga=index($1,"@fpga@");
+		if (hasfpga > 0) {
+			for (fpgaNr = 0; fpgaNr < nrFPGAs; fpgaNr++) {
+				dpname=$1;
+				newname = sprintf("FPGA%1d",fpgaNr);
+				sub("@fpga@", newname, dpname);
+				print dpname"	"$2;
+				}
+			}
 		else {
 			print $1"	"$2;
 		}
@@ -962,7 +894,8 @@ create_dpt_file()
 	) >${DESTDIR}/${DPT_FILE}
 
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
+	# Note: ignore the PermSW_@ring and PermSW_cluster lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -982,14 +915,6 @@ create_dpt_file()
 			echo "	status	41#:ObjectStatus"
 			let count=count+1
 		fi
-# Storage need an ObjectStatus && ProcessStatus element
-		if [ "${dpt}" == "Storage" ];then
-			echo "	status	41#:ObjectStatus"
-		  	echo "	process	41#:ProcessStatus"
-			let count=count+2
-		fi
-
-
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
@@ -997,8 +922,10 @@ create_dpt_file()
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
 			fi
 			if [[ ${dpt} != *Observation ]]; then
+			    if [[ "${leaf}" == "Y" ]]; then
 				echo "	process	41#:ProcessStatus"
 				let count=count+1
+			    fi
 			fi
 		fi
 
@@ -1070,7 +997,8 @@ create_dpt_file()
 		echo    "ElementName	TypeName	_original.._value	_original.._status"
 	) >${TMP_FILE}
 
-	cleanlist $1 | awk -v dbtype=$2 '{ 
+	# Note: ignore the PermSW_@ring and PermSW_cluster lines because they are there only for SAS
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | awk -v dbtype=$2 '{
 		if ($3 == dbtype && $4 == "Y") {
 			print "_mp_"$1".status.leaf	"$1"	1	0x101"
 		} }' >>${TMP_FILE}
@@ -1139,27 +1067,23 @@ create_dp_file()
 				substitute_Cabinet_SubRack_RSPBoard | \
 				substitute_Cabinet_SubRack_TBBoard | \
 				substitute_Cabinet_SubRack | \
+				substitute_fpga | \
+				substitute_uriboard | \
 				substitute_Cabinet | \
 				substitute_cluster_node | \
 				substitute_cluster | \
 				substitute_instancenr | \
 				substitute_lbaantenna | \
 				substitute_hbaantenna | \
-				substitute_midplane_ionode | \
-				substitute_midplane | \
 				substitute_osrack_locusnode | \
 				substitute_osrack | \
-				substitute_osionode | \
 				substitute_cobaltnode_cobaltnic | \
 				substitute_cobaltnode | \
-				substitute_psionode | \
 				substitute_oscobaltnode | \
-				substitute_pscobaltnode | \
+				substitute_stationfield | \
 			        substitute_oslocusnode | \
 			        substitute_pslocusnode | \
-				substitute_adder | \
 				substitute_cobaltgpuproc | \
-				substitute_writer | \
 				sort -k1,1 >>${DESTDIR}/${DP_FILE}
 
 #				number_dps >>${DESTDIR}/${DP_FILE}
@@ -1262,7 +1186,7 @@ create_dp_file()
 	# setup master point and archives 
 	# NOTE: THIS IS ADDED TO THE DataPointTYPES file!
 	prevdpt="abc"
-	cleanlist $1 | sort | while read dpt prefix dbtype leaf dp
+	cleanlist $1 | grep -v "PermSW_@ring" | grep -v "PermSW_@cluster" | sort | while read dpt prefix dbtype leaf dp
 	do
 		if [ "${dbtype}" != "$2" ]; then
 			continue
@@ -1285,6 +1209,7 @@ create_dp_file()
 		echo $dp | grep 'SW_' 2>&1 1>/dev/null
 		if [ $? = 0 ]; then
 			if [[ ${dpt} != *Observation ]]; then
+			    if [[ "${leaf}" == "Y" ]]; then
 				echo "ElementName	TypeName	_original.._value	_original.._status"
 				echo "_dt_${dpt}.Leaf	_DynamicDatapoints	"'"'_mp_${dpt}.logMsg:_archive'"'"	0x101"
 				echo "_dt_${dpt}.DynamicAttribute	_DynamicDatapoints	"'"'_da_none'"'"	0x101"
@@ -1294,6 +1219,7 @@ create_dp_file()
 				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}		45	1"
 				echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
 				echo ""
+			    fi
 			fi
 		fi
 
@@ -1515,8 +1441,13 @@ TMP_FILE=/tmp/dpts$$.dpl
 CLUSTERLIST=`concatfile $CLUSTERFILE`
 RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
+STATIONFIELDLIST=`create_stationfield_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
+
+# FPGA and URIboard numbers
+let NRFPGAS = 8
+let NRURI = 3
 
 let NRRSPBOARDS=0
 let NRLBAS=0

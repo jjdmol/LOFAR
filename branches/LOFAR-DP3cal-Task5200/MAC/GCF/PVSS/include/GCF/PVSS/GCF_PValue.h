@@ -171,7 +171,8 @@ inline ostream& operator<< (ostream& os, const GCFPValue& gv)
 	return (os);
 }
 
-  } // namespace Common
+
+  } // namespace PVSS
  } // namespace GCF
 } // namespace LOFAR
 

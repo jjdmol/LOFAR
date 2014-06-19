@@ -70,7 +70,11 @@ class Mutex
 class ScopedLock
 {
   public:
-    ScopedLock(Mutex &);
+    // Locks a mutex while this objects exists.
+    //
+    // If unlock = true, the working is reversed:
+    // the mutex is unlocked while this object exists.
+    ScopedLock(Mutex &, bool unlock = false);
     ~ScopedLock();
 
   private:
@@ -78,6 +82,7 @@ class ScopedLock
     ScopedLock& operator=(const ScopedLock&);
 
     Mutex &itsMutex;
+    const bool itsUnlock;
 };
 
 
@@ -159,18 +164,19 @@ inline bool Mutex::trylock()
 }
 
 
-inline ScopedLock::ScopedLock(Mutex &mutex)
+inline ScopedLock::ScopedLock(Mutex &mutex, bool unlock)
 :
-  itsMutex(mutex)
+  itsMutex(mutex),
+  itsUnlock(unlock)
 {
-  itsMutex.lock();
+  itsUnlock ? itsMutex.unlock() : itsMutex.lock();
 }
 
 
 inline ScopedLock::~ScopedLock()
 {
   try {
-    itsMutex.unlock();
+    itsUnlock ? itsMutex.lock() : itsMutex.unlock();
   } catch (std::exception &) {}
 }
 

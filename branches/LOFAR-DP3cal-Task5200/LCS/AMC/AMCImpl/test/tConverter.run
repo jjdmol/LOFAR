@@ -30,11 +30,7 @@ then
 
   # The AMC server process needs its own log_prop file. We will copy 
   # tConverter.log_prop so that the same logging levels are set.
-  if [ -f tConverter.log_prop ]
-  then
-    sed -e "s/tConverter_tmp/AMCServer_tmp/" \
-      tConverter.log_prop > AMCServer.log_prop
-  fi
+  cp tConverter.log_prop $SERVER.log_prop
 
   # Exit and interrupt handler. $! is the process id of the last background 
   # process started, i.e. the converter server.

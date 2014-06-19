@@ -159,12 +159,15 @@ class imager_prepare(LOFARnodeTCP):
 
             # skip the copy if machine is the same (execution on localhost) 
             # make sure data is in the correct directory. for now: working_dir/[jobname]/subbands
-            if input_item.host == "localhost":           
-                continue
+            #if input_item.host == "localhost":           
+            #    continue
             # construct copy command
             command = ["rsync", "-r", "{0}:{1}".format(
                             input_item.host, input_item.file),
                                "{0}".format(processed_ms_dir)]
+            if input_item.host == "localhost":
+                command = ["cp", "-r", "{0}".format(input_item.file),
+                                       "{0}".format(processed_ms_dir)]
 
             self.logger.debug("executing: " + " ".join(command))
 

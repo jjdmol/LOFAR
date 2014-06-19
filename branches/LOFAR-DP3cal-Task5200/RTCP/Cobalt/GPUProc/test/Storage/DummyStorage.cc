@@ -22,6 +22,8 @@
 
 #include <string>
 #include <iostream>
+#include <cstdlib>
+#include <unistd.h>
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
@@ -30,6 +32,7 @@
 #include <CoInterface/Stream.h>
 #include <CoInterface/FinalMetaData.h>
 #include <CoInterface/Parset.h>
+#include <Common/Exception.h>
 
 using namespace LOFAR;
 using namespace Cobalt;
@@ -37,6 +40,8 @@ using namespace std;
 
 int observationID;
 unsigned rank;
+
+Exception::TerminateHandler th(Exception::terminate);
 
 FinalMetaData origFinalMetaData;
 
@@ -102,11 +107,21 @@ int main(int argc, char **argv)
 {
   INIT_LOGGER("DummyStorage");
 
-  ASSERT(argc == 4);
+  if (argc != 3) {
+    cerr << "Usage: DummyStorage obsid rank" << endl;
+    cerr << endl;
+    cerr << "Emulates both an OutputProc and a FinalMetaDataGatherer instance." << endl;
+    cerr << "Only the protocol with GPUProc is implemented, that is," << endl;
+    cerr << "no data is actually received or written to disk." << endl;
+    exit(1);
+  }
+
+  // Make sure DummyStorage always dies, even if the test
+  // malfunctions.
+  alarm(10);
 
   observationID = boost::lexical_cast<int>(argv[1]);
   rank = boost::lexical_cast<unsigned>(argv[2]);
-  //bool isBigEndian = boost::lexical_cast<bool>(argv[3]);
 
   // set up broker server
   PortBroker::createInstance(storageBrokerPort(observationID));

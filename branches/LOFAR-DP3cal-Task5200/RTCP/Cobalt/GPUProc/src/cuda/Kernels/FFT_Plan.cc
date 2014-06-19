@@ -31,14 +31,36 @@ namespace LOFAR
       :
       context(context)
     {
+      // prevent cufftPlan1d from crashing
+      if (nrFFTs == 0)
+        nrFFTs = 1;
+
       gpu::ScopedCurrentContext scc(context);
 
       cufftResult error;
+      size_t workSize;
 
+      // Allocate plan
       error = cufftPlan1d(&plan, fftSize, CUFFT_C2C, nrFFTs);
 
-      if (error != CUFFT_SUCCESS)
+      if (error != CUFFT_SUCCESS) {
+#if CUDA_VERSION >= 5050
+        // Print estimated work size
+        if (cufftEstimate1d(fftSize, CUFFT_C2C, nrFFTs, &workSize) == CUFFT_SUCCESS)
+          LOG_INFO_STR("FFT_Plan size for " << nrFFTs << " x " << fftSize << 
+                       " points: " << (workSize/1024/1024) << " MByte (estimated)");
+#else
+        (void) workSize;
+#endif
         THROW(gpu::CUDAException, "cufftPlan1d: " << gpu::cufftErrorMessage(error));
+      }
+
+#if CUDA_VERSION >= 5050
+      // Print actual work size
+      if (cufftGetSize(plan, &workSize) == CUFFT_SUCCESS)
+        LOG_DEBUG_STR("FFT_Plan size for " << nrFFTs << " x " << fftSize <<
+                      " points: " << (workSize/1024/1024) << " MByte (actual)");
+#endif
     }
 
     FFT_Plan::~FFT_Plan()

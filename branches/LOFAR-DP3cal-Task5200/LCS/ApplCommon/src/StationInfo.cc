@@ -165,27 +165,23 @@ uint16	getInstanceNr (const string&	controllerName)
 //  A PropSetMask may contain the markers:
 //	@ring@
 //	@station@
-//  @instance@
+//      @instance@
 //	@observation@
 //	@cabinet@
 //	@subrack@
 //	@RSPboard@
 //	@TBboard@
 //	@rcu@
-//      @bgp@
-//      @midplane@
-//      @ionode@
 //      @osrack@
 //      @ossubcluster@
 //      @storagenode@
 //      @offlinenode@
-//  @inputbuffer@
-//  @adder@
-//  @storage@
+//	@fpga@
+//	@uriboard@
 //  @cobaltnode@
 //  @cobaltnic@
 //  @oscobaltnode@
-//  @pscobaltnode@
+//  @stationfield@
 //  @cobaltgpuproc@
 //
 string	createPropertySetName(const string&		propSetMask,
@@ -238,18 +234,6 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@rcu@")) != string::npos) {
 		psName.replace(pos, 5, string("RCU%d"));
 	}
-	if ((pos = psName.find("@bgp@")) != string::npos) {
-		psName.replace(pos, 5, string("BGP%d"));
-	}
-	if ((pos = psName.find("@midplane@")) != string::npos) {
-		psName.replace(pos, 10, string("Midplane%d"));
-	}
-	if ((pos = psName.find("@ionode@")) != string::npos) {
-		psName.replace(pos, 8, string("IONode%02d"));
-	}
-	if ((pos = psName.find("@osionode@")) != string::npos) {
-		psName.replace(pos, 10, string("OSIONode%02d"));
-	}
 	if ((pos = psName.find("@locusnode@")) != string::npos) {
 		psName.replace(pos, 11, string("LocusNode%03d"));
 	}
@@ -265,15 +249,6 @@ string	createPropertySetName(const string&		propSetMask,
 	if ((pos = psName.find("@offlinenode@")) != string::npos) {
 		psName.replace(pos, 13, string("OfflineNode%d"));
 	}
-	if ((pos = psName.find("@inputbuffer@")) != string::npos) {
-		psName.replace(pos, 13, string("InputBuffer%d"));
-	}
-	if ((pos = psName.find("@adder@")) != string::npos) {
-		psName.replace(pos, 7, string("Adder%d"));
-	}
-	if ((pos = psName.find("@storage@")) != string::npos) {
-		psName.replace(pos, 9, string("Storage%d"));
-	}
 	if ((pos = psName.find("@cobaltnode@")) != string::npos) {
 		psName.replace(pos, 12, string("CBT%03d"));
 	}
@@ -288,6 +263,15 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@cobaltgpuproc@")) != string::npos) {
 		psName.replace(pos, 15, string("CobaltGPUProc%02d"));
+	}
+	if ((pos = psName.find("@stationfield@")) != string::npos) {
+	  psName.replace(pos, 14, string("%s"));
+	}
+	if ((pos = psName.find("@fpga@")) != string::npos) {
+		psName.replace(pos, 6, string("FPGA%d"));
+	}
+	if ((pos = psName.find("@uriboard@")) != string::npos) {
+		psName.replace(pos, 10, string("Cabinet%d_URIboard%d"));
 	}
 		
 	return (psName);

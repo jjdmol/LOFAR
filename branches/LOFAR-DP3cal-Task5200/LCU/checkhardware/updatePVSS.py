@@ -32,7 +32,7 @@ def main():
     global args, logdir, logger, nRSP, nLBL, nLBH, nHBA
     getArguments()
     logdir = getLogDir()
-    ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
+    ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT = readStationConfig()
     logger = cPVSSLogger(logdir)
     
     if args.has_key('RESET'):

@@ -43,9 +43,9 @@ namespace LOFAR
       virtual size_t size();
 
       // formally, the required alignment for O_DIRECT is determined by the file system
-      static const unsigned alignment = 512;
+      static const size_t alignment = 512;
     private:
-      // writes the remainder, padded with zeros if needed. Returns the number of bytes written.
+      // writes the remainder, padded with zeros if needed. Returns the number of zero-pad bytes written.
       size_t writeRemainder();
 
       // we only support writing

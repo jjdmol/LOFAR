@@ -56,24 +56,32 @@ struct ParsetFixture
     nrChannels = 37,
     nrOutputSamples = 29,
     nrInputSamples = nrOutputSamples * timeIntegrationFactor, 
-    blockSize = timeIntegrationFactor * nrChannels * nrInputSamples,
-    nrStations = 43;
+    blockSize = nrChannels * nrInputSamples,
+    nrStations = 43,
+    nrDelayCompensationChannels = 64;
 
   Parset parset;
 
   ParsetFixture() {
-    parset.add("Observation.DataProducts.Output_Beamformed.enabled", 
+    parset.add("Observation.DataProducts.Output_IncoherentStokes.enabled", 
                "true");
-    parset.add("OLAP.CNProc_IncoherentStokes.timeIntegrationFactor", 
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.timeIntegrationFactor", 
                lexical_cast<string>(timeIntegrationFactor));
-    parset.add("OLAP.CNProc_IncoherentStokes.channelsPerSubband",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.nrChannelsPerSubband",
                lexical_cast<string>(nrChannels));
-    parset.add("OLAP.CNProc_IncoherentStokes.which",
+    parset.add("Cobalt.BeamFormer.IncoherentStokes.which",
                "IQUV");
     parset.add("Observation.VirtualInstrument.stationList",
                str(format("[%d*RS000]") % nrStations));
+    parset.add("Observation.antennaSet", "LBA_INNER");
+    parset.add("Observation.rspBoardList", "[0]");
+    parset.add("Observation.rspSlotList", "[0]");
     parset.add("Cobalt.blockSize", 
                lexical_cast<string>(blockSize)); 
+    parset.add("Observation.nrBeams", "1");
+    parset.add("Observation.Beam[0].subbandList", "[0]");
+    parset.add("Cobalt.BeamFormer.nrDelayCompensationChannels",
+               lexical_cast<string>(nrDelayCompensationChannels));
     parset.updateSettings();
   }
 };
@@ -84,7 +92,8 @@ const size_t
   ParsetFixture::nrOutputSamples,
   ParsetFixture::nrInputSamples,
   ParsetFixture::blockSize,
-  ParsetFixture::nrStations;
+  ParsetFixture::nrStations,
+  ParsetFixture::nrDelayCompensationChannels;
 
 
 // Test correctness of reported buffer sizes
@@ -96,7 +105,7 @@ TEST_FIXTURE(ParsetFixture, BufferSizes)
   CHECK_EQUAL(nrChannels, settings.nrChannels);
   CHECK_EQUAL(4U, settings.nrStokes);
   CHECK_EQUAL(nrStations, parset.nrStations());
-  CHECK_EQUAL(nrInputSamples, settings.nrSamples(blockSize));
+  CHECK_EQUAL(nrOutputSamples, settings.nrSamples);
 }
 
 

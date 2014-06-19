@@ -70,6 +70,44 @@ SubArrays::~SubArrays()
 }
 
 //
+// conflicting(SubArray*	array)
+//
+bool SubArrays::conflicting(SubArray*	newArray) const
+{
+	SubArray::RCUmask_t	newRCUs(newArray->getRCUMask());
+	int					newRCUmode(newArray->getSPW().rcumode());
+
+	// loop over all existing SA's and check if they conflict.
+	for (SubArrayMap::const_iterator it = m_new_arrays.begin(); it != m_new_arrays.end(); ++it) {
+		int	activeRCUmode(it->second->getSPW().rcumode());
+		if (activeRCUmode != newRCUmode) {				// diffent rcumode? check rcus
+			SubArray::RCUmask_t	activeRCUs(it->second->getRCUMask());
+			if ((newRCUs & activeRCUs).any()) {
+				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " << 
+								it->second->getName() << ". Refused.");
+				return (true);		// we have a conflict
+			}
+		}
+	}
+
+	// don't forget the active arrays (being calibrated and not in the dead-list)
+	for (SubArrayMap::const_iterator it = m_arrays.begin(); it != m_arrays.end(); ++it) {
+		int	activeRCUmode(it->second->getSPW().rcumode());
+		if (activeRCUmode != newRCUmode) {				// diffent rcumode? check rcus
+			SubArray::RCUmask_t	activeRCUs(it->second->getRCUMask());
+			// Note: inDeadList is a relatively expensive call, call it as last-check.
+			if ((newRCUs & activeRCUs).any() && !inDeadList(newArray->getName())) {
+				LOG_INFO_STR ("New subarray " << newArray->getName() << " would conflict with " << 
+								it->second->getName() << ". Refused.");
+				return (true);		// we have a conflict
+			}
+		}
+	}
+
+	return (false);
+}
+
+//
 // schedule_add(SubArray*)
 //
 void SubArrays::schedule_add(SubArray* array)
@@ -160,6 +198,19 @@ void SubArrays::undertaker()
 		delete (*it);
 	}
 	m_dead_arrays.clear();
+}
+
+//
+// inDeadList(const string& name)
+//
+bool SubArrays::inDeadList(const string& name) const
+{
+	for (list<SubArray*>::const_iterator it = m_dead_arrays.begin(); it != m_dead_arrays.end(); ++it) {
+		if ((*it)->getName() == name) {
+			return (true);
+		}
+	}
+	return (false);
 }
 
 //

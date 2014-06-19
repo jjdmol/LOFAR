@@ -32,6 +32,7 @@
 #include <CoInterface/BlockID.h>
 
 #include <fstream>
+#include <algorithm>
 
 using boost::lexical_cast;
 using boost::format;
@@ -44,17 +45,16 @@ namespace LOFAR
     string BeamFormerKernel::theirFunction = "beamFormer";
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrStations(ps.settings.antennaFields.size()),
+
+      nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
+      nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
+
       nrSAPs(ps.settings.beamFormer.SAPs.size()),
-      nrTABs(ps.settings.beamFormer.maxNrTABsPerSAP()),
-      weightCorrection(1.0f), // TODO: pass FFT size
-      subbandBandwidth(ps.settings.subbandWidth())
+      nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
+      subbandBandwidth(ps.settings.subbandWidth()),
+      doFlysEye(ps.settings.beamFormer.doFlysEye)
     {
-      // override the correlator settings with beamformer specifics
-      nrChannelsPerSubband = 
-        ps.settings.beamFormer.coherentSettings.nrChannels;
-      nrSamplesPerChannel =
-        ps.settings.beamFormer.coherentSettings.nrSamples(ps.nrSamplesPerSubband());
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.BeamFormerKernel.dumpOutput", false);
       dumpFilePattern = 
@@ -72,49 +72,25 @@ namespace LOFAR
       setArg(1, buffers.input);
       setArg(2, buffers.beamFormerDelays);
 
-      // Try #chnl/blk where 256 <= block size <= maxThreadsPerBlock && blockDim.z <= maxBlockDimZ.
-      // Violations for small input are fine. This should be auto-tuned for large inputs.
-      unsigned nrThreadsXY = params.nrPolarizations * params.nrTABs;
-      unsigned prefBlockSize = 256;
-      unsigned prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
-      prefBlockSize = prefNrThreadsZ * nrThreadsXY;
-      const unsigned maxBlockDimZ = stream.getContext().getDevice().getMaxBlockDims().z; // low, so check
-      unsigned maxNrThreadsPerBlock = std::min(std::min(maxThreadsPerBlock,
-                                                        maxBlockDimZ * nrThreadsXY),
-                                               params.nrChannelsPerSubband * nrThreadsXY);
-      if (prefBlockSize > maxNrThreadsPerBlock) {
-        prefBlockSize = maxNrThreadsPerBlock;
-        prefNrThreadsZ = (prefBlockSize + nrThreadsXY-1) / nrThreadsXY;
-      }
-      unsigned nrChannelsPerBlock = prefNrThreadsZ;
-
-      setEnqueueWorkSizes( gpu::Grid (params.nrPolarizations, params.nrTABs, params.nrChannelsPerSubband),
-                           gpu::Block(params.nrPolarizations, params.nrTABs, nrChannelsPerBlock) );
-
-#if 0
-      size_t nrDelaysBytes = bufferSize(ps, BEAM_FORMER_DELAYS);
-      size_t nrSampleBytesPerPass = bufferSize(ps, INPUT_DATA);
-      size_t nrComplexVoltagesBytesPerPass = bufferSize(ps, OUTPUT_DATA);
-
-      size_t count = 
-        params.nrChannelsPerSubband * params.nrSamplesPerChannel * params.nrPolarizations;
-      unsigned nrPasses = std::max((params.nrStations + 6) / 16, 1U);
-
-      nrOperations = count * params.nrStations * params.nrTABs * 8;
-      nrBytesRead = 
-        nrDelaysBytes + nrSampleBytesPerPass + (nrPasses - 1) * 
-        nrComplexVoltagesBytesPerPass;
-      nrBytesWritten = nrPasses * nrComplexVoltagesBytesPerPass;
-#endif
+      // Beamformer kernel requires 1 channel in the blockDim.z dimension
+      setEnqueueWorkSizes(
+        gpu::Grid(NR_POLARIZATIONS,
+                  std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
+                  params.nrChannels),
+        gpu::Block(NR_POLARIZATIONS,
+                   std::max(16U, params.nrTABs),  // if < 16 tabs use more to fill out the wave
+                   1));
+        // The additional tabs added to fill out the waves are skipped
+        // in the kernel file. Additional threads are used to optimize
+        // memory access
     }
 
     void BeamFormerKernel::enqueue(const BlockID &blockId,
-                                   PerformanceCounter &counter,
                                    double subbandFrequency, unsigned SAP)
     {
       setArg(3, subbandFrequency);
       setArg(4, SAP);
-      Kernel::enqueue(blockId, counter);
+      Kernel::enqueue(blockId);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -125,16 +101,18 @@ namespace LOFAR
       switch (bufferType) {
       case BeamFormerKernel::INPUT_DATA: 
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrStations * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannels *
+          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
+          itsParameters.nrStations * sizeof(std::complex<float>);
       case BeamFormerKernel::OUTPUT_DATA:
         return
-          (size_t) itsParameters.nrChannelsPerSubband * itsParameters.nrSamplesPerChannel *
-            itsParameters.nrPolarizations * itsParameters.nrTABs * sizeof(std::complex<float>);
+          (size_t) itsParameters.nrChannels * 
+          itsParameters.nrSamplesPerChannel * NR_POLARIZATIONS *
+          itsParameters.nrTABs * sizeof(std::complex<float>);
       case BeamFormerKernel::BEAM_FORMER_DELAYS:
         return 
-          (size_t) itsParameters.nrSAPs * itsParameters.nrStations * itsParameters.nrTABs *
-            sizeof(double);
+          (size_t) itsParameters.nrSAPs * itsParameters.nrStations *
+          itsParameters.nrTABs * sizeof(double);
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
@@ -147,14 +125,21 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
+
+      defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
+      defs["NR_SAMPLES_PER_CHANNEL"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerChannel);
+
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
       defs["NR_TABS"] =
         lexical_cast<string>(itsParameters.nrTABs);
-      defs["WEIGHT_CORRECTION"] =
-        str(format("%.7ff") % itsParameters.weightCorrection);
       defs["SUBBAND_BANDWIDTH"] =
         str(format("%.7f") % itsParameters.subbandBandwidth);
+      if (itsParameters.doFlysEye)
+        defs["FLYS_EYE"] = "1";
 
       return defs;
     }

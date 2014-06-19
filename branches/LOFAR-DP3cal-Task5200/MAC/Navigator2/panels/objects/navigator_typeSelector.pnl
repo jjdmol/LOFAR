@@ -329,7 +329,7 @@ void updateProcList()
     if (spl[1] == \"\" || processesTree.itemExists(spl[1])) {
       processesTree.appendItem(spl[1],spl[3],spl[2]);
       if (processesTree.itemExists(spl[3])) {
-        processesTree.ensureItemVisible(spl[3]);
+//        processesTree.ensureItemVisible(spl[3]);
         processesTree.setIcon(spl[3],0,\"16_empty.gif\");
       }
     }
@@ -392,8 +392,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
+"allColumnsShowFocus" "bool TRUE"
 1
 LANG:1 37 MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0
 0  10 30 289 429

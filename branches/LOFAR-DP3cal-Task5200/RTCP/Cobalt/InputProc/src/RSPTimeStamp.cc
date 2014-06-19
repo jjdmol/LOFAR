@@ -40,7 +40,12 @@ namespace LOFAR
       gettimeofday(&tv, NULL);
 
       unsigned long usec = tv.tv_sec * 1000000 + tv.tv_usec;
-      return TimeStamp(usec * clockSpeed / 1024 / 1000000, clockSpeed);
+      return convert((double)usec / 1000000, clockSpeed);
+    }
+
+    TimeStamp TimeStamp::universe_heat_death( unsigned clockSpeed )
+    {
+      return TimeStamp(0x7FFFFFFFFFFFFFFFUL, clockSpeed);
     }
 
 
@@ -62,7 +67,8 @@ namespace LOFAR
       size_t len = strftime(buf, sizeof buf, "%F %T", &tm);
       buf[len] = '\0';
 
-      return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
+      //return os << "[" << ts.getSeqId() << "s, " << ts.getBlockId() << "] = " << buf << "." << setfill('0') << setw(3) << ms << " UTC";
+      return os << buf << "." << setfill('0') << setw(3) << ms << " UTC";
     }
 
   } // namespace Cobalt

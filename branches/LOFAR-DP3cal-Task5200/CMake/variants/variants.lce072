@@ -14,3 +14,7 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION
   "/log4cxx/helpers/objectptr.h:[0-9]+: warning: base class"
   "/log4cxx/helpers/objectptr.h:[0-9]+: warning: dereferencing type-punned pointer"
 )
+
+# Drop the now default C++ debug compile flag -D_GLIBCXX_DEBUG, because Python
+# (or Boost.Python) barfs on it (glibc detected: python free(): invalid pointer)
+set(GNU_CXX_FLAGS_DEBUG  "-g")

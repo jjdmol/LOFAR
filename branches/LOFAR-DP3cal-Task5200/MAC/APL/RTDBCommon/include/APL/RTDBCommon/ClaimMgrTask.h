@@ -56,6 +56,9 @@ public:
 					 const string&		nameInAppl,
 					 GCFPortInterface&	replyPort);
   
+	// Ask the claimManager to flee an object. 
+    void freeObject (const string&		objectType,
+					 const string&		nameInAppl);
 private:
 	enum {
 		RO_UNDEFINED = 0,

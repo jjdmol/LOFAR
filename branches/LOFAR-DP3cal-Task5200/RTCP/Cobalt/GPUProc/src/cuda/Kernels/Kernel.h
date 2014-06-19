@@ -46,12 +46,8 @@ namespace LOFAR
       // or drop opt)
       struct Parameters
       {
-        Parameters(const Parset& ps);
-        unsigned nrStations;
-        unsigned nrChannelsPerSubband;
-        unsigned nrSamplesPerChannel;
-        unsigned nrSamplesPerSubband;
-        unsigned nrPolarizations;
+        Parameters();
+
         bool dumpBuffers;
         std::string dumpFilePattern;
       };
@@ -75,7 +71,10 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId) const;
 
-      void enqueue(const BlockID &blockId, PerformanceCounter &counter) const;
+      PerformanceCounter &getCounter();
+
+      // Performance counter for work done by this kernel
+      PerformanceCounter itsCounter;
 
     protected:
       // Construct a kernel.
@@ -87,9 +86,28 @@ namespace LOFAR
       // Explicit destructor, because the implicitly generated one is public.
       ~Kernel();
 
-      void setEnqueueWorkSizes(gpu::Grid globalWorkSize, 
-                               gpu::Block localWorkSize);
-      
+      // Set the passed execution configuration if supported on the hardware
+      // in the stream for this kernel.
+      // If not supported and NULL was passed in errorStrings, an exc is thrown.
+      // If not supported and errorsStrings is valid, an error string is written
+      // to the errorStrings pointer.
+      void setEnqueueWorkSizes(gpu::Grid globalWorkSize,
+                               gpu::Block localWorkSize,
+                               std::string* errorStrings = NULL);
+
+      // Requires call to setEnqueueWorkSizes() first to get meaningful result.
+      // Idem for cache and shared memory configuration in the context.
+      unsigned getNrBlocksPerMultiProc(unsigned dynSharedMemBytes = 0) const;
+
+      // "The multiprocessor occupancy is the ratio of active warps to the
+      // maximum number of warps supported on a multiprocessor of the GPU."
+      // This (tries to) mimic what NVIDIA's CUDA_Occupancy_Calculator.xls does.
+      //
+      // Requires call to setEnqueueWorkSizes() first to get meaningful result.
+      // Idem for cache and shared memory configuration in the context.
+      // Note: Higher occupancy does not necessarily mean higher performance.
+      double predictMultiProcOccupancy(unsigned dynSharedMemBytes = 0) const;
+
 
       const unsigned maxThreadsPerBlock;
       size_t nrOperations, nrBytesRead, nrBytesWritten;

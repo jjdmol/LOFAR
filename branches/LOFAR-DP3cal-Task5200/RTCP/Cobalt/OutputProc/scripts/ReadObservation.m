@@ -2,6 +2,8 @@
 # this is a script that is used for making a simple plot
 # of the auto and crosscorrelations
 # it is not userfriendly, it is only meant to be used on the CDR
+#
+# $Id$
 
 
 if (size(argv)(1) > 0)

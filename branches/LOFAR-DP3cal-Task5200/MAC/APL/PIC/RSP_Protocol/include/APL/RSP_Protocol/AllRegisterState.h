@@ -86,6 +86,8 @@ public:
 		itsSerdesWriteState.resize(nrRspBoards);
 		itsSerdesReadState.resize(nrRspBoards);
 		itsBitModeWriteState.resize(nrRspBoards);
+		itsSDOModeWriteState.resize(nrRspBoards);
+		itsSDOSelectWriteState.resize(nrBlps);
 		ts_state.resize(nrRspBoards);
 	}
 
@@ -125,6 +127,8 @@ public:
 		itsSerdesWriteState.reset();
 		itsSerdesReadState.reset();
 		itsBitModeWriteState.reset();
+		itsSDOModeWriteState.reset();
+		itsSDOSelectWriteState.reset();
         ts_state.reset();
 		
 		sys_state.read();
@@ -156,6 +160,8 @@ public:
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
 		itsBitModeWriteState.check();
+		itsSDOModeWriteState.check();
+		itsSDOSelectWriteState.check();
 		ts_state.write();
 	}
 
@@ -192,6 +198,8 @@ public:
 		itsSerdesWriteState.check();
 		itsSerdesReadState.check();
 		itsBitModeWriteState.check();
+		itsSDOModeWriteState.check();
+		itsSDOSelectWriteState.check();
 		ts_state.write(); // always write timestamp
 	}
 
@@ -228,6 +236,8 @@ public:
 		itsSerdesWriteState.clear();
 		itsSerdesReadState.clear();
 		itsBitModeWriteState.clear();
+		itsSDOModeWriteState.clear();
+		itsSDOSelectWriteState.clear();
 		ts_state.clear();
 		
 	}
@@ -267,9 +277,11 @@ public:
 		out << "HBAProtocol         "; hbaprotocol_state.print(out);
 		out << "SerdesWrite         "; itsSerdesWriteState.print(out);
 		out << "SerdesRead          "; itsSerdesReadState.print(out);
+		out << "Bitmode Status (w)  "; itsBitModeWriteState.print(out);
+		out << "SDOMode Status (w)  "; itsSDOModeWriteState.print(out);
+		out << "SDOSelect Status (w)"; itsSDOSelectWriteState.print(out);
 		out << "RawDataBlock(write) "; rawdatawrite_state.print(out);
 		out << "RawDataBlock(read)  "; rawdataread_state.print(out);
-		out << "Bitmode Status (w)  "; itsBitModeWriteState.print(out);
 		out << "Timestamp           "; ts_state.print(out);
 		out << endl;
 	}
@@ -284,72 +296,76 @@ public:
 public:
 	/*@{*/
 	// Accessor methods
-	RTC::RegisterState& sys()            { return sys_state; }
-	RTC::RegisterState& bf()             { return bf_state; }
-	RTC::RegisterState& ss()             { return ss_state; }
-	RTC::RegisterState& rcusettings()    { return rcusettings_state; }
-	RTC::RegisterState& rcuprotocol()    { return rcuprotocol_state; }
-	RTC::RegisterState& rcuread()        { return itsRcuReadState; }
-	RTC::RegisterState& hbaprotocol()    { return hbaprotocol_state; }
-	RTC::RegisterState& rsuclear()       { return rsuclear_state; }
-	RTC::RegisterState& diagwgsettings() { return diagwgsettings_state; }
-	RTC::RegisterState& sst()            { return sst_state; }
-	RTC::RegisterState& bst()            { return bst_state; }
-	RTC::RegisterState& xst()            { return xst_state; }
-	RTC::RegisterState& cdo()            { return cdo_state; }
-	RTC::RegisterState& bs()             { return bs_state; }
-	RTC::RegisterState& tdclear()        { return tdclear_state; }
-	RTC::RegisterState& tdwrite()        { return tdwrite_state; }
-	RTC::RegisterState& tdread()         { return tdread_state; }
-	RTC::RegisterState& rad()            { return rad_state; }
-	RTC::RegisterState& crcontrol()      { return itsCRstate; }
-	RTC::RegisterState& ts()             { return ts_state; }
-	RTC::RegisterState& tdstatuswrite()  { return tdstatuswrite_state; }
-	RTC::RegisterState& tdstatusread()   { return tdstatusread_state; }
-	RTC::RegisterState& tbbsettings()    { return tbbsettings_state; }
-	RTC::RegisterState& tbbbandsel()     { return tbbbandsel_state; }
-	RTC::RegisterState& bypasssettings() { return bypasssettings_state; }
-	RTC::RegisterState& rawdatawrite()   { return rawdatawrite_state; }
-	RTC::RegisterState& rawdataread()    { return rawdataread_state; }
-	RTC::RegisterState& sbwState()    	 { return itsSerdesWriteState; }
-	RTC::RegisterState& sbrState()    	 { return itsSerdesReadState; }
-	RTC::RegisterState& bmState()    	 { return itsBitModeWriteState; }
+	RTC::RegisterState& sys()               { return sys_state; }
+	RTC::RegisterState& bf()                { return bf_state; }
+	RTC::RegisterState& ss()                { return ss_state; }
+	RTC::RegisterState& rcusettings()       { return rcusettings_state; }
+	RTC::RegisterState& rcuprotocol()       { return rcuprotocol_state; }
+	RTC::RegisterState& rcuread()           { return itsRcuReadState; }
+	RTC::RegisterState& hbaprotocol()       { return hbaprotocol_state; }
+	RTC::RegisterState& rsuclear()          { return rsuclear_state; }
+	RTC::RegisterState& diagwgsettings()    { return diagwgsettings_state; }
+	RTC::RegisterState& sst()               { return sst_state; }
+	RTC::RegisterState& bst()               { return bst_state; }
+	RTC::RegisterState& xst()               { return xst_state; }
+	RTC::RegisterState& cdo()               { return cdo_state; }
+	RTC::RegisterState& bs()                { return bs_state; }
+	RTC::RegisterState& tdclear()           { return tdclear_state; }
+	RTC::RegisterState& tdwrite()           { return tdwrite_state; }
+	RTC::RegisterState& tdread()            { return tdread_state; }
+	RTC::RegisterState& rad()               { return rad_state; }
+	RTC::RegisterState& crcontrol()         { return itsCRstate; }
+	RTC::RegisterState& ts()                { return ts_state; }
+	RTC::RegisterState& tdstatuswrite()     { return tdstatuswrite_state; }
+	RTC::RegisterState& tdstatusread()      { return tdstatusread_state; }
+	RTC::RegisterState& tbbsettings()       { return tbbsettings_state; }
+	RTC::RegisterState& tbbbandsel()        { return tbbbandsel_state; }
+	RTC::RegisterState& bypasssettings()    { return bypasssettings_state; }
+	RTC::RegisterState& rawdatawrite()      { return rawdatawrite_state; }
+	RTC::RegisterState& rawdataread()       { return rawdataread_state; }
+	RTC::RegisterState& sbwState()    	    { return itsSerdesWriteState; }
+	RTC::RegisterState& sbrState()    	    { return itsSerdesReadState; }
+	RTC::RegisterState& bmState()    	    { return itsBitModeWriteState; }
+	RTC::RegisterState& sdoState()    	    { return itsSDOModeWriteState; }
+	RTC::RegisterState& sdoSelectState()    { return itsSDOSelectWriteState; }
 	   
 
 	/*@}*/
 
 private:
 	// ----- data members -----
-	RTC::RegisterState sys_state;            // RSR state
-	RTC::RegisterState bf_state;             // BF weights state
-	RTC::RegisterState ss_state;             // SS state
-	RTC::RegisterState rcusettings_state;    // RCU settings state
-	RTC::RegisterState rcuprotocol_state;    // RCU protocol state
-	RTC::RegisterState itsRcuReadState;      // RCU read state
-	RTC::RegisterState hbaprotocol_state;    // HBA protocol state
-	RTC::RegisterState rsuclear_state;       // RSU clear state
-	RTC::RegisterState diagwgsettings_state; // DIAG WG settings state
-	RTC::RegisterState sst_state;            // SST state
-	RTC::RegisterState bst_state;            // BST state
-	RTC::RegisterState xst_state;            // XST State
-	RTC::RegisterState cdo_state;            // CDO state
-	RTC::RegisterState bs_state;             // BS register state
-	RTC::RegisterState tdclear_state;        // TDS register clear
-	RTC::RegisterState tdwrite_state;        // TDS register write
-	RTC::RegisterState tdread_state;         // TDS register read
-	RTC::RegisterState rad_state;            // RAD register state
-	RTC::RegisterState itsCRstate;           // CR  register state
-	RTC::RegisterState tdstatuswrite_state;  // TDS status write
-	RTC::RegisterState tdstatusread_state;   // TDS status result
-	RTC::RegisterState tbbsettings_state;    // TBB settings state
-	RTC::RegisterState tbbbandsel_state;     // TBB bandsel state
-	RTC::RegisterState bypasssettings_state; // Bypass (specinv) state
-	RTC::RegisterState rawdatawrite_state;	 // Write userdefined datablock
-	RTC::RegisterState rawdataread_state;	 // Read userdefined datablock
-	RTC::RegisterState itsSerdesWriteState;	 // Writing Serdes registers
-	RTC::RegisterState itsSerdesReadState;	 // Reading Serdes registers
-	RTC::RegisterState itsBitModeWriteState; // RSR Bitmode register state
-	RTC::RegisterState ts_state;             // RSR Timestamp register state
+	RTC::RegisterState sys_state;               // RSR state
+	RTC::RegisterState bf_state;                // BF weights state
+	RTC::RegisterState ss_state;                // SS state
+	RTC::RegisterState rcusettings_state;       // RCU settings state
+	RTC::RegisterState rcuprotocol_state;       // RCU protocol state
+	RTC::RegisterState itsRcuReadState;         // RCU read state
+	RTC::RegisterState hbaprotocol_state;       // HBA protocol state
+	RTC::RegisterState rsuclear_state;          // RSU clear state
+	RTC::RegisterState diagwgsettings_state;    // DIAG WG settings state
+	RTC::RegisterState sst_state;               // SST state
+	RTC::RegisterState bst_state;               // BST state
+	RTC::RegisterState xst_state;               // XST State
+	RTC::RegisterState cdo_state;               // CDO state
+	RTC::RegisterState bs_state;                // BS register state
+	RTC::RegisterState tdclear_state;           // TDS register clear
+	RTC::RegisterState tdwrite_state;           // TDS register write
+	RTC::RegisterState tdread_state;            // TDS register read
+	RTC::RegisterState rad_state;               // RAD register state
+	RTC::RegisterState itsCRstate;              // CR  register state
+	RTC::RegisterState tdstatuswrite_state;     // TDS status write
+	RTC::RegisterState tdstatusread_state;      // TDS status result
+	RTC::RegisterState tbbsettings_state;       // TBB settings state
+	RTC::RegisterState tbbbandsel_state;        // TBB bandsel state
+	RTC::RegisterState bypasssettings_state;    // Bypass (specinv & sdo enable) state
+	RTC::RegisterState rawdatawrite_state;	    // Write userdefined datablock
+	RTC::RegisterState rawdataread_state;	    // Read userdefined datablock
+	RTC::RegisterState itsSerdesWriteState;	    // Writing Serdes registers
+	RTC::RegisterState itsSerdesReadState;	    // Reading Serdes registers
+	RTC::RegisterState itsBitModeWriteState;    // RSR Bitmode register state
+	RTC::RegisterState itsSDOModeWriteState;    // RSR SDOMode register state
+	RTC::RegisterState itsSDOSelectWriteState;  // SDO SDOSelect register state
+	RTC::RegisterState ts_state;                // RSR Timestamp register state
 
 	int m_nrcus;
 };

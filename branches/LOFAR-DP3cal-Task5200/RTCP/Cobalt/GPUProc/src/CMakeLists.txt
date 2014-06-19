@@ -13,12 +13,11 @@ set(_gpuproc_sources
   cpu_utils.cc
   FilterBank.cc
   global_defines.cc
-  RunningStatistics.cc
+  MPIReceiver.cc
   Package__Version.cc
   SysInfoLogger.cc
   Station/StationNodeAllocation.cc
   Station/StationInput.cc
-  Storage/SSH.cc
   Storage/StorageProcess.cc
   Storage/StorageProcesses.cc
 )
@@ -42,11 +41,11 @@ if(USE_CUDA)
     cuda/Kernels/BandPassCorrectionKernel.cc
     cuda/Kernels/FFT_Kernel.cc
     cuda/Kernels/FFT_Plan.cc
-    cuda/Kernels/Filter_FFT_Kernel.cc
     cuda/Kernels/FIR_FilterKernel.cc
     cuda/Kernels/IncoherentStokesKernel.cc
     cuda/Kernels/IncoherentStokesTransposeKernel.cc
     cuda/Kernels/IntToFloatKernel.cc
+    cuda/Kernels/FFTShiftKernel.cc
     #cuda/Kernels/UHEP_BeamFormerKernel.cc
     #cuda/Kernels/UHEP_InvFFT_Kernel.cc
     #cuda/Kernels/UHEP_InvFIR_Kernel.cc
@@ -60,6 +59,10 @@ if(USE_CUDA)
     cuda/SubbandProcs/BeamFormerSubbandProc.cc
     cuda/SubbandProcs/BeamFormerFactories.cc
     cuda/SubbandProcs/CorrelatorSubbandProc.cc
+    cuda/SubbandProcs/BeamFormerPreprocessingStep.cc
+    cuda/SubbandProcs/BeamFormerCoherentStep.cc
+    cuda/SubbandProcs/BeamFormerIncoherentStep.cc
+    
 #    cuda/SubbandProcs/UHEP_SubbandProc.cc
   )
   add_subdirectory(cuda)
@@ -70,6 +73,7 @@ if(USE_CUDA)
   endif()
 
   lofar_add_bin_program(rtcp rtcp.cc)
+  lofar_add_bin_program(getOutputProcHosts getOutputProcHosts.cc)
 endif()
 
 if(USE_OPENCL)
@@ -115,18 +119,32 @@ endif()
 lofar_add_bin_program(mpi_node_list Station/mpi_node_list.cc)
 lofar_add_bin_program(station_stream Station/station_stream.cc)
 
-# install the scripts for MAC and for auto-updating casacore measures tables
+# install scripts used to run an observation under bin
 install(PROGRAMS
+  scripts/CobaltControl.sh
   scripts/runObservation.sh
   scripts/startBGL.sh
   scripts/stopBGL.sh
-  scripts/get_casacore_measures_data.sh
-  scripts/apply_casacore_measures_data.sh
+  scripts/watchlogs.sh
   DESTINATION bin)
 
-# install the logprop file
+# install support scripts (install, roll-out, debugging) into sbin
+install(PROGRAMS
+  scripts/Cobalt_build.sh
+  scripts/Cobalt_install.sh
+  scripts/Cobalt_setcurrent.sh
+  scripts/setloglevels.sh
+  scripts/startstopkeys.sh
+  scripts/get_casacore_measures_data.sh
+  scripts/apply_casacore_measures_data.sh
+  DESTINATION sbin)
+
+# install logprop files
 install(FILES
   rtcp.log_prop
+  getOutputProcHosts.log_prop
   Station/mpi_node_list.log_prop
   Station/station_stream.log_prop
+  scripts/watchlogs-multitail.conf
   DESTINATION etc)
+

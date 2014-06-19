@@ -82,11 +82,14 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_rawDataBlock.size()                =" << ETH_DATA_LEN + sizeof (uint16));
   LOG_DEBUG_STR("m_SdsWriteBuffer.size()              =" << sizeof(itsSdsWriteBuffer));
   LOG_DEBUG_STR("m_SdsReadBuffer.size()               =" << sizeof(itsSdsReadBuffer));
-  LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()    * sizeof(EPA_Protocol::RADLatency));
-  LOG_DEBUG_STR("itsSwappedXY.size()           =" << itsSwappedXY.size());
-  LOG_DEBUG_STR("itsBitsModeInfo.size()        =" << itsBitModeInfo().size()           * sizeof(EPA_Protocol::RSRBeamMode));
-  LOG_DEBUG_STR("itsBitsPerSample.size()       =" << sizeof(itsBitsPerSample));
-
+  LOG_DEBUG_STR("m_latencys.size()                    =" << itsLatencys().size()          * sizeof(EPA_Protocol::RADLatency));
+  LOG_DEBUG_STR("itsSwappedXY.size()                  =" << itsSwappedXY.size());
+  LOG_DEBUG_STR("itsBitModeInfo.size()                =" << itsBitModeInfo().size()       * sizeof(EPA_Protocol::RSRBeamMode));
+  LOG_DEBUG_STR("itsBitsPerSample.size()              =" << sizeof(itsBitsPerSample));
+  LOG_DEBUG_STR("itsSDOModeInfo.size()                =" << itsSDOModeInfo().size()       * sizeof(EPA_Protocol::RSRSDOMode));
+  LOG_DEBUG_STR("itsSDOSelection.size()               =" << itsSDOSelection.subbands().size() * sizeof(uint16));
+  LOG_DEBUG_STR("itsSDOBitsPerSample.size()           =" << sizeof(itsSDOBitsPerSample));
+  
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
 	       + m_subbandselection.crosslets().size()  
@@ -109,7 +112,13 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 		   + ETH_DATA_LEN + sizeof(uint16)
 		   + sizeof(itsSdsWriteBuffer)
 		   + sizeof(itsSdsReadBuffer)
-		   + itsLatencys().size()));
+		   + itsLatencys().size()
+           + itsSwappedXY.size()
+           + itsBitModeInfo().size()
+           + sizeof(itsBitsPerSample)
+           + itsSDOModeInfo().size()
+           + itsSDOSelection.subbands().size()
+           + sizeof(itsBitsPerSample)));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -135,6 +144,8 @@ CacheBuffer::~CacheBuffer()
   m_bypasssettings().free();
   itsLatencys().free();
   itsBitModeInfo().free();
+  itsSDOModeInfo().free();
+  itsSDOSelection.subbands().free();
 }
 
 void CacheBuffer::reset(void)
@@ -147,6 +158,7 @@ void CacheBuffer::reset(void)
 	m_timestamp.set(tv);
 
     itsBitsPerSample = MAX_BITS_PER_SAMPLE;
+    itsSDOBitsPerSample = MAX_BITS_PER_SAMPLE;
     
 	m_beamletweights().resize( BeamletWeights::SINGLE_TIMESTEP, 
 	                           StationSettings::instance()->nrRcus(),
@@ -275,12 +287,12 @@ void CacheBuffer::reset(void)
 	bandsel = 0;
 	m_tbbsettings() = bandsel;
 
-	// BypassSettings (per BP)
-	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrRcus() / N_POL);
-	m_bypasssettings().resize(StationSettings::instance()->nrRcus() / N_POL);
+	// BypassSettings (BP and AP's)
+	LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrBlps());
+    m_bypasssettings().resize(StationSettings::instance()->nrBlps());
 	BypassSettings::Control	control;
 	m_bypasssettings() = control;
-
+    
 	// clear rawdatablock
 	itsRawDataBlock.address = 0;
 	itsRawDataBlock.offset  = 0;
@@ -316,6 +328,18 @@ void CacheBuffer::reset(void)
 	bitmodeinfo.bm_max = 0;
 	itsBitModeInfo() = bitmodeinfo;
 	
+    // SDOMode
+	itsSDOModeInfo().resize(StationSettings::instance()->nrRspBoards());
+	RSRSDOMode sdomodeinfo;
+	sdomodeinfo.bm_select = 0;
+	sdomodeinfo.bm_max = 0;
+	itsSDOModeInfo() = sdomodeinfo;
+    
+    itsSDOSelection.subbands().resize(StationSettings::instance()->nrRcus(),
+                                     (MAX_BITS_PER_SAMPLE/MIN_BITS_PER_SAMPLE),
+                                      MEPHeader::N_SDO_SUBBANDS);
+	itsSDOSelection.subbands() = 0;
+	//TODO: itsSDOSelection() = 0;
 }
 
 

@@ -41,12 +41,26 @@ TEST(tKernelFunctions)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("Cobalt.blockSize", "262144");
   ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
+  
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f);
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -85,7 +99,7 @@ TEST(tKernelFunctions)
   // excercise it
   PerformanceCounter counter(context);  //create a counter
   BlockID blockId;                      // create a dummy block-ID struct
-  kernel->enqueue(blockId, counter, 0); // insert in kernel queue
+  kernel->enqueue(blockId,  0); // insert in kernel queue
 
 
   stream.readBuffer(hOutput, dOutput);
@@ -93,11 +107,11 @@ TEST(tKernelFunctions)
   stream.synchronize();
  
   // update the counter
-  counter.logTime();
+  kernel->getCounter().logTime();
 
   stringstream str;
-  counter.stats.print(str);
-  
+  kernel->getCounter().stats.print(str);
+
   // Most functionality is tested at the specific stats class. Just test if
   // the stats object has been used once
   CHECK(str.str() != "*Not executed*");

@@ -9,20 +9,18 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 
 lofar_add_library(outputproc 
   Package__Version.cc
-  ExitOnClosedStdin.cc
   FastFileStream.cc
+  GPUProcIO.cc
   InputThread.cc
-  OutputThread.cc
-  SubbandWriter.cc
   MSWriter.cc
   MSWriterCorrelated.cc
   MSWriterDAL.cc
   MSWriterNull.cc
   MSWriterFile.cc
-  Format.cc
   MeasurementSetFormat.cc
+  OutputThread.cc
+  SubbandWriter.cc
   TBB_StaticMapping.cc
-#  TBB_Writer.cc
 )
 
 install(PROGRAMS
@@ -34,8 +32,10 @@ install(FILES
   DESTINATION etc)
 
 lofar_add_bin_program(outputProc outputProc.cc)
-#lofar_add_bin_program(createHeaders createHeaders.cc)
-lofar_add_bin_program(plotMS plotMS.cc)
 lofar_add_bin_program(versionoutputproc versionoutputproc.cc)
-#lofar_add_bin_program(TBB_Writer_main TBB_Writer_main.cc)
+#lofar_add_bin_program(TBB_Writer TBB_Writer_main.cc TBB_Writer.cc)
+
+lofar_add_sbin_program(createHeaders createHeaders.cc)
+lofar_add_sbin_program(plotMS plotMS.cc)
+lofar_add_sbin_program(write_pvss_dp write_pvss_dp.cc)
 

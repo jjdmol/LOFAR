@@ -205,17 +205,6 @@ namespace LOFAR
       }
 
 
-      Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
-        x(x_), y(y_), z(z_)
-      {
-      }
-
-      std::ostream& operator<<(std::ostream& os, const Block& block)
-      {
-        os << "[" << block.x << ", " << block.y << ", " << block.z << "]";
-        return os;
-      }
-
       Grid::Grid(unsigned int x_, unsigned int y_, unsigned int z_) :
         x(x_), y(y_), z(z_)
       {
@@ -224,6 +213,34 @@ namespace LOFAR
       std::ostream& operator<<(std::ostream& os, const Grid& grid)
       {
         os << "[" << grid.x << ", " << grid.y << ", " << grid.z << "]";
+        return os;
+      }
+
+      Block::Block(unsigned int x_, unsigned int y_, unsigned int z_) :
+        x(x_), y(y_), z(z_)
+      {
+        // Cannot enforce this as an obj invariant (x, y, z public on purpose),
+        // but intended to trigger bugs early.
+        if (x == 0 || y == 0 || z == 0)
+          THROW(CUDAException, "Block(): block dims must be non-zero: " <<
+                               x << " " << y << " " << z);
+      }
+
+      std::ostream& operator<<(std::ostream& os, const Block& block)
+      {
+        os << "[" << block.x << ", " << block.y << ", " << block.z << "]";
+        return os;
+      }
+
+      ExecConfig::ExecConfig(Grid gr, Block bl, size_t dynShMem) :
+        grid(gr), block(bl), dynSharedMemSize(dynShMem)
+      {
+      }
+
+      std::ostream& operator<<(std::ostream& os, const ExecConfig& execConfig)
+      {
+        os << "{" << execConfig.grid << ", " << execConfig.block <<
+              ", " << execConfig.dynSharedMemSize << "}";
         return os;
       }
 
@@ -421,19 +438,19 @@ namespace LOFAR
           checkCuCall(cuCtxDestroy(_context));
         }
 
-        CUdevice getDevice() const
+        CUdevice getCurrentDevice() const
         {
           CUdevice dev;
           checkCuCall(cuCtxGetDevice(&dev));
           return dev;
         }
 
-        void setCacheConfig(CUfunc_cache config) const
+        void setCurrentCacheConfig(CUfunc_cache config) const
         {
           checkCuCall(cuCtxSetCacheConfig(config));
         }
 
-        void setSharedMemConfig(CUsharedconfig config) const
+        void setCurrentSharedMemConfig(CUsharedconfig config) const
         {
 #if CUDA_VERSION >= 4020
           checkCuCall(cuCtxSetSharedMemConfig(config));
@@ -465,21 +482,21 @@ namespace LOFAR
       {
         ScopedCurrentContext scc(*this);
 
-        return Device(_impl->getDevice());
+        return Device(_impl->getCurrentDevice());
       }
 
       void Context::setCacheConfig(CUfunc_cache config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setCacheConfig(config);
+        _impl->setCurrentCacheConfig(config);
       }
 
       void Context::setSharedMemConfig(CUsharedconfig config) const
       {
         ScopedCurrentContext scc(*this);
 
-        _impl->setSharedMemConfig(config);
+        _impl->setCurrentSharedMemConfig(config);
       }
 
 
@@ -571,7 +588,7 @@ namespace LOFAR
           return _ptr;
         }
 
-        void set(unsigned char uc, size_t n)
+        void set(unsigned char uc, size_t n) const
         {
           ScopedCurrentContext scc(_context);
 
@@ -605,7 +622,7 @@ namespace LOFAR
         return (void *)_impl->get();
       }
 
-      void DeviceMemory::set(unsigned char uc, size_t n)
+      void DeviceMemory::set(unsigned char uc, size_t n) const
       {
         _impl->set(uc, std::min(n, size()));
       }
@@ -802,7 +819,15 @@ namespace LOFAR
           ScopedCurrentContext scc(_context);
 
           float ms;
-          checkCuCall(cuEventElapsedTime(&ms, other, _event));
+
+          try {
+            checkCuCall(cuEventElapsedTime(&ms, other, _event));
+          } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
+            // Prevent exceptions/crashes caused by querying unused timers
+            // checkCuCall already logs the error
+            ms = 0.0f;
+          }
+
           return ms;
         }
 
@@ -878,13 +903,13 @@ namespace LOFAR
 
         void launchKernel(CUfunction function, unsigned gridX, unsigned gridY,
                           unsigned gridZ, unsigned blockX, unsigned blockY,
-                          unsigned blockZ, unsigned sharedMemBytes,
+                          unsigned blockZ, unsigned dynSharedMemSize,
                           void **parameters)
         {
           ScopedCurrentContext scc(_context);
 
           checkCuCall(cuLaunchKernel(function, gridX, gridY, gridZ, blockX,
-                                     blockY, blockZ, sharedMemBytes, _stream,
+                                     blockY, blockZ, dynSharedMemSize, _stream,
                                      parameters, NULL));
         }
 
@@ -1064,9 +1089,9 @@ namespace LOFAR
       {
         LOG_DEBUG_STR("Launching " << function._name);
 
-        const unsigned dynSharedMemBytes = 0; // we don't need this for LOFAR
+        const unsigned dynSharedMemSize = 0; // we don't need this for LOFAR
         _impl->launchKernel(function._function, grid.x, grid.y, grid.z,
-                            block.x, block.y, block.z, dynSharedMemBytes,
+                            block.x, block.y, block.z, dynSharedMemSize,
                             const_cast<void **>(&function._kernelArgs[0]));
 
         if (force_synchronous) {

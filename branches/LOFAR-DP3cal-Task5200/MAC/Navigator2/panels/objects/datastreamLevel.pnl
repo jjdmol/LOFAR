@@ -22,7 +22,7 @@ PANEL,-1 -1 251 88 N "_3DFace" 1
     return;
   }
 
-  if (strpos(station,\"CS\") < 0){
+  if (!navFunct_isCoreStation(station)){
     setValue(\"stream1-1_text\",\"visible\",false);
     setValue(\"stream1-2_text\",\"visible\",false);
     setValue(\"stream1-3_text\",\"visible\",false);

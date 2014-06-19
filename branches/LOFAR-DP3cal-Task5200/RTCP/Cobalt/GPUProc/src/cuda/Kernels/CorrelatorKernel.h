@@ -38,6 +38,10 @@ namespace LOFAR
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
+        unsigned nrStations;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
       };
 
       enum BufferType
@@ -56,6 +60,9 @@ namespace LOFAR
 
     template<> size_t
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const;
+
+    template<> CompileDefinitions
+    KernelFactory<CorrelatorKernel>::compileDefinitions() const;
   }
 }
 

@@ -35,10 +35,10 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    Generator::Generator( const BufferSettings &settings, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to )
+    Generator::Generator( const StationID &stationID, const std::vector< SmartPtr<Stream> > &outputStreams_, PacketFactory &packetFactory, const TimeStamp &from, const TimeStamp &to )
       :
-      RSPBoards(str(boost::format("[station %s %s] [Generator] ") % settings.station.stationName % settings.station.antennaField), outputStreams_.size()),
-      settings(settings),
+      RSPBoards(str(boost::format("[station %s] [Generator] ") % stationID.name()), outputStreams_.size()),
+      stationID(stationID),
       outputStreams(outputStreams_.size()),
       packetFactory(packetFactory),
       nrSent(nrBoards, 0),
@@ -55,7 +55,7 @@ namespace LOFAR
 
     void Generator::processBoard( size_t nr )
     {
-      const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
+      const std::string logPrefix(str(boost::format("[station %s board %u] [Generator] ") % stationID.name() % nr));
 
       try {
         Stream &s = *outputStreams[nr];
@@ -102,7 +102,7 @@ namespace LOFAR
     void Generator::logStatistics()
     {
       for( size_t nr = 0; nr < nrBoards; nr++ ) {
-        const std::string logPrefix(str(boost::format("[station %s %s board %u] [Generator] ") % settings.station.stationName % settings.station.antennaField % nr));
+        const std::string logPrefix(str(boost::format("[station %s board %u] [Generator] ") % stationID.name() % nr));
 
         LOG_INFO_STR( logPrefix << nrSent[nr] << " packets sent.");
 

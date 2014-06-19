@@ -9,9 +9,15 @@
 CalServer.N_SUBBANDS=512
 
 # Set name for various configuration files
-CalServer.DipoleModelFile=DipoleModel.conf
-CalServer.SourceCatalogFile=SourceCatalog.conf
-CalServer.AntennaArraysFile=AntennaArrays.conf
+CalServer.DipoleModelFile   = DipoleModel.conf
+CalServer.SourceCatalogFile = SourceCatalog.conf
+CalServer.AntennaArraysFile = AntennaArrays.conf
+
+# Period the antennas are kept 'on' after they are not claimed anymore.
+# After this period (or when the Calserver is stopped) the antennas are 
+# switched off when they were not claimed again.
+# Default value is 3m
+CalServer.PowerOffDelay	= 3m
 
 # For testing purposes, read ACC from file
 #

@@ -50,7 +50,6 @@ void dblClick(string name) {
 
   if (dpExists(baseDP) ) {
     LOG_DEBUG(\"swlevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
-    DebugN(\"swlevel.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
     g_currentDatapoint=baseDP;
     if (name == station) {
       navPanel_setEvent(station,\"ChangePanel\");

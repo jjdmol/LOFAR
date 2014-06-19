@@ -39,15 +39,17 @@ namespace LOFAR
       static std::string theirFunction;
 
       // Parameters that must be passed to the constructor of the
-      // DelayAndBandPassKernel class.
+      // BandPassCorrectionKernel class.
       struct Parameters : Kernel::Parameters
       {
         Parameters(const Parset& ps);
-        size_t nrBitsPerSample;
-        size_t nrBytesPerComplexSample;
-        size_t nrSAPs;
-        size_t nrChannels1;
-        size_t nrChannels2;
+        unsigned nrStations;
+        unsigned nrBitsPerSample;
+
+        unsigned nrDelayCompensationChannels;
+        unsigned nrHighResolutionChannels;
+        unsigned nrSamplesPerChannel;
+
         bool correctBandPass;
       };
 
@@ -58,8 +60,8 @@ namespace LOFAR
         BAND_PASS_CORRECTION_WEIGHTS
       };
 
-      // Buffers that must be passed to the constructor of the DelayAndBandPassKernel
-      // class.
+      // Buffers that must be passed to the constructor of the
+      // BandPassCorrection class.
       struct Buffers : Kernel::Buffers
       {
         Buffers(const gpu::DeviceMemory& in, 
@@ -73,9 +75,9 @@ namespace LOFAR
       };
 
       BandPassCorrectionKernel(const gpu::Stream &stream,
-                             const gpu::Module &module,
-                             const Buffers &buffers,
-                             const Parameters &param);
+                               const gpu::Module &module,
+                               const Buffers &buffers,
+                               const Parameters &param);
 
     };
 

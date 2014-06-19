@@ -41,6 +41,7 @@ const string   DPNAME_NAVIGATOR  = "__navigator";
 
 //the Database name & number for the Mainsystem (== MainCU)
 global string   MainDBName        = "MCU099:";
+global string   MainDBName        = "CCU099:";
 global unsigned MainDBID          = 231;
 
 global mapping stateColor;

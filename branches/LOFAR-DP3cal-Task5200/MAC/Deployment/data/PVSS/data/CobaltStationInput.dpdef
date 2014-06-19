@@ -1,10 +1,14 @@
-# InputBuffer
-stationName		string
+# These keys must be set _per_ antenna field.
 
-# Observation that is using this station
+# Name of the CobaltNode (CBT001).
+Node			string
+
+# CPU number
+CPU			int
+# Observation ID as string.
 observationName		string
 
-# statistics of the 4 input streams of each RSP board, per second
+# Number of UDP frames per second for each of the 4 RSP boards
 stream0.blocksIn	int
 stream0.rejected	int
 stream1.blocksIn	int

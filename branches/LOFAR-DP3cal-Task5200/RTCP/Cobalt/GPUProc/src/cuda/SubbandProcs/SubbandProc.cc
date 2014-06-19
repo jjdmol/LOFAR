@@ -32,6 +32,10 @@ namespace LOFAR
   {
     SubbandProc::SubbandProc(const Parset &ps, gpu::Context &context, size_t nrSubbandsPerSubbandProc)
     :
+      inputPool("SubbandProc::inputPool"),
+      processPool("SubbandProc::processPool"),
+      outputPool("SubbandProc::outputPool"),
+
       ps(ps),
       nrSubbandsPerSubbandProc(nrSubbandsPerSubbandProc),
       queue(gpu::Stream(context))
@@ -41,14 +45,7 @@ namespace LOFAR
       // At least 3 items are needed for a smooth Pool operation.
       size_t nrInputDatas = std::max(3UL, 2 * nrSubbandsPerSubbandProc);
       for (size_t i = 0; i < nrInputDatas; ++i) {
-        inputPool.free.append(new SubbandProcInputData(
-                ps.nrBeams(),
-                ps.nrStations(),
-                ps.settings.nrPolarisations,
-                ps.settings.beamFormer.maxNrTABsPerSAP(),
-                ps.nrSamplesPerSubband(),
-                ps.nrBytesPerComplexSample(),
-                context));
+        inputPool.free.append(new SubbandProcInputData(ps, context), false);
       }
     }
 
@@ -66,13 +63,15 @@ namespace LOFAR
     {
       /*
        * Output elements can get stuck in:
+       *   process()                1 element
        *   Best-effort queue:       3 elements
+       *   In flight to BE queue:   1 element
        *   In flight to outputProc: 1 element
        *
-       * which means we'll need at least 5 elements
+       * which means we'll need at least 7 elements
        * in the pool to get a smooth operation.
        */
-      return 5 * nrSubbandsPerSubbandProc;
+      return 7 * nrSubbandsPerSubbandProc;
     }
 
 
@@ -88,29 +87,37 @@ namespace LOFAR
       // extract and assign the delays for the station beams
 
       // X polarisation
-      delaysAtBegin[SAP][station][0]  = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][0] = ps.settings.stations[station].delay.x + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][0]             = ps.settings.stations[station].phase0.x;
+      delaysAtBegin[SAP][station][0]  = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][0] = ps.settings.antennaFields[station].delay.x + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][0]             = ps.settings.antennaFields[station].phase0.x;
 
       // Y polarisation
-      delaysAtBegin[SAP][station][1]  = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAtBegin;
-      delaysAfterEnd[SAP][station][1] = ps.settings.stations[station].delay.y + metaData.stationBeam.delayAfterEnd;
-      phase0s[station][1]             = ps.settings.stations[station].phase0.y;
-
+      delaysAtBegin[SAP][station][1]  = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAtBegin;
+      delaysAfterEnd[SAP][station][1] = ps.settings.antennaFields[station].delay.y + metaData.stationBeam.delayAfterEnd;
+      phase0s[station][1]             = ps.settings.antennaFields[station].phase0.y;
 
       if (ps.settings.beamFormer.enabled)
       {
-        for (unsigned tab = 0; tab < metaData.TABs.size(); tab++)
-        {
-          // we already compensated for the delay for the first beam
-          double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
-                                     metaData.stationBeam.delayAtBegin) * 0.5;
+        // we already compensated for the delay for the first beam
+        double compensatedDelay = (metaData.stationBeam.delayAfterEnd +
+                                   metaData.stationBeam.delayAtBegin) * 0.5;
 
+        size_t nrTABs = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
+
+        ASSERTSTR(metaData.TABs.size() == nrTABs, "Need delays for " << nrTABs << " coherent TABs, but got delays for " << metaData.TABs.size() << " TABs");
+
+        // Note: We only get delays for the coherent TABs
+        for (unsigned tab = 0; tab < nrTABs; tab++)
+        {
           // subtract the delay that was already compensated for
           tabDelays[SAP][station][tab] = (metaData.TABs[tab].delayAtBegin +
                                           metaData.TABs[tab].delayAfterEnd) * 0.5 -
                                          compensatedDelay;
         }
+
+        // Zero padding entries that exist because we always produce maxNrCoherentTABsPerSAP for any subband
+        for (unsigned tab = nrTABs; tab < ps.settings.beamFormer.maxNrCoherentTABsPerSAP(); tab++)
+          tabDelays[SAP][station][tab] = 0.0;
       }
     }
 
@@ -139,7 +146,7 @@ namespace LOFAR
 
 
     // Get the log2 of the supplied number
-    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),nextPowerOfTwo())
+    // TODO: move this into a util/helper function/file (just like CorrelatorSubbandProc.cc::baseline() and Align.h::powerOfTwo(),roundUpToPowerOfTwo())
     unsigned SubbandProc::Flagger::log2(unsigned n)
     {
       ASSERT(powerOfTwo(n));

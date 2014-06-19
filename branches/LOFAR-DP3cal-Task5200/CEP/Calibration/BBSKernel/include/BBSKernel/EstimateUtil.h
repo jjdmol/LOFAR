@@ -26,7 +26,7 @@
 // \file
 // Helper functions and types for model parameter estimation.
 
-#include <BBSKernel/Types.h>
+#include <BBSKernel/Interval.h>
 #include <BBSKernel/MeasurementExpr.h>
 #include <BBSKernel/VisBuffer.h>
 #include <Common/lofar_algorithm.h>

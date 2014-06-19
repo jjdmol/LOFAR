@@ -76,6 +76,8 @@
 #include <BBSKernel/Apply.h>
 #include <BBSKernel/Estimate.h>
 
+#include <casa/OS/Path.h>
+
 namespace LOFAR
 {
   namespace BBS

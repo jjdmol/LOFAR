@@ -23,6 +23,8 @@
 
 #include <cstddef>
 
+#include <Common/LofarTypes.h>
+
 namespace LOFAR
 {
   namespace Cobalt
@@ -30,32 +32,73 @@ namespace LOFAR
 
 
     /*
-     * Returns true iff n is a power of two.
+     * Returns true iff n is a power of two. Else, return false.
+     * T must be an integral type.
      */
     template <typename T>
     inline static bool powerOfTwo(T n)
     {
-      return n > 0 && (n & -n) == n;
+      return n > 0 && !(n & (n - 1));
     }
 
 
     /*
-     * Returns the first power of two higher than n.
+     * Returns the first power of two greater or equal than n.
+     * T must be an integral type.
+     * n must be less or equal to the largest representable power of two.
      */
     template <typename T>
-    inline static T nextPowerOfTwo(T n)
+    inline static T roundUpToPowerOfTwo(T n)
     {
-      T p;
+      n -= 1;
+      n |= n >> 1;
+      n |= n >> 2;
+      n |= n >> 4;
+      if (sizeof n > sizeof(uint8))
+        n |= n >> 8;
+      if (sizeof n > sizeof(uint16))
+        n |= n >> 16;
+      if (sizeof n > sizeof(uint32))
+        n |= (uint64)n >> 32; // quell warning
+      n++;
+      n += (n == 0);
+      return n;
+    }
 
-      for (p = 1; p < n; p <<= 1)
-        ;
 
-      return p;
+    /*
+     * Returns the greatest common divisor of a and b.
+     * T must be an integral type.
+     * a, b > 0.
+     */
+    template <typename T>
+    inline static T gcd(T a, T b)
+    {
+      while (a != 0) {
+        T tmp = a;
+        a = b % a;
+        b = tmp;
+      }
+
+      return b;
+    }
+
+
+    /*
+     * Returns the least common multiple of a and b (may overflow T).
+     * T must be an integral type.
+     * a, b > 0.
+     */
+    template <typename T>
+    inline static T lcm(T a, T b)
+    {
+      return a / gcd(a, b) * b;
     }
 
 
     /*
      * Returns `value' rounded up to `alignment'.
+     * T must be an integral type.
      */
     template <typename T>
     inline static T align(T value, size_t alignment)
@@ -71,6 +114,7 @@ namespace LOFAR
 
     /*
      * Returns `value' rounded up to `alignment', in bytes.
+     * T must be an integral type.
      */
     template <typename T>
     inline static T *align(T *value, size_t alignment)
@@ -81,6 +125,7 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment'.
+     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T value, size_t alignment)
@@ -91,6 +136,7 @@ namespace LOFAR
 
     /*
      * Returns true if `value' is aligned to `alignment', in bytes.
+     * T must be an integral type.
      */
     template <typename T>
     inline static bool aligned(T *value, size_t alignment)

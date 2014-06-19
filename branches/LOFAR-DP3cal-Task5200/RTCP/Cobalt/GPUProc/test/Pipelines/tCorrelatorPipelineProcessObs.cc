@@ -28,7 +28,8 @@
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
-#include <InputProc/OMPThread.h>
+#include <CoInterface/OMPThread.h>
+#include <InputProc/Transpose/MPIUtil.h>
 #include <GPUProc/Pipelines/CorrelatorPipeline.h>
 #include <GPUProc/Station/StationInput.h>
 
@@ -39,28 +40,19 @@ using namespace LOFAR::Cobalt;
 int main(int argc, char *argv[]) {
   INIT_LOGGER("tCorrelatorPipelineProcessObs");
 
+  LOFAR::Cobalt::MPI mpi;
+
+  // Note: we just need to test the Pipeline part (processObservation()),
+  // not the SubbandProc and other logic below it, as that is already covered
+  // in other tests. (This is not a feature or integration test.)
+  // Testing Pipeline in isolation is next to impossible, but fake it
+  // with a parset where the number of input data blocks is 0. Then we don't
+  // have to start input procs etc. The disadvantage is that some code of
+  // processObservation() remains untested...
+  Parset ps("tCorrelatorPipelineProcessObs.parset");
+
   omp_set_nested(true);
   OMPThread::init();
-
-  if (setenv("DISPLAY", ":0", 1) < 0)
-  {
-    perror("error setting DISPLAY");
-    exit(1);
-  }
-
-  int rank = 0;
-  int nrHosts = 1;
-#ifdef HAVE_MPI
-  // Initialize and query MPI
-  int mpi_thread_support;
-  if (MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_support) != MPI_SUCCESS) {
-    cerr << "MPI_Init failed" << endl;
-    exit(1);
-  }
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nrHosts);
-#endif
 
   try {
     gpu::Platform pf;
@@ -74,19 +66,6 @@ int main(int argc, char *argv[]) {
   vector<gpu::Device> devices(1, device);
   gpu::Context ctx(device);
 
-  // Note: we just need to test the Pipeline part (processObservation()),
-  // not the SubbandProc and other logic below it, as that is already covered
-  // in other tests. (This is not a feature or integration test.)
-  // Testing Pipeline in isolation is next to impossible, but fake it
-  // with a parset where the number of input data blocks is 0. Then we don't
-  // have to start input procs etc. The disadvantage is that some code of
-  // processObservation() remains untested...
-  Parset ps("tCorrelatorPipelineProcessObs.parset");
-
-#ifndef HAVE_MPI
-  DirectInput::instance(&ps);
-#endif
-
   // "distribute" subbands over 1 node
   vector<size_t> subbands;
   for (size_t sb = 0; sb < ps.nrSubbands(); sb++)
@@ -94,14 +73,53 @@ int main(int argc, char *argv[]) {
     subbands.push_back(sb);
   }
 
+  Pool<struct MPIRecvData> MPI_receive_pool("MPI_receive_pool");
+
+
+
+  // Init the pipeline *before* touching MPI. MPI doesn't like fork().
+  // So do kernel compilation (reqs fork()) first.
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, 
+  devices, MPI_receive_pool);
+
+  //pipeline->allocateResources();
+  mpi.init(argc, argv);
+
+  SubbandDistribution subbandDistribution; // rank -> [subbands]
+
+  for (size_t subband = 0; subband < ps.nrSubbands(); ++subband) {
+    int receiverRank = subband % mpi.size();
+
+    subbandDistribution[receiverRank].push_back(subband);
+  }
+  const std::vector<size_t>  subbandIndices(subbandDistribution[mpi.rank()]);
+  MPIReceiver MPI_receiver(MPI_receive_pool,
+    subbandDistribution[mpi.rank()],
+    std::find(subbandIndices.begin(),
+    subbandIndices.end(), 0U) != subbandIndices.end(),
+    ps.nrSamplesPerSubband(),
+    ps.nrStations(),
+    ps.nrBitsPerSample());
+
+#pragma omp parallel sections num_threads(2)
+  {
+#pragma omp section
+    {
+      size_t nrBlocks = floor((ps.settings.stopTime - ps.settings.startTime) / ps.settings.blockDuration());
+
+      MPI_receiver.receiveInput(nrBlocks);
+    }
+
+#pragma omp section
+    {
   // no data, so no need to run a sender:
   // receiver(s) from processObservation() will fwd a end of data NULL pool item immediately.
   // idem for storage proc: we'll get a failed to connect to storage log msg, but don't care.
-  CorrelatorPipeline(ps, subbands).processObservation(CORRELATED_DATA);
+      pipeline->processObservation();
+      pipeline = 0;
+    }
 
-#ifdef HAVE_MPI
-  MPI_Finalize();
-#endif
+  }
 
   return 0;
 }

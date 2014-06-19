@@ -23,11 +23,7 @@
 #ifndef LOFAR_BBSKERNEL_TYPES_H
 #define LOFAR_BBSKERNEL_TYPES_H
 
-#include <Common/lofar_iosfwd.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
 #include <Common/LofarTypes.h>
-
 #include <utility>
 
 namespace LOFAR
@@ -55,35 +51,6 @@ enum ParmCategory
     INSTRUMENT,
     SKY,
     N_ParmCategory
-};
-
-template <typename T_VALUE>
-class Interval
-{
-public:
-    Interval()
-    {
-    }
-
-    Interval(T_VALUE start, T_VALUE end)
-        :   start(start),
-            end(end)
-    {
-    }
-
-    T_VALUE start;
-    T_VALUE end;
-};
-
-struct Vector3
-{
-    const double &operator[](size_t i) const
-    { return __data[i]; }
-
-    double &operator[](size_t i)
-    { return __data[i]; }
-
-    double  __data[3];
 };
 
 // @}

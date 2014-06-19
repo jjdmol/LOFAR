@@ -41,6 +41,7 @@ typedef signed char SampleType;
 #endif
 
 #include <cstdlib> 
+#include <cmath>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -48,13 +49,13 @@ typedef signed char SampleType;
 #include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
+#include <CoInterface/fpequals.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/FilterBank.h>
 
 #include "../TestUtil.h"
-#include "../fpequals.h"
 
 using namespace std;
 using namespace LOFAR;
@@ -86,6 +87,7 @@ int test()
   definitions["COMPLEX"] = lexical_cast<string>(COMPLEX);
   definitions["NR_BITS_PER_SAMPLE"] = lexical_cast<string>(NR_BITS_PER_SAMPLE);
   definitions["NR_SUBBANDS"] = lexical_cast<string>(NR_SUBBANDS);
+  definitions["INPUT_IS_STATIONDATA"] = "1";
 
   // Create a default context
   Platform pf;
@@ -190,7 +192,7 @@ int test()
   hKernel.setArg(1, devSampledData);
   hKernel.setArg(2, devFirWeights);
   hKernel.setArg(3, devHistoryData);
-  size_t subbandIdx = 0;
+  unsigned subbandIdx = 0;
   hKernel.setArg(4, subbandIdx);
 
   // Run the kernel
@@ -324,6 +326,7 @@ int test()
   // imag input.
   FilterBank filterBank(true, NR_TAPS, NR_CHANNELS, KAISER);
   filterBank.negateWeights(); // not needed for testing, but as we use it
+  filterBank.scaleWeights(std::sqrt((double)NR_CHANNELS)); // idem
   //filterBank.printWeights();
 
   assert(firWeightsArr.num_elements() == 

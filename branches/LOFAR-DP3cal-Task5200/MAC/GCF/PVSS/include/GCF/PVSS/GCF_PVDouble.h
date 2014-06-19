@@ -45,7 +45,7 @@ class GCFPVDouble : public GCFPValue
   	virtual ~GCFPVDouble () {;}
     
     /** Changes the value of this object */
-    void setValue ( const double newVal) {_value = newVal;};
+    void setValue (const double newVal) {_value = newVal;};
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 

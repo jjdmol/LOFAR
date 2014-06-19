@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-check_version = '1013f'
+check_version = '0214'
 
 import sys
 import os
@@ -8,6 +8,8 @@ import os
 mainPath = r'/opt/stationtest'
 libPath  = os.path.join(mainPath, 'lib')
 sys.path.insert(0, libPath)
+
+logPath  = r'/localhome/stationtest/log'
 
 import time
 import datetime
@@ -48,12 +50,14 @@ def printHelp():
     print "                    default data time = 300 sec for hba and 180 sec for lba"
     print "-ehba[=120]       : do all HBA element tests, optional data time in seconds"
     print "                    default data time = 10 sec"
+    print "-es7              : do element signal check in rcumode 7, and skip rcumode 5 test"
     print "-m                : HBA modem check, automatic selected if other hba check are selected"
     print "-sn               : HBA summator noise check"
     print
     print "-lbl              : do all LBL tests"
     print "-lbh              : do all LBH tests"
     print "-hba              : do all HBA tests"
+    print "-s7               : do S7 test instead of S5, must be places before -hba"
     print
     print "-rv               : RSP version check"
     print "-tv               : TBB version check"
@@ -125,7 +129,8 @@ def addToArgs(key, value):
                 args['SN'] = '-'
                 args['SP5'] = '-'
                 args['N5'] = '-'
-                args['S5'] = '-'
+                if not args.has_key('S7'):
+                    args['S5'] = '-'
             else:    
                 args[key] = '-'
         
@@ -214,7 +219,7 @@ def init_logging():
                   'ERROR'  : logging.ERROR}
 
     try:
-        screen_log_level = args.get('LS', 'INFO')
+        screen_log_level = args.get('LS', 'WARNING')
         file_log_level   = args.get('LF', 'DEBUG')
     except:
         print "Not a legal log level, try again"
@@ -225,9 +230,13 @@ def init_logging():
     # create logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-
+    
+    # check if log dir exist  
+    if not os.access(logPath, os.F_OK):
+        os.mkdir(logPath)
+    
     # create file handler
-    full_filename = os.path.join(mainPath, 'checkHardware.log')
+    full_filename = os.path.join(logPath, 'checkHardware.log')
     #backup_filename = os.path.join(mainPath, 'checkHardware_bk.log')
     #sendCmd('cp', '%s %s' %(full_filename, backup_filename))
     file_handler = logging.FileHandler(full_filename, mode='w')
@@ -325,12 +334,15 @@ def main():
     
     start_time = time.gmtime()
     # Read in RemoteStation.conf
-    ID, nRSP, nTBB, nLBL, nLBH, nHBA = readStationConfig()
+    ID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT = readStationConfig()
 
     # setup intern database with station layout
-    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA)
-
+    db = cDB(StID, nRSP, nTBB, nLBL, nLBH, nHBA, HBA_SPLIT)
     
+    
+    if (stop_time > 0.0):
+        db.setTestEndTime((stop_time-120.0))
+        
                     
     # set manualy marked bad antennas
     log_dir = conf.getStr('log-dir-global')
@@ -510,7 +522,14 @@ def main():
                                                         low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
                                                         high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
                             
+                            # RF test in mode 7 for UK station
+                            if repeat_cnt == 1 and args.has_key('S7'):
+                                hba.checkSignal(mode=7, subband=conf.getInt('hba-test-sb',155),
+                                                        min_signal=conf.getFloat('hba-rf-min-signal', 80.0),
+                                                        low_deviation=conf.getFloat('hba-rf-min-deviation', -24.0),
+                                                        high_deviation=conf.getFloat('hba-rf-max-deviation', 12.0))
         
+                            runtime = (time.time() - runstart)
                             
                             # All element test
                             if args.has_key('EHBA'):
@@ -553,10 +572,10 @@ def main():
                                 
                             # one run done
                             repeat_cnt += 1
-                            runtime = max((time.time() - runstart), 45.0)
+                            
 
                         except:
-                            logger.warn("Program fault, RSP test")
+                            logger.error("Program fault, RSP test (%s)" %(sys.exc_value))
                             #raise
                             break
                             
@@ -578,7 +597,7 @@ def main():
                         db.addTestDone('TM')
                         tbb.checkMemory()
                 except:
-                    logger.warn("Program fault, TBB test")
+                    logger.error("Program fault, TBB test (%s)" %(sys.exc_value))
     db.check_stop_time = time.gmtime()
 
     # do db test and write result files to log directory
@@ -589,7 +608,8 @@ def main():
     else:
         logger.warn("not a valid log directory")
     if not db.rsp_driver_down:
-        swlevel(6)
+        logger.info("Going back to swlevel %d" %(start_level))
+        swlevel(start_level)
     logger.info("Test ready.")
     writeMessage('!!!     The test is ready and the station can be used again!               !!!')
 

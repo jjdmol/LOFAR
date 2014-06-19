@@ -222,8 +222,9 @@ namespace LOFAR {
           const size_t p = baselines->first;
           const size_t q = baselines->second;
           // Only compute if no autocorr and if stations need to be solved.
-          ///if (p != q  &&  (itsSolveStation[p] || itsSolveStation[q])) { ????
-          if (p != q) {
+          if (p != q  &&  ((itsSolveStation[p] || itsSolveStation[q])  &&
+                           (!solveBoth ||
+                            (itsSolveStation[p] && itsSolveStation[q])))) {
             // Create partial derivative index for current baseline.
             size_t nPartial = fillDerivIndex (srcSet.size(), unknownsIndex,
                                               *baselines);
@@ -327,43 +328,47 @@ namespace LOFAR {
                     for (size_t dr=0; dr<nDirection; ++dr) {
                       bool do1 = unknownsIndex[dr][p] >= 0;
                       bool do2 = unknownsIndex[dr][q] >= 0;
-                      // Look-up mixing weight.
-                      const dcomplex mix_weight = *mix;
-                      // Sum weighted model visibilities.
-                      visibility += mix_weight * itsM[dr * 4 + cr];
+                      // Only generate equations if a station has to be solved
+                      // for this direction.
+                      if ((do1 && do2)  ||  (!solveBoth && (do1 || do2))) {
+                        // Look-up mixing weight.
+                        const dcomplex mix_weight = *mix;
+                        // Sum weighted model visibilities.
+                        visibility += mix_weight * itsM[dr * 4 + cr];
 
-                      // Compute weighted partial derivatives.
-                      if (do1) {
-                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
-                        itsdR[off]     = real(der);
-                        itsdI[off]     = imag(der);
-                        itsdR[off + 1] = -imag(der);
-                        itsdI[off + 1] = real(der);
-                        off += 2;
-                      }
-                      if (do2) {
-                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 1]);
-                        itsdR[off]     = real(der);
-                        itsdI[off]     = imag(der);
-                        itsdR[off + 1] = -imag(der);
-                        itsdI[off + 1] = real(der);
-                        off += 2;
-                      }
-                      if (do1) {
-                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
-                        itsdR[off]     = real(der);
-                        itsdI[off]     = imag(der);
-                        itsdR[off + 1] = imag(der);  // conjugate
-                        itsdI[off + 1] = -real(der);
-                        off += 2;
-                      }
-                      if (do2) {
-                        dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 3]);
-                        itsdR[off]     = real(der);
-                        itsdI[off]     = imag(der);
-                        itsdR[off + 1] = imag(der);
-                        itsdI[off + 1] = -real(der);
-                        off += 2;
+                        // Compute weighted partial derivatives.
+                        if (do1) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = -imag(der);
+                          itsdI[off + 1] = real(der);
+                          off += 2;
+                        }
+                        if (do2) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 1]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = -imag(der);
+                          itsdI[off + 1] = real(der);
+                          off += 2;
+                        }
+                        if (do1) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 2]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = imag(der);  // conjugate
+                          itsdI[off + 1] = -real(der);
+                          off += 2;
+                        }
+                        if (do2) {
+                          dcomplex der(mix_weight * itsdM[dr * 16 + cr * 4 + 3]);
+                          itsdR[off]     = real(der);
+                          itsdI[off]     = imag(der);
+                          itsdR[off + 1] = imag(der);
+                          itsdI[off + 1] = -real(der);
+                          off += 2;
+                        }
                       }
                       // Move to next source direction.
                       mix.forward(1);

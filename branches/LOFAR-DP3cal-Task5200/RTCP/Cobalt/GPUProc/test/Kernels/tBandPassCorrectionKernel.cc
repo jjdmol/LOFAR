@@ -51,10 +51,10 @@ int main() {
 
   Parset ps("tBandPassCorrectionKernel.in_parset");
   BandPassCorrectionKernel::Parameters params(ps);
-  params.nrChannels1 = 64;
-  params.nrChannels2 = 64;
+  params.nrDelayCompensationChannels = 64; // unused
+  params.nrHighResolutionChannels = 4096;
   params.nrSamplesPerChannel = 
-          ps.nrSamplesPerSubband() / (params.nrChannels1 * params.nrChannels2);
+    ps.nrSamplesPerSubband() / params.nrHighResolutionChannels;
 
   KernelFactory<BandPassCorrectionKernel> factory(params);
 
@@ -70,7 +70,7 @@ int main() {
 
   PerformanceCounter counter(ctx);
   BlockID blockId;
-  kernel->enqueue(blockId, counter);
+  kernel->enqueue(blockId);
   stream.synchronize();
 
   return 0;

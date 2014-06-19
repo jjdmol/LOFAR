@@ -251,8 +251,6 @@ namespace LOFAR { namespace BBS {
     mutable LOFAR::CEP::SocketConnectionSet itsConn;
     vector<string>        itsPartNames;
     vector<string>        itsParmNames;
-    vector<double>        itsStartFreqs;
-    vector<double>        itsEndFreqs;
     casa::Record          itsDefValues;
     static int            theirNextPort;
     static vector<string> theirFreePorts;

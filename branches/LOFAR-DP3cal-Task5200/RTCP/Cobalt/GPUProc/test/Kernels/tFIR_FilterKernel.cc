@@ -39,12 +39,27 @@ TEST(FIR_FilterKernel)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  KernelFactory<FIR_FilterKernel> factory(ps);
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f
+    );
+
+  KernelFactory<FIR_FilterKernel> factory(params);
 
   gpu::Device device(gpu::Platform().devices()[0]);
   gpu::Context context(device);
@@ -83,7 +98,7 @@ TEST(FIR_FilterKernel)
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
   PerformanceCounter counter(context);
   BlockID blockId;
-  kernel->enqueue(blockId, counter, 0);
+  kernel->enqueue(blockId,  0);
 
   stream.readBuffer(hOutput, dOutput);
   stream.readBuffer(hCoeff, dCoeff);
@@ -110,12 +125,25 @@ TEST(HistoryFlags)
   Parset ps;
   ps.add("Observation.nrBitsPerSample", "8");
   ps.add("Observation.VirtualInstrument.stationList", "[RS000]");
+  ps.add("Observation.antennaSet", "LBA_INNER");
+  ps.add("Observation.Dataslots.RS000LBA.RSPBoardList", "[0]");
+  ps.add("Observation.Dataslots.RS000LBA.DataslotList", "[0]");
+  ps.add("Observation.nrBeams", "1");
+  ps.add("Observation.Beam[0].subbandList", "[0]");
   ps.add("OLAP.CNProc.integrationSteps", "128");
-  ps.add("Observation.channelsPerSubband", "64");
+  ps.add("Cobalt.Correlator.nrChannelsPerSubband", "64");
   ps.add("Observation.DataProducts.Output_Correlated.enabled", "true");
+  ps.add("Observation.DataProducts.Output_Correlated.filenames", "[L12345_SAP000_SB000_uv.MS]");
+  ps.add("Observation.DataProducts.Output_Correlated.locations", "[localhost:.]");
   ps.updateSettings();
 
-  FIR_FilterKernel::Parameters params(ps);
+  FIR_FilterKernel::Parameters params(ps,
+    ps.settings.antennaFields.size(),
+    true,
+    1,
+    ps.settings.correlator.nrChannels,
+    1.0f
+    );
 
   KernelFactory<FIR_FilterKernel> factory(params);
 

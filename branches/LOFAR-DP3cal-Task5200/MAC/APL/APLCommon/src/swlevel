@@ -71,6 +71,10 @@ SyntaxError()
 	exit 0
 }
 
+# Method to run a command with a specified timeout in seconds
+# First argument is timeout, next arguments are the command and its parameters
+
+
 # Find which image to load on a given station; uses file 
 # ${ETCDIR}/RSPImage.conf
 #
@@ -106,9 +110,11 @@ findImage()
 selectImage()
 {
 	let nrRSPs=`grep RSPBOARDS ${ETCDIR}/RemoteStation.conf | cut -d'=' -f2 | sed 's/ //g'`
+        let offset=0x`grep RSPDriver.MAC_ADDR_0 ${ETCDIR}/RSPDriver.conf | cut -d'=' -f2 | cut -d':' -f5`
 	let board=0
         # Assume no errors with board communication
 	boardError=0
+        errorBoards=""
 	# Make sure we have an image number in parameter $image
         if [ -z $image ] && [ $imageForced -eq 0 ]; then  
             findImage `hostname -s`
@@ -117,22 +123,32 @@ selectImage()
 	while [ $board -lt $nrRSPs ]
 	do
 		# get major version of active firmware on RSPboard $board
-		boardHex=`echo $board | awk '{ printf "%02x", $1 }'`
-		rsu=`sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
+                #boardHex=`echo $board | awk '{ printf "%02x", $1 }'` 
+		boardHex=`echo $board | awk -v firstBoard=$offset '{ printf "%02x", firstBoard+$1 }'`
+		# Uncomment next lines only for testing purposes!
+                #if [ "$boardHex" == "03" ]; then 
+		#   boardHex="1F"
+                #fi
+		rsu=`run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3 -m 10:fa:00:00:$boardHex:00 -qV 2>&1 | grep BP | cut -d':' -f2 | sed 's/ //g' | cut -d'.' -f1`
 
 		# If not a single number, something weird  must have happened
 		if [ ${#rsu} -ne 1 ]; then 
-                  echo "RSPboard $board: Error requesting active firmware version (communication error)"
+                  echo "RSPboard $boardHex: Error requesting active firmware version (communication error)"
 		  boardError=1
+		  errorBoards=${errorBoards}${boardHex}","
                 else
-  		  echo "Loading image $image on RSPboard $board ..."
-		  sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+  		  echo "Loading image $image on RSPboard $boardHex ..."
+		  run_timeout.sh 5 sudo ${BINDIR}/../sbin/rsuctl3_reset -m 10:fa:00:00:$boardHex:00 -q -x -p $image 1>/dev/null 2>&1
+                  if [ $? -ne 0 ]; then 
+		      boardError=1
+                      errorBoards=${errorBoards}${boardHex}","
+                  fi
 		fi
 		# Next board
 		let board+=1
 	done
 	if [ $boardError -eq 1 ]; then
-	    echo "One or more boards have a communication problem; try reset the 48V"
+	    echo "Board(s) $errorBoards have a communication problem; try reset the 48V"
 	fi
 }
 
@@ -180,12 +196,23 @@ start_prog()
                     fi		    
   		else
 		    if [ -n "$asroot" ]; then
-		       echo Starting $prog
-		       sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
-		       if [ "$prog" = "RSPDriver" ]; then
+		       	echo Starting $prog
+		       	sudo rm -f $LOGDIR/$prog.log.? 1>/dev/null 2>&1
+		       	if [ "$prog" = "RSPDriver" ]; then
 			   selectImage
-                       fi
-		       sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
+			   if [ $boardError -eq 1 ]; then
+	 			exit
+			   fi
+		       	fi
+                        if [ "$prog" = "TBBDriver" ]; then 
+			   # Check if RSPDriver is already running; if not, do not start either!
+			   /sbin/pidof RSPDriver 1>/dev/null 2>&1
+			   if [ $? -ne 0 ]; then
+				echo "RSPDriver not running, so not starting TBBDriver either"
+				exit
+			   fi
+                        fi
+		       	sudo -b $BINDIR/$prog 1>>$LOGDIR/$prog.stdout.${curdate} 2>&1
 		    else
 			echo Starting $prog
 			rm -f $LOGDIR/$prog.log*.? 1>/dev/null 2>&1
@@ -494,6 +521,9 @@ goto_level()
 			start_prog $program x$asroot x$withmpi
                         ) <&- # cant have programs reading from stdin
                               # as that would mess up 'while read line'
+#			if [ $start -eq 1 ]; then
+#			    break
+#			fi
 	       done
 	done
 }

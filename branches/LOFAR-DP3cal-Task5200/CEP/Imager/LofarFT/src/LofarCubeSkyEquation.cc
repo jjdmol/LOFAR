@@ -262,7 +262,7 @@ void LofarCubeSkyEquation::init(FTMachine& ft){
      iftm_p[0]=ift_;
      ftm_p[0]->setMiscInfo(0);
      iftm_p[0]->setMiscInfo(0);
-     cout<<"nmod="<<nmod<<endl;
+//      cout<<"nmod="<<nmod<<endl;
      //if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
      //  throw(AipsError("No multifield with a-projection allowed"));
      for (Int k=1; k < (nmod); ++k){
@@ -890,6 +890,7 @@ void LofarCubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	//	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
+        // Always use CORRECTED_DATA if it's there!
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
 	//	Timers tVBInValid=Timers::getTime();

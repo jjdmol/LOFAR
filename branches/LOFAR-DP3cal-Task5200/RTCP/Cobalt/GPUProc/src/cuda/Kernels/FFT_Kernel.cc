@@ -34,51 +34,90 @@ namespace LOFAR
   namespace Cobalt
   {
 
+    /*
+     * cuFFT uses a plan for each FFT, tied to a (context, fftSize, nrFFTs)
+     * tuple. The plan is allocated on the GPU, with a size equal to the
+     * size of the input (!).
+     *
+     * Since we need to span a lot of points with small FFTs, we use the
+     * following strategy:
+     *
+     *  1) Repeatedly FFT 1M points (maxNrFFTpoints).
+     *  2) FFT the rest.
+     *
+     * This value maxNrFFTpoints balances between:
+     *   - a small number of points creates a smaller plan (8 bytes/point)
+     *   - a big number of points creates more parallellism
+     *
+     * Note that fftSize == 1 will result in a no-op in cuFFT.
+     */
+    const size_t maxNrFFTpoints = 1024 * 1024;
+
     FFT_Kernel::FFT_Kernel(const gpu::Stream &stream, unsigned fftSize,
                            unsigned nrFFTs, bool forward, 
                            const gpu::DeviceMemory &buffer)
       :
+      itsCounter(stream.getContext()),
       context(stream.getContext()),
-      nrFFTs(nrFFTs),
+      nrMajorFFTs(nrFFTs / (maxNrFFTpoints / fftSize)),
+      nrMinorFFTs(nrFFTs % (maxNrFFTpoints / fftSize)),
       fftSize(fftSize),
       direction(forward ? CUFFT_FORWARD : CUFFT_INVERSE),
-      plan(context, fftSize, nrFFTs),
+      planMajor(context, fftSize, maxNrFFTpoints / fftSize),
+      planMinor(context, fftSize, nrMinorFFTs),
       buffer(buffer),
       itsStream(stream)
     {
+      // fftSize must fit into maxNrFFTpoints an exact number of times
+      ASSERT(maxNrFFTpoints % fftSize == 0);
+
+      // buffer must be big enough for the job
+      // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
+      //ASSERT(buffer.size() >= fftSize * nrFFTs * sizeof(fcomplex));
+
       LOG_DEBUG_STR("FFT_Kernel: " <<
                     "fftSize=" << fftSize << 
                     ", direction=" << (forward ? "forward" : "inverse") <<
                     ", nrFFTs=" << nrFFTs);
     }
 
-    void FFT_Kernel::enqueue(const BlockID &blockId, 
-                             PerformanceCounter &counter) const
+    void FFT_Kernel::executePlan(const cufftHandle &plan, cufftComplex *data) const
     {
-      itsStream.recordEvent(counter.start); 
-      enqueue(blockId);
-      itsStream.recordEvent(counter.stop); 
+      cufftResult error = cufftExecC2C(plan, data, data, direction);
+
+      if (error != CUFFT_SUCCESS)
+        THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
     }
+
 
     void FFT_Kernel::enqueue(const BlockID &/*blockId*/) const
     {
       gpu::ScopedCurrentContext scc(context);
 
-      cufftResult error;
-
       // Tie our plan to the specified stream
-      plan.setStream(itsStream);
+      planMajor.setStream(itsStream);
+      planMinor.setStream(itsStream);
 
-      LOG_DEBUG("Launching cuFFT");
-        
       // Enqueue the FFT execution
-      error = cufftExecC2C(plan.plan,
-                           static_cast<cufftComplex*>(buffer.get()),
-                           static_cast<cufftComplex*>(buffer.get()),
-                           direction);
+      itsStream.recordEvent(itsCounter.start);
+      LOG_DEBUG("Launching cuFFT");
 
-      if (error != CUFFT_SUCCESS)
-        THROW(gpu::CUDAException, "cufftExecC2C: " << gpu::cufftErrorMessage(error));
+      // Running pointer of the GPU data we're about to FFT
+      cufftComplex *data = static_cast<cufftComplex*>(buffer.get());
+
+      // Execute the major FFTs
+      for (size_t major = 0; major < nrMajorFFTs; ++major) {
+        executePlan(planMajor.plan, data);
+        data += maxNrFFTpoints;
+      }
+
+      // Execute the minor FFT
+      if (nrMinorFFTs > 0) {
+        executePlan(planMinor.plan, data);
+      }
+
+      // Wrap up
+      itsStream.recordEvent(itsCounter.stop);
 
       if (itsStream.isSynchronous()) {
         itsStream.synchronize();

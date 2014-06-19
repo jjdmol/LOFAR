@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <Stream/Stream.h>
+#include <Common/LofarLogger.h>
 
 
 namespace LOFAR {
@@ -37,6 +38,8 @@ void Stream::read(void *ptr, size_t size)
   while (size > 0) {
     size_t bytes = tryRead(ptr, size);
 
+    ASSERT(bytes <= size);
+
     size -= bytes;
     ptr   = static_cast<char *>(ptr) + bytes;
   }
@@ -47,6 +50,8 @@ void Stream::write(const void *ptr, size_t size)
 {
   while (size > 0) {
     size_t bytes = tryWrite(ptr, size);
+
+    ASSERT(bytes <= size);
 
     size -= bytes;
     ptr   = static_cast<const char *>(ptr) + bytes;

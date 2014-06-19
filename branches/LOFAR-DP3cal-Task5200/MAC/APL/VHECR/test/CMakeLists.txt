@@ -1,5 +1,5 @@
 # $Id$
 
-lofar_add_sbin_program(VHECRtest 
-  VHECRtest.cc)
+#lofar_add_sbin_program(VHECRtest 
+#  VHECRtest.cc)
 

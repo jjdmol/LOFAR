@@ -9,7 +9,7 @@ adding to the changelog will naturally do this.
 """
 
 # Version number
-__version__ = '1.8.0'
+__version__ = '1.8.2'
 
 # Store svn Revision number. For this to work, one also needs to do:
 #
@@ -27,8 +27,34 @@ def changelog():
     PyBDSM Changelog.
     -----------------------------------------------------------------------
 
-    2013/11/04 - Added error message when rms is zero in some part of the
-        image.
+    2014/01/14 - Version 1.8.2
+
+    2014/05/15 - Fix to bug in CASA masks generated with export_image() that
+        caused cleaning to fail in CASA 4.2 and above.
+
+    2014/02/05 - Fix to bug that resulted in output file names being
+        converted to lower case inappropriately.
+
+    2014/01/14 - Version 1.8.1
+
+    2014/01/13 - Added option (bbs_patches = 'mask') to allow patches in
+        an output BBS sky model to be defined using a mask image.
+
+    2014/01/09 - Fix to bug that caused the incl_empty option to be
+        ignored when format='fits' in the write_catalog task.
+
+    2013/12/05 - Enabled output of images in CASA format in the export_image
+    	task (img_format = 'casa'). Added an option to export_image task to
+    	export an island-mask image, with ones where there is emission and
+    	zeros elsewhere (image_type = 'island_mask'). Features in the island
+    	mask may be optionally dilated by specifying the number of dilation
+    	iterations with the mask_dilation parameter. Added an option to
+    	write a CASA region file to the write_catalog task (format =
+    	'casabox'). Added an option to write a CSV catalog to the
+    	write_catalog task (format = 'csv').
+
+    2013/11/04 - Added error message when the rms is zero in some part of the
+        rms map.
 
     2013/10/16 - Version 1.8.0
 

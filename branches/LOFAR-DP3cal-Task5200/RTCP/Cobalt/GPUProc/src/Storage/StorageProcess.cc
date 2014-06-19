@@ -31,8 +31,6 @@
 #include <Stream/PortBroker.h>
 #include <CoInterface/Stream.h>
 
-#include "SSH.h"
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -42,14 +40,12 @@ namespace LOFAR
     using boost::format;
 
 
-    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname, FinalMetaData &finalMetaData, Trigger &finalMetaDataAvailable )
+    StorageProcess::StorageProcess( const Parset &parset, const string &logPrefix, int rank, const string &hostname )
       :
       itsParset(parset),
       itsLogPrefix(str(boost::format("%s [StorageWriter rank %2d host %s] ") % logPrefix % rank % hostname)),
       itsRank(rank),
-      itsHostname(hostname),
-      itsFinalMetaData(finalMetaData),
-      itsFinalMetaDataAvailable(finalMetaDataAvailable)
+      itsHostname(hostname)
     {
     }
 
@@ -92,6 +88,13 @@ namespace LOFAR
     }
 
 
+    void StorageProcess::setFinalMetaData( const FinalMetaData &finalMetaData )
+    {
+      itsFinalMetaData = finalMetaData;
+      itsFinalMetaDataAvailable.up();
+    }
+
+
     ParameterSet StorageProcess::feedbackLTA() const
     {
       // Prevent read/write conflicts
@@ -103,52 +106,6 @@ namespace LOFAR
 
     void StorageProcess::controlThread()
     {
-      // Start Storage
-      std::string userName = itsParset.getString("Cobalt.OutputProc.userName", "");
-      std::string pubKey = itsParset.getString("Cobalt.OutputProc.sshPublicKey", "");
-      std::string privKey = itsParset.getString("Cobalt.OutputProc.sshPrivateKey", "");
-      std::string executable = itsParset.getString("Cobalt.OutputProc.executable", "outputProc");
-
-      if (userName == "") {
-        // No username given -- use $USER
-        const char *USER = getenv("USER");
-
-        ASSERTSTR(USER, "$USER not set.");
-
-        userName = USER;
-      }
-
-      if (pubKey == "" && privKey == "") {
-        // No SSH keys given -- try to discover them
-
-        char discover_pubkey[1024];
-        char discover_privkey[1024];
-
-        if (discover_ssh_keys(discover_pubkey, sizeof discover_pubkey, discover_privkey, sizeof discover_privkey)) {
-          pubKey = discover_pubkey;
-          privKey = discover_privkey;
-        }
-      }
-
-      std::string commandLine = str(boost::format("%s%s %u %d %u")
-#if defined USE_VALGRIND
-                                    % "valgrind --leak-check=full "
-#else
-                                    % ""
-#endif
-                                    % executable
-                                    % itsParset.observationID()
-                                    % itsRank
-#if defined WORDS_BIGENDIAN
-                                    % 1
-#else
-                                    % 0
-#endif
-                                    );
-
-      SSHconnection sshconn(itsLogPrefix, itsHostname, commandLine, userName, pubKey, privKey, 0);
-      sshconn.start();
-
       // Connect control stream
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] connecting...");
       std::string resource = getStorageControlDescription(itsParset.observationID(), itsRank);
@@ -160,7 +117,7 @@ namespace LOFAR
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sent parset");
 
       // Send final meta data once it is available
-      itsFinalMetaDataAvailable.wait();
+      itsFinalMetaDataAvailable.down();
 
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] sending final meta data");
       itsFinalMetaData.write(stream);
@@ -168,12 +125,10 @@ namespace LOFAR
 
       // Wait for LTA feedback
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] reading LTA feedback");
-      Parset feedbackLTA(&stream);
+      ParameterSet feedbackLTA;
+      readParameterSet(stream, feedbackLTA);
       itsFeedbackLTA.adoptCollection(feedbackLTA);
       LOG_DEBUG_STR(itsLogPrefix << "[ControlThread] read LTA feedback");
-
-      // Wait for Storage to finish properly
-      sshconn.wait();
     }
 
   }

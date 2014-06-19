@@ -29,6 +29,7 @@
 #include <lofar_config.h>
 #include <LofarFT/LofarImager.h>
 #include <Common/InputParSet.h>
+#include <Common/Exception.h>
 
 #include <images/Images/PagedImage.h>
 #include <images/Images/HDF5Image.h>
@@ -47,6 +48,9 @@
 #include <casa/sstream.h>
 
 using namespace casa;
+
+// Use a terminate handler that can produce a backtrace.
+LOFAR::Exception::TerminateHandler t(LOFAR::Exception::terminate);
 
 IPosition handlePos (const IPosition& pos, const IPosition& def)
 {
@@ -296,7 +300,7 @@ int main (Int argc, char** argv)
 		   "Name of psf image file (default is <imagename>.psf",
 		   "string");
     inputs.create ("data", "DATA",
-		   "Name of DATA column to use",
+		   "Name of DATA column to use (if operation is not \"image\", CORRECTED_DATA is always used!)",
 		   "string");
     inputs.create ("mode", "mfs",
 		   "Imaging mode (mfs, channel, or velocity)",
@@ -387,7 +391,7 @@ int main (Int argc, char** argv)
 		   "string");
     inputs.create ("operation", "image",
                    ///		   "Operation (empty,image,clark,hogbom,csclean,multiscale,entropy)",
-		   "Operation (empty,image,csclean,predict,psf,mfclark)",
+		   "Operation (empty,image,csclean,predict,psf,mfclark,multiscale)",
 		   "string");
     inputs.create ("niter", "1000",
 		   "Number of clean iterations",
@@ -675,16 +679,29 @@ int main (Int argc, char** argv)
     if (psfName.empty()) {
       psfName = imgName + ".psf";
     }
-    if (weight == "robust") {
+    
+    if (weight == "robust") 
+    {
       weight = "briggs";
-    } else if (weight == "robustabs") {
+    } 
+    else if (weight == "robustabs") 
+    {
       weight = "briggsabs";
     }
-    string rmode = "norm";
-    if (weight == "briggsabs") {
+    
+    // rmode for weighting (only valid for weight "uniform" "superuniform" "briggs")
+    // anything but "norm" or "abs" means (super)uniform weighting
+    String rmode; 
+    if (weight == "briggs") 
+    {
+      rmode  = "norm";
+    }
+    else if (weight == "briggsabs") 
+    {
       weight = "briggs";
       rmode  = "abs";
     }
+    
     bool doShift = False;
     MDirection phaseCenter;
     if (! phasectr.empty()) {
@@ -692,8 +709,22 @@ int main (Int argc, char** argv)
       phaseCenter = readDirection (phasectr);
     }
     operation.downcase();
-    AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="csclean"|| operation=="msmfs"||operation=="predict"||operation=="psf"||operation=="mfclark");
-    ///AlwaysAssertExit (operation=="empty" || operation=="image" || operation=="hogbom" || operation=="clark" || operation=="csclean" || operation=="multiscale" || operation =="entropy");
+    ASSERTSTR (operation=="empty" || 
+                  operation=="image" || 
+                  operation=="csclean"|| 
+                  operation=="msmfs"||
+                  operation=="predict"||
+                  operation=="psf"||
+                  operation=="mfclark"||
+                  operation=="multiscale", 
+                  "Unknown operation");
+
+    if (operation!="image") {
+      // Skip assert if imageType=="observed" because it is the default
+      ASSERTSTR (imageType=="corrected" || imageType=="observed",
+                 "When operation is not \"image\", CORRECTED_DATA is used");
+    }
+
     IPosition maskBlc, maskTrc;
     Quantity threshold;
     Quantity sigma;
@@ -767,9 +798,9 @@ int main (Int argc, char** argv)
 
     ROArrayColumn<Double> chfreq(window.chanFreq());
 
-    cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
+    if (verbose) cout<<"Number of channels: "<<chfreq(0).shape()[0]<<endl;
     if(ChanBlockSize!=0){
-      AlwaysAssertExit (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]));
+      AlwaysAssert (((chfreq(0).shape()[0]%ChanBlockSize)==0)&(ChanBlockSize<chfreq(0).shape()[0]), AipsError);
     }
 
     Vector<Int> chansel(1);

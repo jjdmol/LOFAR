@@ -1,4 +1,5 @@
 //#  GetStatsCmd.cc: implementation of the GetStatsCmd class
+//#  GetStatsCmd.cc: implementation of the GetStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)

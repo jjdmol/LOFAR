@@ -28,14 +28,11 @@
 //
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
 // navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
-// navFunct_BGPMidplane2BGPRack               : Returns the BGPRackNr for a given BGPMidplane
-// navFunct_CEPName2DPName                    : Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
 // navFunct_CEPName2inputBuf                  : returns ionr from CEPname
 // navFunct_clearGlobalLists                  : clear all temporarily global hardware,observation and processes lists..
 // navFunct_dpGetFullPathAsTypes              : Returns full dp path (maincu && station components) as dynstring)
 // navFunct_dpGetLastElement                  : Returns last element from DP 
 // navFunct_dpHasPanels                       : checkes if a given DP has loadable panels.
-// navFunct_DPName2CEPName                    : Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
 // navFunct_dpReachable                       : looks if the databpoint on a dist system is also reachable
 // navFunct_dpStripLastElement                : Returns DP string without last element 
 // navFunct_dynToString                       : Returns a dynArray as a , seperated string
@@ -52,6 +49,7 @@
 // navFunct_getArmFromStation                 : Returns the armposition code from a stationName
 // navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
+// navFunct_getGPUProcsForObservation         : Returns all the GPUProcs for a given observation
 // navFunct_getHBABitmap                      : get the HBABitmap from a given observation on a given station
 // navFunct_getInputBuffersForObservations    : returns all the InputBuffers that are in use for an observation
 // navFunct_getInputBuffersForStation         : returns all the InputBuffers that are connected to a station
@@ -63,13 +61,22 @@
 // navFunct_getReceiverBitmap                 : returns the stations receiverBitMap for a given observation
 // navFunct_getRingFromStation                : Returns the ringName from a stationName
 // navFunct_getStationFromDP                  : get the stationname out of a DP name (if any)
+// navFunct_getStationInputForObservation     : Returns all stationInputs used for this observation
 // navFunct_getWritersForObservation          : returns all the writers that are in use for an observation
 // navFunct_giveFadedColor                    : returns faded color string between green and red depending on min,max and currentValue
 // navFunct_hardware2Obs                      : Looks if a piece of hardware maps to an observation
-// navFunct_inputBuf2CEPName                  : Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
-// navFunct_IONode2BGPMidplane                : Returns the BGPMidplaneNr for a given IONode
 // navFunct_IONode2DPName                     : returns the DP name based on the ionode number.
-// navFunct_isBGPSwitch                       : returns the BGPSwitch setting (True = BGPRack1, False=BGPRack0)
+// navFunct_isCoreStation                     : returns TRUE if the station is part of the Core stations
+// navFunct_isHBA                             : returns true if the antenna is an International HBA antenna
+// navFunct_isHBAZero                         : returns true if the antenna is a Core HBA Zero antenna
+// navFunct_isHBAOne                          : returns true if the antenna is a Core HBA One antenna
+// navFunct_isHBAInner                        : returns true if the antenna is a Remote HBA Inner antenna
+// navFunct_isHBAOuter                        : returns true if the antenna is a Remote HBA Outer antenna
+// navFunct_isInternationalStation            : returns TRUE if the station is part of the International stations
+// navFunct_isLBA                             : returns true if the antenna is an International LBA antenna
+// navFunct_isLBAInner                        : returns true if the antenna is a Core or Remote LBA Inner antenna
+// navFunct_isLBAOuter                        : returns true if the antenna is a Core or Remote LBA Outer antenna
+// navFunct_isRemoteStation                   : returns TRUE if the station is part of the Remote stations
 // navFunct_isObservation                     : returns  true is a given observationnumber is an observation or false when it is a pipeline
 // navFunct_listToDynString                   : puts [a,b,d] lists into dynstrings
 // navFunct_locusNode2OSRack                  : Returns the OSRackNr for a given LocusNode
@@ -101,6 +108,7 @@
 global dyn_string oldActiveObservations;                        
 global dyn_string oldPlannedObservations;                        
 global dyn_string oldFinishedObservations;  
+dyn_int HBAInnerCircle = makeDynInt(5,6,10,11,12,13,17,18,19,20,21,22,25,26,27,28,29,30,34,35,36,37,41,42);  // Telescopenrs in de Inner HBA (Remote only)
                      
 
 // ****************************************
@@ -537,39 +545,6 @@ int navFunct_receiver2Subrack(int receiverNr) {
 }
 
 // ****************************************
-// Name : navFunct_IONode2Midplane
-// ****************************************
-// Description:
-//    Returns the midplaneNr to which a IONode is connected 
-//
-// Returns:
-//    The midplanenr
-// ***************************************
-
-int navFunct_IONode2Midplane(int nodeNr) {
-  return floor(nodeNr/32);
-}
-
-// ****************************************
-// Name : navFunct_IONode2BGPRack
-// ****************************************
-// Description:
-//    Returns the rackNr to which a IONode is connected 
-//
-//  For now we only show the active rack, so all ionodes 
-//  automaticly belong to the active rack
-//
-// Returns:
-//    The bgpracknr
-// ***************************************
-
-int navFunct_IONode2BGPRack(int nodeNr) {
-  int r = 0;
-  if (navFunct_isBGPSwitch()) r = 1;
-  return r;
-}
-
-// ****************************************
 // Name : navFunct_receiver2RSP
 // ****************************************
 // Description:
@@ -664,24 +639,6 @@ int navFunct_TBB2Subrack(int tbbNr) {
 int navFunct_subrack2Cabinet(int subrackNr) {
   return floor(subrackNr/2);
 }
-
-
-
-// ****************************************
-// Name : navFunct_BGPMidplane2BGPRack
-// ****************************************
-// Description:
-//    Returns the rackNr to which a midplane is connected 
-//
-// Returns:
-//    The racknr
-// ***************************************
-
-int navFunct_BGPMidplane2BGPRack(int midplaneNr) {
-  return floor(midplaneNr/2);
-}
-
-
 
 // ****************************************
 // Name : navFunct_dpStripLastElement
@@ -1256,8 +1213,6 @@ void navFunct_fillObservationsList() {
             }
           }
         }
-      } else {
-        LOG_ERROR("navFunct.ctl:navFunct_fillObservationsLists| ERROR: illegal DP in processList: "+process);
       }
     }
   // otherwise hardware  
@@ -1415,9 +1370,58 @@ void navFunct_fillProcessesList() {
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| Entered");     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_stationsList: "+g_stationList);     
   LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_processesList: "+g_processesList);     
-  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);     
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcesseLists| g_observationsList: "+g_observationsList);
+
+  dynClear(strHighlight);
+  dynClear(highlight);
   
-  // to do
+
+  if (dynlen(g_stationList) > 0) {                      // else hardware based processes
+    dyn_string stationList;
+    dyn_string aTemp;
+
+    // if the stationlist involves rings, we need to expand those rings to real stations
+    for (int k=1;k<= dynlen(g_stationList); k++) {
+      if (g_stationList[k] == "Europe") {
+        aTemp=europeStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Remote") {
+        aTemp=remoteStations;
+        dynAppend(stationList,aTemp);
+      } else if (g_stationList[k] == "Core") {
+        aTemp=coreStations;
+        dynAppend(stationList,aTemp);
+      } else {
+        dynAppend(stationList,g_stationList[k]);
+      }
+    }
+    
+    // For each type of "station" (MCU,CCU and stations) we need to gather the involved running processes, 
+    // Observation software if any active observations that involve this "stations" and the permanent software
+    //
+
+    for (int k=1;k<= dynlen(stationList); k++) {
+      int z;
+      dyn_dyn_anytype tab;
+      //PermSW + PermSW_Daemons
+      if (navFunct_dpReachable(stationList[k]+":")) {
+        dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.process.error' REMOTE '"+stationList[k]+"'", tab);
+        LOG_TRACE("navFunct.ctl:navFunct_fillProcessesList|Found: "+ tab);
+  
+        dyn_string aDS=navFunct_getDynString(tab, 2,1);
+        dynSortAsc(aDS);
+  
+        for(z=1;z<=dynlen(aDS);z++){
+    
+          // strip .status.state from CEP_result
+          string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+          dynAppend(g_processesList,aS);
+        }
+      }
+    }
+  }
+  // now prepare the ProcessesTree    
+  navFunct_fillProcessesTree(); 
 }
 
 // ****************************************
@@ -1462,62 +1466,21 @@ void navFunct_fillHardwareTree() {
     if (g_stationList[1]+":" == CEPDBName) {
       string baseConnect=connectTo;
       
-      // add BGPRacks
-      if (dynlen(g_BGPRackList) > 0) {
-        for (int i = 1; i <= dynlen(g_BGPRackList); i++) {
-          dp = station+":LOFAR_PIC_BGP";
-          dynAppend(result,baseConnect+",BGP"+","+dp);
-        }
-        lvl="BGPRack";
-      }
-      
-      // add midplanes
-      if (dynlen(g_BGPMidplaneList) > 0) {
-        for (int i = 1; i <= dynlen(g_BGPMidplaneList); i++) {
-          int bgprackNr=navFunct_BGPMidplane2BGPRack(g_BGPMidplaneList[i]);
-          if (lvl == "BGPRack") {
-            connectTo = station+":LOFAR_PIC_BGP";
-          }
-          dp = station+":LOFAR_PIC_BGP_Midplane"+g_BGPMidplaneList[i];
-          dynAppend(result,connectTo+",Midplane"+g_BGPMidplaneList[i]+","+dp);
-        }
-        lvl="BGPMidplane";
-      }
-
-      //add Ionodes
-      if (dynlen(g_IONodeList) > 0) {
-        for (int i = 1; i <= dynlen(g_IONodeList); i++) {
-          int BGPRackNr=navFunct_IONode2BGPRack(g_IONodeList[i]);
-          int midplaneNr=navFunct_IONode2Midplane(g_IONodeList[i]);
-          if (lvl == "BGPRack") {
-            connectTo = station+":LOFAR_PIC_BGP";
-          } else if (lvl == "BGPMidplane") {
-            connectTo = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr;
-          }
-          dp = station+":LOFAR_PIC_BGP_Midplane"+midplaneNr+"_IONode"+g_IONodeList[i];
-          dynAppend(result,connectTo+",IONode"+g_IONodeList[i]+","+dp);
-        }
-      }
-
-      //add CobaltRacks
+      // add CobaltRacks
       if (dynlen(g_cobaltRackList) > 0) {
         for (int i = 1; i <= dynlen(g_cobaltRackList); i++) {
           dp = station+":LOFAR_PIC_Cobalt";
           dynAppend(result,baseConnect+",Cobalt"+","+dp);
         }
-        lvl="CobaltRack";
       }
-      
+
       //add CobaltNodes
       if (dynlen(g_cobaltNodeList) > 0) {
         for (int i = 1; i <= dynlen(g_cobaltNodeList); i++) {
-          if (lvl == "CobaltRack") {
-            connectTo = station+":LOFAR_PIC_Cobalt";
-          }
+          connectTo = station+":LOFAR_PIC_Cobalt";
           dp = station+":LOFAR_PIC_Cobalt_CBT"+navFunct_formatInt(g_cobaltNodeList[i],999);
           dynAppend(result,connectTo+",CBT"+navFunct_formatInt(g_cobaltNodeList[i],999)+","+dp);
         }
-        lvl="CobaltNode";
       }
 
       // add OSRacks
@@ -1654,7 +1617,47 @@ void navFunct_fillHardwareTree() {
 //
 // ****************************************
 void navFunct_fillProcessesTree() {
-  //to do
+
+  if (dynlen(g_processesList) <=0) return;
+  
+  dyn_string result;
+  string lvl="";
+  string station ="";
+  string dp="";
+  
+  dynSortAsc(g_processesList);
+
+  for (int i = 1; i <= dynlen(g_processesList); i++) {
+    // Analyze the datapointpath and see if all elements are available to be able to connect to them
+    dp = g_processesList[i];
+    string db = navFunct_bareDBName(dpSubStr(dp,DPSUB_SYS));
+    dp = dpSubStr(dp,DPSUB_DP);
+    // find out if on PermSW or ObsSW level 
+    if (strpos(dp,"PermSW_") >= 0) {
+      lvl = "PermSW";
+      dp =substr(dp,13);
+    } else {
+      lvl = "ObsSW";
+      dp =substr(dp,12);
+    }
+    dyn_string pathList = strsplit(dp,"_");
+    // now we have the db name and the path in seperateparts
+    string connectTo = db+":LOFAR_"+lvl;
+    if (!dynContains(result,","+db+","+db+":LOFAR_"+lvl)) { 
+      dynAppend(result,","+db+","+db+":LOFAR_"+lvl);
+    }
+    string fullProcessPath=connectTo;
+    for (int j=1; j <= dynlen(pathList); j++) {
+      fullProcessPath+="_"+pathList[j];
+      if (!dynContains(result,connectTo+","+pathList[j]+","+fullProcessPath)) {
+       dynAppend(result,connectTo+","+pathList[j]+","+fullProcessPath);
+      }
+      connectTo=fullProcessPath;      
+    }
+  }
+  
+  LOG_DEBUG("navFunct.ctl:navFunct_fillProcessesTree|result: "+ result);  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);  
 }
 
 // ****************************************
@@ -1712,9 +1715,6 @@ void navFunct_clearGlobalLists() {
   dynClear(g_RCUList);
   dynClear(g_HBAList);
   dynClear(g_LBAList);
-  dynClear(g_BGPRackList);
-  dynClear(g_BGPMidplaneList);
-  dynClear(g_IONodeList);
   dynClear(g_OSRackList);
   dynClear(g_locusNodeList);
   dynClear(g_cobaltRackList);
@@ -1882,197 +1882,7 @@ void navFunct_waitObjectReady(int timer,string name) {
   return;
 } 
 
-// ****************************************
-// Name: navFunct_CEPName2DPName
-// ****************************************
-// Translates Rxx-Mx-Nxx-Jxx names to _BGP_Midplane_IONode names
-//
-// returns the DPName for the CEPName representation
-// ****************************************
-string navFunct_CEPName2DPName(string CEPName) {
-  string name = "";
-  bool foundRack     = false;
-  bool foundMidplane = false;
-  bool foundNodecard = false;
-  bool foundIONode   = false;
-  int rack     = -1;
-  int midplane = -1;
-  int nodecard = -1;
-  int ionode   = -1;
-  
-  if (CEPName == "") return name;
 
-  dyn_string names = strsplit(CEPName,"-");
-  
-  for (int i=1; i<= dynlen(names); i++) {
-
-    if (strpos(names[i],"R") > -1) {
-      foundRack=true;
-      rack = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"M") > -1) {
-      foundMidplane=true;
-      midplane = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"N") > -1) {
-      foundNodecard=true;
-      nodecard = substr(names[i],1,strlen(names[i]));
-    } else if (strpos(names[i],"J") > -1) {
-      foundIONode=true;
-      ionode = substr(names[i],1,strlen(names[i]));
-    } else {
-      return name;
-    }
-  }
-  
-  int midnr=0;
-  int nodenr=0;
-  int ionr=0;
-  
-  
-  if (foundRack) {
-    name += "BGP";
-  }
-  if (foundRack && foundMidplane) {
-    name += "_Midplane" + midplane;
-    midnr=midplane;
-  }
-  if (foundRack && foundMidplane && foundNodecard && foundIONode) {
-    nodenr = nodecard + (16*midnr);
-    ionr = ionode + (2*nodenr);
-    if (ionr < 10) { 
-      name += "_IONode0" + ionr;
-    } else if (ionr >= 10 && ionr < 64) {
-    name += "_IONode" + ionr;
-  }
-  }
-
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_DPName2CEPName
-// ****************************************
-// Translates _BGP_Midplane_IONode names to Rxx-Mx-Nxx-Jxx names
-//
-// returns the CEPName from the DPName representation
-// ****************************************
-string navFunct_DPName2CEPName(string DPName) {
-  bool foundRack     = false;
-  bool foundMidplane = false;
-  bool foundIONode   = false;
-  int rack     = -1;
-  int midplane = -1;
-  int ionode   = -1;
-  string name = "";
-  
-  if (DPName == "") return name;
-
-  // strip all b4 BGP if part of the name
-  if (strpos(DPName,"BGP") >= 0) {
-    string dp = substr(DPName,strpos(DPName,"BGP"));
-    DPName = dp;
-  }
-    
-  dyn_string names = strsplit(DPName,"_");
-      
-  for (int i=1; i<= dynlen(names); i++) {
-    if (strpos(names[i],"BGP") > -1) {
-      foundRack=true;
-      rack=0;
-      if (navFunct_isBGPSwitch()) rack=1;
-    } else if (strpos(names[i],"Midplane") > -1) {
-      foundMidplane=true;
-      midplane = substr(names[i],8,strlen(names[i]));
-    } else if (strpos(names[i],"IONode") > -1) {
-      foundIONode=true;
-      ionode = substr(names[i],6,strlen(names[i]));
-    } else {
-      LOG_ERROR("navFunct.ctl:navFunct_DPName2CEPName|Non DPName part in string: "+ names[i]);
-      return name;
-    }
-  }
-  
-  int racknr=0;
-  int midnr=0;
-  int nodenr=0;
-  int ionr=0;
-  
-  if (foundRack){
-    name += "R0" + rack;
-  }
-  
-  if (foundMidplane) {
-    if (foundRack) name+="-";
-    midnr = midplane;
-    name += "M" + midnr;
-  }
-  
-  if (foundIONode) {
-    if (foundMidplane) name+="-";
-    midnr = floor(ionode/32);
-    nodenr = floor(ionode/2)-(midnr*16);
-    float nr = fmod(ionode,2);
-    ionr=nr;
-    if (nodenr < 10) {
-      name += "N0" + nodenr + "-J0" + ionr;
-    } else {
-      name += "N" + nodenr + "-J0" + ionr;
-    }
-  }
-
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_inputBuf2CEPName
-// ****************************************
-// Translates inputBufferNr 2 the Rxx-Mx-Nxx-Jxx name
-//
-// returns the CEPName 
-// ****************************************
-string navFunct_inputBuf2CEPName(int buf) {
-  int racknr = 0;
-  if (navFunct_isBGPSwitch()) racknr=1;
-  int midnr = floor(buf/32);
-  buf=buf-midnr*32;
-  int nodenr = floor(buf/2);
-  buf=buf-nodenr*2;
-  int ionr = buf;
-  
-  string name = "R0"+racknr+"-M"+midnr;
-  if (nodenr < 10) {
-    name += "-N0" + nodenr + "-J0" + ionr;
-  } else {
-    name += "-N" + nodenr + "-J0" + ionr;
-  }
-  return name;
-}
-
-// ****************************************
-// Name: navFunct_CEPName2InputBuf
-// ****************************************
-// Translates Rxx-Mx-Nxx-Jxx name 2 inputBufferNr 
-//
-// returns the IONode  
-// ****************************************
-int navFunct_CEPName2inputBuf(string name) {
-  
-  dyn_string spl_name = strsplit(name,"-");
-  
-//  DebugN("name :", name);
-//  DebugN("spl_name :", spl_name);
-
-  if (dynlen(spl_name) < 4) return -1;
-  int nr=0;
-  int r = (int) substr(spl_name[1],3,1);
-  int m = (int) substr(spl_name[2],2,1);
-  int n = (int) substr(spl_name[3],3,1);
-  int j = (int) substr(spl_name[4],3,1);
-  
-  nr = (r*64)+(m*32)+(n*2)+j;
-  if (nr > 63) nr-=64;
-  
-  return nr;
-}
 
 string navFunct_ObsToTemp(string dp){
   int pos=strpos(dp,"Observation");
@@ -2150,36 +1960,6 @@ bool navFunct_isOnline(int syst) {
     LOG_ERROR("navFunct.ctl:navFunct_isOnline|System not found in g_connections "+ syst);
     return false;
   }
-}
-  
-// Searchs all ionodes.usedStation names for  match with the given name
-string navFunct_stationNameToIONode(string name) {
- 
-  dyn_dyn_anytype tab;
-  dpQuery("SELECT '_original.._value' FROM 'LOFAR_PIC_BGP_Midplane*_IONode*.usedStation' REMOTE '"+CEPDBName+"' WHERE _DPT =  \"IONode\"",tab);
-  
-  for(int z=2;z<=dynlen(tab);z++) {
-    if (tab[z][2] == name) return dpSubStr(tab[z][1],DPSUB_DP);
-  }
-  return "not found";
-}
-
-// returns if the 2nd rack is used (true) or not (false)
-bool navFunct_isBGPSwitch() {
-  // get BGPSwitch to see if rack 0 or rack 1 in use
-  bool BGPSwitch=false;
-  dpGet(CEPDBName+"LOFAR_PIC_BGP.BGPSwitch",BGPSwitch);
-  return BGPSwitch;
-}
-
-//returns the name of the DataPoint for a given ionr
-string navFunct_IONode2DPName(int ionode) {
-  string ext="";
-  if (ionode < 10) ext = "0";
-  string dp = CEPDBName+"LOFAR_PIC_BGP_Midplane"+navFunct_IONode2Midplane(ionode)+"_IONode"+ext+ionode;
-
-  return dp;  
-  
 }
 
 // ****************************************
@@ -2330,6 +2110,33 @@ bool navFunct_isObservation(string obsName) {
 
 
 // ***************************
+// navFunct_getStationInputForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all StationInput used by this observation
+// ***************************
+// 
+dyn_string navFunct_getStationInputForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string stationInput;
+  dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return stationInput;
+
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_CobaltStationInput*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp = dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    dynAppend(stationInput,dp);
+  }
+  dynSort(stationInput);
+  return stationInput;
+}
+
+// ***************************
 // navFunct_getInputBuffersForObservation
 // ***************************
 // obsName : the observation in question
@@ -2344,6 +2151,8 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
   }
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
+
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   dpQuery(query,tab);
   for(int z=2;z<=dynlen(tab);z++) {
@@ -2365,6 +2174,8 @@ dyn_string navFunct_getInputBuffersForObservation(string obsName) {
 dyn_string navFunct_getInputBuffersForStation(string station) {
   dyn_string inputBuffers;
   dyn_dyn_anytype tab;
+  
+  if (!navFunct_dpReachable(CEPDBName)) return inputBuffers;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_InputBuffer*.stationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+station+"\"";
   dpQuery(query,tab);
   for(int z=2;z<=dynlen(tab);z++) {
@@ -2390,6 +2201,7 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   }
   dyn_string adders;
   dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return adders;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_Adder*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   //DebugN("query: "+query);
   dpQuery(query,tab);
@@ -2401,6 +2213,33 @@ dyn_string navFunct_getAddersForObservation(string obsName) {
   }
   dynSort(adders);
   return adders;
+}
+
+// ***************************
+// navFunct_getGPUProcsForObservation
+// ***************************
+// obsName : the observation in question
+//
+// Returns a dyn_string containing all GPUProcs used by this observation
+// ***************************
+// 
+dyn_string navFunct_getGPUProcsForObservation(string obsName) {
+  //  we only need the number from the observation
+  if (strpos(obsName,"Observation") >= 0) {
+    strreplace(obsName,"Observation","");
+  }
+  dyn_string gpuprocs;
+  dyn_dyn_anytype tab;
+  if (!navFunct_dpReachable(CEPDBName)) return gpuprocs;
+  string query="SELECT '_online.._value' FROM 'LOFAR_*_CobaltGPUProc*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
+  dpQuery(query,tab);
+  for(int z=2;z<=dynlen(tab);z++) {
+    string dp=dpSubStr(tab[z][1],DPSUB_SYS_DP);
+    // avoid doubles
+    if (!dynContains(gpuprocs,dp) ) dynAppend(gpuprocs,dp);
+  }
+  dynSort(gpuprocs);
+  return gpuprocs;
 }
 
 // ***************************
@@ -2443,6 +2282,8 @@ dyn_string navFunct_getWritersForObservation(string obsName) {
   }
   dyn_string writers;
   dyn_dyn_anytype tab;
+
+  if (!navFunct_dpReachable(CEPDBName)) return writers;
   string query="SELECT '_online.._value' FROM 'LOFAR_*_Writer*.observationName' REMOTE '"+CEPDBName+"' WHERE '_online.._value' == \""+obsName+"\"";
   
   dpQuery(query,tab);
@@ -2468,6 +2309,179 @@ bool navFunct_stationInObservation(string station,string pool) {
         return true;
       }
     }
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isCoreStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the Core stations
+// **********************
+//
+bool navFunct_isCoreStation(string stationName) {
+  if (strpos(stationName,"CS") == 0) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isInternationalStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the International stations
+// **********************
+//
+bool navFunct_isInternationalStation(string stationName) {
+  if (strpos(stationName,"CS") == 0 || strpos(stationName,"RS") == 0) {
+    return false;
+  }
+  return true;
+}
+
+// **********************
+// navFunct_isRemoteStation
+// **********************
+// stationName:  the station in question
+//
+// Returns TRUE if the station is part of the Remote stations
+// **********************
+//
+bool navFunct_isRemoteStation(string stationName) {
+  if (strpos(stationName,"RS") == 0) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBA
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is an International HBA antenna
+// **********************
+//
+bool navFunct_isHBA(string stationName,int antennaNr) {
+  if (navFunct_isInternationalStation(stationName) && antennaNr < 96) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAZero
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core HBA Zero antenna
+// **********************
+//
+bool navFunct_isHBAZero(string stationName,int antennaNr) {
+  if (navFunct_isCoreStation(stationName) && antennaNr < 24) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAOne
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core HBA One antenna
+// **********************
+//
+bool navFunct_isHBAOne(string stationName,int antennaNr) {
+  if (navFunct_isCoreStation(stationName) && antennaNr > 23) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAInner
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Remote HBA Inner antenna
+// **********************
+//
+bool navFunct_isHBAInner(string stationName,int antennaNr) {
+  if (navFunct_isRemoteStation(stationName) && dynContains(HBAInnerCircle,antennaNr)) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isHBAOuter
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Remote HBA Outer antenna
+// **********************
+//
+bool navFunct_isHBAOuter(string stationName,int antennaNr) {
+  if (navFunct_isRemoteStation(stationName) && !dynContains(HBAInnerCircle,antennaNr)) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBA
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is an International LBA antenna
+// **********************
+//
+bool navFunct_isLBA(string stationName,int antennaNr) {
+  if (navFunct_isInternationalStation(stationName) && antennaNr < 96) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBAInner
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core or Remote LBA Inner antenna
+// **********************
+//
+bool navFunct_isLBAInner(string stationName,int antennaNr) {
+  if ((navFunct_isCoreStation(stationName) || navFunct_isRemoteStation(stationName))&& antennaNr < 48) {
+    return true;
+  }
+  return false;
+}
+
+// **********************
+// navFunct_isLBAOuter
+// **********************
+// stationName:  the station in question
+// antennaNr  :  the antennanr in question
+//
+// returns true if the antenna is a Core or Remote LBA Outer antenna
+// **********************
+//
+bool navFunct_isLBAOuter(string stationName,int antennaNr) {
+  if ((navFunct_isCoreStation(stationName) || navFunct_isRemoteStation(stationName))&& antennaNr > 47) {
+    return true;
   }
   return false;
 }

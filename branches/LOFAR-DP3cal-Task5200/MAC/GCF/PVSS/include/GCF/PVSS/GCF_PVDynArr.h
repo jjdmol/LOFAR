@@ -79,6 +79,9 @@ class GCFPVDynArr : public GCFPValue
 
 	// add value to the dynarray
 	void push_back(GCFPValue*	newElem) { _values.push_back(newElem); }
+
+	// return number of elements
+	size_t count() const { return(_values.size()); }
  
   private:
     /// @see GCFPValue::unpack()

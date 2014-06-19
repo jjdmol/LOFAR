@@ -1,205 +1,6 @@
 #include <lofar_config.h>
 #include "MPIUtil.h"
 
-/*
- * New plan:
- *
- *
- * 1) One thread / subband.
- *    - will result in thousands of threads!
- *    - better: one thread / dest node?
- *
- * 2) One polling thread / process.
- *
- * Design for 1):
- *
- * Design for 2):
- *
- * 1. Polling thread does:
-
-     // Wait request as provided by clients
-     struct request_cl {
-       // MPI handle
-       int handle;
-
-       // Whether the request has been satisfied
-       bool done;
-
-       // Whether the request has been reported
-       // to the client (waitAny)
-       bool reported;
-
-       request_cl(int handle): handle(handle), done(false), reported(false) {}
-     };
-
-     // Wait request as maintained by pollThread
-     struct request {
-       // MPI handle
-       int handle;
-
-       // Pointer to request_cl.done,
-       // indicating whether the request
-       // has been satisfied.
-       bool *done;
-
-       // Signal to trigger if the request
-       // satisfies.
-       Semaphore *doneSignal;
-     };
-
-     vector<request> requests;
-     Mutex requestMutex;
-     Condition newRequest;
-
-     void Testsome( vector<int> &doneset, vector<int> &handles ) {
-       const size_t incount = requests.size();
-
-       handles.resize(incount);
-       doneset.resize(incount);
-
-       for (size_t i = 0; i < incount; ++i)
-         handles[i] = requests[i].handle;
-
-       int outcount;
-       MPI_Testsome(incount, &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
-       doneset.resize(outcount);
-
-       return doneset;
-     }
-
-     void pollThread() {
-       ScopedLock sl(requestMutex);
-
-       // cache doneset/handles, for efficiency.
-       // Testsome() handles these.
-       vector<int> doneset;
-       vector<int> handles;
-
-       while(!done) {
-         if (requests.empty()) {
-           // wait for request, with lock released
-           newRequest.wait(requestMutex);
-         } else {
-           // poll existing requests
-           Testsome(doneset, handles);
-
-           // set of wait* functions we've signaled
-           set<Semaphore*> signalSet;
-
-           // mark finished requests,
-           // and trigger each of their
-           // signals at most once
-           for (size_t i = 0; i < doneset.size(); ++i) {
-             struct request &r = requests[doneset[i]];
-
-             // mark request_cl as done
-             r.handle = MPI_REQUEST_NULL; // don't give this one to MPI_Testsome again
-             *(r.done) = true;
-
-             if (signalSet.add(r.doneSignal).second) {
-               // signal was not yet in set -- trigger
-               r.doneSignal->signal();
-             }
-           }
-
-           // if there are still pending requests, release
-           // the lock and just wait with a timeout
-           if (!requests.empty()) {
-             newRequest.wait(requestMutex, now() + 0.001);
-           }
-         }
-       }
-     }
-
-     // Register/unregister requests in bulk to reduce overhead
-
-     void registerRequests( const std::vector<request_cl> &newRequests, Semaphore &doneSignal ) {
-       ScopedLock sl(requestMutex);
-
-       // register all new requests
-       requests.reserve(requests.size() + newRequests.size());
-       for (size_t i = 0; i < newRequests.size(); ++i) {
-         struct request_cl &from = newRequests[i];
-         struct request to = { from.handle, &from.done, &doneSignal };
-         requests.push_back(to);
-       }
-
-       // trigger our thread
-       newRequest.signal();
-     }
-
-     void unregisterRequests( Semaphore &doneSignal ) {
-       ScopedLock sl(requestMutex);
-
-       // unregister all requests
-       vector<struct request> writePtr = requests.begin();
-       for (size_t i = 0; i < requests.size(); ++i) {
-         if (requests[i].doneSignal != &doneSignal) {
-           // keep
-           *(writePtr++) = requests[i];
-         } else {
-           // ours -- throw away
-           ASSERTSTR(requests[i].done, "Unregistering an uncompleted request");
-         }
-       }
-
-       // cut off at new size
-       requests.resize(writePtr - requests.begin());
-     }
-
-     size_t waitAny( const std::vector<request_cl> &waitRequests, Semaphore &doneSignal ) {
-       // assumes all waitRequests have been registered
-
-       for(;;) {
-         {
-           ScopedLock sl(requestMutex);
-
-           // check if any request has finished already
-           for (size_t i = 0; i < waitRequests.size(); ++i) {
-             struct request_cl &r = waitRequests[i];
-
-             if (r.done && !r.reported) {
-               r.reported = true;
-
-               return i;
-             }
-           }
-         }
-
-         // wait for a request to finish
-         doneSignal.wait();
-       }
-     }
-
-     void waitAll( const std::vector<request_cl> &waitRequests, Semaphore &doneSignal ) {
-       // assumes all waitRequests have been registered
-
-       for(;;) {
-         {
-           ScopedLock sl(requestMutex);
-
-           bool allDone = true;
-
-           // check if any request is still pending
-           for (size_t i = 0; i < waitRequests.size(); ++i) {
-             struct request_cl &r = waitRequests[i];
-
-             if (!r.done) {
-               allDone = false;
-               break;
-             }
-           }
-
-           if (allDone)
-             return;
-         }
-
-         // wait for a request to finish
-         doneSignal.wait();
-       }
-     }
- */
-
 #include <iomanip>
 
 #include <Common/LofarLogger.h>
@@ -213,52 +14,98 @@
 #endif
 
 #include <ctime>
+#include <boost/lexical_cast.hpp>
 #include <Common/Thread/Mutex.h>
+#include <Common/Timer.h>
 #include <CoInterface/SmartPtr.h>
+#include <CoInterface/TimeFuncs.h>
 
 using namespace std;
 
 namespace LOFAR {
 
   namespace Cobalt {
-
     Mutex MPIMutex;
+    static MPIPoll mpiPoller;
 
-    int MPI_Rank() {
+    MPI::MPI()
+    :
+      itsRank(0),
+      itsSize(1),
+      itsIsInitialised(false)
+    {
+#ifdef HAVE_MPI
+      // Pull rank/size from environment, as MPI_init has
+      // not yet been called
+      const char *rankstr, *sizestr;
+
+      // OpenMPI rank
+      if ((rankstr = getenv("OMPI_COMM_WORLD_RANK")) != NULL)
+        itsRank = boost::lexical_cast<int>(rankstr);
+
+      // MVAPICH2 rank
+      if ((rankstr = getenv("MV2_COMM_WORLD_RANK")) != NULL)
+        itsRank = boost::lexical_cast<int>(rankstr);
+
+      // OpenMPI size
+      if ((sizestr = getenv("OMPI_COMM_WORLD_SIZE")) != NULL)
+        itsSize = boost::lexical_cast<int>(sizestr);
+
+      // MVAPICH2 size
+      if ((sizestr = getenv("MV2_COMM_WORLD_SIZE")) != NULL)
+        itsSize = boost::lexical_cast<int>(sizestr);
+#endif
+    }
+
+    void MPI::init(int argc, char **argv)
+    {
+      itsIsInitialised = true;
+
+  #ifdef HAVE_MPI
       ScopedLock sl(MPIMutex);
-      
-      int rank;
 
-      ::MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      // Initialise and query MPI
+      int provided_mpi_thread_support;
 
-      return rank;
+      LOG_INFO("----- Initialising MPI");
+      if (MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided_mpi_thread_support) != MPI_SUCCESS) {
+        LOG_FATAL("MPI_Init_thread failed");
+        exit(1);
+      }
+
+      // Verify the rank/size settings we assumed earlier
+      int real_rank;
+      int real_size;
+
+      MPI_Comm_rank(MPI_COMM_WORLD, &real_rank);
+      MPI_Comm_size(MPI_COMM_WORLD, &real_size);
+
+      ASSERT(itsRank == real_rank);
+      ASSERT(itsSize == real_size);
+
+      mpiPoller.start();
+  #endif
     }
 
-    int MPI_Size() {
+    MPI::~MPI()
+    {
+      if (!initialised())
+        return;
+
+  #ifdef HAVE_MPI
       ScopedLock sl(MPIMutex);
-      
-      int size;
 
-      ::MPI_Comm_size(MPI_COMM_WORLD, &size);
+      mpiPoller.stop();
 
-      return size;
+      MPI_Finalize();
+  #endif
     }
-
-    bool MPI_Initialised() {
-      int flag;
-
-      ::MPI_Initialized(&flag);
-
-      return flag != 0;
-    }
-
 
     void *MPIAllocator::allocate(size_t size, size_t alignment)
     {
       ScopedLock sl(MPIMutex);
 
       ASSERT(alignment == 1); // Don't support anything else yet, although MPI likely aligns for us
-      ASSERT(MPI_Initialised());
 
       void *ptr;
 
@@ -278,158 +125,6 @@ namespace LOFAR {
     }
 
     MPIAllocator mpiAllocator;
-
-    void freeRequest(MPI_Request &request) {
-      ::MPI_Request_free(&request);
-      ASSERT(request == MPI_REQUEST_NULL);
-    }
-
-    /*
-     * Returns (and caches) whether the MPI library is thread safe.
-     */
-    static bool MPI_threadSafe() {
-      return false;
-      /*
-       * The level of threading support as reported by the MPI library.
-       *
-       * For multi-threading support, we need at least MPI_THREAD_MULTIPLE.
-       *
-       * Note that OpenMPI will claim to support the safe-but-useless
-       * MPI_THREAD_SINGLE, while it supports MPI_THREAD_SERIALIZED in practice.
-       */
-      static int provided_mpi_thread_support;
-      static const int minimal_thread_level = MPI_THREAD_MULTIPLE;
-
-      static bool initialised = false;
-
-      if (!initialised) {
-        ScopedLock sl(MPIMutex);
-
-        int error = MPI_Query_thread(&provided_mpi_thread_support);
-        ASSERT(error == MPI_SUCCESS);
-
-        initialised = true;
-
-        LOG_INFO_STR("MPI is thread-safe: " << (provided_mpi_thread_support >= minimal_thread_level ? "yes" : "no"));
-      }
-
-      return provided_mpi_thread_support >= minimal_thread_level;
-    }
-
-    std::vector<int> waitSome( std::vector<MPI_Request> &requests )
-    {
-      DEBUG("entry");
-
-      if (requests.empty())
-        return vector<int>(0);
-
-      std::vector<int> completed(requests.size());
-      int nr_completed = 0;
-
-      if (MPI_threadSafe()) {
-        int error = MPI_Waitsome(requests.size(), &requests[0], &nr_completed, &completed[0], MPI_STATUSES_IGNORE);
-        ASSERT(error == MPI_SUCCESS);
-      } else {
-        do {
-          {
-            ScopedLock sl(MPIMutex);
-
-            int error = MPI_Testsome(requests.size(), &requests[0], &nr_completed, &completed[0], MPI_STATUSES_IGNORE);
-            ASSERT(error == MPI_SUCCESS);
-          }
-
-          // sleep (with lock released)
-          if (nr_completed == 0) {
-            const struct timespec req = { 0, 10000000 }; // 10 ms
-            nanosleep(&req, NULL);
-          }
-        } while(nr_completed == 0);
-      }
-
-      ASSERT(nr_completed != MPI_UNDEFINED);
-      ASSERT(nr_completed >= 0);
-      ASSERT((size_t)nr_completed < requests.size());
-
-      // cut off array
-      completed.resize(nr_completed);
-
-      return completed;
-    }
-
-    int waitAny( std::vector<MPI_Request> &requests )
-    {
-      DEBUG("entry");
-
-      int idx;
-
-      if (MPI_threadSafe()) {
-        int error = MPI_Waitany(requests.size(), &requests[0], &idx, MPI_STATUS_IGNORE);
-        ASSERT(error == MPI_SUCCESS);
-      } else {
-        int flag;
-
-        do {
-          {
-            ScopedLock sl(MPIMutex);
-
-            int error = MPI_Testany(requests.size(), &requests[0], &idx, &flag, MPI_STATUS_IGNORE);
-            ASSERT(error == MPI_SUCCESS);
-          }
-
-          // sleep (with lock released)
-          if (!flag) {
-            const struct timespec req = { 0, 10000000 }; // 10 ms
-            nanosleep(&req, NULL);
-          }
-        } while(!flag);
-      }
-
-      ASSERT(idx != MPI_UNDEFINED);
-
-      // NOTE: MPI_Waitany/MPI_Testany will overwrite completed
-      // entries with MPI_REQUEST_NULL, unless the request
-      // was persistent (MPI_Send_init + MPI_Start).
-      ASSERT(requests[idx] == MPI_REQUEST_NULL);
-
-      DEBUG("index " << idx);
-
-      return idx;
-    }
-
-
-    void waitAll( std::vector<MPI_Request> &requests )
-    {
-      DEBUG("entry: " << requests.size() << " requests");
-
-      if (requests.size() > 0) {
-        if (MPI_threadSafe()) {
-          int error = MPI_Waitall(requests.size(), &requests[0], MPI_STATUSES_IGNORE);
-          ASSERT(error == MPI_SUCCESS);
-        } else {
-          int flag;
-
-          do {
-            {
-              ScopedLock sl(MPIMutex);
-
-              int error = MPI_Testall(requests.size(), &requests[0], &flag, MPI_STATUSES_IGNORE);
-              ASSERT(error == MPI_SUCCESS);
-            }
-
-            // sleep (with lock released)
-            if (!flag) {
-              const struct timespec req = { 0, 10000000 }; // 10 ms
-              nanosleep(&req, NULL);
-            }
-          } while(!flag);
-        }
-      }
-
-      // NOTE: MPI_Waitall/MPI_Testall will overwrite completed
-      // entries with MPI_REQUEST_NULL.
-
-      DEBUG("exit");
-    }
 
     namespace {
       typedef int (*MPI_SEND)(void *, int, MPI_Datatype, int, int, MPI_Comm, MPI_Request*);
@@ -487,6 +182,352 @@ namespace LOFAR {
 
       return request;
     }
+
+
+    MPIPoll::MPIPoll()
+    :
+      started(false),
+      done(false)
+    {
+    }
+
+
+    MPIPoll::~MPIPoll()
+    {
+      stop();
+    }
+
+
+    void MPIPoll::add( RequestSet *set ) {
+      ASSERT(set != NULL);
+
+      DEBUG("MPIPoll::add " << set->name);
+
+      ASSERT(mpiPoller.is_started());
+
+      ScopedLock sl(mutex);
+
+      requests.push_back(set);
+      newRequest.signal();
+    }
+
+
+    void MPIPoll::remove( RequestSet *set ) {
+      ScopedLock sl(mutex);
+
+      _remove(set);
+    }
+
+
+    void MPIPoll::_remove( RequestSet *set ) {
+      ASSERT(set != NULL);
+
+      DEBUG("MPIPoll::_remove " << set->name);
+
+      const std::vector<RequestSet*>::iterator i = std::find(requests.begin(), requests.end(), set);
+
+      if (i == requests.end())
+        return;
+
+      DEBUG("MPIPoll::_remove found and removing " << set->name);
+
+      requests.erase(i);
+    }
+
+
+    bool MPIPoll::have( RequestSet *set ) {
+      ScopedLock sl(mutex);
+
+      return std::find(requests.begin(), requests.end(), set) != requests.end();
+    }
+
+
+    void MPIPoll::start() {
+      DEBUG("MPIPoll::start");
+
+      started = true;
+
+      thread = new Thread(this, &MPIPoll::pollThread, "MPIPoll::pollThread");
+    }
+
+
+    void MPIPoll::stop() {
+      DEBUG("MPIPoll::stop");
+
+      {
+        ScopedLock sl(mutex);
+
+        done = true;
+
+        // Unlock thread if it is waiting for a new request
+        newRequest.signal();
+      }
+
+      // Wait for thread to finish
+      thread = 0;
+
+      DEBUG("MPIPoll::stop stopped");
+    }
+
+    // Track the time spent on lock contention
+    NSTimer MPIMutexTimer("MPIPoll::MPIMutex lock()", true, true);
+
+    // Track the time spent in MPI_Testsome
+    NSTimer MPITestsomeTimer("MPIPoll::MPI_Testsome", true, true);
+
+    std::vector<int> MPIPoll::testSome( std::vector<handle_t> &handles ) const {
+      DEBUG("MPIPoll::testSome on " << handles.size() << " handles");
+
+      vector<int> doneset;
+
+      if (handles.empty())
+        return doneset;
+
+      doneset.resize(handles.size());
+
+      int outcount;
+
+      {
+        MPIMutexTimer.start();
+        ScopedLock sl(MPIMutex);
+        MPIMutexTimer.stop();
+
+        // MPI_Testsome will put the indices of finished requests in doneset,
+        // and set the respective handle to MPI_REQUEST_NULL.
+        //
+        // Note that handles that are MPI_REQUEST_NULL on input are ignored.
+        MPITestsomeTimer.start();
+        MPI_Testsome(handles.size(), &handles[0], &outcount, &doneset[0], MPI_STATUSES_IGNORE);
+        MPITestsomeTimer.stop();
+      }
+
+      // Cut off doneset at the actual number of returned indices
+      doneset.resize(outcount);
+
+      return doneset;
+    }
+
+    namespace {
+      struct handle_ref {
+        RequestSet *set;
+        size_t index;
+
+        handle_ref(RequestSet *set, size_t index): set(set), index(index) {}
+      };
+    };
+
+    bool MPIPoll::handleRequests()
+    {
+      // Collect all ACTIVE requests, and keep track of their index
+      vector<handle_t> handles;
+
+      vector<handle_ref> references;
+
+      for (size_t i = 0; i < requests.size(); ++i) {
+        ScopedLock sl(requests[i]->mutex);
+
+        for (size_t j = 0; j < requests[i]->handles.size(); ++j) {
+          if (requests[i]->states[j] != RequestSet::ACTIVE)
+            continue;
+
+          handles.push_back(requests[i]->handles[j]);
+          references.push_back(handle_ref(requests[i], j));
+        }
+      }
+
+      // Ask MPI which requests have finished
+      //
+      // NOTE: Finished requests are set to MPI_REQUEST_NULL in `handles'.
+      const vector<int> finishedIndices = testSome(handles);
+
+      // Process finished requests
+      for(size_t i = 0; i < finishedIndices.size(); ++i) {
+        struct handle_ref &ref = references[finishedIndices[i]];
+        RequestSet &set = *(ref.set);
+
+        ScopedLock sl(set.mutex);
+
+        // Mark as FINISHED
+        DEBUG("MPIPoll::handleRequest: marking " << set.name << "[" << ref.index << "] as FINISHED");
+        ASSERT(set.states[ref.index] == RequestSet::ACTIVE);
+        set.states[ref.index] = RequestSet::FINISHED;
+
+        set.nrFinished++;
+
+        // Inform waitAny/waitSome threads
+        if (!set.willWaitAll)
+          set.oneFinished.signal();
+
+        if (set.nrFinished == set.handles.size()) {
+          DEBUG("MPIPoll::handleRequest: all requests in " << set.name << " are FINISHED");
+
+          // Inform waitAll threads
+          if (set.willWaitAll)
+            set.allFinished.signal();
+
+          // Remove this set from the requests to watch
+          _remove(&set);
+        }
+      }
+
+      return !finishedIndices.empty();
+    }
+
+    void MPIPoll::pollThread() {
+      Thread::ScopedPriority sp(SCHED_FIFO, 10);
+
+      ScopedLock sl(mutex);
+
+      while(!done) {
+        // next poll will be in 0.1 ms
+        //
+        // NOTE: MPI is VERY sensitive to this, requiring
+        //       often enough polling to keep transfers
+        //       running smoothly.
+
+        if (requests.empty()) {
+          // wait for request, with lock released
+          newRequest.wait(mutex);
+        } else {
+          // poll all handles
+          (void)handleRequests();
+
+          // if there are still pending requests, release
+          // the lock and just wait with a timeout
+          if (!requests.empty()) {
+            struct timespec deadline = TimeSpec::now();
+            TimeSpec::inc(deadline, 0.0001);
+
+            newRequest.wait(mutex, deadline);
+          }
+        }
+      }
+    }
+
+
+   RequestSet::RequestSet(const std::vector<handle_t> &handles, bool willWaitAll, const std::string &name)
+   :
+     name(name),
+     willWaitAll(willWaitAll),
+     handles(handles),
+     states(handles.size(), ACTIVE),
+     nrFinished(0)
+   {
+     // Requests shouldn't be MPI_REQUEST_NULL,
+     // because those will never be reported as FINISHED
+     for (size_t i = 0; i < states.size(); ++i) {
+       ASSERT(handles[i] != MPI_REQUEST_NULL);
+     }
+
+     ASSERT(!handles.empty() || willWaitAll);
+
+     if (!handles.empty()) {
+       // register ourselves
+       mpiPoller.add(this);
+     }
+   }
+
+   RequestSet::~RequestSet()
+   {
+     // all requests should be finished and reported by now
+     {
+       ScopedLock sl(mutex);
+
+       ASSERT(nrFinished == handles.size());
+
+       for (size_t i = 0; i < states.size(); ++i) {
+         ASSERT(states[i] == REPORTED);
+       }
+     }
+
+     // we should have been unregistered once our last
+     // request was FINISHED
+     {
+       ScopedLock sl(mutex);
+       ASSERT(!mpiPoller.have(this));
+     }
+   }
+
+   size_t RequestSet::waitAny() {
+     ASSERT(!willWaitAll);
+
+     ScopedLock sl(mutex);
+
+     for(;;) {
+       // Look for a finished request that hasn't been
+       // reported yet.
+       for (size_t i = 0; i < states.size(); ++i) {
+         if (states[i] == FINISHED) {
+           states[i] = REPORTED;
+
+           DEBUG("RequestSet::waitAny: set " << name << " finished request " << i);
+           return i;
+         }
+       }
+
+       // Wait for another request to finish
+       DEBUG("RequestSet::waitAny: set " << name << " waits for a request to finish");
+
+       // There has to be something to wait for
+       ASSERT(nrFinished < handles.size());
+       oneFinished.wait(mutex);
+     }
+   }
+
+   vector<size_t> RequestSet::waitSome() {
+     ASSERT(!willWaitAll);
+
+     ScopedLock sl(mutex);
+
+     vector<size_t> finished;
+
+     do {
+       // Look for all finished requests that haven't been
+       // reported yet.
+       for (size_t i = 0; i < states.size(); ++i) {
+         if (states[i] == FINISHED) {
+           states[i] = REPORTED;
+
+           finished.push_back(i);
+         }
+       }
+
+       if (finished.empty()) {
+         // Wait for another request to finish
+         DEBUG("RequestSet::waitSome: set " << name << " waits for a request to finish");
+
+         // There has to be something to wait for
+         ASSERT(nrFinished < handles.size());
+         oneFinished.wait(mutex);
+       }
+     } while (finished.empty());
+
+     DEBUG("RequestSet::waitSome: set " << name << " finished " << finished.size() << " requests");
+
+     return finished;
+   }
+
+   void RequestSet::waitAll() {
+     ASSERT(willWaitAll);
+
+     ScopedLock sl(mutex);
+
+     while (nrFinished < handles.size()) {
+       DEBUG("RequestSet::waitAll: set " << name << " has " << nrFinished << "/" << handles.size() << " requests finished");
+
+       // Wait for all requests to finish
+       allFinished.wait(mutex);
+     }
+
+     DEBUG("RequestSet::waitAll: set " << name << " finished all requests");
+
+     // Mark all requests as reported
+     for (size_t i = 0; i < states.size(); ++i) {
+       ASSERT(states[i] >= FINISHED);
+
+       states[i] = REPORTED;
+     }
+   }
 
   }
 }

@@ -1181,8 +1181,19 @@ def read_image_from_file(filename, img, indir, quiet=False):
     if img.use_io == 'rap':
         tmpdir = img.parentname+'_tmp'
         hdr = convert_pyrap_header(inputimage, tmpdir)
+        coords = inputimage.coordinates()
+        img.coords_dict = coords.dict()
+        if img.coords_dict.has_key('telescope'):
+            img._telescope = img.coords_dict['telescope']
+        else:
+            img._telescope = None
     if img.use_io == 'fits':
         hdr = fits[0].header
+        img.coords_dict = None
+        if 'TELESCOP' in hdr:
+            img._telescope = hdr['TELESCOP']
+        else:
+            img._telescope = None
 
     # Make sure data is in proper order. Final order is [pol, chan, x (RA), y (DEC)],
     # so we need to rearrange dimensions if they are not in this order. Use the
@@ -1262,6 +1273,9 @@ def read_image_from_file(filename, img, indir, quiet=False):
 
     # Read in data. If only a subsection of the image is desired (as defined
     # by the trim_box option), we can try to use PyFITS to read only that section.
+    img._original_naxis = data_shape
+    img._original_shape = (shape_out[2], shape_out[3])
+    img._xy_hdr_shift = (0, 0)
     if img.opts.trim_box != None:
         img.trim_box = img.opts.trim_box
         xmin, xmax, ymin, ymax = img.trim_box
@@ -1315,6 +1329,7 @@ def read_image_from_file(filename, img, indir, quiet=False):
         # Adjust WCS keywords for trim_box starting x and y.
         hdr['crpix1'] -= xmin
         hdr['crpix2'] -= ymin
+        img._xy_hdr_shift = (xmin, ymin)
     else:
         if img.use_io == 'fits':
             data = fits[0].data
@@ -1360,13 +1375,25 @@ def convert_pyrap_header(pyrap_image, tmpdir):
 
 
 def write_image_to_file(use, filename, image, img, outdir=None,
-                                           clobber=True):
-    """ Writes image array to dir/filename using pyfits"""
+                        pad_image=False, clobber=True, is_mask=False):
+    """ Writes image array to dir/filename"""
     import numpy as N
     import os
     import mylogger
 
     mylog = mylogger.logging.getLogger("PyBDSM."+img.log+"Writefile")
+
+    wcs_obj = img.wcs_obj
+    if pad_image and img.opts.trim_box is not None:
+        # Pad image to original size
+        xsize, ysize = img._original_shape
+        xmin, ymin = img._xy_hdr_shift
+        image_pad = N.zeros((xsize, ysize), dtype=N.float32)
+        image_pad[xmin:xmin+image.shape[0], ymin:ymin+image.shape[1]] = image
+        image = image_pad
+    else:
+        xmin = 0
+        ymin = 0
 
     if filename == 'SAMP':
         import tempfile
@@ -1376,9 +1403,11 @@ def write_image_to_file(use, filename, image, img, outdir=None,
             img.samp_key = private_key
 
         # Broadcast image to SAMP Hub
-        temp_im = make_fits_image(N.transpose(image), img.wcs_obj, img.beam, img.frequency)
+        temp_im = make_fits_image(N.transpose(image), wcs_obj, img.beam,
+            img.frequency, img.equinox, img._telescope, xmin=xmin, ymin=ymin,
+            is_mask=is_mask)
         tfile = tempfile.NamedTemporaryFile(delete=False)
-        temp_im.writeto(tfile.name,  clobber=clobber)
+        temp_im.writeto(tfile.name, clobber=clobber)
         send_fits_image(img.samp_client, img.samp_key, 'PyBDSM image', tfile.name)
     else:
         # Write image to FITS file
@@ -1386,15 +1415,54 @@ def write_image_to_file(use, filename, image, img, outdir=None,
             outdir = img.indir
         if not os.path.exists(outdir) and outdir != '':
             os.makedirs(outdir)
-        if os.path.exists(outdir + filename):
+        if os.path.isfile(outdir+filename):
             if clobber:
-                os.remove(outdir + filename)
+                os.remove(outdir+filename)
             else:
                 return
-        temp_im = make_fits_image(N.transpose(image), img.wcs_obj, img.beam, img.frequency)
-        temp_im.writeto(outdir + filename,  clobber=clobber)
+        if os.path.isdir(outdir+filename):
+            if clobber:
+                os.system("rm -rf "+outdir+filename)
+            else:
+                return
+        temp_im = make_fits_image(N.transpose(image), wcs_obj, img.beam,
+            img.frequency, img.equinox, img._telescope, xmin=xmin, ymin=ymin,
+            is_mask=is_mask)
+        if use == 'rap':
+            outfile = outdir + filename + '.fits'
+        else:
+            outfile = outdir + filename
+        temp_im.writeto(outfile,  clobber=clobber)
+        temp_im.close()
 
-def make_fits_image(imagedata, wcsobj, beam, freq):
+        if use == 'rap':
+            # For CASA images, read in FITS image and convert
+            try:
+                import pyrap.images as pim
+                import pyrap.tables as pt
+                import os
+                outimage = pim.image(outfile)
+                outimage.saveas(outdir+filename, overwrite=clobber)
+
+                # For masks, use the coordinates dictionary from the input
+                # image, as this is needed in order for the
+                # image to work as a clean mask in CASA
+                if is_mask:
+                    if img.coords_dict is None:
+                        mylog.warning('Mask header information may be incomplete.')
+                    else:
+                        outtable = pt.table(outdir+filename, readonly=False, ack=False)
+                        outtable.putkeywords({'coords': img.coords_dict})
+                        outtable.done()
+
+            except ImportError, err:
+                import os
+                os.remove(outfile)
+                raise RuntimeError("Error writing CASA image. Use img_format = 'fits' instead.")
+
+
+def make_fits_image(imagedata, wcsobj, beam, freq, equinox, telescope, xmin=0, ymin=0,
+                    is_mask=False):
     """Makes a simple FITS hdulist appropriate for single-channel images"""
     from distutils.version import StrictVersion
     try:
@@ -1410,6 +1478,8 @@ def make_fits_image(imagedata, wcsobj, beam, freq):
             use_header_update = True
         else:
             use_header_update = False
+    import numpy as np
+
     shape_out = [1, 1, imagedata.shape[0], imagedata.shape[1]]
     hdu = pyfits.PrimaryHDU(imagedata.reshape(shape_out))
     hdulist = pyfits.HDUList([hdu])
@@ -1419,107 +1489,81 @@ def make_fits_image(imagedata, wcsobj, beam, freq):
     if use_header_update:
         header.update('CRVAL1', wcsobj.wcs.crval[0])
         header.update('CDELT1', wcsobj.wcs.cdelt[0])
-        header.update('CRPIX1', wcsobj.wcs.crpix[0])
-        header.update('CUNIT1', wcsobj.wcs.cunit[0])
+        header.update('CRPIX1', wcsobj.wcs.crpix[0] + xmin)
+        header.update('CUNIT1', str(wcsobj.wcs.cunit[0]).strip().lower()) # needed due to bug in pywcs/astropy
         header.update('CTYPE1', wcsobj.wcs.ctype[0])
         header.update('CRVAL2', wcsobj.wcs.crval[1])
         header.update('CDELT2', wcsobj.wcs.cdelt[1])
-        header.update('CRPIX2', wcsobj.wcs.crpix[1])
-        header.update('CUNIT2', wcsobj.wcs.cunit[1])
+        header.update('CRPIX2', wcsobj.wcs.crpix[1] + ymin)
+        header.update('CUNIT2', str(wcsobj.wcs.cunit[1]).strip().lower())
         header.update('CTYPE2', wcsobj.wcs.ctype[1])
     else:
         header['CRVAL1'] = wcsobj.wcs.crval[0]
         header['CDELT1'] = wcsobj.wcs.cdelt[0]
-        header['CRPIX1'] = wcsobj.wcs.crpix[0]
+        header['CRPIX1'] = wcsobj.wcs.crpix[0] + xmin
         header['CUNIT1'] = str(wcsobj.wcs.cunit[0]).strip().lower() # needed due to bug in pywcs/astropy
         header['CTYPE1'] = wcsobj.wcs.ctype[0]
         header['CRVAL2'] = wcsobj.wcs.crval[1]
         header['CDELT2'] = wcsobj.wcs.cdelt[1]
-        header['CRPIX2'] = wcsobj.wcs.crpix[1]
-        header['CUNIT2'] = str(wcsobj.wcs.cunit[1]).strip().lower() # needed due to bug in pywcs/astropy
+        header['CRPIX2'] = wcsobj.wcs.crpix[1] + ymin
+        header['CUNIT2'] = str(wcsobj.wcs.cunit[1]).strip().lower()
         header['CTYPE2'] = wcsobj.wcs.ctype[1]
 
     # Add STOKES info
     if use_header_update:
-        header.update('CRVAL3', 1)
-        header.update('CDELT3', 1)
-        header.update('CRPIX3', 1)
-        header.update('CUNIT3', '')
+        header.update('CRVAL3', 1.0)
+        header.update('CDELT3', 1.0)
+        header.update('CRPIX3', 1.0)
+        header.update('CUNIT3', ' ')
         header.update('CTYPE3', 'STOKES')
     else:
-        header['CRVAL3'] = 1
-        header['CDELT3'] = 1
-        header['CRPIX3'] = 1
+        header['CRVAL3'] = 1.0
+        header['CDELT3'] = 1.0
+        header['CRPIX3'] = 1.0
         header['CUNIT3'] = ''
         header['CTYPE3'] = 'STOKES'
 
-    # Add or alter frequency info if needed
+    # Add frequency info
     if use_header_update:
+        header.update('RESTFRQ', freq)
         header.update('CRVAL4', freq)
-        header.update('CDELT4', 0.0)
-        header.update('CRPIX4', 1)
-        header.update('CUNIT4', 'Hz')
+        header.update('CDELT4', 3e8)
+        header.update('CRPIX4', 1.0)
+        header.update('CUNIT4', 'HZ')
         header.update('CTYPE4', 'FREQ')
+        header.update('SPECSYS', 'TOPOCENT')
     else:
+        header['RESTFRQ'] = freq
         header['CRVAL4'] = freq
-        header['CDELT4'] = 0.0
-        header['CRPIX4'] = 1
-        header['CUNIT4'] = 'Hz'
+        header['CDELT4'] = 3e8
+        header['CRPIX4'] = 1.0
+        header['CUNIT4'] = 'HZ'
         header['CTYPE4'] = 'FREQ'
+        header['SPECSYS'] = 'TOPOCENT'
 
     # Add beam info
-    if use_header_update:
-        header.update('BMAJ', beam[0])
-        header.update('BMIN', beam[1])
-        header.update('BPA', beam[2])
-    else:
-        header['BMAJ'] = beam[0]
-        header['BMIN'] = beam[1]
-        header['BPA'] = beam[2]
-
-    # Add STOKES info
-    if use_header_update:
-        header.update('CRVAL3', 1)
-        header.update('CDELT3', 1)
-        header.update('CRPIX3', 1)
-        header.update('CUNIT3', '')
-        header.update('CTYPE3', 'STOKES')
-    else:
-        header['CRVAL3'] = 1
-        header['CDELT3'] = 1
-        header['CRPIX3'] = 1
-        header['CUNIT3'] = ''
-        header['CTYPE3'] = 'STOKES'
-
-    # Add or alter frequency info if needed
-    if wcsobj.wcs.spec != -1:
+    if not is_mask:
         if use_header_update:
-            header.update('CRVAL' + str(wcsobj.wcs.spec + 1), freq)
+            header.update('BMAJ', beam[0])
+            header.update('BMIN', beam[1])
+            header.update('BPA', beam[2])
         else:
-            header['CRVAL' + str(wcsobj.wcs.spec + 1)] =  freq
-    else:
-        if use_header_update:
-            header.update('CRVAL4', freq)
-            header.update('CDELT4', 0.0)
-            header.update('CRPIX4', 1)
-            header.update('CUNIT4', 'Hz')
-            header.update('CTYPE4', 'FREQ')
-        else:
-            header['CRVAL4'] = freq
-            header['CDELT4'] = 0.0
-            header['CRPIX4'] = 1
-            header['CUNIT4'] = 'Hz'
-            header['CTYPE4'] = 'FREQ'
+            header['BMAJ'] = beam[0]
+            header['BMIN'] = beam[1]
+            header['BPA'] = beam[2]
 
-    # Add beam info
+    # Add equinox
     if use_header_update:
-        header.update('BMAJ', beam[0])
-        header.update('BMIN', beam[1])
-        header.update('BPA', beam[2])
+        header.update('EQUINOX', equinox)
     else:
-        header['BMAJ'] = beam[0]
-        header['BMIN'] = beam[1]
-        header['BPA'] = beam[2]
+        header['EQUINOX'] = equinox
+
+    # Add telescope
+    if telescope is not None:
+        if use_header_update:
+            header.update('TELESCOP', telescope)
+        else:
+            header['TELESCOP'] = telescope
 
     hdulist[0].header = header
     return hdulist

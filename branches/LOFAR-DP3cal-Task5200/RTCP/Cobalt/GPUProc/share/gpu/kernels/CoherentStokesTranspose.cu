@@ -42,15 +42,20 @@
  *   + inner dim (x): nr (( params.nrTABs + 16 - 1) / 16) * 16 
  *   + middle dim (y): nr samples ( /16)
  *   + outer dim (z): number of channels (/1)
+ *
+ * $Id$
  */
+
 #include "gpu_math.cuh"
 
 #if !(NR_SAMPLES_PER_CHANNEL >= 1)
 #error Precondition violated: NR_SAMPLES_PER_CHANNEL >= 1
 #endif
 
+// This kernel is also compiled for unused combination of settings.
+// with 0 tabs. Change to warning untill we have optional kernel compilation
 #if !(NR_TABS >= 1)
-#error Precondition violated: NR_TABS >= 1
+#warning Precondition violated: NR_TABS >= 1
 #endif
 
 #if !(NR_CHANNELS >= 16)

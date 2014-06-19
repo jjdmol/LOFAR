@@ -22,10 +22,11 @@
 #define LOFAR_GPUPROC_CUDA_CORRELATOR_SUBBAND_PROC_H
 
 // @file
+#include <cmath>
 #include <complex>
+#include <utility>
 #include <memory>
 
-#include <Common/Thread/Queue.h>
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
@@ -35,7 +36,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/Filter_FFT_Kernel.h>
+#include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/CorrelatorKernel.h>
 #include <GPUProc/PerformanceCounter.h>
@@ -50,19 +51,16 @@ namespace LOFAR
     // A CorrelatedData object tied to a HostBuffer. Represents an output
     // data item that can be efficiently filled from the GPU.
     class CorrelatedDataHostBuffer: public MultiDimArrayHostBuffer<fcomplex, 4>,
-                                    public CorrelatedData
+                                    public CorrelatedData,
+                                    public SubbandProcOutputData
     {
     public:
-      CorrelatedDataHostBuffer(unsigned nrStations, unsigned nrChannels,
-                               unsigned maxNrValidSamples, gpu::Context &context)
-      :
-        MultiDimArrayHostBuffer<fcomplex, 4>(boost::extents[nrStations * (nrStations + 1) / 2]
-                                                           [nrChannels][NR_POLARIZATIONS]
-                                                           [NR_POLARIZATIONS], context, 0),
-        CorrelatedData(nrStations, nrChannels, maxNrValidSamples, this->origin(),
-                       this->num_elements(), heapAllocator, 1)
-      {
-      }
+      CorrelatedDataHostBuffer(unsigned nrStations, 
+                               unsigned nrChannels,
+                               unsigned maxNrValidSamples,
+                               gpu::Context &context);
+      // Reset the MultiDimArrayHostBuffer and the CorrelatedData
+      void reset();
     };
 
     struct CorrelatorFactories
@@ -70,7 +68,7 @@ namespace LOFAR
       CorrelatorFactories(const Parset &ps, 
                           size_t nrSubbandsPerSubbandProc = 1):
         firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
-        delayAndBandPass(ps),
+        delayAndBandPass(delayAndBandPassParams(ps)),
         correlator(ps)
       {
       }
@@ -79,9 +77,30 @@ namespace LOFAR
       KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
       KernelFactory<CorrelatorKernel> correlator;
 
-      FIR_FilterKernel::Parameters firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const {
-        FIR_FilterKernel::Parameters params(ps);
-        params.nrSubbands = nrSubbandsPerSubbandProc;
+      DelayAndBandPassKernel::Parameters
+      delayAndBandPassParams(const Parset &ps) const
+      {
+        DelayAndBandPassKernel::Parameters params(ps, true);
+
+        return params;
+      }
+
+      FIR_FilterKernel::Parameters
+      firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const 
+      {
+        FIR_FilterKernel::Parameters params(ps,
+          ps.settings.antennaFields.size(),
+          true,
+          nrSubbandsPerSubbandProc,
+          ps.settings.correlator.nrChannels,
+
+          // Scale to always output visibilities or stokes with the same flux scale.
+          // With the same bandwidth, twice the (narrower) channels _average_ (not
+          // sum) to the same fluxes (and same noise). Twice the channels (twice the
+          // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
+          // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
+          // effectively squares, integr on fewer channels averages over more values.
+          std::sqrt((double)ps.settings.correlator.nrChannels));
 
         return params;
       }
@@ -90,14 +109,22 @@ namespace LOFAR
     class CorrelatorSubbandProc : public SubbandProc
     {
     public:
-      CorrelatorSubbandProc(const Parset &parset, gpu::Context &context,
-                          CorrelatorFactories &factories, size_t nrSubbandsPerSubbandProc = 1);
+      CorrelatorSubbandProc(const Parset &parset, 
+                            gpu::Context &context,
+                            CorrelatorFactories &factories,
+                            size_t nrSubbandsPerSubbandProc = 1);
+
+      virtual ~CorrelatorSubbandProc();
+
+      // Print statistics of all kernels and transfers
+      void printStats();
 
       // Correlate the data found in the input data buffer
-      virtual void processSubband(SubbandProcInputData &input, StreamableData &output);
+      virtual void processSubband(SubbandProcInputData &input,
+                                  SubbandProcOutputData &output);
 
       // Do post processing on the CPU
-      virtual void postprocessSubband(StreamableData &output);
+      virtual bool postprocessSubband(SubbandProcOutputData &output);
 
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
@@ -106,22 +133,30 @@ namespace LOFAR
       class Flagger: public SubbandProc::Flagger
       {
       public:
-        // 1. Convert input flags to channel flags, calculate the amount flagged samples and save this in output
+        // 1. Convert input flags to channel flags, calculate the amount flagged
+        // samples and save this in output
         static void propagateFlags(Parset const & parset,
           MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
           CorrelatedData &output);
 
-        // 2. Calculate the weight based on the number of flags and apply this weighting to all output values
-        template<typename T> static void applyWeights(Parset const &parset, CorrelatedData &output);
+        // 2. Calculate the weight based on the number of flags and apply this
+        // weighting to all output values
+        template<typename T>
+        static void applyWeights(Parset const &parset, CorrelatedData &output);
 
-        // 1.2 Calculate the number of flagged samples and set this on the output dataproduct
-        // This function is aware of the used filter width a corrects for this.
-        template<typename T> static void calcWeights(Parset const &parset,
-          MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-          CorrelatedData &output);
+        // 1.2 Calculate the number of flagged samples and set this on the
+        // output dataproduct This function is aware of the used filter width a
+        // corrects for this.
+        template<typename T> 
+        static void
+        calcWeights(Parset const &parset,
+                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
+                    CorrelatedData &output);
 
-        // 2.1 Apply the supplied weight to the complex values in the channel and baseline
-        static void applyWeight(unsigned baseline, unsigned channel, float weight, CorrelatedData &output);
+        // 2.1 Apply the supplied weight to the complex values in the channel
+        // and baseline
+        static void applyWeight(unsigned baseline, unsigned channel,
+                                float weight, CorrelatedData &output);
       };
 
       // Correlator specific collection of PerformanceCounters
@@ -168,7 +203,7 @@ namespace LOFAR
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
 
       // FFT
-      Filter_FFT_Kernel fftKernel;
+      FFT_Kernel fftKernel;
 
       // Delay and Bandpass
       gpu::DeviceMemory devBandPassCorrectionWeights;
@@ -178,6 +213,13 @@ namespace LOFAR
       // Correlator
       CorrelatorKernel::Buffers correlatorBuffers;
       std::auto_ptr<CorrelatorKernel> correlatorKernel;
+
+      // Buffers for long-time integration; one buffer for each subband that
+      // will be processed by this class instance. Each element of the vector
+      // contains a counter that tracks the number of additions made to the data
+      // buffer and the data buffer itself.
+      vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
+      integratedData;
     };
 
   }

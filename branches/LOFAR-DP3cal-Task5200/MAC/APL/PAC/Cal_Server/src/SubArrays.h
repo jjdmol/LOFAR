@@ -40,6 +40,9 @@ public:
 	SubArrays();
 	virtual ~SubArrays();
 
+	// Check if given array conflicts with any of the other active subArrays
+	bool conflicting(SubArray*	newArray) const;
+
 	// @pre array != 0
 	// Schedule a new array for addition to the subarray list.
 	// @param array Pointer (not 0) to the array to be added.
@@ -60,6 +63,9 @@ public:
 	// This method deletes these subarrays removes
 	// them from the m_arrays.
 	void undertaker();
+
+	// Checks if the given name is present in the deadlist.
+	bool inDeadList(const string& name) const;
 
 	// Find a subarray by name.
 	// @param name Find the subarray with this name.

@@ -164,25 +164,29 @@
   COMMAND="$CMDPREFIX ./$PROG"
   
 # Determine if the program needs to be run with a checktool like valgrind.
-# That is only done if defined in CHECKTOOLPROGS.
-  if [ "$CHECKTOOL" != ""  -a  "$CHECKTOOLPROGS" != "" ]
+  if [ "$LOFAR_CHECKTOOL" != "" ]
   then
-    match=0
-    for prg in $CHECKTOOLPROGS
-    do
-      if [ "$PROG" = "$prg" ]
-      then
-        match=1
-        break
-      fi
-    done
-    if [ $match = 1 ]
-    then
-      # Use a checktool; replace [PROGNAME] by actual program name.
-      CHKTOOL=`echo "$CHECKTOOL" | sed -e 's/\[PROGNAME\]/'$PROG'/g'`
-      COMMAND="$CMDPREFIX $CHKTOOL ./$PROG"
-    fi
+    COMMAND="$CMDPREFIX $LOFAR_CHECKTOOL ./$PROG"
   fi
+
+#  if [ "$CHECKTOOL" != ""  -a  "$CHECKTOOLPROGS" != "" ]
+#  then
+#    match=0
+#    for prg in $CHECKTOOLPROGS
+#    do
+#      if [ "$PROG" = "$prg" ]
+#      then
+#        match=1
+#        break
+#      fi
+#    done
+#    if [ $match = 1 ]
+#    then
+#      # Use a checktool; replace [PROGNAME] by actual program name.
+#      CHKTOOL=`echo "$CHECKTOOL" | sed -e 's/\[PROGNAME\]/'$PROG'/g'`
+#      COMMAND="$CMDPREFIX $CHKTOOL ./$PROG"
+#    fi
+#  fi
 
 
 # Define exit and interrupt handler.
@@ -202,7 +206,6 @@
   if [ -f "$PROG.run" ]
   then
     COMMAND="./$PROG.run"
-    LOFAR_CHECKTOOL="$CHKTOOL"
     export LOFAR_CHECKTOOL
   fi
 
@@ -210,6 +213,7 @@
 # fetch the exit status of $COMMAND, not that of tee. There is an arcane POSIX
 # way of doing this (ref: http://stackoverflow.com/questions/2413166/
 # bash-redirect-and-append-stdout-and-stderr-to-file-and-terminal).
+  echo "Executing command: $COMMAND"
   exec 4>&1
   STATUS=$({ { eval "$COMMAND"; echo $? >&3; } | \
              { tee ${PROG}_tmp.out >&4; } } 3>&1)

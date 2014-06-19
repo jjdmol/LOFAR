@@ -1,7 +1,7 @@
 V 11
 1
 LANG:1 0 
-PANEL,-1 -1 1200 823 N "_3DFace" 0
+PANEL,-1 -1 1225 823 N "_3DFace" 0
 "main()
 {
    // Initialise the Panel
@@ -69,7 +69,7 @@ LANG:1 0
 0
 1
 LANG:1 33 MS Shell Dlg,-1,11,5,50,0,0,0,0,0
-0  -2 -2 1192 832
+0  -2 -2 1162 832
 E2 "New Alarms" 1
 LANG:1 10 New Alarms
 1 "objects/Alerts/alarms.pnl" 1

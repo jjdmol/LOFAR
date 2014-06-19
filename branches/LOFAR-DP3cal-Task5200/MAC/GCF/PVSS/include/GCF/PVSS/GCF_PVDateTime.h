@@ -45,6 +45,7 @@ public:
 
 	/** Changes the value of this object */
 	virtual TGCFResult setValue(double newVal);
+	void 			   setValue(time_t newVal, uint16 milliSec = 0);
 
 	/** 
 	* Changes the value of this object by means of a stringbuffer, 
@@ -92,7 +93,7 @@ inline bool GCFPVDateTime::operator==(const GCFPValue&	that) const {
 			(getValue() == ((GCFPVDateTime *) &that)->getValue()));
 }
 
-  } // namespace Common
+  } // namespace PVS
  } // namespace GCF
 } // namespace LOFAR
 #endif

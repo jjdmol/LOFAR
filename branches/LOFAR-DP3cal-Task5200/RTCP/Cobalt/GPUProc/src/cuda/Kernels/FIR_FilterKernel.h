@@ -43,13 +43,19 @@ namespace LOFAR
       // FIR_FilterKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps);
-        unsigned nrBitsPerSample;
-        unsigned nrBytesPerComplexSample;
+        Parameters(const Parset& ps, unsigned nrSTABs, bool inputIsStationData, unsigned nrSubbands, unsigned nrChannels, float scaleFactor);
 
         // The number of stations or TABs to filter. The FIR filter will
         // deal with either in the same way.
         unsigned nrSTABs;
+
+        unsigned nrBitsPerSample;
+        unsigned nrBytesPerComplexSample() const;
+
+        unsigned nrChannels;
+        unsigned nrSamplesPerChannel;
+        unsigned nrSamplesPerSubband() const;
+
 
         // The number of subbands \e this kernel instance will process,
         // typically equal to \c nrSubbandsPerSubbandProc.
@@ -60,6 +66,18 @@ namespace LOFAR
 
         // The number of history samples used for each block
         unsigned nrHistorySamples() const;
+
+        // Additional scale factor (e.g. for FFT normalization).
+        // Derived differently from nrChannelsPerSubband for correlation
+        // and beamforming, so must be passed into this class.
+        float scaleFactor;
+
+        // If true, we'll read integers in the order as they're coming from the
+        // stations: intXX[stab][sample][pol]
+        //
+        // If false, we'll read floats in the order produced by the beam-former
+        // pipeline: float[stab][pol][sample]
+        bool inputIsStationData;
       };
 
       enum BufferType
@@ -90,7 +108,6 @@ namespace LOFAR
                        const Parameters& param);
 
       void enqueue(const BlockID &blockId,
-                   PerformanceCounter &counter,
                    unsigned subbandIdx);
 
       // Put the historyFlags[subbandIdx] in front of the given inputFlags,

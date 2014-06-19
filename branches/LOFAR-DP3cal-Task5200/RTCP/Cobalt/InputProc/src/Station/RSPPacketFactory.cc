@@ -72,10 +72,12 @@ namespace LOFAR
     bool RSPPacketFactory::make16bitPayload( RSP &packet )
     {
       int Xr, Xi, Yr, Yi;
-      for(size_t i = 0; i < itsNrSubbands * packet.header.nrBlocks; i++) {
-        if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
-        RSP::Payload::samples16bit_t& s = packet.payload.samples16bit[i];
-        s.Xr = Xr; s.Xi = Xi; s.Yr = Yr; s.Yi = Yi;
+      for(size_t b = 0; b < packet.header.nrBlocks; b++) {
+        for(size_t sb = 0; sb < itsNrSubbands; sb++) {
+          if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
+          RSP::Payload::samples16bit_t& s = packet.payload.samples16bit[sb * packet.header.nrBlocks + b];
+          s.Xr = Xr; s.Xi = Xi; s.Yr = Yr; s.Yi = Yi;
+        }
       }
       return true;
     }
@@ -83,10 +85,12 @@ namespace LOFAR
     bool RSPPacketFactory::make8bitPayload( RSP &packet )
     {
       int Xr, Xi, Yr, Yi;
-      for(size_t i = 0; i < itsNrSubbands * packet.header.nrBlocks; i++) {
-        if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
-        RSP::Payload::samples8bit_t& s = packet.payload.samples8bit[i];
-        s.Xr = Xr; s.Xi = Xi; s.Yr = Yr; s.Yi = Yi;
+      for(size_t b = 0; b < packet.header.nrBlocks; b++) {
+        for(size_t sb = 0; sb < itsNrSubbands; sb++) {
+          if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
+          RSP::Payload::samples8bit_t& s = packet.payload.samples8bit[sb * packet.header.nrBlocks + b];
+          s.Xr = Xr; s.Xi = Xi; s.Yr = Yr; s.Yi = Yi;
+        }
       }
       return true;
     }
@@ -94,11 +98,13 @@ namespace LOFAR
     bool RSPPacketFactory::make4bitPayload( RSP &packet )
     {
       int Xr, Xi, Yr, Yi;
-      for(size_t i = 0; i < itsNrSubbands * packet.header.nrBlocks; i++) {
-        if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
-        RSP::Payload::samples4bit_t& s = packet.payload.samples4bit[i];
-        s.X = (Xr & 0xF) | ((Xi & 0xF) << 4);
-        s.Y = (Yr & 0xF) | ((Yi & 0xF) << 4);
+      for(size_t b = 0; b < packet.header.nrBlocks; b++) {
+        for(size_t sb = 0; sb < itsNrSubbands; sb++) {
+          if (!(itsInputStream >> Xr >> Xi >> Yr >> Yi)) return false;
+          RSP::Payload::samples4bit_t& s = packet.payload.samples4bit[sb * packet.header.nrBlocks + b];
+          s.X = (Xr & 0xF) | ((Xi & 0xF) << 4);
+          s.Y = (Yr & 0xF) | ((Yi & 0xF) << 4);
+        }
       }
       return true;
     }

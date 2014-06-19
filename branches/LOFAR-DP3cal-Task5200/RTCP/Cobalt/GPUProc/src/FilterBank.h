@@ -59,6 +59,9 @@ namespace LOFAR
 
       bool isNegated();
 
+      // Used for normalization of FFT fwd(+bwd) by FFTW/CUFFT.
+      void scaleWeights(float scale);
+
       // Used for debugging.
       void reverseTaps();
 

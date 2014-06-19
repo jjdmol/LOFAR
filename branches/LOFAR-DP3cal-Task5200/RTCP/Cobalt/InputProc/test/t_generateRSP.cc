@@ -48,8 +48,8 @@ void generate_input(ostream& os, unsigned bitMode,
   const unsigned mask = (1 << bitMode) - 1;
   const unsigned offset = mask >> 1;
   for(unsigned packet = 0; packet < nrPackets; packet++) {
-    for(unsigned subband = 0; subband < nrSubbands; subband++) {
-      for(unsigned block = 0; block < NR_BLOCKS; block++) {
+    for(unsigned block = 0; block < NR_BLOCKS; block++) {
+      for(unsigned subband = 0; subband < nrSubbands; subband++) {
         for(unsigned pol = 0; pol < NR_POLS; pol++) {
           for(unsigned ri = 0; ri < COMPLEX; ri++) {
             int sample = min((rand() & mask) - offset, offset);
@@ -74,8 +74,8 @@ void read_rsp(Stream& is, ostream& os, unsigned bitMode, unsigned nrSubbands)
       ASSERT(packet.bitMode() == bitMode);
       ASSERT(packet.header.nrBeamlets == nrSubbands);
       ASSERT(packet.header.nrBlocks == NR_BLOCKS);
-      for(unsigned subband = 0; subband < nrSubbands; subband++) {
-        for(unsigned block = 0; block < NR_BLOCKS; block++) {
+      for(unsigned block = 0; block < NR_BLOCKS; block++) {
+        for(unsigned subband = 0; subband < nrSubbands; subband++) {
           for(char pol = 'X'; pol <= 'Y'; pol++) {
             sample = packet.sample(subband, block, pol);
             os << sample.real() << " " << sample.imag() << " ";
@@ -118,7 +118,7 @@ int main()
         ofstream ascStream(ascFile.c_str());
         generate_input(ascStream, bitMode[b], nrPackets[p], nrSubbands[s]);
 
-        command = str(format("../src/generateRSP -b%d -s%d < %s > %s") % 
+        command = str(format("../src/generateRSP -b%d -s%d < %s -o %s") % 
                       bitMode[b] % nrSubbands[s] % ascFile % rspFile);
         cout << "Executing command: " << command << endl;
         ASSERT(system(command.c_str()) == 0);

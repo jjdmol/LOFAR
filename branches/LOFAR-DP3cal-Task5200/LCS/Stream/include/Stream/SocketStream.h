@@ -60,6 +60,9 @@ class SocketStream : public FileDescriptorBasedStream
 
     template<typename T> size_t recvmmsg( std::vector<T> &buffers, bool oneIsEnough ); // only for UDP server socket
 
+    // Allow individual recv()/send() calls to last for 'timeout' seconds before returning EWOULDBLOCK
+    void setTimeout(double timeout);
+
   private:
     const std::string hostname;
     uint16 port;

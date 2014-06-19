@@ -43,15 +43,21 @@ namespace LOFAR
     string IntToFloatKernel::theirFunction = "intToFloat";
 
     IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
-      Kernel::Parameters(ps),
+      nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
-      nrBytesPerComplexSample(ps.nrBytesPerComplexSample())
+
+      nrSamplesPerSubband(ps.settings.blockSize)
     {
       dumpBuffers = 
         ps.getBool("Cobalt.Kernels.IntToFloatKernel.dumpOutput", false);
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_IntToFloatKernel.dat") % 
             ps.settings.observationID);
+    }
+
+
+    unsigned IntToFloatKernel::Parameters::nrBytesPerComplexSample() const {
+      return 2 * nrBitsPerSample / 8;
     }
 
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
@@ -63,12 +69,10 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      unsigned maxNrThreads;
-      maxNrThreads = getAttribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
-      setEnqueueWorkSizes( gpu::Grid(maxNrThreads, params.nrStations),
-                           gpu::Block(maxNrThreads, 1) );
+      setEnqueueWorkSizes( gpu::Grid(maxThreadsPerBlock, params.nrStations),
+                           gpu::Block(maxThreadsPerBlock, 1) );
 
-      unsigned nrSamples = params.nrStations * params.nrChannelsPerSubband * NR_POLARIZATIONS;
+      unsigned nrSamples = params.nrStations * params.nrSamplesPerSubband * NR_POLARIZATIONS;
       nrOperations = (size_t) nrSamples * 2;
       nrBytesRead = (size_t) nrSamples * 2 * params.nrBitsPerSample / 8;
       nrBytesWritten = (size_t) nrSamples * sizeof(std::complex<float>);
@@ -83,7 +87,7 @@ namespace LOFAR
       case IntToFloatKernel::INPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample;
+            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample();
       case IntToFloatKernel::OUTPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
@@ -98,8 +102,12 @@ namespace LOFAR
     {
       CompileDefinitions defs =
         KernelFactoryBase::compileDefinitions(itsParameters);
+
+      defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
+      defs["NR_SAMPLES_PER_SUBBAND"] = 
+        lexical_cast<string>(itsParameters.nrSamplesPerSubband);
       return defs;
     }
 

@@ -42,8 +42,11 @@ TEST(Tracking) {
   ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
   ps.add( "Observation.VirtualInstrument.stationList", "[CS001]" );
   ps.add( "Observation.antennaSet", "LBA_INNER" );
+  ps.add( "Observation.Dataslots.CS001LBA.RSPBoardList", "[0]" );
+  ps.add( "Observation.Dataslots.CS001LBA.DataslotList", "[0]" );
 
   ps.add( "Observation.nrBeams", "1" );
+  ps.add( "Observation.Beam[0].subbandList", "[0]" );
   ps.add( "Observation.Beam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[0].angle1", "0" );
   ps.add( "Observation.Beam[0].angle2", "0" );
@@ -52,7 +55,6 @@ TEST(Tracking) {
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
-  delays.start();
 
   Delays::AllDelays delaySet(ps), prevDelaySet(ps);
 
@@ -77,33 +79,37 @@ TEST(Tracking) {
 TEST(TiedArrayBeam) {
   Parset ps;
 
-  ps.add( "Observation.DataProducts.Output_Beamformed.enabled", "true" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.filenames", "[beam0.raw]" );
-  ps.add( "Observation.DataProducts.Output_Beamformed.locations", "[localhost:.]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.enabled", "true" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.filenames", "[2*beam0.raw]" );
+  ps.add( "Observation.DataProducts.Output_CoherentStokes.locations", "[2*localhost:.]" );
 
   ps.add( "Observation.referencePhaseCenter", "[0, 0, 0]" ); // center of earth
   ps.add( "PIC.Core.CS001LBA.phaseCenter", "[0, 0, 299792458]" ); // 1 lightsecond away from earth center
   ps.add( "Observation.VirtualInstrument.stationList", "[CS001]" );
   ps.add( "Observation.antennaSet", "LBA_INNER" );
+  ps.add( "Observation.Dataslots.CS001LBA.RSPBoardList", "[0, 0]" );
+  ps.add( "Observation.Dataslots.CS001LBA.DataslotList", "[5, 6]" );
 
   // Delays for SAP 0 and TAB 0 of SAP 1 should be equal
   ps.add( "Observation.nrBeams", "2" );
+  ps.add( "Observation.Beam[0].subbandList", "[5]" );
   ps.add( "Observation.Beam[0].directionType", "J2000" );
   ps.add( "Observation.Beam[0].angle1", "1" );
   ps.add( "Observation.Beam[0].angle2", "1" );
   ps.add( "Observation.Beam[0].nrTiedArrayBeams", "0" );
+  ps.add( "Observation.Beam[1].subbandList", "[6]" );
   ps.add( "Observation.Beam[1].directionType", "J2000" );
   ps.add( "Observation.Beam[1].angle1", "1" );
   ps.add( "Observation.Beam[1].angle2", "0" );
   ps.add( "Observation.Beam[1].nrTiedArrayBeams", "1" );
   ps.add( "Observation.Beam[1].TiedArrayBeam[0].directionType", "J2000" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "0" );
-  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" );
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle1", "1" ); // Observation.Beam[1].angle1 + 0
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].angle2", "1" ); // Observation.Beam[1].angle2 + 1
+  ps.add( "Observation.Beam[1].TiedArrayBeam[0].coherent", "true" );
   ps.updateSettings();
 
   // blockSize is ~1s
   Delays delays(ps, 0, TimeStamp(time(0), 0, 200000000), dayOfSamples);
-  delays.start();
 
   Delays::AllDelays delaySet(ps);
 
@@ -124,9 +130,6 @@ TEST(TiedArrayBeam) {
 int main()
 {
   INIT_LOGGER( "tDelays" );
-
-  // Don't run forever if communication fails for some reason
-  alarm(10);
 
   return UnitTest::RunAllTests() > 0;
 }

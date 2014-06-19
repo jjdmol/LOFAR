@@ -64,18 +64,6 @@ namespace LOFAR
       std::string errorMessage(CUresult errcode);
 
 
-      // Struct representing a CUDA Block, which is similar to the @c dim3 type
-      // in the CUDA Runtime API.
-      struct Block
-      {
-        Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
-        unsigned int x;
-        unsigned int y;
-        unsigned int z;
-        friend std::ostream& operator<<(std::ostream& os, const Block& block);
-      };
-
-
       // Struct representing a CUDA Grid, which is similar to the @c dim3 type
       // in the CUDA Runtime API.
       struct Grid
@@ -86,6 +74,31 @@ namespace LOFAR
         unsigned int z;
         friend std::ostream& operator<<(std::ostream& os, const Grid& grid);
       };
+
+      // Struct representing a CUDA Block, which is similar to the @c dim3 type
+      // in the CUDA Runtime API.
+      //
+      // @invariant x > 0, y > 0, z > 0
+      struct Block
+      {
+        Block(unsigned int x_ = 1, unsigned int y_ = 1, unsigned int z_ = 1);
+        unsigned int x;
+        unsigned int y;
+        unsigned int z;
+        friend std::ostream& operator<<(std::ostream& os, const Block& block);
+      };
+
+      // Struct containing kernel launch configuration.
+      struct ExecConfig
+      {
+        ExecConfig(Grid gr = Grid(), Block bl = Block(), size_t dynShMem = 0);
+        Grid   grid;
+        Block  block;
+        size_t dynSharedMemSize;
+        friend std::ostream& operator<<(std::ostream& os,
+                                        const ExecConfig& execConfig);
+      };
+
 
       // Forward declaration needed by Platform::devices.
       class Device;
@@ -99,7 +112,7 @@ namespace LOFAR
         // \param flags must be 0 (at least up till CUDA 5.0).
         Platform(unsigned int flags = 0);
 
-        // The CUDA version (f.e. 5.0 -> 5000).
+        // The CUDA version (e.g. 5.0 -> 5000).
         int version() const;
 
         // Returns the number of devices in the CUDA platform.
@@ -200,15 +213,15 @@ namespace LOFAR
       public:
         // Create a new CUDA context and associate it with the calling thread.
         // In other words, \c setCurrent() is implied.
-        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_AUTO);
+        Context(const Device &device, unsigned int flags = CU_CTX_SCHED_YIELD);
 
-        // Returns the device associated to the _current_ context.
+        // Returns the device associated to this context.
         Device getDevice() const;
 
-        // Set the cache configuration of the _current_ context.
+        // Set the cache configuration for kernel launches in this context.
         void setCacheConfig(CUfunc_cache config) const;
 
-        // Set the shared memory configuration of the _current_ context.
+        // Set the shared memory configuration for kernel launches in this context.
         void setSharedMemConfig(CUsharedconfig config) const;
 
       private:
@@ -294,7 +307,7 @@ namespace LOFAR
         // \param n  Number of bytes to set. Defaults to the complete block.
         //           If \a n is larger than the current memory block size, then
         //           the complete block will be set to \a uc.
-        void set(unsigned char uc, size_t n = (size_t)-1);
+        void set(unsigned char uc, size_t n = (size_t)-1) const;
 
         // Return the size of this memory block.
         size_t size() const;
@@ -403,9 +416,10 @@ namespace LOFAR
         // documentation of cuFuncSetSharedMemConfig in the CUDA Driver API.
         void setSharedMemConfig(CUsharedconfig config) const;
 
-      private:
+      protected:
         const Context _context;
 
+      private:
         // Keep the Module alive, because Function actually wraps a pointer
         // to a function within the Module.
         const Module _module;
