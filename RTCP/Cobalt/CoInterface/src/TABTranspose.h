@@ -29,6 +29,7 @@
 #include <Common/Thread/Condition.h>
 #include <Stream/Stream.h>
 #include <Stream/PortBroker.h>
+#include <MACIO/RTmetadata.h>
 #include "RunningStatistics.h"
 #include "BestEffortQueue.h"
 #include "MultiDimArray.h"
@@ -43,6 +44,8 @@ namespace LOFAR
   {
     namespace TABTranspose
     {
+      using MACIO::RTmetadata;
+
       /*
        * A piece of data belonging to a certain subband.
        *
@@ -159,7 +162,7 @@ namespace LOFAR
 
         ~BlockCollector();
 
-	      /*
+        /*
          * Add a subband of any block.
          */
         void addSubband( SmartPtr<Subband> &subband );
@@ -321,7 +324,6 @@ namespace LOFAR
       /*
        * MultiSender sends data to various receivers.
        */
-
       class MultiSender {
       public:
         // A host to send data to, that is, enough information
@@ -350,9 +352,13 @@ namespace LOFAR
         // Set up a TAB sender to multiple hosts:
         //
         // hostMap:          the mapping fileIdx -> Host
-        // canDrop:          whether data dropping is allowed
+        // parset:           the parset (i.e. observation configuration)
+        // mdLogger:         MACIO/PVSS metadata logger for monitoring
+        // mdKeyPrefix:      prefix needed to log MAC/PVSS events
         // maxRetentionTime: drop data older than this from the queue
-        MultiSender( const HostMap &hostMap, bool canDrop = false, double maxRetentionTime = 3.0 );
+        MultiSender( const HostMap &hostMap, const Parset &parset,
+                     RTmetadata &mdLogger, const std::string &mdKeyPrefix,
+                     double maxRetentionTime = 3.0 );
         ~MultiSender();
 
         // Send the data from the queues to the receiving hosts. Will run until
@@ -372,8 +378,14 @@ namespace LOFAR
         // fileIdx -> host mapping
         const HostMap hostMap;
 
-        // if we're allowed to drop in the first place
-        const bool canDrop;
+        const Parset &itsParset;
+
+        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
+
+        // Logging for monitoring (PVSS).
+        RTmetadata &itsMdLogger; // non-const to be able to use its log()
+        const std::string itsMdKeyPrefix;
+        size_t itsBlocksWritten, itsBlocksDropped;
 
         // MultiSender has a queue per host it sends to. If it appends an element
         // to a queue, it will discard the head if it is older than maxRententionTime.
@@ -382,13 +394,11 @@ namespace LOFAR
         // 'maxRetentionTime' seconds.
         const double maxRetentionTime;
 
-        std::map<size_t, RunningStatistics> drop_rates; // [fileIdx]
-
         // Set of hosts to connect to (the list of unique values in hostMap)
         std::vector<struct Host> hosts;
 
         // A queue for data to be sent to each host
-	      std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
+        std::map<struct Host, SmartPtr< Queue< SmartPtr<struct Subband> > > > queues;
       };
 
     } // namespace TABTranspose

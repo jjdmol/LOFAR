@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
   }
 
   Parset parset(argv[1]);
+  MACIO::RTmetadata rtmd(parset.observationID(), "", ""); // dummy
 
   Parset feedbackLTA;
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 
       Pool<StreamableData> outputPool(logPrefix);
 
-      SubbandOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      SubbandOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();
       feedbackLTA.adoptCollection(writer.feedbackLTA());
     }
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
 
       Pool<TABTranspose::BeamformedData> outputPool(logPrefix);
 
-      TABOutputThread writer(parset, fileIdx, outputPool, logPrefix, ".");
+      TABOutputThread writer(parset, fileIdx, outputPool, rtmd, "rtmd key prefix", logPrefix, ".");
       writer.createMS();
       feedbackLTA.adoptCollection(writer.feedbackLTA());
     }

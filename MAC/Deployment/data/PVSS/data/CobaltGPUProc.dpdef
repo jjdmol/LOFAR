@@ -1,13 +1,13 @@
 # These keys contain statistics about the output of GPUProc, i.e. the data that
-# is ready to be sent to outputProc. These keys must be written _per_ subband. 
+# is ready to be sent to outputProc. The *Arr keys must be written _per_ [subband]. 
 
 # Observation ID as string
 observationName		string
 
-# Type of data (Correlated/Beamformed)
+# Type of data ("Correlated" or "Beamformed")
 dataProductType		string
 
-# Subband index number (usually in the range [0..488>)
+# Subband index number (usually in the range [0..966> (max in 4 bit mode))
 subband			intArr
 
 # Are we dropping output at the moment?
