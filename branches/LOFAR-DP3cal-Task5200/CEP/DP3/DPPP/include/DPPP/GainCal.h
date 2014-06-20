@@ -214,6 +214,9 @@ namespace {
 
       string           itsOperation;
 
+      uint             itsConverged;
+      uint             itsNonconverged;
+      uint             itsStalled;
       NSTimer          itsTimer;
       NSTimer          itsTimerPredict;
       NSTimer          itsTimerSolve;
