@@ -61,7 +61,7 @@ namespace LOFAR
         KernelFactory<BeamFormerKernel> beamFormer;
         KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
         KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
-        KernelFactory<FIR_FilterKernel> coherentFirFilter;
+        SmartPtr< KernelFactory<FIR_FilterKernel> > coherentFirFilter;
         KernelFactory<CoherentStokesKernel> coherentStokes;
       };
 
@@ -89,11 +89,9 @@ namespace LOFAR
 
       void logTime();
 
-      ~BeamFormerCoherentStep();
-
     private:
 
-      bool coherentStokesPPF;
+      const bool coherentStokesPPF;
 
       // Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;

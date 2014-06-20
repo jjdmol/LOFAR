@@ -55,12 +55,15 @@ namespace LOFAR
       incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.antennaFields.size(),
         ps.settings.beamFormer.nrHighResolutionChannels)),
-      incoherentFirFilter(FIR_FilterKernel::Parameters(ps,
-        ps.settings.antennaFields.size(),
-        false,
-        nrSubbandsPerSubbandProc,
-        ps.settings.beamFormer.incoherentSettings.nrChannels,
-        static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels))),
+      incoherentFirFilter(
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1
+        ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
+            ps.settings.antennaFields.size(),
+            false,
+            nrSubbandsPerSubbandProc,
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels)))
+        : NULL ),
       incoherentStokes(IncoherentStokesKernel::Parameters(ps))
     {
     }
@@ -78,7 +81,8 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devE,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull )
       :
-      BeamFormerSubbandProcStep(parset, i_queue)
+      BeamFormerSubbandProcStep(parset, i_queue),
+      incoherentStokesPPF(factories.incoherentFirFilter != NULL)
     {
       devInput = i_devInput;
       devA = i_devA;
@@ -95,8 +99,6 @@ namespace LOFAR
     void BeamFormerIncoherentStep::initMembers(gpu::Context &context,
       Factories &factories)
     {
-      incoherentStokesPPF =
-        ps.settings.beamFormer.incoherentSettings.nrChannels > 1;
 
       // Transpose: B -> A
       incoherentTransposeBuffers =
@@ -124,37 +126,42 @@ namespace LOFAR
       incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
         factories.incoherentInverseFFTShift.create(queue, *incoherentInverseFFTShiftBuffers));
 
-      devIncoherentFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.incoherentFirFilter.bufferSize(
-        FIR_FilterKernel::HISTORY_DATA)
-        ));
-      devIncoherentFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.incoherentFirFilter.bufferSize(
-        FIR_FilterKernel::FILTER_WEIGHTS)));
+      if (incoherentStokesPPF) {
+        devIncoherentFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
+          new gpu::DeviceMemory(context,
+          factories.incoherentFirFilter->bufferSize(
+          FIR_FilterKernel::HISTORY_DATA)
+          ));
 
-      // final FIR: A -> B
-      incoherentFirFilterBuffers =
-        std::auto_ptr<FIR_FilterKernel::Buffers>(
-        new FIR_FilterKernel::Buffers(*devA, *devB,
-        *devIncoherentFilterWeights,
-        *devIncoherentFilterHistoryData));
+        devIncoherentFilterHistoryData->set(0);
 
-      incoherentFirFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-        factories.incoherentFirFilter.create(
-        queue, *incoherentFirFilterBuffers));
+        devIncoherentFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
+          new gpu::DeviceMemory(context,
+          factories.incoherentFirFilter->bufferSize(
+          FIR_FilterKernel::FILTER_WEIGHTS)));
+
+        // final FIR: A -> B
+        incoherentFirFilterBuffers =
+          std::auto_ptr<FIR_FilterKernel::Buffers>(
+          new FIR_FilterKernel::Buffers(*devA, *devB,
+          *devIncoherentFilterWeights,
+          *devIncoherentFilterHistoryData));
+
+        incoherentFirFilterKernel = std::auto_ptr<FIR_FilterKernel>(
+          factories.incoherentFirFilter->create(
+          queue, *incoherentFirFilterBuffers));
 
 
-      // final FFT: B -> B
-      unsigned nrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.incoherentSettings.nrChannels;
+        // final FFT: B -> B
+        unsigned nrFFTs = ps.nrStations() * NR_POLARIZATIONS *
+          ps.nrSamplesPerSubband() /
+          ps.settings.beamFormer.incoherentSettings.nrChannels;
 
-      incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
-        new FFT_Kernel(
-        queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-        nrFFTs, true, *devB));
+        incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
+          new FFT_Kernel(
+          queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
+          nrFFTs, true, *devB));
+      }
 
       // Incoherent Stokes kernel: A/B -> B/A
       //
@@ -167,8 +174,6 @@ namespace LOFAR
         incoherentStokesPPF ? *devA : *devB));
       incoherentStokesKernel = std::auto_ptr<IncoherentStokesKernel>(
         factories.incoherentStokes.create(queue, *incoherentStokesBuffers));
-
-      devIncoherentFilterHistoryData->set(0);
     }
 
     gpu::DeviceMemory BeamFormerIncoherentStep::outputBuffer() {
@@ -203,14 +208,14 @@ namespace LOFAR
     {
       // ********************************************************************
       // incoherent stokes kernels
-      incoherentTranspose->enqueue( blockID);
+      incoherentTranspose->enqueue(blockID);
 
-      incoherentInverseFFT->enqueue( blockID);
+      incoherentInverseFFT->enqueue(blockID);
 
       DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
         "incoherentInverseFFTShiftBuffers.input.dat");
 
-      incoherentInverseFFTShiftKernel->enqueue( blockID);
+      incoherentInverseFFTShiftKernel->enqueue(blockID);
 
       DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
         "incoherentInverseFFTShiftBuffers.output.dat");
@@ -224,11 +229,7 @@ namespace LOFAR
         incoherentFinalFFT->enqueue(blockID);
       }
 
-      incoherentStokesKernel->enqueue( blockID);
+      incoherentStokesKernel->enqueue(blockID);
     }
-
-    BeamFormerIncoherentStep::~BeamFormerIncoherentStep()
-    {}
-
   }
 }

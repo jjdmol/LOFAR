@@ -56,7 +56,7 @@ namespace LOFAR
 
         KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
         KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
-        KernelFactory<FIR_FilterKernel> incoherentFirFilter;
+        SmartPtr< KernelFactory<FIR_FilterKernel> > incoherentFirFilter;
         KernelFactory<IncoherentStokesKernel> incoherentStokes;
       };
 
@@ -86,8 +86,6 @@ namespace LOFAR
 
       void logTime();
 
-      ~BeamFormerIncoherentStep();
-
     private:
 
       // Data members
@@ -101,7 +99,7 @@ namespace LOFAR
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
-      bool incoherentStokesPPF;
+      const bool incoherentStokesPPF;
 
       // Transpose 
       std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;

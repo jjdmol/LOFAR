@@ -57,12 +57,15 @@ namespace LOFAR
       coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
         ps.settings.beamFormer.nrHighResolutionChannels)),
-      coherentFirFilter(FIR_FilterKernel::Parameters(ps,
-        ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
-        false,
-        nrSubbandsPerSubbandProc,
-        ps.settings.beamFormer.coherentSettings.nrChannels,
-        static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels))),
+      coherentFirFilter(
+        ps.settings.beamFormer.coherentSettings.nrChannels > 1
+        ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
+            ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
+            false,
+            nrSubbandsPerSubbandProc,
+            ps.settings.beamFormer.coherentSettings.nrChannels,
+            static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels)))
+        : NULL),
       coherentStokes(CoherentStokesKernel::Parameters(ps))
     {
     }
@@ -81,7 +84,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
       BeamFormerSubbandProcStep(parset, i_queue),
-      coherentStokesPPF(ps.settings.beamFormer.coherentSettings.nrChannels > 1)
+      coherentStokesPPF(factories.coherentFirFilter != NULL)
     {
       devInput = i_devInput;
       devA = i_devA;
@@ -92,9 +95,6 @@ namespace LOFAR
       devNull = i_devNull;
       initMembers(context, factories);
     }
-
-    BeamFormerCoherentStep::~BeamFormerCoherentStep()
-    {}
 
     void BeamFormerCoherentStep::initMembers(gpu::Context &context,
       Factories &factories)
@@ -142,28 +142,30 @@ namespace LOFAR
     // Output buffer:
     // 1ch: - (no FIR will be done)
     // PPF: C
-    devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
-      new gpu::DeviceMemory(context,
-      factories.coherentFirFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
+    if (coherentStokesPPF) {
+      devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
 
-    devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
-      new gpu::DeviceMemory(context,
-      factories.coherentFirFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)));
+      devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
+        new gpu::DeviceMemory(context,
+        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA)));
 
-    firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
-      new FIR_FilterKernel::Buffers(*devD, *devC, *devFilterWeights, *devFilterHistoryData));
+      firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
+        new FIR_FilterKernel::Buffers(*devD, *devC, *devFilterWeights, *devFilterHistoryData));
 
-    firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-      factories.coherentFirFilter.create(queue, *firFilterBuffers));
+      firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
+        factories.coherentFirFilter->create(queue, *firFilterBuffers));
 
-    // final FFT: C -> C (in-place) = firFilterBuffers.output
+      // final FFT: C -> C (in-place) = firFilterBuffers.output
 
-    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
-      NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-      ps.settings.beamFormer.coherentSettings.nrChannels;
-    finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
-      queue, ps.settings.beamFormer.coherentSettings.nrChannels,
-      nrFinalFFTs, true, *devC));
+      unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
+        NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
+        ps.settings.beamFormer.coherentSettings.nrChannels;
+      finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
+        queue, ps.settings.beamFormer.coherentSettings.nrChannels,
+        nrFinalFFTs, true, *devC));
+    }
 
     // coherentStokes: C -> D
     //
@@ -182,8 +184,7 @@ namespace LOFAR
 
 void BeamFormerCoherentStep::logTime()
 {
-  if (coherentStokesPPF)
-  {
+  if (coherentStokesPPF) {
     firFilterKernel->itsCounter.logTime();
     finalFFT->itsCounter.logTime();
   }
@@ -230,8 +231,7 @@ void BeamFormerCoherentStep::process(BlockID blockID,
   inverseFFTShiftKernel->enqueue(blockID);
   DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
 
-  if (coherentStokesPPF)
-  {
+  if (coherentStokesPPF) {
     // The subbandIdx immediate kernel arg must outlive kernel runs.
     firFilterKernel->enqueue(blockID,
       blockID.subbandProcSubbandIdx);
