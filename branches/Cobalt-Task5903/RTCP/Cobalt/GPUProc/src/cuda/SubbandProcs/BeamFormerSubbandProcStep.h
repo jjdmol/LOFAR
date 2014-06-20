@@ -47,7 +47,7 @@ namespace LOFAR
 
       virtual void logTime() = 0;
 
-       ~BeamFormerSubbandProcStep()
+      virtual ~BeamFormerSubbandProcStep()
        {}
 
     protected:
