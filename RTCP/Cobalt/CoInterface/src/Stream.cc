@@ -25,6 +25,7 @@
 #include <CoInterface/Stream.h>
 
 #include <ctime>
+#include <cstring>
 #include <vector>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -49,10 +50,10 @@ namespace LOFAR
 
     Stream *createStream(const string &descriptor, bool asServer, time_t deadline)
     {
-      vector<string> split = StringUtil::split(descriptor, ':');
+      if (deadline > 0 && deadline <= std::time(0)) // TODO: doesn't belong here
+        THROW(SocketStream::TimeOutException, "createStream deadline passed");
 
-      if (deadline > 0 && deadline <= std::time(0))
-        THROW(SocketStream::TimeOutException, "Deadline already passed at start");
+      vector<string> split = StringUtil::split(descriptor, ':');
 
       if (descriptor == "null:")
         return new NullStream;
@@ -77,9 +78,46 @@ namespace LOFAR
       else if (split.size() == 1)
         return asServer ? new FileStream(split[0].c_str()) : new FileStream(split[0].c_str(), 0666);
       else
-        THROW(CoInterfaceException, string("unrecognized connector format: \"" + descriptor + '"'));
+        THROW(CoInterfaceException, string("createStream unrecognized descriptor format: " + descriptor));
     }
 
+    // TODO: this function is an unfinished start to refactor the above.
+    enum StreamSpecification::Protocol readProtocol(char **str)
+    {
+      // The first part can be done with iterators,
+      // but the if-nest below becomes tedious. Use C.
+      char *base = *str;
+      unsigned i = 0;
+      while (isalnum(base[i])) {
+        i += 1;
+      }
+
+      enum StreamSpecification::Protocol rv;
+      if (strncmp(base, "udp", i) == 0) {
+        rv = StreamSpecification::UDP_STREAM;
+      } else if (strncmp(base, "tcp", i) == 0) {
+        rv = StreamSpecification::TCP_STREAM;
+      } else if (strncmp(base, "file", i) == 0) {
+        rv = StreamSpecification::FILE_STREAM;
+      } else if (strncmp(base, "null", i) == 0) {
+        rv = StreamSpecification::NULL_STREAM;
+      } else if (strncmp(base, "pipe", i) == 0) {
+        rv = StreamSpecification::PIPE_STREAM;
+      } else if (strncmp(base, "udpkey", i) == 0) {
+        rv = StreamSpecification::UDPKEY_STREAM;
+      } else if (strncmp(base, "tcpkey", i) == 0) {
+        rv = StreamSpecification::TCPKEY_STREAM;
+      } else if (strncmp(base, "tcpbroker", i) == 0) {
+        rv = StreamSpecification::TCPBROKER_STREAM;
+      } else if (strncmp(base, "factory", i) == 0) {
+        rv = StreamSpecification::FACTORY_STREAM;
+      } else {
+        THROW(CoInterfaceException, string("createStream failed to recognize protocol: ") + *str);
+      }
+
+      *str += i;
+      return rv;
+    }
 
     uint16 storageBrokerPort(int observationID)
     {

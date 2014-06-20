@@ -346,15 +346,15 @@ SmartPtr<Stream> StationInput::inputStream(size_t board) const
 
     stream = new PacketStream(factory, from, to, board);
   } else {
-    try {
-      stream = createStream(desc, true);
-    } catch(Exception &ex) {
-      if (ps.settings.realTime) {
-        LOG_ERROR_STR(logPrefix << "Caught exception: " << ex.what());
-        stream = new FileStream("/dev/null"); /* block on read to avoid spamming illegal packets */
-      } else {
-        throw;
+    if (ps.settings.realTime) {
+      try {
+        stream = createStream(desc, true);
+      } catch (Exception &ex) {
+        LOG_ERROR_STR(logPrefix << "Caught exception creating stream (continuing on /dev/null): " << ex.what());
+        stream = new FileStream("/dev/null"); /* will read end-of-stream: avoid spamming illegal packets */
       }
+    } else { // non real time: un-tried call, so no rethrow (changes exc backtrace)
+      stream = createStream(desc, true);
     }
   }
 
