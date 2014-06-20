@@ -162,7 +162,7 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
 
       // initialize storage
-      const size_t nThread=1;//OpenMP::maxThreads();
+      const size_t nThread=OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
         end = itsThreadStorage.end(); it != end; ++it)
@@ -284,6 +284,7 @@ namespace LOFAR {
       storage.measFrame.resetEpoch (MEpoch(MVEpoch(time/86400), MEpoch::UTC));
 
       itsTimerPredict.start();
+//#pragma omp parallel for
       for(size_t dr = 0; dr < nDr; ++dr)
       {
         fill(storage.model_patch.begin(), storage.model_patch.end(), dcomplex());
@@ -465,7 +466,7 @@ namespace LOFAR {
       uint nomega = 24;
       double c1 = 0.5;
       double c2 = 1.2;
-      double dg  =1.0e30;
+      double dg  =1.0e29;
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
@@ -499,7 +500,7 @@ namespace LOFAR {
       DComplex* mvis_p;
 
       uint iter=0;
-      for (;iter<itsMaxIter;++iter) {
+      for (;iter<itsMaxIter&&dg/dgx<0.99;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
@@ -565,7 +566,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>6) {
+          if (itsDebugLevel>3) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -605,7 +606,7 @@ namespace LOFAR {
                   }
                 }
               } else if (dg <= dgx) {
-                if (itsDebugLevel>3) {
+                if (itsDebugLevel>4) {
                   cout<<"dg<=dgx"<<endl;
                 }
                 for (uint ant=0;ant<nSt;++ant) {
@@ -682,7 +683,7 @@ namespace LOFAR {
       uint nomega = 24;
       double c1 = 0.5;
       double c2 = 1.2;
-      double dg  =1.0e30;
+      double dg  =1.0e29;
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
@@ -738,7 +739,7 @@ namespace LOFAR {
       if (nSt==0) {
         iter=itsMaxIter;
       }
-      for (;iter<itsMaxIter;++iter) {
+      for (;iter<itsMaxIter&&dg/dgx<0.99;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
@@ -749,9 +750,9 @@ namespace LOFAR {
         for (uint st1=0;st1<2*nSt;++st1) {
           w=0;
           t=0;
+          mvis_p=&itsMVis(IPosition(3,0,0,st1));
+          vis_p = &itsVis(IPosition(3,0,0,st1));
           for (uint ch=0;ch<nCh;++ch) {
-            mvis_p=&itsMVis(IPosition(3,0,ch,st1));
-            vis_p = &itsVis(IPosition(3,0,ch,st1));
             for (uint st2=0;st2<2*nSt;++st2) {
               iS.z(ch*nSt+st2,0) = iS.h(st2,0) * (*mvis_p++);//itsMVis(IPosition(3,st2,ch,st1));
               w+=norm(iS.z(ch*nSt+st2,0));
@@ -778,7 +779,7 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>7) {
+          if (itsDebugLevel>3) {
             cout<<"dg="<<dg<<endl;
           }
 
@@ -946,6 +947,7 @@ namespace LOFAR {
       uint nSt   = info().antennaUsed().size();
       uint nBl   = info().nbaselines();
 
+//#pragma omp parallel for
       for (size_t st=0; st<nSt; ++st) {
         itsAntBeamInfo[st]->response (nchan, time, chanFreqs.cbegin(),
                                       srcdir, info().refFreq(), refdir, tiledir,
