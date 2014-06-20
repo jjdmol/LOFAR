@@ -198,12 +198,12 @@ void BeamFormerCoherentStep::printStats()
   // Print the individual counter stats: mean and stDev
   LOG_INFO_STR(
     "**** BeamFormerSubbandProc coherent stage GPU mean and stDev ****" << endl <<
-    std::setw(20) << "(firFilterKernel)" << firFilterKernel->itsCounter.stats << endl <<
-    std::setw(20) << "(finalFFT)" << finalFFT->itsCounter.stats << endl <<
+    std::setw(20) << "(firFilterKernel)" << (coherentStokesPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
+    std::setw(20) << "(finalFFT)" << (coherentStokesPPF ? finalFFT->itsCounter.stats : RunningStatistics()) << endl <<
     std::setw(20) << "(beamformer)" << beamFormerKernel->itsCounter.stats << endl <<
     std::setw(20) << "(coherentTranspose)" << coherentTransposeKernel->itsCounter.stats << endl <<
     std::setw(20) << "(inverseFFT)" << inverseFFT->itsCounter.stats << endl <<
-    //std::setw(20) << "(inverseFFTShift)" << inverseFFTShift.stats << endl <<
+    std::setw(20) << "(inverseFFTShift)" << inverseFFTShiftKernel->itsCounter.stats << endl <<
     std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl);
 
 }
