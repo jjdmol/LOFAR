@@ -22,45 +22,26 @@
 #ifndef LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
 #define LOFAR_GPUPROC_CUDA_BEAM_FORMER_FACTORIES_H
 
-#include <GPUProc/KernelFactory.h>
-#include <GPUProc/Kernels/BandPassCorrectionKernel.h>
-#include <GPUProc/Kernels/BeamFormerKernel.h>
-#include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
-#include <GPUProc/Kernels/CoherentStokesKernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/IntToFloatKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesKernel.h>
-#include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
+#include <CoInterface/Parset.h>
+#include <CoInterface/SmartPtr.h>
+
+#include "BeamFormerPreprocessingStep.h"
+#include "BeamFormerCoherentStep.h"
+#include "BeamFormerIncoherentStep.h"
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    class Parset;
-
     struct BeamFormerFactories
     {
       BeamFormerFactories(const Parset &ps, 
                             size_t nrSubbandsPerSubbandProc = 1);
 
-      KernelFactory<IntToFloatKernel> intToFloat;
-      KernelFactory<FFTShiftKernel> fftShift;
-      KernelFactory<DelayAndBandPassKernel> delayCompensation;
-      KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+      BeamFormerPreprocessingStep::Factories preprocessing;
 
-      KernelFactory<BeamFormerKernel> beamFormer;
-      KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
-      KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
-      KernelFactory<FIR_FilterKernel> coherentFirFilter;
-      KernelFactory<CoherentStokesKernel> coherentStokes;
-
-      KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
-      KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
-      KernelFactory<FIR_FilterKernel> incoherentFirFilter;
-      KernelFactory<IncoherentStokesKernel> incoherentStokes;
+      SmartPtr<BeamFormerCoherentStep::Factories> coherentStokes;
+      SmartPtr<BeamFormerIncoherentStep::Factories> incoherentStokes;
     };
 
   }

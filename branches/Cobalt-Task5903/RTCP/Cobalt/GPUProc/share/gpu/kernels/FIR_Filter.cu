@@ -49,9 +49,7 @@ typedef signed char SampleType;
 typedef float SampleType;
 #endif
 
-#if NR_CHANNELS == 1
-#warning TODO: NR_CHANNELS == 1 is not (yet) supported
-#elif !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
+#if !(NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0)
 #error Precondition violated: NR_CHANNELS > 0 && NR_CHANNELS % 16 == 0
 #endif
 
