@@ -208,6 +208,11 @@ namespace LOFAR
       // buffer and the data buffer itself.
       vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
       integratedData;
+
+      // Perform long-time integration. Returns `true' if integration has
+      // been completed. In that case, `output' will contain the integration
+      // result.
+      bool integrate(CorrelatedDataHostBuffer &output);
     };
 
   }

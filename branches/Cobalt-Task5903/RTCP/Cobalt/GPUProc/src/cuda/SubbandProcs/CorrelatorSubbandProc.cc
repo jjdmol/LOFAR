@@ -209,7 +209,7 @@ namespace LOFAR
     {   
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
+        boost::extents[parset.settings.correlator.nrChannels][parset.settings.antennaFields.size()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -255,7 +255,7 @@ namespace LOFAR
           unsigned bl = baseline(stat1, stat2);
 
           // If there is a single channel then the index 0 contains real data
-          if (parset.nrChannelsPerSubband() == 1) 
+          if (parset.settings.correlator.nrChannels == 1) 
           {                                            
             // The number of invalid (flagged) samples is the union of the
             // flagged samples in the two stations
@@ -270,7 +270,7 @@ namespace LOFAR
             // channel 0 does not contain valid data
             output.nrValidSamples<T>(bl, 0) = 0;
 
-            for(unsigned ch = 1; ch < parset.nrChannelsPerSubband(); ch ++) 
+            for(unsigned ch = 1; ch < parset.settings.correlator.nrChannels; ch ++) 
             {
               // valid samples is total number of samples minus the union of the
               // Two stations.
@@ -317,7 +317,7 @@ namespace LOFAR
         //
         // Channel 0 is already flagged according to specs, so we can simply
         // include it both for 1 and >1 channels/subband.
-        for (unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) 
+        for (unsigned ch = 0; ch < parset.settings.correlator.nrChannels; ch++) 
         {
           T nrValidSamples = output.nrValidSamples<T>(bl, ch);
 
@@ -449,27 +449,8 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
+    bool CorrelatorSubbandProc::integrate(CorrelatedDataHostBuffer &output)
     {
-      CorrelatedDataHostBuffer &output = 
-        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
-
-      // The flags are already copied to the correct location
-      // now the flagged amount should be applied to the visibilities
-      switch (output.itsNrBytesPerNrValidSamples) {
-        case 4:
-          Flagger::applyWeights<uint32_t>(ps, output);  
-          break;
-
-        case 2:
-          Flagger::applyWeights<uint16_t>(ps, output);  
-          break;
-
-        case 1:
-          Flagger::applyWeights<uint8_t>(ps, output);  
-          break;
-      }
-
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
       
@@ -492,6 +473,36 @@ namespace LOFAR
         integratedData[idx].second->reset();
         return true;
       }
+    }
+
+
+    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
+    {
+      CorrelatedDataHostBuffer &output = 
+        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
+
+      if (!integrate(output)) {
+        // Not yet done constructing output block 
+        return false;
+      }
+
+      // The flags are already copied to the correct location
+      // now the flagged amount should be applied to the visibilities
+      switch (output.itsNrBytesPerNrValidSamples) {
+        case 4:
+          Flagger::applyWeights<uint32_t>(ps, output);  
+          break;
+
+        case 2:
+          Flagger::applyWeights<uint16_t>(ps, output);  
+          break;
+
+        case 1:
+          Flagger::applyWeights<uint8_t>(ps, output);  
+          break;
+      }
+
+      return true;
     }
 
   }
