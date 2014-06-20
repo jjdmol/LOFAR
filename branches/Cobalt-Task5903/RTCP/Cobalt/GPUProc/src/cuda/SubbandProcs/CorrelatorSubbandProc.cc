@@ -28,8 +28,6 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/OpenMP_Lock.h>
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -81,13 +79,12 @@ namespace LOFAR
       :
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
       counters(context),
+      correlatorPPF(ps.settings.correlator.nrChannels > 1),
       prevBlock(-1),
       prevSAP(-1),
       devInput(
-        std::max(ps.nrChannelsPerSubband() == 1 ? 
-                 0UL : 
-                 factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
-                 factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
+        factories.correlator.bufferSize(
+          CorrelatorKernel::INPUT_DATA),
         factories.delayAndBandPass.bufferSize(
           DelayAndBandPassKernel::DELAYS),
         factories.delayAndBandPass.bufferSize(
@@ -99,20 +96,6 @@ namespace LOFAR
                    DelayAndBandPassKernel::INPUT_DATA),
                  factories.correlator.bufferSize(
                    CorrelatorKernel::OUTPUT_DATA))),
-      // FIR filter
-      devFilterWeights(
-        context,
-        factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(
-        context, 
-        factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
-      firFilterBuffers(
-        *devInput.inputSamples, devFilteredData,
-        devFilterWeights, devFilterHistoryData),
-      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
-
-      // FFT
-      fftKernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.correlator.nrSamplesPerChannel, true, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(
@@ -136,8 +119,23 @@ namespace LOFAR
 
       //## --------  Start of constructor body  -------- ##//
     {
-      // initialize history data to zero
-      devFilterHistoryData.set(0);
+      if (correlatorPPF) {
+        // FIR filter
+        devFilterWeights = new gpu::DeviceMemory(
+          context,
+          factories.firFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
+        devFilterHistoryData = new gpu::DeviceMemory(
+          context, 
+          factories.firFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA));
+
+        firFilterBuffers = new FIR_FilterKernel::Buffers(
+          *devInput.inputSamples, devFilteredData,
+          *devFilterWeights, *devFilterHistoryData);
+        firFilterKernel = factories.firFilter->create(queue, *firFilterBuffers);
+
+        // FFT
+        fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.correlator.nrSamplesPerChannel, true, devFilteredData);
+      }
 
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
@@ -182,8 +180,8 @@ namespace LOFAR
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** CorrelatorSubbandProc GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(fir)" << firFilterKernel->itsCounter.stats<< endl <<
-        std::setw(20) << "(fft)" << fftKernel.itsCounter.stats << endl <<
+        std::setw(20) << "(fir)" << (correlatorPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
+        std::setw(20) << "(fft)" << (correlatorPPF ? fftKernel->itsCounter.stats : RunningStatistics()) << endl <<
         std::setw(20) << "(delayBp)" << delayAndBandPassKernel->itsCounter.stats << endl <<
         std::setw(20) << "(correlator)" << correlatorKernel->itsCounter.stats << endl <<
         std::setw(20) << "(samples)" << counters.samples.stats << endl <<
@@ -364,18 +362,15 @@ namespace LOFAR
       // Copy data to the GPU 
       // If #ch/sb==1, copy the input to the device buffer where the
       // DelayAndBandPass kernel reads from.
-#if 1
-      if (ps.nrChannelsPerSubband() == 1)
-        queue.writeBuffer(
-          devFilteredData, input.inputSamples, counters.samples, true);
-      else // #ch/sb > 1
+      if (correlatorPPF)
         queue.writeBuffer(
           *devInput.inputSamples, input.inputSamples, counters.samples, true);
-#endif
+      else
+        queue.writeBuffer(
+          devFilteredData, input.inputSamples, counters.samples, true);
    
-      if (ps.delayCompensation())
-      {
-        unsigned SAP = ps.settings.subbands[subband].SAP;
+      if (ps.settings.delayCompensation.enabled) {
+        const unsigned SAP = ps.settings.subbands[subband].SAP;
 
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) 
@@ -395,11 +390,11 @@ namespace LOFAR
       // *********************************************
       // Run the kernels
 
-      if (ps.nrChannelsPerSubband() > 1) {
+      if (correlatorPPF) {
         // The subbandIdx immediate kernel arg must outlive kernel runs.
         firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(input.blockID);
+        fftKernel->enqueue(input.blockID);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare), run
@@ -411,13 +406,13 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(input.blockID );
+      correlatorKernel->enqueue(input.blockID);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
 
       // Propagate the flags.
-      if (ps.nrChannelsPerSubband() > 1) {
+      if (correlatorPPF) {
         // Put the history flags in front of the sample flags,
         // because Flagger::propagateFlags expects it that way.
         firFilterKernel->prefixHistoryFlags(
@@ -440,10 +435,9 @@ namespace LOFAR
         queue.synchronize();
 
         // Update the counters
-        if (ps.nrChannelsPerSubband() > 1) 
-        {
+        if (correlatorPPF) {
           firFilterKernel->itsCounter.logTime();
-          fftKernel.itsCounter.logTime();
+          fftKernel->itsCounter.logTime();
         }
 
         delayAndBandPassKernel->itsCounter.logTime();

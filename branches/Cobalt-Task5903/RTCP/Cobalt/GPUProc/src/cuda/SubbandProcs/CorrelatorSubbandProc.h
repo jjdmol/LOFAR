@@ -67,43 +67,29 @@ namespace LOFAR
     {
       CorrelatorFactories(const Parset &ps, 
                           size_t nrSubbandsPerSubbandProc = 1):
-        firFilter(firFilterParams(ps, nrSubbandsPerSubbandProc)),
-        delayAndBandPass(delayAndBandPassParams(ps)),
+        firFilter(
+          ps.settings.correlator.nrChannels > 1
+          ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
+            ps.settings.antennaFields.size(),
+            true,
+            nrSubbandsPerSubbandProc,
+            ps.settings.correlator.nrChannels,
+            // Scale to always output visibilities or stokes with the same flux scale.
+            // With the same bandwidth, twice the (narrower) channels _average_ (not
+            // sum) to the same fluxes (and same noise). Twice the channels (twice the
+            // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
+            // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
+            // effectively squares, integr on fewer channels averages over more values.
+            std::sqrt((double)ps.settings.correlator.nrChannels)))
+          : NULL),
+        delayAndBandPass(DelayAndBandPassKernel::Parameters(ps, true)),
         correlator(ps)
       {
       }
 
-      KernelFactory<FIR_FilterKernel> firFilter;
+      SmartPtr< KernelFactory<FIR_FilterKernel> > firFilter;
       KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
       KernelFactory<CorrelatorKernel> correlator;
-
-      DelayAndBandPassKernel::Parameters
-      delayAndBandPassParams(const Parset &ps) const
-      {
-        DelayAndBandPassKernel::Parameters params(ps, true);
-
-        return params;
-      }
-
-      FIR_FilterKernel::Parameters
-      firFilterParams(const Parset &ps, size_t nrSubbandsPerSubbandProc) const 
-      {
-        FIR_FilterKernel::Parameters params(ps,
-          ps.settings.antennaFields.size(),
-          true,
-          nrSubbandsPerSubbandProc,
-          ps.settings.correlator.nrChannels,
-
-          // Scale to always output visibilities or stokes with the same flux scale.
-          // With the same bandwidth, twice the (narrower) channels _average_ (not
-          // sum) to the same fluxes (and same noise). Twice the channels (twice the
-          // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
-          // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
-          // effectively squares, integr on fewer channels averages over more values.
-          std::sqrt((double)params.nrChannels));
-
-        return params;
-      }
     };
 
     class CorrelatorSubbandProc : public SubbandProc
@@ -181,6 +167,8 @@ namespace LOFAR
 
       Counters counters;
     private:
+      const bool correlatorPPF;
+
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
       // to be uploaded.
@@ -197,13 +185,13 @@ namespace LOFAR
        */
 
       // FIR filter
-      gpu::DeviceMemory devFilterWeights;
-      gpu::DeviceMemory devFilterHistoryData;
-      FIR_FilterKernel::Buffers firFilterBuffers;
-      std::auto_ptr<FIR_FilterKernel> firFilterKernel;
+      SmartPtr<gpu::DeviceMemory> devFilterWeights;
+      SmartPtr<gpu::DeviceMemory> devFilterHistoryData;
+      SmartPtr<FIR_FilterKernel::Buffers> firFilterBuffers;
+      SmartPtr<FIR_FilterKernel> firFilterKernel;
 
       // FFT
-      FFT_Kernel fftKernel;
+      SmartPtr<FFT_Kernel> fftKernel;
 
       // Delay and Bandpass
       gpu::DeviceMemory devBandPassCorrectionWeights;
