@@ -78,7 +78,10 @@ namespace LOFAR {
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
         itsPatchList     (),
-        itsOperation     (parset.getString(prefix + "operation", "solve"))
+        itsOperation     (parset.getString(prefix + "operation", "solve")),
+        itsConverged     (0),
+        itsNonconverged  (0),
+        itsStalled       (0)
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -230,6 +233,8 @@ namespace LOFAR {
       FlagCounter::showPerc1 (os, itsTimerWrite.getElapsed(), totaltime);
       os << " of it spent in writing gain solutions to disk" << endl;
 
+      os << "          ";
+      os <<"Converged: "<<itsConverged<<", stalled: "<<itsStalled<<", non converged: "<<itsNonconverged<<endl;
     }
 
     bool GainCal::process (const DPBuffer& bufin)
@@ -470,6 +475,8 @@ namespace LOFAR {
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
+      int nhit=0;
+      int maxhit=4;
 
       uint nSt=itsMVis.shape()[1];
       uint nCr=4;
@@ -500,7 +507,7 @@ namespace LOFAR {
       DComplex* mvis_p;
 
       uint iter=0;
-      for (;iter<itsMaxIter&&dg/dgx<0.99;++iter) {
+      for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
@@ -550,6 +557,17 @@ namespace LOFAR {
         }
 
         if (iter % 2 == 1) {
+          if (abs(dg-dgx) <= 1.0e-3*dg) {
+            nhit++;
+          } else {
+            nhit=0;
+          }
+
+          if (nhit>=maxhit) {
+            itsStalled++;
+            break;
+          }
+
           dgxx = dgx;
           dgx  = dg;
 
@@ -571,6 +589,7 @@ namespace LOFAR {
           }
 
           if (dg <= itsTolerance) {
+            itsConverged++;
             break;
           }
 
@@ -636,8 +655,13 @@ namespace LOFAR {
           iS.gx = iS.g;
         }
       }
-      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
-        cerr<<"!";
+      if (dg > itsTolerance && nSt>0) {
+        if (iter==itsMaxIter) {
+          itsNonconverged++;
+        }
+        if (itsDebugLevel>0) {
+          cerr<<"!";
+        }
       }
 
       if (itsDebugLevel>1) {
@@ -687,6 +711,8 @@ namespace LOFAR {
       double dgx =1.0e30;
       double dgxx;
       bool threestep = false;
+      int nhit=0;
+      int maxhit=4;
 
       uint nSt=itsMVis.shape()[0]/2;
       uint nCh = info().nchan();
@@ -765,6 +791,17 @@ namespace LOFAR {
           }
         }
         if (iter % 2 == 1) {
+          if (abs(dg-dgx) <= 1.0e-3*dg) {
+            nhit++;
+          } else {
+            nhit=0;
+          }
+
+          if (nhit>=maxhit) {
+            itsStalled++;
+            break;
+          }
+
           dgxx = dgx;
           dgx  = dg;
 
@@ -784,6 +821,7 @@ namespace LOFAR {
           }
 
           if (dg <= itsTolerance) {
+            itsConverged++;
             break;
           }
 
@@ -843,8 +881,13 @@ namespace LOFAR {
           iS.gx = iS.g;
         }
       }
-      if (dg > itsTolerance && nSt>0 && itsDebugLevel>0) {
-        cerr<<"!";
+      if (dg > itsTolerance && nSt>0) {
+        if (iter==itsMaxIter) {
+          itsNonconverged++;
+        }
+        if (itsDebugLevel>0) {
+          cerr<<"!";
+        }
       }
 
       if (itsDebugLevel>1) {
