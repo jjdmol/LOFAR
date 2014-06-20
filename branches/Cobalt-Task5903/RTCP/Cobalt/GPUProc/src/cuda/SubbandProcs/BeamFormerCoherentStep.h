@@ -74,8 +74,7 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devC,
         boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays);
 
 
 
@@ -100,7 +99,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devC;
       boost::shared_ptr<gpu::DeviceMemory> devD;
       boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
 
 

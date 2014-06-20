@@ -66,11 +66,7 @@ namespace LOFAR
         Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devE,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull
+        boost::shared_ptr<gpu::DeviceMemory> i_devB
         );
 
 
@@ -92,10 +88,6 @@ namespace LOFAR
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devC;
-      boost::shared_ptr<gpu::DeviceMemory> devD;
-      boost::shared_ptr<gpu::DeviceMemory> devE;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output

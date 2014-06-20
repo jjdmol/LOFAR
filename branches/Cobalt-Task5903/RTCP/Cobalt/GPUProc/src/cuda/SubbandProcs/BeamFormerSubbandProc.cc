@@ -136,13 +136,13 @@ namespace LOFAR
 
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
           new BeamFormerCoherentStep(parset, queue, context, *factories.coherentStokes,
-          devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
+          devInput, devA, devB, devC, devD, devBeamFormerDelays));
       }
 
       if (factories.incoherentStokes) {
         incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
           new BeamFormerIncoherentStep(parset, queue, context, *factories.incoherentStokes, 
-              devInput, devA, devB, devC, devD, devE, devNull));
+              devInput, devA, devB));
       }
 
 

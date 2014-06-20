@@ -75,11 +75,7 @@ namespace LOFAR
       Factories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
-      boost::shared_ptr<gpu::DeviceMemory> i_devB,
-      boost::shared_ptr<gpu::DeviceMemory> i_devC,
-      boost::shared_ptr<gpu::DeviceMemory> i_devD,
-      boost::shared_ptr<gpu::DeviceMemory> i_devE,
-      boost::shared_ptr<gpu::DeviceMemory> i_devNull )
+      boost::shared_ptr<gpu::DeviceMemory> i_devB )
       :
       BeamFormerSubbandProcStep(parset, i_queue),
       incoherentStokesPPF(factories.incoherentFirFilter != NULL)
@@ -87,10 +83,6 @@ namespace LOFAR
       devInput = i_devInput;
       devA = i_devA;
       devB = i_devB;
-      devC = i_devC;
-      devD = i_devD;
-      devE = i_devE;
-      devNull = i_devNull;
       initMembers(context,
         factories);
     }
@@ -132,8 +124,6 @@ namespace LOFAR
           factories.incoherentFirFilter->bufferSize(
           FIR_FilterKernel::HISTORY_DATA)
           ));
-
-        devIncoherentFilterHistoryData->set(0);
 
         devIncoherentFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
           new gpu::DeviceMemory(context,

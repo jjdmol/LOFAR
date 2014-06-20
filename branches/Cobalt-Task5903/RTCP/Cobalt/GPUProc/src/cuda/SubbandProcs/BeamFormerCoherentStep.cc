@@ -80,8 +80,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devC,
       boost::shared_ptr<gpu::DeviceMemory> i_devD,
-      boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
-      boost::shared_ptr<gpu::DeviceMemory> i_devNull)
+      boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays)
       :
       BeamFormerSubbandProcStep(parset, i_queue),
       coherentStokesPPF(factories.coherentFirFilter != NULL)
@@ -92,7 +91,6 @@ namespace LOFAR
       devC = i_devC;
       devD = i_devD;
       devBeamFormerDelays = i_devBeamFormerDelays;
-      devNull = i_devNull;
       initMembers(context, factories);
     }
 
@@ -177,9 +175,6 @@ namespace LOFAR
 
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
       factories.coherentStokes.create(queue, *coherentStokesBuffers));
-
-    // initialize history data for both coherent and incoherent stokes.
-    devFilterHistoryData->set(0);
   }
 
 void BeamFormerCoherentStep::logTime()
