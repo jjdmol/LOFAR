@@ -136,13 +136,9 @@ namespace {
         dir2Itrf(info().delayCenterCopy(),storage.measConverter);
       }
 
-      // Do a unpolarized stefcal
-      void stefcalunpol(dcomplex* model, casa::Complex* data, float* weight,
-                         const casa::Bool* flag);
-
-      // Do a polarized stefcal
-      void stefcalpol(dcomplex* model, casa::Complex* data, float* weight,
-                       const casa::Bool* flag);
+      // Perform stefcal (polarized or unpolarized)
+      void stefcal(dcomplex* model, casa::Complex* data, float* weight,
+                         const casa::Bool* flag, bool pol=false);
 
       // Find all antennas with data
       void setAntUsedNotFlagged (const casa::Bool* flag);
