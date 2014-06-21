@@ -61,7 +61,7 @@ int StationNodeAllocation::receiverRank() const
   /*
    * The parset keys
    *
-   *   PIC.Code.<antennaFieldName>.RSP.{receiver,ports}
+   *   PIC.Core.<antennaFieldName>.RSP.{receiver,ports}
    *
    * contain the antenna field names (keys) that will be received
    * by the MPI ranks and interfaces (values). See StationStreams.parset
