@@ -476,7 +476,7 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
       int nhit=0;
-      int maxhit=4;
+      int maxhit=5;
 
       uint nSt=itsMVis.shape()[1];
       uint nCr=4;
@@ -557,7 +557,10 @@ namespace LOFAR {
         }
 
         if (iter % 2 == 1) {
-          if (abs(dg-dgx) <= 1.0e-3*dg) {
+          if (dgx-dg <= 1.0e-3*dg) {
+            if (itsDebugLevel>3) {
+              cout<<"**"<<endl;
+            }
             nhit++;
           } else {
             nhit=0;
@@ -715,7 +718,7 @@ namespace LOFAR {
       double dgxx;
       bool threestep = false;
       int nhit=0;
-      int maxhit=4;
+      int maxhit=5;
 
       uint nSt=itsMVis.shape()[0]/2;
       uint nCh = info().nchan();
@@ -794,7 +797,10 @@ namespace LOFAR {
           }
         }
         if (iter % 2 == 1) {
-          if (abs(dg-dgx) <= 1.0e-3*dg) {
+          if (dgx-dg <= 1.0e-3*dg) {
+            if (itsDebugLevel>3) {
+              cout<<"**"<<endl;
+            }
             nhit++;
           } else {
             nhit=0;
