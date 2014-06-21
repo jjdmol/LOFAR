@@ -564,6 +564,9 @@ namespace LOFAR {
           }
 
           if (nhit>=maxhit) {
+            if (itsDebugLevel>3) {
+              cout<<"Detected stall"<<endl;
+            }
             itsStalled++;
             break;
           }
@@ -798,6 +801,9 @@ namespace LOFAR {
           }
 
           if (nhit>=maxhit) {
+            if (itsDebugLevel>3) {
+              cout<<"Detected stall"<<endl;
+            }
             itsStalled++;
             break;
           }
