@@ -656,7 +656,7 @@ namespace LOFAR {
         }
       }
       if (dg > itsTolerance && nSt>0) {
-        if (iter>=itsMaxIter) {
+        if (nhit<maxhit) {
           itsNonconverged++;
         }
         if (itsDebugLevel>0) {
@@ -882,7 +882,7 @@ namespace LOFAR {
         }
       }
       if (dg > itsTolerance && nSt>0) {
-        if (iter>=itsMaxIter) {
+        if (nhit<maxhit) {
           itsNonconverged++;
         }
         if (itsDebugLevel>0) {
