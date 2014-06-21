@@ -765,7 +765,7 @@ namespace LOFAR {
       if (nSt==0) {
         iter=itsMaxIter;
       }
-      for (;iter<itsMaxIter&&dg/dgx<0.99;++iter) {
+      for (;iter<itsMaxIter;++iter) {
         //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
