@@ -50,6 +50,7 @@
 #include <CoInterface/OMPThread.h>
 #include <CoInterface/TimeFuncs.h>
 #include <CoInterface/Stream.h>
+#include <CoInterface/PrintVector.h>
 
 #include <InputProc/SampleType.h>
 #include <InputProc/Station/PacketReader.h>
@@ -263,19 +264,7 @@ StationInput::StationInput( const Parset &ps, size_t stationIdx,
   }
 
   // Log all input descriptions
-  vector<string> inputStreamDescs = ps.settings.antennaFields[stationIdx].inputStreams;
-
-  stringstream inputDescription;
-
-  for (size_t board = 0; board < inputStreamDescs.size(); ++board) {
-    const string &desc = inputStreamDescs[board];
-
-    if (board > 0)
-      inputDescription << ", ";
-    inputDescription << desc;
-  }
-
-  LOG_INFO_STR(logPrefix << "Input streams: " << inputDescription.str());
+  LOG_INFO_STR(logPrefix << "Input streams: " << ps.settings.antennaFields.at(stationIdx).inputStreams);
 
   ASSERTSTR(nrBoards > 0, logPrefix << "No input streams");
 }
