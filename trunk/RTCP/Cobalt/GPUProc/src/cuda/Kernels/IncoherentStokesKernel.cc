@@ -26,7 +26,7 @@
 #include <boost/format.hpp>
 
 #include <Common/lofar_complex.h>
-#include <GPUProc/global_defines.h>
+#include <CoInterface/Config.h>
 
 namespace LOFAR
 {

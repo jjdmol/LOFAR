@@ -20,10 +20,10 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 

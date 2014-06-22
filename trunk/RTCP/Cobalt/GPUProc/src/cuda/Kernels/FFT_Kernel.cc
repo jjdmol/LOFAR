@@ -24,8 +24,8 @@
 #include <cufft.h>
 
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 
 #include "FFT_Kernel.h"
 

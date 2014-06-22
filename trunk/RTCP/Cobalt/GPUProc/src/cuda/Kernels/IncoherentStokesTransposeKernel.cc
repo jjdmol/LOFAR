@@ -22,8 +22,8 @@
 
 #include "IncoherentStokesTransposeKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 
 #include <boost/format.hpp>

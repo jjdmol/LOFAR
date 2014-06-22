@@ -21,11 +21,11 @@
 
 #include <lofar_config.h>
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/CoherentStokesKernel.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/Parset.h>
 #include <Common/LofarLogger.h>
 
