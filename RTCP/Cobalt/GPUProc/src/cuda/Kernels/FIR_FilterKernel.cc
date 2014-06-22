@@ -21,9 +21,9 @@
 #include <lofar_config.h>
 
 #include "FIR_FilterKernel.h"
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
