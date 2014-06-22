@@ -73,7 +73,7 @@ namespace LOFAR {
       startTime(ps.startTime() * ps.subbandBandwidth(), ps.clockSpeed()),
       stopTime(ps.stopTime() * ps.subbandBandwidth(), ps.clockSpeed()),
 
-      nrSamples(ps.nrSamplesPerSubband()),
+      nrSamples(ps.settings.blockSize),
       nrBlocks((stopTime - startTime) / nrSamples),
 
       metaDataPool(str(format("StationMetaData::metaDataPool [station %s]") % stationID.name())),
@@ -97,7 +97,7 @@ namespace LOFAR {
 
       // Each element represents 1 block of buffer.
       for (size_t i = 0; i < 5; ++i)
-        metaDataPool.free.append(new MPIData<SampleT>(ps.nrSubbands(), nrSamples), false);
+        metaDataPool.free.append(new MPIData<SampleT>(startTime, ps.settings.subbands.size(), nrSamples), false);
 
       /*
        * Set up delay compensation.
@@ -124,25 +124,14 @@ namespace LOFAR {
         // INPUT
         SmartPtr< MPIData<SampleT> > mpiData = metaDataPool.free.remove();
 
+        // Annotate
+        mpiData->reset(block);
+
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Applying delays") % block));
 
         // Compute the next set of metaData and read_offsets from the new
         // delays pair.
         delays.generateMetaData(*delaysAtBegin, *delaysAfterEnd, subbands, mpiData->metaData, mpiData->read_offsets);
-
-        // Annotate
-        mpiData->block = block;
-        mpiData->nrSamples = nrSamples;
-        mpiData->from  =
-          mpiData->block == -1 ? startTime - nrSamples
-                               : startTime + mpiData->block * nrSamples;
-        mpiData->to    = mpiData->from + nrSamples;
-        mpiData->stationID = stationID;
-
-        // Clear flags
-        for (size_t sb = 0; sb < ps.nrSubbands(); ++sb) {
-          mpiData->metaData[sb].flags.reset();
-        }
 
         // OUTPUT
         metaDataPool.filled.append(mpiData);

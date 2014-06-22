@@ -46,20 +46,8 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
-#include <Stream/FileStream.h>
-#include <CoInterface/Parset.h>
 #include <CoInterface/OMPThread.h>
-#include <CoInterface/TimeFuncs.h>
-#include <CoInterface/Stream.h>
-#include <CoInterface/PrintVector.h>
-
 #include <InputProc/SampleType.h>
-#include <InputProc/Station/PacketReader.h>
-#include <InputProc/Station/PacketFactory.h>
-#include <InputProc/Station/PacketStream.h>
-#include <InputProc/Buffer/BoardMode.h>
-#include <InputProc/Delays/Delays.h>
-#include <InputProc/RSPTimeStamp.h>
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
@@ -68,6 +56,34 @@ using boost::format;
 
 namespace LOFAR {
   namespace Cobalt {
+    template<typename SampleT>
+    MPIData<SampleT>::MPIData(TimeStamp obsStartTime, size_t nrSubbands, size_t nrSamples):
+      mpi_samples(boost::extents[nrSubbands][nrSamples], 1, mpiAllocator),
+      mpi_metaData(boost::extents[nrSubbands], 1, mpiAllocator),
+      metaData(nrSubbands),
+      read_offsets(nrSubbands, 0),
+      obsStartTime(obsStartTime),
+      nrSamples(nrSamples),
+      nrSubbands(nrSubbands)
+    {
+      reset(0);
+      //memset(mpi_samples.origin(), 0, mpi_samples.num_elements() * sizeof *mpi_samples.origin());
+    }
+
+
+    template<typename SampleT>
+    void MPIData<SampleT>::reset(ssize_t block)
+    {
+      this->block = block;
+
+      // update time span for this block
+      from = obsStartTime + block * nrSamples;
+      to   = from + nrSamples;
+
+      // clear flags
+      for (size_t sb = 0; sb < nrSubbands; ++sb)
+        metaData[sb].flags.reset();
+    }
 
     template<typename SampleT>
     bool MPIData<SampleT>::write(const struct RSP &packet, const ssize_t *beamletIndices, size_t nrBeamletIndices) {
@@ -150,6 +166,21 @@ namespace LOFAR {
       return consider_next;
     }
 
+    template<typename SampleT>
+    void MPIData<SampleT>::serialiseMetaData() {
+      // Convert the metaData -> mpi_metaData for transfer over MPI
+      for(size_t sb = 0; sb < nrSubbands; ++sb) {
+        SubbandMetaData md = metaData[sb];
+
+        // MPIData::write adds flags for what IS present, but the receiver
+        // needs flags for what IS NOT present. So invert the flags here.
+        md.flags = md.flags.invert(0, nrSamples);
+
+        // Write the meta data into the fixed buffer.
+        mpi_metaData[sb] = md;
+      }
+    }
+
     template struct MPIData< SampleType<i16complex> >;
     template struct MPIData< SampleType<i8complex> >;
     template struct MPIData< SampleType<i4complex> >;
@@ -172,6 +203,34 @@ namespace LOFAR {
 
 
     template <typename SampleT>
+    void MPISender::sendBlock( MPIData<SampleT> &mpiData )
+    {
+      std::vector<MPI_Request> requests;
+
+      {
+        ScopedLock sl(MPIMutex);
+
+        for(size_t i = 0; i < targetRanks.size(); ++i) {
+          const int rank = targetRanks.at(i);
+
+          if (subbandDistribution.at(rank).empty())
+            continue;
+
+          MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), mpiData.nrSamples);
+
+          const size_t offset = subbandOffsets[rank];
+
+          requests.push_back(sender.sendData<SampleT>(&mpiData.mpi_samples[offset][0]));
+          requests.push_back(sender.sendMetaData(&mpiData.mpi_metaData[offset]));
+        }
+      }
+
+      RequestSet rs(requests, true, str(format("station %d block %d") % stationIdx % mpiData.block));
+      rs.waitAll();
+    }
+
+
+    template <typename SampleT>
     void MPISender::sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue )
     {
       SmartPtr< MPIData<SampleT> > mpiData;
@@ -185,51 +244,21 @@ namespace LOFAR {
         const ssize_t block = mpiData->block;
         const size_t  nrSamples = mpiData->nrSamples;
 
-        nrProcessedSamples += nrSamples * nrSubbands;
-
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Finalising metaData") % block));
 
-        // Convert the metaData -> mpi_metaData for transfer over MPI
+        mpiData->serialiseMetaData();
+
+        // Update statistics
+        nrProcessedSamples += nrSamples * nrSubbands;
+
         for(size_t sb = 0; sb < mpiData->metaData.size(); ++sb) {
-          SubbandMetaData &md = mpiData->metaData[sb];
-
-          // MPIData::write adds flags for what IS present, but the receiver
-          // needs flags for what IS NOT present. So invert the flags here.
-          mpiData->metaData[sb].flags = md.flags.invert(0, nrSamples);
-
-          nrFlaggedSamples += md.flags.count();
-
-          // Write the meta data into the fixed buffer.
-          mpiData->mpi_metaData[sb] = md;
+          nrFlaggedSamples += nrSamples - mpiData->metaData[sb].flags.count();
         }
 
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Sending data") % block));
 
         mpiSendTimer.start();
-
-        std::vector<MPI_Request> requests;
-
-        {
-          ScopedLock sl(MPIMutex);
-
-          for(size_t i = 0; i < targetRanks.size(); ++i) {
-            const int rank = targetRanks.at(i);
-
-            if (subbandDistribution.at(rank).empty())
-              continue;
-
-            MPISendStation sender(stationIdx, rank, subbandDistribution.at(rank), nrSamples);
-
-            const size_t offset = subbandOffsets[rank];
-
-            requests.push_back(sender.sendData<SampleT>(&mpiData->mpi_samples[offset][0]));
-            requests.push_back(sender.sendMetaData(&mpiData->mpi_metaData[offset]));
-          }
-        }
-
-        RequestSet rs(requests, true, str(format("station %d block %d") % stationIdx % block));
-        rs.waitAll();
-
+        sendBlock(*mpiData);
         mpiSendTimer.stop();
 
         LOG_DEBUG_STR(logPrefix << str(format("[block %d] Data sent") % block));
