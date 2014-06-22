@@ -28,6 +28,7 @@
 #include <GPUProc/global_defines.h>
 #include <GPUProc/Kernels/Kernel.h>
 #include <GPUProc/PerformanceCounter.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/BlockID.h>
 #include <Common/LofarLogger.h>
@@ -218,7 +219,7 @@ namespace LOFAR
 
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
       unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
-      unsigned nrWarpsPerBlock = (nrThreadsPerBlock + warpSize - 1) / warpSize;
+      unsigned nrWarpsPerBlock = divRoundUp(nrThreadsPerBlock, warpSize);
       unsigned nrBlocksPerMP = getNrBlocksPerMultiProc(dynSharedMemBytes);
       unsigned nrWarps = nrBlocksPerMP * nrWarpsPerBlock;
 

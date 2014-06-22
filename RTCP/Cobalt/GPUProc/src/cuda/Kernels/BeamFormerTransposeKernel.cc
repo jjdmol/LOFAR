@@ -23,6 +23,7 @@
 #include "BeamFormerTransposeKernel.h"
 
 #include <GPUProc/gpu_utils.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
@@ -67,7 +68,7 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      setEnqueueWorkSizes( gpu::Grid(256, (params.nrTABs + 15) / 16, params.nrSamplesPerChannel / 16),
+      setEnqueueWorkSizes( gpu::Grid(256, divRoundUp(params.nrTABs, 16U), params.nrSamplesPerChannel / 16),
                            gpu::Block(256, 1, 1) );
 
       nrOperations = 0;

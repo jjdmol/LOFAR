@@ -39,6 +39,8 @@ namespace LOFAR
       {
         Parameters(const Parset& ps);
         unsigned nrStations;
+        unsigned nrStationsPerThread;
+        unsigned nrBaselines() const;
 
         unsigned nrChannels;
         unsigned nrSamplesPerChannel;

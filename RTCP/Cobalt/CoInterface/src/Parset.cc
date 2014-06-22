@@ -41,6 +41,7 @@
 #include <Common/LofarBitModeInfo.h>
 #include <ApplCommon/PosixTime.h>
 #include <CoInterface/OutputTypes.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/Config.h>
 #include <CoInterface/Exceptions.h>
 #include <CoInterface/PrintVector.h>
@@ -768,8 +769,7 @@ namespace LOFAR
             }
 
             // Generate file list
-            unsigned nrParts = max(1UL, (settings.SAPs[i].subbands.size() +
-                                         nrSubbandsPerFile - 1) / nrSubbandsPerFile);
+            unsigned nrParts = max(1UL, divRoundUp(settings.SAPs[i].subbands.size(), nrSubbandsPerFile));
             tab.files.resize(stSettings.nrStokes * nrParts);
             for (size_t s = 0; s < stSettings.nrStokes; ++s) 
             {
