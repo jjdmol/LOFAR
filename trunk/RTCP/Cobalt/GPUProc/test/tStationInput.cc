@@ -55,11 +55,8 @@ public:
   :
     nrSubbands(10),
     nrSamples(1024),
-    data(nrSubbands, nrSamples)
+    data(TimeStamp::now(mode.clockHz()), nrSubbands, nrSamples)
   {
-    data.block = 0;
-    data.from = TimeStamp::now(mode.clockHz());
-    data.to   = data.from + nrSamples;
   }
 
   // Test whether the data in the packet is the ONLY data written.
