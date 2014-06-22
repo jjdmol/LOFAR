@@ -133,6 +133,7 @@ CompileDefinitions getDefaultCompileDefinitions()
 
   defs["NR_STATIONS"] =
     boost::lexical_cast<string>(NR_STATIONS);
+  defs["INPUT_IS_STATIONDATA"] = "1";
   defs["NR_CHANNELS"] =
     boost::lexical_cast<string>(NR_CHANNELS);
   defs["NR_SAMPLES_PER_CHANNEL"] =

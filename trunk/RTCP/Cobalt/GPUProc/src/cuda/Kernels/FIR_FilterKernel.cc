@@ -71,7 +71,9 @@ namespace LOFAR
 
     unsigned FIR_FilterKernel::Parameters::nrBytesPerComplexSample() const
     {
-      return 2 * nrBitsPerSample / 8;
+      return inputIsStationData
+               ? 2 * nrBitsPerSample / 8
+               : sizeof(std::complex<float>);
     }
 
     unsigned FIR_FilterKernel::Parameters::nrHistorySamples() const
@@ -184,10 +186,7 @@ namespace LOFAR
         return
           (size_t) itsParameters.nrSubbands *
             itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            NR_POLARIZATIONS *
-            (itsParameters.inputIsStationData
-             ? itsParameters.nrBytesPerComplexSample()
-             : sizeof(std::complex<float>));
+            NR_POLARIZATIONS * itsParameters.nrBytesPerComplexSample();
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }
