@@ -27,9 +27,10 @@
 #include <vector>
 
 #include <CoInterface/Parset.h>
-#include <CoInterface/Pool.h>
+#include <CoInterface/Queue.h>
 #include <CoInterface/SubbandMetaData.h>
-#include <InputProc/Buffer/StationID.h>
+#include <InputProc/RSPTimeStamp.h>
+#include <InputProc/Station/RSP.h>
 
 #ifdef HAVE_MPI
 #include <InputProc/Transpose/MPIProtocol.h>
@@ -45,17 +46,6 @@ namespace LOFAR {
     // Data meant to be sent over MPI to the receivers
     template<typename SampleT>
     struct MPIData {
-      /*
-       * Block annotation, is set directly when block
-       * is (re)used.
-       */
-      ssize_t block;
-      uint64_t from;
-      uint64_t to;
-      size_t nrSamples;
-
-      /* Block annotation for logging purposes */
-      StationID stationID;
 
       /*
        * The order of the subbands in the arrays below is
@@ -76,23 +66,32 @@ namespace LOFAR {
       MultiDimArray<SampleT, 2> mpi_samples; // [subband][sample]
 
       // mpi_metaData: the meta data as they will be sent over MPI
+      // NOTE: the flags indicate which samples ARE NOT present
       MultiDimArray<MPIProtocol::MetaData, 1> mpi_metaData; // [subband]
 
-      // metaData: the meta data as being maintained and updated
+      // metaData: the meta data as being maintained and updated.
+      // NOTE: the flags indicate which samples ARE present
       std::vector<struct SubbandMetaData> metaData; // [subband]
 
       // read_offsets: the offsets for which the reader expects
       // to have compensated. Implements the coarse delay compensation.
       std::vector<ssize_t> read_offsets; // [subband]
 
-      MPIData(size_t nrSubbands, size_t nrSamples):
-        mpi_samples(boost::extents[nrSubbands][nrSamples], 1, mpiAllocator),
-        mpi_metaData(boost::extents[nrSubbands], 1, mpiAllocator),
-        metaData(nrSubbands),
-        read_offsets(nrSubbands, 0)
-      {
-        //memset(mpi_samples.origin(), 0, mpi_samples.num_elements() * sizeof *mpi_samples.origin());
-      }
+      MPIData(TimeStamp obsStartTime, size_t nrSubbands, size_t nrSamples);
+
+      /* Update block annotation for a given block number,
+       * and clear all flags.
+       *
+       * Note that the data is not cleared for performance reasons.
+       */
+      void reset(ssize_t block);
+
+      /*
+       * Serialises metaData into mpi_metaData.
+       *
+       * NOTE: The flags are inverted from metaData to mpi_metaData.
+       */
+      void serialiseMetaData();
 
       /*
        * Write a certain RSP packet into mpi_samples, and update
@@ -106,12 +105,39 @@ namespace LOFAR {
        * to the next MPIData block as well.
        */
       bool write(const struct RSP &packet, const ssize_t *beamletIndices, size_t nrBeamletIndices);
+
+      /*
+       * Block annotation, set by reset().
+       */
+      uint64_t from;
+      uint64_t to;
+      ssize_t block;
+
+      /* Observation start time, used to calculate the time span
+       * of each block.
+       */
+      const TimeStamp obsStartTime;
+
+      const size_t nrSamples;
+      const size_t nrSubbands;
     };
 
     class MPISender {
     public:
       MPISender( const std::string &logPrefix, size_t stationIdx, const SubbandDistribution &subbandDistribution );
 
+      /*
+       * Sends one block over MPI.
+       */
+      template <typename SampleT>
+      void sendBlock( MPIData<SampleT> &mpiData );
+
+      /*
+       * Sends blocks over MPI until a NULL is read from the inputQueue.
+       *
+       * For each block, serialiseMetaData() is called before sendBlock()
+       * is used to send the block over MPI.
+       */
       template <typename SampleT>
       void sendBlocks( Queue< SmartPtr< MPIData<SampleT> > > &inputQueue, Queue< SmartPtr< MPIData<SampleT> > > &outputQueue );
 
