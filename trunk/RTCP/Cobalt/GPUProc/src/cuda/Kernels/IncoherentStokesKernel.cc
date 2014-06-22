@@ -26,6 +26,7 @@
 #include <boost/format.hpp>
 
 #include <Common/lofar_complex.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/Config.h>
 
 namespace LOFAR
@@ -65,9 +66,9 @@ namespace LOFAR
       unsigned nrTimes = 
         params.nrSamplesPerChannel / params.timeIntegrationFactor;
       unsigned nrPasses = 
-        (nrTimes + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
+        divRoundUp(nrTimes, maxThreadsPerBlock);
       unsigned nrTimesPerPass = 
-        (nrTimes + nrPasses - 1) / nrPasses;
+        divRoundUp(nrTimes, nrPasses);
 
       LOG_DEBUG_STR("nrTimes = " << nrTimes);
       LOG_DEBUG_STR("nrPasses = " << nrPasses);

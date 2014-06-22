@@ -34,6 +34,7 @@
 #include <Stream/FileStream.h>
 #include <Stream/NullStream.h>
 
+#include <CoInterface/Align.h>
 #include <CoInterface/Stream.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/Kernels/Kernel.h>
@@ -79,8 +80,7 @@ namespace LOFAR
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
-      nrSubbandsPerSubbandProc(
-        (subbandIndices.size() + workQueues.size() - 1) / workQueues.size()),
+      nrSubbandsPerSubbandProc(divRoundUp(subbandIndices.size(), workQueues.size())),
       itsMdLogger(mdLogger),
       itsMdKeyPrefix(mdKeyPrefix),
       mpiPool(pool),

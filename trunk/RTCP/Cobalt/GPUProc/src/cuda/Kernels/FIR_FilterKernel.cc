@@ -22,6 +22,7 @@
 
 #include "FIR_FilterKernel.h"
 #include <GPUProc/gpu_utils.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Config.h>
 
@@ -92,7 +93,7 @@ namespace LOFAR
       setArg(3, buffers.historySamples);
 
       unsigned totalNrThreads = params.nrChannels * NR_POLARIZATIONS * 2;
-      unsigned nrPasses = (totalNrThreads + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
+      unsigned nrPasses = divRoundUp(totalNrThreads, maxThreadsPerBlock);
 
       setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
                            gpu::Block(totalNrThreads / nrPasses, 1) );

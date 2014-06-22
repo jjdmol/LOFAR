@@ -67,6 +67,16 @@ namespace LOFAR
 
 
     /*
+     * Returns ceil(n/divisor).
+     */
+    template <typename T>
+    inline static T divRoundUp(T n, T divisor)
+    {
+      return (n + divisor - 1) / divisor;
+    }
+
+
+    /*
      * Returns the greatest common divisor of a and b.
      * T must be an integral type.
      * a, b > 0.
