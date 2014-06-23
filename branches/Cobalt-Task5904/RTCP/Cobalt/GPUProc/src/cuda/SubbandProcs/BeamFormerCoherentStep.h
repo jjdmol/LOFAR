@@ -34,7 +34,7 @@
 #include <CoInterface/BlockID.h>
 
 #include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "ProcessStep.h"
 
 #include <GPUProc/Kernels/BeamFormerKernel.h>
 #include <GPUProc/Kernels/CoherentStokesTransposeKernel.h>
@@ -51,7 +51,7 @@ namespace LOFAR
     //# Forward declarations
     struct BeamFormerFactories;
 
-    class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
+    class BeamFormerCoherentStep: public ProcessStep
     {
     public:
       struct Factories

@@ -33,9 +33,7 @@
 
 #include "SubbandProc.h"
 
-#include "BeamFormerSubbandProcStep.h"
 #include "BeamFormerCoherentStep.h"
-#include "BeamFormerFactories.h"
 
 #include <iomanip>
 
@@ -82,7 +80,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devD,
       boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays)
       :
-      BeamFormerSubbandProcStep(parset, i_queue),
+      ProcessStep(parset, i_queue),
       coherentStokesPPF(factories.coherentFirFilter != NULL)
     {
       devInput = i_devInput;

@@ -1,4 +1,4 @@
-//# BeamFormerSubbandProcStep.h
+//# ProcessStep.h
 //# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
@@ -18,8 +18,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
-#define LOFAR_GPUPROC_CUDA_BEAMFORMER_SUBBAND_PROC_STEP_H
+#ifndef LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
+#define LOFAR_GPUPROC_CUDA_PROCESS_STEP_H
 
 #include <CoInterface/Parset.h>
 
@@ -33,11 +33,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    //# Forward declarations
-    struct BeamFormerFactories;
-
-    class BeamFormerSubbandProcStep
+    class ProcessStep
     {
     public:
       virtual void process(BlockID blockID,
@@ -47,20 +43,19 @@ namespace LOFAR
 
       virtual void logTime() = 0;
 
-      virtual ~BeamFormerSubbandProcStep()
+      virtual ~ProcessStep()
        {}
 
     protected:
-      BeamFormerSubbandProcStep(const Parset &parset,
-        gpu::Stream &i_queue)
+      ProcessStep(const Parset &parset,
+        gpu::Stream &queue)
         :
         ps(parset),
-        queue(i_queue) 
-        {} ;
+        queue(queue) 
+        {};
 
       const Parset ps;
       gpu::Stream queue;
-
     };
   }
 }

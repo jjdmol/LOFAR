@@ -21,7 +21,6 @@
 #include <lofar_config.h>
 
 #include "BeamFormerPreprocessingStep.h"
-#include "BeamFormerFactories.h"
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_wrapper.h>
@@ -63,7 +62,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devNull)
       :
-      BeamFormerSubbandProcStep(parset, i_queue)
+      ProcessStep(parset, i_queue)
     {
       devInput=i_devInput;
       devA=i_devA;

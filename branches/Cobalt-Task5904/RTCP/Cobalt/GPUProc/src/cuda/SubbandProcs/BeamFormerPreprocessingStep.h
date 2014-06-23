@@ -33,7 +33,7 @@
 #include <CoInterface/BlockID.h>
 
 #include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "ProcessStep.h"
 
 #include <GPUProc/KernelFactory.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
@@ -47,7 +47,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerPreprocessingStep: public BeamFormerSubbandProcStep
+    class BeamFormerPreprocessingStep: public ProcessStep
     {
     public:
       struct Factories {

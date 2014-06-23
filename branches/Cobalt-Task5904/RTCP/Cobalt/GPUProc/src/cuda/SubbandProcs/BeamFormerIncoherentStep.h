@@ -34,7 +34,7 @@
 #include <CoInterface/BlockID.h>
 
 #include "SubbandProc.h"
-#include "BeamFormerSubbandProcStep.h"
+#include "ProcessStep.h"
 
 #include <GPUProc/Kernels/FFT_Kernel.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
@@ -47,7 +47,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerIncoherentStep : public BeamFormerSubbandProcStep
+    class BeamFormerIncoherentStep : public ProcessStep
     {
     public:
       struct Factories
