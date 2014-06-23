@@ -127,7 +127,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devC;
       boost::shared_ptr<gpu::DeviceMemory> devD;
-      boost::shared_ptr<gpu::DeviceMemory> devE;
       // @}
 
       // NULL placeholder for unused DeviceMemory parameters

@@ -119,7 +119,6 @@ namespace LOFAR
       devB.reset(new gpu::DeviceMemory(context, devB_size));
       devC.reset(new gpu::DeviceMemory(context, devC_size));
       devD.reset(new gpu::DeviceMemory(context, devD_size));
-      devE = devInput->inputSamples;
 
       // Null buffer for unused parts of the pipeline
       devNull.reset(new gpu::DeviceMemory(context, 1));
@@ -281,7 +280,6 @@ namespace LOFAR
         // Reshape output to only read nrIncoherent TABs
         output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
 
-        // Output in devE, by design
         queue.readBuffer(output.incoherentData, incoherentStep->outputBuffer(),
           counters.incoherentOutput, false);
 
