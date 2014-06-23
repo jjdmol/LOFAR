@@ -87,12 +87,12 @@ namespace LOFAR
       firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
         factories.fftShift.create(queue, *firstFFTShiftBuffers));
 
+      const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
+
       // FFT: B -> B
       firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
         ps.settings.beamFormer.nrDelayCompensationChannels,
-        (ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.nrDelayCompensationChannels),
-        true, *devB));
+        nrSamples, true, *devB));
 
       // delayComp: B -> A
       delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
@@ -115,15 +115,10 @@ namespace LOFAR
           factories.fftShift.create(queue, *secondFFTShiftBuffers));
 
         // FFT: A -> A
-        unsigned secondFFTnrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-          ps.nrSamplesPerSubband() /
-           (ps.settings.beamFormer.nrHighResolutionChannels /
-            ps.settings.beamFormer.nrDelayCompensationChannels);
-
         secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
           ps.settings.beamFormer.nrHighResolutionChannels /
           ps.settings.beamFormer.nrDelayCompensationChannels,
-          secondFFTnrFFTs, true, *devA));
+          nrSamples, true, *devA));
       }
 
       // bandPass: A -> B

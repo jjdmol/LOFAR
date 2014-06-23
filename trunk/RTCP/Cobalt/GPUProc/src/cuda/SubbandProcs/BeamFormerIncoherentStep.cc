@@ -93,14 +93,12 @@ namespace LOFAR
         factories.incoherentStokesTranspose.create(queue,
         *incoherentTransposeBuffers));
 
-      // inverse FFT: A -> A
-      unsigned incInversNrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.nrHighResolutionChannels;
+      const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
 
+      // inverse FFT: A -> A
       incoherentInverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
         queue, ps.settings.beamFormer.nrHighResolutionChannels,
-        incInversNrFFTs, false, *devA));
+        nrSamples, false, *devA));
 
       // inverse FFTShift: A -> A
       incoherentInverseFFTShiftBuffers =
@@ -133,14 +131,10 @@ namespace LOFAR
 
 
       // final FFT: B -> B
-      unsigned nrFFTs = ps.nrStations() * NR_POLARIZATIONS *
-        ps.nrSamplesPerSubband() /
-        ps.settings.beamFormer.incoherentSettings.nrChannels;
-
       incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
         new FFT_Kernel(
         queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-        nrFFTs, true, *devB));
+        nrSamples, true, *devB));
 
       // Incoherent Stokes kernel: A/B -> B/A
       //

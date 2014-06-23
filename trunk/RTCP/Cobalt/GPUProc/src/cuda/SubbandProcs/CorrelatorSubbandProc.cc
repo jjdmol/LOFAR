@@ -112,7 +112,7 @@ namespace LOFAR
       firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
 
       // FFT
-      fftKernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.correlator.nrSamplesPerChannel, true, devFilteredData),
+      fftKernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(
