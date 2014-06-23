@@ -64,7 +64,6 @@
 #include <InputProc/Buffer/StationID.h>
 
 #include "global_defines.h"
-#include "OpenMP_Lock.h"
 #include <GPUProc/Station/StationInput.h>
 #include <GPUProc/Station/StationNodeAllocation.h>
 #include "Pipelines/CorrelatorPipeline.h"
