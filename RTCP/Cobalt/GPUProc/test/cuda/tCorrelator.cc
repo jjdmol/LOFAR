@@ -103,10 +103,10 @@ HostMemory runTest(gpu::Context ctx,
   hKernel.setArg(1, devCorrectedMemory);
 
   // Calculate the number of threads in total and per block
-  unsigned nrFuncStations = divRoundUp(NR_STATIONS, nrStationsPerThread);
+  unsigned nrFuncStations = ceilDiv(NR_STATIONS, nrStationsPerThread);
   unsigned nrBlocks = nrFuncStations * (nrFuncStations + 1) / 2;
-  unsigned nrPasses = divRoundUp(nrBlocks, 1024U);
-  unsigned nrThreads = divRoundUp(nrBlocks, nrPasses);
+  unsigned nrPasses = ceilDiv(nrBlocks, 1024U);
+  unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
   unsigned nrUsableChannels = 15;
   Grid globalWorkSize(nrPasses, nrUsableChannels, 1);
   Block localWorkSize(nrThreads, 1,1);

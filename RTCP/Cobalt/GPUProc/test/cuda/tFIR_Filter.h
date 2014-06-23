@@ -173,7 +173,7 @@ namespace LOFAR
 
         int MAXNRCUDATHREADS = 512;
         size_t maxNrThreads = MAXNRCUDATHREADS;
-        unsigned nrPasses = divRoundUp(totalNrThreads, maxNrThreads);
+        unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
         dim3 localWorkSize(totalNrThreads / nrPasses, 1); 
 
 

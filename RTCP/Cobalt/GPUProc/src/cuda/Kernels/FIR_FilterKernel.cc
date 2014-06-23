@@ -95,7 +95,7 @@ namespace LOFAR
       setArg(3, buffers.historySamples);
 
       unsigned totalNrThreads = params.nrChannels * NR_POLARIZATIONS * 2;
-      unsigned nrPasses = divRoundUp(totalNrThreads, maxThreadsPerBlock);
+      unsigned nrPasses = ceilDiv(totalNrThreads, maxThreadsPerBlock);
 
       setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
                            gpu::Block(totalNrThreads / nrPasses, 1) );

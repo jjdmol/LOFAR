@@ -137,7 +137,7 @@ int test()
 
   unsigned maxNrThreads = MAXNRCUDATHREADS;
   unsigned totalNrThreads = NR_CHANNELS * NR_POLARIZATIONS * 2;
-  unsigned nrPasses = divRoundUp(totalNrThreads, maxNrThreads);
+  unsigned nrPasses = ceilDiv(totalNrThreads, maxNrThreads);
   
   Grid globalWorkSize(nrPasses, NR_STATIONS); 
   Block localWorkSize(totalNrThreads / nrPasses, 1); 

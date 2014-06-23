@@ -219,7 +219,7 @@ namespace LOFAR
 
       const unsigned warpSize = device.getAttribute(CU_DEVICE_ATTRIBUTE_WARP_SIZE);
       unsigned nrThreadsPerBlock = itsBlockDims.x * itsBlockDims.y * itsBlockDims.z;
-      unsigned nrWarpsPerBlock = divRoundUp(nrThreadsPerBlock, warpSize);
+      unsigned nrWarpsPerBlock = ceilDiv(nrThreadsPerBlock, warpSize);
       unsigned nrBlocksPerMP = getNrBlocksPerMultiProc(dynSharedMemBytes);
       unsigned nrWarps = nrBlocksPerMP * nrWarpsPerBlock;
 
