@@ -37,7 +37,7 @@ namespace LOFAR
     class FFT_Kernel
     {
     public:
-      FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrFFTs,
+      FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrSamples,
                  bool forward, const gpu::DeviceMemory &buffer);
 
       void enqueue(const BlockID &blockId) const;
@@ -55,7 +55,7 @@ namespace LOFAR
     private:
       gpu::Context context;
 
-      const unsigned nrMajorFFTs, nrMinorFFTs, fftSize;
+      const unsigned nrFFTs, nrMajorFFTs, nrMinorFFTs, fftSize;
       const int direction;
       FFT_Plan planMajor, planMinor;
       gpu::DeviceMemory buffer;

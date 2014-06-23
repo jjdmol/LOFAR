@@ -102,13 +102,12 @@ namespace LOFAR
       factories.coherentTranspose.create(
       queue, *coherentTransposeBuffers));
 
+    const size_t nrSamples = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize;
+
     // inverse FFT: C/D -> C/D (in-place)
-    unsigned nrInverFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
-      NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-      ps.settings.beamFormer.nrHighResolutionChannels;
     inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
       queue, ps.settings.beamFormer.nrHighResolutionChannels,
-      nrInverFFTs, false, coherentStokesPPF ? *devD : *devC));
+      nrSamples, false, coherentStokesPPF ? *devD : *devC));
 
     // fftshift: C/D -> C/D (in-place)
     inverseFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
@@ -141,13 +140,9 @@ namespace LOFAR
       factories.coherentFirFilter.create(queue, *firFilterBuffers));
 
     // final FFT: C -> C (in-place) = firFilterBuffers.output
-
-    unsigned nrFinalFFTs = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() *
-      NR_POLARIZATIONS * ps.nrSamplesPerSubband() /
-      ps.settings.beamFormer.coherentSettings.nrChannels;
     finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
       queue, ps.settings.beamFormer.coherentSettings.nrChannels,
-      nrFinalFFTs, true, *devC));
+      nrSamples, true, *devC));
 
     // coherentStokes: C -> D
     //

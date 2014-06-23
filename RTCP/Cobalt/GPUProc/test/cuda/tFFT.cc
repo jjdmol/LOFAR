@@ -81,7 +81,7 @@ int main() {
 
   const size_t size = 16 * 1024 * 1024 + 256;
   const int fftSize = 256;
-  const unsigned nrFFTs = size / fftSize;
+  const int nrFFTs = size / fftSize;
 
   // GPU buffers and plans
   gpu::HostMemory inout(ctx, size  * sizeof(fcomplex));
@@ -90,14 +90,14 @@ int main() {
   // Dummy Block-ID
   BlockID blockId;
 
-  FFT_Kernel fftFwdKernel(stream, fftSize, nrFFTs, true, d_inout);
-  FFT_Kernel fftBwdKernel(stream, fftSize, nrFFTs, false, d_inout);
+  FFT_Kernel fftFwdKernel(stream, fftSize, size, true, d_inout);
+  FFT_Kernel fftBwdKernel(stream, fftSize, size, false, d_inout);
 
   // FFTW buffers and plans
   ASSERT(fftw_init_threads() != 0);
   fftw_plan_with_nthreads(4); // use up to 4 threads (don't care about test performance, but be impatient anyway...)
 
-  fftwf_complex *f_inout = (fftwf_complex*)fftw_malloc(fftSize * nrFFTs * sizeof(fftw_complex));
+  fftwf_complex *f_inout = (fftwf_complex*)fftw_malloc(size * sizeof(fftw_complex));
   ASSERT(f_inout);
 
   fftwf_plan f_fftFwdPlan = fftwf_plan_many_dft(1, &fftSize, nrFFTs, // int rank, const int *n (=dims), int howmany,

@@ -93,7 +93,6 @@ int main() {
 
   const size_t size = 128 * 1024;
   const int fftSize = 256;
-  const unsigned nrFFTs = size / fftSize;
 
   // GPU buffers and plans
   gpu::HostMemory inout(ctx, ps.nrStations() * NR_POLARIZATIONS * ps.nrSamplesPerSubband()   * sizeof(fcomplex));
@@ -145,7 +144,7 @@ int main() {
     devInput.inputSamples,
     devFIRweights);
 
-  FFT_Kernel fftFwdKernel(ctx, fftSize, nrFFTs, true, devFilteredData);
+  FFT_Kernel fftFwdKernel(ctx, fftSize, size, true, devFilteredData);
 
   fstream amplitudes("amplitudes.output",  std::fstream::out);
   double freq_begin = 4.0;

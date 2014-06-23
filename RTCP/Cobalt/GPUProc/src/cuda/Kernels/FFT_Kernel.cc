@@ -54,11 +54,12 @@ namespace LOFAR
     const size_t maxNrFFTpoints = 1024 * 1024;
 
     FFT_Kernel::FFT_Kernel(const gpu::Stream &stream, unsigned fftSize,
-                           unsigned nrFFTs, bool forward, 
+                           unsigned nrSamples, bool forward, 
                            const gpu::DeviceMemory &buffer)
       :
       itsCounter(stream.getContext()),
       context(stream.getContext()),
+      nrFFTs(nrSamples / fftSize),
       nrMajorFFTs(nrFFTs / (maxNrFFTpoints / fftSize)),
       nrMinorFFTs(nrFFTs % (maxNrFFTpoints / fftSize)),
       fftSize(fftSize),
@@ -68,6 +69,9 @@ namespace LOFAR
       buffer(buffer),
       itsStream(stream)
     {
+      // fftSize must fit into nrSamples an exact number of times
+      ASSERT(nrSamples % fftSize == 0);
+
       // fftSize must fit into maxNrFFTpoints an exact number of times
       ASSERT(maxNrFFTpoints % fftSize == 0);
 
