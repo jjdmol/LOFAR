@@ -58,6 +58,7 @@ const unsigned NR_POLARIZATIONS = 2;
 
 const unsigned NR_SAPS = 8;
 const double SUBBAND_BANDWIDTH = 0.0 * NR_CHANNELS;
+const bool INPUT_IS_STATIONDATA = false;
 const bool BANDPASS_CORRECTION = true;
 const bool DELAY_COMPENSATION = false;
 const bool DO_TRANSPOSE = true;
@@ -133,7 +134,9 @@ CompileDefinitions getDefaultCompileDefinitions()
 
   defs["NR_STATIONS"] =
     boost::lexical_cast<string>(NR_STATIONS);
-  defs["INPUT_IS_STATIONDATA"] = "1";
+  if (INPUT_IS_STATIONDATA)
+    defs["INPUT_IS_STATIONDATA"] = "1";
+
   defs["NR_CHANNELS"] =
     boost::lexical_cast<string>(NR_CHANNELS);
   defs["NR_SAMPLES_PER_CHANNEL"] =
@@ -174,6 +177,14 @@ vector<fcomplex> runTest(const CompileDefinitions& compileDefs,
 
   boost::scoped_ptr<MultiDimArrayHostBuffer<fcomplex, 4> > outputData;
   boost::scoped_ptr<MultiDimArrayHostBuffer<T,        4> > inputData;
+
+  if (compileDefs.find("INPUT_IS_STATIONDATA") == compileDefs.end()) {
+    // If input does not come from station, we'll read fcomplex.
+    ASSERT(sizeof(T) == sizeof(fcomplex));
+  } else {
+    // If input does NOT come from station, NR_BITS_PER_SAMPLE needs to match T.
+    ASSERT(boost::lexical_cast<unsigned>(compileDefs.at("NR_BITS_PER_SAMPLE")) == 8 * sizeof(T) / 2);
+  }
 
   if(compileDefs.find("DO_TRANSPOSE") != compileDefs.end())
     outputData.reset(
