@@ -66,9 +66,9 @@ namespace LOFAR
       unsigned nrTimes = 
         params.nrSamplesPerChannel / params.timeIntegrationFactor;
       unsigned nrPasses = 
-        divRoundUp(nrTimes, maxThreadsPerBlock);
+        ceilDiv(nrTimes, maxThreadsPerBlock);
       unsigned nrTimesPerPass = 
-        divRoundUp(nrTimes, nrPasses);
+        ceilDiv(nrTimes, nrPasses);
 
       LOG_DEBUG_STR("nrTimes = " << nrTimes);
       LOG_DEBUG_STR("nrPasses = " << nrPasses);

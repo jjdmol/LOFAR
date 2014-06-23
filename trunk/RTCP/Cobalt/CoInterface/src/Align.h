@@ -70,7 +70,7 @@ namespace LOFAR
      * Returns ceil(n/divisor).
      */
     template <typename T>
-    inline static T divRoundUp(T n, T divisor)
+    inline static T ceilDiv(T n, T divisor)
     {
       return (n + divisor - 1) / divisor;
     }

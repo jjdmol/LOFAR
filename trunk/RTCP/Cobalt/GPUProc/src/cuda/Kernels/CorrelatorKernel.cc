@@ -76,11 +76,11 @@ namespace LOFAR
 
       // Knowing the number of stations/thread, we can divide up our baselines
       // in bigger blocks (of stationsPerThread each).
-      unsigned nrMacroStations = divRoundUp(params.nrStations, params.nrStationsPerThread);
+      unsigned nrMacroStations = ceilDiv(params.nrStations, params.nrStationsPerThread);
       unsigned nrBlocks = nrMacroStations * (nrMacroStations + 1) / 2;
 
-      unsigned nrPasses = divRoundUp(nrBlocks, maxThreadsPerBlock);
-      unsigned nrThreads = divRoundUp(nrBlocks, nrPasses);
+      unsigned nrPasses = ceilDiv(nrBlocks, maxThreadsPerBlock);
+      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
       nrThreads = align(nrThreads, preferredMultiple);
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);

@@ -80,7 +80,7 @@ namespace LOFAR
       subbandIndices(subbandIndices),
       processingSubband0(std::find(subbandIndices.begin(), subbandIndices.end(), 0U) != subbandIndices.end()),
       workQueues(std::max(1UL, (profiling ? 1 : NR_WORKQUEUES_PER_DEVICE) * devices.size())),
-      nrSubbandsPerSubbandProc(divRoundUp(subbandIndices.size(), workQueues.size())),
+      nrSubbandsPerSubbandProc(ceilDiv(subbandIndices.size(), workQueues.size())),
       itsMdLogger(mdLogger),
       itsMdKeyPrefix(mdKeyPrefix),
       mpiPool(pool),

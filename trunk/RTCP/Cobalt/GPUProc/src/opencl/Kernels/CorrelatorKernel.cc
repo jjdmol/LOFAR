@@ -78,8 +78,8 @@ namespace LOFAR
 # else
       unsigned nrBlocks = ps.nrBaselines();
 # endif
-      unsigned nrPasses = divRoundUp(nrBlocks, maxNrThreads);
-      unsigned nrThreads = divRoundUp(nrBlocks, nrPasses);
+      unsigned nrPasses = ceilDiv(nrBlocks, maxNrThreads);
+      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
       nrThreads = align(nrThreads, preferredMultiple);
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 

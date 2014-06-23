@@ -769,7 +769,7 @@ namespace LOFAR
             }
 
             // Generate file list
-            unsigned nrParts = max(1UL, divRoundUp(settings.SAPs[i].subbands.size(), nrSubbandsPerFile));
+            unsigned nrParts = max(1UL, ceilDiv(settings.SAPs[i].subbands.size(), nrSubbandsPerFile));
             tab.files.resize(stSettings.nrStokes * nrParts);
             for (size_t s = 0; s < stSettings.nrStokes; ++s) 
             {
