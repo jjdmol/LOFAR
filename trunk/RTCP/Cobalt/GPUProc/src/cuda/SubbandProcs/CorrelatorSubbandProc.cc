@@ -79,13 +79,12 @@ namespace LOFAR
       :
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
       counters(context),
+      correlatorPPF(ps.settings.correlator.nrChannels > 1),
       prevBlock(-1),
       prevSAP(-1),
       devInput(
-        std::max(ps.nrChannelsPerSubband() == 1 ? 
-                 0UL : 
-                 factories.firFilter.bufferSize(FIR_FilterKernel::INPUT_DATA),
-                 factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
+        factories.correlator.bufferSize(
+          CorrelatorKernel::INPUT_DATA),
         factories.delayAndBandPass.bufferSize(
           DelayAndBandPassKernel::DELAYS),
         factories.delayAndBandPass.bufferSize(
@@ -97,20 +96,6 @@ namespace LOFAR
                    DelayAndBandPassKernel::INPUT_DATA),
                  factories.correlator.bufferSize(
                    CorrelatorKernel::OUTPUT_DATA))),
-      // FIR filter
-      devFilterWeights(
-        context,
-        factories.firFilter.bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)),
-      devFilterHistoryData(
-        context, 
-        factories.firFilter.bufferSize(FIR_FilterKernel::HISTORY_DATA)),
-      firFilterBuffers(
-        *devInput.inputSamples, devFilteredData,
-        devFilterWeights, devFilterHistoryData),
-      firFilterKernel(factories.firFilter.create(queue, firFilterBuffers)),
-
-      // FFT
-      fftKernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devFilteredData),
 
       // Delay and Bandpass
       devBandPassCorrectionWeights(
@@ -134,8 +119,23 @@ namespace LOFAR
 
       //## --------  Start of constructor body  -------- ##//
     {
-      // initialize history data to zero
-      devFilterHistoryData.set(0);
+      if (correlatorPPF) {
+        // FIR filter
+        devFilterWeights = new gpu::DeviceMemory(
+          context,
+          factories.firFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
+        devFilterHistoryData = new gpu::DeviceMemory(
+          context, 
+          factories.firFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA));
+
+        firFilterBuffers = new FIR_FilterKernel::Buffers(
+          *devInput.inputSamples, devFilteredData,
+          *devFilterWeights, *devFilterHistoryData);
+        firFilterKernel = factories.firFilter->create(queue, *firFilterBuffers);
+
+        // FFT
+        fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devFilteredData);
+      }
 
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
@@ -180,8 +180,8 @@ namespace LOFAR
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** CorrelatorSubbandProc GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(fir)" << firFilterKernel->itsCounter.stats<< endl <<
-        std::setw(20) << "(fft)" << fftKernel.itsCounter.stats << endl <<
+        std::setw(20) << "(fir)" << (correlatorPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
+        std::setw(20) << "(fft)" << (correlatorPPF ? fftKernel->itsCounter.stats : RunningStatistics()) << endl <<
         std::setw(20) << "(delayBp)" << delayAndBandPassKernel->itsCounter.stats << endl <<
         std::setw(20) << "(correlator)" << correlatorKernel->itsCounter.stats << endl <<
         std::setw(20) << "(samples)" << counters.samples.stats << endl <<
@@ -209,7 +209,7 @@ namespace LOFAR
     {   
       // Object for storing transformed flags
       MultiDimArray<SparseSet<unsigned>, 2> flagsPerChannel(
-        boost::extents[parset.nrChannelsPerSubband()][parset.nrStations()]);
+        boost::extents[parset.settings.correlator.nrChannels][parset.settings.antennaFields.size()]);
 
       // First transform the flags to channel flags: taking in account 
       // reduced resolution in time and the size of the filter
@@ -255,7 +255,7 @@ namespace LOFAR
           unsigned bl = baseline(stat1, stat2);
 
           // If there is a single channel then the index 0 contains real data
-          if (parset.nrChannelsPerSubband() == 1) 
+          if (parset.settings.correlator.nrChannels == 1) 
           {                                            
             // The number of invalid (flagged) samples is the union of the
             // flagged samples in the two stations
@@ -270,7 +270,7 @@ namespace LOFAR
             // channel 0 does not contain valid data
             output.nrValidSamples<T>(bl, 0) = 0;
 
-            for(unsigned ch = 1; ch < parset.nrChannelsPerSubband(); ch ++) 
+            for(unsigned ch = 1; ch < parset.settings.correlator.nrChannels; ch ++) 
             {
               // valid samples is total number of samples minus the union of the
               // Two stations.
@@ -317,7 +317,7 @@ namespace LOFAR
         //
         // Channel 0 is already flagged according to specs, so we can simply
         // include it both for 1 and >1 channels/subband.
-        for (unsigned ch = 0; ch < parset.nrChannelsPerSubband(); ch++) 
+        for (unsigned ch = 0; ch < parset.settings.correlator.nrChannels; ch++) 
         {
           T nrValidSamples = output.nrValidSamples<T>(bl, ch);
 
@@ -362,18 +362,15 @@ namespace LOFAR
       // Copy data to the GPU 
       // If #ch/sb==1, copy the input to the device buffer where the
       // DelayAndBandPass kernel reads from.
-#if 1
-      if (ps.nrChannelsPerSubband() == 1)
-        queue.writeBuffer(
-          devFilteredData, input.inputSamples, counters.samples, true);
-      else // #ch/sb > 1
+      if (correlatorPPF)
         queue.writeBuffer(
           *devInput.inputSamples, input.inputSamples, counters.samples, true);
-#endif
+      else
+        queue.writeBuffer(
+          devFilteredData, input.inputSamples, counters.samples, true);
    
-      if (ps.delayCompensation())
-      {
-        unsigned SAP = ps.settings.subbands[subband].SAP;
+      if (ps.settings.delayCompensation.enabled) {
+        const unsigned SAP = ps.settings.subbands[subband].SAP;
 
         // Only upload delays if they changed w.r.t. the previous subband.
         if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) 
@@ -393,11 +390,11 @@ namespace LOFAR
       // *********************************************
       // Run the kernels
 
-      if (ps.nrChannelsPerSubband() > 1) {
+      if (correlatorPPF) {
         // The subbandIdx immediate kernel arg must outlive kernel runs.
         firFilterKernel->enqueue(input.blockID, 
                                  input.blockID.subbandProcSubbandIdx);
-        fftKernel.enqueue(input.blockID);
+        fftKernel->enqueue(input.blockID);
       }
 
       // Even if we skip delay compensation and bandpass correction (rare), run
@@ -409,13 +406,13 @@ namespace LOFAR
         ps.settings.subbands[subband].centralFrequency,
         ps.settings.subbands[subband].SAP);
 
-      correlatorKernel->enqueue(input.blockID );
+      correlatorKernel->enqueue(input.blockID);
 
       // The GPU will be occupied for a while, do some calculations in the
       // background.
 
       // Propagate the flags.
-      if (ps.nrChannelsPerSubband() > 1) {
+      if (correlatorPPF) {
         // Put the history flags in front of the sample flags,
         // because Flagger::propagateFlags expects it that way.
         firFilterKernel->prefixHistoryFlags(
@@ -438,10 +435,9 @@ namespace LOFAR
         queue.synchronize();
 
         // Update the counters
-        if (ps.nrChannelsPerSubband() > 1) 
-        {
+        if (correlatorPPF) {
           firFilterKernel->itsCounter.logTime();
-          fftKernel.itsCounter.logTime();
+          fftKernel->itsCounter.logTime();
         }
 
         delayAndBandPassKernel->itsCounter.logTime();
@@ -453,27 +449,8 @@ namespace LOFAR
     }
 
 
-    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
+    bool CorrelatorSubbandProc::integrate(CorrelatedDataHostBuffer &output)
     {
-      CorrelatedDataHostBuffer &output = 
-        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
-
-      // The flags are already copied to the correct location
-      // now the flagged amount should be applied to the visibilities
-      switch (output.itsNrBytesPerNrValidSamples) {
-        case 4:
-          Flagger::applyWeights<uint32_t>(ps, output);  
-          break;
-
-        case 2:
-          Flagger::applyWeights<uint16_t>(ps, output);  
-          break;
-
-        case 1:
-          Flagger::applyWeights<uint8_t>(ps, output);  
-          break;
-      }
-
       const size_t idx = output.blockID.subbandProcSubbandIdx;
       const size_t nblock = ps.settings.correlator.nrBlocksPerIntegration;
       
@@ -496,6 +473,36 @@ namespace LOFAR
         integratedData[idx].second->reset();
         return true;
       }
+    }
+
+
+    bool CorrelatorSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
+    {
+      CorrelatedDataHostBuffer &output = 
+        dynamic_cast<CorrelatedDataHostBuffer&>(_output);
+
+      if (!integrate(output)) {
+        // Not yet done constructing output block 
+        return false;
+      }
+
+      // The flags are already copied to the correct location
+      // now the flagged amount should be applied to the visibilities
+      switch (output.itsNrBytesPerNrValidSamples) {
+        case 4:
+          Flagger::applyWeights<uint32_t>(ps, output);  
+          break;
+
+        case 2:
+          Flagger::applyWeights<uint16_t>(ps, output);  
+          break;
+
+        case 1:
+          Flagger::applyWeights<uint8_t>(ps, output);  
+          break;
+      }
+
+      return true;
     }
 
   }

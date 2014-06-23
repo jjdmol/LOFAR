@@ -36,13 +36,9 @@
 #include "SubbandProc.h"
 #include "BeamFormerSubbandProcStep.h"
 
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/FFTShiftKernel.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-
-
 #include <GPUProc/Kernels/FFTShiftKernel.h>
+#include <GPUProc/Kernels/FIR_FilterKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesKernel.h>
 #include <GPUProc/Kernels/IncoherentStokesTransposeKernel.h>
 
@@ -51,29 +47,31 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    struct BeamFormerFactories;
-
     class BeamFormerIncoherentStep : public BeamFormerSubbandProcStep
     {
     public:
+      struct Factories
+      {
+        Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
+
+        KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+        KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
+        SmartPtr< KernelFactory<FIR_FilterKernel> > incoherentFirFilter;
+        KernelFactory<IncoherentStokesKernel> incoherentStokes;
+      };
 
       BeamFormerIncoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         gpu::Context &context,
-        BeamFormerFactories &factories,
+        Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devE,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull
+        boost::shared_ptr<gpu::DeviceMemory> i_devB
         );
 
 
       void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+        Factories &factories);
 
       gpu::DeviceMemory outputBuffer();
 
@@ -84,22 +82,16 @@ namespace LOFAR
 
       void logTime();
 
-      ~BeamFormerIncoherentStep();
-
     private:
 
       // Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devC;
-      boost::shared_ptr<gpu::DeviceMemory> devD;
-      boost::shared_ptr<gpu::DeviceMemory> devE;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
       // *****************************************************************
       //  Objects needed to produce incoherent stokes output
-      bool incoherentStokesPPF;
+      const bool incoherentStokesPPF;
 
       // Transpose 
       std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;
