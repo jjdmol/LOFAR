@@ -147,9 +147,9 @@ namespace LOFAR
 
 
       LOG_INFO_STR("Running coherent pipeline: " 
-        << (ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0 ? "yes" : "no")  
+        << (coherentStep.get() ? "yes" : "no")  
         << ", incoherent pipeline: " 
-        << (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0 ? "yes" : "no"));
+        << (incoherentStep.get() ? "yes" : "no"));
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
@@ -184,9 +184,9 @@ namespace LOFAR
     void BeamFormerSubbandProc::printStats()
     {
       preprocessingPart->printStats();
-      if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+      if (coherentStep.get())
         coherentStep->printStats();
-      if (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP())
+      if (incoherentStep.get())
         incoherentStep->printStats();
       counters.printStats();
     }
@@ -242,8 +242,12 @@ namespace LOFAR
             input.phase0s, false);
         }
 
-        // Upload the new beamformerDelays (pointings) to the GPU 
-        queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
+        if (nrCoherent > 0) {
+          ASSERT(devBeamFormerDelays.get());
+
+          // Upload the new beamformerDelays (pointings) to the GPU 
+          queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
+        }
 
         prevSAP = SAP;
         prevBlock = block;
@@ -256,6 +260,8 @@ namespace LOFAR
 
       if (nrCoherent > 0)
       {
+        ASSERT(coherentStep.get());
+
         coherentStep->process(input.blockID, subband);
 
         // Reshape output to only read nrCoherent TABs
@@ -268,6 +274,8 @@ namespace LOFAR
 
       if (nrIncoherent > 0)
       {
+        ASSERT(incoherentStep.get());
+
         incoherentStep->process(input.blockID, subband);
 
         // Reshape output to only read nrIncoherent TABs
