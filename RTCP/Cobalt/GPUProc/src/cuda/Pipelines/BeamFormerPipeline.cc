@@ -22,12 +22,10 @@
 
 #include "BeamFormerPipeline.h"
 
-#include <map>
 #include <vector>
 #include <string>
 #include <iomanip>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
@@ -38,6 +36,7 @@
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
@@ -45,7 +44,6 @@ namespace LOFAR
   {
     using namespace std;
     using boost::format;
-    using boost::lexical_cast;
 
     static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
     {

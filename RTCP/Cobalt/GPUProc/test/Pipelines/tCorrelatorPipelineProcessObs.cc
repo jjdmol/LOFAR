@@ -22,9 +22,7 @@
 
 #include <vector>
 
-#ifdef HAVE_MPI
-#  include <mpi.h>
-#endif
+#include <omp.h>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>

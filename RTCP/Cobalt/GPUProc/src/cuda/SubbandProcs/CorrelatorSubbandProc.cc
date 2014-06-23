@@ -28,8 +28,6 @@
 
 #include <Common/LofarLogger.h>
 
-#include <GPUProc/OpenMP_Lock.h>
-
 namespace LOFAR
 {
   namespace Cobalt
