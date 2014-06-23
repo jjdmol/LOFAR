@@ -43,12 +43,21 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    BeamFormerPreprocessingStep::Factories::Factories(const Parset &ps) :
+        intToFloat(ps),
+        fftShift(FFTShiftKernel::Parameters(ps,
+          ps.settings.antennaFields.size(),
+          ps.settings.beamFormer.nrDelayCompensationChannels)),
+        delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
+        bandPassCorrection(BandPassCorrectionKernel::Parameters(ps))
+    {
+    }
 
     BeamFormerPreprocessingStep::BeamFormerPreprocessingStep(
       const Parset &parset,
       gpu::Stream &i_queue,
       gpu::Context &context,
-      BeamFormerFactories &factories,
+      Factories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
@@ -67,7 +76,7 @@ namespace LOFAR
     {}
 
     void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
-      BeamFormerFactories &factories){
+      Factories &factories){
 
       doSecondFFT = 
         (ps.settings.beamFormer.nrHighResolutionChannels /

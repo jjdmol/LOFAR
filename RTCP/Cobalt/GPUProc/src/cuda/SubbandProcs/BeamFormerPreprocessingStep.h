@@ -35,6 +35,7 @@
 #include "SubbandProc.h"
 #include "BeamFormerSubbandProcStep.h"
 
+#include <GPUProc/KernelFactory.h>
 #include <GPUProc/Kernels/BandPassCorrectionKernel.h>
 #include <GPUProc/Kernels/DelayAndBandPassKernel.h>
 #include <GPUProc/Kernels/FFTShiftKernel.h>
@@ -46,14 +47,17 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-
-    //# Forward declarations
-    struct BeamFormerFactories;
-
-
     class BeamFormerPreprocessingStep: public BeamFormerSubbandProcStep
     {
     public:
+      struct Factories {
+        Factories(const Parset &ps);
+
+        KernelFactory<IntToFloatKernel> intToFloat;
+        KernelFactory<FFTShiftKernel> fftShift;
+        KernelFactory<DelayAndBandPassKernel> delayCompensation;
+        KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
+      };
 
       BeamFormerPreprocessingStep(const Parset &parset, 
         gpu::Stream &i_queue,
@@ -65,14 +69,14 @@ namespace LOFAR
       BeamFormerPreprocessingStep(const Parset &parset,
         gpu::Stream &i_queue, 
         gpu::Context &context,
-        BeamFormerFactories &factories,
+        Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devNull);
 
       void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+        Factories &factories);
 
       void process(BlockID blockID,
         unsigned subband);

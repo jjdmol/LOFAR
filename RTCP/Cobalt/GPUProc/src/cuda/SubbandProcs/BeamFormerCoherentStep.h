@@ -54,23 +54,32 @@ namespace LOFAR
     class BeamFormerCoherentStep: public BeamFormerSubbandProcStep
     {
     public:
+      struct Factories
+      {
+        Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
+
+        KernelFactory<BeamFormerKernel> beamFormer;
+        KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
+        KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
+        SmartPtr< KernelFactory<FIR_FilterKernel> > coherentFirFilter;
+        KernelFactory<CoherentStokesKernel> coherentStokes;
+      };
 
       BeamFormerCoherentStep(const Parset &parset,
         gpu::Stream &i_queue,
         gpu::Context &context,
-        BeamFormerFactories &factories,
+        Factories &factories,
         boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devC,
         boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays,
-        boost::shared_ptr<gpu::DeviceMemory> i_devNull);
+        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays);
 
 
 
       void initMembers(gpu::Context &context,
-        BeamFormerFactories &factories);
+        Factories &factories);
 
       void process(BlockID blockID,
         unsigned subband);
@@ -79,11 +88,9 @@ namespace LOFAR
 
       void logTime();
 
-      ~BeamFormerCoherentStep();
-
     private:
 
-      bool coherentStokesPPF;
+      const bool coherentStokesPPF;
 
       // Data members
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
@@ -92,7 +99,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devC;
       boost::shared_ptr<gpu::DeviceMemory> devD;
       boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
 
 
 

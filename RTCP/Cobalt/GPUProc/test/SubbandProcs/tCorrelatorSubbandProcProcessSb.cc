@@ -72,10 +72,9 @@ int main() {
   const size_t scaleFactor = nrBitsPerSample == 16 ? 1 : 16;
 
   // The output is the correlation-product of two inputs (with identical
-  // `inputValue`) and the number of integration blocks.
+  // `inputValue`).
   const fcomplex outputValue = 
-    norm(inputValue) * scaleFactor * scaleFactor *
-    nrBlocksPerIntegration;
+    norm(inputValue) * scaleFactor * scaleFactor;
 
   // Create very simple kernel programs, with predictable output. Skip as much
   // as possible. Nr of channels/sb from the parset is 1, so the PPF will not

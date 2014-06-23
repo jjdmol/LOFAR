@@ -30,39 +30,17 @@ namespace LOFAR
   {
     BeamFormerFactories::BeamFormerFactories(const Parset &ps,
                                              size_t nrSubbandsPerSubbandProc) :
-        intToFloat(ps),
-        fftShift(FFTShiftKernel::Parameters(ps,
-          ps.settings.antennaFields.size(),
-          ps.settings.beamFormer.nrDelayCompensationChannels)),
-        delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
-        bandPassCorrection(BandPassCorrectionKernel::Parameters(ps)),
-        beamFormer(BeamFormerKernel::Parameters(ps)),
+      preprocessing(ps),
 
-        coherentTranspose(CoherentStokesTransposeKernel::Parameters(ps)),
-        coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
-          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
-          ps.settings.beamFormer.nrHighResolutionChannels)),
-        coherentFirFilter(FIR_FilterKernel::Parameters(ps,
-          std::max(1UL, ps.settings.beamFormer.maxNrCoherentTABsPerSAP()),
-          false,
-          nrSubbandsPerSubbandProc,
-          ps.settings.beamFormer.coherentSettings.nrChannels,
-          static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels))),
-        coherentStokes(CoherentStokesKernel::Parameters(ps)),
+      coherentStokes(ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0
+        ? new BeamFormerCoherentStep::Factories(ps, nrSubbandsPerSubbandProc)
+        : NULL),
 
-        incoherentStokesTranspose(IncoherentStokesTransposeKernel::Parameters(ps)),
-        incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
-          ps.settings.antennaFields.size(),
-          ps.settings.beamFormer.nrHighResolutionChannels)),
-        incoherentFirFilter(FIR_FilterKernel::Parameters(ps,
-          ps.settings.antennaFields.size(),
-          false,
-          nrSubbandsPerSubbandProc,
-          ps.settings.beamFormer.incoherentSettings.nrChannels,
-          static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels))),
-        incoherentStokes(IncoherentStokesKernel::Parameters(ps))
-      {
-      }
+      incoherentStokes(ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0
+        ? new BeamFormerIncoherentStep::Factories(ps, nrSubbandsPerSubbandProc)
+        : NULL)
+    {
+    }
   }
 }
 
