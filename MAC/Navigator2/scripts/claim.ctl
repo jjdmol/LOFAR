@@ -952,8 +952,7 @@ void checkAndCreateDPs() {
     //    CEPObservation: LOFAR_ObsSW_TempObs0001-g_MaxNrClaims
     //    OnlineControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl
     //    PythonControl:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_PythonControl
-    //    BGLAppl:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl
-    //    BGLProc:        LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OnlineControl_BGLAppl_BGLProc
+    //    CobaltGPUProc:  LOFAR_ObsSW_TempObs0001-g_MaxNrClaims_OSCBT001-009_CobaltGPYProc00-01
     
 
     if (claimableTypes[i] == "Observation") {
