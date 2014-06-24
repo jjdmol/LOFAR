@@ -1,9 +1,0 @@
-mac.ns.ST3.server.type=TCP
-mac.ns.ST3.server.host=lofar35
-mac.ns.ST3.server.port=23000
-mac.ns.ST3.provider.type=TCP
-mac.ns.ST3.provider.host=lofar35
-mac.ns.ST3.provider.port=23001
-mac.top.ST1.client.remoteservice=ST3:server
-mac.top.ST1.mclient.remoteservice=ST3:provider
-mac.top.ST2.mclient.remoteservice=ST3:provider

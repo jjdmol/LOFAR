@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# For now, require exact settings for all users
-grep '\*\s*-\s*memlock\s*unlimited' /etc/security/limits.conf || exit 1
-grep '\*\s*-\s*nice\s*19' /etc/security/limits.conf || exit 1
-grep '\*\s*-\s*rtprio\s*99' /etc/security/limits.conf || exit 1
