@@ -80,7 +80,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     const Vector<Double> &time,
     const Vector<Double> &timeCentroid,
     const Vector<Bool> &flagRow,
-    const Matrix<Float> &imagingWeight,
+    const Cube<Float> &imagingWeightCube,
     const Cube<Bool> &flag,
     const Cube<Complex> &data,
     Bool newMS)
@@ -90,7 +90,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     itsTime.reference(time);
     itsTimeCentroid.reference(timeCentroid);
     itsFlagRow.reference(flagRow);
-    itsImagingWeight.reference(imagingWeight);
+    itsImagingWeightCube.reference(imagingWeightCube);
     itsFlag.reference(flag);
     itsData.reference(data);
     itsNewMS = newMS;
@@ -151,7 +151,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     itsData.set(0.0);
 }
 
-VisBuffer &VisBufferStub::assign(const VisBuffer & vb, Bool copy)
+LOFAR::LofarFT::VisBuffer &VisBufferStub::assign(const LOFAR::LofarFT::VisBuffer & vb, Bool copy)
 {
     AlwaysAssert(false, AipsError);
 }
@@ -458,6 +458,11 @@ const Vector<Double> &VisBufferStub::lsrFrequency() const
     return itsFrequency;
 }
 
+void VisBufferStub::lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert, const Bool ignoreconv) const
+{
+  freq = itsFrequency;
+}
+
 void VisBufferStub::lsrFrequency(const Int & spw, Vector<Double>& freq,
     Bool &convert) const
 {
@@ -702,6 +707,16 @@ Matrix<Float> &VisBufferStub::imagingWeight()
 const Matrix<Float> &VisBufferStub::imagingWeight() const
 {
     return itsImagingWeight;
+}
+
+Cube<Float> &VisBufferStub::imagingWeightCube()
+{
+    return itsImagingWeightCube;
+}
+
+const Cube<Float> &VisBufferStub::imagingWeightCube() const
+{
+    return itsImagingWeightCube;
 }
 
 Cube<Float> &VisBufferStub::weightCube()

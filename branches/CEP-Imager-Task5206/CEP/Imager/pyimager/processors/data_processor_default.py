@@ -44,8 +44,9 @@ class DataProcessorDefault(DataProcessorBase):
         psf, weight = self._processor.point_spread_function(self._coordinates,
             self._shape, False)
 
-        exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
-        return numpy.where(exp_weight > 0.0, psf / exp_weight, 0.0)
+        #exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
+        #return numpy.where(exp_weight > 0.0, psf / exp_weight, 0.0)
+        return psf
 
     def density(self, coordinates, shape):
         self._update_image_configuration(coordinates, shape)
@@ -66,7 +67,7 @@ class DataProcessorDefault(DataProcessorBase):
 
         # Divide out the summed weight.
         exp_weight = weight[:, :, numpy.newaxis, numpy.newaxis]
-        image = numpy.where(exp_weight > 0.0, image / exp_weight, 0.0)
+        #image = numpy.where(exp_weight > 0.0, image / exp_weight, 0.0)
 
         # Normalize residual image to the requested normalization. Note that the
         # image produced by gridding is flat noise by default.

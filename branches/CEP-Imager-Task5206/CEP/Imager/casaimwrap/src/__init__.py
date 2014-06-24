@@ -20,4 +20,18 @@
 #
 # $Id: __init__.py 20560 2012-03-26 12:06:49Z zwieten $
 
+
 from _casaimwrap import *
+
+import _casaimwrap
+import lofar.parameterset
+
+
+def init(context, msname, parameters) :
+  
+  ps = lofar.parameterset.parameterset()
+  for key in parameters :
+    ps.add(key, str(parameters[key]))
+  _casaimwrap.init(context, msname, lofar.parameterset.PyParameterSet(ps))
+  
+  

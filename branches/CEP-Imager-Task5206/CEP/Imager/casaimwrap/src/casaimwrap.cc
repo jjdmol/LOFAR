@@ -49,6 +49,8 @@
 #include <synthesis/MeasurementEquations/ConvolutionEquation.h>
 #include <synthesis/MeasurementEquations/ClarkCleanModel.h>
 
+#include <Common/ParameterSet.h>
+
 #include <LofarFT/CubeSkyEquation.h>
 #include <LofarFT/FTMachine.h>
 #include <LofarFT/FTMachineSimple.h>
@@ -120,7 +122,7 @@ struct CASAContext
 
     IPosition                               shape;
     CoordinateSystem                        coordinates;
-    TempImage<Complex>                      image;
+    TempImage<Float>                        image;
     Matrix<Float>                           weight;
     CountedPtr<VisBufferStub>               buffer;
     bool                                    psf;
@@ -177,9 +179,9 @@ CoordinateSystem make_coordinate_system(const Vector<Int> &shape,
     return coordinates;
 }
 
-void init(CASAContext &context, const String &name, const Record &options)
+void init(CASAContext &context, const String &name, const ParameterSet &parameters)
 {
-    context.options = options;
+//     context.options = options;
 
     MeasurementSet ms(name);
     context.ms = ms(ms.col("ANTENNA1") != ms.col("ANTENNA2")
@@ -191,23 +193,10 @@ void init(CASAContext &context, const String &name, const Record &options)
     // Stripped version of LofarImager::createFTMachine()
     // -------------------------------------------------------------------------
 
-    // Defaults from awimager (see Imager::setoptions() call).
-    Long cache_p = 512*1024*(1024/8); // 512 MB
-    Int tile_p = 16;
-    String gridfunction_p = "sf";
-    MPosition mLocation_p;
-    Float padding_p = options.asFloat("padding");
-    Int wprojPlanes_p = options.asInt("wplanes");
-
-    // From LofarImager::createFTMachine().
-    CountedPtr<VisibilityResamplerBase> visResampler;
-    Bool useDoublePrecGrid = False;
-
-    // RefFreq doesn't look to be used by LofarFTMachine (!)
-    Double RefFreq = 0.0;
-
-//     context.ft = CountedPtr<LOFAR::LofarFT::FTMachine>(new LOFAR::LofarFT::FTMachineSimple());
-//     context.ft->initGridThreads(context.grids, context.gridsComplex);
+    context.ft = LOFAR::LofarFT::FTMachineFactory::instance().create(
+      string("FTMachineSplitBeamWStackWB"), 
+      context.ms, 
+      parameters);
 
     context.buffer = CountedPtr<VisBufferStub>(new VisBufferStub(context.ms));
 }
@@ -348,11 +337,9 @@ Record begin_degrid(CASAContext &context, const Record &coordinates,
     tmp_image.put(pixels);
 
     // Complex image to degrid.
-    context.image = TempImage<Complex>(context.shape, context.coordinates);
-    StokesImageUtil::changeCStokesRep(context.image, StokesImageUtil::LINEAR);
+    context.image = TempImage<Float>(context.shape, context.coordinates);
 
     // Convert from Stokes to complex.
-    StokesImageUtil::From(context.image, tmp_image);
 
     // Update temporary VisBuffer.
     context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
@@ -361,7 +348,7 @@ Record begin_degrid(CASAContext &context, const Record &coordinates,
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("IMAGING_WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
         chunk.asArrayBool("FLAG"),
         true);
 
@@ -382,7 +369,7 @@ Record degrid(CASAContext &context, const Record &chunk)
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("IMAGING_WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
         chunk.asArrayBool("FLAG"),
         false);
 
@@ -416,12 +403,8 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
         tmp_shape[0]);
 
     // Create temporary image.
-    context.image = TempImage<Complex>(context.shape, context.coordinates);
-    StokesImageUtil::changeCStokesRep(context.image, StokesImageUtil::LINEAR);
+    context.image = TempImage<Float>(context.shape, context.coordinates);
     context.image.set(0.0);
-
-    // Create weight matrix.
-    // ==> No need, will be resized by LofarFTMachine.
 
     // Update temporary VisBuffer.
     context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
@@ -430,13 +413,15 @@ void begin_grid(CASAContext &context, const ValueHolder &shape,
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("IMAGING_WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
         chunk.asArrayBool("FLAG"),
         chunk.asArrayComplex("DATA"),
         true);
 
     // Initialize static information in temporary VisBuffer.
-    context.ft->initializeToSky(context.image, context.weight, *context.buffer);
+    PtrBlock<ImageInterface<Float> * > images(1);
+    images[0] = &context.image;
+    context.ft->initializeToSky(images, False);
 
     // Grid data.
     context.ft->put(*context.buffer, -1, context.psf, FTMachine::OBSERVED);
@@ -451,7 +436,7 @@ void grid(CASAContext &context, const Record &chunk)
         chunk.asArrayDouble("TIME"),
         chunk.asArrayDouble("TIME_CENTROID"),
         chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("IMAGING_WEIGHT"),
+        chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
         chunk.asArrayBool("FLAG"),
         chunk.asArrayComplex("DATA"),
         false);
@@ -464,24 +449,12 @@ Record end_grid(CASAContext &context, bool normalize)
 {
     context.ft->finalizeToSky();
 
-    ImageInterface<Complex> &image = context.ft->getImage(context.weight,
-        normalize);
-
-    TempImage<Float> tmp_image(context.shape, context.coordinates);
-    tmp_image.set(0.0);
-
-    if(context.psf)
-    {
-        StokesImageUtil::ToStokesPSF(tmp_image, image);
-    }
-    else
-    {
-        StokesImageUtil::To(tmp_image, image);
-    }
+    context.ft->getImages(context.weight, normalize);
+    
 
     Record result;
     result.define("weight", context.weight);
-    result.define("image", tmp_image.get());
+    result.define("image", context.image.get());
     return result;
 }
 
@@ -807,6 +780,10 @@ BOOST_PYTHON_MODULE(_casaimwrap)
     casa::pyrap::register_convert_casa_vector<casa::uInt>();
 
     class_<LOFAR::casaimwrap::CASAContext>("CASAContext");
+
+//     def("init", LOFAR::casaimwrap::init,
+//         (boost::python::arg("context"),
+//         boost::python::arg("options")));
 
     def("init", LOFAR::casaimwrap::init,
         (boost::python::arg("context"),

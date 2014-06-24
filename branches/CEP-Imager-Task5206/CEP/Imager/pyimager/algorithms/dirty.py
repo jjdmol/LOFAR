@@ -77,7 +77,7 @@ def dirty(options):
     util.notice("storing dirty images...")
     util.store_image(options.image + ".dirty.flat_noise",
         image_coordinates, dirty_image)
-    util.store_image(options.image + ".dirty", image_coordinates,
-        processor.normalize(image_coordinates, dirty_image,
-        processors.Normalization.FLAT_NOISE,
-        processors.Normalization.FLAT_GAIN))
+    #util.store_image(options.image + ".dirty", image_coordinates,
+        #processor.normalize(image_coordinates, dirty_image,
+        #processors.Normalization.FLAT_NOISE,
+        #processors.Normalization.FLAT_GAIN))

@@ -29,7 +29,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         parms["verbose"] = 0                # 1, 2 for more output
         parms["maxsupport"] = 1024
         parms["oversample"] = 8
-        parms["imagename"] = options["image"]
+        parms["output.imagename"] = options["image"]
         parms["UseLIG"] = False             # linear interpolation
         parms["UseEJones"] = True
         parms["ApplyElement"] = True
@@ -144,8 +144,9 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
         args["FLAG"] = self._ms.getcol("FLAG")
-        args["IMAGING_WEIGHT"] = self.imw.imaging_weight(args["UVW"], \
-            self.channel_frequency(), args["FLAG"], self._ms.getcol("WEIGHT_SPECTRUM"))
+        #args["IMAGING_WEIGHT"] = self.imw.imaging_weight(args["UVW"], \
+            #self.channel_frequency(), args["FLAG"], self._ms.getcol("WEIGHT_SPECTRUM"))
+        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
         args["DATA"] = numpy.ones(args["FLAG"].shape, dtype=numpy.complex64)
 
         lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
@@ -165,7 +166,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
         args["FLAG"] = self._ms.getcol("FLAG")
-        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
+        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
         args["DATA"] = self._ms.getcol(self._data_column)
 
         lofar.casaimwrap.begin_grid(self._context, shape, coordinates.dict(), \
@@ -186,7 +187,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
         args["FLAG"] = self._ms.getcol("FLAG")
-        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
+        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
 
         result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
@@ -207,7 +208,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
         args["FLAG"] = self._ms.getcol("FLAG")
-        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
+        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
 
         result = lofar.casaimwrap.begin_degrid(self._context, \
             coordinates.dict(), model, args)
@@ -225,7 +226,7 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["TIME_CENTROID"] = self._ms.getcol("TIME_CENTROID")
         args["FLAG_ROW"] = self._ms.getcol("FLAG_ROW")
         args["FLAG"] = self._ms.getcol("FLAG")
-        args["IMAGING_WEIGHT"] = numpy.ones(args["FLAG"].shape[:2], dtype=numpy.float32)
+        args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
         args["DATA"] = residual
 
         lofar.casaimwrap.begin_grid(self._context, model.shape, \
