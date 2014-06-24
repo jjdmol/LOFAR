@@ -320,8 +320,8 @@ ValueHolder average_response(const CASAContext &context)
 //     return ValueHolder(context.ft->getAverageResponse());
 }
 
-Record begin_degrid(CASAContext &context, const Record &coordinates,
-    const ValueHolder &image, const Record &chunk)
+void begin_degrid(CASAContext &context, const Record &coordinates,
+    const ValueHolder &image)
 {
     CountedPtr<CoordinateSystem> tmp_coordinates =
         CountedPtr<CoordinateSystem>(CoordinateSystem::restore(coordinates,
@@ -336,28 +336,10 @@ Record begin_degrid(CASAContext &context, const Record &coordinates,
     TempImage<Float> tmp_image(context.shape, context.coordinates);
     tmp_image.put(pixels);
 
-    // Complex image to degrid.
-    context.image = TempImage<Float>(context.shape, context.coordinates);
+    PtrBlock<ImageInterface<Float> * > images(1);
+    images[0] = &tmp_image;
+    context.ft->initializeToVis(images, False);
 
-    // Convert from Stokes to complex.
-
-    // Update temporary VisBuffer.
-    context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
-        chunk.asArrayInt("ANTENNA2"),
-        chunk.asArrayDouble("UVW"),
-        chunk.asArrayDouble("TIME"),
-        chunk.asArrayDouble("TIME_CENTROID"),
-        chunk.asArrayBool("FLAG_ROW"),
-        chunk.asArrayFloat("IMAGING_WEIGHT_CUBE"),
-        chunk.asArrayBool("FLAG"),
-        true);
-
-//     context.ft->initializeToVis(context.image, *context.buffer, False);
-    context.ft->get(*context.buffer);
-
-    Record result;
-    result.define("data", context.buffer->modelVisCube());
-    return result;
 }
 
 Record degrid(CASAContext &context, const Record &chunk)
@@ -826,8 +808,7 @@ BOOST_PYTHON_MODULE(_casaimwrap)
     def("begin_degrid", LOFAR::casaimwrap::begin_degrid,
         (boost::python::arg("context"),
         boost::python::arg("coordinates"),
-        boost::python::arg("image"),
-        boost::python::arg("chunk")));
+        boost::python::arg("image")));
 
     def("degrid", LOFAR::casaimwrap::degrid,
         (boost::python::arg("context"),

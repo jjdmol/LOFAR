@@ -189,8 +189,12 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         args["FLAG"] = self._ms.getcol("FLAG")
         args["IMAGING_WEIGHT_CUBE"] = numpy.ones(args["FLAG"].shape, dtype=numpy.float32)
 
-        result = lofar.casaimwrap.begin_degrid(self._context, \
-            coordinates.dict(), model, args)
+        lofar.casaimwrap.begin_degrid(self._context, \
+            coordinates.dict(), model)
+          
+        result = lofar.casaimwrap.degrid(self._context, \
+            args)
+          
         lofar.casaimwrap.end_degrid(self._context)
         self._response_available = True
 #        self._ms.putcol(self._data_column, result["data"])
