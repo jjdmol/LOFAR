@@ -506,28 +506,21 @@ namespace LOFAR {
       // Initialize all vectors
       double fronormvis=0;
       double fronormmod=0;
-      if (pol) {
-        //nCr,nSt,nCh,nSt
-        for (uint st1=0;st1<nSt;++st1) {
-          for (uint ch=0;ch<nCh;++ch) {
-            for (uint st2=0;st2<nSt;++st2) {
-              for (uint cr=0;cr<nCr;++cr) {
-                fronormvis+=norm( itsVis(IPosition(4,cr,st2,ch,st1)));
-                fronormmod+=norm(itsMVis(IPosition(4,cr,st2,ch,st1)));
-              }
-            }
-          }
-        }
-      } else {
-        for (uint st1=0;st1<nSt;++st1) {
-          for (uint st2=0;st2<nSt;++st2) {
-            for (uint ch=0;ch<nCh;++ch) {
-              fronormvis+=norm( itsVis(IPosition(3,st2,ch,st1)));
-              fronormmod+=norm(itsMVis(IPosition(3,st2,ch,st1)));
-            }
-          }
-        }
+
+      double fronormvis1=0;
+      double fronormmod1=0;
+      DComplex* vis_p;
+      DComplex* mvis_p;
+
+      vis_p=itsVis.data();
+      mvis_p=itsMVis.data();
+
+      uint vissize=itsVis.size();
+      for (uint i=0;i<vissize;++i) {
+        fronormvis1+=norm(*vis_p++);
+        fronormmod1+=norm(*mvis_p++);
       }
+
       fronormvis=sqrt(fronormvis);
       fronormmod=sqrt(fronormmod);
 
@@ -548,9 +541,6 @@ namespace LOFAR {
 
       iS.gx = iS.g;
       int sstep=0;
-
-      DComplex* vis_p;
-      DComplex* mvis_p;
 
       uint iter=0;
       if (nSt==0) {
