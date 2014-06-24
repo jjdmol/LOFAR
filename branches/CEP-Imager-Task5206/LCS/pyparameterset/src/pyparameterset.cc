@@ -222,7 +222,8 @@ namespace LOFAR {
   // Define the python interface to ParameterSet.
   void pyparameterset()
   {
-    class_<PyParameterSet> ("PyParameterSet")
+    class_<ParameterSet> ("ParameterSet");
+    class_<PyParameterSet, bases<ParameterSet> > ("PyParameterSet")
       .def (init<PyParameterSet>())
       .def (init<bool, int, int>())
       .def (init<std::string, bool>())
