@@ -83,13 +83,7 @@ public class ResultPanelHelper {
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
         itsPanelMap.put("Observation",itsArrayList);
         addParSetAndLogPanels();
-
-        //OLAP
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
-        itsPanelMap.put("OLAP",itsArrayList);        
-        addParSetAndLogPanels();
-        
+     
         //Cobalt
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.CobaltPanel");

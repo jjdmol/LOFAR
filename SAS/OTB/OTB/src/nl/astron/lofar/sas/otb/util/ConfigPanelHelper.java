@@ -83,12 +83,6 @@ public class ConfigPanelHelper {
 //        addParSetPanel();
 
 
-        //OLAP
-        itsArrayList = new ArrayList<>();
-        itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
-        itsPanelMap.put("OLAP",itsArrayList);
-        addParSetPanel();
-
         //Cobalt
         itsArrayList = new ArrayList<>();
         itsArrayList.add("nl.astron.lofar.sas.otbcomponents.userpanels.CobaltPanel");
