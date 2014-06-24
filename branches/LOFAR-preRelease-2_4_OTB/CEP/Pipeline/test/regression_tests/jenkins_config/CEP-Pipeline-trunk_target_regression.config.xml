@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <actions/>
+  <description>Regression/delta test for the LOFAR target pipeline.
+Triggers a build and test after midnight on changes in the trunk.</description>
+  <logRotator>
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>15</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.redmine.RedmineProjectProperty plugin="redmine@0.10">
+      <redmineWebsite>https://support.astron.nl/lofar_issuetracker/</redmineWebsite>
+      <projectName/>
+      <redmineVersion>true</redmineVersion>
+    </hudson.plugins.redmine.RedmineProjectProperty>
+  </properties>
+  <scm class="hudson.scm.SubversionSCM" plugin="subversion@1.43">
+    <locations>
+      <hudson.scm.SubversionSCM_-ModuleLocation>
+        <remote>https://svn.astron.nl/LOFAR/trunk/CEP</remote>
+        <local>LOFAR/CEP</local>
+      </hudson.scm.SubversionSCM_-ModuleLocation>
+      <hudson.scm.SubversionSCM_-ModuleLocation>
+        <remote>https://svn.astron.nl/LOFAR/trunk/CMake</remote>
+        <local>LOFAR/CMake</local>
+      </hudson.scm.SubversionSCM_-ModuleLocation>
+    </locations>
+    <browser class="hudson.plugins.viewVC.ViewVCRepositoryBrowser" plugin="viewVC@1.5">
+      <url>https://svn.astron.nl/</url>
+      <location>LOFAR</location>
+    </browser>
+    <excludedRegions/>
+    <includedRegions/>
+    <excludedUsers/>
+    <excludedRevprop/>
+    <excludedCommitMessages/>
+    <workspaceUpdater class="hudson.scm.subversion.UpdateUpdater"/>
+  </scm>
+  <assignedNode>LCE072</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <jdk>(Default)</jdk>
+  <triggers class="vector">
+    <hudson.triggers.SCMTrigger>
+      <spec>0 4 * * *</spec>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
+  <concurrentBuild>true</concurrentBuild>
+  <customWorkspace>/home/lofarbuild/jenkins_builds/target_regression</customWorkspace>
+  <builders>
+    <hudson.tasks.Shell>
+      <command># Perform svn steps needed before building
+if [ -f $WORKSPACE/LOFAR/CMakeLists.txt ]
+  then  echo "Found a previous checkout: updating"; svn up --depth files LOFAR
+  else  echo "not found a previous checkout: checkingout"; svn checkout --depth files  https://svn.astron.nl/LOFAR/trunk LOFAR
+fi</command>
+    </hudson.tasks.Shell>
+    <hudson.plugins.cmake.CmakeBuilder plugin="cmakebuilder@1.9">
+      <sourceDir>LOFAR</sourceDir>
+      <buildDir>gnu_debug</buildDir>
+      <installDir>install</installDir>
+      <buildType>Debug</buildType>
+      <otherBuildType/>
+      <generator>Unix Makefiles</generator>
+      <makeCommand>make -j4</makeCommand>
+      <installCommand>make install</installCommand>
+      <preloadScript/>
+      <cmakeArgs>-Wdev -DBUILD_ASKAPsoft=OFF  -DUSE_OPENMP=ON -DBUILD_PACKAGES=Offline </cmakeArgs>
+      <projectCmakePath/>
+      <cleanBuild>false</cleanBuild>
+      <cleanInstallDir>false</cleanInstallDir>
+      <builderImpl/>
+    </hudson.plugins.cmake.CmakeBuilder>
+    <hudson.tasks.Shell>
+      <command># This command will perform the actual regression test steps
+
+# 1. A unit test
+cd gnu_debug 
+ctest -R pipeline
+cd ..
+
+# 2. set environment
+. /opt/cep/login/bashrc
+use LofIm
+export PYTHONPATH=$WORKSPACE/install/lib/python2.6/dist-packages:$PYTHONPATH
+
+# remove old data, use at least a single entry
+ssh lce070 "touch /data/scratch/lofarbuild/Observation64406/temp"
+ssh lce070 "rm -rf /data/scratch/lofarbuild/Observation64406/*"
+ssh lce069 "touch /data/scratch/lofarbuild/Observation64406/temp"
+ssh lce069 "rm -rf /data/scratch/lofarbuild/Observation64406/*"
+ssh lce070 "touch /data/scratch/lofarbuild/target_integration/temp"
+ssh lce070 "rm -rf /data/scratch/lofarbuild/target_integration/*"
+ssh lce069 "touch /data/scratch/lofarbuild/target_integration/temp"
+ssh lce069 "rm -rf /data/scratch/lofarbuild/target_integration/*"
+
+# copy the test data to the correct place on the node
+ssh lce070 "mkdir -p /data/scratch/lofarbuild/target_integration"
+scp -rp /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64372_SAP000_SB000_uv.MS lce070:/data/scratch/lofarbuild/target_integration
+
+scp -rp /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64405_SAP000_SB000_inst.INST lce070:/data/scratch/lofarbuild/target_integration
+
+ssh lce069 "mkdir -p /data/scratch/lofarbuild/target_integration"
+scp -rp /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64372_SAP000_SB001_uv.MS lce069:/data/scratch/lofarbuild/target_integration
+
+scp -rp /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64405_SAP000_SB001_inst.INST lce069:/data/scratch/lofarbuild/target_integration
+
+# 3. run the pipeline
+#cleanup the var/run directory
+rm -rf $WORKSPACE/install/var/run/*
+
+mkdir -p $WORKSPACE/install/var/run/pipeline
+
+#copy the config file to a 'writable' location
+cp $WORKSPACE/install/share/pipeline/pipeline.cfg $WORKSPACE/install/var/run/pipeline/pipeline_copy.cfg 
+
+#copy the parset to a writable location
+cp /data/lofar/testdata/CEP/Pipeline/target_pipeline/Observation64406  $WORKSPACE/install/var/run/Observation64406  
+
+# replace clusterdesc file in the cfg file: allows running in lce072
+sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $WORKSPACE/install/var/run/pipeline/pipeline_copy.cfg 
+
+cd $WORKSPACE/install/bin
+
+python msss_target_pipeline.py $WORKSPACE/install/var/run/Observation64406 -c $WORKSPACE/install/var/run/pipeline/pipeline_copy.cfg -d
+
+## 4. Test correct functioning
+#  a. copy target calibrated data to the scratch directory
+mkdir -p /data/scratch/lofarbuild/target_regression_test
+scp -r /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64406_SB000_uv.dppp.MS_target /data/scratch/lofarbuild/target_regression_test/L64406_SB000_uv.dppp.MS_target 
+scp -r /data/lofar/testdata/CEP/Pipeline/target_pipeline/datasets/L64406_SB001_uv.dppp.MS_target /data/scratch/lofarbuild/target_regression_test/L64406_SB001_uv.dppp.MS_target 
+
+#  b. copy target sourcelist to the scratch directory
+scp -r lce070:/data/scratch/lofarbuild/target_integration/L64406_SB000_uv.dppp.MS /data/scratch/lofarbuild/target_regression_test/L64406_SB000_uv.dppp.MS
+scp -r lce069:/data/scratch/lofarbuild/target_integration/L64406_SB001_uv.dppp.MS /data/scratch/lofarbuild/target_regression_test/L64406_SB001_uv.dppp.MS
+
+
+#  c. Do actual comparison
+python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/target_pipeline.py /data/scratch/lofarbuild/target_regression_test/L64406_SB000_uv.dppp.MS_target /data/scratch/lofarbuild/target_regression_test/L64406_SB000_uv.dppp.MS
+
+python $WORKSPACE/LOFAR/CEP/Pipeline/test/regression_tests/target_pipeline.py /data/scratch/lofarbuild/target_regression_test/L64406_SB001_uv.dppp.MS_target /data/scratch/lofarbuild/target_regression_test/L64406_SB001_uv.dppp.MS</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.plugins.warnings.WarningsPublisher plugin="warnings@4.18">
+      <healthy/>
+      <unHealthy/>
+      <thresholdLimit>low</thresholdLimit>
+      <pluginName>[WARNINGS] </pluginName>
+      <defaultEncoding/>
+      <canRunOnFailed>true</canRunOnFailed>
+      <useStableBuildAsReference>false</useStableBuildAsReference>
+      <useDeltaValues>false</useDeltaValues>
+      <thresholds plugin="analysis-core@1.48">
+        <unstableTotalAll/>
+        <unstableTotalHigh/>
+        <unstableTotalNormal/>
+        <unstableTotalLow/>
+        <unstableNewAll/>
+        <unstableNewHigh/>
+        <unstableNewNormal/>
+        <unstableNewLow/>
+        <failedTotalAll/>
+        <failedTotalHigh/>
+        <failedTotalNormal/>
+        <failedTotalLow/>
+        <failedNewAll/>
+        <failedNewHigh/>
+        <failedNewNormal/>
+        <failedNewLow/>
+      </thresholds>
+      <shouldDetectModules>false</shouldDetectModules>
+      <dontComputeNew>false</dontComputeNew>
+      <doNotResolveRelativePaths>false</doNotResolveRelativePaths>
+      <parserConfigurations/>
+      <consoleParsers>
+        <hudson.plugins.warnings.ConsoleParser>
+          <parserName>GNU Compiler 4 (gcc)</parserName>
+        </hudson.plugins.warnings.ConsoleParser>
+      </consoleParsers>
+    </hudson.plugins.warnings.WarningsPublisher>
+    <xunit plugin="xunit@1.48">
+      <types>
+        <JUnitType>
+          <pattern>gnu_debug/**/*.xml</pattern>
+          <faildedIfNotNew>true</faildedIfNotNew>
+          <deleteOutputFiles>true</deleteOutputFiles>
+          <stopProcessingIfError>true</stopProcessingIfError>
+        </JUnitType>
+      </types>
+      <thresholds>
+        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+          <unstableThreshold/>
+          <unstableNewThreshold/>
+          <failureThreshold/>
+          <failureNewThreshold/>
+        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+        <org.jenkinsci.plugins.xunit.threshold.SkippedThreshold>
+          <unstableThreshold/>
+          <unstableNewThreshold/>
+          <failureThreshold/>
+          <failureNewThreshold/>
+        </org.jenkinsci.plugins.xunit.threshold.SkippedThreshold>
+      </thresholds>
+      <thresholdMode>1</thresholdMode>
+    </xunit>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.3.2"/>
+  </buildWrappers>
+</project>

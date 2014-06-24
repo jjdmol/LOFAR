@@ -1,0 +1,4 @@
+CALL InsertVersion();
+
+CALL BuildFrequencyBands();
+

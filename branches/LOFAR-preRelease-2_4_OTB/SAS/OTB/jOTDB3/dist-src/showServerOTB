@@ -1,0 +1,29 @@
+#!/bin/bash
+#
+# Shop running OTB servers 
+#
+# Usage: showServerOTB
+#
+# Author: A.P. Schoenmakers
+#
+
+
+echo "Finding OTB servers:"
+
+user_ports=( `ps -eaf | grep server | grep java | awk '{print $1":"$2":"$NF-1}'` )
+
+if [ "$user_ports" == "" ]; then
+  echo "No such servers running"
+  exit
+fi
+
+for user_port in "${user_ports[@]}"
+  do
+    user=`echo $user_port | awk -F: '{print $1}'`
+    pid=`echo $user_port | awk -F: '{print $2}'`
+    port=`echo $user_port | awk -F: '{print $3}'`
+    echo "Found server using port $port started by user $user with PID $pid"
+  done
+
+
+
