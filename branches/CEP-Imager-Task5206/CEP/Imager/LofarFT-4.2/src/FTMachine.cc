@@ -92,7 +92,7 @@ namespace LofarFT {
 
 FTMachine::FTMachine(
   const MeasurementSet& ms, 
-  ParameterSet& parset)
+  const ParameterSet& parset)
   : casa::FTMachine(), 
    // Aliases for data members of casa::FTMachine
 //     itsImage(0),
@@ -310,8 +310,6 @@ void FTMachine::initializeToSky(
   
   // initialize_grids uses itsImages to set up complex grids
   initialize_grids();
-  
-  
 }
 
 void FTMachine::finalizeToSky()
@@ -467,6 +465,13 @@ void FTMachine::initialize_grids()
     itsSumWeight[i].resize (itsNPol, itsNChan);
     itsSumWeight[i] = 0.;
   }
+}
+
+void FTMachine::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
+                         FTMachine::Type type) 
+{
+  cout << "static cast!" << endl;
+  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
 }
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and

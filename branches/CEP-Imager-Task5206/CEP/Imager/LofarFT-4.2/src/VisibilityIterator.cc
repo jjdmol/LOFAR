@@ -41,7 +41,7 @@ VisibilityIterator::VisibilityIterator(
   casa::Double timeInterval) 
 : 
   casa::VisibilityIterator(ms, sortColumns, timeInterval), 
-  lofar_imwgt_p() 
+  lofar_imwgt_p(0) 
 {};
   
 VisibilityIterator &
@@ -57,7 +57,7 @@ VisibilityIterator::operator= (const VisibilityIterator & other)
 }
   
 void
-VisibilityIterator::useImagingWeight (const VisImagingWeight & imWgt)
+VisibilityIterator::useImagingWeight (casa::CountedPtr<VisImagingWeight> imWgt)
 {
     lofar_imwgt_p = imWgt;
 }
@@ -65,7 +65,7 @@ VisibilityIterator::useImagingWeight (const VisImagingWeight & imWgt)
 const VisImagingWeight &
 VisibilityIterator::getImagingWeightGenerator () const
 {
-    return lofar_imwgt_p;
+    return *lofar_imwgt_p;
 }
     
 } // end namespace LofarFT

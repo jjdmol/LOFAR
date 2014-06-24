@@ -51,7 +51,7 @@ namespace LofarFT {
 
 FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   const MeasurementSet& ms,
-  ParameterSet& parset)
+  const ParameterSet& parset)
   : FTMachine( ms, parset),
     itsSplitBeam(parset.getBool("gridding.splitbeam", False)),
     itsNThread(OpenMP::maxThreads())
@@ -66,11 +66,10 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   itsSumWeight.resize (itsNGrid);
   itsGriddedDataDomain = IMAGE;
   double msRefFreq=0; //TODO: put some useful reference frequency here
-  itsRefFreq=parset.getDouble("image.refFreq",msRefFreq),
+  itsRefFreq=parset.getDouble("image.reffreq",msRefFreq),
   itsTimeWindow=parset.getDouble("gridding.timewindow",300);
   if (itsSplitBeam)
   {
-    cout << "SplitBeam is True" << endl;
     itsConvFunc = new ConvolutionFunctionDiagonal(
       itsMS, 
       itsWMax,
@@ -240,15 +239,6 @@ FTMachineSplitBeamWStackWB::VisibilityMap FTMachineSplitBeamWStackWB::make_mappi
   return v;  
 }
 
- 
-
-
-void FTMachineSplitBeamWStackWB::put(const casa::VisBuffer& vb, Int row, Bool dopsf,
-                         FTMachine::Type type) 
-{
-  put( *static_cast<const VisBuffer*>(&vb), row, dopsf, type);
-}
-
 void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
                          FTMachine::Type type) 
 {
@@ -300,8 +290,6 @@ void FTMachineSplitBeamWStackWB::put(const VisBuffer& vb, Int row, Bool dopsf,
   case FTMachine::OBSERVED:
     data.reference(vb.visCube());
   }
-  
-  Cube<Bool> flag(vb.flag());
   
   Cube<Float> imagingWeightCube(vb.imagingWeightCube());
   

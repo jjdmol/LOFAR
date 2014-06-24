@@ -21,6 +21,7 @@ lofar_add_library(lofarft
   VisBuffer.cc
   VisibilityIterator.cc
   VisImagingWeight.cc
+  VisImagingWeightRobust.cc
   VisResampler.cc
   VisResamplerMatrixWB.cc
   VisResamplerDiagonalWB.cc

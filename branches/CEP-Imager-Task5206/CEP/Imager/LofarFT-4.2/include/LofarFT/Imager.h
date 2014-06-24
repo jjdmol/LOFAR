@@ -53,15 +53,6 @@ namespace LofarFT {
 
     virtual ~Imager();
 
-    casa::Bool weight(
-      const casa::String& algorithm, 
-      const casa::String& rmode,
-      const casa::Quantity& noise, 
-      const casa::Double robust,
-      const casa::Quantity& fieldofview, 
-      const casa::Int npixels, 
-      const casa::Bool multiField = casa::False);
-    
     // Create the LofarFTMachine and fill ft_p in the parent.
     virtual casa::Bool createFTMachine();
 
@@ -111,6 +102,8 @@ namespace LofarFT {
   void initPredict(const casa::Vector<casa::String>& modelNames);
   void predict();
   
+  casa::Bool set_imaging_weight(const ParameterSet& parset);
+  
   private:
     //# Data members.
     ParameterSet    &itsParset;
@@ -118,7 +111,7 @@ namespace LofarFT {
     vector<casa::Array<casa::Complex> >  itsGridsParallel;
     vector<casa::Array<casa::DComplex> > itsGridsParallel2;
     VisibilityIterator*    lofar_rvi_p;
-    VisImagingWeight       lofar_imwgt_p;
+    casa::CountedPtr<VisImagingWeight> lofar_imwgt_p;
     casa::Vector<casa::String> itsPSFNames;
 
     

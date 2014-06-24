@@ -180,7 +180,7 @@ void VisResamplerDiagonalWB::DataToGridImpl_p(
           cf = cfs.vdata()[CFChan][ipol][ipol].data() + cfoff;
           for (Int sx=-fsupx; sx<=fsupx; ++sx) 
           {
-            Complex polSum = Complex(visPtr[ipol].real(), visPtr[ipol].imag() * sign_w) * conj(*cf);
+            Complex polSum = Complex(visPtr[ipol].real(), visPtr[ipol].imag() * sign_w) * *cf;
             cf += fsampx;
             polSum *= *imgWtPtr * tw;
             *gridPtr++ += polSum;

@@ -52,7 +52,7 @@ FTMachineSimple::FTMachineSimple(
 //   Float padding, 
 //   Bool useDoublePrec,
   const Record& parameters,
-  ParameterSet& parset)
+  const ParameterSet& parset)
   : FTMachine( ms, parameters, parset),
     itsParset(parset),
     itsNThread(OpenMP::maxThreads())

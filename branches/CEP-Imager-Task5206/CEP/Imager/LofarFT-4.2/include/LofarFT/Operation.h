@@ -48,6 +48,8 @@ namespace LOFAR {
 
       void initImage();
 
+      void initWeight();
+
       void initFTMachine();
 
       void makeEmptyImage(const casa::String& imgName, casa::Int fieldid);
@@ -84,6 +86,9 @@ namespace LOFAR {
       void showHelpImage (ostream& os, const string& name);
       void showHelpFTMachine (ostream& os, const string& name);
       void showHelpWeight (ostream& os, const string& name);
+      casa::Double observationReferenceFreq(
+        const casa::MeasurementSet &ms,
+        casa::uInt idDataDescription);
     };
 
     // Factory that can be used to generate new Operation objects.

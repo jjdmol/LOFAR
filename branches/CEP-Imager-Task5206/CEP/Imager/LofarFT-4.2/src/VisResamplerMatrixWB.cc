@@ -186,7 +186,7 @@ void VisResamplerMatrixWB::DataToGridImpl_p(
             Complex polSum(0,0);
             for (Int i=0; i<4; ++i) // i runs over data polarizations
             {
-              polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * conj(*cf[i]);
+              polSum += Complex(visPtr[i].real(), visPtr[i].imag() * sign_w) * *cf[i];
               cf[i] += fsampx;
             }
             polSum *= *imgWtPtr * tw;

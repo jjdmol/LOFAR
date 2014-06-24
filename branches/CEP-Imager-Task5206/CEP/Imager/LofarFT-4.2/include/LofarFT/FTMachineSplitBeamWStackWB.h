@@ -43,7 +43,7 @@ public:
 
   FTMachineSplitBeamWStackWB(
     const casa::MeasurementSet& ms, 
-    ParameterSet& parset);
+    const ParameterSet& parset);
 
   virtual ~FTMachineSplitBeamWStackWB();
   
@@ -66,12 +66,6 @@ public:
   // Put coherence to grid by gridding.
   using casa::FTMachine::put;
 
-  virtual void put(
-    const casa::VisBuffer& vb, 
-    casa::Int row = -1, 
-    casa::Bool dopsf = casa::False,
-    casa::FTMachine::Type type = casa::FTMachine::OBSERVED);
-  
   virtual void put(
     const VisBuffer& vb, 
     casa::Int row = -1, 

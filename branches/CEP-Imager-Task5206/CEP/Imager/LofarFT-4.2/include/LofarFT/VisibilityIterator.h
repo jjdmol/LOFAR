@@ -52,11 +52,11 @@ class VisibilityIterator : public casa::VisibilityIterator
     VisibilityIterator & operator= (const VisibilityIterator & other);
     
     //assign a LofarVisImagingWeight object to this iterator
-    void useImagingWeight(const VisImagingWeight& imWgt);
+    void useImagingWeight(casa::CountedPtr<VisImagingWeight> imWgt);
     const VisImagingWeight & getImagingWeightGenerator () const;
   
   private:
-    VisImagingWeight        lofar_imwgt_p;    // object to calculate imaging weight
+    casa::CountedPtr<VisImagingWeight>      lofar_imwgt_p;    // object to calculate imaging weight
   
 };
 

@@ -45,6 +45,7 @@ OperationClean::OperationClean(ParameterSet& parset): Operation(parset)
 {
     needsData=true;
     needsImage=true;
+    needsWeight=true;
     needsFTMachine=true;
 }
 

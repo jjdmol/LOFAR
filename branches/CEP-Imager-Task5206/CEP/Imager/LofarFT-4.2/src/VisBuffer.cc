@@ -62,14 +62,15 @@ const casa::Cube<casa::Float>& VisBuffer::imagingWeightCube () const
   
 const casa::Matrix<casa::Float>& VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
 {
-    if (lofarImagingWeightOK_p)
-    {
-        return lofarImagingWeight_p;
-    }
-    
-    weightGenerator.weight (lofarImagingWeight_p, *this);
-
-    this->lofarImagingWeightOK_p = casa::True;
+  throw casa::AipsError("Use VisBuffer::imagingWeightCube instead of VisBuffer::imagingWeight");
+//     if (lofarImagingWeightOK_p)
+//     {
+//         return lofarImagingWeight_p;
+//     }
+//     
+//     weightGenerator.weight (lofarImagingWeight_p, *this);
+// 
+//     this->lofarImagingWeightOK_p = casa::True;
 
     return lofarImagingWeight_p;
 }

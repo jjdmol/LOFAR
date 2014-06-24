@@ -27,24 +27,13 @@
 //# $Id: $
 
 #include <lofar_config.h>
-#include <LofarFT/VisImagingWeight.h>
+#include <LofarFT/VisImagingWeightRobust.h>
 #include <LofarFT/VisBuffer.h>
 
 namespace LOFAR {
 namespace LofarFT {
   
-//empty constructor
-VisImagingWeight::VisImagingWeight() : 
-  casa::VisImagingWeight() {};
-  
-//Constructor to calculate natural and radial weights
-VisImagingWeight::VisImagingWeight(const casa::String& type) :
-  casa::VisImagingWeight(type) {};
-
-//Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
-//If multiField=True, the weight density calcution is done on a per field basis, 
-//else it is all fields combined
-VisImagingWeight::VisImagingWeight(
+VisImagingWeightRobust::VisImagingWeightRobust(
   casa::ROVisibilityIterator& vi, 
   const casa::String& rmode, 
   const casa::Quantity& noise,
@@ -57,43 +46,143 @@ VisImagingWeight::VisImagingWeight(
   const casa::Int vBox, 
   const casa::Bool multiField) 
   :
-    casa::VisImagingWeight(vi, rmode, noise, robust, nx, ny, cellx, celly, uBox, vBox, multiField) {};  
-
+  VisImagingWeight()
+{
+  casa::VisBufferAutoPtr vb (vi);
   
-void VisImagingWeight::weight(
-  casa::Matrix<casa::Float>& imagingWeight, 
+  itsUScale = (nx*cellx.get("rad").getValue());
+  itsVScale = (ny*celly.get("rad").getValue());
+  itsUOrigin = nx/2;
+  itsVOrigin = ny/2;
+  itsNX = nx;
+  itsNY = ny;
+  
+  itsWeightMap.resize(itsNX, itsNY);
+  itsWeightMap.set(0.0);
+  
+  casa::Float sumwt = 0.0;
+  
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
+  {
+    for (vi.origin();vi.more();vi++) 
+    {
+      casa::Int nRow=vb->nRow();
+      casa::Int nChan=vb->nChannel();
+      for (casa::Int row=0; row<nRow; row++) 
+      {
+        for (casa::Int chn=0; chn<nChan; chn++) 
+        {
+          if (!vb->flagCube()(0, chn,row) && !vb->flagCube()(3, chn,row)) 
+          {
+            casa::Float f = vb->frequency()(chn)/casa::C::c;
+            casa::Float u = vb->uvw()(row)(0)*f;
+            casa::Float v = vb->uvw()(row)(1)*f;
+            casa::Int ucell = casa::Int(itsUScale*u + itsUOrigin);
+            casa::Int vcell = casa::Int(itsVScale*v + itsVOrigin);
+            if (((ucell-uBox)>0) && ((ucell+uBox)<nx) && ((vcell-vBox)>0) && ((vcell+vBox)<ny)) 
+            {
+              for (casa::Int iv=-vBox;iv<=vBox;iv++) 
+              {
+                for (casa::Int iu=-uBox;iu<=uBox;iu++) 
+                {
+                  itsWeightMap(ucell+iu,vcell+iv) += vb->weightSpectrum()(0, chn, row) * !vb->flagCube()(0, chn,row);
+                  sumwt += vb->weightSpectrum()(0, chn, row) * !vb->flagCube()(0, chn,row);
+                  itsWeightMap(ucell+iu,vcell+iv) += vb->weightSpectrum()(3, chn, row) * !vb->flagCube()(3, chn,row);
+                  sumwt += vb->weightSpectrum()(3, chn, row) * !vb->flagCube()(3, chn,row);
+                }
+              }
+            }
+            ucell = casa::Int(-itsUScale*u + itsUOrigin);
+            vcell = casa::Int(-itsVScale*v + itsVOrigin);
+            if (((ucell-uBox)>0) && ((ucell+uBox)<nx) && ((vcell-vBox)>0) && ((vcell+vBox)<ny)) 
+            {
+              for (casa::Int iv=-vBox;iv<=vBox;iv++) 
+              {
+                for (casa::Int iu=-uBox;iu<=uBox;iu++) 
+                {
+                  itsWeightMap(ucell+iu,vcell+iv) += vb->weightSpectrum()(0, chn, row) * !vb->flagCube()(0, chn,row);
+                  sumwt += vb->weightSpectrum()(0, chn, row) * !vb->flagCube()(0, chn,row);
+                  itsWeightMap(ucell+iu,vcell+iv) += vb->weightSpectrum()(3, chn, row) * !vb->flagCube()(3, chn,row);
+                  sumwt += vb->weightSpectrum()(3, chn, row) * !vb->flagCube()(3, chn,row);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // We use the approximation that all statistical weights are equal to
+  // calculate the average summed weights (over visibilities, not bins!)
+  // This is simply to try an ensure that the normalization of the robustness
+  // parameter is similar to that of the ungridded case, but it doesn't have
+  // to be exact, since any given case will require some experimentation.
+
+  if (rmode=="norm") 
+  {
+    casa::Double sumlocwt = 0.;
+    for(casa::Int vgrid=0;vgrid<ny;vgrid++) 
+    {
+      for(casa::Int ugrid=0;ugrid<nx;ugrid++) 
+      {
+        if (itsWeightMap(ugrid, vgrid)>0.0) sumlocwt += casa::square(itsWeightMap(ugrid,vgrid));
+      }
+    }
+    itsF2 = casa::square(5.0*pow(10.0,casa::Double(-robust))) / (sumlocwt / sumwt);
+    itsD2 = 1.0;
+  }
+  else if (rmode=="abs") 
+  {
+    itsF2 = casa::square(robust);
+    itsD2 = 2.0 * casa::square(noise.get("Jy").getValue());
+
+  }
+  else // Uniform weighting
+  {
+    itsF2 = 1.0;
+    itsD2 = 0.0;
+  }
+  std::cout << "f2: " << itsF2 << std::endl;
+  std::cout << "d2: " << itsD2 << std::endl;
+}
+    
+void VisImagingWeightRobust::weight(
+  casa::Cube<casa::Float>& imagingWeight, 
   const casa::VisBuffer& vb) const
 {
-    casa::String type = getType();
-    if (type == "none") {
-        throw (casa::AipsError ("Programmer Error... imaging weights not set"));
-    }
-
-    casa::Vector<casa::Float> weightvec = vb.weight ();
-    casa::Matrix<casa::Bool> flagmat = vb.flag ();
-    imagingWeight.resize (flagmat.shape ());
-
-    if (getType () == "uniform") 
-    {
-        weightUniform (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec, vb.msId (), vb.fieldId ());
-    } 
-    else if (getType () == "radial") 
-    {
-        weightRadial (imagingWeight, flagmat, uvwmat, vb.frequency(), weightvec);
-    }
-    else 
-    {
-      weightNatural (imagingWeight, flagmat, weightvec);
-    }
-
-    if (doFilter ()) 
-    {
-        filter (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec);
-    }
-
+  std::cout << "VisImagingWeightRobust::weight" << std::endl;
+  imagingWeight.assign(vb.weightSpectrum());
+  imagingWeight(vb.flagCube()) = 0.0;
   
-}
+  casa::Int nRow = imagingWeight.shape()(2);
+  casa::Int nChannel = imagingWeight.shape()(1);
+  casa::Int nPol = imagingWeight.shape()(0);
 
+  casa::Float u, v;
+  for (casa::Int row=0; row<nRow; row++) 
+  {
+    for (casa::Int chn=0; chn<nChannel; chn++) 
+    {
+      casa::Float f = vb.frequency()(chn)/casa::C::c;
+      u = vb.uvw()(row)(0)*f;
+      v = vb.uvw()(row)(1)*f;
+      casa::Int ucell = casa::Int(itsUScale*u + itsUOrigin);
+      casa::Int vcell = casa::Int(itsVScale*v + itsVOrigin);
+      if ((ucell>0) && (ucell<itsNX) && (vcell>0) && (vcell<itsNY)) 
+      {
+        if(itsWeightMap(ucell,vcell)>0.0) 
+        {
+          for (casa::Int pol=0; pol<nPol; pol++) 
+          {
+            imagingWeight(pol, chn,row) /= itsWeightMap(ucell,vcell)*itsF2 + itsD2;
+          }
+        }
+      }
+    }
+  }
+}
+    
     
 } // end LofarFT namespace
 } // end LOFAR namespace

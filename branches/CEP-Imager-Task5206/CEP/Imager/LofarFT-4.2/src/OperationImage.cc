@@ -37,9 +37,10 @@ namespace
   
 OperationImage::OperationImage(ParameterSet& parset): Operation(parset)
 {
-    needsData=true;
-    needsImage=true;
-    needsFTMachine=true;
+    needsData = true;
+    needsImage = true;
+    needsWeight = true;
+    needsFTMachine = true;
 }
 
 void OperationImage::init()

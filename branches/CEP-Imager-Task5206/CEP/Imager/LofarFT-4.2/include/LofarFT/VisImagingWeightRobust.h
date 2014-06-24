@@ -33,6 +33,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Arrays/Matrix.h>
+#include <LofarFT/VisImagingWeight.h>
 
 namespace casa
 {
@@ -44,56 +45,42 @@ namespace casa
 namespace LOFAR { //# NAMESPACE LOFAR - BEGIN
 namespace LofarFT { //# NAMESPACE LOFAR - BEGIN
 
-// <summary>
-// Object to hold type of imaging weight scheme to be used on the fly and to provide
-// facilities to do that.
-// </summary>
+class VisImagingWeightRobust : public VisImagingWeight
 
-// <reviewed reviewer="" date="" tests="" demos="">
-
-// <prerequisite>
-// </prerequisite>
-//
-// <etymology>
-// </etymology>
-//
-// <synopsis>
-// </synopsis>
-//
-// <example>
-// <srcblock>
-// </srcblock>
-// </example>
-//
-// <motivation>
-// </motivation>
-//
-// <todo asof="">
-// </todo>
-
-
-class VisImagingWeightRobust : public VisImagingWeight{
+{
   
-    public:
+public:
       
-     VisImagingWeightRobust(
-       casa::ROVisibilityIterator& vi, 
-       const casa::String& rmode, 
-       const casa::Quantity& noise,
-       casa::Double robust, 
-       casa::Int nx, 
-       casa::Int ny,
-       const casa::Quantity& cellx, 
-       const casa::Quantity& celly,
-       casa::Int uBox, 
-       casa::Int vBox,
-       casa::Bool multiField = casa::False);
-     
-     virtual void weight(
-       casa::Matrix<casa::Float>& imagingWeight, 
-       const casa::VisBuffer& vb) const;
+VisImagingWeightRobust(
+  casa::ROVisibilityIterator& vi, 
+  const casa::String& rmode, 
+  const casa::Quantity& noise,
+  casa::Double robust, 
+  casa::Int nx, 
+  casa::Int ny,
+  const casa::Quantity& cellx, 
+  const casa::Quantity& celly,
+  casa::Int uBox = 0, 
+  casa::Int vBox = 0,
+  casa::Bool multiField = casa::False);
 
-  };
+virtual void weight(
+  casa::Cube<casa::Float>& imagingWeight, 
+  const casa::VisBuffer& vb) const;
+
+private:
+  casa::Float itsF2;
+  casa::Float itsD2;
+  casa::Int itsNX;
+  casa::Int itsNY;
+  casa::Int itsUOrigin;
+  casa::Int itsVOrigin;
+  casa::Float itsUScale;
+  casa::Float itsVScale;
+  
+  casa::Matrix<casa::Float> itsWeightMap;
+  
+};
   
 } //end namespace LofarFT
 } //end namespace LOFAR

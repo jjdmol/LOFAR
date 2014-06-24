@@ -73,23 +73,17 @@ namespace LofarFT { //# NAMESPACE LOFAR - BEGIN
 // </todo>
 
 
-class VisImagingWeight : public casa::VisImagingWeight{
-    public:
-     //empty constructor
-     VisImagingWeight();
-     //Constructor to calculate natural and radial weights
-     VisImagingWeight(const casa::String& type);
-     //Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
-     //If multiField=True, the weight density calcution is done on a per field basis, 
-     //else it is all fields combined
-     VisImagingWeight(casa::ROVisibilityIterator& vi, const casa::String& rmode, const casa::Quantity& noise,
-                      const casa::Double robust, const casa::Int nx, const casa::Int ny,
-                      const casa::Quantity& cellx, const casa::Quantity& celly,
-                      const casa::Int uBox, const casa::Int vBox, const casa::Bool multiField=casa::False);
-     virtual void weight(casa::Matrix<casa::Float>& imagingWeight, const casa::VisBuffer& vb) const;
-     virtual void weight(casa::Cube<casa::Float>& imagingWeight, const casa::VisBuffer& vb) const;
+class VisImagingWeight : public casa::VisImagingWeight
+{
+public:
+  VisImagingWeight() : casa::VisImagingWeight() {};
+  VisImagingWeight(const casa::String& type);
+  virtual void weight(casa::Cube<casa::Float>& imagingWeight, const casa::VisBuffer& vb) const;
+  
+private:
+  casa::String itsType;
 
-  };
+};
   
 } //end namespace LofarFT
 } //end namespace LOFAR

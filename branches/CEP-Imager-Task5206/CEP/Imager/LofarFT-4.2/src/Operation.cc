@@ -47,6 +47,7 @@ void Operation::init()
 
   if (needsData) initData();
   if (needsImage) initImage();
+  if (needsWeight) initWeight();
   if (needsFTMachine) initFTMachine();
 }
 
@@ -103,19 +104,12 @@ void Operation::initData()
     String(),                       // obs
     True);                          // useModelCol
 
-  String weight("natural");
-  String rmode;
-  Double robust;
-  Double noise;
+}
 
+void Operation::initWeight()
+{
   // Define weighting.
-  itsImager->weight (
-    weight,                      // type
-    rmode,                       // rmode
-    Quantity(noise, "Jy"),       // briggsabs noise
-    robust,                      // robust
-    Quantity(0, "rad"),          // fieldofview
-    0);                          // npixels
+  itsImager->set_imaging_weight(itsParset);
 }
 
 void Operation::initImage()
@@ -153,8 +147,12 @@ void Operation::initImage()
 void Operation::initFTMachine()
 {
   Int nterms = itsParset.getInt("image.nterms",1);
-  Double RefFreq = itsParset.getDouble("RefFreq",0); // TODO get sensible reference frequency
-  itsImager->settaylorterms(nterms,RefFreq);
+  if (!itsParset.isDefined("image.reffreq"))
+  {
+    itsParset.add(KVpair("image.reffreq", observationReferenceFreq(itsMS, 0)));
+  }
+  Double reffreq = itsParset.getDouble("image.reffreq");
+  itsImager->settaylorterms(nterms,reffreq);
 
   itsImager->createFTMachine();
 }
@@ -287,6 +285,25 @@ void Operation::readFilter (const String& filter,
   if (! strs[2].empty()) {
     bpa = readQuantity (strs[2]);
   }
+}
+
+Double Operation::observationReferenceFreq(
+  const MeasurementSet &ms, 
+  uInt idDataDescription)
+{
+  // Read polarization id and spectral window id.
+  ROMSDataDescColumns desc(ms.dataDescription());
+  ASSERT(desc.nrow() > idDataDescription);
+  ASSERT(!desc.flagRow()(idDataDescription));
+
+  const uInt idWindow = desc.spectralWindowId()(idDataDescription);
+
+  // Get spectral information.
+  ROMSSpWindowColumns window(ms.spectralWindow());
+  ASSERT(window.nrow() > idWindow);
+  ASSERT(!window.flagRow()(idWindow));
+
+  return window.refFrequency()(idWindow);
 }
 
 

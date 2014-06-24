@@ -33,66 +33,10 @@
 namespace LOFAR {
 namespace LofarFT {
   
-//empty constructor
-VisImagingWeight::VisImagingWeight() : 
-  casa::VisImagingWeight() {};
-  
-//Constructor to calculate natural and radial weights
 VisImagingWeight::VisImagingWeight(const casa::String& type) :
-  casa::VisImagingWeight(type) {};
-
-//Constructor to calculate uniform weight schemes; include Brigg's and super/uniform
-//If multiField=True, the weight density calcution is done on a per field basis, 
-//else it is all fields combined
-VisImagingWeight::VisImagingWeight(
-  casa::ROVisibilityIterator& vi, 
-  const casa::String& rmode, 
-  const casa::Quantity& noise,
-  const casa::Double robust, 
-  const casa::Int nx, 
-  const casa::Int ny,
-  const casa::Quantity& cellx, 
-  const casa::Quantity& celly,
-  const casa::Int uBox, 
-  const casa::Int vBox, 
-  const casa::Bool multiField) 
-  :
-    casa::VisImagingWeight(vi, rmode, noise, robust, nx, ny, cellx, celly, uBox, vBox, multiField) {};  
-
-  
-void VisImagingWeight::weight(
-  casa::Matrix<casa::Float>& imagingWeight, 
-  const casa::VisBuffer& vb) const
-{
-    casa::String type = getType();
-    if (type == "none") {
-        throw (casa::AipsError ("Programmer Error... imaging weights not set"));
-    }
-
-    casa::Vector<casa::Float> weightvec = vb.weight ();
-    casa::Matrix<casa::Bool> flagmat = vb.flag ();
-    imagingWeight.resize (flagmat.shape ());
-
-    if (getType () == "uniform") 
-    {
-        weightUniform (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec, vb.msId (), vb.fieldId ());
-    } 
-    else if (getType () == "radial") 
-    {
-        weightRadial (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec);
-    }
-    else 
-    {
-      weightNatural (imagingWeight, flagmat, weightvec);
-    }
-
-    if (doFilter ()) 
-    {
-        filter (imagingWeight, flagmat, vb.uvwMat(), vb.frequency(), weightvec);
-    }
-
-  
-}
+  casa::VisImagingWeight(type),
+  itsType(type)
+  {};
 
 void VisImagingWeight::weight(
   casa::Cube<casa::Float>& imagingWeight, 
@@ -100,6 +44,27 @@ void VisImagingWeight::weight(
 {
   imagingWeight.assign(vb.weightSpectrum());
   imagingWeight(vb.flagCube()) = 0.0;
+  
+  if (itsType == "radial")
+  {
+  
+    casa::Int nPol = imagingWeight.shape()(0);
+    casa::Int nChan = imagingWeight.shape()(1);
+    casa::Int nRow = imagingWeight.shape()(2);
+
+    for (casa::Int row=0; row<nRow; row++) 
+    {
+      for (casa::Int chn=0; chn< nChan; chn++) 
+      {
+        casa::Float f=vb.frequency()(chn)/casa::C::c;
+        casa::Float factor = f * sqrt(casa::square(vb.uvw()(row)(0))+casa::square(vb.uvw()(row)(1)));
+        for (casa::Int pol=0; pol< nPol; pol++) 
+        {
+          imagingWeight(pol, chn,row) *= factor;
+        }
+      }
+    }
+  }
 }
 
     
