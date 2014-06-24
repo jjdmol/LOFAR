@@ -606,7 +606,7 @@ namespace LOFAR
         }
 
         settings.beamFormer.doFlysEye = 
-          getBool("OLAP.PencilInfo.flysEye", false);
+          getBool(renamedKey("Cobalt.BeamFormer.flysEye", "OLAP.PencilInfo.flysEye"), false);
 
         unsigned nrDelayCompCh;
         if (!isDefined("Cobalt.BeamFormer.nrDelayCompensationChannels")) {
@@ -768,16 +768,10 @@ namespace LOFAR
                 const string prefix = str(format("Observation.Beam[%u].TiedArrayBeam[%u]") % i % j);
                 tab.direction.type    = getString(prefix + ".directionType", "J2000");
               
-                tab.direction.angle1  = getDouble(renamedKey(prefix + ".absoluteAngle1",
-                                                             prefix + ".angle1"), 0.0);
-                tab.direction.angle2  = getDouble(renamedKey(prefix + ".absoluteAngle2",
-                                                             prefix + ".angle2"), 0.0);
-
-                // Always store absolute angles. So this is for backwards compat.
-                if (!isDefined(prefix + ".absoluteAngle1"))
-                  tab.direction.angle1 += settings.SAPs[i].direction.angle1;
-                if (!isDefined(prefix + ".absoluteAngle2"))
-                  tab.direction.angle2 += settings.SAPs[i].direction.angle2;
+                tab.direction.angle1  = getDouble(renamedKey(prefix + ".angle1",
+                                                             prefix + ".absoluteAngle1"), 0.0);
+                tab.direction.angle2  = getDouble(renamedKey(prefix + ".angle2",
+                                                             prefix + ".absoluteAngle2"), 0.0);
 
                 tab.dispersionMeasure     = getDouble(prefix + ".dispersionMeasure", 0.0);
                 tab.coherent              = getBool(prefix + ".coherent", true);
