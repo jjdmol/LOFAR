@@ -199,7 +199,7 @@ void Operation::showHelpFTMachine(ostream& os, const string& name)
   os<<
   "Gridding pameters:"<<endl<<
   "  gridding.ftmachine  : FTMachine to use                           "<<endl<<
-  "                        string, default FTMachineSimpleWB          "<<endl<<
+  "                        string, default FTMachineSplitBeamWStackWB "<<endl<<
   "  gridding.oversample : oversampling factor                        "<<endl<<
   "                        int   , default 8                          "<<endl<<endl;
 }
