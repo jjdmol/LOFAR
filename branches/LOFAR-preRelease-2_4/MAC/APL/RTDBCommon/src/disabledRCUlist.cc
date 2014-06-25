@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/lofar_fstream.h>
+#include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DPservice.h>
