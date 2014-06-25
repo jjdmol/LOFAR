@@ -160,12 +160,18 @@ namespace LOFAR
     template<typename T> void OutputThread<T>::doWork()
     {
       for (SmartPtr<T> data; (data = itsOutputPool.filled.remove()) != 0; itsOutputPool.free.append(data)) {
-        try {
+        if (itsParset.settings.realTime) {
+          try {
+            itsWriter->write(data);
+          } catch (SystemCallException &ex) {
+            LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
+            continue;
+          }
+        } else { // no try/catch: any loss (e.g. disk full) is fatal in non-real-time mode
           itsWriter->write(data);
-          checkForDroppedData(data);
-        } catch (SystemCallException &ex) {
-          LOG_WARN_STR(itsLogPrefix << "OutputThread caught non-fatal exception: " << ex.what());
         }
+
+        checkForDroppedData(data);
 
         // print debug info for the other blocks
         LOG_DEBUG_STR(itsLogPrefix << "Written block with seqno = " << data->sequenceNumber() << ", " << itsBlocksWritten << " blocks written (" << itsWriter->percentageWritten() << "%), " << itsBlocksDropped << " blocks dropped");
