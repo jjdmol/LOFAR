@@ -79,7 +79,12 @@ then
 fi
 
 # Check hardware
-checkHardware.py $level $start $stop
+if [ $SERVICE == "yes" ]
+then
+    checkHardware.py $level $start $stop -ls=info
+else
+    checkHardware.py $level $start $stop
+fi
 
 err=$?
 echo $err
