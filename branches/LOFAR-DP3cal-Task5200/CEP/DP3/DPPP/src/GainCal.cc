@@ -874,6 +874,11 @@ namespace LOFAR {
       itsTimer.start();
       itsTimerWrite.start();
 
+      if (itsOperation!="solve") {
+        getNextStep()->finish();
+        return;
+      }
+
       uint nSt=info().antennaUsed().size();
 
       uint ntime=itsSols.size();
