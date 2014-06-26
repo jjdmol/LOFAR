@@ -61,15 +61,39 @@ namespace LOFAR
             ps.settings.observationID );
     }
 
+    size_t BandPassCorrectionKernel::Parameters::bufferSize(BandPassCorrectionKernel::BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case BandPassCorrectionKernel::INPUT_DATA: 
+        return 
+            (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerChannel *
+            nrHighResolutionChannels *
+            sizeof(std::complex<float>);
+      case BandPassCorrectionKernel::OUTPUT_DATA:
+        return
+            (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerChannel *
+            nrHighResolutionChannels *
+            sizeof(std::complex<float>);
+      case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
+        return
+            (size_t) nrHighResolutionChannels * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     BandPassCorrectionKernel::BandPassCorrectionKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(2, buffers.bandPassCorrectionWeights);
+      setArg(2, bandPassCorrectionWeights);
 
       const unsigned nrChannels2 = params.nrHighResolutionChannels / params.nrDelayCompensationChannels;
 
@@ -85,39 +109,15 @@ namespace LOFAR
       nrOperations = nrSamples ;
       nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
 
-      gpu::HostMemory bpWeights(stream.getContext(), buffers.bandPassCorrectionWeights.size());
+      gpu::HostMemory bpWeights(stream.getContext(), bandPassCorrectionWeights.size());
       BandPass::computeCorrectionFactors(bpWeights.get<float>(),
                                          params.nrHighResolutionChannels,
                                          1.0 / params.nrHighResolutionChannels);
-      stream.writeBuffer(buffers.bandPassCorrectionWeights, bpWeights, true);
+      stream.writeBuffer(bandPassCorrectionWeights, bpWeights, true);
     }
 
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<BandPassCorrectionKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case BandPassCorrectionKernel::INPUT_DATA: 
-        return 
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerChannel *
-            itsParameters.nrHighResolutionChannels *
-            sizeof(std::complex<float>);
-      case BandPassCorrectionKernel::OUTPUT_DATA:
-        return
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerChannel *
-            itsParameters.nrHighResolutionChannels *
-            sizeof(std::complex<float>);
-      case BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS:
-        return
-            (size_t) itsParameters.nrHighResolutionChannels * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<BandPassCorrectionKernel>::compileDefinitions() const

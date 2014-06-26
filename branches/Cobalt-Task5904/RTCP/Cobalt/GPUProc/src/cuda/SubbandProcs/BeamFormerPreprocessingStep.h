@@ -111,7 +111,6 @@ namespace LOFAR
       std::auto_ptr<FFT_Kernel> secondFFT;
 
       // Bandpass correction and tranpose
-      std::auto_ptr<gpu::DeviceMemory> devBandPassCorrectionWeights;
       std::auto_ptr<BandPassCorrectionKernel::Buffers> bandPassCorrectionBuffers;
       std::auto_ptr<BandPassCorrectionKernel> bandPassCorrectionKernel;
 

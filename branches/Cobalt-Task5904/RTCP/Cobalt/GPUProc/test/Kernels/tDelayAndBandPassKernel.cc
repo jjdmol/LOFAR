@@ -63,10 +63,9 @@ int main(int argc, char *argv[])
     filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
     delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
     delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS)),
-    bandPassCorrectionWeights(ctx, factory.bufferSize(DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS));
+    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS));
 
-  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s, bandPassCorrectionWeights);
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s);
 
   auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
 

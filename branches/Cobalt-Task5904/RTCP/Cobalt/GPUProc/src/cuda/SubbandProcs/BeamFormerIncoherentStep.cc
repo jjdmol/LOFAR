@@ -115,23 +115,10 @@ namespace LOFAR
         factories.incoherentInverseFFTShift.create(queue, *incoherentInverseFFTShiftBuffers));
 
       if (incoherentStokesPPF) {
-        devIncoherentFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
-          new gpu::DeviceMemory(context,
-          factories.incoherentFirFilter->bufferSize(
-          FIR_FilterKernel::HISTORY_DATA)
-          ));
-
-        devIncoherentFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
-          new gpu::DeviceMemory(context,
-          factories.incoherentFirFilter->bufferSize(
-          FIR_FilterKernel::FILTER_WEIGHTS)));
-
         // final FIR: A -> B
         incoherentFirFilterBuffers =
           std::auto_ptr<FIR_FilterKernel::Buffers>(
-          new FIR_FilterKernel::Buffers(*devA, *devB,
-          *devIncoherentFilterWeights,
-          *devIncoherentFilterHistoryData));
+          new FIR_FilterKernel::Buffers(*devA, *devB));
 
         incoherentFirFilterKernel = std::auto_ptr<FIR_FilterKernel>(
           factories.incoherentFirFilter->create(

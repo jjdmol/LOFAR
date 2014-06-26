@@ -185,8 +185,6 @@ namespace LOFAR
        */
 
       // FIR filter
-      SmartPtr<gpu::DeviceMemory> devFilterWeights;
-      SmartPtr<gpu::DeviceMemory> devFilterHistoryData;
       SmartPtr<FIR_FilterKernel::Buffers> firFilterBuffers;
       SmartPtr<FIR_FilterKernel> firFilterKernel;
 
@@ -194,7 +192,6 @@ namespace LOFAR
       SmartPtr<FFT_Kernel> fftKernel;
 
       // Delay and Bandpass
-      gpu::DeviceMemory devBandPassCorrectionWeights;
       DelayAndBandPassKernel::Buffers delayAndBandPassBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
 

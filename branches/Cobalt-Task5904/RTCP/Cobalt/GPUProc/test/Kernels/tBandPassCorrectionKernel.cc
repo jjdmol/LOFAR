@@ -61,10 +61,9 @@ int main() {
   // Get the buffers as created by factory
   gpu::DeviceMemory 
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA)),
-    bandPassCorrectionWeights(ctx, factory.bufferSize(BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS));
+    filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA));
 
-  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData, bandPassCorrectionWeights);
+  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData);
 
   auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, buffers));
 

@@ -138,16 +138,8 @@ namespace LOFAR
     // 1ch: - (no FIR will be done)
     // PPF: C
     if (coherentStokesPPF) {
-      devFilterWeights = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS)));
-
-      devFilterHistoryData = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.coherentFirFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA)));
-
       firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
-        new FIR_FilterKernel::Buffers(*devD, *devC, *devFilterWeights, *devFilterHistoryData));
+        new FIR_FilterKernel::Buffers(*devD, *devC));
 
       firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
         factories.coherentFirFilter->create(queue, *firFilterBuffers));

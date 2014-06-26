@@ -39,6 +39,15 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        DELAYS,
+        PHASE_ZEROS,
+        BAND_PASS_CORRECTION_WEIGHTS
+      };
+
       // Parameters that must be passed to the constructor of the
       // DelayAndBandPassKernel class.
       struct Parameters : Kernel::Parameters
@@ -60,15 +69,8 @@ namespace LOFAR
 
         unsigned nrSamplesPerSubband() const;
         unsigned nrBytesPerComplexSample() const;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        DELAYS,
-        PHASE_ZEROS,
-        BAND_PASS_CORRECTION_WEIGHTS
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       // Buffers that must be passed to the constructor of the DelayAndBandPassKernel
@@ -79,15 +81,13 @@ namespace LOFAR
                 const gpu::DeviceMemory& out,
                 const gpu::DeviceMemory& delaysAtBegin,
                 const gpu::DeviceMemory& delaysAfterEnd,
-                const gpu::DeviceMemory& phase0s,
-                const gpu::DeviceMemory& bandPassCorrectionWeights) :
-          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phase0s(phase0s), bandPassCorrectionWeights(bandPassCorrectionWeights)
+                const gpu::DeviceMemory& phase0s):
+          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phase0s(phase0s)
         {}
 
         gpu::DeviceMemory delaysAtBegin;
         gpu::DeviceMemory delaysAfterEnd;
         gpu::DeviceMemory phase0s;
-        gpu::DeviceMemory bandPassCorrectionWeights;
       };
 
       DelayAndBandPassKernel(const gpu::Stream &stream,
@@ -99,12 +99,12 @@ namespace LOFAR
       void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
 
+    private:
+      // The weights to correct the bandpass with, per channel
+      gpu::DeviceMemory bandPassCorrectionWeights;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<DelayAndBandPassKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<DelayAndBandPassKernel>::compileDefinitions() const;

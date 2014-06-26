@@ -74,14 +74,10 @@ TEST(tKernelFunctions)
 
   gpu::HostMemory
     hInput(context, dInput.size()),
-    hOutput(context, dOutput.size()),
-    hCoeff(context, dCoeff.size()),
-    hHistory(context, dHistory.size());
+    hOutput(context, dOutput.size());
 
   cout << "dInput.size() = " << dInput.size() << endl;
   cout << "dOutput.size() = " << dOutput.size() << endl;
-  cout << "dCoeff.size() = " << dCoeff.size() << endl;
-  cout << "dHistory.size() = " << dHistory.size() << endl;
 
   // hInput.get<i8complex>()[2176] = i8complex(1,0);
 
@@ -92,7 +88,7 @@ TEST(tKernelFunctions)
 
   stream.writeBuffer(dInput, hInput);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput, dCoeff, dHistory);
+  FIR_FilterKernel::Buffers buffers(dInput, dOutput);
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
 
   // **************************************
@@ -103,7 +99,6 @@ TEST(tKernelFunctions)
 
 
   stream.readBuffer(hOutput, dOutput);
-  stream.readBuffer(hCoeff, dCoeff);
   stream.synchronize();
  
   // update the counter

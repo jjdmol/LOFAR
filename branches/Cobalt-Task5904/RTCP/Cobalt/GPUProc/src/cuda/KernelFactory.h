@@ -76,7 +76,7 @@ namespace LOFAR
         // could be wrong.
         ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
         // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
-        //ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+        ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
 
         return new T(
           stream, createModule(stream.getContext(), 
@@ -85,13 +85,11 @@ namespace LOFAR
           buffers, itsParameters);
       }
 
-      // // Create a new Kernel object of type \c T, using kernel-specific
-      // // parameters to instantiate this new object.
-      // T* create(const Parameters& params)
-      //   { return new T(params); }
-
       // Return required buffer size for \a bufferType
-      size_t bufferSize(BufferType bufferType) const;
+      size_t bufferSize(BufferType bufferType) const
+      {
+        return itsParameters.bufferSize(bufferType);
+      }
 
     private:
       // Used by the constructors to construct the PTX from the other

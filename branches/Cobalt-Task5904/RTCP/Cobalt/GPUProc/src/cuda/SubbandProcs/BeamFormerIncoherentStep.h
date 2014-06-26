@@ -105,9 +105,6 @@ namespace LOFAR
       std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterWeights;
-      std::auto_ptr<gpu::DeviceMemory> devIncoherentFilterHistoryData;
-
       std::auto_ptr<FIR_FilterKernel::Buffers> incoherentFirFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
       std::auto_ptr<FFT_Kernel> incoherentFinalFFT;

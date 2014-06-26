@@ -98,14 +98,10 @@ namespace LOFAR
                    CorrelatorKernel::OUTPUT_DATA))),
 
       // Delay and Bandpass
-      devBandPassCorrectionWeights(
-        context,
-        factories.delayAndBandPass.bufferSize(
-          DelayAndBandPassKernel::BAND_PASS_CORRECTION_WEIGHTS)),
       delayAndBandPassBuffers(
         devFilteredData, *devInput.inputSamples,
         devInput.delaysAtBegin, devInput.delaysAfterEnd,
-        devInput.phase0s, devBandPassCorrectionWeights),
+        devInput.phase0s),
       delayAndBandPassKernel(
         factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
 
@@ -121,16 +117,8 @@ namespace LOFAR
     {
       if (correlatorPPF) {
         // FIR filter
-        devFilterWeights = new gpu::DeviceMemory(
-          context,
-          factories.firFilter->bufferSize(FIR_FilterKernel::FILTER_WEIGHTS));
-        devFilterHistoryData = new gpu::DeviceMemory(
-          context, 
-          factories.firFilter->bufferSize(FIR_FilterKernel::HISTORY_DATA));
-
         firFilterBuffers = new FIR_FilterKernel::Buffers(
-          *devInput.inputSamples, devFilteredData,
-          *devFilterWeights, *devFilterHistoryData);
+          *devInput.inputSamples, devFilteredData);
         firFilterKernel = factories.firFilter->create(queue, *firFilterBuffers);
 
         // FFT

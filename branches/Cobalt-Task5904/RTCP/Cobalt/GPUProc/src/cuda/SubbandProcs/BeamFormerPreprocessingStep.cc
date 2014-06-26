@@ -106,7 +106,7 @@ namespace LOFAR
       delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
         new DelayAndBandPassKernel::Buffers(*devB, *devA, devInput->delaysAtBegin,
         devInput->delaysAfterEnd,
-        devInput->phase0s, *devNull));
+        devInput->phase0s));
 
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));
@@ -130,15 +130,9 @@ namespace LOFAR
       }
 
       // bandPass: A -> B
-      devBandPassCorrectionWeights = std::auto_ptr<gpu::DeviceMemory>(
-        new gpu::DeviceMemory(context,
-        factories.bandPassCorrection.bufferSize(
-        BandPassCorrectionKernel::BAND_PASS_CORRECTION_WEIGHTS)));
-
       bandPassCorrectionBuffers =
         std::auto_ptr<BandPassCorrectionKernel::Buffers>(
-        new BandPassCorrectionKernel::Buffers(*devA, *devB,
-        *devBandPassCorrectionWeights));
+        new BandPassCorrectionKernel::Buffers(*devA, *devB));
 
       bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
         factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
