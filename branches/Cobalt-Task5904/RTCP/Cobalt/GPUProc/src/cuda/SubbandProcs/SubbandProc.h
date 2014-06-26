@@ -57,19 +57,12 @@ namespace LOFAR
       // since device memory size is a concern.
       struct DeviceBuffers
       {
-        gpu::DeviceMemory delaysAtBegin;
-        gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phase0s;
         // We don't have tabDelays here, as it is only for bf.
         // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
         // similar to the bandpass correction and FIR filter weights (also not here).
         boost::shared_ptr<gpu::DeviceMemory> inputSamples;
 
-        DeviceBuffers(size_t inputSamplesSize, size_t delaysSize, 
-                      size_t phase0sSize, gpu::Context &context) :
-          delaysAtBegin(context, delaysSize),
-          delaysAfterEnd(context, delaysSize),
-          phase0s(context, phase0sSize),
+        DeviceBuffers(size_t inputSamplesSize, gpu::Context &context) :
           inputSamples(new gpu::DeviceMemory(context, inputSamplesSize))
         {
         }

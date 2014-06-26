@@ -38,6 +38,12 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
       // Parameters that must be passed to the constructor of the
       // IncoherentStokesKernel class.
       struct Parameters : Kernel::Parameters
@@ -50,12 +56,8 @@ namespace LOFAR
 
         unsigned nrStokes;
         unsigned timeIntegrationFactor;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       IncoherentStokesKernel(const gpu::Stream &stream,
@@ -66,9 +68,6 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<IncoherentStokesKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const;

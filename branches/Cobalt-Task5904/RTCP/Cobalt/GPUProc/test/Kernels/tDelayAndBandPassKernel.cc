@@ -60,12 +60,9 @@ int main(int argc, char *argv[])
 
   gpu::DeviceMemory
     inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
-    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA)),
-    delaysAtBegin(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    delaysAfterEnd(ctx, factory.bufferSize(DelayAndBandPassKernel::DELAYS)),
-    phase0s(ctx, factory.bufferSize(DelayAndBandPassKernel::PHASE_ZEROS));
+    filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA));
 
-  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData, delaysAtBegin, delaysAfterEnd, phase0s);
+  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData);
 
   auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
 

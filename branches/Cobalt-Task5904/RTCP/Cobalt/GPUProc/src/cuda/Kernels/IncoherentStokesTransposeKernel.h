@@ -42,6 +42,12 @@ namespace LOFAR
       // Name of the kernel function to invoke.
       static const std::string theirFunction;
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
       // Parameters that must be passed to the constructor of the
       // IncoherentStokesTransposeKernel class.
       struct Parameters : Kernel::Parameters
@@ -54,12 +60,8 @@ namespace LOFAR
 
         // Size of the square shared memory tile to be used.
         const unsigned tileSize;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       IncoherentStokesTransposeKernel(const gpu::Stream &stream,
@@ -70,10 +72,6 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<IncoherentStokesTransposeKernel>::
-    bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesTransposeKernel>::

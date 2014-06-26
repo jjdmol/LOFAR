@@ -60,6 +60,24 @@ namespace LOFAR
       return 2 * nrBitsPerSample / 8;
     }
 
+
+    size_t IntToFloatKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IntToFloatKernel::INPUT_DATA:
+        return
+          (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerSubband * nrBytesPerComplexSample();
+      case IntToFloatKernel::OUTPUT_DATA:
+        return
+          (size_t) nrStations * NR_POLARIZATIONS * 
+            nrSamplesPerSubband * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
+
     IntToFloatKernel::IntToFloatKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
                                        const Buffers& buffers,
@@ -79,23 +97,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<IntToFloatKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IntToFloatKernel::INPUT_DATA:
-        return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * itsParameters.nrBytesPerComplexSample();
-      case IntToFloatKernel::OUTPUT_DATA:
-        return
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-            itsParameters.nrSamplesPerSubband * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<IntToFloatKernel>::compileDefinitions() const

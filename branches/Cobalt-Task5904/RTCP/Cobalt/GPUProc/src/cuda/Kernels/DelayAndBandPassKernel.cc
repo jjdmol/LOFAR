@@ -118,6 +118,9 @@ namespace LOFAR
                                        const Buffers& buffers,
                                        const Parameters& params) :
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      delaysAtBegin(stream.getContext(), params.bufferSize(DELAYS)),
+      delaysAfterEnd(stream.getContext(), params.bufferSize(DELAYS)),
+      phase0s(stream.getContext(), params.bufferSize(PHASE_ZEROS)),
       bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
     {
       LOG_DEBUG_STR("DelayAndBandPassKernel:" <<
@@ -133,9 +136,9 @@ namespace LOFAR
 
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setArg(4, buffers.delaysAtBegin);
-      setArg(5, buffers.delaysAfterEnd);
-      setArg(6, buffers.phase0s);
+      setArg(4, delaysAtBegin);
+      setArg(5, delaysAfterEnd);
+      setArg(6, phase0s);
       setArg(7, bandPassCorrectionWeights);
 
       setEnqueueWorkSizes( gpu::Grid(256,

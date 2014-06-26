@@ -73,23 +73,6 @@ namespace LOFAR
         size_t bufferSize(BufferType bufferType) const;
       };
 
-      // Buffers that must be passed to the constructor of the DelayAndBandPassKernel
-      // class.
-      struct Buffers : Kernel::Buffers
-      {
-        Buffers(const gpu::DeviceMemory& in, 
-                const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& delaysAtBegin,
-                const gpu::DeviceMemory& delaysAfterEnd,
-                const gpu::DeviceMemory& phase0s):
-          Kernel::Buffers(in, out), delaysAtBegin(delaysAtBegin), delaysAfterEnd(delaysAfterEnd), phase0s(phase0s)
-        {}
-
-        gpu::DeviceMemory delaysAtBegin;
-        gpu::DeviceMemory delaysAfterEnd;
-        gpu::DeviceMemory phase0s;
-      };
-
       DelayAndBandPassKernel(const gpu::Stream &stream,
                              const gpu::Module &module,
                              const Buffers &buffers,
@@ -98,6 +81,11 @@ namespace LOFAR
 
       void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
+
+      // Input parameters for the delay compensation
+      gpu::DeviceMemory delaysAtBegin;
+      gpu::DeviceMemory delaysAfterEnd;
+      gpu::DeviceMemory phase0s;
 
     private:
       // The weights to correct the bandpass with, per channel

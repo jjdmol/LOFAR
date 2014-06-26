@@ -106,12 +106,7 @@ namespace LOFAR
       }
 
       devInput.reset(new SubbandProcInputData::DeviceBuffers(
-        devA_size,
-        factories.preprocessing.delayCompensation.bufferSize(
-        DelayAndBandPassKernel::DELAYS),
-        factories.preprocessing.delayCompensation.bufferSize(
-        DelayAndBandPassKernel::PHASE_ZEROS),
-        context));
+        devA_size, context));
 
       // NOTE: For an explanation of the different buffers being used, please refer
       // to the document bf-pipeline.txt in the GPUProc/doc directory.
@@ -228,15 +223,7 @@ namespace LOFAR
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        if (ps.settings.delayCompensation.enabled)
-        {
-          queue.writeBuffer(devInput->delaysAtBegin,
-            input.delaysAtBegin, false);
-          queue.writeBuffer(devInput->delaysAfterEnd,
-            input.delaysAfterEnd, false);
-          queue.writeBuffer(devInput->phase0s,
-            input.phase0s, false);
-        }
+        preprocessingPart->writeInput(input);
 
         if (nrCoherent > 0) {
           ASSERT(coherentStep.get());

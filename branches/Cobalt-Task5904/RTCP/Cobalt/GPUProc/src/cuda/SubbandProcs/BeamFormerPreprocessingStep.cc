@@ -104,9 +104,7 @@ namespace LOFAR
 
       // delayComp: B -> A
       delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
-        new DelayAndBandPassKernel::Buffers(*devB, *devA, devInput->delaysAtBegin,
-        devInput->delaysAfterEnd,
-        devInput->phase0s));
+        new DelayAndBandPassKernel::Buffers(*devB, *devA));
 
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
         factories.delayCompensation.create(queue, *delayCompensationBuffers));
@@ -137,6 +135,19 @@ namespace LOFAR
       bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
         factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
 
+    }
+
+    void BeamFormerPreprocessingStep::writeInput(SubbandProcInputData &input)
+    {
+      if (ps.settings.delayCompensation.enabled)
+      {
+        queue.writeBuffer(delayCompensationKernel->delaysAtBegin,
+          input.delaysAtBegin, false);
+        queue.writeBuffer(delayCompensationKernel->delaysAfterEnd,
+          input.delaysAfterEnd, false);
+        queue.writeBuffer(delayCompensationKernel->phase0s,
+          input.phase0s, false);
+      }
     }
 
     void BeamFormerPreprocessingStep::process(BlockID blockID, unsigned subband)

@@ -71,6 +71,8 @@ namespace LOFAR
       void initMembers(gpu::Context &context,
         Factories &factories);
 
+      void writeInput(SubbandProcInputData &input);
+
       void process(BlockID blockID,
         unsigned subband);
 

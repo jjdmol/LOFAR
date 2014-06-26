@@ -37,6 +37,12 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA
+      };
+
       // Parameters that must be passed to the constructor of the
       // IntToFloatKernel class.
       struct Parameters : Kernel::Parameters
@@ -46,12 +52,8 @@ namespace LOFAR
 
         unsigned nrChannels;
         unsigned nrSamplesPerChannel;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       // Construct a FFTShift kernel.
@@ -67,9 +69,6 @@ namespace LOFAR
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<FFTShiftKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<FFTShiftKernel>::compileDefinitions() const;

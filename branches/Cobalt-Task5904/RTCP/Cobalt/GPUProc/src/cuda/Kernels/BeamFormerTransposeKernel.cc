@@ -57,6 +57,20 @@ namespace LOFAR
 
     }
 
+    
+    size_t BeamFormerTransposeKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case BeamFormerTransposeKernel::INPUT_DATA: 
+      case BeamFormerTransposeKernel::OUTPUT_DATA:
+        return
+          (size_t) nrChannels * nrSamplesPerChannel * 
+            NR_POLARIZATIONS * nrTABs * sizeof(std::complex<float>);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     BeamFormerTransposeKernel::
     BeamFormerTransposeKernel(const gpu::Stream& stream,
                                        const gpu::Module& module,
@@ -78,20 +92,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t 
-    KernelFactory<BeamFormerTransposeKernel>::bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case BeamFormerTransposeKernel::INPUT_DATA: 
-      case BeamFormerTransposeKernel::OUTPUT_DATA:
-        return
-          (size_t) itsParameters.nrChannels * itsParameters.nrSamplesPerChannel * 
-            NR_POLARIZATIONS * itsParameters.nrTABs * sizeof(std::complex<float>);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<BeamFormerTransposeKernel>::compileDefinitions() const

@@ -54,6 +54,25 @@ namespace LOFAR
             ps.settings.observationID);
     }
 
+
+    size_t IncoherentStokesKernel::Parameters::bufferSize(BufferType bufferType) const
+    {
+      switch (bufferType) {
+      case IncoherentStokesKernel::INPUT_DATA:
+        return 
+          (size_t) nrStations * NR_POLARIZATIONS * 
+          nrSamplesPerChannel * 
+          nrChannels * sizeof(std::complex<float>);
+      case IncoherentStokesKernel::OUTPUT_DATA:
+        return 
+          (size_t) nrStokes * nrSamplesPerChannel / 
+          timeIntegrationFactor * 
+          nrChannels * sizeof(float);
+      default:
+        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
+      }
+    }
+
     IncoherentStokesKernel::IncoherentStokesKernel(const gpu::Stream& stream,
                                                    const gpu::Module& module,
                                                    const Buffers& buffers,
@@ -81,26 +100,6 @@ namespace LOFAR
     }
 
     //--------  Template specializations for KernelFactory  --------//
-
-    template<> size_t
-    KernelFactory<IncoherentStokesKernel>::
-    bufferSize(BufferType bufferType) const
-    {
-      switch (bufferType) {
-      case IncoherentStokesKernel::INPUT_DATA:
-        return 
-          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-          itsParameters.nrSamplesPerChannel * 
-          itsParameters.nrChannels * sizeof(std::complex<float>);
-      case IncoherentStokesKernel::OUTPUT_DATA:
-        return 
-          (size_t) itsParameters.nrStokes * itsParameters.nrSamplesPerChannel / 
-          itsParameters.timeIntegrationFactor * 
-          itsParameters.nrChannels * sizeof(float);
-      default:
-        THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
-      }
-    }
 
     template<> CompileDefinitions
     KernelFactory<IncoherentStokesKernel>::compileDefinitions() const
