@@ -37,6 +37,13 @@ namespace LOFAR
       static std::string theirSourceFile;
       static std::string theirFunction;
 
+      enum BufferType
+      {
+        INPUT_DATA,
+        OUTPUT_DATA,
+        BEAM_FORMER_DELAYS
+      };
+
       // Parameters that must be passed to the constructor of the
       // BeamFormerKernel class.
       struct Parameters : Kernel::Parameters
@@ -50,26 +57,8 @@ namespace LOFAR
         unsigned nrTABs;
         double subbandBandwidth;
         bool doFlysEye;
-      };
 
-      enum BufferType
-      {
-        INPUT_DATA,
-        OUTPUT_DATA,
-        BEAM_FORMER_DELAYS
-      };
-
-      // Buffers that must be passed to the constructor of the BeamFormerKernel
-      // class.
-      struct Buffers : Kernel::Buffers
-      {
-        Buffers(const gpu::DeviceMemory& in, 
-                const gpu::DeviceMemory& out,
-                const gpu::DeviceMemory& beamFormerDelays) :
-          Kernel::Buffers(in, out), beamFormerDelays(beamFormerDelays)
-        {}
-
-        gpu::DeviceMemory beamFormerDelays;
+        size_t bufferSize(BufferType bufferType) const;
       };
 
       BeamFormerKernel(const gpu::Stream &stream,
@@ -80,12 +69,10 @@ namespace LOFAR
       void enqueue(const BlockID &blockId, 
                    double subbandFrequency, unsigned SAP);
 
+      gpu::DeviceMemory beamFormerDelays;
     };
 
     //# --------  Template specializations for KernelFactory  -------- #//
-
-    template<> size_t
-    KernelFactory<BeamFormerKernel>::bufferSize(BufferType bufferType) const;
 
     template<> CompileDefinitions
     KernelFactory<BeamFormerKernel>::compileDefinitions() const;

@@ -130,12 +130,9 @@ namespace LOFAR
         devInput, devA, devB, devNull));
 
       if (factories.coherentStokes) {
-        devBeamFormerDelays.reset(new gpu::DeviceMemory(context,
-          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)));
-
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
           new BeamFormerCoherentStep(parset, queue, context, *factories.coherentStokes,
-          devInput, devA, devB, devC, devD, devBeamFormerDelays));
+          devInput, devA, devB, devC, devD));
       }
 
       if (factories.incoherentStokes) {
@@ -231,7 +228,7 @@ namespace LOFAR
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
-        if (ps.delayCompensation())
+        if (ps.settings.delayCompensation.enabled)
         {
           queue.writeBuffer(devInput->delaysAtBegin,
             input.delaysAtBegin, false);
@@ -242,10 +239,9 @@ namespace LOFAR
         }
 
         if (nrCoherent > 0) {
-          ASSERT(devBeamFormerDelays.get());
+          ASSERT(coherentStep.get());
 
-          // Upload the new beamformerDelays (pointings) to the GPU 
-          queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
+          coherentStep->writeInput(input);
         }
 
         prevSAP = SAP;

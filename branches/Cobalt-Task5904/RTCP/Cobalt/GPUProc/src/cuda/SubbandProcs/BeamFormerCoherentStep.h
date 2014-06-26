@@ -73,13 +73,14 @@ namespace LOFAR
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD,
-        boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays);
+        boost::shared_ptr<gpu::DeviceMemory> i_devD);
 
 
 
       void initMembers(gpu::Context &context,
         Factories &factories);
+
+      void writeInput(SubbandProcInputData &input);
 
       void process(BlockID blockID,
         unsigned subband);
@@ -98,12 +99,8 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devC;
       boost::shared_ptr<gpu::DeviceMemory> devD;
-      boost::shared_ptr<gpu::DeviceMemory> devBeamFormerDelays;
-
-
 
       // Kernel members
-
       std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 

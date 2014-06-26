@@ -77,8 +77,7 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB,
       boost::shared_ptr<gpu::DeviceMemory> i_devC,
-      boost::shared_ptr<gpu::DeviceMemory> i_devD,
-      boost::shared_ptr<gpu::DeviceMemory> i_devBeamFormerDelays)
+      boost::shared_ptr<gpu::DeviceMemory> i_devD)
       :
       ProcessStep(parset, i_queue),
       coherentStokesPPF(factories.coherentFirFilter != NULL)
@@ -88,7 +87,6 @@ namespace LOFAR
       devB = i_devB;
       devC = i_devC;
       devD = i_devD;
-      devBeamFormerDelays = i_devBeamFormerDelays;
       initMembers(context, factories);
     }
 
@@ -96,7 +94,7 @@ namespace LOFAR
       Factories &factories)
     {
     beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
-      new BeamFormerKernel::Buffers(*devB, *devA, *devBeamFormerDelays));
+      new BeamFormerKernel::Buffers(*devB, *devA));
 
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
       factories.beamFormer.create(queue, *beamFormerBuffers));
@@ -191,6 +189,15 @@ void BeamFormerCoherentStep::printStats()
     std::setw(20) << "(inverseFFTShift)" << inverseFFTShiftKernel->itsCounter.stats << endl <<
     std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl);
 
+}
+
+
+void BeamFormerCoherentStep::writeInput(SubbandProcInputData &input)
+{
+    ASSERT(beamFormerKernel.get());
+
+    // Upload the new beamformerDelays (pointings) to the GPU 
+    queue.writeBuffer(beamFormerKernel->beamFormerDelays, input.tabDelays, false);
 }
 
 
