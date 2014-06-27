@@ -59,15 +59,13 @@ namespace LOFAR
       Factories &factories,
       boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
-      boost::shared_ptr<gpu::DeviceMemory> i_devB,
-      boost::shared_ptr<gpu::DeviceMemory> i_devNull)
+      boost::shared_ptr<gpu::DeviceMemory> i_devB)
       :
       ProcessStep(parset, i_queue)
     {
       devInput=i_devInput;
       devA=i_devA;
       devB=i_devB;
-      devNull=i_devNull;
       initMembers(context, factories);
     }
 

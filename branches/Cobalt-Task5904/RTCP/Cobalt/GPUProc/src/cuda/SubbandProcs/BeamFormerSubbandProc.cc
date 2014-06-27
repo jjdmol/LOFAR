@@ -115,14 +115,11 @@ namespace LOFAR
       devC.reset(new gpu::DeviceMemory(context, devC_size));
       devD.reset(new gpu::DeviceMemory(context, devD_size));
 
-      // Null buffer for unused parts of the pipeline
-      devNull.reset(new gpu::DeviceMemory(context, 1));
-
       //################################################
       // Create objects containing the kernel and device buffers
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
         new BeamFormerPreprocessingStep(parset, queue, context, factories.preprocessing, 
-        devInput, devA, devB, devNull));
+        devInput, devA, devB));
 
       if (factories.coherentStokes) {
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(

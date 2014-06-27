@@ -129,9 +129,6 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devD;
       // @}
 
-      // NULL placeholder for unused DeviceMemory parameters
-      boost::shared_ptr<gpu::DeviceMemory> devNull;
-
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;
       std::auto_ptr<BeamFormerIncoherentStep> incoherentStep;
