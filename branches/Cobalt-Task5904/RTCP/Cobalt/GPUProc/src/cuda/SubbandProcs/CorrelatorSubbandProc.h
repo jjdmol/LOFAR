@@ -185,18 +185,15 @@ namespace LOFAR
        */
 
       // FIR filter
-      SmartPtr<FIR_FilterKernel::Buffers> firFilterBuffers;
       SmartPtr<FIR_FilterKernel> firFilterKernel;
 
       // FFT
       SmartPtr<FFT_Kernel> fftKernel;
 
       // Delay and Bandpass
-      DelayAndBandPassKernel::Buffers delayAndBandPassBuffers;
       std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
 
       // Correlator
-      CorrelatorKernel::Buffers correlatorBuffers;
       std::auto_ptr<CorrelatorKernel> correlatorKernel;
 
       // Buffers for long-time integration; one buffer for each subband that

@@ -93,15 +93,12 @@ namespace LOFAR
                    CorrelatorKernel::OUTPUT_DATA))),
 
       // Delay and Bandpass
-      delayAndBandPassBuffers(
-        devFilteredData, *devInput.inputSamples),
       delayAndBandPassKernel(
-        factories.delayAndBandPass.create(queue, delayAndBandPassBuffers)),
+        factories.delayAndBandPass.create(queue, devFilteredData, *devInput.inputSamples)),
 
       // Correlator
       //correlatorBuffers(*devInput.inputSamples, devFilteredData),
-      correlatorBuffers(*devInput.inputSamples, devFilteredData),
-      correlatorKernel(factories.correlator.create(queue, correlatorBuffers)),
+      correlatorKernel(factories.correlator.create(queue, *devInput.inputSamples, devFilteredData)),
 
       // Buffers for long-time integration
       integratedData(nrSubbandsPerSubbandProc)
@@ -110,9 +107,7 @@ namespace LOFAR
     {
       if (correlatorPPF) {
         // FIR filter
-        firFilterBuffers = new FIR_FilterKernel::Buffers(
-          *devInput.inputSamples, devFilteredData);
-        firFilterKernel = factories.firFilter->create(queue, *firFilterBuffers);
+        firFilterKernel = factories.firFilter->create(queue, *devInput.inputSamples, devFilteredData);
 
         // FFT
         fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devFilteredData);

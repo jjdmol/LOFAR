@@ -88,8 +88,7 @@ TEST(tKernelFunctions)
 
   stream.writeBuffer(dInput, hInput);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput);
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
 
   // **************************************
   // excercise it

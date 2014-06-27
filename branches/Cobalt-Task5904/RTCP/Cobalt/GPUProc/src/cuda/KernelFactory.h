@@ -70,19 +70,12 @@ namespace LOFAR
 
       // Create a new Kernel object of type \c T.
       T* create(const gpu::Stream& stream,
-                const typename T::Buffers& buffers) const
+                gpu::DeviceMemory &inputBuffer,
+                gpu::DeviceMemory &outputBuffer) const
       {
-        // Since we use overlapping input/output buffers, their size
-        // could be wrong.
-        ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
-        // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
-        ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+        const typename T::Buffers buffers(inputBuffer, outputBuffer);
 
-        return new T(
-          stream, createModule(stream.getContext(), 
-                               T::theirSourceFile,
-                               itsPTX), 
-          buffers, itsParameters);
+        return create(stream, buffers);
       }
 
       // Return required buffer size for \a bufferType
@@ -98,6 +91,23 @@ namespace LOFAR
         return createPTX(T::theirSourceFile,
                            compileDefinitions(),
                            compileFlags());
+      }
+
+      // Create a new Kernel object of type \c T.
+      T* create(const gpu::Stream& stream,
+                const typename T::Buffers& buffers) const
+      {
+        // Since we use overlapping input/output buffers, their size
+        // could be wrong.
+        ASSERT(buffers.input.size() >= bufferSize(T::INPUT_DATA));
+        // Untill we have optional kernel compilation this test will fail on unused and thus incorrect kernels
+        ASSERT(buffers.output.size() >= bufferSize(T::OUTPUT_DATA));
+
+        return new T(
+          stream, createModule(stream.getContext(), 
+                               T::theirSourceFile,
+                               itsPTX), 
+          buffers, itsParameters);
       }
 
       // Return compile definitions to use when creating PTX code for kernels of

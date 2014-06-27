@@ -136,7 +136,8 @@ struct SUTWrapper:  ParsetSUT
   MultiDimArrayHostBuffer<fcomplex, 4> hInput;
   MultiDimArrayHostBuffer<float, 4> hOutput;
   MultiDimArrayHostBuffer<float, 4> hRefOutput;
-  CoherentStokesKernel::Buffers buffers;
+  gpu::DeviceMemory inputBuffer;
+  gpu::DeviceMemory outputBuffer;
   scoped_ptr<CoherentStokesKernel> kernel;
 
   SUTWrapper(size_t inrChannels = 16,
@@ -161,12 +162,9 @@ struct SUTWrapper:  ParsetSUT
     hRefOutput(
       boost::extents[nrTabs][nrStokes][nrOutputSamples][nrChannels],
       context),
-    buffers(
-      gpu::DeviceMemory(
-        context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
-      gpu::DeviceMemory(
-        context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA))),
-    kernel(factory.create(stream, buffers))
+    inputBuffer(context, factory.bufferSize(CoherentStokesKernel::INPUT_DATA)),
+    outputBuffer(context, factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA)),
+    kernel(factory.create(stream, inputBuffer, outputBuffer))
   {
     initializeHostBuffers();
   }
@@ -176,11 +174,11 @@ struct SUTWrapper:  ParsetSUT
   void initializeHostBuffers()
   {
     cout << "\nInitializing host buffers..."
-         << "\n  buffers.input.size()  = " << setw(7) << buffers.input.size()
-         << "\n  buffers.output.size() = " << setw(7) << buffers.output.size()
+         << "\n  buffers.input.size()  = " << setw(7) << inputBuffer.size()
+         << "\n  buffers.output.size() = " << setw(7) << outputBuffer.size()
          << endl;
-    CHECK_EQUAL(buffers.input.size(), hInput.size());
-    CHECK_EQUAL(buffers.output.size(), hOutput.size());
+    CHECK_EQUAL(inputBuffer.size(), hInput.size());
+    CHECK_EQUAL(outputBuffer.size(), hOutput.size());
     fill(hInput.data(), hInput.data() + hInput.num_elements(), 0.0f);
     fill(hOutput.data(), hOutput.data() + hOutput.num_elements(), 42);
     fill(hRefOutput.data(), hRefOutput.data() + hRefOutput.num_elements(), 0.0f);
@@ -191,11 +189,11 @@ struct SUTWrapper:  ParsetSUT
     // Dummy BlockID
     BlockID blockId;
     // Copy input data from host- to device buffer synchronously
-    stream.writeBuffer(buffers.input, hInput, true);
+    stream.writeBuffer(inputBuffer, hInput, true);
     // Launch the kernel
     kernel->enqueue(blockId);
     // Copy output data from device- to host buffer synchronously
-    stream.readBuffer(hOutput, buffers.output, true);
+    stream.readBuffer(hOutput, outputBuffer, true);
   }
 
 };
@@ -465,12 +463,8 @@ int main(int argc, char *argv[])
                   coherentStokesOutputMem(ctx,
                    factory.bufferSize(CoherentStokesKernel::OUTPUT_DATA));
 
-
-  CoherentStokesKernel::Buffers buffers(coherentStokesInputMem,
-              coherentStokesOutputMem);
-
   // kernel
-  auto_ptr<CoherentStokesKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<CoherentStokesKernel> kernel(factory.create(stream, coherentStokesInputMem, coherentStokesOutputMem));
 
   BlockID blockId;
   // run

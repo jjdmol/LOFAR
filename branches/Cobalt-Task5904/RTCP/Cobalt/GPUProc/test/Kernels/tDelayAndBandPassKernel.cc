@@ -62,9 +62,7 @@ int main(int argc, char *argv[])
     inputData(ctx, factory.bufferSize(DelayAndBandPassKernel::INPUT_DATA)),
     filteredData(ctx, factory.bufferSize(DelayAndBandPassKernel::OUTPUT_DATA));
 
-  DelayAndBandPassKernel::Buffers buffers(inputData, filteredData);
-
-  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<DelayAndBandPassKernel> kernel(factory.create(stream, inputData, filteredData));
 
 
   size_t subbandIdx = 0;

@@ -93,11 +93,8 @@ namespace LOFAR
     void BeamFormerCoherentStep::initMembers(gpu::Context &context,
       Factories &factories)
     {
-    beamFormerBuffers = std::auto_ptr<BeamFormerKernel::Buffers>(
-      new BeamFormerKernel::Buffers(*devB, *devA));
-
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
-      factories.beamFormer.create(queue, *beamFormerBuffers));
+      factories.beamFormer.create(queue, *devB, *devA));
 
     // transpose after beamforming: A -> C/D
     //
@@ -105,12 +102,9 @@ namespace LOFAR
     // 1ch: C
     // PPF: D
 
-    coherentTransposeBuffers = std::auto_ptr<CoherentStokesTransposeKernel::Buffers>(
-      new CoherentStokesTransposeKernel::Buffers(*devA, coherentStokesPPF ? *devD : *devC));
-
     coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
       factories.coherentTranspose.create(
-      queue, *coherentTransposeBuffers));
+      queue, *devA, coherentStokesPPF ? *devD : *devC));
 
     const size_t nrSamples = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize;
 
@@ -120,11 +114,9 @@ namespace LOFAR
       nrSamples, false, coherentStokesPPF ? *devD : *devC));
 
     // fftshift: C/D -> C/D (in-place)
-    inverseFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-      new FFTShiftKernel::Buffers(coherentStokesPPF ? *devD : *devC, coherentStokesPPF ? *devD : *devC));
-
     inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-      factories.coherentInverseFFTShift.create(queue, *inverseFFTShiftBuffers));
+      factories.coherentInverseFFTShift.create(
+        queue, coherentStokesPPF ? *devD : *devC, coherentStokesPPF ? *devD : *devC));
 
     // FIR filter: D -> C
     //
@@ -136,11 +128,8 @@ namespace LOFAR
     // 1ch: - (no FIR will be done)
     // PPF: C
     if (coherentStokesPPF) {
-      firFilterBuffers = std::auto_ptr<FIR_FilterKernel::Buffers>(
-        new FIR_FilterKernel::Buffers(*devD, *devC));
-
       firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-        factories.coherentFirFilter->create(queue, *firFilterBuffers));
+        factories.coherentFirFilter->create(queue, *devD, *devC));
 
       // final FFT: C -> C (in-place) = firFilterBuffers.output
       finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
@@ -152,12 +141,8 @@ namespace LOFAR
     //
     // 1ch: input comes from inverseFFT in C
     // Nch: input comes from finalFFT in C
-
-    coherentStokesBuffers = std::auto_ptr<CoherentStokesKernel::Buffers>(
-      new CoherentStokesKernel::Buffers(*devC, *devD));
-
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
-      factories.coherentStokes.create(queue, *coherentStokesBuffers));
+      factories.coherentStokes.create(queue, *devC, *devD));
   }
 
 void BeamFormerCoherentStep::logTime()

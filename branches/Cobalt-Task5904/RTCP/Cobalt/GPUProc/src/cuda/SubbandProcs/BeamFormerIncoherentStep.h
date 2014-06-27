@@ -94,23 +94,19 @@ namespace LOFAR
       const bool incoherentStokesPPF;
 
       // Transpose 
-      std::auto_ptr<IncoherentStokesTransposeKernel::Buffers> incoherentTransposeBuffers;
       std::auto_ptr<IncoherentStokesTransposeKernel> incoherentTranspose;
 
       // Inverse (4k points) FFT
       std::auto_ptr<FFT_Kernel> incoherentInverseFFT;
 
       // Inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> incoherentInverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> incoherentInverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<FIR_FilterKernel::Buffers> incoherentFirFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> incoherentFirFilterKernel;
       std::auto_ptr<FFT_Kernel> incoherentFinalFFT;
 
       // Incoherent Stokes
-      std::auto_ptr<IncoherentStokesKernel::Buffers> incoherentStokesBuffers;
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
     };
   }

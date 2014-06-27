@@ -90,8 +90,7 @@ TEST(FIR_FilterKernel)
   // initialize history data
   dHistory.set(0);
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput);
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
   PerformanceCounter counter(context);
   BlockID blockId;
   kernel->enqueue(blockId,  0);
@@ -150,8 +149,7 @@ TEST(HistoryFlags)
     dInput(context, factory.bufferSize(FIR_FilterKernel::INPUT_DATA)),
     dOutput(context, factory.bufferSize(FIR_FilterKernel::OUTPUT_DATA));
 
-  FIR_FilterKernel::Buffers buffers(dInput, dOutput);
-  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
 
   /*
    * Test propagation of history flags. Each block tests for the flags of

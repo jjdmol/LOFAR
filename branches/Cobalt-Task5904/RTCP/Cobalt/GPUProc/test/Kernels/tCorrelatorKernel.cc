@@ -105,10 +105,9 @@ TEST(DataValidity)
   // Buffers
   gpu::DeviceMemory devInput(context, factory.bufferSize(CorrelatorKernel::INPUT_DATA));
   gpu::DeviceMemory devOutput(context, factory.bufferSize(CorrelatorKernel::OUTPUT_DATA));
-  CorrelatorKernel::Buffers buffers(devInput, devOutput);
 
   // Kernel
-  std::auto_ptr<CorrelatorKernel> kernel(factory.create(stream, buffers));
+  std::auto_ptr<CorrelatorKernel> kernel(factory.create(stream, devInput, devOutput));
 
   // Fill input
   BlockID blockID;

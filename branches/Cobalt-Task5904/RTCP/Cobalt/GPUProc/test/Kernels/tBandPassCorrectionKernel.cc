@@ -63,9 +63,7 @@ int main() {
     inputData(ctx, factory.bufferSize(BandPassCorrectionKernel::INPUT_DATA)),
     filteredData(ctx, factory.bufferSize(BandPassCorrectionKernel::OUTPUT_DATA));
 
-  BandPassCorrectionKernel::Buffers buffers(inputData, filteredData);
-
-  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, buffers));
+  auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, inputData, filteredData));
 
   PerformanceCounter counter(ctx);
   BlockID blockId;

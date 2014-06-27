@@ -81,19 +81,12 @@ namespace LOFAR
         (ps.settings.beamFormer.nrHighResolutionChannels /
          ps.settings.beamFormer.nrDelayCompensationChannels) > 1;
 
-      // intToFloat: input -> B
-      intToFloatBuffers = std::auto_ptr<IntToFloatKernel::Buffers>(
-        new IntToFloatKernel::Buffers(*devInput->inputSamples, *devB));
-
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
-        factories.intToFloat.create(queue, *intToFloatBuffers));
+        factories.intToFloat.create(queue, *devInput->inputSamples, *devB));
 
       // FFTShift: B -> B
-      firstFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devB, *devB));
-
       firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.fftShift.create(queue, *firstFFTShiftBuffers));
+        factories.fftShift.create(queue, *devB, *devB));
 
       const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
 
@@ -103,22 +96,16 @@ namespace LOFAR
         nrSamples, true, *devB));
 
       // delayComp: B -> A
-      delayCompensationBuffers = std::auto_ptr<DelayAndBandPassKernel::Buffers>(
-        new DelayAndBandPassKernel::Buffers(*devB, *devA));
-
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
-        factories.delayCompensation.create(queue, *delayCompensationBuffers));
+        factories.delayCompensation.create(queue, *devB, *devA));
 
 
       // Only perform second FFTshift and FFT if we have to.
       if (doSecondFFT) {
 
         // FFTShift: A -> A
-        secondFFTShiftBuffers = std::auto_ptr<FFTShiftKernel::Buffers>(
-          new FFTShiftKernel::Buffers(*devA, *devA));
-
         secondFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-          factories.fftShift.create(queue, *secondFFTShiftBuffers));
+          factories.fftShift.create(queue, *devA, *devA));
 
         // FFT: A -> A
         secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
@@ -128,12 +115,8 @@ namespace LOFAR
       }
 
       // bandPass: A -> B
-      bandPassCorrectionBuffers =
-        std::auto_ptr<BandPassCorrectionKernel::Buffers>(
-        new BandPassCorrectionKernel::Buffers(*devA, *devB));
-
       bandPassCorrectionKernel = std::auto_ptr<BandPassCorrectionKernel>(
-        factories.bandPassCorrection.create(queue, *bandPassCorrectionBuffers));
+        factories.bandPassCorrection.create(queue, *devA, *devB));
 
     }
 

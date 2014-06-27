@@ -101,32 +101,23 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devD;
 
       // Kernel members
-      std::auto_ptr<BeamFormerKernel::Buffers> beamFormerBuffers;
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
 
       // Transpose 
-      std::auto_ptr<CoherentStokesTransposeKernel::Buffers> coherentTransposeBuffers;
       std::auto_ptr<CoherentStokesTransposeKernel> coherentTransposeKernel;
 
       // inverse (4k points) FFT
       std::auto_ptr<FFT_Kernel> inverseFFT;
 
       // inverse FFT-shift
-      std::auto_ptr<FFTShiftKernel::Buffers> inverseFFTShiftBuffers;
       std::auto_ptr<FFTShiftKernel> inverseFFTShiftKernel;
 
       // Poly-phase filter (FIR + FFT)
-      std::auto_ptr<FIR_FilterKernel::Buffers> firFilterBuffers;
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
       std::auto_ptr<FFT_Kernel>finalFFT;
 
       // Coherent Stokes
-      std::auto_ptr<CoherentStokesKernel::Buffers> coherentStokesBuffers;
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
-
-
-
-
     };
 
 

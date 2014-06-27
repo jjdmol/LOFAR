@@ -91,13 +91,9 @@ namespace LOFAR
     {
 
       // Transpose: B -> A
-      incoherentTransposeBuffers =
-        std::auto_ptr<IncoherentStokesTransposeKernel::Buffers>(
-        new IncoherentStokesTransposeKernel::Buffers(*devB, *devA));
-
       incoherentTranspose = std::auto_ptr<IncoherentStokesTransposeKernel>(
         factories.incoherentStokesTranspose.create(queue,
-        *incoherentTransposeBuffers));
+        *devB, *devA));
 
       const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
 
@@ -107,22 +103,14 @@ namespace LOFAR
         nrSamples, false, *devA));
 
       // inverse FFTShift: A -> A
-      incoherentInverseFFTShiftBuffers =
-        std::auto_ptr<FFTShiftKernel::Buffers>(
-        new FFTShiftKernel::Buffers(*devA, *devA));
-
       incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
-        factories.incoherentInverseFFTShift.create(queue, *incoherentInverseFFTShiftBuffers));
+        factories.incoherentInverseFFTShift.create(queue, *devA, *devA));
 
       if (incoherentStokesPPF) {
         // final FIR: A -> B
-        incoherentFirFilterBuffers =
-          std::auto_ptr<FIR_FilterKernel::Buffers>(
-          new FIR_FilterKernel::Buffers(*devA, *devB));
-
         incoherentFirFilterKernel = std::auto_ptr<FIR_FilterKernel>(
           factories.incoherentFirFilter->create(
-          queue, *incoherentFirFilterBuffers));
+          queue, *devA, *devB));
 
         // final FFT: B -> B
         incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
@@ -135,13 +123,11 @@ namespace LOFAR
       //
       // 1ch: input comes from incoherentInverseFFT in A, output in B
       // Nch: input comes from incoherentFinalFFT in B, output in A
-      incoherentStokesBuffers =
-        std::auto_ptr<IncoherentStokesKernel::Buffers>(
-        new IncoherentStokesKernel::Buffers(
-        incoherentStokesPPF ? *devB : *devA,
-        incoherentStokesPPF ? *devA : *devB));
       incoherentStokesKernel = std::auto_ptr<IncoherentStokesKernel>(
-        factories.incoherentStokes.create(queue, *incoherentStokesBuffers));
+        factories.incoherentStokes.create(
+          queue,
+          incoherentStokesPPF ? *devB : *devA,
+          incoherentStokesPPF ? *devA : *devB));
     }
 
     gpu::DeviceMemory BeamFormerIncoherentStep::outputBuffer() {
