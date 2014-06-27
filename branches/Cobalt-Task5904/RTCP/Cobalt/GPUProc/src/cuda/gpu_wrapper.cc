@@ -49,6 +49,17 @@
     }                                                                   \
   } while(0)
 
+// Like checkCuCall, but don't emit log lines
+#define checkCuCall_noLog(func)                                               \
+  do {                                                                  \
+    CUresult result = func;                                             \
+    if (result != CUDA_SUCCESS) {                                       \
+      THROW (LOFAR::Cobalt::gpu::CUDAException,                         \
+             # func << ": " << LOFAR::Cobalt::gpu::errorMessage(result)); \
+    }                                                                   \
+  } while(0)
+
+
 LOFAR::Exception::TerminateHandler th(LOFAR::Exception::terminate);
 
 using boost::format;
@@ -820,13 +831,7 @@ namespace LOFAR
 
           float ms;
 
-          try {
-            checkCuCall(cuEventElapsedTime(&ms, other, _event));
-          } catch (LOFAR::Cobalt::gpu::CUDAException &ex) {
-            // Prevent exceptions/crashes caused by querying unused timers
-            // checkCuCall already logs the error
-            ms = 0.0f;
-          }
+          checkCuCall_noLog(cuEventElapsedTime(&ms, other, _event));
 
           return ms;
         }

@@ -82,9 +82,9 @@ namespace LOFAR
       size_t nrSubbandsPerSubbandProc)
     :
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),
-      counters(context),
       prevBlock(-1),
-      prevSAP(-1)
+      prevSAP(-1),
+      inputCounter(context)
     {
       // See doc/bf-pipeline.txt
       size_t devA_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
@@ -146,57 +146,33 @@ namespace LOFAR
       }
     }
      
-    BeamFormerSubbandProc::Counters::Counters(gpu::Context &context)
-      :
-      inputsamples(context),
-      coherentOutput(context),
-      incoherentOutput(context)
+    void BeamFormerSubbandProc::logTime()
     {
-    }
+      inputCounter.logTime();
 
-    void BeamFormerSubbandProc::logTime(unsigned nrCoherent,
-      unsigned nrIncoherent)
-    {
       preprocessingPart->logTime();
-      // samples.logTime();  // performance count the transfer      
-      if (nrCoherent > 0)
+
+      if (coherentStep.get())
         coherentStep->logTime();
 
-      if (nrIncoherent > 0) 
+      if (incoherentStep.get())
         incoherentStep->logTime();
-
-      counters.logTime( nrCoherent,
-         nrIncoherent);
     }
 
     void BeamFormerSubbandProc::printStats()
     {
-      preprocessingPart->printStats();
-      if (coherentStep.get())
-        coherentStep->printStats();
-      if (incoherentStep.get())
-        incoherentStep->printStats();
-      counters.printStats();
-    }
-
-    void BeamFormerSubbandProc::Counters::logTime(
-      unsigned nrCoherent, unsigned nrIncoherent)
-    {
-      inputsamples.logTime();
-      if (nrCoherent)
-        coherentOutput.logTime();
-      if (nrIncoherent)
-        incoherentOutput.logTime();      
-    }
-
-    void BeamFormerSubbandProc::Counters::printStats()
-    {     
       // Print the individual counter stats: mean and stDev
       LOG_INFO_STR(
         "**** BeamFormerSubbandProc cpu to GPU transfers GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(inputsamples)" << inputsamples.stats << endl <<
-        std::setw(20) << "(coherentOutput)" << coherentOutput.stats << endl <<
-        std::setw(20) << "(incoherentOutput )" << incoherentOutput.stats << endl );
+        std::setw(20) << "(input)" << inputCounter.stats << endl);
+
+      preprocessingPart->printStats();
+
+      if (coherentStep.get())
+        coherentStep->printStats();
+
+      if (incoherentStep.get())
+        incoherentStep->printStats();
     }
 
     void BeamFormerSubbandProc::processSubband( SubbandProcInputData &input,
@@ -207,24 +183,19 @@ namespace LOFAR
       //*******************************************************************
       // calculate some variables depending on the input subband
       size_t block = input.blockID.block;
-      unsigned subband = input.blockID.globalSubbandIdx;
-      unsigned SAP = ps.settings.subbands[subband].SAP;
-      unsigned nrCoherent   = ps.settings.beamFormer.SAPs[SAP].nrCoherent;
-      unsigned nrIncoherent = ps.settings.beamFormer.SAPs[SAP].nrIncoherent;
+      unsigned SAP = ps.settings.subbands[input.blockID.globalSubbandIdx].SAP;
 
       //****************************************
       // Send inputs to GPU
       queue.writeBuffer(*devInput->inputSamples, input.inputSamples,
-        counters.inputsamples, true);
+        inputCounter, true);
 
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.
       if ((int)SAP != prevSAP || (ssize_t)block != prevBlock) {
         preprocessingPart->writeInput(input);
 
-        if (nrCoherent > 0) {
-          ASSERT(coherentStep.get());
-
+        if (coherentStep.get()) {
           coherentStep->writeInput(input);
         }
 
@@ -235,44 +206,27 @@ namespace LOFAR
       // ************************************************
       // Start the processing
       // Preprocessing, the same for all
-      preprocessingPart->process(input.blockID, subband);
+      preprocessingPart->process(input);
 
-      if (nrCoherent > 0)
+      if (coherentStep.get())
       {
-        ASSERT(coherentStep.get());
-
-        coherentStep->process(input.blockID, subband);
-
-        // Reshape output to only read nrCoherent TABs
-        output.coherentData.resizeOneDimensionInplace(0, nrCoherent);
-
-        // Output in devD, by design
-        queue.readBuffer( output.coherentData, *devD,
-         counters.coherentOutput, false);
+        coherentStep->process(input);
+        coherentStep->readOutput(output);
       }
 
-      if (nrIncoherent > 0)
+      if (incoherentStep.get())
       {
-        ASSERT(incoherentStep.get());
-
-        incoherentStep->process(input.blockID, subband);
-
-        // Reshape output to only read nrIncoherent TABs
-        output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent);
-
-        queue.readBuffer(output.incoherentData, incoherentStep->outputBuffer(),
-          counters.incoherentOutput, false);
-
-        // TODO: Propagate flags
+        incoherentStep->process(input);
+        incoherentStep->readOutput(output);
       }
+
       // Synchronise to assure that all the work in the data is done
       queue.synchronize();
 
       // ************************************************
       // Perform performance statistics if needed
-      if (gpuProfiling)
-      {      
-        logTime(nrCoherent, nrIncoherent);
+      if (gpuProfiling) {      
+        logTime();
       }
     }
 

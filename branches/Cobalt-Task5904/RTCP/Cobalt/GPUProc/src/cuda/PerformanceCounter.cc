@@ -36,7 +36,12 @@ namespace LOFAR
     void PerformanceCounter::logTime()
     {
       // get the difference between start and stop. push it on the stats object
-      stats.push(stop.elapsedTime(start));
+      try {
+        stats.push(stop.elapsedTime(start));
+      } catch (LOFAR::Cobalt::gpu::CUDAException) {
+        // catch errors in case the event was not posted -- the current interface
+        // has no easy way to check beforehand.
+      }
     }
     
   }

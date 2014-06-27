@@ -32,17 +32,11 @@
 #include <CoInterface/Parset.h>
 
 #include "SubbandProc.h"
+#include "BeamFormerSubbandProc.h"
 
 #include "BeamFormerIncoherentStep.h"
 
 #include <iomanip>
-
-// Set to true to get detailed buffer informatio
-#if 0
-#define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
-#else
-#define DUMPBUFFER(a,b)
-#endif
 
 namespace LOFAR
 {
@@ -75,7 +69,8 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devB )
       :
       ProcessStep(parset, i_queue),
-      incoherentStokesPPF(factories.incoherentFirFilter != NULL)
+      incoherentStokesPPF(factories.incoherentFirFilter != NULL),
+      outputCounter(context)
     {
       devA = i_devA;
       devB = i_devB;
@@ -142,6 +137,7 @@ namespace LOFAR
         incoherentFinalFFT->itsCounter.logTime();
       }
       incoherentStokesKernel->itsCounter.logTime();
+      outputCounter.logTime();
     }
 
     void BeamFormerIncoherentStep::printStats()
@@ -153,35 +149,52 @@ namespace LOFAR
         std::setw(20) << "(incoherentInverseFFTShift)" << incoherentInverseFFTShiftKernel->itsCounter.stats << endl <<
         std::setw(20) << "(incoherentFirFilterKernel)" << (incoherentStokesPPF ? incoherentFirFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
         std::setw(20) << "(incoherentFinalFFT)" << (incoherentStokesPPF ? incoherentFinalFFT->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl);
+        std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl <<
+        std::setw(20) << "(output)" << outputCounter.stats << endl);
     }
 
-    void BeamFormerIncoherentStep::process(BlockID blockID, unsigned /*subband*/)
+
+    size_t BeamFormerIncoherentStep::nrIncoherent(const BlockID &blockID) const
     {
+      unsigned SAP = ps.settings.subbands[blockID.globalSubbandIdx].SAP;
+
+      return ps.settings.beamFormer.SAPs[SAP].nrIncoherent;
+    }
+
+
+    void BeamFormerIncoherentStep::process(const SubbandProcInputData &input)
+    {
+      if (nrIncoherent(input.blockID) == 0)
+        return;
+
       // ********************************************************************
       // incoherent stokes kernels
-      incoherentTranspose->enqueue(blockID);
+      incoherentTranspose->enqueue(input.blockID);
 
-      incoherentInverseFFT->enqueue(blockID);
+      incoherentInverseFFT->enqueue(input.blockID);
 
-      DUMPBUFFER(incoherentInverseFFTShiftBuffers.input,
-        "incoherentInverseFFTShiftBuffers.input.dat");
-
-      incoherentInverseFFTShiftKernel->enqueue(blockID);
-
-      DUMPBUFFER(incoherentInverseFFTShiftBuffers.output,
-        "incoherentInverseFFTShiftBuffers.output.dat");
+      incoherentInverseFFTShiftKernel->enqueue(input.blockID);
 
       if (incoherentStokesPPF)
       {
         // The subbandIdx immediate kernel arg must outlive kernel runs.
-        incoherentFirFilterKernel->enqueue(blockID,
-          blockID.subbandProcSubbandIdx);
+        incoherentFirFilterKernel->enqueue(input.blockID,
+          input.blockID.subbandProcSubbandIdx);
 
-        incoherentFinalFFT->enqueue(blockID);
+        incoherentFinalFFT->enqueue(input.blockID);
       }
 
-      incoherentStokesKernel->enqueue(blockID);
+      incoherentStokesKernel->enqueue(input.blockID);
+    }
+
+
+    void BeamFormerIncoherentStep::readOutput(BeamFormedData &output)
+    {
+      if (nrIncoherent(output.blockID) == 0)
+        return;
+
+      output.incoherentData.resizeOneDimensionInplace(0, nrIncoherent(output.blockID));
+      queue.readBuffer(output.incoherentData, outputBuffer(), outputCounter, false);
     }
   }
 }

@@ -50,6 +50,7 @@ namespace LOFAR
   {
     //# Forward declarations
     struct BeamFormerFactories;
+    class BeamFormedData;
 
     class BeamFormerCoherentStep: public ProcessStep
     {
@@ -79,10 +80,11 @@ namespace LOFAR
       void initMembers(gpu::Context &context,
         Factories &factories);
 
-      void writeInput(SubbandProcInputData &input);
+      void writeInput(const SubbandProcInputData &input);
 
-      void process(BlockID blockID,
-        unsigned subband);
+      void process(const SubbandProcInputData &input);
+
+      void readOutput(BeamFormedData &output);
 
       void printStats();
 
@@ -116,6 +118,10 @@ namespace LOFAR
 
       // Coherent Stokes
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;
+
+      PerformanceCounter outputCounter;
+
+      size_t nrCoherent(const BlockID &blockID) const;
     };
 
 

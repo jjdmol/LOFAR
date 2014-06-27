@@ -25,7 +25,7 @@
 
 #include <GPUProc/gpu_wrapper.h>
 
-#include <CoInterface/BlockID.h>
+#include <GPUProc/SubbandProcs/SubbandProc.h>
 
 #include "SubbandProc.h"
 
@@ -36,8 +36,7 @@ namespace LOFAR
     class ProcessStep
     {
     public:
-      virtual void process(BlockID blockID,
-        unsigned subband) = 0;
+      virtual void process(const SubbandProcInputData &input) = 0;
 
       virtual void printStats() =0;
 

@@ -31,13 +31,6 @@
 
 #include <iomanip>
 
-// Set to true to get detailed buffer informatio
-#if 0
-#define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
-#else
-#define DUMPBUFFER(a,b)
-#endif
-
 namespace LOFAR
 {
   namespace Cobalt
@@ -118,7 +111,7 @@ namespace LOFAR
 
     }
 
-    void BeamFormerPreprocessingStep::writeInput(SubbandProcInputData &input)
+    void BeamFormerPreprocessingStep::writeInput(const SubbandProcInputData &input)
     {
       if (ps.settings.delayCompensation.enabled)
       {
@@ -131,39 +124,33 @@ namespace LOFAR
       }
     }
 
-    void BeamFormerPreprocessingStep::process(BlockID blockID, unsigned subband)
+    void BeamFormerPreprocessingStep::process(const SubbandProcInputData &input)
     {
 
       //****************************************
       // Enqueue the kernels
       // Note: make sure to call the right enqueue() for each kernel.
       // Otherwise, a kernel arg may not be set...
-      DUMPBUFFER(intToFloatBuffers.input, "intToFloatBuffers.input.dat");
-      intToFloatKernel->enqueue(blockID);
+      intToFloatKernel->enqueue(input.blockID);
 
-      firstFFTShiftKernel->enqueue(blockID);
-      DUMPBUFFER(firstFFTShiftBuffers.output, "firstFFTShiftBuffers.output.dat");
+      firstFFTShiftKernel->enqueue(input.blockID);
 
-      firstFFT->enqueue(blockID);
-      DUMPBUFFER(delayCompensationBuffers.input, "firstFFT.output.dat");
+      firstFFT->enqueue(input.blockID);
 
       // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
       delayCompensationKernel->enqueue(
-        blockID,
-        ps.settings.subbands[subband].centralFrequency,
-        ps.settings.subbands[subband].SAP);
-      DUMPBUFFER(delayCompensationBuffers.output, "delayCompensationBuffers.output.dat");
+        input.blockID,
+        ps.settings.subbands[input.blockID.globalSubbandIdx].centralFrequency,
+        ps.settings.subbands[input.blockID.globalSubbandIdx].SAP);
 
       if (doSecondFFT) {
-        secondFFTShiftKernel->enqueue(blockID);
-        DUMPBUFFER(secondFFTShiftBuffers.output, "secondFFTShiftBuffers.output.dat");
+        secondFFTShiftKernel->enqueue(input.blockID);
 
-        secondFFT->enqueue(blockID);
-        //DUMPBUFFER(bandPassCorrectionBuffers.input, "secondFFT.output.dat");
+        secondFFT->enqueue(input.blockID);
       }
 
       bandPassCorrectionKernel->enqueue(
-        blockID);
+        input.blockID);
     }
 
 

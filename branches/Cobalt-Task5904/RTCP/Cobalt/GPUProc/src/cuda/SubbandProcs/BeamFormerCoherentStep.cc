@@ -33,16 +33,10 @@
 
 #include "SubbandProc.h"
 
+#include "BeamFormerSubbandProc.h"
 #include "BeamFormerCoherentStep.h"
 
 #include <iomanip>
-
-// Set to true to get detailed buffer informatio
-#if 0
-#define DUMPBUFFER(a,b) dumpBuffer((a),  (b))
-#else
-#define DUMPBUFFER(a,b)
-#endif
 
 namespace LOFAR
 {
@@ -79,7 +73,8 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> i_devD)
       :
       ProcessStep(parset, i_queue),
-      coherentStokesPPF(factories.coherentFirFilter != NULL)
+      coherentStokesPPF(factories.coherentFirFilter != NULL),
+      outputCounter(context)
     {
       devA = i_devA;
       devB = i_devB;
@@ -154,8 +149,7 @@ void BeamFormerCoherentStep::logTime()
   coherentTransposeKernel->itsCounter.logTime();
   inverseFFT->itsCounter.logTime();
   coherentStokesKernel->itsCounter.logTime();
-  //visibilities.logTime(); //transfer
-
+  outputCounter.logTime();
 }
 
 
@@ -170,46 +164,64 @@ void BeamFormerCoherentStep::printStats()
     std::setw(20) << "(coherentTranspose)" << coherentTransposeKernel->itsCounter.stats << endl <<
     std::setw(20) << "(inverseFFT)" << inverseFFT->itsCounter.stats << endl <<
     std::setw(20) << "(inverseFFTShift)" << inverseFFTShiftKernel->itsCounter.stats << endl <<
-    std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl);
+    std::setw(20) << "(coherentStokes)" << coherentStokesKernel->itsCounter.stats << endl <<
+    std::setw(20) << "(output)"         << outputCounter.stats << endl);
 
 }
 
 
-void BeamFormerCoherentStep::writeInput(SubbandProcInputData &input)
+size_t BeamFormerCoherentStep::nrCoherent(const BlockID &blockID) const
 {
-    ASSERT(beamFormerKernel.get());
+  unsigned SAP = ps.settings.subbands[blockID.globalSubbandIdx].SAP;
 
-    // Upload the new beamformerDelays (pointings) to the GPU 
-    queue.writeBuffer(beamFormerKernel->beamFormerDelays, input.tabDelays, false);
+  return ps.settings.beamFormer.SAPs[SAP].nrCoherent;
 }
 
 
-void BeamFormerCoherentStep::process(BlockID blockID,
-  unsigned subband)
+void BeamFormerCoherentStep::writeInput(const SubbandProcInputData &input)
 {
+  if (nrCoherent(input.blockID) == 0)
+    return;
+
+  // Upload the new beamformerDelays (pointings) to the GPU 
+  queue.writeBuffer(beamFormerKernel->beamFormerDelays, input.tabDelays, false);
+}
+
+
+void BeamFormerCoherentStep::process(const SubbandProcInputData &input)
+{
+  if (nrCoherent(input.blockID) == 0)
+    return;
+
   // The centralFrequency and SAP immediate kernel args must outlive kernel runs.
-  beamFormerKernel->enqueue(blockID,
-    ps.settings.subbands[subband].centralFrequency,
-    ps.settings.subbands[subband].SAP);
+  beamFormerKernel->enqueue(input.blockID,
+    ps.settings.subbands[input.blockID.globalSubbandIdx].centralFrequency,
+    ps.settings.subbands[input.blockID.globalSubbandIdx].SAP);
 
-  coherentTransposeKernel->enqueue(blockID);
-  DUMPBUFFER(coherentTransposeBuffers.output, "coherentTransposeBuffers.output.dat");
+  coherentTransposeKernel->enqueue(input.blockID);
 
-  inverseFFT->enqueue(blockID);
-  DUMPBUFFER(inverseFFTShiftBuffers.input, "inverseFFTBuffers.output.dat");
+  inverseFFT->enqueue(input.blockID);
 
-  inverseFFTShiftKernel->enqueue(blockID);
-  DUMPBUFFER(inverseFFTShiftBuffers.output, "inverseFFTShift.output.dat");
+  inverseFFTShiftKernel->enqueue(input.blockID);
 
   if (coherentStokesPPF) {
     // The subbandIdx immediate kernel arg must outlive kernel runs.
-    firFilterKernel->enqueue(blockID,
-      blockID.subbandProcSubbandIdx);
-    finalFFT->enqueue(blockID);
+    firFilterKernel->enqueue(input.blockID,
+      input.blockID.subbandProcSubbandIdx);
+    finalFFT->enqueue(input.blockID);
   }
 
-  DUMPBUFFER(coherentStokesBuffers.input, "coherentStokesBuffers.input.dat");
-  coherentStokesKernel->enqueue(blockID);
+  coherentStokesKernel->enqueue(input.blockID);
+}
+
+
+void BeamFormerCoherentStep::readOutput(BeamFormedData &output)
+{
+  if (nrCoherent(output.blockID) == 0)
+    return;
+
+  output.coherentData.resizeOneDimensionInplace(0, nrCoherent(output.blockID));
+  queue.readBuffer(output.coherentData, *devD, outputCounter, false);
 }
 
 

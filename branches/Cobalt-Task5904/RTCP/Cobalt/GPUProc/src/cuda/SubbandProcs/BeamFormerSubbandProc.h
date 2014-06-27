@@ -83,30 +83,9 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(SubbandProcOutputData &output);
 
+      void logTime();
+
       void printStats();
-
-      void logTime(unsigned nrCoherent, unsigned nrIncoherent);
-
-      // Beamformer specific collection of PerformanceCounters
-      class Counters
-      {
-      public:
-        Counters(gpu::Context &context);
-
-        // gpu transfer counters
-        PerformanceCounter inputsamples;
-
-        PerformanceCounter coherentOutput;
-
-        PerformanceCounter incoherentOutput;
-
-        // Print the mean and std of each performance counter on the logger
-        void printStats();
-
-        void logTime(unsigned nrCoherent, unsigned nrIncoherent);
-      };
-
-      Counters counters;
 
     private:
       // The previously processed SAP/block, or -1 if nothing has been
@@ -128,6 +107,8 @@ namespace LOFAR
       boost::shared_ptr<gpu::DeviceMemory> devC;
       boost::shared_ptr<gpu::DeviceMemory> devD;
       // @}
+
+      PerformanceCounter inputCounter;
 
       std::auto_ptr<BeamFormerPreprocessingStep> preprocessingPart;
       std::auto_ptr<BeamFormerCoherentStep> coherentStep;

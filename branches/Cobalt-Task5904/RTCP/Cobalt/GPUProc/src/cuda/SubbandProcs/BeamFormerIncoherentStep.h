@@ -47,6 +47,9 @@ namespace LOFAR
 {
   namespace Cobalt
   {
+    //# Forward declarations
+    class BeamFormedData;
+
     class BeamFormerIncoherentStep : public ProcessStep
     {
     public:
@@ -74,8 +77,9 @@ namespace LOFAR
 
       gpu::DeviceMemory outputBuffer();
 
-      void process(BlockID blockID,
-        unsigned subband);
+      void process(const SubbandProcInputData &input);
+
+      void readOutput(BeamFormedData &output);
 
       void printStats();
 
@@ -106,6 +110,10 @@ namespace LOFAR
 
       // Incoherent Stokes
       std::auto_ptr<IncoherentStokesKernel> incoherentStokesKernel;
+
+      PerformanceCounter outputCounter;
+
+      size_t nrIncoherent(const BlockID &blockID) const;
     };
   }
 }
