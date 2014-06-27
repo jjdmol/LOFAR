@@ -87,55 +87,45 @@ namespace LOFAR
     beamFormerKernel = std::auto_ptr<BeamFormerKernel>(
       factories.beamFormer.create(queue, *devB, *devA));
 
-    // transpose after beamforming: A -> C/D
-    //
-    // Output buffer: 
-    // 1ch: C
-    // PPF: D
-
+    // transpose after beamforming: A -> C
     coherentTransposeKernel = std::auto_ptr<CoherentStokesTransposeKernel>(
       factories.coherentTranspose.create(
-      queue, *devA, coherentStokesPPF ? devD : devC));
+      queue, *devA, devC));
 
     const size_t nrSamples = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize;
 
-    // inverse FFT: C/D -> C/D (in-place)
+    // inverse FFT: C -> C (in-place)
     inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
       queue, ps.settings.beamFormer.nrHighResolutionChannels,
-      nrSamples, false, coherentStokesPPF ? devD : devC));
+      nrSamples, false, devC));
 
-    // fftshift: C/D -> C/D (in-place)
+    // fftshift: C -> C (in-place)
     inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
       factories.coherentInverseFFTShift.create(
-        queue,
-        coherentStokesPPF ? devD : devC,
-        coherentStokesPPF ? devD : devC));
+        queue, devC, devC));
 
-    // FIR filter: D -> C
-    //
-    // Input buffer:
-    // 1ch: - (no FIR will be done)
-    // PPF: D
-    //
-    // Output buffer:
-    // 1ch: - (no FIR will be done)
-    // PPF: C
     if (coherentStokesPPF) {
+      // FIR filter: C -> D
       firFilterKernel = std::auto_ptr<FIR_FilterKernel>(
-        factories.coherentFirFilter->create(queue, devD, devC));
+        factories.coherentFirFilter->create(queue, devC, devD));
 
-      // final FFT: C -> C (in-place) = firFilterBuffers.output
+      // final FFT: D -> D (in-place) = firFilterBuffers.output
       finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
         queue, ps.settings.beamFormer.coherentSettings.nrChannels,
-        nrSamples, true, devC));
+        nrSamples, true, devD));
     }
 
-    // coherentStokes: C -> D
-    //
-    // 1ch: input comes from inverseFFT in C
-    // Nch: input comes from finalFFT in C
+    // coherentStokes:
+    //    coherentstokesPPF: D -> C
+    //                 else: C -> D
     coherentStokesKernel = std::auto_ptr<CoherentStokesKernel>(
-      factories.coherentStokes.create(queue, devC, devD));
+      factories.coherentStokes.create(queue,
+      coherentStokesPPF ? devD : devC,
+      coherentStokesPPF ? devC : devD));
+  }
+
+  gpu::DeviceMemory BeamFormerCoherentStep::outputBuffer() {
+    return coherentStokesPPF ? devC : devD;
   }
 
 void BeamFormerCoherentStep::logTime()
@@ -221,7 +211,7 @@ void BeamFormerCoherentStep::readOutput(BeamFormedData &output)
     return;
 
   output.coherentData.resizeOneDimensionInplace(0, nrCoherent(output.blockID));
-  queue.readBuffer(output.coherentData, devD, outputCounter, false);
+  queue.readBuffer(output.coherentData, outputBuffer(), outputCounter, false);
 }
 
 

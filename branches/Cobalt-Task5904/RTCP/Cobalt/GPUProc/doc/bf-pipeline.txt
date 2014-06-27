@@ -64,28 +64,28 @@ BeamFormer {I/O: weights}
    |            [channel][sample][tab][pol]             [4096][48][tab][2]  = 3 MiB/TAB             A
    V
 Transpose  
-   |            [tab][pol][sample][channel]             [tab][2][48][4096]  = 3 MiB/TAB             1ch: C
-   |                                                                                                Nch: D
+   |            [tab][pol][sample][channel]             [tab][2][48][4096]  = 3 MiB/TAB             C
+   |
    V
 iFFT-4k {inplace}
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: C
-   |                                                                                                Nch: D
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             C
+   |
    V
 FFT-shift {inplace}
-   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: C
-   |                                                                                                Nch: D
+   |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             C
+   |
    V
 FIR-16 (if >1ch) {I/O: history samples}
    |            [tab][pol][sample]                      [tab][2][196608]    = 3 MiB/TAB             1ch: -
-   |                                                                                                Nch: C
+   |                                                                                                Nch: D
    V
 FFT-16 {inplace} (if >1ch)
    |            [tab][pol][sample][channel]             [tab][2][12288][16] = 3 MiB/TAB             1ch: -
-   |                                                                                                Nch: C
+   |                                                                                                Nch: D
    V
 Coherent Stokes
    |            [tab][stokes][sample][channel]          [tab][4][12288][16] = 0.75 MiB/TAB/Stokes   1ch: D
-   |                                                    (float)                                     Nch: D
+   |                                                    (float)                                     Nch: C
    V
 (output)
 
