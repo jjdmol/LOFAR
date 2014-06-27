@@ -69,7 +69,6 @@ namespace LOFAR
         gpu::Stream &i_queue,
         gpu::Context &context,
         Factories &factories,
-        boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
         boost::shared_ptr<gpu::DeviceMemory> i_devB,
         boost::shared_ptr<gpu::DeviceMemory> i_devC,
@@ -94,7 +93,6 @@ namespace LOFAR
       const bool coherentStokesPPF;
 
       // Data members
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
       boost::shared_ptr<gpu::DeviceMemory> devC;
