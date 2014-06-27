@@ -89,15 +89,9 @@ namespace LOFAR
       // See doc/bf-pipeline.txt
       size_t devA_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
       size_t devB_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
-      size_t devC_size = 1;
-      size_t devD_size = 1;
 
       if (factories.coherentStokes) {
         devA_size = std::max(devA_size,
-          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
-        devC_size = std::max(devC_size,
-          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
-        devD_size = std::max(devD_size,
           factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
       }
 
@@ -112,8 +106,6 @@ namespace LOFAR
       // to the document bf-pipeline.txt in the GPUProc/doc directory.
       devA = devInput->inputSamples;
       devB.reset(new gpu::DeviceMemory(context, devB_size));
-      devC.reset(new gpu::DeviceMemory(context, devC_size));
-      devD.reset(new gpu::DeviceMemory(context, devD_size));
 
       //################################################
       // Create objects containing the kernel and device buffers
@@ -124,7 +116,7 @@ namespace LOFAR
       if (factories.coherentStokes) {
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
           new BeamFormerCoherentStep(parset, queue, context, *factories.coherentStokes,
-          devA, devB, devC, devD));
+          devA, devB));
       }
 
       if (factories.incoherentStokes) {

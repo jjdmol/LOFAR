@@ -104,8 +104,6 @@ namespace LOFAR
       // GPUProc/doc.
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devC;
-      boost::shared_ptr<gpu::DeviceMemory> devD;
       // @}
 
       PerformanceCounter inputCounter;

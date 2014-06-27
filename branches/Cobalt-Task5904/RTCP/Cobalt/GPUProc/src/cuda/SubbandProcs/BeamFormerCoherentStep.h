@@ -71,9 +71,7 @@ namespace LOFAR
         gpu::Context &context,
         Factories &factories,
         boost::shared_ptr<gpu::DeviceMemory> i_devA,
-        boost::shared_ptr<gpu::DeviceMemory> i_devB,
-        boost::shared_ptr<gpu::DeviceMemory> i_devC,
-        boost::shared_ptr<gpu::DeviceMemory> i_devD);
+        boost::shared_ptr<gpu::DeviceMemory> i_devB);
 
 
 
@@ -97,8 +95,8 @@ namespace LOFAR
       // Data members
       boost::shared_ptr<gpu::DeviceMemory> devA;
       boost::shared_ptr<gpu::DeviceMemory> devB;
-      boost::shared_ptr<gpu::DeviceMemory> devC;
-      boost::shared_ptr<gpu::DeviceMemory> devD;
+      gpu::DeviceMemory devC;
+      gpu::DeviceMemory devD;
 
       // Kernel members
       std::auto_ptr<BeamFormerKernel> beamFormerKernel;
