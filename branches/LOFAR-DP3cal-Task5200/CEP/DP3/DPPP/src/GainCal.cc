@@ -296,10 +296,14 @@ namespace LOFAR {
 
         simulate(itsPhaseRef, itsPatchList[dr], nSt, nBl, nCh, cr_baseline,
                  cr_freq, cr_uvw_split, cr_model);
-        applyBeam(time, itsPatchList[dr]->position(), itsApplyBeam,
-                  info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
-                  refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
-                  storage.measConverter);
+
+        for(size_t i = 0; i < itsPatchList[dr]->nComponents(); ++i)
+        { // Apply beam for every source, not only once per patch
+          applyBeam(time, itsPatchList[dr]->component(i)->position(), itsApplyBeam,
+                    info().chanFreqs(), &(itsThreadStorage[thread].model_patch[0]),
+                    refdir, tiledir, &(itsThreadStorage[thread].beamvalues[0]),
+                    storage.measConverter);
+        }
 
         for (size_t i=0; i<itsThreadStorage[thread].model_patch.size();++i) {
           itsThreadStorage[thread].model[i]+=
