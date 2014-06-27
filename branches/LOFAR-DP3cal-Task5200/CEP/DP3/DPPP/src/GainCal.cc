@@ -469,6 +469,8 @@ namespace LOFAR {
         fillMatricesUnpol(model,data,weight,flag);
       }
 
+      vector<double> dgs;
+
       itsTimerSolve.start();
       double f2 = -1.0;
       double f3 = -0.5;
@@ -656,8 +658,8 @@ namespace LOFAR {
           fronormg=sqrt(fronormg);
 
           dg = fronormdiff/fronormg;
-          if (itsDebugLevel>3) {
-            cout<<"dg="<<dg<<endl;
+          if (itsDebugLevel>1) {
+            dgs.push_back(dg);
           }
 
           if (dg <= itsTolerance) {
@@ -737,7 +739,14 @@ namespace LOFAR {
       }
 
       if (itsDebugLevel>1) {
-        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg="<<dg<<endl;
+        cout<<"t: "<<itsTStep<<", iter:"<<iter<<", dg=[";
+        if (dgs.size()>0) {
+          cout<<dgs[0];
+        }
+        for (uint i=1;i<dgs.size();++i) {
+          cout<<","<<dgs[i];
+        }
+        cout<<"]"<<endl;
       }
 
       if (nSt>0) {
@@ -759,7 +768,7 @@ namespace LOFAR {
       // Let's save G...
       itsSols.push_back(iS.g.copy());
 
-      if (itsDebugLevel>2) {
+      if (itsDebugLevel>3) {
         cout<<"g="<<iS.g<<endl;
       }
 
