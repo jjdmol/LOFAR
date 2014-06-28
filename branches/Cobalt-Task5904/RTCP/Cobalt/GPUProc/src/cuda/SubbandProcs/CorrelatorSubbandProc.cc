@@ -63,19 +63,25 @@ namespace LOFAR
       correlatorPPF(ps.settings.correlator.nrChannels > 1),
       prevBlock(-1),
       prevSAP(-1),
-      devA(context, factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
+      devA(context, 
+        correlatorPPF ? factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)
+                      : std::max(factories.delayAndBandPass.bufferSize(DelayAndBandPassKernel::INPUT_DATA),
+                                 factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))),
       devB(context,
-        std::max(factories.delayAndBandPass.bufferSize(
-                   DelayAndBandPassKernel::INPUT_DATA),
-                 factories.correlator.bufferSize(
-                   CorrelatorKernel::OUTPUT_DATA))),
+        correlatorPPF ? std::max(factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
+                                 factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
+                      : factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
 
       // Delay and Bandpass
-      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, devB, devA)),
+      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, 
+        correlatorPPF ? devB : devA,
+        correlatorPPF ? devA : devB)),
 
       // Correlator
       //correlatorBuffers(*devInput.inputSamples, devFilteredData),
-      correlatorKernel(factories.correlator.create(queue, devA, devB)),
+      correlatorKernel(factories.correlator.create(queue,
+        correlatorPPF ? devA : devB,
+        correlatorPPF ? devB : devA)),
 
       // Buffers for long-time integration
       integratedData(nrSubbandsPerSubbandProc)
@@ -313,10 +319,7 @@ namespace LOFAR
 
       // ***************************************************
       // Copy data to the GPU 
-      // If #ch/sb==1, copy the input to the device buffer where the
-      // DelayAndBandPass kernel reads from.
-      queue.writeBuffer(
-        correlatorPPF ? devA : devB, input.inputSamples, counters.samples, true);
+      queue.writeBuffer(devA, input.inputSamples, counters.samples, true);
    
       if (ps.settings.delayCompensation.enabled) {
         const unsigned SAP = ps.settings.subbands[subband].SAP;
@@ -374,7 +377,7 @@ namespace LOFAR
       queue.synchronize();
 
       // Read data back from the kernel
-      queue.readBuffer(output, devB, counters.visibilities, true);
+      queue.readBuffer(output, correlatorPPF ? devB : devA, counters.visibilities, true);
 
       // ************************************************
       // Perform performance statistics if needed

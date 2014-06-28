@@ -25,8 +25,8 @@ Note:
 
 Flow:           Data dimensions:                        Max size (fcomplex):                        Buffer:
 ===================================================================================================================
-(input)         [station][sample][pol]                  [80][196608][2]     = 120 MiB               1ch: B
-   |                                                    (i16complex)                                Nch: A
+(input)         [station][sample][pol]                  [80][196608][2]     = 120 MiB               A
+   |
    V
   FIR (if >1ch) {IntToFloat} {I/O: history samples}
    |            [station][pol][sample]                  [80][2][196608]     = 240 MiB               Nch: B
@@ -35,15 +35,15 @@ Flow:           Data dimensions:                        Max size (fcomplex):    
    |            [station][pol][sample][channel]         [80][2][3072][64]   = 240 MiB               Nch: B
    V
 Delay compensation + Band pass + Transpose {I/O: delays}
-   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               A
-   V
+   |            [station][channel][sample][pol]         [80][64][3072][2]   = 240 MiB               1ch: B
+   V                                                                                                Nch: A
 Correlator
-   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               B
-   V
+   |            [baseline][channel][pol][pol]           [3240][64][2][2]    =   6 MiB               1ch: A
+   V                                                                                                Nch: B
 (output)
 
 
     1ch        Nch
-A = 240 MiB    240 MiB
-B = 120 MiB    240 MiB
+A = 120 MiB    240 MiB
+B = 240 MiB    240 MiB
 
