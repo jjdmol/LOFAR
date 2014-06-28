@@ -32,25 +32,6 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    /* The data travels as follows:
-     *
-     *              > 1 channel/subband                  1 channel/subband
-     *            ----------------------               ---------------------
-     * [input]  -> devInput.inputSamples            -> devFilteredData
-     *             -> firFilterKernel
-     *          -> devFilteredData
-     *             -> fftKernel
-     *          -> devFilteredData
-     *             -> delayAndBandPassKernel           -> delayAndBandPassKernel
-     *          -> devInput.inputSamples            -> devInput.inputSamples
-     *             -> correlatorKernel                 -> correlatorKernel
-     *          -> devFilteredData                  -> devFilteredData
-     * [output] <- = visibilities                   <- = visibilities
-     *
-     * For #channels/subband == 1, skip the FIR and FFT kernels,
-     * and provide the input in devFilteredData.
-     */
-
     CorrelatedDataHostBuffer::CorrelatedDataHostBuffer(
       unsigned nrStations, unsigned nrChannels,
       unsigned maxNrValidSamples, gpu::Context &context)
@@ -82,23 +63,19 @@ namespace LOFAR
       correlatorPPF(ps.settings.correlator.nrChannels > 1),
       prevBlock(-1),
       prevSAP(-1),
-      devInput(
-        factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA),
-        context),
-      devFilteredData(
-        context,
+      devA(context, factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
+      devB(context,
         std::max(factories.delayAndBandPass.bufferSize(
                    DelayAndBandPassKernel::INPUT_DATA),
                  factories.correlator.bufferSize(
                    CorrelatorKernel::OUTPUT_DATA))),
 
       // Delay and Bandpass
-      delayAndBandPassKernel(
-        factories.delayAndBandPass.create(queue, devFilteredData, *devInput.inputSamples)),
+      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, devB, devA)),
 
       // Correlator
       //correlatorBuffers(*devInput.inputSamples, devFilteredData),
-      correlatorKernel(factories.correlator.create(queue, *devInput.inputSamples, devFilteredData)),
+      correlatorKernel(factories.correlator.create(queue, devA, devB)),
 
       // Buffers for long-time integration
       integratedData(nrSubbandsPerSubbandProc)
@@ -107,10 +84,10 @@ namespace LOFAR
     {
       if (correlatorPPF) {
         // FIR filter
-        firFilterKernel = factories.firFilter->create(queue, *devInput.inputSamples, devFilteredData);
+        firFilterKernel = factories.firFilter->create(queue, devA, devB);
 
         // FFT
-        fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devFilteredData);
+        fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devB);
       }
 
       // put enough objects in the outputPool to operate
@@ -338,12 +315,8 @@ namespace LOFAR
       // Copy data to the GPU 
       // If #ch/sb==1, copy the input to the device buffer where the
       // DelayAndBandPass kernel reads from.
-      if (correlatorPPF)
-        queue.writeBuffer(
-          *devInput.inputSamples, input.inputSamples, counters.samples, true);
-      else
-        queue.writeBuffer(
-          devFilteredData, input.inputSamples, counters.samples, true);
+      queue.writeBuffer(
+        correlatorPPF ? devA : devB, input.inputSamples, counters.samples, true);
    
       if (ps.settings.delayCompensation.enabled) {
         const unsigned SAP = ps.settings.subbands[subband].SAP;
@@ -401,7 +374,7 @@ namespace LOFAR
       queue.synchronize();
 
       // Read data back from the kernel
-      queue.readBuffer(output, devFilteredData, counters.visibilities, true);
+      queue.readBuffer(output, devB, counters.visibilities, true);
 
       // ************************************************
       // Perform performance statistics if needed

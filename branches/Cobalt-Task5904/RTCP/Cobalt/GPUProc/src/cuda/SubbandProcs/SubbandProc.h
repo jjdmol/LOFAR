@@ -51,23 +51,6 @@ namespace LOFAR
     class SubbandProcInputData
     {
     public:
-
-      // The set of GPU buffers to link our host buffers to.
-      // Device buffers may be reused between different pairs of kernels,
-      // since device memory size is a concern.
-      struct DeviceBuffers
-      {
-        // We don't have tabDelays here, as it is only for bf.
-        // It is transferred to devBeamFormerDelays declared in the bf SubbandProc,
-        // similar to the bandpass correction and FIR filter weights (also not here).
-        boost::shared_ptr<gpu::DeviceMemory> inputSamples;
-
-        DeviceBuffers(size_t inputSamplesSize, gpu::Context &context) :
-          inputSamples(new gpu::DeviceMemory(context, inputSamplesSize))
-        {
-        }
-      };
-
       // Which block this InputData represents
       struct BlockID blockID;
 

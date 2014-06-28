@@ -99,12 +99,9 @@ namespace LOFAR
         /* buffers of the preprocessing step are big enough */
       }
 
-      devInput.reset(new SubbandProcInputData::DeviceBuffers(
-        devA_size, context));
-
       // NOTE: For an explanation of the different buffers being used, please refer
       // to the document bf-pipeline.txt in the GPUProc/doc directory.
-      devA = devInput->inputSamples;
+      devA.reset(new gpu::DeviceMemory(context, devA_size));
       devB.reset(new gpu::DeviceMemory(context, devB_size));
 
       //################################################
@@ -179,8 +176,7 @@ namespace LOFAR
 
       //****************************************
       // Send inputs to GPU
-      queue.writeBuffer(*devInput->inputSamples, input.inputSamples,
-        inputCounter, true);
+      queue.writeBuffer(*devA, input.inputSamples, inputCounter, true);
 
       // Some additional buffers
       // Only upload delays if they changed w.r.t. the previous subband.

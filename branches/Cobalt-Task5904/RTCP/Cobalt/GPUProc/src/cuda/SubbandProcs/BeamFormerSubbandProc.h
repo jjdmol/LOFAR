@@ -94,10 +94,6 @@ namespace LOFAR
       ssize_t prevBlock;
       signed int prevSAP;
 
-      // Raw buffers, these are mapped with boost multiarrays 
-      // in the InputData class
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> devInput;
-
       // @{
       // Device memory buffers. These buffers are used interleaved. For details,
       // please refer to the document bf-pipeline.txt in the directory

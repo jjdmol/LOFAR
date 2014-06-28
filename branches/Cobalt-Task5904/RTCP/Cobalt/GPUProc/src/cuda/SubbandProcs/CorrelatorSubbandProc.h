@@ -175,10 +175,8 @@ namespace LOFAR
       ssize_t prevBlock;
       signed int prevSAP;
 
-      // Raw buffers, these are mapped with boost multiarrays 
-      // in the InputData class
-      SubbandProcInputData::DeviceBuffers devInput;      
-      gpu::DeviceMemory devFilteredData;
+      gpu::DeviceMemory devA;      
+      gpu::DeviceMemory devB;
 
       /*
        * Kernels
