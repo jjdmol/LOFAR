@@ -72,17 +72,6 @@ namespace LOFAR
                                  factories.correlator.bufferSize(CorrelatorKernel::OUTPUT_DATA))
                       : factories.correlator.bufferSize(CorrelatorKernel::INPUT_DATA)),
 
-      // Delay and Bandpass
-      delayAndBandPassKernel(factories.delayAndBandPass.create(queue, 
-        correlatorPPF ? devB : devA,
-        correlatorPPF ? devA : devB)),
-
-      // Correlator
-      //correlatorBuffers(*devInput.inputSamples, devFilteredData),
-      correlatorKernel(factories.correlator.create(queue,
-        correlatorPPF ? devA : devB,
-        correlatorPPF ? devB : devA)),
-
       // Buffers for long-time integration
       integratedData(nrSubbandsPerSubbandProc)
 
@@ -95,6 +84,17 @@ namespace LOFAR
         // FFT
         fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true, devB);
       }
+
+      // Delay and Bandpass
+      delayAndBandPassKernel = std::auto_ptr<DelayAndBandPassKernel>(factories.delayAndBandPass.create(queue, 
+        correlatorPPF ? devB : devA,
+        correlatorPPF ? devA : devB));
+
+      // Correlator
+      correlatorKernel = std::auto_ptr<CorrelatorKernel>(factories.correlator.create(queue,
+        correlatorPPF ? devA : devB,
+        correlatorPPF ? devB : devA));
+
 
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
@@ -113,20 +113,6 @@ namespace LOFAR
                                                     ps.integrationSteps(),
                                                     context));
       }
-
-      //// CPU timers are set by CorrelatorPipeline
-      //addTimer("CPU - read input");
-      //addTimer("CPU - process");
-      //addTimer("CPU - postprocess");
-      //addTimer("CPU - total");
-
-      //// GPU timers are set by us
-      //addTimer("GPU - total");
-      //addTimer("GPU - input");
-      //addTimer("GPU - output");
-      //addTimer("GPU - compute");
-      //addTimer("GPU - wait");
-
     }
 
     CorrelatorSubbandProc::~CorrelatorSubbandProc()
@@ -149,17 +135,9 @@ namespace LOFAR
 
     CorrelatorSubbandProc::Counters::Counters(gpu::Context &context)
       :
-    fir(context),
-    fft(context),
-    delayBp(context),
-    correlator(context),
     samples(context),
     visibilities(context)
     {}
-
-    void CorrelatorSubbandProc::Counters::printStats()
-    {     
-    }
 
     void CorrelatorSubbandProc::Flagger::propagateFlags(
       Parset const &parset,

@@ -151,18 +151,9 @@ namespace LOFAR
       public:
         Counters(gpu::Context &context);
 
-        // gpu kernel counters
-        PerformanceCounter fir;
-        PerformanceCounter fft;
-        PerformanceCounter delayBp;
-        PerformanceCounter correlator;
-
         // gpu transfer counters
         PerformanceCounter samples;
         PerformanceCounter visibilities;
-
-        // Print the mean and std of each performance counter on the logger
-        void printStats();
       };
 
       Counters counters;
