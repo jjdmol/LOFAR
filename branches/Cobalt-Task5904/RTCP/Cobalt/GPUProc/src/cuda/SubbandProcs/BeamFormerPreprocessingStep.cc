@@ -50,13 +50,11 @@ namespace LOFAR
       gpu::Stream &i_queue,
       gpu::Context &context,
       Factories &factories,
-      boost::shared_ptr<SubbandProcInputData::DeviceBuffers> i_devInput,
       boost::shared_ptr<gpu::DeviceMemory> i_devA,
       boost::shared_ptr<gpu::DeviceMemory> i_devB)
       :
       ProcessStep(parset, i_queue)
     {
-      devInput=i_devInput;
       devA=i_devA;
       devB=i_devB;
       initMembers(context, factories);
@@ -73,7 +71,7 @@ namespace LOFAR
          ps.settings.beamFormer.nrDelayCompensationChannels) > 1;
 
       intToFloatKernel = std::auto_ptr<IntToFloatKernel>(
-        factories.intToFloat.create(queue, *devInput->inputSamples, *devB));
+        factories.intToFloat.create(queue, *devA, *devB));
 
       // FFTShift: B -> B
       firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(

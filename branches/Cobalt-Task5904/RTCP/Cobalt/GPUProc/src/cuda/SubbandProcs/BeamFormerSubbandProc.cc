@@ -111,7 +111,7 @@ namespace LOFAR
       // Create objects containing the kernel and device buffers
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
         new BeamFormerPreprocessingStep(parset, queue, context, factories.preprocessing, 
-        devInput, devA, devB));
+        devA, devB));
 
       if (factories.coherentStokes) {
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
