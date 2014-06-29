@@ -20,30 +20,31 @@
 
 #include <lofar_config.h>
 
-#include <map>
+#include "BeamFormerPipeline.h"
+
 #include <vector>
 #include <string>
 #include <iomanip>
 #include <boost/format.hpp>
 
-#include "BeamFormerPipeline.h"
-
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
+#include <ApplCommon/PVSSDatapointDefs.h>
 
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Stream.h>
 #include <GPUProc/SubbandProcs/BeamFormerSubbandProc.h>
 #include <GPUProc/gpu_wrapper.h>
 #include <GPUProc/gpu_utils.h>
-
-using boost::format;
-using namespace std;
+#include <GPUProc/global_defines.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
+    using namespace std;
+    using boost::format;
+
     static TABTranspose::MultiSender::HostMap hostMap(const Parset &ps, const vector<size_t> &subbandIndices, int hostID)
     {
       TABTranspose::MultiSender::HostMap hostMap;
@@ -95,19 +96,24 @@ namespace LOFAR
 
     BeamFormerPipeline::BeamFormerPipeline(const Parset &ps, 
          const std::vector<size_t> &subbandIndices, 
-         Pool<struct MPIRecvData> &pool,
          const std::vector<gpu::Device> &devices, 
+         Pool<struct MPIRecvData> &pool,
+         RTmetadata &mdLogger, const std::string &mdKeyPrefix,
          int hostID)
       :
-      Pipeline(ps, subbandIndices, devices, pool),
+      Pipeline(ps, subbandIndices, devices, pool, mdLogger, mdKeyPrefix),
       // Each work queue needs an output element for each subband it processes, because the GPU output can
       // be in bulk: if processing is cheap, all subbands will be output right after they have been received.
       //
       // Allow queue to drop items older than 3 seconds.
-      multiSender(hostMap(ps, subbandIndices, hostID), ps.realTime(), 3.0),
+      multiSender(hostMap(ps, subbandIndices, hostID), ps,
+                  mdLogger, mdKeyPrefix, 3.0),
       factories(ps, nrSubbandsPerSubbandProc)
     {
       ASSERT(ps.settings.beamFormer.enabled);
+
+      // Write data point(s) for monitoring (PVSS).
+      itsMdLogger.log(itsMdKeyPrefix + PN_CGP_DATA_PRODUCT_TYPE, "Beamformed");
     }
 
     void BeamFormerPipeline::allocateResources()

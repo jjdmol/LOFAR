@@ -611,8 +611,13 @@ namespace LOFAR
       unsigned bytesPerBlock = itsBlockSize * sizeof(T);  
 
       // fill in zeroes for lost blocks
-      if (itsNextSeqNr < seqNr)
+      if (itsNextSeqNr < seqNr) {
         itsFile.skip((seqNr - itsNextSeqNr) * bytesPerBlock);
+
+        // the write below can throw, so record that we've
+        // skipped this far to prevent skipping twice.
+        itsNextSeqNr = seqNr;
+      }
 
       // make sure we skip |2 in the highest dimension
       itsFile.write(sdata->samples.origin(), bytesPerBlock);

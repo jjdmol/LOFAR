@@ -27,9 +27,9 @@
 
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 
 #include <fstream>
 #include <algorithm>

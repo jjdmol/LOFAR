@@ -21,9 +21,10 @@
 #include <lofar_config.h>
 
 #include "FIR_FilterKernel.h"
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
@@ -70,7 +71,9 @@ namespace LOFAR
 
     unsigned FIR_FilterKernel::Parameters::nrBytesPerComplexSample() const
     {
-      return 2 * nrBitsPerSample / 8;
+      return inputIsStationData
+               ? 2 * nrBitsPerSample / 8
+               : sizeof(std::complex<float>);
     }
 
     unsigned FIR_FilterKernel::Parameters::nrHistorySamples() const
@@ -92,7 +95,7 @@ namespace LOFAR
       setArg(3, buffers.historySamples);
 
       unsigned totalNrThreads = params.nrChannels * NR_POLARIZATIONS * 2;
-      unsigned nrPasses = (totalNrThreads + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
+      unsigned nrPasses = ceilDiv(totalNrThreads, maxThreadsPerBlock);
 
       setEnqueueWorkSizes( gpu::Grid(totalNrThreads, params.nrSTABs),
                            gpu::Block(totalNrThreads / nrPasses, 1) );
@@ -183,10 +186,7 @@ namespace LOFAR
         return
           (size_t) itsParameters.nrSubbands *
             itsParameters.nrHistorySamples() * itsParameters.nrSTABs * 
-            NR_POLARIZATIONS *
-            (itsParameters.inputIsStationData
-             ? itsParameters.nrBytesPerComplexSample()
-             : sizeof(std::complex<float>));
+            NR_POLARIZATIONS * itsParameters.nrBytesPerComplexSample();
       default:
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
       }

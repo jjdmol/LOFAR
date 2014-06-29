@@ -78,9 +78,9 @@ namespace LOFAR
 # else
       unsigned nrBlocks = ps.nrBaselines();
 # endif
-      unsigned nrPasses = (nrBlocks + maxNrThreads - 1) / maxNrThreads;
-      unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
-      nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
+      unsigned nrPasses = ceilDiv(nrBlocks, maxNrThreads);
+      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
+      nrThreads = align(nrThreads, preferredMultiple);
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
       unsigned nrUsableChannels = std::max(ps.nrChannelsPerSubband() - 1, 1U);

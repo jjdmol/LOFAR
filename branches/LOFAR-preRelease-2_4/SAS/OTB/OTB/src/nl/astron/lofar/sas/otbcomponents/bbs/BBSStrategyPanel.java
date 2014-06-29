@@ -309,7 +309,6 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
      * @param aNode  the node to be displayed
      */
     private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
-        // OLAP_HW settings
         if (aParam==null) {
             return;
         }

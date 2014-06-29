@@ -22,10 +22,10 @@
 
 #include "DelayAndBandPassKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
@@ -47,6 +47,9 @@ namespace LOFAR
     DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps, bool correlator) :
       nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
+      inputIsStationData(correlator && ps.settings.correlator.nrChannels == 1
+                                    ? true
+                                    : false),
 
       nrChannels(correlator ? ps.settings.correlator.nrChannels
                             : ps.settings.beamFormer.nrDelayCompensationChannels),
@@ -78,7 +81,9 @@ namespace LOFAR
 
 
     unsigned DelayAndBandPassKernel::Parameters::nrBytesPerComplexSample() const {
-      return 2 * nrBitsPerSample / 8;
+      return inputIsStationData
+               ? 2 * nrBitsPerSample / 8
+               : sizeof(std::complex<float>);
     }
 
 
@@ -115,7 +120,7 @@ namespace LOFAR
       
       size_t nrSamples = (size_t)params.nrStations * params.nrChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS;
       nrOperations = nrSamples * 12;
-      nrBytesRead = nrBytesWritten = nrSamples * sizeof(std::complex<float>);
+      nrBytesRead = nrBytesWritten = nrSamples * params.nrBytesPerComplexSample();
 
       // Initialise bandpass correction weights
       if (params.correctBandPass)
@@ -142,15 +147,9 @@ namespace LOFAR
     {
       switch (bufferType) {
       case DelayAndBandPassKernel::INPUT_DATA: 
-        if (itsParameters.nrChannels == 1)
-          return 
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-              itsParameters.nrSamplesPerSubband() *
-              itsParameters.nrBytesPerComplexSample();
-        else
-          return 
-            (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
-              itsParameters.nrSamplesPerSubband() * sizeof(std::complex<float>);
+        return 
+          (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
+            itsParameters.nrSamplesPerSubband() * itsParameters.nrBytesPerComplexSample();
       case DelayAndBandPassKernel::OUTPUT_DATA:
         return
           (size_t) itsParameters.nrStations * NR_POLARIZATIONS * 
@@ -180,6 +179,9 @@ namespace LOFAR
       defs["NR_BITS_PER_SAMPLE"] =
         lexical_cast<string>(itsParameters.nrBitsPerSample);
 
+      if (itsParameters.inputIsStationData)
+        defs["INPUT_IS_STATIONDATA"] = "1";
+
       defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
       defs["NR_SAMPLES_PER_CHANNEL"] = 
         lexical_cast<string>(itsParameters.nrSamplesPerChannel);
@@ -191,17 +193,14 @@ namespace LOFAR
       defs["NR_SAPS"] =
         lexical_cast<string>(itsParameters.nrSAPs);
 
-      if (itsParameters.delayCompensation) {
+      if (itsParameters.delayCompensation)
         defs["DELAY_COMPENSATION"] = "1";
-      }
 
-      if (itsParameters.correctBandPass) {
+      if (itsParameters.correctBandPass)
         defs["BANDPASS_CORRECTION"] = "1";
-      }
 
-      if (itsParameters.transpose) {
+      if (itsParameters.transpose)
         defs["DO_TRANSPOSE"] = "1";
-      }
 
       return defs;
     }

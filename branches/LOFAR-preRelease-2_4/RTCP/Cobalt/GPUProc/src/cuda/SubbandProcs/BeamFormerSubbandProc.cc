@@ -86,64 +86,70 @@ namespace LOFAR
       prevBlock(-1),
       prevSAP(-1)
     {
-      // NOTE: Make sure the history samples are dealt with properly until the
-      // FIR, which the beam former does in a later stage!
+      // See doc/bf-pipeline.txt
+      size_t devA_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
+      size_t devB_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
+      size_t devC_size = 1;
+      size_t devD_size = 1;
+
+      if (factories.coherentStokes) {
+        devA_size = std::max(devA_size,
+          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
+        devC_size = std::max(devC_size,
+          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
+        devD_size = std::max(devD_size,
+          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA));
+      }
+
+      if (factories.incoherentStokes) {
+        /* buffers of the preprocessing step are big enough */
+      }
+
       devInput.reset(new SubbandProcInputData::DeviceBuffers(
-        std::max(
-        factories.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA),
-        factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)),
-        factories.delayCompensation.bufferSize(
+        devA_size,
+        factories.preprocessing.delayCompensation.bufferSize(
         DelayAndBandPassKernel::DELAYS),
-        factories.delayCompensation.bufferSize(
+        factories.preprocessing.delayCompensation.bufferSize(
         DelayAndBandPassKernel::PHASE_ZEROS),
         context));
 
       // NOTE: For an explanation of the different buffers being used, please refer
       // to the document bf-pipeline.txt in the GPUProc/doc directory.
       devA = devInput->inputSamples;
-      devB.reset(
-        new gpu::DeviceMemory(
-          context,
-          factories.beamFormer.bufferSize(BeamFormerKernel::INPUT_DATA)));
-      devC.reset(
-        new gpu::DeviceMemory(
-          context,
-          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)));
-      devD.reset(
-        new gpu::DeviceMemory(
-          context,
-          factories.beamFormer.bufferSize(BeamFormerKernel::OUTPUT_DATA)));
+      devB.reset(new gpu::DeviceMemory(context, devB_size));
+      devC.reset(new gpu::DeviceMemory(context, devC_size));
+      devD.reset(new gpu::DeviceMemory(context, devD_size));
       devE = devInput->inputSamples;
 
       // Null buffer for unused parts of the pipeline
       devNull.reset(new gpu::DeviceMemory(context, 1));
 
-      // TODO: support >1 SAP
-      devBeamFormerDelays.reset(new gpu::DeviceMemory(context,
-        factories.beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)));
-
       //################################################
       // Create objects containing the kernel and device buffers
       preprocessingPart = std::auto_ptr<BeamFormerPreprocessingStep>(
-        new BeamFormerPreprocessingStep(parset, queue, context, factories, 
+        new BeamFormerPreprocessingStep(parset, queue, context, factories.preprocessing, 
         devInput, devA, devB, devNull));
 
-      // Only create the parts actually needed prevents possible checks
-      // that are not used anyways
-      if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+      if (factories.coherentStokes) {
+        devBeamFormerDelays.reset(new gpu::DeviceMemory(context,
+          factories.coherentStokes->beamFormer.bufferSize(BeamFormerKernel::BEAM_FORMER_DELAYS)));
+
         coherentStep = std::auto_ptr<BeamFormerCoherentStep>(
-          new BeamFormerCoherentStep(parset, queue, context, factories,       
-          devInput, devA, devB, devC, devD, devBeamFormerDelays, devNull));
-      if (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP())
+          new BeamFormerCoherentStep(parset, queue, context, *factories.coherentStokes,
+          devInput, devA, devB, devC, devD, devBeamFormerDelays));
+      }
+
+      if (factories.incoherentStokes) {
         incoherentStep = std::auto_ptr<BeamFormerIncoherentStep>(
-          new BeamFormerIncoherentStep(parset, queue, context, factories, 
-              devInput, devA, devB, devC, devD, devE, devNull));
+          new BeamFormerIncoherentStep(parset, queue, context, *factories.incoherentStokes, 
+              devInput, devA, devB));
+      }
 
 
       LOG_INFO_STR("Running coherent pipeline: " 
-        << (ps.settings.beamFormer.maxNrCoherentTABsPerSAP() > 0 ? "yes" : "no")  
+        << (coherentStep.get() ? "yes" : "no")  
         << ", incoherent pipeline: " 
-        << (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP() > 0 ? "yes" : "no"));
+        << (incoherentStep.get() ? "yes" : "no"));
       
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i)
@@ -178,9 +184,9 @@ namespace LOFAR
     void BeamFormerSubbandProc::printStats()
     {
       preprocessingPart->printStats();
-      if (ps.settings.beamFormer.maxNrCoherentTABsPerSAP())
+      if (coherentStep.get())
         coherentStep->printStats();
-      if (ps.settings.beamFormer.maxNrIncoherentTABsPerSAP())
+      if (incoherentStep.get())
         incoherentStep->printStats();
       counters.printStats();
     }
@@ -236,8 +242,12 @@ namespace LOFAR
             input.phase0s, false);
         }
 
-        // Upload the new beamformerDelays (pointings) to the GPU 
-        queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
+        if (nrCoherent > 0) {
+          ASSERT(devBeamFormerDelays.get());
+
+          // Upload the new beamformerDelays (pointings) to the GPU 
+          queue.writeBuffer(*devBeamFormerDelays, input.tabDelays, false);
+        }
 
         prevSAP = SAP;
         prevBlock = block;
@@ -250,6 +260,8 @@ namespace LOFAR
 
       if (nrCoherent > 0)
       {
+        ASSERT(coherentStep.get());
+
         coherentStep->process(input.blockID, subband);
 
         // Reshape output to only read nrCoherent TABs
@@ -262,6 +274,8 @@ namespace LOFAR
 
       if (nrIncoherent > 0)
       {
+        ASSERT(incoherentStep.get());
+
         incoherentStep->process(input.blockID, subband);
 
         // Reshape output to only read nrIncoherent TABs

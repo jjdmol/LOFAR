@@ -7,7 +7,6 @@ KV3: IntegerValue=125000
 KV4: DoubleValue=57566757.000124998391
 KV5: FloatValue=5.756676e+07
 KV6: TimeTValue=1373614941
-KV7: IntVectorValue=[5,78,32,39,5003]
 
 --- Testing constructors with timestamp ---
 >>>KVT0: stringValue{1373614941.134670019}=aap noot mies<<<
@@ -17,7 +16,6 @@ KV7: IntVectorValue=[5,78,32,39,5003]
 >>>KVT4: DoubleValue{1373614941.134732962}=57566757.000124998391<<<
 >>>KVT5: FloatValue{1373614941.134749889}=5.756676e+07<<<
 >>>KVT6: TimeTValue{1373614941.134763002}=1373614941<<<
->>>KVT7: IntVectorValue{1373614941.134780884}=[5,78,32,39,5003]<<<
 
 --- Testing copy and assignment operators ---
 

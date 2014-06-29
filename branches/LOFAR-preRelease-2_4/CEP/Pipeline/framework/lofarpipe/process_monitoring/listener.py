@@ -12,8 +12,10 @@ class Listener(Thread):
         parentpid = self.config['parentpid']
         sock_fname  = self.config['sock_fname']
         self.sockname = sock_fname.format(parentpid)
-        self.config.add_item('obspids',set())
+        self.config.add_item('obspids', set())
         self.config.add_item('pidnames', dict())
+        self.config.add_item('stoppedpids', set())
+        self.config.add_item('startpids', set())
         self.running = True
         
         try:
@@ -35,6 +37,7 @@ class Listener(Thread):
             self.s.listen(10)
             con, addr = self.s.accept()
             cmd = con.recv(80)
+            print cmd
             self.__command(cmd)
             con.close()
             
@@ -49,18 +52,17 @@ class Listener(Thread):
         executable name followed by an int (the pid). If 'del' 
         and int, remove it from list. Send stop to stop the listener theread
         No exception handling yet"""
+        scmd = cmd.split()
         try:
-            scmd = cmd.split()
             ccmd = int(scmd[1])
-        except ValueError:
-            cs = cmd.split()
-            if cs[0].strip().lower() == "del":
-                self.config['obspids'].remove(int(cs[1].strip()))
-                del(self.config['pidnames'][int(cs[1].strip())])
         except IndexError:
             if "stop" in cmd.lower():
                 self.config['stop'] = True
                 self.__stop()
         else:
-            self.config['obspids'].add(ccmd)
-            self.config['pidnames'][ccmd] = scmd[0]
+            if scmd[0].strip().lower() == "del":
+                self.config['stoppedpids'].add(ccmd)
+            else:
+                print ccmd
+                self.config['startpids'].add(ccmd)               
+                self.config['pidnames'][ccmd] = scmd[0]

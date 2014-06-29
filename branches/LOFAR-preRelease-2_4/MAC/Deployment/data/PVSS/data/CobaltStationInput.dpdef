@@ -1,10 +1,12 @@
-# These keys must be set _per_ antenna field.
+# These keys must be set _per_ antenna field. The antenna field designation
+# goes into the PVSS "data type" (the log key prefix, not the types listed here).
 
-# Name of the CobaltNode (CBT001).
+# Name of the Cobalt node (e.g. "cbt001").
 Node			string
 
-# CPU number
+# CPU number (e.g. on a dual socket node, this is 0 or 1)
 CPU			int
+
 # Observation ID as string.
 observationName		string
 

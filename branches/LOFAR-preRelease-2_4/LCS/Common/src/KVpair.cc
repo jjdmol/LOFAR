@@ -32,6 +32,8 @@
 
 namespace LOFAR {
 
+using std::pair;
+
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
 		timestamp = (double)NsTimestamp::now(); \
@@ -100,25 +102,6 @@ KVpair::KVpair(const string& aKey, time_t		  aValue, bool genTimestamp, bool tim
 {
 	OPTIONAL_TIMESTAMP
 }
-
-KVpair::KVpair(const string& aKey, const vector<int>&    aValue, bool genTimestamp, bool timestampInKeyname) :
-	timestamp(0.0),
-	valueType(VT_STRING | VT_INT)
-{
-	uint max = aValue.size();
-   	string strValue = "[";
-   	for (uint i = 0; i < max; i++) {
-		strValue += formatString("%d", aValue[i]);
-		if (i < max-1) {
-			strValue += ",";
-		}
-	} 
-	strValue += "]";
-	first = aKey;
-	second = strValue;
-
-	OPTIONAL_TIMESTAMP
-} 
 
 KVpair::~KVpair()
 {}

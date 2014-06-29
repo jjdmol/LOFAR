@@ -28,5 +28,5 @@ dirty=`echo $vals $pageSize | awk '{print $7*$8/1024}'`
 printf "$totalVM\t\t$reserved\t\t$shared\t\t$code\t$datastack\t$library\t\t$dirty\n"
 
 printf "CPU user time, CPU kernel time, children in user time, children in kernel time \n"
-cat stat | awk '{print $14","$15","$16","$17}'
+cat /proc/${PID}/stat | awk '{print $14","$15","$16","$17}'
 echo =============

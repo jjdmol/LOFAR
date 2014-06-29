@@ -22,9 +22,9 @@
 
 #include "CorrelatorKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
@@ -36,28 +36,19 @@
 using boost::format;
 using boost::lexical_cast;
 
-// For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
-// performance.
-
-#define USE_2X2
-
 namespace LOFAR
 {
   namespace Cobalt
   {
     string CorrelatorKernel::theirSourceFile = "Correlator.cu";
-# if defined USE_4X4
-    string CorrelatorKernel::theirFunction = "correlate_4x4";
-# elif defined USE_3X3
-    string CorrelatorKernel::theirFunction = "correlate_3x3";
-# elif defined USE_2X2
-    string CorrelatorKernel::theirFunction = "correlate_2x2";
-# else
     string CorrelatorKernel::theirFunction = "correlate";
-# endif
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
       nrStations(ps.settings.antennaFields.size()),
+      // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
+      // performance.
+      nrStationsPerThread(2),
+
       nrChannels(ps.settings.correlator.nrChannels),
       nrSamplesPerChannel(ps.settings.correlator.nrSamplesPerChannel)
     {
@@ -66,6 +57,10 @@ namespace LOFAR
       dumpFilePattern = 
         str(format("L%d_SB%%03d_BL%%03d_CorrelatorKernel.dat") % 
             ps.settings.observationID);
+    }
+
+    unsigned CorrelatorKernel::Parameters::nrBaselines() const {
+      return nrStations * (nrStations + 1) / 2;
     }
 
     CorrelatorKernel::CorrelatorKernel(const gpu::Stream& stream,
@@ -77,32 +72,16 @@ namespace LOFAR
       setArg(0, buffers.output);
       setArg(1, buffers.input);
 
-      unsigned preferredMultiple;
+      unsigned preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
 
-      gpu::Platform pf;
-      if (pf.getName() == "AMD Accelerated Parallel Processing") {
-        preferredMultiple = 256;
-      } else {
-        preferredMultiple = 64; // FOR NVIDIA CUDA, there is no call to get this. Could check what the NV OCL pf says, but set to 64 for now. Generalize later (TODO).
-      }
+      // Knowing the number of stations/thread, we can divide up our baselines
+      // in bigger blocks (of stationsPerThread each).
+      unsigned nrMacroStations = ceilDiv(params.nrStations, params.nrStationsPerThread);
+      unsigned nrBlocks = nrMacroStations * (nrMacroStations + 1) / 2;
 
-      unsigned nrBaselines = params.nrStations * (params.nrStations + 1) / 2;
-
-# if defined USE_4X4
-      unsigned quartStations = (params.nrStations + 3) / 4;
-      unsigned nrBlocks = quartStations * (quartStations + 1) / 2;
-# elif defined USE_3X3
-      unsigned thirdStations = (params.nrStations + 2) / 3;
-      unsigned nrBlocks = thirdStations * (thirdStations + 1) / 2;
-# elif defined USE_2X2
-      unsigned halfStations = (params.nrStations + 1) / 2;
-      unsigned nrBlocks = halfStations * (halfStations + 1) / 2;
-# else
-      unsigned nrBlocks = nrBaselines;
-# endif
-      unsigned nrPasses = (nrBlocks + maxThreadsPerBlock - 1) / maxThreadsPerBlock;
-      unsigned nrThreads = (nrBlocks + nrPasses - 1) / nrPasses;
-      nrThreads = (nrThreads + preferredMultiple - 1) / preferredMultiple * preferredMultiple;
+      unsigned nrPasses = ceilDiv(nrBlocks, maxThreadsPerBlock);
+      unsigned nrThreads = ceilDiv(nrBlocks, nrPasses);
+      nrThreads = align(nrThreads, preferredMultiple);
 
       //LOG_DEBUG_STR("nrBlocks = " << nrBlocks << ", nrPasses = " << nrPasses << ", preferredMultiple = " << preferredMultiple << ", nrThreads = " << nrThreads);
 
@@ -110,9 +89,9 @@ namespace LOFAR
       setEnqueueWorkSizes( gpu::Grid(nrPasses * nrThreads, nrUsableChannels),
                            gpu::Block(nrThreads, 1) );
 
-      nrOperations = (size_t) nrUsableChannels * nrBaselines * params.nrSamplesPerChannel * 32;
+      nrOperations = (size_t) nrUsableChannels * params.nrBaselines() * params.nrSamplesPerChannel * 32;
       nrBytesRead = (size_t) nrPasses * params.nrStations * nrUsableChannels * params.nrSamplesPerChannel * NR_POLARIZATIONS * sizeof(std::complex<float>);
-      nrBytesWritten = (size_t) nrBaselines * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
+      nrBytesWritten = (size_t) params.nrBaselines() * nrUsableChannels * NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
     }
 
     //--------  Template specializations for KernelFactory  --------//
@@ -120,8 +99,6 @@ namespace LOFAR
     template<> size_t 
     KernelFactory<CorrelatorKernel>::bufferSize(BufferType bufferType) const
     {
-      unsigned nrBaselines = itsParameters.nrStations * (itsParameters.nrStations + 1) / 2;
-
       switch (bufferType) {
       case CorrelatorKernel::INPUT_DATA:
         return
@@ -129,7 +106,7 @@ namespace LOFAR
             NR_POLARIZATIONS * sizeof(std::complex<float>);
       case CorrelatorKernel::OUTPUT_DATA:
         return 
-          (size_t) nrBaselines * itsParameters.nrChannels * 
+          (size_t) itsParameters.nrBaselines() * itsParameters.nrChannels * 
             NR_POLARIZATIONS * NR_POLARIZATIONS * sizeof(std::complex<float>);
       default: 
         THROW(GPUProcException, "Invalid bufferType (" << bufferType << ")");
@@ -144,6 +121,7 @@ namespace LOFAR
         KernelFactoryBase::compileDefinitions(itsParameters);
 
       defs["NR_STATIONS"] = lexical_cast<string>(itsParameters.nrStations);
+      defs["NR_STATIONS_PER_THREAD"] = lexical_cast<string>(itsParameters.nrStationsPerThread);
 
       defs["NR_CHANNELS"] = lexical_cast<string>(itsParameters.nrChannels);
       defs["NR_SAMPLES_PER_CHANNEL"] = 

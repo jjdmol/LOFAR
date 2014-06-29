@@ -22,9 +22,10 @@
 
 #include "CoherentStokesTransposeKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
+#include <CoInterface/Align.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 
@@ -64,12 +65,12 @@ namespace LOFAR
       Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel > 0);
-      ASSERT(params.nrTABs >  0);
+      ASSERT(params.nrTABs > 0);
       ASSERT(params.nrChannels  % 16 == 0);
 
       setArg(0, buffers.output);
       setArg(1, buffers.input);
-      setEnqueueWorkSizes( gpu::Grid((( params.nrTABs + 16 - 1) / 16) * 16 ,  // Get multiple of 16  in the grid size
+      setEnqueueWorkSizes( gpu::Grid(align(params.nrTABs, 16),
                                      params.nrChannels,
                                      params.nrSamplesPerChannel),
                            gpu::Block(16, 16, 1) );

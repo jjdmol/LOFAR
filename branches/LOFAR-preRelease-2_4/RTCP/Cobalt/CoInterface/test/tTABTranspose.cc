@@ -1,5 +1,5 @@
-//# tParset.cc
-//# Copyright (C) 2012-2013  ASTRON (Netherlands Institute for Radio Astronomy)
+//# tTABTranspose.cc
+//# Copyright (C) 2012-2014  ASTRON (Netherlands Institute for Radio Astronomy)
 //# P.O. Box 2, 7990 AA Dwingeloo, The Netherlands
 //#
 //# This file is part of the LOFAR software suite.
@@ -27,13 +27,17 @@
 
 #include <UnitTest++.h>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include <omp.h>
+
+#include "tParsetDefault.h"
 
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 using namespace LOFAR::Cobalt::TABTranspose;
 using namespace std;
 using boost::format;
+using boost::lexical_cast;
 
 SUITE(Block) {
   TEST(OrderedArrival) {
@@ -519,20 +523,42 @@ SUITE(MultiReceiver) {
 
   TEST(MultiSender) {
     MultiSender::HostMap hostMap;
-    MultiSender msender(hostMap, false);
+    Parset ps = makeDefaultTestParset();
+    ps.replace("Cobalt.realTime", "false");
+    ps.updateSettings();
+    MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+    MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
   }
 
   TEST(Transpose) {
-    // We use the even fileIdx to simulate a sparse set
-    #define FILEIDX(tabNr) ((tabNr)*2)
+    // We use the even fileIdx to simulate a sparse set.
+    // Do create enough filenames. (Ab)use the subbandsPerFile (multiple parts) feature for that.
+    #define SPARSITY 2
+    #define FILEIDX(tabNr) ((tabNr)*SPARSITY)
 
     LOG_DEBUG_STR("Transpose test started");
 
     const int nrSubbands = 4;
     const size_t nrBlocks = 2;
-    const int nrTABs = 2;
+    const int nrTABs = 2; // keep in sync w/ ps filenames below (others are auto-derived)
     const size_t nrSamples = 16;
     const size_t nrChannels = 1;
+
+    // Adapt a copy of the default parset to conform to the above specs.
+    Parset ps = makeDefaultTestParset();
+    ps.replace("Observation.DataProducts.Output_Correlated.enabled", "false");
+    ps.replace("Cobalt.realTime", "false");
+    ps.replace("Observation.Beam[0].subbandList", "[21.." + lexical_cast<string>(21 + nrSubbands - 1) + "]");
+    ps.replace("Observation.Dataslots.CS001LBA.RSPBoardList", "[" + lexical_cast<string>(nrSubbands) + "*0]");
+    ps.replace("Observation.Dataslots.CS001LBA.DataslotList", "[0.." + lexical_cast<string>(nrSubbands - 1) + "]");
+    ps.replace("Observation.Beam[0].nrTiedArrayBeams", lexical_cast<string>(nrTABs));
+    ps.replace("Cobalt.BeamFormer.CoherentStokes.subbandsPerFile", lexical_cast<string>(nrSubbands / SPARSITY));
+    ps.replace("Observation.DataProducts.Output_CoherentStokes.filenames", // size must be SPARSITY * nrTABs
+               "[L12345_SAP000_B000_S000_P000_bf.h5, L12345_SAP000_B000_S000_P001_bf.h5, L12345_SAP000_B001_S000_P000_bf.h5, L12345_SAP000_B001_S000_P001_bf.h5]");
+    ps.replace("Observation.DataProducts.Output_CoherentStokes.locations", "[" + lexical_cast<string>(SPARSITY * nrTABs) + "*localhost:tParset-data/]");
+    ps.replace("Cobalt.blockSize", lexical_cast<string>(nrSamples * nrChannels));
+    ps.replace("Cobalt.BeamFormer.CoherentStokes.nrChannelsPerSubband", lexical_cast<string>(nrSamples));
+    ps.updateSettings();
 
     // Give both senders and receivers multiple tasks,
     // but not all the same amount.
@@ -624,7 +650,8 @@ SUITE(MultiReceiver) {
             hostMap[FILEIDX(t)] = host;
           }
 
-          MultiSender msender(hostMap, false);
+          MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+          MultiSender msender(hostMap, ps, rtmd, "rtmd key prefix");
 
 #         pragma omp parallel sections num_threads(2)
           {

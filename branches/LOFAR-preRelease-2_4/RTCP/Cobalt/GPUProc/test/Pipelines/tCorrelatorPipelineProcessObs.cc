@@ -22,9 +22,7 @@
 
 #include <vector>
 
-#ifdef HAVE_MPI
-#  include <mpi.h>
-#endif
+#include <omp.h>
 
 #include <Common/LofarLogger.h>
 #include <CoInterface/Parset.h>
@@ -79,8 +77,10 @@ int main(int argc, char *argv[]) {
 
   // Init the pipeline *before* touching MPI. MPI doesn't like fork().
   // So do kernel compilation (reqs fork()) first.
-  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, 
-  devices, MPI_receive_pool);
+  // Don't bother passing a hostname to (or start()ing) the mdLogger.
+  MACIO::RTmetadata rtmd(ps.observationID(), "", "");
+  SmartPtr<Pipeline> pipeline = new CorrelatorPipeline(ps, subbands, devices,
+      MPI_receive_pool, rtmd, "rtmd key prefix");
 
   //pipeline->allocateResources();
   mpi.init(argc, argv);

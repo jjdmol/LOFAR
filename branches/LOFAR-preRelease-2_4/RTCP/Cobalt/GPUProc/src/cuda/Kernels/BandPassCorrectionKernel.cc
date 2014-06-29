@@ -22,10 +22,10 @@
 
 #include "BandPassCorrectionKernel.h"
 
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 #include <GPUProc/BandPass.h>
 #include <CoInterface/BlockID.h>
+#include <CoInterface/Config.h>
 #include <Common/lofar_complex.h>
 #include <Common/LofarLogger.h>
 

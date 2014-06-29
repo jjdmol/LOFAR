@@ -288,7 +288,7 @@
                               </Group>
                               <EmptySpace max="32767" attributes="0"/>
                           </Group>
-                          <Component id="existingStepAddPanel" alignment="0" pref="42" max="32767" attributes="0"/>
+                          <Component id="existingStepAddPanel" alignment="0" pref="43" max="32767" attributes="0"/>
                       </Group>
                     </DimensionLayout>
                   </Layout>

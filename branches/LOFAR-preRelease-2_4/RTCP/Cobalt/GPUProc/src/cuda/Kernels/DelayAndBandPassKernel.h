@@ -46,6 +46,7 @@ namespace LOFAR
         Parameters(const Parset& ps, bool correlator);
         unsigned nrStations;
         unsigned nrBitsPerSample;
+        bool inputIsStationData;
 
         unsigned nrChannels;
         unsigned nrSamplesPerChannel;

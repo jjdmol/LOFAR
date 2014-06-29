@@ -31,8 +31,8 @@
 #include <Common/LofarLogger.h>
 #include <CoInterface/BlockID.h>
 #include <CoInterface/Align.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/fpequals.h>
-#include <GPUProc/global_defines.h>
 #include <GPUProc/gpu_utils.h>
 
 namespace LOFAR

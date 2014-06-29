@@ -11,7 +11,7 @@ error()
 }
 
 # Set LOFARROOT and other LOFAR env vars into install directory (var is always set).
-. "@CMAKE_INSTALL_PREFIX@/lofarinit.sh"
+. "@CMAKE_INSTALL_PREFIX@/lofarinit.sh" || error "Could not load our lofarinit.sh -- did you run 'make install'?"
 
 # Create runtime output directories if not exists.
 # Not done at build, because it is a post-install setting. Different in production.
