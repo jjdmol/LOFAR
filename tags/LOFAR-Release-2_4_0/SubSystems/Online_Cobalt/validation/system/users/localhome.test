@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for DIR in lofarbuild lofarsystem lofar
+do
+  [ -d /localhome/$DIR ] || exit 1
+done
