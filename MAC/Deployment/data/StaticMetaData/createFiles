@@ -224,11 +224,11 @@ def findStationInfo(stationName, dataDir):
 
 def createCCURSPConnectionsFile(resultDir, dataDir):
    """
-   For now, copy the static file RSPConnections_CCU.dat from StaticMetaData to
+   Copy the static file RSPConnections_Cobalt.dat from StaticMetaData to
    the /opt/lofar/etc. Can be adapted later for more flexible behaviour
    """
-   CCU_RSPFile = dataDir + "/RSPConnections_CCU.dat"
-   destFile = resultDir + "/RSPConnections_CCU.dat"
+   CCU_RSPFile = dataDir + "/RSPConnections_Cobalt.dat"
+   destFile = resultDir + "/RSPConnections_Cobalt.dat"
    command = "cp -f "+ CCU_RSPFile + " " + destFile
    os.system(command);
 
