@@ -154,20 +154,9 @@ namespace LOFAR
 
       // Calculate the number of flafs per baseline and assign to
       // output object.
-      switch (output.itsNrBytesPerNrValidSamples) {
-        case 4:
-          calcWeights<uint32_t>(parset, flagsPerChannel, output);
-          break;
-
-        case 2:
-          calcWeights<uint16_t>(parset, flagsPerChannel, output);
-          break;
-
-        case 1:
-          calcWeights<uint8_t>(parset, flagsPerChannel, output);
-          break;
-      }
+      calcWeights(parset, flagsPerChannel, output);
     }
+
 
     namespace {
       // Return the baseline number for a pair of stations
@@ -222,19 +211,27 @@ namespace LOFAR
       }
     }
 
-    // Instantiate required templates
-    template void CorrelatorSubbandProc::Flagger::calcWeights<uint32_t>(
+
+    void CorrelatorSubbandProc::Flagger::calcWeights(
       Parset const &parset,
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output);
-    template void CorrelatorSubbandProc::Flagger::calcWeights<uint16_t>(
-      Parset const &parset,
-      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output);
-    template void CorrelatorSubbandProc::Flagger::calcWeights<uint8_t>(
-      Parset const &parset,
-      MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
-      CorrelatedData &output);
+      CorrelatedData &output)
+    {
+      switch (output.itsNrBytesPerNrValidSamples) {
+        case 4:
+          calcWeights<uint32_t>(parset, flagsPerChannel, output);
+          break;
+
+        case 2:
+          calcWeights<uint16_t>(parset, flagsPerChannel, output);
+          break;
+
+        case 1:
+          calcWeights<uint8_t>(parset, flagsPerChannel, output);
+          break;
+      }
+    }
+
 
     void CorrelatorSubbandProc::Flagger::applyWeight(unsigned baseline, 
       unsigned channel, float weight, CorrelatedData &output)
@@ -243,6 +240,7 @@ namespace LOFAR
         for(unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; ++pol2)
           output.visibilities[baseline][channel][pol1][pol2] *= weight;
     }
+
 
     template<typename T> void 
     CorrelatorSubbandProc::Flagger::applyWeights(Parset const &parset,
@@ -267,21 +265,24 @@ namespace LOFAR
       }
     }
 
-    // Instantiate required templates
-    template void 
-    CorrelatorSubbandProc::Flagger::applyWeights<uint32_t>(
-      Parset const &parset,
-      CorrelatedData &output);
 
-    template void
-    CorrelatorSubbandProc::Flagger::applyWeights<uint16_t>(
-      Parset const &parset,
-      CorrelatedData &output);
+    void CorrelatorSubbandProc::Flagger::applyWeights(Parset const &parset,
+                                                 CorrelatedData &output)
+    {
+      switch (output.itsNrBytesPerNrValidSamples) {
+        case 4:
+          Flagger::applyWeights<uint32_t>(parset, output);  
+          break;
 
-    template void
-    CorrelatorSubbandProc::Flagger::applyWeights<uint8_t>(
-      Parset const &parset,
-      CorrelatedData &output);
+        case 2:
+          Flagger::applyWeights<uint16_t>(parset, output);  
+          break;
+
+        case 1:
+          Flagger::applyWeights<uint8_t>(parset, output);  
+          break;
+      }
+    }
 
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input,
@@ -418,19 +419,7 @@ namespace LOFAR
 
       // The flags are already copied to the correct location
       // now the flagged amount should be applied to the visibilities
-      switch (output.itsNrBytesPerNrValidSamples) {
-        case 4:
-          Flagger::applyWeights<uint32_t>(ps, output);  
-          break;
-
-        case 2:
-          Flagger::applyWeights<uint16_t>(ps, output);  
-          break;
-
-        case 1:
-          Flagger::applyWeights<uint8_t>(ps, output);  
-          break;
-      }
+      Flagger::applyWeights(ps, output);  
 
       return true;
     }

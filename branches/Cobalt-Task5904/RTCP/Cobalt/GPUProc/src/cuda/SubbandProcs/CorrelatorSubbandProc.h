@@ -127,13 +127,11 @@ namespace LOFAR
 
         // 2. Calculate the weight based on the number of flags and apply this
         // weighting to all output values
-        template<typename T>
         static void applyWeights(Parset const &parset, CorrelatedData &output);
 
         // 1.2 Calculate the number of flagged samples and set this on the
         // output dataproduct This function is aware of the used filter width a
         // corrects for this.
-        template<typename T> 
         static void
         calcWeights(Parset const &parset,
                     MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
@@ -143,6 +141,16 @@ namespace LOFAR
         // and baseline
         static void applyWeight(unsigned baseline, unsigned channel,
                                 float weight, CorrelatedData &output);
+      private:
+        template<typename T>
+        static void applyWeights(Parset const &parset, CorrelatedData &output);
+
+        template<typename T> 
+        static void
+        calcWeights(Parset const &parset,
+                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
+                    CorrelatedData &output);
+
       };
 
       // Correlator specific collection of PerformanceCounters
