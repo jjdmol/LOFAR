@@ -21,3 +21,4 @@ add_dependencies(rtdbcommon RTDBCommon-CM_Protocol)
 
 lofar_add_bin_program(versionrtdbcommon versionrtdbcommon.cc)
 lofar_add_sbin_program(setObjectState setObjectState.cc)
+lofar_add_sbin_program(disabledRCUlist disabledRCUlist.cc)

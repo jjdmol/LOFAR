@@ -964,10 +964,10 @@ class cHBA:
             
             if (self.rcudata.testSignal_X != -1) and (self.rcudata.testSignal_Y != -1):
                 
-                self.hba.ref_signal[ctrl_nr]   = self.rcudata.testSignal_X
-                self.hba.ref_signal[ctrl_nr]   = self.rcudata.testSignal_Y
-                self.hba.test_subband[ctrl_nr] = self.rcudata.testSubband_X
-                self.hba.test_subband[ctrl_nr] = self.rcudata.testSubband_Y
+                self.hba.ref_signal_x[ctrl_nr]   = self.rcudata.testSignal_X
+                self.hba.ref_signal_y[ctrl_nr]   = self.rcudata.testSignal_Y
+                self.hba.test_subband_x[ctrl_nr] = self.rcudata.testSubband_X
+                self.hba.test_subband_y[ctrl_nr] = self.rcudata.testSubband_Y
                 
                 ssdataX = self.rcudata.getSubbandX()
                 ssdataY = self.rcudata.getSubbandY()

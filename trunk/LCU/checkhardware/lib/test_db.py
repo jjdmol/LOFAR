@@ -384,12 +384,12 @@ class cDB:
                     valstr = ''    
                     if tile.x.too_low or tile.x.too_high:
                         valstr += ",X=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                  (tile.x.test_signal[0], tile.x.test_subband[0], tile.x.ref_signal[0],\
-                                   tile.x.test_signal[1], tile.x.test_subband[1], tile.x.ref_signal[1])
+                                  (tile.x.test_signal[0], self.hba.test_subband_x[0], self.hba.ref_signal_x[0],\
+                                   tile.x.test_signal[1], self.hba.test_subband_x[1], self.hba.ref_signal_x[1])
                     if tile.y.too_low or tile.y.too_high:
                         valstr += ",Y=%3.1f %d %3.1f %3.1f %d %3.1f" %\
-                                  (tile.y.test_signal[0], tile.y.test_subband[0], tile.y.ref_signal[0],\
-                                   tile.y.test_signal[1], tile.y.test_subband[1], tile.y.ref_signal[1])
+                                  (tile.y.test_signal[0], self.hba.test_subband_y[0], self.hba.ref_signal_y[0],\
+                                   tile.y.test_signal[1], self.hba.test_subband_y[1], self.hba.ref_signal_y[1])
                     if len(valstr):
                         log.addLine("%s,HBA,%03d,RF_FAIL%s" %(date, tile.nr, valstr))
                                        

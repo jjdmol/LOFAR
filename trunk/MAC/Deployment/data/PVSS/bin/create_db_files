@@ -1446,8 +1446,8 @@ WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
 
 # FPGA and URIboard numbers
-let NRFPGAS = 8
-let NRURI = 3
+let NRFPGAS=8
+let NRURI=3
 
 let NRRSPBOARDS=0
 let NRLBAS=0
