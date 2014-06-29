@@ -99,18 +99,18 @@ namespace LOFAR
       // put enough objects in the outputPool to operate
       for (size_t i = 0; i < nrOutputElements(); ++i) {
         outputPool.free.append(new CorrelatedDataHostBuffer(
-                                 ps.nrStations(),
-                                 ps.nrChannelsPerSubband(),
-                                 ps.integrationSteps(),
+                                 ps.settings.antennaFields.size(),
+                                 ps.settings.correlator.nrChannels,
+                                 ps.settings.correlator.nrSamplesPerChannel,
                                  context));
       }
 
       // Initialize the output buffers for the long-time integration
       for (size_t i = 0; i < integratedData.size(); i++) {
         integratedData[i] = 
-          make_pair(0, new CorrelatedDataHostBuffer(ps.nrStations(), 
-                                                    ps.nrChannelsPerSubband(),
-                                                    ps.integrationSteps(),
+          make_pair(0, new CorrelatedDataHostBuffer(ps.settings.antennaFields.size(), 
+                                                    ps.settings.correlator.nrChannels,
+                                                    ps.settings.correlator.nrSamplesPerChannel,
                                                     context));
       }
     }
@@ -184,7 +184,7 @@ namespace LOFAR
       MultiDimArray<SparseSet<unsigned>, 2>const & flagsPerChannel,
       CorrelatedData &output)
     {
-      unsigned nrSamplesPerIntegration = parset.nrSamplesPerChannel();
+      unsigned nrSamplesPerIntegration = parset.settings.correlator.nrSamplesPerChannel;
 
       // loop the stations
       for (unsigned stat1 = 0; stat1 < parset.nrStations(); stat1 ++) {
