@@ -33,7 +33,7 @@ namespace LOFAR
     //# Forward declarations
     class Parset;
 
-    class IncoherentStokesTransposeKernel : public Kernel
+    class IncoherentStokesTransposeKernel : public CompiledKernel
     {
     public:
       // Name of the CUDA kernel source file.

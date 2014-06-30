@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FFTShiftKernel : public Kernel
+    class FFTShiftKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

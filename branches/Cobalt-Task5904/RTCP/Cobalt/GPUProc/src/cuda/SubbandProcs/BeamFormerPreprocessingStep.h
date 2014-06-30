@@ -54,8 +54,14 @@ namespace LOFAR
         Factories(const Parset &ps);
 
         KernelFactory<IntToFloatKernel> intToFloat;
+
+        KernelFactory<FFT_Kernel> firstFFT;
         KernelFactory<FFTShiftKernel> fftShift;
+
         KernelFactory<DelayAndBandPassKernel> delayCompensation;
+
+        KernelFactory<FFT_Kernel> secondFFT;
+
         KernelFactory<BandPassCorrectionKernel> bandPassCorrection;
       };
 

@@ -111,7 +111,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
       params(params),
       filterWeights(stream.getContext(), params.bufferSize(FILTER_WEIGHTS)),
       historySamples(stream.getContext(), params.bufferSize(HISTORY_DATA)),

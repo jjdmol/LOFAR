@@ -44,9 +44,14 @@ namespace LOFAR
   {
     BeamFormerIncoherentStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
       incoherentStokesTranspose(IncoherentStokesTransposeKernel::Parameters(ps)),
+
+      incoherentInverseFFT(FFT_Kernel::Parameters(
+        ps.settings.beamFormer.nrHighResolutionChannels,
+        ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, false)),
       incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.antennaFields.size(),
         ps.settings.beamFormer.nrHighResolutionChannels)),
+
       incoherentFirFilter(
         ps.settings.beamFormer.incoherentSettings.nrChannels > 1
         ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
@@ -56,6 +61,13 @@ namespace LOFAR
             ps.settings.beamFormer.incoherentSettings.nrChannels,
             static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels)))
         : NULL ),
+      incoherentFinalFFT(
+        ps.settings.beamFormer.incoherentSettings.nrChannels > 1
+        ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
+            ps.settings.beamFormer.incoherentSettings.nrChannels,
+            ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true))
+        : NULL),
+
       incoherentStokes(IncoherentStokesKernel::Parameters(ps))
     {
     }
@@ -88,12 +100,9 @@ namespace LOFAR
         factories.incoherentStokesTranspose.create(queue,
         *devB, *devA));
 
-      const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
-
       // inverse FFT: A -> A
-      incoherentInverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
-        queue, ps.settings.beamFormer.nrHighResolutionChannels,
-        nrSamples, false, *devA));
+      incoherentInverseFFT = std::auto_ptr<FFT_Kernel>(
+        factories.incoherentInverseFFT.create(queue, *devA, *devA));
 
       // inverse FFTShift: A -> A
       incoherentInverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
@@ -107,9 +116,7 @@ namespace LOFAR
 
         // final FFT: B -> B
         incoherentFinalFFT = std::auto_ptr<FFT_Kernel>(
-          new FFT_Kernel(
-          queue, ps.settings.beamFormer.incoherentSettings.nrChannels,
-          nrSamples, true, *devB));
+          factories.incoherentFinalFFT->create(queue, *devB, *devB));
       }
 
       // Incoherent Stokes kernel: A/B -> B/A

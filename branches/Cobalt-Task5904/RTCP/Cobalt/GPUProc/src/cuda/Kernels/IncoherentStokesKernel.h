@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class IncoherentStokesKernel : public Kernel
+    class IncoherentStokesKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

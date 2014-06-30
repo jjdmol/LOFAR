@@ -28,28 +28,21 @@
 using namespace LOFAR;
 using namespace LOFAR::Cobalt;
 
-struct TestFixture
-{
-  TestFixture() : ps("tFFT_Kernel.in_parset") {}
-  ~TestFixture() {}
-  Parset ps;
-};
-
-TEST_FIXTURE(TestFixture, InputData)
+TEST(InputData)
 {
   CHECK_EQUAL(size_t(786432),
-              FFT_Kernel::bufferSize(ps, FFT_Kernel::INPUT_DATA));
+              FFT_Kernel::Parameters(16, 49152, true).bufferSize(FFT_Kernel::INPUT_DATA));
 }
 
-TEST_FIXTURE(TestFixture, OutputData)
+TEST(OutputData)
 {
   CHECK_EQUAL(size_t(786432),
-              FFT_Kernel::bufferSize(ps, FFT_Kernel::OUTPUT_DATA));
+              FFT_Kernel::Parameters(16, 49152, false).bufferSize(FFT_Kernel::OUTPUT_DATA));
 }
 
-TEST_FIXTURE(TestFixture, MustThrow)
+TEST(MustThrow)
 {
-  CHECK_THROW(FFT_Kernel::bufferSize(ps, FFT_Kernel::BufferType(2)),
+  CHECK_THROW(FFT_Kernel::Parameters(0, 0, true).bufferSize(FFT_Kernel::BufferType(2)),
               GPUProcException);
 }
 

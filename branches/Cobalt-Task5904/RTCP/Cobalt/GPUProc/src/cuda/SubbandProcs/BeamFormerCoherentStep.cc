@@ -46,9 +46,15 @@ namespace LOFAR
     BeamFormerCoherentStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
       beamFormer(BeamFormerKernel::Parameters(ps)),
       coherentTranspose(CoherentStokesTransposeKernel::Parameters(ps)),
+
+      coherentInverseFFT(FFT_Kernel::Parameters(
+        ps.settings.beamFormer.nrHighResolutionChannels,
+        ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize,
+        false)),
       coherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.beamFormer.maxNrCoherentTABsPerSAP(),
         ps.settings.beamFormer.nrHighResolutionChannels)),
+
       coherentFirFilter(
         ps.settings.beamFormer.coherentSettings.nrChannels > 1
         ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
@@ -58,6 +64,14 @@ namespace LOFAR
             ps.settings.beamFormer.coherentSettings.nrChannels,
             static_cast<float>(ps.settings.beamFormer.coherentSettings.nrChannels)))
         : NULL),
+      coherentFinalFFT(
+        ps.settings.beamFormer.coherentSettings.nrChannels > 1
+        ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
+            ps.settings.beamFormer.coherentSettings.nrChannels,
+            ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize,
+            true))
+        : NULL),
+
       coherentStokes(CoherentStokesKernel::Parameters(ps))
     {
     }
@@ -92,12 +106,10 @@ namespace LOFAR
       factories.coherentTranspose.create(
       queue, *devA, devC));
 
-    const size_t nrSamples = ps.settings.beamFormer.maxNrCoherentTABsPerSAP() * NR_POLARIZATIONS * ps.settings.blockSize;
-
     // inverse FFT: C -> C (in-place)
-    inverseFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
-      queue, ps.settings.beamFormer.nrHighResolutionChannels,
-      nrSamples, false, devC));
+    inverseFFT = std::auto_ptr<FFT_Kernel>(
+      factories.coherentInverseFFT.create(
+        queue, devC, devC));
 
     // fftshift: C -> C (in-place)
     inverseFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
@@ -110,9 +122,8 @@ namespace LOFAR
         factories.coherentFirFilter->create(queue, devC, devD));
 
       // final FFT: D -> D (in-place) = firFilterBuffers.output
-      finalFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(
-        queue, ps.settings.beamFormer.coherentSettings.nrChannels,
-        nrSamples, true, devD));
+      coherentFinalFFT = std::auto_ptr<FFT_Kernel>(
+        factories.coherentFinalFFT->create(queue, devD, devD));
     }
 
     // coherentStokes:
@@ -132,7 +143,7 @@ void BeamFormerCoherentStep::logTime()
 {
   if (coherentStokesPPF) {
     firFilterKernel->itsCounter.logTime();
-    finalFFT->itsCounter.logTime();
+    coherentFinalFFT->itsCounter.logTime();
   }
 
   beamFormerKernel->itsCounter.logTime();
@@ -149,7 +160,7 @@ void BeamFormerCoherentStep::printStats()
   LOG_INFO_STR(
     "**** BeamFormerSubbandProc coherent stage GPU mean and stDev ****" << endl <<
     std::setw(20) << "(firFilterKernel)" << (coherentStokesPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
-    std::setw(20) << "(finalFFT)" << (coherentStokesPPF ? finalFFT->itsCounter.stats : RunningStatistics()) << endl <<
+    std::setw(20) << "(finalFFT)" << (coherentStokesPPF ? coherentFinalFFT->itsCounter.stats : RunningStatistics()) << endl <<
     std::setw(20) << "(beamformer)" << beamFormerKernel->itsCounter.stats << endl <<
     std::setw(20) << "(coherentTranspose)" << coherentTransposeKernel->itsCounter.stats << endl <<
     std::setw(20) << "(inverseFFT)" << inverseFFT->itsCounter.stats << endl <<
@@ -198,7 +209,7 @@ void BeamFormerCoherentStep::process(const SubbandProcInputData &input)
     // The subbandIdx immediate kernel arg must outlive kernel runs.
     firFilterKernel->enqueue(input.blockID,
       input.blockID.subbandProcSubbandIdx);
-    finalFFT->enqueue(input.blockID);
+    coherentFinalFFT->enqueue(input.blockID);
   }
 
   coherentStokesKernel->enqueue(input.blockID);

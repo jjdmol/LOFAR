@@ -32,7 +32,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class BandPassCorrectionKernel : public Kernel
+    class BandPassCorrectionKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

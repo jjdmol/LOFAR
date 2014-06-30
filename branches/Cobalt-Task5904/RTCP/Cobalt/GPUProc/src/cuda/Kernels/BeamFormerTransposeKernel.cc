@@ -76,7 +76,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       ASSERT(params.nrSamplesPerChannel % 16 == 0);
       setArg(0, buffers.output);

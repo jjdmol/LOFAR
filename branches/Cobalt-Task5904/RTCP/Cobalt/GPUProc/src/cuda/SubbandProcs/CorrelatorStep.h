@@ -58,8 +58,11 @@ namespace LOFAR
       struct Factories {
         Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc);
 
+        SmartPtr< KernelFactory<FFT_Kernel> > fft;
         SmartPtr< KernelFactory<FIR_FilterKernel> > firFilter;
+
         KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
+
         KernelFactory<CorrelatorKernel> correlator;
       };
 

@@ -84,7 +84,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params)
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params)
     {
       setArg(0, buffers.output);
       setArg(1, buffers.input);

@@ -33,7 +33,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class FIR_FilterKernel : public Kernel
+    class FIR_FilterKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

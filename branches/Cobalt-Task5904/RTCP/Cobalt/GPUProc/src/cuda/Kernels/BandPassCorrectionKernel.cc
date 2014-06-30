@@ -88,7 +88,7 @@ namespace LOFAR
                                        const gpu::Module& module,
                                        const Buffers& buffers,
                                        const Parameters& params) :
-      Kernel(stream, gpu::Function(module, theirFunction), buffers, params),
+      CompiledKernel(stream, gpu::Function(module, theirFunction), buffers, params),
       bandPassCorrectionWeights(stream.getContext(), params.bufferSize(BAND_PASS_CORRECTION_WEIGHTS))
     {
       setArg(0, buffers.output);

@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class UHEP_InvFFT_Kernel : public Kernel
+    class UHEP_InvFFT_Kernel : public CompiledKernel
     {
     public:
       UHEP_InvFFT_Kernel(const Parset &ps, gpu::Module &program, gpu::DeviceMemory &devFFTedData);

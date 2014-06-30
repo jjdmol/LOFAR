@@ -37,6 +37,12 @@ namespace LOFAR
   namespace Cobalt
   {
     CorrelatorStep::Factories::Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc) :
+      fft(ps.settings.correlator.nrChannels > 1
+        ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
+          ps.settings.correlator.nrChannels,
+          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
+          true))
+        : NULL),
       firFilter(ps.settings.correlator.nrChannels > 1
           ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
             ps.settings.antennaFields.size(),
@@ -52,7 +58,9 @@ namespace LOFAR
             // effectively squares, integr on fewer channels averages over more values.
             std::sqrt((double)ps.settings.correlator.nrChannels)))
           : NULL),
+
       delayAndBandPass(DelayAndBandPassKernel::Parameters(ps, true)),
+
       correlator(ps)
     {
     }
@@ -232,8 +240,7 @@ namespace LOFAR
         firFilterKernel = factories.firFilter->create(queue, *devA, *devB);
 
         // FFT
-        const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
-        fftKernel = new FFT_Kernel(queue, ps.settings.correlator.nrChannels, nrSamples, true, *devB);
+        fftKernel = factories.fft->create(queue, *devB, *devB);
       }
 
       // Delay and Bandpass

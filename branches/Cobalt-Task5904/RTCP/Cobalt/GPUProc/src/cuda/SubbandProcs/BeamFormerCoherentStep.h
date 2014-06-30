@@ -61,8 +61,10 @@ namespace LOFAR
 
         KernelFactory<BeamFormerKernel> beamFormer;
         KernelFactory<CoherentStokesTransposeKernel> coherentTranspose;
+        KernelFactory<FFT_Kernel> coherentInverseFFT;
         KernelFactory<FFTShiftKernel> coherentInverseFFTShift;
         SmartPtr< KernelFactory<FIR_FilterKernel> > coherentFirFilter;
+        SmartPtr< KernelFactory<FFT_Kernel> > coherentFinalFFT;
         KernelFactory<CoherentStokesKernel> coherentStokes;
       };
 
@@ -112,7 +114,7 @@ namespace LOFAR
 
       // Poly-phase filter (FIR + FFT)
       std::auto_ptr<FIR_FilterKernel> firFilterKernel;
-      std::auto_ptr<FFT_Kernel>finalFFT;
+      std::auto_ptr<FFT_Kernel> coherentFinalFFT;
 
       // Coherent Stokes
       std::auto_ptr<CoherentStokesKernel> coherentStokesKernel;

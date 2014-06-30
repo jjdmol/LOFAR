@@ -29,7 +29,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class CorrelatorKernel : public Kernel
+    class CorrelatorKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

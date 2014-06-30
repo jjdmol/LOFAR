@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class BeamFormerKernel : public Kernel
+    class BeamFormerKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

@@ -31,7 +31,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class IntToFloatKernel : public Kernel
+    class IntToFloatKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

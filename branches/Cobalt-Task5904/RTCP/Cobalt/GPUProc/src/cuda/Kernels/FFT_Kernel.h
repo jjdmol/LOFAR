@@ -21,48 +21,62 @@
 #ifndef LOFAR_GPUPROC_CUDA_FFT_KERNEL_H
 #define LOFAR_GPUPROC_CUDA_FFT_KERNEL_H
 
-#include <CoInterface/Parset.h>
-
 #include <GPUProc/gpu_wrapper.h>
 #include "FFT_Plan.h"
 #include <GPUProc/PerformanceCounter.h>
+#include <GPUProc/Kernels/Kernel.h>
+#include <GPUProc/KernelFactory.h>
 
 namespace LOFAR
 {
   namespace Cobalt
   {
-    //# Forward declarations
-    struct BlockID;
-
-    class FFT_Kernel
+    class FFT_Kernel: public Kernel
     {
     public:
-      FFT_Kernel(const gpu::Stream &stream, unsigned fftSize, unsigned nrSamples,
-                 bool forward, const gpu::DeviceMemory &buffer);
-
-      void enqueue(const BlockID &blockId) const;
-
       enum BufferType
       {
         INPUT_DATA,
         OUTPUT_DATA
       };
 
-      // Return required buffer size for \a bufferType
-      static size_t bufferSize(const Parset& ps, BufferType bufferType);
-      PerformanceCounter itsCounter;
+      // Parameters that must be passed to the constructor of the
+      // BandPassCorrectionKernel class.
+      struct Parameters : Kernel::Parameters
+      {
+        Parameters(unsigned fftSize, unsigned nrSamples, bool forward);
+
+        unsigned fftSize;
+        unsigned nrSamples;
+        bool forward;
+
+        size_t bufferSize(FFT_Kernel::BufferType bufferType) const;
+      };
+
+      FFT_Kernel(const gpu::Stream &stream,
+                 const Buffers& buffers,
+                 const Parameters& params);
+
+    protected:
+      void launch() const;
 
     private:
-      gpu::Context context;
-
-      const unsigned nrFFTs, nrMajorFFTs, nrMinorFFTs, fftSize;
+      const unsigned nrFFTs, nrMajorFFTs, nrMinorFFTs;
       const int direction;
       FFT_Plan planMajor, planMinor;
-      gpu::DeviceMemory buffer;
-      gpu::Stream itsStream;
 
-      void executePlan(const cufftHandle &plan, cufftComplex *data) const;
+      void executePlan(const cufftHandle &plan, cufftComplex *in_data, cufftComplex *out_data) const;
     };
+
+    //# --------  Template specializations for KernelFactory  -------- #//
+
+    // The default KernelFactory tries to compile a source,
+    // but FFT_Kernel has nothing to compile, so we implement short cuts.
+    template<> std::string KernelFactory<FFT_Kernel>::_createPTX() const;
+    template<> FFT_Kernel* KernelFactory<FFT_Kernel>::create(
+              const gpu::Stream& stream,
+              gpu::DeviceMemory &inputBuffer,
+              gpu::DeviceMemory &outputBuffer) const;
   }
 }
 #endif

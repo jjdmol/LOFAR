@@ -33,7 +33,7 @@ namespace LOFAR
   namespace Cobalt
   {
 
-    class DelayAndBandPassKernel : public Kernel
+    class DelayAndBandPassKernel : public CompiledKernel
     {
     public:
       static std::string theirSourceFile;

@@ -30,7 +30,7 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    class UHEP_TransposeKernel : public Kernel
+    class UHEP_TransposeKernel : public CompiledKernel
     {
     public:
       UHEP_TransposeKernel(const Parset &ps, gpu::Module &program,

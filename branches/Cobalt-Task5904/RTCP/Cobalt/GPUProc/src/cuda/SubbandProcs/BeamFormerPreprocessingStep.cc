@@ -37,10 +37,23 @@ namespace LOFAR
   {
     BeamFormerPreprocessingStep::Factories::Factories(const Parset &ps) :
         intToFloat(ps),
+
+        firstFFT(FFT_Kernel::Parameters(
+          ps.settings.beamFormer.nrDelayCompensationChannels,
+          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
+          true)),
         fftShift(FFTShiftKernel::Parameters(ps,
           ps.settings.antennaFields.size(),
           ps.settings.beamFormer.nrDelayCompensationChannels)),
+
         delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
+
+        secondFFT(FFT_Kernel::Parameters(
+          ps.settings.beamFormer.nrHighResolutionChannels /
+          ps.settings.beamFormer.nrDelayCompensationChannels,
+          ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
+          true)),
+
         bandPassCorrection(BandPassCorrectionKernel::Parameters(ps))
     {
     }
@@ -77,12 +90,9 @@ namespace LOFAR
       firstFFTShiftKernel = std::auto_ptr<FFTShiftKernel>(
         factories.fftShift.create(queue, *devB, *devB));
 
-      const size_t nrSamples = ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize;
-
       // FFT: B -> B
-      firstFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-        ps.settings.beamFormer.nrDelayCompensationChannels,
-        nrSamples, true, *devB));
+      firstFFT = std::auto_ptr<FFT_Kernel>(
+        factories.firstFFT.create(queue, *devB, *devB));
 
       // delayComp: B -> A
       delayCompensationKernel = std::auto_ptr<DelayAndBandPassKernel>(
@@ -97,10 +107,8 @@ namespace LOFAR
           factories.fftShift.create(queue, *devA, *devA));
 
         // FFT: A -> A
-        secondFFT = std::auto_ptr<FFT_Kernel>(new FFT_Kernel(queue,
-          ps.settings.beamFormer.nrHighResolutionChannels /
-          ps.settings.beamFormer.nrDelayCompensationChannels,
-          nrSamples, true, *devA));
+        secondFFT = std::auto_ptr<FFT_Kernel>(
+          factories.secondFFT.create(queue, *devA, *devA));
       }
 
       // bandPass: A -> B

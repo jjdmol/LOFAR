@@ -58,8 +58,10 @@ namespace LOFAR
         Factories(const Parset &ps, size_t nrSubbandsPerSubbandProc = 1);
 
         KernelFactory<IncoherentStokesTransposeKernel> incoherentStokesTranspose;
+        KernelFactory<FFT_Kernel> incoherentInverseFFT;
         KernelFactory<FFTShiftKernel> incoherentInverseFFTShift;
         SmartPtr< KernelFactory<FIR_FilterKernel> > incoherentFirFilter;
+        SmartPtr< KernelFactory<FFT_Kernel> > incoherentFinalFFT;
         KernelFactory<IncoherentStokesKernel> incoherentStokes;
       };
 
