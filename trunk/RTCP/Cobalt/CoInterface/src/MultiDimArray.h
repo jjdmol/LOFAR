@@ -484,7 +484,7 @@ namespace LOFAR
       str << "[ ";
 
       if (!array.empty()) {
-        T seen = array.origin()[0];
+        T seen = array.data()[0];
         size_t count = 1;
 
         for (size_t i = 1; i < array.num_elements(); ++i) {
