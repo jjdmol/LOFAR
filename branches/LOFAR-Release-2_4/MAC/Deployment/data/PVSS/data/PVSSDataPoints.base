@@ -72,7 +72,7 @@ CobaltRack			-		C	N	LOFAR_PIC_Cobalt
 CobaltNode			-		C	N	LOFAR_PIC_Cobalt_@cobaltnode@
 CobaltNIC			CNI		C	Y	LOFAR_PIC_Cobalt_@cobaltnode@_@cobaltnic@
 CobaltStationField		-		C	N	LOFAR_PermSW_@stationfield@
-OSCobaltNode			-		C	N	LOFAR_PermSW_@oscobaltnoded@
+OSCobaltNode			-		C	N	LOFAR_PermSW_@oscobaltnode@
 CobaltStationInput		CSI		C	Y	LOFAR_PermSW_@stationfield@_CobaltStationInput
 CobaltGPUProc			CGP		C	Y	LOFAR_ObsSW_@observation@_@oscobaltnode@_@cobaltgpuproc@
 CobaltOutputProc		COP		C	Y	LOFAR_ObsSW_@observation@_CobaltOutputProc
