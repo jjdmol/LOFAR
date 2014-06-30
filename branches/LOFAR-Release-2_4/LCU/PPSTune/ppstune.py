@@ -2129,7 +2129,7 @@ def initialize_logging(station, log_dir, log_level):
     logger.setLevel(level)
     formatter    = logging.Formatter(log_format)
 
-    file_handler = logging.FileHandler(log_file_name)
+    file_handler = logging.FileHandler(log_file_name,'w')
     logger.addHandler(file_handler)
 
     if len(logger.handlers) == 1:
