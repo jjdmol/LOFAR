@@ -90,7 +90,7 @@ namespace LOFAR
       const unsigned defaultNrTABsPerBlock     = 16;
 
       const unsigned minNrChannelsPerBlock  = std::min(params.nrChannels,
-                                                      defaultNrChannelsPerBlock);
+                                                       defaultNrChannelsPerBlock);
       const unsigned minTimeParallelThreads = 1;
       const unsigned minNrTABsPerBlock      = std::min(params.nrTABs,
                                                        defaultNrTABsPerBlock);
@@ -99,7 +99,7 @@ namespace LOFAR
       const unsigned maxNrChannelsPerBlock  = std::min(params.nrChannels,
                                                        maxLocalWorkSize.x);
       const unsigned maxTimeParallelThreads = 
-              std::min(params.nrSamplesPerChannel / params.timeIntegrationFactor,
+              gcd(params.nrSamplesPerChannel / params.timeIntegrationFactor,
                                                        maxLocalWorkSize.y);
       const unsigned maxNrTABsPerBlock      = std::min(params.nrTABs,
                                                        maxLocalWorkSize.z);

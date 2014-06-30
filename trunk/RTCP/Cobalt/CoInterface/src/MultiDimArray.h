@@ -465,11 +465,42 @@ namespace LOFAR
     {
       str << "[ ";
 
-      for (size_t i = 0; i < array.size(); i++) {
+      for (size_t i = 0; i < array.num_elements(); i++) {
         if (i > 0)
           str << ", ";
 
-        str << array[i];
+        str << array.data()[i];
+      }
+
+      str << " ]";
+      return str;
+    }
+
+    // output function for full MultiDimArrays suitable when large ranges of
+    // consecutive values are the same.
+    template <typename T, unsigned DIM>
+    std::ostream &printBlockFormat(std::ostream& str, const MultiDimArray<T, DIM> &array)
+    {
+      str << "[ ";
+
+      if (!array.empty()) {
+        T seen = array.origin()[0];
+        size_t count = 1;
+
+        for (size_t i = 1; i < array.num_elements(); ++i) {
+          T val = array.data()[i];
+
+          if (seen == val) {
+            count += 1;
+          } else if (count != 0) {
+            str << seen << " (" << count << "x), ";
+
+            seen = val;
+            count = 1;
+          }
+        }
+
+        str << seen << " (" << count << "x)";
       }
 
       str << " ]";
@@ -482,11 +513,11 @@ namespace LOFAR
     {
       str << "[ ";
 
-      for (size_t i = 0; i < array.size(); i++) {
+      for (size_t i = 0; i < array.num_elements(); i++) {
         if (i > 0)
           str << ", ";
 
-        str << array[i];
+        str << array.data()[i];
       }
 
       str << " ]";

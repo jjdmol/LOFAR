@@ -354,7 +354,7 @@ TEST(BasicIntegrationTest)
                  16); // itimeIntegrationFactor
 
   // Set the input
-  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
+  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
     sut.hInput.data()[idx] = fcomplex(1.0f, 0.0f);
 
 
@@ -363,7 +363,7 @@ TEST(BasicIntegrationTest)
   sut.runKernel();
 
   // Expected output
-  for (size_t idx = 0; idx < sut.hRefOutput.size() / (size_t) 2; ++idx)
+  for (size_t idx = 0; idx < sut.hRefOutput.num_elements(); ++idx)
   {
     sut.hRefOutput.data()[idx * 2] = 2.0f * NR_SAMPLES_PER_CHANNEL;
     sut.hRefOutput.data()[idx * 2 + 1 ] = 0.0f;
@@ -397,14 +397,22 @@ TEST(Coherent2DifferentValuesAllDimTest)
                  NR_TABS,  
                  INTEGRATION_SIZE); 
   // Set the input
-  for (size_t idx = 0; idx < sut.hInput.size(); ++idx)
+  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
     sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
+
+  cout << "hInput: ";
+  printBlockFormat(cout, sut.hInput);
+  cout << endl;
 
   // Host buffers are properly initialized for this test. Just run the kernel. 
   sut.runKernel();
 
+  cout << "hOutput: ";
+  printBlockFormat(cout, sut.hOutput);
+  cout << endl;
+
   // Expected output
-  size_t value_repeat = NR_SAMPLES_PER_OUTPUT_CHANNEL;
+  size_t value_repeat = NR_CHANNELS * NR_SAMPLES_PER_OUTPUT_CHANNEL;
   cout << "value_repeat: "  << value_repeat << endl;
   // For stokes parameters
   size_t size_tab = value_repeat * 4;
@@ -420,11 +428,71 @@ TEST(Coherent2DifferentValuesAllDimTest)
     }
   }
 
+  cout << "hRefOutput: ";
+  printBlockFormat(cout, sut.hRefOutput);
+  cout << endl;
+
   CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
                     sut.hOutput.data(),
                     sut.hOutput.num_elements()); 
 }
 
+TEST(NSAMPLES_196608)
+{
+  LOG_INFO("Test NSAMPLES_196608");
+
+  size_t NR_CHANNELS = 16;
+  size_t NR_SAMPLES_PER_OUTPUT_CHANNEL = 1536;
+  size_t NR_STATIONS = 46;
+  size_t NR_TABS = 1;
+  size_t INTEGRATION_SIZE = 8;
+
+  SUTWrapper sut(NR_CHANNELS,
+                 NR_SAMPLES_PER_OUTPUT_CHANNEL,
+                 NR_STATIONS,
+                 NR_TABS,
+                 INTEGRATION_SIZE);
+
+  // Set the input
+  for (size_t idx = 0; idx < sut.hInput.num_elements(); ++idx)
+    sut.hInput.data()[idx] = fcomplex(1.0f, 2.0f);
+
+  cout << "hInput: ";
+  printBlockFormat(cout, sut.hInput);
+  cout << endl;
+
+  // Host buffers are properly initialized for this test. Just run the kernel. 
+  sut.runKernel();
+
+  cout << "hOutput: ";
+  printBlockFormat(cout, sut.hOutput);
+  cout << endl;
+
+  // Expected output
+  size_t value_repeat = NR_CHANNELS * NR_SAMPLES_PER_OUTPUT_CHANNEL;
+  cout << "value_repeat: "  << value_repeat << endl;
+  // For stokes parameters
+  size_t size_tab = value_repeat * 4;
+  for (size_t idx_tab = 0; idx_tab < NR_TABS; ++idx_tab)
+  {
+    // I
+    for (size_t idx_value_repeat = 0 ; idx_value_repeat < value_repeat; ++idx_value_repeat)
+    {
+      sut.hRefOutput.data()[idx_tab * size_tab + idx_value_repeat]                    = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat + idx_value_repeat]     = 0.0f;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 2 + idx_value_repeat] = 10.0f * INTEGRATION_SIZE;
+      sut.hRefOutput.data()[idx_tab * size_tab + value_repeat * 3 +idx_value_repeat]  = 0.0f;
+    }
+  }
+
+  cout << "hRefOutput: ";
+  printBlockFormat(cout, sut.hRefOutput);
+  cout << endl;
+
+  CHECK_ARRAY_EQUAL(sut.hRefOutput.data(),
+                    sut.hOutput.data(),
+                    sut.hOutput.num_elements()); 
+}
 
 int main(int argc, char *argv[])
 {
