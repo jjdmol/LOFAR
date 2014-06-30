@@ -82,7 +82,7 @@ int main() {
   // correction (but that kernel will run to convert int to float and to
   // transform the data order).
 
-  CorrelatorFactories factories(ps);
+  CorrelatorStep::Factories factories(ps, 1);
   CorrelatorSubbandProc cwq(ps, ctx, factories);
 
   SubbandProcInputData in(

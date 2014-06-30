@@ -64,7 +64,7 @@ namespace LOFAR
       SmartPtr<Stream> connectToOutput(unsigned globalSubbandIdx) const;
 
     private:
-      CorrelatorFactories factories;
+      CorrelatorStep::Factories factories;
 
       // For monitoring (PVSS). The beamformer has these in TABTranspose.
       size_t itsBlocksWritten, itsBlocksDropped;

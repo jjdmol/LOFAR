@@ -27,6 +27,8 @@
 #include <utility>
 #include <memory>
 
+#include <boost/shared_ptr.hpp>
+
 #include <Stream/Stream.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/CorrelatedData.h>
@@ -35,12 +37,9 @@
 
 #include <GPUProc/global_defines.h>
 #include <GPUProc/MultiDimArrayHostBuffer.h>
-#include <GPUProc/Kernels/FIR_FilterKernel.h>
-#include <GPUProc/Kernels/FFT_Kernel.h>
-#include <GPUProc/Kernels/DelayAndBandPassKernel.h>
-#include <GPUProc/Kernels/CorrelatorKernel.h>
 #include <GPUProc/PerformanceCounter.h>
 
+#include "CorrelatorStep.h"
 #include "SubbandProc.h"
 
 namespace LOFAR
@@ -63,41 +62,12 @@ namespace LOFAR
       void reset();
     };
 
-    struct CorrelatorFactories
-    {
-      CorrelatorFactories(const Parset &ps, 
-                          size_t nrSubbandsPerSubbandProc = 1):
-        firFilter(ps.settings.correlator.nrChannels > 1
-          ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
-            ps.settings.antennaFields.size(),
-            true,
-            nrSubbandsPerSubbandProc,
-            ps.settings.correlator.nrChannels,
-
-            // Scale to always output visibilities or stokes with the same flux scale.
-            // With the same bandwidth, twice the (narrower) channels _average_ (not
-            // sum) to the same fluxes (and same noise). Twice the channels (twice the
-            // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
-            // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
-            // effectively squares, integr on fewer channels averages over more values.
-            std::sqrt((double)ps.settings.correlator.nrChannels)))
-          : NULL),
-        delayAndBandPass(DelayAndBandPassKernel::Parameters(ps, true)),
-        correlator(ps)
-      {
-      }
-
-      SmartPtr< KernelFactory<FIR_FilterKernel> > firFilter;
-      KernelFactory<DelayAndBandPassKernel> delayAndBandPass;
-      KernelFactory<CorrelatorKernel> correlator;
-    };
-
     class CorrelatorSubbandProc : public SubbandProc
     {
     public:
       CorrelatorSubbandProc(const Parset &parset, 
                             gpu::Context &context,
-                            CorrelatorFactories &factories,
+                            CorrelatorStep::Factories &factories,
                             size_t nrSubbandsPerSubbandProc = 1);
 
       virtual ~CorrelatorSubbandProc();
@@ -112,47 +82,6 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(SubbandProcOutputData &output);
 
-      // Collection of functions to tranfer the input flags to the output.
-      // \c propagateFlags can be called parallel to the kernels.
-      // After the data is copied from the the shared buffer 
-      // \c applyWeights can be used to weight the visibilities 
-      class Flagger: public SubbandProc::Flagger
-      {
-      public:
-        // 1. Convert input flags to channel flags, calculate the amount flagged
-        // samples and save this in output
-        static void propagateFlags(Parset const & parset,
-          MultiDimArray<LOFAR::SparseSet<unsigned>, 1>const &inputFlags,
-          CorrelatedData &output);
-
-        // 2. Calculate the weight based on the number of flags and apply this
-        // weighting to all output values
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
-
-        // 1.2 Calculate the number of flagged samples and set this on the
-        // output dataproduct This function is aware of the used filter width a
-        // corrects for this.
-        static void
-        calcWeights(Parset const &parset,
-                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
-
-        // 2.1 Apply the supplied weight to the complex values in the channel
-        // and baseline
-        static void applyWeight(unsigned baseline, unsigned channel,
-                                float weight, CorrelatedData &output);
-      private:
-        template<typename T>
-        static void applyWeights(Parset const &parset, CorrelatedData &output);
-
-        template<typename T> 
-        static void
-        calcWeights(Parset const &parset,
-                    MultiDimArray<SparseSet<unsigned>, 2>const &flagsPerChannel,
-                    CorrelatedData &output);
-
-      };
-
       // Correlator specific collection of PerformanceCounters
       class Counters
       {
@@ -161,49 +90,20 @@ namespace LOFAR
 
         // gpu transfer counters
         PerformanceCounter samples;
-        PerformanceCounter visibilities;
       };
 
       Counters counters;
     private:
-      const bool correlatorPPF;
-
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
       // to be uploaded.
       ssize_t prevBlock;
       signed int prevSAP;
 
-      gpu::DeviceMemory devA;      
-      gpu::DeviceMemory devB;
+      boost::shared_ptr<gpu::DeviceMemory> devA;      
+      boost::shared_ptr<gpu::DeviceMemory> devB;
 
-      /*
-       * Kernels
-       */
-
-      // FIR filter
-      SmartPtr<FIR_FilterKernel> firFilterKernel;
-
-      // FFT
-      SmartPtr<FFT_Kernel> fftKernel;
-
-      // Delay and Bandpass
-      std::auto_ptr<DelayAndBandPassKernel> delayAndBandPassKernel;
-
-      // Correlator
-      std::auto_ptr<CorrelatorKernel> correlatorKernel;
-
-      // Buffers for long-time integration; one buffer for each subband that
-      // will be processed by this class instance. Each element of the vector
-      // contains a counter that tracks the number of additions made to the data
-      // buffer and the data buffer itself.
-      vector< std::pair< size_t, SmartPtr<CorrelatedDataHostBuffer> > >
-      integratedData;
-
-      // Perform long-time integration. Returns `true' if integration has
-      // been completed. In that case, `output' will contain the integration
-      // result.
-      bool integrate(CorrelatedDataHostBuffer &output);
+      SmartPtr<CorrelatorStep> correlatorStep;
     };
 
   }
