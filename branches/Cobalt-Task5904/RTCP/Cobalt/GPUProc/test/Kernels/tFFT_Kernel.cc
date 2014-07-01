@@ -21,6 +21,7 @@
 
 #include <lofar_config.h>
 #include <GPUProc/Kernels/FFT_Kernel.h>
+#include <CoInterface/Config.h>
 #include <CoInterface/Parset.h>
 #include <Common/lofar_iostream.h>
 #include <UnitTest++.h>
@@ -31,13 +32,13 @@ using namespace LOFAR::Cobalt;
 TEST(InputData)
 {
   CHECK_EQUAL(size_t(786432),
-              FFT_Kernel::Parameters(16, 49152, true).bufferSize(FFT_Kernel::INPUT_DATA));
+              FFT_Kernel::Parameters(16, 49152 * NR_POLARIZATIONS, true).bufferSize(FFT_Kernel::INPUT_DATA));
 }
 
 TEST(OutputData)
 {
   CHECK_EQUAL(size_t(786432),
-              FFT_Kernel::Parameters(16, 49152, false).bufferSize(FFT_Kernel::OUTPUT_DATA));
+              FFT_Kernel::Parameters(16, 49152 * NR_POLARIZATIONS, false).bufferSize(FFT_Kernel::OUTPUT_DATA));
 }
 
 TEST(MustThrow)
