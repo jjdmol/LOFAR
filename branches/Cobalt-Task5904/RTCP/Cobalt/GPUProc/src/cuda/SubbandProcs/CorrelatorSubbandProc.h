@@ -70,11 +70,6 @@ namespace LOFAR
                             CorrelatorStep::Factories &factories,
                             size_t nrSubbandsPerSubbandProc = 1);
 
-      virtual ~CorrelatorSubbandProc();
-
-      // Print statistics of all kernels and transfers
-      void printStats();
-
       // Correlate the data found in the input data buffer
       virtual void processSubband(SubbandProcInputData &input,
                                   SubbandProcOutputData &output);
@@ -82,18 +77,9 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(SubbandProcOutputData &output);
 
-      // Correlator specific collection of PerformanceCounters
-      class Counters
-      {
-      public:
-        Counters(gpu::Context &context);
-
-        // gpu transfer counters
-        PerformanceCounter samples;
-      };
-
-      Counters counters;
     private:
+      PerformanceCounter inputCounter;
+
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have
       // to be uploaded.

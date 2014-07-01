@@ -40,6 +40,7 @@ namespace LOFAR
     string IncoherentStokesKernel::theirFunction = "incoherentStokes";
 
     IncoherentStokesKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("incoherentStokes"),
       nrStations(ps.settings.antennaFields.size()),
       nrChannels(ps.settings.beamFormer.incoherentSettings.nrChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),

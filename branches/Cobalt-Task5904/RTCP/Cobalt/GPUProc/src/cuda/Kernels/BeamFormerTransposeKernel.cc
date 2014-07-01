@@ -45,6 +45,7 @@ namespace LOFAR
     string BeamFormerTransposeKernel::theirFunction = "transpose";
 
     BeamFormerTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("beamFormerTranspose"),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
       nrSamplesPerChannel(ps.nrSamplesPerSubband() / nrChannels),
       nrTABs(ps.settings.beamFormer.maxNrCoherentTABsPerSAP())

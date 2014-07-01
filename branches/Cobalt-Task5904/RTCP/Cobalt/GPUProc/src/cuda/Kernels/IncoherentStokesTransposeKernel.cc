@@ -42,6 +42,7 @@ namespace LOFAR
       "transpose";
 
     IncoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("incoherentStokesTranspose"),
       nrStations(ps.settings.antennaFields.size()),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),

@@ -41,7 +41,8 @@ namespace LOFAR
         ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
           ps.settings.correlator.nrChannels,
           ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
-          true))
+          true,
+          "FFT (correlator)"))
         : NULL),
       firFilter(ps.settings.correlator.nrChannels > 1
           ? new KernelFactory<FIR_FilterKernel>(FIR_FilterKernel::Parameters(ps,
@@ -56,7 +57,8 @@ namespace LOFAR
             // total bandwidth) _average_ to the _same_ flux, but noise * 1/sqrt(2).
             // Note: FFTW/CUFFT do not normalize, correlation or stokes calculation
             // effectively squares, integr on fewer channels averages over more values.
-            std::sqrt((double)ps.settings.correlator.nrChannels)))
+            std::sqrt((double)ps.settings.correlator.nrChannels),
+            "FIR (correlator)"))
           : NULL),
 
       delayAndBandPass(DelayAndBandPassKernel::Parameters(ps, true)),
@@ -222,16 +224,13 @@ namespace LOFAR
       :
       ProcessStep(parset, i_queue),
       correlatorPPF(ps.settings.correlator.nrChannels > 1),
-      outputCounter(context),
+      outputCounter(context, "output (correlator)"),
       integratedData(nrSubbandsPerSubbandProc)
     {
       devA=i_devA;
       devB=i_devB;
       initMembers(context, factories);
     }
-
-    CorrelatorStep::~CorrelatorStep()
-    {}
 
     void CorrelatorStep::initMembers(gpu::Context &context,
       Factories &factories){
@@ -265,8 +264,7 @@ namespace LOFAR
 
     void CorrelatorStep::writeInput(const SubbandProcInputData &input)
     {
-      if (ps.settings.delayCompensation.enabled)
-      {
+      if (ps.settings.delayCompensation.enabled) {
         queue.writeBuffer(delayAndBandPassKernel->delaysAtBegin,
           input.delaysAtBegin, false);
         queue.writeBuffer(delayAndBandPassKernel->delaysAfterEnd,
@@ -318,31 +316,6 @@ namespace LOFAR
       }
 
       Flagger::propagateFlags(ps, flags, output);
-    }
-
-
-    void CorrelatorStep::printStats()
-    {
-      LOG_INFO_STR(
-        "**** CorrelatorStep GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(fir)" << (correlatorPPF ? firFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(fft)" << (correlatorPPF ? fftKernel->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(delayBp)" << delayAndBandPassKernel->itsCounter.stats << endl <<
-        std::setw(20) << "(correlator)" << correlatorKernel->itsCounter.stats << endl <<
-        std::setw(20) << "(visibilities)" << outputCounter.stats << endl);
-    }
-
-    void CorrelatorStep::logTime()
-    {
-      if (correlatorPPF) {
-        firFilterKernel->itsCounter.logTime();
-        fftKernel->itsCounter.logTime();
-      }
-
-      delayAndBandPassKernel->itsCounter.logTime();
-      correlatorKernel->itsCounter.logTime();
-
-      outputCounter.logTime();
     }
 
 

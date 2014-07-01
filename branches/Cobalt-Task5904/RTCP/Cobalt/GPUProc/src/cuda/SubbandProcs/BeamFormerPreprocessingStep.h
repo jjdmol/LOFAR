@@ -79,12 +79,6 @@ namespace LOFAR
 
       void process(const SubbandProcInputData &input);
 
-      void printStats();
-
-      void logTime();
-
-      ~BeamFormerPreprocessingStep();
-
     private:
 
       //Data members

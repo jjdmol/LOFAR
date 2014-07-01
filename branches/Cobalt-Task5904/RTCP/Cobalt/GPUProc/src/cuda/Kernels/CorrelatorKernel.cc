@@ -44,6 +44,7 @@ namespace LOFAR
     string CorrelatorKernel::theirFunction = "correlate";
 
     CorrelatorKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("correlator"),
       nrStations(ps.settings.antennaFields.size()),
       // For Cobalt (= up to 80 antenna fields), the 2x2 kernel gives the best
       // performance.

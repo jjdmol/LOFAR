@@ -47,10 +47,12 @@ namespace LOFAR
 
       incoherentInverseFFT(FFT_Kernel::Parameters(
         ps.settings.beamFormer.nrHighResolutionChannels,
-        ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, false)),
+        ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, false,
+        "FFT (incoherent, inverse)")),
       incoherentInverseFFTShift(FFTShiftKernel::Parameters(ps,
         ps.settings.antennaFields.size(),
-        ps.settings.beamFormer.nrHighResolutionChannels)),
+        ps.settings.beamFormer.nrHighResolutionChannels,
+        "FFT-shift (incoherent, inverse)")),
 
       incoherentFirFilter(
         ps.settings.beamFormer.incoherentSettings.nrChannels > 1
@@ -59,13 +61,15 @@ namespace LOFAR
             false,
             nrSubbandsPerSubbandProc,
             ps.settings.beamFormer.incoherentSettings.nrChannels,
-            static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels)))
+            static_cast<float>(ps.settings.beamFormer.incoherentSettings.nrChannels),
+            "FIR (incoherent, final)"))
         : NULL ),
       incoherentFinalFFT(
         ps.settings.beamFormer.incoherentSettings.nrChannels > 1
         ? new KernelFactory<FFT_Kernel>(FFT_Kernel::Parameters(
             ps.settings.beamFormer.incoherentSettings.nrChannels,
-            ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true))
+            ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize, true,
+            "FFT (incoherent, final)"))
         : NULL),
 
       incoherentStokes(IncoherentStokesKernel::Parameters(ps))
@@ -82,7 +86,7 @@ namespace LOFAR
       :
       ProcessStep(parset, i_queue),
       incoherentStokesPPF(factories.incoherentFirFilter != NULL),
-      outputCounter(context)
+      outputCounter(context, "output (incoherent)")
     {
       devA = i_devA;
       devB = i_devB;
@@ -132,32 +136,6 @@ namespace LOFAR
 
     gpu::DeviceMemory BeamFormerIncoherentStep::outputBuffer() {
       return incoherentStokesPPF ? *devA : *devB;
-    }
-
-    void BeamFormerIncoherentStep::logTime()
-    {
-      incoherentTranspose->itsCounter.logTime();
-      incoherentInverseFFT->itsCounter.logTime();
-      if (incoherentStokesPPF)
-      {
-        incoherentFirFilterKernel->itsCounter.logTime();
-        incoherentFinalFFT->itsCounter.logTime();
-      }
-      incoherentStokesKernel->itsCounter.logTime();
-      outputCounter.logTime();
-    }
-
-    void BeamFormerIncoherentStep::printStats()
-    {
-      LOG_INFO_STR(
-        "**** BeamFormerSubbandProc incoherent stage GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(incoherentStokesTranspose)" << incoherentTranspose->itsCounter.stats << endl <<
-        std::setw(20) << "(incoherentInverseFFT)" << incoherentInverseFFT->itsCounter.stats << endl <<
-        std::setw(20) << "(incoherentInverseFFTShift)" << incoherentInverseFFTShiftKernel->itsCounter.stats << endl <<
-        std::setw(20) << "(incoherentFirFilterKernel)" << (incoherentStokesPPF ? incoherentFirFilterKernel->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(incoherentFinalFFT)" << (incoherentStokesPPF ? incoherentFinalFFT->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(incoherentStokes)" << incoherentStokesKernel->itsCounter.stats << endl <<
-        std::setw(20) << "(output)" << outputCounter.stats << endl);
     }
 
 

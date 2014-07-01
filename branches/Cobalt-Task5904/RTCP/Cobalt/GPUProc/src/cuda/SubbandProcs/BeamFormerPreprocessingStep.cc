@@ -41,10 +41,12 @@ namespace LOFAR
         firstFFT(FFT_Kernel::Parameters(
           ps.settings.beamFormer.nrDelayCompensationChannels,
           ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
-          true)),
+          true,
+          "FFT (beamformer, 1st)")),
         fftShift(FFTShiftKernel::Parameters(ps,
           ps.settings.antennaFields.size(),
-          ps.settings.beamFormer.nrDelayCompensationChannels)),
+          ps.settings.beamFormer.nrDelayCompensationChannels,
+          "FFT-shift (beamformer)")),
 
         delayCompensation(DelayAndBandPassKernel::Parameters(ps, false)),
 
@@ -52,7 +54,8 @@ namespace LOFAR
           ps.settings.beamFormer.nrHighResolutionChannels /
           ps.settings.beamFormer.nrDelayCompensationChannels,
           ps.settings.antennaFields.size() * NR_POLARIZATIONS * ps.settings.blockSize,
-          true)),
+          true,
+          "FFT (beamformer, 2nd)")),
 
         bandPassCorrection(BandPassCorrectionKernel::Parameters(ps))
     {
@@ -73,8 +76,6 @@ namespace LOFAR
       initMembers(context, factories);
     }
 
-    BeamFormerPreprocessingStep::~BeamFormerPreprocessingStep()
-    {}
 
     void BeamFormerPreprocessingStep::initMembers(gpu::Context &context,
       Factories &factories){
@@ -157,31 +158,6 @@ namespace LOFAR
 
       bandPassCorrectionKernel->enqueue(
         input.blockID);
-    }
-
-
-    void BeamFormerPreprocessingStep::printStats()
-    {
-      // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR(
-        "**** BeamFormerSubbandProc FirstStage GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(intToFloatKernel)" << intToFloatKernel->itsCounter.stats << endl <<
-        //std::setw(20) << "(firstFFTShift)" << firstFFTShift.stats << endl <<
-        std::setw(20) << "(firstFFT)" << firstFFT->itsCounter.stats << endl <<
-        std::setw(20) << "(delayCompensationKernel)" << delayCompensationKernel->itsCounter.stats << endl <<
-        //std::setw(20) << "(secondFFTShift)" << secondFFTShift.stats << endl <<
-        std::setw(20) << "(secondFFT)" << 
-        (doSecondFFT ? secondFFT->itsCounter.stats : RunningStatistics()) << endl <<
-        std::setw(20) << "(bandPassCorrectionKernel)" << bandPassCorrectionKernel->itsCounter.stats << endl);
-    }
-
-    void BeamFormerPreprocessingStep::logTime()
-    {
-      intToFloatKernel->itsCounter.logTime();
-      firstFFT->itsCounter.logTime();
-      delayCompensationKernel->itsCounter.logTime();
-      if (doSecondFFT) secondFFT->itsCounter.logTime();
-      bandPassCorrectionKernel->itsCounter.logTime();
     }
   }
 }

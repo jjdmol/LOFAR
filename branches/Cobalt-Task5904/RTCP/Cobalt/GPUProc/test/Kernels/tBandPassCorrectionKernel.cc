@@ -65,7 +65,6 @@ int main() {
 
   auto_ptr<BandPassCorrectionKernel> kernel(factory.create(stream, inputData, filteredData));
 
-  PerformanceCounter counter(ctx);
   BlockID blockId;
   kernel->enqueue(blockId);
   stream.synchronize();

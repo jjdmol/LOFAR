@@ -43,7 +43,7 @@ struct MyKernel : CompiledKernel {
   : CompiledKernel(stream, gpu::Function(module, fname), buffers, parameters) { }
 
   struct Parameters : Kernel::Parameters {
-    Parameters(const Parset& ps) { (void)ps; }
+    Parameters(const Parset& ps): Kernel::Parameters("MyKernel") { (void)ps; }
   };
 
   struct Buffers : Kernel::Buffers {

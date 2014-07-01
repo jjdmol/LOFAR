@@ -39,7 +39,8 @@ namespace LOFAR
 {
   namespace Cobalt
   {
-    Kernel::Parameters::Parameters() :
+    Kernel::Parameters::Parameters(const std::string &name) :
+      name(name),
       dumpBuffers(false)
     {
     }
@@ -54,18 +55,20 @@ namespace LOFAR
                    const Buffers &buffers,
                    const Parameters &params)
       : 
-      itsCounter(stream.getContext()),
+      itsCounter(stream.getContext(), params.name),
       itsStream(stream),
       itsBuffers(buffers),
       itsParameters(params)
     {
     }
 
-    void Kernel::enqueue(const BlockID &blockId) const
+    void Kernel::enqueue(const BlockID &blockId)
     {
-      itsStream.recordEvent(itsCounter.start);
+      // record duration of last invocation (or noop
+      // if there was none)
+      itsCounter.recordStart(itsStream);
       launch();
-      itsStream.recordEvent(itsCounter.stop);
+      itsCounter.recordStop(itsStream);
 
       if (itsParameters.dumpBuffers && blockId.block >= 0) {
         itsStream.synchronize();
@@ -81,10 +84,6 @@ namespace LOFAR
                      blockId.block));
     }
 
-    PerformanceCounter &Kernel::getCounter()
-    {
-      return itsCounter;
-    }
 
     CompiledKernel::CompiledKernel(
                    const gpu::Stream& stream, 

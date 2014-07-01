@@ -45,6 +45,7 @@ namespace LOFAR
     string CoherentStokesTransposeKernel::theirFunction = "coherentStokesTranspose";
 
     CoherentStokesTransposeKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("coherentStokesTranspose"),
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),
       nrSamplesPerChannel(ps.settings.blockSize / nrChannels),
 

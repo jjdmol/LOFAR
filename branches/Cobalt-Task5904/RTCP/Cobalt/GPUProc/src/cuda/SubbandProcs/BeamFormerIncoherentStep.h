@@ -83,10 +83,6 @@ namespace LOFAR
 
       void readOutput(BeamFormedData &output);
 
-      void printStats();
-
-      void logTime();
-
     private:
 
       // Data members

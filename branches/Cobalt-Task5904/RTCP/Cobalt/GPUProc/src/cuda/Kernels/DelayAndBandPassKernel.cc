@@ -45,6 +45,7 @@ namespace LOFAR
     string DelayAndBandPassKernel::theirFunction = "applyDelaysAndCorrectBandPass";
 
     DelayAndBandPassKernel::Parameters::Parameters(const Parset& ps, bool correlator) :
+      Kernel::Parameters(correlator ? "delayAndBandPass" : "delayCompensation"),
       nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
       inputIsStationData(correlator && ps.settings.correlator.nrChannels == 1

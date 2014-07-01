@@ -45,6 +45,7 @@ namespace LOFAR
     string BandPassCorrectionKernel::theirFunction = "bandPassCorrection";
 
     BandPassCorrectionKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("bandpassCorrection"),
       nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
 

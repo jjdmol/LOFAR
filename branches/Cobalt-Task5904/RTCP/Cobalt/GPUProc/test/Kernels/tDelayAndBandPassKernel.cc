@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
   size_t subbandIdx = 0;
   float centralFrequency = ps.settings.subbands[subbandIdx].centralFrequency;
   size_t SAP = ps.settings.subbands[subbandIdx].SAP;
-  PerformanceCounter counter(ctx);
   BlockID blockId;
   kernel->enqueue(blockId, centralFrequency, SAP);
   stream.synchronize();

@@ -91,9 +91,8 @@ TEST(FIR_FilterKernel)
   dHistory.set(0);
 
   auto_ptr<FIR_FilterKernel> kernel(factory.create(stream, dInput, dOutput));
-  PerformanceCounter counter(context);
   BlockID blockId;
-  kernel->enqueue(blockId,  0);
+  kernel->enqueue(blockId, 0);
 
   stream.readBuffer(hOutput, dOutput);
 

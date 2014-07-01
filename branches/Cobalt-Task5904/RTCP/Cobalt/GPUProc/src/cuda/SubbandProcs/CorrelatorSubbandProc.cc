@@ -59,7 +59,7 @@ namespace LOFAR
       CorrelatorStep::Factories &factories, size_t nrSubbandsPerSubbandProc)
       :
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),       
-      counters(context),
+      inputCounter(context, "input"),
       prevBlock(-1),
       prevSAP(-1)
     {
@@ -87,20 +87,6 @@ namespace LOFAR
       }
     }
 
-    CorrelatorSubbandProc::~CorrelatorSubbandProc()
-    {
-    }
-
-    void CorrelatorSubbandProc::printStats()
-    {
-      correlatorStep->printStats();
-    }
-
-    CorrelatorSubbandProc::Counters::Counters(gpu::Context &context)
-      :
-    samples(context)
-    {}
-
 
     void CorrelatorSubbandProc::processSubband(SubbandProcInputData &input,
                                                SubbandProcOutputData &_output)
@@ -110,7 +96,7 @@ namespace LOFAR
 
       // ***************************************************
       // Copy data to the GPU 
-      queue.writeBuffer(*devA, input.inputSamples, counters.samples, true);
+      queue.writeBuffer(*devA, input.inputSamples, inputCounter, true);
    
       if (ps.settings.delayCompensation.enabled) {
         const size_t block = input.blockID.block;
@@ -136,15 +122,6 @@ namespace LOFAR
 
       // Wait for the GPU to finish.
       queue.synchronize();
-
-      // ************************************************
-      // Perform performance statistics if needed
-      if (gpuProfiling)
-      {
-        correlatorStep->logTime();
-
-        counters.samples.logTime();
-      }
     }
 
 

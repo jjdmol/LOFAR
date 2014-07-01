@@ -38,10 +38,6 @@ namespace LOFAR
     public:
       virtual void process(const SubbandProcInputData &input) = 0;
 
-      virtual void printStats() =0;
-
-      virtual void logTime() = 0;
-
       virtual ~ProcessStep()
        {}
 

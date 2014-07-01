@@ -42,7 +42,8 @@ namespace LOFAR
     string FFTShiftKernel::theirSourceFile = "FFTShift.cu";
     string FFTShiftKernel::theirFunction = "FFTShift";
 
-    FFTShiftKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels):
+    FFTShiftKernel::Parameters::Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels, const std::string &name):
+      Kernel::Parameters(name),
       nrSTABs(nrSTABs),
 
       nrChannels(nrChannels),

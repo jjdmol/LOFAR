@@ -1001,18 +1001,11 @@ namespace LOFAR
       }
 
       void Stream::writeBuffer(const DeviceMemory &devMem, const HostMemory &hostMem,
-                         const PerformanceCounter &counter, bool synchronous) const
+                         PerformanceCounter &counter, bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          writeBuffer(devMem, hostMem, synchronous); 
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          writeBuffer(devMem, hostMem, synchronous);
-        }
+        counter.recordStart(*this);
+        writeBuffer(devMem, hostMem, synchronous); 
+        counter.recordStop(*this);
       }
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
@@ -1039,19 +1032,12 @@ namespace LOFAR
 
       void Stream::copyBuffer(const DeviceMemory &devTarget, 
                               const DeviceMemory &devSource,
-                              const PerformanceCounter &counter,
+                              PerformanceCounter &counter,
                               bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          copyBuffer(devTarget, devSource, synchronous); 
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          copyBuffer(devTarget, devSource, synchronous);
-        }
+        counter.recordStart(*this);
+        copyBuffer(devTarget, devSource, synchronous); 
+        counter.recordStop(*this);
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, 
@@ -1074,18 +1060,11 @@ namespace LOFAR
       }
 
       void Stream::readBuffer(const HostMemory &hostMem, const DeviceMemory &devMem,
-                        const PerformanceCounter &counter, bool synchronous) const
+                        PerformanceCounter &counter, bool synchronous) const
       {
-        if (gpuProfiling)
-        {
-          recordEvent(counter.start);
-          readBuffer(hostMem, devMem, synchronous);  
-          recordEvent(counter.stop);
-        }
-        else
-        {
-          writeBuffer(devMem, hostMem, synchronous);
-        }
+        counter.recordStart(*this);
+        readBuffer(hostMem, devMem, synchronous);  
+        counter.recordStop(*this);
       }
 
 

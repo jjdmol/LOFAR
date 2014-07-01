@@ -45,6 +45,7 @@ namespace LOFAR
     string BeamFormerKernel::theirFunction = "beamFormer";
 
     BeamFormerKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("beamFormer"),
       nrStations(ps.settings.antennaFields.size()),
 
       nrChannels(ps.settings.beamFormer.nrHighResolutionChannels),

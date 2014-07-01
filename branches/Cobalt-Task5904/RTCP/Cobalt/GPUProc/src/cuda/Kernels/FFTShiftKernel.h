@@ -47,7 +47,7 @@ namespace LOFAR
       // IntToFloatKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels);
+        Parameters(const Parset& ps, unsigned nrSTABs, unsigned nrChannels, const std::string &name = "FFT-shift");
         unsigned nrSTABs;
 
         unsigned nrChannels;

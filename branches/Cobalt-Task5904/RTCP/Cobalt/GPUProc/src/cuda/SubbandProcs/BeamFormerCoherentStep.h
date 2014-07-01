@@ -86,10 +86,6 @@ namespace LOFAR
 
       void readOutput(BeamFormedData &output);
 
-      void printStats();
-
-      void logTime();
-
     private:
 
       const bool coherentStokesPPF;

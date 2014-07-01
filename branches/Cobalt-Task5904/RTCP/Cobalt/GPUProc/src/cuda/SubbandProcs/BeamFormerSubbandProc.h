@@ -83,10 +83,6 @@ namespace LOFAR
       // Do post processing on the CPU
       virtual bool postprocessSubband(SubbandProcOutputData &output);
 
-      void logTime();
-
-      void printStats();
-
     private:
       // The previously processed SAP/block, or -1 if nothing has been
       // processed yet. Used in order to determine if new delays have

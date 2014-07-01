@@ -43,6 +43,7 @@ namespace LOFAR
     string IntToFloatKernel::theirFunction = "intToFloat";
 
     IntToFloatKernel::Parameters::Parameters(const Parset& ps) :
+      Kernel::Parameters("intToFloat"),
       nrStations(ps.settings.antennaFields.size()),
       nrBitsPerSample(ps.settings.nrBitsPerSample),
 

@@ -92,24 +92,11 @@ TEST(tKernelFunctions)
 
   // **************************************
   // excercise it
-  PerformanceCounter counter(context);  //create a counter
   BlockID blockId;                      // create a dummy block-ID struct
   kernel->enqueue(blockId,  0); // insert in kernel queue
 
-
   stream.readBuffer(hOutput, dOutput);
   stream.synchronize();
- 
-  // update the counter
-  kernel->getCounter().logTime();
-
-  stringstream str;
-  kernel->getCounter().stats.print(str);
-
-  // Most functionality is tested at the specific stats class. Just test if
-  // the stats object has been used once
-  CHECK(str.str() != "*Not executed*");
-
 }
 
 int main()

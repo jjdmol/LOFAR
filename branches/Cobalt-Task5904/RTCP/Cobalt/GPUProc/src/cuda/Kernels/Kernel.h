@@ -49,7 +49,9 @@ namespace LOFAR
       // or drop opt)
       struct Parameters
       {
-        Parameters();
+        Parameters(const std::string &name);
+
+        std::string name;
 
         bool dumpBuffers;
         std::string dumpFilePattern;
@@ -72,12 +74,7 @@ namespace LOFAR
         gpu::DeviceMemory output;
       };
 
-      void enqueue(const BlockID &blockId) const;
-
-      PerformanceCounter &getCounter();
-
-      // Performance counter for work done by this kernel
-      PerformanceCounter itsCounter;
+      void enqueue(const BlockID &blockId);
 
     protected:
       // Construct a kernel.
@@ -87,6 +84,9 @@ namespace LOFAR
 
       // Explicit destructor, because the implicitly generated one is public.
       virtual ~Kernel();
+
+      // Performance counter for work done by this kernel
+      PerformanceCounter itsCounter;
 
       size_t nrOperations, nrBytesRead, nrBytesWritten;
 

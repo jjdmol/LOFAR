@@ -86,12 +86,6 @@ namespace LOFAR
 
       bool postprocessSubband(CorrelatedDataHostBuffer &output);
 
-      void printStats();
-
-      void logTime();
-
-      ~CorrelatorStep();
-
       // Collection of functions to tranfer the input flags to the output.
       // \c propagateFlags can be called parallel to the kernels.
       // After the data is copied from the the shared buffer

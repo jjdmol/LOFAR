@@ -53,8 +53,9 @@ namespace LOFAR
      */
     const size_t maxNrFFTpoints = 1024 * 1024;
 
-    FFT_Kernel::Parameters::Parameters(unsigned fftSize, unsigned nrSamples, bool forward)
+    FFT_Kernel::Parameters::Parameters(unsigned fftSize, unsigned nrSamples, bool forward, const std::string &name)
     :
+      Kernel::Parameters(name),
       fftSize(fftSize),
       nrSamples(nrSamples),
       forward(forward)

@@ -44,7 +44,7 @@ namespace LOFAR
       // BandPassCorrectionKernel class.
       struct Parameters : Kernel::Parameters
       {
-        Parameters(unsigned fftSize, unsigned nrSamples, bool forward);
+        Parameters(unsigned fftSize, unsigned nrSamples, bool forward, const std::string &name = "FFT");
 
         unsigned fftSize;
         unsigned nrSamples;

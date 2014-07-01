@@ -84,7 +84,7 @@ namespace LOFAR
       SubbandProc(parset, context, nrSubbandsPerSubbandProc),
       prevBlock(-1),
       prevSAP(-1),
-      inputCounter(context)
+      inputCounter(context, "input")
     {
       // See doc/bf-pipeline.txt
       size_t devA_size = factories.preprocessing.intToFloat.bufferSize(IntToFloatKernel::OUTPUT_DATA);
@@ -134,35 +134,7 @@ namespace LOFAR
         outputPool.free.append(new BeamFormedData(ps, context));
       }
     }
-     
-    void BeamFormerSubbandProc::logTime()
-    {
-      inputCounter.logTime();
 
-      preprocessingPart->logTime();
-
-      if (coherentStep.get())
-        coherentStep->logTime();
-
-      if (incoherentStep.get())
-        incoherentStep->logTime();
-    }
-
-    void BeamFormerSubbandProc::printStats()
-    {
-      // Print the individual counter stats: mean and stDev
-      LOG_INFO_STR(
-        "**** BeamFormerSubbandProc cpu to GPU transfers GPU mean and stDev ****" << endl <<
-        std::setw(20) << "(input)" << inputCounter.stats << endl);
-
-      preprocessingPart->printStats();
-
-      if (coherentStep.get())
-        coherentStep->printStats();
-
-      if (incoherentStep.get())
-        incoherentStep->printStats();
-    }
 
     void BeamFormerSubbandProc::processSubband( SubbandProcInputData &input,
       SubbandProcOutputData &_output)
@@ -210,12 +182,6 @@ namespace LOFAR
 
       // Synchronise to assure that all the work in the data is done
       queue.synchronize();
-
-      // ************************************************
-      // Perform performance statistics if needed
-      if (gpuProfiling) {      
-        logTime();
-      }
     }
 
     bool BeamFormerSubbandProc::postprocessSubband(SubbandProcOutputData &_output)
