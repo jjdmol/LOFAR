@@ -1,0 +1,7 @@
+[general]
+pvss_path = "/usr/pvss/pvss2_v3.0"
+proj_path = "/usr/pvss/pvss2_v3.0/Lofar/MAC"
+proj_version = "3.0"
+userName = "root"
+password = ""
+langs = "de_AT.iso88591"

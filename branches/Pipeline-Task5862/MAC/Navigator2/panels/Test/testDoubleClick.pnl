@@ -1,0 +1,150 @@
+V 10
+2
+LANG:1 0 
+LANG:6 0 
+PANEL,-1 -1 500 400 N "_3DFace" 0
+E E E E E 1 -1 -1 0  30 50
+""0  1
+E "bool bDoubleClicked = false;
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+6 0
+"RECTANGLE1"
+""
+1 30 50 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E "main()
+{
+  bDoubleClicked = true;
+      
+  debug.appendItem( \"Double-click -> set variable\" );
+
+  test.text = \"true\";
+  
+  DebugN(\"DoubleClicked\");
+  
+  this.backCol = \"red\";
+  
+  delay(0, 500);
+
+  debug.appendItem( \"Double-click -> delay has ended\" );
+    
+  test.text = \"false\";
+  bDoubleClicked = false;
+}" 0
+
+0 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:6 0 
+
+1
+"dashclr"N "_Transparent"
+E "main()
+{
+  debug.appendItem( \"Click \" );
+  delay(0, 100);
+  
+  debug.appendItem( \"Click is checking bool\" );
+  if (!bDoubleClicked)
+  {
+    debug.appendItem( \"CLICK:Bool is false\" );
+    DebugN(\"*********Clicked\");
+    this.backCol = \"green\";
+  }
+  else
+    debug.appendItem( \"bool is true -> no click\" );
+}" 0
+ 0 1 1 2 1 E 1 0 1 10 0 1 E 30 50 130 100
+13 1
+"test"
+""
+1 180 70 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:6 0 
+
+0
+2
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:6 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 178 68 332 132
+
+T 
+2
+LANG:1 12 PUSH_BUTTON1
+LANG:6 12 PUSH_BUTTON1
+E E E E
+17 2
+"debug"
+""
+1 40 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:6 0 
+
+0
+2
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:6 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 38 158 432 372
+0
+
+E
+"main()
+{
+  this.deleteAllItems();
+}" 0
+
+E
+
+0 0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
