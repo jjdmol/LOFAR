@@ -4,7 +4,7 @@
 
 # Replace PVSSGatewayStub's path where it outputs events with stdout,
 # such that the test framework can check against the .stdout ref output.
-cp "$LOFARROOT/etc/PVSSGatewayStub.conf" "$LOFARROOT/etc/PVSSGatewayStub.conf.backup"
+cp --preserve=all "$LOFARROOT/etc/PVSSGatewayStub.conf" "$LOFARROOT/etc/PVSSGatewayStub.conf.backup"
 sed -i -e '/outputFile[[:blank:]]*=/d' "$LOFARROOT/etc/PVSSGatewayStub.conf"
 echo "outputFile = /dev/stdout" >> "$LOFARROOT/etc/PVSSGatewayStub.conf"
 
