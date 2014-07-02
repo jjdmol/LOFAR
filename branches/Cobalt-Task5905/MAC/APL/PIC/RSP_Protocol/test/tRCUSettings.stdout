@@ -1,0 +1,8 @@
+mode 0: Nyquist:0, LBAfilter:OFF, LBLinput:OFF, LBHinput:OFF, HBAinput:OFF
+mode 1: Nyquist:1, LBAfilter:OFF, LBLinput:ON , LBHinput:OFF, HBAinput:OFF
+mode 2: Nyquist:1, LBAfilter:ON , LBLinput:ON , LBHinput:OFF, HBAinput:OFF
+mode 3: Nyquist:1, LBAfilter:OFF, LBLinput:OFF, LBHinput:ON , HBAinput:OFF
+mode 4: Nyquist:1, LBAfilter:ON , LBLinput:OFF, LBHinput:ON , HBAinput:OFF
+mode 5: Nyquist:2, LBAfilter:OFF, LBLinput:OFF, LBHinput:OFF, HBAinput:ON 
+mode 6: Nyquist:3, LBAfilter:OFF, LBLinput:OFF, LBHinput:OFF, HBAinput:ON 
+mode 7: Nyquist:3, LBAfilter:OFF, LBLinput:OFF, LBHinput:OFF, HBAinput:ON 
