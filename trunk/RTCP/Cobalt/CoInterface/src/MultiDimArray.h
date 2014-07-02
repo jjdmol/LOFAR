@@ -492,7 +492,7 @@ namespace LOFAR
 
           if (seen == val) {
             count += 1;
-          } else if (count != 0) {
+          } else {
             str << seen << " (" << count << "x), ";
 
             seen = val;
