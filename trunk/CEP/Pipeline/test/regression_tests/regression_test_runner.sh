@@ -85,7 +85,7 @@ mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
 
 # set up environment
 . /opt/cep/login/bashrc # source the login of use commands
-use LofIm               # this is a weak point in the script we should be able to run without
+use Lofar               # this is a weak point in the script we should be able to run without
 use Pythonlibs
 . $"$WORKSPACE/lofarinit.sh"  
 
@@ -98,8 +98,8 @@ rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh lce072 $"mkdir $WORKING_DIR -p" 
-ssh lce072 $"rm $WORKING_DIR/* -rf" 
+ssh $HOST $"mkdir $WORKING_DIR -p" 
+ssh $HOST $"rm $WORKING_DIR/* -rf" 
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
@@ -131,7 +131,7 @@ echo "Configuring the input parset and configuration files for cep!"
 
 # TODO: This script only work on CEP1!!
 # insert the cluserdesc for test cluster (default install is for cep2)
-sed -i 's/cep2.clusterdesc/cep1_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
+sed -i 's/cep2.clusterdesc/cep2_test.clusterdesc/g' $"$WORKING_DIR/pipeline.cfg"
 # specify the new working directory
 sed -i $"s|working_directory = /data/scratch/$USER|working_directory = $WORKING_DIR|g" $"$WORKING_DIR/pipeline.cfg"
 
