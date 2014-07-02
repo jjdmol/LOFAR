@@ -2,6 +2,7 @@
 
 install(FILES
 cep2.clusterdesc
+cep2_test.clusterdesc
 development.clusterdesc
 full.clusterdesc
 imaging.clusterdesc
