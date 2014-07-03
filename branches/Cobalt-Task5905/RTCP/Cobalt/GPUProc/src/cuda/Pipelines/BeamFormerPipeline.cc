@@ -153,7 +153,7 @@ namespace LOFAR
     }
 
     // Write the blocks of rtcp bf output via the MultiSender towards outputProc.
-    // Removes the blocks from a best effort queue (bequeue) out of 'output'.
+    // Removes the blocks the queue in 'output'.
     // All output corresponds to the subband indexed by globalSubbandIdx in the list of sb.
     void BeamFormerPipeline::writeOutput( unsigned globalSubbandIdx,
            struct Output &output )
@@ -166,7 +166,7 @@ namespace LOFAR
       SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
-      while ((outputData = output.bequeue->remove()) != NULL) 
+      while ((outputData = output.queue->remove()) != NULL) 
       {
         BeamFormedData &beamFormedData = dynamic_cast<BeamFormedData&>(*outputData);
 

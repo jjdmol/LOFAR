@@ -26,7 +26,6 @@
 
 #include <Common/LofarTypes.h>
 #include <MACIO/RTmetadata.h>
-#include <CoInterface/BestEffortQueue.h>
 #include <CoInterface/Parset.h>
 #include <CoInterface/SmartPtr.h>
 #include <CoInterface/Pool.h>
@@ -69,7 +68,7 @@ namespace LOFAR
       struct Output 
       {
         // output data queue
-        SmartPtr< BestEffortQueue< SmartPtr<SubbandProcOutputData> > > bequeue;
+        SmartPtr< Queue< SmartPtr<SubbandProcOutputData> > > queue;
       };
 
     protected:

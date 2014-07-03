@@ -90,7 +90,7 @@ namespace LOFAR
       SmartPtr<SubbandProcOutputData> outputData;
 
       // Process pool elements until end-of-output
-      while ((outputData = output.bequeue->remove()) != NULL) {
+      while ((outputData = output.queue->remove()) != NULL) {
         CorrelatedData &correlatedData = dynamic_cast<CorrelatedData&>(*outputData);
 
         const struct BlockID id = outputData->blockID;

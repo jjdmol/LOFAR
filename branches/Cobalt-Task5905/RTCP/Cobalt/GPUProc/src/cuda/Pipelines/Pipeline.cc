@@ -109,9 +109,7 @@ namespace LOFAR
     void Pipeline::allocateResources()
     {
       for (size_t i = 0; i < writePool.size(); i++) {
-        // Allow 10 blocks to be in the best-effort queue.
-        // TODO: make this dynamic based on memory or time
-        writePool[i].bequeue = new BestEffortQueue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i), 3, ps.realTime());
+        writePool[i].queue = new Queue< SmartPtr<SubbandProcOutputData> >(str(boost::format("Pipeline::writePool [local subband %u]") % i));
       }
     }
 
