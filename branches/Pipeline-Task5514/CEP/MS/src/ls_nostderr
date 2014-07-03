@@ -1,5 +1,0 @@
-#!/bin/sh
-
-# Discard ls errors
-# This is useful when using ls in cexec,which mixes stdout and stderr output.
-ls "$@"  2> /dev/null
