@@ -197,7 +197,8 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
           
         lofar.casaimwrap.end_degrid(self._context)
         self._response_available = True
-#        self._ms.putcol(self._data_column, result["data"])
+	# INI: uncommenting the line below so that the result is written to the MS.
+        self._ms.putcol(self._data_column, result["data"])
 
     def residual(self, coordinates, model, as_grid):
         assert(not as_grid)

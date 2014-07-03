@@ -26,6 +26,7 @@ python_install(__init__.py
     algorithms/constants.py
     algorithms/dirty.py
     algorithms/empty.py
+    algorithms/degridder.py
     algorithms/mfclean.py
     algorithms/util.py
     DESTINATION lofar/pyimager)

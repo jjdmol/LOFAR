@@ -7,6 +7,28 @@ def main():
     parser = argparse.ArgumentParser(description = "Python imager")
     subparsers = parser.add_subparsers(help = "operation to perform")
 
+    subparser = subparsers.add_parser("degrid", help = "Write predicted visibilities to MS")
+    subparser.add_argument("-z", "--threads", help = "no. of threads",
+        type = int, default = 1)
+    subparser.add_argument("-p", "--data-processor", dest = "processor",
+        metavar = "PROCESSOR", default = "casa", help = "data processor to use")
+    subparser.add_argument("-b", "--max-baseline", type = float, default = 0.0,
+        metavar = "LENGTH", help = "maximum baseline length (m)")
+    subparser.add_argument("--weight-type", dest = "weighttype",
+        default = "natural", metavar = "WEIGHTTYPE", help = "uniform, natural,"
+        " robust")
+    subparser.add_argument("--rmode", dest = "rmode",
+        default = "normal", metavar = "RMODE", help = "abs, normal")
+    subparser.add_argument("--noise", dest = "noise", type = float,
+        default = 0.0, metavar = "NOISE", help = "")
+    subparser.add_argument("--robustness", dest = "robustness", type = float,
+        default = 0.0, metavar = "ROBUSTNESS", help = "")
+    subparser.add_argument("--profile", dest = "profile",
+        default = "", metavar = "PROFILE", help = "ipcluster profile name")
+    subparser.add_argument("ms", help = "input measurement set")
+    subparser.add_argument("image", help = "input model image")
+    subparser.set_defaults(func = algorithms.degridder)
+
     subparser = subparsers.add_parser("empty", help = "create an empty image")
     subparser.add_argument("-z", "--threads", help = "no. of threads",
         type = int, default = 1)
