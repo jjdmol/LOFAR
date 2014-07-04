@@ -20,7 +20,7 @@ import pulp
 from string import join
 from lofarpipe.support.control import control
 from lofarpipe.support.data_map import DataMap, validate_data_maps
-from lofarpipe.support.lofarexceptions import PipelineException
+from lofarpipe.support.lofarexceptions import PipelineException, DataMapError
 from lofarpipe.support.utilities import create_directory
 from lofar.parameterset import parameterset
 from lofarpipe.support.loggingdecorators import mail_log_on_exception, duration
