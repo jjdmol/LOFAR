@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<StationReceptor>
+  <command> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</command>
+  <status> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</status>
+  <startTime> 
+  	<MACType> MACInteger  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</startTime>
+  <stopTime> 
+  	<MACType> MACInteger  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</stopTime>
+  <filter> 
+    <!-- 1, 2, 3, 4 -->
+  	<MACType> MACInteger  </MACType> 
+  	<MACDefault> 1 </MACDefault> 
+ 	</filter>
+  <antenna> 
+    <!-- 0=LBA, 1=HBA -->
+  	<MACType> MACInteger  </MACType> 
+  	<MACDefault> 0 </MACDefault> 
+ 	</antenna>
+  <power> 
+    <!-- 0=off, 1=on -->
+  	<MACType> MACInteger  </MACType> 
+  	<MACDefault> 1 </MACDefault> 
+ 	</power>
+  <frequency>      <!-- used by PVSS panels -->
+  	<MACType> MACDouble  </MACType> 
+  	<MACDefault> 110.0 </MACDefault> 
+ 	</frequency>
+</StationReceptor>
