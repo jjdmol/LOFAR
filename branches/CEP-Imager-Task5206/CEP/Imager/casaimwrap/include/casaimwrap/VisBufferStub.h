@@ -62,7 +62,7 @@ public:
         const Vector<Double> &time,
         const Vector<Double> &timeCentroid,
         const Vector<Bool> &flagRow,
-        const Matrix<Float> &weight,
+        const Cube<Float> &weight,
         const Cube<Bool> &flag,
         Bool newMS = false);
 

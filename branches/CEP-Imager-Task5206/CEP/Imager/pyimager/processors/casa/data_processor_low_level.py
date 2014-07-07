@@ -10,12 +10,13 @@ import imaging_weight
 class DataProcessorLowLevel(DataProcessorLowLevelBase):
     def __init__(self, measurement, options):
         self._measurement = measurement
-        self._ms = pyrap.tables.table(measurement)
+        self._ms = pyrap.tables.table(measurement, readonly = False)
         self._ms = self._ms.query("ANTENNA1 != ANTENNA2 && OBSERVATION_ID ==" \
             " 0 && FIELD_ID == 0 && DATA_DESC_ID == 0")
 
 #        assert(options["weight_algorithm"] == WeightAlgorithm.NATURAL)
         self._data_column = "CORRECTED_DATA"
+        self._modeldata_column = "MODEL_DATA"
 
         self._coordinates = None
         self._shape = None

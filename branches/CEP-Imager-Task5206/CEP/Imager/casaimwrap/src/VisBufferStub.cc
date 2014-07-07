@@ -141,7 +141,7 @@ void VisBufferStub::setChunk(const Vector<Int> &antenna1,
     const Vector<Double> &time,
     const Vector<Double> &timeCentroid,
     const Vector<Bool> &flagRow,
-    const Matrix<Float> &imagingWeight,
+    const Cube<Float> &imagingWeight,
     const Cube<Bool> &flag,
     Bool newMS)
 {

@@ -84,6 +84,8 @@
 
 #include <boost/python.hpp>
 #include <boost/python/args.hpp>
+#include <signal.h>
+#include <setjmp.h>
 
 using namespace casa;
 using namespace casa::pyrap;
@@ -99,18 +101,76 @@ class ScopedGILRelease
 public:
     inline ScopedGILRelease()
     {
-        m_thread_state = PyEval_SaveThread();
+      m_thread_state = PyEval_SaveThread();
+      m_sig_int_handler = 0;
+    }
+    
+    void set_sigint_handler()
+    {
+      m_previous_release = __release;
+      __release = this;
+      m_sig_int_handler = signal(SIGINT, handler_SIGINT);        
+    }
+    
+    void sigint_handler()
+    {      
+        PyEval_RestoreThread(m_thread_state);
+        m_thread_state = 0;
+        
+        PyErr_SetString(PyExc_KeyboardInterrupt, "");
+        throw_error_already_set();
     }
 
     inline ~ScopedGILRelease()
     {
+      if (m_sig_int_handler) 
+      {
+        signal(SIGINT, m_sig_int_handler);
+      }
+      
+      __release = m_previous_release;
+      
+      if (m_thread_state)
+      {
         PyEval_RestoreThread(m_thread_state);
-        m_thread_state = 0;
+      }
     }
+
+    jmp_buf m_jmp_buf;
 
 private:
     PyThreadState *m_thread_state;
+    sighandler_t m_sig_int_handler;
+    
+    static ScopedGILRelease *__release;
+    ScopedGILRelease *m_previous_release;
+    
+    
+    static void handler_SIGINT(int s)
+    {
+      longjmp(__release->m_jmp_buf, 0);
+    }
 };
+
+ScopedGILRelease *ScopedGILRelease::__release = 0;
+
+// TODO: substitute by real test for main thread
+// TODO: make sure sigint signal is delivered to main thread
+
+#define is_main_thread true
+
+#define HANDLE_SIGINT(release) \
+if (is_main_thread) \
+{ \
+  if (setjmp(release.m_jmp_buf) ==0) \
+  { \
+    release.set_sigint_handler(); \
+  } \
+  else \
+  { \
+    release.sigint_handler(); \
+  }\
+}
 
 struct CASAContext
 {
@@ -323,6 +383,9 @@ ValueHolder average_response(const CASAContext &context)
 void begin_degrid(CASAContext &context, const Record &coordinates,
     const ValueHolder &image)
 {
+    ScopedGILRelease __release;
+    HANDLE_SIGINT(__release)
+    
     CountedPtr<CoordinateSystem> tmp_coordinates =
         CountedPtr<CoordinateSystem>(CoordinateSystem::restore(coordinates,
         ""));
@@ -333,17 +396,20 @@ void begin_degrid(CASAContext &context, const Record &coordinates,
     context.shape = pixels.shape();
 
     // Create temporary image.
-    TempImage<Float> tmp_image(context.shape, context.coordinates);
-    tmp_image.put(pixels);
+    context.image = TempImage<Float> (context.shape, context.coordinates);
+    context.image.put(pixels);
 
     PtrBlock<ImageInterface<Float> * > images(1);
-    images[0] = &tmp_image;
+    images[0] = &context.image;
     context.ft->initializeToVis(images, False);
 
 }
 
 Record degrid(CASAContext &context, const Record &chunk)
 {
+    ScopedGILRelease __release;
+    HANDLE_SIGINT(__release)
+
     // Update temporary VisBuffer.
     context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
         chunk.asArrayInt("ANTENNA2"),
@@ -365,6 +431,9 @@ Record degrid(CASAContext &context, const Record &chunk)
 
 void end_degrid(CASAContext &context)
 {
+    ScopedGILRelease __release;
+    HANDLE_SIGINT(__release)
+
     context.ft->finalizeToVis();
 }
 
