@@ -24,6 +24,7 @@
 
 #include <Common/lofar_iostream.h>
 #include <LofarFT/Operation.h>
+#include <LofarFT/util.h>
 
 using namespace casa;
 
@@ -147,11 +148,7 @@ void Operation::initImage()
 void Operation::initFTMachine()
 {
   Int nterms = itsParset.getInt("image.nterms",1);
-  if (!itsParset.isDefined("image.reffreq"))
-  {
-    itsParset.add(KVpair("image.reffreq", observationReferenceFreq(itsMS, 0)));
-  }
-  Double reffreq = itsParset.getDouble("image.reffreq");
+  Double reffreq = get_reference_frequency(itsParset, itsMS);
   itsImager->settaylorterms(nterms,reffreq);
 
   itsImager->createFTMachine();
@@ -174,7 +171,7 @@ void Operation::showHelpData(ostream& os, const string& name)
   "                     string,  no default                           "<<endl<<
   "  data.query       : TaQL selection string for MS                  "<<endl<<
   "                     string,  default \"ANTENNA1 != ANTENNA2\"     "<<endl<<
-  "  data.uvrange     : UV range in wavelengths                       "<<endl<<
+  "  data.uvrange     : UV range, for example 1klambda~10klambda      "<<endl<<
   "                     string,  default \"\"                         "<<endl<<
   "  data.baselines   : baseline selection string                     "<<endl<<
   "                     string,  default \"\"                         "<<endl<<endl;
@@ -208,8 +205,19 @@ void Operation::showHelpWeight(ostream& os, const string& name)
 {
   os<<
   "Weight pameters:"<<endl<<
-  "  weight.scheme       : weighting scheme, must be \"natural\"      "<<endl<<
-  "                        string, default natural                    "<<endl<<endl;
+  "  weight.type       : weighting scheme,                            "<<endl<<
+  "                        string, default natural                    "<<endl<<
+  "                        (natural, robust, uniform)                 "<<endl<<endl;
+  os<<
+  "  weight.robust     : robustness,                                  "<<endl<<
+  "                        float, default 0.0                         "<<endl<<endl;
+  os<<
+  "  weight.mode       : robust weighting mode,                       "<<endl<<
+  "                        string, default norm                       "<<endl<<
+  "                        (norm, abs)                                "<<endl<<endl;
+  os<<
+  "  weight.noise       : robust abs noise,                           "<<endl<<
+  "                        string, default 0Jy                        "<<endl<<endl;
 }
 
 // Show the help info.
@@ -286,27 +294,6 @@ void Operation::readFilter (const String& filter,
     bpa = readQuantity (strs[2]);
   }
 }
-
-Double Operation::observationReferenceFreq(
-  const MeasurementSet &ms, 
-  uInt idDataDescription)
-{
-  // Read polarization id and spectral window id.
-  ROMSDataDescColumns desc(ms.dataDescription());
-  ASSERT(desc.nrow() > idDataDescription);
-  ASSERT(!desc.flagRow()(idDataDescription));
-
-  const uInt idWindow = desc.spectralWindowId()(idDataDescription);
-
-  // Get spectral information.
-  ROMSSpWindowColumns window(ms.spectralWindow());
-  ASSERT(window.nrow() > idWindow);
-  ASSERT(!window.flagRow()(idWindow));
-
-  return window.refFrequency()(idWindow);
-}
-
-
 
 } //# namespace LofarFT
 

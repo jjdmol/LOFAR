@@ -138,19 +138,47 @@ void Imager::makeVisSet(
 // Weight the MeasurementSet
 Bool Imager::set_imaging_weight(const ParameterSet& parset)
 {
-  
-  
-//   lofar_imwgt_p = new VisImagingWeight();
-
-  lofar_imwgt_p = new VisImagingWeightRobust::VisImagingWeightRobust(
-    *rvi_p, 
-    casa::String("norm"), 
-    casa::Quantity(),
-    0.0, 
-    nx_p,
-    ny_p,
-    mcellx_p,
-    mcelly_p);
+  casa::String weighttype = parset.getString("weight.type", "natural");
+   
+  if (weighttype == "natural")
+  {
+    lofar_imwgt_p = new VisImagingWeight();
+  }
+  else if ((weighttype == "robust") || (weighttype == "uniform"))
+  {
+    casa::String mode(""); 
+    casa::Quantity noise;
+    casa::Float robustness = 0.0;
+    
+    if (weighttype == "robust")
+    {
+      mode = parset.getString("weight.mode", "norm");
+      ASSERT( mode == "norm" || mode == "abs");
+    }
+    
+    if (mode == "abs") 
+    {
+      ASSERT(casa::Quantity::read(noise, parset.getString("weight.noise", "1Jy")));
+    }
+    else
+    {
+      robustness = parset.getFloat("weight.robust", 0.0);
+    }
+    
+    lofar_imwgt_p = new VisImagingWeightRobust(
+      *rvi_p, 
+      mode, 
+      noise,
+      robustness, 
+      nx_p,
+      ny_p,
+      mcellx_p,
+      mcelly_p);
+  }
+  else
+  {
+    throw AipsError("Unknown weight.type: " + weighttype);
+  }
     
   lofar_rvi_p->useImagingWeight(lofar_imwgt_p);
   
@@ -173,6 +201,97 @@ void Imager::showTimings (std::ostream&, double duration) const
   }
 }
 
+Bool Imager::checkCoord(const CoordinateSystem& coordsys,  
+                        const String& imageName)
+{ 
+
+  LogIO os(LogOrigin("Imager", "checkCoord()", WHERE));
+  os << LogIO::NORMAL << "checkCoord" << LogIO::POST;
+  
+  PagedImage<Float> image(imageName);
+  CoordinateSystem imageCoord= image.coordinates();
+  Vector<Int> imageShape= image.shape().asVector();
+
+  if(imageShape.nelements() > 3)
+  {
+    if(imageShape(3) != imageNchan_p)
+    {
+      os << "Number of channel mismatch" << LogIO::POST;
+      return False;
+    }
+  }
+  else
+  {
+    if(imageNchan_p >1)
+      return False;
+  }
+
+  if(imageShape.nelements() > 2)
+  {
+    if(imageShape(2) != npol_p)
+    {  
+      os << "Number of pol mismatch" << LogIO::POST;
+      return False;
+    }
+  } 
+  else
+  {
+    if(npol_p > 1)
+      return False;
+  }
+  
+  if(imageShape(0) != nx_p)
+  {
+    os << "Shape mismatch" << LogIO::POST;
+    return False;
+  }
+  
+  if(imageShape(1) != ny_p)
+  {
+    os << "Shape mismatch" << LogIO::POST;
+    return False;
+  }
+ 
+  if(!imageCoord.near(coordsys))
+  {
+    
+    std::ostringstream sstream;
+    std::string varAsString;
+    
+    sstream.precision(20);
+    
+    SpectralCoordinate sc;
+    sc = imageCoord.spectralCoordinate (imageCoord.findCoordinate(Coordinate::SPECTRAL));
+    sstream << sc.referenceValue();
+    sc = coordsys.spectralCoordinate (coordsys.findCoordinate(Coordinate::SPECTRAL));
+    sstream << sc.referenceValue();
+    varAsString = sstream.str();    
+    os << varAsString << endl;
+
+    os << "coordsys mismatch" << LogIO::POST;
+    coordsys.list(os, MDoppler::DEFAULT, IPosition(), IPosition());
+    os << "Not near" << LogIO::POST;
+    imageCoord.list(os, MDoppler::DEFAULT, IPosition(), IPosition());
+    os << imageCoord.errorMessage() << LogIO::POST;
+    return False;
+  }
+  
+  /*
+  DirectionCoordinate dir1(coordsys.directionCoordinate(0));
+  DirectionCoordinate dir2(imageCoord.directionCoordinate(0));
+  if(dir1.increment()(0) != dir2.increment()(0))
+    return False;
+  if(dir1.increment()(1) != dir2.increment()(1))
+    return False;
+  SpectralCoordinate sp1(coordsys.spectralCoordinate(2));
+  SpectralCoordinate sp2(imageCoord.spectralCoordinate(2));
+  if(sp1.increment()(0) != sp2.increment()(0))
+    return False;
+  */
+  return True;
+}
+
+
 // Clean algorithm
 Record Imager::initClean(const String& algorithm,
                      const Int niter,
@@ -192,7 +311,7 @@ Record Imager::initClean(const String& algorithm,
   retval.define("converged", False);
   retval.define("iterations", Int(0));
   retval.define("maxresidual", Float(0.0));
-  itsPSFNames=psfnames;
+  itsPSFNames = psfnames;
   
   if(!valid())
     {
@@ -202,19 +321,23 @@ Record Imager::initClean(const String& algorithm,
   LogIO os(LogOrigin("imager", "clean()"),logSink_p);
   
   this->lock();
-  try {
-    if(!assertDefinedImageParameters()) 
-      {
+  try 
+  {
+    if (!assertDefinedImageParameters()) 
+    {
         return retval;
-      }
+    }
     
     Int nmodels=model.nelements();
     os << LogIO::DEBUG1
        << "Found " << nmodels << " specified model images" << LogIO::POST;
     
-    if(model.nelements()>0) {
-      for (uInt thismodel=0;thismodel<model.nelements(); ++thismodel) {
-        if(model(thismodel)=="") {
+    if(model.nelements()>0) 
+    {
+      for (uInt thismodel=0;thismodel<model.nelements(); ++thismodel) 
+      {
+        if(model(thismodel)=="") 
+        {
           this->unlock();
           os << LogIO::SEVERE << "Need a name for model "
              << thismodel << LogIO::POST;
@@ -227,21 +350,30 @@ Record Imager::initClean(const String& algorithm,
     // Make first image with the required shape and coordinates only if
     // it doesn't exist yet. Otherwise we'll throw an exception later
     if(modelNames(0)=="") modelNames(0)=imageName()+".clean";
-    if(!Table::isWritable(modelNames(0))) {
+    if(!Table::isWritable(modelNames(0))) 
+    {
       make(modelNames(0));
     }
-    else{
+    else
+    {
       Bool coordMatch=False;
       CoordinateSystem coordsys;
       //imagecoordinates(coordsys, firstrun);
       imagecoordinates2(coordsys, firstrun);
-      for (uInt modelNum=0; modelNum < modelNames.nelements(); ++modelNum){
-        if(Table::isWritable(modelNames(modelNum))){
-          coordMatch= coordMatch || 
-            (this->checkCoord(coordsys, modelNames(modelNum)));
+      for (uInt modelNum=0; modelNum < modelNames.nelements(); ++modelNum)
+      {
+        if(Table::isWritable(modelNames(modelNum)))
+        {
+          Bool cm = this->checkCoord(coordsys, modelNames(modelNum));
+          if (!cm)
+          {
+            os << "coordinates mismatch:" << modelNames(modelNum) << endl;
+          }
+          coordMatch = coordMatch || cm;
         }
       } 
-      if(!coordMatch){
+      if(!coordMatch)
+      {
         os << LogIO::WARN << "The model(s) image exists on disk " 
            << LogIO::POST;
         os << LogIO::WARN 
@@ -256,19 +388,23 @@ Record Imager::initClean(const String& algorithm,
       }
     }
     Vector<String> maskNames(nmodels);
-    if(Int(mask.nelements())==nmodels) {
+    if(Int(mask.nelements())==nmodels) 
+    {
       maskNames=mask;
     }
-    else {
+    else 
+    {
       /* For msmfs, the one input mask PER FIELD must be replicated for all 
          Taylor-planes PER FIELD */
-      if(algorithm=="msmfs" && (Int(mask.nelements())>=(nmodels/ntaylor_p)) ){
-       for(Int tay=0;tay<nmodels;tay++)
-         {
-           maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
-         }
+      if(algorithm=="msmfs" && (Int(mask.nelements())>=(nmodels/ntaylor_p)) )
+      {
+        for(Int tay=0;tay<nmodels;tay++)
+        {
+          maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
+        }
       }
-      else {
+      else 
+      {
          /* No mask */
          maskNames="";
       }

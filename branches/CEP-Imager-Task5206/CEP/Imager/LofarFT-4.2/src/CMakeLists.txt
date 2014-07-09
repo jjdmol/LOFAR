@@ -26,6 +26,7 @@ lofar_add_library(lofarft
   VisResamplerMatrixWB.cc
   VisResamplerDiagonalWB.cc
   SkyEquation.cc
+  util.cc
 )
 
 lofar_add_bin_program(awimager 

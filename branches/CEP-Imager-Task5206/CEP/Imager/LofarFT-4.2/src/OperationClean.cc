@@ -109,6 +109,9 @@ void OperationClean::init()
       modelNames(i) = imgName + ".model.tt" + String::toString(i);
       residualNames(i) = imgName + ".residual.tt" + String::toString(i);
       restoredNames(i) = imgName + ".restored.tt" + String::toString(i);
+    }
+    for(Int i=0;i<((nterms*(nterms+1))/2);++i)
+    {
       psfNames(i) = imgName + ".psf.tt" + String::toString(i);
     }
   }

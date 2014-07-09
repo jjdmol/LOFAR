@@ -83,6 +83,10 @@ namespace LofarFT {
     
     casa::Bool restoreImages(const casa::Vector<casa::String>& restored, casa::Bool modresiduals=casa::True);
 
+  virtual casa::Bool checkCoord(const casa::CoordinateSystem& coordsys, 
+                          const casa::String& imageName); 
+    
+    
   casa::Record initClean(
     const casa::String& algorithm,
     const casa::Int niter,

@@ -31,6 +31,8 @@
 #include <LofarFT/ConvolutionFunctionDiagonal.h>
 #include <LofarFT/VisResamplerMatrixWB.h>
 #include <LofarFT/VisResamplerDiagonalWB.h>
+#include <LofarFT/util.h>
+
 #include <Common/OpenMP.h>
 #include <lattices/Lattices/LatticeFFT.h>
 
@@ -66,7 +68,7 @@ FTMachineSplitBeamWStackWB::FTMachineSplitBeamWStackWB(
   itsSumWeight.resize (itsNGrid);
   itsGriddedDataDomain = IMAGE;
   double msRefFreq=0; //TODO: put some useful reference frequency here
-  itsRefFreq=parset.getDouble("image.reffreq",msRefFreq),
+  itsRefFreq = get_reference_frequency(itsParset, itsMS);
   itsTimeWindow=parset.getDouble("gridding.timewindow",300);
   if (itsSplitBeam)
   {

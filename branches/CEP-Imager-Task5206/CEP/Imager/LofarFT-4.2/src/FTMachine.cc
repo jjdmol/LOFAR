@@ -570,7 +570,14 @@ void FTMachine::normalize(ImageInterface<Complex> &image, Bool do_beam, Bool do_
           Float f = 1.0;
           if (do_spheroidal) f *= spheroidal(IPosition(2,l,k));
           if (do_beam) f *= beam(IPosition(2,l,k));
-          image.putAt((f>0.02) * (v/f), pos);
+          if (f>0.02)
+          {
+            image.putAt(v/f, pos);
+          }
+          else
+          {
+            image.putAt(0.0, pos);
+          }
         }
       }
     }
