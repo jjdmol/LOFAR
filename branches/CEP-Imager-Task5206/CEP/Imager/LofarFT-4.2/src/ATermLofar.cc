@@ -187,7 +187,7 @@ namespace
   void rescale(Cube<DComplex> &response);
 } //# unnamed namespace
   
-ATermLofar::ATermLofar(const MeasurementSet& ms, ParameterSet& parset) :
+ATermLofar::ATermLofar(const MeasurementSet& ms, const ParameterSet& parset) :
   itsVerbose(parset.getInt("verbose",0))
 {
   // Read station information.
@@ -243,6 +243,7 @@ void ATermLofar::setDirection(
 
 void ATermLofar::setEpoch( const MEpoch &epoch )
 {
+  itsTime = epoch.get(casa::Unit("s")).getValue();
   if (itsDirectionCoordinates)
   {
     itsITRFDirectionMap = makeDirectionMap(*itsDirectionCoordinates, 
@@ -250,7 +251,6 @@ void ATermLofar::setEpoch( const MEpoch &epoch )
   }
   if (itsApplyIonosphere) 
   {
-    itsTime = epoch.get(casa::Unit("s")).getValue();
     Record parms = itsPDB->getValuesGrid ("*", 0, 1e9, itsTime, itsTime + 0.01);
     itsR0 = get_parmvalue(parms, "r_0");
     itsBeta = get_parmvalue(parms, "beta");

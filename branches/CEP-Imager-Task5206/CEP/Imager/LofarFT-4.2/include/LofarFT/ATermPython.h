@@ -27,6 +27,7 @@
 #include <LofarFT/DynamicObjectFactory.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
+#include <Common/ParameterSet.h>
 #include <BBSKernel/Instrument.h>
 #include <ParmDB/ParmFacade.h>
 
@@ -49,7 +50,7 @@ namespace LofarFT {
 class ATermPython : public ATermLofar
 {
 public:
-  ATermPython(const casa::MeasurementSet &ms, const casa::Record& parameters);
+  ATermPython(const casa::MeasurementSet &ms, const ParameterSet& parameters);
   
   virtual vector<casa::Cube<casa::Complex> > evaluate(
     uint idStation,

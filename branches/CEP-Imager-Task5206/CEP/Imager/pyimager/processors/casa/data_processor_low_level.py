@@ -66,6 +66,10 @@ class DataProcessorLowLevel(DataProcessorLowLevelBase):
         parms["t1"] = -1
         parms["ChanBlockSize"] = 0
         parms["FindNWplanes"] = True
+        
+        parms["gridding.ATerm.name"] = options["gridding.ATerm.name"]
+        parms["ATermPython.module"] = options["ATermPython.module"]
+        parms["ATermPython.class"] = options["ATermPython.class"]
 
         weightoptionnames = ["weighttype", "rmode", "noise", "robustness"]
         weightoptions = dict( (key, value) for (key,value) in options.iteritems() if key in weightoptionnames)

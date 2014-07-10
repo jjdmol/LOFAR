@@ -20,6 +20,11 @@ def degridder(options):
     processor_options["noise"] = options.noise
     processor_options["robustness"] = options.robustness
     processor_options["profile"] = options.profile
+    
+    processor_options["gridding.ATerm.name"] = "ATermPython"
+    processor_options["ATermPython.module"] = "lofar.imager.myaterm"
+    processor_options["ATermPython.class"] = "MyATerm"
+    
     processor = processors.create_data_processor(options.ms, processor_options)
 
     '''channel_freq = processor.channel_frequency()

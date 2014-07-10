@@ -49,7 +49,7 @@ namespace LofarFT {
 class ATermLofar : public ATerm
 {
 public:
-  ATermLofar(const casa::MeasurementSet &ms, ParameterSet& parset);
+  ATermLofar(const casa::MeasurementSet &ms, const ParameterSet& parset);
   
   virtual ~ATermLofar() {};
 

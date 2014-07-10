@@ -174,7 +174,7 @@ public:
     
 };
 
-typedef Singleton<DynamicObjectFactory<ATerm*(const casa::MeasurementSet& ms, ParameterSet& parset)> > ATermFactory;
+typedef Singleton<DynamicObjectFactory<ATerm*(const casa::MeasurementSet& ms, const ParameterSet& parset)> > ATermFactory;
 
 } // namespace LofarFT
 } // namespace LOFAR

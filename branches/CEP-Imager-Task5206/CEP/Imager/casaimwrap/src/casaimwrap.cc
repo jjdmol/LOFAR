@@ -383,8 +383,8 @@ ValueHolder average_response(const CASAContext &context)
 void begin_degrid(CASAContext &context, const Record &coordinates,
     const ValueHolder &image)
 {
-    ScopedGILRelease __release;
-    HANDLE_SIGINT(__release)
+//     ScopedGILRelease __release;
+//     HANDLE_SIGINT(__release)
     
     CountedPtr<CoordinateSystem> tmp_coordinates =
         CountedPtr<CoordinateSystem>(CoordinateSystem::restore(coordinates,
@@ -407,8 +407,8 @@ void begin_degrid(CASAContext &context, const Record &coordinates,
 
 Record degrid(CASAContext &context, const Record &chunk)
 {
-    ScopedGILRelease __release;
-    HANDLE_SIGINT(__release)
+//     ScopedGILRelease __release;
+//     HANDLE_SIGINT(__release)
 
     // Update temporary VisBuffer.
     context.buffer->setChunk(chunk.asArrayInt("ANTENNA1"),
@@ -431,8 +431,8 @@ Record degrid(CASAContext &context, const Record &chunk)
 
 void end_degrid(CASAContext &context)
 {
-    ScopedGILRelease __release;
-    HANDLE_SIGINT(__release)
+//     ScopedGILRelease __release;
+//     HANDLE_SIGINT(__release)
 
     context.ft->finalizeToVis();
 }

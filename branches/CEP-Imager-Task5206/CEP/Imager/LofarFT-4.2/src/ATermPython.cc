@@ -43,11 +43,12 @@ namespace
 namespace LOFAR {
 namespace LofarFT {
  
-ATermPython::ATermPython(const MeasurementSet& ms, const casa::Record& parameters) :
+ATermPython::ATermPython(const MeasurementSet& ms, const ParameterSet& parameters) :
   ATermLofar(ms, parameters)
 {
   
-
+  #pragma omp critical
+  {
   // Initialize Python interpreter
   Py_Initialize();
   
@@ -63,10 +64,10 @@ ATermPython::ATermPython(const MeasurementSet& ms, const casa::Record& parameter
     boost::python::object main_module = boost::python::import("__main__");
     
     // Import the module
-    boost::python::object embedded_module = boost::python::import(parameters.asString("ATermPython.module").c_str());
+    boost::python::object embedded_module = boost::python::import(parameters.getString("ATermPython.module").c_str());
     
     // Get the python class object from the imported module
-    boost::python::object pyATerm = embedded_module.attr(parameters.asString("ATermPython.class").c_str());
+    boost::python::object pyATerm = embedded_module.attr(parameters.getString("ATermPython.class").c_str());
     
     // create an instance of the python class
     itsPyaterm = pyATerm(); 
@@ -75,6 +76,7 @@ ATermPython::ATermPython(const MeasurementSet& ms, const casa::Record& parameter
   {
     // handle the exception in some way
     PyErr_Print();
+  }
   }
 }
 
@@ -85,6 +87,7 @@ vector<casa::Cube<casa::Complex> > ATermPython::evaluate(
   bool normalize) const
 {
   // call the evaluta method of the python ATerm instance
+  #pragma omp critical
   itsPyaterm.attr("evaluate")(itsTime, itsITRFDirectionMap, idStation, freq, reference, normalize);
   
   // Ignore the result of the python code and return the result of the evaluate method of our parent
