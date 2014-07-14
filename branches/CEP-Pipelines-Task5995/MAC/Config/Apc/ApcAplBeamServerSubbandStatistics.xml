@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<power>
+	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y>
+</power>

@@ -1,0 +1,6 @@
+# AARTFAAC piggybackmode on/off
+piggyback		bool
+
+# Stations that belong to AARTFAAC
+stationList		stringArr
+
