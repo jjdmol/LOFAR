@@ -70,12 +70,15 @@ class imager_source_finding(LOFARnodeTCP):
             # output of the previous iteration. The 1+ iteration have a 
             # seperate parameter set. 
             if idx == 0:
-                input_image_local = input_image # input_image_cropped
+                input_image_local 		= input_image # input_image_cropped
+                input_image_local_corr	= input_image+'.corr'
                 image_output_path_local = image_output_path + "_0"
                 bdsm_parameter_local = parameterset(bdsm_parameter_run1_path)
             else:
                 input_image_local = image_output_path + "_{0}".format(
                                                                 str(idx - 1))
+                input_image_local_corr = image_output_path + "_{0}".format(
+                                                                str(idx - 1))+'.corr'                                               
                 image_output_path_local = image_output_path + "_{0}".format(
                                                                     str(idx))
                 bdsm_parameter_local = parameterset(bdsm_parameter_run2x_path)
@@ -99,6 +102,8 @@ class imager_source_finding(LOFARnodeTCP):
                 "Starting sourcefinder bdsm on {0} using parameters:".format(
                                                         input_image_local))
             self.logger.debug(repr(bdsm_parameters))
+#            img = bdsm.process_image(bdsm_parameters,
+#                        filename = input_image_local_corr, detection_image = input_image_local, frequency = frequency)
             img = bdsm.process_image(bdsm_parameters,
                         filename = input_image_local, frequency = frequency)
 

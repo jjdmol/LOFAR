@@ -6,6 +6,8 @@
 #                                                               loose@astron.nl
 #                                                            Wouter Klijn, 2012
 #                                                               klijn@astron.nl
+#                                                         Nicolas Vilchez, 2014
+#                                                             vilchez@astron.nl
 # -----------------------------------------------------------------------------
 import os
 import sys
@@ -194,27 +196,32 @@ class msss_imager_pipeline(control):
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
 
-
+        number_of_major_cycles = 6
+        nof_cycle = number_of_major_cycles 
+        
         for idx_loop in range(number_of_major_cycles):
             # *****************************************************************
             # (2) Create dbs and sky model
             parmdbs_path, sourcedb_map_path = self._create_dbs(
-                        concat_ms_map_path, timeslice_map_path,
+                        concat_ms_map_path, timeslice_map_path,idx_loop,
                         source_list = source_list,
                         skip_create_dbs = False)
 
+
             # *****************************************************************
             # (3)  bbs_imager recipe.
-            bbs_output = self._bbs(timeslice_map_path, parmdbs_path,
-                        sourcedb_map_path, skip = False)
+            bbs_output = self._bbs(concat_ms_map_path, timeslice_map_path, parmdbs_path,
+                        sourcedb_map_path, idx_loop, skip = False)
 
+            
             # TODO: Extra recipe: concat timeslices using pyrap.concatms
             # (see prepare)
+            # Done in imager_bbs.p at the node level after calibration 
 
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
-                        idx_loop, sourcedb_map_path,
+                        idx_loop, sourcedb_map_path, nof_cycle,
                         skip = False)
 
             # *****************************************************************
@@ -370,8 +377,8 @@ class msss_imager_pipeline(control):
             return source_list_map, sourcedb_map_path
 
     @xml_node
-    def _bbs(self, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
-              skip = False):
+    def _bbs(self, prepare_phase_output, timeslice_map_path, parmdbs_map_path, sourcedb_map_path,
+              major_cycle, skip = False):
         """
         Perform a calibration step. First with a set of sources from the
         gsm and in later iterations also on the found sources
@@ -406,6 +413,7 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(sourcedb_map))
             self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
+	
 
         self.run_task("imager_bbs",
                       timeslice_map_path,
@@ -413,12 +421,14 @@ class msss_imager_pipeline(control):
                       instrument_mapfile = parmdbs_map_path,
                       sourcedb_mapfile = sourcedb_map_path,
                       mapfile = output_mapfile,
-                      working_directory = self.scratch_directory)
+                      working_directory = self.scratch_directory,
+                      prepare_phase_output=prepare_phase_output,
+                      major_cycle=major_cycle)
 
         return output_mapfile
 
     @xml_node
-    def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
+    def _aw_imager(self, prepare_phase_output, major_cycle, sky_path, nof_cycle, 
                    skip = False):
         """
         Create an image based on the calibrated, filtered and combined data.
@@ -463,7 +473,8 @@ class msss_imager_pipeline(control):
                           sourcedb_path = sky_path,
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = autogenerate_parameters,
-                          specify_fov = specify_fov)
+                          specify_fov = specify_fov, major_cycle = major_cycle,
+                          nof_cycle = nof_cycle)
 
         return output_mapfile, max_baseline
 
@@ -533,8 +544,14 @@ class msss_imager_pipeline(control):
             processed_ms_dir
 
     @xml_node
-    def _create_dbs(self, input_map_path, timeslice_map_path, source_list = "",
+    def _create_dbs(self, input_map_path, timeslice_map_path, major_cycle, source_list = "", 
                     skip_create_dbs = False):
+
+
+        # need the output directory path (use the same structure as for bbs)
+        prepare_phase_output = input_map_path
+
+
         """
         Create for each of the concatenated input measurement sets
         an instrument model and parmdb
@@ -565,17 +582,35 @@ class msss_imager_pipeline(control):
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
                         source_list_path = source_list,
-                        working_directory = self.scratch_directory)
+                        working_directory = self.scratch_directory,
+                        major_cycle = major_cycle,
+                        prepare_phase_output=prepare_phase_output)
 
         return parmdbs_map_path, sourcedb_map_path
 
     # TODO: Move these helpers to the parent class
     def _write_parset_to_file(self, parset, parset_name, message):
+
+        """
+        Mofication of parsets (bbs) for selfcal imaging pipeline.
+        done by nicolas Vilchez
+        """      
+        if parset_name == "bbs":
+             self._selfcal_modify_parset(parset, parset_name)           
+
+        if parset_name == "pybdsm_first_pass.par":
+             self._selfcal_modify_parset(parset, parset_name)          
+
+        if parset_name == "pybdsm_second_pass.par":
+             self._selfcal_modify_parset(parset, parset_name)  
+
         """
         Write the suplied the suplied parameterset to the parameter set
         directory in the jobs dir with the filename suplied in parset_name.
         Return the full path to the created file.
         """
+        
+        
         parset_dir = os.path.join(
             self.config.get("layout", "job_directory"), "parsets")
         # create the parset dir if it does not exist
@@ -624,6 +659,66 @@ class msss_imager_pipeline(control):
                     "Touched mapfile <{0}>: {1}".format(mapfile_path, message))
 
         return mapfile_path
+
+
+
+    def _selfcal_modify_parset(self, parset, parset_name):    
+        
+        """ 
+        Modification of the BBS parset for selfcal implementation, add, 
+        remove, modify some values in bbs parset, done by 
+        done by Nicolas Vilchez
+        """            
+        
+        if parset_name == "bbs":			
+        
+             parset.replace('Step.solve.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.solve.Model.Ionosphere.Enable', 'F')
+             parset.replace('Step.solve.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Beam.UseChannelFreq', 'True')
+             parset.replace('Step.correct.Model.TEC.Enable', 'F')
+             parset.replace('Step.correct.Model.Phasors.Enable', 'T')
+             parset.replace('Step.correct.Output.WriteCovariance', 'T')             
+                         
+             #must be erased, by default I replace to the default value
+             parset.replace('Step.solve.Baselines', '*&')
+             
+             parset.replace('Step.solve.Solve.Mode', 'COMPLEX')
+             parset.replace('Step.solve.Solve.CellChunkSize', '100')                             
+             parset.replace('Step.solve.Solve.PropagateSolutions', 'F')                    
+             parset.replace('Step.solve.Solve.Options.MaxIter', '100')  
+                   
+
+        if parset_name == "pybdsm_first_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(15.0,10.0)')
+             parset.replace('thresh_isl', '6')
+             parset.replace('thresh_pix', '8')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')             
+             
+
+        if parset_name == "pybdsm_second_pass.par":
+             
+             parset.replace('advanced_opts', 'True')
+             parset.replace('atrous_do', 'True')
+             parset.replace('rms_box', '(15.0,10.0)')
+             parset.replace('thresh_isl', '6')
+             parset.replace('thresh_pix', '8')
+             parset.replace('adaptive_rms_box', 'True')
+             parset.replace('blank_limit', '1E-4')
+             parset.replace('ini_method', 'curvature')
+             parset.replace('atrous_do', 'True')             
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

@@ -3,6 +3,8 @@
 #                                    Example recipe with simple job distribution
 #                                                          Wouter Klijn, 2010
 #                                                      swinbank@transientskp.org
+#                                                         Nicolas Vilchez, 2014
+#                                                             vilchez@astron.nl
 # ------------------------------------------------------------------------------
 import sys
 import copy
@@ -77,7 +79,16 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             help = "calculated Image parameters are relative to this"
             " Field Of View in arcSec. This parameter is obligatory when"
             " specify_fov is True"
+        ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help = "The number of the current cycle to modify the parset."
+        ),
+        'nof_cycle': ingredient.IntField(
+            '--nof_cycle',
+            help = "The number of the current cycle to modify the parset."
         )
+                     
     }
 
     outputs = {
@@ -141,6 +152,8 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.inputs['autogenerate_parameters'],
                          self.inputs['specify_fov'],
                          self.inputs['fov'],
+                         self.inputs['major_cycle'],
+                         self.inputs['nof_cycle']
                          ]
 
             jobs.append(ComputeJob(host, node_command, arguments))

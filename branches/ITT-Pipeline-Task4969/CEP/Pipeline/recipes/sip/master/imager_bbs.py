@@ -6,10 +6,11 @@
 from __future__ import with_statement
 import sys
 import os
+import copy
 
 from lofarpipe.support.remotecommand import RemoteCommandRecipeMixIn
 from lofarpipe.support.baserecipe import BaseRecipe
-from lofarpipe.support.data_map import DataMap, MultiDataMap
+from lofarpipe.support.data_map import DataMap, MultiDataMap, validate_data_maps
 import lofarpipe.support.lofaringredient as ingredient
 from lofarpipe.support.remotecommand import ComputeJob
 
@@ -59,6 +60,15 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--mapfile',
             help="Full path to the file containing the output data products"
         ),
+        'prepare_phase_output': ingredient.FileField(
+            '--prepare_phase_output',
+            help="Output of the concat MS file"
+        ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help="ID for the current major cycle"
+        )                 
+             
     }
 
     outputs = {
@@ -75,9 +85,8 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.info("Starting imager_bbs run")
 
         # ********************************************************************
-        # 1. Load the and validate the data
-
-        ms_map = MultiDataMap.load(self.inputs['args'][0])
+        # 1. Load the and validate the data        
+        ms_map = MultiDataMap.load(self.inputs['args'][0])        
         parmdb_map = MultiDataMap.load(self.inputs['instrument_mapfile'])
         sourcedb_map = DataMap.load(self.inputs['sourcedb_mapfile'])
 
@@ -106,6 +115,34 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         ms_map.iterator = parmdb_map.iterator = sourcedb_map.iterator = \
             DataMap.SkipIterator
+ 
+        
+        
+        # *********************************************************************
+        # 2.bis Extract the concat MS (added by Nicolas Vilchez)
+        input_map = DataMap.load(self.inputs['prepare_phase_output']) 
+        
+        if not validate_data_maps(input_map):
+            self.logger.error(
+                        "the supplied input_ms mapfile and sourcedb mapfile"
+                        "are incorrect. Aborting")
+            self.logger.error(repr(input_map))
+            return 1              
+        
+        output_map = copy.deepcopy(input_map)        
+        for w, x in zip(input_map, output_map):
+            w.skip = x.skip = (
+                w.skip or x.skip
+            )
+
+        input_map.iterator = output_map.iterator = \
+            DataMap.SkipIterator
+
+        for (measurement_item, output_map) in zip(input_map, output_map):
+                host_timeconcat , measurement_path_timeconcat = measurement_item.host, measurement_item.file
+
+        # *********************************************************************
+        # 2.continue from here (concat.ms caught)                      
         for (ms, parmdb, sourcedb) in zip(ms_map, parmdb_map, sourcedb_map):
             #host is same for each entry (validate_data_maps)
             host, ms_list = ms.host, ms.file
@@ -124,10 +161,12 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
                     map_dir, host + "_sky_" + run_id + ".map")
             MultiDataMap(
                 [tuple([host, [sourcedb.file], False])]).save(sourcedb_list_path)
-
+                
+                                               
             arguments = [self.inputs['bbs_executable'],
                          self.inputs['parset'],
-                         ms_list_path, parmdb_list_path, sourcedb_list_path]
+                         ms_list_path, parmdb_list_path, sourcedb_list_path, 
+                         measurement_path_timeconcat,self.inputs['major_cycle']]
             jobs.append(ComputeJob(host, node_command, arguments))
 
         # start and wait till all are finished

@@ -96,6 +96,15 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--sourcedb-map-path',
             help="path to mapfile containing produced sourcedb files"
         ),
+        'major_cycle': ingredient.IntField(
+            '--major_cycle',
+            help="current major cycle"
+        ),
+        'prepare_phase_output': ingredient.FileField(
+            '--prepare_phase_output',
+            help="concat MS path"
+        )        
+        
     }
 
     outputs = {
@@ -112,6 +121,32 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
     def go(self):
         super(imager_create_dbs, self).go()
+        
+        
+        # *********************************************************************
+        #  Extract the concat MS (added by Nicolas Vilchez)
+        input_map = DataMap.load(self.inputs['prepare_phase_output']) 
+        
+        if not validate_data_maps(input_map):
+            self.logger.error(
+                        "the supplied input_ms mapfile and sourcedb mapfile"
+                        "are incorrect. Aborting")
+            self.logger.error(repr(input_map))
+            return 1              
+        
+        output_map = copy.deepcopy(input_map)        
+        for w, x in zip(input_map, output_map):
+            w.skip = x.skip = (
+                w.skip or x.skip
+            )
+
+        input_map.iterator = output_map.iterator = \
+            DataMap.SkipIterator
+
+        for (measurement_item, output_map) in zip(input_map, output_map):
+                host_timeconcat , measurement_path_timeconcat = measurement_item.host, measurement_item.file        
+        # *********************************************************************        
+        
 
         # get assoc_theta, convert from empty string if needed 
         assoc_theta = self.inputs["assoc_theta"]
@@ -128,7 +163,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Run the nodes with now collected inputs
         jobs, output_map = self._run_create_dbs_node(
-                 input_map, slice_paths_map, assoc_theta)
+                 input_map, slice_paths_map, assoc_theta,measurement_path_timeconcat)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
@@ -163,7 +198,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
     def _run_create_dbs_node(self, input_map, slice_paths_map,
-                                         assoc_theta):
+                                         assoc_theta,measurement_path_timeconcat):
         """
         Decompose the input mapfiles into task for specific nodes and 
         distribute these to the node recipes. Wait for the jobs to finish and
@@ -205,7 +240,9 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
-                         self.inputs["source_list_path"]]
+                         self.inputs["source_list_path"],
+                         self.inputs["major_cycle"],
+                         measurement_path_timeconcat]
 
             jobs.append(ComputeJob(host_ms, node_command, arguments))
         # Wait the nodes to finish

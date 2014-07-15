@@ -58,17 +58,22 @@ class imager_create_dbs(LOFARnodeTCP):
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, environment, working_directory, makesourcedb_path,
-            source_list_path_extern):
+            source_list_path_extern,major_cycle,measurement_path_timeconcat):
 
         self.logger.info("Starting imager_create_dbs Node")
         self.environment.update(environment)
 
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file
-        source_list, append = self._create_source_list(source_list_path_extern,
-            sourcedb_target_path, concatenated_measurement_set,
-            monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
-            monet_db_password, assoc_theta)
+        
+        if major_cycle == 0:
+			source_list, append = self._create_source_list(source_list_path_extern,sourcedb_target_path, concatenated_measurement_set,monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,monet_db_password, assoc_theta)       
+        else:
+            Skymodel_path_list 	= measurement_path_timeconcat.split('concat.ms')
+            Skymodel_path      	= Skymodel_path_list[0]+'awimage_cycle_%s/bdsm_catalog'%(major_cycle)
+            source_list			= Skymodel_path
+            append				= 'False'
+                    
 
         #*******************************************************************
         # 2convert it to a sourcedb (casa table)

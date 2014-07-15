@@ -2,9 +2,14 @@
 # imager_bbs
 # Wouter Klijn 2012
 # klijn@astron.nl
+# Nicolas Vilchez, 2014
+# vilchez@astron.nl
 # -----------------------------------------------------------------------------
 from __future__ import with_statement
 import sys
+import os
+
+import pyrap.tables as pt
 
 from lofarpipe.support.lofarnode import LOFARnodeTCP
 from lofarpipe.support.group_data import load_data_map
@@ -21,9 +26,12 @@ class imager_bbs(LOFARnodeTCP):
     1. Load the mapfiles
     2. For each measurement set to calibrate start a subprocess
     3. Check if the processes finished correctly
+    4. (added by Nicolas vilchez) concat in time the final MS
+    5. (added by N.Vilchez) copy time slives directory to a new one       
     """
+    
     def run(self, bbs_executable, parset, ms_list_path, parmdb_list_path,
-             sky_list_path):
+             sky_list_path, measurement_path_timeconcat,major_cycle):
         """
         imager_bbs functionality. Called by framework performing all the work
         """
@@ -39,6 +47,9 @@ class imager_bbs(LOFARnodeTCP):
         sky_list = MultiDataMap.load(sky_list_path)
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
 
+        ms_list = list()
+        
+
         try:
             bbs_process_group = SubProcessGroup(self.logger)
             # *****************************************************************
@@ -53,8 +64,10 @@ class imager_bbs(LOFARnodeTCP):
                     parset]
                 self.logger.info("Executing bbs command: {0}".format(" ".join(
                             command)))
-
+                            
+                ms_list.append(measurement_set)
                 bbs_process_group.run(command)
+
 
             # *****************************************************************
             # 3. check status of the processes
@@ -65,6 +78,24 @@ class imager_bbs(LOFARnodeTCP):
             self.logger.error("Failed to execute bbs: {0}".format(str(
                                                                     exception)))
             return 1
+            
+        # *********************************************************************
+        # 4. Concat in time after bbs calibration your MSs using 
+        #    msconcat (pyrap.tables module) (added by N.Vilchez)                   
+        pt.msconcat(sorted(ms_list),measurement_path_timeconcat, concatTime=True)       
+           
+            
+ 
+        # *********************************************************************
+        # 5. copy time slives directory to a new one  
+        #  (added by N.Vilchez)                   
+        time_slices_dir = measurement_path_timeconcat.split('concat.ms')
+        copy_cmd = 'cp -r %s %s'%(time_slices_dir[0]+'time_slices',time_slices_dir[0]+'time_slices_cycle_%s'%(str(major_cycle)))     
+        os.system(copy_cmd)        
+		
+  
+ 
+            
         return 0
 
 
