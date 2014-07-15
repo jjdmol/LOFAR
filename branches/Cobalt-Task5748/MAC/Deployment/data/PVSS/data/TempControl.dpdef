@@ -1,6 +1,0 @@
-#
-# TempControl
-#
-setpoint				float
-ambient.lowestTemp		float
-ambient.highestTemp		float
