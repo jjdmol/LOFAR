@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# We need kernel.yama.ptrace_scope == 0 to be able to attach
-# gdb to our processes.
-[ `sysctl -n kernel.yama.ptrace_scope` == "0" ] || exit 1
