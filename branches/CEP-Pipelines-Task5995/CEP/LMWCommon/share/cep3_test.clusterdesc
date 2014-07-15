@@ -1,0 +1,9 @@
+ClusterName = cep3_test
+
+# Compute nodes
+Compute.Nodes = [ lof021..22 ]
+Compute.LocalDisks = [ /data ]
+
+# Head nodes
+Head.Nodes = [ lhd002 ]
+Head.LocalDisks = [ /data ]
