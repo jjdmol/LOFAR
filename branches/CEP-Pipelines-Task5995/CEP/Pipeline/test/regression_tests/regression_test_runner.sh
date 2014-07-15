@@ -2,7 +2,11 @@
 HELP=$" This programs runs LOFAR regressions tests in a standalone fashion. 
 Usage: regression_test_runner.sh pipeline_type host1 host2
 Run the regressions test for pipeline_type. Perform the work on host1 and host2
-Test should be started from the base installation directory eg: ~/build/gnu_debug
+Test should be started from the base installation directory 
+  eg: ~/build/gnu_debug/installed
+      /opt/cep/lofar_build/lofar/release
+  
+
 
 pipeline_type select any one of: 
   msss_calibratior_pipeline 
@@ -41,7 +45,7 @@ then
 fi
 
 # Test if the selected pipeline is valid
-if [ -f $"$WORKSPACE/installed/bin/$PIPELINE.py" ]
+if [ -f $"$WORKSPACE/bin/$PIPELINE.py" ]
 then
   # Test if the testdata dir is present (do not test the full tree just the parset)
   if [ -f /data/lofar/testdata/regression_test_runner/${PIPELINE}/${PIPELINE}.parset ]
@@ -56,7 +60,7 @@ then
 else
     echo "*** Error ***"
     echo $"The selected pipeline does not exist as executable in:"
-    echo $"$WORKSPACE/installed/bin/"
+    echo $"$WORKSPACE/bin/"
     exit 1
 fi
 
@@ -81,7 +85,7 @@ echo "Settings up environment"
 shopt -s expand_aliases
 
 # create the var run directory
-mkdir -p $"$WORKSPACE/installed/var/run/pipeline"
+mkdir -p $"$WORKSPACE/var/run/pipeline"
 
 # set up environment
 . /opt/cep/login/bashrc # source the login of use commands
@@ -93,13 +97,14 @@ use Pythonlibs
 # 3) Clear old data:
 # Clear var run directory: remove state, map and logfiles
 echo "Clearing working directories"
-rm $"$WORKSPACE/installed/var/run/pipeline/"* -rf   # log and state files
+rm $"$WORKSPACE/var/run/pipeline/"* -rf   # log and state files
 
 echo "Clearing working directory"
 # Assure working directory exists
 # and remove all files in these dirs
-ssh $HOST $"mkdir $WORKING_DIR -p" 
-ssh $HOST $"rm $WORKING_DIR/* -rf" 
+
+mkdir $WORKING_DIR -p
+rm $WORKING_DIR/* -rf 
 
 ssh $HOST1 $"mkdir $WORKING_DIR -p" 
 ssh $HOST1 $"rm $WORKING_DIR/* -rf" 
@@ -118,6 +123,7 @@ echo "copy input data to working directory at correct nodes"
 # copy input data from data storage to the target host
 # copy full input data batch to the target hosts
 ssh $HOST1 $"mkdir $WORKING_DIR/input_data"
+
 scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host1/"* $HOST1:$"$WORKING_DIR/input_data"
 if [ $SECONDHOST == true ]
 then
@@ -125,7 +131,7 @@ then
   scp -r $"/data/lofar/testdata/regression_test_runner/$PIPELINE/input_data/host2/"* $HOST2:$"$WORKING_DIR/input_data"
 fi
 
-cp $"$WORKSPACE/installed/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
+cp $"$WORKSPACE/share/pipeline/pipeline.cfg"  $"$WORKING_DIR/pipeline.cfg"
 
 echo "Configuring the input parset and configuration files for cep!"
 
@@ -153,7 +159,7 @@ sed -i  $"s|output_path2_placeholder|$WORKING_DIR/output_data|g" $"$WORKING_DIR/
 # *********************************************************************
 # 5) Run the pipeline
 echo "Run the pipeline"
-python $"$WORKSPACE/installed/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
+python $"$WORKSPACE/bin/$PIPELINE.py" $"$WORKING_DIR/$PIPELINE.parset" -c $"$WORKING_DIR/pipeline.cfg" -d
 
 # ***********************************************************************
 # 6) validate output
