@@ -1,0 +1,278 @@
+# -*- Makefile -*-
+#
+# Common Makefile for building RPMs
+#
+# $Id: Makefile.common 7626 2006-02-10 15:59:12Z wierenga $
+
+# Initialize the variables that we need, but are not defined
+# the version of the package
+ifndef NAME
+$(error "You can not run this Makefile without having NAME defined")
+endif
+ifndef VERSION
+VERSION := $(shell rpm $(RPM_DEFINES) -q --qf "%{VERSION}\n" --specfile $(SPECFILE)| head -1)
+endif
+# the release of the package
+ifndef RELEASE
+RELEASE := $(shell rpm $(RPM_DEFINES) -q --qf "%{RELEASE}\n" --specfile $(SPECFILE)| head -1)
+endif
+# this is used in make patch, maybe make clean eventually.
+# would be nicer to autodetermine from the spec file...
+ifndef RPM_BUILD_DIR
+RPM_BUILD_DIR = $(BUILDDIR)/$(NAME)-$(VERSION)
+endif
+
+# default target: just make sure we've got the sources
+all: sources
+
+# user specific configuration
+CVS_DIST_RC	:= $(shell if test -f $(HOME)/.cvsdistrc ; then echo $(HOME)/.cvsdistrc ; fi)
+ifdef CVS_DIST_RC
+include $(CVS_DIST_RC)
+endif
+
+## a base directory where we'll put as much temporary working stuff as we can
+ifndef WORKDIR
+WORKDIR := $(shell pwd)
+endif
+## of course all this can also be overridden in your RPM macros file,
+## but this way you can separate your normal RPM setup from your CVS
+## setup. Override RPM_WITH_DIRS in .pkgcvsrc to avoid the usage of
+## these variables.
+ifndef SRCRPMDIR
+SRCRPMDIR = $(WORKDIR)
+endif
+ifndef BUILDDIR
+BUILDDIR = $(WORKDIR)
+endif
+ifndef RPMDIR
+RPMDIR = $(WORKDIR)
+endif
+## SOURCEDIR is special; it has to match the CVS checkout directory, 
+## because the CVS checkout directory contains the patch files. So it basically 
+## can't be overridden without breaking things. But we leave it a variable
+## for consistency, and in hopes of convincing it to work sometime.
+ifndef SOURCEDIR
+SOURCEDIR := $(shell pwd)
+endif
+
+# The repository and the clients we use for the files
+ifndef REPOSITORY
+REPOSITORY = http://cvs.fedora.redhat.com/repo/dist
+endif
+
+# We define CURL and WGET in a way that makes if possible to have them
+# overwritten from the module's Makefiles. Then CLIENT picks CURL, otherwise WGET
+CURL	?= $(shell if test -f /usr/bin/curl ; then echo "curl -O -R -S --fail --show-error" ; fi)
+WGET	?= $(shell if test -f /usr/bin/wget ; then echo "wget -nd -m" ; fi)
+CLIENT	?= $(if $(CURL),$(CURL),$(if $(WGET),$(WGET)))
+
+# RPM with all the overrides in place; you can override this in your
+# .cvsdistrc also, to use a default rpm setup
+# the rpm build command line
+ifndef RPM
+RPM := $(shell if test -f /usr/bin/rpmbuild ; then echo rpmbuild ; else echo rpm ; fi)
+endif
+ifndef RPM_WITH_DIRS
+RPM_WITH_DIRS = $(RPM) --define "_sourcedir $(SOURCEDIR)" \
+		--define "_builddir $(BUILDDIR)" \
+		--define "_srcrpmdir $(SRCRPMDIR)" \
+		--define "_rpmdir $(RPMDIR)"
+endif
+
+# CVS-safe version/release -- a package name like 4Suite screws things
+# up, so we have to remove the leaving digits from the name
+TAG_NAME    := $(shell echo $(NAME)    | sed -e s/\\\./_/g -e s/^[0-9]\\\+//g)
+TAG_VERSION := $(shell echo $(VERSION) | sed s/\\\./_/g)
+TAG_RELEASE := $(shell echo $(RELEASE) | sed s/\\\./_/g)
+
+# tag to export, defaulting to current tag in the spec file
+ifndef TAG
+TAG=$(TAG_NAME)-$(TAG_VERSION)-$(TAG_RELEASE)
+endif
+
+# where to cvs export temporarily
+TMPCVS := $(WORKDIR)/cvs-$(TAG)
+
+# source file basenames
+SOURCEFILES := $(shell cat sources 2>/dev/null | awk '{ print $$2 }')
+# full path to source files
+FULLSOURCEFILES := $(addprefix $(SOURCEDIR)/,$(SOURCEFILES))
+
+# retrieve the stored md5 sum for a source download
+define get_sources_md5
+$(shell cat sources 2>/dev/null | while read m f ; do if test "$$f" = "$@" ; then echo $$m ; break ; fi ; done)
+endef
+
+# list the possible targets for valid arches
+ARCHES = noarch i386 i586 i686 x86_64 ia64 s390 s390x ppc ppc64 pseries ppc64pseries iseries ppc64iseries # athlon alpha alphaev6 sparc sparc64 sparcv9 i164 mac sh mips
+
+# for the modules that do different "make prep" depending on what arch we build for
+PREP_ARCHES	= $(addprefix prep-,$(ARCHES))
+
+## list all our bogus targets
+.PHONY :: $(ARCHES) sources uploadsource upload export check build test-srpm real-srpm srpm tag verrel new clean patch prep compile install-short compile-short FORCE
+
+# The TARGETS define is meant for local module targets that should be
+# made in addition to the SOURCEFILES whenever needed
+TARGETS		?=
+
+# default target - retrieve the sources and make the module specific targets
+sources: $(SOURCEFILES) $(TARGETS)
+
+# Retrieve the sources we do not have in CVS
+$(SOURCEFILES): #FORCE
+	@mkdir -p $(SOURCEDIR)
+	@if [ ! -e "$@" ] ; then $(CLIENT) $(REPOSITORY)/$(NAME)/$@/$(get_sources_md5)/$@  ; fi
+	@if [ ! -e "$@" ] ; then echo "Could not download source file: $@ does not exist" ; exit 1 ; fi
+	@if test "$$(md5sum $@ | awk '{print $$1}')" != "$(get_sources_md5)" ; then \
+	    echo "md5sum of the downloaded $@ does not match the one from 'sources' file" ; \
+	    echo "Local copy: $$(md5sum $@)" ; \
+	    echo "In sources: $$(grep $@ sources)" ; \
+	    exit 1 ; \
+	else \
+	    ls -l $@ ; \
+	fi
+
+# build for a particular arch
+$(ARCHES) : sources $(TARGETS)
+	$(RPM_WITH_DIRS) --target $@ -ba $(SPECFILE)
+
+# empty target to force checking of md5sums in FULLSOURCEFILES
+FORCE:
+
+# attempt to apply all the patches, optionally only for a particular arch
+ifdef PREPARCH
+prep: sources $(TARGETS)
+	$(RPM_WITH_DIRS) --nodeps -bp --target $(PREPARCH) $(SPECFILE)
+else
+prep: sources $(TARGETS)
+	$(RPM_WITH_DIRS) --nodeps -bp $(SPECFILE)
+endif
+
+# this allows for make prep-i686, make prep-ppc64, etc
+prep-% : Makefile
+	$(MAKE) prep PREPARCH=$*
+
+compile: sources $(TARGETS)
+	$(RPM_WITH_DIRS) -bc $(SPECFILE)
+
+compile-short: sources $(TARGETS)
+	$(RPM_WITH_DIRS) --nodeps --short-circuit -bc $(SPECFILE)
+
+install-short: sources $(TARGETS)
+	$(RPM_WITH_DIRS) --nodeps --short-circuit -bi $(SPECFILE)
+
+CVS_ROOT	:= $(shell if [ -f CVS/Root ] ; then cat CVS/Root ; fi)
+CVS_REPOSITORY	:= $(shell if [ -f CVS/Repository ] ; then cat CVS/Repository ; fi)
+
+## create a clean exported copy in $(TMPCVS)
+export:: sources
+	@mkdir -p $(WORKDIR)
+	/bin/rm -rf $(TMPCVS)
+	@if test -z "$(TAG)" ; then echo "Must specify a tag to check out" ; exit 1; fi
+	@mkdir -p $(TMPCVS)
+	@cd $(TMPCVS) && \
+	    cvs -Q -d $(CVS_ROOT) export -r$(TAG) -d $(NAME) $(CVS_REPOSITORY) && \
+	    cvs -Q -d $(CVS_ROOT) export -rHEAD common
+	@if [ -n "$(FULLSOURCEFILES)" ]; then ln -f $(FULLSOURCEFILES) $(TMPCVS)/$(NAME) 2> /dev/null || cp -f $(FULLSOURCEFILES) $(TMPCVS)/$(NAME) ; fi
+	@echo "Exported $(TMPCVS)/$(NAME)"
+
+## build a test-srpm and see if it will -bp on all arches 
+# XXX: I am not sure exactly what this is supposed to really do, since the
+# query format returns (none) most of the time, and that is not
+# handled --gafton
+check: test-srpm
+	@archs=`rpm -qp $(SRCRPMDIR)/$(NAME)-$(VERSION)-$(RELEASE).src.rpm --qf "[%{EXCLUSIVEARCH}\n]" | egrep -v "(i586)|(i686)|(athlon)"` ;\
+	if test -z "$$archs"; then archs=noarch; fi ; \
+	echo "Checking arches: $$archs" ; \
+	for arch in $$archs; do \
+	    echo "Checking $$arch..."; \
+	    if ! $(RPM_WITH_DIRS) -bp --target $$arch $(SPECFILE); then \
+		echo "*** make prep failed for $$arch"; \
+		exit 1; \
+	    fi; \
+	done;
+
+## use this to build an srpm locally
+srpm: sources $(TARGETS)
+	$(RPM_WITH_DIRS) --nodeps -bs $(SPECFILE)
+
+verrel:
+	@echo $(NAME)-$(VERSION)-$(RELEASE)
+
+# "make new | less" to see what has changed since the last tag was assigned
+new:
+	-@cvs diff -u -r$$(cvs log Makefile 2>/dev/null | awk '/^symbolic names:$$/ {getline; sub(/^[ \t]*/, "") ; sub (/:.*$$/, ""); print; exit 0}')
+
+# mop up, printing out exactly what was mopped.
+clean ::
+	@echo "Running the %clean script of the rpmbuild..."
+	-@$(RPM_WITH_DIRS) --clean --nodeps $(SPECFILE)
+	@for F in $(FULLSOURCEFILES); do \
+                if test -e $$F ; then \
+                        echo "Deleting $$F" ; /bin/rm -f $$F ; \
+                fi; \
+        done
+	@if test -d $(TMPCVS); then \
+		echo "Deleting CVS dir $(TMPCVS)" ; \
+		/bin/rm -rf $(TMPCVS); \
+	fi
+	@if test -e $(SRCRPMDIR)/$(NAME)-$(VERSION)-$(RELEASE).src.rpm ; then \
+		echo "Deleting $(SRCRPMDIR)/$(NAME)-$(VERSION)-$(RELEASE).src.rpm" ; \
+		/bin/rm -f $(SRCRPMDIR)/$(NAME)-$(VERSION)-$(RELEASE).src.rpm ; \
+        fi
+	@rm -fv *~ clog
+	@echo "Fully clean!"
+
+# To prevent CVS noise due to changing file timestamps, upgrade
+# to patchutils-0.2.23-3 or later, and add to ~/.cvsdistrc:
+#    FILTERDIFF := filterdiff --remove-timestamps
+ifndef FILTERDIFF
+FILTERDIFF := cat
+endif
+
+PATCHFILE := $(NAME)-$(VERSION)-$(SUFFIX).patch
+patch:
+	@if test -z "$(SUFFIX)"; then echo "Must specify SUFFIX=whatever" ; exit 1; fi
+	(cd $(RPM_BUILD_DIR)/.. && gendiff $(NAME)-$(VERSION) .$(SUFFIX) | $(FILTERDIFF) > $(PATCHFILE)) || true
+	@if ! test -s $(PATCHFILE); then echo "Patch is empty!"; exit 1; fi
+	@echo "Created $(PATCHFILE)"
+	@grep "$(PATCHFILE)" CVS/Entries >&/dev/null || cvs add -ko $(PATCHFILE) || true
+
+# Recreates the patch file of specified suffix from the current working sources
+# but keeping any comments at the top of file intact, and backing up the old copy
+# with a '~' suffix.
+rediff:
+	@if test -z "$(SUFFIX)"; then echo "Must specify SUFFIX=whatever" ; exit 1; fi
+	@if ! test -f "$(PATCHFILE)"; then echo "$(PATCHFILE) not found"; exit 1; fi
+	@mv -f $(PATCHFILE) $(PATCHFILE)\~
+	@sed '/^--- /,$$d' < $(PATCHFILE)\~ > $(PATCHFILE)
+	@cd $(RPM_BUILD_DIR)/.. && gendiff $(NAME)-$(VERSION) .$(SUFFIX) | $(FILTERDIFF) >> $(PATCHFILE) || true
+
+clog: $(SPECFILE)
+	@sed -n '/^%changelog/,/^$$/{/^%/d;/^$$/d;s/%%/%/g;p}' $(SPECFILE) | tee $@
+
+help:
+	@echo "Usage: make <target>"
+	@echo "Available targets are:"
+	@echo "	help			Show this text"
+	@echo "	sources			Download source files [default]"
+	@echo "	<arch>			Local test rpmbuild binary"
+	@echo "	prep			Local test rpmbuild prep"
+	@echo "	compile			Local test rpmbuild compile"
+	@echo "	compile-short		Local test rpmbuild short-circuit compile"
+	@echo "	install-short		Local test rpmbuild short-circuit install"
+	@echo "	export			Create clean export in \"cvs-$(TAG)\""
+	@echo "	check			Check test srpm preps on all archs"
+	@echo "	srpm			Create a srpm"
+	@echo "	verrel			Echo \"$(NAME)-$(VERSION)-$(RELEASE)\""
+	@echo "	new			Diff against last tag"
+	@echo "	clog			Make a clog file containing top changelog entry"
+	@echo "	clean			Remove srcs ($(SOURCEFILES)), export dir (cvs-$(TAG)) and srpm ($(NAME)-$(VERSION)-$(RELEASE).src.rpm)"
+	@echo "	patch SUFFIX=<suff>	Create and add a gendiff patch file"
+	@echo "	rediff SUFFIX=<suff>	Recreates a gendiff patch file, retaining comments"
+	@echo "	gimmespec		Print the name of the specfile"
+
+gimmespec:
+	@echo "$(SPECFILE)"

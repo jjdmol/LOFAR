@@ -1,0 +1,7 @@
+# This is test input for tmakesourcedb
+ #
+
+#(name,   type, reftype,   Ra,   Dec, I, Q, U, V, SpectralIndex, ReferenceFrequency ) = format
+
+sun,      point, sun,      ,      ,10, '0', '0', '0.'
+cygnus, point, , 23deg, 45deg, 2, '0', '0', '0', 2, 2.5e9
