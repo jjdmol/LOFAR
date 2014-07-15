@@ -121,6 +121,8 @@ class imager_source_finding(BaseRecipe, RemoteCommandRecipeMixIn):
         source_dbs_from_nodes.iterator = \
             catalog_output_path_from_nodes.iterator = DataMap.SkipIterator
 
+        # default succesfull_job is false. Set to true on a single succes
+        succesfull_job = False 
         for job, sourcedb_item, catalog_item in zip(jobs,
                                    source_dbs_from_nodes,
                                    catalog_output_path_from_nodes):
