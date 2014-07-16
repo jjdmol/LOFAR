@@ -464,7 +464,7 @@ namespace LOFAR {
                                 const Bool* flag, bool pol) {
       setAntUsedNotFlagged(flag);
       if (pol) {
-        fillMatricesPol(model,data,weight,flag);
+        fillMatricesUnpol(model,data,weight,flag);
       } else {
         fillMatricesUnpol(model,data,weight,flag);
       }
@@ -569,13 +569,15 @@ namespace LOFAR {
           for (uint st1=0;st1<nSt;++st1) {
             mvis_p=&itsMVis(IPosition(4,0,0,0,st1));
             for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) {
-                iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(4,0,st2,ch,st1)) + iS.h(st2,2) * itsMVis(IPosition(4,2,st2,ch,st1)); //mvis_p[0], mvis_p[2];
-                iS.z(ch*nSt+st2,1) = iS.h(st2,0) * itsMVis(IPosition(4,1,st2,ch,st1)) + iS.h(st2,2) * itsMVis(IPosition(4,3,st2,ch,st1)); //mvis_p[1], mvis_p[3];
-                iS.z(ch*nSt+st2,2) = iS.h(st2,1) * itsMVis(IPosition(4,0,st2,ch,st1)) + iS.h(st2,3) * itsMVis(IPosition(4,2,st2,ch,st1)); //mvis_p[0], mvis_p[2];
-                iS.z(ch*nSt+st2,3) = iS.h(st2,1) * itsMVis(IPosition(4,1,st2,ch,st1)) + iS.h(st2,3) * itsMVis(IPosition(4,3,st2,ch,st1)); //mvis_p[1], mvis_p[3];
-                mvis_p+=4;
-              }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0)  = iS.h(st2,0) * itsMVis(IPosition(5,st2,0,ch,st1,0)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0) += iS.h(st2,2) * itsMVis(IPosition(5,st2,0,ch,st1,1)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1)  = iS.h(st2,0) * itsMVis(IPosition(5,st2,1,ch,st1,0)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1) += iS.h(st2,2) * itsMVis(IPosition(5,st2,1,ch,st1,1)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2)  = iS.h(st2,1) * itsMVis(IPosition(5,st2,0,ch,st1,0)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2) += iS.h(st2,3) * itsMVis(IPosition(5,st2,0,ch,st1,1)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3)  = iS.h(st2,1) * itsMVis(IPosition(5,st2,1,ch,st1,0)); }
+              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3) += iS.h(st2,3) * itsMVis(IPosition(5,st2,1,ch,st1,1)); }
+              mvis_p+=4;
             }
 
             w=0;
@@ -593,13 +595,14 @@ namespace LOFAR {
             t=0;
             vis_p=&itsVis(IPosition(4,0,0,0,st1));
             for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) {
-                t(0) += conj(iS.z(st2+nSt*ch,0)) * itsVis(IPosition(4,0,st2,ch,st1)) + conj(iS.z(st2+nSt*ch,2)) * itsVis(IPosition(4,2,st2,ch,st1)); //vis_p[0], vis_p[2];
-                t(1) += conj(iS.z(st2+nSt*ch,0)) * itsVis(IPosition(4,1,st2,ch,st1)) + conj(iS.z(st2+nSt*ch,2)) * itsVis(IPosition(4,3,st2,ch,st1)); //vis_p[1], vis_p[3];
-                t(2) += conj(iS.z(st2+nSt*ch,1)) * itsVis(IPosition(4,0,st2,ch,st1)) + conj(iS.z(st2+nSt*ch,3)) * itsVis(IPosition(4,2,st2,ch,st1)); //vis_p[0], vis_p[2];
-                t(3) += conj(iS.z(st2+nSt*ch,1)) * itsVis(IPosition(4,1,st2,ch,st1)) + conj(iS.z(st2+nSt*ch,3)) * itsVis(IPosition(4,3,st2,ch,st1)); //vis_p[1], vis_p[3];
-                vis_p+=4;
-              }
+              for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2,0,ch,st1,0));}
+              for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(5,st2,0,ch,st1,1));}
+              for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2,1,ch,st1,0));}
+              for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(5,st2,1,ch,st1,1));}
+              for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(5,st2,0,ch,st1,0));}
+              for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(5,st2,0,ch,st1,1));}
+              for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(5,st2,1,ch,st1,0));}
+              for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(5,st2,1,ch,st1,1));}
             }
             DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
             iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
