@@ -94,47 +94,6 @@ namespace LOFAR {
 
       ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
 
-      /*
-      vector<string> parms = parset.getStringVector(prefix+"parms",vector<string>());
-      uint numdiag=0;
-      uint numoffdiag=0;
-      for (vector<string>::iterator parmname=parms.begin(); parmname!=parms.end();++parmname) {
-        if ((*parmname).length()<8 ||
-            (*parmname).substr(0,5)!="Gain:") {
-          THROW (Exception, "Can only solve for gains");
-        }
-        string parmpol=(*parmname).substr(5,3);
-        if (parmpol=="0:1" || parmpol=="1:0") {
-          numoffdiag++;
-       } else if (parmpol=="0:0" || parmpol=="1:1") {
-          numdiag++;
-        } else {
-          THROW (Exception, "Can only solve for gains");
-        }
-      }
-      if (numoffdiag==2 && numdiag==2) {
-        itsMode="fullgain";
-      } else if (numoffdiag==0 && numdiag==2) {
-        itsMode="diaggain";
-      } else if (parms.size()==0) {
-        itsMode="fullgain";
-      } else {
-        THROW (Exception, "Can only solve for diagonal or all gains");
-      }
-
-      string parmmode=parset.getString(prefix+"mode","COMPLEX");
-      if (parmmode=="COMPLEX") {
-        itsPhaseOnly = false;
-      } else if (parmmode=="PHASE") {
-        itsPhaseOnly = true;
-        if (itsMode!="diaggain") {
-          THROW (Exception, "Mode PHASE only works when solving for diagonal gains");
-        }
-      } else {
-        THROW (Exception, "Can only handle the modes Phase and Complex");
-      }
-      */
-
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
 
@@ -334,7 +293,7 @@ namespace LOFAR {
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
     // top left, all 11 polarizations in the bottom right, etc.
-    void GainCal::fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
+    void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       itsTimerFill.start();
       vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
@@ -366,49 +325,6 @@ namespace LOFAR {
             // Below is the complex conjugate. tcr is the correlation for the transposed
             itsVis (IPosition(5,ant2,cr/2,ch,ant1,cr%2)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
             itsMVis(IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-          }
-        }
-      }
-      itsTimerFill.stop();
-    }
-
-
-    void GainCal::fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
-                                const casa::Bool* flag) {
-      itsTimerFill.start();
-      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
-      uint nSt=(*antUsed).size();
-      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
-
-      const size_t nBl = info().nbaselines();
-      const size_t nCh = info().nchan();
-      const size_t nCr = 4;
-
-      itsVis.resize (IPosition(4,nCr,nSt,nCh,nSt));
-      itsMVis.resize(IPosition(4,nCr,nSt,nCh,nSt));
-
-      itsVis=0;
-      itsMVis=0;
-
-      for (uint ch=0;ch<nCh;++ch) {
-        for (uint bl=0;bl<nBl;++bl) {
-          int ant1=(*antMap)[info().getAnt1()[bl]];
-          int ant2=(*antMap)[info().getAnt2()[bl]];
-          if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
-            continue;
-          }
-
-          for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(4,cr,ant1,ch,ant2)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,cr,ant1,ch,ant2)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-
-            // Below is the complex conjugate. tcr is the correlation for the transposed
-            uint tcr=cr;
-            if (cr==1 || cr==2) {
-              tcr=3-cr;
-            }
-            itsVis (IPosition(4,tcr,ant2,ch,ant1)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,tcr,ant2,ch,ant1)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
@@ -463,11 +379,7 @@ namespace LOFAR {
     void GainCal::stefcal (dcomplex* model, casa::Complex* data, float* weight,
                                 const Bool* flag, bool pol) {
       setAntUsedNotFlagged(flag);
-      if (pol) {
-        fillMatricesUnpol(model,data,weight,flag);
-      } else {
-        fillMatricesUnpol(model,data,weight,flag);
-      }
+      fillMatrices(model,data,weight,flag);
 
       vector<double> dgs;
 
@@ -567,17 +479,15 @@ namespace LOFAR {
           }
 
           for (uint st1=0;st1<nSt;++st1) {
-            mvis_p=&itsMVis(IPosition(4,0,0,0,st1));
             for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0)  = iS.h(st2,0) * itsMVis(IPosition(5,st2,0,ch,st1,0)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0) += iS.h(st2,2) * itsMVis(IPosition(5,st2,0,ch,st1,1)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1)  = iS.h(st2,0) * itsMVis(IPosition(5,st2,1,ch,st1,0)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1) += iS.h(st2,2) * itsMVis(IPosition(5,st2,1,ch,st1,1)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2)  = iS.h(st2,1) * itsMVis(IPosition(5,st2,0,ch,st1,0)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2) += iS.h(st2,3) * itsMVis(IPosition(5,st2,0,ch,st1,1)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3)  = iS.h(st2,1) * itsMVis(IPosition(5,st2,1,ch,st1,0)); }
-              for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3) += iS.h(st2,3) * itsMVis(IPosition(5,st2,1,ch,st1,1)); }
-              mvis_p+=4;
+              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,0)); }
+              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,1)); }
+              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,0)); }
+              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,1)); }
+              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,0)); }
+              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,1)); }
+              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,0)); }
+              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,1)); }
             }
 
             w=0;
@@ -593,16 +503,16 @@ namespace LOFAR {
             w(2)=conj(w(1));
 
             t=0;
-            vis_p=&itsVis(IPosition(4,0,0,0,st1));
+
             for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2,0,ch,st1,0));}
-              for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(5,st2,0,ch,st1,1));}
-              for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2,1,ch,st1,0));}
-              for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,2)) * itsVis(IPosition(5,st2,1,ch,st1,1));}
-              for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(5,st2,0,ch,st1,0));}
-              for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(5,st2,0,ch,st1,1));}
-              for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,1)) * itsVis(IPosition(5,st2,1,ch,st1,0));}
-              for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,3)) * itsVis(IPosition(5,st2,1,ch,st1,1));}
+              vis_p=&itsVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,0)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,0));}
+              vis_p=&itsVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,2)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,1));}
+              vis_p=&itsVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,0)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,0));}
+              vis_p=&itsVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,2)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,1));}
+              vis_p=&itsVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,1)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,0));}
+              vis_p=&itsVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,3)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,1));}
+              vis_p=&itsVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,1)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,0));}
+              vis_p=&itsVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,3)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,1));}
             }
             DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
             iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
@@ -618,13 +528,13 @@ namespace LOFAR {
           for (uint st1=0;st1<nUn;++st1) {
             ww=0;
             t(0)=0;
-            mvis_p=&itsMVis(IPosition(3,0,0,st1));
-            vis_p = &itsVis(IPosition(3,0,0,st1));
+            mvis_p=&itsMVis(IPosition(5,0,0,0,st1,0));
+            vis_p = &itsVis(IPosition(5,0,0,0,st1,0));
             for (uint ch=0;ch<nCh;++ch) {
               for (uint st2=0;st2<nUn;++st2) {
-                iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt)); //*mvis_p;
+                iS.z(ch*nSt+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt));
                 ww+=norm(iS.z(ch*nSt+st2,0));
-                t(0)+=conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt)); //*vis_p;
+                t(0)+=conj(iS.z(ch*nSt+st2,0)) * *vis_p; //itsVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt));
                 mvis_p++;
                 vis_p++;
               }

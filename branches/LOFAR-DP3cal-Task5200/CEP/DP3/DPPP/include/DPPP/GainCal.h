@@ -144,11 +144,7 @@ namespace {
       void setAntUsedNotFlagged (const casa::Bool* flag);
 
       // Fills the matrices itsVis and itsMVis
-      void fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
-                         const casa::Bool* flag);
-
-      // Fills the matrices itsVis and itsMVis
-      void fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
+      void fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                          const casa::Bool* flag);
 
       void stefcalunpol (dcomplex* model, casa::Complex* data, float* weight,
