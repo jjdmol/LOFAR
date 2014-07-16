@@ -77,14 +77,11 @@ namespace LOFAR {
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
-        itsSolInt        (parset.getBool(prefix + "solint", 1)),
-        itsMinBLperAnt   (parset.getBool(prefix + "minblperant", 4)),
         itsPatchList     (),
         itsOperation     (parset.getString(prefix + "operation", "solve")),
         itsConverged     (0),
         itsNonconverged  (0),
-        itsStalled       (0),
-        itsNTimes        (0)
+        itsStalled       (0)
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -96,6 +93,47 @@ namespace LOFAR {
       patchNames=makePatchList(sourceDB, sourcePatterns);
 
       ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
+
+      /*
+      vector<string> parms = parset.getStringVector(prefix+"parms",vector<string>());
+      uint numdiag=0;
+      uint numoffdiag=0;
+      for (vector<string>::iterator parmname=parms.begin(); parmname!=parms.end();++parmname) {
+        if ((*parmname).length()<8 ||
+            (*parmname).substr(0,5)!="Gain:") {
+          THROW (Exception, "Can only solve for gains");
+        }
+        string parmpol=(*parmname).substr(5,3);
+        if (parmpol=="0:1" || parmpol=="1:0") {
+          numoffdiag++;
+       } else if (parmpol=="0:0" || parmpol=="1:1") {
+          numdiag++;
+        } else {
+          THROW (Exception, "Can only solve for gains");
+        }
+      }
+      if (numoffdiag==2 && numdiag==2) {
+        itsMode="fullgain";
+      } else if (numoffdiag==0 && numdiag==2) {
+        itsMode="diaggain";
+      } else if (parms.size()==0) {
+        itsMode="fullgain";
+      } else {
+        THROW (Exception, "Can only solve for diagonal or all gains");
+      }
+
+      string parmmode=parset.getString(prefix+"mode","COMPLEX");
+      if (parmmode=="COMPLEX") {
+        itsPhaseOnly = false;
+      } else if (parmmode=="PHASE") {
+        itsPhaseOnly = true;
+        if (itsMode!="diaggain") {
+          THROW (Exception, "Mode PHASE only works when solving for diagonal gains");
+        }
+      } else {
+        THROW (Exception, "Can only handle the modes Phase and Complex");
+      }
+      */
 
       itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
     }
@@ -125,17 +163,8 @@ namespace LOFAR {
       const size_t nDr = itsPatchList.size();
       const size_t nSt = info().antennaUsed().size();
       const size_t nCh = info().nchan();
-      const size_t nCr = info().ncorr();
 
       // initialize storage
-      if (itsMode=="diagonal" || itsMode=="phaseonly") {
-        itsVis.resize (IPosition(3,nSt*2,nCh,nSt*2));
-        itsMVis.resize(IPosition(3,nSt*2,nCh,nSt*2));
-      } else {
-        itsVis.resize (IPosition(4,nCr,nSt,nCh,nSt));
-        itsMVis.resize(IPosition(4,nCr,nSt,nCh,nSt));
-      }
-
       const size_t nThread=OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
@@ -149,7 +178,6 @@ namespace LOFAR {
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
       itsAntennaUsedNames.resize(info().antennaUsed().size());
-      itsDataPerAntenna.resize(info().antennaUsed().size());
       casa::Vector<int> antsUsed = info().antennaUsed();
       for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
         itsAntennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
@@ -176,10 +204,9 @@ namespace LOFAR {
       os << "   number of patches: " << itsPatchList.size() << endl;
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
-      os << "  solint          " << itsSolInt <<endl;
       os << "  max iter:       " << itsMaxIter << endl;
       os << "  tolerance:      " << itsTolerance << endl;
-      //os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
+      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
     }
 
@@ -291,26 +318,10 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
-        if (itsNTimes==0) {
-          itsDataPerAntenna=0;
-          itsVis=0;
-          itsMVis=0;
-        }
-        countAntUsedNotFlagged(flag);
-        if (itsMode=="fulljones") {
-          fillMatricesPol(&storage.model[0],data,weight,flag);
+        if (itsMode=="diagonal" || itsMode=="phaseonly") {
+          stefcal(&storage.model[0], data, weight, flag, false);
         } else {
-          fillMatricesUnpol(&storage.model[0],data,weight,flag);
-        }
-
-        if (itsNTimes==itsSolInt) {
-          setAntennaMaps();
-          removeDeadAntennas();
-          if (itsMode=="fulljones") {
-            stefcal(true);
-          } else {
-            stefcal(false);
-          }
+          stefcal(&storage.model[0], data, weight, flag, true);
         }
       }
 
@@ -320,39 +331,41 @@ namespace LOFAR {
       return false;
     }
 
-    // Remove rows and colums corresponding to antennas with too much
-    // flagged data from vis and mvis
-    void GainCal::removeDeadAntennas () {
-
-    }
-
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
     // top left, all 11 polarizations in the bottom right, etc.
     void GainCal::fillMatricesUnpol (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       itsTimerFill.start();
-      uint nSt=info().antennaUsed().size();
+      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
+      uint nSt=(*antUsed).size();
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
 
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
 
+      itsVis.resize (IPosition(3,nSt*2,nCh,nSt*2));
+      itsMVis.resize(IPosition(3,nSt*2,nCh,nSt*2));
+
+      itsVis=0;
+      itsMVis=0;
+
       for (uint ch=0;ch<nCh;++ch) {
         for (uint bl=0;bl<nBl;++bl) {
-          int ant1=info().getAnt1()[bl];
-          int ant2=info().getAnt2()[bl];
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
           if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
             continue;
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) += DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) +=          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(3,ant1+nSt*(cr%2),ch,ant2+nSt*(cr/2))) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
             // Below is the complex conjugate. tcr is the correlation for the transposed
-            itsVis (IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) += DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) +=          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(3,ant2+nSt*(cr/2),ch,ant1+nSt*(cr%2))) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
@@ -363,42 +376,53 @@ namespace LOFAR {
     void GainCal::fillMatricesPol (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       itsTimerFill.start();
+      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
+      uint nSt=(*antUsed).size();
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
 
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
 
+      itsVis.resize (IPosition(4,nCr,nSt,nCh,nSt));
+      itsMVis.resize(IPosition(4,nCr,nSt,nCh,nSt));
+
+      itsVis=0;
+      itsMVis=0;
+
       for (uint ch=0;ch<nCh;++ch) {
         for (uint bl=0;bl<nBl;++bl) {
-          int ant1=info().getAnt1()[bl];
-          int ant2=info().getAnt2()[bl];
+          int ant1=(*antMap)[info().getAnt1()[bl]];
+          int ant2=(*antMap)[info().getAnt2()[bl]];
           if (ant1==ant2 || ant1==-1 || ant2 == -1 || flag[bl*nCr*nCh+ch*nCr]) { // Only check flag of cr==0
             continue;
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(4,cr,ant1,ch,ant2)) += DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,cr,ant1,ch,ant2)) +=          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(4,cr,ant1,ch,ant2)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(4,cr,ant1,ch,ant2)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
             // Below is the complex conjugate. tcr is the correlation for the transposed
             uint tcr=cr;
             if (cr==1 || cr==2) {
               tcr=3-cr;
             }
-            itsVis (IPosition(4,tcr,ant2,ch,ant1)) += DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(4,tcr,ant2,ch,ant1)) +=          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(4,tcr,ant2,ch,ant1)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(4,tcr,ant2,ch,ant1)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
       itsTimerFill.stop();
     }
 
-    void GainCal::countAntUsedNotFlagged (const Bool* flag) {
+    void GainCal::setAntUsedNotFlagged (const Bool* flag) {
       uint nCr=info().ncorr();
       uint nCh=info().nchan();
       uint nBl=info().nbaselines();
 
-      // Assume antennas are numbered 0, 1, 2, ...
+      vector<uint> dataPerAntenna(info().antennaNames().size(),0);
+
+      // I assume antennas are numbered 0, 1, 2, ...
       for (uint bl=0;bl<nBl;++bl) {
         uint ant1=info().getAnt1()[bl];
         uint ant2=info().getAnt2()[bl];
@@ -408,21 +432,18 @@ namespace LOFAR {
         for (uint ch=0;ch<nCh;++ch) {
           for (uint cr=0;cr<nCr;++cr) {
             if (!flag[bl*nCr*nCh + ch*nCr + cr]) {
-              itsDataPerAntenna[ant1]++;
-              itsDataPerAntenna[ant2]++;
+              dataPerAntenna[ant1]++;
+              dataPerAntenna[ant2]++;
             }
           }
         }
       }
-    }
-
-    void GainCal::setAntennaMaps () {
       vector<int> antMap(info().antennaNames().size(),-1);
-      uint nCr=info().ncorr();
 
-      for (uint ant=0; ant<itsDataPerAntenna.size(); ++ant) {
-        if (itsDataPerAntenna[ant]>nCr*itsMinBLperAnt) {
-          antMap[ant] = 0;
+      const uint minBaselinesPerAntenna=4;
+      for (uint i=0; i<dataPerAntenna.size(); ++i) {
+        if (dataPerAntenna[i]>nCr*minBaselinesPerAntenna) {
+          antMap[i] = 0;
         }
       }
 
@@ -439,7 +460,15 @@ namespace LOFAR {
       itsAntMaps.push_back(antMap);
     }
 
-    void GainCal::stefcal (bool pol) {
+    void GainCal::stefcal (dcomplex* model, casa::Complex* data, float* weight,
+                                const Bool* flag, bool pol) {
+      setAntUsedNotFlagged(flag);
+      if (pol) {
+        fillMatricesPol(model,data,weight,flag);
+      } else {
+        fillMatricesUnpol(model,data,weight,flag);
+      }
+
       vector<double> dgs;
 
       itsTimerSolve.start();
