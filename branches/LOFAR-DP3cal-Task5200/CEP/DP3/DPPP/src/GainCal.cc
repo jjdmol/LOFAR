@@ -488,23 +488,24 @@ namespace LOFAR {
       int nhit=0;
       int maxhit=5;
 
-      uint nSt, nCr;
+      uint nSt, nCr, nUn;
 
+      nSt=itsAntUseds[itsAntUseds.size()-1].size();
       if (pol) {
-        nSt=itsAntUseds[itsAntUseds.size()-1].size();
+        nUn=nSt;
         nCr=4;
       } else {
-        nSt=itsAntUseds[itsAntUseds.size()-1].size()*2;
+        nUn=nSt*2;
         nCr=1;
       }
       uint nCh = info().nchan();
 
-      iS.g.resize(nSt,nCr);
-      iS.gold.resize(nSt,nCr);
-      iS.gx.resize(nSt,nCr);
-      iS.gxx.resize(nSt,nCr);
-      iS.h.resize(nSt,nCr);
-      iS.z.resize(nSt*nCh,nCr);
+      iS.g.resize(nUn,nCr);
+      iS.gold.resize(nUn,nCr);
+      iS.gx.resize(nUn,nCr);
+      iS.gxx.resize(nUn,nCr);
+      iS.h.resize(nUn,nCr);
+      iS.z.resize(nUn*nCh,nCr);
 
       double ww; // Same as w, but specifically for pol==false
       Vector<DComplex> w(nCr);
@@ -536,7 +537,7 @@ namespace LOFAR {
         ginit=sqrt(fronormvis/fronormmod);
       }
       if (pol) {
-        for (uint st=0;st<nSt;++st) {
+        for (uint st=0;st<nUn;++st) {
           iS.g(st,0)=1.;
           iS.g(st,1)=0.;
           iS.g(st,2)=0.;
@@ -607,20 +608,20 @@ namespace LOFAR {
             iS.g(st1,3) = invdet * ( w(0) * t(3) - w(2) * t(1) );
           }
         } else {// ======================== Nonpolarized =======================
-          for (uint st=0;st<nSt;++st) {
+          for (uint st=0;st<nUn;++st) {
             iS.h(st,0)=conj(iS.g(st,0));
           }
 
-          for (uint st1=0;st1<nSt;++st1) {
+          for (uint st1=0;st1<nUn;++st1) {
             ww=0;
             t(0)=0;
             mvis_p=&itsMVis(IPosition(3,0,0,st1));
             vis_p = &itsVis(IPosition(3,0,0,st1));
             for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) {
-                iS.z(ch*(nSt/2)+st2,0) = iS.h(st2,0) * itsMVis(IPosition(5,st2%(nSt/2),st2/(nSt/2),ch,st1%(nSt/2),st1/(nSt/2))); //*mvis_p;
-                ww+=norm(iS.z(ch*(nSt/2)+st2,0));
-                t(0)+=conj(iS.z(ch*(nSt/2)+st2,0)) * itsVis(IPosition(5,st2%(nSt/2),st2/(nSt/2),ch,st1%(nSt/2),st1/(nSt/2))); //*vis_p;
+              for (uint st2=0;st2<nUn;++st2) {
+                iS.z(ch*nSt+st2,0) = iS.h(st2,0) * itsMVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt)); //*mvis_p;
+                ww+=norm(iS.z(ch*nSt+st2,0));
+                t(0)+=conj(iS.z(ch*nSt+st2,0)) * itsVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt)); //*vis_p;
                 mvis_p++;
                 vis_p++;
               }
@@ -654,7 +655,7 @@ namespace LOFAR {
 
           double fronormdiff=0;
           double fronormg=0;
-          for (uint ant=0;ant<nSt;++ant) {
+          for (uint ant=0;ant<nUn;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
               DComplex diff=iS.g(ant,cr)-iS.gold(ant,cr);
               fronormdiff+=abs(diff*diff);
@@ -677,7 +678,7 @@ namespace LOFAR {
           if (itsDebugLevel>7) {
             cout<<"Averaged"<<endl;
           }
-          for (uint ant=0;ant<nSt;++ant) {
+          for (uint ant=0;ant<nUn;++ant) {
             for (uint cr=0;cr<nCr;++cr) {
               iS.g(ant,cr) = (1-omega) * iS.g(ant,cr) + omega * iS.gold(ant,cr);
             }
@@ -700,7 +701,7 @@ namespace LOFAR {
                 if (itsDebugLevel>7) {
                   cout<<"dg<=c1*dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
+                for (uint ant=0;ant<nUn;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
                     iS.g(ant,cr) = f1q * iS.g(ant,cr) + f2q * iS.gx(ant,cr);
                   }
@@ -709,7 +710,7 @@ namespace LOFAR {
                 if (itsDebugLevel>7) {
                   cout<<"dg<=dgx"<<endl;
                 }
-                for (uint ant=0;ant<nSt;++ant) {
+                for (uint ant=0;ant<nUn;++ant) {
                   for (uint cr=0;cr<nCr;++cr) {
                     iS.g(ant,cr) = f1 * iS.g(ant,cr) + f2 * iS.gx(ant,cr) + f3 * iS.gxx(ant,cr);
                   }
