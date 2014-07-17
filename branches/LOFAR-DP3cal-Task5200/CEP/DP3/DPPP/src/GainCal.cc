@@ -77,11 +77,14 @@ namespace LOFAR {
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
+        itsSolInt        (parset.getBool(prefix + "solint", 1)),
+        itsMinBLperAnt   (parset.getBool(prefix + "minblperant", 4)),        
         itsPatchList     (),
         itsOperation     (parset.getString(prefix + "operation", "solve")),
         itsConverged     (0),
         itsNonconverged  (0),
-        itsStalled       (0)
+        itsStalled       (0),
+        itsNTimes        (0)
     {
       BBS::SourceDB sourceDB(BBS::ParmDBMeta("", itsSourceDBName), false);
 
@@ -124,6 +127,9 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
 
       // initialize storage
+      itsVis.resize (IPosition(5,nSt,2,nCh,nSt,2));
+      itsMVis.resize(IPosition(5,nSt,2,nCh,nSt,2));
+ 
       const size_t nThread=OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
       for(vector<ThreadPrivateStorage>::iterator it = itsThreadStorage.begin(),
@@ -137,6 +143,7 @@ namespace LOFAR {
       // Read the antenna beam info from the MS.
       // Only take the stations actually used.
       itsAntennaUsedNames.resize(info().antennaUsed().size());
+      itsDataPerAntenna.resize(info().antennaUsed().size());
       casa::Vector<int> antsUsed = info().antennaUsed();
       for (int ant=0, nAnts=info().antennaUsed().size(); ant<nAnts; ++ant) {
         itsAntennaUsedNames[ant]=info().antennaNames()[info().antennaUsed()[ant]];
@@ -163,9 +170,10 @@ namespace LOFAR {
       os << "   number of patches: " << itsPatchList.size() << endl;
       os << "  parmdb:         " << itsParmDBName << endl;
       os << "  apply beam:     " << boolalpha << itsApplyBeam << endl;
+      os << "  solint          " << itsSolInt <<endl;
       os << "  max iter:       " << itsMaxIter << endl;
       os << "  tolerance:      " << itsTolerance << endl;
-      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
+//      os << "  propagate sols: " << boolalpha << itsPropagateSolutions << endl;
       os << "  mode:           " << itsMode << endl;
     }
 
@@ -277,10 +285,21 @@ namespace LOFAR {
       }
 
       if (itsOperation=="solve") {
-        if (itsMode=="diagonal" || itsMode=="phaseonly") {
-          stefcal(&storage.model[0], data, weight, flag, false);
-        } else {
-          stefcal(&storage.model[0], data, weight, flag, true);
+        if (itsNTimes==0) {
+          itsDataPerAntenna=0;
+          itsVis=0;
+          itsMVis=0;
+          countAntUsedNotFlagged(flag);
+          setAntennaMaps();
+        }
+        fillMatrices(&storage.model[0],data,weight,flag);
+
+        if (itsNTimes==itsSolInt-1) {
+          if (itsMode=="diagonal" || itsMode=="phaseonly") {
+            stefcal(false);
+          } else {
+            stefcal(true);
+          }
         }
       }
 
@@ -290,25 +309,22 @@ namespace LOFAR {
       return false;
     }
 
+    // Remove rows and colums corresponding to antennas with too much
+    // flagged data from vis and mvis
+    void GainCal::removeDeadAntennas() {
+      //TODO: implement this function...
+    }
 
     // Fills itsVis and itsMVis as matrices with all 00 polarizations in the
     // top left, all 11 polarizations in the bottom right, etc.
     void GainCal::fillMatrices (dcomplex* model, casa::Complex* data, float* weight,
                                 const casa::Bool* flag) {
       itsTimerFill.start();
-      vector<int>* antUsed=&itsAntUseds[itsAntUseds.size()-1];
-      uint nSt=(*antUsed).size();
-      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];
+      vector<int>* antMap=&itsAntMaps[itsAntMaps.size()-1];      
 
       const size_t nBl = info().nbaselines();
       const size_t nCh = info().nchan();
       const size_t nCr = 4;
-
-      itsVis.resize (IPosition(5,nSt,2,nCh,nSt,2));
-      itsMVis.resize(IPosition(5,nSt,2,nCh,nSt,2));
-
-      itsVis=0;
-      itsMVis=0;
 
       for (uint ch=0;ch<nCh;++ch) {
         for (uint bl=0;bl<nBl;++bl) {
@@ -319,19 +335,27 @@ namespace LOFAR {
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(5,ant1,cr%2,ch,ant2,cr/2)) = DComplex(data [bl*nCr*nCh+ch*nCr+cr])*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(5,ant1,cr%2,ch,ant2,cr/2)) =          model[bl*nCr*nCh+ch*nCr+cr] *DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsVis (IPosition(5,ant1,cr%2,ch,ant2,cr/2)) =
+                DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(5,ant1,cr%2,ch,ant2,cr/2)) =
+                         model[bl*nCr*nCh+ch*nCr+cr] *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
-            // Below is the complex conjugate. tcr is the correlation for the transposed
-            itsVis (IPosition(5,ant2,cr/2,ch,ant1,cr%2)) = DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr]))*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =          conj(model[bl*nCr*nCh+ch*nCr+cr] )*DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            // conjugate transpose
+            itsVis (IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =
+                DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr])) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
+            itsMVis(IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =
+                         conj(model[bl*nCr*nCh+ch*nCr+cr] ) *
+                DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
         }
       }
       itsTimerFill.stop();
     }
 
-    void GainCal::setAntUsedNotFlagged (const Bool* flag) {
+    void GainCal::countAntUsedNotFlagged (const Bool* flag) {
       uint nCr=info().ncorr();
       uint nCh=info().nchan();
       uint nBl=info().nbaselines();
@@ -348,18 +372,21 @@ namespace LOFAR {
         for (uint ch=0;ch<nCh;++ch) {
           for (uint cr=0;cr<nCr;++cr) {
             if (!flag[bl*nCr*nCh + ch*nCr + cr]) {
-              dataPerAntenna[ant1]++;
-              dataPerAntenna[ant2]++;
+              itsDataPerAntenna[ant1]++;
+              itsDataPerAntenna[ant2]++;
             }
           }
         }
       }
+    }
+      
+    void GainCal::setAntennaMaps () {      
       vector<int> antMap(info().antennaNames().size(),-1);
+      uint nCr=info().ncorr();
 
-      const uint minBaselinesPerAntenna=4;
-      for (uint i=0; i<dataPerAntenna.size(); ++i) {
-        if (dataPerAntenna[i]>nCr*minBaselinesPerAntenna) {
-          antMap[i] = 0;
+      for (uint ant=0; ant<itsDataPerAntenna.size(); ++ant) {
+        if (itsDataPerAntenna[ant]>nCr*itsMinBLperAnt) {
+          antMap[ant] = 0;
         }
       }
 
@@ -376,11 +403,7 @@ namespace LOFAR {
       itsAntMaps.push_back(antMap);
     }
 
-    void GainCal::stefcal (dcomplex* model, casa::Complex* data, float* weight,
-                                const Bool* flag, bool pol) {
-      setAntUsedNotFlagged(flag);
-      fillMatrices(model,data,weight,flag);
-
+    void GainCal::stefcal (bool pol) {
       vector<double> dgs;
 
       itsTimerSolve.start();
