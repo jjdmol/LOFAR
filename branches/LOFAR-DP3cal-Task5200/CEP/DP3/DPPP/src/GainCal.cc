@@ -77,8 +77,8 @@ namespace LOFAR {
         itsMaxIter       (parset.getInt (prefix + "maxiter", 50)),
         itsTolerance     (parset.getDouble (prefix + "tolerance", 1.e-5)),
         itsPropagateSolutions (parset.getBool(prefix + "propagatesolutions", false)),
-        itsSolInt        (parset.getBool(prefix + "solint", 1)),
-        itsMinBLperAnt   (parset.getBool(prefix + "minblperant", 4)),        
+        itsSolInt        (parset.getInt(prefix + "solint", 1)),
+        itsMinBLperAnt   (parset.getInt(prefix + "minblperant", 4)),
         itsPatchList     (),
         itsOperation     (parset.getString(prefix + "operation", "solve")),
         itsConverged     (0),
@@ -127,8 +127,8 @@ namespace LOFAR {
       const size_t nCh = info().nchan();
 
       // initialize storage
-      itsVis.resize (IPosition(5,nSt,2,nCh,nSt,2));
-      itsMVis.resize(IPosition(5,nSt,2,nCh,nSt,2));
+      itsVis.resize (IPosition(6,nSt,2,nCh,itsSolInt,nSt,2));
+      itsMVis.resize(IPosition(6,nSt,2,nCh,itsSolInt,nSt,2));
  
       const size_t nThread=OpenMP::maxThreads();
       itsThreadStorage.resize(nThread);
@@ -300,6 +300,9 @@ namespace LOFAR {
           } else {
             stefcal(true);
           }
+          itsNTimes=0;
+        } else {
+          itsNTimes++;
         }
       }
 
@@ -335,18 +338,18 @@ namespace LOFAR {
           }
 
           for (uint cr=0;cr<nCr;++cr) {
-            itsVis (IPosition(5,ant1,cr%2,ch,ant2,cr/2)) =
+            itsVis (IPosition(6,ant1,cr%2,ch,itsNTimes,ant2,cr/2)) =
                 DComplex(data [bl*nCr*nCh+ch*nCr+cr]) *
                 DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(5,ant1,cr%2,ch,ant2,cr/2)) =
+            itsMVis(IPosition(6,ant1,cr%2,ch,itsNTimes,ant2,cr/2)) =
                          model[bl*nCr*nCh+ch*nCr+cr] *
                 DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
 
             // conjugate transpose
-            itsVis (IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =
+            itsVis (IPosition(6,ant2,cr/2,ch,itsNTimes,ant1,cr%2)) =
                 DComplex(conj(data [bl*nCr*nCh+ch*nCr+cr])) *
                 DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
-            itsMVis(IPosition(5,ant2,cr/2,ch,ant1,cr%2)) =
+            itsMVis(IPosition(6,ant2,cr/2,ch,itsNTimes,ant1,cr%2)) =
                          conj(model[bl*nCr*nCh+ch*nCr+cr] ) *
                 DComplex(sqrt(weight[bl*nCr*nCh+ch*nCr+cr]));
           }
@@ -440,7 +443,7 @@ namespace LOFAR {
       iS.gx.resize(nUn,nCr);
       iS.gxx.resize(nUn,nCr);
       iS.h.resize(nUn,nCr);
-      iS.z.resize(nUn*nCh,nCr);
+      iS.z.resize(nUn*nCh*itsSolInt,nCr);
 
       double ww; // Same as w, but specifically for pol==false
       Vector<DComplex> w(nCr);
@@ -490,7 +493,6 @@ namespace LOFAR {
         iter=itsMaxIter;
       }
       for (;iter<itsMaxIter;++iter) {
-        //cout<<"iter+1 = "<<iter+1<<endl;
         iS.gold=iS.g;
 
         if (pol) { // ======================== Polarized =======================
@@ -502,40 +504,46 @@ namespace LOFAR {
           }
 
           for (uint st1=0;st1<nSt;++st1) {
-            for (uint ch=0;ch<nCh;++ch) {
-              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,0)); }
-              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,1)); }
-              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,0)); }
-              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,1)); }
-              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,0)); }
-              mvis_p=&itsMVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,0,ch,st1,1)); }
-              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,0)); }
-              mvis_p=&itsMVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(ch*nSt+st2,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(5,st2,1,ch,st1,1)); }
+            for (uint time=0;time<itsSolInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,0)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,st1,0)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,0) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,st1,1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,1)  = iS.h(st2,0) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,st1,0)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,1) += iS.h(st2,2) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,st1,1)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,2)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,st1,0)); }
+                mvis_p=&itsMVis(IPosition(6,0,0,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,2) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,0,ch,time,st1,1)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,3)  = iS.h(st2,1) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,st1,0)); }
+                mvis_p=&itsMVis(IPosition(6,0,1,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { iS.z(st2+nSt*ch+nSt*nCh*time,3) += iS.h(st2,3) * mvis_p[st2]; } // itsMVis(IPosition(6,st2,1,ch,time,st1,1)); }
+              }
             }
 
             w=0;
             t=0;
 
-            for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nSt;++st2) {
-                w(0) += conj(iS.z(st2+nSt*ch,0))*iS.z(st2+nSt*ch,0) + conj(iS.z(st2+nSt*ch,2))*iS.z(st2+nSt*ch,2);
-                w(1) += conj(iS.z(st2+nSt*ch,0))*iS.z(st2+nSt*ch,1) + conj(iS.z(st2+nSt*ch,2))*iS.z(st2+nSt*ch,3);
-                w(3) += conj(iS.z(st2+nSt*ch,1))*iS.z(st2+nSt*ch,1) + conj(iS.z(st2+nSt*ch,3))*iS.z(st2+nSt*ch,3);
+            for (uint time=0;time<itsSolInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                for (uint st2=0;st2<nSt;++st2) {
+                  w(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0))*iS.z(st2+nSt*ch+nSt*nCh*time,0) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,2))*iS.z(st2+nSt*ch+nSt*nCh*time,2);
+                  w(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0))*iS.z(st2+nSt*ch+nSt*nCh*time,1) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,2))*iS.z(st2+nSt*ch+nSt*nCh*time,3);
+                  w(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1))*iS.z(st2+nSt*ch+nSt*nCh*time,1) + conj(iS.z(st2+nSt*ch+nSt*nCh*time,3))*iS.z(st2+nSt*ch+nSt*nCh*time,3);
+                }
               }
             }
             w(2)=conj(w(1));
 
             t=0;
 
-            for (uint ch=0;ch<nCh;++ch) {
-              vis_p=&itsVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,0)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,0));}
-              vis_p=&itsVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(ch*nSt+st2,2)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,1));}
-              vis_p=&itsVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,0)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,0));}
-              vis_p=&itsVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(ch*nSt+st2,2)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,1));}
-              vis_p=&itsVis(IPosition(5,0,0,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,1)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,0));}
-              vis_p=&itsVis(IPosition(5,0,0,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(ch*nSt+st2,3)) * vis_p[st2]; }// itsVis(IPosition(5,st2,0,ch,st1,1));}
-              vis_p=&itsVis(IPosition(5,0,1,ch,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,1)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,0));}
-              vis_p=&itsVis(IPosition(5,0,1,ch,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(ch*nSt+st2,3)) * vis_p[st2]; }// itsVis(IPosition(5,st2,1,ch,st1,1));}
+            for (uint time=0;time<itsSolInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,st1,0));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(0) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,st1,1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,0)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,st1,0));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(1) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,2)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,st1,1));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,st1,0));}
+                vis_p=&itsVis(IPosition(6,0,0,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(2) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,0,ch,time,st1,1));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,st1,0)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,1)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,st1,0));}
+                vis_p=&itsVis(IPosition(6,0,1,ch,time,st1,1)); for (uint st2=0;st2<nSt;++st2) { t(3) += conj(iS.z(st2+nSt*ch+nSt*nCh*time,3)) * vis_p[st2]; }// itsVis(IPosition(6,st2,1,ch,time,st1,1));}
+              }
             }
             DComplex invdet= 1./(w(0) * w (3) - w(1)*w(2));
             iS.g(st1,0) = invdet * ( w(3) * t(0) - w(1) * t(2) );
@@ -551,15 +559,17 @@ namespace LOFAR {
           for (uint st1=0;st1<nUn;++st1) {
             ww=0;
             t(0)=0;
-            mvis_p=&itsMVis(IPosition(5,0,0,0,st1,0));
-            vis_p = &itsVis(IPosition(5,0,0,0,st1,0));
-            for (uint ch=0;ch<nCh;++ch) {
-              for (uint st2=0;st2<nUn;++st2) {
-                iS.z(ch*nSt+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt));
-                ww+=norm(iS.z(ch*nSt+st2,0));
-                t(0)+=conj(iS.z(ch*nSt+st2,0)) * *vis_p; //itsVis(IPosition(5,st2%nSt,st2/nSt,ch,st1%nSt,st1/nSt));
-                mvis_p++;
-                vis_p++;
+            mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1,0));
+            vis_p = &itsVis(IPosition(6,0,0,0,0,st1,0));
+            for (uint time=0;time<itsSolInt;++time) {
+              for (uint ch=0;ch<nCh;++ch) {
+                for (uint st2=0;st2<nUn;++st2) {
+                  iS.z(nCh*nSt*time+ch*nSt+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  ww+=norm(iS.z(nCh*nSt*time+ch*nSt+st2,0));
+                  t(0)+=conj(iS.z(nCh*nSt*time+ch*nSt+st2,0)) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  mvis_p++;
+                  vis_p++;
+                }
               }
             }
             iS.g(st1,0)=t(0)/ww;
@@ -829,6 +839,18 @@ namespace LOFAR {
     void GainCal::finish()
     {
       itsTimer.start();
+
+      //Solve remaining time slots if any
+      itsTimerSolve.start();
+      if (itsNTimes!=0) {
+        if (itsMode=="diagonal" || itsMode=="phaseonly") {
+          stefcal(false);
+        } else {
+          stefcal(true);
+        }
+      }
+      itsTimerSolve.stop();
+
       itsTimerWrite.start();
 
       if (itsOperation!="solve") {

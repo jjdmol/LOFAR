@@ -219,7 +219,7 @@ namespace {
       uint             itsConverged;
       uint             itsNonconverged;
       uint             itsStalled;
-      uint             itsNTimes;      
+      uint             itsNTimes;
       NSTimer          itsTimer;
       NSTimer          itsTimerPredict;
       NSTimer          itsTimerSolve;
