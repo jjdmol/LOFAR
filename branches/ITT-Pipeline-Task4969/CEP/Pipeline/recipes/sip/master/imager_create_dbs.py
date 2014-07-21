@@ -83,9 +83,9 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
              '--makesourcedb-path',
              help="Path to makesourcedb executable."
         ),
-        'source_list_path': ingredient.StringField(
-             '--source-list-path',
-             help="Path to sourcelist from external source (eg. bdsm) "\
+        'source_list_map_path': ingredient.StringField(
+             '--source-list-map-path',
+             help="Path to sourcelist map from external source (eg. bdsm) "\
              "use an empty string for gsm generated data"
         ),
         'parmdbs_map_path': ingredient.StringField(
@@ -158,13 +158,14 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         self.logger.error(self.inputs["slice_paths_mapfile"])
         slice_paths_map = MultiDataMap.load(self.inputs["slice_paths_mapfile"])
         input_map = DataMap.load(self.inputs['args'][0])
+        source_list_map = DataMap.load(self.inputs['source_list_map_path'])
 
         if self._validate_input_data(input_map, slice_paths_map):
             return 1
 
         # Run the nodes with now collected inputs
         jobs, output_map = self._run_create_dbs_node(
-                 input_map, slice_paths_map, assoc_theta, 
+                 input_map, slice_paths_map, assoc_theta, source_list_map, 
                  measurement_path_timeconcat)
 
         # Collect the output of the node scripts write to (map) files
@@ -200,7 +201,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
     def _run_create_dbs_node(self, input_map, slice_paths_map,
-                                     assoc_theta,measurement_path_timeconcat):
+             assoc_theta, source_list_map, measurement_path_timeconcat):
         """
         Decompose the input mapfiles into task for specific nodes and 
         distribute these to the node recipes. Wait for the jobs to finish and
@@ -214,12 +215,12 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Update the skip fields of the four maps. If 'skip' is True in any of
         # these maps, then 'skip' must be set to True in all maps.
-        for w, x, y in zip(input_map, output_map, slice_paths_map):
-            w.skip = x.skip = y.skip = (
-                w.skip or x.skip or y.skip
+        for w, x, y, s in zip(input_map, output_map, slice_paths_map, source_list_map ):
+            w.skip = x.skip = y.skip = s.skip(
+                w.skip or x.skip or y.skip or s.skip
             )
         slice_paths_map.iterator = input_map.iterator = DataMap.SkipIterator
-        for (input_item, slice_item) in zip(input_map, slice_paths_map):
+        for (input_item, slice_item, source_list_item) in zip(input_map, slice_paths_map,source_list_map):
             host_ms, concat_ms = input_item.host, input_item.file
             host_slice, slice_paths = slice_item.host, slice_item.file
 
@@ -242,7 +243,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
-                         self.inputs["source_list_path"],
+                         source_list_item.file,
                          self.inputs["major_cycle"],
                          measurement_path_timeconcat]
 

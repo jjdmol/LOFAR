@@ -66,18 +66,18 @@ class imager_create_dbs(LOFARnodeTCP):
         #*******************************************************************
         # 1. get a sourcelist: from gsm or from file
         
-        if major_cycle == 0:
-          source_list, append = self._create_source_list(
+        #if major_cycle == 0:
+        source_list, append = self._create_source_list(
                  source_list_path_extern,sourcedb_target_path, 
                  concatenated_measurement_set,monet_db_hostname, 
                  monet_db_port, monet_db_name, monet_db_user,
                  monet_db_password, assoc_theta)       
-        else:
-            Skymodel_path = os.path.dirname(measurement_path_timeconcat)
-            Skymodel_path = os.path.join(Skymodel_path,
-                 'awimage_cycle_%s/bdsm_catalog'%(major_cycle))
-            source_list	  = Skymodel_path
-            append				= 'False'
+        #else:
+        #    Skymodel_path = os.path.dirname(measurement_path_timeconcat)
+        #    Skymodel_path = os.path.join(Skymodel_path,
+        #         'awimage_cycle_%s/bdsm_catalog'%(major_cycle))
+        #    source_list	  = Skymodel_path
+        #    append				= False
                     
 
         #*******************************************************************
