@@ -58,7 +58,7 @@ class imager_create_dbs(LOFARnodeTCP):
             monet_db_hostname, monet_db_port, monet_db_name, monet_db_user,
             monet_db_password, assoc_theta, parmdb_executable, slice_paths,
             parmdb_suffix, environment, working_directory, makesourcedb_path,
-            source_list_path_extern,major_cycle,measurement_path_timeconcat):
+            source_list_path_extern):
 
         self.logger.info("Starting imager_create_dbs Node")
         self.environment.update(environment)

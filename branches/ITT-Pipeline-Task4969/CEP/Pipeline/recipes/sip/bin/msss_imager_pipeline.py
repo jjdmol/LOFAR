@@ -589,9 +589,7 @@ class msss_imager_pipeline(control):
                         parmdbs_map_path = parmdbs_map_path,
                         sourcedb_map_path = sourcedb_map_path,
                         source_list_map_path = source_list_map_path,
-                        working_directory = self.scratch_directory,
-                        major_cycle = major_cycle,
-                        prepare_phase_output=prepare_phase_output)
+                        working_directory = self.scratch_directory)
 
         return parmdbs_map_path, sourcedb_map_path
 

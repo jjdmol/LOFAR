@@ -95,14 +95,6 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         'sourcedb_map_path': ingredient.StringField(
             '--sourcedb-map-path',
             help="path to mapfile containing produced sourcedb files"
-        ),
-        'major_cycle': ingredient.IntField(
-            '--major_cycle',
-            help="current major cycle"
-        ),
-        'prepare_phase_output': ingredient.FileField(
-            '--prepare_phase_output',
-            help="concat MS path"
         )        
         
     }
@@ -242,9 +234,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
                          self.environment,
                          self.inputs["working_directory"],
                          self.inputs["makesourcedb_path"],
-                         source_list_item.file,
-                         self.inputs["major_cycle"],
-                         measurement_path_timeconcat]
+                         source_list_item.file]
 
             jobs.append(ComputeJob(host_ms, node_command, arguments))
         # Wait the nodes to finish
