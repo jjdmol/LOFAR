@@ -68,7 +68,6 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             '--major_cycle',
             help="ID for the current major cycle"
         )                 
-             
     }
 
     outputs = {
@@ -139,7 +138,8 @@ class imager_bbs(BaseRecipe, RemoteCommandRecipeMixIn):
             DataMap.SkipIterator
 
         for (measurement_item, output_map) in zip(input_map, output_map):
-                host_timeconcat , measurement_path_timeconcat = measurement_item.host, measurement_item.file
+                host_timeconcat , measurement_path_timeconcat = \
+                measurement_item.host, measurement_item.file
 
         # *********************************************************************
         # 2.continue from here (concat.ms caught)                      

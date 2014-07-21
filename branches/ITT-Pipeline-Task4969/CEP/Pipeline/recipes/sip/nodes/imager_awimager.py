@@ -197,16 +197,9 @@ class imager_awimager(LOFARnodeTCP):
         self.outputs["image"] = output_image + ".restored"
         return 0
 
-
-
-############################################################################
-#
-# For selfcal this function _get_imaging_parameters is not used anymore
-# we use: _get_selfcal_parameters
-#
-############################################################################
-
-
+    ###########################################################################
+    # For selfcal this function _get_imaging_parameters is not used anymore
+    # we use: _get_selfcal_parameters   
     def _get_imaging_parameters(self, measurement_set, parset,
                 autogenerate_parameters, specify_fov, fov):
         """
@@ -266,7 +259,8 @@ class imager_awimager(LOFARnodeTCP):
 
         # else use full resolution (calculate the fov)
         else:
-            self.logger.info("Using fov calculated on measurement data: " + str(fov_from_ms))
+            self.logger.info("Using fov calculated on measurement data: " +
+                             str(fov_from_ms))
             fov = fov_from_ms
 
         # ********************************************************************
@@ -318,16 +312,10 @@ class imager_awimager(LOFARnodeTCP):
 
         return cell_size_formatted, str(npix), str(w_max), str(w_proj_planes)
         
- ############################################################################
-#
-# end of function _get_imaging_parameters is not used anymore
-# we use: _get_selfcal_parameters but _get_fov_and_station_diameter is 
-# still in use to compute station diameter for w_proj_planes
-#
-############################################################################       
-        
-        
-
+    ###########################################################################
+    # end of function _get_imaging_parameters is not used anymore
+    # we use: _get_selfcal_parameters but _get_fov_and_station_diameter is 
+    # still in use to compute station diameter for w_proj_planes
     def _get_fov_and_station_diameter(self, measurement_set):
         """
         _field_of_view calculates the fov, which is dependend on the
@@ -395,12 +383,9 @@ class imager_awimager(LOFARnodeTCP):
         return fov, station_diameter
 
 
-############################################################################
-#
-# Mask is generated but not used  following it is mask's part
-#
-############################################################################
-
+    ###########################################################################
+    #
+    # Mask is generated but not used  following it is mask's part
     def _create_mask(self, npix, cell_size, output_image,
                      concatenated_measurement_set, executable,
                      working_directory, log4_cplus_name, sourcedb_path,
@@ -613,13 +598,9 @@ class imager_awimager(LOFARnodeTCP):
         null = null
         mask.putdata(mask_data)
         table.close()
-
-############################################################################
-#
-# End of  mask's part
-#
-############################################################################
-
+    
+    # End of  mask's part
+    ##########################################################################
 
 
     # some helper functions
@@ -631,174 +612,163 @@ class imager_awimager(LOFARnodeTCP):
         """
         return int(pow(2, math.ceil(math.log(value, 2))))
         
-        
-        
-        
     # Awimager parameters  for selfcal process (depends with major cycle)    
-    def _get_selfcal_parameters(self, measurement_set, parset, major_cycle, nof_cycle): 
+    def _get_selfcal_parameters(self, measurement_set, parset, major_cycle,
+                                nof_cycle): 
+      """
+      0. modify the nof cycle to have a final step at the same resolution 
+      as the previous last cycle
+      1. Determine target coordinates especially declinaison, because 
+      for low dec (<35 deg) UVmin = 0.1 to excluse very short baseline
+      2. Determine the frequency and the wavelenght
+      3. Determine the longuest baseline and the best resolution avaible
+      4. Estimate all imaging parameters
+      5. Calculate number of projection planes
+      6. Pixelsize must be a string number : number +arcsec
+      """		
+      # ********************************************************************
+      #0. modify the nof cycle to have a final step at the same resolution 
+      #as the previous last cycle
+
+      if major_cycle < nof_cycle-1:
+         nof_cycle = nof_cycle-1
     
-		"""
-		0. modify the nof cycle to have a final step at the same resolution 
-		as the previous last cycle
-		1. Determine target coordinates especially declinaison, because 
-		for low dec (<35 deg) UVmin = 0.1 to excluse very short baseline
-		2. Determine the frequency and the wavelenght
-		3. Determine the longuest baseline and the best resolution avaible
-		4. Estimate all imaging parameters
-		5. Calculate number of projection planes
-		6. Pixelsize must be a string number : number +arcsec
-		"""		
+      # ********************************************************************
+      #1. Determine Target coordinates for UVmin
+      tabtarget	= pt.table(measurement_set)
+      tabfield	= pt.table(tabtarget.getkeyword('FIELD'))
+      coords		= tabfield.getcell('REFERENCE_DIR',0)
+      target		= coords[0] * 180.0 / 3.14
 
-		# ********************************************************************
-		#0. modify the nof cycle to have a final step at the same resolution 
-		#as the previous last cycle
+      UVmin=0
+      if target[1] <= 35:
+          UVmin = 0.1		    
 
-		if major_cycle < nof_cycle-1:
-			nof_cycle = nof_cycle-1
-			
+      ra_target	= target[0] + 360.0
+      dec_target	= target[1]    
 
+      # ********************************************************************        
+      # 2. Determine the frequency and the wavelenght
+      tabfreq					= pt.table(measurement_set)
+      table_spectral_window 	= pt.table(tabfreq.getkeyword("SPECTRAL_WINDOW"))
+      frequency				= table_spectral_window.getcell('REF_FREQUENCY', 0)   
 
-    
-		# ********************************************************************
-		#1. Determine Target coordinates for UVmin
-		tabtarget	= pt.table(measurement_set)
-		tabfield	= pt.table(tabtarget.getkeyword('FIELD'))
-		coords		= tabfield.getcell('REFERENCE_DIR',0)
-		target		= coords[0]*180./3.14
-		
-		UVmin=0
-		if target[1] <= 35:
-		    UVmin=0.1		    
-		
-		ra_target	= target[0]+360.
-		dec_target	= target[1]    
-           
-		
-		# ********************************************************************        
-        # 2. Determine the frequency and the wavelenght
-		tabfreq					= pt.table(measurement_set)
-		table_spectral_window 	= pt.table(tabfreq.getkeyword("SPECTRAL_WINDOW"))
-		frequency				= table_spectral_window.getcell('REF_FREQUENCY',0)   
-		
-		wavelenght  = 3.0E8/frequency
-				
-		# ********************************************************************        
-        # 3. Determine the longuest baseline and the best resolution avaible	
-		
-		tabbaseline 	= pt.table(measurement_set, readonly=False, ack=True)
-		posbaseline 	= tabbaseline.getcol('UVW')
-		maxBaseline 	= max(posbaseline[:,0]**2+posbaseline[:,1]**2)**0.5 
-		
-		bestBeamresol	= float(fpformat.fix((wavelenght/maxBaseline)*180./3.14*3600.,0))
-		
-		# Beam resolution limitation to 10arcsec to avoid too large images
-		if bestBeamresol < 10.0:
-			bestBeamresol = 10.0	
-			
-			
-			
-		
-		# ********************************************************************        
-        # 4. Estimate all imaging parameters
+      wavelenght  = 3.0E8 / frequency
+
+      # ********************************************************************        
+      # 3. Determine the longuest baseline and the best resolution avaible	
+
+      tabbaseline 	= pt.table(measurement_set, readonly=False, ack=True)
+      posbaseline 	= tabbaseline.getcol('UVW')
+      maxBaseline 	= max(posbaseline[:, 0] ** 2 + 
+                          posbaseline[:, 1] ** 2) ** 0.5 
+
+      bestBeamresol	= float(
+         fpformat.fix((wavelenght / maxBaseline) * 180.0 / 3.14 * 3600.0, 0))
+
+      # Beam resolution limitation to 10arcsec to avoid too large images
+      if bestBeamresol < 10.0:
+          bestBeamresol = 10.0	
+
+      # ********************************************************************        
+      # 4. Estimate all imaging parameters
  
-		# estimate fov
-		# fov = 5 degree, except for High HBA Observation => 1.5 degree
-		if frequency > 1.9E8:
-				fov	= 1.5				
-		else:
-				fov	= 5.0	    
+      # estimate fov
+      # fov = 5 degree, except for High HBA Observation => 1.5 degree
+      if frequency > 1.9E8:
+          fov	= 1.5				
+      else:
+          fov	= 5.0	    
 
-		# we need 4 pixel/beam to have enough sampling
-		pixPerBeam	= 4.0 
-		
-		# best resolution pixel size (i.e final pixel size for selfcal)
-		bestPixelResol	= float(fpformat.fix(bestBeamresol/pixPerBeam,2)) 
-		
-		# factor to estimate the starting resolution (9 times in this case)
-		badResolFactor	= 9
-		
-		
-		pixsize	= float(fpformat.fix((badResolFactor*bestPixelResol)-(major_cycle*(badResolFactor*bestPixelResol-bestPixelResol)/(nof_cycle-1)),3))
-		
-		# number of pixel must be a multiple of 2 !!
-		nbpixel	= int(fov*3600./pixsize)
-		if nbpixel%2 ==1:
-		     nbpixel = nbpixel+1		
-		
-		
-		robust	= float(fpformat.fix(1.0-(major_cycle*3.0/(nof_cycle-1)),2))
-			
-		UVmax	= float(fpformat.fix((wavelenght)/(pixPerBeam*pixsize/3600.*3.14/180.)/(1E3*wavelenght),3))
-		wmax	= float(fpformat.fix(UVmax*(wavelenght)*1E3,3))		
+      # we need 4 pixel/beam to have enough sampling
+      pixPerBeam	= 4.0 
 
-		# ********************************************************************        
-        # 5. Calculate number of projection planes
-        
-        # Need to compute station diameter (the fov is fixed to 5 degree)
-        # using wouter's function, to compute the w_proj_planes
-        #    fov and diameter depending on the antenna name
-        
-		fov_from_ms, station_diameter = self._get_fov_and_station_diameter(measurement_set)        
-            
-		w_proj_planes = min(257, math.floor((maxBaseline * wavelenght) / (station_diameter ** 2)))
-		w_proj_planes = int(round(w_proj_planes))
+      # best resolution pixel size (i.e final pixel size for selfcal)
+      bestPixelResol	= float(fpformat.fix(bestBeamresol / pixPerBeam, 2)) 
 
-        # MAximum number of proj planes set to 1024: George Heald, Ger van
-        # Diepen if this exception occurs
-		maxsupport = max(1024, nbpixel)
-		if w_proj_planes > maxsupport:
-		     raise Exception("The number of projections planes for the current" + "measurement set is to large.")
+      # factor to estimate the starting resolution (9 times in this case)
+      badResolFactor	= 9
+      
+      pixsize	= float(fpformat.fix((badResolFactor * bestPixelResol) - 
+          (major_cycle * (badResolFactor * bestPixelResol - bestPixelResol) / 
+           (nof_cycle - 1)) , 3))
 
-		# Warnings on pixel size
-		if nbpixel < 256:
-		     self.logger.warn("Using a image size smaller then 256x256: This leads to problematic imaging in some instances!!") 
+      # number of pixel must be a multiple of 2 !!
+      nbpixel	= int(fov * 3600.0 / pixsize)
+      if nbpixel % 2 ==1:
+          nbpixel = nbpixel + 1		
+      
+      robust	= float(
+                fpformat.fix(1.0 - (major_cycle * 3.0 / (nof_cycle - 1)), 2))
+
+      UVmax	= float(
+          fpformat.fix((wavelenght) / 
+                       (pixPerBeam * pixsize / 3600.0 * 3.14 / 180.0 ) / 
+                       (1E3 * wavelenght), 3))
+      wmax	= float(fpformat.fix(UVmax * (wavelenght) * 1E3, 3))		
+
+      # ********************************************************************        
+      # 5. Calculate number of projection planes
+      # Need to compute station diameter (the fov is fixed to 5 degree)
+      # using wouter's function, to compute the w_proj_planes
+      #    fov and diameter depending on the antenna name       
+      fov_from_ms, station_diameter = self._get_fov_and_station_diameter(
+                                                              measurement_set)        
+
+      w_proj_planes = min(257, math.floor((maxBaseline * wavelenght) / 
+                                          (station_diameter ** 2)))
+      w_proj_planes = int(round(w_proj_planes))
+
+      # MAximum number of proj planes set to 1024: George Heald, Ger van
+      # Diepen if this exception occurs
+      maxsupport = max(1024, nbpixel)
+      if w_proj_planes > maxsupport:
+          raise Exception("The number of projections planes for the current" +
+                          "measurement set is to large.")
+
+      # Warnings on pixel size
+      if nbpixel < 256:
+          self.logger.warn("Using a image size smaller then 256x256: This " + 
+                           "leads to problematic imaging in some instances!!") 
  
  
-		# ********************************************************************        
-		# 6. Pixelsize must be a string number : number +arcsec
-		#    conversion at this step
-		pixsize = str(pixsize)+'arcsec'
-		
-		
-		# ********************************************************************        
-		# 7. Threshold determination from the previous cycle 
-		#    
-		if major_cycle == 0:
-			threshold = '0.005Jy'	
-		else:
-			fits_image_path_list	= measurement_set.split('concat.ms')
-			fits_image_path			= fits_image_path_list[0]+'awimage_cycle_%s/image.fits'%(major_cycle-1)
-			
-			
-			# open a FITS file 
-			fitsImage	= pyfits.open(fits_image_path) 
-			scidata 	= fitsImage[0].data 
-			
-			dataRange	= range(fitsImage[0].shape[2])
-			sortedData	=  range(fitsImage[0].shape[2]**2)
-			
-			for i in dataRange:
-				for j in dataRange:
-					sortedData[i*fitsImage[0].shape[2]+j]	=  scidata[0,0,i,j]
-			
-			sortedData 		= sorted(sortedData)
-			
-			# Percent of faintest data to use to determine 5sigma value : use 5%			
-			dataPercent		= int(fitsImage[0].shape[2]*0.05)
-			
-			fiveSigmaData	= sum(sortedData[0:dataPercent])/dataPercent	
-			threshold		= abs(fiveSigmaData)/5.0*2.335/2.0
-			
-		# ******************************************************************** 			
-        
- 
-		return pixsize, str(nbpixel), str(wmax), str(w_proj_planes), str(UVmin), str(UVmax), str(robust), str(threshold)
+      # ********************************************************************        
+      # 6. Pixelsize must be a string number : number +arcsec
+      #    conversion at this step
+      pixsize = str(pixsize)+'arcsec'
 
- 
- 
-    
-        
+      # ********************************************************************        
+      # 7. Threshold determination from the previous cycle 
+      if major_cycle == 0:
+          threshold = '0.005Jy'	
+      else:
+        fits_image_path_list	= measurement_set.split('concat.ms')
+        fits_image_path			= fits_image_path_list[0] +\
+                'awimage_cycle_%s/image.fits'%(major_cycle-1)
 
+
+        # open a FITS file 
+        fitsImage	= pyfits.open(fits_image_path) 
+        scidata 	= fitsImage[0].data 
+
+        dataRange	= range(fitsImage[0].shape[2])
+        sortedData	=  range(fitsImage[0].shape[2] ** 2)
+
+        for i in dataRange:
+            for j in dataRange:
+                sortedData[i * fitsImage[0].shape[2] + j]	=  scidata[0,0,i,j]
+
+        sortedData 		= sorted(sortedData)
+
+        # Percent of faintest data to use to determine 5sigma value : use 5%			
+        dataPercent		= int(fitsImage[0].shape[2] * 0.05)
+
+        fiveSigmaData	= sum(sortedData[0:dataPercent]) / dataPercent	
+        threshold		= abs(fiveSigmaData) / 5.0 * 2.335 / 2.0
+
+      return pixsize, str(nbpixel), str(wmax), str(w_proj_planes), \
+             str(UVmin), str(UVmax), str(robust), str(threshold)
+ 
 
 if __name__ == "__main__":
     _JOBID, _JOBHOST, _JOBPORT = sys.argv[1:4]

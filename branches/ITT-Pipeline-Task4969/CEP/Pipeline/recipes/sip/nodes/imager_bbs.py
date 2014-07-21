@@ -48,8 +48,7 @@ class imager_bbs(LOFARnodeTCP):
         source_db = sky_list[0].file[0] # the sourcedb is the first file entry
 
         ms_list = list()
-        
-
+      
         try:
             bbs_process_group = SubProcessGroup(self.logger)
             # *****************************************************************
@@ -84,17 +83,14 @@ class imager_bbs(LOFARnodeTCP):
         #    msconcat (pyrap.tables module) (added by N.Vilchez)                   
         pt.msconcat(sorted(ms_list),measurement_path_timeconcat, concatTime=True)       
            
-            
  
         # *********************************************************************
         # 5. copy time slives directory to a new one  
         #  (added by N.Vilchez)                   
         time_slices_dir = measurement_path_timeconcat.split('concat.ms')
-        copy_cmd = 'cp -r %s %s'%(time_slices_dir[0]+'time_slices',time_slices_dir[0]+'time_slices_cycle_%s'%(str(major_cycle)))     
+        copy_cmd = 'cp -r %s %s'%(time_slices_dir[0] + 'time_slices', 
+                time_slices_dir[0] + 'time_slices_cycle_%s'%(str(major_cycle)))     
         os.system(copy_cmd)        
-		
-  
- 
             
         return 0
 

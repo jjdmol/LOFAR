@@ -144,7 +144,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
             DataMap.SkipIterator
 
         for (measurement_item, output_map) in zip(input_map, output_map):
-                host_timeconcat , measurement_path_timeconcat = measurement_item.host, measurement_item.file        
+                host_timeconcat , measurement_path_timeconcat =\
+                    measurement_item.host, measurement_item.file        
         # *********************************************************************        
         
 
@@ -163,7 +164,8 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
 
         # Run the nodes with now collected inputs
         jobs, output_map = self._run_create_dbs_node(
-                 input_map, slice_paths_map, assoc_theta,measurement_path_timeconcat)
+                 input_map, slice_paths_map, assoc_theta, 
+                 measurement_path_timeconcat)
 
         # Collect the output of the node scripts write to (map) files
         return self._collect_and_assign_outputs(jobs, output_map,
@@ -198,7 +200,7 @@ class imager_create_dbs(BaseRecipe, RemoteCommandRecipeMixIn):
         return 0
 
     def _run_create_dbs_node(self, input_map, slice_paths_map,
-                                         assoc_theta,measurement_path_timeconcat):
+                                     assoc_theta,measurement_path_timeconcat):
         """
         Decompose the input mapfiles into task for specific nodes and 
         distribute these to the node recipes. Wait for the jobs to finish and

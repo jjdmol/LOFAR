@@ -88,7 +88,6 @@ class imager_awimager(BaseRecipe, RemoteCommandRecipeMixIn):
             '--nof_cycle',
             help = "The number of the current cycle to modify the parset."
         )
-                     
     }
 
     outputs = {

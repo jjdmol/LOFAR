@@ -221,7 +221,7 @@ class msss_imager_pipeline(control):
             # *****************************************************************
             # (4) Get parameters awimager from the prepare_parset and inputs
             aw_image_mapfile, maxbaseline = self._aw_imager(concat_ms_map_path,
-                        idx_loop, sourcedb_map_path, nof_cycle,
+                        idx_loop, sourcedb_map_path, number_of_major_cycles,
                         skip = False)
 
             # *****************************************************************
@@ -413,7 +413,6 @@ class msss_imager_pipeline(control):
             self.logger.error(repr(sourcedb_map))
             self.logger.error(repr(parmdbs_map))
             raise PipelineException("Invalid input data for imager_bbs recipe")
-	
 
         self.run_task("imager_bbs",
                       timeslice_map_path,
@@ -428,8 +427,8 @@ class msss_imager_pipeline(control):
         return output_mapfile
 
     @xml_node
-    def _aw_imager(self, prepare_phase_output, major_cycle, sky_path, nof_cycle, 
-                   skip = False):
+    def _aw_imager(self, prepare_phase_output, major_cycle, sky_path,
+                  number_of_major_cycles,   skip = False):
         """
         Create an image based on the calibrated, filtered and combined data.
         """
@@ -474,7 +473,7 @@ class msss_imager_pipeline(control):
                           working_directory = self.scratch_directory,
                           autogenerate_parameters = autogenerate_parameters,
                           specify_fov = specify_fov, major_cycle = major_cycle,
-                          nof_cycle = nof_cycle)
+                          nof_cycle = number_of_major_cycles)
 
         return output_mapfile, max_baseline
 
