@@ -195,11 +195,10 @@ class msss_imager_pipeline(control):
         # entries all set to zero
         source_list_map_path = os.path.join(self.mapfile_dir,
                                         "initial_sourcelist.mapfile")
-        source_list_map = DataMap(repr(target_mapfile)) # copy the output map
+        source_list_map = DataMap.load(target_mapfile) # copy the output map
         for item in source_list_map:
             item.file = ""             # set all to empty string
         source_list_map.save(source_list_map_path)
-
 
         number_of_major_cycles = self.parset.getInt(
                                     "Imaging.number_of_major_cycles")
