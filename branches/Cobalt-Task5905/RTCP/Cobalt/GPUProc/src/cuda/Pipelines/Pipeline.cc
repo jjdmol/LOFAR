@@ -194,7 +194,7 @@ namespace LOFAR
 
           // Signal end of output
           for (size_t i = 0; i < writePool.size(); ++i) {
-            writePool[i].bequeue->noMore();
+            writePool[i].queue->append(NULL);
           }
 
           // Wait for data to propagate towards outputProc,
@@ -428,10 +428,6 @@ namespace LOFAR
 
       NSTimer postprocessTimer("postprocess", true, true);
 
-      size_t nrBlocksForwarded = 0;
-      size_t nrBlocksDropped = 0;
-      time_t lastLogTime = 0;
-
       // Keep fetching output objects until end-of-output
       while ((output = workQueue.outputPool.filled.remove()) != NULL) {
         const struct BlockID id = output->blockID;
@@ -451,25 +447,10 @@ namespace LOFAR
         // Hand off output, force in-order as Storage expects it that way
         struct Output &pool = writePool[id.localSubbandIdx];
 
-        if (pool.bequeue->append(output)) {
-          nrBlocksForwarded++;
-        } else {
-          nrBlocksDropped++;
-          // LOG_WARN_STR("[block " << block << "] Dropped for subband " <<
-          //              globalSubbandIdx);
-          // Give back to queue
-          workQueue.outputPool.free.append(output);
-        }
+        pool.queue->append(output);
         ASSERT(!output);
 
         LOG_DEBUG_STR("[" << id << "] Forwarded output to writer");
-
-        // Log every 5 seconds (note: time() returns time in sec.)
-        if (time(0) > lastLogTime + 5) {
-          lastLogTime = time(0);
-          LOG_INFO_STR("Forwarded " << nrBlocksForwarded << 
-                       " blocks, dropped " << nrBlocksDropped << " blocks");
-        }
       }
     }
 
