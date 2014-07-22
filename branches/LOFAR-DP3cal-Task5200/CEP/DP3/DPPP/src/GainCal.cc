@@ -100,7 +100,8 @@ namespace LOFAR {
 
         itsPatchList = makePatches (sourceDB, patchNames, patchNames.size());
       }
-      ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" || itsMode=="fulljones");
+      ASSERT(itsMode=="diagonal" || itsMode=="phaseonly" ||
+             itsMode=="fulljones" || itsMode=="scalarphase");
     }
 
     GainCal::~GainCal()
@@ -309,10 +310,10 @@ namespace LOFAR {
         }
 
         if (itsNTimes==itsSolInt-1) {
-          if (itsMode=="diagonal" || itsMode=="phaseonly") {
-            stefcal(false);
-          } else {
+          if (itsMode=="fulljones") {
             stefcal(true);
+          } else {
+            stefcal(false);
           }
           itsNTimes=0;
         } else {
@@ -611,16 +612,18 @@ namespace LOFAR {
           for (uint st1=0;st1<nUn;++st1) {
             ww=0;
             t(0)=0;
+            DComplex* z_p=iS.z.data();
             mvis_p=&itsMVis(IPosition(6,0,0,0,0,st1%nSt,st1/nSt));
             vis_p = &itsVis(IPosition(6,0,0,0,0,st1%nSt,st1/nSt));
             for (uint time=0;time<itsSolInt;++time) {
               for (uint ch=0;ch<nCh;++ch) {
                 for (uint st2=0;st2<nUn;++st2) {
-                  iS.z(nCh*nUn*time+ch*nUn+st2,0) = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
-                  ww+=norm(iS.z(nCh*nUn*time+ch*nUn+st2,0));
-                  t(0)+=conj(iS.z(nCh*nUn*time+ch*nUn+st2,0)) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  *z_p = iS.h(st2,0) * *mvis_p; //itsMVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
+                  ww+=norm(*z_p);
+                  t(0)+=conj(*z_p) * *vis_p; //itsVis(IPosition(6,st2%nSt,st2/nSt,ch,time,st1%nSt,st1/nSt));
                   mvis_p++;
                   vis_p++;
+                  z_p++;
                 }
                 //cout<<"iS.z bij ch="<<ch<<"="<<iS.z<<endl<<"----"<<endl;
               }
@@ -917,112 +920,109 @@ namespace LOFAR {
 
       itsTimerWrite.start();
 
-      if (itsOperation!="solve") {
-        getNextStep()->finish();
-        return;
-      }
+      if (itsOperation=="solve") {
+        uint nSt=info().antennaUsed().size();
 
-      uint nSt=info().antennaUsed().size();
+        uint ntime=itsSols.size();
 
-      uint ntime=itsSols.size();
+        // Construct solution grid.
+        const Vector<double>& freq      = getInfo().chanFreqs();
+        const Vector<double>& freqWidth = getInfo().chanWidths();
+        BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
+          * 0.5, getInfo().totalBW(), 1));
+        BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
+                                  (info().startTime(),
+                                   info().timeInterval(), ntime));
+        BBS::Grid solGrid(freqAxis, timeAxis);
+        // Create domain grid.
+        BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
+                                  (info().startTime(),
+                                   info().timeInterval() * ntime, 1));
+        BBS::Grid domainGrid(freqAxis, tdomAxis);
 
-      // Construct solution grid.
-      const Vector<double>& freq      = getInfo().chanFreqs();
-      const Vector<double>& freqWidth = getInfo().chanWidths();
-      BBS::Axis::ShPtr freqAxis(new BBS::RegularAxis(freq[0] - freqWidth[0]
-        * 0.5, getInfo().totalBW(), 1));
-      BBS::Axis::ShPtr timeAxis(new BBS::RegularAxis
-                                (info().startTime(),
-                                 info().timeInterval(), ntime));
-      BBS::Grid solGrid(freqAxis, timeAxis);
-      // Create domain grid.
-      BBS::Axis::ShPtr tdomAxis(new BBS::RegularAxis
-                                (info().startTime(),
-                                 info().timeInterval() * ntime, 1));
-      BBS::Grid domainGrid(freqAxis, tdomAxis);
+        // Open the ParmDB at the first write.
+        // In that way the instrumentmodel ParmDB can be in the MS directory.
+        if (! itsParmDB) {
+          itsParmDB = boost::shared_ptr<BBS::ParmDB>
+            (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsParmDBName),
+                             true));
+          itsParmDB->lock();
+          // Store the (freq, time) resolution of the solutions.
+          vector<double> resolution(2);
+          resolution[0] = freqWidth[0];
+          resolution[1] = info().timeInterval();
+          itsParmDB->setDefaultSteps(resolution);
+        }
+        // Write the solutions per parameter.
+        const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
+        const char* strri[] = {"Real:","Imag:"};
+        Matrix<double> values(1, ntime);
 
-      // Open the ParmDB at the first write.
-      // In that way the instrumentmodel ParmDB can be in the MS directory.
-      if (! itsParmDB) {
-        itsParmDB = boost::shared_ptr<BBS::ParmDB>
-          (new BBS::ParmDB(BBS::ParmDBMeta("casa", itsParmDBName),
-                           true));
-        itsParmDB->lock();
-        // Store the (freq, time) resolution of the solutions.
-        vector<double> resolution(2);
-        resolution[0] = freqWidth[0];
-        resolution[1] = info().timeInterval();
-        itsParmDB->setDefaultSteps(resolution);
-      }
-      // Write the solutions per parameter.
-      const char* str0101[] = {"0:0:","1:0:","0:1:","1:1:"}; // Conjugate transpose!
-      const char* strri[] = {"Real:","Imag:"};
-      Matrix<double> values(1, ntime);
+        DComplex sol;
 
-      DComplex sol;
+        for (size_t st=0; st<nSt; ++st) {
+          uint seqnr = 0; // To take care of real and imaginary part
+          string suffix(itsAntennaUsedNames[st]);
 
-      for (size_t st=0; st<nSt; ++st) {
-        uint seqnr = 0; // To take care of real and imaginary part
-        string suffix(itsAntennaUsedNames[st]);
-
-        for (int i=0; i<4; ++i) {
-          if ((itsMode=="diagonal" || itsMode=="phaseonly") && (i==1||i==2)) {
-            continue;
-          }
-          int kmax;
-          if (itsMode=="phaseonly") {
-            kmax=1;
-          } else {
-            kmax=2;
-          }
-          for (int k=0; k<kmax; ++k) {
-            string name(string("Gain:") +
-                        str0101[i] + (itsMode=="phaseonly"?"Phase:":strri[k]) + suffix);
-            // Collect its solutions for all times in a single array.
-            for (uint ts=0; ts<ntime; ++ts) {
-              if (itsAntMaps[ts][st]==-1) {
-                if (itsMode!="phaseonly" && k==0 && (i==0||i==3)) {
-                  values(0, ts) = 1;
-                } else {
-                  values(0, ts) = 0;
-                }
-              } else {
-                int rst=itsAntMaps[ts][st];
-                if (itsMode=="fulljones") {
-                  if (seqnr%2==0) {
-                    values(0, ts) = real(itsSols[ts](rst,seqnr/2));
+          for (int i=0; i<4; ++i) {
+            if ((itsMode=="diagonal" || itsMode=="phaseonly") && (i==1||i==2)) {
+              continue;
+            }
+            int kmax;
+            if (itsMode=="phaseonly") {
+              kmax=1;
+            } else {
+              kmax=2;
+            }
+            for (int k=0; k<kmax; ++k) {
+              string name(string("Gain:") +
+                          str0101[i] + (itsMode=="phaseonly"?"Phase:":strri[k]) + suffix);
+              // Collect its solutions for all times in a single array.
+              for (uint ts=0; ts<ntime; ++ts) {
+                if (itsAntMaps[ts][st]==-1) {
+                  if (itsMode!="phaseonly" && k==0 && (i==0||i==3)) {
+                    values(0, ts) = 1;
                   } else {
-                    values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
-                  }
-                } else if (itsMode=="diagonal") {
-                  uint sSt=itsSols[ts].size()/2;
-                  if (seqnr%2==0) {
-                    values(0, ts) = real(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
-                  } else {
-                    values(0, ts) = -imag(itsSols[ts](i/3*sSt+rst,0)); // Conjugate transpose!
+                    values(0, ts) = 0;
                   }
                 } else {
-                  uint sSt=itsSols[ts].size()/2;
-                  values(0, ts) = -arg(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1 // Transpose!
+                  int rst=itsAntMaps[ts][st];
+                  if (itsMode=="fulljones") {
+                    if (seqnr%2==0) {
+                      values(0, ts) = real(itsSols[ts](rst,seqnr/2));
+                    } else {
+                      values(0, ts) = -imag(itsSols[ts](rst,seqnr/2)); // Conjugate transpose!
+                    }
+                  } else if (itsMode=="diagonal") {
+                    uint sSt=itsSols[ts].size()/2;
+                    if (seqnr%2==0) {
+                      values(0, ts) = real(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1
+                    } else {
+                      values(0, ts) = -imag(itsSols[ts](i/3*sSt+rst,0)); // Conjugate transpose!
+                    }
+                  } else {
+                    uint sSt=itsSols[ts].size()/2;
+                    values(0, ts) = -arg(itsSols[ts](i/3*sSt+rst,0)); // nSt times Gain:0:0 at the beginning, then nSt times Gain:1:1 // Transpose!
+                  }
                 }
               }
-            }
-            cout.flush();
-            seqnr++;
-            BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
-            pv->setScalars (solGrid, values);
-            BBS::ParmValueSet pvs(domainGrid,
-                                  vector<BBS::ParmValue::ShPtr>(1, pv));
-            map<string,int>::const_iterator pit = itsParmIdMap.find(name);
-            if (pit == itsParmIdMap.end()) {
-              // First time, so a new nameId will be set.
-              int nameId = -1;
-              itsParmDB->putValues (name, nameId, pvs);
-              itsParmIdMap[name] = nameId;
-            } else {
-              // Parm has been put before.
-              int nameId = pit->second;
-              itsParmDB->putValues (name, nameId, pvs);
+              cout.flush();
+              seqnr++;
+              BBS::ParmValue::ShPtr pv(new BBS::ParmValue());
+              pv->setScalars (solGrid, values);
+              BBS::ParmValueSet pvs(domainGrid,
+                                    vector<BBS::ParmValue::ShPtr>(1, pv));
+              map<string,int>::const_iterator pit = itsParmIdMap.find(name);
+              if (pit == itsParmIdMap.end()) {
+                // First time, so a new nameId will be set.
+                int nameId = -1;
+                itsParmDB->putValues (name, nameId, pvs);
+                itsParmIdMap[name] = nameId;
+              } else {
+                // Parm has been put before.
+                int nameId = pit->second;
+                itsParmDB->putValues (name, nameId, pvs);
+              }
             }
           }
         }
